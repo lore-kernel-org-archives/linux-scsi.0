@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4645EC43217
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 00:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA9B3C4167D
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 01:10:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229982AbiKZAw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Nov 2022 19:52:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56092 "EHLO
+        id S229868AbiKZBKa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Nov 2022 20:10:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229583AbiKZAwZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 19:52:25 -0500
+        with ESMTP id S229570AbiKZBK3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 20:10:29 -0500
 Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09A972A426;
-        Fri, 25 Nov 2022 16:52:25 -0800 (PST)
-Received: by mail-pj1-f46.google.com with SMTP id a22-20020a17090a6d9600b0021896eb5554so8993933pjk.1;
-        Fri, 25 Nov 2022 16:52:25 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA9302CCAA;
+        Fri, 25 Nov 2022 17:10:28 -0800 (PST)
+Received: by mail-pj1-f46.google.com with SMTP id md8so799829pjb.4;
+        Fri, 25 Nov 2022 17:10:28 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sWY+oFob71zcGNoB4QxLTbUSKbIFCrDLOt093KFruu4=;
-        b=NhwHS76ByNTYMSMAS5nSnVxrXS5Q4rvYQs/GRfic5w9Iowymf/jXRVaiYkFyU+spQJ
-         LVUJbWHxBlME7r+L8bgWi2sIvpMGM+Q7prt3OcY4yczXSB/q6LOFcVtSZho7cdFBLyg/
-         rACe2a+zhIbawlY91+q1TOgRDJSxn0WM+OZjpM/ZUgSWtCiGWw56aMOKk84OKWgFedfX
-         vaJLwDUPNRSj5NuKYN0EAhgb6InCMKlVWnOhmseu4HUmUR+b/Wvbb74fS31x5bic8yRt
-         WMWFnYkUo68m4Xt/6IyU/8G1sZbGHF5GJMPBaP2JAYMFr2jhux9XRxaOiHZ91q+unGcW
-         onYg==
-X-Gm-Message-State: ANoB5pk0NuW9+BlS2SML5RfgjuiCjoH1TJq1XgDts0Iskf0xqeVNovfq
-        fhlQ2v2Lt/q50uUU4rzsY3c=
-X-Google-Smtp-Source: AA0mqf7FjiTtC9iNp0feg12bQ/s1eycHwDHFjbVSilPVwh8m65vIgzK/DSRrE1ka6WKVsQCVi3xYqQ==
-X-Received: by 2002:a17:90a:7e8a:b0:217:f784:689a with SMTP id j10-20020a17090a7e8a00b00217f784689amr43901737pjl.0.1669423944414;
-        Fri, 25 Nov 2022 16:52:24 -0800 (PST)
+        bh=PEeX4qyWg0IrAHe/fvm5AXFA+iKbUTvD986+eHJxTfA=;
+        b=RN9JDfdIuJBguFyi1A9tBs0JXROnRymTPjbW6QtK3uzaFxPzPZfE8BMYO3uGAsES8B
+         mPvNlJ2QzVWT+Kgdggc7R51pDDBQcMQEUxRAFOVFrLeV9BHR0f9K2lT7g/pfQOI9QlMv
+         Rm+D4EWQ+8OuEnY18ainQ/pPuKkYRakhb7mP+mPC5lvfbGQT4kaIUZ8DF44YC9i+uWHl
+         3687p93OqQCNSmDy+PBeePbSE7dWu6UBIfQvZM6fjUSZuQD8dCC4o2xmF3dRDl345Jq1
+         5y5wKJkIs1ASTtlrxNQTj4lA/B/NTmeQfRuJ7w5wfvvYOaztx2VTOmefRZQ4y7IpDoWx
+         lCdw==
+X-Gm-Message-State: ANoB5pnt+uvEXLejnZ17yTLiLIC67QK8XcQOfbgIPNvnr80XKXrRSQRU
+        Jw5vPiw4IR5lc0k9bE5RzSQ=
+X-Google-Smtp-Source: AA0mqf4YYaQW75PaoYy4IXPZM8MWzzeDuc9H22FTeGdh1VZ7ErM5RanSi3THxi/FOrCJwzcN0IMwjA==
+X-Received: by 2002:a17:902:7b84:b0:189:6623:4c47 with SMTP id w4-20020a1709027b8400b0018966234c47mr6292602pll.170.1669425028073;
+        Fri, 25 Nov 2022 17:10:28 -0800 (PST)
 Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id c2-20020a170903234200b001708c4ebbaesm3954226plh.309.2022.11.25.16.52.22
+        by smtp.gmail.com with ESMTPSA id k4-20020a63d844000000b00476e84c3530sm3101627pgj.60.2022.11.25.17.10.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Nov 2022 16:52:23 -0800 (PST)
-Message-ID: <2d04069e-9756-a6ec-b1cd-82a6d8afe382@acm.org>
-Date:   Fri, 25 Nov 2022 16:52:21 -0800
+        Fri, 25 Nov 2022 17:10:27 -0800 (PST)
+Message-ID: <105b9113-8322-aa68-7d21-45f5ba288d34@acm.org>
+Date:   Fri, 25 Nov 2022 17:10:25 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.0
-Subject: Re: [PATCH v5 05/16] ufs: core: mcq: Add Multi Circular Queue support
+Subject: Re: [PATCH v5 06/16] ufs: core: mcq: Configure resource regions
 Content-Language: en-US
 To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org
@@ -52,14 +52,11 @@ Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
- <91d17ea9623b06d66027699257816bb2fb7176cb.1669176158.git.quic_asutoshd@quicinc.com>
+ <05400727c8a82b7ef85a576c1fa2d9bd81458e9a.1669176158.git.quic_asutoshd@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <91d17ea9623b06d66027699257816bb2fb7176cb.1669176158.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <05400727c8a82b7ef85a576c1fa2d9bd81458e9a.1669176158.git.quic_asutoshd@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -67,9 +64,32 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/22/22 20:10, Asutosh Das wrote:
-> Add support for multi-circular queue (MCQ) which has been added
-> in UFSHC v4.0 standard in addition to the Single Doorbell mode.
-> The MCQ mode supports multiple submission and completion queues.
-> Add support to configure the number of queues.
+> +/* Resources */
+> +static const struct ufshcd_res_info ufs_res_info[RES_MAX] = {
+> +	{.name = "ufs_mem",},
+> +	{.name = "mcq",},
+> +	/* Submission Queue DAO */
+> +	{.name = "mcq_sqd",},
+> +	/* Submission Queue Interrupt Status */
+> +	{.name = "mcq_sqis",},
+> +	/* Completion Queue DAO */
+> +	{.name = "mcq_cqd",},
+> +	/* Completion Queue Interrupt Status */
+> +	{.name = "mcq_cqis",},
+> +	/* MCQ vendor specific */
+> +	{.name = "mcq_vs",},
+> +};
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Which names to associate with nodes in the device tree for UFS MCQ 
+resources has not been standardized. Additionally, the UFS driver is 
+also used on platforms that do not support the device tree (e.g. Intel 
+x86 platforms). So I don't think that the platform_get_resource_byname() 
+calls should occur in the UFS driver core. How about moving the code 
+that queries device tree nodes into the Qualcomm driver until a second 
+user of this code is added? If a second user of this code appears this 
+code could e.g. become a kernel module shared by both UFS host 
+controller drivers.
+
+Thanks,
+
+Bart.
