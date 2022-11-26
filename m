@@ -2,107 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7024DC4321E
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 06:09:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 888A5C4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 08:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230145AbiKZGJC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 26 Nov 2022 01:09:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33274 "EHLO
+        id S229495AbiKZIhI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 26 Nov 2022 03:37:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230114AbiKZGJB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Nov 2022 01:09:01 -0500
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D53F205E5;
-        Fri, 25 Nov 2022 22:08:59 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4NK1Wp0gVcz4f3kpS;
-        Sat, 26 Nov 2022 14:08:54 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgB3m9h4rYFj1lyxBA--.33831S3;
-        Sat, 26 Nov 2022 14:08:57 +0800 (CST)
-Subject: Re: Why is MEGASAS_SAS_QD set to 256?
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Ming Lei <ming.lei@redhat.com>
-Cc:     John Garry <john.g.garry@oracle.com>, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-block <linux-block@vger.kernel.org>,
-        "zhangyi (F)" <yi.zhang@huawei.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <1c4d66ca-fe1a-3d1a-d7f9-4981d2fc9eb1@huaweicloud.com>
- <e11cdb17-053c-390c-9c48-36790eb70cc5@oracle.com>
- <2b89210a-222c-a919-ab5b-c76830308f92@huaweicloud.com>
- <Y4F3XG3lMCCKlLAr@T590>
- <aef69f3b-a8db-f34c-4a52-49ba9020f6cf@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <7fa1cf9f-3cd3-9ca8-8ddc-0c8407a466e8@huaweicloud.com>
-Date:   Sat, 26 Nov 2022 14:08:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229523AbiKZIhG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Nov 2022 03:37:06 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF6F21DA65
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2022 00:36:58 -0800 (PST)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NK4k20cSXzqSQ9;
+        Sat, 26 Nov 2022 16:32:58 +0800 (CST)
+Received: from huawei.com (10.175.100.227) by kwepemi500016.china.huawei.com
+ (7.221.188.220) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Sat, 26 Nov
+ 2022 16:36:55 +0800
+From:   Shang XiaoJing <shangxiaojing@huawei.com>
+To:     <linuxdrivers@attotech.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <JBottomley@Parallels.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <shangxiaojing@huawei.com>
+Subject: [PATCH] gpio/rockchip: Add missing of_node_put() in rockchip_gpiolib_register()
+Date:   Sat, 26 Nov 2022 16:35:06 +0800
+Message-ID: <20221126083506.5952-1-shangxiaojing@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <aef69f3b-a8db-f34c-4a52-49ba9020f6cf@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgB3m9h4rYFj1lyxBA--.33831S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Wr4DJrWUZrykZry5Wr4DJwb_yoWfGFXEgw
-        4jkFn7Gw15Grs2qa1UJry5ArZ3GFZ3tasxA34qq3W5X39rC3W3KrW5Zw1rZan3Grsxtrn7
-        tr4Yg3WYqws09jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb3xFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Gr0_Zr1l
-        IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
-        C2KfnxnUUI43ZEXa7VU1a9aPUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain
+X-Originating-IP: [10.175.100.227]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+rockchip_gpiolib_register() get the device_node by of_get_parent() with
+refcount incremented. Add of_node_put() on it before exitting
+rockchip_gpiolib_register(). So as rockchip_gpio_probe().
 
+Fixes: 936ee2675eee ("gpio/rockchip: add driver for rockchip gpio")
+Signed-off-by: Shang XiaoJing <shangxiaojing@huawei.com>
+---
+ drivers/gpio/gpio-rockchip.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-在 2022/11/26 14:08, Yu Kuai 写道:
-> Hi, Ming
-> 
-> 在 2022/11/26 10:18, Ming Lei 写道:
->>
->> If you want aggressive merge on sequential IO workload, the queue 
->> depth need
->> to be a bit less, then more requests can be staggered into scheduler 
->> queue,
->> and merge chance is increased.
-> 
-> But if nr_requests >= queue_depth, it seems to me elevator will have no
-> effect, no request can be merged or sorted by scheduler, right?
-Sorry that should be nr_requests <= queue_depth.
-
->>
->> If you want good perf on random IO perf, the queue depth needs to
->> be deep enough to have enough parallelism for saturating SSD internal.
->>
->> But we don't recognize sequential/random IO pattern, and usually fixed
->> queue depth is used.
-> 
-> Is it possible to use none elevator and set large queue_depth if nvme is
-> used in this case?
-> 
-> Thansk,
-> Kuai
->>
->> Thanks,
->> Ming
->>
->> .
->>
-> 
-> .
-> 
+diff --git a/drivers/gpio/gpio-rockchip.c b/drivers/gpio/gpio-rockchip.c
+index 870910bb9dd3..3c1e303aaca8 100644
+--- a/drivers/gpio/gpio-rockchip.c
++++ b/drivers/gpio/gpio-rockchip.c
+@@ -610,6 +610,7 @@ static int rockchip_gpiolib_register(struct rockchip_pin_bank *bank)
+ 			return -ENODATA;
+ 
+ 		pctldev = of_pinctrl_get(pctlnp);
++		of_node_put(pctlnp);
+ 		if (!pctldev)
+ 			return -ENODEV;
+ 
+@@ -712,6 +713,7 @@ static int rockchip_gpio_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 
+ 	pctldev = of_pinctrl_get(pctlnp);
++	of_node_put(pctlnp);
+ 	if (!pctldev)
+ 		return -EPROBE_DEFER;
+ 
+-- 
+2.17.1
 
