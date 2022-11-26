@@ -2,111 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D04C46467
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 03:28:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A970C4321E
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 06:08:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230291AbiKZD2q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Nov 2022 22:28:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37538 "EHLO
+        id S230038AbiKZGIS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 26 Nov 2022 01:08:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230304AbiKZD22 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 22:28:28 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2E0E1BE98;
-        Fri, 25 Nov 2022 19:28:24 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AQ2hbup007916;
-        Sat, 26 Nov 2022 03:27:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=AcagkFnJ+fxUlscIN6IjL6P7egIgluL1OZhulAL1UnQ=;
- b=mvu81B1jAjb+iQ6MM92frRDUHEr4JjxmPPoaI8lGgelfK0tY26AeAGpXKYQqxl7PfakE
- zKYR5gspEHq4K8A5lXxuzIhtLNaXvmIKO62/MRCp0/7BL781RtS2v7uCoevnZJ3y5Jpe
- o4k15RYgVjtQOzJ7HMVMABblAwr0dtY49pEsscSVs8hehmj/twewXRy1+1LN1vLlT3G/
- v2xYrPsJW6V6XrJm2hokCQMoNB7mRQcHFN2tzIe9dpmq/LftKP6ZeS9lIhBRARfqXgp+
- Eaf1bj/wXzdFOlU5SlpQfuENIvXv9u+TNm6GxzDP01RMy7w2HAFdX8VSqM3T7Hplrxc0 Qw== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m39k2g1ng-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 26 Nov 2022 03:27:47 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AQ1XTWB007302;
-        Sat, 26 Nov 2022 03:27:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3m3988b812-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 26 Nov 2022 03:27:47 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AQ3Rhsb028327;
-        Sat, 26 Nov 2022 03:27:46 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3m3988b7y9-8;
-        Sat, 26 Nov 2022 03:27:46 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Fenghua Yu <fenghua.yu@intel.com>, oss-drivers@corigine.com,
-        James Smart <james.smart@broadcom.com>,
-        Cornelia Huck <cohuck@redhat.com>, dmaengine@vger.kernel.org,
-        Paolo Abeni <pabeni@redhat.com>, Will Deacon <will@kernel.org>,
-        Lee Jones <lee@kernel.org>, Vinod Koul <vkoul@kernel.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Roy Pledge <Roy.Pledge@nxp.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Ioana Ciornei <ioana.ciornei@nxp.com>, iommu@lists.linux.dev,
-        Joerg Roedel <joro@8bytes.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        netdev@vger.kernel.org, kvm@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Marc Zyngier <maz@kernel.org>,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Stuart Yoder <stuyoder@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>
-Subject: Re: [patch 00/10] genirq/msi: Treewide cleanup of pointless linux/msi.h includes
-Date:   Sat, 26 Nov 2022 03:27:39 +0000
-Message-Id: <166943312556.1684293.1625990735787388062.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221113201935.776707081@linutronix.de>
-References: <20221113201935.776707081@linutronix.de>
+        with ESMTP id S229464AbiKZGIR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Nov 2022 01:08:17 -0500
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 473F11B9EC;
+        Fri, 25 Nov 2022 22:08:15 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4NK1Vn63zqz4f3tTF;
+        Sat, 26 Nov 2022 14:08:01 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgC329hDrYFj0lOxBA--.20596S3;
+        Sat, 26 Nov 2022 14:08:04 +0800 (CST)
+Subject: Re: Why is MEGASAS_SAS_QD set to 256?
+To:     Ming Lei <ming.lei@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     John Garry <john.g.garry@oracle.com>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        "zhangyi (F)" <yi.zhang@huawei.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <1c4d66ca-fe1a-3d1a-d7f9-4981d2fc9eb1@huaweicloud.com>
+ <e11cdb17-053c-390c-9c48-36790eb70cc5@oracle.com>
+ <2b89210a-222c-a919-ab5b-c76830308f92@huaweicloud.com>
+ <Y4F3XG3lMCCKlLAr@T590>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <aef69f3b-a8db-f34c-4a52-49ba9020f6cf@huaweicloud.com>
+Date:   Sat, 26 Nov 2022 14:08:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <Y4F3XG3lMCCKlLAr@T590>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-26_02,2022-11-25_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 phishscore=0
- mlxlogscore=825 mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211260024
-X-Proofpoint-GUID: oUxjHgTGr4WNozsr_LV_OOFyzCy5QslK
-X-Proofpoint-ORIG-GUID: oUxjHgTGr4WNozsr_LV_OOFyzCy5QslK
+X-CM-TRANSID: gCh0CgC329hDrYFj0lOxBA--.20596S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7JFyDuF1rCFy3XFyUKrWxZwb_yoW3JFXEga
+        9Fk3Z7tw13Grsaqa13GFW5AFWfGFZ3KF9rZ3Wqq3Z8X3yjkFyfKrZY9r98Zan3Grs7Kwn7
+        Kr4Y9a4Yqrs09jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
+        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 13 Nov 2022 21:33:54 +0100 (CET), Thomas Gleixner wrote:
+Hi, Ming
 
-> While working on per device MSI domains I noticed that quite some files
-> include linux/msi.h just because.
+在 2022/11/26 10:18, Ming Lei 写道:
 > 
-> The top level comment in the header file clearly says:
+> If you want aggressive merge on sequential IO workload, the queue depth need
+> to be a bit less, then more requests can be staggered into scheduler queue,
+> and merge chance is increased.
+
+But if nr_requests >= queue_depth, it seems to me elevator will have no
+effect, no request can be merged or sorted by scheduler, right?
 > 
->   Regular device drivers have no business with any of these functions....
+> If you want good perf on random IO perf, the queue depth needs to
+> be deep enough to have enough parallelism for saturating SSD internal.
 > 
-> [...]
+> But we don't recognize sequential/random IO pattern, and usually fixed
+> queue depth is used.
 
-Applied to 6.2/scsi-queue, thanks!
+Is it possible to use none elevator and set large queue_depth if nvme is
+used in this case?
 
-[03/10] scsi: lpfc: Remove linux/msi.h include
-        https://git.kernel.org/mkp/scsi/c/cdd9344e00b4
+Thansk,
+Kuai
+> 
+> Thanks,
+> Ming
+> 
+> .
+> 
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
