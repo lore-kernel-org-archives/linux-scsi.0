@@ -2,100 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28826C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Nov 2022 21:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D580C4167D
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 00:11:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229936AbiKYVFc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Nov 2022 16:05:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48556 "EHLO
+        id S230029AbiKZALb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Nov 2022 19:11:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbiKYVFb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 16:05:31 -0500
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19630442C5;
-        Fri, 25 Nov 2022 13:05:30 -0800 (PST)
-Received: from hednb3.intra.ispras.ru (unknown [10.10.2.52])
-        by mail.ispras.ru (Postfix) with ESMTPSA id B7E39419E9E1;
-        Fri, 25 Nov 2022 21:05:25 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru B7E39419E9E1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-        s=default; t=1669410325;
-        bh=gv0SXRdsM8PzdgCeoPT9rv4Jtt/qWR7XgDFUEPFsVV8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=o20EMoupgJpijvO6b6lw/bNuICKYfkb3olBc7A1d8BKLSH5aVCwYeYo3xHxSalorG
-         nTanv9X7HWhNaq+oTEhkNtETtVoV1oFJgFLkOBTd5Xtk1eeF/yjQXZawvtN/jNN/8b
-         tb0e88srbHB65ohvkuVzpien8Y56wDhiUpw+gvnU=
-From:   Alexey Khoroshilov <khoroshilov@ispras.ru>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org,
-        Semyon Verchenko <semverchenko@factor-ts.ru>
-Subject: [PATCH] scsi: initio: Add checks for errors in initio_msgin()
-Date:   Sat, 26 Nov 2022 00:04:04 +0300
-Message-Id: <1669410244-5565-1-git-send-email-khoroshilov@ispras.ru>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S229514AbiKZALa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 19:11:30 -0500
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D26113D910;
+        Fri, 25 Nov 2022 16:11:29 -0800 (PST)
+Received: by mail-pf1-f174.google.com with SMTP id 130so5356083pfu.8;
+        Fri, 25 Nov 2022 16:11:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=LLJS0ozjYPHcBVcXrqu9nXfG4jqxc0v1MG8z2nceRi4=;
+        b=Jf9BrQQxYg2UgwzNL8I3dCi5404G5H5pQFKAZAi+8/2pKBxez7AvEmtpzTOp0Oag9w
+         i6yYWJKbYNqXF86j+tEgXoUYeg1pFs9Mfo1dyVkC5ecNOtDyKSp6jCGJKkVbYUqn4iZ/
+         fOftb7u/jdouU/SJnROMAz/qMOzuVX6OeN4uQbVJPDr/cYh65wArPUyWSmrZ6+aWo7uk
+         0eXMTFIAD8ckv62fTlb1ebQqQYrTxUqUrr3Srt2cQXDt+5VvTNjbZ8NBVb+85zo+K2AF
+         aon+x3bH6BfXoBXBlm+NHRfUFflZuJjnDYwkoR+HTl/vJtruodiOXmIyAewFozwlCVY0
+         5+2Q==
+X-Gm-Message-State: ANoB5pn3Dcu65xAgogTWGYfDbjp6JO/z+6uqEg1FYysBXGhQCrwIHTxx
+        8NSepYcIzbP9/yKaf9DhzAU=
+X-Google-Smtp-Source: AA0mqf5Y874+p1CylOIaXkTfyH87v0jyxlWWC7FeoyhPbYZx88G4UvnHgcVSZQtR2NAaSIYWmx2jqg==
+X-Received: by 2002:a05:6a00:18a9:b0:572:6da6:218e with SMTP id x41-20020a056a0018a900b005726da6218emr21577626pfh.1.1669421489243;
+        Fri, 25 Nov 2022 16:11:29 -0800 (PST)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id x8-20020aa79568000000b005633a06ad67sm3623164pfq.64.2022.11.25.16.11.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Nov 2022 16:11:28 -0800 (PST)
+Message-ID: <3dbfae56-918f-d850-11b4-5c98e3baae05@acm.org>
+Date:   Fri, 25 Nov 2022 16:11:26 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH v2 rcu 12/16] scsi/scsi_error: Use call_rcu_flush()
+ instead of call_rcu()
+Content-Language: en-US
+To:     "Paul E. McKenney" <paulmck@kernel.org>, rcu@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
+        rostedt@goodmis.org, Uladzislau Rezki <urezki@gmail.com>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20221122010408.GA3799268@paulmck-ThinkPad-P17-Gen-1>
+ <20221122010421.3799681-12-paulmck@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221122010421.3799681-12-paulmck@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The initio_msgin() calls initio_msgin_accept(), initio_msgin_reject()
-and initio_msgin_extend(), but does not check if they are succeed.
-It is not consistent with the other code of the driver.
+On 11/21/22 17:04, Paul E. McKenney wrote:
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 6995c89792300..634672e67c81f 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -312,7 +312,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>   	 * Ensure that all tasks observe the host state change before the
+>   	 * host_failed change.
+>   	 */
+> -	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
+> +	call_rcu_flush(&scmd->rcu, scsi_eh_inc_host_failed);
+>   }
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Fixes: 72d39fea9017 ("[SCSI] initio: Convert into a real Linux driver and update to modern style")
-Signed-off-by: Semyon Verchenko <semverchenko@factor-ts.ru>
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/scsi/initio.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 375261d67619..ee451aa34143 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2065,7 +2065,8 @@ static int initio_msgin(struct initio_host * host)
- 		case SAVE_POINTERS:
- 		case RESTORE_POINTERS:
- 		case NOP:
--			initio_msgin_accept(host);
-+			if (initio_msgin_accept(host) == -1)
-+				return -1;
- 			break;
- 		case MESSAGE_REJECT:	/* Clear ATN first              */
- 			outb((inb(host->addr + TUL_SSignal) & (TSC_SET_ACK | 7)),
-@@ -2074,20 +2075,24 @@ static int initio_msgin(struct initio_host * host)
- 			if ((active_tc->flags & (TCF_SYNC_DONE | TCF_NO_SYNC_NEGO)) == 0)	/* do sync nego */
- 				outb(((inb(host->addr + TUL_SSignal) & (TSC_SET_ACK | 7)) | TSC_SET_ATN),
- 					host->addr + TUL_SSignal);
--			initio_msgin_accept(host);
-+			if (initio_msgin_accept(host) == -1)
-+				return -1;
- 			break;
- 		case EXTENDED_MESSAGE:	/* extended msg */
--			initio_msgin_extend(host);
-+			if (initio_msgin_extend(host) == -1)
-+				return -1;
- 			break;
- 		case IGNORE_WIDE_RESIDUE:
--			initio_msgin_accept(host);
-+			if (initio_msgin_accept(host) == -1)
-+				return -1;
- 			break;
- 		case COMMAND_COMPLETE:
- 			outb(TSC_FLUSH_FIFO, host->addr + TUL_SCtrl0);
- 			outb(TSC_MSG_ACCEPT, host->addr + TUL_SCmd);
- 			return initio_wait_done_disc(host);
- 		default:
--			initio_msgout_reject(host);
-+			if (initio_msgout_reject(host) == -1)
-+				return -1;
- 			break;
- 		}
- 		if (host->phase != MSG_IN)
--- 
-2.7.4
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
