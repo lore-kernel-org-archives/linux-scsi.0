@@ -2,69 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EAF6C43217
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Nov 2022 11:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E11FC46467
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Nov 2022 09:43:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229489AbiKZLOE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 26 Nov 2022 06:14:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50538 "EHLO
+        id S229506AbiK0Jn6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Nov 2022 04:43:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbiKZLNf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Nov 2022 06:13:35 -0500
-Received: from smtp.smtpout.orange.fr (smtp-30.smtpout.orange.fr [80.12.242.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D83019008
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2022 03:13:32 -0800 (PST)
-Received: from pop-os.home ([86.243.100.34])
-        by smtp.orange.fr with ESMTPA
-        id yt7gosMV5gfI9yt7hoiV8F; Sat, 26 Nov 2022 12:13:30 +0100
-X-ME-Helo: pop-os.home
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Sat, 26 Nov 2022 12:13:30 +0100
-X-ME-IP: 86.243.100.34
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: libfc: Include the correct header
-Date:   Sat, 26 Nov 2022 12:13:27 +0100
-Message-Id: <960f34418358f0c35e645aa2cf7e0ec7fe6b60b9.1669461197.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229493AbiK0Jnz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 04:43:55 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87ABB11C3D
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2022 01:43:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669542180;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hCGeRJaJ4BT+MNAi9nuSQuHFDu4OGy2+H1qbzpSUDAE=;
+        b=NVcbaKmeh27tebG3N31/Oge0UMNSSlKrNJDIiAVEmObhacwctvceRZGx/L6knOvuFQKYJP
+        oaYP2IyS1Mb5Il2uSMemUssjvQ0/cbUnkrwDZ1wluzvrSQuiol61Euw0+y40rgFtC9zdCG
+        1O/HPG07DQ7OObd+LVprGuwPMMOQjXk=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-452-ReqQPmC-Pf6YqMl_chEeIQ-1; Sun, 27 Nov 2022 04:42:56 -0500
+X-MC-Unique: ReqQPmC-Pf6YqMl_chEeIQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id A20B885A588;
+        Sun, 27 Nov 2022 09:42:55 +0000 (UTC)
+Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id BD8FE111F3B6;
+        Sun, 27 Nov 2022 09:42:46 +0000 (UTC)
+Date:   Sun, 27 Nov 2022 17:42:41 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     John Garry <john.g.garry@oracle.com>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        "zhangyi (F)" <yi.zhang@huawei.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: Why is MEGASAS_SAS_QD set to 256?
+Message-ID: <Y4MxEcF+DWCAgxGJ@T590>
+References: <1c4d66ca-fe1a-3d1a-d7f9-4981d2fc9eb1@huaweicloud.com>
+ <e11cdb17-053c-390c-9c48-36790eb70cc5@oracle.com>
+ <2b89210a-222c-a919-ab5b-c76830308f92@huaweicloud.com>
+ <Y4F3XG3lMCCKlLAr@T590>
+ <aef69f3b-a8db-f34c-4a52-49ba9020f6cf@huaweicloud.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <aef69f3b-a8db-f34c-4a52-49ba9020f6cf@huaweicloud.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This file does not use rcu, so there is no point in including
-<linux/rculist.h>.
+On Sat, Nov 26, 2022 at 02:08:02PM +0800, Yu Kuai wrote:
+> Hi, Ming
+> 
+> 在 2022/11/26 10:18, Ming Lei 写道:
+> > 
+> > If you want aggressive merge on sequential IO workload, the queue depth need
+> > to be a bit less, then more requests can be staggered into scheduler queue,
+> > and merge chance is increased.
+> 
+> But if nr_requests >= queue_depth, it seems to me elevator will have no
+> effect, no request can be merged or sorted by scheduler, right?
 
-The dependency has been removed in commit fa519f701d27 ("scsi: libfc: fixup
-'sleeping function called from invalid context'")
-It turned a list_for_each_entry_rcu() into a list_for_each_entry().
+Yeah.
 
-So just #include <linux/list.h> now.
+If nr_requests <= queue_depth, every request can be queued to
+driver/device, so requests won't be merged by scheduler.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/libfc/fc_disc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But plug merge still works if IOs are submitted as batch.
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 0f32ded246d0..384f48ff64d7 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -24,7 +24,7 @@
- #include <linux/slab.h>
- #include <linux/err.h>
- #include <linux/export.h>
--#include <linux/rculist.h>
-+#include <linux/list.h>
- 
- #include <asm/unaligned.h>
- 
--- 
-2.34.1
+> > 
+> > If you want good perf on random IO perf, the queue depth needs to
+> > be deep enough to have enough parallelism for saturating SSD internal.
+> > 
+> > But we don't recognize sequential/random IO pattern, and usually fixed
+> > queue depth is used.
+> 
+> Is it possible to use none elevator and set large queue_depth if nvme is
+> used in this case?
+
+Yeah, if the storage is SSD, usually none with bigger queue_depth should
+help, and usually 256 should be enough to saturate one single SSD for
+one well implemented driver.
+
+
+Thanks
+Ming
 
