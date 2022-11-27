@@ -2,96 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D6A1C4321E
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Nov 2022 09:46:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 908B6C4321E
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Nov 2022 12:08:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229506AbiK0JqQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Nov 2022 04:46:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42500 "EHLO
+        id S229627AbiK0MIk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Nov 2022 07:08:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbiK0JqP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 04:46:15 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8BED12080
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2022 01:45:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669542316;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HZriKgT8RvIKDcrqwLOlGsqsyNg3u1Uj/dHSvWpclCY=;
-        b=PfQ94/wZANBeDtse2liWgMYOyiwf1QV78kLomt4XRNTPnvoygmTXZBhuE8KE4m4ldVGdeV
-        HUWC02FKZmIdelOWkspTCQ5vhiN6AkJSIqUycXlrdsqev1DlQpzt2njPqGfG8wE9gpf6Wz
-        t7WHLEMt54biHlKmCan8Dz+821hE1Ek=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-478-bjLNizmdO8O7eqTRldTnRA-1; Sun, 27 Nov 2022 04:45:12 -0500
-X-MC-Unique: bjLNizmdO8O7eqTRldTnRA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4161E85A588;
-        Sun, 27 Nov 2022 09:45:12 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D5AC840C2087;
-        Sun, 27 Nov 2022 09:45:07 +0000 (UTC)
-Date:   Sun, 27 Nov 2022 17:45:02 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
-Message-ID: <Y4MxnrBmEvehPNOX@T590>
-References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
- <cefdae2e-67e3-b4b4-f569-31db960e991f@huaweicloud.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cefdae2e-67e3-b4b4-f569-31db960e991f@huaweicloud.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
+        with ESMTP id S229642AbiK0MIh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 07:08:37 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 571A2F589;
+        Sun, 27 Nov 2022 04:08:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1669550916; x=1701086916;
+  h=from:to:cc:subject:date:message-id;
+  bh=WsOMxY+mPL8jQ8iYAIC8w8tkwMDA68IYjaiBaloXufk=;
+  b=d0kdRU7ssy4opxR7tuVZSXThA+doI0fGRtugjDgqwczXBhsSwqsA7wXD
+   unTeTXkGypOAfi1UGEM/rdm9Jeb7f5BPjKukvaWj6Rc7NKN+HuCLipWEN
+   70bqTAccUJZ+qbjGVAdFldQjbvelcSx+5W3l6c5jzxPeVTEUYpJaNq3cc
+   t/mIXMZUrTPOgrXdhuDp+JAII2WwKuoE7EgeC4qF1Q0WbgaQeF2tFQNhc
+   1r5UHN8Es1o5ZzR5QFhD0boYrSNkg2P508YFDzgBBxq3BPAxlnfdTsBsj
+   eSC/zpypX+9RNL7SfPOiZPAZM/zeKw7HwiKQmZRhs4JhcmZ/oxKYASBq1
+   w==;
+X-IronPort-AV: E=Sophos;i="5.96,198,1665417600"; 
+   d="scan'208";a="215510875"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Nov 2022 20:08:35 +0800
+IronPort-SDR: iaJd2Nw4Kw7krW7tJnTtai54dvUfJFAahhQlgxE4ozOuihy+ObwMQfgCxteqR+IxlU6DmHyPkb
+ QqExMAb2OcxSQOtHetwqgKafveGlWixs9fTgSIWhd1qer1qHFgrb92mSFIhWbchz/e0/OBfoaG
+ TMBfdGjCvGiMITex+xdTtGYCK7C8obSxwq6x8H88dYh/uFkdDUKLc4kB7jk1TmmLmLM6pytPex
+ 7Ud/aEt543xkD64ZJ7MaDRyTg2YnNcYYrfI1kcPWU5RWBZHpnYz8Vn/F+qP4OSfyW/evp4mTHg
+ NXM=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Nov 2022 03:27:18 -0800
+IronPort-SDR: MUeIfeHbTxG4k+b7YqnOPpFiuVh8xYG4afDViF9r95qFJap4Q4eY890R6nAXJiBdMNfaJJdDGO
+ aykeH8jPjZfsi/ebZ/iUD2UJHia+lj/TL4cEaO+NQS8Hvs5xiUeckM3qB4H7QGk0Xu54CLCOv1
+ LZtp/4qW2ECRD7LpUiQ0bWFed8kP6PvsNYkJPzeBNrrLfjNzCQ8ZEOubs7hsBLvNX9OKydI0p+
+ v6BNhMyYsYP0VSGAMZXcdk25jhR15/OiAsLPqFER5fDlNosOPNifQdFqtXLWSCuCxNRZnBsCnC
+ +RM=
+WDCIronportException: Internal
+Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Nov 2022 04:08:33 -0800
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH v4 0/4] ufs: core: Always read the descriptors with max length
+Date:   Sun, 27 Nov 2022 14:08:26 +0200
+Message-Id: <1669550910-9672-1-git-send-email-Arthur.Simchaev@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Nov 26, 2022 at 04:54:46PM +0800, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2022/11/18 19:30, Yu Kuai 写道:
-> > From: Yu Kuai <yukuai3@huawei.com>
-> > 
-> > During code review, I found that 'restarts' is not useful anymore after
-> > the following commits:
-> > 
-> > 1) commit ab3cee3762e5 ("blk-mq: In blk_mq_dispatch_rq_list() "no budget"
-> > is a reason to kick")
-> > 2) commit d3b38596875d ("blk-mq: run queue no matter whether the request
-> > is the last request")
-> > 3) commit 673235f91531 ("scsi: core: Fix race between handling STS_RESOURCE
-> > and completion")
-> > 
-> > Now that if get budget ever failed, block layer will make sure to
-> > trigger new run queue for the hctx. Hence there is no need to run queue
-> > from scsi layer in this case.
-> > 
-> 
-> Does anyone has suggestions about this patch?
-> 
-> More info why I tried to remove this:
-> 
-> while testing megaraid with 4 nvme with none elevator, the default
-> queue_depth is 128, while I test it with fio 128 jobs and 1 iodepth,
-> bw is about 4Gib/s, however, if I test with 128 jobs and 2 iodepth,
-> bw is decreased to about 0.8Gib/s, and with this patch applied,
-> bw can stay 4Gib/s in the later case.
+v3--v4:
+  Add "Reviewed-by" to patch's commits
+  Use kzalloc instead of kmalloc in drivers/ufs/core/ufshcd.c - patch 2/4
 
-I will look at this patch next week.
+v2--v3:
+  Based on Bean's comments:
+  1)Use kzalloc instead of kmalloc in ufshcd_set_active_icc_lvl - patch 2/4
+  2)Delete  UFS_RPMB_UNIT definition - patch 2/4
+  3)Delete len description - patch 3/4
 
-Can you investigate a bit the reason why perf boost is from this patch?
+v1--v2:
+  Fix argument warning in ufshpb.c
 
-Thanks,
-Ming
+Read any descriptor with a maximum size of QUERY_DESC_MAX_SIZE.
+According to the spec the device rerurns the actual size.
+Thus can improve code readability and save CPU cycles.
+While at it, cleanup few leftovers around the descriptor size parameter.
+
+Suggested-by: Bean Huo <beanhuo@micron.com>
+
+Arthur Simchaev (4):
+  ufs:core: Remove redundant wb check
+  ufs:core: Remove redundant desc_size variable from hba
+  ufs: core: Remove len parameter from ufshcd_set_active_icc_lvl
+  ufs: core: Remove ufshcd_map_desc_id_to_length function
+
+ drivers/ufs/core/ufs_bsg.c     |   7 +--
+ drivers/ufs/core/ufshcd-priv.h |   3 --
+ drivers/ufs/core/ufshcd.c      | 100 ++++++++++-------------------------------
+ drivers/ufs/core/ufshpb.c      |   5 +--
+ include/ufs/ufshcd.h           |   1 -
+ 5 files changed, 26 insertions(+), 90 deletions(-)
+
+-- 
+2.7.4
 
