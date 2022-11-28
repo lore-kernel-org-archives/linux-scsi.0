@@ -2,140 +2,245 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6827CC43217
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 12:52:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7E99C43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 12:54:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230462AbiK1Mw4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 07:52:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55452 "EHLO
+        id S230508AbiK1MyB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 07:54:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229659AbiK1Mwz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 07:52:55 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10DEFB7DE
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2022 04:52:55 -0800 (PST)
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ASBk3cc022528;
-        Mon, 28 Nov 2022 12:52:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : content-transfer-encoding : mime-version; s=pp1;
- bh=CZaOdcnZPuYH2Qo9lNrxl6ctZ5VbTOwAGCEUfkxCK9k=;
- b=ZO9OY11UQI16AMO+Z7rok0axZLhJfQvvAKFdm6nhsxu8gK97h+QYhRh02pdWw5rX81Lh
- arYoK8Gs+c1f5/KMbNAcDLgD23HCJP12aQGLUvtbP7NDDDGHxBV1im7GP03c5B4LhIxZ
- Ixn0ukMx6YOuhB/PGM90amRCttpNh30HMMCD6kyGFRuOQEvtYXtZVIIPfd0fdKaSyeku
- NvadK1w3AindwbrddXTMpJ3o239bUN5rZ0aOsJwSwOWWcqh51qaucnVspZFuOB9kXl7K
- q1ne4VW/9ovqGjXL6s9CwuAfN4pXL3btVQ25EH0uxc6pEcYf2aI7MSYmKJu0wL1e9XdH 0Q== 
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3m3vmrfqdr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 28 Nov 2022 12:52:39 +0000
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 2ASCpqu1003567;
-        Mon, 28 Nov 2022 12:52:38 GMT
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-        by ppma03dal.us.ibm.com with ESMTP id 3m3ae98xdx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 28 Nov 2022 12:52:38 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 2ASCqdij37159476
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 28 Nov 2022 12:52:39 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 358317805E;
-        Mon, 28 Nov 2022 13:59:43 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id DE0D37805C;
-        Mon, 28 Nov 2022 13:59:41 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.211.83.181])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 28 Nov 2022 13:59:41 +0000 (GMT)
-Message-ID: <ca7e2aba5db5bd6e15182070f26e0c2c77c70927.camel@linux.ibm.com>
-Subject: Re: [QUESTION]: Why did we clear the lowest bit of SCSI command's
- status in scsi_status_is_good
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Wenchao Hao <haowenchao@huawei.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linfeilong@huawei.com,
-        yanaijie@huawei.com, xuhujie@huawei.com, lijinlin3@huawei.com
-Date:   Mon, 28 Nov 2022 07:52:34 -0500
-In-Reply-To: <6e9ea80e-d4e0-6d52-47c1-8939c13d60a8@huawei.com>
-References: <6e9ea80e-d4e0-6d52-47c1-8939c13d60a8@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 7ipf3KGV3fvHlEo3PLPvipnOLO9Zz8it
-X-Proofpoint-ORIG-GUID: 7ipf3KGV3fvHlEo3PLPvipnOLO9Zz8it
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S229659AbiK1MyA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 07:54:00 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FD5315A2C;
+        Mon, 28 Nov 2022 04:53:59 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D02086116A;
+        Mon, 28 Nov 2022 12:53:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C3EFC433C1;
+        Mon, 28 Nov 2022 12:53:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669640038;
+        bh=5YMBgBHbiI5ucnZji8ODGK5VNaLR2nVSSk6RpRVsnoo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=sLukV95y/MQTlIeDozB/IqPe5U+RcumxuUoLvGRJ4Ao/Gt5Di9mFB/3CsksOQP9P7
+         tv8T8r+xaJ8FGD35Y+D8bkiD8+pt5T5eytBmxFQ7qtiVOcd+nu47hOKmMf2dlOybm1
+         sC2OKF6uww9aS5pu+f37nDdL+bpYW1guo4YL9QrydShC/0hKMFuufwSnU6DUPrFJ1A
+         MXTOcR8GN9rdL6uZgsR/8eGDA62KFLdNcdkY3aBd6A1P8fx2+b79PhexQw8DyWoNYR
+         M11ybe/0kDzNSfBLrUMEMDgoJQRRP1rtC4U7enUKIxYff8E4IvdmhRqDCAzQjL97xJ
+         ky8VS/UvHfVfg==
+Date:   Mon, 28 Nov 2022 18:23:41 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
+        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
+        eddie.huang@mediatek.com, daejun7.park@samsung.com,
+        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
+        linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 02/16] ufs: core: Probe for ext_iid support
+Message-ID: <20221128125341.GB62721@thinkpad>
+References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
+ <7cb284c2ba6f4065f9c84a91f4bf100a26c73383.1669176158.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-28_09,2022-11-28_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
- priorityscore=1501 mlxlogscore=999 impostorscore=0 mlxscore=0 bulkscore=0
- phishscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211280096
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7cb284c2ba6f4065f9c84a91f4bf100a26c73383.1669176158.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2022-11-28 at 11:58 +0800, Wenchao Hao wrote:
-> static inline bool scsi_status_is_good(int
-> status)                                                              
->                                                                      
->                           
-> {
->         if (status < 0)
->                 return false;
+On Tue, Nov 22, 2022 at 08:10:15PM -0800, Asutosh Das wrote:
+> Task Tag is limited to 8 bits and this restricts the number
+> of active IOs to 255.
+> In Multi-circular queue mode, this may not be enough.
+> The specification provides EXT_IID which can be used to increase
+> the number of IOs if the UFS device and UFSHC support it.
+> This patch adds support to probe for ext_iid support in
+> ufs device and UFSHC.
 > 
->         if (host_byte(status) == DID_NO_CONNECT)
->                 return false;
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+
+One nitpick below. But even without addressing that, this patch looks good to
+me.
+
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 31 +++++++++++++++++++++++++++++++
+>  include/ufs/ufs.h         |  4 ++++
+>  include/ufs/ufshcd.h      |  4 ++++
+>  include/ufs/ufshci.h      |  7 +++++++
+>  4 files changed, 46 insertions(+)
 > 
->         /*  
->          * FIXME: bit0 is listed as reserved in SCSI-2, but is
->          * significant in SCSI-3.  For now, we follow the SCSI-2
->          * behaviour and ignore reserved bits.
->          */
->         status &= 0xfe;
->         return ((status == SAM_STAT_GOOD) ||
->                 (status == SAM_STAT_CONDITION_MET) ||
->                 /* Next two "intermediate" statuses are obsolete in
-> SAM-4 */
->                 (status == SAM_STAT_INTERMEDIATE) ||
->                 (status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
->                 /* FIXME: this is obsolete in SAM-3 */
->                 (status == SAM_STAT_COMMAND_TERMINATED));
-> }
-> We have function defined in include/scsi/scsi.h as above, which is
-> used to check if the status in result is good.
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index c9d7b78..66b797f 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2258,6 +2258,10 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>  	if (err)
+>  		dev_err(hba->dev, "crypto setup failed\n");
+>  
+> +	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+> +	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
+> +				     hba->mcq_capabilities);
+> +
+>  	return err;
+>  }
+>  
+> @@ -7663,6 +7667,30 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+>  	}
+>  }
+>  
+> +static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
+> +{
+> +	struct ufs_dev_info *dev_info = &hba->dev_info;
+> +	u32 ext_ufs_feature;
+> +	u32 ext_iid_en = 0;
+
+Given that scsi_host_alloc() uses kzalloc(), there is no need to explicitly set
+the b_ext_iid_en to 0 in case of failure.
+
+Thanks,
+Mani
+
+> +	int err;
+> +
+> +	/* Only UFS-4.0 and above may support EXT_IID */
+> +	if (dev_info->wspecversion < 0x400)
+> +		goto out;
+> +
+> +	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+> +	if (!(ext_ufs_feature & UFS_DEV_EXT_IID_SUP))
+> +		goto out;
+> +
+> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +				      QUERY_ATTR_IDN_EXT_IID_EN, 0, 0, &ext_iid_en);
+> +	if (err)
+> +		dev_err(hba->dev, "failed reading bEXTIIDEn. err = %d\n", err);
+> +
+> +out:
+> +	dev_info->b_ext_iid_en = ext_iid_en;
+> +}
+> +
+>  void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+>  			     const struct ufs_dev_quirk *fixups)
+>  {
+> @@ -7761,6 +7789,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>  
+>  	ufshcd_temp_notif_probe(hba, desc_buf);
+>  
+> +	if (hba->ext_iid_sup)
+> +		ufshcd_ext_iid_probe(hba, desc_buf);
+> +
+>  	/*
+>  	 * ufshcd_read_string_desc returns size of the string
+>  	 * reset the error value
+> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> index 1bba3fe..ba2a1d8 100644
+> --- a/include/ufs/ufs.h
+> +++ b/include/ufs/ufs.h
+> @@ -165,6 +165,7 @@ enum attr_idn {
+>  	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+>  	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+>  	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+> +	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
+>  };
+>  
+>  /* Descriptor idn for Query requests */
+> @@ -352,6 +353,7 @@ enum {
+>  	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+>  	UFS_DEV_HPB_SUPPORT		= BIT(7),
+>  	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+> +	UFS_DEV_EXT_IID_SUP		= BIT(16),
+>  };
+>  #define UFS_DEV_HPB_SUPPORT_VERSION		0x310
+>  
+> @@ -601,6 +603,8 @@ struct ufs_dev_info {
+>  
+>  	bool	b_rpm_dev_flush_capable;
+>  	u8	b_presrv_uspc_en;
+> +	/* UFS EXT_IID Enable */
+> +	bool	b_ext_iid_en;
+>  };
+>  
+>  /*
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 5cf81df..aec37cb9 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -747,6 +747,7 @@ struct ufs_hba_monitor {
+>   * @outstanding_lock: Protects @outstanding_reqs.
+>   * @outstanding_reqs: Bits representing outstanding transfer requests
+>   * @capabilities: UFS Controller Capabilities
+> + * @mcq_capabilities: UFS Multi Circular Queue capabilities
+>   * @nutrs: Transfer Request Queue depth supported by controller
+>   * @nutmrs: Task Management Queue depth supported by controller
+>   * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
+> @@ -830,6 +831,7 @@ struct ufs_hba_monitor {
+>   *	device
+>   * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+>   *	ufshcd_resume_complete()
+> + * @ext_iid_sup: is EXT_IID is supported by UFSHC
+>   */
+>  struct ufs_hba {
+>  	void __iomem *mmio_base;
+> @@ -871,6 +873,7 @@ struct ufs_hba {
+>  
+>  	u32 capabilities;
+>  	int nutrs;
+> +	u32 mcq_capabilities;
+>  	int nutmrs;
+>  	u32 reserved_slot;
+>  	u32 ufs_version;
+> @@ -978,6 +981,7 @@ struct ufs_hba {
+>  #endif
+>  	u32 luns_avail;
+>  	bool complete_put;
+> +	bool ext_iid_sup;
+>  };
+>  
+>  /* Returns true if clocks can be gated. Otherwise false */
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index f525566..4d4da06 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -22,6 +22,7 @@ enum {
+>  /* UFSHCI Registers */
+>  enum {
+>  	REG_CONTROLLER_CAPABILITIES		= 0x00,
+> +	REG_MCQCAP				= 0x04,
+>  	REG_UFS_VERSION				= 0x08,
+>  	REG_CONTROLLER_DEV_ID			= 0x10,
+>  	REG_CONTROLLER_PROD_ID			= 0x14,
+> @@ -68,6 +69,12 @@ enum {
+>  	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+>  	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
+>  	MASK_CRYPTO_SUPPORT			= 0x10000000,
+> +	MASK_MCQ_SUPPORT			= 0x40000000,
+> +};
+> +
+> +/* MCQ capability mask */
+> +enum {
+> +	MASK_EXT_IID_SUPPORT = 0x00000400,
+>  };
+>  
+>  #define UFS_MASK(mask, offset)		((mask) << (offset))
+> -- 
+> 2.7.4
 > 
-> But the function cleared the lowest bit of SCSI command's status,
-> which would translate an undefined status to good in some condition,
-> for example the status is 0x1.
-> 
-> This code seems introduced in this patch:
-> https://lore.kernel.org/all/1052403312.2097.35.camel@mulgrave/
-> 
-> Is anyone who knows why did we clear the lowest bit? 
 
-It says why in the comment you quote above ... what is unclear about
-it?
-
-> We found some firmware or drivers would return status which did not
-> defined in SAM. Now SCSI middle level do not have an uniform behavior
-> for these undefined status. I want to change the logic to return
-> error for all status which did not defined in SAM or define a method
-> in host template to let drivers to judge what to do in this
-> condition.
-
-Why? The general rule of thumb is be strict in what you emit and
-generous in what you receive (which is why reserved bits are ignored).
-Is the drive you refer to above not working in some way, in which case
-detail it so people can understand the actual problem.
-
-James
-
+-- 
+மணிவண்ணன் சதாசிவம்
