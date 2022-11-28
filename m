@@ -2,72 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4F78C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 03:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 803ADC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 03:58:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229609AbiK1Dij (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Nov 2022 22:38:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42286 "EHLO
+        id S229586AbiK1D6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Nov 2022 22:58:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229518AbiK1Dii (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 22:38:38 -0500
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6A8F10DA;
-        Sun, 27 Nov 2022 19:38:36 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4NLB5M0Qp5z4f3jZH;
-        Mon, 28 Nov 2022 11:38:31 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCXu9g5LYRjQ6QeBQ--.37025S3;
-        Mon, 28 Nov 2022 11:38:34 +0800 (CST)
-Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Ming Lei <ming.lei@redhat.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
- <cefdae2e-67e3-b4b4-f569-31db960e991f@huaweicloud.com>
- <Y4QqtbXsuYmkOe88@T590>
- <7a747bc3-b902-6f0c-21ef-0ef470ec326e@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <d8bd7bfd-7b19-cd8e-4f5b-928d5a721155@huaweicloud.com>
-Date:   Mon, 28 Nov 2022 11:38:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229569AbiK1D6l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 22:58:41 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B9C412D3D
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2022 19:58:40 -0800 (PST)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NLBWn2TMWzHwCH;
+        Mon, 28 Nov 2022 11:57:57 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 28 Nov 2022 11:58:37 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 28 Nov 2022 11:58:36 +0800
+Message-ID: <6e9ea80e-d4e0-6d52-47c1-8939c13d60a8@huawei.com>
+Date:   Mon, 28 Nov 2022 11:58:35 +0800
 MIME-Version: 1.0
-In-Reply-To: <7a747bc3-b902-6f0c-21ef-0ef470ec326e@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCXu9g5LYRjQ6QeBQ--.37025S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYF7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72
-        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
-        xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
-        1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
-        14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
-        IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2
-        z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnU
-        UI43ZEXa7VU1a9aPUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Content-Language: en-US
+From:   Wenchao Hao <haowenchao@huawei.com>
+Subject: [QUESTION]: Why did we clear the lowest bit of SCSI command's status
+ in scsi_status_is_good
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James Bottomley" <jejb@linux.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <linfeilong@huawei.com>,
+        <yanaijie@huawei.com>, <xuhujie@huawei.com>, <lijinlin3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml100007.china.huawei.com (7.185.36.28) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+static inline bool scsi_status_is_good(int status)                                                                                                                                                             
+{
+        if (status < 0)
+                return false;
 
+        if (host_byte(status) == DID_NO_CONNECT)
+                return false;
 
-在 2022/11/28 11:35, Yu Kuai 写道:
+        /*  
+         * FIXME: bit0 is listed as reserved in SCSI-2, but is
+         * significant in SCSI-3.  For now, we follow the SCSI-2
+         * behaviour and ignore reserved bits.
+         */
+        status &= 0xfe;
+        return ((status == SAM_STAT_GOOD) ||
+                (status == SAM_STAT_CONDITION_MET) ||
+                /* Next two "intermediate" statuses are obsolete in SAM-4 */
+                (status == SAM_STAT_INTERMEDIATE) ||
+                (status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
+                /* FIXME: this is obsolete in SAM-3 */
+                (status == SAM_STAT_COMMAND_TERMINATED));
+}
+We have function defined in include/scsi/scsi.h as above, which is used to check
+if the status in result is good.
 
-> 
-> Why the hw queue need to run if get budget never failed in this hw
-> queue?
+But the function cleared the lowest bit of SCSI command's status, which would
+translate an undefined status to good in some condition, for example the status
+is 0x1.
 
-And by the way, after Jan's patch "blk-mq: Improve performance of non-mq
-IO schedulers with multiple HW queues", scsi_run_queue_async() can only
-garantee to run hw queue for the current cpu, not all the hw queues.
+This code seems introduced in this patch:
+https://lore.kernel.org/all/1052403312.2097.35.camel@mulgrave/
 
+Is anyone who knows why did we clear the lowest bit? 
+
+We found some firmware or drivers would return status which did not defined in
+SAM. Now SCSI middle level do not have an uniform behavior for these undefined
+status. I want to change the logic to return error for all status which did not
+defined in SAM or define a method in host template to let drivers to judge
+what to do in this condition.
