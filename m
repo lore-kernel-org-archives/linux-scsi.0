@@ -2,94 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79474C4167D
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 20:33:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E1D5C4321E
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 21:39:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233383AbiK1UdK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 15:33:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43950 "EHLO
+        id S234170AbiK1Vjf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 16:39:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232783AbiK1UdJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 15:33:09 -0500
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 428922AC52;
-        Mon, 28 Nov 2022 12:33:08 -0800 (PST)
-Received: by mail-pl1-f169.google.com with SMTP id d3so6349339plr.10;
-        Mon, 28 Nov 2022 12:33:08 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ftKGuI0EeUZhD1QDVOqqqnsiiCfbTt1mUy91/ldF0Uc=;
-        b=Pd/fQzms6yju3QaUsP06DbILNQ6OxllXnKE4FuOMyxaJxDN3dLtRzhwt0HMuI0DhCc
-         Y1Olqwcw5kdu4hER/rC3ih47ImWBee0ehw0hMrJnxOChFPgXHWPBub8xBtLyyYsRFy9w
-         HjUCFUcgKNrPOmFRQtPrgAfh7NBr/zj0Q7XBj0AYM051EYXdYMnp6gUWpVKgQA/OSSjB
-         S+eu7mLgrEfoWT8guIPfi7biQbvWnyxE1UBCAEWVSsCRfiH2VFQQ1LtEuSVvKiQPKKhd
-         iEQt+lrhoQyLuaMOUghQ+pBkcfuR/CiGXicHFg262uCtRTwuPURfRvzU1DswuEQBVY+F
-         7Yjg==
-X-Gm-Message-State: ANoB5plKVEQqtWKshpUVE7PBdDc/OKVtKfUJ2VoGjxeaLtBjY1uS1HA/
-        UXPuXOM8aC9gdV8133sLAz8=
-X-Google-Smtp-Source: AA0mqf7KbOuLp9LZHNnmD4KWoKV1AKSUMMAeJAt/SYOleMl5tTXg3bYqTPPwQuqwjFT+ZJCIZSrVRw==
-X-Received: by 2002:a17:90a:dc06:b0:218:9196:1cd1 with SMTP id i6-20020a17090adc0600b0021891961cd1mr49355887pjv.230.1669667587615;
-        Mon, 28 Nov 2022 12:33:07 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:95f2:baa2:773c:2cfe? ([2620:15c:211:201:95f2:baa2:773c:2cfe])
-        by smtp.gmail.com with ESMTPSA id v2-20020a626102000000b005609d3d3008sm8674844pfb.171.2022.11.28.12.33.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Nov 2022 12:33:06 -0800 (PST)
-Message-ID: <89037602-f09a-f0da-69f7-f6aae72acc76@acm.org>
-Date:   Mon, 28 Nov 2022 12:33:03 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH v5 07/16] ufs: core: mcq: Calculate queue depth
-Content-Language: en-US
-To:     Asutosh Das <quic_asutoshd@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        eddie.huang@mediatek.com, daejun7.park@samsung.com,
-        avri.altman@wdc.com, beanhuo@micron.com,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S233027AbiK1Vjd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 16:39:33 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8833B2B615;
+        Mon, 28 Nov 2022 13:39:32 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1454861487;
+        Mon, 28 Nov 2022 21:39:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BD8DC433D6;
+        Mon, 28 Nov 2022 21:39:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669671571;
+        bh=+iGaNGL/hq1R2stU0J1peDhuCuQTsMSXjSkHqLjkOQE=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=AMarH7AUrqIGM6fvRI2Bfh7pVKQVtteizXkhfgv/IB/teARzs/tnjTekU5l0LjQKy
+         fqOwByPaIvN44OhCML+wFbZdMkWaMdYgZrImW3FtMP+tSx0hRlm9IIJflEdM+xc5yh
+         bs5mXnJw6eAbDdz6xCpmmdpcv/IdPFTKDMPhDKaMSkVkthFwzQIka+ACjPqWTQgf12
+         6Fw+x9qicdsUZGBwyrjIDaY4sfDUor1ZCRveJa+owqCXsrhf83xnxelpyJ3WH/6Wqr
+         acQNgs/Up1y5y9JAWjhSgxa2dlDZOjDxt5tsjv+zzLgBFbxx2/DhUaRTCKtWImEBF7
+         EBJPfHrHIQWDA==
+Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
+        id E7C6F5C0BA0; Mon, 28 Nov 2022 13:39:30 -0800 (PST)
+Date:   Mon, 28 Nov 2022 13:39:30 -0800
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     rcu@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-team@meta.com, rostedt@goodmis.org,
+        Uladzislau Rezki <urezki@gmail.com>,
+        Joel Fernandes <joel@joelfernandes.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
- <ae139f730dcec6462f9218856bf974eda4a29e1d.1669176158.git.quic_asutoshd@quicinc.com>
- <20221128151512.GF62721@thinkpad>
- <20221128195430.GD20677@asutoshd-linux1.qualcomm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221128195430.GD20677@asutoshd-linux1.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 rcu 12/16] scsi/scsi_error: Use call_rcu_flush()
+ instead of call_rcu()
+Message-ID: <20221128213930.GK4001@paulmck-ThinkPad-P17-Gen-1>
+Reply-To: paulmck@kernel.org
+References: <20221122010408.GA3799268@paulmck-ThinkPad-P17-Gen-1>
+ <20221122010421.3799681-12-paulmck@kernel.org>
+ <3dbfae56-918f-d850-11b4-5c98e3baae05@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3dbfae56-918f-d850-11b4-5c98e3baae05@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/28/22 11:54, Asutosh Das wrote:
-> On Mon, Nov 28 2022 at 07:15 -0800, Manivannan Sadhasivam wrote:
->> On Tue, Nov 22, 2022 at 08:10:20PM -0800, Asutosh Das wrote:
->>> +static inline int ufshcd_mcq_vops_get_hba_mac(struct ufs_hba *hba)
->>
->> Again, no inline please.
->>
-> It spits out the following warning for all files that include this 
-> header, when
-> inline is removed:
-> warning: 'ufshcd_mcq_vops_get_hba_mac' defined but not used 
-> [-Wunused-function]
+On Fri, Nov 25, 2022 at 04:11:26PM -0800, Bart Van Assche wrote:
+> On 11/21/22 17:04, Paul E. McKenney wrote:
+> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > index 6995c89792300..634672e67c81f 100644
+> > --- a/drivers/scsi/scsi_error.c
+> > +++ b/drivers/scsi/scsi_error.c
+> > @@ -312,7 +312,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+> >   	 * Ensure that all tasks observe the host state change before the
+> >   	 * host_failed change.
+> >   	 */
+> > -	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
+> > +	call_rcu_flush(&scmd->rcu, scsi_eh_inc_host_failed);
+> >   }
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-My understanding is that the "no inline" rule applies to .c files only 
-and also that functions defined in header files should be declared 
-"static inline".
+Thank you both, I will apply these on the next rebase.
 
-Thanks,
-
-Bart.
+							Thanx, Paul
