@@ -2,124 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7594C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 09:07:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A805BC43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 12:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230271AbiK1JHT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 04:07:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36938 "EHLO
+        id S230449AbiK1MWz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 07:22:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229911AbiK1JGz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 04:06:55 -0500
-Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B1FE18390;
-        Mon, 28 Nov 2022 01:06:51 -0800 (PST)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id 742935C00D8;
-        Mon, 28 Nov 2022 04:06:49 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Mon, 28 Nov 2022 04:06:49 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
-         h=cc:cc:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1669626409; x=1669712809; bh=kr
-        fSa4bc8ipNX+QkbBzdZ+8Y7nQovRdn0CO1SuGs+Js=; b=a8Ikv9fjtE2DqYh8ZO
-        h+3wxnxoz0UrNDUFsxR/b3JKpel/sw+APTOynRYfQ5R2aDwOrr1f2Q7/3wUo2FPn
-        YMTCaPb66rtMUmlhxtjalPevX743b+E9HM/KQ5i2FhAZ7yrTd7OA9BNS95ibZxOU
-        cq8OEkUjbILFb3M+FX0Bs9XPu2nTdaMY4WGiCsdzne4EwGMbPS9tAB/7MNBzPCMR
-        Z5i/uJW9wqZNjzmqmca2qRyAeJmMt7bKzVSX3ZGr9WMguwswx4XFcsj9baxkQAq8
-        PGu3T2Vk6Zv9nNAr5lu81LBVEWQTqw7xe+Xs5rVi/rK1kvm1tCYGMdTdu1HcC9m2
-        9msw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1669626409; x=1669712809; bh=krfSa4bc8ipNX+QkbBzdZ+8Y7nQo
-        vRdn0CO1SuGs+Js=; b=Xl5FzoAh7L7W7ZMQD528ZtTI8aEIZ3nPom2mGj0ij0kz
-        kF2MB/oJIpixJ2OVApUGMfF9C5V1J8gtYw4IYHbpD5L2K0xZMNnSQltaVuzDHuS1
-        +Z/Xq1mUm26LJ8NSD0dxh8PT1i5+o8wof9B6TDM8Z5ouMxiZPx1bs6dMQgIUYUu0
-        E1vZWuqL9qr+i8mzl1kkoKmv3FyupcqiF4c9z7S0EaExGf6cbOffzblyC2ntLKs1
-        65JwJdxbYeVbXBvoYizlrWIHJmwaZ3QX6HctbqXtkHYd6atQJaDxCfrDXnNFOgYJ
-        0VBs4dlX0qrYG+1NDOvRCJnTTDjAz24Y0gIQZpnNzA==
-X-ME-Sender: <xms:KXqEY53zFzDHoFazKCchq7gUQGnUHYLHsAJSYk88gY6OlWMGWGcQ9A>
-    <xme:KXqEYwHkwwFrN4pnRqJFPte7zBTGR7TA8edRG3P0HG5F9XFApsouuPDeh7SGDqO2U
-    xLOsqgRRC0LuK2Xns0>
-X-ME-Received: <xmr:KXqEY55SjcW2lyfLpIF8pYZVll0dussFecC9TpVrM89uL0NgZw07hmiPdidgT4gG4xr_fA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvgedrjedugdduvdelucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfhfgggtuggjsehttd
-    dttddttddvnecuhfhrohhmpedfmfhirhhilhhlucetrdcuufhhuhhtvghmohhvfdcuoehk
-    ihhrihhllhesshhhuhhtvghmohhvrdhnrghmvgeqnecuggftrfgrthhtvghrnhephfeige
-    fhtdefhedtfedthefghedutddvueehtedttdehjeeukeejgeeuiedvkedtnecuvehluhhs
-    thgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepkhhirhhilhhlsehshh
-    huthgvmhhovhdrnhgrmhgv
-X-ME-Proxy: <xmx:KXqEY22N8YeqVT3-KhleHcZ0VSl5tYTlZmlbg6u_rVeCUTDbQDy37Q>
-    <xmx:KXqEY8HpqAnf01i_CKQCe85RhVUf9Hkmt40CgzAjqQkFeyTZpzYZMQ>
-    <xmx:KXqEY3-JwTvbt5DT3a7-HJgrxqTo9-5232AU-I4ATaXfH8MLsENdBQ>
-    <xmx:KXqEYx56jVSAjj9fJow1HiiTXkBuSHJ4k-kmaMBHfDwXKtchJR8GAg>
-Feedback-ID: ie3994620:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 28 Nov 2022 04:06:48 -0500 (EST)
-Received: by box.shutemov.name (Postfix, from userid 1000)
-        id 52A45109780; Mon, 28 Nov 2022 12:06:45 +0300 (+03)
-Date:   Mon, 28 Nov 2022 12:06:45 +0300
-From:   "Kirill A. Shutemov" <kirill@shutemov.name>
-To:     "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, dave.hansen@linux.intel.com,
-        David.Laight@ACULAB.COM, linux-kernel@vger.kernel.org,
-        x86@kernel.org
-Subject: Re: [PATCHv2] scsi: Fix get_user() in call sg_scsi_ioctl()
-Message-ID: <20221128090645.i2a526vp47ymqnfi@box.shutemov.name>
-References: <20221117232304.1544-1-kirill.shutemov@linux.intel.com>
+        with ESMTP id S230520AbiK1MWb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 07:22:31 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 904A5DFE8;
+        Mon, 28 Nov 2022 04:20:37 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3A5CFB80D84;
+        Mon, 28 Nov 2022 12:20:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42ECBC433C1;
+        Mon, 28 Nov 2022 12:20:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669638034;
+        bh=hwHxJwIUXRDcNgQfpP18T9DGPQgJ8ElV6U1yC2ecy1E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YRSu7lJaA0D7yuu98WzjVmoyeD+bzYRaqqkKWoM5K7ty7v/Bgs6+sTZYQjPKpFF3/
+         mOECZOqRWaioKrgZe5qOpyiDZ0AyjCYukBgDmEuh3W5cnX0fBK0vcB4nIOpDEbUssH
+         R6JooCa0PvTyW6fWLlCdtlXw1Ar45JoRIKmcbVOW6h7Y0s34dRalpQWbVBDdZo1SCr
+         8jHjQ2rVwlvGOYQtld90wCKjnau3Bm+rhewLjyGN1sdJHzCj0mjhg+dqFfzlyOumEQ
+         AsqsknUj9+imZeI+LXEr1wDUtwJdYUZlQlDe6lDCWv1F27PVBiWmpvNAR5CLT0z2+I
+         mTmLwiDzSAuKA==
+Date:   Mon, 28 Nov 2022 17:50:18 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
+        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
+        eddie.huang@mediatek.com, daejun7.park@samsung.com,
+        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
+        linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 01/16] ufs: core: Optimize duplicate code to read
+ extended feature
+Message-ID: <20221128122018.GA62721@thinkpad>
+References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
+ <b95fdf1a9b7d716049e286f84b94513dc30527ed.1669176158.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221117232304.1544-1-kirill.shutemov@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <b95fdf1a9b7d716049e286f84b94513dc30527ed.1669176158.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 18, 2022 at 02:23:04AM +0300, Kirill A. Shutemov wrote:
-> get_user() expects the pointer to be pointer-to-simple-variable type,
-> but sic->data is array of 'unsigned char'. It violates get_user()
-> contracts.
+On Tue, Nov 22, 2022 at 08:10:14PM -0800, Asutosh Das wrote:
+> The code to parse the extended feature is duplicated twice
+> in the ufs core. Replace the duplicated code with a
+> function.
 > 
-> Explicitly take pointer to the first element of the array. It matches
-> current behaviour.
-> 
-> This is preparation for fixing sparse warnings caused by Linear Address
-> Masking patchset.
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 
-James, Martin, ping?
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-It prevents a fix for sparse warnings from applying.
+Thanks,
+Mani
 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/scsi_ioctl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/ufs/core/ufshcd.c | 21 +++++++++++++--------
+>  1 file changed, 13 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-> index 2d20da55fb64..fdd47565a311 100644
-> --- a/drivers/scsi/scsi_ioctl.c
-> +++ b/drivers/scsi/scsi_ioctl.c
-> @@ -519,7 +519,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
->  		return -EFAULT;
->  	if (in_len > PAGE_SIZE || out_len > PAGE_SIZE)
->  		return -EINVAL;
-> -	if (get_user(opcode, sic->data))
-> +	if (get_user(opcode, &sic->data[0]))
->  		return -EFAULT;
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 768cb49..c9d7b78 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -215,6 +215,17 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
+>  	return UFS_PM_LVL_0;
+>  }
 >  
->  	bytes = max(in_len, out_len);
+> +static unsigned int ufs_get_ext_ufs_feature(struct ufs_hba *hba,
+> +					    const u8 *desc_buf)
+> +{
+> +	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+> +	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+> +		return 0;
+> +
+> +	return get_unaligned_be32(desc_buf +
+> +				  DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+> +}
+> +
+>  static const struct ufs_dev_quirk ufs_fixups[] = {
+>  	/* UFS cards deviations table */
+>  	{ .wmanufacturerid = UFS_VENDOR_MICRON,
+> @@ -7584,13 +7595,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
+>  	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
+>  		goto wb_disabled;
+>  
+> -	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+> -	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+> -		goto wb_disabled;
+> -
+> -	ext_ufs_feature = get_unaligned_be32(desc_buf +
+> -					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+> -
+> +	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+>  	if (!(ext_ufs_feature & UFS_DEV_WRITE_BOOSTER_SUP))
+>  		goto wb_disabled;
+>  
+> @@ -7644,7 +7649,7 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+>  	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) || dev_info->wspecversion < 0x300)
+>  		return;
+>  
+> -	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+> +	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+>  
+>  	if (ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF)
+>  		mask |= MASK_EE_TOO_LOW_TEMP;
 > -- 
-> 2.38.0
+> 2.7.4
 > 
 
 -- 
-  Kiryl Shutsemau / Kirill A. Shutemov
+மணிவண்ணன் சதாசிவம்
