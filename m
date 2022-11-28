@@ -2,90 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 803ADC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 03:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6872BC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 04:13:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229586AbiK1D6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Nov 2022 22:58:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47378 "EHLO
+        id S229815AbiK1ENk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Nov 2022 23:13:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbiK1D6l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 22:58:41 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B9C412D3D
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2022 19:58:40 -0800 (PST)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NLBWn2TMWzHwCH;
-        Mon, 28 Nov 2022 11:57:57 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 28 Nov 2022 11:58:37 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 28 Nov 2022 11:58:36 +0800
-Message-ID: <6e9ea80e-d4e0-6d52-47c1-8939c13d60a8@huawei.com>
-Date:   Mon, 28 Nov 2022 11:58:35 +0800
+        with ESMTP id S229593AbiK1ENj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2022 23:13:39 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC999DD4
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2022 20:12:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669608762;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uHFYfzRCe6jDaTnm3OEKqkH3C4ZqHqLSKyUHJrmAPjs=;
+        b=Ke4j74y8pqGEJf83jTikv0KjWxShOh470ygW5eMmKyZdj+27wHb7RYOaWXupmETQxL+srA
+        p3vCmWI+3mEfN43p585hYYm3JnkewsKQ0yogmi3ahb8/zT6nunyYMIJuo/+vsF+taxFQeM
+        AmlMpFw0qB9/dB0uN0cXDsqLXs2bTek=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-572-gFTBXwEmMq-sZ48Hkls-yQ-1; Sun, 27 Nov 2022 23:12:39 -0500
+X-MC-Unique: gFTBXwEmMq-sZ48Hkls-yQ-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 842FD185A7A3;
+        Mon, 28 Nov 2022 04:12:38 +0000 (UTC)
+Received: from T590 (ovpn-8-18.pek2.redhat.com [10.72.8.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C349D4A9254;
+        Mon, 28 Nov 2022 04:12:30 +0000 (UTC)
+Date:   Mon, 28 Nov 2022 12:12:24 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
+Message-ID: <Y4Q1KPgBsDCZTyTW@T590>
+References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
+ <cefdae2e-67e3-b4b4-f569-31db960e991f@huaweicloud.com>
+ <Y4QqtbXsuYmkOe88@T590>
+ <7a747bc3-b902-6f0c-21ef-0ef470ec326e@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Content-Language: en-US
-From:   Wenchao Hao <haowenchao@huawei.com>
-Subject: [QUESTION]: Why did we clear the lowest bit of SCSI command's status
- in scsi_status_is_good
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "James Bottomley" <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linfeilong@huawei.com>,
-        <yanaijie@huawei.com>, <xuhujie@huawei.com>, <lijinlin3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggpeml100007.china.huawei.com (7.185.36.28) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7a747bc3-b902-6f0c-21ef-0ef470ec326e@huaweicloud.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-static inline bool scsi_status_is_good(int status)                                                                                                                                                             
-{
-        if (status < 0)
-                return false;
+On Mon, Nov 28, 2022 at 11:35:18AM +0800, Yu Kuai wrote:
+> 
+> 
+> 在 2022/11/28 11:27, Ming Lei 写道:
+> > On Sat, Nov 26, 2022 at 04:54:46PM +0800, Yu Kuai wrote:
+> > > Hi,
+> > > 
+> > > 在 2022/11/18 19:30, Yu Kuai 写道:
+> > > > From: Yu Kuai <yukuai3@huawei.com>
+> > > > 
+> > > > During code review, I found that 'restarts' is not useful anymore after
+> > > > the following commits:
+> > > > 
+> > > > 1) commit ab3cee3762e5 ("blk-mq: In blk_mq_dispatch_rq_list() "no budget"
+> > > > is a reason to kick")
+> > > > 2) commit d3b38596875d ("blk-mq: run queue no matter whether the request
+> > > > is the last request")
+> > > > 3) commit 673235f91531 ("scsi: core: Fix race between handling STS_RESOURCE
+> > > > and completion")
+> > > > 
+> > > > Now that if get budget ever failed, block layer will make sure to
+> > > > trigger new run queue for the hctx. Hence there is no need to run queue
+> > > > from scsi layer in this case.
+> > > > 
+> > 
+> > But scsi_run_queue_async() needs to run all hw queue because budget is
+> > actually LUN/request queue wide.
+> 
+> Why the hw queue need to run if get budget never failed in this hw
+> queue?
 
-        if (host_byte(status) == DID_NO_CONNECT)
-                return false;
+Because all hw queues share the queue wide budget, and once budget
+is available, all hw queues are re-run, and the hw queue won't be
+scheduled actually if there is nothing to run, see
+blk_mq_run_hw_queue().
 
-        /*  
-         * FIXME: bit0 is listed as reserved in SCSI-2, but is
-         * significant in SCSI-3.  For now, we follow the SCSI-2
-         * behaviour and ignore reserved bits.
-         */
-        status &= 0xfe;
-        return ((status == SAM_STAT_GOOD) ||
-                (status == SAM_STAT_CONDITION_MET) ||
-                /* Next two "intermediate" statuses are obsolete in SAM-4 */
-                (status == SAM_STAT_INTERMEDIATE) ||
-                (status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
-                /* FIXME: this is obsolete in SAM-3 */
-                (status == SAM_STAT_COMMAND_TERMINATED));
-}
-We have function defined in include/scsi/scsi.h as above, which is used to check
-if the status in result is good.
+> 
+> > 
+> > > 
+> > > Does anyone has suggestions about this patch?
+> > > 
+> > > More info why I tried to remove this:
+> > > 
+> > > while testing megaraid with 4 nvme with none elevator, the default
+> > > queue_depth is 128, while I test it with fio 128 jobs and 1 iodepth,
+> > > bw is about 4Gib/s, however, if I test with 128 jobs and 2 iodepth,
+> > > bw is decreased to about 0.8Gib/s, and with this patch applied,
+> > > bw can stay 4Gib/s in the later case.
+> > 
+> > What is .can_queue and nr_hw_queues in your setting?
+> test cmd:
+> fio -name=0 -ioengine=libaio -direct=1 -group_reporting=1 -randseed=2022
+> -rwmixread=70 -refill_buffers -filename=/dev/sdg -numjobs=128 -size=1TB
+> -runtime=60s -bs=4k -iodepth=2 -rw=randwrite
+> 
+> test environment:
+> arm64 Kunpeng-920, 128 cpu
+> megaraid with 4 NVMEs, 128 hctx and queue_depth is 128
 
-But the function cleared the lowest bit of SCSI command's status, which would
-translate an undefined status to good in some condition, for example the status
-is 0x1.
+From your setting, megaraid should sets ->host_tagset, that said there
+is only 128 tags for all 4 NVMEs(128 hw queue shares the all 128 tags
+too).
 
-This code seems introduced in this patch:
-https://lore.kernel.org/all/1052403312.2097.35.camel@mulgrave/
+That looks one really bad setting.
 
-Is anyone who knows why did we clear the lowest bit? 
+BTW, why do you drive nvme via megaraid instead nvme driver?
 
-We found some firmware or drivers would return status which did not defined in
-SAM. Now SCSI middle level do not have an uniform behavior for these undefined
-status. I want to change the logic to return error for all status which did not
-defined in SAM or define a method in host template to let drivers to judge
-what to do in this condition.
+> And by the way, after Jan's patch "blk-mq: Improve performance of non-mq
+> IO schedulers with multiple HW queues", scsi_run_queue_async() can only
+> garantee to run hw queue for the current cpu, not all the hw queues.
+
+That isn't true, each hctx is still run in case of none & kyber scheduler.
+
+thanks,
+Ming
+
