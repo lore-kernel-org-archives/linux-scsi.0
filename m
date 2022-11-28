@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC5C7C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 16:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9071C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 17:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232672AbiK1QME (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 11:12:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43586 "EHLO
+        id S231959AbiK1RAm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 12:00:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbiK1QLx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 11:11:53 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65E2E62DF;
-        Mon, 28 Nov 2022 08:11:52 -0800 (PST)
+        with ESMTP id S231970AbiK1RAh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 12:00:37 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 625E6221;
+        Mon, 28 Nov 2022 09:00:33 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E7AF461053;
-        Mon, 28 Nov 2022 16:11:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFE9FC433D6;
-        Mon, 28 Nov 2022 16:11:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1DEA7B80E54;
+        Mon, 28 Nov 2022 17:00:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA2B6C433C1;
+        Mon, 28 Nov 2022 17:00:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669651911;
-        bh=/AfMrRO3Gs++Irv+cSQmDnR4JW658Sic77CmiYl5VTg=;
+        s=k20201202; t=1669654830;
+        bh=gd4m9ArrBoMN6mAP0/4pNU/hxXbns/+fZGp4s0bPo1g=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SnpeCGRT89ht/EL42vkGT98ucBHJcFrSOQ+mtt9ix1rVW7MqA/gct5mvfce25bpR/
-         ZAfLBWVx2VSYAdzcUqEcCink0vxW34Rnhz0hp96cPO8B9gdSLIbYIa6y18NwuK5JLB
-         Q15uiUejDU6SoIFJSp2K8aTzBim4Ke0vHpeiygOu3sE5hDWCXfJ2D1AJ/HJCnKLmvm
-         YO+rhT/+w/LNdtNtXyBvyr/yMeoeYnZ6SAH7Rv8m0m7qFtU1NvLu9l+rRnRr/965i3
-         R5EiErAJ2msu3wNOwVvjv6vSMx6fhymx8uFip8BkYEVnZ+h2Jy3pJVHCjVziIEhrm2
-         8neFpdDvJrRdQ==
-Date:   Mon, 28 Nov 2022 21:41:34 +0530
+        b=iXzgvcstEH5BTSLpU7ux0q3Mmjixk1SlUSHKdwZTIa5z6s5yp2vHqN10pJ8WXhv/O
+         7Ch45qNe/fVcaxdwUzdWZ9XP71AjdQ0JYPSoahiJJ+hf7IgiLupfrEfPKkwsW5vP7f
+         xCxMkn3oZfsOZZ7npYJghOqr2BoWevnBYJ9HiNkcPLZRrh0IC2dL3HAbiA8CALF5pM
+         142aoCw3kF6ZGix5l/8v6pIC+QqTmggSGgGq1WVu/zSyjuNNfzRx+7gPvvPrOZTyGL
+         IpT2C/7MgDHApb30TT2XeQ+1Gpk/DvK3wmlAT9mdD4Rb3OGCRZvKpDxDZWdT6gXnf2
+         P3xWmoM1rUGzA==
+Date:   Mon, 28 Nov 2022 22:30:15 +0530
 From:   Manivannan Sadhasivam <mani@kernel.org>
 To:     Asutosh Das <quic_asutoshd@quicinc.com>
 Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
@@ -42,190 +42,209 @@ Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
         linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
         Jinyoung Choi <j-young.choi@samsung.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 13/16] ufs: core: Prepare for completion in mcq
-Message-ID: <20221128161134.GL62721@thinkpad>
+Subject: Re: [PATCH v5 14/16] ufs: mcq: Add completion support of a cqe
+Message-ID: <20221128170015.GM62721@thinkpad>
 References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
- <d076c0b5bfa9c34eed9038d36677853ea042bb78.1669176158.git.quic_asutoshd@quicinc.com>
+ <32219cb9b058d7329ad8234a8a287701af1a0e34.1669176158.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <d076c0b5bfa9c34eed9038d36677853ea042bb78.1669176158.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <32219cb9b058d7329ad8234a8a287701af1a0e34.1669176158.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 22, 2022 at 08:10:26PM -0800, Asutosh Das wrote:
-> Modify completion path APIs and add completion queue
-> entry.
+On Tue, Nov 22, 2022 at 08:10:27PM -0800, Asutosh Das wrote:
+> Add support for completing requests from Completion Queue.
+> Some host controllers support vendor specific registers
+> that provide a bitmap of all CQ's which have at least one
+> completed CQE. Add this support.
+> The MCQ specification doesn't provide the Task Tag or its
+> equivalent in the Completion Queue Entry.
+> So use an indirect method to find the Task Tag from the
+> Completion Queue Entry.
 > 
 > Co-developed-by: Can Guo <quic_cang@quicinc.com>
 > Signed-off-by: Can Guo <quic_cang@quicinc.com>
 > Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> Reported-by: kernel test robot <lkp@intel.com>
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-Thanks,
-Mani
+What is this reported by for?
 
 > Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/ufs/core/ufshcd-priv.h |  2 ++
->  drivers/ufs/core/ufshcd.c      | 80 ++++++++++++++++++++++++++----------------
->  2 files changed, 51 insertions(+), 31 deletions(-)
+>  drivers/ufs/core/ufs-mcq.c     | 57 ++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/core/ufshcd-priv.h | 43 +++++++++++++++++++++++++++++++
+>  drivers/ufs/core/ufshcd.c      | 37 +++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.c    | 16 ++++++++++++
+>  drivers/ufs/host/ufs-qcom.h    |  4 +++
+>  include/ufs/ufshcd.h           |  7 ++++++
+>  include/ufs/ufshci.h           |  3 +++
+>  7 files changed, 167 insertions(+)
 > 
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-> index 14df7ce..6453449 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -61,6 +61,8 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->  	enum flag_idn idn, u8 index, bool *flag_res);
->  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
-> +void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-> +			  struct cq_entry *cqe);
->  int ufshcd_mcq_init(struct ufs_hba *hba);
->  int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
->  int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 52c0386..f16d02c 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -784,12 +784,17 @@ static inline bool ufshcd_is_device_present(struct ufs_hba *hba)
->  /**
->   * ufshcd_get_tr_ocs - Get the UTRD Overall Command Status
->   * @lrbp: pointer to local command reference block
-> + * @cqe: pointer to the completion queue entry
->   *
->   * This function is used to get the OCS field from UTRD
->   * Returns the OCS field in the UTRD
->   */
-> -static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
-> +static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp,
-> +				      struct cq_entry *cqe)
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 10a0d0d7..365ad98 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -28,6 +28,7 @@
+>  	((((c) >> 16) & MCQ_QCFGPTR_MASK) * MCQ_QCFGPTR_UNIT)
+>  #define MCQ_QCFG_SIZE	0x40
+>  #define MCQ_ENTRY_SIZE_IN_DWORD	8
+> +#define CQE_UCD_BA GENMASK_ULL(63, 7)
+>  
+>  static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
 >  {
-> +	if (cqe)
-> +		return le32_to_cpu(cqe->status) & MASK_OCS;
-> +
->  	return le32_to_cpu(lrbp->utr_descriptor_ptr->header.dword_2) & MASK_OCS;
+> @@ -333,6 +334,59 @@ static void __iomem *mcq_opr_base(struct ufs_hba *hba,
+>  	return opr->base + opr->stride * i;
 >  }
 >  
-> @@ -3048,7 +3053,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
->  		 * not trigger any race conditions.
->  		 */
->  		hba->dev_cmd.complete = NULL;
-> -		err = ufshcd_get_tr_ocs(lrbp);
-> +		err = ufshcd_get_tr_ocs(lrbp, hba->dev_cmd.cqe);
->  		if (!err)
->  			err = ufshcd_dev_cmd_completion(hba, lrbp);
->  	} else {
-> @@ -5214,18 +5219,20 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
->   * ufshcd_transfer_rsp_status - Get overall status of the response
->   * @hba: per adapter instance
->   * @lrbp: pointer to local reference block of completed command
-> + * @cqe: pointer to the completion queue entry
->   *
->   * Returns result of the command to notify SCSI midlayer
->   */
->  static inline int
-> -ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> +ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
-> +			   struct cq_entry *cqe)
->  {
->  	int result = 0;
->  	int scsi_status;
->  	enum utp_ocs ocs;
->  
->  	/* overall command status of utrd */
-> -	ocs = ufshcd_get_tr_ocs(lrbp);
-> +	ocs = ufshcd_get_tr_ocs(lrbp, cqe);
->  
->  	if (hba->quirks & UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR) {
->  		if (be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_1) &
-> @@ -5390,42 +5397,53 @@ static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
->  }
->  
->  /**
-> - * __ufshcd_transfer_req_compl - handle SCSI and query command completion
-> + * ufshcd_compl_one_cqe - handle a completion queue entry
->   * @hba: per adapter instance
-> - * @completed_reqs: bitmask that indicates which requests to complete
-> + * @task_tag: the task tag of the request to be completed
-> + * @cqe: pointer to the completion queue entry
->   */
-> -static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
-> -					unsigned long completed_reqs)
-> +void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-> +			  struct cq_entry *cqe)
->  {
->  	struct ufshcd_lrb *lrbp;
->  	struct scsi_cmnd *cmd;
-> -	int index;
-> -
-> -	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
-> -		lrbp = &hba->lrb[index];
-> -		lrbp->compl_time_stamp = ktime_get();
-> -		lrbp->compl_time_stamp_local_clock = local_clock();
-> -		cmd = lrbp->cmd;
-> -		if (cmd) {
-> -			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-> -				ufshcd_update_monitor(hba, lrbp);
-> -			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
-> -			cmd->result = ufshcd_transfer_rsp_status(hba, lrbp);
-> -			ufshcd_release_scsi_cmd(hba, lrbp);
-> -			/* Do not touch lrbp after scsi done */
-> -			scsi_done(cmd);
-> -		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
-> -			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
-> -			if (hba->dev_cmd.complete) {
-> -				ufshcd_add_command_trace(hba, index,
-> -							 UFS_DEV_COMP);
-> -				complete(hba->dev_cmd.complete);
-> -				ufshcd_clk_scaling_update_busy(hba);
-> -			}
-> +
-> +	lrbp = &hba->lrb[task_tag];
-> +	lrbp->compl_time_stamp = ktime_get();
-> +	cmd = lrbp->cmd;
-> +	if (cmd) {
-> +		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-> +			ufshcd_update_monitor(hba, lrbp);
-> +		ufshcd_add_command_trace(hba, task_tag, UFS_CMD_COMP);
-> +		cmd->result = ufshcd_transfer_rsp_status(hba, lrbp, cqe);
-> +		ufshcd_release_scsi_cmd(hba, lrbp);
-> +		/* Do not touch lrbp after scsi done */
-> +		scsi_done(cmd);
-> +	} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
-> +		   lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
-> +		if (hba->dev_cmd.complete) {
-> +			hba->dev_cmd.cqe = cqe;
-> +			ufshcd_add_command_trace(hba, task_tag, UFS_DEV_COMP);
-> +			complete(hba->dev_cmd.complete);
-> +			ufshcd_clk_scaling_update_busy(hba);
->  		}
->  	}
->  }
->  
-> +/**
-> + * __ufshcd_transfer_req_compl - handle SCSI and query command completion
-> + * @hba: per adapter instance
-> + * @completed_reqs: bitmask that indicates which requests to complete
-> + */
-> +static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
-> +					unsigned long completed_reqs)
+> +u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i)
 > +{
-> +	int tag;
+> +	return readl(mcq_opr_base(hba, OPR_CQIS, i) + REG_CQIS);
+> +}
 > +
-> +	for_each_set_bit(tag, &completed_reqs, hba->nutrs)
-> +		ufshcd_compl_one_cqe(hba, tag, NULL);
+> +void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i)
+> +{
+> +	writel(val, mcq_opr_base(hba, OPR_CQIS, i) + REG_CQIS);
+> +}
+> +
+
+It'd be good to add a comment about tag extraction as you did in description.
+
+> +static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
+> +				     struct ufs_hw_queue *hwq,
+> +				     struct cq_entry *cqe)
+> +{
+> +	dma_addr_t dma_addr;
+> +
+> +	/* sizeof(struct utp_transfer_cmd_desc) must be a multiple of 128 */
+> +	BUILD_BUG_ON(sizeof(struct utp_transfer_cmd_desc) & GENMASK(6, 0));
+> +
+> +	/* Bits 63:7 UCD base address, 6:5 are reserved, 4:0 is SQ ID */
+> +	dma_addr = le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA;
+> +
+> +	return (dma_addr - hba->ucdl_dma_addr) /
+> +		sizeof(struct utp_transfer_cmd_desc);
+> +}
+> +
+
+[...]
+
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index dd53e85..89d29a1 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1454,6 +1454,21 @@ static int ufs_qcom_get_hba_mac(struct ufs_hba *hba)
+>  	return MAX_SUPP_MAC;
+>  }
+>  
+> +static int ufs_qcom_get_outstanding_cqs(struct ufs_hba *hba,
+> +					unsigned long *ocqs)
+> +{
+> +	u32 cqis_vs;
+> +	struct ufshcd_res_info *mcq_vs_res = &hba->res[RES_MCQ_VS];
+> +
+> +	if (!mcq_vs_res->base)
+> +		return -EINVAL;
+> +
+> +	cqis_vs = readl(mcq_vs_res->base + UFS_MEM_CQIS_VS);
+> +	*ocqs = cqis_vs;
+
+Why can't you assign readl to *ocqs?
+
+Thanks,
+Mani
+> +
+> +	return 0;
 > +}
 > +
 >  /*
->   * Returns > 0 if one or more commands have been completed or 0 if no
->   * requests have been completed.
+>   * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+>   *
+> @@ -1479,6 +1494,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+>  	.program_key		= ufs_qcom_ice_program_key,
+>  	.get_hba_mac		= ufs_qcom_get_hba_mac,
+>  	.op_runtime_config	= ufs_qcom_op_runtime_config,
+> +	.get_outstanding_cqs	= ufs_qcom_get_outstanding_cqs,
+>  };
+>  
+>  /**
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index 44466a3..7769f03 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -72,6 +72,10 @@ enum {
+>  	UFS_UFS_DBG_RD_EDTL_RAM			= 0x1900,
+>  };
+>  
+> +enum {
+> +	UFS_MEM_CQIS_VS		= 0x8,
+> +};
+> +
+>  #define UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(x)	(0x000 + x)
+>  #define UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(x)	(0x400 + x)
+>  
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 853c525..d5fde64 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -300,6 +300,7 @@ struct ufs_pwr_mode_info {
+>   * @event_notify: called to notify important events
+>   * @get_hba_mac: called to get vendor specific mac value, mandatory for mcq mode
+>   * @op_runtime_config: called to config Operation and runtime regs Pointers
+> + * @get_outstanding_cqs: called to get outstanding completion queues
+>   */
+>  struct ufs_hba_variant_ops {
+>  	const char *name;
+> @@ -340,6 +341,8 @@ struct ufs_hba_variant_ops {
+>  				enum ufs_event_type evt, void *data);
+>  	int	(*get_hba_mac)(struct ufs_hba *hba);
+>  	int	(*op_runtime_config)(struct ufs_hba *hba);
+> +	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
+> +				       unsigned long *ocqs);
+>  };
+>  
+>  /* clock gating state  */
+> @@ -1064,6 +1067,8 @@ struct ufs_hba {
+>   * @id: hardware queue ID
+>   * @sq_tp_slot: current slot to which SQ tail pointer is pointing
+>   * @sq_lock: serialize submission queue access
+> + * @cq_tail_slot: current slot to which CQ tail pointer is pointing
+> + * @cq_head_slot: current slot to which CQ head pointer is pointing
+>   */
+>  struct ufs_hw_queue {
+>  	void __iomem *mcq_sq_head;
+> @@ -1079,6 +1084,8 @@ struct ufs_hw_queue {
+>  	u32 id;
+>  	u32 sq_tail_slot;
+>  	spinlock_t sq_lock;
+> +	u32 cq_tail_slot;
+> +	u32 cq_head_slot;
+>  };
+>  
+>  static inline bool is_mcq_enabled(struct ufs_hba *hba)
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index c85bdf2..1e557ba 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -262,6 +262,9 @@ enum {
+>  /* UTMRLRSR - UTP Task Management Request Run-Stop Register 80h */
+>  #define UTP_TASK_REQ_LIST_RUN_STOP_BIT		0x1
+>  
+> +/* CQISy - CQ y Interrupt Status Register  */
+> +#define UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS	0x1
+> +
+>  /* UICCMD - UIC Command */
+>  #define COMMAND_OPCODE_MASK		0xFF
+>  #define GEN_SELECTOR_INDEX_MASK		0xFFFF
 > -- 
 > 2.7.4
 > 
