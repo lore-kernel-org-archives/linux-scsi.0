@@ -2,99 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A051CC47088
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 18:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D82A9C4167D
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 18:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234142AbiK1SBL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 13:01:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41690 "EHLO
+        id S233343AbiK1SHM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 13:07:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232976AbiK1SAj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 13:00:39 -0500
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AD3227DFE;
-        Mon, 28 Nov 2022 09:47:46 -0800 (PST)
-Received: by mail-pf1-f169.google.com with SMTP id b4so11207409pfb.9;
-        Mon, 28 Nov 2022 09:47:46 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mZKuvJhFRP5fDD1GxgFohQBtxaDdSsjAdzx3M27SwEE=;
-        b=yN4RJ/hOAMDCk0uORpcJusF+Sht+RaDxcesaQHwI1yVVMqupcYHCmOr7x5Du6s75p2
-         Nq4NSEYUMbcduw8AlF/2RXpP+J14qgbVqwe+6pisY9M0yc3+a5dkr8MXIoy3mjoBXMVH
-         6LupHLW8BdPrCzlpcve7fpFpM0hjMsIoQL+BSe3EXnTZTG/FEnHoZ+3W7YT7Gy8iFPvu
-         zyRZzt1YXu5ojYED7qGsqsDlBIgsMexHClZJduZmDWz1Ad5WG65HQ7QwdUp94pS4ttuX
-         BxgOLnT1MpwI4y8yiAVtrsXeH8UO+NBy+SR+13HLGYuPIcV11ALmcpIhGfkPVdRKby/l
-         ZLGA==
-X-Gm-Message-State: ANoB5plilEvB8qS7yQzVvAP+XTHDOGwCU13BgkgtBuViFIWSEHqycAT9
-        H6/G5R2Mlazl6r4K+meppPA=
-X-Google-Smtp-Source: AA0mqf5b56D5U7xlFZNXY9EV8a41oSDS7cAF4ID7GMgiHEd0+TF/j14hxb2MwuUJBqsLZOBxMzTEmQ==
-X-Received: by 2002:a63:1466:0:b0:476:cac7:16ad with SMTP id 38-20020a631466000000b00476cac716admr29993503pgu.128.1669657665374;
-        Mon, 28 Nov 2022 09:47:45 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:95f2:baa2:773c:2cfe? ([2620:15c:211:201:95f2:baa2:773c:2cfe])
-        by smtp.gmail.com with ESMTPSA id x189-20020a6231c6000000b0056cee8af3a6sm8304685pfx.54.2022.11.28.09.47.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Nov 2022 09:47:44 -0800 (PST)
-Message-ID: <de0c1d8a-42bb-4e29-4da0-7b0cfc9c2ffe@acm.org>
-Date:   Mon, 28 Nov 2022 09:47:41 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH v5 14/16] ufs: mcq: Add completion support of a cqe
-Content-Language: en-US
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        eddie.huang@mediatek.com, daejun7.park@samsung.com,
-        avri.altman@wdc.com, beanhuo@micron.com,
-        linux-arm-msm@vger.kernel.org,
+        with ESMTP id S234027AbiK1SGw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 13:06:52 -0500
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CE9056EFA;
+        Mon, 28 Nov 2022 09:51:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1669657910; x=1701193910;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=CadsEG0q9KIeXpKiPUwPfa3n7odeNEMPY1wpvA775xc=;
+  b=xrz/txrE+JD16ONRVaLToihVvi+ugyfle9P9uWPqE5Q0KeUpSn/SyE7h
+   oEzCesaRqwy16gboCTF57CW5/GuF3z8qojTKSoH5uFOlU8tbI+VrAyRnR
+   fabr7fbbUUB8j5/oYU4ylbdosZ2OjXBmsmAKZx63lxdAvzKzjrENgNimu
+   I=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 28 Nov 2022 09:51:00 -0800
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Nov 2022 09:51:00 -0800
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Mon, 28 Nov 2022 09:50:59 -0800
+Date:   Mon, 28 Nov 2022 09:50:59 -0800
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Manivannan Sadhasivam <mani@kernel.org>
+CC:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <eddie.huang@mediatek.com>, <daejun7.park@samsung.com>,
+        <bvanassche@acm.org>, <avri.altman@wdc.com>, <beanhuo@micron.com>,
+        <linux-arm-msm@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
         Jinyoung Choi <j-young.choi@samsung.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 04/16] ufs: core: Defer adding host to scsi if mcq is
+ supported
+Message-ID: <20221128175059.GC20677@asutoshd-linux1.qualcomm.com>
 References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
- <32219cb9b058d7329ad8234a8a287701af1a0e34.1669176158.git.quic_asutoshd@quicinc.com>
- <20221128170015.GM62721@thinkpad>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221128170015.GM62721@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <b75e35e1c23b428a6c55396c0fcda5ea22b4e33e.1669176158.git.quic_asutoshd@quicinc.com>
+ <20221128144222.GD62721@thinkpad>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221128144222.GD62721@thinkpad>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/28/22 09:00, Manivannan Sadhasivam wrote:
-> On Tue, Nov 22, 2022 at 08:10:27PM -0800, Asutosh Das wrote:
->> Add support for completing requests from Completion Queue.
->> Some host controllers support vendor specific registers
->> that provide a bitmap of all CQ's which have at least one
->> completed CQE. Add this support.
->> The MCQ specification doesn't provide the Task Tag or its
->> equivalent in the Completion Queue Entry.
->> So use an indirect method to find the Task Tag from the
->> Completion Queue Entry.
->>
->> Co-developed-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
->> Reported-by: kernel test robot <lkp@intel.com>
-> 
-> What is this reported by for?
+On Mon, Nov 28 2022 at 06:42 -0800, Manivannan Sadhasivam wrote:
+>On Tue, Nov 22, 2022 at 08:10:17PM -0800, Asutosh Das wrote:
+>> If MCQ support is present, enabling it after MCQ support
+>> has been configured would require reallocating tags and memory.
+>> It would also free up the already allocated memory in
+>> Single Doorbell Mode. So defer invoking scsi_add_host() until
+>> MCQ is configured.
+>
+>Why cannot we do it for non MCQ case as well?
+>
+Hello Mani,
+Thanks for taking a look.
 
-I think that tag should be left out. "Reported-by: kernel test robot" 
-should only be used for patches that fix bugs reported by the kernel 
-test robot. I assume that a fix has been folded in into this patch that 
-was reported by the kernel test robot. If that is the case, the 
-"Reported-by: kernel test robot" tag is inappropriate.
+I don't think there was any specific reason to defer it for SDB mode.
 
-Bart.
+-asd
 
+>-- 
+>மணிவண்ணன் சதாசிவம்
