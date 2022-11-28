@@ -2,159 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E185C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 14:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35869C43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Nov 2022 14:42:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232515AbiK1O3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 09:29:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51388 "EHLO
+        id S232225AbiK1Ol5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 09:41:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232502AbiK1O3V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 09:29:21 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676A720F5D;
-        Mon, 28 Nov 2022 06:29:20 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 00EF6611D1;
-        Mon, 28 Nov 2022 14:29:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B2C4C433D6;
-        Mon, 28 Nov 2022 14:29:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669645759;
-        bh=p6P+Usk+fx7WFz5pI3uzrFQy/vvCPkHrwJgNphkmKrY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jJYgucy+3wQ4DiHXcbfACdNAYxeHo5CMMUhCtPkq6phwywQwagEFAuMTf6BtwvDfi
-         5HCzZIZpKYFA/PUKYNbzLueeoNdjPw772VIjLV3rAVMsd2z0Uf6c1akE6jCAgRD09N
-         FNbKygozUbuHmX4dW1FXYadAmfnAVzIokIF3ncOxFRhAJqmJoG5e5CTQh8gJ0jI0JR
-         UkPRdoE4fA7wCpPVVNJ0Gi0AyiWhYJQI0bQdFSIGakxFdGKXkuWwvHSQ+bFZYnp/39
-         2wNvnlm4jn0P9iMZvJeOfFvqAOqXuf27u9LpB8M302mF67o+z1UnI3+C9zAArtTEs0
-         C03H++3H9taPg==
-Date:   Mon, 28 Nov 2022 19:59:04 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        eddie.huang@mediatek.com, daejun7.park@samsung.com,
-        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 03/16] ufs: core: Introduce Multi-circular queue
- capability
-Message-ID: <20221128142904.GC62721@thinkpad>
-References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
- <1a84dab482956b19cb513dc46e9689e07316e357.1669176158.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S232496AbiK1Olb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 09:41:31 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47EBC1F637
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2022 06:41:30 -0800 (PST)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NLSnZ5DpRzRpQQ;
+        Mon, 28 Nov 2022 22:40:50 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 28 Nov 2022 22:41:28 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 28 Nov 2022 22:41:27 +0800
+Message-ID: <ada12c1d-b732-59a9-8dba-1662673b6a5d@huawei.com>
+Date:   Mon, 28 Nov 2022 22:41:27 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [QUESTION]: Why did we clear the lowest bit of SCSI command's
+ status in scsi_status_is_good
+Content-Language: en-US
+To:     <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linfeilong@huawei.com>,
+        <yanaijie@huawei.com>, <xuhujie@huawei.com>, <lijinlin3@huawei.com>
+References: <6e9ea80e-d4e0-6d52-47c1-8939c13d60a8@huawei.com>
+ <ca7e2aba5db5bd6e15182070f26e0c2c77c70927.camel@linux.ibm.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <ca7e2aba5db5bd6e15182070f26e0c2c77c70927.camel@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1a84dab482956b19cb513dc46e9689e07316e357.1669176158.git.quic_asutoshd@quicinc.com>
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml100023.china.huawei.com (7.185.36.151) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 22, 2022 at 08:10:16PM -0800, Asutosh Das wrote:
-> Add support to check for MCQ capability in the UFSHC.
-> Add a module parameter to disable MCQ if needed.
+On 2022/11/28 20:52, James Bottomley wrote:
+> On Mon, 2022-11-28 at 11:58 +0800, Wenchao Hao wrote:
+>> static inline bool scsi_status_is_good(int
+>> status)                                                              
+>>                                                                      
+>>                           
+>> {
+>>         if (status < 0)
+>>                 return false;
+>>
+>>         if (host_byte(status) == DID_NO_CONNECT)
+>>                 return false;
+>>
+>>         /*  
+>>          * FIXME: bit0 is listed as reserved in SCSI-2, but is
+>>          * significant in SCSI-3.  For now, we follow the SCSI-2
+>>          * behaviour and ignore reserved bits.
+>>          */
+>>         status &= 0xfe;
+>>         return ((status == SAM_STAT_GOOD) ||
+>>                 (status == SAM_STAT_CONDITION_MET) ||
+>>                 /* Next two "intermediate" statuses are obsolete in
+>> SAM-4 */
+>>                 (status == SAM_STAT_INTERMEDIATE) ||
+>>                 (status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
+>>                 /* FIXME: this is obsolete in SAM-3 */
+>>                 (status == SAM_STAT_COMMAND_TERMINATED));
+>> }
+>> We have function defined in include/scsi/scsi.h as above, which is
+>> used to check if the status in result is good.
+>>
+>> But the function cleared the lowest bit of SCSI command's status,
+>> which would translate an undefined status to good in some condition,
+>> for example the status is 0x1.
+>>
+>> This code seems introduced in this patch:
+>> https://lore.kernel.org/all/1052403312.2097.35.camel@mulgrave/
+>>
+>> Is anyone who knows why did we clear the lowest bit? 
 > 
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-
-Couple of nitpicks below, with those addressed:
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-> ---
->  drivers/ufs/core/ufshcd.c | 31 +++++++++++++++++++++++++++++++
->  include/ufs/ufshcd.h      |  2 ++
->  2 files changed, 33 insertions(+)
+> It says why in the comment you quote above ... what is unclear about
+> it?
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 66b797f..08be8ad 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -89,6 +89,33 @@
->  /* Polling time to wait for fDeviceInit */
->  #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
->  
-> +/* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
-> +static bool use_mcq_mode = true;
-> +
-> +static inline bool is_mcq_supported(struct ufs_hba *hba)
-
-Please get rid of inline keyword and let the compiler handle it.
-
-> +{
-> +	return hba->mcq_sup && use_mcq_mode;
-> +}
-> +
-> +static int param_set_mcq_mode(const char *val, const struct kernel_param *kp)
-> +{
-> +	int ret;
-> +
-> +	ret = param_set_bool(val, kp);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct kernel_param_ops mcq_mode_ops = {
-> +	.set = param_set_mcq_mode,
-> +	.get = param_get_bool,
-> +};
-> +
-> +module_param_cb(use_mcq_mode, &mcq_mode_ops, &use_mcq_mode, 0644);
-> +MODULE_PARM_DESC(mcq_mode, "Control MCQ mode for UFSHCI 4.0 controllers");
-
-Is it ok to mention only 4.0? What about future revisions?
-
-Thanks,
-Mani
-> +
->  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
->  	({                                                              \
->  		int _ret;                                               \
-> @@ -2258,6 +2285,10 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
->  	if (err)
->  		dev_err(hba->dev, "crypto setup failed\n");
->  
-> +	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
-> +	if (!hba->mcq_sup)
-> +		return err;
-> +
->  	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
->  	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
->  				     hba->mcq_capabilities);
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index aec37cb9..70c0f9f 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -832,6 +832,7 @@ struct ufs_hba_monitor {
->   * @complete_put: whether or not to call ufshcd_rpm_put() from inside
->   *	ufshcd_resume_complete()
->   * @ext_iid_sup: is EXT_IID is supported by UFSHC
-> + * @mcq_sup: is mcq supported by UFSHC
->   */
->  struct ufs_hba {
->  	void __iomem *mmio_base;
-> @@ -982,6 +983,7 @@ struct ufs_hba {
->  	u32 luns_avail;
->  	bool complete_put;
->  	bool ext_iid_sup;
-> +	bool mcq_sup;
->  };
->  
->  /* Returns true if clocks can be gated. Otherwise false */
-> -- 
-> 2.7.4
+>> We found some firmware or drivers would return status which did not
+>> defined in SAM. Now SCSI middle level do not have an uniform behavior
+>> for these undefined status. I want to change the logic to return
+>> error for all status which did not defined in SAM or define a method
+>> in host template to let drivers to judge what to do in this
+>> condition.
 > 
+> Why? The general rule of thumb is be strict in what you emit and
+> generous in what you receive (which is why reserved bits are ignored).
+> Is the drive you refer to above not working in some way, in which case
+> detail it so people can understand the actual problem.
+> 
+> James
+> 
+> .
 
--- 
-மணிவண்ணன் சதாசிவம்
+
+We come with an issue with megaraid_sas driver. Where scsi_cmnd is completed with result's
+status byte set to 1, scsi_io_completion() would finish this scsi_cmnd's request with BLK_STS_OK.
+The path is:
+
+scsi_io_completion()
+	scsi_io_completion_nz_result()
+		scsi_status_is_good()	->  return true
+		result = 0;
+		*blk_statp = BLK_STS_OK
+	scsi_end_request() with BLK_STS_OK
+
+While the scsi_cmnd result is actually wrong and should be finished with BLK_STS_IOERR.
+
+
+What's more, according to code analysis, we found for scsi_cmnd which completed with status byte
+undefined in SAM, the scsi_status_is_good() behave differently. For example, if status byte is in
+0x1, 0x3, 0x5, 0x9 and so on, it would return true; while for status in other reserved field,
+it would return false. 
+
+So I think we should respect the SAM and drop the line "status &= 0xfe" in scsi_status_is_good()
+to tell the caller the status is not good for all status which is not defined in SAM, so
+scsi_result_to_blk_status() would return BLK_STS_IOERR on this condition.
