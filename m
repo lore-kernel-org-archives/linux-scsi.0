@@ -2,112 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 510A5C4167B
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 16:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C760C46467
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 17:00:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236268AbiK2Qyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Nov 2022 11:54:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55264 "EHLO
+        id S236507AbiK2RAq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Nov 2022 12:00:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235812AbiK2QyK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 11:54:10 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 650B874626
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2022 08:48:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669740480;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=e0muEHBDbnLFxSz/8uKrynkgUxzkHQQXyf0Q/GGNCDo=;
-        b=PdLSH/C+BpPDtfUIHgqkj0E8cNeZUwoj1CT9+VFwTiIUuq9gkjqBiiyM8Um6/6YuI5NYXQ
-        5QB6kauLYXBNvach6wXw4Yx3LbZXkaMwGLYjxXZzZ3J2sQNUd0oMFk/iUy6BZ0q4umuQmg
-        9D29gaYVRhQV6GdiBr9eMuG+pGw/JnI=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-97-NLEV3qqHMjm2VIHjZofz1g-1; Tue, 29 Nov 2022 11:47:58 -0500
-X-MC-Unique: NLEV3qqHMjm2VIHjZofz1g-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id EA346101E155;
-        Tue, 29 Nov 2022 16:47:53 +0000 (UTC)
-Received: from [10.22.16.202] (unknown [10.22.16.202])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 417A52166B2D;
-        Tue, 29 Nov 2022 16:47:51 +0000 (UTC)
-From:   Benjamin Coddington <bcodding@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        =?utf-8?q?Christoph_B=C3=B6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Valentina Manea <valentina.manea.m@gmail.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Steve French <sfrench@samba.org>,
-        Christine Caulfield <ccaulfie@redhat.com>,
-        David Teigland <teigland@redhat.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Eric Van Hensbergen <ericvh@gmail.com>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Xiubo Li <xiubli@redhat.com>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Jeff Layton <jlayton@kernel.org>, drbd-dev@lists.linbit.com,
-        linux-block@vger.kernel.org, nbd@other.debian.org,
-        linux-nvme@lists.infradead.org, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-afs@lists.infradead.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, v9fs-developer@lists.sourceforge.net,
-        ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH v1 2/3] Treewide: Stop corrupting socket's task_frag
-Date:   Tue, 29 Nov 2022 11:47:47 -0500
-Message-ID: <794DBAB0-EDAF-4DA2-A837-C1F99916BC8E@redhat.com>
-In-Reply-To: <20221129140242.GA15747@lst.de>
-References: <cover.1669036433.git.bcodding@redhat.com>
- <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com>
- <20221129140242.GA15747@lst.de>
+        with ESMTP id S236484AbiK2RAN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 12:00:13 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2548C6DFF2;
+        Tue, 29 Nov 2022 08:56:30 -0800 (PST)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ATFCEI4002709;
+        Tue, 29 Nov 2022 16:56:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=u9zXB3qqVZ0k/Ms/7UTwwNWaO6cuhnG1yPubtNR+wj0=;
+ b=QZLGvXd4PSSC8lmS85vnOI+Dtp2UyIW2PraLvE2ceo8p2aJWT5doqqI7bE7YCgrVRPUn
+ eQMosBzs99TFvkNLEHAjCvsA2ebDlgdl78Y0J5/9GQ7P2EWuQQ4iOcK393qf4PhVnI0V
+ qWNh1TcSN3knH6p7Svq4uLg3N5IKpD2/7YDYNTCLA169aCd3xwaMB5/JZPtOZamh4E6D
+ jiJFiGAjKvyzdqE7QeYtIp5JKNI314nJho/vsdfz+PDJB+2sfnNuJq14jRvnUolvCYo2
+ zMcZ9/NDUsumEHbFppR9FtBbm28n1+OGD1NSWeYF8S5+WAeF9Z0iFB9kRLVmFoSCF0lP Tg== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5bnh1u5k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 29 Nov 2022 16:56:21 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2ATGuKjP030058
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 29 Nov 2022 16:56:20 GMT
+Received: from [10.216.8.159] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Tue, 29 Nov
+ 2022 08:56:16 -0800
+Message-ID: <2a1047a7-3121-6cbe-d4c5-46bbff0c5cc5@quicinc.com>
+Date:   Tue, 29 Nov 2022 22:26:13 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: PM-runtime: supplier looses track of consumer during probe
+To:     Tushar Nimkar <quic_tnimkar@quicinc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        <linux-pm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+CC:     <linux-arm-msm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        <bjorn.andersson@kernel.org>, <quic_mkshah@quicinc.com>,
+        <quic_lsrao@quicinc.com>, <bvanassche@acm.org>,
+        Peter Wang <peter.wang@mediatek.com>
+References: <36aed941-a73e-d937-2721-4f0decd61ce0@quicinc.com>
+ <8c0a715a-d626-aa70-15f1-79f1e23fbc67@quicinc.com>
+ <a5e2aab6-7f0e-7f3b-f34b-6d222450c97d@intel.com>
+ <8ca27fcb-b146-3ea7-a042-55f99e0ae3fb@quicinc.com>
+Content-Language: en-US
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <8ca27fcb-b146-3ea7-a042-55f99e0ae3fb@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: PCdJ6YPgUwI8byB6RxkpvBrLF8MLWPan
+X-Proofpoint-GUID: PCdJ6YPgUwI8byB6RxkpvBrLF8MLWPan
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-29_11,2022-11-29_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ phishscore=0 adultscore=0 lowpriorityscore=0 mlxlogscore=999
+ suspectscore=0 malwarescore=0 bulkscore=0 impostorscore=0 mlxscore=0
+ spamscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211290094
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29 Nov 2022, at 9:02, Christoph Hellwig wrote:
+Hi Adrian,
 
-> Hmm.  Having to set a flag to not accidentally corrupt per-task
-> state seems a bit fragile.  Wouldn't it make sense to find a way to opt
-> into the feature only for sockets created from the syscall layer?
+On 11/21/2022 11:38 AM, Tushar Nimkar wrote:
+> Hi Adrian,
+> 
+> On 11/18/2022 8:25 PM, Adrian Hunter wrote:
+>> On 4/11/22 11:19, Tushar Nimkar wrote:
+>>> Hi linux-pm/linux-scsi,
+> 
+>>>> Process -1
+>>>> ufshcd_async_scan context (process 1)
+>>>> scsi_autopm_put_device() //0:0:0:0
+>>
+>> I am having trouble following your description.  What function is calling
+>> scsi_autopm_put_device() here?
+>>
+> Below is flow which calls scsi_autopm_put_device()
+> Process -1
+> ufshcd_async_scan()
+>      scsi_probe_and_add_lun()
+>          scsi_add_lun()
+>              slave_configure()
+>                  scsi_sysfs_add_sdev()
+>                      scsi_autopm_get_device()
+>                          device_add()     <- invoked [Process 2] sd_probe()
+>                              scsi_autopm_put_device()
+> 
+>>>> pm_runtime_put_sync()
+>>>> __pm_runtime_idle()
+>>>> rpm_idle() -- RPM_GET_PUT(4)
+>>>>       __rpm_callback
+>>>>           scsi_runtime_idle()
+>>>>               pm_runtime_mark_last_busy()
+>>>>               pm_runtime_autosuspend()  --[A]
+>>>>                   rpm_suspend() -- RPM_AUTO(8)
+>>>>                       pm_runtime_autosuspend_expiration() 
+>>>> use_autosuspend    is false return 0   --- [B]
+>>>>                           __update_runtime_status to RPM_SUSPENDING
+>>>>                       __rpm_callback()
+>>>>                           __rpm_put_suppliers(dev, false)
+>>>>                       __update_runtime_status to RPM_SUSPENDED
+>>>>                   rpm_suspend_suppliers()
+>>>>                       rpm_idle() for supplier -- RPM_ASYNC(1) return 
+>>>> (-EAGAIN) [ Other consumer active for supplier]
+>>>>                   rpm_suspend() – END with return=0
+>>>>           scsi_runtime_idle() END return (-EBUSY) always.
+>>
+>> Not following here either.  Which device is EBUSY and why?
+> 
+> scsi_runtime_idle() return -EBUSY always [3]
+> Storage/scsi team can better explain -EBUSY implementation.
 
-It's totally fragile, and that's why it's currently broken in production.
-The fragile ship sailed when networking decided to depend on users setting
-the socket's GFP_ flags correctly to avoid corruption.
+EBUSY is returned from below code for consumer dev 0:0:0:0.
+scsi_runtime_idle is called from scsi_autopm_put_device which inturn is 
+called from ufshcd_async_scan (Process 1 as per above call stack)
+static int scsi_runtime_idle(struct device *dev)
+{
+	:
 
-Meantime, this problem needs fixing in a way that makes everyone happy.
-This fix doesn't make it less fragile, but it may (hopefully) address the
-previous criticisms enough that something gets done to fix it.
+	if (scsi_is_sdev_device(dev)) {
+		pm_runtime_mark_last_busy(dev);
+		pm_runtime_autosuspend(dev);
+		return -EBUSY; ---> EBUSY returned from here.
+	}
 
-Ben
+	
+}
 
+> 
+> [3] 
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/scsi_pm.c?h=next-20221118#n210
+> 
+> 
+>>>>
+>>>> [1]: https://lore.kernel.org/lkml/4748074.GXAFRqVoOG@kreacher/T/
+>>>> [2]: https://lkml.org/lkml/2022/10/12/259
+>>>>
+>>>> Thanks,
+>>>> Tushar Nimkar
+>>
+> Thanks,
+> Tushar Nimkar
+
+Thanks,
+Nitin
