@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B95A4C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 18:54:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A35C4167B
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 18:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236139AbiK2Syk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Nov 2022 13:54:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60462 "EHLO
+        id S236262AbiK2SzB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Nov 2022 13:55:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236232AbiK2Syf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 13:54:35 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 139B656D6E;
-        Tue, 29 Nov 2022 10:54:34 -0800 (PST)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ATIekji008083;
-        Tue, 29 Nov 2022 18:54:19 GMT
+        with ESMTP id S235770AbiK2Sy6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 13:54:58 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81D315B5AC;
+        Tue, 29 Nov 2022 10:54:48 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ATIMlYe011423;
+        Tue, 29 Nov 2022 18:54:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=zkh5XXEIdZfFBZvLVeyb6djySik3rlD7agJhw3idEWs=;
- b=YF9ouFlgJ/RcVhM2SmCpcd+qFh/nk8+hNEFPEdUh+K9rqjMAxTXbU2h2t//VLgkAgbb5
- LyYJ1uFc25csBcMg6RxCuBJszsZ7F+8C3DiMppu1EOcMjs4C+vV6090FU8wcnbHf9RLa
- WqGQGJgYJw7qe9u6+PO6Mz+o+oGDrNv/c5RjjBifR/xbckmKdzVJzULcYU9NP/YGZjzL
- irqTeHal7RxEkIQNwXslaPFGxJoZrZe3S7PuDCqQA/31GZUCXE5iv7EBQeS/5GWn3igQ
- /59mOKL2Hr7MhcMlBcAUQbg8Lrij/o7LwaVF9mTcAzUZmAa6wACCY3WbA83rKLClAIPJ Fg== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5bnh25rp-1
+ bh=cEc6d+rufE3TCn17bKb+V76iBS5kpOCf6SBQG15gSgA=;
+ b=ccsRiYmo/GJ/kZD43Wow8cnx7SIihJgbiv5ZvkNUFmyCG2AMMt/NzLkWpcbKklrsilw4
+ Oc8UjCmx8Lz2axIO9xw18rtZ6/POKZiAqTCL2qD2kezCKYpSz+yPmTAl5GZcCI0Hl6O3
+ 0p9ElIM5p+WCCFtCmNPYlLqyeMrPlKcB5w3dO2/fOw/dI7UvGPRUV6XTlgeIRTOf5pMa
+ D+m1bkwMu9zLaZOmsU7y+yFukfU2qb0ep3Av5ZxiZjyZ2Qe2jxrMCABZMwwV1tjc2e7L
+ tATHecWNnD9xa4o5RLbYlCKrieJGAzkJkfYJ3sutUn9VADI+JpbGlrgfW6UdC1WzivGb RA== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5dnea99p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 29 Nov 2022 18:54:19 +0000
+        Tue, 29 Nov 2022 18:54:28 +0000
 Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2ATIsIJV017125
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2ATIsRI2027917
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 29 Nov 2022 18:54:18 GMT
+        Tue, 29 Nov 2022 18:54:27 GMT
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 29 Nov 2022 10:54:17 -0800
+ 15.2.986.36; Tue, 29 Nov 2022 10:54:27 -0800
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -50,11 +50,10 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 02/16] ufs: core: Probe for ext_iid support
-Date:   Tue, 29 Nov 2022 10:53:08 -0800
-Message-ID: <f4bb4850076c9a953eaaa9e76dc3b2fa37f0505e.1669747235.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v7 04/16] ufs: core: Defer adding host to scsi if mcq is supported
+Date:   Tue, 29 Nov 2022 10:53:10 -0800
+Message-ID: <0475898faf23cba385b9484b5823c1248b0e656a.1669747235.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1669747235.git.quic_asutoshd@quicinc.com>
 References: <cover.1669747235.git.quic_asutoshd@quicinc.com>
@@ -65,187 +64,91 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: _E28zf-vxFBzzeWwtyvx7TTAAC4tOQFy
-X-Proofpoint-GUID: _E28zf-vxFBzzeWwtyvx7TTAAC4tOQFy
+X-Proofpoint-GUID: AaMl822IFskd9YjT5yuNzhHWaCz-vf6b
+X-Proofpoint-ORIG-GUID: AaMl822IFskd9YjT5yuNzhHWaCz-vf6b
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-29_11,2022-11-29_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- phishscore=0 adultscore=0 lowpriorityscore=0 mlxlogscore=999
- suspectscore=0 malwarescore=0 bulkscore=0 impostorscore=0 mlxscore=0
- spamscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211290107
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
+ lowpriorityscore=0 adultscore=0 priorityscore=1501 impostorscore=0
+ clxscore=1015 spamscore=0 phishscore=0 mlxlogscore=999 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211290108
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Task Tag is limited to 8 bits and this restricts the number
-of active IOs to 255.
-In Multi-circular queue mode, this may not be enough.
-The specification provides EXT_IID which can be used to increase
-the number of IOs if the UFS device and UFSHC support it.
-This patch adds support to probe for ext_iid support in
-ufs device and UFSHC.
+If MCQ support is present, enabling it after MCQ support
+has been configured would require reallocating tags and memory.
+It would also free up the already allocated memory in
+Single Doorbell Mode. So defer invoking scsi_add_host() until
+MCQ is configured.
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 31 +++++++++++++++++++++++++++++++
- include/ufs/ufs.h         |  4 ++++
- include/ufs/ufshcd.h      |  4 ++++
- include/ufs/ufshci.h      |  7 +++++++
- 4 files changed, 46 insertions(+)
+ drivers/ufs/core/ufshcd.c | 24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 6ea22b5..595fd3c 100644
+index eca15b0..3c2220c 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2258,6 +2258,10 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
- 	if (err)
- 		dev_err(hba->dev, "crypto setup failed\n");
+@@ -92,6 +92,11 @@
+ /* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
+ static bool use_mcq_mode = true;
  
-+	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
-+	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
-+				     hba->mcq_capabilities);
-+
- 	return err;
- }
- 
-@@ -7687,6 +7691,30 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- 	}
- }
- 
-+static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
++static bool is_mcq_supported(struct ufs_hba *hba)
 +{
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+	u32 ext_ufs_feature;
-+	u32 ext_iid_en = 0;
-+	int err;
-+
-+	/* Only UFS-4.0 and above may support EXT_IID */
-+	if (dev_info->wspecversion < 0x400)
-+		goto out;
-+
-+	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
-+	if (!(ext_ufs_feature & UFS_DEV_EXT_IID_SUP))
-+		goto out;
-+
-+	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+				      QUERY_ATTR_IDN_EXT_IID_EN, 0, 0, &ext_iid_en);
-+	if (err)
-+		dev_err(hba->dev, "failed reading bEXTIIDEn. err = %d\n", err);
-+
-+out:
-+	dev_info->b_ext_iid_en = ext_iid_en;
++        return hba->mcq_sup && use_mcq_mode;
 +}
 +
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups)
+ static int param_set_mcq_mode(const char *val, const struct kernel_param *kp)
  {
-@@ -7785,6 +7813,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 	int ret;
+@@ -8227,6 +8232,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 	int ret;
+ 	unsigned long flags;
+ 	ktime_t start = ktime_get();
++	struct Scsi_Host *host = hba->host;
  
- 	ufshcd_temp_notif_probe(hba, desc_buf);
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
  
-+	if (hba->ext_iid_sup)
-+		ufshcd_ext_iid_probe(hba, desc_buf);
+@@ -8261,6 +8267,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 		ret = ufshcd_device_params_init(hba);
+ 		if (ret)
+ 			goto out;
 +
- 	/*
- 	 * ufshcd_read_string_desc returns size of the string
- 	 * reset the error value
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 1bba3fe..ba2a1d8 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -165,6 +165,7 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
- 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
- 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
-+	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
- };
++		if (is_mcq_supported(hba)) {
++			ret = scsi_add_host(host, hba->dev);
++			if (ret) {
++				dev_err(hba->dev, "scsi_add_host failed\n");
++				goto out;
++			}
++		}
+ 	}
  
- /* Descriptor idn for Query requests */
-@@ -352,6 +353,7 @@ enum {
- 	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
- 	UFS_DEV_HPB_SUPPORT		= BIT(7),
- 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
-+	UFS_DEV_EXT_IID_SUP		= BIT(16),
- };
- #define UFS_DEV_HPB_SUPPORT_VERSION		0x310
+ 	ufshcd_tune_unipro_params(hba);
+@@ -9857,10 +9871,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		hba->is_irq_enabled = true;
+ 	}
  
-@@ -601,6 +603,8 @@ struct ufs_dev_info {
+-	err = scsi_add_host(host, hba->dev);
+-	if (err) {
+-		dev_err(hba->dev, "scsi_add_host failed\n");
+-		goto out_disable;
++	if (!is_mcq_supported(hba)) {
++		err = scsi_add_host(host, hba->dev);
++		if (err) {
++			dev_err(hba->dev, "scsi_add_host failed\n");
++			goto out_disable;
++		}
+ 	}
  
- 	bool	b_rpm_dev_flush_capable;
- 	u8	b_presrv_uspc_en;
-+	/* UFS EXT_IID Enable */
-+	bool	b_ext_iid_en;
- };
- 
- /*
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 5cf81df..aec37cb9 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -747,6 +747,7 @@ struct ufs_hba_monitor {
-  * @outstanding_lock: Protects @outstanding_reqs.
-  * @outstanding_reqs: Bits representing outstanding transfer requests
-  * @capabilities: UFS Controller Capabilities
-+ * @mcq_capabilities: UFS Multi Circular Queue capabilities
-  * @nutrs: Transfer Request Queue depth supported by controller
-  * @nutmrs: Task Management Queue depth supported by controller
-  * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
-@@ -830,6 +831,7 @@ struct ufs_hba_monitor {
-  *	device
-  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
-  *	ufshcd_resume_complete()
-+ * @ext_iid_sup: is EXT_IID is supported by UFSHC
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -871,6 +873,7 @@ struct ufs_hba {
- 
- 	u32 capabilities;
- 	int nutrs;
-+	u32 mcq_capabilities;
- 	int nutmrs;
- 	u32 reserved_slot;
- 	u32 ufs_version;
-@@ -978,6 +981,7 @@ struct ufs_hba {
- #endif
- 	u32 luns_avail;
- 	bool complete_put;
-+	bool ext_iid_sup;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index f525566..4d4da06 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -22,6 +22,7 @@ enum {
- /* UFSHCI Registers */
- enum {
- 	REG_CONTROLLER_CAPABILITIES		= 0x00,
-+	REG_MCQCAP				= 0x04,
- 	REG_UFS_VERSION				= 0x08,
- 	REG_CONTROLLER_DEV_ID			= 0x10,
- 	REG_CONTROLLER_PROD_ID			= 0x14,
-@@ -68,6 +69,12 @@ enum {
- 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
- 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
- 	MASK_CRYPTO_SUPPORT			= 0x10000000,
-+	MASK_MCQ_SUPPORT			= 0x40000000,
-+};
-+
-+/* MCQ capability mask */
-+enum {
-+	MASK_EXT_IID_SUPPORT = 0x00000400,
- };
- 
- #define UFS_MASK(mask, offset)		((mask) << (offset))
+ 	hba->tmf_tag_set = (struct blk_mq_tag_set) {
 -- 
 2.7.4
 
