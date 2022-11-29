@@ -2,108 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 230F3C46467
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 01:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB6EC43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 02:15:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235125AbiK2BZl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 20:25:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53162 "EHLO
+        id S235112AbiK2CPM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 21:15:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235028AbiK2BZJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 20:25:09 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E46A247312;
-        Mon, 28 Nov 2022 17:24:23 -0800 (PST)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ASNRbiR013671;
-        Tue, 29 Nov 2022 01:24:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=bUx2F1njbYad5/Bph/yve0YlzZuGc9YGQi5bG0PZGWI=;
- b=ltAAK175CmvgNLFfySzjtA+BPi4tayoq+cVE6fzPYwodz6ujjYUDdl+WkG/BOiceYR2P
- FJc8jlsbE04vsGA7h2aB+SYRQZTSb2Vd7APv+hBYw38mSZkeiv6S6EoakPlUxqNqzsFG
- wc1j0f3GKljgcBnrzlFeVtgE3Za0a1/sT3fXFB8o5fauWn/PfXNLN/llDKc4tLZYym84
- tI2lpriX7MVSfKsw6fzdGAma4d0LJFuvQ0h9QHeYF6SPUxc5d+77cTpObEDnrIO0VCQu
- R2lNmIG0FKkaTQV4kWABJJ7istngOiOz+WfMEHF7qSLnFF4NFlKoaGiwE23tMOR0GqZ7 fg== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m39tg5j15-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 29 Nov 2022 01:24:11 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AT1OAwI010419
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 29 Nov 2022 01:24:10 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Mon, 28 Nov 2022 17:24:10 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <eddie.huang@mediatek.com>,
-        <daejun7.park@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 16/16] ufs: core: mcq: Enable Multi Circular Queue
-Date:   Mon, 28 Nov 2022 17:20:57 -0800
-Message-ID: <fcb750c102b9ba7ee69acf1e81fd2775376c2466.1669684648.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1669684648.git.quic_asutoshd@quicinc.com>
-References: <cover.1669684648.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S235102AbiK2CPL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 21:15:11 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5E53F05B;
+        Mon, 28 Nov 2022 18:15:09 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4NLmBb27YRz4f3v51;
+        Tue, 29 Nov 2022 10:15:03 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBnitcoa4Vj6_5UBQ--.52275S3;
+        Tue, 29 Nov 2022 10:15:06 +0800 (CST)
+Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
+To:     Yu Kuai <yukuai1@huaweicloud.com>, Ming Lei <ming.lei@redhat.com>,
+        Jan Kara <jack@suse.cz>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
+ <cefdae2e-67e3-b4b4-f569-31db960e991f@huaweicloud.com>
+ <Y4QqtbXsuYmkOe88@T590>
+ <7a747bc3-b902-6f0c-21ef-0ef470ec326e@huaweicloud.com>
+ <Y4Q1KPgBsDCZTyTW@T590>
+ <1caa7d49-0322-3eb9-7e99-6be96f77c80a@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8280fa32-4a96-be98-06ac-1890f95f026f@huaweicloud.com>
+Date:   Tue, 29 Nov 2022 10:15:04 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: UokaQh5Cujl0684lK1QMxe6SoWo-NkO0
-X-Proofpoint-ORIG-GUID: UokaQh5Cujl0684lK1QMxe6SoWo-NkO0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-29_01,2022-11-28_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 suspectscore=0
- adultscore=0 spamscore=0 lowpriorityscore=0 malwarescore=0 mlxlogscore=999
- mlxscore=0 phishscore=0 impostorscore=0 priorityscore=1501 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211290006
+In-Reply-To: <1caa7d49-0322-3eb9-7e99-6be96f77c80a@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBnitcoa4Vj6_5UBQ--.52275S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrZF43tw4kXw48Gw4DZryftFb_yoWxArXE9r
+        1a9rnrtrWrGFyI9rZrKFWrZF9YyFZYqa4rJ3yUtayfX3sxZF13Gr10q3yxAa13J3Wjkrn7
+        Xrs0kFyktrZI9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb48FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_GcCE
+        3s1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
+        1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
+        cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
+        ACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAYIcxG
+        8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
+        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
+        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
+        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
+        IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUU
+        U==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable MCQ in the Host Controller.
+Hi,
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> Hi,
+> 
+> 在 2022/11/28 12:12, Ming Lei 写道:
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index adf3597..e9d6891 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8381,6 +8381,12 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
- 
- 	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
-+
-+	/* Select MCQ mode */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-+		      REG_UFS_MEM_CFG);
-+	hba->mcq_enabled = true;
-+
- 	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
- 		 hba->nr_hw_queues, hba->nr_queues[HCTX_TYPE_DEFAULT],
- 		 hba->nr_queues[HCTX_TYPE_READ], hba->nr_queues[HCTX_TYPE_POLL],
--- 
-2.7.4
+>>
+>> BTW, why do you drive nvme via megaraid instead nvme driver?
+>>
+>>> And by the way, after Jan's patch "blk-mq: Improve performance of non-mq
+>>> IO schedulers with multiple HW queues", scsi_run_queue_async() can only
+>>> garantee to run hw queue for the current cpu, not all the hw queues.
+>>
+>> That isn't true, each hctx is still run in case of none & kyber 
+>> scheduler.
+
+And I really suspect that why Jan's patch can improve performance is
+because it avoid many run queues from scsi_run_queue_async().
+
+> 
+> Yes, but current default hctx shared elevator is deadline.
+>>
+>> thanks,
+>> Ming
+>>
+>> .
+>>
+> 
+> .
+> 
 
