@@ -2,113 +2,176 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0633C46467
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 17:42:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 752C6C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 18:54:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236182AbiK2Rmq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Nov 2022 12:42:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39070 "EHLO
+        id S236212AbiK2SyW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Nov 2022 13:54:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236679AbiK2Rmn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 12:42:43 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBF521901F;
-        Tue, 29 Nov 2022 09:42:41 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 95822B8129E;
-        Tue, 29 Nov 2022 17:42:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88D66C433C1;
-        Tue, 29 Nov 2022 17:42:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669743759;
-        bh=3+jgbqIH2MJTIsVHlcxt6FoqC9JTTWJi5HGZCaZxgug=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QUm6mA5J8FMakXMYs9TxR1saaYz2xtuB1WQ4vJJERTQPls5BaIPHVnOKz8jZIo9kT
-         XulObDx1A347icJCI3BmL1Pf+V0Y6vDE7c7GJVgCQGxPvlvdctmnzKGaymxCYNMyXQ
-         dKw/DfIH615h0CSbluMrGHtANR4WOUzVKajaI/Lk7UG43sRTDV3681zTOgmNB5PA42
-         4z8cYl3L4lhD0Mvd0OcboC2hB3hl3nwz3MNA3jwsaSJnlHZe8k2mACwlMT6PMRhQUD
-         9V/1JVeknQRJ/G2/votnmVuu78OlhM7g7yW8UlJERa2tg+7VQlKisF3sYHT8GaId68
-         G+E9LkyPR/ygQ==
-Message-ID: <d0a8f7a5e307e201926ae8e80d629da10c706a91.camel@kernel.org>
-Subject: Re: [PATCH v1 2/3] Treewide: Stop corrupting socket's task_frag
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>,
-        Benjamin Coddington <bcodding@redhat.com>
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Christoph =?ISO-8859-1?Q?B=F6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Valentina Manea <valentina.manea.m@gmail.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Steve French <sfrench@samba.org>,
-        Christine Caulfield <ccaulfie@redhat.com>,
-        David Teigland <teigland@redhat.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Eric Van Hensbergen <ericvh@gmail.com>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Xiubo Li <xiubli@redhat.com>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        nbd@other.debian.org, linux-nvme@lists.infradead.org,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        v9fs-developer@lists.sourceforge.net, ceph-devel@vger.kernel.org,
-        linux-nfs@vger.kernel.org
-Date:   Tue, 29 Nov 2022 12:42:33 -0500
-In-Reply-To: <20221129140242.GA15747@lst.de>
-References: <cover.1669036433.git.bcodding@redhat.com>
-         <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com>
-         <20221129140242.GA15747@lst.de>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.1 (3.46.1-1.fc37) 
+        with ESMTP id S235889AbiK2SyV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 13:54:21 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A356C57B5A;
+        Tue, 29 Nov 2022 10:54:20 -0800 (PST)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ATGgJ04027843;
+        Tue, 29 Nov 2022 18:54:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=BBrMGSVcCtipXyb/g2sQ489ix+JYXY7e3AM/HnxPQbM=;
+ b=PuvyhhYu2Vd38H7WHwPi9fuEL9J+M88RX6Zsc2nrLerbAX5/8YCRkKbXAkcWeuMcnOvi
+ vt1UzYByos7JmYvv/vHmev2SVIDYX18WmgsItfQzXAdTUzF/em4ZA3X7Zuz4Pll1Z/fG
+ iRh8+rSDw8LwPUHYh7mKsuj5P12leH+zbMQnZE5PPNJRisk05XovgFaoexjcoptj4Qhb
+ mZaBnRHV9EMALuF8jSA8O7woyrMXgy2WkSLKMWC+oAL0U7zsegQSDu2fLEsDfJ4QbOdz
+ Q5TkDJJMdeArhqSHQwpA3qDQ49BvXBkxQ438MkNRuEXHIIKNHlF9ZOD4fS3x0BVHwTcb pw== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m513skddr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 29 Nov 2022 18:54:06 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2ATIs5ub027232
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 29 Nov 2022 18:54:05 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Tue, 29 Nov 2022 10:54:04 -0800
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
+        <stanley.chu@mediatek.com>, <eddie.huang@mediatek.com>,
+        <daejun7.park@samsung.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>
+Subject: [PATCH v7 00/16] Add Multi Circular Queue Support 
+Date:   Tue, 29 Nov 2022 10:53:06 -0800
+Message-ID: <cover.1669747235.git.quic_asutoshd@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 539YbQejNPVaYwRgr4gkEsVH1M5Luljo
+X-Proofpoint-ORIG-GUID: 539YbQejNPVaYwRgr4gkEsVH1M5Luljo
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-29_11,2022-11-29_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 mlxlogscore=999 clxscore=1015 phishscore=0 priorityscore=1501
+ mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211290107
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-11-29 at 15:02 +0100, Christoph Hellwig wrote:
-> Hmm.  Having to set a flag to not accidentally corrupt per-task
-> state seems a bit fragile.  Wouldn't it make sense to find a way to opt
-> into the feature only for sockets created from the syscall layer?
+Hi Martin,
 
-I agree that that would be cleaner. task_frag should have been an opt-in
-thing all along. That change regressed all of the in-kernel users of
-sockets.
+This patch series is an implementation of UFS Multi-Circular Queue.
+Please consider this series for next merge window.
 
-Where would be the right place to set that flag for only userland
-sockets? A lot of the in-kernel socket users hook into the socket API at
-a fairly high-level. 9P and CIFS, for instance, call __sock_create.
+Thanks,
+Asutosh
 
-We could set it in the syscall handlers (and maybe in iouring) I
-suppose, but that seems like the wrong thing to do too.
 
-In the absence of a clean place to do this, I think we're going to be
-stuck doing it the way Ben has proposed...
---=20
-Jeff Layton <jlayton@kernel.org>
+UFS Multi-Circular Queue (MCQ) has been added in UFSHCI v4.0 to improve storage performance.
+The implementation uses the shared tagging mechanism so that tags are shared
+among the hardware queues. The number of hardware queues is configurable.
+This series doesn't include the ESI implementation for completion handling.
+This implementation has been verified by on a Qualcomm platform.
+
+Please take a look and let us know your thoughts.
+
+v6 -> v7:
+- Added missing Reviewed-by tags.
+
+v5 -> v6:
+- Addressed Mani's comments
+- Addressed Bart's comments
+
+v4 -> v5:
+- Fixed failure to fallback to SDB during initialization
+- Fixed failure when rpm-lvl=5 in the ufshcd_host_reset_and_restore() path
+- Improved ufshcd_mcq_config_nr_queues() to handle different configurations
+- Addressed Bart's comments
+- Verified read/write using FIO, clock gating, runtime-pm[lvl=3, lvl=5]
+
+v3 -> v4:
+- Added a kernel module parameter to disable MCQ mode
+- Added Bart's reviewed-by tag for some patches
+- Addressed Bart's comments
+
+v2 -> v3:
+- Split ufshcd_config_mcq() into ufshcd_alloc_mcq() and ufshcd_config_mcq()
+- Use devm_kzalloc() in ufshcd_mcq_init()
+- Free memory and resource allocation on error paths
+- Corrected typos in code comments
+
+v1 -> v2:
+- Added a non MCQ related change to use a function to extrace ufs extended
+feature
+- Addressed Mani's comments
+- Addressed Bart's comments
+
+v1:
+- Split the changes
+- Addressed Bart's comments
+- Addressed Bean's comments
+
+* RFC versions:
+v2 -> v3:
+- Split the changes based on functionality
+- Addressed queue configuration issues
+- Faster SQE tail pointer increments
+- Addressed comments from Bart and Manivannan
+
+v1 -> v2:
+- Enabled host_tagset
+- Added queue num configuration support
+- Added one more vops to allow vendor provide the wanted MAC
+- Determine nutrs and can_queue by considering both MAC, bqueuedepth and EXT_IID support
+- Postponed MCQ initialization and scsi_add_host() to async probe
+- Used (EXT_IID, Task Tag) tuple to support up to 4096 tasks (theoretically)
+
+
+
+
+Asutosh Das (16):
+  ufs: core: Optimize duplicate code to read extended feature
+  ufs: core: Probe for ext_iid support
+  ufs: core: Introduce Multi-circular queue capability
+  ufs: core: Defer adding host to scsi if mcq is supported
+  ufs: core: mcq: Add support to allocate multiple queues
+  ufs: core: mcq: Configure resource regions
+  ufs: core: mcq: Calculate queue depth
+  ufs: core: mcq: Allocate memory for mcq mode
+  ufs: core: mcq: Configure operation and runtime interface
+  ufs: core: mcq: Use shared tags for MCQ mode
+  ufs: core: Prepare ufshcd_send_command for mcq
+  ufs: core: mcq: Find hardware queue to queue request
+  ufs: core: Prepare for completion in mcq
+  ufs: mcq: Add completion support of a cqe
+  ufs: core: mcq: Add completion support in poll
+  ufs: core: mcq: Enable Multi Circular Queue
+
+ drivers/ufs/core/Makefile      |   2 +-
+ drivers/ufs/core/ufs-mcq.c     | 416 +++++++++++++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h |  92 ++++++++-
+ drivers/ufs/core/ufshcd.c      | 395 +++++++++++++++++++++++++++++++-------
+ drivers/ufs/host/ufs-qcom.c    | 148 +++++++++++++++
+ drivers/ufs/host/ufs-qcom.h    |   5 +
+ include/ufs/ufs.h              |   6 +
+ include/ufs/ufshcd.h           | 128 +++++++++++++
+ include/ufs/ufshci.h           |  64 +++++++
+ 9 files changed, 1189 insertions(+), 67 deletions(-)
+ create mode 100644 drivers/ufs/core/ufs-mcq.c
+
+-- 
+2.7.4
+
