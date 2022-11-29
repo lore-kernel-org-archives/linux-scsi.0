@@ -2,96 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB6EC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 02:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3121C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 02:46:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235112AbiK2CPM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Nov 2022 21:15:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56338 "EHLO
+        id S235247AbiK2Cp7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Nov 2022 21:45:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235102AbiK2CPL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 21:15:11 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5E53F05B;
-        Mon, 28 Nov 2022 18:15:09 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4NLmBb27YRz4f3v51;
-        Tue, 29 Nov 2022 10:15:03 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBnitcoa4Vj6_5UBQ--.52275S3;
-        Tue, 29 Nov 2022 10:15:06 +0800 (CST)
-Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Ming Lei <ming.lei@redhat.com>,
-        Jan Kara <jack@suse.cz>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
- <cefdae2e-67e3-b4b4-f569-31db960e991f@huaweicloud.com>
- <Y4QqtbXsuYmkOe88@T590>
- <7a747bc3-b902-6f0c-21ef-0ef470ec326e@huaweicloud.com>
- <Y4Q1KPgBsDCZTyTW@T590>
- <1caa7d49-0322-3eb9-7e99-6be96f77c80a@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8280fa32-4a96-be98-06ac-1890f95f026f@huaweicloud.com>
-Date:   Tue, 29 Nov 2022 10:15:04 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S235102AbiK2Cp6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Nov 2022 21:45:58 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7271E47313;
+        Mon, 28 Nov 2022 18:45:57 -0800 (PST)
+Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NLmnZ1wNfzqSfN;
+        Tue, 29 Nov 2022 10:41:54 +0800 (CST)
+Received: from dggpemm500012.china.huawei.com (7.185.36.89) by
+ dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 29 Nov 2022 10:45:55 +0800
+Received: from [10.67.101.126] (10.67.101.126) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 29 Nov 2022 10:45:55 +0800
+Message-ID: <66c9f444-ef8f-c56a-0b95-ed39715e4a75@huawei.com>
+Date:   Tue, 29 Nov 2022 10:45:55 +0800
 MIME-Version: 1.0
-In-Reply-To: <1caa7d49-0322-3eb9-7e99-6be96f77c80a@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnitcoa4Vj6_5UBQ--.52275S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrZF43tw4kXw48Gw4DZryftFb_yoWxArXE9r
-        1a9rnrtrWrGFyI9rZrKFWrZF9YyFZYqa4rJ3yUtayfX3sxZF13Gr10q3yxAa13J3Wjkrn7
-        Xrs0kFyktrZI9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb48FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_GcCE
-        3s1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
-        1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
-        cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
-        ACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAYIcxG
-        8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
-        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
-        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
-        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-        IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUU
-        U==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: sd: Update dix config everytime sd_revalidate_disk
+ is called
+Content-Language: en-CA
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+        <john.garry@huawei.com>
+References: <20221019081825.20794-1-yangxingui@huawei.com>
+ <yq1h6zzz740.fsf@ca-mkp.ca.oracle.com>
+From:   yangxingui <yangxingui@huawei.com>
+In-Reply-To: <yq1h6zzz740.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.67.101.126]
+X-ClientProxiedBy: dggpemm500019.china.huawei.com (7.185.36.180) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
 
-> Hi,
+
+On 2022/10/20 8:18, Martin K. Petersen wrote:
 > 
-> 在 2022/11/28 12:12, Ming Lei 写道:
-
->>
->> BTW, why do you drive nvme via megaraid instead nvme driver?
->>
->>> And by the way, after Jan's patch "blk-mq: Improve performance of non-mq
->>> IO schedulers with multiple HW queues", scsi_run_queue_async() can only
->>> garantee to run hw queue for the current cpu, not all the hw queues.
->>
->> That isn't true, each hctx is still run in case of none & kyber 
->> scheduler.
-
-And I really suspect that why Jan's patch can improve performance is
-because it avoid many run queues from scsi_run_queue_async().
-
+> Xingui,
 > 
-> Yes, but current default hctx shared elevator is deadline.
->>
->> thanks,
->> Ming
->>
->> .
->>
+>> When the host protection capabilities are 0x77 and a DIF disk is
+>> connected, the DIX and DIF of the disk are default enabled. Then if
+>> that DIF disk is reformatted as a non-DIF format, per the currently
+>> flow, the DIX is kept enabled which is not correct
 > 
-> .
+> DIX is orthogonal to DIF and a host property. DIX should not be disabled
+> just because the disk is no longer formatted with protection
+> information.
+> 
+> That said, your patch is probably fine. I'll take a closer look
+> tomorrow.
 > 
 
+Friendly ping... Do you have other suggestions?
+Thanks,
+Xingui
