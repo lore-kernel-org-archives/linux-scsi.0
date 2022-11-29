@@ -2,108 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96864C46467
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 18:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD09C4167B
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Nov 2022 19:25:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236522AbiK2S70 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Nov 2022 13:59:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32804 "EHLO
+        id S236919AbiK2TZx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Nov 2022 14:25:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236502AbiK2S6z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 13:58:55 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 730D76D97D;
-        Tue, 29 Nov 2022 10:57:16 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ATGhuwg022591;
-        Tue, 29 Nov 2022 18:57:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=bUx2F1njbYad5/Bph/yve0YlzZuGc9YGQi5bG0PZGWI=;
- b=ByqpJyK0MzsxqmNirVOrHOP0fyUpRS78w4q3rrIUdYkkO6b1Eu+ag0JzooRHRSvx3D+r
- EkteljUNueT1dfFbABG6j0n3fgiF2LsF/VLld8XqcGSzrqHrb47MA0Z1E+nKntoKQb7q
- MDBBerp7qpWoLHE9vx/Anh0qYWVwyZtDQ5La3+CXXfbYMPAV7EFZVr1gvldGC+Q71pd1
- 9SPWyAb5Rq/f7Pl1PKjNGqYKq00nM0UEVRH9gjnZFtOKGQQWmpTOqn1XkEsApmQWrAZZ
- r4sssi+w4cjc9UKiZsZQnRYps+rRn8C+Fu3FE43A/LcBirxgKp+5WFWyxu7YPGzvMrg4 Aw== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5fjx1ddg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 29 Nov 2022 18:57:01 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2ATIv0R7020830
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 29 Nov 2022 18:57:00 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 29 Nov 2022 10:57:00 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <eddie.huang@mediatek.com>,
-        <daejun7.park@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
+        with ESMTP id S236880AbiK2TZd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2022 14:25:33 -0500
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 600861E3C3;
+        Tue, 29 Nov 2022 11:22:43 -0800 (PST)
+Received: by mail-pl1-f182.google.com with SMTP id io19so14402363plb.8;
+        Tue, 29 Nov 2022 11:22:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ud7QUQrd40h0Xyjtk+wC6bX6renF5UjjCEwypxPzWbY=;
+        b=kG/AQCQULhSSPnElbR+0UswMt+8adcA2nyKl20+tvq4vgtatUzsSW9isc4JQYt5iLa
+         EgW1YSnFOcj1c5GrNiBPILJm+oyjJAJlyDldggj4bpCykL2zZQ+fklbmpVe8PZm2Tm/g
+         /mCo4F2q3V51IJgm2oJrvjbaZwuIMAbKDahYgvucq5gi0/sWBZb4GArq2J0TCDqNeH0L
+         No/nYLflZ0SqGPjiBSYDug04Ox3XSKjuSlYq5YHSZHxEOibtmLNzt4FyqDGHmKOq6Pdc
+         Guy2u/c7oHC8gqFPuuKSJLuoYZrFtHxzRWtFHOqjwbGSkDyle0/iZcWSskvfy+teyDrk
+         Dz5g==
+X-Gm-Message-State: ANoB5pkBlEaZVgyvXUKC3XiwBpavJzx7OWbh4cLKdZtmhJkJk3Hj6TIy
+        u8ruIXJ4Dt2mntdn9EvG5Ee/tNbIzYY=
+X-Google-Smtp-Source: AA0mqf74NWcZBGgWlmT1N9eayQRdNZmN5bY+tJ7R4lYGyiec59ZGomU4zmG2JjRFNKoH5mxbfzzdsg==
+X-Received: by 2002:a17:90a:e398:b0:219:61e2:226b with SMTP id b24-20020a17090ae39800b0021961e2226bmr7449pjz.11.1669749762806;
+        Tue, 29 Nov 2022 11:22:42 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:7d15:8e62:30bb:9a14? ([2620:15c:211:201:7d15:8e62:30bb:9a14])
+        by smtp.gmail.com with ESMTPSA id p10-20020a170902e34a00b001873aa85e1fsm11089481plc.305.2022.11.29.11.22.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 29 Nov 2022 11:22:42 -0800 (PST)
+Message-ID: <df585a3d-f69e-7a9f-d006-b58bed56d2bb@acm.org>
+Date:   Tue, 29 Nov 2022 11:22:39 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v7 06/16] ufs: core: mcq: Configure resource regions
+Content-Language: en-US
+To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        stanley.chu@mediatek.com, eddie.huang@mediatek.com,
+        daejun7.park@samsung.com, avri.altman@wdc.com, mani@kernel.org,
+        beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 16/16] ufs: core: mcq: Enable Multi Circular Queue
-Date:   Tue, 29 Nov 2022 10:53:22 -0800
-Message-ID: <8aff808cab2db90ca6c701496ddf370af87d33eb.1669747235.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1669747235.git.quic_asutoshd@quicinc.com>
 References: <cover.1669747235.git.quic_asutoshd@quicinc.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: VWeUQFi8ts7GDWQ4KBBNvgNDdOJR1cgo
-X-Proofpoint-GUID: VWeUQFi8ts7GDWQ4KBBNvgNDdOJR1cgo
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-29_11,2022-11-29_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- malwarescore=0 clxscore=1015 suspectscore=0 mlxlogscore=999
- impostorscore=0 priorityscore=1501 spamscore=0 bulkscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211290108
+ <c655d1e62f619818e034f76c90330393cba8c79b.1669747235.git.quic_asutoshd@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c655d1e62f619818e034f76c90330393cba8c79b.1669747235.git.quic_asutoshd@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable MCQ in the Host Controller.
+On 11/29/22 10:53, Asutosh Das wrote:
+> Define the mcq resources and add support to ioremap
+> the resource regions.
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index adf3597..e9d6891 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8381,6 +8381,12 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
- 
- 	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
-+
-+	/* Select MCQ mode */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-+		      REG_UFS_MEM_CFG);
-+	hba->mcq_enabled = true;
-+
- 	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
- 		 hba->nr_hw_queues, hba->nr_queues[HCTX_TYPE_DEFAULT],
- 		 hba->nr_queues[HCTX_TYPE_READ], hba->nr_queues[HCTX_TYPE_POLL],
--- 
-2.7.4
 
