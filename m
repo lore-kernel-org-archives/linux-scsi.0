@@ -2,37 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B57C47089
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:28:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D3DC4708C
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:28:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229612AbiK3U2d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 15:28:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41020 "EHLO
+        id S229668AbiK3U2e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 15:28:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbiK3U2c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:28:32 -0500
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 808EC4B9BD;
-        Wed, 30 Nov 2022 12:28:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1669840111; x=1701376111;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=cEc6d+rufE3TCn17bKb+V76iBS5kpOCf6SBQG15gSgA=;
-  b=F1mQk+I9eduytlxdtzwyjg7nHkoPEGtnLgXmq3+t/C2o9VrfYIEPoUeW
-   84t+rfn/gP3eEI/hGqaWuBUt7QVqIJLVZFWcgAd8/OIxjv9PK3/C5ImXw
-   x3M2AxB+EeUabcO6JMrNk5Wir3sLZmZcKureLMBd4bK5BSQD98Li1V1vf
-   Q=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 30 Nov 2022 12:28:30 -0800
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Nov 2022 12:28:29 -0800
+        with ESMTP id S229541AbiK3U2d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:28:33 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A75614A05B;
+        Wed, 30 Nov 2022 12:28:32 -0800 (PST)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUCs0e9018690;
+        Wed, 30 Nov 2022 20:28:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=7S4T/d7o/o3m7oWFT/7SEWHru8hmIy5SxOT8QbpPUxE=;
+ b=UDmRATgk0DXvADAkXnui6N1XTQORWUGFNS0gCUGlU7+4pgWmvotN5xtfWT7M3IvoFX+G
+ yNPCsDsLm+eSqUVhXF/nky3ujeHpe9QLgIfZb4FjkuqYzytHzofyBtRMuzXHpei9Vpu9
+ d4MaVb4gX4EFA9an0DlXVuOSUmAZSy/ZoAhftpyGRf8Xm0yy9onGAT9plM0LQvseRsQD
+ q6v9dZsmi/QzP3p3PQC03+gPu3LDMah7O3Qc4bTAuPS1nFG+L+Nv6PnugY3A9DvNDyU+
+ 2pEOM37CV9zhqKticq4t1Zj4X6RZPTacbjpx8EKbc02SB1L4Xpgu3dBD88++G5mbfasF Hw== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5n1rw1tt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 30 Nov 2022 20:28:10 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKS9Zs029678
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 30 Nov 2022 20:28:10 GMT
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 30 Nov 2022 12:28:28 -0800
+ 15.2.986.36; Wed, 30 Nov 2022 12:28:09 -0800
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -46,9 +51,9 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 04/16] ufs: core: Defer adding host to scsi if mcq is supported
-Date:   Wed, 30 Nov 2022 12:27:45 -0800
-Message-ID: <0475898faf23cba385b9484b5823c1248b0e656a.1669839847.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v8 01/16] ufs: core: Optimize duplicate code to read extended feature
+Date:   Wed, 30 Nov 2022 12:27:42 -0800
+Message-ID: <c166e46a1fff4662f7b3677dcbf0b814eaa98ae0.1669839847.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1669839847.git.quic_asutoshd@quicinc.com>
 References: <cover.1669839847.git.quic_asutoshd@quicinc.com>
@@ -57,81 +62,79 @@ Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Z5kwM0iEVXrSzspFZ5YUCTlfkZVqaekK
+X-Proofpoint-ORIG-GUID: Z5kwM0iEVXrSzspFZ5YUCTlfkZVqaekK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-30_04,2022-11-30_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ impostorscore=0 mlxlogscore=999 mlxscore=0 lowpriorityscore=0
+ suspectscore=0 bulkscore=0 priorityscore=1501 spamscore=0 adultscore=0
+ clxscore=1015 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211300143
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If MCQ support is present, enabling it after MCQ support
-has been configured would require reallocating tags and memory.
-It would also free up the already allocated memory in
-Single Doorbell Mode. So defer invoking scsi_add_host() until
-MCQ is configured.
+The code to parse the extended feature is duplicated twice
+in the ufs core. Replace the duplicated code with a
+function.
 
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 24 ++++++++++++++++++++----
- 1 file changed, 20 insertions(+), 4 deletions(-)
+ drivers/ufs/core/ufshcd.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index eca15b0..3c2220c 100644
+index 2dbe249..6ea22b5 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -92,6 +92,11 @@
- /* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
- static bool use_mcq_mode = true;
+@@ -215,6 +215,17 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
+ 	return UFS_PM_LVL_0;
+ }
  
-+static bool is_mcq_supported(struct ufs_hba *hba)
++static unsigned int ufs_get_ext_ufs_feature(struct ufs_hba *hba,
++					    const u8 *desc_buf)
 +{
-+        return hba->mcq_sup && use_mcq_mode;
++	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
++	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
++		return 0;
++
++	return get_unaligned_be32(desc_buf +
++				  DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
 +}
 +
- static int param_set_mcq_mode(const char *val, const struct kernel_param *kp)
- {
- 	int ret;
-@@ -8227,6 +8232,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
- 	int ret;
- 	unsigned long flags;
- 	ktime_t start = ktime_get();
-+	struct Scsi_Host *host = hba->host;
+ static const struct ufs_dev_quirk ufs_fixups[] = {
+ 	/* UFS cards deviations table */
+ 	{ .wmanufacturerid = UFS_VENDOR_MICRON,
+@@ -7608,13 +7619,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ 	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
+ 		goto wb_disabled;
  
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+-	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+-	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+-		goto wb_disabled;
+-
+-	ext_ufs_feature = get_unaligned_be32(desc_buf +
+-					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+-
++	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+ 	if (!(ext_ufs_feature & UFS_DEV_WRITE_BOOSTER_SUP))
+ 		goto wb_disabled;
  
-@@ -8261,6 +8267,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
- 		ret = ufshcd_device_params_init(hba);
- 		if (ret)
- 			goto out;
-+
-+		if (is_mcq_supported(hba)) {
-+			ret = scsi_add_host(host, hba->dev);
-+			if (ret) {
-+				dev_err(hba->dev, "scsi_add_host failed\n");
-+				goto out;
-+			}
-+		}
- 	}
+@@ -7668,7 +7673,7 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ 	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) || dev_info->wspecversion < 0x300)
+ 		return;
  
- 	ufshcd_tune_unipro_params(hba);
-@@ -9857,10 +9871,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		hba->is_irq_enabled = true;
- 	}
+-	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
++	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
  
--	err = scsi_add_host(host, hba->dev);
--	if (err) {
--		dev_err(hba->dev, "scsi_add_host failed\n");
--		goto out_disable;
-+	if (!is_mcq_supported(hba)) {
-+		err = scsi_add_host(host, hba->dev);
-+		if (err) {
-+			dev_err(hba->dev, "scsi_add_host failed\n");
-+			goto out_disable;
-+		}
- 	}
- 
- 	hba->tmf_tag_set = (struct blk_mq_tag_set) {
+ 	if (ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF)
+ 		mask |= MASK_EE_TOO_LOW_TEMP;
 -- 
 2.7.4
 
