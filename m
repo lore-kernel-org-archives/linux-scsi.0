@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04092C47089
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:30:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABD72C352A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:31:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbiK3Uau (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 15:30:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42608 "EHLO
+        id S230191AbiK3UbI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 15:31:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230170AbiK3Uaq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:30:46 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82C135AE08;
-        Wed, 30 Nov 2022 12:30:44 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUCLJBU020458;
-        Wed, 30 Nov 2022 20:29:55 GMT
+        with ESMTP id S230179AbiK3Uay (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:30:54 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3941D91372;
+        Wed, 30 Nov 2022 12:30:51 -0800 (PST)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUIFM23021823;
+        Wed, 30 Nov 2022 20:30:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=ayT/B9TTsuGZyGZdPUqnbVMQKOPEfENgzDqXeHo/pjg=;
- b=mxKRvecoJSoxGoCSKVFPZLwdFlxWemcllmAAt374eiASfwrrRUQG7pTIsHsR02keucuK
- DluWqf90TMfCgLEofb7m8NgBD/CZ8UEm0kk6v5lDwiDYK92gt1YrWms2wLfkHEi2gbtL
- 1T60Z1LArC41j2/W7vYsWNHxqwKpqHouPVge06OOosQ3wHkUcXN0gYJ3KiuXv5HEZNaq
- fniNOZOkajdffc922diOKdppasjhjrDyMATFJgsZlPFRCK7KZbKjH1pdnhtzKdBiwQX3
- sB7Ci2jpqyZf2aPthGCQIDazPcB1DBUCVGfk0ylbX45KXxJEl2JP6LtB8v84zIwGFCiE LQ== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5n1rw20x-1
+ bh=/saQ8HdqSwrP9Ikuh+6P+rYv50pHaQco2YVGANbtHrg=;
+ b=K5cZKJ8Y6Nccw8fXmLQND51w1YeF2mUWD9/p/amycIcTHAkDgDSRgFY5Sep3/EDVW8Yk
+ 4ubDL+8TcQgwM49f5G5T5I1Ocn3RTH7grFsbnxzpe6EKSNWH6POTA/alA8Urp63pRr5I
+ MuQst+qbZfxcd5h++fX4bhhHXUhKRho9bF2sb8XeBdIFhdsUb+ztx4/VSwXkUPNc4ON5
+ ynmoTpLzkod9L+maeZk9+C0tbuhEeE5ii1FaZgA2uJdtrmBVTwPxeLGdQlt1GiWapQ0R
+ n3gp0nNfaslkYofZR0Feq0PgqajB8UeYNPSO+fdi3oXeFPpWLrgcgj07IMAa4r+lT+r/ Fg== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5fjx5bfg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Nov 2022 20:29:55 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKTsch003127
+        Wed, 30 Nov 2022 20:30:21 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKUK8N002073
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Nov 2022 20:29:54 GMT
+        Wed, 30 Nov 2022 20:30:20 GMT
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 30 Nov 2022 12:29:53 -0800
+ 15.2.986.36; Wed, 30 Nov 2022 12:30:19 -0800
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -50,10 +50,12 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 10/16] ufs: core: mcq: Use shared tags for MCQ mode
-Date:   Wed, 30 Nov 2022 12:27:51 -0800
-Message-ID: <47a0b862c6920b0c94299c33e298da4669b25163.1669839847.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v8 12/16] ufs: core: mcq: Find hardware queue to queue request
+Date:   Wed, 30 Nov 2022 12:27:53 -0800
+Message-ID: <a541f653e898145758541c69a55da4a5fc6a40cc.1669839847.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1669839847.git.quic_asutoshd@quicinc.com>
 References: <cover.1669839847.git.quic_asutoshd@quicinc.com>
@@ -64,25 +66,24 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Px98wh-rlh316ZI0j0DVR-vFLxQ-CIUS
-X-Proofpoint-ORIG-GUID: Px98wh-rlh316ZI0j0DVR-vFLxQ-CIUS
+X-Proofpoint-ORIG-GUID: FKjqEfUZFSDjT2dU_uAZQPPR6kVRgRBh
+X-Proofpoint-GUID: FKjqEfUZFSDjT2dU_uAZQPPR6kVRgRBh
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-30_04,2022-11-30_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- impostorscore=0 mlxlogscore=999 mlxscore=0 lowpriorityscore=0
- suspectscore=0 bulkscore=0 priorityscore=1501 spamscore=0 adultscore=0
- clxscore=1015 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211300144
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
+ malwarescore=0 clxscore=1015 suspectscore=0 mlxlogscore=999
+ impostorscore=0 priorityscore=1501 spamscore=0 bulkscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211300143
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable shared tags for MCQ. For UFS, this should
-not have a huge performance impact. It however
-simplifies the MCQ implementation and reuses most of
-the existing code in the issue and completion path.
-Also add multiple queue mapping to map_queue().
+Adds support to find the hardware queue on which the request
+would be queued.
+Since the very first queue is to serve device commands, an offset
+of 1 is added to the index of the hardware queue.
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
@@ -90,75 +91,70 @@ Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/ufs/core/ufs-mcq.c |  2 ++
- drivers/ufs/core/ufshcd.c  | 28 ++++++++++++++++------------
- 2 files changed, 18 insertions(+), 12 deletions(-)
+ drivers/ufs/core/ufs-mcq.c     | 19 +++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h |  3 +++
+ drivers/ufs/core/ufshcd.c      |  3 +++
+ 3 files changed, 25 insertions(+)
 
 diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index a783dcd..cffec4c 100644
+index 0c40fe2..151caf3 100644
 --- a/drivers/ufs/core/ufs-mcq.c
 +++ b/drivers/ufs/core/ufs-mcq.c
-@@ -280,6 +280,7 @@ void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
- 
- int ufshcd_mcq_init(struct ufs_hba *hba)
- {
-+	struct Scsi_Host *host = hba->host;
- 	struct ufs_hw_queue *hwq;
- 	int ret, i;
- 
-@@ -315,6 +316,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
- 	/* Give dev_cmd_queue the minimal number of entries */
- 	hba->dev_cmd_queue->max_entries = MAX_DEV_CMD_ENTRIES;
- 
-+	host->host_tagset = 1;
- 	return 0;
+@@ -93,6 +93,25 @@ void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds)
  }
  
+ /**
++ * ufshcd_mcq_req_to_hwq - find the hardware queue on which the
++ * request would be issued.
++ * @hba - per adapter instance
++ * @req - pointer to the request to be issued
++ *
++ * Returns the hardware queue instance on which the request would
++ * be queued.
++ */
++struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
++					 struct request *req)
++{
++	u32 utag = blk_mq_unique_tag(req);
++	u32 hwq = blk_mq_unique_tag_to_hwq(utag);
++
++	/* uhq[0] is used to serve device commands */
++	return &hba->uhq[hwq + UFSHCD_MCQ_IO_QUEUE_OFFSET];
++}
++
++/**
+  * ufshcd_mcq_decide_queue_depth - decide the queue depth
+  * @hba - per adapter instance
+  *
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index d295be4..a07f85e 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -67,7 +67,10 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
+ void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
+ void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
+ void ufshcd_mcq_select_mcq_mode(struct ufs_hba *hba);
++struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
++					   struct request *req);
+ 
++#define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
+ #define SD_ASCII_STD true
+ #define SD_RAW false
+ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3210f6e..965e844 100644
+index 1639a97..b0b0f2c 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2763,24 +2763,28 @@ static inline bool is_device_wlun(struct scsi_device *sdev)
-  */
- static void ufshcd_map_queues(struct Scsi_Host *shost)
- {
--	int i;
-+	struct ufs_hba *hba = shost_priv(shost);
-+	int i, queue_offset = 0;
-+
-+	if (!is_mcq_supported(hba)) {
-+		hba->nr_queues[HCTX_TYPE_DEFAULT] = 1;
-+		hba->nr_queues[HCTX_TYPE_READ] = 0;
-+		hba->nr_queues[HCTX_TYPE_POLL] = 1;
-+		hba->nr_hw_queues = 1;
-+	}
- 
- 	for (i = 0; i < shost->nr_maps; i++) {
- 		struct blk_mq_queue_map *map = &shost->tag_set.map[i];
- 
--		switch (i) {
--		case HCTX_TYPE_DEFAULT:
--		case HCTX_TYPE_POLL:
--			map->nr_queues = 1;
--			break;
--		case HCTX_TYPE_READ:
--			map->nr_queues = 0;
-+		map->nr_queues = hba->nr_queues[i];
-+		if (!map->nr_queues)
- 			continue;
--		default:
--			WARN_ON_ONCE(true);
--		}
--		map->queue_offset = 0;
-+		map->queue_offset = queue_offset;
-+		if (i == HCTX_TYPE_POLL && !is_mcq_supported(hba))
-+			map->queue_offset = 0;
-+
- 		blk_mq_map_queues(map);
-+		queue_offset += map->nr_queues;
+@@ -2921,6 +2921,9 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		goto out;
  	}
- }
  
++	if (is_mcq_enabled(hba))
++		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
++
+ 	ufshcd_send_command(hba, tag, hwq);
+ 
+ out:
 -- 
 2.7.4
 
