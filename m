@@ -2,79 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74F1C47089
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 21:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0308C47088
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 21:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229615AbiK3VOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 16:14:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47702 "EHLO
+        id S229747AbiK3Vvc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 16:51:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbiK3VOU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 16:14:20 -0500
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B270585676;
-        Wed, 30 Nov 2022 13:14:17 -0800 (PST)
-Received: by mail-pf1-f179.google.com with SMTP id q12so13925988pfn.10;
-        Wed, 30 Nov 2022 13:14:17 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RERUzz6/YZPtxpRCxabjr50cpPcCSEqbCmnFPgBMN70=;
-        b=dTViLEwziEtSAFp0bGI/mlM+qnUnrP3YUrmY6TrE919cfo47ZXy6c4sB0goOKbQeT/
-         1AcP+2kmVflCrSET/zBeTLrCdI2e0fQcnuAr4le/ZzJwm8CQ5wfokV1HecD/eZtlmL7T
-         gif1vtuEHf3L0S6YEOD+DCO7dhI9XjH53038yCm0mVna/6XUSxHm/+yVN8Z7oivEEQoy
-         J0SYEOh6nxPyylwLgfuuey+SHoZTkAgejEmQcuZbQhbNeb/6F1/VD6mg6vfiX6j90xi7
-         jbjaZytlKe0f0E9X+fDlkTpVuJpib8xPG3ajY+R48DS3LqCbDsmaQTBZRMxQ0Wt8t4Qy
-         6fYQ==
-X-Gm-Message-State: ANoB5pnwZs22v/3SnVvKQpeTnfDn1Dys/JV/1CDDiIiopFU+i9qsJKOH
-        o5BYQTu58b88q/+FTXyo6O01xqyXlvk=
-X-Google-Smtp-Source: AA0mqf7ZM0l+qCglya0TE6wEwNNAt5QZ1A0aBeT8dyEd77Kr2siWM3ebI33jQpelYQXndV5lxDYKkg==
-X-Received: by 2002:a65:53ca:0:b0:46f:ed3a:f38b with SMTP id z10-20020a6553ca000000b0046fed3af38bmr42693489pgr.387.1669842857047;
-        Wed, 30 Nov 2022 13:14:17 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:3729:bd90:53d2:99e3? ([2620:15c:211:201:3729:bd90:53d2:99e3])
-        by smtp.gmail.com with ESMTPSA id pw9-20020a17090b278900b00210c84b8ae5sm1662694pjb.35.2022.11.30.13.14.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Nov 2022 13:14:16 -0800 (PST)
-Message-ID: <7b71f90d-05d2-0b42-3a4a-6414e0cb88a3@acm.org>
-Date:   Wed, 30 Nov 2022 13:14:14 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
+        with ESMTP id S229750AbiK3Vv2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 16:51:28 -0500
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACF3692A1E;
+        Wed, 30 Nov 2022 13:51:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1669845087; x=1701381087;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=GAy6p2zNRrTbb2Kd0FfJLA6CMe4CwBNHgW0q9DGdS6s=;
+  b=pZfNbt71hca0xqb5gXyQsvsHC9s3aK0uHFeenhaRNb7prXo1lAjwwuOM
+   gsF+wGJBcFskmmxFLGphptSumxMbj9nXm4dMFa9ZSSB42WB4OGnLCsYlz
+   ZbYQxev9+9sb9xCYyIdgvPeXPHM1GCr0sb3UJp9jVFGdSn7QIVjrMaLzJ
+   U=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 30 Nov 2022 13:51:27 -0800
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Nov 2022 13:51:27 -0800
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Wed, 30 Nov 2022 13:51:26 -0800
+Date:   Wed, 30 Nov 2022 13:51:26 -0800
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <eddie.huang@mediatek.com>, <daejun7.park@samsung.com>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
+        <linux-arm-msm@vger.kernel.org>
 Subject: Re: [PATCH v8 00/16] Add Multi Circular Queue Support
-Content-Language: en-US
-To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        stanley.chu@mediatek.com, eddie.huang@mediatek.com,
-        daejun7.park@samsung.com, avri.altman@wdc.com, mani@kernel.org,
-        beanhuo@micron.com, linux-arm-msm@vger.kernel.org
+Message-ID: <20221130215126.GC9934@asutoshd-linux1.qualcomm.com>
 References: <cover.1669839847.git.quic_asutoshd@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <cover.1669839847.git.quic_asutoshd@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <7b71f90d-05d2-0b42-3a4a-6414e0cb88a3@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Disposition: inline
+In-Reply-To: <7b71f90d-05d2-0b42-3a4a-6414e0cb88a3@acm.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/22 12:27, Asutosh Das wrote:
-> This patch series is an implementation of UFS Multi-Circular Queue.
-> Please consider this series for next merge window.
+On Wed, Nov 30 2022 at 13:14 -0800, Bart Van Assche wrote:
+>On 11/30/22 12:27, Asutosh Das wrote:
+>>This patch series is an implementation of UFS Multi-Circular Queue.
+>>Please consider this series for next merge window.
+>
+>Hi Asutosh,
+>
+>It seems like my Reviewed-by tag is missing from several patches?
+>
+>>Please take a look and let us know your thoughts.
+>>
+>>v6 -> v7:
+>>- Added missing Reviewed-by tags.
+>
+>Are the v7 -> v8 changes perhaps missing?
+>
+Hello Bart,
+Thanks.
+Let me correct this and RESEND the v8 with everything updated.
 
-Hi Asutosh,
+-asd
 
-It seems like my Reviewed-by tag is missing from several patches?
-
-> Please take a look and let us know your thoughts.
-> 
-> v6 -> v7:
-> - Added missing Reviewed-by tags.
-
-Are the v7 -> v8 changes perhaps missing?
-
-Thanks,
-
-Bart.
-
+>Thanks,
+>
+>Bart.
+>
