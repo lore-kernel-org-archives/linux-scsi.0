@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21780C4321E
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:29:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B4E5C4321E
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:30:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230029AbiK3U35 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 15:29:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41428 "EHLO
+        id S229640AbiK3UaW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 15:30:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229627AbiK3U3r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:29:47 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F4424E687;
-        Wed, 30 Nov 2022 12:29:46 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUF0Bkt005238;
-        Wed, 30 Nov 2022 20:29:34 GMT
+        with ESMTP id S229627AbiK3UaV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:30:21 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FEB748422;
+        Wed, 30 Nov 2022 12:30:19 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUK8Ut2007329;
+        Wed, 30 Nov 2022 20:30:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=hSwauwJY6jNxIC6HYpEWOhZmp55bFgqboCWDmLwlg3Y=;
- b=OdX35BXuTTYRET7baM6UInguo1ZfmbsK1A0CnZ7S/BiJu7t/usIV5m4zkf3LFZrXlkcD
- tHlOYFZPp5DcCaVd5mNGKg0dGaykkoKPPS6paRrTOFYGeDd4pFyPIPY9rGFXWEK1Dz7H
- WTZWwSRI6YElNdxXdXs6S8myZY6zMAuH+FSSSj9m+ICPE+QpjMjEVNpHGImyuhPPYnxt
- aPxHW9ll5OpGSu/FBs19NX5s8MgsupVcDohUvBspGE/0kxWG19b+bTkEGYXxxUF/OT86
- o4RviSlRnRCXwStjYkN6TLT27mMblN79A/SnFkkMz2v1ADfup2IjWguBuS14mgyMa9AH 5A== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5fjx5bdr-1
+ bh=K/TDgFRGKW5DhwC7pWS4O1f/elYqF2/2a8/3RnUeogY=;
+ b=DTZOQYuCQEVqfZFJsLy8t04uCH9IJQTqEytBGj6ZsNJC7nQBUWIEVAsoqSYp/+xoS8OW
+ arVHl3viMy0/GEGFRlrklcTR8aZiYE0SHl/4eaQAwn7co/UWU0/m+mtcFoOIodMb+AX3
+ kJUL9BDSnuEmFzB3RU8MjaGtTMwmwgkWxQSzRaTrNETG2skjnHzaEuy1t8N2zE0ytXVv
+ /7xpT41YnFH8E/oksJUBjCUU9Pc5KS7/DwZl9L2qNdSPSBiKdMcJjDp3sLi95lMp65Qh
+ NETlTXniu9INcHShcS0qcHKEmyBL+Y7//3ACsjJezDvLof9BnaAFhfxYFa0r/+PT/t/Q nA== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m6dxx81sf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Nov 2022 20:29:33 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKTWJQ002464
+        Wed, 30 Nov 2022 20:30:10 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKU9qw020705
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Nov 2022 20:29:32 GMT
+        Wed, 30 Nov 2022 20:30:09 GMT
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 30 Nov 2022 12:29:32 -0800
+ 15.2.986.36; Wed, 30 Nov 2022 12:30:08 -0800
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -51,11 +51,10 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 08/16] ufs: core: mcq: Allocate memory for mcq mode
-Date:   Wed, 30 Nov 2022 12:27:49 -0800
-Message-ID: <345ee547e7892ff93a8efa5c78571b134d4110cd.1669839847.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v8 11/16] ufs: core: Prepare ufshcd_send_command for mcq
+Date:   Wed, 30 Nov 2022 12:27:52 -0800
+Message-ID: <181d2d72a0804060809ae074d97010c5fc07ab26.1669839847.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1669839847.git.quic_asutoshd@quicinc.com>
 References: <cover.1669839847.git.quic_asutoshd@quicinc.com>
@@ -66,283 +65,184 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: dqiYgdoliNw0YX0NPJrYXtXHR9kU-5_Z
-X-Proofpoint-GUID: dqiYgdoliNw0YX0NPJrYXtXHR9kU-5_Z
+X-Proofpoint-ORIG-GUID: 85Vp6Vc9M9c51gdArsXhM0bbtS1t46UH
+X-Proofpoint-GUID: 85Vp6Vc9M9c51gdArsXhM0bbtS1t46UH
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-30_04,2022-11-30_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- malwarescore=0 clxscore=1015 suspectscore=0 mlxlogscore=999
- impostorscore=0 priorityscore=1501 spamscore=0 bulkscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211300143
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ clxscore=1015 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ phishscore=0 suspectscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211300144
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-To read the bqueuedepth, the device descriptor is fetched
-in Single Doorbell Mode. This allocated memory may not be
-enough for MCQ mode because the number of tags supported
-in MCQ mode may be larger than in SDB mode.
-Hence, release the memory allocated in SDB mode and allocate
-memory for MCQ mode operation.
-Define the ufs hardware queue and Completion Queue Entry.
+Add support to send commands using multiple submission
+queues in MCQ mode.
+Modify the functions that use ufshcd_send_command().
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/ufs/core/ufs-mcq.c     | 59 ++++++++++++++++++++++++++++++++++++++++--
- drivers/ufs/core/ufshcd-priv.h |  1 +
- drivers/ufs/core/ufshcd.c      | 48 +++++++++++++++++++++++++++++++---
- include/ufs/ufshcd.h           | 20 ++++++++++++++
- include/ufs/ufshci.h           | 22 ++++++++++++++++
- 5 files changed, 145 insertions(+), 5 deletions(-)
+ drivers/ufs/core/ufs-mcq.c     |  1 +
+ drivers/ufs/core/ufshcd-priv.h | 10 ++++++++++
+ drivers/ufs/core/ufshcd.c      | 36 ++++++++++++++++++++++++++----------
+ include/ufs/ufshcd.h           |  5 +++++
+ 4 files changed, 42 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 6f66bd7..5496c62 100644
+index cffec4c..0c40fe2 100644
 --- a/drivers/ufs/core/ufs-mcq.c
 +++ b/drivers/ufs/core/ufs-mcq.c
-@@ -149,15 +149,70 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
- 	return 0;
- }
+@@ -309,6 +309,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
+ 	for (i = 0; i < hba->nr_hw_queues; i++) {
+ 		hwq = &hba->uhq[i];
+ 		hwq->max_entries = hba->nutrs;
++		spin_lock_init(&hwq->sq_lock);
+ 	}
  
-+int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
-+{
-+	struct ufs_hw_queue *hwq;
-+	size_t utrdl_size, cqe_size;
-+	int i;
-+
-+	for (i = 0; i < hba->nr_hw_queues; i++) {
-+		hwq = &hba->uhq[i];
-+
-+		utrdl_size = sizeof(struct utp_transfer_req_desc) *
-+			     hwq->max_entries;
-+		hwq->sqe_base_addr = dmam_alloc_coherent(hba->dev, utrdl_size,
-+							 &hwq->sqe_dma_addr,
-+							 GFP_KERNEL);
-+		if (!hwq->sqe_dma_addr) {
-+			dev_err(hba->dev, "SQE allocation failed\n");
-+			return -ENOMEM;
-+		}
-+
-+		cqe_size = sizeof(struct cq_entry) * hwq->max_entries;
-+		hwq->cqe_base_addr = dmam_alloc_coherent(hba->dev, cqe_size,
-+							 &hwq->cqe_dma_addr,
-+							 GFP_KERNEL);
-+		if (!hwq->cqe_dma_addr) {
-+			dev_err(hba->dev, "CQE allocation failed\n");
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+
- int ufshcd_mcq_init(struct ufs_hba *hba)
- {
--	int ret;
-+	struct ufs_hw_queue *hwq;
-+	int ret, i;
- 
- 	ret = ufshcd_mcq_config_nr_queues(hba);
- 	if (ret)
- 		return ret;
- 
- 	ret = ufshcd_vops_mcq_config_resource(hba);
--	return ret;
-+	if (ret)
-+		return ret;
-+
-+	hba->uhq = devm_kzalloc(hba->dev,
-+				hba->nr_hw_queues * sizeof(struct ufs_hw_queue),
-+				GFP_KERNEL);
-+	if (!hba->uhq) {
-+		dev_err(hba->dev, "ufs hw queue memory allocation failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	for (i = 0; i < hba->nr_hw_queues; i++) {
-+		hwq = &hba->uhq[i];
-+		hwq->max_entries = hba->nutrs;
-+	}
-+
-+	/* The very first HW queue serves device commands */
-+	hba->dev_cmd_queue = &hba->uhq[0];
-+	/* Give dev_cmd_queue the minimal number of entries */
-+	hba->dev_cmd_queue->max_entries = MAX_DEV_CMD_ENTRIES;
-+
-+	return 0;
- }
- 
+ 	/* The very first HW queue serves device commands */
 diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index d9b2087..93ebfec 100644
+index 0e35cfa..d295be4 100644
 --- a/drivers/ufs/core/ufshcd-priv.h
 +++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -63,6 +63,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
- int ufshcd_mcq_init(struct ufs_hba *hba);
- int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
-+int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
- 
- #define SD_ASCII_STD true
- #define SD_RAW false
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e17159a..7e931aa 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3740,6 +3740,14 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	}
- 
- 	/*
-+	 * Skip utmrdl allocation; it may have been
-+	 * allocated during first pass and not released during
-+	 * MCQ memory allocation.
-+	 * See ufshcd_release_sdb_queue() and ufshcd_config_mcq()
-+	 */
-+	if (hba->utmrdl_base_addr)
-+		goto skip_utmrdl;
-+	/*
- 	 * Allocate memory for UTP Task Management descriptors
- 	 * UFSHCI requires 1024 byte alignment of UTMRD
- 	 */
-@@ -3755,6 +3763,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
-+skip_utmrdl:
- 	/* Allocate memory for local reference block */
- 	hba->lrb = devm_kcalloc(hba->dev,
- 				hba->nutrs, sizeof(struct ufshcd_lrb),
-@@ -8221,6 +8230,22 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 	return ret;
+@@ -332,4 +332,14 @@ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
+ 	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
  }
  
-+/* SDB - Single Doorbell */
-+static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
++static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
 +{
-+	size_t ucdl_size, utrdl_size;
++	u32 mask = q->max_entries - 1;
++	u32 val;
 +
-+	ucdl_size = sizeof(struct utp_transfer_cmd_desc) * nutrs;
-+	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
-+			   hba->ucdl_dma_addr);
-+
-+	utrdl_size = sizeof(struct utp_transfer_req_desc) * nutrs;
-+	dmam_free_coherent(hba->dev, utrdl_size, hba->utrdl_base_addr,
-+			   hba->utrdl_dma_addr);
-+
-+	devm_kfree(hba->dev, hba->lrb);
++	q->sq_tail_slot = (q->sq_tail_slot + 1) & mask;
++	val = q->sq_tail_slot * sizeof(struct utp_transfer_req_desc);
++	writel(val, q->mcq_sq_tail);
 +}
 +
- static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ #endif /* _UFSHCD_PRIV_H_ */
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 965e844..1639a97 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2182,9 +2182,11 @@ static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *
+  * ufshcd_send_command - Send SCSI or device management commands
+  * @hba: per adapter instance
+  * @task_tag: Task tag of the command
++ * @hwq: pointer to hardware queue instance
+  */
+ static inline
+-void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
++void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
++			 struct ufs_hw_queue *hwq)
  {
- 	int ret;
-@@ -8232,12 +8257,29 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ 	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+ 	unsigned long flags;
+@@ -2198,12 +2200,24 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+ 		ufshcd_start_monitor(hba, lrbp);
  
- 	hba->nutrs = ret;
- 	ret = ufshcd_mcq_init(hba);
--	if (ret) {
--		hba->nutrs = old_nutrs;
--		return ret;
-+	if (ret)
-+		goto err;
+-	spin_lock_irqsave(&hba->outstanding_lock, flags);
+-	if (hba->vops && hba->vops->setup_xfer_req)
+-		hba->vops->setup_xfer_req(hba, task_tag, !!lrbp->cmd);
+-	__set_bit(task_tag, &hba->outstanding_reqs);
+-	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
++	if (is_mcq_enabled(hba)) {
++		int utrd_size = sizeof(struct utp_transfer_req_desc);
 +
-+	/*
-+	 * Previously allocated memory for nutrs may not be enough in MCQ mode.
-+	 * Number of supported tags in MCQ mode may be larger than SDB mode.
-+	 */
-+	if (hba->nutrs != old_nutrs) {
-+		ufshcd_release_sdb_queue(hba, old_nutrs);
-+		ret = ufshcd_memory_alloc(hba);
-+		if (ret)
-+			goto err;
-+		ufshcd_host_memory_configure(hba);
- 	}
- 
-+	ret = ufshcd_mcq_memory_alloc(hba);
-+	if (ret)
-+		goto err;
-+
- 	return 0;
-+err:
-+	hba->nutrs = old_nutrs;
-+	return ret;
++		spin_lock(&hwq->sq_lock);
++		memcpy(hwq->sqe_base_addr + (hwq->sq_tail_slot * utrd_size),
++		       lrbp->utr_descriptor_ptr, utrd_size);
++		ufshcd_inc_sq_tail(hwq);
++		spin_unlock(&hwq->sq_lock);
++	} else {
++		spin_lock_irqsave(&hba->outstanding_lock, flags);
++		if (hba->vops && hba->vops->setup_xfer_req)
++			hba->vops->setup_xfer_req(hba, lrbp->task_tag,
++						  !!lrbp->cmd);
++		__set_bit(lrbp->task_tag, &hba->outstanding_reqs);
++		ufshcd_writel(hba, 1 << lrbp->task_tag,
++			      REG_UTP_TRANSFER_REQ_DOOR_BELL);
++		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
++	}
  }
  
  /**
+@@ -2822,6 +2836,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	int tag = scsi_cmd_to_rq(cmd)->tag;
+ 	struct ufshcd_lrb *lrbp;
+ 	int err = 0;
++	struct ufs_hw_queue *hwq = NULL;
+ 
+ 	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n", tag);
+ 
+@@ -2906,7 +2921,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		goto out;
+ 	}
+ 
+-	ufshcd_send_command(hba, tag);
++	ufshcd_send_command(hba, tag, hwq);
+ 
+ out:
+ 	rcu_read_unlock();
+@@ -3101,10 +3116,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 		goto out;
+ 
+ 	hba->dev_cmd.complete = &wait;
++	hba->dev_cmd.cqe = NULL;
+ 
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+ 
+-	ufshcd_send_command(hba, tag);
++	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
+ 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+ 	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
+ 				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+@@ -6952,7 +6968,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+ 
+-	ufshcd_send_command(hba, tag);
++	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
+ 	/*
+ 	 * ignore the returning value here - ufshcd_check_query_response is
+ 	 * bound to fail since dev_cmd.query and dev_cmd.type were left empty.
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9d7829a..90461f43 100644
+index ac46d36..ae20697 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -865,6 +865,8 @@ enum ufshcd_res {
-  * @mcq_sup: is mcq supported by UFSHC
-  * @res: array of resource info of MCQ registers
-  * @mcq_base: Multi circular queue registers base address
-+ * @uhq: array of supported hardware queues
-+ * @dev_cmd_queue: Queue for issuing device management commands
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -1020,6 +1022,24 @@ struct ufs_hba {
- 	bool mcq_sup;
- 	struct ufshcd_res_info res[RES_MAX];
- 	void __iomem *mcq_base;
-+	struct ufs_hw_queue *uhq;
-+	struct ufs_hw_queue *dev_cmd_queue;
-+};
-+
-+/**
-+ * struct ufs_hw_queue - per hardware queue structure
-+ * @sqe_base_addr: submission queue entry base address
-+ * @sqe_dma_addr: submission queue dma address
-+ * @cqe_base_addr: completion queue base address
-+ * @cqe_dma_addr: completion queue dma address
-+ * @max_entries: max number of slots in this hardware queue
-+ */
-+struct ufs_hw_queue {
-+	void *sqe_base_addr;
-+	dma_addr_t sqe_dma_addr;
-+	struct cq_entry *cqe_base_addr;
-+	dma_addr_t cqe_dma_addr;
-+	u32 max_entries;
+@@ -222,6 +222,7 @@ struct ufs_dev_cmd {
+ 	struct mutex lock;
+ 	struct completion *complete;
+ 	struct ufs_query query;
++	struct cq_entry *cqe;
  };
  
- /* Returns true if clocks can be gated. Otherwise false */
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 67fcebd..15d1ea2 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -486,6 +486,28 @@ struct utp_transfer_req_desc {
- 	__le16  prd_table_offset;
+ /**
+@@ -1064,6 +1065,8 @@ struct ufs_hba {
+  * @cqe_dma_addr: completion queue dma address
+  * @max_entries: max number of slots in this hardware queue
+  * @id: hardware queue ID
++ * @sq_tp_slot: current slot to which SQ tail pointer is pointing
++ * @sq_lock: serialize submission queue access
+  */
+ struct ufs_hw_queue {
+ 	void __iomem *mcq_sq_head;
+@@ -1077,6 +1080,8 @@ struct ufs_hw_queue {
+ 	dma_addr_t cqe_dma_addr;
+ 	u32 max_entries;
+ 	u32 id;
++	u32 sq_tail_slot;
++	spinlock_t sq_lock;
  };
  
-+/* MCQ Completion Queue Entry */
-+struct cq_entry {
-+	/* DW 0-1 */
-+	__le64 command_desc_base_addr;
-+
-+	/* DW 2 */
-+	__le16  response_upiu_length;
-+	__le16  response_upiu_offset;
-+
-+	/* DW 3 */
-+	__le16  prd_table_length;
-+	__le16  prd_table_offset;
-+
-+	/* DW 4 */
-+	__le32 status;
-+
-+	/* DW 5-7 */
-+	__le32 reserved[3];
-+};
-+
-+static_assert(sizeof(struct cq_entry) == 32);
-+
- /*
-  * UTMRD structure.
-  */
+ static inline bool is_mcq_enabled(struct ufs_hba *hba)
 -- 
 2.7.4
 
