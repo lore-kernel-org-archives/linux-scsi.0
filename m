@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE39AC47089
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6753DC47089
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Nov 2022 20:29:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbiK3U3W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 15:29:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41418 "EHLO
+        id S230054AbiK3U3p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 15:29:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229977AbiK3U3N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:29:13 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D160F5132F;
-        Wed, 30 Nov 2022 12:29:01 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUK8QuM007194;
-        Wed, 30 Nov 2022 20:28:47 GMT
+        with ESMTP id S230121AbiK3U3g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 15:29:36 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 034A44E690;
+        Wed, 30 Nov 2022 12:29:34 -0800 (PST)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AUKC6SV024591;
+        Wed, 30 Nov 2022 20:29:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=qoNczxWKn7OWA6oOtPlIoQ05gd3AruxeCbhc1tsdva0=;
- b=jWQwEFo8o+bSDt7Y2os4Evr6RdMtZEsGKlJcdOivrNVmE6WXikXB5P8AWJhYzFzJAQHH
- tIZYhOxdsGgBL4xcuIlScjE5CHW7EBgimHUQDzkTfaLnxKlFJL8pmAbbZtWpM+pu10qf
- 25kool8civmitNk76OxoJ7SO9hWsnKfKkAfWJL6opcJ9yv2zxrf/WGdgG5Ay0IzCoyRw
- NjEHfTzF1HVogNKdQ/IAhZCWztaQ8cKv9ja46PaxLdsLB9JvVCOsVpiy/D0bZRzHmmD6
- GnABDU2ywcqDUjocsvdzEPXEmFUzxizEtCumJq+qD2th7aG9YeY3+NHwlBz+aDy0n44B nw== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m6dxx81n6-1
+ bh=otQ53QqilwXS6zLLANW/XYAmq02DN7iwWMVvCJ8/ROM=;
+ b=D0XPLEg0XMqtYlrDmk66X3L9PPRMT1TNQSghvcMn45lV7/oNYUTcJ9IYdaR4tigzvz5A
+ 9jPOMHTIdO1/wWQhElJy9tFImd0fCdUsjsgkd/hcdYi9Lh3xxHWTyoZI2cPx2RP95qyo
+ Qabb4LlABWn8OpLwkff907WofwgT6ZiTs3e/t7hJZiKQ5r7rVggtyktHh93pXfcnN9OG
+ GBRu5x39GaAPdAEOM3JXe8CPdT3cYaSCGSaOz9uBo9LfVBeyzAYM+nBpyFpqiLAL4yAR
+ 3mfSbuw4IrrMg+RK2+ExeaFGO2J7NUArwcoIcP1xQI/2BnNKtVsGRUtEy4ahLWVtijmk 3w== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m5fjx5bb3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Nov 2022 20:28:47 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKSkdK010619
+        Wed, 30 Nov 2022 20:29:18 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AUKTGLx022447
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Nov 2022 20:28:46 GMT
+        Wed, 30 Nov 2022 20:29:16 GMT
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 30 Nov 2022 12:28:46 -0800
+ 15.2.986.36; Wed, 30 Nov 2022 12:29:16 -0800
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -49,13 +49,17 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         <linux-arm-msm@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
+        "Andy Gross" <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "Konrad Dybcio" <konrad.dybcio@somainline.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        "open list" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 05/16] ufs: core: mcq: Add support to allocate multiple queues
-Date:   Wed, 30 Nov 2022 12:27:46 -0800
-Message-ID: <c5b8081775bfd0f26ea70ace77ccd54ac007e196.1669839847.git.quic_asutoshd@quicinc.com>
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8 07/16] ufs: core: mcq: Calculate queue depth
+Date:   Wed, 30 Nov 2022 12:27:48 -0800
+Message-ID: <5dcfc7594eee8a69350a0402b3da06a2ff75ee78.1669839847.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1669839847.git.quic_asutoshd@quicinc.com>
 References: <cover.1669839847.git.quic_asutoshd@quicinc.com>
@@ -66,248 +70,240 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 9uIQSDUlzPLf1WyFPCzO0qhcpPGNWfkD
-X-Proofpoint-GUID: 9uIQSDUlzPLf1WyFPCzO0qhcpPGNWfkD
+X-Proofpoint-ORIG-GUID: Eal62YeYkSNNAneC9F6EpSHqDs4Ys6yD
+X-Proofpoint-GUID: Eal62YeYkSNNAneC9F6EpSHqDs4Ys6yD
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-30_04,2022-11-30_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
- clxscore=1015 bulkscore=0 priorityscore=1501 lowpriorityscore=0
- phishscore=0 suspectscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
+ malwarescore=0 clxscore=1015 suspectscore=0 mlxlogscore=999
+ impostorscore=0 priorityscore=1501 spamscore=0 bulkscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2210170000 definitions=main-2211300143
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Multi-circular queue (MCQ) has been added in UFSHC v4.0
-standard in addition to the Single Doorbell mode.
-The MCQ mode supports multiple submission and completion queues.
-Add support to allocate and configure the queues.
-Add module parameters support to configure the queues.
+The ufs device defines the supported queuedepth by
+bqueuedepth which has a max value of 256.
+The HC defines MAC (Max Active Commands) that define
+the max number of commands that in flight to the ufs
+device.
+Calculate and configure the nutrs based on both these
+values.
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/ufs/core/Makefile      |   2 +-
- drivers/ufs/core/ufs-mcq.c     | 125 +++++++++++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |   1 +
- drivers/ufs/core/ufshcd.c      |  12 ++++
- include/ufs/ufshcd.h           |   4 ++
- 5 files changed, 143 insertions(+), 1 deletion(-)
- create mode 100644 drivers/ufs/core/ufs-mcq.c
+ drivers/ufs/core/ufs-mcq.c     | 35 +++++++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h |  9 +++++++++
+ drivers/ufs/core/ufshcd.c      | 17 ++++++++++++++++-
+ drivers/ufs/host/ufs-qcom.c    |  7 +++++++
+ drivers/ufs/host/ufs-qcom.h    |  1 +
+ include/ufs/ufs.h              |  2 ++
+ include/ufs/ufshcd.h           |  2 ++
+ include/ufs/ufshci.h           |  1 +
+ 8 files changed, 73 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
-index 62f38c5..4d02e0f 100644
---- a/drivers/ufs/core/Makefile
-+++ b/drivers/ufs/core/Makefile
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- 
- obj-$(CONFIG_SCSI_UFSHCD)		+= ufshcd-core.o
--ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
-+ufshcd-core-y				+= ufshcd.o ufs-sysfs.o ufs-mcq.o
- ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
- ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
 diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-new file mode 100644
-index 0000000..bf08ec5
---- /dev/null
+index d6807e3..6f66bd7 100644
+--- a/drivers/ufs/core/ufs-mcq.c
 +++ b/drivers/ufs/core/ufs-mcq.c
-@@ -0,0 +1,125 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2022 Qualcomm Innovation Center. All rights reserved.
+@@ -19,6 +19,9 @@
+ #define UFS_MCQ_NUM_DEV_CMD_QUEUES 1
+ #define UFS_MCQ_MIN_POLL_QUEUES 0
+ 
++#define MAX_DEV_CMD_ENTRIES	2
++#define MCQ_CFG_MAC_MASK	GENMASK(16, 8)
++
+ static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
+ {
+ 	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_RW_QUEUES,
+@@ -67,6 +70,38 @@ module_param_cb(poll_queues, &poll_queue_count_ops, &poll_queues, 0644);
+ MODULE_PARM_DESC(poll_queues,
+ 		 "Number of poll queues used for r/w. Default value is 1");
+ 
++/**
++ * ufshcd_mcq_decide_queue_depth - decide the queue depth
++ * @hba - per adapter instance
 + *
-+ * Authors:
-+ *	Asutosh Das <quic_asutoshd@quicinc.com>
-+ *	Can Guo <quic_cang@quicinc.com>
++ * Returns queue-depth on success, non-zero on error
++ *
++ * MAC - Max. Active Command of the Host Controller (HC)
++ * HC wouldn't send more than this commands to the device.
++ * It is mandatory to implement get_hba_mac() to enable MCQ mode.
++ * Calculates and adjusts the queue depth based on the depth
++ * supported by the HC and ufs device.
 + */
-+
-+#include <asm/unaligned.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+#include "ufshcd-priv.h"
-+
-+#define MAX_QUEUE_SUP GENMASK(7, 0)
-+#define UFS_MCQ_MIN_RW_QUEUES 2
-+#define UFS_MCQ_MIN_READ_QUEUES 0
-+#define UFS_MCQ_NUM_DEV_CMD_QUEUES 1
-+#define UFS_MCQ_MIN_POLL_QUEUES 0
-+
-+static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
++int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
 +{
-+	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_RW_QUEUES,
-+				     num_possible_cpus());
-+}
++	int mac;
 +
-+static const struct kernel_param_ops rw_queue_count_ops = {
-+	.set = rw_queue_count_set,
-+	.get = param_get_uint,
-+};
-+
-+static unsigned int rw_queues;
-+module_param_cb(rw_queues, &rw_queue_count_ops, &rw_queues, 0644);
-+MODULE_PARM_DESC(rw_queues,
-+		 "Number of interrupt driven I/O queues used for rw. Default value is nr_cpus");
-+
-+static int read_queue_count_set(const char *val, const struct kernel_param *kp)
-+{
-+	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_READ_QUEUES,
-+				     num_possible_cpus());
-+}
-+
-+static const struct kernel_param_ops read_queue_count_ops = {
-+	.set = read_queue_count_set,
-+	.get = param_get_uint,
-+};
-+
-+static unsigned int read_queues;
-+module_param_cb(read_queues, &read_queue_count_ops, &read_queues, 0644);
-+MODULE_PARM_DESC(read_queues,
-+		 "Number of interrupt driven read queues used for read. Default value is 0");
-+
-+static int poll_queue_count_set(const char *val, const struct kernel_param *kp)
-+{
-+	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_POLL_QUEUES,
-+				     num_possible_cpus());
-+}
-+
-+static const struct kernel_param_ops poll_queue_count_ops = {
-+	.set = poll_queue_count_set,
-+	.get = param_get_uint,
-+};
-+
-+static unsigned int poll_queues = 1;
-+module_param_cb(poll_queues, &poll_queue_count_ops, &poll_queues, 0644);
-+MODULE_PARM_DESC(poll_queues,
-+		 "Number of poll queues used for r/w. Default value is 1");
-+
-+static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
-+{
-+	int i;
-+	u32 hba_maxq, rem, tot_queues;
-+	struct Scsi_Host *host = hba->host;
-+
-+	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
-+
-+	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
-+			rw_queues;
-+
-+	if (hba_maxq < tot_queues) {
-+		dev_err(hba->dev, "Total queues (%d) exceeds HC capacity (%d)\n",
-+			tot_queues, hba_maxq);
-+		return -EOPNOTSUPP;
++	/* Mandatory to implement get_hba_mac() */
++	mac = ufshcd_mcq_vops_get_hba_mac(hba);
++	if (mac < 0) {
++		dev_err(hba->dev, "Failed to get mac, err=%d\n", mac);
++		return mac;
 +	}
 +
-+	rem = hba_maxq - UFS_MCQ_NUM_DEV_CMD_QUEUES;
-+
-+	if (rw_queues) {
-+		hba->nr_queues[HCTX_TYPE_DEFAULT] = rw_queues;
-+		rem -= hba->nr_queues[HCTX_TYPE_DEFAULT];
-+	} else {
-+		rw_queues = num_possible_cpus();
-+	}
-+
-+	if (poll_queues) {
-+		hba->nr_queues[HCTX_TYPE_POLL] = poll_queues;
-+		rem -= hba->nr_queues[HCTX_TYPE_POLL];
-+	}
-+
-+	if (read_queues) {
-+		hba->nr_queues[HCTX_TYPE_READ] = read_queues;
-+		rem -= hba->nr_queues[HCTX_TYPE_READ];
-+	}
-+
-+	if (!hba->nr_queues[HCTX_TYPE_DEFAULT])
-+		hba->nr_queues[HCTX_TYPE_DEFAULT] = min3(rem, rw_queues,
-+							 num_possible_cpus());
-+
-+	for (i = 0; i < HCTX_MAX_TYPES; i++)
-+		host->nr_hw_queues += hba->nr_queues[i];
-+
-+	hba->nr_hw_queues = host->nr_hw_queues + UFS_MCQ_NUM_DEV_CMD_QUEUES;
-+	return 0;
++	WARN_ON_ONCE(!hba->dev_info.bqueuedepth);
++	/*
++	 * max. value of bqueuedepth = 256, mac is host dependent.
++	 * It is mandatory for UFS device to define bQueueDepth if
++	 * shared queuing architecture is enabled.
++	 */
++	return min_t(int, mac, hba->dev_info.bqueuedepth);
 +}
 +
-+int ufshcd_mcq_init(struct ufs_hba *hba)
-+{
-+	int ret;
-+
-+	ret = ufshcd_mcq_config_nr_queues(hba);
-+
-+	return ret;
-+}
-+
+ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+ {
+ 	int i;
 diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index a9e8e1f..9368ba2 100644
+index 3e21242..d9b2087 100644
 --- a/drivers/ufs/core/ufshcd-priv.h
 +++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -61,6 +61,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+@@ -62,6 +62,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
  	enum flag_idn idn, u8 index, bool *flag_res);
  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
-+int ufshcd_mcq_init(struct ufs_hba *hba);
+ int ufshcd_mcq_init(struct ufs_hba *hba);
++int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
  
  #define SD_ASCII_STD true
  #define SD_RAW false
+@@ -235,6 +236,14 @@ static inline int ufshcd_vops_mcq_config_resource(struct ufs_hba *hba)
+ 	return -EOPNOTSUPP;
+ }
+ 
++static inline int ufshcd_mcq_vops_get_hba_mac(struct ufs_hba *hba)
++{
++	if (hba->vops && hba->vops->get_hba_mac)
++		return hba->vops->get_hba_mac(hba);
++
++	return -EOPNOTSUPP;
++}
++
+ extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ 
+ /**
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3c2220c..9b78814 100644
+index 9b78814..e17159a 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -8220,6 +8220,11 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+@@ -7807,6 +7807,7 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 	/* getting Specification Version in big endian format */
+ 	dev_info->wspecversion = desc_buf[DEVICE_DESC_PARAM_SPEC_VER] << 8 |
+ 				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
++	dev_info->bqueuedepth = desc_buf[DEVICE_DESC_PARAM_Q_DPTH];
+ 	b_ufs_feature_sup = desc_buf[DEVICE_DESC_PARAM_UFS_FEAT];
+ 
+ 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+@@ -8222,7 +8223,21 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 
+ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ {
+-	return ufshcd_mcq_init(hba);
++	int ret;
++	int old_nutrs = hba->nutrs;
++
++	ret = ufshcd_mcq_decide_queue_depth(hba);
++	if (ret < 0)
++		return ret;
++
++	hba->nutrs = ret;
++	ret = ufshcd_mcq_init(hba);
++	if (ret) {
++		hba->nutrs = old_nutrs;
++		return ret;
++	}
++
++	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 6bea541..ad7cde2 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1526,6 +1526,12 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
  	return ret;
  }
  
-+static int ufshcd_alloc_mcq(struct ufs_hba *hba)
++static int ufs_qcom_get_hba_mac(struct ufs_hba *hba)
 +{
-+	return ufshcd_mcq_init(hba);
++	/* Qualcomm HC supports up to 64 */
++	return MAX_SUPP_MAC;
 +}
 +
- /**
-  * ufshcd_probe_hba - probe hba to detect device and initialize it
-  * @hba: per-adapter instance
-@@ -8269,6 +8274,13 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
- 			goto out;
+ /*
+  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+  *
+@@ -1550,6 +1556,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.config_scaling_param = ufs_qcom_config_scaling_param,
+ 	.program_key		= ufs_qcom_ice_program_key,
+ 	.mcq_config_resource	= ufs_qcom_mcq_config_resource,
++	.get_hba_mac		= ufs_qcom_get_hba_mac,
+ };
  
- 		if (is_mcq_supported(hba)) {
-+			ret = ufshcd_alloc_mcq(hba);
-+			if (ret) {
-+				/* Continue with SDB mode */
-+				use_mcq_mode = false;
-+				dev_err(hba->dev, "MCQ mode is disabled, err=%d\n",
-+					 ret);
-+			}
- 			ret = scsi_add_host(host, hba->dev);
- 			if (ret) {
- 				dev_err(hba->dev, "scsi_add_host failed\n");
+ /**
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 44466a3..f86e532 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -16,6 +16,7 @@
+ #define HBRN8_POLL_TOUT_MS      100
+ #define DEFAULT_CLK_RATE_HZ     1000000
+ #define BUS_VECTOR_NAME_LEN     32
++#define MAX_SUPP_MAC		64
+ 
+ #define UFS_HW_VER_MAJOR_SHFT	(28)
+ #define UFS_HW_VER_MAJOR_MASK	(0x000F << UFS_HW_VER_MAJOR_SHFT)
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index ba2a1d8..5112418 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -591,6 +591,8 @@ struct ufs_dev_info {
+ 	u8	*model;
+ 	u16	wspecversion;
+ 	u32	clk_gating_wait_us;
++	/* Stores the depth of queue in UFS device */
++	u8	bqueuedepth;
+ 
+ 	/* UFS HPB related flag */
+ 	bool	hpb_enabled;
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 70c0f9f..146b613 100644
+index 0e21a6a..9d7829a 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -829,6 +829,8 @@ struct ufs_hba_monitor {
-  *	ee_ctrl_mask
-  * @luns_avail: number of regular and well known LUNs supported by the UFS
-  *	device
-+ * @nr_hw_queues: number of hardware queues configured
-+ * @nr_queues: number of Queues of different queue types
-  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
-  *	ufshcd_resume_complete()
-  * @ext_iid_sup: is EXT_IID is supported by UFSHC
-@@ -981,6 +983,8 @@ struct ufs_hba {
- 	u32 debugfs_ee_rate_limit_ms;
- #endif
- 	u32 luns_avail;
-+	unsigned int nr_hw_queues;
-+	unsigned int nr_queues[HCTX_MAX_TYPES];
- 	bool complete_put;
- 	bool ext_iid_sup;
- 	bool mcq_sup;
+@@ -298,6 +298,7 @@ struct ufs_pwr_mode_info {
+  * @program_key: program or evict an inline encryption key
+  * @event_notify: called to notify important events
+  * @mcq_config_resource: called to configure MCQ platform resources
++ * @get_hba_mac: called to get vendor specific mac value, mandatory for mcq mode
+  */
+ struct ufs_hba_variant_ops {
+ 	const char *name;
+@@ -337,6 +338,7 @@ struct ufs_hba_variant_ops {
+ 	void	(*event_notify)(struct ufs_hba *hba,
+ 				enum ufs_event_type evt, void *data);
+ 	int	(*mcq_config_resource)(struct ufs_hba *hba);
++	int	(*get_hba_mac)(struct ufs_hba *hba);
+ };
+ 
+ /* clock gating state  */
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 4d4da06..67fcebd 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -57,6 +57,7 @@ enum {
+ 	REG_UFS_CCAP				= 0x100,
+ 	REG_UFS_CRYPTOCAP			= 0x104,
+ 
++	REG_UFS_MCQ_CFG				= 0x380,
+ 	UFSHCI_CRYPTO_REG_SPACE_SIZE		= 0x400,
+ };
+ 
 -- 
 2.7.4
 
