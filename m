@@ -2,129 +2,184 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB91C47088
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 09:44:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33803C4321E
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 13:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230235AbiLAJo3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 04:44:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49578 "EHLO
+        id S231190AbiLANKY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 08:10:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230245AbiLAJoO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 04:44:14 -0500
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E67B68EE73
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 01:44:08 -0800 (PST)
-X-UUID: 2f1b84a7b1ca49bd8745677374c16705-20221201
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=P587dA8Aha5RLNm5yWfcKiJxxnQVVKASOviRpQBreb8=;
-        b=h1M35Jvcab5aLqVEbmVUddZFWv/NGjA4jEjsvvE+S2JbQtyFrwUFz5fWlb/3f+LQltlM7lLh86qwuKsJJbjCshm31dwuxyd6v7YtqQruRNneWhYpkNii+bXnCzAWeQzDZtD/g0s6/5xT32PTkV3DTdxjaUsLOpDdA+5ucRoG6mU=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:da7c34a1-d18b-4b5e-865d-951e9b2c5e21,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:dcaaed0,CLOUDID:7914dc1e-5e1d-4ab5-ab8e-3e04efc02b30,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 2f1b84a7b1ca49bd8745677374c16705-20221201
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1711310103; Thu, 01 Dec 2022 17:44:02 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Thu, 1 Dec 2022 17:44:01 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Thu, 1 Dec 2022 17:44:01 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <tun-yu.yu@mediatek.com>,
-        <eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>
-Subject: [PATCH v2] ufs: core: wlun suspend SSU/enter hibern8 fail recovery
-Date:   Thu, 1 Dec 2022 17:43:58 +0800
-Message-ID: <20221201094358.20700-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S231364AbiLANKT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 08:10:19 -0500
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52E189E45C;
+        Thu,  1 Dec 2022 05:10:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1669900209; x=1701436209;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=s8L1eFbYp0vprVnbaMynMWJnquPml4BCuQIfirbAahA=;
+  b=aDOYyqNe9JDsFTMer2wQzK6D56iO6HTdNCR7+NxxezTPDupMZbzRKfIl
+   lA3zr2IAQ7cGqEXAVUUG+YvNknxd1D/FCWEgP+G/6Nor64tIdfDF8VTsC
+   y3a07VVC/7BcoYdiNU6CnOcvxlpXfeIwbuhWOGZWkg9UjZx0/wLjgxnkn
+   Nu/LXlbP6tKuPBBBPbirHRV+94BAWCakg19WiuDtkUfESodqHeb0s0QG0
+   YEIzhByHDckff9AIV1XoxJvfaDFr2a1HazQLEEkgx9AfE+szR6pNAWGkr
+   3DDO7ipbXGLIwkX3LTfNR4VFOwjqbXD+xswN8qZVH/jzOtvykqL44cnqR
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10547"; a="314379303"
+X-IronPort-AV: E=Sophos;i="5.96,209,1665471600"; 
+   d="scan'208";a="314379303"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2022 05:10:08 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10547"; a="638384748"
+X-IronPort-AV: E=Sophos;i="5.96,209,1665471600"; 
+   d="scan'208";a="638384748"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.34.240])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2022 05:10:03 -0800
+Message-ID: <20aae21e-62d2-8fdb-b57a-7b5a180266d8@intel.com>
+Date:   Thu, 1 Dec 2022 15:09:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.5.0
+Subject: Re: PM-runtime: supplier looses track of consumer during probe
+Content-Language: en-US
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Tushar Nimkar <quic_tnimkar@quicinc.com>,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     linux-arm-msm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        bjorn.andersson@kernel.org, quic_mkshah@quicinc.com,
+        quic_lsrao@quicinc.com, bvanassche@acm.org,
+        Peter Wang <peter.wang@mediatek.com>
+References: <36aed941-a73e-d937-2721-4f0decd61ce0@quicinc.com>
+ <8c0a715a-d626-aa70-15f1-79f1e23fbc67@quicinc.com>
+ <a5e2aab6-7f0e-7f3b-f34b-6d222450c97d@intel.com>
+ <8ca27fcb-b146-3ea7-a042-55f99e0ae3fb@quicinc.com>
+ <2a1047a7-3121-6cbe-d4c5-46bbff0c5cc5@quicinc.com>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <2a1047a7-3121-6cbe-d4c5-46bbff0c5cc5@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 29/11/22 18:56, Nitin Rawat wrote:
+> Hi Adrian,
+> 
+> On 11/21/2022 11:38 AM, Tushar Nimkar wrote:
+>> Hi Adrian,
+>>
+>> On 11/18/2022 8:25 PM, Adrian Hunter wrote:
+>>> On 4/11/22 11:19, Tushar Nimkar wrote:
+>>>> Hi linux-pm/linux-scsi,
+>>
+>>>>> Process -1
+>>>>> ufshcd_async_scan context (process 1)
+>>>>> scsi_autopm_put_device() //0:0:0:0
+>>>
+>>> I am having trouble following your description.  What function is calling
+>>> scsi_autopm_put_device() here?
+>>>
+>> Below is flow which calls scsi_autopm_put_device()
+>> Process -1
+>> ufshcd_async_scan()
+>>      scsi_probe_and_add_lun()
+>>          scsi_add_lun()
+>>              slave_configure()
+>>                  scsi_sysfs_add_sdev()
+>>                      scsi_autopm_get_device()
+>>                          device_add()     <- invoked [Process 2] sd_probe()
+>>                              scsi_autopm_put_device()
+>>
+>>>>> pm_runtime_put_sync()
+>>>>> __pm_runtime_idle()
+>>>>> rpm_idle() -- RPM_GET_PUT(4)
+>>>>>       __rpm_callback
+>>>>>           scsi_runtime_idle()
+>>>>>               pm_runtime_mark_last_busy()
+>>>>>               pm_runtime_autosuspend()  --[A]
+>>>>>                   rpm_suspend() -- RPM_AUTO(8)
+>>>>>                       pm_runtime_autosuspend_expiration() use_autosuspend    is false return 0   --- [B]
+>>>>>                           __update_runtime_status to RPM_SUSPENDING
+>>>>>                       __rpm_callback()
+>>>>>                           __rpm_put_suppliers(dev, false)
+>>>>>                       __update_runtime_status to RPM_SUSPENDED
+>>>>>                   rpm_suspend_suppliers()
+>>>>>                       rpm_idle() for supplier -- RPM_ASYNC(1) return (-EAGAIN) [ Other consumer active for supplier]
+>>>>>                   rpm_suspend() – END with return=0
+>>>>>           scsi_runtime_idle() END return (-EBUSY) always.
+>>>
+>>> Not following here either.  Which device is EBUSY and why?
+>>
+>> scsi_runtime_idle() return -EBUSY always [3]
+>> Storage/scsi team can better explain -EBUSY implementation.
+> 
+> EBUSY is returned from below code for consumer dev 0:0:0:0.
+> scsi_runtime_idle is called from scsi_autopm_put_device which inturn is called from ufshcd_async_scan (Process 1 as per above call stack)
+> static int scsi_runtime_idle(struct device *dev)
+> {
+>     :
+> 
+>     if (scsi_is_sdev_device(dev)) {
+>         pm_runtime_mark_last_busy(dev);
+>         pm_runtime_autosuspend(dev);
+>         return -EBUSY; ---> EBUSY returned from here.
+>     }
+> 
+>     
+> }
+> 
+>>
+>> [3] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/scsi_pm.c?h=next-20221118#n210
+>>
+>>
+>>>>>
+>>>>> [1]: https://lore.kernel.org/lkml/4748074.GXAFRqVoOG@kreacher/T/
+>>>>> [2]: https://lkml.org/lkml/2022/10/12/259
 
-When SSU/enter hibern8 fail in wlun suspend flow, trigger error
-handler and return busy to break the suspend.
-If not, wlun runtime pm status become error and the consumer will
-stuck in runtime suspend status.
+It looks to me like __rpm_callback() makes assumptions about
+dev->power.runtime_status that are not necessarily true because
+dev->power.lock is dropped.  AFAICT the intention of the code
+would be fulfilled by instead using the status as it was before
+the lock was dropped.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+Consequently, perhaps you could try this:
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b1f59a5fe632..8e5f7d9fe7c2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8970,6 +8970,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	enum ufs_pm_level pm_lvl;
- 	enum ufs_dev_pwr_mode req_dev_pwr_mode;
- 	enum uic_link_state req_link_state;
-+	unsigned long flags;
+diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+index b52049098d4e..3cf9abc3b2c2 100644
+--- a/drivers/base/power/runtime.c
++++ b/drivers/base/power/runtime.c
+@@ -365,6 +365,7 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
+ {
+ 	int retval = 0, idx;
+ 	bool use_links = dev->power.links_count > 0;
++	enum rpm_status runtime_status = dev->power.runtime_status;
  
- 	hba->pm_op_in_progress = true;
- 	if (pm_op != UFS_SHUTDOWN_PM) {
-@@ -9049,6 +9050,20 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	if (dev->power.irq_safe) {
+ 		spin_unlock(&dev->power.lock);
+@@ -378,7 +379,7 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
+ 		 * routine returns, so it is safe to read the status outside of
+ 		 * the lock.
+ 		 */
+-		if (use_links && dev->power.runtime_status == RPM_RESUMING) {
++		if (use_links && runtime_status == RPM_RESUMING) {
+ 			idx = device_links_read_lock();
  
- 		if (!hba->dev_info.b_rpm_dev_flush_capable) {
- 			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
-+			if ((ret) && (pm_op != UFS_SHUTDOWN_PM)) {
-+				/*
-+				 * If return err in suspend flow, IO will hang.
-+				 * Trigger error handler and break suspend for
-+				 * error recovery.
-+				 */
-+				spin_lock_irqsave(hba->host->host_lock, flags);
-+				hba->force_reset = true;
-+				ufshcd_schedule_eh_work(hba);
-+				spin_unlock_irqrestore(hba->host->host_lock,
-+					flags);
-+
-+				ret = -EBUSY;
-+			}
- 			if (ret)
- 				goto enable_scaling;
- 		}
-@@ -9060,6 +9075,20 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 */
- 	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
- 	ret = ufshcd_link_state_transition(hba, req_link_state, check_for_bkops);
-+	if ((ret) && (pm_op != UFS_SHUTDOWN_PM)) {
-+		/*
-+		 * If return err in suspend flow, IO will hang.
-+		 * Trigger error handler and break suspend for
-+		 * error recovery.
-+		 */
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		hba->force_reset = true;
-+		ufshcd_schedule_eh_work(hba);
-+		spin_unlock_irqrestore(hba->host->host_lock,
-+			flags);
-+
-+		ret = -EBUSY;
-+	}
- 	if (ret)
- 		goto set_dev_active;
+ 			retval = rpm_get_suppliers(dev);
+@@ -405,8 +406,8 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
+ 		 * Do that if resume fails too.
+ 		 */
+ 		if (use_links
+-		    && ((dev->power.runtime_status == RPM_SUSPENDING && !retval)
+-		    || (dev->power.runtime_status == RPM_RESUMING && retval))) {
++		    && ((runtime_status == RPM_SUSPENDING && !retval)
++		    || (runtime_status == RPM_RESUMING && retval))) {
+ 			idx = device_links_read_lock();
  
--- 
-2.18.0
+ 			__rpm_put_suppliers(dev, false);
+
 
