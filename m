@@ -2,62 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88520C4321E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 03:45:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C295C47088
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 03:45:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229704AbiLADpt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 22:45:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59556 "EHLO
+        id S229728AbiLADpu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 22:45:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229568AbiLADpt (ORCPT
+        with ESMTP id S229563AbiLADpt (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 22:45:49 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C10F9075D
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2022 19:45:48 -0800 (PST)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B13POsI016265;
-        Thu, 1 Dec 2022 03:45:39 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BE1C9075D;
+        Wed, 30 Nov 2022 19:45:49 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B12cw7b018211;
+        Thu, 1 Dec 2022 03:45:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=dn/bh+1pO/12NyqUsvhoI+gMWRI2cPvnKXRWSrRlbz0=;
- b=hdxf0uq0RUoCqoZ64gdzoFJs0Gz5iyzTHec8Ih6CCD+LXxNx5ansHmrnKyGPXgCTD4MY
- WMM4vAGZoY+GfhIQvUFDtsdUPokAJKx+fcbQkq87vUs7nkc9JE0y745N1GuL2AMt8lTQ
- SieV6n/j8knz7VQvHsPN/nI7o9fhad7idENVbk8UdCw1RzRMaUMkPOkq3vi5Az/AIkhG
- ytErL01jMhiu5Q64l3lxOEZzKAYXw2UJQHwz9QH6xPGWQo41eo5g0OOsxi3bZrTvpsQ6
- SBoTm3UzBJ8de1gYSFt0npRXWCQ2w6xfQVw8Dz8LfhfRIho0HixSLwvAnHFyTI1eBDz8 Xg== 
+ bh=s2lKGcIDI4AmL3/WrisDPx/XVUZYFEjrbjDERtfxedM=;
+ b=P25S1mwpy16V9MA7WRyiyP8PT5DsP73pv8MLMUvP3PyEkpJ/1UmJbg0l5z1nzMy1NGaR
+ VTZJmYgCYfbr/ZnckCuNarizuf4ulQ6JYl+omFqjwZ8A0u3TDoYtRX3yvOmR0JoLBfYt
+ wk5khozpbh8oVQpPbHPMtfw7FWP4bhxlz5EPXUrfWqoxh7hJRVEOBKKFdm66dbMXtJ2s
+ F7pwrMXqMs3/dWvEkg/qkRibf/h80Ni3AOCzC5NqGG63TuopLXywTj7hS17U4iSmbrX9
+ 5XHDKdOfDtdxHLXsiqDrsaQoqkm9WlpmBk8BIi3eCJS8vpe05sLZTfnKR/ZLSjwhaq/k pg== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m4aemjjnb-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m3xhtbnpx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Dec 2022 03:45:39 +0000
+        Thu, 01 Dec 2022 03:45:40 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2B1149Gw007732;
-        Thu, 1 Dec 2022 03:45:38 GMT
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2B13EhFO007601;
+        Thu, 1 Dec 2022 03:45:40 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3m398a2ckm-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3m398a2cky-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Dec 2022 03:45:38 +0000
+        Thu, 01 Dec 2022 03:45:40 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2B13jbpO033801;
-        Thu, 1 Dec 2022 03:45:38 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2B13jbpQ033801;
+        Thu, 1 Dec 2022 03:45:39 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3m398a2cjs-2;
-        Thu, 01 Dec 2022 03:45:38 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3m398a2cjs-3;
+        Thu, 01 Dec 2022 03:45:39 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Bart Van Assche <bvanassche@acm.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        Chen Zhongjin <chenzhongjin@huawei.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: Re: [PATCH v2] scsi: ufs: Fix the polling implementation
-Date:   Thu,  1 Dec 2022 03:45:03 +0000
-Message-Id: <166986602295.2101055.5654422129059010458.b4-ty@oracle.com>
+        jejb@linux.ibm.com, christophe.jaillet@wanadoo.fr, hare@suse.de,
+        ram.vegesna@broadcom.com, dwagner@suse.de, james.smart@broadcom.com
+Subject: Re: [PATCH] scsi: efct: Fix possible memleak in efct_device_init()
+Date:   Thu,  1 Dec 2022 03:45:04 +0000
+Message-Id: <166986602281.2101055.16297897704954452228.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221118233717.441298-1-bvanassche@acm.org>
-References: <20221118233717.441298-1-bvanassche@acm.org>
+In-Reply-To: <20221111074046.57061-1-chenzhongjin@huawei.com>
+References: <20221111074046.57061-1-chenzhongjin@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -66,31 +64,37 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2022-12-01_02,2022-11-30_02,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
  phishscore=0 mlxscore=0 bulkscore=0 spamscore=0 malwarescore=0
- mlxlogscore=594 classifier=spam adjust=0 reason=mlx scancount=1
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2210170000 definitions=main-2212010022
-X-Proofpoint-ORIG-GUID: VvyJOxxMJAQcb9qm1qYXFUopQj3Z4_uD
-X-Proofpoint-GUID: VvyJOxxMJAQcb9qm1qYXFUopQj3Z4_uD
+X-Proofpoint-GUID: J-bSg6ItaaEh2IX5ayA29fee92Pd0m5N
+X-Proofpoint-ORIG-GUID: J-bSg6ItaaEh2IX5ayA29fee92Pd0m5N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 18 Nov 2022 15:37:03 -0800, Bart Van Assche wrote:
+On Fri, 11 Nov 2022 15:40:46 +0800, Chen Zhongjin wrote:
 
-> Fix the following issues in ufshcd_poll():
-> - If polling succeeds, return a positive value.
-> - Do not complete polling requests from interrupt context because the
->   block layer expects these requests to be completed from thread
->   context. From block/bio.c:
+> In efct_device_init(), when efct_scsi_reg_fc_transport() fails,
+> efct_scsi_tgt_driver_exit() is not called to release memory for
+> efct_scsi_tgt_driver_init() and causes memleak:
 > 
->     If REQ_ALLOC_CACHE is set, the final put of the bio MUST be done
->     from process context, not hard/soft IRQ.
+> unreferenced object 0xffff8881020ce000 (size 2048):
+>   comm "modprobe", pid 465, jiffies 4294928222 (age 55.872s)
+>   backtrace:
+>     [<0000000021a1ef1b>] kmalloc_trace+0x27/0x110
+>     [<000000004c3ed51c>] target_register_template+0x4fd/0x7b0 [target_core_mod]
+>     [<00000000f3393296>] efct_scsi_tgt_driver_init+0x18/0x50 [efct]
+>     [<00000000115de533>] 0xffffffffc0d90011
+>     [<00000000d608f646>] do_one_initcall+0xd0/0x4e0
+>     [<0000000067828cf1>] do_init_module+0x1cc/0x6a0
+>     ...
 > 
 > [...]
 
 Applied to 6.2/scsi-queue, thanks!
 
-[1/1] scsi: ufs: Fix the polling implementation
-      https://git.kernel.org/mkp/scsi/c/ee8c88cab4af
+[1/1] scsi: efct: Fix possible memleak in efct_device_init()
+      https://git.kernel.org/mkp/scsi/c/bb0cd225dd37
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
