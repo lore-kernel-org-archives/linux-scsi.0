@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 210D8C3A5A7
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 23:09:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 728A5C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 23:10:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231224AbiLAXJc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 18:09:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37968 "EHLO
+        id S231355AbiLAXKV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 18:10:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230348AbiLAXJ3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 18:09:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E0393804
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 15:08:34 -0800 (PST)
+        with ESMTP id S230331AbiLAXKU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 18:10:20 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38ACFBDCFA
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 15:08:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669936113;
+        s=mimecast20190719; t=1669936138;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=4JvfJWU7+uq7jrpATovd2AsryJuPNwIs+V/5GzjE+z8=;
-        b=Hl1FmKGjn7bLR58i1TR/e+DgV7GR/Ln1FPyWoyuUhRqF2ohzIXnE7IsecQkCr45I7OPncQ
-        uR93aCjIiL0SIRJHIXpmNPrVeGEdYGArXim/SWPZW/FtE1yVB2VRz5M1KhnG8ianuHV0cI
-        sRIQmloarvaB4lfMuphRXAG3N4EglGY=
-Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com
- [209.85.160.71]) by relay.mimecast.com with ESMTP with STARTTLS
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Au+k80w/pmMXn842EfJNDQH8P/z+f/qneC68ARqh1Us=;
+        b=VrkzBEqCFLMUtDNQQDwtdpAWU7kupGCDIJpA8KEX1yvi+JpDtOgo5bDvj4iaS6r2CaoSvy
+        qCKS/qVJmQ+QRGWRwmVhCmCeBjNVAdvxbb+OkeDJqq+wp6hIhkyOax1BTxrhzMdC87ti+G
+        kEmVuDJpyoFrKStJznuy6ONnK8tM/OY=
+Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
+ [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-227-6oWAiVYaPQS8U8lDx2EOHw-1; Thu, 01 Dec 2022 18:08:32 -0500
-X-MC-Unique: 6oWAiVYaPQS8U8lDx2EOHw-1
-Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-13b88262940so1486990fac.15
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Dec 2022 15:08:32 -0800 (PST)
+ us-mta-140-HF3_K1IUPQC4zaNJvcxP_g-1; Thu, 01 Dec 2022 18:08:54 -0500
+X-MC-Unique: HF3_K1IUPQC4zaNJvcxP_g-1
+Received: by mail-oi1-f197.google.com with SMTP id j3-20020a544803000000b0035bda575daeso1808591oij.23
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Dec 2022 15:08:54 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4JvfJWU7+uq7jrpATovd2AsryJuPNwIs+V/5GzjE+z8=;
-        b=HyAu/7f0MqjQG+VmlbFnu6zBzD7kWCNhu9LiCcC8kArFTYO145HSV5yNrT0aBssdfd
-         daTdfrnjdpgUa2xn/gQd68vUDQ0GDaYGCi13DKsnGeGKYmNQ2J4CsVV8xLYHTxKO32tH
-         yuW5qAZ9/SZzeT8WZu8mwRnT7dRbQW5ryhZnMX9Ks8uSFbPr4wWVuECdlql8SV7g+x5X
-         1+YG92by9/6gU7Z+s+9h7gZvh8DUsWhT5/ldPfzX9Q5tw8G8EjKbPDp/t6kQPatpK3k5
-         XCinaiE6Mchg1phbUqY7xIVtF0EqfeXdrmgoyfUcmEccKCpIuaSWn3nvv+QfIm3CV7vj
-         vRag==
-X-Gm-Message-State: ANoB5pna49qPATVenMZGI8fe7runxynsu6MJA40RF6w34jxt5oh0MuLk
-        hOdjO3q0ucuFRDddGkpbUiAsPOFRw8CTx5OjG5wrvqjOIL8d8X59I771A7aTUkd4mNKW3D/Jn4x
-        8eWQEDIFN8fUb/ynQ8NAlOw==
-X-Received: by 2002:a05:6870:738f:b0:143:995e:807b with SMTP id z15-20020a056870738f00b00143995e807bmr14586264oam.160.1669936111502;
-        Thu, 01 Dec 2022 15:08:31 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf4R/AbnN+GXungjyYMQ/UXertPssHquQIq+R2j7hlnxk6+qDZ17QK95zUZPe2UXHoxhg7AYjQ==
-X-Received: by 2002:a05:6870:738f:b0:143:995e:807b with SMTP id z15-20020a056870738f00b00143995e807bmr14586242oam.160.1669936111243;
-        Thu, 01 Dec 2022 15:08:31 -0800 (PST)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Au+k80w/pmMXn842EfJNDQH8P/z+f/qneC68ARqh1Us=;
+        b=pw+e4tR6bmojFyFLMalaqHR5ceelm4+aUU+1pqRIZyOYZGB8yARfv0mR0D1E8CBiBp
+         Jqfx9aVNrXYFxNe/w7kHUdp9E6zZ8BbjSgx9wfDRIoPTiHJ5cRM5/vTjSiAnYLGy2yZl
+         YzldTpQen0QeiIvlS4YwtFNpjhCTW5Qhl3kq9C7xlXDVyJGfW92GEf+Q1B9DEaVv9OOl
+         DGZ3kfqqUtO6zTXJClL68FpfUgL1tPTo0gv9rw8nNQxAKL05A/CD9ZdKcnT3CiQ9GT05
+         AW4lcO0qwQtPIniPCw06PGNcQPWDJV7eQ7J31Rv4U+r0WQf+1pJZTLyPSOZtlNzw9aKO
+         fAQA==
+X-Gm-Message-State: ANoB5plW0BLm3H1lFGezHf0afw88eNeLhy+tgyTBckae+iy6f5VRQPb/
+        S4+gHkiYAwrkfRlWSzc1iMFqUtuXYtjsGn4GIpLoI7EsUbfuFZJLgC1OJc+q4cXPZpOoUscNpzR
+        XUEVTqexqfrFw0HsvujaZ4A==
+X-Received: by 2002:aca:c108:0:b0:354:946b:f72f with SMTP id r8-20020acac108000000b00354946bf72fmr26849982oif.48.1669936134115;
+        Thu, 01 Dec 2022 15:08:54 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf6pXPhwwXla9o1f3TOf302ZiviAEa7VY59few9IlfP2oWCgZT5Q9QV8Go8vg9BjCquwWs2B6w==
+X-Received: by 2002:aca:c108:0:b0:354:946b:f72f with SMTP id r8-20020acac108000000b00354946bf72fmr26849967oif.48.1669936133904;
+        Thu, 01 Dec 2022 15:08:53 -0800 (PST)
 Received: from halaney-x13s.redhat.com ([2600:1700:1ff0:d0e0::41])
-        by smtp.gmail.com with ESMTPSA id y22-20020a4ade16000000b0049fb2a96de4sm2320393oot.0.2022.12.01.15.08.30
+        by smtp.gmail.com with ESMTPSA id y22-20020a4ade16000000b0049fb2a96de4sm2320393oot.0.2022.12.01.15.08.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Dec 2022 15:08:30 -0800 (PST)
+        Thu, 01 Dec 2022 15:08:53 -0800 (PST)
 From:   Andrew Halaney <ahalaney@redhat.com>
 To:     andersson@kernel.org
 Cc:     agross@kernel.org, konrad.dybcio@linaro.org, jejb@linux.ibm.com,
@@ -61,10 +62,12 @@ Cc:     agross@kernel.org, konrad.dybcio@linaro.org, jejb@linux.ibm.com,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, manivannan.sadhasivam@linaro.org,
         Andrew Halaney <ahalaney@redhat.com>
-Subject: [PATCH 0/4] scsi: ufs: ufs-qcom: Debug clean ups
-Date:   Thu,  1 Dec 2022 17:08:06 -0600
-Message-Id: <20221201230810.1019834-1-ahalaney@redhat.com>
+Subject: [PATCH 3/4] scsi: ufs: ufs-qcom: Remove usage of dbg_print_en
+Date:   Thu,  1 Dec 2022 17:08:09 -0600
+Message-Id: <20221201230810.1019834-4-ahalaney@redhat.com>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20221201230810.1019834-1-ahalaney@redhat.com>
+References: <20221201230810.1019834-1-ahalaney@redhat.com>
 MIME-Version: 1.0
 Content-type: text/plain
 Content-Transfer-Encoding: 8bit
@@ -72,19 +75,97 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch series attempts to clean up some debug code paths in the
-ufs-qcom driver.
+This bitmask is unconditionally set in the current driver,
+so all conditionals using it can be considered bit rot.
 
-Andrew Halaney (4):
-  scsi: ufs: ufs-qcom: Drop unnecessary NULL checks
-  scsi: ufs: ufs-qcom: Clean up dbg_register_dump
-  scsi: ufs: ufs-qcom: Remove usage of dbg_print_en
-  scsi: ufs: ufs-qcom: Use dev_err() where possible
+Let's take the current default conditional path everywhere and remove
+dbg_print_en from the driver.
 
- drivers/ufs/host/ufs-qcom.c | 135 +++++++++++++-----------------------
- drivers/ufs/host/ufs-qcom.h |  11 ---
- 2 files changed, 48 insertions(+), 98 deletions(-)
+Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 18 +++---------------
+ drivers/ufs/host/ufs-qcom.h | 11 -----------
+ 2 files changed, 3 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 1b0dfbbdcdf3..b1fcff1fad0c 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -22,9 +22,6 @@
+ #include <ufs/ufshci.h>
+ #include <ufs/ufs_quirks.h>
+ 
+-#define UFS_QCOM_DEFAULT_DBG_PRINT_EN	\
+-	(UFS_QCOM_DBG_PRINT_REGS_EN | UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
+-
+ enum {
+ 	TSTBUS_UAWM,
+ 	TSTBUS_UARM,
+@@ -1040,7 +1037,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+ 		ufs_qcom_hosts[hba->dev->id] = host;
+ 
+-	host->dbg_print_en |= UFS_QCOM_DEFAULT_DBG_PRINT_EN;
+ 	ufs_qcom_get_default_testbus_cfg(host);
+ 	err = ufs_qcom_testbus_config(host);
+ 	if (err) {
+@@ -1191,14 +1187,9 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 
+ static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
+ {
+-	if (host->dbg_print_en & UFS_QCOM_DBG_PRINT_TEST_BUS_EN) {
+-		ufshcd_rmwl(host->hba, UFS_REG_TEST_BUS_EN,
+-				UFS_REG_TEST_BUS_EN, REG_UFS_CFG1);
+-		ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
+-	} else {
+-		ufshcd_rmwl(host->hba, UFS_REG_TEST_BUS_EN, 0, REG_UFS_CFG1);
+-		ufshcd_rmwl(host->hba, TEST_BUS_EN, 0, REG_UFS_CFG1);
+-	}
++	ufshcd_rmwl(host->hba, UFS_REG_TEST_BUS_EN,
++			UFS_REG_TEST_BUS_EN, REG_UFS_CFG1);
++	ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
+ }
+ 
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host)
+@@ -1315,9 +1306,6 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ 	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
+ 			 "HCI Vendor Specific Registers ");
+ 
+-	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
+-		return;
+-
+ 	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
+ 	ufshcd_dump_regs(hba, reg, 44 * 4, "UFS_UFS_DBG_RD_REG_OCSC ");
+ 
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 44466a395bb5..e567e4636357 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -113,15 +113,6 @@ enum {
+ 	MASK_CLK_NS_REG                     = 0xFFFC00,
+ };
+ 
+-/* QCOM UFS debug print bit mask */
+-#define UFS_QCOM_DBG_PRINT_REGS_EN	BIT(0)
+-#define UFS_QCOM_DBG_PRINT_ICE_REGS_EN	BIT(1)
+-#define UFS_QCOM_DBG_PRINT_TEST_BUS_EN	BIT(2)
+-
+-#define UFS_QCOM_DBG_PRINT_ALL	\
+-	(UFS_QCOM_DBG_PRINT_REGS_EN | UFS_QCOM_DBG_PRINT_ICE_REGS_EN | \
+-	 UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
+-
+ /* QUniPro Vendor specific attributes */
+ #define PA_VS_CONFIG_REG1	0x9000
+ #define DME_VS_CORE_CLK_CTRL	0xD002
+@@ -212,8 +203,6 @@ struct ufs_qcom_host {
+ 
+ 	u32 dev_ref_clk_en_mask;
+ 
+-	/* Bitmask for enabling debug prints */
+-	u32 dbg_print_en;
+ 	struct ufs_qcom_testbus testbus;
+ 
+ 	/* Reset control of HCI */
 -- 
 2.38.1
 
