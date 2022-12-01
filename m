@@ -2,183 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B1FC43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 19:44:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1C4C4321E
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 20:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230388AbiLAToM convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 14:44:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42962 "EHLO
+        id S231154AbiLAUPv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 15:15:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229714AbiLAToL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 14:44:11 -0500
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60B9114D04;
-        Thu,  1 Dec 2022 11:44:09 -0800 (PST)
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.1.0)
- id 25ab7833bb94707f; Thu, 1 Dec 2022 20:44:07 +0100
-Received: from kreacher.localnet (unknown [213.134.188.161])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S230251AbiLAUPq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 15:15:46 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 966A7BEE22;
+        Thu,  1 Dec 2022 12:15:45 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 60D7527C06A2;
-        Thu,  1 Dec 2022 20:44:05 +0100 (CET)
-Authentication-Results: v370.home.net.pl; dmarc=none (p=none dis=none) header.from=rjwysocki.net
-Authentication-Results: v370.home.net.pl; spf=fail smtp.mailfrom=rjwysocki.net
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Tushar Nimkar <quic_tnimkar@quicinc.com>,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        linux-arm-msm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        bjorn.andersson@kernel.org, quic_mkshah@quicinc.com,
-        quic_lsrao@quicinc.com, bvanassche@acm.org,
-        Peter Wang <peter.wang@mediatek.com>
-Subject: Re: PM-runtime: supplier looses track of consumer during probe
-Date:   Thu, 01 Dec 2022 20:44:03 +0100
-Message-ID: <12104185.O9o76ZdvQC@kreacher>
-In-Reply-To: <CAJZ5v0gdg=PUz-j0yd_QJRPmjhZ7pCuRrHt30U60H4QyTHCmdA@mail.gmail.com>
-References: <36aed941-a73e-d937-2721-4f0decd61ce0@quicinc.com> <20aae21e-62d2-8fdb-b57a-7b5a180266d8@intel.com> <CAJZ5v0gdg=PUz-j0yd_QJRPmjhZ7pCuRrHt30U60H4QyTHCmdA@mail.gmail.com>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 52F06B82025;
+        Thu,  1 Dec 2022 20:15:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3DC8C433D6;
+        Thu,  1 Dec 2022 20:15:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669925743;
+        bh=NJZdGIoTQ+syZmGFc9QowZvmsGy6Ky1CvgYKtzEukIM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UoCrH0/cQsxc9IjEbuD5u3e9fmgx3T1slPaJJPc9macrTyYP5SSVV9e1vIDUWYX74
+         jfjgS8kZFGEPdm6FQQPpGaMyL+hZ9Z73FDsd4+utvQARXPkm/S04USxyCglP8O94JQ
+         k/ALzVut9f78dqhlXiJzMCdENjpnS+z0NbGwV/6HgiJLN2aexYf1YWjY0ZWiV+QbLa
+         mYkXRN2xLYy7w9Mu4WAbNI5X2QPgydRtY1kuTE9MTlZQjX7uXbdt2DOmJ9tZLA4Nbe
+         6gbQ6gkDNintLXmpf/kUs3JaeQukAlrKiimbKekL2pgsdH5ZfVqP24xcwzsvOf/8yC
+         Kw/ha74cQuwNQ==
+Date:   Thu, 1 Dec 2022 14:15:39 -0600
+From:   Bjorn Andersson <andersson@kernel.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com, vkoul@kernel.org,
+        quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
+        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org
+Subject: Re: [PATCH v4 23/23] MAINTAINERS: Add myself as the maintainer for
+ Qcom UFS drivers
+Message-ID: <20221201201539.ohhbs2n75ryw6lad@builder.lan>
+References: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org>
+ <20221201174328.870152-24-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 213.134.188.161
-X-CLIENT-HOSTNAME: 213.134.188.161
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvhedrtdehgdduvdelucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkfgjfhgggfgtsehtqhertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepffelhfeiuefgudelhefftdekfeetkeelvdduhedvgfffhfetudfffeevkefgkeefnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghdplhhkmhhlrdhorhhgnecukfhppedvudefrddufeegrddukeekrdduiedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddufedrudefgedrudekkedrudeiuddphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohepudegpdhrtghpthhtoheprggurhhirghnrdhhuhhnthgvrhesihhnthgvlhdrtghomhdprhgtphhtthhopehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepqhhuihgtpghnihhtihhrrgifrgesqhhuihgtihhntgdrtghomhdprhgtphhtthhopehquhhitggpthhnihhm
- khgrrhesqhhuihgtihhntgdrtghomhdprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhstghsihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgrrhhmqdhmshhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghjohhrnhdrrghnuggvrhhsshhonheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepqhhuihgtpghmkhhshhgrhhesqhhuihgtihhntgdrtghomhdprhgtphhtthhopehquhhitggplhhsrhgrohesqhhuihgtihhntgdrtghomhdprhgtphhtthhopegsvhgrnhgrshhstghhvgesrggtmhdrohhrghdprhgtphhtthhopehpvghtvghrrdifrghnghesmhgvughirghtvghkrdgtohhm
-X-DCC--Metrics: v370.home.net.pl 1024; Body=14 Fuz1=14 Fuz2=14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221201174328.870152-24-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thursday, December 1, 2022 8:28:25 PM CET Rafael J. Wysocki wrote:
-> On Thu, Dec 1, 2022 at 2:10 PM Adrian Hunter <adrian.hunter@intel.com> wrote:
-> >
-> > On 29/11/22 18:56, Nitin Rawat wrote:
-> > > Hi Adrian,
-> > >
-> > > On 11/21/2022 11:38 AM, Tushar Nimkar wrote:
-> > >> Hi Adrian,
-> > >>
-> > >> On 11/18/2022 8:25 PM, Adrian Hunter wrote:
-> > >>> On 4/11/22 11:19, Tushar Nimkar wrote:
-> > >>>> Hi linux-pm/linux-scsi,
-> > >>
-> > >>>>> Process -1
-> > >>>>> ufshcd_async_scan context (process 1)
-> > >>>>> scsi_autopm_put_device() //0:0:0:0
-> > >>>
-> > >>> I am having trouble following your description.  What function is calling
-> > >>> scsi_autopm_put_device() here?
-> > >>>
-> > >> Below is flow which calls scsi_autopm_put_device()
-> > >> Process -1
-> > >> ufshcd_async_scan()
-> > >>      scsi_probe_and_add_lun()
-> > >>          scsi_add_lun()
-> > >>              slave_configure()
-> > >>                  scsi_sysfs_add_sdev()
-> > >>                      scsi_autopm_get_device()
-> > >>                          device_add()     <- invoked [Process 2] sd_probe()
-> > >>                              scsi_autopm_put_device()
-> > >>
-> > >>>>> pm_runtime_put_sync()
-> > >>>>> __pm_runtime_idle()
-> > >>>>> rpm_idle() -- RPM_GET_PUT(4)
-> > >>>>>       __rpm_callback
-> > >>>>>           scsi_runtime_idle()
-> > >>>>>               pm_runtime_mark_last_busy()
-> > >>>>>               pm_runtime_autosuspend()  --[A]
-> > >>>>>                   rpm_suspend() -- RPM_AUTO(8)
-> > >>>>>                       pm_runtime_autosuspend_expiration() use_autosuspend    is false return 0   --- [B]
-> > >>>>>                           __update_runtime_status to RPM_SUSPENDING
-> > >>>>>                       __rpm_callback()
-> > >>>>>                           __rpm_put_suppliers(dev, false)
-> > >>>>>                       __update_runtime_status to RPM_SUSPENDED
-> > >>>>>                   rpm_suspend_suppliers()
-> > >>>>>                       rpm_idle() for supplier -- RPM_ASYNC(1) return (-EAGAIN) [ Other consumer active for supplier]
-> > >>>>>                   rpm_suspend() – END with return=0
-> > >>>>>           scsi_runtime_idle() END return (-EBUSY) always.
-> > >>>
-> > >>> Not following here either.  Which device is EBUSY and why?
-> > >>
-> > >> scsi_runtime_idle() return -EBUSY always [3]
-> > >> Storage/scsi team can better explain -EBUSY implementation.
-> > >
-> > > EBUSY is returned from below code for consumer dev 0:0:0:0.
-> > > scsi_runtime_idle is called from scsi_autopm_put_device which inturn is called from ufshcd_async_scan (Process 1 as per above call stack)
-> > > static int scsi_runtime_idle(struct device *dev)
-> > > {
-> > >     :
-> > >
-> > >     if (scsi_is_sdev_device(dev)) {
-> > >         pm_runtime_mark_last_busy(dev);
-> > >         pm_runtime_autosuspend(dev);
-> > >         return -EBUSY; ---> EBUSY returned from here.
-> > >     }
-> > >
-> > >
-> > > }
-> > >
-> > >>
-> > >> [3] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/scsi_pm.c?h=next-20221118#n210
-> > >>
-> > >>
-> > >>>>>
-> > >>>>> [1]: https://lore.kernel.org/lkml/4748074.GXAFRqVoOG@kreacher/T/
-> > >>>>> [2]: https://lkml.org/lkml/2022/10/12/259
-> >
-> > It looks to me like __rpm_callback() makes assumptions about
-> > dev->power.runtime_status that are not necessarily true because
-> > dev->power.lock is dropped.
+On Thu, Dec 01, 2022 at 11:13:28PM +0530, Manivannan Sadhasivam wrote:
+> Qcom UFS drivers are left un-maintained till now. I'd like to step up to
+> maintain the drivers and the binding.
 > 
-> Well, this happens because rpm_idle() calls __rpm_callback() and
-> allows it to run concurrently with rpm_suspend() and rpm_resume(), so
-> one of them may change runtime_status to RPM_SUSPENDING or
-> RPM_RESUMING while __rpm_callback() is running.
+
+Acked-by: Bjorn Andersson <andersson@kernel.org>
+
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  MAINTAINERS | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> It is somewhat questionable whether or not this should be allowed to
-> happen, but since it is generally allowed to suspend the device from
-> its .runtime_idle callback, there is not too much that can be done
-> about it.
-
-But this means that the patch below should help too.
-
-I actually think that we can do both, because rpm_idle() doesn't have to do
-the whole device links dance and the fact that it still calls __rpm_callback()
-is a clear oversight.
-
----
- drivers/base/power/runtime.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-Index: linux-pm/drivers/base/power/runtime.c
-===================================================================
---- linux-pm.orig/drivers/base/power/runtime.c
-+++ linux-pm/drivers/base/power/runtime.c
-@@ -484,7 +484,17 @@ static int rpm_idle(struct device *dev,
- 
- 	dev->power.idle_notification = true;
- 
--	retval = __rpm_callback(callback, dev);
-+	if (dev->power.irq_safe)
-+		spin_unlock(&dev->power.lock);
-+	else
-+		spin_unlock_irq(&dev->power.lock);
-+
-+	retval = callback(dev);
-+
-+	if (dev->power.irq_safe)
-+		spin_lock(&dev->power.lock);
-+	else
-+		spin_lock_irq(&dev->power.lock);
- 
- 	dev->power.idle_notification = false;
- 	wake_up_all(&dev->power.wait_queue);
-
-
-
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 3583c5f6889d..3c8214f4a3cf 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -21379,6 +21379,14 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+>  F:	drivers/ufs/host/ufs-mediatek*
+>  
+> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER QUALCOMM HOOKS
+> +M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> +L:	linux-arm-msm@vger.kernel.org
+> +L:	linux-scsi@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +F:	drivers/ufs/host/ufs-qcom*
+> +
+>  UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
+>  M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+>  L:	linux-renesas-soc@vger.kernel.org
+> -- 
+> 2.25.1
+> 
