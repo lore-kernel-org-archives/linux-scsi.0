@@ -2,213 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB48C43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 14:54:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD5A4C43217
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 17:43:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230204AbiLAOy6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 09:54:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36556 "EHLO
+        id S230114AbiLARnq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 12:43:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbiLAOy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 09:54:57 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4224BB7E5;
-        Thu,  1 Dec 2022 06:54:55 -0800 (PST)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B1ClA0Z020865;
-        Thu, 1 Dec 2022 14:54:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=AHZfeKWHAigykHXpKG+U8KPxZRTpKcXcySDW/Tm6oVE=;
- b=XEObTR86tM5OKA5pYb3W3XUgT35IpeEJ2kIPLC4bh68BRVbaw66AAlnV9JvJsxnCJIjK
- SIKvy+zJd5Um0bExQTDe5OsonJ3eEQcOKpb+0rYYoQPtqBQKFTBMRBVlc1zRoKaz8Lkz
- T1IkqRqED2W+fUGB4nA3XEsoFLrvDKlPwLRcMFBa4ooolLI7PEhr1pm8DnzlZoX0whrK
- FIEU5KCqbet9MK1iFkhVRcPitswHIBZnBZt5iM14wNJUlzQiU3peIzsENgAQrNlvfS0D
- PkAwGu5DjBc22IihAzB+CFg0x6L2WIIRIooVqc6FsjU1+4JgfNsFcG6TXr3nox0Y0tI1 GA== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m6k2c29t7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 01 Dec 2022 14:54:31 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2B1EsSnx024355
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 1 Dec 2022 14:54:28 GMT
-Received: from [10.216.42.191] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Thu, 1 Dec 2022
- 06:54:23 -0800
-Message-ID: <50578b41-8894-24fe-a768-25c55fa38a78@quicinc.com>
-Date:   Thu, 1 Dec 2022 20:24:20 +0530
+        with ESMTP id S229723AbiLARno (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 12:43:44 -0500
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B630A7AAB
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 09:43:43 -0800 (PST)
+Received: by mail-pl1-x62e.google.com with SMTP id g10so2306041plo.11
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Dec 2022 09:43:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=BpBie4jkW/BfxvQG7eHd3js6+LWawB9Le/asGO1bMFA=;
+        b=UCOwgQt8RZigkWNgSd1ke+sJbq8LSwRBcqZB8crZW/+D3bvgWNt4ttG8AdBYOqpVtc
+         n4N29Eo3116K73DwQjoSmAP49oYkVYTOE3mCM3/O+BXc6YPjvOQjduuPiNN9mLboIuse
+         NNnX7dpqmBfuLMlOtIV5+TGEqQ1puds6oF9YDHp5NK9pkZMhDAHkL1hkWTcSCiCnMsXC
+         0z6+8qnk2Y4IrUbyTXIrH/a8BRw0Rg/M+ozcLt9hEAeIOoWWPDNPXAGyCNShLhUJJ/FR
+         V8AQKugEHC5BqiR31HbMDUQjYullb0JIvr513FZb05CyRYweUXsDfLaTOzgHd5FNP/nc
+         x7lA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=BpBie4jkW/BfxvQG7eHd3js6+LWawB9Le/asGO1bMFA=;
+        b=HatqLm5xmFcxbhY70gHBMtREso0/C2Zs+eB/CsN1fOZzKO0BJFup5JzmPYdEvIs7Ay
+         uKJPc+Xoe6jB/k460WnB8k1qPnsHTO4ZyKfDL2IjpqaC8Y9Mc1ZZJ4XlUq4jEFXrVA74
+         eUEGwJ3Y6KrKWYN+kdXTm4/CgWquK721ILRyvt7FUJoN6pmeumVbh41SXlXMCmI48B/o
+         mDr0/u3iWNtuiy3D55iVMcIXAtoJh6ySFg0arrrEs3aJSvdHOsgKocUYbOxbdISTnuA5
+         JSZwOpzDC35Bp68LmU2ABjI1DMSivEXCyfy3jw6vJXmxqY0d/4PLFnDYiX9fqwRYgEU5
+         4CZA==
+X-Gm-Message-State: ANoB5plX8KkwL6nytprwlR3UvrZc4uVrcE2dHHU2KHwQM1CF5yHBolsP
+        e7iMKbitbijdo0LpTAFQxhVZ
+X-Google-Smtp-Source: AA0mqf7lrHvbI6R/i7eq5zc7oayucCfI5hEsfEFmlM7cZP1cBPnHiT5XX45q3DnUog1aq7u69hZeZg==
+X-Received: by 2002:a17:90a:e2c1:b0:219:5bdb:2b45 with SMTP id fr1-20020a17090ae2c100b002195bdb2b45mr12216640pjb.71.1669916622611;
+        Thu, 01 Dec 2022 09:43:42 -0800 (PST)
+Received: from localhost.localdomain ([220.158.159.39])
+        by smtp.gmail.com with ESMTPSA id p4-20020a170902780400b0016d9b101413sm3898743pll.200.2022.12.01.09.43.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Dec 2022 09:43:41 -0800 (PST)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org
+Cc:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
+        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v4 00/23] ufs: qcom: Add HS-G4 support
+Date:   Thu,  1 Dec 2022 23:13:05 +0530
+Message-Id: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: PM-runtime: supplier looses track of consumer during probe
-Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Tushar Nimkar <quic_tnimkar@quicinc.com>,
-        <linux-pm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>
-CC:     <linux-arm-msm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        <bjorn.andersson@kernel.org>, <quic_mkshah@quicinc.com>,
-        <quic_lsrao@quicinc.com>, <bvanassche@acm.org>,
-        Peter Wang <peter.wang@mediatek.com>
-References: <36aed941-a73e-d937-2721-4f0decd61ce0@quicinc.com>
- <8c0a715a-d626-aa70-15f1-79f1e23fbc67@quicinc.com>
- <a5e2aab6-7f0e-7f3b-f34b-6d222450c97d@intel.com>
- <8ca27fcb-b146-3ea7-a042-55f99e0ae3fb@quicinc.com>
- <2a1047a7-3121-6cbe-d4c5-46bbff0c5cc5@quicinc.com>
- <20aae21e-62d2-8fdb-b57a-7b5a180266d8@intel.com>
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20aae21e-62d2-8fdb-b57a-7b5a180266d8@intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 2U8UlMOvKdvPcZqq1DNliUaSbNr2AG7r
-X-Proofpoint-GUID: 2U8UlMOvKdvPcZqq1DNliUaSbNr2AG7r
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-01_11,2022-12-01_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- adultscore=0 mlxlogscore=999 impostorscore=0 spamscore=0 clxscore=1015
- bulkscore=0 phishscore=0 suspectscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2212010108
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Adrian,
-Thanks for the patch.
-I Agree, using local variable to store the runtime status before 
-dev->power.lock is released and using this variable later in the code 
-can meet the intention of code and can help to solve this race.
+Hello,
 
-We will get it tested and update you.
+This series adds HS-G4 support to the Qcom UFS driver and PHY driver.
+The newer Qcom platforms support configuring the UFS controller and PHY
+in dual gears (i.e., controller/PHY can be configured to run in two gear
+speeds). This is accomplished by adding two different PHY init sequences
+to the PHY driver and the UFS driver requesting the one that's required
+based on the platform configuration.
 
+Initially the ufs-qcom driver will use the default gear G2 for enumerating
+the UFS device. Afer enumeration, the max gear supported by both the
+controller and device would be found out and that will be used thereafter.
+But for using the max gear after enumeration, the ufs-qcom driver requires
+the UFS device to be reinitialized. For this purpose, a separate quirk has
+been introduced in the UFS core along with a callback and those will be used
+by the ufs-qcom driver.
 
-Regards,
-Nitin
+This series has been tested on following platforms:
 
-On 12/1/2022 6:39 PM, Adrian Hunter wrote:
-> On 29/11/22 18:56, Nitin Rawat wrote:
->> Hi Adrian,
->>
->> On 11/21/2022 11:38 AM, Tushar Nimkar wrote:
->>> Hi Adrian,
->>>
->>> On 11/18/2022 8:25 PM, Adrian Hunter wrote:
->>>> On 4/11/22 11:19, Tushar Nimkar wrote:
->>>>> Hi linux-pm/linux-scsi,
->>>
->>>>>> Process -1
->>>>>> ufshcd_async_scan context (process 1)
->>>>>> scsi_autopm_put_device() //0:0:0:0
->>>>
->>>> I am having trouble following your description.  What function is calling
->>>> scsi_autopm_put_device() here?
->>>>
->>> Below is flow which calls scsi_autopm_put_device()
->>> Process -1
->>> ufshcd_async_scan()
->>>       scsi_probe_and_add_lun()
->>>           scsi_add_lun()
->>>               slave_configure()
->>>                   scsi_sysfs_add_sdev()
->>>                       scsi_autopm_get_device()
->>>                           device_add()     <- invoked [Process 2] sd_probe()
->>>                               scsi_autopm_put_device()
->>>
->>>>>> pm_runtime_put_sync()
->>>>>> __pm_runtime_idle()
->>>>>> rpm_idle() -- RPM_GET_PUT(4)
->>>>>>        __rpm_callback
->>>>>>            scsi_runtime_idle()
->>>>>>                pm_runtime_mark_last_busy()
->>>>>>                pm_runtime_autosuspend()  --[A]
->>>>>>                    rpm_suspend() -- RPM_AUTO(8)
->>>>>>                        pm_runtime_autosuspend_expiration() use_autosuspend    is false return 0   --- [B]
->>>>>>                            __update_runtime_status to RPM_SUSPENDING
->>>>>>                        __rpm_callback()
->>>>>>                            __rpm_put_suppliers(dev, false)
->>>>>>                        __update_runtime_status to RPM_SUSPENDED
->>>>>>                    rpm_suspend_suppliers()
->>>>>>                        rpm_idle() for supplier -- RPM_ASYNC(1) return (-EAGAIN) [ Other consumer active for supplier]
->>>>>>                    rpm_suspend() – END with return=0
->>>>>>            scsi_runtime_idle() END return (-EBUSY) always.
->>>>
->>>> Not following here either.  Which device is EBUSY and why?
->>>
->>> scsi_runtime_idle() return -EBUSY always [3]
->>> Storage/scsi team can better explain -EBUSY implementation.
->>
->> EBUSY is returned from below code for consumer dev 0:0:0:0.
->> scsi_runtime_idle is called from scsi_autopm_put_device which inturn is called from ufshcd_async_scan (Process 1 as per above call stack)
->> static int scsi_runtime_idle(struct device *dev)
->> {
->>      :
->>
->>      if (scsi_is_sdev_device(dev)) {
->>          pm_runtime_mark_last_busy(dev);
->>          pm_runtime_autosuspend(dev);
->>          return -EBUSY; ---> EBUSY returned from here.
->>      }
->>
->>      
->> }
->>
->>>
->>> [3] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/scsi_pm.c?h=next-20221118#n210
->>>
->>>
->>>>>>
->>>>>> [1]: https://lore.kernel.org/lkml/4748074.GXAFRqVoOG@kreacher/T/
->>>>>> [2]: https://lkml.org/lkml/2022/10/12/259
-> 
-> It looks to me like __rpm_callback() makes assumptions about
-> dev->power.runtime_status that are not necessarily true because
-> dev->power.lock is dropped.  AFAICT the intention of the code
-> would be fulfilled by instead using the status as it was before
-> the lock was dropped.
-> 
-> Consequently, perhaps you could try this:
-> 
-> diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
-> index b52049098d4e..3cf9abc3b2c2 100644
-> --- a/drivers/base/power/runtime.c
-> +++ b/drivers/base/power/runtime.c
-> @@ -365,6 +365,7 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
->   {
->   	int retval = 0, idx;
->   	bool use_links = dev->power.links_count > 0;
-> +	enum rpm_status runtime_status = dev->power.runtime_status;
->   
->   	if (dev->power.irq_safe) {
->   		spin_unlock(&dev->power.lock);
-> @@ -378,7 +379,7 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
->   		 * routine returns, so it is safe to read the status outside of
->   		 * the lock.
->   		 */
-> -		if (use_links && dev->power.runtime_status == RPM_RESUMING) {
-> +		if (use_links && runtime_status == RPM_RESUMING) {
->   			idx = device_links_read_lock();
->   
->   			retval = rpm_get_suppliers(dev);
-> @@ -405,8 +406,8 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
->   		 * Do that if resume fails too.
->   		 */
->   		if (use_links
-> -		    && ((dev->power.runtime_status == RPM_SUSPENDING && !retval)
-> -		    || (dev->power.runtime_status == RPM_RESUMING && retval))) {
-> +		    && ((runtime_status == RPM_SUSPENDING && !retval)
-> +		    || (runtime_status == RPM_RESUMING && retval))) {
->   			idx = device_links_read_lock();
->   
->   			__rpm_put_suppliers(dev, false);
-> 
-> 
+* Qcom RB5 development platform powered by SM8250 SoC
+* SM8450 based dev board
+
+Merging Strategy:
+-----------------
+
+The PHY patches are expected to go through PHY tree and UFS, MAINTAINERS
+patches are expected to go through SCSI tree.
+
+NOTE: Since this series targets multiple SoCs (base like SM8350) and
+(derivative like SC8280XP), testing on all of these platforms is really
+appreciated. Although, if the series works for base SoC, then for derivatives
+also it should work.
+
+Thanks,
+Mani
+
+Changes in v4:
+
+* Dropped HS G3 specific setting from SM8350 default init sequence
+* Added G4 support to SM8350 and SC8280XP
+* Covered all qcom files under drivers/ufs/host in MAINTAINERS file
+* Added missing Suggested-by tags for Can Guo
+* Rebased on top of linux-next 20221201
+
+Changes in v3:
+
+* Dropped the "device-max-gear" DT property and switched to reinitialization (Krzysztof)
+* Added HS-G4 support to all compatible SoCs (SM8150, SM8250 and SM8450). This will also
+  benefit the derivative SoCs of these platforms like SC8180x, SC8280x etc...
+* Splitted the qmp_phy_init_tbl changes into separate patches (Vinod)
+* Collected reviews from Andrew H
+
+Changes in v2:
+
+* Collected reviews from Dmitry
+* Renamed "max-gear" property to "max-device-gear"
+* Used min() for deciding which gear to use instead of open comparision
+* Added comment about the old register name
+
+Manivannan Sadhasivam (23):
+  phy: qcom-qmp-ufs: Remove _tbl suffix from qmp_phy_init_tbl
+    definitions
+  phy: qcom-qmp-ufs: Rename MSM8996 PHY definitions
+  phy: qcom-qmp-ufs: Move register settings to qmp_phy_cfg_tbls struct
+  phy: qcom-qmp-ufs: Add support for configuring PHY in HS Series B mode
+  phy: qcom-qmp-ufs: Add support for configuring PHY in HS G4 mode
+  phy: qcom-qmp-ufs: Move HS Rate B register setting to tbls_hs_b
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SM8150 SoC
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SM8250 SoC
+  phy: qcom-qmp-ufs: Avoid setting HS G3 specific registers
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SM8350 SoC
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SM8450 SoC
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SC8280XP SoC
+  scsi: ufs: ufs-qcom: Remove un-necessary goto statements
+  scsi: ufs: ufs-qcom: Remove un-necessary WARN_ON()
+  scsi: ufs: ufs-qcom: Use bitfields where appropriate
+  scsi: ufs: ufs-qcom: Use dev_err_probe() for printing probe error
+  scsi: ufs: ufs-qcom: Fix the Qcom register name for offset 0xD0
+  scsi: ufs: core: Add reinit_notify() callback
+  scsi: ufs: core: Add support for reinitializing the UFS device
+  scsi: ufs: ufs-qcom: Factor out the logic finding the HS Gear
+  scsi: ufs: ufs-qcom: Add support for reinitializing the UFS device
+  scsi: ufs: ufs-qcom: Add support for finding max gear on new platforms
+  MAINTAINERS: Add myself as the maintainer for Qcom UFS drivers
+
+ MAINTAINERS                                   |   8 +
+ .../phy/qualcomm/phy-qcom-qmp-pcs-ufs-v5.h    |   1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       | 454 +++++++++++++-----
+ drivers/ufs/core/ufshcd-priv.h                |   6 +
+ drivers/ufs/core/ufshcd.c                     |  63 ++-
+ drivers/ufs/host/ufs-qcom.c                   | 170 +++----
+ drivers/ufs/host/ufs-qcom.h                   |  70 +--
+ include/ufs/ufshcd.h                          |   8 +
+ 8 files changed, 532 insertions(+), 248 deletions(-)
+
+-- 
+2.25.1
+
