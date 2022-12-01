@@ -2,59 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3661EC43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 03:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47122C43217
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 03:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229616AbiLADqO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Nov 2022 22:46:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59612 "EHLO
+        id S229766AbiLADqQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Nov 2022 22:46:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229766AbiLADpx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 22:45:53 -0500
+        with ESMTP id S229821AbiLADqB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2022 22:46:01 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 640E5975C3;
-        Wed, 30 Nov 2022 19:45:53 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B133ci4022994;
-        Thu, 1 Dec 2022 03:45:42 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4319B9F485;
+        Wed, 30 Nov 2022 19:45:58 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B1297Hh022941;
+        Thu, 1 Dec 2022 03:45:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=Dao7V3IuXK/uUwxH2RR0W6oduC9JIaRrwYoUs+wXEz8=;
- b=1noYF0ehCIatEx8MI7LzafNpatLzaJr9NY8t21RtBoE64kOwDfXcVvY/j4ZdYbBJ9c9I
- zdpb7Hkv7wDonDQ7NzLiWITxSXTGj1z/q2Ky5rLxptD6LwultTMSu7KOENLisjBUDvmq
- iftz4/po6SaRkBgyw4pCLMGhuHoRhk0tBuhAxMGwKDrXRtbo7XTkQFcJ21S0B/QwW8vT
- IQxs1oWPPT/9YxwW+7Z1BtDdqVWLLCHL4femDd1vpOu1uOJwVWUgG5VEoH7LOZnikamJ
- xKEQvGkgV7ShxrVQ2V0IoucoSmqWBTHLqaVxW4PRv75drWgQpNLqx7Mf3wUp4iwWpQ6H tQ== 
+ bh=E3oSv37GEd3ziErG13c7JSDdYOMAG0ny9Fwi0GjMsyE=;
+ b=GYpZF4DFjxPwXqW5nzKvU7BYXLF9y169n7PfQ79rd7Jd6diDteyRXPKaqAb8Vn0j76B4
+ HpfIiBX9su5V3QEWuGnLqzgKzhfeXDNlWazijdyu6XaTD+z/Er9RFBAetiZxf9+avM5O
+ GXHDq0dVoCmdRFC4d4HBqOV9Z1TiF7qCcj7a3VhQr3s3EXxAqa6UjBpCnXeUwIi5d+M2
+ y0p4PTBbaZZdolHonrq8OI/md457a2rZoP5P6Wqqrp8gBz6Sq8KCWVVpV/8yTm86jL9P
+ xyoERw4koMWgG7nluvwYO5sEvum+qh6IZKole08rvZOIpPxL7KtDR0Hu8YV0l5yyPfxG ig== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m40y43enu-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m3xhtbnqf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Dec 2022 03:45:41 +0000
+        Thu, 01 Dec 2022 03:45:54 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2B13f2ut007584;
-        Thu, 1 Dec 2022 03:45:41 GMT
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2B1149H1007732;
+        Thu, 1 Dec 2022 03:45:53 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3m398a2cme-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3m398a2cu5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Dec 2022 03:45:41 +0000
+        Thu, 01 Dec 2022 03:45:53 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2B13jbpS033801;
-        Thu, 1 Dec 2022 03:45:40 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2B13jbpp033801;
+        Thu, 1 Dec 2022 03:45:53 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3m398a2cjs-4;
-        Thu, 01 Dec 2022 03:45:40 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3m398a2cjs-16;
+        Thu, 01 Dec 2022 03:45:53 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Chen Zhongjin <chenzhongjin@huawei.com>
+To:     Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
+        dgilbert@interlog.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, bprakash@broadcom.com, robert.w.love@intel.com,
-        James.Bottomley@suse.de, hare@suse.de, yi.zou@intel.com
-Subject: Re: [PATCH] scsi: fcoe: Fix transport not deattached when fcoe_if_init() fails
-Date:   Thu,  1 Dec 2022 03:45:05 +0000
-Message-Id: <166986602287.2101055.16563015716609057451.b4-ty@oracle.com>
+        error27@gmail.com, linux-kernel@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi@vger.kernel.org, harshit.m.mogalapalli@gmail.com,
+        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH] scsi: scsi_debug: Fix a warning in resp_report_zones()
+Date:   Thu,  1 Dec 2022 03:45:17 +0000
+Message-Id: <166986602284.2101055.17478772586173934593.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221115092442.133088-1-chenzhongjin@huawei.com>
-References: <20221115092442.133088-1-chenzhongjin@huawei.com>
+In-Reply-To: <20221112070612.2121535-1-harshit.m.mogalapalli@oracle.com>
+References: <20221112070612.2121535-1-harshit.m.mogalapalli@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -63,35 +66,29 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2022-12-01_02,2022-11-30_02,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
  phishscore=0 mlxscore=0 bulkscore=0 spamscore=0 malwarescore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ mlxlogscore=894 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2210170000 definitions=main-2212010022
-X-Proofpoint-GUID: cARE2Ej_Z9qBbv-L-e_6MkauMeaEfnTB
-X-Proofpoint-ORIG-GUID: cARE2Ej_Z9qBbv-L-e_6MkauMeaEfnTB
+X-Proofpoint-GUID: 8SFQ-8Uz0Ft2Hh7FY8cY5Ai2y2-jH33y
+X-Proofpoint-ORIG-GUID: 8SFQ-8Uz0Ft2Hh7FY8cY5Ai2y2-jH33y
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 15 Nov 2022 17:24:42 +0800, Chen Zhongjin wrote:
+On Fri, 11 Nov 2022 23:06:12 -0800, Harshit Mogalapalli wrote:
 
-> fcoe_init() calls fcoe_transport_attach(&fcoe_sw_transport), but when
-> fcoe_if_init() fails, &fcoe_sw_transport is not detached and leave freed
-> &fcoe_sw_transport on list fcoe_transports, which causes panic when
-> reinserting module.
+> As 'alloc_len' is user controlled data, if user tries to allocate memory
+> larger than(>=) MAX_ORDER, then kcalloc() will fail, it creates a stack
+> trace and messes up dmesg with a warning.
 > 
->  BUG: unable to handle page fault for address: fffffbfff82e2213
->  RIP: 0010:fcoe_transport_attach+0xe1/0x230 [libfcoe]
->  Call Trace:
->   <TASK>
->   do_one_initcall+0xd0/0x4e0
->   load_module+0x5eee/0x7210
->   ...
+> Add __GFP_NOWARN in order to avoid too large allocation warning.
+> This is detected by static analysis using smatch.
 > 
 > [...]
 
 Applied to 6.2/scsi-queue, thanks!
 
-[1/1] scsi: fcoe: Fix transport not deattached when fcoe_if_init() fails
-      https://git.kernel.org/mkp/scsi/c/4155658cee39
+[1/1] scsi: scsi_debug: Fix a warning in resp_report_zones()
+      https://git.kernel.org/mkp/scsi/c/07f2ca139d9a
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
