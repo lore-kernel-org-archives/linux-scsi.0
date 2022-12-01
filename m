@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 859FEC4708D
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 14:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68A6BC43217
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 14:05:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231734AbiLAOFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 09:05:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47898 "EHLO
+        id S231739AbiLAOFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 09:05:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231411AbiLAOE6 (ORCPT
+        with ESMTP id S231414AbiLAOE6 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 09:04:58 -0500
-Received: from mo4-p03-ob.smtp.rzone.de (mo4-p03-ob.smtp.rzone.de [81.169.146.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F21EA5184;
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B6F0A5191;
         Thu,  1 Dec 2022 06:04:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669903492;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669903489;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=c/FJw1eQjtrDqv72K4MlGdG6wEsHIdThMCAbiYaGxDU=;
-    b=kREa1XxoNJ1LJ3ewyuLoUkQTmSeZlo/x3RF3D+z+28Da5UFbDnVwETEVXMIIZYeVbF
-    KaFeFwAcWP4fC9zUFbuzwLyKah5VwFKdVPDJc6cnlKHQC3vAsIl3PkYqvYzYheRzBxeJ
-    jeu1PP1QuYXfdjl5fl/PWgSuFjl+RD/PsCpND/0ZqXCfvm/SXwMDjrv+LVPJkTsMBQah
-    QwRDfhkldEwwo2PFyU5KUAagpVlDNQW5UT3WE5v/6xkK65Bz7o2VfW8a/vPRrw5nG81i
-    pLVL+OJ51KxVRCIa3vykz/9zEjKXksqyCqW476+6YPjxvn4AYRzmOX2rTg0Gdmf1vGK2
-    pkiA==
+    bh=KMmrymso6RGjDkYBGOZ13Mhdy02M0I3meAzkE2PuEuM=;
+    b=eUw3jwsqYSSgU0JEe5yxaePj+S26Z/3GnzyYzxmUbBGOLuS7/VlKBmm2s8I7Z+156x
+    vd0wH0VpJ2qhtxBv7eD02ybZVz79URRL2qty/gCBDhYZikY8IOTH67qxisV+VYaK5PPi
+    d9IwSvHV7frbfCi14jyEaahmNYVWcdzqcGzI7l+s7bEBXz9ptzZTRaLQ/PdqnsZOHVGH
+    9nTDLEAjLBxj2yYSwHwW/30993Gav+7Hlv+dR1ag8jat0bfr8ww4gPduQq0afdomqNB4
+    A1+5cKhrR74Gh7Qm7B8Cq0EAOKuISVTSsMEuDIc74uUvGwLVFB7IRv2Mu4RzgZqgxLQG
+    VJXQ==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD2QzemV2tdlNlNRZBXiUw="
-X-RZG-CLASS-ID: mo03
+X-RZG-CLASS-ID: mo01
 Received: from blinux.micron.com
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyB1E4pHoX
+    with ESMTPSA id z9cfbfyB1E4mHoT
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Thu, 1 Dec 2022 15:04:51 +0100 (CET)
+    Thu, 1 Dec 2022 15:04:48 +0100 (CET)
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
@@ -43,9 +43,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 5/7] ufs: core: Advanced RPMB detection
-Date:   Thu,  1 Dec 2022 15:04:35 +0100
-Message-Id: <20221201140437.549272-6-beanhuo@iokpp.de>
+Subject: [PATCH v3 1/7] ufs: bsg: Let result in struct ufs_bsg_reply be signed int
+Date:   Thu,  1 Dec 2022 15:04:31 +0100
+Message-Id: <20221201140437.549272-2-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221201140437.549272-1-beanhuo@iokpp.de>
 References: <20221201140437.549272-1-beanhuo@iokpp.de>
@@ -57,73 +57,27 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Check UFS Advanced RPMB LU enablement during ufshcd_lu_init().
+According to the comments in struct ufs_bsg_reply and its usage, the
+result should be signed int, not __u32.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/ufs/core/ufshcd.c |  6 ++++++
- include/ufs/ufs.h         | 24 ++++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
+ include/uapi/scsi/scsi_bsg_ufs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d1bcb4c4e4e4..641fed6dae5d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4954,6 +4954,12 @@ static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
- 	    desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] == UFS_LU_POWER_ON_WP)
- 		hba->dev_info.is_lu_power_on_wp = true;
+diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
+index d55f2176dfd4..64b0cb33e549 100644
+--- a/include/uapi/scsi/scsi_bsg_ufs.h
++++ b/include/uapi/scsi/scsi_bsg_ufs.h
+@@ -95,7 +95,7 @@ struct ufs_bsg_reply {
+ 	 * msg and status fields. The per-msgcode reply structure
+ 	 * will contain valid data.
+ 	 */
+-	__u32 result;
++	int result;
  
-+	/* In case of RPMB LU, check if advanced RPMB mode is enabled */
-+	if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] == UFS_UPIU_RPMB_WLUN &&
-+	    desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-+		hba->dev_info.b_advanced_rpmb_en = true;
-+
-+
- 	kfree(desc_buf);
- set_qdepth:
- 	/*
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 1bba3fead2ce..17e401df674c 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -212,6 +212,28 @@ enum unit_desc_param {
- 	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
- };
- 
-+/* RPMB Unit descriptor parameters offsets in bytes*/
-+enum rpmb_unit_desc_param {
-+	RPMB_UNIT_DESC_PARAM_LEN		= 0x0,
-+	RPMB_UNIT_DESC_PARAM_TYPE		= 0x1,
-+	RPMB_UNIT_DESC_PARAM_UNIT_INDEX		= 0x2,
-+	RPMB_UNIT_DESC_PARAM_LU_ENABLE		= 0x3,
-+	RPMB_UNIT_DESC_PARAM_BOOT_LUN_ID	= 0x4,
-+	RPMB_UNIT_DESC_PARAM_LU_WR_PROTECT	= 0x5,
-+	RPMB_UNIT_DESC_PARAM_LU_Q_DEPTH		= 0x6,
-+	RPMB_UNIT_DESC_PARAM_PSA_SENSITIVE	= 0x7,
-+	RPMB_UNIT_DESC_PARAM_MEM_TYPE		= 0x8,
-+	RPMB_UNIT_DESC_PARAM_REGION_EN		= 0x9,
-+	RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_SIZE	= 0xA,
-+	RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_COUNT	= 0xB,
-+	RPMB_UNIT_DESC_PARAM_REGION0_SIZE	= 0x13,
-+	RPMB_UNIT_DESC_PARAM_REGION1_SIZE	= 0x14,
-+	RPMB_UNIT_DESC_PARAM_REGION2_SIZE	= 0x15,
-+	RPMB_UNIT_DESC_PARAM_REGION3_SIZE	= 0x16,
-+	RPMB_UNIT_DESC_PARAM_PROVISIONING_TYPE	= 0x17,
-+	RPMB_UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
-+};
-+
- /* Device descriptor parameters offsets in bytes*/
- enum device_desc_param {
- 	DEVICE_DESC_PARAM_LEN			= 0x0,
-@@ -601,6 +623,8 @@ struct ufs_dev_info {
- 
- 	bool	b_rpm_dev_flush_capable;
- 	u8	b_presrv_uspc_en;
-+
-+	bool    b_advanced_rpmb_en;
- };
- 
- /*
+ 	/* If there was reply_payload, how much was received? */
+ 	__u32 reply_payload_rcv_len;
 -- 
 2.25.1
 
