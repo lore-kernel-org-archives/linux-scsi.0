@@ -2,504 +2,213 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE019C47088
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 14:05:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB48C43217
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 14:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231749AbiLAOFG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 09:05:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47906 "EHLO
+        id S230204AbiLAOy6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 09:54:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231532AbiLAOE6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 09:04:58 -0500
-Received: from mo4-p03-ob.smtp.rzone.de (mo4-p03-ob.smtp.rzone.de [85.215.255.104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9675AA5193;
-        Thu,  1 Dec 2022 06:04:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669903493;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=2nRu0P8NbWQ922VMs3rl370fEKxsdqVp5TVrGfVLkEU=;
-    b=hBcBgRf5ricEvQbkp3SdR3MeaW5NX11qXxx3lj3JSMjsPHPBE4tj0J9EYy8SqrHuTa
-    3tVcIDng6W8OOsEHOJKqUcmU1LQnM5wGn5mfm5zO0T0WLK/ld+iPFohrQUxov9h0oAFZ
-    bZr7x+3ONyC24GzhsAj5hDKrnSsUu2P4Cvb7V+L/LV/xFNZX26kzk02ahxuks0hsFTpy
-    1PPzGN9D4CzROQ0z00LnoPCTdMACDTVDbtXE8sgPH3kegF/QEWaS7DSyodl4FLnh4QYX
-    vZ+/22q1B8iaB4JsRT/IbQO5rZ6faUtQq1BIh/DnMKTsNS5oQMDKe491lesrlK/kBsgm
-    ZSOQ==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD2QzemV2tdlNlNRZBXiUw="
-X-RZG-CLASS-ID: mo03
-Received: from blinux.micron.com
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyB1E4rHob
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Thu, 1 Dec 2022 15:04:53 +0100 (CET)
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        daejun7.park@samsung.com, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 7/7] ufs: core: Add advanced RPMB support in ufs_bsg
-Date:   Thu,  1 Dec 2022 15:04:37 +0100
-Message-Id: <20221201140437.549272-8-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221201140437.549272-1-beanhuo@iokpp.de>
-References: <20221201140437.549272-1-beanhuo@iokpp.de>
+        with ESMTP id S229630AbiLAOy5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 09:54:57 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4224BB7E5;
+        Thu,  1 Dec 2022 06:54:55 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B1ClA0Z020865;
+        Thu, 1 Dec 2022 14:54:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=AHZfeKWHAigykHXpKG+U8KPxZRTpKcXcySDW/Tm6oVE=;
+ b=XEObTR86tM5OKA5pYb3W3XUgT35IpeEJ2kIPLC4bh68BRVbaw66AAlnV9JvJsxnCJIjK
+ SIKvy+zJd5Um0bExQTDe5OsonJ3eEQcOKpb+0rYYoQPtqBQKFTBMRBVlc1zRoKaz8Lkz
+ T1IkqRqED2W+fUGB4nA3XEsoFLrvDKlPwLRcMFBa4ooolLI7PEhr1pm8DnzlZoX0whrK
+ FIEU5KCqbet9MK1iFkhVRcPitswHIBZnBZt5iM14wNJUlzQiU3peIzsENgAQrNlvfS0D
+ PkAwGu5DjBc22IihAzB+CFg0x6L2WIIRIooVqc6FsjU1+4JgfNsFcG6TXr3nox0Y0tI1 GA== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m6k2c29t7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 01 Dec 2022 14:54:31 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2B1EsSnx024355
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 1 Dec 2022 14:54:28 GMT
+Received: from [10.216.42.191] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Thu, 1 Dec 2022
+ 06:54:23 -0800
+Message-ID: <50578b41-8894-24fe-a768-25c55fa38a78@quicinc.com>
+Date:   Thu, 1 Dec 2022 20:24:20 +0530
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: PM-runtime: supplier looses track of consumer during probe
+Content-Language: en-US
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Tushar Nimkar <quic_tnimkar@quicinc.com>,
+        <linux-pm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+CC:     <linux-arm-msm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        <bjorn.andersson@kernel.org>, <quic_mkshah@quicinc.com>,
+        <quic_lsrao@quicinc.com>, <bvanassche@acm.org>,
+        Peter Wang <peter.wang@mediatek.com>
+References: <36aed941-a73e-d937-2721-4f0decd61ce0@quicinc.com>
+ <8c0a715a-d626-aa70-15f1-79f1e23fbc67@quicinc.com>
+ <a5e2aab6-7f0e-7f3b-f34b-6d222450c97d@intel.com>
+ <8ca27fcb-b146-3ea7-a042-55f99e0ae3fb@quicinc.com>
+ <2a1047a7-3121-6cbe-d4c5-46bbff0c5cc5@quicinc.com>
+ <20aae21e-62d2-8fdb-b57a-7b5a180266d8@intel.com>
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20aae21e-62d2-8fdb-b57a-7b5a180266d8@intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 2U8UlMOvKdvPcZqq1DNliUaSbNr2AG7r
+X-Proofpoint-GUID: 2U8UlMOvKdvPcZqq1DNliUaSbNr2AG7r
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-12-01_11,2022-12-01_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
+ adultscore=0 mlxlogscore=999 impostorscore=0 spamscore=0 clxscore=1015
+ bulkscore=0 phishscore=0 suspectscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2212010108
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+Hi Adrian,
+Thanks for the patch.
+I Agree, using local variable to store the runtime status before 
+dev->power.lock is released and using this variable later in the code 
+can meet the intention of code and can help to solve this race.
 
-Add advanced RPMB support in ufs_bsg. For these reasons, we try to add
-Advanced RPMB support in ufs_bsg:
+We will get it tested and update you.
 
-1. According to the UFS specification, only one RPMB operation can be
-performed at any time. We can ensure this by using reserved slot and
-its dev_cmd sync operation protection mechanism.
 
-2. For the Advanced RPMB, RPMB metadata is packaged in an EHS(Extra
-Header Segment) of a command UPIU, and the corresponding reply EHS
-(from the device) should also be returned to the user space.
-bsg_job->request and bsg_job->reply allow us to pass and return EHS
-from/back to userspace.
+Regards,
+Nitin
 
-Compared to normal/legacy RPMB, the advantage of advanced RPMB are:
-
-1. The data length in the Advanced RPBM data read/write command could
-be > 4KB. For the legacy RPMB, the data length in a single RPMB data
-transfer is 256 bytes.
-2.  All of the advanced RPMB operations will be a single command shot.
-But for the legacy  RPBM, take the read write-counter value as an example,
-you need two commands(first SECURITY PROTOCOL OUT, then the second SECURITY
-PROTOCOL IN).
-
-Signed-off-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufs_bsg.c       |  93 +++++++++++++++++++++++++---
- drivers/ufs/core/ufshcd.c        | 103 +++++++++++++++++++++++++++++++
- include/uapi/scsi/scsi_bsg_ufs.h |  46 +++++++++++++-
- include/ufs/ufs.h                |   5 ++
- include/ufs/ufshcd.h             |   6 +-
- include/ufs/ufshci.h             |   1 +
- 6 files changed, 242 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 850a0d798f63..a8e58faa7da2 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -6,6 +6,7 @@
-  */
- 
- #include <linux/bsg-lib.h>
-+#include <linux/dma-mapping.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
- #include "ufs_bsg.h"
-@@ -68,6 +69,72 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
- 	return 0;
- }
- 
-+static int ufs_bsg_exec_advanced_rpmb_req(struct ufs_hba *hba, struct bsg_job *job)
-+{
-+	struct ufs_rpmb_request *rpmb_request = job->request;
-+	struct ufs_rpmb_reply *rpmb_reply = job->reply;
-+	struct bsg_buffer *payload = NULL;
-+	enum dma_data_direction dir;
-+	struct scatterlist *sg_list;
-+	int rpmb_req_type;
-+	int sg_cnt;
-+	int ret;
-+	int data_len;
-+
-+	if (hba->ufs_version < ufshci_version(4, 0) || !hba->dev_info.b_advanced_rpmb_en ||
-+	    !(hba->capabilities & MASK_EHSLUTRD_SUPPORTED))
-+		return -EINVAL;
-+
-+	if (rpmb_request->ehs_req.length != 2 || rpmb_request->ehs_req.ehs_type != 1)
-+		return -EINVAL;
-+
-+	rpmb_req_type = be16_to_cpu(rpmb_request->ehs_req.meta.req_resp_type);
-+
-+	switch (rpmb_req_type) {
-+	case UFS_RPMB_WRITE_KEY:
-+	case UFS_RPMB_READ_CNT:
-+	case UFS_RPMB_PURGE_ENABLE:
-+		dir = DMA_NONE;
-+		break;
-+	case UFS_RPMB_WRITE:
-+	case UFS_RPMB_SEC_CONF_WRITE:
-+		dir = DMA_TO_DEVICE;
-+		break;
-+	case UFS_RPMB_READ:
-+	case UFS_RPMB_SEC_CONF_READ:
-+	case UFS_RPMB_PURGE_STATUS_READ:
-+		dir = DMA_FROM_DEVICE;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	if (dir != DMA_NONE) {
-+		payload = &job->request_payload;
-+		if (!payload || !payload->payload_len || !payload->sg_cnt)
-+			return -EINVAL;
-+
-+		sg_cnt = dma_map_sg(hba->host->dma_dev, payload->sg_list, payload->sg_cnt, dir);
-+		if (unlikely(!sg_cnt))
-+			return -ENOMEM;
-+		sg_list = payload->sg_list;
-+		data_len = payload->payload_len;
-+	}
-+
-+	ret = ufshcd_advanced_rpmb_req_handler(hba, &rpmb_request->bsg_request.upiu_req,
-+				   &rpmb_reply->bsg_reply.upiu_rsp, &rpmb_request->ehs_req,
-+				   &rpmb_reply->ehs_rsp, sg_cnt, sg_list, dir);
-+
-+	if (dir != DMA_NONE) {
-+		dma_unmap_sg(hba->host->dma_dev, payload->sg_list, payload->sg_cnt, dir);
-+
-+		if (!ret)
-+			rpmb_reply->bsg_reply.reply_payload_rcv_len = data_len;
-+	}
-+
-+	return ret;
-+}
-+
- static int ufs_bsg_request(struct bsg_job *job)
- {
- 	struct ufs_bsg_request *bsg_request = job->request;
-@@ -75,10 +142,11 @@ static int ufs_bsg_request(struct bsg_job *job)
- 	struct ufs_hba *hba = shost_priv(dev_to_shost(job->dev->parent));
- 	struct uic_command uc = {};
- 	int msgcode;
--	uint8_t *desc_buff = NULL;
-+	uint8_t *buff = NULL;
- 	int desc_len = 0;
- 	enum query_opcode desc_op = UPIU_QUERY_OPCODE_NOP;
- 	int ret;
-+	bool rpmb = false;
- 
- 	bsg_reply->reply_payload_rcv_len = 0;
- 
-@@ -88,8 +156,7 @@ static int ufs_bsg_request(struct bsg_job *job)
- 	switch (msgcode) {
- 	case UPIU_TRANSACTION_QUERY_REQ:
- 		desc_op = bsg_request->upiu_req.qr.opcode;
--		ret = ufs_bsg_alloc_desc_buffer(hba, job, &desc_buff,
--						&desc_len, desc_op);
-+		ret = ufs_bsg_alloc_desc_buffer(hba, job, &buff, &desc_len, desc_op);
- 		if (ret)
- 			goto out;
- 		fallthrough;
-@@ -97,25 +164,31 @@ static int ufs_bsg_request(struct bsg_job *job)
- 	case UPIU_TRANSACTION_TASK_REQ:
- 		ret = ufshcd_exec_raw_upiu_cmd(hba, &bsg_request->upiu_req,
- 					       &bsg_reply->upiu_rsp, msgcode,
--					       desc_buff, &desc_len, desc_op);
-+					       buff, &desc_len, desc_op);
- 		if (ret)
- 			dev_err(hba->dev, "exe raw upiu: error code %d\n", ret);
--		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len)
-+		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len) {
- 			bsg_reply->reply_payload_rcv_len =
- 				sg_copy_from_buffer(job->request_payload.sg_list,
- 						    job->request_payload.sg_cnt,
--						    desc_buff, desc_len);
-+						    buff, desc_len);
-+		}
- 		break;
- 	case UPIU_TRANSACTION_UIC_CMD:
- 		memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE);
- 		ret = ufshcd_send_uic_cmd(hba, &uc);
- 		if (ret)
--			dev_err(hba->dev,
--				"send uic cmd: error code %d\n", ret);
-+			dev_err(hba->dev, "send uic cmd: error code %d\n", ret);
- 
- 		memcpy(&bsg_reply->upiu_rsp.uc, &uc, UIC_CMD_SIZE);
- 
- 		break;
-+	case UPIU_TRANSACTION_ARPMB_CMD:
-+		rpmb = true;
-+		ret = ufs_bsg_exec_advanced_rpmb_req(hba, job);
-+		if (ret)
-+			dev_err(hba->dev, "ARPMB OP failed: error code  %d\n", ret);
-+		break;
- 	default:
- 		ret = -ENOTSUPP;
- 		dev_err(hba->dev, "unsupported msgcode 0x%x\n", msgcode);
-@@ -125,9 +198,9 @@ static int ufs_bsg_request(struct bsg_job *job)
- 
- out:
- 	ufshcd_rpm_put_sync(hba);
--	kfree(desc_buff);
-+	kfree(buff);
- 	bsg_reply->result = ret;
--	job->reply_len = sizeof(struct ufs_bsg_reply);
-+	job->reply_len = !rpmb ? sizeof(struct ufs_bsg_reply) : sizeof(struct ufs_rpmb_reply);
- 	/* complete the job here only if no error */
- 	if (ret == 0)
- 		bsg_job_done(job, ret, bsg_reply->reply_payload_rcv_len);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index bacc94f87ee2..1ecee6507e88 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -56,6 +56,9 @@
- /* Query request timeout */
- #define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
- 
-+/* Advanced RPMB request timeout */
-+#define ADVANCED_RPMB_REQ_TIMEOUT  3000 /* 3 seconds */
-+
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
- 
-@@ -2954,6 +2957,12 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 		dev_err(hba->dev, "%s: Reject UPIU not fully implemented\n",
- 				__func__);
- 		break;
-+	case UPIU_TRANSACTION_RESPONSE:
-+		if (hba->dev_cmd.type != DEV_CMD_TYPE_RPMB) {
-+			err = -EINVAL;
-+			dev_err(hba->dev, "%s: unexpected response %x\n", __func__, resp);
-+		}
-+		break;
- 	default:
- 		err = -EINVAL;
- 		dev_err(hba->dev, "%s: Invalid device management cmd response: %x\n",
-@@ -7006,6 +7015,100 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 	return err;
- }
- 
-+/**
-+ * ufshcd_advanced_rpmb_req_handler - handle advanced RPMB request
-+ * @hba:	per adapter instance
-+ * @req_upiu:	upiu request
-+ * @rsp_upiu:	upiu reply
-+ * @req_ehs:	EHS field which contains Advanced RPMB Request Message
-+ * @rsp_ehs:	EHS field which returns Advanced RPMB Response Message
-+ * @sg_cnt:	The number of sg lists actually used
-+ * @sg_list:	Pointer to SG list when DATA IN/OUT UPIU is required in ARPMB operation
-+ * @dir:	DMA direction
-+ *
-+ * Returns zero on success, non-zero on failure
-+ */
-+int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *req_upiu,
-+			 struct utp_upiu_req *rsp_upiu, struct ufs_ehs *req_ehs,
-+			 struct ufs_ehs *rsp_ehs, int sg_cnt, struct scatterlist *sg_list,
-+			 enum dma_data_direction dir)
-+{
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	const u32 tag = hba->reserved_slot;
-+	struct ufshcd_lrb *lrbp;
-+	int err = 0;
-+	int result;
-+	u8 upiu_flags;
-+	u8 *ehs_data;
-+	u16 ehs_len;
-+
-+	/* Protects use of hba->reserved_slot. */
-+	ufshcd_hold(hba, false);
-+	mutex_lock(&hba->dev_cmd.lock);
-+	down_read(&hba->clk_scaling_lock);
-+
-+	lrbp = &hba->lrb[tag];
-+	WARN_ON(lrbp->cmd);
-+	lrbp->cmd = NULL;
-+	lrbp->task_tag = tag;
-+	lrbp->lun = UFS_UPIU_RPMB_WLUN;
-+
-+	lrbp->intr_cmd = true;
-+	ufshcd_prepare_lrbp_crypto(NULL, lrbp);
-+	hba->dev_cmd.type = DEV_CMD_TYPE_RPMB;
-+
-+	/* Advanced RPMB starts from UFS 4.0, so its command type is UTP_CMD_TYPE_UFS_STORAGE */
-+	lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
-+
-+	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, dir, 2);
-+
-+	/* update the task tag and LUN in the request upiu */
-+	req_upiu->header.dword_0 |= cpu_to_be32(upiu_flags << 16 | UFS_UPIU_RPMB_WLUN << 8 | tag);
-+
-+	/* copy the UPIU(contains CDB) request as it is */
-+	memcpy(lrbp->ucd_req_ptr, req_upiu, sizeof(*lrbp->ucd_req_ptr));
-+	/* Copy EHS, starting with byte32, immediately after the CDB package */
-+	memcpy(lrbp->ucd_req_ptr + 1, req_ehs, sizeof(*req_ehs));
-+
-+	if (dir != DMA_NONE && sg_list)
-+		ufshcd_sgl_to_prdt(hba, lrbp, sg_cnt, sg_list);
-+
-+	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
-+
-+	hba->dev_cmd.complete = &wait;
-+
-+	ufshcd_send_command(hba, tag);
-+
-+	err = ufshcd_wait_for_dev_cmd(hba, lrbp, ADVANCED_RPMB_REQ_TIMEOUT);
-+
-+	if (!err) {
-+		/* Just copy the upiu response as it is */
-+		memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
-+		/* Get the response UPIU result */
-+		result = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr);
-+
-+		ehs_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) >> 24;
-+		/*
-+		 * Since the bLength in EHS indicates the total size of the EHS Header and EHS Data
-+		 * in 32 Byte units, the value of the bLength Request/Response for Advanced RPMB
-+		 * Message is 02h
-+		 */
-+		if (ehs_len == 2 && rsp_ehs) {
-+			/*
-+			 * ucd_rsp_ptr points to a buffer with a length of 512 bytes
-+			 * (ALIGNED_UPIU_SIZE = 512), and the EHS data just starts from byte32
-+			 */
-+			ehs_data = (u8 *)lrbp->ucd_rsp_ptr + EHS_OFFSET_IN_RESPONSE;
-+			memcpy(rsp_ehs, ehs_data, ehs_len * 32);
-+		}
-+	}
-+
-+	up_read(&hba->clk_scaling_lock);
-+	mutex_unlock(&hba->dev_cmd.lock);
-+	ufshcd_release(hba);
-+	return err ? : result;
-+}
-+
- /**
-  * ufshcd_eh_device_reset_handler() - Reset a single logical unit.
-  * @cmd: SCSI command pointer
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index 64b0cb33e549..276e2772328f 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -14,10 +14,27 @@
-  */
- 
- #define UFS_CDB_SIZE	16
--#define UPIU_TRANSACTION_UIC_CMD 0x1F
- /* uic commands are 4DW long, per UFSHCI V2.1 paragraph 5.6.1 */
- #define UIC_CMD_SIZE (sizeof(__u32) * 4)
- 
-+enum ufs_bsg_msg_code {
-+	UPIU_TRANSACTION_UIC_CMD = 0x1F,
-+	UPIU_TRANSACTION_ARPMB_CMD,
-+};
-+
-+/* UFS RPMB Request Message Types */
-+enum ufs_rpmb_op_type {
-+	UFS_RPMB_WRITE_KEY		= 0x01,
-+	UFS_RPMB_READ_CNT		= 0x02,
-+	UFS_RPMB_WRITE			= 0x03,
-+	UFS_RPMB_READ			= 0x04,
-+	UFS_RPMB_READ_RESP		= 0x05,
-+	UFS_RPMB_SEC_CONF_WRITE		= 0x06,
-+	UFS_RPMB_SEC_CONF_READ		= 0x07,
-+	UFS_RPMB_PURGE_ENABLE		= 0x08,
-+	UFS_RPMB_PURGE_STATUS_READ	= 0x09,
-+};
-+
- /**
-  * struct utp_upiu_header - UPIU header structure
-  * @dword_0: UPIU header DW-0
-@@ -79,6 +96,23 @@ struct utp_upiu_req {
- 	};
- };
- 
-+struct ufs_arpmb_meta {
-+	__u16	req_resp_type;
-+	__u8	nonce[16];
-+	__u32	write_counter;
-+	__u16	addr_lun;
-+	__u16	block_count;
-+	__u16	result;
-+} __attribute__((__packed__));
-+
-+struct ufs_ehs {
-+	__u8	length;
-+	__u8	ehs_type;
-+	__u16	ehssub_type;
-+	struct ufs_arpmb_meta meta;
-+	__u8	mac_key[32];
-+} __attribute__((__packed__));
-+
- /* request (CDB) structure of the sg_io_v4 */
- struct ufs_bsg_request {
- 	__u32 msgcode;
-@@ -102,4 +136,14 @@ struct ufs_bsg_reply {
- 
- 	struct utp_upiu_req upiu_rsp;
- };
-+
-+struct ufs_rpmb_request {
-+	struct ufs_bsg_request bsg_request;
-+	struct ufs_ehs ehs_req;
-+};
-+
-+struct ufs_rpmb_reply {
-+	struct ufs_bsg_reply bsg_reply;
-+	struct ufs_ehs ehs_rsp;
-+};
- #endif /* UFS_BSG_H */
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 17e401df674c..0c112195b288 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -49,6 +49,11 @@
-  */
- #define UFS_WB_EXCEED_LIFETIME		0x0B
- 
-+/*
-+ * In UFS Spec, the Extra Header Segment (EHS) starts from byte 32 in UPIU request/response packet
-+ */
-+#define EHS_OFFSET_IN_RESPONSE 32
-+
- /* Well known logical unit id in LUN field of UPIU */
- enum {
- 	UFS_UPIU_REPORT_LUNS_WLUN	= 0x81,
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 5cf81dff60aa..c3dfa8084b5c 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -30,6 +30,7 @@ struct ufs_hba;
- enum dev_cmd_type {
- 	DEV_CMD_TYPE_NOP		= 0x0,
- 	DEV_CMD_TYPE_QUERY		= 0x1,
-+	DEV_CMD_TYPE_RPMB		= 0x2,
- };
- 
- enum ufs_event_type {
-@@ -1201,7 +1202,10 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     int msgcode,
- 			     u8 *desc_buff, int *buff_len,
- 			     enum query_opcode desc_op);
--
-+int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *req_upiu,
-+				     struct utp_upiu_req *rsp_upiu, struct ufs_ehs *ehs_req,
-+				     struct ufs_ehs *ehs_rsp, int sg_cnt,
-+				     struct scatterlist *sg_list, enum dma_data_direction dir);
- int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
- int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
- int ufshcd_suspend_prepare(struct device *dev);
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index f525566a0864..af216296b86e 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -63,6 +63,7 @@ enum {
- enum {
- 	MASK_TRANSFER_REQUESTS_SLOTS		= 0x0000001F,
- 	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	= 0x00070000,
-+	MASK_EHSLUTRD_SUPPORTED			= 0x00400000,
- 	MASK_AUTO_HIBERN8_SUPPORT		= 0x00800000,
- 	MASK_64_ADDRESSING_SUPPORT		= 0x01000000,
- 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
--- 
-2.25.1
-
+On 12/1/2022 6:39 PM, Adrian Hunter wrote:
+> On 29/11/22 18:56, Nitin Rawat wrote:
+>> Hi Adrian,
+>>
+>> On 11/21/2022 11:38 AM, Tushar Nimkar wrote:
+>>> Hi Adrian,
+>>>
+>>> On 11/18/2022 8:25 PM, Adrian Hunter wrote:
+>>>> On 4/11/22 11:19, Tushar Nimkar wrote:
+>>>>> Hi linux-pm/linux-scsi,
+>>>
+>>>>>> Process -1
+>>>>>> ufshcd_async_scan context (process 1)
+>>>>>> scsi_autopm_put_device() //0:0:0:0
+>>>>
+>>>> I am having trouble following your description.  What function is calling
+>>>> scsi_autopm_put_device() here?
+>>>>
+>>> Below is flow which calls scsi_autopm_put_device()
+>>> Process -1
+>>> ufshcd_async_scan()
+>>>       scsi_probe_and_add_lun()
+>>>           scsi_add_lun()
+>>>               slave_configure()
+>>>                   scsi_sysfs_add_sdev()
+>>>                       scsi_autopm_get_device()
+>>>                           device_add()     <- invoked [Process 2] sd_probe()
+>>>                               scsi_autopm_put_device()
+>>>
+>>>>>> pm_runtime_put_sync()
+>>>>>> __pm_runtime_idle()
+>>>>>> rpm_idle() -- RPM_GET_PUT(4)
+>>>>>>        __rpm_callback
+>>>>>>            scsi_runtime_idle()
+>>>>>>                pm_runtime_mark_last_busy()
+>>>>>>                pm_runtime_autosuspend()  --[A]
+>>>>>>                    rpm_suspend() -- RPM_AUTO(8)
+>>>>>>                        pm_runtime_autosuspend_expiration() use_autosuspend    is false return 0   --- [B]
+>>>>>>                            __update_runtime_status to RPM_SUSPENDING
+>>>>>>                        __rpm_callback()
+>>>>>>                            __rpm_put_suppliers(dev, false)
+>>>>>>                        __update_runtime_status to RPM_SUSPENDED
+>>>>>>                    rpm_suspend_suppliers()
+>>>>>>                        rpm_idle() for supplier -- RPM_ASYNC(1) return (-EAGAIN) [ Other consumer active for supplier]
+>>>>>>                    rpm_suspend() – END with return=0
+>>>>>>            scsi_runtime_idle() END return (-EBUSY) always.
+>>>>
+>>>> Not following here either.  Which device is EBUSY and why?
+>>>
+>>> scsi_runtime_idle() return -EBUSY always [3]
+>>> Storage/scsi team can better explain -EBUSY implementation.
+>>
+>> EBUSY is returned from below code for consumer dev 0:0:0:0.
+>> scsi_runtime_idle is called from scsi_autopm_put_device which inturn is called from ufshcd_async_scan (Process 1 as per above call stack)
+>> static int scsi_runtime_idle(struct device *dev)
+>> {
+>>      :
+>>
+>>      if (scsi_is_sdev_device(dev)) {
+>>          pm_runtime_mark_last_busy(dev);
+>>          pm_runtime_autosuspend(dev);
+>>          return -EBUSY; ---> EBUSY returned from here.
+>>      }
+>>
+>>      
+>> }
+>>
+>>>
+>>> [3] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/scsi_pm.c?h=next-20221118#n210
+>>>
+>>>
+>>>>>>
+>>>>>> [1]: https://lore.kernel.org/lkml/4748074.GXAFRqVoOG@kreacher/T/
+>>>>>> [2]: https://lkml.org/lkml/2022/10/12/259
+> 
+> It looks to me like __rpm_callback() makes assumptions about
+> dev->power.runtime_status that are not necessarily true because
+> dev->power.lock is dropped.  AFAICT the intention of the code
+> would be fulfilled by instead using the status as it was before
+> the lock was dropped.
+> 
+> Consequently, perhaps you could try this:
+> 
+> diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+> index b52049098d4e..3cf9abc3b2c2 100644
+> --- a/drivers/base/power/runtime.c
+> +++ b/drivers/base/power/runtime.c
+> @@ -365,6 +365,7 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
+>   {
+>   	int retval = 0, idx;
+>   	bool use_links = dev->power.links_count > 0;
+> +	enum rpm_status runtime_status = dev->power.runtime_status;
+>   
+>   	if (dev->power.irq_safe) {
+>   		spin_unlock(&dev->power.lock);
+> @@ -378,7 +379,7 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
+>   		 * routine returns, so it is safe to read the status outside of
+>   		 * the lock.
+>   		 */
+> -		if (use_links && dev->power.runtime_status == RPM_RESUMING) {
+> +		if (use_links && runtime_status == RPM_RESUMING) {
+>   			idx = device_links_read_lock();
+>   
+>   			retval = rpm_get_suppliers(dev);
+> @@ -405,8 +406,8 @@ static int __rpm_callback(int (*cb)(struct device *), struct device *dev)
+>   		 * Do that if resume fails too.
+>   		 */
+>   		if (use_links
+> -		    && ((dev->power.runtime_status == RPM_SUSPENDING && !retval)
+> -		    || (dev->power.runtime_status == RPM_RESUMING && retval))) {
+> +		    && ((runtime_status == RPM_SUSPENDING && !retval)
+> +		    || (runtime_status == RPM_RESUMING && retval))) {
+>   			idx = device_links_read_lock();
+>   
+>   			__rpm_put_suppliers(dev, false);
+> 
+> 
