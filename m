@@ -2,102 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 837B8C43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 17:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 330D3C43217
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Dec 2022 18:06:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231179AbiLARtO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Dec 2022 12:49:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32810 "EHLO
+        id S229999AbiLASGH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Dec 2022 13:06:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230514AbiLARsb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 12:48:31 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1623ABE100
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 09:46:15 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id h33so2269792pgm.9
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Dec 2022 09:46:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=43OqRHaaIujJi6ZlQt/N8badSJ3sWGrShf1wADibj34=;
-        b=NmPY8iCDxI+NhdKK5uUYYLt8/z3vqea6wkBFcmL3hDLIQ2o87rg+rRhj+mkuN/E1z1
-         gLdcQ0VjJJrZwx2+tj6eWlyids+OqliSDb82dhXf+V9km/G2FgMPVSxJF0tPUx9HtApI
-         0zHIeHNft62jZOjXQ0tID5RteBnF++m1Ry72uLtWQ/re8HR0wBS67ohbK3Vjmn8K9bKD
-         VI+c0Ws0++zPjmSHNsSL5U8DDR7ztW4XttZKgFQ8nQAszbwyYEwbAuOFbBx6aeopiexo
-         ibofa9Gkr8xq5YUroQb67IM68EFua/fbX7SFpy51N6hiMrqvwLJPklmfywd93kQbm4Q8
-         t4ng==
+        with ESMTP id S229579AbiLASGG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2022 13:06:06 -0500
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47465B2772;
+        Thu,  1 Dec 2022 10:06:02 -0800 (PST)
+Received: by mail-pj1-f44.google.com with SMTP id 3-20020a17090a098300b00219041dcbe9so2857809pjo.3;
+        Thu, 01 Dec 2022 10:06:02 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=43OqRHaaIujJi6ZlQt/N8badSJ3sWGrShf1wADibj34=;
-        b=oLQHtc9cAWA7b+1gcQ8dzqGKnr7k4xAJ6/HwUQGdQ3m3DS8CIyf8iz/dTg+NjSq9KC
-         Pl4F5kIs3aXilXzErFHXcq6l9ueIp6SdPAzedUU0LxrkcspXNpJKjOgz0/w3INrEP7eC
-         JpGbg5a3SeeOwYVNkOnq/BjxbsuFExyvNf1wHdQIrzpu9K/xmIxTOL5HVqknd+7HMdTM
-         iXfsjPb4a3wEJzIQDWO6uCMfmUcg6vzfdvpEmVBHWLtY4IYTaJcYkEk/B879baUlOzyd
-         7tHUVJIONjhQ6bboumv/2xdc/S0i7I8HZAa2gNGguGi8PRdoZHQTRWcjdzVqdJ7mCRbU
-         b8Zw==
-X-Gm-Message-State: ANoB5pmudWCYMaEQ2LbBfwTAjAhNW3UXWwBW5zM9bz006UOgAJe+LczD
-        Il+I869a2qFzOiS3mRT3DUBC
-X-Google-Smtp-Source: AA0mqf64D09WmHdfFGHHBXjzBUhd1iZ31q9mHzfnHXrDTrmY1nFgAImzsVcgggCYrYBrM0bUZjm06A==
-X-Received: by 2002:a62:3006:0:b0:554:7525:7acf with SMTP id w6-20020a623006000000b0055475257acfmr48105047pfw.44.1669916775237;
-        Thu, 01 Dec 2022 09:46:15 -0800 (PST)
-Received: from localhost.localdomain ([220.158.159.39])
-        by smtp.gmail.com with ESMTPSA id p4-20020a170902780400b0016d9b101413sm3898743pll.200.2022.12.01.09.46.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Dec 2022 09:46:14 -0800 (PST)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qVK+6Kq4nzKMUbH9qhCB7m0XxdurCZ5fwk7wImCZNKU=;
+        b=jpxkEUUrMozXGXuNAYjG+hNZncHHIADglofgFslEQCSHomakkLVASRkGPGdu3fTCE+
+         zkDGS4AT0j7pRI+5ixZcyTHi+qonsQXZuKr7Y87K/a2rMIuHgEX/m63+eC2jlCtFxX2A
+         k0Cirf6Y20s5O8Ee3AtsOa7eSQudahzKFBQEwjwf5K/q6OgEdoTZ5O7pQ8+Xp+uIPdh1
+         yJVCvJRIyRIAAWt9LAbshW8g2B9XO34x/wsExUEineUeQORi+b25cGwh7YVN576OIwdd
+         HFeanEGg3L0r3jtG8a14eNfnWD5ILV/x6GKBwCusrdMN0CGvq6w+VlTPZVTXxNF6S15M
+         WzGw==
+X-Gm-Message-State: ANoB5pllCnRdzETkrJaQzcX/ueB+42B4dnyMMWla5PhnJsGa6iJaN2xC
+        I/V1BpScJO0TW3ZXrqPLMMM=
+X-Google-Smtp-Source: AA0mqf5yON6iTF21v9ToNldiRX4UMXdkbeYNlxYzwMUD2LUs0hxwgAPvPXpnhTc9b58+xORLL06YFQ==
+X-Received: by 2002:a17:902:f68a:b0:176:71be:cc64 with SMTP id l10-20020a170902f68a00b0017671becc64mr50293287plg.141.1669917961631;
+        Thu, 01 Dec 2022 10:06:01 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:e25f:2653:dbae:e657? ([2620:15c:211:201:e25f:2653:dbae:e657])
+        by smtp.gmail.com with ESMTPSA id y7-20020a17090a2b4700b0021806f631ccsm3292919pjc.30.2022.12.01.10.05.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 01 Dec 2022 10:05:59 -0800 (PST)
+Message-ID: <fa0e6167-a893-4eb7-efff-8f378ee819e1@acm.org>
+Date:   Thu, 1 Dec 2022 10:05:57 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v4 18/23] scsi: ufs: core: Add reinit_notify() callback
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com,
         andersson@kernel.org, vkoul@kernel.org
 Cc:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
         linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
         dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
-        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v4 23/23] MAINTAINERS: Add myself as the maintainer for Qcom UFS drivers
-Date:   Thu,  1 Dec 2022 23:13:28 +0530
-Message-Id: <20221201174328.870152-24-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org>
+        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com
 References: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+ <20221201174328.870152-19-manivannan.sadhasivam@linaro.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221201174328.870152-19-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Qcom UFS drivers are left un-maintained till now. I'd like to step up to
-maintain the drivers and the binding.
+On 12/1/22 09:43, Manivannan Sadhasivam wrote:
+> reinit_notify() callback can be used by the UFS controllers to perform
+> changes required for UFS core reinit.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+What does "UFS core" refer to in this context? Should "UFS core" perhaps 
+be changed into "UFS controller phy"?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3583c5f6889d..3c8214f4a3cf 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -21379,6 +21379,14 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/ufs/host/ufs-mediatek*
- 
-+UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER QUALCOMM HOOKS
-+M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+L:	linux-arm-msm@vger.kernel.org
-+L:	linux-scsi@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+F:	drivers/ufs/host/ufs-qcom*
-+
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
- M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
- L:	linux-renesas-soc@vger.kernel.org
--- 
-2.25.1
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 5cf81dff60aa..af8c95077d96 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
+>    * @config_scaling_param: called to configure clock scaling parameters
+>    * @program_key: program or evict an inline encryption key
+>    * @event_notify: called to notify important events
+> + * @reinit_notify: called to notify UFS core reinit
+
+Please make this comment more clear. Nobody knows what "UFS core" means.
+
+Thanks,
+
+Bart.
 
