@@ -2,87 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E49EC4167B
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Dec 2022 07:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5D7DC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Dec 2022 07:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231808AbiLBHic (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Dec 2022 02:38:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46714 "EHLO
+        id S232195AbiLBHkB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Dec 2022 02:40:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232261AbiLBHi3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2022 02:38:29 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9BA5A7AA1
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 23:38:26 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id h193so3725181pgc.10
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Dec 2022 23:38:26 -0800 (PST)
+        with ESMTP id S230094AbiLBHj7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2022 02:39:59 -0500
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3337AD98E
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Dec 2022 23:39:58 -0800 (PST)
+Received: by mail-pg1-x531.google.com with SMTP id f9so3743577pgf.7
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Dec 2022 23:39:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=LnoX7NMS749gHaHaMrlO+RqnODlHQ21OO457WlTgAcw=;
-        b=HsJTbbg8xWv9wCDADe4WPc6sNNK/QYEpjFVaIE+lN+AsiHupKUSNfq5P3DejWmqvGP
-         g1jBlr9qqom6077HCYBYKI+NwUZ6JQ1nbFqHvQsVzH2NuTNRR8Yykc4VKTHPPGYp6b1Q
-         oQhSyxgIopIXhsUlbnVOU8mqA77jHmcPqL9lGjPw2YStKQZNwzgE5VNRCTphQDb7Fj6P
-         WNaYBk7Q2PtKvgi8geWafakpisAPammljleADgiOaXSjk1QV2DPPAWD0ovIIOUSRMOij
-         qQ1arhbdecZ6F2DoI/78DYvvEAnmGpN3nRq5uZLUjbHplF9QbouSPlGnkfcCQMyrkClo
-         PKJw==
+        bh=EKdJy8iwYIrzA6eUcHS1xN++4Pj6b6rZ6Y+yBBYokW8=;
+        b=Uw1oClizcn3XTQesSOqhOmB5uui3mQLM2nfnZLp7ch36IdWnVz33clXfk4pw4FoI/W
+         XMkc7MJawfHhIBKsjA0b/bl1oSzxHbPhekaCKF/HdvEi+2F6lZ+R7V/YtSU/EtzoDwtv
+         yFXYWYBmMWAPn/yQGpLx+AtN48qzfQA4/InfnhgC1EMYmzfSpJdu1x19LCBWOgXh2yp7
+         IKui+F7vxprrEQ3XXvuyZgrTyDanXVjL0VI3Q1l+MTQLdB+UfSj7blpsnLxlK7IDS/ul
+         M+dOR4h8DD9s3wn9qRi+N1ZmPnV7oKxB8TNvZkNJgVfNGNISX/ECEeyP4enPo8A5dvCJ
+         HLFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LnoX7NMS749gHaHaMrlO+RqnODlHQ21OO457WlTgAcw=;
-        b=GQYoqDKw/mQwNvgUB7Ox5U2XDgwEyq6vz8oPTchSjf3fw3yBmskoN/8GKhz8oIu5kT
-         MNW/cCkesgOQwbpGvFeynAYLXFMUXxFFY35EQJtkDO47+KDGKoREdmmkXvElaAmT2iH7
-         clw84wise8NSsBYYSFg6XopNppgF+SS0nj0x++AREq1w1Mk3l2ddrhb1Crxm4rEj2XIW
-         zkuPowTEOECJlmD2ccI6/ZuUNqFXzBoD1+F9eJ7B/ULejFdCBAyIacJm06szMdWdeaxf
-         7ZFoT9qMsJAVDOPVpsOczHKlCCAg2skXtc6SEjfCyIbV/W5PUvKH2VTF6tRXWddith0N
-         0ZMg==
-X-Gm-Message-State: ANoB5pnWwqeMNfL2vbVuqAvYD7dffg/spCCBVk9u+ScGr2iX58W7vObu
-        ePSF1NutGs2aVWA29SGOG9lb
-X-Google-Smtp-Source: AA0mqf7ofvd8rwhX7cwm0rlBmMIbFlWCCL+4agMbRIN3/Fa5JM0r79jIXgmE+szlXkgCHmB9H+Ecdw==
-X-Received: by 2002:a62:687:0:b0:56e:924e:ee22 with SMTP id 129-20020a620687000000b0056e924eee22mr51493018pfg.34.1669966705977;
-        Thu, 01 Dec 2022 23:38:25 -0800 (PST)
+        bh=EKdJy8iwYIrzA6eUcHS1xN++4Pj6b6rZ6Y+yBBYokW8=;
+        b=bkV+j9uRC4uZoMeWpdlFGwRjuODqybf3imELlAN5MMc+sJmiW2bCfq9XqPaRfIJUTI
+         Q97TWC6z6CTC5aBCDlc1XmY/1F5aAa7Lea/KuVoHXq88iZL5j/k6LHr1LO80cJ1m5Og1
+         QXqREGplGJktkWzadq1Zh/a0vRxjEjH369Q07HdKRDU2GwxntNJMakSTaDKarSgpfwM5
+         7paa9trkTja67mCpD9MWqkQISzX0k0GwPZhtMHWZWbI7pHeLyksZXwOmE/mBt//iX25r
+         bO60UsHoTkreYTznG07ruNbB1FBKj/CEIUodkIEr4NbMcXbuZgqWtpr4LSYPtY3n9g6h
+         dw+w==
+X-Gm-Message-State: ANoB5plDPVAi0ooQNHcgKAzETkowge0wPZS8heVasfrFaSxm2zhs75wI
+        OvUpmhBBbDEcJw7SX/9yUC8iIOrSgMxrwAQ=
+X-Google-Smtp-Source: AA0mqf4RHtpfIlj5JeeEw6Da3Yq5R9fgzfWHMLyg5+ZY64vcJqKkS0zVLdyfP/r8TE+O0RRrfjgcOw==
+X-Received: by 2002:a62:840b:0:b0:575:2199:70e8 with SMTP id k11-20020a62840b000000b00575219970e8mr25115627pfd.14.1669966798480;
+        Thu, 01 Dec 2022 23:39:58 -0800 (PST)
 Received: from thinkpad ([27.111.75.154])
-        by smtp.gmail.com with ESMTPSA id p3-20020a170902e74300b00189988a1a9esm4892588plf.135.2022.12.01.23.38.21
+        by smtp.gmail.com with ESMTPSA id bd12-20020a170902830c00b001894198d0ebsm4849251plb.24.2022.12.01.23.39.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Dec 2022 23:38:25 -0800 (PST)
-Date:   Fri, 2 Dec 2022 13:08:18 +0530
+        Thu, 01 Dec 2022 23:39:57 -0800 (PST)
+Date:   Fri, 2 Dec 2022 13:09:51 +0530
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     Andrew Halaney <ahalaney@redhat.com>
 Cc:     andersson@kernel.org, agross@kernel.org, konrad.dybcio@linaro.org,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
         p.zabel@pengutronix.de, linux-arm-msm@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/4] scsi: ufs: ufs-qcom: Clean up dbg_register_dump
-Message-ID: <20221202073818.GC5356@thinkpad>
+Subject: Re: [PATCH 3/4] scsi: ufs: ufs-qcom: Remove usage of dbg_print_en
+Message-ID: <20221202073951.GD5356@thinkpad>
 References: <20221201230810.1019834-1-ahalaney@redhat.com>
- <20221201230810.1019834-3-ahalaney@redhat.com>
+ <20221201230810.1019834-4-ahalaney@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20221201230810.1019834-3-ahalaney@redhat.com>
+In-Reply-To: <20221201230810.1019834-4-ahalaney@redhat.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Dec 01, 2022 at 05:08:08PM -0600, Andrew Halaney wrote:
-> The current implementation has abstractions that don't give any
-> benefits.
+On Thu, Dec 01, 2022 at 05:08:09PM -0600, Andrew Halaney wrote:
+> This bitmask is unconditionally set in the current driver,
+> so all conditionals using it can be considered bit rot.
 > 
-> The print_fn callback (and its only callback implementation,
-> ufs_qcom_dump_regs_wrapper()) was only used by
-> ufs_qcom_print_hw_debug_reg_all() and just multiplies len by 4
-> before calling ufshcd_dump_regs().
-> 
-> ufs_qcom_print_hw_debug_reg_all() is only called by
-> ufs_qcom_dump_dbg_regs().
-> 
-> There's no real gain in those abstractions, so let's just do the work
-> directly in ufs_qcom_dump_dbg_regs() (the dbg_register_dump callback).
+> Let's take the current default conditional path everywhere and remove
+> dbg_print_en from the driver.
 > 
 > Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
 
@@ -92,143 +84,89 @@ Thanks,
 Mani
 
 > ---
->  drivers/ufs/host/ufs-qcom.c | 106 ++++++++++++++++--------------------
->  1 file changed, 47 insertions(+), 59 deletions(-)
+>  drivers/ufs/host/ufs-qcom.c | 18 +++---------------
+>  drivers/ufs/host/ufs-qcom.h | 11 -----------
+>  2 files changed, 3 insertions(+), 26 deletions(-)
 > 
 > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 70e25f9f8ca8..1b0dfbbdcdf3 100644
+> index 1b0dfbbdcdf3..b1fcff1fad0c 100644
 > --- a/drivers/ufs/host/ufs-qcom.c
 > +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -52,12 +52,6 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
->  	return container_of(rcd, struct ufs_qcom_host, rcdev);
->  }
+> @@ -22,9 +22,6 @@
+>  #include <ufs/ufshci.h>
+>  #include <ufs/ufs_quirks.h>
 >  
-> -static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
-> -				       const char *prefix, void *priv)
-> -{
-> -	ufshcd_dump_regs(hba, offset, len * 4, prefix);
-> -}
+> -#define UFS_QCOM_DEFAULT_DBG_PRINT_EN	\
+> -	(UFS_QCOM_DBG_PRINT_REGS_EN | UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
 > -
->  static int ufs_qcom_host_clk_get(struct device *dev,
->  		const char *name, struct clk **clk_out, bool optional)
->  {
-> @@ -1195,58 +1189,6 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
->  	return err;
->  }
+>  enum {
+>  	TSTBUS_UAWM,
+>  	TSTBUS_UARM,
+> @@ -1040,7 +1037,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+>  		ufs_qcom_hosts[hba->dev->id] = host;
 >  
-> -static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
-> -		void *priv, void (*print_fn)(struct ufs_hba *hba,
-> -		int offset, int num_regs, const char *str, void *priv))
-> -{
-> -	u32 reg;
-> -	struct ufs_qcom_host *host;
-> -
-> -	host = ufshcd_get_variant(hba);
-> -	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
-> -		return;
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
-> -	print_fn(hba, reg, 44, "UFS_UFS_DBG_RD_REG_OCSC ", priv);
-> -
-> -	reg = ufshcd_readl(hba, REG_UFS_CFG1);
-> -	reg |= UTP_DBG_RAMS_EN;
-> -	ufshcd_writel(hba, reg, REG_UFS_CFG1);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_EDTL_RAM);
-> -	print_fn(hba, reg, 32, "UFS_UFS_DBG_RD_EDTL_RAM ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_DESC_RAM);
-> -	print_fn(hba, reg, 128, "UFS_UFS_DBG_RD_DESC_RAM ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_PRDT_RAM);
-> -	print_fn(hba, reg, 64, "UFS_UFS_DBG_RD_PRDT_RAM ", priv);
-> -
-> -	/* clear bit 17 - UTP_DBG_RAMS_EN */
-> -	ufshcd_rmwl(hba, UTP_DBG_RAMS_EN, 0, REG_UFS_CFG1);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UAWM);
-> -	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UAWM ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UARM);
-> -	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UARM ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TXUC);
-> -	print_fn(hba, reg, 48, "UFS_DBG_RD_REG_TXUC ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_RXUC);
-> -	print_fn(hba, reg, 27, "UFS_DBG_RD_REG_RXUC ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_DFC);
-> -	print_fn(hba, reg, 19, "UFS_DBG_RD_REG_DFC ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TRLUT);
-> -	print_fn(hba, reg, 34, "UFS_DBG_RD_REG_TRLUT ", priv);
-> -
-> -	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TMRLUT);
-> -	print_fn(hba, reg, 9, "UFS_DBG_RD_REG_TMRLUT ", priv);
-> -}
-> -
+> -	host->dbg_print_en |= UFS_QCOM_DEFAULT_DBG_PRINT_EN;
+>  	ufs_qcom_get_default_testbus_cfg(host);
+>  	err = ufs_qcom_testbus_config(host);
+>  	if (err) {
+> @@ -1191,14 +1187,9 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+>  
 >  static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
 >  {
->  	if (host->dbg_print_en & UFS_QCOM_DBG_PRINT_TEST_BUS_EN) {
-> @@ -1365,10 +1307,56 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+> -	if (host->dbg_print_en & UFS_QCOM_DBG_PRINT_TEST_BUS_EN) {
+> -		ufshcd_rmwl(host->hba, UFS_REG_TEST_BUS_EN,
+> -				UFS_REG_TEST_BUS_EN, REG_UFS_CFG1);
+> -		ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
+> -	} else {
+> -		ufshcd_rmwl(host->hba, UFS_REG_TEST_BUS_EN, 0, REG_UFS_CFG1);
+> -		ufshcd_rmwl(host->hba, TEST_BUS_EN, 0, REG_UFS_CFG1);
+> -	}
+> +	ufshcd_rmwl(host->hba, UFS_REG_TEST_BUS_EN,
+> +			UFS_REG_TEST_BUS_EN, REG_UFS_CFG1);
+> +	ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
+>  }
 >  
->  static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
->  {
-> +	u32 reg;
-> +	struct ufs_qcom_host *host;
-> +
-> +	host = ufshcd_get_variant(hba);
-> +
+>  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host)
+> @@ -1315,9 +1306,6 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
 >  	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
 >  			 "HCI Vendor Specific Registers ");
 >  
-> -	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
-> +	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
-> +		return;
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
-> +	ufshcd_dump_regs(hba, reg, 44 * 4, "UFS_UFS_DBG_RD_REG_OCSC ");
-> +
-> +	reg = ufshcd_readl(hba, REG_UFS_CFG1);
-> +	reg |= UTP_DBG_RAMS_EN;
-> +	ufshcd_writel(hba, reg, REG_UFS_CFG1);
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_EDTL_RAM);
-> +	ufshcd_dump_regs(hba, reg, 32 * 4, "UFS_UFS_DBG_RD_EDTL_RAM ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_DESC_RAM);
-> +	ufshcd_dump_regs(hba, reg, 128 * 4, "UFS_UFS_DBG_RD_DESC_RAM ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_PRDT_RAM);
-> +	ufshcd_dump_regs(hba, reg, 64 * 4, "UFS_UFS_DBG_RD_PRDT_RAM ");
-> +
-> +	/* clear bit 17 - UTP_DBG_RAMS_EN */
-> +	ufshcd_rmwl(hba, UTP_DBG_RAMS_EN, 0, REG_UFS_CFG1);
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UAWM);
-> +	ufshcd_dump_regs(hba, reg, 4 * 4, "UFS_DBG_RD_REG_UAWM ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UARM);
-> +	ufshcd_dump_regs(hba, reg, 4 * 4, "UFS_DBG_RD_REG_UARM ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TXUC);
-> +	ufshcd_dump_regs(hba, reg, 48 * 4, "UFS_DBG_RD_REG_TXUC ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_RXUC);
-> +	ufshcd_dump_regs(hba, reg, 27 * 4, "UFS_DBG_RD_REG_RXUC ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_DFC);
-> +	ufshcd_dump_regs(hba, reg, 19 * 4, "UFS_DBG_RD_REG_DFC ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TRLUT);
-> +	ufshcd_dump_regs(hba, reg, 34 * 4, "UFS_DBG_RD_REG_TRLUT ");
-> +
-> +	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TMRLUT);
-> +	ufshcd_dump_regs(hba, reg, 9 * 4, "UFS_DBG_RD_REG_TMRLUT ");
->  }
+> -	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
+> -		return;
+> -
+>  	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
+>  	ufshcd_dump_regs(hba, reg, 44 * 4, "UFS_UFS_DBG_RD_REG_OCSC ");
 >  
->  /**
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index 44466a395bb5..e567e4636357 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -113,15 +113,6 @@ enum {
+>  	MASK_CLK_NS_REG                     = 0xFFFC00,
+>  };
+>  
+> -/* QCOM UFS debug print bit mask */
+> -#define UFS_QCOM_DBG_PRINT_REGS_EN	BIT(0)
+> -#define UFS_QCOM_DBG_PRINT_ICE_REGS_EN	BIT(1)
+> -#define UFS_QCOM_DBG_PRINT_TEST_BUS_EN	BIT(2)
+> -
+> -#define UFS_QCOM_DBG_PRINT_ALL	\
+> -	(UFS_QCOM_DBG_PRINT_REGS_EN | UFS_QCOM_DBG_PRINT_ICE_REGS_EN | \
+> -	 UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
+> -
+>  /* QUniPro Vendor specific attributes */
+>  #define PA_VS_CONFIG_REG1	0x9000
+>  #define DME_VS_CORE_CLK_CTRL	0xD002
+> @@ -212,8 +203,6 @@ struct ufs_qcom_host {
+>  
+>  	u32 dev_ref_clk_en_mask;
+>  
+> -	/* Bitmask for enabling debug prints */
+> -	u32 dbg_print_en;
+>  	struct ufs_qcom_testbus testbus;
+>  
+>  	/* Reset control of HCI */
 > -- 
 > 2.38.1
 > 
