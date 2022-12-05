@@ -2,76 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E18C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 18:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09391C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 18:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233563AbiLESkh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Dec 2022 13:40:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57546 "EHLO
+        id S230280AbiLESn3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Dec 2022 13:43:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232135AbiLESkG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 13:40:06 -0500
-Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D4321E22
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 10:37:10 -0800 (PST)
-Received: by mail-io1-xd36.google.com with SMTP id 3so1887068iou.12
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 10:37:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=solid-run-com.20210112.gappssmtp.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=bKqfMwQzWVOYOX0yr/2heukDSWlHU0sCLL6O1tBRc7A=;
-        b=r2nugea+/S+x1+A/NKJxhGhSo46KlCg0/YSPkE4xZ65fZB3u3y4swnhKZToZJV53y9
-         W9ZuR4fGX6HPrGTQoaamF83HV2266vhVLmtnTqs0f08R19v4/QjYZHxHkxNpukL6bq0T
-         2RNtr7QF3zxGwPNAWXt2lxtnP8HKNHLrQNZWZRjIkLp+m6CJBuuAzxLg7wn6L7NeH5Br
-         Ykj6XHfBLizr5eRdyrLbdpPVKMOx9NAw8tufqLVjkmkB+eGjAdId2ThIt3wJmqhKSbJT
-         h7O2hmgsO0npQxMPs01kiVL2/tcv7qdJOM/Wj3xa/a2hq4E1YFE6m6+itmy/n/6DMF31
-         q9xA==
+        with ESMTP id S231426AbiLESnC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 13:43:02 -0500
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5879CF57
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 10:42:04 -0800 (PST)
+Received: by mail-pj1-f41.google.com with SMTP id t11-20020a17090a024b00b0021932afece4so15693090pje.5
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 10:42:04 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bKqfMwQzWVOYOX0yr/2heukDSWlHU0sCLL6O1tBRc7A=;
-        b=EUI2VJ//aUs8SlJ0/PfaDSqapJlKAi0kbwvCMSYPqO5UlxFZ0sBawulP3PIhbJBHl9
-         LcjBdXsbmRlf0R1yVIijKCg9h7YNC43tYcSbj0F4CPqTMXl2F1OXXpGOsqx5nhhPMU2r
-         Y1k9mVwieRTbvT7/EjLTusFrWIEacFtYm8/CNaMrfCcsEo5PoCay2QtcndacZOp6g3Df
-         Ww6m+cMdwfrA6Vn9g42mS9aq5/DddM6BRjOH+JdZrpceQ5z2PKCWbvYRQc3S+3ImveXY
-         Rk3eGT6o4SZO8+BE1zNiTKwOUxor/E+tKDdkWs/ZcPdU/xjwhq0RvjZwrLmQoKl59b9Z
-         bMjA==
-X-Gm-Message-State: ANoB5pm3mat9lxFdvfUwCMrTjHhdBrrtlVrZO/Zz8dyOvdiEI80xieOw
-        WRAT5qDyQFELMftY3d1znpPrA2dj09EYRQWZbwBTVA==
-X-Google-Smtp-Source: AA0mqf7iS69oYWO13rn/6u9i2SOCARyk4OODHe8uFql4/VPC3ttbr8u6HDq0kZnXhGPO5q+l052KxdhC7ngmMQnNADM=
-X-Received: by 2002:a02:6603:0:b0:375:9e02:b459 with SMTP id
- k3-20020a026603000000b003759e02b459mr38421363jac.30.1670265429512; Mon, 05
- Dec 2022 10:37:09 -0800 (PST)
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PyzTPV6X9xNiTCbyGstKIWGMGMo8e5LT5ChhPCYnMlc=;
+        b=zMUYq1TrKVtgok9ac8QBQfejPFzTTMt3o493cVMV7muXkBCvusdBsQy/GAEs66KAYR
+         mx14erkWNz8goKYoF3rWITCixYIBk26Pv1RJnL1VPZ/bPDFRrCsL/sUvO4f6R4jWfHtQ
+         MDfS+i5qQCRgxkn182ONMDMG9R6yNOEHnGJMuFxAC1SwqbUDGkgbHFYJ6qu7X6abimVB
+         kSdAJ+9AJYDv/xTrnnTAuCdumOhwbaPsJBhTEkHrf997j7nB2PYVAnDOt1lbk1fER9wH
+         D3VRkUI+UHp1z8EamKvewoPQFXQYYDNC6EaR1Eam84O2RBnj4TYX9Izjp5XYwP0viYnj
+         EKzQ==
+X-Gm-Message-State: ANoB5plK2lSLbsXhkDhr7rbiL2QmRlCnSVXnxkXZsUZp67GT9hheVqJJ
+        j4hIaCA4If8imrt5oirB3NR3Jd3blc4=
+X-Google-Smtp-Source: AA0mqf7YcuHB/+S/cPgfuJ0vxZsTspMf7KptxrrWaSD1oWJBYRYRq9ExUjSUrPOI7HRt0+It34rSpQ==
+X-Received: by 2002:a17:902:b608:b0:189:7a8b:537d with SMTP id b8-20020a170902b60800b001897a8b537dmr44459287pls.95.1670265723486;
+        Mon, 05 Dec 2022 10:42:03 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:c22a:d200:1ba3:dcca? ([2620:15c:211:201:c22a:d200:1ba3:dcca])
+        by smtp.gmail.com with ESMTPSA id h15-20020a056a00000f00b00574d38f4d37sm10244237pfk.45.2022.12.05.10.42.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 05 Dec 2022 10:42:02 -0800 (PST)
+Message-ID: <6785696a-cb52-5934-dbd6-28472b4cd7c6@acm.org>
+Date:   Mon, 5 Dec 2022 10:41:59 -0800
 MIME-Version: 1.0
-References: <20221205162035.2261037-1-alvaro.karsz@solid-run.com> <fe2800f1-aaae-33e8-aaf0-83fd034162d5@kernel.dk>
-In-Reply-To: <fe2800f1-aaae-33e8-aaf0-83fd034162d5@kernel.dk>
-From:   Alvaro Karsz <alvaro.karsz@solid-run.com>
-Date:   Mon, 5 Dec 2022 20:36:33 +0200
-Message-ID: <CAJs=3_AKOMWBpvKqvX6_c=zN1cwEM7x9dzGr7na=i-5_16rdEg@mail.gmail.com>
-Subject: Re: [PATCH v3] virtio_blk: add VIRTIO_BLK_F_LIFETIME feature support
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     virtualization@lists.linux-foundation.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v3] ufs: core: wlun suspend SSU/enter hibern8 fail
+ recovery
+Content-Language: en-US
+To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com,
+        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+        naomi.chu@mediatek.com
+References: <20221202073532.7884-1-peter.wang@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221202073532.7884-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 12/1/22 23:35, peter.wang@mediatek.com wrote:
+> From: Peter Wang <peter.wang@mediatek.com>
+> 
+> When SSU/enter hibern8 fail in wlun suspend flow, trigger error
+> handler and return busy to break the suspend.
+> If not, wlun runtime pm status become error and the consumer will
+> stuck in runtime suspend status.
+> 
+> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 26 ++++++++++++++++++++++++++
+>   1 file changed, 26 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index b1f59a5fe632..a0dbf2c410b1 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -9049,6 +9049,19 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>   
+>   		if (!hba->dev_info.b_rpm_dev_flush_capable) {
+>   			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
+> +			if (ret && (pm_op != UFS_SHUTDOWN_PM)) {
+> +				/*
+> +				 * If return err in suspend flow, IO will hang.
+> +				 * Trigger error handler and break suspend for
+> +				 * error recovery.
+> +				 */
+> +				spin_lock_irq(hba->host->host_lock);
+> +				hba->force_reset = true;
+> +				ufshcd_schedule_eh_work(hba);
+> +				spin_unlock_irq(hba->host->host_lock);
+> +
+> +				ret = -EBUSY;
+> +			}
+>   			if (ret)
+>   				goto enable_scaling;
+>   		}
+> @@ -9060,6 +9073,19 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>   	 */
+>   	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
+>   	ret = ufshcd_link_state_transition(hba, req_link_state, check_for_bkops);
+> +	if ((ret) && (pm_op != UFS_SHUTDOWN_PM)) {
+> +		/*
+> +		 * If return err in suspend flow, IO will hang.
+> +		 * Trigger error handler and break suspend for
+> +		 * error recovery.
+> +		 */
+> +		spin_lock_irq(hba->host->host_lock);
+> +		hba->force_reset = true;
+> +		ufshcd_schedule_eh_work(hba);
+> +		spin_unlock_irq(hba->host->host_lock);
+> +
+> +		ret = -EBUSY;
+> +	}
+>   	if (ret)
+>   		goto set_dev_active;
+>   
 
-> Is this based on some spec? Because it looks pretty odd to me. There
-> can be a pretty wide range of two/three/etc level cells with wildly
-> different ranges of durability. And there's really not a lot of slc
-> for generic devices these days, if any.
+Please follow the coding style that is used elsewhere in the kernel and
+remove the superfluous parentheses from this patch. "if (ret && (pm_op !=
+UFS_SHUTDOWN_PM)) {" can be changed into "if (ret && pm_op !=
+UFS_SHUTDOWN_PM) {" and "if ((ret) && (pm_op != UFS_SHUTDOWN_PM)) {" can be
+changed into "if ((ret) && (pm_op != UFS_SHUTDOWN_PM)) {".
 
-Yes, this is based on the virtio spec
-https://docs.oasis-open.org/virtio/virtio/v1.2/csd01/virtio-v1.2-csd01.html
-section  5.2.6
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
