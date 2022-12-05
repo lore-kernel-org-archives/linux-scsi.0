@@ -2,488 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB58EC4708E
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 22:27:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A8EC4708C
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 22:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232323AbiLEW1r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Dec 2022 17:27:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57362 "EHLO
+        id S232053AbiLEW2N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Dec 2022 17:28:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233764AbiLEW1n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 17:27:43 -0500
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD8301138
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 14:27:38 -0800 (PST)
-Received: by mail-lf1-x130.google.com with SMTP id bp15so20775721lfb.13
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 14:27:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Ik/UwYGkNtvCKECth4XEynNimFfWTJwc3LAnHqyGcKM=;
-        b=HpWcdPQye7eAnYl6/VFGcLZEkXqb0Gbfs2zHPaNL3UDbgG71N4p95sjHZWjmdAe7oW
-         /X5V1wP7L5cVQEJngTBJbfUULlZzX0s/TRMni5oQZBhJ1khqOuxqOK6kS7XDZERRXl98
-         eNNmoBGEAylwHs4VxWfdfnaaMoa1ec89Ds42RIULDMVTopSPazVDDajiUE/cq3wj5KKA
-         4+rhOWdwiDkbyL4uQtJ6YHwkBbCg3owcvDXoL8pDt9+t1zrw5QoQJN8Lkms7AeSwIJwg
-         8osV3Ip76RKWngK7UUY7GetBKctPsW+2DZFXIvR+xans3D4n59vAFsj4WKmd7zgwbFRo
-         Di2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Ik/UwYGkNtvCKECth4XEynNimFfWTJwc3LAnHqyGcKM=;
-        b=o3W7+VAiCGtMDSdyGOKFZGoyUtIY2sJun7JdRGQ6rhpzk6xr/k7DGxY4LTe7/0pkWr
-         iJZQk10LaHBdwPJmEYD3vHVQj7J0ANlDx6HTKyENDsbVu7Nt6UrMBSHx8R5laCWobmZI
-         zxXipEuRF5a+lwnFbOtptz8qV2LDyI0u7DEC79N///ahZ6K8lDHxZPOCMzqGqYLuihBZ
-         TA2QX03NaNXNI5ZqyOIchBy8MF8rXMtz6z2fDlnSBvhUgUnCn0xiH4f7ri4mSQSVc96s
-         OxfbNaGWIO1aiIP2nIWjKW2IUFHN6THY+Clmg0z8LY5QxiFzGQx6tub59bPwrvkRPKGR
-         Jw7g==
-X-Gm-Message-State: ANoB5pnhNk0dwNbvzX0BF6xkBLN4ANH+MJLl8Dngv/LJ9BSDEh01gsFK
-        WCP5eZihbeTSt1LEBgZWQN4h+Q==
-X-Google-Smtp-Source: AA0mqf4ix7dAZ17Pea+SOr+Lf9tdy75RBjwTknY7dYH+pwR4H3+ziQ7VLQVdGorXp/iwo9WROlWYEQ==
-X-Received: by 2002:ac2:5636:0:b0:4b5:5f97:6a18 with SMTP id b22-20020ac25636000000b004b55f976a18mr4282631lff.77.1670279257008;
-        Mon, 05 Dec 2022 14:27:37 -0800 (PST)
-Received: from [127.0.0.1] ([94.25.229.129])
-        by smtp.gmail.com with ESMTPSA id v20-20020a2e5054000000b002797d6bb516sm1503230ljd.20.2022.12.05.14.27.36
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Dec 2022 14:27:36 -0800 (PST)
-Date:   Tue, 06 Dec 2022 01:26:26 +0300
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org
-CC:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        ahalaney@redhat.com, abel.vesa@linaro.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_13/23=5D_scsi=3A_ufs=3A_ufs-qc?= =?US-ASCII?Q?om=3A_Remove_un-necessary_goto_statements?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <20221201174328.870152-14-manivannan.sadhasivam@linaro.org>
-References: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org> <20221201174328.870152-14-manivannan.sadhasivam@linaro.org>
-Message-ID: <3F1FB621-3368-43C6-8D91-115352BE6921@linaro.org>
+        with ESMTP id S233627AbiLEW2H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 17:28:07 -0500
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2084.outbound.protection.outlook.com [40.107.223.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 046631A830;
+        Mon,  5 Dec 2022 14:28:05 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=aSn9srerDU4EStTQ6R9Y9HMutf5s5sRxAwVaMcvED3dlWflbKgvP2tM9GjiTtQvmyWqC0cV0/bkmTZkCFOvm97WRcDC5LCi1s3+Jx0ecJm1P+ldS5nvnKEqGzOwccXa9u1K4H/awXodsCl9djfhP0brgEV9WAAMQxZkW0buypS+f7nxlSRh02E6hSfUtVMUdrJqXRexHesuIjE0NYECWl52+RNHZ5eI0GvTnPP36v/k5fj/U5pgKoMGucHQk3RkoXlJGYVdWf/GtM5yoaWiyfMmqG6rDwUoMsNzjMKoxk3Zg3GSW5jNrY0rqs8T1yLcdwXYUCXAWgh6bnf81Q2Txfw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=GxZZmxPoucrDaYUEga4PN6KrA+Vsty1+QhogQD7ZXcs=;
+ b=cY+h5DbTg1fRgLSLaci+uRRVuzzWCKdvkcclTpL8C8pbAhYJR01JVeli4uQWDGWpVQgeQfHZA1gFFeGv0ntMXSf/eQ5KvWQ549Sezj4QWZZ3k5qHA1LOTBQUCXAwL09DZxmEN/N72iFdgcJUIfl4ugkBXBltvAVx/ioJ1Xzupe476b5TKN0pMF3r+S6xx15C+CPNa7WtWxTceAimbvcXLyIxwtQXXNwClsTDG7p1dhRoaxJdDbkzJvoBQ/nSdsVyXfp+JiS8CnI0p9MK4ifbYWVAVRohKXMDpYdthgP3V/ikJ9JTGg9+2Ad3yl/2/IuRWd/9OwaLN1d9ht6CjKlSnA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GxZZmxPoucrDaYUEga4PN6KrA+Vsty1+QhogQD7ZXcs=;
+ b=NU4d7Ls6MjNHkOc1dLHPYOKkX59q6eAQaKe2JOlB47OmuqH4XE2nSclqWALTwMRJYTN/3bOirJEumzd36Rv/doNg+IjtfJBGOH5aG565zCzr/96bq9CyV/m92UneJFGtmkluzOTJVwAhngP9yPxcHuOgP8op7/5kgsP9mUtpcn1nphkV1fPiMXc+7yKYW5KB85LqsLcGUfVgZco2+xZQJ/30HAvtT5oz9jxsd2s1vNVQ9XysiAr79+3c4Y9t5i5cxaW0DLPajeC2oqyEq2afAsKoF3A/a0zCPxCHVcMcG8NctlvZ9/45Ihc/ITTU7TCEORVN7se3k5bDKYJaOy6sfw==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by IA0PR12MB7628.namprd12.prod.outlook.com (2603:10b6:208:436::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5880.13; Mon, 5 Dec
+ 2022 22:28:03 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::b84c:b6e:dc0:8d7]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::b84c:b6e:dc0:8d7%2]) with mapi id 15.20.5880.014; Mon, 5 Dec 2022
+ 22:28:02 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     Jens Axboe <axboe@kernel.dk>,
+        Alvaro Karsz <alvaro.karsz@solid-run.com>,
+        "virtualization@lists.linux-foundation.org" 
+        <virtualization@lists.linux-foundation.org>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>
+Subject: Re: [PATCH v3] virtio_blk: add VIRTIO_BLK_F_LIFETIME feature support
+Thread-Topic: [PATCH v3] virtio_blk: add VIRTIO_BLK_F_LIFETIME feature support
+Thread-Index: AQHZCMWIE493Nhwph0Wuxc84G3ju4K5fm/IAgABELwA=
+Date:   Mon, 5 Dec 2022 22:28:02 +0000
+Message-ID: <8de86bbf-b6dc-7945-2004-f41b05055dd9@nvidia.com>
+References: <20221205162035.2261037-1-alvaro.karsz@solid-run.com>
+ <fe2800f1-aaae-33e8-aaf0-83fd034162d5@kernel.dk>
+In-Reply-To: <fe2800f1-aaae-33e8-aaf0-83fd034162d5@kernel.dk>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|IA0PR12MB7628:EE_
+x-ms-office365-filtering-correlation-id: 9ef777b8-c930-4e61-be24-08dad70ff90a
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: QAAq4HvDYMX5PQrzZ9riDk5R+mJ3LYBlvV67f98TJ1c4mQDZoi0whTLwb6LYaq2piv6w2aCj9fZ7OS4fPZ3rsRoRHXHgEjSIpx6UEyZUDUJcyq0Vv7vSSErFHyJMMxLlTKwyfAHE3qPqotq/9EBNqgQSsX/Hr6Bqf7nztlYcpfSZYelCOTk1mG/C1J3DPwhQNuqKe4mteyVPSusvbQBekTXY1V/jpa9mnn//5gM9eT0icJtPFoPTrMJ9Dofw0pmIE3UXvuCWl6N4cNGWe+LBepxWZB6zlPn7I3L2JwQG9jBa78LaNkZaSGt/B5sGB/c+wZFJm7YIcc/2YBYZeLihE5CJxs2LS2HJzE4awfiiBVQMNU6cU4L1Tb84IA4EtWYRZ6feEhgU0QzO9Mfg0y+L1J8cR5VWZp2azoKF+uEy2Nz7F+oF0+Mg/nxFIf1nnnzR6c1LH8W8/ywxoPVpFQTbNecoSvghAb4MXyknIy6e9SC+DnZ4Da1HRNORirMSCTadp/kUMqgGrEwG4njQl++2eAx9qlqiVzjDPJ3lkckc1KZbdPMKba0wx0cwahN1xdCp8U4m2Uhs0yPeTjXaQaN13QzeqvILLdUj8lv4sA7SXP8xRkcp40xVd5o6sbdzoqv0PMsW8C0o+efRQVgtF4xph0o3RsQVZMOvK14KF1vXirQxFWpWfSuovuZdfjs9tf/Pi7idX68jhS+jGAp4nnClU0IkoNLlhwBAFEo93/Rv/RaCeMOnKU0noDTaK5EiQ3HXRTEGfj46gHU5cx3/dVkixQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(136003)(366004)(346002)(39860400002)(396003)(376002)(451199015)(38070700005)(2906002)(7416002)(5660300002)(38100700002)(122000001)(31686004)(31696002)(86362001)(83380400001)(53546011)(478600001)(6512007)(186003)(6506007)(110136005)(71200400001)(54906003)(6486002)(64756008)(8676002)(66446008)(76116006)(4326008)(91956017)(66476007)(316002)(8936002)(41300700001)(66556008)(2616005)(36756003)(66946007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?MWJOTGh2a3VJOUNqTnIxNnYxcklCS2s1MUZyODR0U1B1MlJzU2pDcUpuSDhp?=
+ =?utf-8?B?VHlSZFJxMlJRdldUYnR5RFRoZzliL3EyYklKQlZHd1RpN1MyYlNtTU5sOHE2?=
+ =?utf-8?B?c1VoYWRkM3dhc2JOSU9VRzZYYTFWVHpwazVNb3JmMUsvdkY2ZzczbUdTVGs2?=
+ =?utf-8?B?d1FseHJFVExvaDFkdUdaQnlrd2NBdllrRGZheWh1cVhCWW5jUk05UjFYQUFy?=
+ =?utf-8?B?OGZYai9ENk1iR01xc1ZuWVNWNXB4R1BaSjhmaTI2UlZUNjY4NUI1SFhKNWU2?=
+ =?utf-8?B?ay9ucGVhRVlxSy9icFNEbkpLWG83ejBXMlZLcTAyRERsMWFaV2w1ZXkwNVY2?=
+ =?utf-8?B?RFBHSTNzckhXM1dkeENsVGt2cWJtSHhLVC9ZK25wVGFFa0JNZm91blRNeHJ0?=
+ =?utf-8?B?WTRYVmdpckhiRlEvTEVheHAya1NsTG1pRWRESDFqdXgvNm0zZ3VnRmd6MmpT?=
+ =?utf-8?B?cEdmUjdEdG93QXkxelNoU3RmaVlRV0ZHL2RlelhhWm5ESm9kL3RsK2JjUnZn?=
+ =?utf-8?B?cktYVG5aVWtwTnRWeVFJTVhTOG5rRFprd1pRcnVKalgvdHdMUTdJZm9CdjJU?=
+ =?utf-8?B?NlBJVXkzeWRBeTdTOHRwTHNXS0hoWlpKLzBkVHgrUXFjcDltNjB0aGVSdXhw?=
+ =?utf-8?B?UGQrRmRGWldDMVF4LzBLaXRSZDZCbmZnR25TRk4vbWRMbUhiOWo5WU1hSWVO?=
+ =?utf-8?B?TlNGakVzTzRIL0dJRmp4aEZHZG51a3dpdEhYdm1NT3JQT1BIT2xTTkVzeWtp?=
+ =?utf-8?B?QXhtazNyY0NBUzdndTNXMGtvdUw1VWU2b2srMFR4eEdIUmJRWWFxQmMvU3dN?=
+ =?utf-8?B?YjZncHdiT3VTcXNDRjFydEF6eXZHNkpSV3IrSlB3VDdnZTFpcGpqUnhCbm91?=
+ =?utf-8?B?b0NQc3BPaWNGTUc0YlkxQlVWZ3V6amFyOHJqTnJ6ZVdDZGxCSkxUc2hjRGQ4?=
+ =?utf-8?B?bXJaZHRNWlZReFZ6QS91ZlVieGs4NjJ6SmhFV1c3Vkk0cFhHSTJSR0JXQTRJ?=
+ =?utf-8?B?NjU5T295SEJ1cHJST2dQbjNKUWprY0pPZURBU0VoVWRNYVB2cWxBMld4akpB?=
+ =?utf-8?B?bjF3aFdaRTVMSGJWK1VFSlBCbklrU2gvdU1HWXliano3OXQ1T3RzSXZDZmF6?=
+ =?utf-8?B?YWNUVFRjbXJkNXB2VHhuRHNqWEZYWUo0d01KQ3NlTXJzdDdLZ2ZydStsNDA2?=
+ =?utf-8?B?Qk82aVh2cFNNVERudVdma0V2M1MvQ01BbFEwd3ZmQVdoaDNYcnlSOHR2TmpO?=
+ =?utf-8?B?MmRXWGF3M2wxd0hhbE5UaHRzeGJVODdGNjlDNUhGcDZLZVh6MXNweFdIaEdi?=
+ =?utf-8?B?dDExSWE3b0RVL0F0cWhqQ3VFckJ5ajg2OVk2NkI5ZXpiMks4Y1FKTUVha0kw?=
+ =?utf-8?B?bVF5emkvTEFhUEFkbmRaWERwdlJSY05UNWg5SFNGUFBERWl0OU9FZ0lab2Vw?=
+ =?utf-8?B?dVFvTFVGNndLcDB6anNiMEpySG5ybzVabGNLOFdxeW85R2FtM2JqN05wTmRa?=
+ =?utf-8?B?dmUyM2dqSlV2WitONGQyWit0MTNvMUprZ2pwS3RPYTQzYkU1TldnMm1IZjNW?=
+ =?utf-8?B?Z0RGazkvWWF4RURlbnR1Y3R5Wk1NSUxxQ20wSmdvMmtsaVFZQzBzRC82VVkr?=
+ =?utf-8?B?UE42UmZjQk5DMmpYZE9SZitFdzlydHY1T3VSc3QzWElVSnoxajdBWUdZUE5h?=
+ =?utf-8?B?QzNqd0E0Z2pUME9Ub1VSTDFhd2pIc0J5RUpESmdxUGY3eXB4NXBabklqQ3R6?=
+ =?utf-8?B?V0VTendmaDAraVBWMEdiZUpicjl2bVdEdk5wVEZKazF0MFl1UThXZVRhZllG?=
+ =?utf-8?B?Yk9yVFVhQTNGY0NybTA3bXhhQzgzQkxSUk8xT2tWeTZhSnR2WjV5K003TWtN?=
+ =?utf-8?B?K0dOMzJDb1NGMXpRSHdFdXJpV21lYUhuQmNHRU92Y2RieGdKYWl0V3lNczlr?=
+ =?utf-8?B?V1lVTGpsUHN2ZG05am8zVm9RS3dxR1h5di9RckJLdUJzdUVjZHJMRGxwY3c5?=
+ =?utf-8?B?YzFOUDNiTUtWOS8yNTdFZnF1cVlqZktVVHZJdDlOSWEveWQyTWpYNE93c3Zn?=
+ =?utf-8?B?c0pXQklQNXhpODBrYlY0ODM5LzVXenVYVkpxU0N1cHFwZUc1dFJPZnFwSmlV?=
+ =?utf-8?B?Ukhwd2M5LzhSZk9SbzNpOCtadHF1UVJjV2k1WW9yQWFPTkQwS3lmcXJPVW4w?=
+ =?utf-8?B?YVE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <ADF4CE53BDD37F45B159F10C49F434D9@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9ef777b8-c930-4e61-be24-08dad70ff90a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Dec 2022 22:28:02.8433
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: dvs66/jF72orQxdUgfmn6X1xOnYTqPvMe0Jrap9ODfEIUqD4GxceBnQdrzrvoqecUHiTi1dH/cWBLId6CF89IA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB7628
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 1 December 2022 20:43:18 GMT+03:00, Manivannan Sadhasivam <manivannan=
-=2Esadhasivam@linaro=2Eorg> wrote:
->goto in error path is useful if the function needs to do cleanup other
->than returning the error code=2E But in this driver, goto statements are
->used for just returning the error code in many places=2E This really
->makes it hard to read the code=2E
->
->So let's get rid of those goto statements and just return the error code
->directly=2E
->
->Reviewed-by: Dmitry Baryshkov <dmitry=2Ebaryshkov@linaro=2Eorg>
->Signed-off-by: Manivannan Sadhasivam <manivannan=2Esadhasivam@linaro=2Eor=
-g>
-
-Reviewed-by: Dmitry Baryshkov <dmitry=2Ebaryshkov@linaro=2Eorg>
-
-
->---
-> drivers/ufs/host/ufs-qcom=2Ec | 100 +++++++++++++++---------------------
-> 1 file changed, 41 insertions(+), 59 deletions(-)
->
->diff --git a/drivers/ufs/host/ufs-qcom=2Ec b/drivers/ufs/host/ufs-qcom=2E=
-c
->index 8ad1415e10b6=2E=2E7cd996ac180b 100644
->--- a/drivers/ufs/host/ufs-qcom=2Ec
->+++ b/drivers/ufs/host/ufs-qcom=2Ec
->@@ -110,7 +110,7 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qco=
-m_host *host)
->=20
-> static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
-> {
->-	int err =3D 0;
->+	int err;
-> 	struct device *dev =3D host->hba->dev;
->=20
-> 	if (host->is_lane_clks_enabled)
->@@ -119,7 +119,7 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_=
-host *host)
-> 	err =3D ufs_qcom_host_clk_enable(dev, "rx_lane0_sync_clk",
-> 		host->rx_l0_sync_clk);
-> 	if (err)
->-		goto out;
->+		return err;
->=20
-> 	err =3D ufs_qcom_host_clk_enable(dev, "tx_lane0_sync_clk",
-> 		host->tx_l0_sync_clk);
->@@ -137,7 +137,8 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_=
-host *host)
-> 		goto disable_rx_l1;
->=20
-> 	host->is_lane_clks_enabled =3D true;
->-	goto out;
->+
->+	return 0;
->=20
-> disable_rx_l1:
-> 	clk_disable_unprepare(host->rx_l1_sync_clk);
->@@ -145,7 +146,7 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_=
-host *host)
-> 	clk_disable_unprepare(host->tx_l0_sync_clk);
-> disable_rx_l0:
-> 	clk_disable_unprepare(host->rx_l0_sync_clk);
->-out:
->+
-> 	return err;
-> }
->=20
->@@ -160,25 +161,25 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_=
-host *host)
-> 	err =3D ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
-> 					&host->rx_l0_sync_clk, false);
-> 	if (err)
->-		goto out;
->+		return err;
->=20
-> 	err =3D ufs_qcom_host_clk_get(dev, "tx_lane0_sync_clk",
-> 					&host->tx_l0_sync_clk, false);
-> 	if (err)
->-		goto out;
->+		return err;
->=20
-> 	/* In case of single lane per direction, don't read lane1 clocks */
-> 	if (host->hba->lanes_per_direction > 1) {
-> 		err =3D ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
-> 			&host->rx_l1_sync_clk, false);
-> 		if (err)
->-			goto out;
->+			return err;
->=20
-> 		err =3D ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-> 			&host->tx_l1_sync_clk, true);
-> 	}
->-out:
->-	return err;
->+
->+	return 0;
-> }
->=20
-> static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
->@@ -241,7 +242,7 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
->=20
-> 	if (!host->core_reset) {
-> 		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
->-		goto out;
->+		return 0;
-> 	}
->=20
-> 	reenable_intr =3D hba->is_irq_enabled;
->@@ -252,7 +253,7 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
-> 	if (ret) {
-> 		dev_err(hba->dev, "%s: core_reset assert failed, err =3D %d\n",
-> 				 __func__, ret);
->-		goto out;
->+		return ret;
-> 	}
->=20
-> 	/*
->@@ -274,15 +275,14 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
-> 		hba->is_irq_enabled =3D true;
-> 	}
->=20
->-out:
->-	return ret;
->+	return 0;
-> }
->=20
-> static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
-> {
-> 	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
-> 	struct phy *phy =3D host->generic_phy;
->-	int ret =3D 0;
->+	int ret;
-> 	bool is_rate_B =3D UFS_QCOM_LIMIT_HS_RATE =3D=3D PA_HS_MODE_B;
->=20
-> 	/* Reset UFS Host Controller and PHY */
->@@ -299,7 +299,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba =
-*hba)
-> 	if (ret) {
-> 		dev_err(hba->dev, "%s: phy init failed, ret =3D %d\n",
-> 			__func__, ret);
->-		goto out;
->+		return ret;
-> 	}
->=20
-> 	/* power on phy - start serdes and phy's power and clocks */
->@@ -316,7 +316,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba =
-*hba)
->=20
-> out_disable_phy:
-> 	phy_exit(phy);
->-out:
->+
-> 	return ret;
-> }
->=20
->@@ -374,7 +374,6 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba =
-*hba,
-> static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
-> 			       u32 hs, u32 rate, bool update_link_startup_timer)
-> {
->-	int ret =3D 0;
-> 	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
-> 	struct ufs_clk_info *clki;
-> 	u32 core_clk_period_in_ns;
->@@ -409,11 +408,11 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba,=
- u32 gear,
-> 	 * Aggregation logic=2E
-> 	*/
-> 	if (ufs_qcom_cap_qunipro(host) && !ufshcd_is_intr_aggr_allowed(hba))
->-		goto out;
->+		return 0;
->=20
-> 	if (gear =3D=3D 0) {
-> 		dev_err(hba->dev, "%s: invalid gear =3D %d\n", __func__, gear);
->-		goto out_error;
->+		return -EINVAL;
-> 	}
->=20
-> 	list_for_each_entry(clki, &hba->clk_list_head, list) {
->@@ -436,7 +435,7 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u=
-32 gear,
-> 	}
->=20
-> 	if (ufs_qcom_cap_qunipro(host))
->-		goto out;
->+		return 0;
->=20
-> 	core_clk_period_in_ns =3D NSEC_PER_SEC / core_clk_rate;
-> 	core_clk_period_in_ns <<=3D OFFSET_CLK_NS_REG;
->@@ -451,7 +450,7 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u=
-32 gear,
-> 					"%s: index %d exceeds table size %zu\n",
-> 					__func__, gear,
-> 					ARRAY_SIZE(hs_fr_table_rA));
->-				goto out_error;
->+				return -EINVAL;
-> 			}
-> 			tx_clk_cycles_per_us =3D hs_fr_table_rA[gear-1][1];
-> 		} else if (rate =3D=3D PA_HS_MODE_B) {
->@@ -460,13 +459,13 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba,=
- u32 gear,
-> 					"%s: index %d exceeds table size %zu\n",
-> 					__func__, gear,
-> 					ARRAY_SIZE(hs_fr_table_rB));
->-				goto out_error;
->+				return -EINVAL;
-> 			}
-> 			tx_clk_cycles_per_us =3D hs_fr_table_rB[gear-1][1];
-> 		} else {
-> 			dev_err(hba->dev, "%s: invalid rate =3D %d\n",
-> 				__func__, rate);
->-			goto out_error;
->+			return -EINVAL;
-> 		}
-> 		break;
-> 	case SLOWAUTO_MODE:
->@@ -476,14 +475,14 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba,=
- u32 gear,
-> 					"%s: index %d exceeds table size %zu\n",
-> 					__func__, gear,
-> 					ARRAY_SIZE(pwm_fr_table));
->-			goto out_error;
->+			return -EINVAL;
-> 		}
-> 		tx_clk_cycles_per_us =3D pwm_fr_table[gear-1][1];
-> 		break;
-> 	case UNCHANGED:
-> 	default:
-> 		dev_err(hba->dev, "%s: invalid mode =3D %d\n", __func__, hs);
->-		goto out_error;
->+		return -EINVAL;
-> 	}
->=20
-> 	if (ufshcd_readl(hba, REG_UFS_TX_SYMBOL_CLK_NS_US) !=3D
->@@ -507,12 +506,8 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, =
-u32 gear,
-> 		 */
-> 		mb();
-> 	}
->-	goto out;
->=20
->-out_error:
->-	ret =3D -EINVAL;
->-out:
->-	return ret;
->+	return 0;
-> }
->=20
-> static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
->@@ -527,8 +522,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hb=
-a *hba,
-> 					0, true)) {
-> 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
-> 				__func__);
->-			err =3D -EINVAL;
->-			goto out;
->+			return -EINVAL;
-> 		}
->=20
-> 		if (ufs_qcom_cap_qunipro(host))
->@@ -554,7 +548,6 @@ static int ufs_qcom_link_startup_notify(struct ufs_hb=
-a *hba,
-> 		break;
-> 	}
->=20
->-out:
-> 	return err;
-> }
->=20
->@@ -691,8 +684,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba =
-*hba,
->=20
-> 	if (!dev_req_params) {
-> 		pr_err("%s: incoming dev_req_params is NULL\n", __func__);
->-		ret =3D -EINVAL;
->-		goto out;
->+		return -EINVAL;
-> 	}
->=20
-> 	switch (status) {
->@@ -720,7 +712,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba =
-*hba,
-> 		if (ret) {
-> 			pr_err("%s: failed to determine capabilities\n",
-> 					__func__);
->-			goto out;
->+			return ret;
-> 		}
->=20
-> 		/* enable the device ref clock before changing to HS mode */
->@@ -761,7 +753,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba =
-*hba,
-> 		ret =3D -EINVAL;
-> 		break;
-> 	}
->-out:
->+
-> 	return ret;
-> }
->=20
->@@ -773,14 +765,11 @@ static int ufs_qcom_quirk_host_pa_saveconfigtime(st=
-ruct ufs_hba *hba)
-> 	err =3D ufshcd_dme_get(hba, UIC_ARG_MIB(PA_VS_CONFIG_REG1),
-> 			     &pa_vs_config_reg1);
-> 	if (err)
->-		goto out;
->+		return err;
->=20
-> 	/* Allow extension of MSB bits of PA_SaveConfigTime attribute */
->-	err =3D ufshcd_dme_set(hba, UIC_ARG_MIB(PA_VS_CONFIG_REG1),
->+	return ufshcd_dme_set(hba, UIC_ARG_MIB(PA_VS_CONFIG_REG1),
-> 			    (pa_vs_config_reg1 | (1 << 12)));
->-
->-out:
->-	return err;
-> }
->=20
-> static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
->@@ -957,9 +946,8 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->=20
-> 	host =3D devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-> 	if (!host) {
->-		err =3D -ENOMEM;
-> 		dev_err(dev, "%s: no memory for qcom ufs host\n", __func__);
->-		goto out;
->+		return -ENOMEM;
-> 	}
->=20
-> 	/* Make a two way bind between the qcom host and the hba */
->@@ -980,10 +968,8 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> 	host->rcdev=2Eowner =3D dev->driver->owner;
-> 	host->rcdev=2Enr_resets =3D 1;
-> 	err =3D devm_reset_controller_register(dev, &host->rcdev);
->-	if (err) {
->+	if (err)
-> 		dev_warn(dev, "Failed to register reset controller\n");
->-		err =3D 0;
->-	}
->=20
-> 	if (!has_acpi_companion(dev)) {
-> 		host->generic_phy =3D devm_phy_get(dev, "ufsphy");
->@@ -1049,17 +1035,16 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> 	host->dbg_print_en |=3D UFS_QCOM_DEFAULT_DBG_PRINT_EN;
-> 	ufs_qcom_get_default_testbus_cfg(host);
-> 	err =3D ufs_qcom_testbus_config(host);
->-	if (err) {
->+	if (err)
->+		/* Failure is non-fatal */
-> 		dev_warn(dev, "%s: failed to configure the testbus %d\n",
-> 				__func__, err);
->-		err =3D 0;
->-	}
->=20
->-	goto out;
->+	return 0;
->=20
-> out_variant_clear:
-> 	ufshcd_set_variant(hba, NULL);
->-out:
->+
-> 	return err;
-> }
->=20
->@@ -1085,7 +1070,7 @@ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_=
-div(struct ufs_hba *hba,
-> 			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
-> 			    &core_clk_ctrl_reg);
-> 	if (err)
->-		goto out;
->+		return err;
->=20
-> 	core_clk_ctrl_reg &=3D ~DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MA=
-SK;
-> 	core_clk_ctrl_reg |=3D clk_cycles;
->@@ -1093,11 +1078,9 @@ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear=
-_div(struct ufs_hba *hba,
-> 	/* Clear CORE_CLK_DIV_EN */
-> 	core_clk_ctrl_reg &=3D ~DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT;
->=20
->-	err =3D ufshcd_dme_set(hba,
->+	return ufshcd_dme_set(hba,
-> 			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
-> 			    core_clk_ctrl_reg);
->-out:
->-	return err;
-> }
->=20
-> static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
->@@ -1180,7 +1163,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba=
- *hba,
->=20
-> 		if (err || !dev_req_params) {
-> 			ufshcd_uic_hibern8_exit(hba);
->-			goto out;
->+			return err;
-> 		}
->=20
-> 		ufs_qcom_cfg_timers(hba,
->@@ -1191,8 +1174,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba=
- *hba,
-> 		ufshcd_uic_hibern8_exit(hba);
-> 	}
->=20
->-out:
->-	return err;
->+	return 0;
-> }
->=20
-> static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
-
---=20
-With best wishes
-Dmitry
+T24gMTIvNS8yMiAxMDoyNCwgSmVucyBBeGJvZSB3cm90ZToNCj4gT24gMTIvNS8yMiA5OjIw4oCv
+QU0sIEFsdmFybyBLYXJzeiB3cm90ZToNCj4+IEltcGxlbWVudCB0aGUgVklSVElPX0JMS19GX0xJ
+RkVUSU1FIGZlYXR1cmUgZm9yIFZpcnRJTyBibG9jayBkZXZpY2VzLg0KPj4NCj4+IFRoaXMgY29t
+bWl0IGludHJvZHVjZXMgYSBuZXcgaW9jdGwgY29tbWFuZCwgVkJMS19MSUZFVElNRS4NCj4+DQo+
+PiBWQkxLX0xJRkVUSU1FIGlvY3RsIGFza3MgZm9yIHRoZSBibG9jayBkZXZpY2UgdG8gcHJvdmlk
+ZSBsaWZldGltZQ0KPj4gaW5mb3JtYXRpb24gYnkgc2VuZGluZyBhIFZJUlRJT19CTEtfVF9HRVRf
+TElGRVRJTUUgY29tbWFuZCB0byB0aGUgZGV2aWNlLg0KPj4NCj4+IGxpZmV0aW1lIGluZm9ybWF0
+aW9uIGZpZWxkczoNCj4+DQo+PiAtIHByZV9lb2xfaW5mbzogc3BlY2lmaWVzIHRoZSBwZXJjZW50
+YWdlIG9mIHJlc2VydmVkIGJsb2NrcyB0aGF0IGFyZQ0KPj4gCQljb25zdW1lZC4NCj4+IAkJb3B0
+aW9uYWwgdmFsdWVzIGZvbGxvd2luZyB2aXJ0aW8gc3BlYzoNCj4+IAkJKikgMCAtIHVuZGVmaW5l
+ZC4NCj4+IAkJKikgMSAtIG5vcm1hbCwgPCA4MCUgb2YgcmVzZXJ2ZWQgYmxvY2tzIGFyZSBjb25z
+dW1lZC4NCj4+IAkJKikgMiAtIHdhcm5pbmcsIDgwJSBvZiByZXNlcnZlZCBibG9ja3MgYXJlIGNv
+bnN1bWVkLg0KPj4gCQkqKSAzIC0gdXJnZW50LCA5MCUgb2YgcmVzZXJ2ZWQgYmxvY2tzIGFyZSBj
+b25zdW1lZC4NCj4+DQo+PiAtIGRldmljZV9saWZldGltZV9lc3RfdHlwX2E6IHRoaXMgZmllbGQg
+cmVmZXJzIHRvIHdlYXIgb2YgU0xDIGNlbGxzIGFuZA0KPj4gCQkJICAgICBpcyBwcm92aWRlZCBp
+biBpbmNyZW1lbnRzIG9mIDEwdXNlZCwgYW5kIHNvDQo+PiAJCQkgICAgIG9uLCB0aHJ1IHRvIDEx
+IG1lYW5pbmcgZXN0aW1hdGVkIGxpZmV0aW1lDQo+PiAJCQkgICAgIGV4Y2VlZGVkLiBBbGwgdmFs
+dWVzIGFib3ZlIDExIGFyZSByZXNlcnZlZC4NCj4+DQo+PiAtIGRldmljZV9saWZldGltZV9lc3Rf
+dHlwX2I6IHRoaXMgZmllbGQgcmVmZXJzIHRvIHdlYXIgb2YgTUxDIGNlbGxzIGFuZCBpcw0KPj4g
+CQkJICAgICBwcm92aWRlZCB3aXRoIHRoZSBzYW1lIHNlbWFudGljcyBhcw0KPj4gCQkJICAgICBk
+ZXZpY2VfbGlmZXRpbWVfZXN0X3R5cF9hLg0KPj4NCj4+IFRoZSBkYXRhIHJlY2VpdmVkIGZyb20g
+dGhlIGRldmljZSB3aWxsIGJlIHNlbnQgYXMgaXMgdG8gdGhlIHVzZXIuDQo+PiBObyBkYXRhIGNo
+ZWNrL2RlY29kZSBpcyBkb25lIGJ5IHZpcnRibGsuDQo+IA0KPiBJcyB0aGlzIGJhc2VkIG9uIHNv
+bWUgc3BlYz8gQmVjYXVzZSBpdCBsb29rcyBwcmV0dHkgb2RkIHRvIG1lLiBUaGVyZQ0KPiBjYW4g
+YmUgYSBwcmV0dHkgd2lkZSByYW5nZSBvZiB0d28vdGhyZWUvZXRjIGxldmVsIGNlbGxzIHdpdGgg
+d2lsZGx5DQo+IGRpZmZlcmVudCByYW5nZXMgb2YgZHVyYWJpbGl0eS4gQW5kIHRoZXJlJ3MgcmVh
+bGx5IG5vdCBhIGxvdCBvZiBzbGMNCj4gZm9yIGdlbmVyaWMgZGV2aWNlcyB0aGVzZSBkYXlzLCBp
+ZiBhbnkuDQo+IA0KDQpUaGlzIGlzIGV4YWN0bHkgd2hhdCBJIHNhaWQgb24gaW5pdGlhbCB2ZXJz
+aW9uIGFib3V0IG5ldyB0eXBlcyAuLi4NCg0KLWNrDQoNCg==
