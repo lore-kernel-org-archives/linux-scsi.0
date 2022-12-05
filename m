@@ -2,94 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39846C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 18:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D01A5C636F8
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 19:53:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231954AbiLESyA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Dec 2022 13:54:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43494 "EHLO
+        id S235187AbiLETxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Dec 2022 14:53:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230350AbiLESx4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 13:53:56 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9CDB1FF9E
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 10:53:54 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id 3-20020a17090a098300b00219041dcbe9so12386118pjo.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 10:53:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=hN16r2JqgO0aUt9hEV33NLw/555dF70HALoTZ9f98ns=;
-        b=Fm9dfwrFeIHNqJDczZ8ygOt/Uha01dMRWprhcIoeUWieIM4pkz1xky0EJcPnQBQWe0
-         m7GUZoU0/2aCb+0E0+M6kltGs6hlEENaCX5gfWhRnXRd0rye5mK3KgRvIyM/2Oob5UlE
-         38SmhTUgfCQay5hI4WIf3FEGQSsP7+pCWGiu3ohS05iL+h2v7+4MM6ftNKTC3q+ULBws
-         nL39f0K0e/CH9ck/0WnWtdA3yoVKa3Ds36+G8AkqXJGYa6Ma+P2vAgd/4nl8Sjjj7ig4
-         xXJQXoxqZJQ1eNNeKYHnnOqVcnXQ7tDUkUNigzrEsoOXLZHKOOwqgr2IQdgxEPpBBKfc
-         HsYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hN16r2JqgO0aUt9hEV33NLw/555dF70HALoTZ9f98ns=;
-        b=NrZQH1Y43hqd9JbJ6rjAZ36vorz7iuvB9tM55XiPTeT97+fLHx156XUD1WdGiHBMDP
-         zIzcAqyzi15Eh19YLiE0bB3gBSdzDSkfH1kAt8CawbSwu15lqjRW7FuiuKs92cWBodoE
-         nJL0iSAuTPgfQrD8JwDWfWr3abPoYdJ/LiuafVfrK2uQdYH9lBNpbVz+71Akpm0cj86T
-         Goh1ZlIMyODTfG5fJKHCfi1dSfY7nRBFNN21Y6LdGPP2gW6imf/qvQhPe1rMFGHzZqXm
-         67hetpOnH4e+NTyzmK/4LKlmTzjTqVGehUhw0WHoJn07TNxWkCpnKw55J9Wy2TMydBfv
-         OquQ==
-X-Gm-Message-State: ANoB5pmI+Xd+UgZSsx99MyFjr9PZy2rawMlHn//ZlquySPfWftbLEH1r
-        NEN4FaOTz5xcTvhawUKgERQboi76zZ3IEj7p
-X-Google-Smtp-Source: AA0mqf4PO6AFHe2UJAtP+NKsy/VfRk3d594BgBjTrOZGH8U7h8+eNxk2+VLeleDwTNhV8wJgpjSYkQ==
-X-Received: by 2002:a17:902:e411:b0:189:8796:7813 with SMTP id m17-20020a170902e41100b0018987967813mr40667373ple.110.1670266434300;
-        Mon, 05 Dec 2022 10:53:54 -0800 (PST)
-Received: from ?IPV6:2600:380:4a37:5fe7:dac6:a7fe:6a6b:c11a? ([2600:380:4a37:5fe7:dac6:a7fe:6a6b:c11a])
-        by smtp.gmail.com with ESMTPSA id o8-20020a170902778800b00189a7fbff33sm10880935pll.170.2022.12.05.10.53.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Dec 2022 10:53:53 -0800 (PST)
-Message-ID: <23c98c7c-3ed0-0d26-24c0-ed8a63266dcc@kernel.dk>
-Date:   Mon, 5 Dec 2022 11:53:51 -0700
+        with ESMTP id S235193AbiLETxD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 14:53:03 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D8125F1;
+        Mon,  5 Dec 2022 11:51:22 -0800 (PST)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B5IoBkg011149;
+        Mon, 5 Dec 2022 19:50:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=dtEd6a4+3KYTSgIBDPwj+osyJ6l7S6jVZGWZ/ou+Wjk=;
+ b=FrFF1/cu7Jx1Tcidx8I663s6i7UvCrrqYWKW5vkGlUQ6lcHewvvwmlgRLEbNzHX79qSK
+ ELBZyghvSGILs5shTvwh7+VdgqQ7tU+vnEIqCkVeKr43vvGMdxlVuLq+CDeYsaQ+hW2G
+ pWbVWVhGFLetQ4aSWT5alaZwWJbdxm+Qh1jLJ0qg9NTCWYhA+lMn61fJBDdh0u3cVcTp
+ J1ofVaGVTfg/JklQjv23/+u1khiJgB4e+EpglPTb1CCX6XN7qmYPJzicYvaXBaT+Orzx
+ mYJw0ofrwSD1er4Irxu6W/kKOChQ6ZxxsM2pMrffbrNoj36jY0GUPIVEjLT3DXhtC6Et lw== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m7x264ts2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 05 Dec 2022 19:50:58 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2B5JovAr019641
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 5 Dec 2022 19:50:57 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Mon, 5 Dec 2022 11:50:56 -0800
+Date:   Mon, 5 Dec 2022 11:50:50 -0800
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Mason Zhang <mason.zhang@mediatek.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Peng Zhou <peng.zhou@mediatek.com>, <wsd_upstream@mediatek.com>
+Subject: Re: [PATCH v2 1/1] scsi: ufs: core: fix device management cmd
+ timeout flow
+Message-ID: <20221205195050.GA15334@asutoshd-linux1.qualcomm.com>
+References: <20221205014202.2672-1-mason.zhang@mediatek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH v3] virtio_blk: add VIRTIO_BLK_F_LIFETIME feature support
-Content-Language: en-US
-To:     Alvaro Karsz <alvaro.karsz@solid-run.com>
-Cc:     virtualization@lists.linux-foundation.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>
-References: <20221205162035.2261037-1-alvaro.karsz@solid-run.com>
- <fe2800f1-aaae-33e8-aaf0-83fd034162d5@kernel.dk>
- <CAJs=3_AKOMWBpvKqvX6_c=zN1cwEM7x9dzGr7na=i-5_16rdEg@mail.gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <CAJs=3_AKOMWBpvKqvX6_c=zN1cwEM7x9dzGr7na=i-5_16rdEg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20221205014202.2672-1-mason.zhang@mediatek.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: nJRGdf4UKQ5kPTJyyJ06YFgUbQsM4Q4X
+X-Proofpoint-ORIG-GUID: nJRGdf4UKQ5kPTJyyJ06YFgUbQsM4Q4X
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-12-05_01,2022-12-05_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 phishscore=0 bulkscore=0
+ spamscore=0 clxscore=1011 impostorscore=0 mlxscore=0 suspectscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2212050166
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/5/22 11:36 AM, Alvaro Karsz wrote:
-> Hi,
-> 
->> Is this based on some spec? Because it looks pretty odd to me. There
->> can be a pretty wide range of two/three/etc level cells with wildly
->> different ranges of durability. And there's really not a lot of slc
->> for generic devices these days, if any.
-> 
-> Yes, this is based on the virtio spec
-> https://docs.oasis-open.org/virtio/virtio/v1.2/csd01/virtio-v1.2-csd01.html
-> section  5.2.6
+On Mon, Dec 05 2022 at 17:53 -0800, Mason Zhang wrote:
+>From: Mason Zhang <Mason.Zhang@mediatek.com>
+>
+>In ufs error handler flow, host will send device management cmd(NOP OUT)
+>to device for recovery link. If cmd response timeout, and clear doorbell
+>fail, ufshcd_wait_for_dev_cmd will do nothing and return,
+>hba->dev_cmd.complete struct not set to null.
+>
+>In this time, if cmd has been responsed by device, then it will
+>call complete() in __ufshcd_transfer_req_compl, because of complete
+>struct is alloced in stack, then the KE will occur.
+>
+What is KE?
 
-And where did this come from?
+>Fix the following crash:
+>  ipanic_die+0x24/0x38 [mrdump]
+>  die+0x344/0x748
+>  arm64_notify_die+0x44/0x104
+>  do_debug_exception+0x104/0x1e0
+>  el1_dbg+0x38/0x54
+>  el1_sync_handler+0x40/0x88
+>  el1_sync+0x8c/0x140
+>  queued_spin_lock_slowpath+0x2e4/0x3c0
+>  __ufshcd_transfer_req_compl+0x3b0/0x1164
+>  ufshcd_trc_handler+0x15c/0x308
+>  ufshcd_host_reset_and_restore+0x54/0x260
+>  ufshcd_reset_and_restore+0x28c/0x57c
+>  ufshcd_err_handler+0xeb8/0x1b6c
+>  process_one_work+0x288/0x964
+>  worker_thread+0x4bc/0xc7c
+>  kthread+0x15c/0x264
+>  ret_from_fork+0x10/0x30
+>
+>Signed-off-by: Mason Zhang <Mason.Zhang@mediatek.com>
+>---
+> drivers/ufs/core/ufshcd.c | 46 ++++++++++++++++++---------------------
+> 1 file changed, 21 insertions(+), 25 deletions(-)
+>
+>diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>index b1f59a5fe632..2b4934a562a6 100644
+>--- a/drivers/ufs/core/ufshcd.c
+>+++ b/drivers/ufs/core/ufshcd.c
+>@@ -2979,35 +2979,31 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+> 		err = -ETIMEDOUT;
+> 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
+> 			__func__, lrbp->task_tag);
+>-		if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
+>+		if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0)
+> 			/* successfully cleared the command, retry if needed */
+> 			err = -EAGAIN;
+>+		/*
+>+		 * Since clearing the command succeeded we also need to
+>+		 * clear the task tag bit from the outstanding_reqs
+>+		 * variable.
+>+		 */
+Does this comment still hold true? Perhaps this needs to be updated?
+Also, perhaps you missed Bart's comments in v1.
+Also, please can you add a section for changes from v1 -> v2?
 
--- 
-Jens Axboe
+-asd
 
-
+>+		spin_lock_irqsave(&hba->outstanding_lock, flags);
+>+		pending = test_bit(lrbp->task_tag,
+>+				   &hba->outstanding_reqs);
+>+		if (pending) {
+>+			hba->dev_cmd.complete = NULL;
+>+			__clear_bit(lrbp->task_tag,
+>+				    &hba->outstanding_reqs);
+>+		}
+>+		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+>+
+>+		if (!pending) {
+> 			/*
+>-			 * Since clearing the command succeeded we also need to
+>-			 * clear the task tag bit from the outstanding_reqs
+>-			 * variable.
+>+			 * The completion handler ran while we tried to
+>+			 * clear the command.
+> 			 */
+>-			spin_lock_irqsave(&hba->outstanding_lock, flags);
+>-			pending = test_bit(lrbp->task_tag,
+>-					   &hba->outstanding_reqs);
+>-			if (pending) {
+>-				hba->dev_cmd.complete = NULL;
+>-				__clear_bit(lrbp->task_tag,
+>-					    &hba->outstanding_reqs);
+>-			}
+>-			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+>-
+>-			if (!pending) {
+>-				/*
+>-				 * The completion handler ran while we tried to
+>-				 * clear the command.
+>-				 */
+>-				time_left = 1;
+>-				goto retry;
+>-			}
+>-		} else {
+>-			dev_err(hba->dev, "%s: failed to clear tag %d\n",
+>-				__func__, lrbp->task_tag);
+>+			time_left = 1;
+>+			goto retry;
+> 		}
+> 	}
+>
+>-- 
+>2.18.0
+>
