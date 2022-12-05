@@ -2,41 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A61C4708E
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 12:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD78BC4321E
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 12:20:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231535AbiLEMHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Dec 2022 07:07:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44416 "EHLO
+        id S231262AbiLEMU2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Dec 2022 07:20:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231307AbiLEMHP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 07:07:15 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB13DF61;
-        Mon,  5 Dec 2022 04:07:14 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8EDF9B80F93;
-        Mon,  5 Dec 2022 12:07:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ACF3C433D6;
-        Mon,  5 Dec 2022 12:07:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670242032;
-        bh=nbVll1UJq4AQLhzCQgmeFzFvQNQuvneOX3xjaOlj+e4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qB1J99DF86iViwbgNldFH4Gk2vUeZgtbilZV60VobZ4r2E6G2q0qT0HAMPqlVzGk5
-         aPd3KbrscO7WvRR8k7L1zWiPNrTGSUR6YFdTO3iaywrboXXhhG88Qxwjeo64U0HscN
-         pR90gest5KlzP1j6JC1y7hFsraVqD3BOEHdiQkXhr5tweicnauFJyka008tOI3XMfX
-         67nGSMCYeBcD3yF1ghMVWmR0Abq0hjDOUYDMrgFQwEV6NreJClpAE1w7mFWsuKrFSl
-         0lOEc8Xkc99Mf+vi4+4s/WoryU9CCvKAtBbdJqblz96pG4A1TOlzMR8KlE99Ae9O1m
-         DQPjmqCM5Du5w==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1p2AFg-0008W9-OO; Mon, 05 Dec 2022 13:07:17 +0100
-Date:   Mon, 5 Dec 2022 13:07:16 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+        with ESMTP id S230199AbiLEMU0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 07:20:26 -0500
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD1D7EE3F
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 04:20:25 -0800 (PST)
+Received: by mail-pg1-x534.google.com with SMTP id f3so10348315pgc.2
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 04:20:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Vid55BOGkVKUC6ugttNvlVPCmxI78SYJSflCKm2/2lo=;
+        b=RwOkcT8DY8bHR4l7myzhYvnkTXGwsVR7F7ycfbwnoCpGhcyUpIUst/il59G+OA956Q
+         XbYbBtV0El5ZEcvNcDjDh+6WNkJhq8jQBsRsNK8j9GXqLVUNryt3aI2K28Qw+iofwnz5
+         gY0BHNZvXX16br9WauSHnjrBqHaW5eo2++yiUfHROwRj3FcHbz2DpU7HQY5u4Qn2ALGX
+         B53ATSPsHv8Ewz/ah8EecL7WNGoIz4cPxCpPoOkHXH89mPwPwmxNJA7hc9f1hzV5DU6m
+         8aii1lNXLN+m9OzgYk2cQrwXwF0uRUySVcDN06AsZdMzc8VgHZWobS8hbOJg3r4P2e81
+         VQjw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Vid55BOGkVKUC6ugttNvlVPCmxI78SYJSflCKm2/2lo=;
+        b=HfEUKf+eK8jNrqKORmDcqqhuXj++v3raAh55ZEewUwJ//k46eWNruDc6rD+OT78Tsh
+         91N4GFeo45NNp7+zPjIFa7xwfrPUkwG884jyljbtbpADjIp7BypfvBeGgBDAX8R9oIPq
+         PyccNP3BzliF4PreeL7X1ODSgt8Y+8aXFBqah7BKXfWN4jR60zFT8a1R6piIYSgSd0sl
+         DUrM8WmcZusxTz+rXjgJzQHn247sjmzcuTRMmGLy+gxLqFfrOz2Bnergi4ucTEp26Os8
+         80c1YKMttb71euINsCP09j//7smhrShkPIRPoeY+6CVKxq4IUWnB4MiYYOseeLEydR9f
+         qAbw==
+X-Gm-Message-State: ANoB5pkgSgyDtXXpOCmIIKdHF4t3eZjj+uoK7zVih888tv4Rqsf7Nv4x
+        9r5TkhoHBsSNCUEqX5XnRjFL
+X-Google-Smtp-Source: AA0mqf7fbJzRKUmWsG4BnD+ZT4Whr1kbgIOdUPfXz2ApiKpUMLnQoLrjVr+5P0Fkgu4J9S4iYepfmQ==
+X-Received: by 2002:a63:5f83:0:b0:478:ab05:4da9 with SMTP id t125-20020a635f83000000b00478ab054da9mr6863980pgb.369.1670242825289;
+        Mon, 05 Dec 2022 04:20:25 -0800 (PST)
+Received: from thinkpad ([59.92.98.136])
+        by smtp.gmail.com with ESMTPSA id ca12-20020a17090af30c00b0020bfd6586c6sm9093073pjb.7.2022.12.05.04.20.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Dec 2022 04:20:24 -0800 (PST)
+Date:   Mon, 5 Dec 2022 17:50:18 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Johan Hovold <johan@kernel.org>
 Cc:     Johan Hovold <johan+linaro@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
@@ -49,45 +64,59 @@ Cc:     Johan Hovold <johan+linaro@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 1/2] dt-bindings: ufs: qcom: allow 'dma-coherent' property
-Message-ID: <Y43e9KRDsTCS5VI4@hovoldconsulting.com>
+Message-ID: <20221205122018.GC20192@thinkpad>
 References: <20221205100837.29212-1-johan+linaro@kernel.org>
  <20221205100837.29212-2-johan+linaro@kernel.org>
  <20221205115906.GA20192@thinkpad>
+ <Y43e9KRDsTCS5VI4@hovoldconsulting.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221205115906.GA20192@thinkpad>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <Y43e9KRDsTCS5VI4@hovoldconsulting.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 05, 2022 at 05:29:06PM +0530, Manivannan Sadhasivam wrote:
-> On Mon, Dec 05, 2022 at 11:08:36AM +0100, Johan Hovold wrote:
-> > UFS controllers may be cache coherent and must be marked as such in the
-> > devicetree to avoid data corruption.
+On Mon, Dec 05, 2022 at 01:07:16PM +0100, Johan Hovold wrote:
+> On Mon, Dec 05, 2022 at 05:29:06PM +0530, Manivannan Sadhasivam wrote:
+> > On Mon, Dec 05, 2022 at 11:08:36AM +0100, Johan Hovold wrote:
+> > > UFS controllers may be cache coherent and must be marked as such in the
+> > > devicetree to avoid data corruption.
+> > > 
+> > > This is specifically needed on recent Qualcomm platforms like SC8280XP.
+> > > 
+> > > Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+> > > ---
+> > >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> > > index f2d6298d926c..1f1d286749c0 100644
+> > > --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> > > +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> > > @@ -44,6 +44,8 @@ properties:
+> > >      minItems: 8
+> > >      maxItems: 11
+> > >  
+> > > +  dma-coherent: true
+> > > +
 > > 
-> > This is specifically needed on recent Qualcomm platforms like SC8280XP.
-> > 
-> > Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> > ---
-> >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> > index f2d6298d926c..1f1d286749c0 100644
-> > --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> > +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> > @@ -44,6 +44,8 @@ properties:
-> >      minItems: 8
-> >      maxItems: 11
-> >  
-> > +  dma-coherent: true
-> > +
+> > This property is not applicable to all SoCs. So setting true here will make it
+> > valid for all.
 > 
-> This property is not applicable to all SoCs. So setting true here will make it
-> valid for all.
+> Yes, it would be a valid, but it will only be added to the DTs of SoCs
+> that actually require it. No need to re-encode the dtsi in the binding.
+> 
 
-Yes, it would be a valid, but it will only be added to the DTs of SoCs
-that actually require it. No need to re-encode the dtsi in the binding.
+But if you make a property valid in the binding then it implies that anyone
+could add it to DTS which is wrong. You should make this property valid for
+SoCs that actually support it.
 
-Johan
+Thanks,
+Mani
+
+> Johan
+
+-- 
+மணிவண்ணன் சதாசிவம்
