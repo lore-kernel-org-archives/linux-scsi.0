@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9CBC4708C
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 21:56:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A92BC4321E
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Dec 2022 21:57:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232301AbiLEV4l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Dec 2022 16:56:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57630 "EHLO
+        id S230108AbiLEV5H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Dec 2022 16:57:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232801AbiLEV4P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 16:56:15 -0500
+        with ESMTP id S230100AbiLEV4Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2022 16:56:24 -0500
 Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B43310EA
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 13:55:54 -0800 (PST)
-Received: by mail-lf1-x12f.google.com with SMTP id c1so20714016lfi.7
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 13:55:54 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 093AD65D3
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Dec 2022 13:56:17 -0800 (PST)
+Received: by mail-lf1-x12f.google.com with SMTP id f21so19844472lfm.9
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2022 13:56:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:message-id:references
          :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=oKO88ao55DxeeXnBljoXeld0kkAkjM3hR01wftgKVTw=;
-        b=LGmal3EdUpWrC1R3nF6mkwM7Df/F/iOHovzKOGvspnP8S0/6optExX0dgJx1r0NI8P
-         JnTquIdtNcngTOk2jvqi46vEF4u9YUwXWEdKPdzsT9gLjw19VUW/lkeCp5/nWKT9nK18
-         B6lujK1mJ5qNwhpP+k8U0kvHvPJfnE4pCmzVmYkeIcaOYh/bNZyHCrR4dtGi779nu336
-         cUzJ5DL/0R7IBNZDm5UHVQlzQ625m15k7CGHGnx1sFsRaY73R7LHWJCn9wt+0OT877qY
-         pXmaHqAEod8VB7YF2WRTYwAoTPTWSa7pVaKNdrpVBbFeO3agAHKqBCjLDYZT4RAgSUVE
-         3BQw==
+        bh=9ouwMuYuz2oARizUtl7vzXJdY8RwuaCzneky9hi1f4c=;
+        b=l2lQpqKKFAiJUi7/jAj8kNG5nQy91Jn341kmeJ5FkG/igoqQYJ78WDLru7D56uLTVa
+         N5iAxwfXk/DC+m3bhinTJuHu4Gr94G3XcF81t0E/9Wnjjp0rpUtcc8gxftJqA1i1GsQi
+         NnZBfXYmv0gF0Kf5W1bPM3NVNjFDrUuHR80LaM0w9dSKiYg1/kO4+39PNez37/YY51rC
+         F4DQSOUHq4NOxy5KtyzTQoLMIZJdvvBAYllMiw8y2KViGrdfl7kJwpg35eXAVIUQlJIr
+         NgAb1WGlKj4HIXbbkQ/3+gvPD6w0LRDgrqiRlxcLQutoKmCKuq9iLUHxEcj5a9tUSDyF
+         weZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:references
          :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=oKO88ao55DxeeXnBljoXeld0kkAkjM3hR01wftgKVTw=;
-        b=uPjqYUgoJVx/lqEk6L+vPMYCwz7Qj3SAw/kQSU2tSAJn/OKFb4XX3+8/AlS/ZWIX3w
-         gHSkV3da6NM9VgdzJDylM/FFV/5xdlwbnce8gIiNmSgdbMfxHdylVi8SBm1QRUSpAgJz
-         DQHPcn5vKuk3Dgt/xbuLc9LOVLOk2+3UjTekR+naDh77NaH3MnUMNZyNsWnpaNkin1u5
-         i2M3agblI7W4xXQWx9Rv4uZKIZIpJARmBoovGNbnG/on/Vbb1/QgXiTmJWG3sK4KrK3B
-         50akNx9iMxL/ntB8sfr/5a3MbLDuo5noSHLa1jvYrgphqsHnkypA4m+FWduANxYoOxAG
-         A/Qg==
-X-Gm-Message-State: ANoB5pmTMpIjUp79FWq7jIQtMU86tvDJ2V+CD3A4wBxmnIuwp/0Gm/nJ
-        zliBsYxWbckSqyfxJmbJS7fdRg==
-X-Google-Smtp-Source: AA0mqf5SswWygv24y9yRXfk5wHX/CIUMUkg6260+JfxCoIclzTWfee5uW70fP+owZxwIDKvbFGsPdg==
-X-Received: by 2002:a19:760b:0:b0:4b5:67d8:e3c2 with SMTP id c11-20020a19760b000000b004b567d8e3c2mr3416705lff.166.1670277352663;
-        Mon, 05 Dec 2022 13:55:52 -0800 (PST)
+        bh=9ouwMuYuz2oARizUtl7vzXJdY8RwuaCzneky9hi1f4c=;
+        b=BELzWO1pPGY97qmS9JxZqoiGqG9uPmNnzWRxLuwu8C5qjlF9ou19RKsuxijNemJi9+
+         wIylqh3jKXe2uqiZ9uefwHD3KzUgH7Jwr6V8ldoTkd+aXnTZXA+b4FumU8gNa+U2kxvy
+         O+lvn71LICqm0aryyhTO3bIf514hcDvCej5+6zS8uDBihCDbKJegPtK9lYV/NfU9JbBp
+         GmOOL1Njupd0QYG3LSHn63tmeMUHghUtv9Ig3gXCHdWitUvshcDE6brhw4REQvCMh3i3
+         /Mqca6YiwzMQR7zgTjWIPTxlJ8RUyV0EYtOc5FGnHYIhebo5lzESsMRU/22J3wXifQIv
+         TQ5A==
+X-Gm-Message-State: ANoB5pkQHYmzBFF9mh+QhShjGWhOMwlS8PuKQjI4zUONRUoJKaQTNVrj
+        qrfRtcensNucXHpc4AdZs/m3ag==
+X-Google-Smtp-Source: AA0mqf4zwnAwfKtw3LMPJAu09UOZ7qPeq7PZzh98m4mubNvYFfJNS6m7yZZh8qckmGXoI80VmkzSYA==
+X-Received: by 2002:a05:6512:2591:b0:4ae:c2b5:29c4 with SMTP id bf17-20020a056512259100b004aec2b529c4mr24285208lfb.614.1670277375355;
+        Mon, 05 Dec 2022 13:56:15 -0800 (PST)
 Received: from [127.0.0.1] ([94.25.229.129])
-        by smtp.gmail.com with ESMTPSA id w9-20020a05651c118900b00279d206a43bsm1250265ljo.34.2022.12.05.13.55.52
+        by smtp.gmail.com with ESMTPSA id l7-20020a056512110700b004a46f92a15bsm2246422lfg.41.2022.12.05.13.56.14
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Dec 2022 13:55:52 -0800 (PST)
-Date:   Tue, 06 Dec 2022 00:55:48 +0300
+        Mon, 05 Dec 2022 13:56:15 -0800 (PST)
+Date:   Tue, 06 Dec 2022 00:56:10 +0300
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         martin.petersen@oracle.com, jejb@linux.ibm.com,
@@ -59,11 +59,11 @@ CC:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
         linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
         ahalaney@redhat.com, abel.vesa@linaro.org, alim.akhtar@samsung.com,
         avri.altman@wdc.com, bvanassche@acm.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_11/23=5D_phy=3A_qcom-qmp-ufs?= =?US-ASCII?Q?=3A_Add_HS_G4_mode_support_to_SM8450_SoC?=
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_12/23=5D_phy=3A_qcom-qmp-ufs=3A?= =?US-ASCII?Q?_Add_HS_G4_mode_support_to_SC8280XP_SoC?=
 User-Agent: K-9 Mail for Android
-In-Reply-To: <20221201174328.870152-12-manivannan.sadhasivam@linaro.org>
-References: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org> <20221201174328.870152-12-manivannan.sadhasivam@linaro.org>
-Message-ID: <977DEE2E-FCD8-44AD-BB52-49EDF586B796@linaro.org>
+In-Reply-To: <20221201174328.870152-13-manivannan.sadhasivam@linaro.org>
+References: <20221201174328.870152-1-manivannan.sadhasivam@linaro.org> <20221201174328.870152-13-manivannan.sadhasivam@linaro.org>
+Message-ID: <6799A9DF-2CFC-47FE-B8AE-EF74C54E0C9B@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
  charset=utf-8
@@ -74,27 +74,29 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-On 1 December 2022 20:43:16 GMT+03:00, Manivannan Sadhasivam <manivannan=
+On 1 December 2022 20:43:17 GMT+03:00, Manivannan Sadhasivam <manivannan=
 =2Esadhasivam@linaro=2Eorg> wrote:
->UFS PHY in SM8450 SoC is capable of operating at HS G4 mode and the init
+>UFS PHY in SC8280XP SoC is capable of operating at HS G4 mode and the ini=
+t
 >sequence is compatible with SM8350=2E Hence, add the tbls_hs_g4 instance
 >reusing the G4 init sequence of SM8350=2E
-
-Reviewed-by: Dmitry Baryshkov <dmitry=2Ebaryshkov@linaro=2Eorg>
-
 >
 >Signed-off-by: Manivannan Sadhasivam <manivannan=2Esadhasivam@linaro=2Eor=
 g>
+
+Reviewed-by: Dmitry Baryshkov <dmitry=2Ebaryshkov@linaro=2Eorg>
+
+
 >---
 > drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec | 8 ++++++++
 > 1 file changed, 8 insertions(+)
 >
 >diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec b/drivers/phy/qual=
 comm/phy-qcom-qmp-ufs=2Ec
->index 75e55c4181c9=2E=2E96e03d4249da 100644
+>index 96e03d4249da=2E=2E9f5526758985 100644
 >--- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec
 >+++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec
->@@ -935,6 +935,14 @@ static const struct qmp_phy_cfg sm8450_ufsphy_cfg =
+>@@ -763,6 +763,14 @@ static const struct qmp_phy_cfg sc8280xp_ufsphy_cfg =
 =3D {
 > 		=2Eserdes		=3D sm8350_ufsphy_hs_b_serdes,
 > 		=2Eserdes_num	=3D ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
@@ -107,8 +109,8 @@ comm/phy-qcom-qmp-ufs=2Ec
 >+		=2Epcs		=3D sm8350_ufsphy_g4_pcs,
 >+		=2Epcs_num	=3D ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
 >+	},
-> 	=2Eclk_list		=3D sm8450_ufs_phy_clk_l,
-> 	=2Enum_clks		=3D ARRAY_SIZE(sm8450_ufs_phy_clk_l),
+> 	=2Eclk_list		=3D sdm845_ufs_phy_clk_l,
+> 	=2Enum_clks		=3D ARRAY_SIZE(sdm845_ufs_phy_clk_l),
 > 	=2Evreg_list		=3D qmp_phy_vreg_l,
 
 --=20
