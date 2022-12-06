@@ -2,177 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 488C9C3A5A7
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Dec 2022 09:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C138AC352A1
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Dec 2022 13:14:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235027AbiLFJT6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Dec 2022 04:19:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33418 "EHLO
+        id S235108AbiLFNOz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Dec 2022 08:14:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234697AbiLFJTg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2022 04:19:36 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA92C2035F
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Dec 2022 01:17:56 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id 62so12820375pgb.13
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2022 01:17:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=ePWQHlJZ1ifQfk6Te5xFRB+dPeDDvHuJ9FBMyduq99Y=;
-        b=bCtcy40TBkMMs+Bx7uvp/8ffgWsN8SmTCqqiq0rSu0lzo3hObF4h5AzqBWU1RUxsqe
-         d9MjQKefgoEX5/ePs9f3/OyR8DC51smp0jwcbADoc9qCq4inshfq5p5V7sgXUDG4uLai
-         KLXihMWFtwtTsuuVwt23cYGHe47HidgigeuHK5cyOTYqesLPqPXhHvcNC7desZNJ45zS
-         PW7yLVv9J/DfOZtUAtCLPuIhRUfjduXXxZfp+MLVw8Yk0bQgjlUR1OBYeVxyrZMW+uoU
-         0r/VfW72EUgKAG/Ppl1J9m5QfsSehrdRa/Muf1Fo7fgEn7PBewdOnKcrGMX/MeHJAhGG
-         Zvrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ePWQHlJZ1ifQfk6Te5xFRB+dPeDDvHuJ9FBMyduq99Y=;
-        b=0T0V2D4/RiiOPI3Bi1xreGe447gNlo051s8bIhKWN/WlqmlGnuSadUq45biIa3y0dX
-         tkjbhARASFDtRNQ9UV0n2cLGD+8Vpn2CMI/XA0+0Xcfe+lWnAnFYVsgK8aZfSidq16sg
-         57v3C9z/YohzUQQCw5LwZrOsWB3ug8bugKOPPb5BVDTF56uSOHqmJ/ITedoxsGCAx8sq
-         8Ula13MOGDXZ7eT1Ci/lk09KfdFLaWjdLIJ4jRkQ35YFtlleNFDIy20sagINrbx0hAak
-         pXj4WJGpl9nozsptUzczeM7+ryZ2lffJjgp45zSVNspb0B8b+MMUii0MtyOBfGuoyrT9
-         DkRA==
-X-Gm-Message-State: ANoB5plQU5lkU2iq2KaiB9bli5kJflCgg6CrxkCmv6zCwKzstBvDamD3
-        IUF/05QjtHjyyb6H5HeAMlZ7
-X-Google-Smtp-Source: AA0mqf5UTduCpVAOsvqnU2Aq3c7POTsT0fXfbeT+OrZbKq34wo4NaKVMNSIIuYy0HS/p/CxktBtqMA==
-X-Received: by 2002:a65:58ca:0:b0:470:2c91:9579 with SMTP id e10-20020a6558ca000000b004702c919579mr58584377pgu.22.1670318276006;
-        Tue, 06 Dec 2022 01:17:56 -0800 (PST)
-Received: from thinkpad ([59.92.103.18])
-        by smtp.gmail.com with ESMTPSA id u10-20020a170902e5ca00b00189371b5971sm12147194plf.220.2022.12.06.01.17.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Dec 2022 01:17:54 -0800 (PST)
-Date:   Tue, 6 Dec 2022 14:47:37 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Johan Hovold <johan@kernel.org>,
-        Johan Hovold <johan+linaro@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] dt-bindings: ufs: qcom: allow 'dma-coherent' property
-Message-ID: <20221206091737.GC15486@thinkpad>
-References: <20221205100837.29212-1-johan+linaro@kernel.org>
- <20221205100837.29212-2-johan+linaro@kernel.org>
- <20221205115906.GA20192@thinkpad>
- <Y43e9KRDsTCS5VI4@hovoldconsulting.com>
- <20221205122018.GC20192@thinkpad>
- <Y43jtpHqlyiIEZ0S@hovoldconsulting.com>
- <20221205130048.GD20192@thinkpad>
- <Y43uUA2X4Vzn+VLF@hovoldconsulting.com>
- <20221205133712.GE20192@thinkpad>
- <2699840b-9746-473b-fa17-900258db555d@linaro.org>
+        with ESMTP id S234832AbiLFNOi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2022 08:14:38 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9307B2C661
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Dec 2022 05:13:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1670332438; x=1701868438;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=E+zH3taK7NgyDK8TXFfZUMrZiqituFM79TKPCsHMraQ=;
+  b=Ot38ApnwfBQSfwwjB43LvdFjhPMzEVK5UID03r4+pSQ4C3IQVUIoJqLh
+   rh+mVUnuYKj8NolyZxAQjT+rFoTwmuALtSEdtosHEXZs3stPfbZ1ArnI7
+   Q/xWOQiN2XzEBnuYREmgteCYvTEM3nZjnCyFE0LKxqqGYC6mo3ivI4XpZ
+   ZNctak7fq+0ZIaSEQZH1RD6/l/dLAhYzpIIHcng/CsTWAdMwgfXvE8ECt
+   NE6CxZMJcchaRApwzdo1NzVBnvzN1JdRXjZRqSaPgctzGA5aMAYNDYndx
+   PuN/HXmDzwUuwT/vbstl3K1KZw+FGx7XSx48OxFoJ47d4zz6nDth+FP1x
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.96,222,1665417600"; 
+   d="scan'208";a="322368418"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 06 Dec 2022 21:13:56 +0800
+IronPort-SDR: plTmR9DuOSTsrrSjsXHsFOWdBBjSdk+H29DJpkxOkCbjaCcKOUKZwGfGD/QhB1Q7VtkIjE6xkD
+ 88uRrm4josJErYYC3c0fdT3Tl42IZvfxLbTjIyXnTLmRqqnoPPjHe0JR+WmnIE+rYJkpvj5NxE
+ Uw/A7cWQQH1nzCMkslfReyYlqZciDintRJcOrKu5KW1R+/gWAVCXRi9dPnptE2s3cqabVfyYQp
+ Sk38gt/rinMdO4ahtMFAu3JZ5nIN/GxAnTI7BTLacY/p7T6faj20Nt3zg+W97my4zrGmqmgndS
+ 1fI=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Dec 2022 04:32:28 -0800
+IronPort-SDR: ysuBKngdOt919FjiNktpKEgenpsLBMWkqQkwdQtZAarFbHaS0UNc+uID4NVlzCcIK9hGUKFR/1
+ ZFbOYWB+HeHglSxkalyKZUMJzfSAMJV6tXNRbZ6JMYGY9HydnLosNQA3NIYv197MKzIr6Fjq/v
+ cw0TlePxMZZATBlM2NwalFS+xEzxuKC4vSIu4B0wZarkNQacHYnfrahG0fFIR3gMUfz3Ck78HE
+ VqouLc66m4VkfXTyHrQLE8n6RiD1gWUO3YYFLGLlD5S6De34uZJtYrOllhUmiIxglhOCZyOdFG
+ hPg=
+WDCIronportException: Internal
+Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 Dec 2022 05:13:54 -0800
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.g.garry@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v2] scsi_error: do not queue pointless abort workqueue functions
+Date:   Tue,  6 Dec 2022 14:13:45 +0100
+Message-Id: <20221206131346.2045375-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <2699840b-9746-473b-fa17-900258db555d@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 06, 2022 at 09:14:30AM +0100, Krzysztof Kozlowski wrote:
-> On 05/12/2022 14:37, Manivannan Sadhasivam wrote:
-> > On Mon, Dec 05, 2022 at 02:12:48PM +0100, Johan Hovold wrote:
-> >> On Mon, Dec 05, 2022 at 06:30:48PM +0530, Manivannan Sadhasivam wrote:
-> >>> On Mon, Dec 05, 2022 at 01:27:34PM +0100, Johan Hovold wrote:
-> >>>> On Mon, Dec 05, 2022 at 05:50:18PM +0530, Manivannan Sadhasivam wrote:
-> >>>>> On Mon, Dec 05, 2022 at 01:07:16PM +0100, Johan Hovold wrote:
-> >>>>>> On Mon, Dec 05, 2022 at 05:29:06PM +0530, Manivannan Sadhasivam wrote:
-> >>>>>>> On Mon, Dec 05, 2022 at 11:08:36AM +0100, Johan Hovold wrote:
-> >>>>>>>> UFS controllers may be cache coherent and must be marked as such in the
-> >>>>>>>> devicetree to avoid data corruption.
-> >>>>>>>>
-> >>>>>>>> This is specifically needed on recent Qualcomm platforms like SC8280XP.
-> >>>>>>>>
-> >>>>>>>> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> >>
-> >>>>>> Yes, it would be a valid, but it will only be added to the DTs of SoCs
-> >>>>>> that actually require it. No need to re-encode the dtsi in the binding.
-> >>>>>>
-> >>>>>
-> >>>>> But if you make a property valid in the binding then it implies that anyone
-> >>>>> could add it to DTS which is wrong. You should make this property valid for
-> >>>>> SoCs that actually support it.
-> >>>>
-> >>>> No, it's not wrong.
-> >>>>
-> >>>> Note that the binding only requires 'compatible' and 'regs', all other
-> >>>> properties are optional, and you could, for example, add a
-> >>>> 'reset' property to a node for a device which does not have a reset
-> >>>> without the DT validation failing.
-> 
-> Optional properties are optional primarily looking at one variant. It
-> means that on different boards with the same SoC, things can be routed a
-> bit differently and some property can be skipped. E.g. sometimes
-> regulators come from PMIC and sometimes are wired to some VBATT, so we
-> do not have regulator in DTS for them. Or some interrupt/pin is not
-> connected.
-> 
-> Now between variants of devices - different SoCs: I don't think that
-> "optional" should be used in such context, except special cases or lack
-> of knowledge about hardware. For given SoC/variant, the property is either:
-> 1. valid and possible (can be required or optional),
-> 2. not valid, not possible.
-> And this we should express in constraints, if doable with reasonable
-> complexity.
-> 
-> Therefore the question is: is dma-coherent not valid for other SoCs?
-> 
+From: Hannes Reinecke <hare@suse.de>
 
-Yes, it is not valid on older SoCs because they don't support I/O coherency.
-So setting this property on those un-supported SoCs may lead to wierd behavior.
-This was the concern I had for setting this property valid for all SoCs.
+If a host template doesn't implement the .eh_abort_handler()
+there is no point in queueing the abort workqueue function;
+all it does is invoking SCSI EH anyway.
+So return 'FAILED' from scsi_abort_command() if the .eh_abort_handler()
+is not implemented and save us from having to wait for the
+abort workqueue function to complete.
 
-So far we only know that SC8280XP and newer SoCs support I/O coherency.
+Cc: Niklas Cassel <niklas.cassel@wdc.com>
+Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+[niklas: moved the check to the top of scsi_abort_command()]
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+Changes since v1:
+-moved the check to the top of scsi_abort_command(), as there is no need to
+ perform the SCSI_EH_ABORT_SCHEDULED check if there is no eh_abort_handler.
 
-Thanks,
-Mani
+I know that John gave a review comment on V1 that it is possible to not
+allocate the shost->tmf_work_q in case there is no eh_abort_handler,
+however, that is more of a micro optimization. This patch significantly
+reduces the latency before SCSI EH is invoked for libata.
 
-> If it is "not needed" for other SoCs, then I would leave it like this.
-> Consider also what Rob said, that otherwise we would create DTS from the
-> bindings.
-> 
-> Also, too many allOf:if:then: constraints in the bindings make them
-> trickier to read.
-> 
-> >>>>
-> >>>
-> >>> Then what is the point of devicetree validation using bindings?
-> >>
-> >> You're still making sure that no properties are added that are not
-> >> documented, number of clocks, names of clocks, etc.
-> >>
-> >>> There is also a comment from Krzysztof: https://lkml.org/lkml/2022/11/24/390
-> >>
-> >> Speaking of Krzysztof:
-> >>
-> >> 	https://lore.kernel.org/lkml/20221204094717.74016-5-krzysztof.kozlowski@linaro.org/
-> 
-> That's not the best example, because I just do not know where
-> dma-coherent is applicable and where it is not, thus I added it as valid
-> for all variants. Also, I think that all variants are capable of using
-> IOMMU - it isn't restricted per variant. If they are capable of IOMMU,
-> then dma-coherent is a possible choice.
-> 
-> 
-> Best regards,
-> Krzysztof
-> 
+It would be nice if we could get this patched merged for 6.2, for which
+the merge window opens soon.
 
+ drivers/scsi/scsi_error.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index a7960ad2d386..2aa2c2aee6e7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -231,6 +231,11 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+ 	struct Scsi_Host *shost = sdev->host;
+ 	unsigned long flags;
+ 
++	if (!shost->hostt->eh_abort_handler) {
++		/* No abort handler, fail command directly */
++		return FAILED;
++	}
++
+ 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
+ 		/*
+ 		 * Retry after abort failed, escalate to next level.
 -- 
-மணிவண்ணன் சதாசிவம்
+2.38.1
+
