@@ -2,81 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 993E2C352A1
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Dec 2022 19:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1235CC63705
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Dec 2022 21:41:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229546AbiLFT4n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Dec 2022 14:56:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40436 "EHLO
+        id S229667AbiLFVlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Dec 2022 16:41:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbiLFT4m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2022 14:56:42 -0500
-Received: from mail-il1-x132.google.com (mail-il1-x132.google.com [IPv6:2607:f8b0:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3866232B8B
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Dec 2022 11:56:41 -0800 (PST)
-Received: by mail-il1-x132.google.com with SMTP id x13so6959093ilp.8
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2022 11:56:41 -0800 (PST)
+        with ESMTP id S229678AbiLFVlM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2022 16:41:12 -0500
+Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B4AD4843F;
+        Tue,  6 Dec 2022 13:41:08 -0800 (PST)
+Received: by mail-lj1-x231.google.com with SMTP id x6so18754499lji.10;
+        Tue, 06 Dec 2022 13:41:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=solid-run-com.20210112.gappssmtp.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pr5A82QMDS3439cV/l0TiwyD6oe8HTmjdxBAYHIenkw=;
-        b=5gZ4Gpu/Xoh5ChxX8vn4yDQ839Y02gORAbRJKicZwrHFBH0NIchUZDW6Y615MW8Cuo
-         ZdO4L3CqvKD9JNcgHJjpe9/mjrs85Al83QInqMzjcK62pr1wgEqU8ZhTAJi4Ib3ahj7k
-         BZlEtq3KfssqlsY9tZQIx0vaLlC9u3vbxT8LvjuAL1GnsClNkR2tm4WIKQeodHoXdkZE
-         KiPCEIcEoxIg4QSjQNTqtlAXIew+2ghnCH4ev8+TU75YzUKjhKWJSMnNxTy27fwj8JCb
-         XWwul5V7p/Z+1rXby5ETA9G2t4IWGRXtyRcQ3Cmi0XJKOmS3YkN3oRqED74z2Db+6nws
-         ZSgw==
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ETysj4Bx8/q3Mbby4ydbR9t3cYQklYxkUNimuU0Mtik=;
+        b=kBew9e0ZjRuvMB6VMb6kJBucF/HeULbCyoA3DL9XiESyqyRis4mPc4mvYcnZkEZFZU
+         03oVFUEBQ+QQKKXg7zgfoxKrMva+9sSg/TpIShFlImKlenLRqVW+r6S5TSSJAbfzwIGB
+         odE1wyD0V6XOo/JBdWREdcoYE9MlkuEZiwCQCKomLsB+mCsnWcLMig2jBGWYlSyTEJZx
+         mpJXKTpYVFEhW7f8/TzOFmKUG4vlf3TRRFGOtYlIJYG8gggFPtVuh0IjaUQ7JPILI7SW
+         /drTqQkoEs6yCtVPz2EVqJAru5ZRDcsIkQORJrNFzVP+/p2ewwZ+INGS78sQVFJfS2hH
+         +pTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Pr5A82QMDS3439cV/l0TiwyD6oe8HTmjdxBAYHIenkw=;
-        b=3MGeTVs925Od+aQfP+194mQdBUdag3+9AimiBOgRA3sdm9NnI429BRHzrxeiCx/Uv6
-         75OL7IM/1bog4mmhjer5BZBvVOQUB+5uPGm5n62e7tppMYTIosAe6nZU2jrLrTrHB6k5
-         hp2+cKwsHb47i4Lwp5J+FvHQdgyb4D7nDpqLxVtedYTEfNvIZtj4hmgvq+lKq4z5qc9b
-         yFUpQ9fGESzxetI483iIFP3MZs6DXp05CnxXzoR8tb+mCa8IeJd0pVOiZwT0bEfc7gwc
-         gwEwYDZt4p5xgYl+a7Azbslgzy8ngHQE2DR73drC0QBiuxaM/x5mUZSlT5GWPnX3w3qn
-         7KSw==
-X-Gm-Message-State: ANoB5pkJiTUFuM/sFS7dGa7AifjE77WkJN5FfuImghL/oU/Qkv7ZJuVe
-        WKrhxj+V/j7tNYzaX0/OnwG1/mXpAzyWEwA7wCveNQ==
-X-Google-Smtp-Source: AA0mqf5weYpfxnfmeNEaWEQd5GuamfhCWZUc6GKCqEjTgjj47RKtDegoyGS/7Ff3WUue6RAch00gS/qlXcQ0t/Pzp84=
-X-Received: by 2002:a05:6e02:1c8d:b0:303:71ee:7b6b with SMTP id
- w13-20020a056e021c8d00b0030371ee7b6bmr2852396ill.147.1670356600505; Tue, 06
- Dec 2022 11:56:40 -0800 (PST)
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ETysj4Bx8/q3Mbby4ydbR9t3cYQklYxkUNimuU0Mtik=;
+        b=8JdK9hqvHiPmGkS/GgCxJZy4eDIzlcQKXhbGc7D7rkXZkIrH49iff8c2qXfBzIxzQP
+         BESGWQ+PDVsKn9iKT4XGYiTKedW8h0gR6tiE88cdiTEzRnq2AC8x4mRmx0h0lko8zW8L
+         RoZTt2A/2J/W8/0HD5qO96OBMNwejbQDeGL7GAMaFA1I10g8rCRNmyZuBj89IbvSBDYJ
+         C/TgbrfxlQ0Zyb0Z9qGuBoPo/v4si+m8TYIFFz8ZllBES6L7YG8KdsNtOPid0RKzpjys
+         bwduhGLaMNJUBI+TCao8skaRGp/7kRW0reaqETmpA4pNfoSvY1D38O+1QMUXvP1UsiAp
+         c0gw==
+X-Gm-Message-State: ANoB5pk4mEBZpODaEKy7oUTYiHrspxiqUAhs6MBhqmq1djxX79mxmv4D
+        HzR4l9jrpnVHEKNb/YTo2ps=
+X-Google-Smtp-Source: AA0mqf5lMZpEEacm4jO7QvN9SHNS5JS0rsnvTbY0LagzI/PlE2+ZIKHl43uMxZisCfadNoKGaNMuBA==
+X-Received: by 2002:a2e:9941:0:b0:26d:fe34:6dc0 with SMTP id r1-20020a2e9941000000b0026dfe346dc0mr24018640ljj.477.1670362866932;
+        Tue, 06 Dec 2022 13:41:06 -0800 (PST)
+Received: from mobilestation ([95.79.133.202])
+        by smtp.gmail.com with ESMTPSA id a2-20020a19ca02000000b004946a1e045fsm2594803lfg.197.2022.12.06.13.41.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Dec 2022 13:41:06 -0800 (PST)
+Date:   Wed, 7 Dec 2022 00:41:03 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Zhuo Chen <chenzhuo.1@bytedance.com>,
+        sathyanarayanan.kuppuswamy@linux.intel.com, bhelgaas@google.com,
+        ruscur@russell.cc, oohall@gmail.com, jdmason@kudzu.us,
+        dave.jiang@intel.com, allenbh@gmail.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ntb@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 3/9] NTB: Remove pci_aer_clear_nonfatal_status() call
+Message-ID: <20221206214103.77duscgqjifsktxo@mobilestation>
+References: <20220928110355.emf2nucmdmpb3vbu@mobilestation>
+ <20221206180956.GA1361309@bhelgaas>
 MIME-Version: 1.0
-References: <20221205162035.2261037-1-alvaro.karsz@solid-run.com> <1d1c946d-2739-6347-f453-8ccf92c6a0cc@acm.org>
-In-Reply-To: <1d1c946d-2739-6347-f453-8ccf92c6a0cc@acm.org>
-From:   Alvaro Karsz <alvaro.karsz@solid-run.com>
-Date:   Tue, 6 Dec 2022 21:56:05 +0200
-Message-ID: <CAJs=3_CWrO34KBxN_eNVyibRNYUP9tzmywnmq2W+9uMYwbQdBA@mail.gmail.com>
-Subject: Re: [PATCH v3] virtio_blk: add VIRTIO_BLK_F_LIFETIME feature support
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     virtualization@lists.linux-foundation.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221206180956.GA1361309@bhelgaas>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+Hi Bjorn
 
-> Why does the above data structure only refer to SLC and MLC but not to
-> TLC or QLC?
+On Tue, Dec 06, 2022 at 12:09:56PM -0600, Bjorn Helgaas wrote:
+> On Wed, Sep 28, 2022 at 02:03:55PM +0300, Serge Semin wrote:
+> > On Wed, Sep 28, 2022 at 06:59:40PM +0800, Zhuo Chen wrote:
+> > > There is no need to clear error status during init code, so remove it.
+> > 
+> > Why do you think there isn't? Justify in more details.
+> 
+> Thanks for taking a look, Sergey!  I agree we should leave it or add
+> the rationale here.
+> 
+> > > Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+> > > ---
+> > >  drivers/ntb/hw/idt/ntb_hw_idt.c | 2 --
+> > >  1 file changed, 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/ntb/hw/idt/ntb_hw_idt.c b/drivers/ntb/hw/idt/ntb_hw_idt.c
+> > > index 0ed6f809ff2e..fed03217289d 100644
+> > > --- a/drivers/ntb/hw/idt/ntb_hw_idt.c
+> > > +++ b/drivers/ntb/hw/idt/ntb_hw_idt.c
+> > > @@ -2657,8 +2657,6 @@ static int idt_init_pci(struct idt_ntb_dev *ndev)
+> > >  	ret = pci_enable_pcie_error_reporting(pdev);
+> > >  	if (ret != 0)
+> > >  		dev_warn(&pdev->dev, "PCIe AER capability disabled\n");
+> > > -	else /* Cleanup nonfatal error status before getting to init */
+> > > -		pci_aer_clear_nonfatal_status(pdev);
+> 
+> I do think drivers should not need to clear errors; I think the PCI
+> core should be responsible for that.
+> 
+> And I think the core *does* do that in this path:
+> 
+>   pci_init_capabilities
+>     pci_aer_init
+>       pci_aer_clear_status
+>         pci_aer_raw_clear_status
+>           pci_write_config_dword(pdev, aer + PCI_ERR_COR_STATUS)
+>           pci_write_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS)
+> 
+> pci_aer_clear_nonfatal_status() clears only non-fatal uncorrectable
+> errors, while pci_aer_init() clears all correctable and all
+> uncorrectable errors, so the PCI core is already doing more than
+> idt_init_pci() does.
+> 
+> So I think this change is good because it removes some work from the
+> driver, but let me know if you think otherwise.
 
-This has been discussed before.
-The data structure follows the virtio spec
-(https://docs.oasis-open.org/virtio/virtio/v1.2/csd01/virtio-v1.2-csd01.html)
+It's hard to remember now all the details but IIRC back when this
+driver was developed the "Unsupported Request" flag was left uncleared
+on our platform even after the probe completion. Most likely an
+erroneous TLP was generated by some action performed on the device
+probe stage. The forced cleanup of the AER status solved that problem.
+On the other hand the problem of having the UnsupReq+ flag set was
+solved some time after the driver was merged in into the kernel (it
+was caused by a vendor-specific behavior of the IDT PCIe switch placed
+on the path between a RP and PCIe NTB). So since the original reason
+of having the pci_aer_clear_nonfatal_status() method called here was
+platform specific and fixed now anyway, and the AER flags cleanup is
+done by the core, then I have no reason to be against the patch. It
+would be good to add your clarification to the commit message though.
 
-> How will this data structure be extended without having to introduce a
-> new ioctl?
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 
-There are no more lifetime parameters defined in the virtio spec.
-Please note that this is a virtio block specific ioctl, not a block generic one.
+-Serge(y)
+
+> 
+> > >  
+> > >  	/* First enable the PCI device */
+> > >  	ret = pcim_enable_device(pdev);
+> > > -- 
+> > > 2.30.1 (Apple Git-130)
+> > > 
