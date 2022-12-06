@@ -2,89 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8245DC47090
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Dec 2022 07:49:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E38FC47090
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Dec 2022 07:55:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231653AbiLFHtM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Dec 2022 02:49:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33514 "EHLO
+        id S231535AbiLFHzp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Dec 2022 02:55:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231600AbiLFHtK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2022 02:49:10 -0500
+        with ESMTP id S231425AbiLFHzo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2022 02:55:44 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BCE513F8B;
-        Mon,  5 Dec 2022 23:49:10 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8325915736;
+        Mon,  5 Dec 2022 23:55:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B30C76158F;
-        Tue,  6 Dec 2022 07:49:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12C3EC433C1;
-        Tue,  6 Dec 2022 07:49:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 23AEC6159B;
+        Tue,  6 Dec 2022 07:55:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8259DC433C1;
+        Tue,  6 Dec 2022 07:55:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670312949;
-        bh=AjymSXQTjEUupLPnuok4nTVvTlNVhtz7pMWL0eg3FrY=;
+        s=k20201202; t=1670313342;
+        bh=0I6MjdoaniHTQdE6M92nGwwRUX9bmzCkmed1VgLdy4w=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TiO+BPVmkJg/CYiYMeAZ18DWtNGxWKJfE9gC0ILlxn9guVMzwvxV6tcWBFPlNvcix
-         twBKv1l6LtneN/MkGTk6RdY5dtbtPy/f3vIxXwQx+QFcKALV2H9rqOQ1cWjv6mm5CH
-         YWmXj3rrGUa8oAlZAjo0o4GM0bMTZP9z8zncM4VsjVzqYC6lKCNTT4OXk2D1uu48U6
-         sYIFcK5HdWXHGYuUE+oMTMDvg44SgjxeigD8opXhUG4WtaaXntnNckrWY6+GV9ePG3
-         nW7Ry1n8YVTH5bU4zqJwfqhYJK6AzrbxX5rJ7Ba+vNiHN/+znmbvGHrFVN+kdwJKW4
-         A4wEgtBGFhVrA==
+        b=txiWcekEX32RvDDR+LQeWWDeHl2tI47yoHl1qbioOR3ZDWiKmVoXZlxJ2NZvokrMg
+         bNXp1RJjdvLpDKM+3jd75HYocWUahyCe/+2v2BBwXb3DdzYBKpyc9x/Zj6yRyv4MdE
+         F01XBMeevjCet3D0JPktyJY9R01lMtMbadIpWmozbR1a8XElH1/KRXOZwQfPVG5/Pq
+         m3lPCpACLkQxiEWlv14/zdG4YJ/L8PcyORMK3KM9G88mll8pkLPDIBuKEuJ9ClikMD
+         i8yXzTUk/C8cR2FwNl5adu0KzM+3NQvPR0IWqQtBOC9tIYZS58TiBhCsCWe6JatY1/
+         cb7u9vY3Xgkyg==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan@kernel.org>)
-        id 1p2ShY-00070z-Cm; Tue, 06 Dec 2022 08:49:16 +0100
-Date:   Tue, 6 Dec 2022 08:49:16 +0100
+        id 1p2Snt-000745-9v; Tue, 06 Dec 2022 08:55:50 +0100
+Date:   Tue, 6 Dec 2022 08:55:49 +0100
 From:   Johan Hovold <johan@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Johan Hovold <johan+linaro@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
+To:     Bjorn Andersson <andersson@kernel.org>
+Cc:     Johan Hovold <johan+linaro@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Andy Gross <agross@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 1/2] dt-bindings: ufs: qcom: allow 'dma-coherent' property
-Message-ID: <Y47z/DSw49Klk0px@hovoldconsulting.com>
+Message-ID: <Y471hQ2Si5IFq6Xg@hovoldconsulting.com>
 References: <20221205100837.29212-1-johan+linaro@kernel.org>
  <20221205100837.29212-2-johan+linaro@kernel.org>
- <20221205115906.GA20192@thinkpad>
- <Y43e9KRDsTCS5VI4@hovoldconsulting.com>
- <20221205122018.GC20192@thinkpad>
- <Y43jtpHqlyiIEZ0S@hovoldconsulting.com>
- <20221205130048.GD20192@thinkpad>
- <Y43uUA2X4Vzn+VLF@hovoldconsulting.com>
- <20221205223522.GA2799349-robh@kernel.org>
+ <20221205230751.ismiwodjhsyxp5uv@builder.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221205223522.GA2799349-robh@kernel.org>
+In-Reply-To: <20221205230751.ismiwodjhsyxp5uv@builder.lan>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 05, 2022 at 04:35:22PM -0600, Rob Herring wrote:
-> On Mon, Dec 05, 2022 at 02:12:48PM +0100, Johan Hovold wrote:
-> > On Mon, Dec 05, 2022 at 06:30:48PM +0530, Manivannan Sadhasivam wrote:
-> > > On Mon, Dec 05, 2022 at 01:27:34PM +0100, Johan Hovold wrote:
-> > > > On Mon, Dec 05, 2022 at 05:50:18PM +0530, Manivannan Sadhasivam wrote:
-> > > > > On Mon, Dec 05, 2022 at 01:07:16PM +0100, Johan Hovold wrote:
-> > > > > > On Mon, Dec 05, 2022 at 05:29:06PM +0530, Manivannan Sadhasivam wrote:
-> > > > > > > On Mon, Dec 05, 2022 at 11:08:36AM +0100, Johan Hovold wrote:
-> > > > > > > > UFS controllers may be cache coherent and must be marked as such in the
-> > > > > > > > devicetree to avoid data corruption.
+On Mon, Dec 05, 2022 at 05:07:51PM -0600, Bjorn Andersson wrote:
+> On Mon, Dec 05, 2022 at 11:08:36AM +0100, Johan Hovold wrote:
+> > UFS controllers may be cache coherent and must be marked as such in the
+> > devicetree to avoid data corruption.
+> > 
+> > This is specifically needed on recent Qualcomm platforms like SC8280XP.
+> > 
+> > Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 > 
-> Typically, you'd only be doing unnecessary cache flushes without it 
-> rather than getting data corruption. However, it is possible this 
-> property triggers other system setup or something that would cause 
-> problems if not setup right.
+> Reviewed-by: Bjorn Andersson <andersson@kernel.org>
+> 
+> But I think this should be picked up by James or Martin. Added them as
+> explicit recipients, but perhaps they would like you to resubmit this?
 
-You can end up with data corruption, for example, if the kernel remaps
-a consistent buffer and writes data through the non-cacheable alias
-while the coherent device snoops stale data from the caches.
+They were not included in the get_maintainer.pl output so I'm guessing
+they prefer to pick UFS binding patches from the scsi list.
+
+> I'm picking the dts change for now.
+
+Thanks.
 
 Johan
