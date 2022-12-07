@@ -2,108 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FD17C63708
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Dec 2022 20:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6489EC4708D
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Dec 2022 23:32:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230156AbiLGUvf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Dec 2022 15:51:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33238 "EHLO
+        id S229763AbiLGXcB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Dec 2022 18:32:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230086AbiLGUvF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2022 15:51:05 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A19883E90;
-        Wed,  7 Dec 2022 12:49:51 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B7KnbEs031095;
-        Wed, 7 Dec 2022 20:49:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=8SFDvbzQ1dlolm07vRWQ6nGPb415dRbXSJxfEmPGi4I=;
- b=pJ/a57BZCdU68XY9sSHFeZc49JnxtxJ9drOI27FiwBaIkJ+BQSaUs0Nx1deCbixWzZm7
- 0aH1n+4TFIF1m+kP422bjzx7PO+2PQhqadRMBzoKJq79tpvgFoBaDJocJbSY6Ws3+Ioo
- hzv4r37pmk96ZxY7HwHCYhxwcqtTgXsykzCkZVIsP4B77tyF/+GfZJNzncNBBBSapd7L
- qhstLkQOTZPb2ss4ZujzgQVLCzxkoQrXFA+VBh+CQHeYNntARgTQSbNvzhfR1Becef9i
- l4oltmFXfhv1hOPB7VM+QKUVBTpHU1y+qM2xebLg4u4VmTBIFzepTvA/x64sb/891V5w KQ== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3man0ka09f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 07 Dec 2022 20:49:37 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2B7Knatq014967
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 7 Dec 2022 20:49:36 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 7 Dec 2022 12:49:36 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <eddie.huang@mediatek.com>,
-        <daejun7.park@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 16/16] ufs: core: mcq: Enable Multi Circular Queue
-Date:   Wed, 7 Dec 2022 12:46:27 -0800
-Message-ID: <70f8760735786ff9397c5e38144c72aa5482de7f.1670445699.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1670445698.git.quic_asutoshd@quicinc.com>
-References: <cover.1670445698.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S229501AbiLGXb7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2022 18:31:59 -0500
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4703189ACE;
+        Wed,  7 Dec 2022 15:31:59 -0800 (PST)
+Received: by mail-pl1-f182.google.com with SMTP id a9so18521332pld.7;
+        Wed, 07 Dec 2022 15:31:59 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=89G9yW94FuUwQeU9iD8DjLO4IBdrRmB5Y4jr3v6OvPE=;
+        b=kNT9lpBfpjCcEFhJwsk83HPsvwUa/0lwsP+9cRMEXXxjsPJ9V4hZ7FLoZh+v+C72nX
+         OkubANKQe41S7p4dA9s09fb+RSz4R11DCScpIOWEgA1iI578s3H6yMMKByVQZWIPb7vf
+         BtoBa+PR7J9g+djb7Ji+mFjvqCu2ONgLcNBeltruSKE31JWWDIVyW1siRCtuJfowDTgj
+         RIOxxyxdOCfg481U2m/OeblrGMPCEhHJJ7+Ug0ptjHLIvlrXc0DFqmBodPsdo+QzxZDW
+         5koZQL9mgaJjy3Dy/tE8oGet5ZHrcEC6qF7BQhORlQx7+NJDoP0PsCgFICnIQW4mL+kl
+         n0wQ==
+X-Gm-Message-State: ANoB5pn4p5Qw+HeRTbapJX4vR53FgEAVRXNNO1iLuGOtDHsZU0tCClDb
+        PH8468MHF8+0igYdy9qfQ8k=
+X-Google-Smtp-Source: AA0mqf7KoTUWiVuUbP5gv8s3h+lpEEwCmkTd4Dyp4WeSe4OOW3atoyCad2TF4EkuQ2QAMjTzFbPZOw==
+X-Received: by 2002:a17:90a:7444:b0:219:d415:d7cd with SMTP id o4-20020a17090a744400b00219d415d7cdmr17123960pjk.89.1670455918488;
+        Wed, 07 Dec 2022 15:31:58 -0800 (PST)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id z14-20020a1709027e8e00b00188c04258c9sm15119330pla.52.2022.12.07.15.31.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 07 Dec 2022 15:31:57 -0800 (PST)
+Message-ID: <b89f3337-0869-35a8-114d-85e1fd81eb2c@acm.org>
+Date:   Wed, 7 Dec 2022 15:31:55 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: JA_cyClS-aZsCHyKr9bta4npkswA0E5S
-X-Proofpoint-ORIG-GUID: JA_cyClS-aZsCHyKr9bta4npkswA0E5S
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-07_09,2022-12-07_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
- lowpriorityscore=0 mlxscore=0 impostorscore=0 adultscore=0 mlxlogscore=999
- clxscore=1015 priorityscore=1501 suspectscore=0 malwarescore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2212070174
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v4 1/4] ufs: core: Remove redundant wb check
+Content-Language: en-US
+To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1669550910-9672-1-git-send-email-Arthur.Simchaev@wdc.com>
+ <1669550910-9672-2-git-send-email-Arthur.Simchaev@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1669550910-9672-2-git-send-email-Arthur.Simchaev@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable MCQ in the Host Controller.
+On 11/27/22 04:08, Arthur Simchaev wrote:
+> We used to use the extended-feature field in the device descriptor,
+> as an indication that the device supports ufs2.2 or later.
+> Remove that as this check is specifically done few lines above.
+> 
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 4 ----
+>   1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 2dbe249..2e47c69 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -7608,10 +7608,6 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
+>   	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
+>   		goto wb_disabled;
+>   
+> -	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+> -	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+> -		goto wb_disabled;
+> -
+>   	ext_ufs_feature = get_unaligned_be32(desc_buf +
+>   					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Does this code really have to be removed? I see a check of the
+UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES flag above the removed
+code but no check of the descriptor size?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e42d642..7f0bc10 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8381,6 +8381,12 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
- 
- 	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
-+
-+	/* Select MCQ mode */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-+		      REG_UFS_MEM_CFG);
-+	hba->mcq_enabled = true;
-+
- 	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
- 		 hba->nr_hw_queues, hba->nr_queues[HCTX_TYPE_DEFAULT],
- 		 hba->nr_queues[HCTX_TYPE_READ], hba->nr_queues[HCTX_TYPE_POLL],
--- 
-2.7.4
+Thanks,
+
+Bart.
+
 
