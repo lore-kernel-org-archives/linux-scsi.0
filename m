@@ -2,56 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6489EC4708D
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Dec 2022 23:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFF7C4708D
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Dec 2022 23:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229763AbiLGXcB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Dec 2022 18:32:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44120 "EHLO
+        id S230166AbiLGXgq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Dec 2022 18:36:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbiLGXb7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2022 18:31:59 -0500
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4703189ACE;
-        Wed,  7 Dec 2022 15:31:59 -0800 (PST)
-Received: by mail-pl1-f182.google.com with SMTP id a9so18521332pld.7;
-        Wed, 07 Dec 2022 15:31:59 -0800 (PST)
+        with ESMTP id S230097AbiLGXgi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2022 18:36:38 -0500
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22A9F8AAE5;
+        Wed,  7 Dec 2022 15:36:38 -0800 (PST)
+Received: by mail-pj1-f44.google.com with SMTP id b11so3988pjp.2;
+        Wed, 07 Dec 2022 15:36:38 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=89G9yW94FuUwQeU9iD8DjLO4IBdrRmB5Y4jr3v6OvPE=;
-        b=kNT9lpBfpjCcEFhJwsk83HPsvwUa/0lwsP+9cRMEXXxjsPJ9V4hZ7FLoZh+v+C72nX
-         OkubANKQe41S7p4dA9s09fb+RSz4R11DCScpIOWEgA1iI578s3H6yMMKByVQZWIPb7vf
-         BtoBa+PR7J9g+djb7Ji+mFjvqCu2ONgLcNBeltruSKE31JWWDIVyW1siRCtuJfowDTgj
-         RIOxxyxdOCfg481U2m/OeblrGMPCEhHJJ7+Ug0ptjHLIvlrXc0DFqmBodPsdo+QzxZDW
-         5koZQL9mgaJjy3Dy/tE8oGet5ZHrcEC6qF7BQhORlQx7+NJDoP0PsCgFICnIQW4mL+kl
-         n0wQ==
-X-Gm-Message-State: ANoB5pn4p5Qw+HeRTbapJX4vR53FgEAVRXNNO1iLuGOtDHsZU0tCClDb
-        PH8468MHF8+0igYdy9qfQ8k=
-X-Google-Smtp-Source: AA0mqf7KoTUWiVuUbP5gv8s3h+lpEEwCmkTd4Dyp4WeSe4OOW3atoyCad2TF4EkuQ2QAMjTzFbPZOw==
-X-Received: by 2002:a17:90a:7444:b0:219:d415:d7cd with SMTP id o4-20020a17090a744400b00219d415d7cdmr17123960pjk.89.1670455918488;
-        Wed, 07 Dec 2022 15:31:58 -0800 (PST)
+        bh=28j9Rm4k0JPlYGD++Tk9QsIQ3Lzb/Vnp+mpd/Qgtdik=;
+        b=ivw5H2WF+ZPQJPqelUtIagF017Dj7WcOcJOj3sH+tIV6R2gTw0TkJhUfiEyA1H7Kcy
+         kCb0+OynL+4V2B3XAQmUXeHFuuVlqIqeeBrywyT0trJa3MRsyZm/rYl0pf4VzHr5FyDU
+         3ExDRLWJYb8zk5Y+mkiejWvvH89ykG+GCqoTGgl6hH+ibGSb6ErvQDzX93zy9tuWAsgI
+         Ld7MQxQgl+qqFAAefK1iiK0lTYk3VkDXiReYBtiY9JSYaWUfLX10Y93PrYZpmZFBp5/p
+         NlqVdloSWApRSY8xFcc73WQZ8HBO6FVm0vb7siTjq7wpPTCiGMIKNzwXmZkziQjvpcw4
+         OCUg==
+X-Gm-Message-State: ANoB5plCL+gJIKsThotGQnJNrnqvGj0I/S5Nraslgb/A1fF92G8olfWV
+        6NsBcZkuoc2pq+0E3lepigc=
+X-Google-Smtp-Source: AA0mqf6KLxkPVpHRY1K6gFdYuMgrL8YNpUQ8XPtzPz/k6OIcTjfnvQkwjMiMw2gxWXyiA5s/0s52zA==
+X-Received: by 2002:a17:90b:2642:b0:219:55d5:f30a with SMTP id pa2-20020a17090b264200b0021955d5f30amr43860335pjb.23.1670456197478;
+        Wed, 07 Dec 2022 15:36:37 -0800 (PST)
 Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id z14-20020a1709027e8e00b00188c04258c9sm15119330pla.52.2022.12.07.15.31.56
+        by smtp.gmail.com with ESMTPSA id p4-20020a654bc4000000b004774b5dc24dsm11717705pgr.12.2022.12.07.15.36.36
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Dec 2022 15:31:57 -0800 (PST)
-Message-ID: <b89f3337-0869-35a8-114d-85e1fd81eb2c@acm.org>
-Date:   Wed, 7 Dec 2022 15:31:55 -0800
+        Wed, 07 Dec 2022 15:36:36 -0800 (PST)
+Message-ID: <e99e929b-c26e-36eb-3254-d0ec58599e6a@acm.org>
+Date:   Wed, 7 Dec 2022 15:36:35 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.0
-Subject: Re: [PATCH v4 1/4] ufs: core: Remove redundant wb check
+Subject: Re: [PATCH v4 2/4] ufs: core: Remove redundant desc_size variable
+ from hba
 Content-Language: en-US
 To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         martin.petersen@oracle.com
 Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
 References: <1669550910-9672-1-git-send-email-Arthur.Simchaev@wdc.com>
- <1669550910-9672-2-git-send-email-Arthur.Simchaev@wdc.com>
+ <1669550910-9672-3-git-send-email-Arthur.Simchaev@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1669550910-9672-2-git-send-email-Arthur.Simchaev@wdc.com>
+In-Reply-To: <1669550910-9672-3-git-send-email-Arthur.Simchaev@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -59,37 +60,43 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/27/22 04:08, Arthur Simchaev wrote:
-> We used to use the extended-feature field in the device descriptor,
-> as an indication that the device supports ufs2.2 or later.
-> Remove that as this check is specifically done few lines above.
+> Always read the descriptor with QUERY_DESC_MAX_SIZE.
+> According to the spec, the device returns the actual size
 > 
 > Reviewed-by: Bean Huo <beanhuo@micron.com>
 > Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
 > ---
->   drivers/ufs/core/ufshcd.c | 4 ----
->   1 file changed, 4 deletions(-)
+>   drivers/ufs/core/ufshcd.c | 53 +++++++++++++----------------------------------
+>   include/ufs/ufs.h         |  1 -
+>   include/ufs/ufshcd.h      |  1 -
+>   3 files changed, 14 insertions(+), 41 deletions(-)
 > 
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 2dbe249..2e47c69 100644
+> index 2e47c69..70e96b6 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7608,10 +7608,6 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
->   	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
->   		goto wb_disabled;
->   
-> -	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
-> -	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
-> -		goto wb_disabled;
-> -
->   	ext_ufs_feature = get_unaligned_be32(desc_buf +
->   					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+> @@ -3377,28 +3377,11 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+>   void ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
+>   				  int *desc_len)
+>   {
+> -	if (desc_id >= QUERY_DESC_IDN_MAX || desc_id == QUERY_DESC_IDN_RFU_0 ||
+> -	    desc_id == QUERY_DESC_IDN_RFU_1)
+> -		*desc_len = 0;
+> -	else
+> -		*desc_len = hba->desc_size[desc_id];
+> +	/*Always returns QUERY_DESC_MAX_SIZE*/
+> +	*desc_len = QUERY_DESC_MAX_SIZE;
+>   }
+>   EXPORT_SYMBOL(ufshcd_map_desc_id_to_length);
 
-Does this code really have to be removed? I see a check of the
-UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES flag above the removed
-code but no check of the descriptor size?
+Comments should explain something that is nontrivial instead of duplicating the
+code. Additionally, this change makes ufshcd_map_desc_id_to_length() too short
+too keep it as a function. Please remove this function entirely and insert the
+following code into the callers of this function:
+
+desc_len = QUERY_DESC_MAX_SIZE
 
 Thanks,
 
 Bart.
-
 
