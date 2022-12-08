@@ -2,98 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40B6AC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 08:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C5FC3A5A7
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 08:22:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229828AbiLHIVZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 03:21:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59408 "EHLO
+        id S229544AbiLHIWk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 03:22:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229820AbiLHIVY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 03:21:24 -0500
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B8F759178;
-        Thu,  8 Dec 2022 00:21:23 -0800 (PST)
-Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4NSRv55mX6z4xVnf;
-        Thu,  8 Dec 2022 16:21:21 +0800 (CST)
-Received: from xaxapp03.zte.com.cn ([10.88.40.52])
-        by mse-fl1.zte.com.cn with SMTP id 2B88LGWi014440;
-        Thu, 8 Dec 2022 16:21:16 +0800 (+08)
-        (envelope-from ye.xingchen@zte.com.cn)
-Received: from mapi (xaxapp01[null])
-        by mapi (Zmail) with MAPI id mid31;
-        Thu, 8 Dec 2022 16:21:18 +0800 (CST)
-Date:   Thu, 8 Dec 2022 16:21:18 +0800 (CST)
-X-Zmail-TransId: 2af963919e7effffffff8cb47df7
-X-Mailer: Zmail v1.0
-Message-ID: <202212081621189260759@zte.com.cn>
-Mime-Version: 1.0
-From:   <ye.xingchen@zte.com.cn>
-To:     <martin.petersen@oracle.com>
-Cc:     <ketan.mukadam@broadcom.com>, <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIXSBzY3NpOiBiZTJpc2NzaTogQ29udmVydCB0byB1c2Ugc3lzZnNfZW1pdF9hdCgpIEFQSQ==?=
-Content-Type: text/plain;
-        charset="UTF-8"
-X-MAIL: mse-fl1.zte.com.cn 2B88LGWi014440
-X-Fangmail-Gw-Spam-Type: 0
-X-FangMail-Miltered: at cgslv5.04-192.168.250.138.novalocal with ID 63919E81.000 by FangMail milter!
-X-FangMail-Envelope: 1670487681/4NSRv55mX6z4xVnf/63919E81.000/10.5.228.132/[10.5.228.132]/mse-fl1.zte.com.cn/<ye.xingchen@zte.com.cn>
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 63919E81.000/4NSRv55mX6z4xVnf
+        with ESMTP id S229543AbiLHIWi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 03:22:38 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2683AF78
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 00:22:36 -0800 (PST)
+Received: from dggpeml500019.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NSRvW4l6pzmWLC;
+        Thu,  8 Dec 2022 16:21:43 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by dggpeml500019.china.huawei.com
+ (7.185.36.137) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 8 Dec
+ 2022 16:22:34 +0800
+From:   Wu Bo <wubo40@huawei.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <qiuchangqi.qiu@huawei.com>, <wubo40@huawei.com>
+Subject: [PATCH] scsi: core: Add a helper for retry scsi cmnd
+Date:   Thu, 8 Dec 2022 17:03:24 +0800
+Message-ID: <1670490204-10239-1-git-send-email-wubo40@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.27]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpeml500019.china.huawei.com (7.185.36.137)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ye xingchen <ye.xingchen@zte.com.cn>
+From: Wu Bo <wubo40@huawei.com>
 
-Follow the advice of the Documentation/filesystems/sysfs.rst and show()
-should only use sysfs_emit() or sysfs_emit_at() when formatting the
-value to be returned to user space.
+Without any functional modifications,
+just adding a helper function for retry scsi cmnd.
 
-Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+Signed-off-by: Wu Bo <wubo40@huawei.com>
 ---
- drivers/scsi/be2iscsi/be_mgmt.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_error.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 4e899ec1477d..bf39140250bc 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1185,12 +1185,10 @@ beiscsi_active_session_disp(struct device *dev, struct device_attribute *attr,
- 		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
- 			avlbl_cids = BEISCSI_ULP_AVLBL_CID(phba, ulp_num);
- 			total_cids = BEISCSI_GET_CID_COUNT(phba, ulp_num);
--			len += scnprintf(buf+len, PAGE_SIZE - len,
--					 "ULP%d : %d\n", ulp_num,
--					 (total_cids - avlbl_cids));
-+			len += sysfs_emit_at(buf, len, "ULP%d : %d\n",
-+					     ulp_num, (total_cids - avlbl_cids));
- 		} else
--			len += scnprintf(buf+len, PAGE_SIZE - len,
--					 "ULP%d : %d\n", ulp_num, 0);
-+			len += sysfs_emit_at(buf, len, "ULP%d : %d\n", ulp_num, 0);
- 	}
-
- 	return len;
-@@ -1215,12 +1213,10 @@ beiscsi_free_session_disp(struct device *dev, struct device_attribute *attr,
-
- 	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
- 		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported))
--			len += scnprintf(buf+len, PAGE_SIZE - len,
--					 "ULP%d : %d\n", ulp_num,
--					 BEISCSI_ULP_AVLBL_CID(phba, ulp_num));
-+			len += sysfs_emit_at(buf, len, "ULP%d : %d\n", ulp_num,
-+					     BEISCSI_ULP_AVLBL_CID(phba, ulp_num));
- 		else
--			len += scnprintf(buf+len, PAGE_SIZE - len,
--					 "ULP%d : %d\n", ulp_num, 0);
-+			len += sysfs_emit_at(buf, len, "ULP%d : %d\n", ulp_num, 0);
- 	}
-
- 	return len;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 6995c8979230..8fde072192dd 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -133,6 +133,16 @@ static bool scsi_eh_should_retry_cmd(struct scsi_cmnd *cmd)
+ 	return true;
+ }
+ 
++static bool scsi_need_retry_cmd(struct scsi_cmnd *scmd)
++{
++	if (!scsi_noretry_cmd(scmd) &&
++	    scsi_cmd_retry_allowed(scmd) &&
++	    scsi_eh_should_retry_cmd(scmd))
++		return true;
++
++	return false;
++}
++
+ /**
+  * scmd_eh_abort_handler - Handle command aborts
+  * @work:	command to be aborted.
+@@ -195,9 +205,7 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	if (!scsi_noretry_cmd(scmd) &&
+-	    scsi_cmd_retry_allowed(scmd) &&
+-	    scsi_eh_should_retry_cmd(scmd)) {
++	if (scsi_need_retry_cmd(scmd)) {
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			scmd_printk(KERN_WARNING, scmd,
+ 				    "retry aborted command\n"));
+@@ -2149,8 +2157,7 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+ 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+ 		list_del_init(&scmd->eh_entry);
+ 		if (scsi_device_online(scmd->device) &&
+-		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
+-			scsi_eh_should_retry_cmd(scmd)) {
++		    scsi_need_retry_cmd(scmd)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+ 					     "%s: flush retry cmd\n",
 -- 
-2.25.1
+2.33.0
+
