@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E705DC63713
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCBBC63715
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230240AbiLHLDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:03:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35658 "EHLO
+        id S230260AbiLHLDw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:03:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230367AbiLHLDE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:03:04 -0500
+        with ESMTP id S230284AbiLHLCx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:02:53 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A56A6DCE0;
-        Thu,  8 Dec 2022 03:01:25 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA3865BD66;
+        Thu,  8 Dec 2022 03:01:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497285; x=1702033285;
+  t=1670497276; x=1702033276;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=TCe6lErYETiNPEbs2mrPRmtzoW+z5YHpIsqyXmY7qCw=;
-  b=NAWiprYMgEwgP6iAHwCILp//eN9dBbuE/Fohk8QCx2zp07gKFKCHVYKJ
-   aDWJgyN67ThHxStMZorQWIDPIQZH829y1ZeR18K5wRCMEu13KDbH8c/NF
-   62ULmDiSxbA3Vk9AbA2ZyPQjrJ5tJ7xNBDJOJL+V+tzthZo7y+3nnk9Ob
-   G5ZIRM7DAQOAaVKcyR5L2PqyjdBu1s0Wep+/3eBTRHjOZru3HLnDdDuGK
-   mLogzSpH1UZBPHHZ1ysDwaAItoJcIYq1ONxsA7vsMW9+3dc/6iWvm4rwg
-   IuoSL4ruwZdp+EWnWMPqOf3+QvH57wFFTTgQv8kbyOlX32RcM7LUIN2+7
-   Q==;
+  bh=fkMDbHJKptb+eHoWQREDqIKMzmlWlbmdh50ygb3ZD+w=;
+  b=dRQVTaZ1EesjFjoqAvjNVXAcoEJcGbbNd4DeburTqEBi7mkbfgiRgcku
+   nEvumr1j+0lUiZbWAyJ3fix8kzw3wcx04I6lXDywroE4y13Q3jta2EZjy
+   sczA2yCilm+VwaqvGJ9oM2vIJaW5X3p4aReOSentsqIzQLoLS5qLgMwux
+   lvx08tV+Egsn261frgZFXMPdokuzZJhUJLOTWRLiFxzk0BU/j4BlCxvyv
+   UibxkFbOnd7ulFs1yfZGidiE7duMv25c7s+2W0Vjv6qIEbM58fohJvwym
+   udu6ISPCYJXOxPHOzcHWVv5m4jEo949FrY+DN/tkXk79koZI99ljIgDml
+   A==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333412"
+   d="scan'208";a="223333401"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:25 +0800
-IronPort-SDR: X0nX0bQfl5ZPhds/evxiAb99JR/YPtWPaFXn//w9eQRJVVT/GQvVN2RrRcLojFYKvM4YIKT6k3
- mIEFeJfKaMAarVfmJEo3uss4saGgy26VS5BWUMucEqplXxJ5OENhwn6xeI6oJJIxwu4bwpfhwi
- kQINM/CcAH2GSIEV8lu9OQQMXbNmdbYU51chKciJguq2SyFBQ3MwXbfKIdSmaSJSHfEgIUkilf
- bu9iSggcWug73hn+Z5VqiY6prh3chWd5BonJpij/yl6mM45+iC0m+LdktJwmkqt3MIFlq4rQtH
- n7Y=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:16 +0800
+IronPort-SDR: ZBokXB94yfwe0hU26qR8hBoBhrFxVNfibaMDPzL4Vh98DYJNcfFdK4ZEH6RgvwpXc3HvnUQJCZ
+ PkaTXoBLpVSwmGZtrCTcgEZXcG1JwSLkSPPjHufmQQKjNRmae4r2iuVs4qzwUgRIsIMSSbvgsS
+ tSgSwNPdwfqxw504l8eu5AxAr2A3St+pEt6YHrfvLXxtuE1ziK1fd+C5kY3CJuZc6cNw4Wj//0
+ ZemBaD/rwxy2D6UXNDfozBbUKq0A97FneXm21yu/fMRQ6YTz/HLba2mqYdEzoMnHK2a1Nax+V1
+ nDk=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:10 -0800
-IronPort-SDR: OGMJC0vRM5wxgdU/5r//pqFEMLZ101vSK5XHhfWRJG+3Du5AQJpnjwNiv1CXd/GA5Mty/EFfOk
- 2FZ3wlQaq8nE1FVTPpyB8GgiNosmbh2oD8t0a6xcum6JBKKoGc2q7o1QjbwI7TSvjgLP/btBgU
- YVfkXW1JSiRuQx/GALskhPthLaCOgqMOEK5M5mtuHfH4EqeWI7SbdjxKje+Ul+t0cXPg4Yuvh5
- Y45kdThB9aeGCr3+r9k+GLgG8po0iELEr0OBcVB2fAR3mflkKR85E0Yu+0G45z2ZjgisRQmIBu
- czY=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:01 -0800
+IronPort-SDR: 5f6iq0uF0+5KUFxVzbvJEOSn9BUHltZIQiA9/o3Hata+JGC6s24sTmVidgNLX59xP3rIMtb9U7
+ SdudTsfEIyb+AFKwgJOPHN0cRgzalM2I/lKviYg/TlPZTIwQf58FLmc6Af8pTWEzrsIavN+qjT
+ BOxDuNpg7zmkPzcoQCXGravX/odHCINJ6PwTYu+qCs9vHlf4HP1k22r507Y6MImlTI/SGyPVpp
+ Ua+RY465dfudAyz2VgzkYQE3VtZgU+ejyZYB5oacRwMaX8CuPbkCFFYDkbwLwbDYXDxSuxujc2
+ BV8=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:24 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:15 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH 18/25] ata: libata-scsi: add support for CDL pages mode sense
-Date:   Thu,  8 Dec 2022 11:59:34 +0100
-Message-Id: <20221208105947.2399894-19-niklas.cassel@wdc.com>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-block@vger.kernel.org
+Subject: [PATCH 14/25] block: introduce duration-limits priority class
+Date:   Thu,  8 Dec 2022 11:59:30 +0100
+Message-Id: <20221208105947.2399894-15-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
@@ -65,246 +66,153 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Modify ata_scsiop_mode_sense() and ata_msense_control() to support mode
-sense access to the T2A and T2B sub-pages of the control mode page.
-ata_msense_control() is modified to support sub-pages. The T2A sub-page
-is generated using the read descriptors of the command duration limits
-log page 18h. The T2B sub-page is generated using the write descriptors
-of the same log page. With the addition of these sub-pages, getting all
-sub-pages of the control mode page is also supported by increasing the
-value of ATA_SCSI_RBUF_SIZE from 576B up to 2048B to ensure that all
-sub-pages fit in the fill buffer.
+Introduce the IOPRIO_CLASS_DL priority class to indicate that IOs should
+be executed using duration-limits targets. The duration target to apply
+to a command is indicated using the priority level. Up to 8 levels are
+supported, with level 0 indiating "no limit".
 
-Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+This priority class has effect only if the target device supports the
+command duration limits feature and this feature is enabled by the user.
+In BFQ and mq-deadline, all requests with this new priority class are
+handled using the highest priority class RT and priority level 0.
+
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/libata-scsi.c | 150 ++++++++++++++++++++++++++++++++------
- 1 file changed, 128 insertions(+), 22 deletions(-)
+ block/bfq-iosched.c         | 10 ++++++++++
+ block/blk-ioprio.c          |  3 +++
+ block/ioprio.c              |  3 ++-
+ block/mq-deadline.c         |  1 +
+ include/linux/ioprio.h      |  2 +-
+ include/uapi/linux/ioprio.h |  7 +++++++
+ 6 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2500f3ff24a5..456c4e553a76 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -37,7 +37,7 @@
- #include "libata.h"
- #include "libata-transport.h"
- 
--#define ATA_SCSI_RBUF_SIZE	576
-+#define ATA_SCSI_RBUF_SIZE	2048
- 
- static DEFINE_SPINLOCK(ata_scsi_rbuf_lock);
- static u8 ata_scsi_rbuf[ATA_SCSI_RBUF_SIZE];
-@@ -55,6 +55,9 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
- #define CONTROL_MPAGE_LEN		12
- #define ALL_MPAGES			0x3f
- #define ALL_SUB_MPAGES			0xff
-+#define CDL_T2A_SUB_MPAGE		0x07
-+#define CDL_T2B_SUB_MPAGE		0x08
-+#define CDL_T2_SUB_MPAGE_LEN		232
- 
- static const u8 def_rw_recovery_mpage[RW_RECOVERY_MPAGE_LEN] = {
- 	RW_RECOVERY_MPAGE,
-@@ -2199,10 +2202,98 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
- 	return sizeof(def_cache_mpage);
- }
- 
-+/*
-+ * Simulate MODE SENSE control mode page, sub-page 0.
-+ */
-+static unsigned int ata_msense_control_spg0(struct ata_device *dev, u8 *buf,
-+					    bool changeable)
-+{
-+	modecpy(buf, def_control_mpage,
-+		sizeof(def_control_mpage), changeable);
-+	if (changeable) {
-+		/* ata_mselect_control() */
-+		buf[2] |= (1 << 2);
-+	} else {
-+		bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
-+
-+		/* descriptor format sense data */
-+		buf[2] |= (d_sense << 2);
-+	}
-+
-+	return sizeof(def_control_mpage);
-+}
-+
-+/*
-+ * Translate an ATA duration limit in microseconds to a SCSI duration limit
-+ * using the t2cdlunits 0xa (10ms). Since the SCSI duration limits are 2-bytes
-+ * only, take care of overflows.
-+ */
-+static inline u16 ata_xlat_cdl_limit(u8 *buf)
-+{
-+	u32 limit = get_unaligned_le32(buf);
-+
-+	return min_t(u32, limit / 10000, 65535);
-+}
-+
-+/*
-+ * Simulate MODE SENSE control mode page, sub-pages 07h and 08h
-+ * (command duration limits T2A and T2B mode pages).
-+ */
-+static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
-+					     u8 spg)
-+{
-+	u8 *b, *cdl = dev->cdl, *desc;
-+	u32 policy;
-+	int i;
-+
-+	/*
-+	 * Fill the subpage. The first four bytes of the T2A/T2B mode pages
-+	 * are a header. The PAGE LENGTH field is the size of the page
-+	 * excluding the header.
-+	 */
-+	buf[0] = CONTROL_MPAGE;
-+	buf[1] = spg;
-+	put_unaligned_be16(CDL_T2_SUB_MPAGE_LEN - 4, &buf[2]);
-+	if (spg == CDL_T2A_SUB_MPAGE) {
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index a72304c728fc..62cf7fa7e0cf 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -5384,6 +5384,14 @@ bfq_set_next_ioprio_data(struct bfq_queue *bfqq, struct bfq_io_cq *bic)
+ 		bfqq->new_ioprio_class = IOPRIO_CLASS_IDLE;
+ 		bfqq->new_ioprio = 7;
+ 		break;
++	case IOPRIO_CLASS_DL:
 +		/*
-+		 * Read descriptors map to the T2A page:
-+		 * set perf_vs_duration_guidleine.
++		 * For the duration-limits class, we want the disk to do the
++		 * scheduling. So map all levels to the highest RT level.
 +		 */
-+		buf[7] = (cdl[0] & 0x03) << 4;
-+		desc = cdl + 64;
-+	} else {
-+		/* Write descriptors map to the T2B page */
-+		desc = cdl + 288;
-+	}
-+
-+	/* Fill the T2 page descriptors */
-+	b = &buf[8];
-+	policy = get_unaligned_le32(&cdl[0]);
-+	for (i = 0; i < 7; i++, b += 32, desc += 32) {
-+		/* t2cdlunits: fixed to 10ms */
-+		b[0] = 0x0a;
-+
-+		/* Max inactive time and its policy */
-+		put_unaligned_be16(ata_xlat_cdl_limit(&desc[8]), &b[2]);
-+		b[6] = ((policy >> 8) & 0x0f) << 4;
-+
-+		/* Max active time and its policy */
-+		put_unaligned_be16(ata_xlat_cdl_limit(&desc[4]), &b[4]);
-+		b[6] |= (policy >> 4) & 0x0f;
-+
-+		/* Command duration guideline and its policy */
-+		put_unaligned_be16(ata_xlat_cdl_limit(&desc[16]), &b[10]);
-+		b[14] = policy & 0x0f;
-+	}
-+
-+	return CDL_T2_SUB_MPAGE_LEN;
-+}
-+
- /**
-  *	ata_msense_control - Simulate MODE SENSE control mode page
-  *	@dev: ATA device of interest
-  *	@buf: output buffer
-+ *	@spg: sub-page code
-  *	@changeable: whether changeable parameters are requested
-  *
-  *	Generate a generic MODE SENSE control mode page.
-@@ -2211,17 +2302,24 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
-  *	None.
-  */
- static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
--					bool changeable)
-+				       u8 spg, bool changeable)
- {
--	modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
--	if (changeable) {
--		buf[2] |= (1 << 2);	/* ata_mselect_control() */
--	} else {
--		bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
--
--		buf[2] |= (d_sense << 2);	/* descriptor format sense data */
-+	unsigned int n;
-+
-+	switch (spg) {
-+	case 0:
-+		return ata_msense_control_spg0(dev, buf, changeable);
-+	case CDL_T2A_SUB_MPAGE:
-+	case CDL_T2B_SUB_MPAGE:
-+		return ata_msense_control_spgt2(dev, buf, spg);
-+	case ALL_SUB_MPAGES:
-+		n = ata_msense_control_spg0(dev, buf, changeable);
-+		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
-+		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
-+		return n;
-+	default:
-+		return 0;
++		bfqq->new_ioprio = 0;
++		bfqq->new_ioprio_class = IOPRIO_CLASS_RT;
++		break;
  	}
--	return sizeof(def_control_mpage);
+ 
+ 	if (bfqq->new_ioprio >= IOPRIO_NR_LEVELS) {
+@@ -5510,6 +5518,8 @@ static struct bfq_queue **bfq_async_queue_prio(struct bfq_data *bfqd,
+ 		return &bfqg->async_bfqq[1][ioprio];
+ 	case IOPRIO_CLASS_IDLE:
+ 		return &bfqg->async_idle_bfqq;
++	case IOPRIO_CLASS_DL:
++		return &bfqg->async_bfqq[0][0];
+ 	default:
+ 		return NULL;
+ 	}
+diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+index 8bb6b8eba4ce..dfb5c3f447f4 100644
+--- a/block/blk-ioprio.c
++++ b/block/blk-ioprio.c
+@@ -27,6 +27,7 @@
+  * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+  *		IOPRIO_CLASS_BE.
+  * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
++ * @POLICY_ALL_TO_DL: change the I/O priority class into IOPRIO_CLASS_DL.
+  *
+  * See also <linux/ioprio.h>.
+  */
+@@ -35,6 +36,7 @@ enum prio_policy {
+ 	POLICY_NONE_TO_RT	= 1,
+ 	POLICY_RESTRICT_TO_BE	= 2,
+ 	POLICY_ALL_TO_IDLE	= 3,
++	POLICY_ALL_TO_DL	= 4,
+ };
+ 
+ static const char *policy_name[] = {
+@@ -42,6 +44,7 @@ static const char *policy_name[] = {
+ 	[POLICY_NONE_TO_RT]	= "none-to-rt",
+ 	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
+ 	[POLICY_ALL_TO_IDLE]	= "idle",
++	[POLICY_ALL_TO_DL]	= "duration-limits",
+ };
+ 
+ static struct blkcg_policy ioprio_policy;
+diff --git a/block/ioprio.c b/block/ioprio.c
+index 32a456b45804..1b3a9da82597 100644
+--- a/block/ioprio.c
++++ b/block/ioprio.c
+@@ -37,6 +37,7 @@ int ioprio_check_cap(int ioprio)
+ 
+ 	switch (class) {
+ 		case IOPRIO_CLASS_RT:
++		case IOPRIO_CLASS_DL:
+ 			/*
+ 			 * Originally this only checked for CAP_SYS_ADMIN,
+ 			 * which was implicitly allowed for pid 0 by security
+@@ -47,7 +48,7 @@ int ioprio_check_cap(int ioprio)
+ 			if (!capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_NICE))
+ 				return -EPERM;
+ 			fallthrough;
+-			/* rt has prio field too */
++			/* RT and DL have prio field too */
+ 		case IOPRIO_CLASS_BE:
+ 			if (data >= IOPRIO_NR_LEVELS || data < 0)
+ 				return -EINVAL;
+diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+index f10c2a0d18d4..526d0ea4dbf9 100644
+--- a/block/mq-deadline.c
++++ b/block/mq-deadline.c
+@@ -113,6 +113,7 @@ static const enum dd_prio ioprio_class_to_prio[] = {
+ 	[IOPRIO_CLASS_RT]	= DD_RT_PRIO,
+ 	[IOPRIO_CLASS_BE]	= DD_BE_PRIO,
+ 	[IOPRIO_CLASS_IDLE]	= DD_IDLE_PRIO,
++	[IOPRIO_CLASS_DL]	= DD_RT_PRIO,
+ };
+ 
+ static inline struct rb_root *
+diff --git a/include/linux/ioprio.h b/include/linux/ioprio.h
+index 7578d4f6a969..2f3fc2fbd668 100644
+--- a/include/linux/ioprio.h
++++ b/include/linux/ioprio.h
+@@ -20,7 +20,7 @@ static inline bool ioprio_valid(unsigned short ioprio)
+ {
+ 	unsigned short class = IOPRIO_PRIO_CLASS(ioprio);
+ 
+-	return class > IOPRIO_CLASS_NONE && class <= IOPRIO_CLASS_IDLE;
++	return class > IOPRIO_CLASS_NONE && class <= IOPRIO_CLASS_DL;
  }
  
- /**
-@@ -2318,13 +2416,24 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
+ /*
+diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
+index f70f2596a6bf..15908b9e9d8c 100644
+--- a/include/uapi/linux/ioprio.h
++++ b/include/uapi/linux/ioprio.h
+@@ -29,6 +29,7 @@ enum {
+ 	IOPRIO_CLASS_RT,
+ 	IOPRIO_CLASS_BE,
+ 	IOPRIO_CLASS_IDLE,
++	IOPRIO_CLASS_DL,
+ };
  
- 	pg = scsicmd[2] & 0x3f;
- 	spg = scsicmd[3];
+ /*
+@@ -37,6 +38,12 @@ enum {
+ #define IOPRIO_NR_LEVELS	8
+ #define IOPRIO_BE_NR		IOPRIO_NR_LEVELS
+ 
++/*
++ * The Duration limits class allows 8 levels: level 0 for "no limit" and levels
++ * 1 to 7, each corresponding to a read or write limit descriptor.
++ */
++#define IOPRIO_DL_NR_LEVELS	8
 +
- 	/*
--	 * No mode subpages supported (yet) but asking for _all_
--	 * subpages may be valid
-+	 * Supported subpages: all subpages and sub-pages 07h and 08h of
-+	 * the control page.
- 	 */
--	if (spg && (spg != ALL_SUB_MPAGES)) {
--		fp = 3;
--		goto invalid_fld;
-+	if (spg) {
-+		switch (spg) {
-+		case ALL_SUB_MPAGES:
-+			break;
-+		case CDL_T2A_SUB_MPAGE:
-+		case CDL_T2B_SUB_MPAGE:
-+			if (dev->flags & ATA_DFLAG_CDL && pg == CONTROL_MPAGE)
-+				break;
-+			fallthrough;
-+		default:
-+			fp = 3;
-+			goto invalid_fld;
-+		}
- 	}
- 
- 	switch(pg) {
-@@ -2337,13 +2446,13 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 		break;
- 
- 	case CONTROL_MPAGE:
--		p += ata_msense_control(args->dev, p, page_control == 1);
-+		p += ata_msense_control(args->dev, p, spg, page_control == 1);
- 		break;
- 
- 	case ALL_MPAGES:
- 		p += ata_msense_rw_recovery(p, page_control == 1);
- 		p += ata_msense_caching(args->id, p, page_control == 1);
--		p += ata_msense_control(args->dev, p, page_control == 1);
-+		p += ata_msense_control(args->dev, p, spg, page_control == 1);
- 		break;
- 
- 	default:		/* invalid page code */
-@@ -2364,10 +2473,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 			memcpy(rbuf + 4, sat_blk_desc, sizeof(sat_blk_desc));
- 		}
- 	} else {
--		unsigned int output_len = p - rbuf - 2;
--
--		rbuf[0] = output_len >> 8;
--		rbuf[1] = output_len;
-+		put_unaligned_be16(p - rbuf - 2, &rbuf[0]);
- 		rbuf[3] |= dpofua;
- 		if (ebd) {
- 			rbuf[7] = sizeof(sat_blk_desc);
-@@ -3666,7 +3772,7 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 	/*
- 	 * Check that read-only bits are not modified.
- 	 */
--	ata_msense_control(dev, mpage, false);
-+	ata_msense_control_spg0(dev, mpage, false);
- 	for (i = 0; i < CONTROL_MPAGE_LEN - 2; i++) {
- 		if (i == 0)
- 			continue;
+ enum {
+ 	IOPRIO_WHO_PROCESS = 1,
+ 	IOPRIO_WHO_PGRP,
 -- 
 2.38.1
 
