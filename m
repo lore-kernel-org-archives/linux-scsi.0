@@ -2,57 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66C08C63705
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E458C4332F
 	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:05:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229758AbiLHLEw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:04:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40430 "EHLO
+        id S229989AbiLHLEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:04:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229941AbiLHLDa (ORCPT
+        with ESMTP id S229929AbiLHLDa (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:03:30 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D63ED8932F;
-        Thu,  8 Dec 2022 03:01:43 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEDBF89326;
+        Thu,  8 Dec 2022 03:01:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497303; x=1702033303;
+  t=1670497301; x=1702033301;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=NCnbh+fwg8DrIT+FYlYEQD8y0Pfiz4OuOe484jfsh6I=;
-  b=WF7M/M0gZYeL85DrZtTqCfCS6zkX/+m1a+msuXiVf8QOClDHFkDREDPJ
-   Rg1QZZy89VAuhlOntB7KooyI8ORtmKhEuz9G63FGEaKBxHFkFISUy18wW
-   QqdwUPt3yl/yePjty68Ku9HuTgdscq94KZtFSmLt13ehMOj4I//jA9dUC
-   FYarKEGn8QAr2+SPWRa3C+H1Dpk2i6fUcb+GEUQJnLWe5MsBzFN3D82xN
-   xO7bFVIMqt+CjWbHZTCQGnAYzk/fLO/JTkVczAn5aJFxXYyoNOx7dltQB
-   WREEfVF5a8He+ETJvrQkziWRXYrSeZ66k0twQmGg99KFA/HWxaBU3GvX7
-   g==;
+  bh=FrYoQibYnNJyG9v24OMUbrROx7H4s/1w3/ha5UWQEyI=;
+  b=bQp4Q5bYCIHecLZoavWI3dE0M5sTIjqievJK7DOiuWptewLwv7jJxWw7
+   ebn1Z+pK3ILrY6lTGBAz02iwOisZxssEyWFPbZY1sJ3W355Sif/rTXxK7
+   P/NKiT7NJ9XNxoqcsX3BsJWXNjh1QN4G9subfPYVfjiBZ3HOKz+tV5qqt
+   UABc38VzY++gLkTUAwbsRIKRQd8QDZT3V0Xy956aE4FTPtW1hjvliz3Lg
+   +v7McPkAZnHdiZ1GXTHj5uAVs3X5Z+8gATDY5K9JtMa6e6GgbVsDfYrDT
+   yUFGiC5mk1dA5h2TTb5+gDes0++ehtOKggz0v2YhH3dFmmt3UAYRF6mGN
+   w==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333440"
+   d="scan'208";a="223333437"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:43 +0800
-IronPort-SDR: iL4Xm1jd1bTg2a5A72vHqi8XeBtI03RDF+a46ZQnPaY+pk4a3XhQCJtgiZA2OLTks5kafZXKKU
- 7vGglxgSzpWdr7aHaOREUygpX976NJwpPG5CnI7/1Hsa79dcwH3svQZ0D/JjxuJCoq0f3grRjk
- E5ZlQiXQgcs0IXQenoM8SEgr4RgUMRWSqI4Tz9JqxwnRi5VX/M8pAXfWruF9Y20CZl41rVL+sc
- vZCzFt7ICGEL6ZvT7SoOz3m7BLzcXK1iByoFtblD4XcstAnMZB83ZyIOfg7+571dqwYC+fZbX6
- tEU=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:41 +0800
+IronPort-SDR: 9NB2tcLdHLGPgIpGOiAYLCmu/J1Coa0pHW3yhpZQpFvI9CX4ODosnFWVeyudWNOo15mxfQT680
+ JC9x8tJYLUwWVWqxuwHzPOWhnZonjlapew6u+16L33gOCawgDdt1Fd38LAtthUocpWtfsGMFR8
+ kheZ4DgmiPouXLfYeOZ+jV1Foq5g87p4FwajNJcOybvh+Q64fSO/4uyUIerLUYU64oDxebdDw8
+ DQjLnnYX6cV/b5M15A3UeVxnjMZ0wSOKNEUD1q4/MrehOh/anoEJ+i0G/BaZvQEMUR5+qJH7L7
+ RIo=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:28 -0800
-IronPort-SDR: lH0I2LL8Td+V8zpKZDvQN2JXyuFfwFJ/WJwJHI4g3oCU4OlnnIcGij+ff7/scdguZZUCNa/fV3
- oUsBUre7SroxLel2sEwxi1V83Jg+lIsxL4spr3yVrSdv0H1Zav9wKxN4Sj7goW2Uia4TE8d8vC
- sqcT0kHSamh1GII5KG6vz1/0ZHywU5/cpRqbSiVPJ4qpb1lhSq6plpfnDdWuweLeloSNKC4mQZ
- YqXRhfXkPvWAetm/yNR1oTJkSOopt0hL53YsbYGChTzrBaJGaNYg2tCMKqtr9r5o8oI61YS8n/
- gkA=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:26 -0800
+IronPort-SDR: IybSnvqeacTmkLVsHZLtNuEwmHdoXhlR2S5qcFn6Ru/1TqHN6CXFiP5BL2Fzzd4tuhuX6audce
+ 4c405FAdLjqwFits9H2xkN8vlrtU8EHKZ6cDm9b3xDY0DgAKyZN+uQMuM6Y3c1COMloOZy0wyT
+ ci6lCoAEJp4LmqShTJaEvJLAdCHb0UM9oi0/ajXB6mNOrgucnJwhi7mB8fmy12UIoHsxxAHn+c
+ 7GKLBtQKUP/s0bM2bHOPMxjGWKBK8khm0pQ6OROl3+CipDdLXaO1OhPv0BUc/VFXUnf54JzEa3
+ 510=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:43 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:41 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     linux-kernel@vger.kernel.org
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH 25/25] Documentation: sysfs-block-device: document command duration limits
-Date:   Thu,  8 Dec 2022 11:59:41 +0100
-Message-Id: <20221208105947.2399894-26-niklas.cassel@wdc.com>
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH 24/25] ata: libata: handle completion of CDL commands using policy 0xD
+Date:   Thu,  8 Dec 2022 11:59:40 +0100
+Message-Id: <20221208105947.2399894-25-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
@@ -62,168 +63,501 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+A CDL timeout for policy 0xF is defined as a NCQ error, just with a CDL
+specific sk/asc/ascq in the sense data. Therefore, the existing code in
+libata does not need to be modified to handle a policy 0xF CDL timeout.
 
-Document ABI/testing/sysfs-block-device the sysfs attributes present
-under /sys/block/*/device/duration_limits for ATA and SCSI devices
-supporting the command duration limits feature.
+For Command Duration Limits policy 0xD:
+The device shall complete the command without error with the additional
+sense code set to DATA CURRENTLY UNAVAILABLE.
 
+Since a CDL timeout for policy 0xD is not an error, we cannot use the
+NCQ Command Error log (10h).
+
+Instead, we need to read the Sense Data for Successful NCQ Commands
+log (0Fh).
+
+In the success case, just like in the error case, we cannot simply read
+a log page from the interrupt handler itself, since reading a log page
+involves sending a READ LOG DMA EXT or READ LOG EXT command.
+
+Therefore, we add a new EH action ATA_EH_GET_SUCCESS_SENSE.
+When a command completes without error, and when the ATA_SENSE bit
+is set, this new action is set as pending, and EH is scheduled.
+
+This way, similar to the NCQ error case, the log page will be read
+from EH context.
+
+An alternative would have been to add a new kthread or workqueue to
+handle this. However, extending EH can be done with minimal changes
+and avoids the need to synchronize a new kthread/workqueue with EH.
+
+Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- Documentation/ABI/testing/sysfs-block-device | 143 +++++++++++++++++++
- 1 file changed, 143 insertions(+)
+ drivers/ata/libata-core.c |  82 ++++++++++++++++++++++++++++-
+ drivers/ata/libata-eh.c   | 108 +++++++++++++++++++++++++++++++++++++-
+ drivers/ata/libata-sata.c |  89 +++++++++++++++++++++++++++++++
+ include/linux/ata.h       |   3 ++
+ include/linux/libata.h    |  11 +++-
+ 5 files changed, 289 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
-index 7ac7b19b2f72..44841f91c69b 100644
---- a/Documentation/ABI/testing/sysfs-block-device
-+++ b/Documentation/ABI/testing/sysfs-block-device
-@@ -95,3 +95,146 @@ Description:
- 		This file does not exist if the HBA driver does not implement
- 		support for the SATA NCQ priority feature, regardless of the
- 		device support for this feature.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c79ee38dc594..78f586a21528 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -683,8 +683,12 @@ static inline void ata_set_tf_cdl(struct ata_queued_cmd *qc, int ioprio)
+ 	else
+ 		tf->feature |= cdl;
+ 
+-	/* Mark this command as having a CDL */
+-	qc->flags |= ATA_QCFLAG_HAS_CDL;
++	/*
++	 * Mark this command as having a CDL and request the result
++	 * task file so that we can inspect the sense data available
++	 * bit on completion.
++	 */
++	qc->flags |= ATA_QCFLAG_HAS_CDL | ATA_QCFLAG_RESULT_TF;
+ }
+ 
+ /**
+@@ -2427,6 +2431,24 @@ static void ata_dev_config_cdl(struct ata_device *dev)
+ 		ata_dev_warn(dev,
+ 			"Command duration guideline is not supported\n");
+ 
++	/*
++	 * We must have support for the sense data for successful NCQ commands
++	 * log indicated by the successful NCQ command sense data supported bit.
++	 */
++	val = get_unaligned_le64(&ap->sector_buf[8]);
++	if (!(val & BIT_ULL(63)) || !(val & BIT_ULL(47))) {
++		ata_dev_warn(dev,
++			"CDL supported but Successful NCQ Command Sense Data is not supported\n");
++		goto not_supported;
++	}
 +
++	/* Without NCQ autosense, the successful NCQ commands log is useless. */
++	if (!ata_id_has_ncq_autosense(dev->id)) {
++		ata_dev_warn(dev,
++			"CDL supported but NCQ autosense is not supported\n");
++		goto not_supported;
++	}
 +
-+What:		/sys/block/*/device/duration_limits/enable
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RW) For ATA and SCSI devices supporting the command duration
-+		limits feature, write to the file to turn on or off the
-+		feature. By default this feature is turned off. If the device
-+		does not support the command duration limits feature, this
-+		attribute does not exist (the directory
-+		"/sys/block/*/device/duration_limits" does not exist).
-+		Writing "1" to this file enables the use of command duration
-+		limits for read and write commands in the kernel and turns on
-+		the feature on the device. Writing "0" disables the feature.
+ 	/*
+ 	 * If CDL is marked as enabled, make sure the feature is enabled too.
+ 	 * Conversely, if CDL is disabled, make sure the feature is turned off.
+@@ -2461,6 +2483,35 @@ static void ata_dev_config_cdl(struct ata_device *dev)
+ 		}
+ 	}
+ 
++	/*
++	 * While CDL itself has to be enabled using sysfs, CDL requires that
++	 * sense data for successful NCQ commands is enabled to work properly.
++	 * Just like ata_dev_config_sense_reporting(), enable it unconditionally
++	 * if supported.
++	 */
++	if (!(val & BIT_ULL(63)) || !(val & BIT_ULL(18))) {
++		err_mask = ata_dev_set_feature(dev,
++					SETFEATURE_SENSE_DATA_SUCC_NCQ, 0x1);
++		if (err_mask) {
++			ata_dev_warn(dev,
++				     "failed to enable Sense Data for successful NCQ commands, Emask 0x%x\n",
++				     err_mask);
++			goto not_supported;
++		}
++	}
 +
++	/*
++	 * Allocate a buffer to handle reading the sense data for successful
++	 * NCQ Commands log page for commands using a CDL with one of the limit
++	 * policy set to 0xD (successful completion with sense data available
++	 * bit set).
++	 */
++	if (!ap->ncq_sense_buf) {
++		ap->ncq_sense_buf = kmalloc(ATA_LOG_SENSE_NCQ_SIZE, GFP_KERNEL);
++		if (!ap->ncq_sense_buf)
++			goto not_supported;
++	}
 +
-+What:		/sys/block/*/device/duration_limits/read/[1-7]/*
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the set of 7 command duration limits
-+		descriptors for read commands currently set on the device. For
-+		each of the 7 descritors, the following read-only attributes
-+		are present:
+ 	/*
+ 	 * Command duration limits is supported: cache the CDL log page 18h
+ 	 * (command duration descriptors).
+@@ -2478,6 +2529,8 @@ static void ata_dev_config_cdl(struct ata_device *dev)
+ 
+ not_supported:
+ 	dev->flags &= ~(ATA_DFLAG_CDL | ATA_DFLAG_CDL_ENABLED);
++	kfree(ap->ncq_sense_buf);
++	ap->ncq_sense_buf = NULL;
+ }
+ 
+ static int ata_dev_config_lba(struct ata_device *dev)
+@@ -4848,6 +4901,30 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 			fill_result_tf(qc);
+ 
+ 		trace_ata_qc_complete_done(qc);
 +
-+		  - duration_guideline: specifies the preferred length of time
-+		    in microseconds for the completion of a command.
++		/*
++		 * For CDL commands that completed without an error, check if
++		 * we have sense data (ATA_SENSE is set). If we do, then the
++		 * command may have been aborted by the device due to a limit
++		 * timeout using the policy 0xD. For these commands, invoke EH
++		 * to get the command sense data.
++		 */
++		if (qc->result_tf.status & ATA_SENSE &&
++		    ((ata_is_ncq(qc->tf.protocol) &&
++		      dev->flags & ATA_DFLAG_CDL_ENABLED) ||
++		     (!(ata_is_ncq(qc->tf.protocol) &&
++			ata_id_sense_reporting_enabled(dev->id))))) {
++			/*
++			 * Tell SCSI EH to not overwrite scmd->result even if
++			 * this command is finished with result SAM_STAT_GOOD.
++			 */
++			qc->scsicmd->flags |= SCMD_EH_SUCCESS_CMD;
++			qc->flags |= ATA_QCFLAG_EH_SUCCESS_CMD;
++			ehi->dev_action[dev->devno] |= ATA_EH_GET_SUCCESS_SENSE;
++			ata_qc_schedule_eh(qc);
++			return;
++		}
 +
-+		  - duration_guideline_policy: specifies the policy action
-+		    taken if the duration_guideline attribute specifies a
-+		    non-zero command duration guideline that the device is
-+		    unable to achieve for a command.
+ 		/* Some commands need post-processing after successful
+ 		 * completion.
+ 		 */
+@@ -5480,6 +5557,7 @@ static void ata_host_release(struct kref *kref)
+ 
+ 		kfree(ap->pmp_link);
+ 		kfree(ap->slave_link);
++		kfree(ap->ncq_sense_buf);
+ 		kfree(ap);
+ 		host->ports[i] = NULL;
+ 	}
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index e05d62791e08..d34bda7a7baa 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1910,6 +1910,102 @@ static inline bool ata_eh_quiet(struct ata_queued_cmd *qc)
+ 	return qc->flags & ATA_QCFLAG_QUIET;
+ }
+ 
++static int ata_eh_read_sense_success_non_ncq(struct ata_link *link)
++{
++	struct ata_port *ap = link->ap;
++	struct ata_queued_cmd *qc;
 +
-+		    Possible values are:
++	qc = __ata_qc_from_tag(ap, link->active_tag);
++	if (!qc)
++		return -EIO;
 +
-+		      - 0x0: The device will complete the command at the
-+			     earliest possible time consistent with the
-+			     specified command duration guideline.
-+		      - 0x1: If the specified command duration guideline has
-+			     not been achieved and the command duration
-+			     guideline policy field is not the seventh command
-+			     duration limits descriptor, then the device
-+			     continues processing that command using the
-+			     command duration limits descriptor that has
-+			     the next higher number.
-+		      - 0x2: The device will continue processing the command
-+			     as with no command duration limits descriptor
-+			     being used.
-+		      - 0xD: The device will complete the command and an IO
-+			     failure will be reported to the user with the ETIME
-+			     error code.
-+		      - 0xF: Same as 0xD.
++	if (!(qc->flags & ATA_QCFLAG_EH) ||
++	    !(qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) ||
++	    qc->err_mask)
++		return -EIO;
 +
-+		  - max_active_time: specifies an upper limit in microseconds
-+		    on the time that elapses from the time at which the device
-+		    initiates actions to access, transfer, or act upon the
-+		    specified data until the time the device returns status for
-+		    the command.
++	ata_eh_request_sense(qc, false);
 +
-+		  - max_active_time_policy: specifies the policy action taken
-+		    if the time used to process a command exceeds a non-zero
-+		    time specified by the max_active_time attribute.
++	if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
++		return -EIO;
 +
-+		    Possible values are:
++	/*
++	 * If we have sense data, call scsi_check_sense() in order to set the
++	 * correct SCSI ML byte (if any). No point in checking the return value,
++	 * since the command has already completed successfully.
++	 */
++	scsi_check_sense(qc->scsicmd);
 +
-+		      - 0x0: The device will complete the command at the
-+			     earliest possible time (i.e, do nothing based on
-+			     the max limit not being met).
-+		      - 0xD: The device will complete the command and an IO
-+			     failure will be reported to the user with the ETIME
-+			     error code.
-+		      - 0xE: Same as 0xD.
-+		      - 0xF: Same as 0xD.
++	return 0;
++}
 +
-+		  - max_inactive_time: specifies an upper limit in microseconds
-+		    on the time that elapses from the time at which the device
-+		    receives the command until the time at which the device
-+		    initiates actions to access, transfer, or act upon the
-+		    specified data.
++static void ata_eh_get_success_sense(struct ata_link *link)
++{
++	struct ata_eh_context *ehc = &link->eh_context;
++	struct ata_device *dev = link->device;
++	struct ata_port *ap = link->ap;
++	struct ata_queued_cmd *qc;
++	int tag, ret = 0;
 +
-+		  - max_inactive_time_policy: specifies the policy action taken
-+		    if a non-zero max_inactive_time limit is not met.
++	if (!(ehc->i.dev_action[dev->devno] & ATA_EH_GET_SUCCESS_SENSE))
++		return;
 +
-+		    Possible values are:
++	/* if frozen, we can't do much */
++	if (ata_port_is_frozen(ap)) {
++		ata_dev_warn(dev,
++			"successful sense data available but port frozen\n");
++		goto out;
++	}
 +
-+		      - 0x0: The device will complete the command at the
-+			     earliest possible time (i.e, do nothing based on
-+			     the time limit not being met).
-+		      - 0xD: The device will complete the command and an IO
-+			     failure will be reported to the user with the ETIME
-+			     error code.
-+		      - 0xF: Same as 0xD.
++	/*
++	 * If the link has sactive set, then we have outstanding NCQ commands
++	 * and have to read the Successful NCQ Commands log to get the sense
++	 * data. Otherwise, we are dealing with a non-NCQ command and use
++	 * request sense ext command to retrieve the sense data.
++	 */
++	if (link->sactive)
++		ret = ata_eh_read_sense_success_ncq_log(link);
++	else
++		ret = ata_eh_read_sense_success_non_ncq(link);
++	if (ret)
++		goto out;
 +
++	ata_eh_done(link, dev, ATA_EH_GET_SUCCESS_SENSE);
++	return;
 +
-+What:		/sys/block/*/device/duration_limits/read/page
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the name of the device VPD page
-+		specifying the set of 7 command duration limits descriptors for
-+		read commands. Possible values are "T2A" and "T2B".
++out:
++	/*
++	 * If we failed to get sense data for a successful command that ought to
++	 * have sense data, we cannot simply return BLK_STS_OK to user space.
++	 * This is because we can't know if the sense data that we couldn't get
++	 * was actually "DATA CURRENTLY UNAVAILABLE". Reporting such a command
++	 * as success to user space would result in a silent data corruption.
++	 * Thus, add a bogus ABORTED_COMMAND sense data to such commands, such
++	 * that SCSI will report these commands as BLK_STS_IOERR to user space.
++	 */
++	ata_qc_for_each_raw(ap, qc, tag) {
++		if (!(qc->flags & ATA_QCFLAG_EH) ||
++		    !(qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) ||
++		    qc->err_mask ||
++		    ata_dev_phys_link(qc->dev) != link)
++			continue;
 +
++		/* We managed to get sense for this success command, skip. */
++		if (qc->flags & ATA_QCFLAG_SENSE_VALID)
++			continue;
 +
-+What:		/sys/block/*/device/duration_limits/write/[1-7]/*
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the set of 7 command duration limits
-+		descriptors for write commands currently set on the device. For
-+		each of the 7 descritors, the same set of read-only attributes
-+		as for read commands is present.
++		/* This success command did not have any sense data, skip. */
++		if (!(qc->result_tf.status & ATA_SENSE))
++			continue;
 +
++		/* This success command had sense data, but we failed to get. */
++		ata_scsi_set_sense(dev, qc->scsicmd, true, ABORTED_COMMAND,
++				   0, 0);
++		qc->flags |= ATA_QCFLAG_SENSE_VALID;
++	}
++	ata_eh_done(link, dev, ATA_EH_GET_SUCCESS_SENSE);
++}
 +
-+What:		/sys/block/*/device/duration_limits/write/page
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the name of the device VPD page
-+		specifying the set of 7 command duration limits descriptors for
-+		write commands. Possible values are "T2A" and "T2B".
+ /**
+  *	ata_eh_link_autopsy - analyze error and determine recovery action
+  *	@link: host link to perform autopsy on
+@@ -1950,6 +2046,14 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 	/* analyze NCQ failure */
+ 	ata_eh_analyze_ncq_error(link);
+ 
++	/*
++	 * Check if this was a successful command that simply needs sense data.
++	 * Since the sense data is not part of the completion, we need to fetch
++	 * it using an additional command. Since this can't be done from irq
++	 * context, the sense data for successful commands are fetched by EH.
++	 */
++	ata_eh_get_success_sense(link);
 +
+ 	/* any real error trumps AC_ERR_OTHER */
+ 	if (ehc->i.err_mask & ~AC_ERR_OTHER)
+ 		ehc->i.err_mask &= ~AC_ERR_OTHER;
+@@ -1959,6 +2063,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 	ata_qc_for_each_raw(ap, qc, tag) {
+ 		if (!(qc->flags & ATA_QCFLAG_EH) ||
+ 		    qc->flags & ATA_QCFLAG_RETRY ||
++		    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD ||
+ 		    ata_dev_phys_link(qc->dev) != link)
+ 			continue;
+ 
+@@ -3818,7 +3923,8 @@ void ata_eh_finish(struct ata_port *ap)
+ 			else
+ 				ata_eh_qc_complete(qc);
+ 		} else {
+-			if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
++			if (qc->flags & ATA_QCFLAG_SENSE_VALID ||
++			    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) {
+ 				ata_eh_qc_complete(qc);
+ 			} else {
+ 				/* feed zero TF to sense generation */
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index b12f8e9e1f86..1c85e9eee619 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -11,7 +11,9 @@
+ #include <linux/module.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
++#include <scsi/scsi_eh.h>
+ #include <linux/libata.h>
++#include <asm/unaligned.h>
+ 
+ #include "libata.h"
+ #include "libata-transport.h"
+@@ -1408,6 +1410,92 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+ 	return 0;
+ }
+ 
++/**
++ *	ata_eh_read_sense_success_ncq_log - Read the sense data for successful
++ *					    NCQ commands log
++ *	@link: ATA link to get sense data for
++ *
++ *	Read the sense data for successful NCQ commands log page to obtain
++ *	sense data for all NCQ commands that completed successfully with
++ *	the sense data available bit set.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int ata_eh_read_sense_success_ncq_log(struct ata_link *link)
++{
++	struct ata_device *dev = link->device;
++	struct ata_port *ap = dev->link->ap;
++	u8 *buf = ap->ncq_sense_buf;
++	struct ata_queued_cmd *qc;
++	unsigned int err_mask, tag;
++	u8 *sense, sk = 0, asc = 0, ascq = 0;
++	u64 sense_valid, val;
++	int ret = 0;
 +
-+What:		/sys/block/*/device/duration_limits/perf_vs_duration_guideline
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this specifies the maximum percentage increase
-+		in average command completion times (reduction in IOPS) that
-+		is allowed for the device to perform actions based on the
-+		contents of the duration guideline field in every command
-+		duration limit descriptor for both read and write commands.
++	err_mask = ata_read_log_page(dev, ATA_LOG_SENSE_NCQ, 0, buf, 2);
++	if (err_mask) {
++		ata_dev_err(dev,
++			"Failed to read Sense Data for Successful NCQ Commands log\n");
++		return -EIO;
++	}
++
++	/* Check the log header */
++	val = get_unaligned_le64(&buf[0]);
++	if ((val & 0xffff) != 1 || ((val >> 16) & 0xff) != 0x0f) {
++		ata_dev_err(dev,
++			"Invalid Sense Data for Successful NCQ Commands log\n");
++		return -EIO;
++	}
++
++	sense_valid = (u64)buf[8] | ((u64)buf[9] << 8) |
++		((u64)buf[10] << 16) | ((u64)buf[11] << 24);
++
++	ata_qc_for_each_raw(ap, qc, tag) {
++		if (!(qc->flags & ATA_QCFLAG_EH) ||
++		    !(qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) ||
++		    qc->err_mask ||
++		    ata_dev_phys_link(qc->dev) != link)
++			continue;
++
++		/*
++		 * If the command does not have any sense data, clear ATA_SENSE.
++		 * Keep ATA_QCFLAG_EH_SUCCESS_CMD so that command is finished.
++		 */
++		if (!(sense_valid & (1ULL << tag))) {
++			qc->result_tf.status &= ~ATA_SENSE;
++			continue;
++		}
++
++		sense = &buf[32 + 24 * tag];
++		sk = sense[0];
++		asc = sense[1];
++		ascq = sense[2];
++
++		if (!ata_scsi_sense_is_valid(sk, asc, ascq)) {
++			ret = -EIO;
++			continue;
++		}
++
++		ata_scsi_set_sense(dev, qc->scsicmd, false, sk, asc, ascq);
++		qc->flags |= ATA_QCFLAG_SENSE_VALID;
++
++		/*
++		 * If we have sense data, call scsi_check_sense() in order to
++		 * set the correct SCSI ML byte (if any). No point in checking
++		 * the return value, since the command has already completed
++		 * successfully.
++		 */
++		scsi_check_sense(qc->scsicmd);
++	}
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(ata_eh_read_sense_success_ncq_log);
++
+ /**
+  *	ata_eh_analyze_ncq_error - analyze NCQ error
+  *	@link: ATA link to analyze NCQ error for
+@@ -1488,6 +1576,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 
+ 	ata_qc_for_each_raw(ap, qc, tag) {
+ 		if (!(qc->flags & ATA_QCFLAG_EH) ||
++		    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD ||
+ 		    ata_dev_phys_link(qc->dev) != link)
+ 			continue;
+ 
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index a59b17d6ad11..2e2e22362096 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -326,6 +326,8 @@ enum {
+ 	ATA_LOG_CDL		= 0x18,
+ 	ATA_LOG_CDL_SIZE	= ATA_SECT_SIZE,
+ 	ATA_LOG_IDENTIFY_DEVICE	= 0x30,
++	ATA_LOG_SENSE_NCQ	= 0x0F,
++	ATA_LOG_SENSE_NCQ_SIZE	= ATA_SECT_SIZE * 2,
+ 	ATA_LOG_CONCURRENT_POSITIONING_RANGES = 0x47,
+ 
+ 	/* Identify device log pages: */
+@@ -432,6 +434,7 @@ enum {
+ 	SATA_DEVSLP		= 0x09,	/* Device Sleep */
+ 
+ 	SETFEATURE_SENSE_DATA	= 0xC3, /* Sense Data Reporting feature */
++	SETFEATURE_SENSE_DATA_SUCC_NCQ = 0xC4, /* Sense Data for successful NCQ commands */
+ 
+ 	/* feature values for SET_MAX */
+ 	ATA_SET_MAX_ADDR	= 0x00,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ecdabe5647d1..b00bd6daacd0 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -212,6 +212,7 @@ enum {
+ 	ATA_QCFLAG_EH		= (1 << 16), /* cmd aborted and owned by EH */
+ 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
+ 	ATA_QCFLAG_EH_SCHEDULED = (1 << 18), /* EH scheduled (obsolete) */
++	ATA_QCFLAG_EH_SUCCESS_CMD = (1 << 19), /* EH should fetch sense for this successful cmd */
+ 
+ 	/* host set flags */
+ 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+@@ -310,8 +311,10 @@ enum {
+ 	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
+ 	ATA_EH_ENABLE_LINK	= (1 << 3),
+ 	ATA_EH_PARK		= (1 << 5), /* unload heads and stop I/O */
++	ATA_EH_GET_SUCCESS_SENSE = (1 << 6), /* Get sense data for successful cmd */
+ 
+-	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK,
++	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK |
++				  ATA_EH_GET_SUCCESS_SENSE,
+ 	ATA_EH_ALL_ACTIONS	= ATA_EH_REVALIDATE | ATA_EH_RESET |
+ 				  ATA_EH_ENABLE_LINK,
+ 
+@@ -864,6 +867,7 @@ struct ata_port {
+ 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
+ #endif
+ 	/* owned by EH */
++	u8			*ncq_sense_buf;
+ 	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
+ };
+ 
+@@ -1182,6 +1186,7 @@ extern int sata_link_hardreset(struct ata_link *link,
+ 			bool *online, int (*check_ready)(struct ata_link *));
+ extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 			    unsigned long deadline);
++extern int ata_eh_read_sense_success_ncq_log(struct ata_link *link);
+ extern void ata_eh_analyze_ncq_error(struct ata_link *link);
+ #else
+ static inline const unsigned long *
+@@ -1219,6 +1224,10 @@ static inline int sata_link_resume(struct ata_link *link,
+ {
+ 	return -EOPNOTSUPP;
+ }
++static inline int ata_eh_read_sense_success_ncq_log(struct ata_link *link)
++{
++	return -EOPNOTSUPP;
++}
+ static inline void ata_eh_analyze_ncq_error(struct ata_link *link) { }
+ #endif
+ extern int sata_link_debounce(struct ata_link *link,
 -- 
 2.38.1
 
