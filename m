@@ -2,63 +2,63 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78899C3A5A7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92213C63709
 	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:04:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbiLHLEX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:04:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39832 "EHLO
+        id S229754AbiLHLEZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:04:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbiLHLDW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:03:22 -0500
+        with ESMTP id S229775AbiLHLDX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:03:23 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A149A60EBF
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 03:01:33 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA38785669
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 03:01:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497294; x=1702033294;
+  t=1670497296; x=1702033296;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=SEAJ27bM1r5PL33b2gfdry0GN7ugAbmEH4XhqZvGyDc=;
-  b=P2L2lQ3P/cFQbm63RGsBzE20m9hjvtJzDef3TyVGEN6xE1zip3IfgvZL
-   0s4ZA7nx5jTmXX0dLDBUsMBhKnw2fe2Iv3Kbro2vSglbUhkkMyocGNCl7
-   6HnDk7KQG54Eg9iQ7mMvzwBIDNgcXQbvjo4+NbJaNHDMSI0fs18HmAJma
-   Xx0Qz+tWrmHnIz2Y2wFtlWjGyX9zVwqGv0BQnME8TvHjHotA9DDLLSn8j
-   LLHbwTFalewdJPSeObov5p5WDOqWkKOAJ8jwDpDsFJlDELqwkY8VlcBeM
-   s9XcgqdjxT4vudKYfPjaFBYQim209iRrJq/TMsS11FROziCq10pl8e2Zp
+  bh=cwbeswERpri7S0OvuN19RuknsWkkKg0ZDb7ceoG2q0M=;
+  b=LpxZtJmRvrnlZP3yCOJpdJlhYw9Hl5PYGHi/ggJQ+5uekerEuz6d/401
+   XejCJR0+iqvRm2kEDa5jqPzzkIi7hMNoimnwyzbUiWwUIWUu8bYOi9Dhr
+   mlpx6KLUr+h/zx7kr6hbDL9JG296Zl15sSieoWLCTdqdqxoD18RzBT9+L
+   hXRtGqP8PcupEpNW6Mu8meb3XxtXwB75x1TWifWgudNL1VDulaCKH0zwS
+   vVJJVbEqk68rSrp99yNF3LKY913jh7QmVDnPkFO3rTKrLGLg4GegLY5Ro
+   CDasOqDfefnLLH/6M517hcHm6tWxV/C8opYYqNhddgnncmgqOnMIKFg2d
    g==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333424"
+   d="scan'208";a="223333432"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:33 +0800
-IronPort-SDR: kywm4STagQWRB8ihhdPNoSa6BfClwMf2cdfkDN+irAFVy0Kzck3K+aG0MO+z7/Ot5UtX88CJ0a
- 1OvohcODDy0sVxB2bZyASEKT4EpHN3qtzE/HUJ8CGqJX8xYTh7T0gKFTnk/B85/8DV8rhSFj6y
- QmHn/5a3Lcwc8lJVGsoI3SRv5OrYhXK8ffaFRetMz4sAG3+nkcDn0J46P/elQ8C6GeDNRTsRIn
- GzKDtfG5fLFafYHB44EcXB5W1r0gTxmfu9x3n3HcasbyGD7Mytkidcri/8HIVlbkarN4WmwSi/
- His=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:36 +0800
+IronPort-SDR: wgGEJ95nH18BIY1HLGBRC1cTJx2rNe08fFCOBBIPLp/JXQtYQOlH1bduNwEIVoZBD3KkfFbm3O
+ oRpsdvTEnpm6kXfh6ZBz/ta5QX/2ZlrIuUpahBbYbds8h+50rKSpl1USNNMOVkc/y5wcmRxuTn
+ IjAgICvgZ6SpHEtyZpBjQTKRSqSn9PFjGQN512fPsUFeNwNGc1M4Qu7imRkV5UCWx7YR40Qa3F
+ MZ/z9CuoV0UVJpESjPQwDSPosSlDXl34dxZdOqagaJW3xDUtHItjPUDNepIPLZposGhI0AaDEP
+ WNw=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:18 -0800
-IronPort-SDR: 7+gEkGpqcMJ2U8aSVch12df9Q+9y1cFYvkQYszvkN4sCXlSLGH2KOnmtbGUM0lC3ceS2PYLy0u
- j15tKfzDiZuvwCCnYoa+N3PLekrdEuh72B0qVKuG6CPGPnqlV4+F01HdMWAdISO30nv41hucaB
- Xngzd4MftFzrJpyZnhkVCTfEBUMDZghs3MxKTn7KWS+ItuMvgrW7rq/s1nKgdJDK+WNgRyV5eY
- Uw1YDwyNFYqek3mlm1mm0N15O544RPY7X9E+DUxrQyRLAlUTBNEud9bWu8t/thhKg3tudzr9in
- BjE=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:21 -0800
+IronPort-SDR: 2ieOg0b5XT/IpxmBgLoB2+B4LbZMyAAus109Lf2MZM42/Oo83FFKlKmz2v/8aMXXJr+te5iko/
+ 1GHUUz3jo0wx/kRJsF0On4p85BvTuylIURb58sv9g4jG53qTWjfCJ6n9sWQspiAUajbLyzmnkL
+ Tyc33qmnnXdQBBxE/LMLBLFTOTgdmHjGEZytd8IPsbKhjJs3SkaKI/GvhIQl5CFIczYHFkz8SR
+ yBqSiguEL/ugOXBoHRwy9oUKO8jCRGSpYJYzji29ypP24l3VNdR6jcnWHQBsYOQRb9kTi80AOn
+ leM=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:32 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:35 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH 21/25] scsi: sd: detect support for command duration limits
-Date:   Thu,  8 Dec 2022 11:59:37 +0100
-Message-Id: <20221208105947.2399894-22-niklas.cassel@wdc.com>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH 22/25] scsi: sd: set read/write commands CDL index
+Date:   Thu,  8 Dec 2022 11:59:38 +0100
+Message-Id: <20221208105947.2399894-23-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -66,944 +66,345 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Detect if a disk supports command duration limits. Support for
-the READ 16, WRITE 16, READ 32 and WRITE 32 commands is tested using
-the function scsi_report_opcode(). For a disk supporting command
-duration limits, the mode page indicating the command duration limits
-descriptors that apply to the command is indicated using the rwcdlp
-and cdlp bits.
+Introduce the command duration limits helper function
+sd_cdl_cmd_limit() to retrieve and set the DLD bits of the
+READ/WRITE 16 and READ/WRITE 32 commands to indicate to the device
+the command duration limit descriptor to apply to the command.
 
-Support duration limits is advertizes through sysfs using the new
-"duration_limits" sysfs sub-directory of the generic device directory,
-that is, /sys/block/sdX/device/duration_limits. Within this new
-directory, the limit descriptors that apply to read and write operations
-are exposed within the read and write directories, with descriptor
-attributes grouped together in directories. The overall sysfs structure
-created is:
+When command duration limits are enabled, sd_cdl_cmd_limit() obtains the
+index of the descriptor to apply to the command for requests that have
+the IOPRIO_CLASS_DL priority class with a priority data sepcifying a
+valid descriptor index (1 to 7).
 
-/sys/block/sde/device/duration_limits/
-├── perf_vs_duration_guideline
-├── read
-│   ├── 1
-│   │   ├── duration_guideline
-│   │   ├── duration_guideline_policy
-│   │   ├── max_active_time
-│   │   ├── max_active_time_policy
-│   │   ├── max_inactive_time
-│   │   └── max_inactive_time_policy
-│   ├── 2
-│   │   ├── duration_guideline
-...
-│   └── page
-└── write
-    ├── 1
-    │   ├── duration_guideline
-    │   ├── duration_guideline_policy
-...
+The read-write sysfs attribute "enable" is introduced to control
+setting the command duration limits indexes. If this attribute is set
+to 0 (default), command duration limits specified by the user are
+ignored. The user must set this attribute to 1 for command duration
+limits to be set. Enabling and disabling the command duration limits
+feature for ATA devices must be done using the ATA feature sub-page of
+the control mode page. The sd_cdl_enable() function is introduced to
+check if this mode page is supported by the device and if it is, use
+it to enable/disable CDL.
 
-For each of the read and write descriptor directories, the page
-attribute file indicate the command duration limit page providing the
-descriptors. The possible values for the page attribute are "A", "B",
-"T2A" and "T2B".
-
-The new "duration_limits" attributes directory is added only for disks
-that supports command duration limits.
-
+Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/Makefile |   2 +-
- drivers/scsi/sd.c     |   2 +
- drivers/scsi/sd.h     |  61 ++++
- drivers/scsi/sd_cdl.c | 764 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 828 insertions(+), 1 deletion(-)
- create mode 100644 drivers/scsi/sd_cdl.c
+ drivers/scsi/sd.c     |  16 +++--
+ drivers/scsi/sd.h     |  10 ++++
+ drivers/scsi/sd_cdl.c | 134 +++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 152 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index f055bfd54a68..0e48cb6d21d6 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -170,7 +170,7 @@ scsi_mod-$(CONFIG_BLK_DEV_BSG)	+= scsi_bsg.o
- 
- hv_storvsc-y			:= storvsc_drv.o
- 
--sd_mod-objs	:= sd.o
-+sd_mod-objs	:= sd.o sd_cdl.o
- sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
- sd_mod-$(CONFIG_BLK_DEV_ZONED) += sd_zbc.o
- 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2b56ff4fcf8a..45ff44a73256 100644
+index 45ff44a73256..1f516910da0b 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -3306,6 +3306,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		sd_read_write_same(sdkp, buffer);
- 		sd_read_security(sdkp, buffer);
- 		sd_config_protection(sdkp);
-+		sd_read_cdl(sdkp, buffer);
- 	}
+@@ -1042,13 +1042,14 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
  
- 	/*
-@@ -3626,6 +3627,7 @@ static void scsi_disk_release(struct device *dev)
+ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+-				       unsigned char flags)
++				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len = SD_EXT_CDB_SIZE;
+ 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
+ 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
+ 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
+ 	cmd->cmnd[10] = flags;
++	cmd->cmnd[11] = dld & 0x07;
+ 	put_unaligned_be64(lba, &cmd->cmnd[12]);
+ 	put_unaligned_be32(lba, &cmd->cmnd[20]); /* Expected Indirect LBA */
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[28]);
+@@ -1058,12 +1059,12 @@ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
  
- 	ida_free(&sd_index_ida, sdkp->index);
- 	sd_zbc_free_zone_info(sdkp);
-+	sd_cdl_release(sdkp);
- 	put_device(&sdkp->device->sdev_gendev);
- 	free_opal_dev(sdkp->opal_dev);
+ static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+-				       unsigned char flags)
++				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len  = 16;
+ 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
+-	cmd->cmnd[1]  = flags;
+-	cmd->cmnd[14] = 0;
++	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
++	cmd->cmnd[14] = (dld & 0x03) << 6;
+ 	cmd->cmnd[15] = 0;
+ 	put_unaligned_be64(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
+@@ -1126,6 +1127,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+ 	bool write = rq_data_dir(rq) == WRITE;
+ 	unsigned char protect, fua;
++	unsigned int dld = 0;
+ 	blk_status_t ret;
+ 	unsigned int dif;
+ 	bool dix;
+@@ -1175,6 +1177,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 	fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
+ 	dix = scsi_prot_sg_count(cmd);
+ 	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
++	if (sd_cdl_enabled(sdkp))
++		dld = sd_cdl_dld(sdkp, cmd);
  
+ 	if (dif || dix)
+ 		protect = sd_setup_protect_cmnd(cmd, dix, dif);
+@@ -1183,10 +1187,10 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 
+ 	if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
+ 		ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
+-					 protect | fua);
++					 protect | fua, dld);
+ 	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
+ 		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+-					 protect | fua);
++					 protect | fua, dld);
+ 	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+ 		   sdp->use_10_for_rw || protect) {
+ 		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
 diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 5eea762f84d1..e60d33bd222a 100644
+index e60d33bd222a..5b6b6dc4b92d 100644
 --- a/drivers/scsi/sd.h
 +++ b/drivers/scsi/sd.h
-@@ -81,6 +81,62 @@ struct zoned_disk_info {
- 	u32		zone_blocks;
+@@ -130,8 +130,11 @@ struct sd_cdl_page {
+ 	struct sd_cdl_desc      descs[SD_CDL_MAX_DESC];
  };
  
-+/*
-+ * Command duration limits sub-pages for the control mode page 0Ah.
-+ */
-+enum sd_cdlp {
-+	SD_CDLP_A,
-+	SD_CDLP_B,
-+	SD_CDLP_T2A,
-+	SD_CDLP_T2B,
-+	SD_CDLP_NONE,
++struct scsi_disk;
 +
-+	SD_CDL_MAX_PAGES = SD_CDLP_NONE,
-+};
-+
-+enum sd_cdl_cmd {
-+	SD_CDL_READ_16,
-+	SD_CDL_WRITE_16,
-+	SD_CDL_READ_32,
-+	SD_CDL_WRITE_32,
-+
-+	SD_CDL_CMD_MAX,
-+};
-+
-+enum sd_cdl_rw {
-+	SD_CDL_READ,
-+	SD_CDL_WRITE,
-+	SD_CDL_RW,
-+};
-+
-+struct sd_cdl_desc {
-+	struct kobject	kobj;
-+	u64		max_inactive_time;
-+	u64		max_active_time;
-+	u64		duration;
-+	u8		max_inactive_policy;
-+	u8		max_active_policy;
-+	u8		duration_policy;
-+	u8		cdlp;
-+};
-+
-+#define SD_CDL_MAX_DESC		7
-+
-+struct sd_cdl_page {
-+	struct kobject		kobj;
-+	bool			sysfs_registered;
-+	enum sd_cdl_rw		rw;
-+	enum sd_cdlp		cdlp;
-+	struct sd_cdl_desc      descs[SD_CDL_MAX_DESC];
-+};
-+
-+struct sd_cdl {
-+	struct kobject		kobj;
-+	bool			sysfs_registered;
-+	u8			perf_vs_duration_guideline;
-+	struct sd_cdl_page	pages[SD_CDL_RW];
-+};
-+
- struct scsi_disk {
- 	struct scsi_device *device;
- 
-@@ -131,6 +187,7 @@ struct scsi_disk {
- 	u8		provisioning_mode;
+ struct sd_cdl {
+ 	struct kobject		kobj;
++	struct scsi_disk	*sdkp;
+ 	bool			sysfs_registered;
+ 	u8			perf_vs_duration_guideline;
+ 	struct sd_cdl_page	pages[SD_CDL_RW];
+@@ -188,6 +191,7 @@ struct scsi_disk {
  	u8		zeroing_mode;
  	u8		nr_actuators;		/* Number of actuators */
-+	struct sd_cdl	*cdl;
+ 	struct sd_cdl	*cdl;
++	unsigned	cdl_enabled : 1;
  	unsigned	ATO : 1;	/* state of disk ATO bit */
  	unsigned	cache_override : 1; /* temp override of WCE,RCD */
  	unsigned	WCE : 1;	/* state of disk WCE bit */
-@@ -295,4 +352,8 @@ static inline blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd,
- void sd_print_sense_hdr(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
- void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result);
- 
-+/* Command duration limits support (in sd_cdl.c) */
-+void sd_read_cdl(struct scsi_disk *sdkp, unsigned char *buf);
-+void sd_cdl_release(struct scsi_disk *sdkp);
+@@ -355,5 +359,11 @@ void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result);
+ /* Command duration limits support (in sd_cdl.c) */
+ void sd_read_cdl(struct scsi_disk *sdkp, unsigned char *buf);
+ void sd_cdl_release(struct scsi_disk *sdkp);
++int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd);
 +
++static inline bool sd_cdl_enabled(struct scsi_disk *sdkp)
++{
++	return sdkp->cdl && sdkp->cdl_enabled;
++}
+ 
  #endif /* _SCSI_DISK_H */
 diff --git a/drivers/scsi/sd_cdl.c b/drivers/scsi/sd_cdl.c
-new file mode 100644
-index 000000000000..513cd989f19a
---- /dev/null
+index 513cd989f19a..59d02dbb5ea1 100644
+--- a/drivers/scsi/sd_cdl.c
 +++ b/drivers/scsi/sd_cdl.c
-@@ -0,0 +1,764 @@
-+// SPDX-License-Identifier: GPL-2.0-only
+@@ -93,6 +93,63 @@ static const char *sd_cdl_policy_name(u8 policy)
+ 	}
+ }
+ 
 +/*
-+ * SCSI Command Duration Limits (CDL)
-+ *
-+ * Copyright (C) 2021 Western Digital Corporation or its affiliates.
++ * Enable/disable CDL.
 + */
-+#include <linux/vmalloc.h>
-+#include <linux/mutex.h>
-+
-+#include <asm/unaligned.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+#include "sd.h"
-+
-+/*
-+ * Command duration limits sub-pages for the control mode page 0Ah.
-+ */
-+static const struct sd_cdlp_info {
-+	u8	subpage;
-+	char	*name;
-+} cdl_page[SD_CDL_MAX_PAGES + 1] = {
-+	{ 0x03,	"A"	},
-+	{ 0x04,	"B"	},
-+	{ 0x07,	"T2A"	},
-+	{ 0x08,	"T2B"	},
-+	{ 0x00,	"none"	},
-+};
-+
-+static const struct sd_cdl_cmd_info {
-+	u8	opcode;
-+	u16	sa;
-+	char	*name;
-+} cdl_cmd[SD_CDL_CMD_MAX] = {
-+	{ READ_16,		0,		"READ_16"	},
-+	{ WRITE_16,		0,		"WRITE_16"	},
-+	{ VARIABLE_LENGTH_CMD,	READ_32,	"READ_32"	},
-+	{ VARIABLE_LENGTH_CMD,	WRITE_32,	"WRITE_32"	},
-+};
-+
-+static const char *sd_cdl_perf_name(u8 val)
++static int sd_cdl_enable(struct scsi_disk *sdkp, bool enable)
 +{
-+	switch (val) {
-+	case 0x00:
-+		return "0";
-+	case 0x01:
-+		return "0.5";
-+	case 0x02:
-+		return "1.0";
-+	case 0x03:
-+		return "1.5";
-+	case 0x04:
-+		return "2.0";
-+	case 0x05:
-+		return "2.5";
-+	case 0x06:
-+		return "3";
-+	case 0x07:
-+		return "4";
-+	case 0x08:
-+		return "5";
-+	case 0x09:
-+		return "8";
-+	case 0x0A:
-+		return "10";
-+	case 0x0B:
-+		return "15";
-+	case 0x0C:
-+		return "20";
-+	default:
-+		return "?";
-+	}
-+}
++	struct scsi_device *sdp = sdkp->device;
++	struct scsi_mode_data data;
++	struct scsi_sense_hdr sshdr;
++	struct scsi_vpd *vpd;
++	bool is_ata = false;
++	char buf[64];
++	int ret;
 +
-+static const char *sd_cdl_policy_name(u8 policy)
-+{
-+	switch (policy) {
-+	case 0x00:
-+		return "complete-earliest";
-+	case 0x01:
-+		return "continue-next-limit";
-+	case 0x02:
-+		return "continue-no-limit";
-+	case 0x0d:
-+		return "complete-unavailable";
-+	case 0x0e:
-+		return "abort-recovery";
-+	case 0x0f:
-+		return "abort";
-+	default:
-+		return "?";
-+	}
-+}
-+
-+/*
-+ * Command duration limits descriptors sysfs plumbing.
-+ */
-+struct sd_cdl_desc_sysfs_entry {
-+	struct attribute attr;
-+	ssize_t (*show)(struct sd_cdl_desc *desc, char *buf);
-+};
-+
-+#define CDL_DESC_ATTR_RO(_name)	\
-+	static struct sd_cdl_desc_sysfs_entry				\
-+	cdl_desc_##_name##_entry = {					\
-+		.attr	= { .name = __stringify(_name), .mode = 0444 },	\
-+		.show	= cdl_desc_##_name##_show,			\
-+	}
-+
-+static ssize_t cdl_desc_max_inactive_time_show(struct sd_cdl_desc *desc,
-+					       char *buf)
-+{
-+	return sysfs_emit(buf, "%llu\n", desc->max_inactive_time);
-+}
-+CDL_DESC_ATTR_RO(max_inactive_time);
-+
-+static ssize_t cdl_desc_max_inactive_time_policy_show(struct sd_cdl_desc *desc,
-+						      char *buf)
-+{
-+	return sysfs_emit(buf, "%s\n",
-+			sd_cdl_policy_name(desc->max_inactive_policy));
-+}
-+CDL_DESC_ATTR_RO(max_inactive_time_policy);
-+
-+static ssize_t cdl_desc_max_active_time_show(struct sd_cdl_desc *desc,
-+					     char *buf)
-+{
-+	return sysfs_emit(buf, "%llu\n", desc->max_active_time);
-+}
-+CDL_DESC_ATTR_RO(max_active_time);
-+
-+static ssize_t cdl_desc_max_active_time_policy_show(struct sd_cdl_desc *desc,
-+						    char *buf)
-+{
-+	return sysfs_emit(buf, "%s\n",
-+			sd_cdl_policy_name(desc->max_active_policy));
-+}
-+CDL_DESC_ATTR_RO(max_active_time_policy);
-+
-+static ssize_t cdl_desc_duration_guideline_show(struct sd_cdl_desc *desc,
-+						char *buf)
-+{
-+	return sysfs_emit(buf, "%llu\n", desc->duration);
-+}
-+CDL_DESC_ATTR_RO(duration_guideline);
-+
-+static ssize_t cdl_desc_duration_guideline_policy_show(struct sd_cdl_desc *desc,
-+						       char *buf)
-+{
-+	return sysfs_emit(buf, "%s\n",
-+		sd_cdl_policy_name(desc->duration_policy));
-+}
-+CDL_DESC_ATTR_RO(duration_guideline_policy);
-+
-+static umode_t sd_cdl_desc_attr_visible(struct kobject *kobj,
-+					struct attribute *attr, int n)
-+{
-+	struct sd_cdl_desc *desc = container_of(kobj, struct sd_cdl_desc, kobj);
++	rcu_read_lock();
++	vpd = rcu_dereference(sdp->vpd_pg89);
++	if (vpd)
++		is_ata = true;
++	rcu_read_unlock();
 +
 +	/*
-+	 * Descriptors in pages A and B only have the duration guideline
-+	 * field.
++	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
 +	 */
-+	if ((desc->cdlp == SD_CDLP_A || desc->cdlp == SD_CDLP_B) &&
-+	    (attr != &cdl_desc_duration_guideline_entry.attr))
-+		return 0;
++	if (is_ata) {
++		char *buf_data;
++		int len;
 +
-+	return attr->mode;
-+}
++		ret = scsi_mode_sense(sdp, 0x08, 0x0a, 0xf2, buf, sizeof(buf),
++				      SD_TIMEOUT, sdkp->max_retries, &data,
++				      NULL);
++		if (ret)
++			return -EINVAL;
 +
-+static struct attribute *sd_cdl_desc_attrs[] = {
-+	&cdl_desc_max_inactive_time_entry.attr,
-+	&cdl_desc_max_inactive_time_policy_entry.attr,
-+	&cdl_desc_max_active_time_entry.attr,
-+	&cdl_desc_max_active_time_policy_entry.attr,
-+	&cdl_desc_duration_guideline_entry.attr,
-+	&cdl_desc_duration_guideline_policy_entry.attr,
-+	NULL,
-+};
++		/* Enable CDL using the ATA feature page */
++		len = min_t(size_t, sizeof(buf),
++			    data.length - data.header_length -
++			    data.block_descriptor_length);
++		buf_data = buf + data.header_length +
++			data.block_descriptor_length;
++		if (enable)
++			buf_data[4] = 0x02;
++		else
++			buf_data[4] = 0;
 +
-+static const struct attribute_group sd_cdl_desc_group = {
-+	.attrs = sd_cdl_desc_attrs,
-+	.is_visible = sd_cdl_desc_attr_visible,
-+};
-+__ATTRIBUTE_GROUPS(sd_cdl_desc);
-+
-+static ssize_t sd_cdl_desc_sysfs_show(struct kobject *kobj,
-+				      struct attribute *attr, char *buf)
-+{
-+	struct sd_cdl_desc_sysfs_entry *entry =
-+		container_of(attr, struct sd_cdl_desc_sysfs_entry, attr);
-+	struct sd_cdl_desc *desc = container_of(kobj, struct sd_cdl_desc, kobj);
-+
-+	return entry->show(desc, buf);
-+}
-+
-+static const struct sysfs_ops sd_cdl_desc_sysfs_ops = {
-+	.show	= sd_cdl_desc_sysfs_show,
-+};
-+
-+static void sd_cdl_sysfs_nop_release(struct kobject *kobj) { }
-+
-+static struct kobj_type sd_cdl_desc_ktype = {
-+	.sysfs_ops	= &sd_cdl_desc_sysfs_ops,
-+	.default_groups	= sd_cdl_desc_groups,
-+	.release	= sd_cdl_sysfs_nop_release,
-+};
-+
-+/*
-+ * Duration limits page sysfs plumbing.
-+ */
-+struct sd_cdl_page_sysfs_entry {
-+	struct attribute attr;
-+	ssize_t (*show)(struct sd_cdl_page *page, char *buf);
-+};
-+
-+#define CDL_PAGE_ATTR_RO(_name)	\
-+	static struct sd_cdl_page_sysfs_entry				\
-+	cdl_page_##_name##_entry = {					\
-+		.attr	= { .name = __stringify(_name), .mode = 0444 },	\
-+		.show	= cdl_page_##_name##_show,			\
-+	}
-+
-+static ssize_t cdl_page_page_show(struct sd_cdl_page *page, char *buf)
-+{
-+	return sysfs_emit(buf, "%s\n", cdl_page[page->cdlp].name);
-+}
-+CDL_PAGE_ATTR_RO(page);
-+
-+static struct attribute *sd_cdl_page_attrs[] = {
-+	&cdl_page_page_entry.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group sd_cdl_page_group = {
-+	.attrs = sd_cdl_page_attrs,
-+};
-+__ATTRIBUTE_GROUPS(sd_cdl_page);
-+
-+static ssize_t sd_cdl_page_sysfs_show(struct kobject *kobj,
-+				      struct attribute *attr, char *buf)
-+{
-+	struct sd_cdl_page_sysfs_entry *entry =
-+		container_of(attr, struct sd_cdl_page_sysfs_entry, attr);
-+	struct sd_cdl_page *page = container_of(kobj, struct sd_cdl_page, kobj);
-+
-+	return entry->show(page, buf);
-+}
-+
-+static const struct sysfs_ops sd_cdl_page_sysfs_ops = {
-+	.show	= sd_cdl_page_sysfs_show,
-+};
-+
-+static struct kobj_type sd_cdl_page_ktype = {
-+	.sysfs_ops	= &sd_cdl_page_sysfs_ops,
-+	.default_groups	= sd_cdl_page_groups,
-+	.release	= sd_cdl_sysfs_nop_release,
-+};
-+
-+static void sd_cdl_sysfs_unregister_page(struct sd_cdl_page *page)
-+{
-+	int i;
-+
-+	for (i = 0; i < SD_CDL_MAX_DESC; i++) {
-+		if (page->sysfs_registered)
-+			kobject_del(&page->descs[i].kobj);
-+		kobject_put(&page->descs[i].kobj);
-+	}
-+	if (page->sysfs_registered)
-+		kobject_del(&page->kobj);
-+	kobject_put(&page->kobj);
-+
-+	page->cdlp = SD_CDLP_NONE;
-+	page->sysfs_registered = false;
-+}
-+
-+static int sd_cdl_sysfs_register_page(struct scsi_disk *sdkp,
-+				      struct sd_cdl_page *page)
-+{
-+	int i, ret;
-+
-+	/*
-+	 * If the page is already registered, the updated page descriptors
-+	 * are already exported.
-+	 */
-+	if (page->sysfs_registered)
-+		return 0;
-+
-+	ret = kobject_add(&page->kobj, &sdkp->cdl->kobj,
-+			  "%s", page->rw ? "write" : "read");
-+	if (ret) {
-+		kobject_put(&page->kobj);
-+		return ret;
-+	}
-+
-+	for (i = 0; i < SD_CDL_MAX_DESC; i++) {
-+		ret = kobject_add(&page->descs[i].kobj, &page->kobj,
-+				  "%d", i + 1);
++		ret = scsi_mode_select(sdp, 1, 0, buf_data, len, SD_TIMEOUT,
++				       sdkp->max_retries, &data, &sshdr);
 +		if (ret) {
-+			int j;
-+
-+			kobject_put(&page->descs[i].kobj);
-+			for (j = 0; j < SD_CDL_MAX_DESC; j++) {
-+				if (j < i)
-+					kobject_del(&page->descs[j].kobj);
-+				kobject_put(&page->descs[j].kobj);
-+			}
-+			kobject_del(&page->kobj);
-+			kobject_put(&page->kobj);
-+			return ret;
++			if (scsi_sense_valid(&sshdr))
++				sd_print_sense_hdr(sdkp, &sshdr);
++			return -EINVAL;
 +		}
 +	}
 +
-+	page->sysfs_registered = true;
++	sdkp->cdl_enabled = enable;
 +
 +	return 0;
 +}
 +
-+/*
-+ * Command duration limits sysfs plumbing, top level (duration limits directory
-+ * under the "device" sysfs directory.
-+ */
-+struct sd_cdl_sysfs_entry {
-+	struct attribute attr;
-+	ssize_t (*show)(struct sd_cdl *cdl, char *buf);
-+};
-+
-+#define CDL_ATTR_RO(_name)	\
+ /*
+  * Command duration limits descriptors sysfs plumbing.
+  */
+@@ -324,6 +381,7 @@ static int sd_cdl_sysfs_register_page(struct scsi_disk *sdkp,
+ struct sd_cdl_sysfs_entry {
+ 	struct attribute attr;
+ 	ssize_t (*show)(struct sd_cdl *cdl, char *buf);
++	ssize_t (*store)(struct sd_cdl *cdl, const char *buf, size_t length);
+ };
+ 
+ #define CDL_ATTR_RO(_name)	\
+@@ -332,6 +390,13 @@ struct sd_cdl_sysfs_entry {
+ 		.show	= cdl_##_name##_show,				\
+ 	}
+ 
++#define CDL_ATTR_RW(_name)	\
 +	static struct sd_cdl_sysfs_entry cdl_##_name##_entry = {	\
-+		.attr	= { .name = __stringify(_name), .mode = 0444 },	\
++		.attr	= { .name = __stringify(_name), .mode = 0644 },	\
 +		.show	= cdl_##_name##_show,				\
++		.store	= cdl_##_name##_store,				\
 +	}
 +
-+static ssize_t cdl_perf_vs_duration_guideline_show(struct sd_cdl *cdl,
-+						   char *buf)
+ static ssize_t cdl_perf_vs_duration_guideline_show(struct sd_cdl *cdl,
+ 						   char *buf)
+ {
+@@ -340,8 +405,31 @@ static ssize_t cdl_perf_vs_duration_guideline_show(struct sd_cdl *cdl,
+ }
+ CDL_ATTR_RO(perf_vs_duration_guideline);
+ 
++static ssize_t cdl_enable_show(struct sd_cdl *cdl, char *buf)
 +{
-+	return sysfs_emit(buf, "%s\n",
-+			  sd_cdl_perf_name(cdl->perf_vs_duration_guideline));
-+}
-+CDL_ATTR_RO(perf_vs_duration_guideline);
-+
-+static struct attribute *sd_cdl_attrs[] = {
-+	&cdl_perf_vs_duration_guideline_entry.attr,
-+	NULL,
-+};
-+
-+static umode_t sd_cdl_attr_visible(struct kobject *kobj,
-+				   struct attribute *attr, int n)
-+{
-+	struct sd_cdl *cdl = container_of(kobj, struct sd_cdl, kobj);
-+
-+	/* perf_vs_duration_guideline exists only if page T2A is supported */
-+	if (attr == &cdl_perf_vs_duration_guideline_entry.attr &&
-+	    cdl->pages[SD_CDL_READ].cdlp != SD_CDLP_T2A &&
-+	    cdl->pages[SD_CDL_WRITE].cdlp != SD_CDLP_T2A)
-+		return 0;
-+
-+	return attr->mode;
++	return sysfs_emit(buf, "%d\n", (int)cdl->sdkp->cdl_enabled);
 +}
 +
-+static const struct attribute_group sd_cdl_group = {
-+	.attrs		= sd_cdl_attrs,
-+	.is_visible	= sd_cdl_attr_visible,
-+};
-+__ATTRIBUTE_GROUPS(sd_cdl);
++static ssize_t cdl_enable_store(struct sd_cdl *cdl,
++				const char *buf, size_t count)
++{
++	int ret;
++	bool v;
 +
-+static ssize_t sd_cdl_sysfs_show(struct kobject *kobj,
-+				 struct attribute *attr, char *page)
++	if (kstrtobool(buf, &v))
++		return -EINVAL;
++
++	ret = sd_cdl_enable(cdl->sdkp, v);
++	if (ret)
++		return ret;
++
++	return count;
++}
++CDL_ATTR_RW(enable);
++
+ static struct attribute *sd_cdl_attrs[] = {
+ 	&cdl_perf_vs_duration_guideline_entry.attr,
++	&cdl_enable_entry.attr,
+ 	NULL,
+ };
+ 
+@@ -375,8 +463,25 @@ static ssize_t sd_cdl_sysfs_show(struct kobject *kobj,
+ 	return entry->show(cdl, page);
+ }
+ 
++static ssize_t sd_cdl_sysfs_store(struct kobject *kobj, struct attribute *attr,
++				  const char *buf, size_t length)
 +{
 +	struct sd_cdl_sysfs_entry *entry =
 +		container_of(attr, struct sd_cdl_sysfs_entry, attr);
 +	struct sd_cdl *cdl = container_of(kobj, struct sd_cdl, kobj);
 +
-+	return entry->show(cdl, page);
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (!entry->store)
++		return -EIO;
++
++	return entry->store(cdl, buf, length);
 +}
 +
-+static const struct sysfs_ops sd_cdl_sysfs_ops = {
-+	.show	= sd_cdl_sysfs_show,
-+};
-+
-+static void sd_cdl_sysfs_release(struct kobject *kobj)
-+{
-+	struct sd_cdl *cdl = container_of(kobj, struct sd_cdl, kobj);
-+
-+	kfree(cdl);
-+}
-+
-+static struct kobj_type sd_cdl_ktype = {
-+	.sysfs_ops	= &sd_cdl_sysfs_ops,
-+	.default_groups	= sd_cdl_groups,
-+	.release	= sd_cdl_sysfs_release,
-+};
-+
-+static void sd_cdl_sysfs_unregister(struct scsi_disk *sdkp)
-+{
-+	struct sd_cdl *cdl = NULL;
-+	int i;
-+
-+	swap(sdkp->cdl, cdl);
-+	if (!cdl)
-+		return;
-+
-+	if (!cdl->sysfs_registered) {
-+		kfree(cdl);
-+		return;
-+	}
-+
-+	for (i = 0; i < SD_CDL_RW; i++) {
-+		if (cdl->pages[i].sysfs_registered)
-+			sd_cdl_sysfs_unregister_page(&cdl->pages[i]);
-+	}
-+
-+	kobject_del(&cdl->kobj);
-+	kobject_put(&cdl->kobj);
-+}
-+
-+static void sd_cdl_sysfs_register(struct scsi_disk *sdkp)
-+{
-+	struct scsi_device *sdev = sdkp->device;
-+	struct sd_cdl *cdl = sdkp->cdl;
-+	struct sd_cdl_page *page;
-+	int i, ret;
-+
-+	if (!cdl->sysfs_registered) {
-+		ret = kobject_add(&cdl->kobj, &sdev->sdev_gendev.kobj,
-+				  "duration_limits");
-+		if (ret) {
-+			kobject_put(&cdl->kobj);
-+			goto unregister;
-+		}
-+
-+		cdl->sysfs_registered = true;
-+	}
-+
-+	/* Check if the pages changed */
-+	for (i = 0; i < SD_CDL_RW; i++) {
-+		page = &cdl->pages[i];
-+		if (page->cdlp == SD_CDLP_NONE) {
-+			sd_cdl_sysfs_unregister_page(page);
-+			continue;
-+		}
-+
-+		ret = sd_cdl_sysfs_register_page(sdkp, page);
-+		if (ret) {
-+			page->cdlp = SD_CDLP_NONE;
-+			goto unregister;
-+		}
-+	}
-+
-+	return;
-+
-+unregister:
-+	sd_cdl_sysfs_unregister(sdkp);
-+}
+ static const struct sysfs_ops sd_cdl_sysfs_ops = {
+ 	.show	= sd_cdl_sysfs_show,
++	.store	= sd_cdl_sysfs_store,
+ };
+ 
+ static void sd_cdl_sysfs_release(struct kobject *kobj)
+@@ -411,6 +516,7 @@ static void sd_cdl_sysfs_unregister(struct scsi_disk *sdkp)
+ 			sd_cdl_sysfs_unregister_page(&cdl->pages[i]);
+ 	}
+ 
++	cdl->sdkp->cdl_enabled = 0;
+ 	kobject_del(&cdl->kobj);
+ 	kobject_put(&cdl->kobj);
+ }
+@@ -689,7 +795,7 @@ static bool sd_cdl_supported(struct scsi_disk *sdkp, enum sd_cdlp *rw_cdlp,
+ 		rw_cdlp[SD_CDL_WRITE] != SD_CDLP_NONE;
+ }
+ 
+-static struct sd_cdl *sd_cdl_alloc(void)
++static struct sd_cdl *sd_cdl_alloc(struct scsi_disk *sdkp)
+ {
+ 	struct sd_cdl *cdl;
+ 	struct sd_cdl_page *page;
+@@ -699,6 +805,7 @@ static struct sd_cdl *sd_cdl_alloc(void)
+ 	if (!cdl)
+ 		return NULL;
+ 
++	cdl->sdkp = sdkp;
+ 	kobject_init(&cdl->kobj, &sd_cdl_ktype);
+ 	for (i = 0; i < SD_CDL_RW; i++) {
+ 		page = &cdl->pages[i];
+@@ -725,7 +832,7 @@ void sd_read_cdl(struct scsi_disk *sdkp, unsigned char *buf)
+ 		goto unregister;
+ 
+ 	if (!cdl) {
+-		cdl = sd_cdl_alloc();
++		cdl = sd_cdl_alloc(sdkp);
+ 		if (!cdl)
+ 			return;
+ 	}
+@@ -762,3 +869,26 @@ void sd_cdl_release(struct scsi_disk *sdkp)
+ {
+ 	sd_cdl_sysfs_unregister(sdkp);
+ }
 +
 +/*
-+ * CDL pages A and B time limits in microseconds.
++ * Check if a command has a duration limit set. If it does, return the
++ * descriptor index to use and 0 if the command has no limit set.
 + */
-+static u64 sd_cdl_time(u8 *buf, u8 cdlunit)
++int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd)
 +{
-+	u64 val = get_unaligned_be16(buf);
-+	u64 factor;
++	unsigned int ioprio = req_get_ioprio(scsi_cmd_to_rq(scmd));
++	unsigned int dld;
 +
-+	switch (cdlunit) {
-+	case 0x00:
++	/*
++	 * Use "no limit" if the request ioprio class is not IOPRIO_CLASS_DL
++	 * or if the user specified an invalid CDL descriptor index.
++	 */
++	if (IOPRIO_PRIO_CLASS(ioprio) != IOPRIO_CLASS_DL)
 +		return 0;
-+	case 0x04:
-+		/* 1 microsecond */
-+		factor = NSEC_PER_USEC;
-+		break;
-+	case 0x05:
-+		/* 10 milliseconds */
-+		factor = 10ULL * USEC_PER_MSEC;
-+		break;
-+	case 0x06:
-+		/* 500 milliseconds */
-+		factor = 500ULL * USEC_PER_MSEC;
-+		break;
-+	default:
++
++	dld = IOPRIO_PRIO_DATA(ioprio);
++	if (dld > SD_CDL_MAX_DESC)
 +		return 0;
-+	}
 +
-+	return val * factor;
-+}
-+
-+/*
-+ * CDL pages T2A and T2B time limits in microseconds.
-+ */
-+static u64 sd_cdl_t2time(u8 *buf, u8 t2cdlunits)
-+{
-+	u64 val = get_unaligned_be16(buf);
-+	u64 factor;
-+
-+	switch (t2cdlunits) {
-+	case 0x00:
-+		return 0;
-+	case 0x06:
-+		/* 500 nanoseconds */
-+		factor = 500;
-+		break;
-+	case 0x08:
-+		/* 1 microsecond */
-+		factor = NSEC_PER_USEC;
-+		break;
-+	case 0x0A:
-+		/* 10 milliseconds */
-+		factor = 10ULL * NSEC_PER_MSEC;
-+		break;
-+	case 0x0E:
-+		/* 500 milliseconds */
-+		factor = 500ULL * NSEC_PER_MSEC;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	val *= factor;
-+	do_div(val, NSEC_PER_USEC);
-+
-+	return val;
-+}
-+
-+static int sd_cdl_read_page(struct scsi_disk *sdkp, struct sd_cdl_page *page,
-+			    unsigned char *buf)
-+{
-+	struct sd_cdl *cdl = sdkp->cdl;
-+	struct sd_cdl_desc *desc = &page->descs[0];
-+	u8 cdlp = page->cdlp;
-+	struct scsi_mode_data data;
-+	int i, ret;
-+
-+	ret = scsi_mode_sense(sdkp->device, 0x08, 0x0a, cdl_page[cdlp].subpage,
-+			      buf, SD_BUF_SIZE, SD_TIMEOUT, sdkp->max_retries,
-+			      &data, NULL);
-+	if (ret) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "Command duration limits: read CDL page %s failed\n",
-+			  cdl_page[cdlp].name);
-+		return ret;
-+	}
-+	buf += data.header_length + data.block_descriptor_length;
-+
-+	if (cdlp == SD_CDLP_A || cdlp == SD_CDLP_B) {
-+		buf += 8;
-+
-+		for (i = 0; i < SD_CDL_MAX_DESC; i++, buf += 4, desc++) {
-+			u8 cdlunit = (buf[0] & 0xe0) >> 5;
-+
-+			desc->duration = sd_cdl_time(&buf[2], cdlunit);
-+			desc->cdlp = cdlp;
-+		}
-+	} else {
-+		/* T2A and T2B limits page */
-+		if (cdlp == SD_CDLP_T2A)
-+			cdl->perf_vs_duration_guideline = buf[7] >> 4;
-+
-+		buf += 8;
-+
-+		for (i = 0; i < SD_CDL_MAX_DESC; i++, buf += 32, desc++) {
-+			u8 t2cdlunits = buf[0] & 0x0f;
-+
-+			desc->max_inactive_time =
-+				sd_cdl_t2time(&buf[2], t2cdlunits);
-+			desc->max_active_time =
-+				sd_cdl_t2time(&buf[4], t2cdlunits);
-+			desc->duration =
-+				sd_cdl_t2time(&buf[10], t2cdlunits);
-+			desc->max_inactive_policy =  (buf[6] >> 4) & 0x0f;
-+			desc->max_active_policy = buf[6] & 0x0f;
-+			desc->duration_policy = buf[14] & 0x0f;
-+			desc->cdlp = cdlp;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int sd_cdl_read_pages(struct scsi_disk *sdkp, enum sd_cdlp *rw_cdlp,
-+			     unsigned char *buf)
-+{
-+	struct sd_cdl *cdl = sdkp->cdl;
-+	struct sd_cdl_page *page;
-+	int i, ret;
-+
-+	/* Read supported pages */
-+	for (i = 0; i < SD_CDL_RW; i++) {
-+		page = &cdl->pages[i];
-+		page->cdlp = rw_cdlp[i];
-+		if (page->cdlp == SD_CDLP_NONE)
-+			continue;
-+
-+		ret = sd_cdl_read_page(sdkp, page, buf);
-+		if (ret) {
-+			page->cdlp = SD_CDLP_NONE;
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static u8 sd_cdl_check_cmd_support(struct scsi_disk *sdkp,
-+				   enum sd_cdl_cmd cmd, unsigned char *buf)
-+{
-+	u8 opcode = cdl_cmd[cmd].opcode;
-+	u16 sa = cdl_cmd[cmd].sa;
-+	u8 cdlp;
-+
-+	/*
-+	 * READ 32 and WRITE 32 are used only for disks that also support
-+	 * type 2 data protection. If the disk does not have such feature,
-+	 * ignore these commands.
-+	 */
-+	if ((sa == READ_32 || sa == WRITE_32) &&
-+	    sdkp->protection_type != T10_PI_TYPE2_PROTECTION)
-+		return SD_CDLP_NONE;
-+
-+	/* Check operation code */
-+	if (scsi_report_opcode(sdkp->device, buf, SD_BUF_SIZE, opcode, sa) < 0)
-+		return SD_CDLP_NONE;
-+
-+	if ((buf[1] & 0x03) != 0x03)
-+		return SD_CDLP_NONE;
-+
-+	/* See SPC-6, one command format of REPORT SUPPORTED OPERATION CODES */
-+	cdlp = (buf[1] & 0x18) >> 3;
-+	if (buf[0] & 0x01) {
-+		/* rwcdlp == 1 */
-+		switch (cdlp) {
-+		case 0x01:
-+			return SD_CDLP_T2A;
-+		case 0x02:
-+			return SD_CDLP_T2B;
-+		}
-+	} else {
-+		/* rwcdlp == 0 */
-+		switch (cdlp) {
-+		case 0x01:
-+			return SD_CDLP_A;
-+		case 0x02:
-+			return SD_CDLP_B;
-+		}
-+	}
-+
-+	return SD_CDLP_NONE;
-+}
-+
-+static bool sd_cdl_supported(struct scsi_disk *sdkp, enum sd_cdlp *rw_cdlp,
-+			     unsigned char *buf)
-+{
-+	enum sd_cdlp cmd_cdlp[SD_CDL_CMD_MAX];
-+	int i;
-+
-+	/*
-+	 * Command duration limits is supported for READ 16, WRITE 16,
-+	 * READ 32 and WRITE 32. Go through all these commands one at a time
-+	 * and check if any support duration limits.
-+	 */
-+	for (i = 0; i < SD_CDL_CMD_MAX; i++)
-+		cmd_cdlp[i] = sd_cdl_check_cmd_support(sdkp, i, buf);
-+
-+	/*
-+	 * Allow support only for drives that report the same CDL page for the
-+	 * read 16 and 32 variants and the same page for the write 16 and 32
-+	 * variants.
-+	 */
-+	if (cmd_cdlp[SD_CDL_READ_32] != SD_CDLP_NONE &&
-+	    cmd_cdlp[SD_CDL_READ_16] != SD_CDLP_NONE) {
-+		if (cmd_cdlp[SD_CDL_READ_32] != cmd_cdlp[SD_CDL_READ_16])
-+			rw_cdlp[SD_CDL_READ] = SD_CDLP_NONE;
-+		else
-+			rw_cdlp[SD_CDL_READ] = cmd_cdlp[SD_CDL_READ_16];
-+	} else {
-+		rw_cdlp[SD_CDL_READ] = cmd_cdlp[SD_CDL_READ_16];
-+	}
-+
-+	if (cmd_cdlp[SD_CDL_WRITE_32] != SD_CDLP_NONE &&
-+	    cmd_cdlp[SD_CDL_WRITE_16] != SD_CDLP_NONE) {
-+		if (cmd_cdlp[SD_CDL_WRITE_32] != cmd_cdlp[SD_CDL_WRITE_16])
-+			rw_cdlp[SD_CDL_WRITE] = SD_CDLP_NONE;
-+		else
-+			rw_cdlp[SD_CDL_WRITE] = cmd_cdlp[SD_CDL_WRITE_16];
-+	} else {
-+		rw_cdlp[SD_CDL_WRITE] = cmd_cdlp[SD_CDL_WRITE_16];
-+	}
-+
-+	return rw_cdlp[SD_CDL_READ] != SD_CDLP_NONE ||
-+		rw_cdlp[SD_CDL_WRITE] != SD_CDLP_NONE;
-+}
-+
-+static struct sd_cdl *sd_cdl_alloc(void)
-+{
-+	struct sd_cdl *cdl;
-+	struct sd_cdl_page *page;
-+	int i, j;
-+
-+	cdl = kzalloc(sizeof(struct sd_cdl), GFP_KERNEL);
-+	if (!cdl)
-+		return NULL;
-+
-+	kobject_init(&cdl->kobj, &sd_cdl_ktype);
-+	for (i = 0; i < SD_CDL_RW; i++) {
-+		page = &cdl->pages[i];
-+		kobject_init(&page->kobj, &sd_cdl_page_ktype);
-+		page->rw = i;
-+		page->cdlp = SD_CDLP_NONE;
-+		for (j = 0; j < SD_CDL_MAX_DESC; j++)
-+			kobject_init(&page->descs[j].kobj, &sd_cdl_desc_ktype);
-+	}
-+
-+	return cdl;
-+}
-+
-+void sd_read_cdl(struct scsi_disk *sdkp, unsigned char *buf)
-+{
-+	struct sd_cdl *cdl = sdkp->cdl;
-+	enum sd_cdlp rw_cdlp[SD_CDL_RW];
-+
-+	/*
-+	 * Check for CDL support. If the disk does not support duration limits,
-+	 * clear any support information that was previously registered.
-+	 */
-+	if (!sd_cdl_supported(sdkp, rw_cdlp, buf))
-+		goto unregister;
-+
-+	if (!cdl) {
-+		cdl = sd_cdl_alloc();
-+		if (!cdl)
-+			return;
-+	}
-+
-+	/*
-+	 * We have CDL support: force the use of READ16/WRITE16.
-+	 * READ32 and WRITE32 will be used automatically for disks with
-+	 * T10_PI_TYPE2_PROTECTION support.
-+	 */
-+	sdkp->device->use_16_for_rw = 1;
-+	sdkp->device->use_10_for_rw = 0;
-+
-+	if (!sdkp->cdl) {
-+		sd_printk(KERN_NOTICE, sdkp,
-+			"Command duration limits supported, reads: %s, writes: %s\n",
-+			cdl_page[rw_cdlp[SD_CDL_READ]].name,
-+			cdl_page[rw_cdlp[SD_CDL_WRITE]].name);
-+		sdkp->cdl = cdl;
-+	}
-+
-+	/* Update duration limits descriptor pages */
-+	if (sd_cdl_read_pages(sdkp, rw_cdlp, buf))
-+		goto unregister;
-+
-+	sd_cdl_sysfs_register(sdkp);
-+
-+	return;
-+
-+unregister:
-+	sd_cdl_sysfs_unregister(sdkp);
-+}
-+
-+void sd_cdl_release(struct scsi_disk *sdkp)
-+{
-+	sd_cdl_sysfs_unregister(sdkp);
++	return dld;
 +}
 -- 
 2.38.1
