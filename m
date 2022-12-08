@@ -2,58 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 718DDC6371A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C01C6371D
 	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230284AbiLHLDz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:03:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39776 "EHLO
+        id S230288AbiLHLD4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:03:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbiLHLDO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:03:14 -0500
+        with ESMTP id S230357AbiLHLDC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:03:02 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8928F88B62;
-        Thu,  8 Dec 2022 03:01:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0645860B7B;
+        Thu,  8 Dec 2022 03:01:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497290; x=1702033290;
+  t=1670497283; x=1702033283;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+niR1lfLubo3xlVgT4pgZA15mdDi1+PYFnKKG++F5eY=;
-  b=aRGvAB/zL7Sx9LyPiK89Q2CxNQFObQpUd8Ud9gQg6xnk1iUPdJdYM/LF
-   YbekHTQEx6NZVRIFWVO27oK0G0EUIrp2bRg4mPpviJ5ZGMSEUNQ0bLg93
-   vCFldYr0XON+JDHDAb1RpeHpltZ3ANu1G+qJEgQcRL/ozi+1x317exW/x
-   xzx/PgbZ2Lkuv5x2tBrXUHmwg34YnXWtCK2BMFTxPR+mnCs1Tx6Jjo2Z7
-   AyQJJUlEExyex68fuGNLOdkcArobNXsP53cH40gVn3IPQhSn/turQwXsW
-   DzKEYHGSHYwNPXk6iFv6byYbyNO053lM4V8xZCEoi2FvQ5BWCw209ca5Y
-   A==;
+  bh=CbISjLppXxJda0wbpgKO8tx1bXq4PqnF3kqkJG4azWc=;
+  b=GLvW+VZd2RNNa0lzjyEYrqUF0ZV3Sp2SVquggcfs9plz7gIh5+AW7npy
+   QWov9t86Gcy4Ubk5jhIWhxsbVAH5cqDIK/0hSf60PNlWNolXiSHtdlPkY
+   3Yutzm8SLE3TJ+KzCdVhxFqre0L99y5Pn96LmqQ2UjHQ6QbgaXurseqbh
+   2kELsDB4x4tWrUL3/xWPUpk/O72lfx/qNRTUn8QjL/FK5LQ1lJfjLdmHR
+   LkTvdGoUQCJMKSfkbiMKoZOtICYDAZB8tQVz/QnCDMYqtVQ4E5TPXTb2d
+   T8pcfKFWr7EZGz54EUf6zy/sOH0mfSeIaS5HwUPzBGwnhzaYyLPhCPk+u
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333419"
+   d="scan'208";a="223333408"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:30 +0800
-IronPort-SDR: YQauxxZY7txmcFQe7Pwx3s9axK1gC4G3jnm0nXCPwlVfrohs5iaXblfAKKQpRwx2OsSyuIT2wZ
- bDmSU4gZMt6AYuVhhziPc8W7tIeNObqSodZHqJoTrk5b/Ysxi4AKm+eaY9cOpIHdrE0SCJTDNa
- mJo4RHJ6SdtVs4HDGsH9t1tn+pbMataRrOZlzo1Xdl8fH6w8Umyrb/pTP8p/TEM1jnczwjMp9G
- p9nJxvZ+5+4JWrS7eHtDfrrYKHh33gNjQZLjoXsdESTqiKMQd8v2ieMRpDZk0n9oBSmhwtbtPx
- 3Lg=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:23 +0800
+IronPort-SDR: T97g4hz6isM4/FplK7XbgZfZ2If208TeqDLtqv4kSXG+efcHMqIZTu54cnZgdHshWyZwoPDqgH
+ 1SLUdJ72/kFI0/3T5Sr03pWvXoMvBKKNtv8jpI6lCHd8aqEeAACJ3XEXBCxP2h98YViVgtXHWq
+ NPEVfNyzwchXEMR+czGRucvsQpHXVHsbtsEo81piFqFtm7vjgnL4nwgXvX78Pnj+6rKFopri+I
+ jp6RSZVrRF5qUHfR6XBmkqMYYe2CMqh/xbFjmPcaHw3QMgKJcs1bFo4bj1cBZziOXd2HTJvgoq
+ D5U=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:15 -0800
-IronPort-SDR: j4N1t+Kkv2DnU9PP2ymeo1HBAkQmm/kUIwHT8ZSj0D+gO/e9L9FFiBScrT/JDejEew3VKQrRFb
- 3Pxfo9IQwaUiEShnjaoj6Ar4M+Fau7XCH7lWi9wMV+QbOmF9bwHsHNpSKJS4lrBHf22/Ylmxp6
- ujnapAB7+3Wwhz1jjVQpQEKXF3c/axlnWc6ipQHcrfXDOw17Juj1iTqT3omUvs5LbCHI2jEa2u
- ja9OuL5MV+sHCvnOwSO3/O9av2lp7TF9bTVd7GH5Adr1y2Qc1VOgkcnWW2vp0lRQrrdRaFOSHa
- zRY=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:08 -0800
+IronPort-SDR: rAMMAhhop+EpmbOCz0KVGWHPIBrbVRVs5S9wV3sxQnq4zHeXZXapNTqZAD1q5ZsEl5KN9oVntM
+ zkClnKxNxptVXjGjZ6aYscQV0zh54zms7c035Js0sDgH7a9qjWcsj60bk5klFjDr4GLXrJ0sun
+ CLiEO5WGB4C62ev8rr+N6UNvjv2fU/pYISgwo/AOVxEHiBnDj0kgkgX/lhp0qWROiCsXeOU6mQ
+ wuRlktVUVA3asZlUe9iuTNCaWPLFG2ihOgpmjh1FFaslO/9gSN4EBLZeDrFTW6/E8Z2sXlop8a
+ HNk=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:29 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:22 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
         linux-ide@vger.kernel.org
-Subject: [PATCH 20/25] ata: libata: set read/write commands CDL index
-Date:   Thu,  8 Dec 2022 11:59:36 +0100
-Message-Id: <20221208105947.2399894-21-niklas.cassel@wdc.com>
+Subject: [PATCH 17/25] ata: libata-scsi: handle CDL bits in ata_scsiop_maint_in()
+Date:   Thu,  8 Dec 2022 11:59:33 +0100
+Message-Id: <20221208105947.2399894-18-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
@@ -65,148 +64,85 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-For devices supporting the command duration limits feature, when a read
-or write operation has the IOPRIO_CLASS_DL priority class and the
-command duration limits feature is enabled, set the command duration
-limit index field of the command to the priority level.
+For a scsi MAINTENANCE_IN/MI_REPORT_SUPPORTED_OPERATION_CODES operation,
+add the translation of the rwcdlp and cdlp bits for the READ16 and
+WRITE16 commands. If the ATA device does not support command duration
+limits, these bits are always 0. If the ATA device supports command
+duration limits, the rwcdlp bit is set to 1 for READ16 and WRITE16 and
+the cdlp bits are set to 0x1 for READ16 and 0x2 for WRITE16. These
+correspond to the T2A mode page containing the read descriptors and
+to the T2B mode page containing the write descriptors, as defined in
+SAT-5.
 
-For unqueued read and write operations, the command duration limit index
-is set as the lower 2 bits of the feature field. For queued NCQ
-read/write commands, the index is set as the lower 2 bits of the
-auxiliary field.
-
-Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/libata-core.c | 41 +++++++++++++++++++++++++++++++++++----
- drivers/ata/libata-scsi.c |  3 +--
- drivers/ata/libata.h      |  2 +-
- include/linux/libata.h    |  1 +
- 4 files changed, 40 insertions(+), 7 deletions(-)
+ drivers/ata/libata-scsi.c | 30 ++++++++++++++++++++++++++----
+ 1 file changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 70bf82f804da..c79ee38dc594 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -663,13 +663,37 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
- 	return block;
- }
- 
-+/*
-+ * Set a taskfile CDL index.
-+ */
-+static inline void ata_set_tf_cdl(struct ata_queued_cmd *qc, int ioprio)
-+{
-+	struct ata_taskfile *tf = &qc->tf;
-+	int cdl;
-+
-+	if (IOPRIO_PRIO_CLASS(ioprio) != IOPRIO_CLASS_DL)
-+		return;
-+
-+	cdl = IOPRIO_PRIO_DATA(ioprio) & 0x07;
-+	if (!cdl)
-+		return;
-+
-+	if (tf->protocol == ATA_PROT_NCQ)
-+		tf->auxiliary |= cdl;
-+	else
-+		tf->feature |= cdl;
-+
-+	/* Mark this command as having a CDL */
-+	qc->flags |= ATA_QCFLAG_HAS_CDL;
-+}
-+
- /**
-  *	ata_build_rw_tf - Build ATA taskfile for given read/write request
-  *	@qc: Metadata associated with the taskfile to build
-  *	@block: Block address
-  *	@n_block: Number of blocks
-  *	@tf_flags: RW/FUA etc...
-- *	@class: IO priority class
-+ *	@ioprio: IO priority class and level
-  *
-  *	LOCKING:
-  *	None.
-@@ -683,7 +707,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
-  *	-EINVAL if the request is invalid.
-  */
- int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
--		    unsigned int tf_flags, int class)
-+		    unsigned int tf_flags, int ioprio)
- {
- 	struct ata_taskfile *tf = &qc->tf;
- 	struct ata_device *dev = qc->dev;
-@@ -720,12 +744,21 @@ int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
- 			tf->device |= 1 << 7;
- 
- 		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED &&
--		    class == IOPRIO_CLASS_RT)
-+		    IOPRIO_PRIO_CLASS(ioprio) == IOPRIO_CLASS_RT)
- 			tf->hob_nsect |= ATA_PRIO_HIGH << ATA_SHIFT_PRIO;
-+
-+		if (dev->flags & ATA_DFLAG_CDL_ENABLED)
-+			ata_set_tf_cdl(qc, ioprio);
-+
- 	} else if (dev->flags & ATA_DFLAG_LBA) {
- 		tf->flags |= ATA_TFLAG_LBA;
- 
--		if (lba_28_ok(block, n_block)) {
-+		if (dev->flags & ATA_DFLAG_CDL_ENABLED)
-+			ata_set_tf_cdl(qc, ioprio);
-+
-+		/* a CDL index cannot be supplied with the 28-bit commands */
-+		if (!(qc->flags & ATA_QCFLAG_HAS_CDL) &&
-+		    lba_28_ok(block, n_block)) {
- 			/* use LBA28 */
- 			tf->device |= (block >> 24) & 0xf;
- 		} else if (lba_48_ok(block, n_block)) {
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c4c39a5db75e..105795e867c9 100644
+index 042c1748815a..2500f3ff24a5 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -1549,7 +1549,6 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 	struct scsi_cmnd *scmd = qc->scsicmd;
- 	const u8 *cdb = scmd->cmnd;
- 	struct request *rq = scsi_cmd_to_rq(scmd);
--	int class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
- 	unsigned int tf_flags = 0;
- 	u64 block;
- 	u32 n_block;
-@@ -1625,7 +1624,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 	qc->flags |= ATA_QCFLAG_IO;
- 	qc->nbytes = n_block * scmd->device->sector_size;
+@@ -3264,7 +3264,7 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	struct ata_device *dev = args->dev;
+ 	u8 *cdb = args->cmd->cmnd;
+-	u8 supported = 0;
++	u8 supported = 0, cdlp = 0, rwcdlp = 0;
+ 	unsigned int err = 0;
  
--	rc = ata_build_rw_tf(qc, block, n_block, tf_flags, class);
-+	rc = ata_build_rw_tf(qc, block, n_block, tf_flags, req_get_ioprio(rq));
- 	if (likely(rc == 0))
- 		return 0;
+ 	if (cdb[2] != 1 && cdb[2] != 3) {
+@@ -3291,10 +3291,8 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+ 	case MAINTENANCE_IN:
+ 	case READ_6:
+ 	case READ_10:
+-	case READ_16:
+ 	case WRITE_6:
+ 	case WRITE_10:
+-	case WRITE_16:
+ 	case ATA_12:
+ 	case ATA_16:
+ 	case VERIFY:
+@@ -3304,6 +3302,28 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+ 	case START_STOP:
+ 		supported = 3;
+ 		break;
++	case READ_16:
++		supported = 3;
++		if (dev->flags & ATA_DFLAG_CDL) {
++			/*
++			 * CDL read descriptors map to the T2A page, that is,
++			 * rwcdlp = 0x01 and cdlp = 0x01
++			 */
++			rwcdlp = 0x01;
++			cdlp = 0x01 << 3;
++		}
++		break;
++	case WRITE_16:
++		supported = 3;
++		if (dev->flags & ATA_DFLAG_CDL) {
++			/*
++			 * CDL write descriptors map to the T2B page, that is,
++			 * rwcdlp = 0x01 and cdlp = 0x02
++			 */
++			rwcdlp = 0x01;
++			cdlp = 0x02 << 3;
++		}
++		break;
+ 	case ZBC_IN:
+ 	case ZBC_OUT:
+ 		if (ata_id_zoned_cap(dev->id) ||
+@@ -3319,7 +3339,9 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+ 		break;
+ 	}
+ out:
+-	rbuf[1] = supported; /* supported */
++	/* One command format */
++	rbuf[0] = rwcdlp;
++	rbuf[1] = cdlp | supported;
+ 	return err;
+ }
  
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 5481d29bb273..339b19c0bbcf 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -45,7 +45,7 @@ static inline void ata_force_cbl(struct ata_port *ap) { }
- extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
- extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
- extern int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
--			   unsigned int tf_flags, int class);
-+			   unsigned int tf_flags, int ioprio);
- extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
- 			     struct ata_device *dev);
- extern unsigned ata_exec_internal(struct ata_device *dev,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f41a96f89cd7..ecdabe5647d1 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -207,6 +207,7 @@ enum {
- 	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
- 	ATA_QCFLAG_QUIET	= (1 << 6), /* don't report device error */
- 	ATA_QCFLAG_RETRY	= (1 << 7), /* retry after failure */
-+	ATA_QCFLAG_HAS_CDL	= (1 << 8), /* qc has CDL a descriptor set */
- 
- 	ATA_QCFLAG_EH		= (1 << 16), /* cmd aborted and owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
 -- 
 2.38.1
 
