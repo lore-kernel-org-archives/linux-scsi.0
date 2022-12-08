@@ -2,108 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0669AC001B2
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 23:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC4DCC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 23:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230219AbiLHXXb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 18:23:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59962 "EHLO
+        id S230330AbiLHXof (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 18:44:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbiLHXW5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 18:22:57 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C2A9A504F;
-        Thu,  8 Dec 2022 15:21:55 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B8N7X3I015617;
-        Thu, 8 Dec 2022 23:21:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=8SFDvbzQ1dlolm07vRWQ6nGPb415dRbXSJxfEmPGi4I=;
- b=JX9Yl/S3uQf0i4ed0/klIrdU9A6WnqTbL4j2jZrskvQ/Q7PeieJ14gVOnXHrjPcWmkkF
- dsSV30pW/C2yYi/EMf5i2m1V/7p9Cy5B4f7NM9ax/Q+yihDwdVx9pyPFAUJn9TJFwEzh
- LgAiE+pg2JK27dCkh6aaUg85fZiTqddKRVqXNR/vMxBzGmQGh71Q1hVghP2hOjTvB9Mo
- APal3RyjSucj8rmjqZp+kLMMXzVjOgzv5OKpUjwbkfjPv+NiuohIX4o5Q0X7Vi8NOlUK
- 4LL2pMuuSTPsY3EJ9YeGlxGN5vgz7+IV4k1zJHcrKey96bZDfEgFR/8XAx/KuaAumZr+ CA== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3mavtf4y7c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 08 Dec 2022 23:21:44 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2B8NLiel017541
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 8 Dec 2022 23:21:44 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Thu, 8 Dec 2022 15:21:43 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <eddie.huang@mediatek.com>,
-        <daejun7.park@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v11 16/16] ufs: core: mcq: Enable Multi Circular Queue
-Date:   Thu, 8 Dec 2022 15:18:42 -0800
-Message-ID: <b0efa2abeba389a7739ea26956e8b342c65deab1.1670541364.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1670541363.git.quic_asutoshd@quicinc.com>
-References: <cover.1670541363.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S230363AbiLHXoI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 18:44:08 -0500
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F85A3AC15
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 15:44:06 -0800 (PST)
+Received: by mail-pl1-f170.google.com with SMTP id t2so114304ply.2
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Dec 2022 15:44:06 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0nrNVlNOwAxazJvmsTE1rK3sdQfMPeju4ArQiY56A7w=;
+        b=F4wdlCFvCitjbAAN6floe6taQrfEz3H+PlprzJjb1vPt8nhroFvFOP7ZBCFHDYVnf9
+         vB3WbQsRKMPDN04Zq4oWTpn+S0//Rnp9jWNzYFF0n0pxgzR3vOTaw2hkcEv0+vc3ciwk
+         trMy8KGIAwmKqrxJk76GxCWLUBPCkjIpuiVMJTMGqjRRwIeX/ttj1rNuwK+GNB3DtjxC
+         Ijyb55Y6FVSt6I7mxG2IqmW2PI+eDvMhd4cuexdsRVS37VuqGTfZqLwU2EjUll24iB/K
+         tK2NF66JV7qUXQ6Nv2N2sOp0dhaZi4c1Mw8q0xbRCFxJt/KqBlM2+vZZdtwYWqlMzbpo
+         o1Ww==
+X-Gm-Message-State: ANoB5pngujrNTG6N/SsN3AEyC+LlUbTabVem162xYOQg7XP/OGihci3k
+        +u50pnbPAAsZgirOZjRoBRU9H/i7lKk=
+X-Google-Smtp-Source: AA0mqf4P4OusyyDzXbZqhm3nNjxVbhzCzZr5/PbpbKTC/YaRAH2k6pjn5Nttn6L0mtt7hPO9/xMdbQ==
+X-Received: by 2002:a17:90b:310f:b0:219:d84:4446 with SMTP id gc15-20020a17090b310f00b002190d844446mr3632830pjb.26.1670543045330;
+        Thu, 08 Dec 2022 15:44:05 -0800 (PST)
+Received: from bvanassche-glaptop2.roam.corp.google.com ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id t15-20020a17090a2f8f00b00213d28a6dedsm148553pjd.13.2022.12.08.15.44.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Dec 2022 15:44:04 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v5 0/3] Prepare for upstreaming Pixel 6 and 7 UFS support
+Date:   Thu,  8 Dec 2022 15:43:55 -0800
+Message-Id: <20221208234358.252031-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.39.0.rc1.256.g54fd8350bd-goog
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: xxePhSOhwBR-o6G3jTubTL-sbDvT-Oc_
-X-Proofpoint-ORIG-GUID: xxePhSOhwBR-o6G3jTubTL-sbDvT-Oc_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-08_12,2022-12-08_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- lowpriorityscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999
- malwarescore=0 clxscore=1015 adultscore=0 spamscore=0 phishscore=0
- bulkscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2210170000 definitions=main-2212080192
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable MCQ in the Host Controller.
+Hi Martin,
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+The patches in this series are a first step towards integrating support in the
+upstream kernel for the UFS controller in the Pixel 6 and 7. Please consider
+these patches for the next merge window.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e42d642..7f0bc10 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8381,6 +8381,12 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
- 
- 	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
-+
-+	/* Select MCQ mode */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-+		      REG_UFS_MEM_CFG);
-+	hba->mcq_enabled = true;
-+
- 	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
- 		 hba->nr_hw_queues, hba->nr_queues[HCTX_TYPE_DEFAULT],
- 		 hba->nr_queues[HCTX_TYPE_READ], hba->nr_queues[HCTX_TYPE_POLL],
--- 
-2.7.4
+Note: instructions for downloading the Pixel kernel source code are available
+at https://source.android.com/setup/build/building-kernels.
+
+Thank you,
+
+Bart.
+
+Changes compared to v4:
+- Dropped two patches. Dropped one patch without Reviewed-by tag and another
+  patch that exports two functions without adding in-tree callers.
+
+Changes compared to v3:
+- Changed SCSI_UFS_VARIABLE_SG_ENTRY_SIZE from user-selectable into selected
+  only if needed.
+
+Changes compared to v2:
+- Addressed more review comments from Avri.
+
+Changes compared to v1:
+- Addressed Avri's review comments.
+- Added patch "Allow UFS host drivers to override the sg entry size".
+Bart Van Assche (2):
+  scsi: ufs: Reduce the clock scaling latency
+  scsi: ufs: Pass the clock scaling timeout as an argument
+
+Eric Biggers (1):
+  scsi: ufs: Allow UFS host drivers to override the sg entry size
+
+ drivers/ufs/core/ufshcd.c | 60 ++++++++++++++++++++++-----------------
+ drivers/ufs/host/Kconfig  |  4 +++
+ include/ufs/ufshcd.h      | 30 ++++++++++++++++++++
+ include/ufs/ufshci.h      |  9 ++++--
+ 4 files changed, 75 insertions(+), 28 deletions(-)
 
