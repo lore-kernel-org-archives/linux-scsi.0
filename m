@@ -2,160 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E4DC3A5A7
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 06:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B79B1C63708
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 06:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbiLHGeW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 01:34:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41320 "EHLO
+        id S229863AbiLHGgp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 01:36:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229695AbiLHGeU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 01:34:20 -0500
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5FEE9E46F;
-        Wed,  7 Dec 2022 22:34:18 -0800 (PST)
-Received: by mail-lj1-x232.google.com with SMTP id a19so559805ljk.0;
-        Wed, 07 Dec 2022 22:34:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kvEzohbThjLf0h3wsatoxrFWAD5WOAdcVplnsmd6fDY=;
-        b=fFAVrLZXrJJ1GBpBB/tQ1n7kV1X/9Rn46h7U8vz3M4Om+TzOIrlxezxc9JnM2rzDi+
-         wou1Hwh2yqzdkZamzf1utI0RyT/0QbcWSBm9s6T4H+GLlse28qsMpKxI3Y4ATR8xT9Lq
-         nYYhaB0M+g3mTMeE9FYzMMpEh+TQDm11JknZp5TyxnH6LC+nw0pYfZSLELeOMCoG9mLO
-         WuELI6GBZHmYiDwIAYZosinwwxA4LrYa2d0AyXyyUu68qDy/ueuPzpL90RsW3dBoqTNh
-         VF50j+4kWJ8gZEgKxEb/6ts6SxZRIl4aay7hWvm8sy+xeWz9kjNlBjLxa36Iv0u7FBfM
-         V0Ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=kvEzohbThjLf0h3wsatoxrFWAD5WOAdcVplnsmd6fDY=;
-        b=E9qg4huhu1svTNJNKTVmr30MylJkrL/GkduhxDLycqmYI+AFh5nvoHHTBQhDUuXbSt
-         3rrbc5y7LV7fBpVgp5GhdwwtcfLlcwRrFpr0hAzmAj4vDnywNyp5fs1SoBw1ZmxXxOIj
-         YiuyaTgV3B7vGWIfwKkeiShURRFD3pkIz6pquhbSpkKqM7oP/hQfe3mHMIFjtWyJ+B67
-         qZ7wS/OIi64CScysOWWyEYnMwsM2j8cZA3rb8f7sXWO1qme+uporRH4h4+9YERmM9U0B
-         qJV54X+ZrEKCrd5Qrti33EkdBoHyXITANWdqmXC5QpAsxyKfIe+YJ0bwr+psomjk5su6
-         9WKw==
-X-Gm-Message-State: ANoB5pkg3b1GaiNAuAyLaz88p8ApKzRu74zN5+oSPZ6DwQ0YnQPaTFG5
-        hYefnUKtHVRLwtqx0i0tmDuyxbesIToySJYghg==
-X-Google-Smtp-Source: AA0mqf5vx1cSAeMelmy7VQm+f5BVpQcnvI/NYkPrDeRiepDck4qrGlIf2FKqYQvII4OYK7sQ/CAbbqKB43TOLPq9NJg=
-X-Received: by 2002:a2e:bf09:0:b0:279:6c82:3e9a with SMTP id
- c9-20020a2ebf09000000b002796c823e9amr21501858ljr.97.1670481256983; Wed, 07
- Dec 2022 22:34:16 -0800 (PST)
+        with ESMTP id S229848AbiLHGgn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 01:36:43 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAF989E45A
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Dec 2022 22:36:42 -0800 (PST)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NSPYK2VklzRps3;
+        Thu,  8 Dec 2022 14:35:49 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 8 Dec 2022 14:36:22 +0800
+Subject: Re: [PATCH 1/6] scsi: libsas: move sas_get_ata_command_set() up to
+ save the declaration
+To:     John Garry <john.g.garry@oracle.com>, <martin.petersen@oracle.com>,
+        <jejb@linux.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
+        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
+        <damien.lemoal@opensource.wdc.com>
+References: <20221204081643.3835966-1-yanaijie@huawei.com>
+ <20221204081643.3835966-2-yanaijie@huawei.com>
+ <37743f09-8d30-a41b-10c1-caf34f919f3e@oracle.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <6297461a-0908-1c73-383e-6f5f2146c8ea@huawei.com>
+Date:   Thu, 8 Dec 2022 14:36:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-References: <20221208061037.24313-1-peter.wang@mediatek.com>
-In-Reply-To: <20221208061037.24313-1-peter.wang@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Thu, 8 Dec 2022 14:34:05 +0800
-Message-ID: <CAGaU9a_RCpoJggFUmtBmq-xx8EPAaabMK0ptA8y_nm5ahLTMUw@mail.gmail.com>
-Subject: Re: [PATCH v5] ufs: core: wlun suspend SSU/enter hibern8 fail recovery
-To:     peter.wang@mediatek.com
-Cc:     stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com,
-        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
-        naomi.chu@mediatek.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <37743f09-8d30-a41b-10c1-caf34f919f3e@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ canpemm500004.china.huawei.com (7.192.104.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Peter,
+On 2022/12/5 16:45, John Garry wrote:
+> On 04/12/2022 08:16, Jason Yan wrote:
+>> There is a sas_get_ata_command_set() declaration above sas_get_ata_info()
+>> to make it compile ok. However this function is defined in the same file
+>> below. So move it up to save the declaration.
+>>
+>> Cc: John Garry <john.g.garry@oracle.com>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> 
+> Apart from comments, below:
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> 
 
-Please update the patch version and bring all tags (review, ack
-...etc.) to your new patch : )
+Thank you John.
 
-On Thu, Dec 8, 2022 at 2:17 PM <peter.wang@mediatek.com> wrote:
->
-> From: Peter Wang <peter.wang@mediatek.com>
->
-> When SSU/enter hibern8 fail in wlun suspend flow, trigger error
-> handler and return busy to break the suspend.
-> If not, wlun runtime pm status become error and the consumer will
-> stuck in runtime suspend status.
->
-> Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-> ---
->  drivers/ufs/core/ufshcd.c | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
->
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index b1f59a5fe632..c91d58d1486a 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -106,6 +106,13 @@
->                        16, 4, buf, __len, false);                        =
-\
->  } while (0)
->
-> +#define ufshcd_force_error_recovery(hba) do {                           =
-\
-> +       spin_lock_irq(hba->host->host_lock);                            \
-> +       hba->force_reset =3D true;                                       =
- \
-> +       ufshcd_schedule_eh_work(hba);                                   \
-> +       spin_unlock_irq(hba->host->host_lock);                          \
-> +} while (0)
-> +
->  int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
->                      const char *prefix)
->  {
-> @@ -9049,6 +9056,15 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba=
-, enum ufs_pm_op pm_op)
->
->                 if (!hba->dev_info.b_rpm_dev_flush_capable) {
->                         ret =3D ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_=
-mode);
-> +                       if (ret && pm_op !=3D UFS_SHUTDOWN_PM) {
-> +                               /*
-> +                                * If return err in suspend flow, IO will=
- hang.
-> +                                * Trigger error handler and break suspen=
-d for
-> +                                * error recovery.
-> +                                */
-> +                               ufshcd_force_error_recovery(hba);
-> +                               ret =3D -EBUSY;
-> +                       }
->                         if (ret)
->                                 goto enable_scaling;
->                 }
-> @@ -9060,6 +9076,15 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba=
-, enum ufs_pm_op pm_op)
->          */
->         check_for_bkops =3D !ufshcd_is_ufs_dev_deepsleep(hba);
->         ret =3D ufshcd_link_state_transition(hba, req_link_state, check_f=
-or_bkops);
-> +       if (ret && pm_op !=3D UFS_SHUTDOWN_PM) {
-> +               /*
-> +                * If return err in suspend flow, IO will hang.
-> +                * Trigger error handler and break suspend for
-> +                * error recovery.
-> +                */
-> +               ufshcd_force_error_recovery(hba);
-> +               ret =3D -EBUSY;
-> +       }
->         if (ret)
->                 goto set_dev_active;
->
-> --
-> 2.18.0
->
+>> ---
+>>   drivers/scsi/libsas/sas_ata.c | 28 +++++++++++++---------------
+>>   1 file changed, 13 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_ata.c 
+>> b/drivers/scsi/libsas/sas_ata.c
+>> index f7439bf9cdc6..34009c330eb2 100644
+>> --- a/drivers/scsi/libsas/sas_ata.c
+>> +++ b/drivers/scsi/libsas/sas_ata.c
+>> @@ -239,7 +239,19 @@ static struct sas_internal 
+>> *dev_to_sas_internal(struct domain_device *dev)
+>>       return to_sas_internal(dev->port->ha->core.shost->transportt);
+>>   }
+>> -static int sas_get_ata_command_set(struct domain_device *dev);
+>> +static int sas_get_ata_command_set(struct domain_device *dev)
+>> +{
+>> +    struct dev_to_host_fis *fis =
+>> +        (struct dev_to_host_fis *) dev->frame_rcvd;
+> 
+> nit: I did not think that we add a whitespace before casting. And I 
+> think that it would be neater if fis was assigned separately, avoiding 
+> overflowing the line in this way.
+> 
+> Having said that, it does seem odd to cast from u8 [] to struct 
+> dev_to_host_fis * and then back to (u8 *) in the ata_tf_from_fis() call, 
+> below.
+
+Yeah, odd. I'd prefer remove 'fis' and then do:
+
+ata_tf_from_fis(dev->frame_rcvd, &tf).
+
+Thanks,
+Jason
 
 
---=20
-Yours truly,
 
-=E6=9C=B1=E5=8E=9F=E9=99=9E (Stanley Chu)
+
