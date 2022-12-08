@@ -2,70 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA89C3A5A7
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 07:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE37C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 08:03:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229704AbiLHH0d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 02:26:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33538 "EHLO
+        id S229589AbiLHIDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 03:03:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229691AbiLHH0b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 02:26:31 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E36EF4732E
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Dec 2022 23:26:29 -0800 (PST)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NSQbh2RXgzJpCN;
-        Thu,  8 Dec 2022 15:22:56 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 8 Dec 2022 15:26:27 +0800
-Subject: Re: [PATCH 5/6] scsi: libsas: factor out sas_ata_add_dev()
-To:     John Garry <john.g.garry@oracle.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>
-References: <20221204081643.3835966-1-yanaijie@huawei.com>
- <20221204081643.3835966-6-yanaijie@huawei.com>
- <9eeaad19-c1e6-f401-3bdf-a7c3d0b3ab77@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <a05a403d-b663-8255-c9b0-9882ebe05032@huawei.com>
-Date:   Thu, 8 Dec 2022 15:26:27 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S229462AbiLHIDE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 03:03:04 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6E493FB84;
+        Thu,  8 Dec 2022 00:02:59 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AB1EAB806A0;
+        Thu,  8 Dec 2022 08:02:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3439C433C1;
+        Thu,  8 Dec 2022 08:02:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1670486576;
+        bh=AhZ8skKJk8Msl/OSCwNDTiNXAlnXCrNdyRVs0QknuAU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ARpwUGDwYKPok893gLJzzBF1P4ZP2UUH+ajyABfF67cXjZYqpgPtlXyuSxdc6Gg0G
+         OJpj4w2bTRLeCMA57n0F2J75rjH2gKrT9hJJ4C3AHDlKVRSnSl91y+QDCMbjJCVD/c
+         J1ngE2SokH6fRK6nEc5tlzhVlNVAsNYAs7ob1U68=
+Date:   Thu, 8 Dec 2022 09:02:53 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     peter.wang@mediatek.com
+Cc:     stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com,
+        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+        naomi.chu@mediatek.com, stable@vger.kernel.org
+Subject: Re: [PATCH v6] ufs: core: wlun suspend SSU/enter hibern8 fail
+ recovery
+Message-ID: <Y5GaLX6AYEtHFU9F@kroah.com>
+References: <20221208072520.26210-1-peter.wang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <9eeaad19-c1e6-f401-3bdf-a7c3d0b3ab77@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221208072520.26210-1-peter.wang@mediatek.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/12/5 17:24, John Garry wrote:
-> On 04/12/2022 08:16, Jason Yan wrote:
->> +static inline int sas_ata_add_dev(struct domain_device *parent, 
->> struct ex_phy *phy,
->> +                  struct domain_device *child, int phy_id)
->> +{
->> +    pr_notice("ATA is not enabled, target proto 0x%x at %016llx:0x%x\n",
+On Thu, Dec 08, 2022 at 03:25:20PM +0800, peter.wang@mediatek.com wrote:
+> From: Peter Wang <peter.wang@mediatek.com>
 > 
-> nit: how about add "SCSI_SAS_ATA is not enabled ..." or use similar to 
-> the log in sas_discover_domain()?
-
-Yes, make sense. Will update.
-
-Thanks,
-Jason
-
+> When SSU/enter hibern8 fail in wlun suspend flow, trigger error
+> handler and return busy to break the suspend.
+> If not, wlun runtime pm status become error and the consumer will
+> stuck in runtime suspend status.
 > 
->> +          phy->attached_tproto, SAS_ADDR(parent->sas_addr), phy_id);
->> +    return -ENODEV;
+> Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
 > 
-> .
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index b1f59a5fe632..31ed3fdb5266 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -6070,6 +6070,14 @@ void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+>  	}
+>  }
+>  
+> +static void ufshcd_force_error_recovery(struct ufs_hba *hba) 
+> +{
+> +	spin_lock_irq(hba->host->host_lock);
+> +	hba->force_reset = true;
+> +	ufshcd_schedule_eh_work(hba);
+> +	spin_unlock_irq(hba->host->host_lock);
+> +}
+> +
+>  static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
+>  {
+>  	down_write(&hba->clk_scaling_lock);
+> @@ -9049,6 +9057,15 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  
+>  		if (!hba->dev_info.b_rpm_dev_flush_capable) {
+>  			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
+> +			if (ret && pm_op != UFS_SHUTDOWN_PM) {
+> +				/*
+> +				 * If return err in suspend flow, IO will hang.
+> +				 * Trigger error handler and break suspend for
+> +				 * error recovery.
+> +				 */
+> +				ufshcd_force_error_recovery(hba);
+> +				ret = -EBUSY;
+> +			}
+>  			if (ret)
+>  				goto enable_scaling;
+>  		}
+> @@ -9060,6 +9077,15 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  	 */
+>  	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
+>  	ret = ufshcd_link_state_transition(hba, req_link_state, check_for_bkops);
+> +	if (ret && pm_op != UFS_SHUTDOWN_PM) {
+> +		/*
+> +		 * If return err in suspend flow, IO will hang.
+> +		 * Trigger error handler and break suspend for
+> +		 * error recovery.
+> +		 */
+> +		ufshcd_force_error_recovery(hba);
+> +		ret = -EBUSY;
+> +	}
+>  	if (ret)
+>  		goto set_dev_active;
+>  
+> -- 
+> 2.18.0
+> 
+
+Hi,
+
+This is the friendly patch-bot of Greg Kroah-Hartman.  You have sent him
+a patch that has triggered this response.  He used to manually respond
+to these common problems, but in order to save his sanity (he kept
+writing the same thing over and over, yet to different people), I was
+created.  Hopefully you will not take offence and will fix the problem
+in your patch and resubmit it so that it can be accepted into the Linux
+kernel tree.
+
+You are receiving this message because of the following common error(s)
+as indicated below:
+
+- This looks like a new version of a previously submitted patch, but you
+  did not list below the --- line any changes from the previous version.
+  Please read the section entitled "The canonical patch format" in the
+  kernel file, Documentation/SubmittingPatches for what needs to be done
+  here to properly describe this.
+
+If you wish to discuss this problem further, or you have questions about
+how to resolve this issue, please feel free to respond to this email and
+Greg will reply once he has dug out from the pending patches received
+from other developers.
+
+thanks,
+
+greg k-h's patch email bot
