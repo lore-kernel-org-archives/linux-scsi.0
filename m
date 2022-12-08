@@ -2,79 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D79EC63705
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:12:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D127CC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 12:22:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbiLHLMK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:12:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43792 "EHLO
+        id S229793AbiLHMWY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 07:22:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229843AbiLHLLg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:11:36 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F562DF0
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 03:11:19 -0800 (PST)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NSWfC6byrzJqLV;
-        Thu,  8 Dec 2022 19:10:27 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 8 Dec 2022 19:11:16 +0800
-Subject: Re: [PATCH 4/6] scsi: libsas: remove useless dev_list delete in
- sas_ex_discover_end_dev()
-To:     John Garry <john.g.garry@oracle.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>
-References: <20221204081643.3835966-1-yanaijie@huawei.com>
- <20221204081643.3835966-5-yanaijie@huawei.com>
- <aaeef818-97d6-6f38-4a10-36a5d5473b50@oracle.com>
- <1a1f0169-bb89-c9fb-b26a-f8c03c669bd3@huawei.com>
- <8e077620-e0e8-71f0-0a77-66fd91320a78@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <1136cceb-01d9-e01f-0047-eed40ef9f91c@huawei.com>
-Date:   Thu, 8 Dec 2022 19:11:16 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S229573AbiLHMWV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 07:22:21 -0500
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A4592E9F1;
+        Thu,  8 Dec 2022 04:22:19 -0800 (PST)
+Received: by mail-ej1-x636.google.com with SMTP id ud5so3439734ejc.4;
+        Thu, 08 Dec 2022 04:22:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=i5lRBdAoPLMSOy6lJ9M0RNuDyhnO6PTxXoPAh60xUpM=;
+        b=cIlcWPq2u+2Ko4OG4WF2lQV351M/f/MveQeVD3o9/zHtEM3Lb7UqF9GH4WdeceAIA6
+         ZVLURjQ51BGxRYnmsJyy7Zc9ITXgAgPKc+Z0RwydCGhIXQHVFSQ+tgSDyOlTOzTsOnHn
+         mP5CzrA1gN8IHxFTJOAIBEqh9qVw0VhgJM7mQAo+/fKciDYDdQEo4w9E13FQj2k3K0Ry
+         JLetA+OseBk/xTgWvDvL6gJEfFLuUFpxSltQ0zxuelfvp8c4Re835oZBrtbB2mOeBuIf
+         VOCiZhlVbV4J7qXCJv4fofZE3vWITkjbnJ1Ij6ek7srf+snsyDNXBoeEX5UEGtueTUyr
+         mR3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=i5lRBdAoPLMSOy6lJ9M0RNuDyhnO6PTxXoPAh60xUpM=;
+        b=KxLqagrpZmmQAE2fO8Fg7PSBAhGSBrmb06gsNyOeSzZXOfMu61tz9bekrSHl9D/M7s
+         VICL1TKo5LgSFKO/W7+G2JTX616s1LLpU5O11pvZwZa9SHZlUDCWxDjjhO/y/t62FIlJ
+         QvlxAPmHIJdmRe1v9xVSsRksznAbD5mwk/GPpWlEezlr3QIWZKflRNryCYkgvClPLpkK
+         cjSKrviCow0aQd3CjAyQgKohRnXqdLzy0er6MCkoKeg3dDFCYOjCLAv16DFzB+mZous7
+         MoUoH4Nf+vkcw8FEiFhY5d1YGNI3yn4jin2U3irl1gK2UZKvN9rkWGLKJzWpGwy1EAEk
+         rilw==
+X-Gm-Message-State: ANoB5pmIRUuhYC+Lu2JFGJPujoZ4lARSZ3igCZChfFORg81EW68CnMo+
+        X31eDzWrW2lWo2sUUxby0WE=
+X-Google-Smtp-Source: AA0mqf7E587LPcaZVztO0zqjmBfBeI2c13fzuYseYaeQhczxGwPqhvQdxgim8BjmQIwS+Hn/vOKzXg==
+X-Received: by 2002:a17:906:6b97:b0:7c0:fe68:35e9 with SMTP id l23-20020a1709066b9700b007c0fe6835e9mr11384665ejr.49.1670502138053;
+        Thu, 08 Dec 2022 04:22:18 -0800 (PST)
+Received: from [10.176.235.173] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id f17-20020a05640214d100b0045b4b67156fsm3295382edx.45.2022.12.08.04.22.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Dec 2022 04:22:17 -0800 (PST)
+Message-ID: <0a44763d-8c40-b9e7-6268-01567c401884@gmail.com>
+Date:   Thu, 8 Dec 2022 13:22:15 +0100
 MIME-Version: 1.0
-In-Reply-To: <8e077620-e0e8-71f0-0a77-66fd91320a78@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v4 1/4] ufs: core: Remove redundant wb check
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1669550910-9672-1-git-send-email-Arthur.Simchaev@wdc.com>
+ <1669550910-9672-2-git-send-email-Arthur.Simchaev@wdc.com>
+ <b89f3337-0869-35a8-114d-85e1fd81eb2c@acm.org>
 Content-Language: en-US
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <b89f3337-0869-35a8-114d-85e1fd81eb2c@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/12/8 18:40, John Garry wrote:
-> On 08/12/2022 07:21, Jason Yan wrote:
->>>> t_list_del:
->>>>       sas_rphy_free(child->rphy);
->>>>       list_del(&child->disco_list_node);
->>>> -    spin_lock_irq(&parent->port->dev_list_lock);
->>>> -    list_del(&child->dev_list_node);
->>>> -    spin_unlock_irq(&parent->port->dev_list_lock);
->>>
->>> Since we have the spin lock'ing, this seems to be have been 
->>> intentionally added (and not some simple typo or similar) - any idea 
->>> of the origin?
+
+On 08.12.22 12:31 AM, Bart Van Assche wrote:
+> On 11/27/22 04:08, Arthur Simchaev wrote:
+>> We used to use the extended-feature field in the device descriptor,
+>> as an indication that the device supports ufs2.2 or later.
+>> Remove that as this check is specifically done few lines above.
 >>
->> The new device used to be added to the dev_list in this function. But 
->> after 92625f9bff38 ("[SCSI] libsas: restore scan order") and 
->> 87c8331fcf72 ("[SCSI] libsas: prevent domain rediscovery competing 
->> with ata error handling") it is added to the disco_list instead. But 
->> the list_del() and locking is forgot to be removed.
-> 
-> OK, so can we have a fixes tag then? That even helps review, as I can 
-> then quickly see where we went wrong.
-> 
+>> Reviewed-by: Bean Huo <beanhuo@micron.com>
+>> Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+>> ---
+>>   drivers/ufs/core/ufshcd.c | 4 ----
+>>   1 file changed, 4 deletions(-)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 2dbe249..2e47c69 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -7608,10 +7608,6 @@ static void ufshcd_wb_probe(struct ufs_hba 
+>> *hba, const u8 *desc_buf)
+>>            (hba->dev_quirks & 
+>> UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
+>>           goto wb_disabled;
+>>   -    if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+>> -        DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+>> -        goto wb_disabled;
+>> -
+>>       ext_ufs_feature = get_unaligned_be32(desc_buf +
+>>                       DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+>
+> Does this code really have to be removed? I see a check of the
+> UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES flag above the removed
+> code but no check of the descriptor size?
+>
+it is not necessary to check this, but if you have concern, we could 
+change to like this:
 
-Sure.
 
-Thanks,
-Jason
+         if (desc_buf[DEVICE_DESC_PARAM_LEN] <
+             DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+                 goto wb_disabled;
+
+then   hba->desc_size could be removed.
+
+Kind regards,
+
+Bean
+
+
+
