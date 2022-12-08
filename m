@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF97C63719
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7554C6377E
 	for <linux-scsi@archiver.kernel.org>; Thu,  8 Dec 2022 11:03:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229888AbiLHLD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:03:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35626 "EHLO
+        id S230006AbiLHLDc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:03:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbiLHLCH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:02:07 -0500
+        with ESMTP id S230100AbiLHLCk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 06:02:40 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 269ED813BE;
-        Thu,  8 Dec 2022 03:01:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC24B1A832
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 03:01:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497260; x=1702033260;
+  t=1670497268; x=1702033268;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=7OOLcX2+vM155WgZyxnafA0YBJsvwJzjjqumba4e+eQ=;
-  b=WCKLu4rpPWjAgM22gohlf2I1/RiyGRA//4FNtc2rHoPVSXYNJ7gjR/Cq
-   hiPBU0xpSnNmlVlXGGkl6HHt+2gS8Zp9LsPPBTiBk/FU0CDjsZEP9M0Sn
-   ds66Dza7BRZ1ovzp//0NHVsMgr8fHz8VzcLw0gEvG9ryzxcCrJPm4xuvo
-   vW01mgkUOF+lgbzunLe++RbjfgL/qLfb6eOzJpiJp2zjoQM12YsVokVZJ
-   ipar2OwlIQ7v2KYpBLgWaEJWc8XgcAK0fO9QtR+9xPLVuS0BmgJbGgrQ7
-   10zCAygtKseeOnTg7x1TgtQnyguJazTBGMo/LY4WjV+XlEiJCLFKAlW2b
-   Q==;
+  bh=1yJjVrTjEzab2VnGecsAuFT78Y4qRfR29S6StL8QqBU=;
+  b=IOX/FcEYYUyIekaM7856v5WuvRsdUGxDMhQkGgXhZnP0I/SPZdOyNs2W
+   qr6qO6jfQK6YfQW5kI1/cM2q9/bV2SHnR1FI0PjsazKYcZtApqigO/Mvr
+   Y57yuVCf4iDROILLNHNZ+jvVa4lN/sdnZ3cRYwNAaqIU4QPGJ4mm4vC9Y
+   2wTJxeYWhEdg4sRqh9sj68k6vgezrFwjtFklP+IO2+z3ApNajXVz4PY9y
+   NunAA57wsxrm95euq5P/uFhm3eXGmFvVsYuFBWLGWhfOjXXakazcfLnPB
+   piQ3b9CtA/UgDGubcOcQVfLUpk7sm/rCjbkCofEVvo0B/0Yn11buymNT0
+   A==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333379"
+   d="scan'208";a="223333394"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:00:59 +0800
-IronPort-SDR: gunyvR74Zdxnge1ER/wX0QtcLGHBNpzrWBrZp843BBn/f86H0Ug9NWqK1fkhVmY10J5dZSnd8h
- HVou8nLMjAmZT6xe9tZKJU4gGm61Ig2ghbmj20KzjfUmZky8Ld5kPXJhPrlVKHr4H9onjKQ/GX
- bTLY68VFZBHsTiGxdJz3kmPE2uKxEENU6RUPvG9hfsrgfn2sjZqrXYqz0r90NhXWnZurmGwtlR
- WECsmUMArNuLgHp4KPJjLPOEQRAF7CI+d65ya7szLOuZ35NVM/78YyepsvJoTLRDXySHxgnfUC
- f8g=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:08 +0800
+IronPort-SDR: rK5MtyWWdclb6Ag0UUr+xTaBhoZkW8C0PuPCDfAymUW/KqvcA49St0apzW/89H4uTnL+IdGsrC
+ W0fbO9bzBXMiI/3FmlTftcgaOb5MpuJ9u1YRh3t1HBlyfaDP8Xk8ronIHNOa9AQHdVj4+t4bmc
+ HTZGiE7klkNbENFaWMBMKYjhAieyM8Fg6QdVekX7DEQxkZm0XVxhy/L9dBg9EOLBt0OqahLPHt
+ FSPdgyybbIseYnys9mYT7mYYwXhI4bsh9CTjDBx/TmhVJTjnm4FJicQ7g43LTWuukJiEXf0dE5
+ EqA=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:13:45 -0800
-IronPort-SDR: 85QCEAkcwvB4LVbsz1/iBs+GUc6b2Z+vpDwOKzBUOVLgRf/Kg3TQXOIJB5+YhtUWG3+gc5aCOt
- 9ldbNYUkSHM6u6rPzYcoTxj2th8k1avw3cV5HsA9ZADL4CI7V1vTYyURuZs0Wgn2iUIkGmSo29
- oFVdCyfRsT6XP1lvHi5vZu4nxPoGepYiBOWHEEN/MaGjlCDe9M4t54O/BRr1H984bfET9I/E43
- LLN+ZHbZiZWe7XAEbIOfEMC4dvZNiuVEO9Elg5T8PzdtqB5z+oWcsp37T9sO/OOi34V9HtuQno
- 2Jc=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:13:53 -0800
+IronPort-SDR: nA9FqdtM2Za3pgJl07RKaqIx310f20LOp+1VS+NvUt+qfMtZBVq3BmZz3aEimK06837Z1cms77
+ DfYtj3ODKDjm7fI1JXRXC009rqwuUoP5z9r+P3b1xBySnt+AJRt8JE4QAN1dMr2obY/U77oz5+
+ gRLv4oCtPr12OSETek3dhvlBXVagkq7JybC57Tyf/diV0mGj+KeQefcZp2+6prhvOAw9YW7b/p
+ HTqePEZ1HUW6eBoJVHksHg9JKtSwoFKMoj7Pkjz6Atdj9a6srt3ydIsJl4HDUbdMbOafJBeJt5
+ Ju4=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:00:59 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:08 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH 07/25] ata: libata: allow ata_eh_request_sense() to not set CHECK_CONDITION
-Date:   Thu,  8 Dec 2022 11:59:23 +0100
-Message-Id: <20221208105947.2399894-8-niklas.cassel@wdc.com>
+        Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH 11/25] scsi: move get_scsi_ml_byte() to scsi_priv.h
+Date:   Thu,  8 Dec 2022 11:59:27 +0100
+Message-Id: <20221208105947.2399894-12-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
@@ -63,73 +63,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current ata_eh_request_sense() calls ata_scsi_set_sense() with
-check_condition always set to true, which, in addition to setting the
-sense data, unconditionally sets the scsicmd->result to
-SAM_STAT_CHECK_CONDITION.
-
-For Command Duration Limits policy 0xD:
-The device shall complete the command without error (SAM_STAT_GOOD)
-with the additional sense code set to DATA CURRENTLY UNAVAILABLE.
-
-It is perfectly fine to have sense data for a command that returned
-completion without error.
-
-In order to support for CDL policy 0xD, we have to remove this
-assumption that having sense data means that the command failed
-(SAM_STAT_CHECK_CONDITION).
-
-Add a new parameter to ata_eh_request_sense() to allow us to request
-sense data without unconditionally setting SAM_STAT_CHECK_CONDITION.
-This new parameter will be used in a follow-up patch.
+Move get_scsi_ml_byte() to scsi_priv.h since both scsi_lib.c and
+scsi_error.c will need to use this helper in a follow-up patch.
 
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- drivers/ata/libata-eh.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_lib.c  | 5 -----
+ drivers/scsi/scsi_priv.h | 5 +++++
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index c278366370ab..e05d62791e08 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1392,6 +1392,7 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9ed1ebcb7443..d243ebc5ad54 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -579,11 +579,6 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 	return false;
+ }
+ 
+-static inline u8 get_scsi_ml_byte(int result)
+-{
+-	return (result >> 8) & 0xff;
+-}
+-
  /**
-  *	ata_eh_request_sense - perform REQUEST_SENSE_DATA_EXT
-  *	@qc: qc to perform REQUEST_SENSE_SENSE_DATA_EXT to
-+ *	@check_condition: if SAM_STAT_CHECK_CONDITION should get set
-  *
-  *	Perform REQUEST_SENSE_DATA_EXT after the device reported CHECK
-  *	SENSE.  This function is an EH helper.
-@@ -1399,7 +1400,8 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
+  * scsi_result_to_blk_status - translate a SCSI result code into blk_status_t
+  * @result:	scsi error code
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 96284a0e13fe..4f97e126c6fb 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -29,6 +29,11 @@ enum scsi_ml_status {
+ 	SCSIML_STAT_TGT_FAILURE		= 0x04,	/* Permanent target failure */
+ };
+ 
++static inline u8 get_scsi_ml_byte(int result)
++{
++	return (result >> 8) & 0xff;
++}
++
+ /*
+  * Scsi Error Handler Flags
   */
--static void ata_eh_request_sense(struct ata_queued_cmd *qc)
-+static void ata_eh_request_sense(struct ata_queued_cmd *qc,
-+				 bool check_condition)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_device *dev = qc->dev;
-@@ -1429,8 +1431,8 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc)
- 	/* Ignore err_mask; ATA_ERR might be set */
- 	if (tf.status & ATA_SENSE) {
- 		if (ata_scsi_sense_is_valid(tf.lbah, tf.lbam, tf.lbal)) {
--			ata_scsi_set_sense(dev, cmd, true, tf.lbah, tf.lbam,
--					   tf.lbal);
-+			ata_scsi_set_sense(dev, cmd, check_condition, tf.lbah,
-+					   tf.lbam, tf.lbal);
- 			qc->flags |= ATA_QCFLAG_SENSE_VALID;
- 		}
- 	} else {
-@@ -1587,7 +1589,7 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc)
- 		 *  (i.e. NCQ autosense is not supported by the device).
- 		 */
- 		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID) && (stat & ATA_SENSE))
--			ata_eh_request_sense(qc);
-+			ata_eh_request_sense(qc, true);
- 		if (err & ATA_ICRC)
- 			qc->err_mask |= AC_ERR_ATA_BUS;
- 		if (err & (ATA_UNC | ATA_AMNF))
 -- 
 2.38.1
 
