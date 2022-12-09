@@ -2,84 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB39C4708D
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Dec 2022 15:43:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B90C4167B
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Dec 2022 16:11:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230033AbiLIPnF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Dec 2022 10:43:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32994 "EHLO
+        id S229761AbiLIQLJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Dec 2022 11:11:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229828AbiLIPnE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2022 10:43:04 -0500
+        with ESMTP id S229460AbiLIQLH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2022 11:11:07 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0885D2314A;
-        Fri,  9 Dec 2022 07:43:03 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10AE660F7;
+        Fri,  9 Dec 2022 08:11:05 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 98EE762296;
-        Fri,  9 Dec 2022 15:43:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED432C433D2;
-        Fri,  9 Dec 2022 15:43:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CAE860EB0;
+        Fri,  9 Dec 2022 16:11:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B20FEC433EF;
+        Fri,  9 Dec 2022 16:11:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670600582;
-        bh=oCEIGuHeYhxQrCwVo/soAElAtMLWGb4yuO0SHkYdARw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ik/yRMpIxgLkVL0fgXhIFgSsHW8u0esK0EQWhBy/bY5hAzu3m1YsNUwdBhGcXoYrE
-         hCAkf3JzdJXtnU/SR6apKalZFVs21lPhQzUnJZ62pfj2KGJgt6sHUWfM/YZZw7FxDb
-         7PR6OBtqptEbYnTbj782MsCVZE9I95cyUQIvJN0dK8q4j6upYgVSinVBzmUm/6xd+G
-         PTkMdvx6ftPR1+IWfZlV4ynHnswJ+nTJ0N4WcPIgcXtuu3dSS6ja6V+pFI9mkjtmNl
-         Hc7eoVYYCazXTNYgvi4LEW4fHChYVwzDEe8kqksIwObb48uG16qkF+MIwPEjOaTDa7
-         seddbxDxq4WTw==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1p3fWw-0001TN-5z; Fri, 09 Dec 2022 16:43:18 +0100
-Date:   Fri, 9 Dec 2022 16:43:18 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     Luca Weiss <luca.weiss@fairphone.com>
-Cc:     ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: ufs: qcom: Add reg-names property for ICE
-Message-ID: <Y5NXllrF3K+ga/GR@hovoldconsulting.com>
-References: <20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com>
+        s=k20201202; t=1670602264;
+        bh=OclmnU1jYcdMFqciE3c6RyUB6hgvanpdH2l220bFhz4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=lP5pQ24T3IT2YBfVVAYFE/vlA14kPUGpHI19DQSbfMFFqcLV6yfVQX2yzf3FWU9BJ
+         DEPOy15CleSzGVLHHvdVrCdctgS6AMOlWyxNMtd1UP4Jl6EFRe7WSmHsdwacu3KmIi
+         3gphHYn83fw+acEzH9vRCOj48wMtBY8ejFf/mJMd7kxsJCGH1dwZt2JHDO6M2WNy+F
+         RxYdcuexGpRtzv/r3df/M1OzYPk521V8CVwEXUXt0ZTCVSTYNw6OFG3RfFVHJS6f4s
+         Cy+bJUuWARFf6RP5DMfx0m0W7Y2ou/9vrV6yP2gJYTEe5AantjuQErI6+6QNzX5szc
+         v2qI3ygfSsAtw==
+Date:   Fri, 9 Dec 2022 08:11:01 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Paolo Abeni <pabeni@redhat.com>
+Cc:     Benjamin Coddington <bcodding@redhat.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Christoph =?UTF-8?B?QsO2aG13?= =?UTF-8?B?YWxkZXI=?= 
+        <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Valentina Manea <valentina.manea.m@gmail.com>,
+        Shuah Khan <shuah@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Steve French <sfrench@samba.org>,
+        Christine Caulfield <ccaulfie@redhat.com>,
+        David Teigland <teigland@redhat.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>, drbd-dev@lists.linbit.com,
+        linux-block@vger.kernel.org, nbd@other.debian.org,
+        linux-nvme@lists.infradead.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, v9fs-developer@lists.sourceforge.net,
+        ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v1 2/3] Treewide: Stop corrupting socket's task_frag
+Message-ID: <20221209081101.7500478c@kernel.org>
+In-Reply-To: <d220402a232e204676d9100d6fe4c2ae08f753ee.camel@redhat.com>
+References: <cover.1669036433.git.bcodding@redhat.com>
+        <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com>
+        <d220402a232e204676d9100d6fe4c2ae08f753ee.camel@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 09, 2022 at 03:29:47PM +0100, Luca Weiss wrote:
-> The code in ufs-qcom-ice.c needs the ICE reg to be named "ice". Add this
-> in the bindings so the existing dts can validate successfully.
-> 
-> Also sm8450 is using ICE since commit 276ee34a40c1 ("arm64: dts: qcom:
-> sm8450: add Inline Crypto Engine registers and clock") so move the
-> compatible to the correct if.
-> 
-> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> ---
-> (no cover subject)
-> 
-> The only remaining validation issues I see is the following on sc8280xp-crd.dtb
-> and sa8540p-ride.dtb:
-> 
->   Unevaluated properties are not allowed ('required-opps', 'dma-coherent' were unexpected)
-> 
-> Maybe someone who knows something about this can handle this?
+On Fri, 09 Dec 2022 13:37:08 +0100 Paolo Abeni wrote:
+> I think this is the most feasible way out of the existing issue, and I
+> think this patchset should go via the networking tree, targeting the
+> Linux 6.2.
 
-That's being addressed here:
-
-	https://lore.kernel.org/lkml/20221205100837.29212-2-johan+linaro@kernel.org/
-
-Johan
+FWIW some fields had been moved so this will not longer apply cleanly,
+see b534dc46c8ae016. But I think we can apply it to net since the merge
+window is upon us? Just a heads up.
