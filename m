@@ -2,146 +2,260 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23645C04FDE
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Dec 2022 00:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F17BC4167B
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Dec 2022 02:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229632AbiLIA3k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Dec 2022 19:29:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58404 "EHLO
+        id S229795AbiLICYF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Dec 2022 21:24:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229661AbiLIA3i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 19:29:38 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B21C3941B5
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 16:29:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670545777; x=1702081777;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=qk9j8LVxjXBJSIxe9aNCa/SGxFRCLd8rLG0tmlR1LxU=;
-  b=dJew+5WP55mmeGbNeQ/5C2gcG4q3S2oUAmyoQ2tho/TkRdjSLUNdiAoZ
-   W0wlahvL691uht9OGEfJsFYSPHj9aHSFLc4wUiyh1vzRJnzR30S7RQydw
-   9aJD6K4qJyEKZSNtiV1WR7Wz78Gii/fUKFUqGmBo8NxZ19Z+IYDUJGSXE
-   iQ3a6wNAe0e2qa94rVkbWnAldUQc7AX67is/Iwe/anFaKIsRZwNyniKCB
-   hZlTYbpXKcxcZHrKdbKxKZUQ+XjFWXqYkN+F8bzIhbbBc5bTd19TX9tkQ
-   CUFL54+bR3yeDT0T9pVOR19E4UXFUhpERhKBFjGbSjiJYRC1dVfzn2lB4
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,228,1665417600"; 
-   d="scan'208";a="218499348"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Dec 2022 08:29:35 +0800
-IronPort-SDR: kEadZBgSijbK6AvhaOMB0JW38WPXsuXeIi0zZxLpSK2plpZkV9cCZvd8bE7njuZixGRhe158Is
- CeVO17yqBNOuVMgE1vvzTZkeL0SRcz0RgwUeXJ2CG4A1Eg23XfQL4HU6UTeKleFD67K807h7a+
- NNAm98BMEftkx4fpJNH4tt+djrf20DCPPKhQUv6vWpG3J3SKsRA2+suBasjKVnBSs7hXCYv1rW
- 2Bl/ys8dtpKBHi9EavrP6JDmTi7W+JdGDsYJNCzALUfsdKAPnoF46QzC9DRoxgqeYOpzq5n5s6
- 0RQ=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 15:42:19 -0800
-IronPort-SDR: MUNlXrRTVSgirV1QHtmqSyVm7jk1l3rRkEFPUT81MIM8wwdtzVPKbkD3eLPE8w/zfGm2pJdepq
- t0AaRYshhautN0yFv8LxMCrGRXh2dXvHaXUpklTbDNazLCRhdjFIaQq2u2pCZNp8D279p+vtqO
- OnxGkeJGFDB07D188W3lL78bIbTIJw9yqRihZDuPcqm9rVvywf6sMIm0LGvdUKzlR0wl1nd2GO
- fFIJelTYV8pq4rcHbwIfsEcygiHId9b5u/K59hLUIHGq0YH036n1Sq3GdAwIYYjSFMTzU8uHCx
- Wtk=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 16:29:37 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NSsNH0fZrz1RwqL
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Dec 2022 16:29:35 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1670545774; x=1673137775; bh=qk9j8LVxjXBJSIxe9aNCa/SGxFRCLd8rLG0
-        tmlR1LxU=; b=huebuoh6+rUFkVDfHWkwIdyIRMRkWTzAylli86kSWUThPdepn69
-        dn8RJOqP8ddhUIT3MX36NTVEJdrxenavwp13bJnEvWIGoGBVmwzI03NGAR7TETY9
-        a2zGxW1uSHZznctJSJkaQ/rwiVuuy6FloZgtZo148Q08VVK18r4XbYMZ50ub25yE
-        tcRwCMDmuqSg1dpb7CSgwNK/VQUs0eSYireH1H6erTxZqDkmgkv8AT4Jasf9M3tM
-        PA54Xq2VhYzj5BR+gPwUS8HO4qgVVjGaeS2HhzxjTuE5u+pYcXrkJ6AXASDkZdpO
-        M7QdQJFRMm5vpqkfPVBLwL57p0UVDm4uXEA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id obqPmZS3k7_M for <linux-scsi@vger.kernel.org>;
-        Thu,  8 Dec 2022 16:29:34 -0800 (PST)
-Received: from [10.225.163.85] (unknown [10.225.163.85])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NSsNF3v33z1RvLy;
-        Thu,  8 Dec 2022 16:29:33 -0800 (PST)
-Message-ID: <510732e0-7962-cf54-c22c-f1d7066895f5@opensource.wdc.com>
-Date:   Fri, 9 Dec 2022 09:29:32 +0900
+        with ESMTP id S229783AbiLICYE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2022 21:24:04 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D729722BC6;
+        Thu,  8 Dec 2022 18:24:02 -0800 (PST)
+Received: from dggpeml500019.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NSvqS6v9RzqT16;
+        Fri,  9 Dec 2022 10:19:48 +0800 (CST)
+Received: from [10.174.179.189] (10.174.179.189) by
+ dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 9 Dec 2022 10:24:00 +0800
+Message-ID: <806990ed-0e78-a717-db45-370a71bb23c2@huawei.com>
+Date:   Fri, 9 Dec 2022 10:23:42 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH 00/25] Add Command Duration Limits support
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v7] scsi:iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
 Content-Language: en-US
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-Cc:     Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
- <daff011b-6aeb-e6ba-c71b-8b0ff9a21ef7@nvidia.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <daff011b-6aeb-e6ba-c71b-8b0ff9a21ef7@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+References: <20221126010752.231917-1-haowenchao@huawei.com>
+From:   Wu Bo <wubo40@huawei.com>
+In-Reply-To: <20221126010752.231917-1-haowenchao@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.189]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpeml500019.china.huawei.com (7.185.36.137)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/9/22 03:18, Chaitanya Kulkarni wrote:
+On 2022/11/26 9:07, Wenchao Hao wrote:
+> I found an issue that kernel would send ISCSI_KEVENT_UNBIND_SESSION
+> for multiple times which should be fixed.
 > 
->> Kind regards,
->> Niklas & Damien
->>
->> Damien Le Moal (14):
->>    ata: libata: simplify qc_fill_rtf port operation interface
->>    ata: libata-scsi: improve ata_scsiop_maint_in()
->>    scsi: support retrieving sub-pages of mode pages
->>    scsi: support service action in scsi_report_opcode()
->>    block: introduce duration-limits priority class
->>    block: introduce BLK_STS_DURATION_LIMIT
->>    ata: libata: detect support for command duration limits
->>    ata: libata-scsi: handle CDL bits in ata_scsiop_maint_in()
->>    ata: libata-scsi: add support for CDL pages mode sense
->>    ata: libata: add ATA feature control sub-page translation
->>    ata: libata: set read/write commands CDL index
->>    scsi: sd: detect support for command duration limits
->>    scsi: sd: set read/write commands CDL index
->>    Documentation: sysfs-block-device: document command duration limits
->>
->> Niklas Cassel (11):
->>    ata: scsi: rename flag ATA_QCFLAG_FAILED to ATA_QCFLAG_EH
->>    ata: libata: move NCQ related ATA_DFLAGs
->>    ata: libata: fix broken NCQ command status handling
->>    ata: libata: respect successfully completed commands during errors
->>    ata: libata: allow ata_scsi_set_sense() to not set CHECK_CONDITION
->>    ata: libata: allow ata_eh_request_sense() to not set CHECK_CONDITION
->>    ata: libata-scsi: do not overwrite SCSI ML and status bytes
->>    scsi: core: allow libata to complete successful commands via EH
->>    scsi: move get_scsi_ml_byte() to scsi_priv.h
->>    scsi: sd: handle read/write CDL timeout failures
->>    ata: libata: handle completion of CDL commands using policy 0xD
->>
+> This patch introduce target_state in iscsi_cls_session to make
+> sure session would send only one ISCSI_KEVENT_UNBIND_SESSION.
 > 
-> Out of 25 patches linux-block mailing list only got 3,
-> was this on purpose ? see this and [1] :-
+> But this would break issue fixed in commit 13e60d3ba287 ("scsi: iscsi:
+> Report unbind session event when the target has been removed"). The issue
+> is iscsid died for any reason after it send unbind session to kernel, once
+> iscsid restart again, it loss kernel's ISCSI_KEVENT_UNBIND_SESSION event.
+> 
+> Now kernel think iscsi_cls_session has already sent an
+> ISCSI_KEVENT_UNBIND_SESSION event and would not send it any more. Which
+> would cause userspace unable to logout. Actually the session is in
+> invalid state(it's target_id is INVALID), iscsid should not sync this
+> session in it's restart.
+> 
+> So we need to check session's target state during iscsid restart,
+> if session is in unbound state, do not sync this session and perform
+> session teardown. It's reasonable because once a session is unbound, we
+> can not recover it any more(mainly because it's target id is INVALID)
+> 
+> V7:
+> - Define target state to string map and refer this map directly
+> - Cleanup __iscsi_unbind_session, drop check for session's
+>    target_id == ISCSI_MAX_TARGET since it can be handled by target_state
+> 
+> V6:
+> - Set target state to ALLOCATED in iscsi_add_session
+> - Rename state BOUND to SCANNED
+> - Make iscsi_session_target_state_name() more efficient
+> 
+> V5:
+> - Add ISCSI_SESSION_TARGET_ALLOCATED to indicate the session's
+>    target has been allocated but not scanned yet. We should
+>    sync this session and scan this session when iscsid restarted.
+> 
+> V4:
+> - Move debug print out of spinlock critical section
+> 
+> V3:
+> - Make target bind state to a state kind rather than a bool.
+> 
+> V2:
+> - Using target_unbound rather than state to indicate session has been
+>    unbound
+> 
+> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+> ---
+>   drivers/scsi/scsi_transport_iscsi.c | 47 ++++++++++++++++++++++++++---
+>   include/scsi/scsi_transport_iscsi.h |  9 ++++++
+>   2 files changed, 51 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index cd3db9684e52..812578c20fe5 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -1676,6 +1676,13 @@ static const char *iscsi_session_state_name(int state)
+>   	return name;
+>   }
+>   
+> +static char *iscsi_session_target_state_name[] = {
+> +	[ISCSI_SESSION_TARGET_UNBOUND]   = "UNBOUND",
+> +	[ISCSI_SESSION_TARGET_ALLOCATED] = "ALLOCATED",
+> +	[ISCSI_SESSION_TARGET_SCANNED]   = "SCANNED",
+> +	[ISCSI_SESSION_TARGET_UNBINDING] = "UNBINDING",
+> +};
+> +
+>   int iscsi_session_chkready(struct iscsi_cls_session *session)
+>   {
+>   	int err;
+> @@ -1785,9 +1792,13 @@ static int iscsi_user_scan_session(struct device *dev, void *data)
+>   		if ((scan_data->channel == SCAN_WILD_CARD ||
+>   		     scan_data->channel == 0) &&
+>   		    (scan_data->id == SCAN_WILD_CARD ||
+> -		     scan_data->id == id))
+> +		     scan_data->id == id)) {
+>   			scsi_scan_target(&session->dev, 0, id,
+>   					 scan_data->lun, scan_data->rescan);
+> +			spin_lock_irqsave(&session->lock, flags);
+> +			session->target_state = ISCSI_SESSION_TARGET_SCANNED;
+> +			spin_unlock_irqrestore(&session->lock, flags);
+> +		}
+>   	}
+>   
+>   user_scan_exit:
+> @@ -1960,31 +1971,41 @@ static void __iscsi_unbind_session(struct work_struct *work)
+>   	struct iscsi_cls_host *ihost = shost->shost_data;
+>   	unsigned long flags;
+>   	unsigned int target_id;
+> +	bool remove_target = true;
+>   
+>   	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+>   
+>   	/* Prevent new scans and make sure scanning is not in progress */
+>   	mutex_lock(&ihost->mutex);
+>   	spin_lock_irqsave(&session->lock, flags);
+> -	if (session->target_id == ISCSI_MAX_TARGET) {
+> +	if (session->target_state == ISCSI_SESSION_TARGET_ALLOCATED) {
+> +		remove_target = false;
+> +	} else if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
+>   		spin_unlock_irqrestore(&session->lock, flags);
+>   		mutex_unlock(&ihost->mutex);
+> -		goto unbind_session_exit;
+> +		ISCSI_DBG_TRANS_SESSION(session,
+> +			"Skipping target unbinding: Session is unbound/unbinding.\n");
+> +		return;
+>   	}
+>   
+> +	session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
+>   	target_id = session->target_id;
+>   	session->target_id = ISCSI_MAX_TARGET;
+>   	spin_unlock_irqrestore(&session->lock, flags);
+>   	mutex_unlock(&ihost->mutex);
+>   
+> -	scsi_remove_target(&session->dev);
+> +	if (remove_target)
+> +		scsi_remove_target(&session->dev);
+>   
+>   	if (session->ida_used)
+>   		ida_free(&iscsi_sess_ida, target_id);
+>   
+> -unbind_session_exit:
+>   	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
+>   	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
+> +
+> +	spin_lock_irqsave(&session->lock, flags);
+> +	session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
+> +	spin_unlock_irqrestore(&session->lock, flags);
+>   }
+>   
+>   static void __iscsi_destroy_session(struct work_struct *work)
+> @@ -2061,6 +2082,9 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
+>   		session->ida_used = true;
+>   	} else
+>   		session->target_id = target_id;
+> +	spin_lock_irqsave(&session->lock, flags);
+> +	session->target_state = ISCSI_SESSION_TARGET_ALLOCATED;
+> +	spin_unlock_irqrestore(&session->lock, flags);
+>   
+>   	dev_set_name(&session->dev, "session%u", session->sid);
+>   	err = device_add(&session->dev);
+> @@ -4368,6 +4392,16 @@ iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
+>   iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
+>   iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
+>   
+> +static ssize_t
+> +show_priv_session_target_state(struct device *dev, struct device_attribute *attr,
+> +			char *buf)
+> +{
+> +	struct iscsi_cls_session *session = iscsi_dev_to_session(dev->parent);
+> +	return sysfs_emit(buf, "%s\n",
+> +			iscsi_session_target_state_name[session->target_state]);
+> +}
+> +static ISCSI_CLASS_ATTR(priv_sess, target_state, S_IRUGO,
+> +			show_priv_session_target_state, NULL);
+>   static ssize_t
+>   show_priv_session_state(struct device *dev, struct device_attribute *attr,
+>   			char *buf)
+> @@ -4470,6 +4504,7 @@ static struct attribute *iscsi_session_attrs[] = {
+>   	&dev_attr_sess_boot_target.attr,
+>   	&dev_attr_priv_sess_recovery_tmo.attr,
+>   	&dev_attr_priv_sess_state.attr,
+> +	&dev_attr_priv_sess_target_state.attr,
+>   	&dev_attr_priv_sess_creator.attr,
+>   	&dev_attr_sess_chap_out_idx.attr,
+>   	&dev_attr_sess_chap_in_idx.attr,
+> @@ -4583,6 +4618,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
+>   		return S_IRUGO | S_IWUSR;
+>   	else if (attr == &dev_attr_priv_sess_state.attr)
+>   		return S_IRUGO;
+> +	else if (attr == &dev_attr_priv_sess_target_state.attr)
+> +		return S_IRUGO;
+>   	else if (attr == &dev_attr_priv_sess_creator.attr)
+>   		return S_IRUGO;
+>   	else if (attr == &dev_attr_priv_sess_target_id.attr)
+> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> index cab52b0f11d0..34c03707fb6e 100644
+> --- a/include/scsi/scsi_transport_iscsi.h
+> +++ b/include/scsi/scsi_transport_iscsi.h
+> @@ -236,6 +236,14 @@ enum {
+>   	ISCSI_SESSION_FREE,
+>   };
+>   
+> +enum {
+> +	ISCSI_SESSION_TARGET_UNBOUND,
+> +	ISCSI_SESSION_TARGET_ALLOCATED,
+> +	ISCSI_SESSION_TARGET_SCANNED,
+> +	ISCSI_SESSION_TARGET_UNBINDING,
+> +	ISCSI_SESSION_TARGET_MAX,
+> +};
+> +
+>   #define ISCSI_MAX_TARGET -1
+>   
+>   struct iscsi_cls_session {
+> @@ -264,6 +272,7 @@ struct iscsi_cls_session {
+>   	 */
+>   	pid_t creator;
+>   	int state;
+> +	int target_state;			/* session target bind state */
+>   	int sid;				/* session id */
+>   	void *dd_data;				/* LLD private data */
+>   	struct device dev;	/* sysfs transport/container device */
 
-Not sure how Niklas sent the series.
-
-Niklas,
-
-For the next rev (we will need one to at least rebase on 6.2-rc1 I think),
-please make sure to send all patches to all lists/maintainers.
-
+Reviewed-by: Wu Bo <wubo40@huawei.com>
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Wu Bo
