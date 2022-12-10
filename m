@@ -2,151 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACECC04FDE
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Dec 2022 19:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8677C4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Dec 2022 08:40:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229777AbiLITfk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Dec 2022 14:35:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60352 "EHLO
+        id S229720AbiLJIkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Dec 2022 03:40:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbiLITfi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2022 14:35:38 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACCF0ACB04;
-        Fri,  9 Dec 2022 11:35:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5F581B828D5;
-        Fri,  9 Dec 2022 19:35:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B18EC433F2;
-        Fri,  9 Dec 2022 19:35:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670614533;
-        bh=v2LTIozCIJDxxtrquMlOETLKuG0+ICdqDDcLSw5pjlg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=b0dy/WrkYoO7DEJNumDLdv+N0M0NN+t9HA8QsUhTK4lHH9GHXkCyGevjf26e6pwSi
-         A9I1ymbF0br0lhBgU9bMOiR5CEfFVB5oftI6thMjldwSykMPGG+s3P9BF3FGScFIvi
-         vEWtkiN566SQQi9Yn4IS/kuAZzy+mRAGRA3m97NN645Cghs3f0gj07xkRj1Ji4O6FF
-         QUYILJ4st9xbtIxCK0WYJjliMIjhuH85X6wWQd1OjXQEhSwOMSbWmAG2QkZ/oJpeo4
-         sz/rOjRxVWfo40P9plTvmWuSi8lFWyDs39Tq427WNAFARztpah/gxT7Eu+ZD8fQsGV
-         lMhqCy4P8ENwA==
-Date:   Fri, 9 Dec 2022 11:35:31 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Luca Weiss <luca.weiss@fairphone.com>,
-        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: ufs: qcom: Add reg-names property for ICE
-Message-ID: <Y5OOA2+OuwgZ1i7B@sol.localdomain>
-References: <20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com>
- <24fa41d2-87d1-be19-af44-337784b0f0a4@linaro.org>
- <COXDTKRPPU1J.373YHYKBQIN38@otso>
- <a527720e-d4d9-6c90-f991-a5b123c4559b@linaro.org>
+        with ESMTP id S229470AbiLJIkq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Dec 2022 03:40:46 -0500
+Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A12E14D0D;
+        Sat, 10 Dec 2022 00:40:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1670661631; bh=gb6jQctZQdJLMrohgPSsWQC3besPinsKjN42uisSC1g=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=TNDBFp6OUf/CaBSd8L0uzCqxhaTYEIfZ+NIX5fViG2469RhN5WyM1b3pzUxFhAEDO
+         X+DSp80NWYKyV24KdSy9doW/EvUg9AQlnzPqd5GDbKOKEF5Z6Iqgx42OY7woE/x+4d
+         ZysB07bOlH5P+ozBsD9kCENRS9B6TIal4LVeXGLA=
+Received: by b-4.in.mailobj.net [192.168.90.14] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Sat, 10 Dec 2022 09:40:31 +0100 (CET)
+X-EA-Auth: ZGpsW37M5hSIwmgrInD3iTM9iZgpWlfUAd0dqokCc3uteBm/7yhWcaQXQWgjBMXNRuM2J5cGOfGK0zMKPSQDcxhEcgiHVUsP
+Date:   Sat, 10 Dec 2022 14:10:24 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>, drv@mailo.com
+Subject: [PATCH] scsi: qla4xxx: Use sysfs_emit in show function callsbacks
+Message-ID: <Y5RF+PGBuiXu7UrX@qemulion>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a527720e-d4d9-6c90-f991-a5b123c4559b@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 09, 2022 at 04:19:20PM +0100, Krzysztof Kozlowski wrote:
-> On 09/12/2022 16:11, Luca Weiss wrote:
-> > On Fri Dec 9, 2022 at 4:05 PM CET, Krzysztof Kozlowski wrote:
-> >> On 09/12/2022 15:29, Luca Weiss wrote:
-> >>> The code in ufs-qcom-ice.c needs the ICE reg to be named "ice". Add this
-> >>> in the bindings so the existing dts can validate successfully.
-> >>>
-> >>> Also sm8450 is using ICE since commit 276ee34a40c1 ("arm64: dts: qcom:
-> >>> sm8450: add Inline Crypto Engine registers and clock") so move the
-> >>> compatible to the correct if.
-> >>>
-> >>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> >>> ---
-> >>> (no cover subject)
-> >>>
-> >>> The only remaining validation issues I see is the following on sc8280xp-crd.dtb
-> >>> and sa8540p-ride.dtb:
-> >>>
-> >>>   Unevaluated properties are not allowed ('required-opps', 'dma-coherent' were unexpected)
-> >>>
-> >>> Maybe someone who knows something about this can handle this?
-> >>>
-> >>> And the patch adding qcom,sm6115-ufshc hasn't been applied yet.
-> >>> ---
-> >>>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 8 +++++++-
-> >>>  1 file changed, 7 insertions(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> >>> index f2d6298d926c..58a2fb2c83c3 100644
-> >>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> >>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> >>> @@ -102,7 +102,6 @@ allOf:
-> >>>                - qcom,sc8280xp-ufshc
-> >>>                - qcom,sm8250-ufshc
-> >>>                - qcom,sm8350-ufshc
-> >>> -              - qcom,sm8450-ufshc
-> >>>      then:
-> >>>        properties:
-> >>>          clocks:
-> >>> @@ -130,6 +129,7 @@ allOf:
-> >>>                - qcom,sdm845-ufshc
-> >>>                - qcom,sm6350-ufshc
-> >>>                - qcom,sm8150-ufshc
-> >>> +              - qcom,sm8450-ufshc
-> >>>      then:
-> >>>        properties:
-> >>>          clocks:
-> >>> @@ -149,6 +149,12 @@ allOf:
-> >>>          reg:
-> >>>            minItems: 2
-> >>>            maxItems: 2
-> >>> +        reg-names:
-> >>
-> >> There are no reg-names in top-level, so it's surprising to see its
-> >> customized here. It seems no one ever documented that usage...
-> > 
-> > From what I can tell, from driver side all devices not using ICE don't
-> > need reg-names, only the "ice" reg is referenced by name in the driver.
-> > 
-> > I didn't add it top-level because with only one reg I think we're not
-> > supposed to use reg-names, right?
-> 
-> And you still won't need to use. Yet property should be rather described
-> in top-level which also will unify the items here (so no different
-> 2-item reg-names in variants).
-> 
-> Just add it to top-level with minItems: 1 and per variant customize:
-> 1. maxItems: 1
-> 2. minItems: 2 + required
-> 
-> The "required" is a bit questionable... this was never added by Eric to
-> the bindings. Driver support and DTS were added completely skipping
-> bindings...
-> 
+According to Documentation/filesystems/sysfs.rst, the show() callback
+function of kobject attributes should strictly use sysfs_emit instead
+of sprintf family functions.
+Issue identified using the coccinelle device_attr_show.cocci script.
 
-Sorry about that.  At the time
-(https://lore.kernel.org/linux-scsi/20200722051143.GU388985@builder.lan/T/#t)
-I didn't know there was a Documentation file that should have been updated.
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+ drivers/scsi/qla4xxx/ql4_attr.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-The UFS core assumes that the reg at index 0 is the UFS standard registers.
-It is not referenced by name.
+diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
+index abfa6ef60480..773b8dbe1121 100644
+--- a/drivers/scsi/qla4xxx/ql4_attr.c
++++ b/drivers/scsi/qla4xxx/ql4_attr.c
+@@ -156,11 +156,11 @@ qla4xxx_fw_version_show(struct device *dev,
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
 
-ufs-qcom already had an optional reg at index 1.  I needed to add another
-optional reg.  So I made the regs at index 1 and later be optional named regs:
-dev_ref_clk_ctrl_mem and ice.  That seemed better than hardcoding the indices.
+ 	if (is_qla80XX(ha))
+-		return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%x)\n",
++		return sysfs_emit(buf, "%d.%02d.%02d (%x)\n",
+ 				ha->fw_info.fw_major, ha->fw_info.fw_minor,
+ 				ha->fw_info.fw_patch, ha->fw_info.fw_build);
+ 	else
+-		return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d.%02d\n",
++		return sysfs_emit(buf, "%d.%02d.%02d.%02d\n",
+ 				ha->fw_info.fw_major, ha->fw_info.fw_minor,
+ 				ha->fw_info.fw_patch, ha->fw_info.fw_build);
+ }
+@@ -170,7 +170,7 @@ qla4xxx_serial_num_show(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ha->serial_number);
++	return sysfs_emit(buf, "%s\n", ha->serial_number);
+ }
 
-Is it causing a problem that the UFS standard reg at index 0 is being mixed with
-named regs in the same list?
+ static ssize_t
+@@ -178,7 +178,7 @@ qla4xxx_iscsi_version_show(struct device *dev, struct device_attribute *attr,
+ 			   char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fw_info.iscsi_major,
++	return sysfs_emit(buf, "%d.%02d\n", ha->fw_info.iscsi_major,
+ 			ha->fw_info.iscsi_minor);
+ }
 
-- Eric
+@@ -187,7 +187,7 @@ qla4xxx_optrom_version_show(struct device *dev, struct device_attribute *attr,
+ 			    char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d.%02d\n",
++	return sysfs_emit(buf, "%d.%02d.%02d.%02d\n",
+ 			ha->fw_info.bootload_major, ha->fw_info.bootload_minor,
+ 			ha->fw_info.bootload_patch, ha->fw_info.bootload_build);
+ }
+@@ -197,7 +197,7 @@ qla4xxx_board_id_show(struct device *dev, struct device_attribute *attr,
+ 		      char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "0x%08X\n", ha->board_id);
++	return sysfs_emit(buf, "0x%08X\n", ha->board_id);
+ }
+
+ static ssize_t
+@@ -207,7 +207,7 @@ qla4xxx_fw_state_show(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+
+ 	qla4xxx_get_firmware_state(ha);
+-	return snprintf(buf, PAGE_SIZE, "0x%08X%8X\n", ha->firmware_state,
++	return sysfs_emit(buf, "0x%08X%8X\n", ha->firmware_state,
+ 			ha->addl_fw_state);
+ }
+
+@@ -220,7 +220,7 @@ qla4xxx_phy_port_cnt_show(struct device *dev, struct device_attribute *attr,
+ 	if (is_qla40XX(ha))
+ 		return -ENOSYS;
+
+-	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_cnt);
++	return sysfs_emit(buf, "0x%04X\n", ha->phy_port_cnt);
+ }
+
+ static ssize_t
+@@ -232,7 +232,7 @@ qla4xxx_phy_port_num_show(struct device *dev, struct device_attribute *attr,
+ 	if (is_qla40XX(ha))
+ 		return -ENOSYS;
+
+-	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_num);
++	return sysfs_emit(buf, "0x%04X\n", ha->phy_port_num);
+ }
+
+ static ssize_t
+@@ -244,7 +244,7 @@ qla4xxx_iscsi_func_cnt_show(struct device *dev, struct device_attribute *attr,
+ 	if (is_qla40XX(ha))
+ 		return -ENOSYS;
+
+-	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->iscsi_pci_func_cnt);
++	return sysfs_emit(buf, "0x%04X\n", ha->iscsi_pci_func_cnt);
+ }
+
+ static ssize_t
+@@ -253,7 +253,7 @@ qla4xxx_hba_model_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ha->model_name);
++	return sysfs_emit(buf, "%s\n", ha->model_name);
+ }
+
+ static ssize_t
+@@ -261,7 +261,7 @@ qla4xxx_fw_timestamp_show(struct device *dev, struct device_attribute *attr,
+ 			  char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%s %s\n", ha->fw_info.fw_build_date,
++	return sysfs_emit(buf, "%s %s\n", ha->fw_info.fw_build_date,
+ 			ha->fw_info.fw_build_time);
+ }
+
+@@ -270,7 +270,7 @@ qla4xxx_fw_build_user_show(struct device *dev, struct device_attribute *attr,
+ 			   char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ha->fw_info.fw_build_user);
++	return sysfs_emit(buf, "%s\n", ha->fw_info.fw_build_user);
+ }
+
+ static ssize_t
+@@ -278,7 +278,7 @@ qla4xxx_fw_ext_timestamp_show(struct device *dev, struct device_attribute *attr,
+ 			      char *buf)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ha->fw_info.extended_timestamp);
++	return sysfs_emit(buf, "%s\n", ha->fw_info.extended_timestamp);
+ }
+
+ static ssize_t
+@@ -300,7 +300,7 @@ qla4xxx_fw_load_src_show(struct device *dev, struct device_attribute *attr,
+ 		break;
+ 	}
+
+-	return snprintf(buf, PAGE_SIZE, "%s\n", load_src);
++	return sysfs_emit(buf, "%s\n", load_src);
+ }
+
+ static ssize_t
+@@ -309,7 +309,7 @@ qla4xxx_fw_uptime_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+ 	qla4xxx_about_firmware(ha);
+-	return snprintf(buf, PAGE_SIZE, "%u.%u secs\n", ha->fw_uptime_secs,
++	return sysfs_emit(buf, "%u.%u secs\n", ha->fw_uptime_secs,
+ 			ha->fw_uptime_msecs);
+ }
+
+--
+2.34.1
+
+
+
