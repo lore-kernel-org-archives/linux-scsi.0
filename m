@@ -2,180 +2,256 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11E0CC4167B
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Dec 2022 01:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5854C4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Dec 2022 02:54:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbiLKBit (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Dec 2022 20:38:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55176 "EHLO
+        id S229746AbiLKCy2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Dec 2022 21:54:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229568AbiLKBir (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Dec 2022 20:38:47 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D69FA13DCB;
-        Sat, 10 Dec 2022 17:38:46 -0800 (PST)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BB1PXnR021296;
-        Sun, 11 Dec 2022 01:38:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : from : to : cc : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=SDVJt8V9m1cF/eY9kfyPHNQE01xrlDqtWTTzjyP6yck=;
- b=ziwtBl5JYbClHdLPIBdlCW/OdrOXbZKKWVwK8blzP2FxufSD8aPhdvwzCvea4fBBM4cU
- sXk83f0Sp6YRUjBIquX1KoPLHnQWDb4CPgpYBQc7Aovh1o/22GpXcEEDaAC1O/GBhGff
- 6lfZG9fwT5UqAxEWmww0mK+/BwazJm69teqk/QBF5z90qSIItiDsC9JiqukNm8XVqVGp
- y/W6rEojR0NA5ry7ksI0ReWdZIE5pUk/7PH2WgKXW842t3+XED6VOnPu2Z6AL9owJKhp
- 7wPCW3xdxvSK/pDbPdhR5FJImfi1DyM3GKLNLdSAOLEsDXuQrnYSg3S9ZXfB9o9ANjJA 7A== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mcj090ssf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 11 Dec 2022 01:38:44 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2BAN4tDM011597;
-        Sun, 11 Dec 2022 01:38:43 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2172.outbound.protection.outlook.com [104.47.55.172])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3mcgj8g18n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 11 Dec 2022 01:38:43 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Jn73PVglqOmep3HeEVOjvteez/9uXpzvJrhfMgNjckxT0a2WLnVJ2MVcrs7QxlvhaShNZHITgNxZmFtYFmZAoRGKr4eAiuKbwYfIYQXRKTkP1BstJmPV7y7b6kSJJELKbUQIEnepFulyVwnB37/1Yg3qtCmHEc38YmYYmx9X+DC8Gsxeu/QXJTHbpI2+Yli79uH9XU0yXuGW5mXCQ5I4q8PUU8gJRrRTHbQ44WkHx8jSu6AqMiYVoHrTFuyAQBg7IeiLKDA03M0majCppiDeqYJXutL0c/YlE01JP6Wt8398KXNDZbdgcdA8DRtd0g/RSHlKRYA3VxYbtJEYcAmdMQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SDVJt8V9m1cF/eY9kfyPHNQE01xrlDqtWTTzjyP6yck=;
- b=l4yILVWul0OA9qjybSWnFQrk5eKLAstCxLM994kmv46oZScGNjuGSkWq/L7qSjJrc/JIMfdPxLof3nNqgG+dJNx78KBuRtcLKGs00nAyQX24LSb8+zEJT3y1nwEOAGBdoY/OujijWW0zZh1XQIC3Yu0WTd2AgGAk5bFMLk0wkRCSlc5Pr808T+gucNv5zVpPRTpSUSHIUIl9GtAt7vQIFmty3J5QPiQ+JYnGYZucShvruMR4N2sBtxXzp5UMqRGwpsU8wUT8xQOrJgSyzfbbJi+UK2p9OQng+vYHGeeq9BVWzbYa1F6crpk/I4EDSi4jeLQGV79cxVS8EV8XmqTBaw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SDVJt8V9m1cF/eY9kfyPHNQE01xrlDqtWTTzjyP6yck=;
- b=achfP3LC9px8NXdbIlegYYwll6IAFTLgu2xFe1csP3dJ2SzVJNMqYyB0N4cktOpi/XWeKhvP+NdYd/IIOd1k6nI3UBp8bvRDBfp/wSSjX2pavgYD90F9LZ+sBotRkL4b9miFcqAYt/wrmwOph8jBo2iC1sDV0ShmrGjSGejD0+w=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- CY8PR10MB7219.namprd10.prod.outlook.com (2603:10b6:930:77::8) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5880.19; Sun, 11 Dec 2022 01:38:41 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::2dbb:4791:5a67:4372]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::2dbb:4791:5a67:4372%7]) with mapi id 15.20.5880.019; Sun, 11 Dec 2022
- 01:38:41 +0000
-Message-ID: <785b5eab-8e2c-b5c3-e710-d16abe2a2154@oracle.com>
-Date:   Sat, 10 Dec 2022 19:38:40 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH 5/7] scsi: target: iscsit/isert: stop/wait on cmds during
- conn close
-Content-Language: en-US
-From:   Mike Christie <michael.christie@oracle.com>
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc:     mlombard@redhat.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20221208031002.106700-1-michael.christie@oracle.com>
- <20221208031002.106700-6-michael.christie@oracle.com>
- <20221209123202.GD15327@yadro.com>
- <5282eea8-6648-4573-057b-7350955b2368@oracle.com>
-In-Reply-To: <5282eea8-6648-4573-057b-7350955b2368@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR03CA0328.namprd03.prod.outlook.com
- (2603:10b6:610:118::14) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        with ESMTP id S229538AbiLKCy1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Dec 2022 21:54:27 -0500
+Received: from mail-m12746.qiye.163.com (mail-m12746.qiye.163.com [115.236.127.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEB0EA1A1;
+        Sat, 10 Dec 2022 18:54:24 -0800 (PST)
+Received: from [IPV6:240e:3b7:3277:4a60:8d29:b66f:578c:d71b] (unknown [IPV6:240e:3b7:3277:4a60:8d29:b66f:578c:d71b])
+        by mail-m12746.qiye.163.com (Hmail) with ESMTPA id 80169BC0196;
+        Sun, 11 Dec 2022 10:54:18 +0800 (CST)
+Message-ID: <fd20e5c4-34fa-3ab1-71cd-13e4febc3799@sangfor.com.cn>
+Date:   Sun, 11 Dec 2022 10:54:17 +0800
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|CY8PR10MB7219:EE_
-X-MS-Office365-Filtering-Correlation-Id: 498f7ff0-ec94-430d-b9fe-08dadb186ef4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: u1ILjRCDP8Vx3xC/hxHqAtY+/3c8+9bIBZkHAvXqTm0O5W6hgihlXth2sLmDS2cLVLWMwikzLF6qrDSV0bDJhbsvCbAxhB3hW+JGf0tqm1gVFUursnP8QgRLMWeliWz7DR6IA528+T55EpuORZKNkxSXm9yiXA0BzwFfvf7IuE1sCbtx1Qvno0H5FSo7wD2mCWaZIkM90AdYrrkLijaNtbzgfQYdnZRqxNUX4BIobzOJjoRfArzCWA1YUH1JwPQQ3aUv5q1ZSmZZ96uaMHeBjWoUBjmfb7aPHpwaeePMrJn4+6U2z1OQXamC60cTqYKUF/QVwfMPfOv9WtA5JCf97q+25Mj2chSeXwLx/IqFKEytnNSYkRsyMLZUb9bjeP+x+BspMVZQkPYVtVi5p5yjV1V5ZniQlGtjJfD8JFh/xpWWjGzLRPlRe4zBi/lFA+WehBGScAvK5A4wiV6g3CvYNckKyXYj8kyeRSofHrrDatFSJS1Y1UWbOOeEjKKhu6AjOU01ASBVq+laNhdUHinmFssbIYqZrH4AtpGAK3150PzGPlIs9U7I4HLXuFj5Vz+Am6f4A4kh3IV8+df5qJM97YkFpvXWVYHutmyMTfBSCE2trYriNkxxJXZ9IDTaOAm+aW3vtoycsEwyCr7RCFv8+xg0KPkTYzKl5IfJxg/5GjKT3lHs8kvedWyqqmpX6QqWrwCNQ4lvVTtPtJ/p6TfpXXUXFateDBIIWk4OHq+eh8Q=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(39860400002)(366004)(396003)(376002)(136003)(451199015)(36756003)(41300700001)(8936002)(6486002)(478600001)(38100700002)(31696002)(86362001)(5660300002)(2616005)(53546011)(31686004)(316002)(6916009)(66946007)(66556008)(4326008)(8676002)(66476007)(186003)(6512007)(6506007)(83380400001)(26005)(2906002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dUs5ZzRuN2NMTXVyTFlkemg3elNRcE9pckRYa3V4Ujl4Q1V0WXFlakNESUkx?=
- =?utf-8?B?UUNnMDNxOWRGRDVTRTl0Yjc1a3FQSmJqVXZtR3JSVW1QME5YeVdLSm04bjhj?=
- =?utf-8?B?M09QYU9jRVJBallsemxLUUdtcGd6bU9TSCtZL1ExRkdLSVMvTmM4MVhveElh?=
- =?utf-8?B?MUQ3cEtaazRGeGxNTHUydVBXbDRHbEJzdmx3WGdMejVpK2N1VHBNV0hqenZs?=
- =?utf-8?B?a2xFS081R0Znb1pncXhNQ3BuZ3Y0YnpPenpQNjU5aVZub1FML3BDNDkyZ3VU?=
- =?utf-8?B?ZTNxblZpOFRvTU5GcWVqZjAzdnVMUG9NVUY5d1p5dHVJbUtaWGhpc0RlcG5h?=
- =?utf-8?B?RFplWnNHOXBxMUd3eVl6U3U4WVg0OE5CajVBbEVXWVZ3KzgzMWR4NzVXOHNH?=
- =?utf-8?B?UnJYTDZRSmg3Q3lpSUFOaC93bjYwQ0dxUkUxUlNuMUN5L2g1U0owa3BGZHRC?=
- =?utf-8?B?ZU5wNGpXeStSSlk4QzE1TmhKYzlXaU9RUjRIdUQyaHJMU2p2eTV5T0N2TWcx?=
- =?utf-8?B?RTd2Smx6QTQ0NEFqdGE1TTFyKzFzeFFQSm44WkVYNFYwM1V4MHNYS3dOcVFM?=
- =?utf-8?B?WEtESWZvWGJsbnVQSEFkaktMRkg2V2pqeXZoRnA4bUJ1alA5Y05ZNVJCUG1L?=
- =?utf-8?B?YUtXSmlEc29ramVuK001UGwvNUtQUTJhVU1Ra3MzWU44WnNmNVBXMFJEd1VQ?=
- =?utf-8?B?OHBPZWZEaHR5WjNQUCtCR2YvY3VhZk1ObnRBS0wwSDlVL2QxS2pGMHcvUDRi?=
- =?utf-8?B?MnlKMHlsZGxzYStDMkVXblZ2ZHo0QmlQS0s4WC9YYW43WjFhYVArOTdJa1hY?=
- =?utf-8?B?TDVzVTcxQVc2UkNNMm1RSmxYMXJ4RCtBeXlDcExoc3RMOFIwdVlIQ04wZUcx?=
- =?utf-8?B?RDIzSWMvbkNWZE5hc09rZEtmUkE4aWhBaGZOc2RZTXczUlNZUGNxUGhBb2p4?=
- =?utf-8?B?OUtmRUc0bjFZWXJjcXRDRGI0OHJQZXJrTkFMRVBkTm8zTzJ4UUFYMWh1SWVv?=
- =?utf-8?B?UXpQTWMweWJENEtKN1V2VnBqaklZWnFCWWpjVzhYSXNnVUJjL2lPalNmYlcv?=
- =?utf-8?B?ZmdMNHVScjg3WjJZNEJ6SGw5YTJWZjRQbFE5ZGdDTDRub2E1TjF5RHVVMVZN?=
- =?utf-8?B?djhsTE0zUldjUHAyelh5aE55Vll4WFhHYmdkRExjdHZ1eXJnRkxYSHVHQ0tX?=
- =?utf-8?B?VkJLMnFFeU5MdFczQ0dwS2dVU3BRdlJUMzVWZEErbGJwRzRhMWlwTlo4c05i?=
- =?utf-8?B?ajYweFJrdG1QVHk0N1oxN1diU0JLa2lncHdxWGZ4MDcrQTdZdmJSWnNSOGZq?=
- =?utf-8?B?RUw3K1JHUk94VDZueldrOFVYanFmeE9PUDlWMmFGSElTbEJuamp6VUo2SjJO?=
- =?utf-8?B?U2loakVmNitOVm85ZldHNG9nbEdxSjIwR1BlMXdxZWwvS1dhUUhVNlo3ZHlw?=
- =?utf-8?B?QnlCY2xIbDZLdUthMjIwZ2RKKzNQdCtWQXZpcDh3bklPdkIraFNUZlM3bHB0?=
- =?utf-8?B?Zlg1UWFJRlBJd0hvMHpmRStRdnN0djZ3eStKMERRV1l4ZWpRQTduTGhETTZK?=
- =?utf-8?B?RHp3aVJTbjdCNGZ1aUYyZEhycE5tcUV3OWtrMWpURDJnR3J4bWRGY0hHVy9Y?=
- =?utf-8?B?R2xGTTIxSzVzWDFPaEQ3UlRJL0prOG9nNExCT1F6YmRLdktLaHlobFhKWHNt?=
- =?utf-8?B?dVpGM2QyeGR2SHY1U0MvRkI3Sk1mWkdnNXRlMjhwdnZwVnVmN3JmcVAxTWU5?=
- =?utf-8?B?UWVJK3MrS1JmY3JFUjF1YlVqbWY0UStOQzQrcm4rNWtPU09idnVJemlqYkZL?=
- =?utf-8?B?SDhZL3ZnZEV2VVA1aGFLR1ZXaUJIZTY5R0NkdlJwc21sUUUzMEQyRVBKWkVH?=
- =?utf-8?B?L1ZQejYvWGt5YXpGNnRzL3JkdVlXNkJGY2pNa3YrRGQ1cmtpNE5QNFp1YUQ0?=
- =?utf-8?B?bVJzNmFWb0kxdkl2THM3SDEydVpnOUo3WEhQZEVNRUs4ZmhtYWRhT2xPLytJ?=
- =?utf-8?B?ZkNRa3Z5WmtVNTIzU2c3N3U4YVdOaFl1TndUTTZrcWxYNjkzRUNZZnB3dmds?=
- =?utf-8?B?dVJVSlJMM0hjYXBNeFQ3RVRacVp5aXhlVHBkeXRnRFh3Q3Rsbk01ekE0dnBz?=
- =?utf-8?B?Y0dtVlJEdXlaaXNMSDd3SXJGdGlrR3h4a3pXTkorSXcxNG1UOG9zMzRLeUha?=
- =?utf-8?B?VUE9PQ==?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 498f7ff0-ec94-430d-b9fe-08dadb186ef4
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Dec 2022 01:38:41.4826
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sGDccMZMSjJGcgStBK//EekBniKXbvgO8j3LSmPIC++tXcMA6C1cDWN2GQjqJeUa1YMb9mrcGElLsxJ562Rz3N99KA9mjJyX8nHQMKfbolA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB7219
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-10_10,2022-12-08_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 mlxscore=0
- mlxlogscore=999 malwarescore=0 spamscore=0 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2212110012
-X-Proofpoint-ORIG-GUID: IWsnaGMyZ-wfYKPIfuZawEGyrX3cdwwZ
-X-Proofpoint-GUID: IWsnaGMyZ-wfYKPIfuZawEGyrX3cdwwZ
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:91.0)
+ Gecko/20100101 Thunderbird/91.12.0
+Subject: Re: [PATCH] scsi: iscsi_tcp: Fix UAF when access shost attr during
+ session logout
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>, lduncan@suse.com,
+        cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20221209082247.6330-1-dinghui@sangfor.com.cn>
+ <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
+From:   dinghui <dinghui@sangfor.com.cn>
+In-Reply-To: <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCTE5NVh5LHxoeTBhOSkhKSFUTARMWGhIXJBQOD1
+        lXWRgSC1lBWUlPSx5BSBlMQUhJTExBTxpNS0FDH0lCQRlNTR1BTkxDGEEfTEoZWVdZFhoPEhUdFF
+        lBWU9LSFVKSktPSEhVSktLVUtZBg++
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6P006DDo*GD0jFkk5ShBDIUpR
+        LiswC0xVSlVKTUxLTElMSU5CSUxIVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlJT0seQUgZTEFISUxMQU8aTUtBQx9JQkEZTU0dQU5MQxhBH0xKGVlXWQgBWUFKSktISzcG
+X-HM-Tid: 0a84ff1ad28cb219kuuu80169bc0196
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/10/22 12:48 PM, Mike Christie wrote:
-> 
-> When we do iscsit iscsit_release_commands_from_conn we are:
-> 
-> 1. Waiting on commands in the backend and LIO core.
-> 2. Doing the last put on commands that have had queue_status called but
-> we haven't freed the cmd because they haven't been ackd.
-> 
-> Are we hitting an issue with #2? We need a proper bug and analysis or we are
-> just guessing and am going to mess up.
-> 
-> For example, for isert is the bug you are worried about that we have a missing
-> isert_send_done/isert_completion_put call because we disconnected before the
-> send callbacks could be done or because the ib layer won't call isert_send_done
-> when it detects a failure?
-I tested this and it's actually opposite and broken for a different reason :)
+On 2022/12/11 6:04 上午, Mike Christie wrote:
+> On 12/9/22 2:22 AM, Ding Hui wrote:
+>> During iscsi session logout, if another task accessing shost ipaddress
+>> attr at this time, we can get a KASAN UAF report like this:
+>>
+>> [  276.941685] ==================================================================
+>> [  276.942144] BUG: KASAN: use-after-free in _raw_spin_lock_bh+0x78/0xe0
+>> [  276.942535] Write of size 4 at addr ffff8881053b45b8 by task cat/4088
+>> [  276.943511] CPU: 2 PID: 4088 Comm: cat Tainted: G            E      6.1.0-rc8+ #3
+>> [  276.943997] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
+>> [  276.944470] Call Trace:
+>> [  276.944943]  <TASK>
+>> [  276.945397]  dump_stack_lvl+0x34/0x48
+>> [  276.945887]  print_address_description.constprop.0+0x86/0x1e7
+>> [  276.946421]  print_report+0x36/0x4f
+>> [  276.947358]  kasan_report+0xad/0x130
+>> [  276.948234]  kasan_check_range+0x35/0x1c0
+>> [  276.948674]  _raw_spin_lock_bh+0x78/0xe0
+>> [  276.949989]  iscsi_sw_tcp_host_get_param+0xad/0x2e0 [iscsi_tcp]
+>> [  276.951765]  show_host_param_ISCSI_HOST_PARAM_IPADDRESS+0xe9/0x130 [scsi_transport_iscsi]
+>> [  276.952185]  dev_attr_show+0x3f/0x80
+>> [  276.953005]  sysfs_kf_seq_show+0x1fb/0x3e0
+>> [  276.953401]  seq_read_iter+0x402/0x1020
+>> [  276.954260]  vfs_read+0x532/0x7b0
+>> [  276.955113]  ksys_read+0xed/0x1c0
+>> [  276.955952]  do_syscall_64+0x38/0x90
+>> [  276.956347]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>> [  276.956769] RIP: 0033:0x7f5d3a679222
+>> [  276.957161] Code: c0 e9 b2 fe ff ff 50 48 8d 3d 32 c0 0b 00 e8 a5 fe 01 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
+>> [  276.958009] RSP: 002b:00007ffc864d16a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+>> [  276.958431] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f5d3a679222
+>> [  276.958857] RDX: 0000000000020000 RSI: 00007f5d3a4fe000 RDI: 0000000000000003
+>> [  276.959281] RBP: 00007f5d3a4fe000 R08: 00000000ffffffff R09: 0000000000000000
+>> [  276.959682] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000020000
+>> [  276.960126] R13: 0000000000000003 R14: 0000000000000000 R15: 0000557a26dada58
+>> [  276.960536]  </TASK>
+>> [  276.961357] Allocated by task 2209:
+>> [  276.961756]  kasan_save_stack+0x1e/0x40
+>> [  276.962170]  kasan_set_track+0x21/0x30
+>> [  276.962557]  __kasan_kmalloc+0x7e/0x90
+>> [  276.962923]  __kmalloc+0x5b/0x140
+>> [  276.963308]  iscsi_alloc_session+0x28/0x840 [scsi_transport_iscsi]
+>> [  276.963712]  iscsi_session_setup+0xda/0xba0 [libiscsi]
+>> [  276.964078]  iscsi_sw_tcp_session_create+0x1fd/0x330 [iscsi_tcp]
+>> [  276.964431]  iscsi_if_create_session.isra.0+0x50/0x260 [scsi_transport_iscsi]
+>> [  276.964793]  iscsi_if_recv_msg+0xc5a/0x2660 [scsi_transport_iscsi]
+>> [  276.965153]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
+>> [  276.965546]  netlink_unicast+0x4d5/0x7b0
+>> [  276.965905]  netlink_sendmsg+0x78d/0xc30
+>> [  276.966236]  sock_sendmsg+0xe5/0x120
+>> [  276.966576]  ____sys_sendmsg+0x5fe/0x860
+>> [  276.966923]  ___sys_sendmsg+0xe0/0x170
+>> [  276.967300]  __sys_sendmsg+0xc8/0x170
+>> [  276.967666]  do_syscall_64+0x38/0x90
+>> [  276.968028]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>> [  276.968773] Freed by task 2209:
+>> [  276.969111]  kasan_save_stack+0x1e/0x40
+>> [  276.969449]  kasan_set_track+0x21/0x30
+>> [  276.969789]  kasan_save_free_info+0x2a/0x50
+>> [  276.970146]  __kasan_slab_free+0x106/0x190
+>> [  276.970470]  __kmem_cache_free+0x133/0x270
+>> [  276.970816]  device_release+0x98/0x210
+>> [  276.971145]  kobject_cleanup+0x101/0x360
+>> [  276.971462]  iscsi_session_teardown+0x3fb/0x530 [libiscsi]
+>> [  276.971775]  iscsi_sw_tcp_session_destroy+0xd8/0x130 [iscsi_tcp]
+>> [  276.972143]  iscsi_if_recv_msg+0x1bf1/0x2660 [scsi_transport_iscsi]
+>> [  276.972485]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
+>> [  276.972808]  netlink_unicast+0x4d5/0x7b0
+>> [  276.973201]  netlink_sendmsg+0x78d/0xc30
+>> [  276.973544]  sock_sendmsg+0xe5/0x120
+>> [  276.973864]  ____sys_sendmsg+0x5fe/0x860
+>> [  276.974248]  ___sys_sendmsg+0xe0/0x170
+>> [  276.974583]  __sys_sendmsg+0xc8/0x170
+>> [  276.974891]  do_syscall_64+0x38/0x90
+>> [  276.975216]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>>
+>> We can easily reproduce by two tasks:
+>> 1. while :; do iscsiadm -m node --login; iscsiadm -m node --logout; done
+>> 2. while :; do cat /sys/devices/platform/host*/iscsi_host/host*/ipaddress; done
+>>
+>>              iscsid                |        cat
+>> ----------------------------------+-------------------------------------------------
+>> |- iscsi_sw_tcp_session_destroy   |
+>>    |- iscsi_session_teardown       |
+>>      |- device_release             |
+>>        |- iscsi_session_release    |  |- dev_attr_show
+>>          |- kfree                  |    |- show_host_param_ISCSI_HOST_PARAM_IPADDRESS
+>>                                    |      |- iscsi_sw_tcp_host_get_param
+>>                                    |        |- r/w tcp_sw_host->session (UAF)
+>>    |- iscsi_host_remove            |
+>>    |- iscsi_host_free              |
+>>
+>> Since shost hold a pointer to session which is belong to cls_session by its
+>> priv tcp_sw_host, so we should get a ref of cls_session, and after
+>> iscsi_host_remove() the sysfs is cleared, then we can drop the ref.
+>>
+> Nice bug report and thanks for the patch. I think though we should just
+> split the removal from the freeing. The removal will wait on users
+> accessing sysfs files for us, so once they return we know we can just
+> free things.
+>
+> Something like this:
 
-It looks like we will still call isert_send_done for the cases above so we are
-ok there. The target_wait_for_cmds call will also sync us up those calls as
-well. So if we move isert's target_wait_for_cmds we have to flush those calls
-as well or add some more checks/refcounts or something.
+I applied your patch, and it works well.
 
-It turns out instead of a hang there is use after free. We can race where
-isert_put_unsol_pending_cmds does a isert_put_cmd but then isert_send_done
-can be running and also does isert_completion_put -> isert_put_cmd, so we
-hit a use after free due to the isert_put_unsol_pending_cmds calls freeing
-the se_cmd.
+
+Since this is more reasonable, could you ignore mine and submit your 
+patch instead please? I appreciate it.
+
+
+-- 
+Thanks,
+-dinghui
+
+>
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index 5fb1f364e815..751e4b19798b 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -982,10 +982,12 @@ static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
+>   	if (WARN_ON_ONCE(session->leadconn))
+>   		return;
+>   
+> +	iscsi_session_remove(cls_session);
+> +	iscsi_host_remove(shost, false);
+> +
+>   	iscsi_tcp_r2tpool_free(cls_session->dd_data);
+> -	iscsi_session_teardown(cls_session);
+>   
+> -	iscsi_host_remove(shost, false);
+> +	iscsi_session_free(cls_session);
+>   	iscsi_host_free(shost);
+>   }
+>   
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index ef2fc860257e..235957de1164 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -3104,17 +3104,27 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+>   }
+>   EXPORT_SYMBOL_GPL(iscsi_session_setup);
+>   
+> -/**
+> - * iscsi_session_teardown - destroy session, host, and cls_session
+> - * @cls_session: iscsi session
+> +/*
+> + * issi_session_remove - Remove session from iSCSI class.
+>    */
+> -void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+> +void iscsi_session_remove(struct iscsi_cls_session *cls_session)
+>   {
+>   	struct iscsi_session *session = cls_session->dd_data;
+> -	struct module *owner = cls_session->transport->owner;
+>   	struct Scsi_Host *shost = session->host;
+>   
+>   	iscsi_remove_session(cls_session);
+> +	iscsi_host_dec_session_cnt(shost);
+> +}
+> +EXPORT_SYMBOL_GPL(iscsi_session_remove);
+> +
+> +/**
+> + * iscsi_session_free - Free iscsi session and it's resources
+> + * @cls_session: iscsi session
+> + */
+> +void iscsi_session_free(struct iscsi_cls_session *cls_session)
+> +{
+> +	struct iscsi_session *session = cls_session->dd_data;
+> +	struct module *owner = cls_session->transport->owner;
+>   
+>   	iscsi_pool_free(&session->cmdpool);
+>   	kfree(session->password);
+> @@ -3132,10 +3142,19 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+>   	kfree(session->discovery_parent_type);
+>   
+>   	iscsi_free_session(cls_session);
+> -
+> -	iscsi_host_dec_session_cnt(shost);
+>   	module_put(owner);
+>   }
+> +EXPORT_SYMBOL_GPL(iscsi_session_free);
+> +
+> +/**
+> + * iscsi_session_teardown - destroy session and cls_session
+> + * @cls_session: iscsi session
+> + */
+> +void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+> +{
+> +	iscsi_session_remove(cls_session);
+> +	iscsi_session_free(cls_session);
+> +}
+>   EXPORT_SYMBOL_GPL(iscsi_session_teardown);
+>   
+>   /**
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index 695eebc6f2c8..5cdeff776ce2 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -422,6 +422,8 @@ extern int iscsi_host_get_max_scsi_cmds(struct Scsi_Host *shost,
+>   extern struct iscsi_cls_session *
+>   iscsi_session_setup(struct iscsi_transport *, struct Scsi_Host *shost,
+>   		    uint16_t, int, int, uint32_t, unsigned int);
+> +extern void iscsi_session_remove(struct iscsi_cls_session *cls_session);
+> +extern void iscsi_session_free(struct iscsi_cls_session *cls_session);
+>   extern void iscsi_session_teardown(struct iscsi_cls_session *);
+>   extern void iscsi_session_recovery_timedout(struct iscsi_cls_session *);
+>   extern int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+>
+>
