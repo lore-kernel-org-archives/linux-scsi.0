@@ -2,180 +2,847 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA0EC4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Dec 2022 14:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DB5EC4167B
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Dec 2022 22:16:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230081AbiLKOdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Dec 2022 09:33:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40806 "EHLO
+        id S230326AbiLKWQ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Dec 2022 17:16:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229835AbiLKOdC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 09:33:02 -0500
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B79AE55;
-        Sun, 11 Dec 2022 06:33:01 -0800 (PST)
-Received: by mail-ej1-x62a.google.com with SMTP id m18so22042234eji.5;
-        Sun, 11 Dec 2022 06:33:00 -0800 (PST)
+        with ESMTP id S230328AbiLKWQY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 17:16:24 -0500
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 533CADEF6
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2022 14:16:21 -0800 (PST)
+Received: by mail-wr1-x434.google.com with SMTP id f18so10305559wrj.5
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2022 14:16:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=4WqUoVsa+BZHuhTAxrHNAL1fk+hhKzh6lmfruqRjY0A=;
-        b=jPUk5MmJC1Yk5Z2lJVMKIUZeENrXcJRCrfX05/D8yhtxJoNCYszsHmt2p2p4KWciGQ
-         KSlwBONTrm3tJUWBljCfT7/9F2Gb1uFo0lzulQJIxYwhVwn1Wdv4CjiAxmxySnKfF8DX
-         hFC2fItx/DBfX3epAlQbeiyvfgH6kO4IQxe4CQNTO+fzK9CNWqc/wyklcX2uNsS0vurq
-         5AAS4hOeZliQVTsQSvjRmNk86qidAQJAHvfHFVi7LjODNE/VvLcvR7nL7VUqIDesYKU+
-         FNnC81h0OJAHm3/cLBeGlUnkAnlBwKbigbfQ0GQP6E4lB7EgrtPbZLP1xy0vun4JwqnA
-         0RZw==
+        d=mail.huji.ac.il; s=mailhuji;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xP7SztWgBK+Di2/S95g1mehudvt/HTZxLIDMbTsStrA=;
+        b=NsBv8YBArez4sULmrC65Gp4iZjpiVbOwMXtC5J0t9bXgqExRzgTid04TUvMwzKrntf
+         UskktvrreL59jAExs1Mt8AA2jVEClqV07MezbQtmUghS4oHq/kYSD4OxWv2/PV39/15f
+         bzqlsRtcKcynJK4QqTubWDdAu7wQlVvyHklAI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4WqUoVsa+BZHuhTAxrHNAL1fk+hhKzh6lmfruqRjY0A=;
-        b=UQfL5/9ml0VEwvs0Lv8Rp2KHJzdoI04XxjdrGKxct6LEf4sBY8pwzsEg7q1bp4LFzK
-         ZbtpiCtTREHnhLOscNgAg2fZkuHgrzvoqZ6XIC7sNe3ew30O0XK97/jr0zl7V5j/UJpx
-         I0gKnIW1FGpUZb/w3E2NBaGmlV7mmR3QSO+3HrGIQw1hXmLmGHAdWTRikxSsTrdUcYav
-         z9r25AUDSxOzAPorY5MQpodT8/hzFr3e0mUkliz2dK+C0R3feOFfc47z4SvFTTBIBWRN
-         oYUv5BY/0pYtqyqm39O953/gTmfDnkhD8UlFo61csz5GMp71e90ZMrdsMLhJCv1HXlzE
-         4WNQ==
-X-Gm-Message-State: ANoB5pmOBKE/LA+Nc5qglrdvKZILq0d+vP0CCyReeiGwxUm0/8FraO+w
-        6XQz0RgILpQGOYmycd3QJJbs9lcmINhvrqK/mBj0LuhGHZNylQ==
-X-Google-Smtp-Source: AA0mqf4z6PP5SzJzPWAAWwf8R91KnwRFRKIJ2bB6LCnlJmYvJvSeGrnwY1YYE+qBAFA0DTBEU4wvNaYo0dE/6IXjN+Q=
-X-Received: by 2002:a17:906:3604:b0:78d:99a0:7cf6 with SMTP id
- q4-20020a170906360400b0078d99a07cf6mr79046763ejb.56.1670769179467; Sun, 11
- Dec 2022 06:32:59 -0800 (PST)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=xP7SztWgBK+Di2/S95g1mehudvt/HTZxLIDMbTsStrA=;
+        b=36O/W4MmVAiCTEPYhy7PlVG0FvT7KA6PZhLlZnfiD7U11j5mhPe+ZSWKdcETafMmF9
+         1YvhqE8r6wJ6FlJjXlXQTRRmVL/HB6kciSrJrllU2M8XU5O7WPwpook9DVfTewGtPVSH
+         t6+PxqPHWEsg2MXd45wSxhkH08upt4atdAoNPv9plLHu7McD5h4q8PA7d22zDaX7+BJV
+         uIiXGhB0EFhn/iDxr/gabdau00bo4ztGp3pSVFGdUjMCqguEoLGTFIrvAQxpgFOXKccx
+         uiauacNPpSto81lvmKVQSKpkc5KfWjCudVJk1rIf7/EN7k4HpMdppls4+WR5ceidUTTD
+         7I3Q==
+X-Gm-Message-State: ANoB5pk1GQ7kwA2kZwudz2cSqNaTDODVuK6GobD3+KMTM+CqqimOlYXj
+        y6vtRqHOgQ4waG9QdxwqoBPBRA==
+X-Google-Smtp-Source: AA0mqf78YDUe2K8y4Kcbr4ZFKECLu8LJR6RszwRHTVyeY8S7AZZ7xsHqn/enF4FY+rfybmFnQlF/GQ==
+X-Received: by 2002:a05:6000:1c18:b0:242:7594:c2f7 with SMTP id ba24-20020a0560001c1800b002427594c2f7mr10558116wrb.64.1670796979520;
+        Sun, 11 Dec 2022 14:16:19 -0800 (PST)
+Received: from MacBook-Pro-5.lan ([2a0d:6fc2:218c:1a00:a91c:f8bf:c26f:4f15])
+        by smtp.gmail.com with ESMTPSA id d7-20020adffd87000000b002422bc69111sm8605805wrr.9.2022.12.11.14.16.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Dec 2022 14:16:18 -0800 (PST)
+From:   david.keisarschm@mail.huji.ac.il
+To:     Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        John Fastabend <john.fastabend@gmail.com>,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Martin KaFai Lau <martin.lau@linux.dev>,
+        Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>,
+        KP Singh <kpsingh@kernel.org>,
+        Stanislav Fomichev <sdf@google.com>,
+        Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Jiri Pirko <jiri@nvidia.com>,
+        Petr Mladek <pmladek@suse.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>
+Cc:     David <david.keisarschm@mail.huji.ac.il>, aksecurity@gmail.com,
+        ilay.bahat1@gmail.com, linux-kernel@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
+        bpf@vger.kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org
+Subject: [PATCH 1/5] Renaming weak prng invocations - prandom_bytes_state, prandom_u32_state
+Date:   Mon, 12 Dec 2022 00:16:04 +0200
+Message-Id: <b3caaa5ac5fca4b729bf1ecd0d01968c09e6d083.1670778652.git.david.keisarschm@mail.huji.ac.il>
+X-Mailer: git-send-email 2.38.0
+In-Reply-To: <cover.1670778651.git.david.keisarschm@mail.huji.ac.il>
+References: <cover.1670778651.git.david.keisarschm@mail.huji.ac.il>
 MIME-Version: 1.0
-References: <20221209082247.6330-1-dinghui@sangfor.com.cn> <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
-In-Reply-To: <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
-From:   Wenchao Hao <haowenchao22@gmail.com>
-Date:   Sun, 11 Dec 2022 22:32:46 +0800
-Message-ID: <CAOptpSO-TMhqR35RW4Sssm29NA=8rJ6-9TgjTVpGKpYOeS_8sA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: iscsi_tcp: Fix UAF when access shost attr during
- session logout
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Ding Hui <dinghui@sangfor.com.cn>, lduncan@suse.com,
-        cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Dec 11, 2022 at 6:07 AM Mike Christie
-<michael.christie@oracle.com> wrote:
->
-> On 12/9/22 2:22 AM, Ding Hui wrote:
-> > During iscsi session logout, if another task accessing shost ipaddress
-> > attr at this time, we can get a KASAN UAF report like this:
-> >
-> > [  276.941685] ==================================================================
-> > [  276.942144] BUG: KASAN: use-after-free in _raw_spin_lock_bh+0x78/0xe0
-> > [  276.942535] Write of size 4 at addr ffff8881053b45b8 by task cat/4088
-> > [  276.943511] CPU: 2 PID: 4088 Comm: cat Tainted: G            E      6.1.0-rc8+ #3
-> > [  276.943997] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
-> > [  276.944470] Call Trace:
-> > [  276.944943]  <TASK>
-> > [  276.945397]  dump_stack_lvl+0x34/0x48
-> > [  276.945887]  print_address_description.constprop.0+0x86/0x1e7
-> > [  276.946421]  print_report+0x36/0x4f
-> > [  276.947358]  kasan_report+0xad/0x130
-> > [  276.948234]  kasan_check_range+0x35/0x1c0
-> > [  276.948674]  _raw_spin_lock_bh+0x78/0xe0
-> > [  276.949989]  iscsi_sw_tcp_host_get_param+0xad/0x2e0 [iscsi_tcp]
-> > [  276.951765]  show_host_param_ISCSI_HOST_PARAM_IPADDRESS+0xe9/0x130 [scsi_transport_iscsi]
-> > [  276.952185]  dev_attr_show+0x3f/0x80
-> > [  276.953005]  sysfs_kf_seq_show+0x1fb/0x3e0
-> > [  276.953401]  seq_read_iter+0x402/0x1020
-> > [  276.954260]  vfs_read+0x532/0x7b0
-> > [  276.955113]  ksys_read+0xed/0x1c0
-> > [  276.955952]  do_syscall_64+0x38/0x90
-> > [  276.956347]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> > [  276.956769] RIP: 0033:0x7f5d3a679222
-> > [  276.957161] Code: c0 e9 b2 fe ff ff 50 48 8d 3d 32 c0 0b 00 e8 a5 fe 01 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
-> > [  276.958009] RSP: 002b:00007ffc864d16a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
-> > [  276.958431] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f5d3a679222
-> > [  276.958857] RDX: 0000000000020000 RSI: 00007f5d3a4fe000 RDI: 0000000000000003
-> > [  276.959281] RBP: 00007f5d3a4fe000 R08: 00000000ffffffff R09: 0000000000000000
-> > [  276.959682] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000020000
-> > [  276.960126] R13: 0000000000000003 R14: 0000000000000000 R15: 0000557a26dada58
-> > [  276.960536]  </TASK>
-> > [  276.961357] Allocated by task 2209:
-> > [  276.961756]  kasan_save_stack+0x1e/0x40
-> > [  276.962170]  kasan_set_track+0x21/0x30
-> > [  276.962557]  __kasan_kmalloc+0x7e/0x90
-> > [  276.962923]  __kmalloc+0x5b/0x140
-> > [  276.963308]  iscsi_alloc_session+0x28/0x840 [scsi_transport_iscsi]
-> > [  276.963712]  iscsi_session_setup+0xda/0xba0 [libiscsi]
-> > [  276.964078]  iscsi_sw_tcp_session_create+0x1fd/0x330 [iscsi_tcp]
-> > [  276.964431]  iscsi_if_create_session.isra.0+0x50/0x260 [scsi_transport_iscsi]
-> > [  276.964793]  iscsi_if_recv_msg+0xc5a/0x2660 [scsi_transport_iscsi]
-> > [  276.965153]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
-> > [  276.965546]  netlink_unicast+0x4d5/0x7b0
-> > [  276.965905]  netlink_sendmsg+0x78d/0xc30
-> > [  276.966236]  sock_sendmsg+0xe5/0x120
-> > [  276.966576]  ____sys_sendmsg+0x5fe/0x860
-> > [  276.966923]  ___sys_sendmsg+0xe0/0x170
-> > [  276.967300]  __sys_sendmsg+0xc8/0x170
-> > [  276.967666]  do_syscall_64+0x38/0x90
-> > [  276.968028]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> > [  276.968773] Freed by task 2209:
-> > [  276.969111]  kasan_save_stack+0x1e/0x40
-> > [  276.969449]  kasan_set_track+0x21/0x30
-> > [  276.969789]  kasan_save_free_info+0x2a/0x50
-> > [  276.970146]  __kasan_slab_free+0x106/0x190
-> > [  276.970470]  __kmem_cache_free+0x133/0x270
-> > [  276.970816]  device_release+0x98/0x210
-> > [  276.971145]  kobject_cleanup+0x101/0x360
-> > [  276.971462]  iscsi_session_teardown+0x3fb/0x530 [libiscsi]
-> > [  276.971775]  iscsi_sw_tcp_session_destroy+0xd8/0x130 [iscsi_tcp]
-> > [  276.972143]  iscsi_if_recv_msg+0x1bf1/0x2660 [scsi_transport_iscsi]
-> > [  276.972485]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
-> > [  276.972808]  netlink_unicast+0x4d5/0x7b0
-> > [  276.973201]  netlink_sendmsg+0x78d/0xc30
-> > [  276.973544]  sock_sendmsg+0xe5/0x120
-> > [  276.973864]  ____sys_sendmsg+0x5fe/0x860
-> > [  276.974248]  ___sys_sendmsg+0xe0/0x170
-> > [  276.974583]  __sys_sendmsg+0xc8/0x170
-> > [  276.974891]  do_syscall_64+0x38/0x90
-> > [  276.975216]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> >
-> > We can easily reproduce by two tasks:
-> > 1. while :; do iscsiadm -m node --login; iscsiadm -m node --logout; done
-> > 2. while :; do cat /sys/devices/platform/host*/iscsi_host/host*/ipaddress; done
-> >
-> >             iscsid                |        cat
-> > ----------------------------------+-------------------------------------------------
-> > |- iscsi_sw_tcp_session_destroy   |
-> >   |- iscsi_session_teardown       |
-> >     |- device_release             |
-> >       |- iscsi_session_release    |  |- dev_attr_show
-> >         |- kfree                  |    |- show_host_param_ISCSI_HOST_PARAM_IPADDRESS
-> >                                   |      |- iscsi_sw_tcp_host_get_param
-> >                                   |        |- r/w tcp_sw_host->session (UAF)
-> >   |- iscsi_host_remove            |
-> >   |- iscsi_host_free              |
-> >
-> > Since shost hold a pointer to session which is belong to cls_session by its
-> > priv tcp_sw_host, so we should get a ref of cls_session, and after
-> > iscsi_host_remove() the sysfs is cleared, then we can drop the ref.
-> >
->
-> Nice bug report and thanks for the patch. I think though we should just
-> split the removal from the freeing. The removal will wait on users
-> accessing sysfs files for us, so once they return we know we can just
-> free things.
->
-> Something like this:
->
->
+From: David <david.keisarschm@mail.huji.ac.il>
 
-Hi, dinghui and Mike, I submitted patches to fix this issue one year
-ago. But I missed Mike's
-reply because I was new to the community, so the patches did not keep on.
+Since the two functions
+ prandom_byte_state and prandom_u32_state
+ use the weak prng prandom_u32,
+ we added the prefix predictable_rng,
+ to their signatures so it is clear they are weak.
 
-https://lore.kernel.org/linux-scsi/20210407012450.97754-1-haowenchao@huawei.com/
+Signed-off-by: David <david.keisarschm@mail.huji.ac.il>
+---
+ arch/x86/mm/kaslr.c                           |  2 +-
+ .../gpu/drm/i915/gem/selftests/huge_pages.c   |  2 +-
+ .../i915/gem/selftests/i915_gem_client_blt.c  |  2 +-
+ .../i915/gem/selftests/i915_gem_coherency.c   |  2 +-
+ .../drm/i915/gem/selftests/i915_gem_context.c |  2 +-
+ drivers/gpu/drm/i915/gt/selftest_lrc.c        |  2 +-
+ drivers/gpu/drm/i915/gt/selftest_migrate.c    |  2 +-
+ drivers/gpu/drm/i915/gt/selftest_timeline.c   |  4 +-
+ drivers/gpu/drm/i915/selftests/i915_random.c  |  4 +-
+ drivers/gpu/drm/i915/selftests/i915_random.h  |  4 +-
+ drivers/gpu/drm/i915/selftests/i915_syncmap.c |  4 +-
+ .../drm/i915/selftests/intel_memory_region.c  | 10 ++---
+ drivers/gpu/drm/i915/selftests/scatterlist.c  |  4 +-
+ drivers/gpu/drm/lib/drm_random.c              |  2 +-
+ drivers/mtd/tests/oobtest.c                   | 10 ++---
+ drivers/mtd/tests/pagetest.c                  | 12 +++---
+ drivers/mtd/tests/subpagetest.c               | 12 +++---
+ drivers/scsi/fcoe/fcoe_ctlr.c                 |  2 +-
+ include/linux/prandom.h                       |  6 +--
+ kernel/bpf/core.c                             |  2 +-
+ lib/interval_tree_test.c                      |  6 +--
+ lib/random32.c                                | 42 +++++++++----------
+ lib/rbtree_test.c                             |  4 +-
+ lib/test_bpf.c                                |  2 +-
+ lib/test_parman.c                             |  2 +-
+ lib/test_scanf.c                              |  8 ++--
+ mm/slab.c                                     |  2 +-
+ mm/slab_common.c                              |  2 +-
+ 28 files changed, 79 insertions(+), 79 deletions(-)
 
-Because of my negligence, this bug has been discovered so far, and I
-apologize for this.
+diff --git a/arch/x86/mm/kaslr.c b/arch/x86/mm/kaslr.c
+index 557f0fe25..66c17b449 100644
+--- a/arch/x86/mm/kaslr.c
++++ b/arch/x86/mm/kaslr.c
+@@ -123,7 +123,7 @@ void __init kernel_randomize_memory(void)
+ 		 * available.
+ 		 */
+ 		entropy = remain_entropy / (ARRAY_SIZE(kaslr_regions) - i);
+-		prandom_bytes_state(&rand_state, &rand, sizeof(rand));
++		predictable_rng_prandom_bytes_state(&rand_state, &rand, sizeof(rand));
+ 		entropy = (rand % (entropy + 1)) & PUD_MASK;
+ 		vaddr += entropy;
+ 		*kaslr_regions[i].base = vaddr;
+diff --git a/drivers/gpu/drm/i915/gem/selftests/huge_pages.c b/drivers/gpu/drm/i915/gem/selftests/huge_pages.c
+index c570cf780..f698d58e4 100644
+--- a/drivers/gpu/drm/i915/gem/selftests/huge_pages.c
++++ b/drivers/gpu/drm/i915/gem/selftests/huge_pages.c
+@@ -1294,7 +1294,7 @@ static u32 igt_random_size(struct rnd_state *prng,
+ 	GEM_BUG_ON(min_page_size > max_page_size);
+ 
+ 	mask = ((max_page_size << 1ULL) - 1) & PAGE_MASK;
+-	size = prandom_u32_state(prng) & mask;
++	size = predictable_rng_prandom_u32_state(prng) & mask;
+ 	if (size < min_page_size)
+ 		size |= min_page_size;
+ 
+diff --git a/drivers/gpu/drm/i915/gem/selftests/i915_gem_client_blt.c b/drivers/gpu/drm/i915/gem/selftests/i915_gem_client_blt.c
+index 9a6a6b5b7..039f17b6b 100644
+--- a/drivers/gpu/drm/i915/gem/selftests/i915_gem_client_blt.c
++++ b/drivers/gpu/drm/i915/gem/selftests/i915_gem_client_blt.c
+@@ -630,7 +630,7 @@ static int tiled_blits_prepare(struct tiled_blits *t,
+ 
+ 	/* Use scratch to fill objects */
+ 	for (i = 0; i < ARRAY_SIZE(t->buffers); i++) {
+-		fill_scratch(t, map, prandom_u32_state(prng));
++		fill_scratch(t, map, predictable_rng_prandom_u32_state(prng));
+ 		GEM_BUG_ON(verify_buffer(t, &t->scratch, prng));
+ 
+ 		err = tiled_blit(t,
+diff --git a/drivers/gpu/drm/i915/gem/selftests/i915_gem_coherency.c b/drivers/gpu/drm/i915/gem/selftests/i915_gem_coherency.c
+index a666d7e61..24cc7e6d4 100644
+--- a/drivers/gpu/drm/i915/gem/selftests/i915_gem_coherency.c
++++ b/drivers/gpu/drm/i915/gem/selftests/i915_gem_coherency.c
+@@ -371,7 +371,7 @@ static int igt_gem_coherency(void *arg)
+ 
+ 					i915_random_reorder(offsets, ncachelines, &prng);
+ 					for (n = 0; n < count; n++)
+-						values[n] = prandom_u32_state(&prng);
++						values[n] = predictable_rng_prandom_u32_state(&prng);
+ 
+ 					for (n = 0; n < count; n++) {
+ 						err = over->set(&ctx, offsets[n], ~values[n]);
+diff --git a/drivers/gpu/drm/i915/gem/selftests/i915_gem_context.c b/drivers/gpu/drm/i915/gem/selftests/i915_gem_context.c
+index c6ad67b90..6e437a1d6 100644
+--- a/drivers/gpu/drm/i915/gem/selftests/i915_gem_context.c
++++ b/drivers/gpu/drm/i915/gem/selftests/i915_gem_context.c
+@@ -1407,7 +1407,7 @@ static int igt_ctx_readonly(void *arg)
+ 					goto out_file;
+ 				}
+ 
+-				if (prandom_u32_state(&prng) & 1)
++				if (predictable_rng_prandom_u32_state(&prng) & 1)
+ 					i915_gem_object_set_readonly(obj);
+ 			}
+ 
+diff --git a/drivers/gpu/drm/i915/gt/selftest_lrc.c b/drivers/gpu/drm/i915/gt/selftest_lrc.c
+index 82d3f8058..e2fe4fe8f 100644
+--- a/drivers/gpu/drm/i915/gt/selftest_lrc.c
++++ b/drivers/gpu/drm/i915/gt/selftest_lrc.c
+@@ -1760,7 +1760,7 @@ static struct i915_request *garbage(struct intel_context *ce,
+ 	if (err)
+ 		return ERR_PTR(err);
+ 
+-	prandom_bytes_state(prng,
++	predictable_rng_prandom_bytes_state(prng,
+ 			    ce->lrc_reg_state,
+ 			    ce->engine->context_size -
+ 			    LRC_STATE_OFFSET);
+diff --git a/drivers/gpu/drm/i915/gt/selftest_migrate.c b/drivers/gpu/drm/i915/gt/selftest_migrate.c
+index 2b0c87999..9b6e8cf52 100644
+--- a/drivers/gpu/drm/i915/gt/selftest_migrate.c
++++ b/drivers/gpu/drm/i915/gt/selftest_migrate.c
+@@ -551,7 +551,7 @@ static int threaded_migrate(struct intel_migrate *migrate,
+ 
+ 		thread[i].migrate = migrate;
+ 		thread[i].prng =
+-			I915_RND_STATE_INITIALIZER(prandom_u32_state(&prng));
++			I915_RND_STATE_INITIALIZER(predictable_rng_prandom_u32_state(&prng));
+ 
+ 		tsk = kthread_run(fn, &thread[i], "igt-%d", i);
+ 		if (IS_ERR(tsk)) {
+diff --git a/drivers/gpu/drm/i915/gt/selftest_timeline.c b/drivers/gpu/drm/i915/gt/selftest_timeline.c
+index 522d01905..5c8b662c6 100644
+--- a/drivers/gpu/drm/i915/gt/selftest_timeline.c
++++ b/drivers/gpu/drm/i915/gt/selftest_timeline.c
+@@ -308,7 +308,7 @@ static int bench_sync(void *arg)
+ 		u32 x;
+ 
+ 		/* Make sure the compiler doesn't optimise away the prng call */
+-		WRITE_ONCE(x, prandom_u32_state(&prng));
++		WRITE_ONCE(x, predictable_rng_prandom_u32_state(&prng));
+ 
+ 		count++;
+ 	} while (!time_after(jiffies, end_time));
+@@ -393,7 +393,7 @@ static int bench_sync(void *arg)
+ 	end_time = jiffies + HZ/10;
+ 	do {
+ 		u32 id = random_engine(&prng);
+-		u32 seqno = prandom_u32_state(&prng);
++		u32 seqno = predictable_rng_prandom_u32_state(&prng);
+ 
+ 		if (!__intel_timeline_sync_is_later(&tl, id, seqno))
+ 			__intel_timeline_sync_set(&tl, id, seqno);
+diff --git a/drivers/gpu/drm/i915/selftests/i915_random.c b/drivers/gpu/drm/i915/selftests/i915_random.c
+index abdfadcf6..e6b56688e 100644
+--- a/drivers/gpu/drm/i915/selftests/i915_random.c
++++ b/drivers/gpu/drm/i915/selftests/i915_random.c
+@@ -35,9 +35,9 @@ u64 i915_prandom_u64_state(struct rnd_state *rnd)
+ {
+ 	u64 x;
+ 
+-	x = prandom_u32_state(rnd);
++	x = predictable_rng_prandom_u32_state(rnd);
+ 	x <<= 32;
+-	x |= prandom_u32_state(rnd);
++	x |= predictable_rng_prandom_u32_state(rnd);
+ 
+ 	return x;
+ }
+diff --git a/drivers/gpu/drm/i915/selftests/i915_random.h b/drivers/gpu/drm/i915/selftests/i915_random.h
+index 05364eca2..7290a2eaf 100644
+--- a/drivers/gpu/drm/i915/selftests/i915_random.h
++++ b/drivers/gpu/drm/i915/selftests/i915_random.h
+@@ -40,13 +40,13 @@
+ 	struct rnd_state name__ = I915_RND_STATE_INITIALIZER(i915_selftest.random_seed)
+ 
+ #define I915_RND_SUBSTATE(name__, parent__) \
+-	struct rnd_state name__ = I915_RND_STATE_INITIALIZER(prandom_u32_state(&(parent__)))
++	struct rnd_state name__ = I915_RND_STATE_INITIALIZER(predictable_rng_prandom_u32_state(&(parent__)))
+ 
+ u64 i915_prandom_u64_state(struct rnd_state *rnd);
+ 
+ static inline u32 i915_prandom_u32_max_state(u32 ep_ro, struct rnd_state *state)
+ {
+-	return upper_32_bits(mul_u32_u32(prandom_u32_state(state), ep_ro));
++	return upper_32_bits(mul_u32_u32(predictable_rng_prandom_u32_state(state), ep_ro));
+ }
+ 
+ unsigned int *i915_random_order(unsigned int count,
+diff --git a/drivers/gpu/drm/i915/selftests/i915_syncmap.c b/drivers/gpu/drm/i915/selftests/i915_syncmap.c
+index 47f4ae18a..c02e55133 100644
+--- a/drivers/gpu/drm/i915/selftests/i915_syncmap.c
++++ b/drivers/gpu/drm/i915/selftests/i915_syncmap.c
+@@ -223,7 +223,7 @@ static int igt_syncmap_one(void *arg)
+ 
+ 		for (loop = 0; loop <= max; loop++) {
+ 			err = check_one(&sync, context,
+-					prandom_u32_state(&prng));
++					predictable_rng_prandom_u32_state(&prng));
+ 			if (err)
+ 				goto out;
+ 		}
+@@ -575,7 +575,7 @@ static int igt_syncmap_random(void *arg)
+ 		u32 last_seqno = seqno;
+ 		bool expect;
+ 
+-		seqno = prandom_u32_state(&prng);
++		seqno = predictable_rng_prandom_u32_state(&prng);
+ 		expect = seqno_later(last_seqno, seqno);
+ 
+ 		for (i = 0; i < count; i++) {
+diff --git a/drivers/gpu/drm/i915/selftests/intel_memory_region.c b/drivers/gpu/drm/i915/selftests/intel_memory_region.c
+index 3b18e5905..2c65795e8 100644
+--- a/drivers/gpu/drm/i915/selftests/intel_memory_region.c
++++ b/drivers/gpu/drm/i915/selftests/intel_memory_region.c
+@@ -758,7 +758,7 @@ static int igt_gpu_write(struct i915_gem_context *ctx,
+ 	i = 0;
+ 	engines = i915_gem_context_lock_engines(ctx);
+ 	do {
+-		u32 rng = prandom_u32_state(&prng);
++		u32 rng = predictable_rng_prandom_u32_state(&prng);
+ 		u32 dword = offset_in_page(rng) / 4;
+ 
+ 		ce = engines->engines[order[i] % engines->num_engines];
+@@ -929,7 +929,7 @@ static int igt_lmem_create_cleared_cpu(void *arg)
+ 			goto out_unpin;
+ 		}
+ 
+-		val = prandom_u32_state(&prng);
++		val = predictable_rng_prandom_u32_state(&prng);
+ 
+ 		memset32(vaddr, val, obj->base.size / sizeof(u32));
+ 
+@@ -972,7 +972,7 @@ static int igt_lmem_write_gpu(void *arg)
+ 		goto out_file;
+ 	}
+ 
+-	sz = round_up(prandom_u32_state(&prng) % SZ_32M, PAGE_SIZE);
++	sz = round_up(predictable_rng_prandom_u32_state(&prng) % SZ_32M, PAGE_SIZE);
+ 
+ 	obj = i915_gem_object_create_lmem(i915, sz, 0);
+ 	if (IS_ERR(obj)) {
+@@ -1046,7 +1046,7 @@ static int igt_lmem_write_cpu(void *arg)
+ 
+ 	pr_info("%s: using %s\n", __func__, engine->name);
+ 
+-	sz = round_up(prandom_u32_state(&prng) % SZ_32M, PAGE_SIZE);
++	sz = round_up(predictable_rng_prandom_u32_state(&prng) % SZ_32M, PAGE_SIZE);
+ 	sz = max_t(u32, 2 * PAGE_SIZE, sz);
+ 
+ 	obj = i915_gem_object_create_lmem(i915, sz, I915_BO_ALLOC_CONTIGUOUS);
+@@ -1115,7 +1115,7 @@ static int igt_lmem_write_cpu(void *arg)
+ 		offset = igt_random_offset(&prng, 0, obj->base.size,
+ 					   size, align);
+ 
+-		val = prandom_u32_state(&prng);
++		val = predictable_rng_prandom_u32_state(&prng);
+ 		memset32(vaddr + offset / sizeof(u32), val ^ 0xdeadbeaf,
+ 			 size / sizeof(u32));
+ 
+diff --git a/drivers/gpu/drm/i915/selftests/scatterlist.c b/drivers/gpu/drm/i915/selftests/scatterlist.c
+index d599186d5..ff86bf468 100644
+--- a/drivers/gpu/drm/i915/selftests/scatterlist.c
++++ b/drivers/gpu/drm/i915/selftests/scatterlist.c
+@@ -187,7 +187,7 @@ static unsigned int random(unsigned long n,
+ 			   unsigned long count,
+ 			   struct rnd_state *rnd)
+ {
+-	return 1 + (prandom_u32_state(rnd) % 1024);
++	return 1 + (predictable_rng_prandom_u32_state(rnd) % 1024);
+ }
+ 
+ static unsigned int random_page_size_pages(unsigned long n,
+@@ -201,7 +201,7 @@ static unsigned int random_page_size_pages(unsigned long n,
+ 		BIT(21) >> PAGE_SHIFT,
+ 	};
+ 
+-	return page_count[(prandom_u32_state(rnd) % 3)];
++	return page_count[(predictable_rng_prandom_u32_state(rnd) % 3)];
+ }
+ 
+ static inline bool page_contiguous(struct page *first,
+diff --git a/drivers/gpu/drm/lib/drm_random.c b/drivers/gpu/drm/lib/drm_random.c
+index 31b5a3e21..512455039 100644
+--- a/drivers/gpu/drm/lib/drm_random.c
++++ b/drivers/gpu/drm/lib/drm_random.c
+@@ -9,7 +9,7 @@
+ 
+ u32 drm_prandom_u32_max_state(u32 ep_ro, struct rnd_state *state)
+ {
+-	return upper_32_bits((u64)prandom_u32_state(state) * ep_ro);
++	return upper_32_bits((u64)predictable_rng_prandom_u32_state(state) * ep_ro);
+ }
+ EXPORT_SYMBOL(drm_prandom_u32_max_state);
+ 
+diff --git a/drivers/mtd/tests/oobtest.c b/drivers/mtd/tests/oobtest.c
+index 13fed3989..fc248fbdb 100644
+--- a/drivers/mtd/tests/oobtest.c
++++ b/drivers/mtd/tests/oobtest.c
+@@ -60,7 +60,7 @@ static int write_eraseblock(int ebnum)
+ 	int err = 0;
+ 	loff_t addr = (loff_t)ebnum * mtd->erasesize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, use_len_max * pgcnt);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, use_len_max * pgcnt);
+ 	for (i = 0; i < pgcnt; ++i, addr += mtd->writesize) {
+ 		ops.mode      = MTD_OPS_AUTO_OOB;
+ 		ops.len       = 0;
+@@ -170,7 +170,7 @@ static int verify_eraseblock(int ebnum)
+ 	loff_t addr = (loff_t)ebnum * mtd->erasesize;
+ 	size_t bitflips;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, use_len_max * pgcnt);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, use_len_max * pgcnt);
+ 	for (i = 0; i < pgcnt; ++i, addr += mtd->writesize) {
+ 		ops.mode      = MTD_OPS_AUTO_OOB;
+ 		ops.len       = 0;
+@@ -268,7 +268,7 @@ static int verify_eraseblock_in_one_go(int ebnum)
+ 	size_t bitflips;
+ 	int i;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, len);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, len);
+ 	ops.mode      = MTD_OPS_AUTO_OOB;
+ 	ops.len       = 0;
+ 	ops.retlen    = 0;
+@@ -642,7 +642,7 @@ static int __init mtd_oobtest_init(void)
+ 		if (bbt[i] || bbt[i + 1])
+ 			continue;
+ 		addr = (loff_t)(i + 1) * mtd->erasesize - mtd->writesize;
+-		prandom_bytes_state(&rnd_state, writebuf, sz * cnt);
++		predictable_rng_prandom_bytes_state(&rnd_state, writebuf, sz * cnt);
+ 		for (pg = 0; pg < cnt; ++pg) {
+ 			ops.mode      = MTD_OPS_AUTO_OOB;
+ 			ops.len       = 0;
+@@ -673,7 +673,7 @@ static int __init mtd_oobtest_init(void)
+ 	for (i = 0; i < ebcnt - 1; ++i) {
+ 		if (bbt[i] || bbt[i + 1])
+ 			continue;
+-		prandom_bytes_state(&rnd_state, writebuf, mtd->oobavail * 2);
++		predictable_rng_prandom_bytes_state(&rnd_state, writebuf, mtd->oobavail * 2);
+ 		addr = (loff_t)(i + 1) * mtd->erasesize - mtd->writesize;
+ 		ops.mode      = MTD_OPS_AUTO_OOB;
+ 		ops.len       = 0;
+diff --git a/drivers/mtd/tests/pagetest.c b/drivers/mtd/tests/pagetest.c
+index 8eb40b6e6..088146869 100644
+--- a/drivers/mtd/tests/pagetest.c
++++ b/drivers/mtd/tests/pagetest.c
+@@ -42,7 +42,7 @@ static int write_eraseblock(int ebnum)
+ {
+ 	loff_t addr = (loff_t)ebnum * mtd->erasesize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, mtd->erasesize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, mtd->erasesize);
+ 	cond_resched();
+ 	return mtdtest_write(mtd, addr, mtd->erasesize, writebuf);
+ }
+@@ -62,7 +62,7 @@ static int verify_eraseblock(int ebnum)
+ 	for (i = 0; i < ebcnt && bbt[ebcnt - i - 1]; ++i)
+ 		addrn -= mtd->erasesize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, mtd->erasesize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, mtd->erasesize);
+ 	for (j = 0; j < pgcnt - 1; ++j, addr += pgsize) {
+ 		/* Do a read to set the internal dataRAMs to different data */
+ 		err = mtdtest_read(mtd, addr0, bufsize, twopages);
+@@ -97,7 +97,7 @@ static int verify_eraseblock(int ebnum)
+ 		if (err)
+ 			return err;
+ 		memcpy(boundary, writebuf + mtd->erasesize - pgsize, pgsize);
+-		prandom_bytes_state(&rnd_state, boundary + pgsize, pgsize);
++		predictable_rng_prandom_bytes_state(&rnd_state, boundary + pgsize, pgsize);
+ 		if (memcmp(twopages, boundary, bufsize)) {
+ 			pr_err("error: verify failed at %#llx\n",
+ 			       (long long)addr);
+@@ -210,7 +210,7 @@ static int erasecrosstest(void)
+ 		return err;
+ 
+ 	pr_info("writing 1st page of block %d\n", ebnum);
+-	prandom_bytes_state(&rnd_state, writebuf, pgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, pgsize);
+ 	strcpy(writebuf, "There is no data like this!");
+ 	err = mtdtest_write(mtd, addr0, pgsize, writebuf);
+ 	if (err)
+@@ -235,7 +235,7 @@ static int erasecrosstest(void)
+ 		return err;
+ 
+ 	pr_info("writing 1st page of block %d\n", ebnum);
+-	prandom_bytes_state(&rnd_state, writebuf, pgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, pgsize);
+ 	strcpy(writebuf, "There is no data like this!");
+ 	err = mtdtest_write(mtd, addr0, pgsize, writebuf);
+ 	if (err)
+@@ -284,7 +284,7 @@ static int erasetest(void)
+ 		return err;
+ 
+ 	pr_info("writing 1st page of block %d\n", ebnum);
+-	prandom_bytes_state(&rnd_state, writebuf, pgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, pgsize);
+ 	err = mtdtest_write(mtd, addr0, pgsize, writebuf);
+ 	if (err)
+ 		return err;
+diff --git a/drivers/mtd/tests/subpagetest.c b/drivers/mtd/tests/subpagetest.c
+index 05250a080..3d312a51f 100644
+--- a/drivers/mtd/tests/subpagetest.c
++++ b/drivers/mtd/tests/subpagetest.c
+@@ -46,7 +46,7 @@ static int write_eraseblock(int ebnum)
+ 	int err = 0;
+ 	loff_t addr = (loff_t)ebnum * mtd->erasesize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, subpgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, subpgsize);
+ 	err = mtd_write(mtd, addr, subpgsize, &written, writebuf);
+ 	if (unlikely(err || written != subpgsize)) {
+ 		pr_err("error: write failed at %#llx\n",
+@@ -60,7 +60,7 @@ static int write_eraseblock(int ebnum)
+ 
+ 	addr += subpgsize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, subpgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, subpgsize);
+ 	err = mtd_write(mtd, addr, subpgsize, &written, writebuf);
+ 	if (unlikely(err || written != subpgsize)) {
+ 		pr_err("error: write failed at %#llx\n",
+@@ -84,7 +84,7 @@ static int write_eraseblock2(int ebnum)
+ 	for (k = 1; k < 33; ++k) {
+ 		if (addr + (subpgsize * k) > (loff_t)(ebnum + 1) * mtd->erasesize)
+ 			break;
+-		prandom_bytes_state(&rnd_state, writebuf, subpgsize * k);
++		predictable_rng_prandom_bytes_state(&rnd_state, writebuf, subpgsize * k);
+ 		err = mtd_write(mtd, addr, subpgsize * k, &written, writebuf);
+ 		if (unlikely(err || written != subpgsize * k)) {
+ 			pr_err("error: write failed at %#llx\n",
+@@ -120,7 +120,7 @@ static int verify_eraseblock(int ebnum)
+ 	int err = 0;
+ 	loff_t addr = (loff_t)ebnum * mtd->erasesize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, subpgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, subpgsize);
+ 	clear_data(readbuf, subpgsize);
+ 	err = mtd_read(mtd, addr, subpgsize, &read, readbuf);
+ 	if (unlikely(err || read != subpgsize)) {
+@@ -147,7 +147,7 @@ static int verify_eraseblock(int ebnum)
+ 
+ 	addr += subpgsize;
+ 
+-	prandom_bytes_state(&rnd_state, writebuf, subpgsize);
++	predictable_rng_prandom_bytes_state(&rnd_state, writebuf, subpgsize);
+ 	clear_data(readbuf, subpgsize);
+ 	err = mtd_read(mtd, addr, subpgsize, &read, readbuf);
+ 	if (unlikely(err || read != subpgsize)) {
+@@ -184,7 +184,7 @@ static int verify_eraseblock2(int ebnum)
+ 	for (k = 1; k < 33; ++k) {
+ 		if (addr + (subpgsize * k) > (loff_t)(ebnum + 1) * mtd->erasesize)
+ 			break;
+-		prandom_bytes_state(&rnd_state, writebuf, subpgsize * k);
++		predictable_rng_prandom_bytes_state(&rnd_state, writebuf, subpgsize * k);
+ 		clear_data(readbuf, subpgsize * k);
+ 		err = mtd_read(mtd, addr, subpgsize * k, &read, readbuf);
+ 		if (unlikely(err || read != subpgsize * k)) {
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index ddc048069..e1a0e2c27 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2224,7 +2224,7 @@ static void fcoe_ctlr_vn_restart(struct fcoe_ctlr *fip)
+ 	 */
+ 	port_id = fip->port_id;
+ 	if (fip->probe_tries)
+-		port_id = prandom_u32_state(&fip->rnd_state) & 0xffff;
++		port_id = predictable_rng_prandom_u32_state(&fip->rnd_state) & 0xffff;
+ 	else if (!port_id)
+ 		port_id = fip->lp->wwpn & 0xffff;
+ 	if (!port_id || port_id == 0xffff)
+diff --git a/include/linux/prandom.h b/include/linux/prandom.h
+index e0a0759dd..d525ab02e 100644
+--- a/include/linux/prandom.h
++++ b/include/linux/prandom.h
+@@ -16,8 +16,8 @@ struct rnd_state {
+ 	__u32 s1, s2, s3, s4;
+ };
+ 
+-u32 prandom_u32_state(struct rnd_state *state);
+-void prandom_bytes_state(struct rnd_state *state, void *buf, size_t nbytes);
++u32 predictable_rng_prandom_u32_state(struct rnd_state *state);
++void predictable_rng_prandom_bytes_state(struct rnd_state *state, void *buf, size_t nbytes);
+ void prandom_seed_full_state(struct rnd_state __percpu *pcpu_state);
+ 
+ #define prandom_init_once(pcpu_state)			\
+@@ -52,7 +52,7 @@ static inline u32 __seed(u32 x, u32 m)
+ }
+ 
+ /**
+- * prandom_seed_state - set seed for prandom_u32_state().
++ * prandom_seed_state - set seed for predictable_rng_prandom_u32_state().
+  * @state: pointer to state structure to receive the seed.
+  * @seed: arbitrary 64-bit value to use as a seed.
+  */
+diff --git a/kernel/bpf/core.c b/kernel/bpf/core.c
+index 25a54e045..4cb5421d9 100644
+--- a/kernel/bpf/core.c
++++ b/kernel/bpf/core.c
+@@ -2599,7 +2599,7 @@ BPF_CALL_0(bpf_user_rnd_u32)
+ 	u32 res;
+ 
+ 	state = &get_cpu_var(bpf_user_rnd_state);
+-	res = prandom_u32_state(state);
++	res = predictable_rng_prandom_u32_state(state);
+ 	put_cpu_var(bpf_user_rnd_state);
+ 
+ 	return res;
+diff --git a/lib/interval_tree_test.c b/lib/interval_tree_test.c
+index f37f4d44f..1a1a89a39 100644
+--- a/lib/interval_tree_test.c
++++ b/lib/interval_tree_test.c
+@@ -43,8 +43,8 @@ static void init(void)
+ 	int i;
+ 
+ 	for (i = 0; i < nnodes; i++) {
+-		u32 b = (prandom_u32_state(&rnd) >> 4) % max_endpoint;
+-		u32 a = (prandom_u32_state(&rnd) >> 4) % b;
++		u32 b = (predictable_rng_prandom_u32_state(&rnd) >> 4) % max_endpoint;
++		u32 a = (predictable_rng_prandom_u32_state(&rnd) >> 4) % b;
+ 
+ 		nodes[i].start = a;
+ 		nodes[i].last = b;
+@@ -56,7 +56,7 @@ static void init(void)
+ 	 * which is pointless.
+ 	 */
+ 	for (i = 0; i < nsearches; i++)
+-		queries[i] = (prandom_u32_state(&rnd) >> 4) % max_endpoint;
++		queries[i] = (predictable_rng_prandom_u32_state(&rnd) >> 4) % max_endpoint;
+ }
+ 
+ static int interval_tree_test_init(void)
+diff --git a/lib/random32.c b/lib/random32.c
+index 32060b852..3b34ea934 100644
+--- a/lib/random32.c
++++ b/lib/random32.c
+@@ -43,13 +43,13 @@
+ #include <asm/unaligned.h>
+ 
+ /**
+- *	prandom_u32_state - seeded pseudo-random number generator.
++ *	predictable_rng_prandom_u32_state - seeded pseudo-random number generator.
+  *	@state: pointer to state structure holding seeded state.
+  *
+  *	This is used for pseudo-randomness with no outside seeding.
+  *	For more random results, use get_random_u32().
+  */
+-u32 prandom_u32_state(struct rnd_state *state)
++u32 predictable_rng_prandom_u32_state(struct rnd_state *state)
+ {
+ #define TAUSWORTHE(s, a, b, c, d) ((s & c) << d) ^ (((s << a) ^ s) >> b)
+ 	state->s1 = TAUSWORTHE(state->s1,  6U, 13U, 4294967294U, 18U);
+@@ -59,10 +59,10 @@ u32 prandom_u32_state(struct rnd_state *state)
+ 
+ 	return (state->s1 ^ state->s2 ^ state->s3 ^ state->s4);
+ }
+-EXPORT_SYMBOL(prandom_u32_state);
++EXPORT_SYMBOL(predictable_rng_prandom_u32_state);
+ 
+ /**
+- *	prandom_bytes_state - get the requested number of pseudo-random bytes
++ *	predictable_rng_prandom_bytes_state - get the requested number of pseudo-random bytes
+  *
+  *	@state: pointer to state structure holding seeded state.
+  *	@buf: where to copy the pseudo-random bytes to
+@@ -71,18 +71,18 @@ EXPORT_SYMBOL(prandom_u32_state);
+  *	This is used for pseudo-randomness with no outside seeding.
+  *	For more random results, use get_random_bytes().
+  */
+-void prandom_bytes_state(struct rnd_state *state, void *buf, size_t bytes)
++void predictable_rng_prandom_bytes_state(struct rnd_state *state, void *buf, size_t bytes)
+ {
+ 	u8 *ptr = buf;
+ 
+ 	while (bytes >= sizeof(u32)) {
+-		put_unaligned(prandom_u32_state(state), (u32 *) ptr);
++		put_unaligned(predictable_rng_prandom_u32_state(state), (u32 *) ptr);
+ 		ptr += sizeof(u32);
+ 		bytes -= sizeof(u32);
+ 	}
+ 
+ 	if (bytes > 0) {
+-		u32 rem = prandom_u32_state(state);
++		u32 rem = predictable_rng_prandom_u32_state(state);
+ 		do {
+ 			*ptr++ = (u8) rem;
+ 			bytes--;
+@@ -90,21 +90,21 @@ void prandom_bytes_state(struct rnd_state *state, void *buf, size_t bytes)
+ 		} while (bytes > 0);
+ 	}
+ }
+-EXPORT_SYMBOL(prandom_bytes_state);
++EXPORT_SYMBOL(predictable_rng_prandom_bytes_state);
+ 
+ static void prandom_warmup(struct rnd_state *state)
+ {
+ 	/* Calling RNG ten times to satisfy recurrence condition */
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
+-	prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
++	predictable_rng_prandom_u32_state(state);
+ }
+ 
+ void prandom_seed_full_state(struct rnd_state __percpu *pcpu_state)
+@@ -265,7 +265,7 @@ static int __init prandom_state_selftest(void)
+ 		prandom_state_selftest_seed(&state, test1[i].seed);
+ 		prandom_warmup(&state);
+ 
+-		if (test1[i].result != prandom_u32_state(&state))
++		if (test1[i].result != predictable_rng_prandom_u32_state(&state))
+ 			error = true;
+ 	}
+ 
+@@ -281,9 +281,9 @@ static int __init prandom_state_selftest(void)
+ 		prandom_warmup(&state);
+ 
+ 		for (j = 0; j < test2[i].iteration - 1; j++)
+-			prandom_u32_state(&state);
++			predictable_rng_prandom_u32_state(&state);
+ 
+-		if (test2[i].result != prandom_u32_state(&state))
++		if (test2[i].result != predictable_rng_prandom_u32_state(&state))
+ 			errors++;
+ 
+ 		runs++;
+diff --git a/lib/rbtree_test.c b/lib/rbtree_test.c
+index 41ae3c757..62dd773c8 100644
+--- a/lib/rbtree_test.c
++++ b/lib/rbtree_test.c
+@@ -150,8 +150,8 @@ static void init(void)
+ {
+ 	int i;
+ 	for (i = 0; i < nnodes; i++) {
+-		nodes[i].key = prandom_u32_state(&rnd);
+-		nodes[i].val = prandom_u32_state(&rnd);
++		nodes[i].key = predictable_rng_prandom_u32_state(&rnd);
++		nodes[i].val = predictable_rng_prandom_u32_state(&rnd);
+ 	}
+ }
+ 
+diff --git a/lib/test_bpf.c b/lib/test_bpf.c
+index 582070416..b17e751cc 100644
+--- a/lib/test_bpf.c
++++ b/lib/test_bpf.c
+@@ -140,7 +140,7 @@ static int bpf_fill_maxinsns3(struct bpf_test *self)
+ 	prandom_seed_state(&rnd, 3141592653589793238ULL);
+ 
+ 	for (i = 0; i < len - 1; i++) {
+-		__u32 k = prandom_u32_state(&rnd);
++		__u32 k = predictable_rng_prandom_u32_state(&rnd);
+ 
+ 		insn[i] = __BPF_STMT(BPF_ALU | BPF_ADD | BPF_K, k);
+ 	}
+diff --git a/lib/test_parman.c b/lib/test_parman.c
+index 35e322436..f89b8192c 100644
+--- a/lib/test_parman.c
++++ b/lib/test_parman.c
+@@ -136,7 +136,7 @@ static void test_parman_rnd_init(struct test_parman *test_parman)
+ 
+ static u32 test_parman_rnd_get(struct test_parman *test_parman)
+ {
+-	return prandom_u32_state(&test_parman->rnd);
++	return predictable_rng_prandom_u32_state(&test_parman->rnd);
+ }
+ 
+ static unsigned long test_parman_priority_gen(struct test_parman *test_parman)
+diff --git a/lib/test_scanf.c b/lib/test_scanf.c
+index b620cf7de..a2de3dee2 100644
+--- a/lib/test_scanf.c
++++ b/lib/test_scanf.c
+@@ -269,16 +269,16 @@ static void __init numbers_simple(void)
+  */
+ static u32 __init next_test_random(u32 max_bits)
+ {
+-	u32 n_bits = hweight32(prandom_u32_state(&rnd_state)) % (max_bits + 1);
++	u32 n_bits = hweight32(predictable_rng_prandom_u32_state(&rnd_state)) % (max_bits + 1);
+ 
+-	return prandom_u32_state(&rnd_state) & GENMASK(n_bits, 0);
++	return predictable_rng_prandom_u32_state(&rnd_state) & GENMASK(n_bits, 0);
+ }
+ 
+ static unsigned long long __init next_test_random_ull(void)
+ {
+-	u32 rand1 = prandom_u32_state(&rnd_state);
++	u32 rand1 = predictable_rng_prandom_u32_state(&rnd_state);
+ 	u32 n_bits = (hweight32(rand1) * 3) % 64;
+-	u64 val = (u64)prandom_u32_state(&rnd_state) * rand1;
++	u64 val = (u64)predictable_rng_prandom_u32_state(&rnd_state) * rand1;
+ 
+ 	return val & GENMASK_ULL(n_bits, 0);
+ }
+diff --git a/mm/slab.c b/mm/slab.c
+index 59c8e28f7..ff71c5757 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -2447,7 +2447,7 @@ static bool shuffle_freelist(struct kmem_cache *cachep, struct slab *slab)
+ 
+ 		/* Fisher-Yates shuffle */
+ 		for (i = count - 1; i > 0; i--) {
+-			rand = prandom_u32_state(&state.rnd_state);
++			rand = predictable_rng_prandom_u32_state(&state.rnd_state);
+ 			rand %= (i + 1);
+ 			swap_free_obj(slab, i, rand);
+ 		}
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 0042fb273..deb764785 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -1141,7 +1141,7 @@ static void freelist_randomize(struct rnd_state *state, unsigned int *list,
+ 
+ 	/* Fisher-Yates shuffle */
+ 	for (i = count - 1; i > 0; i--) {
+-		rand = prandom_u32_state(state);
++		rand = predictable_rng_prandom_u32_state(state);
+ 		rand %= (i + 1);
+ 		swap(list[i], list[rand]);
+ 	}
+-- 
+2.38.0
+
