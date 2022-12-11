@@ -2,148 +2,180 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE20C4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Dec 2022 13:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA0EC4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Dec 2022 14:33:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbiLKNFw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Dec 2022 08:05:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53538 "EHLO
+        id S230081AbiLKOdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Dec 2022 09:33:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbiLKNFt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 08:05:49 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FA20E0BC;
-        Sun, 11 Dec 2022 05:05:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670763936; x=1702299936;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=virbk6rhnfIZfWCJDUiMIpVN6qxlNGltOo4qipvPCg4=;
-  b=krhbLUm7iVih87HtXsEhViw0nj2ZgwIzvYEwTgRR62wOjUQUqeGODsWS
-   C07WsI/ewyV8YcSuNE1+cJZYqlooElgGjpmHadG4VUqwcJmH9ILdNfmDo
-   bvMBhFblJj5XNWlRksU/0dzrdaNAPZrD2rwSkXBT24cOMxV4zpjlMZT6F
-   ZwNlXrRC98hCmvHf8kIvklPmMZEt/Wi6W71Pm5EHFQa33MTtxSV+SOLtx
-   v/LpyXN4yokduNKA79Ars5VKxvswRmcMyFrf4qtuR/vvIXaf/iR/0EGYR
-   fnNbQZPfzcSpIx5DTPAnTqbJXzSqKCUxnY0h0U+p22TZRSADy6T2g6sAI
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,236,1665417600"; 
-   d="scan'208";a="218373534"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Dec 2022 21:05:36 +0800
-IronPort-SDR: Qdms07bEsYnc8iIAhuE29cgVdz20A9vPuewpeHUonXeSFjhFosaPzF0gyio+ehHwhw5Tr8w97l
- 8GLPrV5/tz0PFyjvAQyPGe7qziLntvQXWD8XJbpSwzWUSIjok5ssMiwEV5D+5u4RQi6Sex5Dp4
- oMrkavTEKBydhLOuGMFssgeIa9XY0Po+KShWz0hHe4iWJlWiyEG/9Ye+uVnjYPe9lU02fQy+VE
- YWev4eGXOD6c+SyZpRLKZxXxYi7cmmZ4wEo/4w7kALcYAbXxzGqNyD5wjz4WI72u6Wc9jbiErQ
- ZKc=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Dec 2022 04:24:02 -0800
-IronPort-SDR: CFUMjJwsfpiF5e1l0dQA7ZsNakqTfUOdKmtmfSMWGqOtsO5DxyIkRioWcmeC4RB5EwLDocTC0M
- Uxbt3/GzCcpMncSU3JSk2gc/cjyNit4rGJy9+Ge01y7I4/VqcqPGnT0k0JelbKVErsyBsSwLf7
- iXNrxdFJr1FJdv3+W4u/K2ZfA+ZqK9Ye6uTr6blJVS33ByfaSM0XuSE5lKQchzKvOym28fh5ly
- 4rogVux9hirQHOD3lD1gClnj4CQNgZvcfXD1EehMkKgSJlSJaF6U7xH9hKDRiTaaPvxmlUmoDj
- QRg=
-WDCIronportException: Internal
-Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
-  by uls-op-cesaip02.wdc.com with ESMTP; 11 Dec 2022 05:05:34 -0800
-From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
-To:     martin.petersen@oracle.com
-Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH v5 4/4] ufs: core: Remove ufshcd_map_desc_id_to_length function
-Date:   Sun, 11 Dec 2022 15:05:11 +0200
-Message-Id: <1670763911-8695-5-git-send-email-Arthur.Simchaev@wdc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1670763911-8695-1-git-send-email-Arthur.Simchaev@wdc.com>
-References: <1670763911-8695-1-git-send-email-Arthur.Simchaev@wdc.com>
+        with ESMTP id S229835AbiLKOdC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 09:33:02 -0500
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B79AE55;
+        Sun, 11 Dec 2022 06:33:01 -0800 (PST)
+Received: by mail-ej1-x62a.google.com with SMTP id m18so22042234eji.5;
+        Sun, 11 Dec 2022 06:33:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=4WqUoVsa+BZHuhTAxrHNAL1fk+hhKzh6lmfruqRjY0A=;
+        b=jPUk5MmJC1Yk5Z2lJVMKIUZeENrXcJRCrfX05/D8yhtxJoNCYszsHmt2p2p4KWciGQ
+         KSlwBONTrm3tJUWBljCfT7/9F2Gb1uFo0lzulQJIxYwhVwn1Wdv4CjiAxmxySnKfF8DX
+         hFC2fItx/DBfX3epAlQbeiyvfgH6kO4IQxe4CQNTO+fzK9CNWqc/wyklcX2uNsS0vurq
+         5AAS4hOeZliQVTsQSvjRmNk86qidAQJAHvfHFVi7LjODNE/VvLcvR7nL7VUqIDesYKU+
+         FNnC81h0OJAHm3/cLBeGlUnkAnlBwKbigbfQ0GQP6E4lB7EgrtPbZLP1xy0vun4JwqnA
+         0RZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=4WqUoVsa+BZHuhTAxrHNAL1fk+hhKzh6lmfruqRjY0A=;
+        b=UQfL5/9ml0VEwvs0Lv8Rp2KHJzdoI04XxjdrGKxct6LEf4sBY8pwzsEg7q1bp4LFzK
+         ZbtpiCtTREHnhLOscNgAg2fZkuHgrzvoqZ6XIC7sNe3ew30O0XK97/jr0zl7V5j/UJpx
+         I0gKnIW1FGpUZb/w3E2NBaGmlV7mmR3QSO+3HrGIQw1hXmLmGHAdWTRikxSsTrdUcYav
+         z9r25AUDSxOzAPorY5MQpodT8/hzFr3e0mUkliz2dK+C0R3feOFfc47z4SvFTTBIBWRN
+         oYUv5BY/0pYtqyqm39O953/gTmfDnkhD8UlFo61csz5GMp71e90ZMrdsMLhJCv1HXlzE
+         4WNQ==
+X-Gm-Message-State: ANoB5pmOBKE/LA+Nc5qglrdvKZILq0d+vP0CCyReeiGwxUm0/8FraO+w
+        6XQz0RgILpQGOYmycd3QJJbs9lcmINhvrqK/mBj0LuhGHZNylQ==
+X-Google-Smtp-Source: AA0mqf4z6PP5SzJzPWAAWwf8R91KnwRFRKIJ2bB6LCnlJmYvJvSeGrnwY1YYE+qBAFA0DTBEU4wvNaYo0dE/6IXjN+Q=
+X-Received: by 2002:a17:906:3604:b0:78d:99a0:7cf6 with SMTP id
+ q4-20020a170906360400b0078d99a07cf6mr79046763ejb.56.1670769179467; Sun, 11
+ Dec 2022 06:32:59 -0800 (PST)
+MIME-Version: 1.0
+References: <20221209082247.6330-1-dinghui@sangfor.com.cn> <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
+In-Reply-To: <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
+From:   Wenchao Hao <haowenchao22@gmail.com>
+Date:   Sun, 11 Dec 2022 22:32:46 +0800
+Message-ID: <CAOptpSO-TMhqR35RW4Sssm29NA=8rJ6-9TgjTVpGKpYOeS_8sA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: iscsi_tcp: Fix UAF when access shost attr during
+ session logout
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     Ding Hui <dinghui@sangfor.com.cn>, lduncan@suse.com,
+        cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There shouldn't be any restriction of the descriptor size
-(not the descriptor id for that matter) up to QUERY_DESC_MAX_SIZE.
-According to the spec, the caller can use any descriptor size,
-and it is up to the device to return the actual size.
-Therefore there shouldn't be any sizes hardcoded in the kernel,
-nor any need to cache it, hence ufshcd_map_desc_id_to_length function is
-redundant. Always read the descriptors with QUERY_DESC_MAX_SIZE size.
+On Sun, Dec 11, 2022 at 6:07 AM Mike Christie
+<michael.christie@oracle.com> wrote:
+>
+> On 12/9/22 2:22 AM, Ding Hui wrote:
+> > During iscsi session logout, if another task accessing shost ipaddress
+> > attr at this time, we can get a KASAN UAF report like this:
+> >
+> > [  276.941685] ==================================================================
+> > [  276.942144] BUG: KASAN: use-after-free in _raw_spin_lock_bh+0x78/0xe0
+> > [  276.942535] Write of size 4 at addr ffff8881053b45b8 by task cat/4088
+> > [  276.943511] CPU: 2 PID: 4088 Comm: cat Tainted: G            E      6.1.0-rc8+ #3
+> > [  276.943997] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
+> > [  276.944470] Call Trace:
+> > [  276.944943]  <TASK>
+> > [  276.945397]  dump_stack_lvl+0x34/0x48
+> > [  276.945887]  print_address_description.constprop.0+0x86/0x1e7
+> > [  276.946421]  print_report+0x36/0x4f
+> > [  276.947358]  kasan_report+0xad/0x130
+> > [  276.948234]  kasan_check_range+0x35/0x1c0
+> > [  276.948674]  _raw_spin_lock_bh+0x78/0xe0
+> > [  276.949989]  iscsi_sw_tcp_host_get_param+0xad/0x2e0 [iscsi_tcp]
+> > [  276.951765]  show_host_param_ISCSI_HOST_PARAM_IPADDRESS+0xe9/0x130 [scsi_transport_iscsi]
+> > [  276.952185]  dev_attr_show+0x3f/0x80
+> > [  276.953005]  sysfs_kf_seq_show+0x1fb/0x3e0
+> > [  276.953401]  seq_read_iter+0x402/0x1020
+> > [  276.954260]  vfs_read+0x532/0x7b0
+> > [  276.955113]  ksys_read+0xed/0x1c0
+> > [  276.955952]  do_syscall_64+0x38/0x90
+> > [  276.956347]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > [  276.956769] RIP: 0033:0x7f5d3a679222
+> > [  276.957161] Code: c0 e9 b2 fe ff ff 50 48 8d 3d 32 c0 0b 00 e8 a5 fe 01 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
+> > [  276.958009] RSP: 002b:00007ffc864d16a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+> > [  276.958431] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f5d3a679222
+> > [  276.958857] RDX: 0000000000020000 RSI: 00007f5d3a4fe000 RDI: 0000000000000003
+> > [  276.959281] RBP: 00007f5d3a4fe000 R08: 00000000ffffffff R09: 0000000000000000
+> > [  276.959682] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000020000
+> > [  276.960126] R13: 0000000000000003 R14: 0000000000000000 R15: 0000557a26dada58
+> > [  276.960536]  </TASK>
+> > [  276.961357] Allocated by task 2209:
+> > [  276.961756]  kasan_save_stack+0x1e/0x40
+> > [  276.962170]  kasan_set_track+0x21/0x30
+> > [  276.962557]  __kasan_kmalloc+0x7e/0x90
+> > [  276.962923]  __kmalloc+0x5b/0x140
+> > [  276.963308]  iscsi_alloc_session+0x28/0x840 [scsi_transport_iscsi]
+> > [  276.963712]  iscsi_session_setup+0xda/0xba0 [libiscsi]
+> > [  276.964078]  iscsi_sw_tcp_session_create+0x1fd/0x330 [iscsi_tcp]
+> > [  276.964431]  iscsi_if_create_session.isra.0+0x50/0x260 [scsi_transport_iscsi]
+> > [  276.964793]  iscsi_if_recv_msg+0xc5a/0x2660 [scsi_transport_iscsi]
+> > [  276.965153]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
+> > [  276.965546]  netlink_unicast+0x4d5/0x7b0
+> > [  276.965905]  netlink_sendmsg+0x78d/0xc30
+> > [  276.966236]  sock_sendmsg+0xe5/0x120
+> > [  276.966576]  ____sys_sendmsg+0x5fe/0x860
+> > [  276.966923]  ___sys_sendmsg+0xe0/0x170
+> > [  276.967300]  __sys_sendmsg+0xc8/0x170
+> > [  276.967666]  do_syscall_64+0x38/0x90
+> > [  276.968028]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > [  276.968773] Freed by task 2209:
+> > [  276.969111]  kasan_save_stack+0x1e/0x40
+> > [  276.969449]  kasan_set_track+0x21/0x30
+> > [  276.969789]  kasan_save_free_info+0x2a/0x50
+> > [  276.970146]  __kasan_slab_free+0x106/0x190
+> > [  276.970470]  __kmem_cache_free+0x133/0x270
+> > [  276.970816]  device_release+0x98/0x210
+> > [  276.971145]  kobject_cleanup+0x101/0x360
+> > [  276.971462]  iscsi_session_teardown+0x3fb/0x530 [libiscsi]
+> > [  276.971775]  iscsi_sw_tcp_session_destroy+0xd8/0x130 [iscsi_tcp]
+> > [  276.972143]  iscsi_if_recv_msg+0x1bf1/0x2660 [scsi_transport_iscsi]
+> > [  276.972485]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
+> > [  276.972808]  netlink_unicast+0x4d5/0x7b0
+> > [  276.973201]  netlink_sendmsg+0x78d/0xc30
+> > [  276.973544]  sock_sendmsg+0xe5/0x120
+> > [  276.973864]  ____sys_sendmsg+0x5fe/0x860
+> > [  276.974248]  ___sys_sendmsg+0xe0/0x170
+> > [  276.974583]  __sys_sendmsg+0xc8/0x170
+> > [  276.974891]  do_syscall_64+0x38/0x90
+> > [  276.975216]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> >
+> > We can easily reproduce by two tasks:
+> > 1. while :; do iscsiadm -m node --login; iscsiadm -m node --logout; done
+> > 2. while :; do cat /sys/devices/platform/host*/iscsi_host/host*/ipaddress; done
+> >
+> >             iscsid                |        cat
+> > ----------------------------------+-------------------------------------------------
+> > |- iscsi_sw_tcp_session_destroy   |
+> >   |- iscsi_session_teardown       |
+> >     |- device_release             |
+> >       |- iscsi_session_release    |  |- dev_attr_show
+> >         |- kfree                  |    |- show_host_param_ISCSI_HOST_PARAM_IPADDRESS
+> >                                   |      |- iscsi_sw_tcp_host_get_param
+> >                                   |        |- r/w tcp_sw_host->session (UAF)
+> >   |- iscsi_host_remove            |
+> >   |- iscsi_host_free              |
+> >
+> > Since shost hold a pointer to session which is belong to cls_session by its
+> > priv tcp_sw_host, so we should get a ref of cls_session, and after
+> > iscsi_host_remove() the sysfs is cleared, then we can drop the ref.
+> >
+>
+> Nice bug report and thanks for the patch. I think though we should just
+> split the removal from the freeing. The removal will wait on users
+> accessing sysfs files for us, so once they return we know we can just
+> free things.
+>
+> Something like this:
+>
+>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Suggested-by: Bean Huo <beanhuo@micron.com>
-Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
----
- drivers/ufs/core/ufs_bsg.c |  1 -
- drivers/ufs/core/ufshcd.c  | 23 +++++++++++------------
- 2 files changed, 11 insertions(+), 13 deletions(-)
+Hi, dinghui and Mike, I submitted patches to fix this issue one year
+ago. But I missed Mike's
+reply because I was new to the community, so the patches did not keep on.
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 7eec38c..dc441ac 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -16,7 +16,6 @@ static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_len,
- 				       struct utp_upiu_query *qr)
- {
- 	int desc_size = be16_to_cpu(qr->length);
--	int desc_id = qr->idn;
- 
- 	if (desc_size <= 0)
- 		return -EINVAL;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b6ef92d3..7f89626 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3395,12 +3395,6 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 	if (desc_id >= QUERY_DESC_IDN_MAX || !param_size)
- 		return -EINVAL;
- 
--	if (param_offset >= buff_len) {
--		dev_err(hba->dev, "%s: Invalid offset 0x%x in descriptor IDN 0x%x, length 0x%x\n",
--			__func__, param_offset, desc_id, buff_len);
--		return -EINVAL;
--	}
--
- 	/* Check whether we need temp memory */
- 	if (param_offset != 0 || param_size < buff_len) {
- 		desc_buf = kzalloc(buff_len, GFP_KERNEL);
-@@ -3413,15 +3407,23 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 
- 	/* Request for full descriptor */
- 	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
--					desc_id, desc_index, 0,
--					desc_buf, &buff_len);
--
-+					    desc_id, desc_index, 0,
-+					    desc_buf, &buff_len);
- 	if (ret) {
- 		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d\n",
- 			__func__, desc_id, desc_index, param_offset, ret);
- 		goto out;
- 	}
- 
-+	/* Update descriptor length */
-+	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
-+
-+	if (param_offset >= buff_len) {
-+		dev_err(hba->dev, "%s: Invalid offset 0x%x in descriptor IDN 0x%x, length 0x%x\n",
-+			__func__, param_offset, desc_id, buff_len);
-+		return -EINVAL;
-+	}
-+
- 	/* Sanity check */
- 	if (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id) {
- 		dev_err(hba->dev, "%s: invalid desc_id %d in descriptor header\n",
-@@ -3430,9 +3432,6 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	/* Update descriptor length */
--	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
--
- 	if (is_kmalloc) {
- 		/* Make sure we don't copy more data than available */
- 		if (param_offset >= buff_len)
--- 
-2.7.4
+https://lore.kernel.org/linux-scsi/20210407012450.97754-1-haowenchao@huawei.com/
 
+Because of my negligence, this bug has been discovered so far, and I
+apologize for this.
