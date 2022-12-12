@@ -2,100 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 867CFC2D0CB
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Dec 2022 08:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9758CC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Dec 2022 08:39:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbiLLIgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Dec 2022 03:36:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48612 "EHLO
+        id S231600AbiLLIjz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Dec 2022 03:39:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231343AbiLLIgC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 03:36:02 -0500
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AAFCDFAA;
-        Mon, 12 Dec 2022 00:36:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1670834161; x=1702370161;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=bFYTa27LxNC965Nl6ptrEOem3ftkvwtR2lcZjjhuh7w=;
-  b=Ctpcli0Qu5gkHgOCOhBib4kAIwQyDbs9RvQiX3xGNTUYi3eEQQ7U3Nuh
-   0dNICWlhMfnaQYPoU6fK7JzSMFJDDJmY7r/cQed6pd5h25++CSYhvj4/I
-   tyiGi6964uzL1ir573stEVlhaVjcIh9rKbD1oLqgsOG9ZxlnyASN5wcm+
-   iBMv4ly/I6ElKrv0u23X4YzRGAckMGAUnRWiXK+E2CSXwQ03CEUQCI2P8
-   vBQNkmWz8CxDxJBaJfeVp/XUnYPcnsQXXPi/I3k+A76sheagMOzPYamGM
-   Xg519DOI/27uQeUYXxixZD14ABPLZRnRsO7Yy89Iwn9bnfMlD0/aPSUZ9
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10558"; a="380011023"
-X-IronPort-AV: E=Sophos;i="5.96,237,1665471600"; 
-   d="scan'208";a="380011023"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2022 00:36:00 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10558"; a="822407894"
-X-IronPort-AV: E=Sophos;i="5.96,237,1665471600"; 
-   d="scan'208";a="822407894"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by orsmga005.jf.intel.com with ESMTP; 12 Dec 2022 00:35:56 -0800
-Received: from andy by smile.fi.intel.com with local (Exim 4.96)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1p4eHx-008Nh5-28;
-        Mon, 12 Dec 2022 10:35:53 +0200
-Date:   Mon, 12 Dec 2022 10:35:53 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     david.keisarschm@mail.huji.ac.il
-Cc:     Dave Hansen <dave.hansen@linux.intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
-        linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-mtd@lists.infradead.org,
-        linux-scsi@vger.kernel.org, bpf@vger.kernel.org,
-        netdev@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 1/5] Renaming weak prng invocations -
- prandom_bytes_state, prandom_u32_state
-Message-ID: <Y5bn6XcozgjbcSkf@smile.fi.intel.com>
-References: <cover.1670778651.git.david.keisarschm@mail.huji.ac.il>
- <b3caaa5ac5fca4b729bf1ecd0d01968c09e6d083.1670778652.git.david.keisarschm@mail.huji.ac.il>
+        with ESMTP id S231537AbiLLIjy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 03:39:54 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38969BEF;
+        Mon, 12 Dec 2022 00:39:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Zr+LzmsqOxE2SWoY3n7ygSNQvczxGbNu/n79CO+xp7g=; b=kzRCc7F+pv0O7XF9u6CEPW9l95
+        S1z9Sfzlyqsad8kyIrx6+2VYUv/QD0vkG1AHwwOjn6jdQ80iCiXcxcqqSTwF288OQk/TD+Cineyjf
+        vUwFIU0E8BiPRaFsH50Ko+wSmr76Gu4dosx86n6HUcSwjGEtiibaMUsSkENsR3p9aRMn/ENm4JxQO
+        lDEzerdi1jwMMCq4oDkgsoRHnkBfKdWOOT7mFxsetzPQlPldS1tByN6riJWILOKyxsoRYMf/dIr3c
+        ps42vz/g23DPk0q93YWqqi6zgcsutuQYlYnU3MWZZYCgcPCLttVUSGC2lKKVkKXSd6XvUNYy1+YIL
+        PaCaoT7w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1p4eLk-00AO7a-9p; Mon, 12 Dec 2022 08:39:48 +0000
+Date:   Mon, 12 Dec 2022 00:39:48 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: remove left-over due to now gone pktcdvd
+ shortcomings
+Message-ID: <Y5bo1I5SytNV8ytv@infradead.org>
+References: <20221209084130.31805-1-lukas.bulwahn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b3caaa5ac5fca4b729bf1ecd0d01968c09e6d083.1670778652.git.david.keisarschm@mail.huji.ac.il>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <20221209084130.31805-1-lukas.bulwahn@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 12, 2022 at 12:16:04AM +0200, david.keisarschm@mail.huji.ac.il wrote:
-> From: David <david.keisarschm@mail.huji.ac.il>
+On Fri, Dec 09, 2022 at 09:41:30AM +0100, Lukas Bulwahn wrote:
+> Commit f40eb99897af ("pktcdvd: remove driver.") removes the pktcdvd driver,
+> including the config CDROM_PKTCDVD and CDROM_PKTCDVD_WCACHE, and the uapi
+> header file.
 > 
-> Since the two functions
->  prandom_byte_state and prandom_u32_state
->  use the weak prng prandom_u32,
->  we added the prefix predictable_rng,
->  to their signatures so it is clear they are weak.
+> Remove some further unneeded left-over due to now gone pktcdvd shortcomings
+> in the scsi library.
 
-It's fancy indentation.
+Right now the removal is only in the block tree, so this will have to
+wait until that and the scsi tree are merged to mainline.
 
-...
+I was actually going to send this patch at that point, but we can
+just pick up yours now:
 
->  		/* Fisher-Yates shuffle */
->  		for (i = count - 1; i > 0; i--) {
-> -			rand = prandom_u32_state(&state.rnd_state);
-> +			rand = predictable_rng_prandom_u32_state(&state.rnd_state);
-
-Isn't it too many "random":s encoded in the name?
-
-I would leave either "rng" or "[p]random".
-
->  			rand %= (i + 1);
->  			swap_free_obj(slab, i, rand);
->  		}
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
