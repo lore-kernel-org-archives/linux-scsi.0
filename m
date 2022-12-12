@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C160C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Dec 2022 00:12:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63518C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Dec 2022 00:19:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230436AbiLLAMR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Dec 2022 19:12:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39966 "EHLO
+        id S230460AbiLLATm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Dec 2022 19:19:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230031AbiLLAMP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 19:12:15 -0500
-Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A8D895BB;
-        Sun, 11 Dec 2022 16:12:14 -0800 (PST)
-Received: by mail-qv1-f44.google.com with SMTP id o12so7259393qvn.3;
-        Sun, 11 Dec 2022 16:12:14 -0800 (PST)
+        with ESMTP id S230031AbiLLATl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 19:19:41 -0500
+Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A9860DE;
+        Sun, 11 Dec 2022 16:19:40 -0800 (PST)
+Received: by mail-qv1-f48.google.com with SMTP id o12so7267615qvn.3;
+        Sun, 11 Dec 2022 16:19:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FbsJncDF4k/nje7/k7lqGjJdwRQs7s+dB9lApe4/jJg=;
-        b=T/00l0PhFJvmtdZyqljFQvKDedQi+ga5gWzep07+ajdBSU294HVQvdfptfQ9FEI/b2
-         3h32K2meJ07KDUGoZYDGRle0eCPg2NwqFCpzV1Fl2vbTyZxkR4bPzWdjLXjg2F8ibOaR
-         n5pK/d6FusDZD9MkRn3YRMSCbsWsGFEH58UK7fFN1ipE6OfgyL2m/y0DguhTBHk1l10F
-         0cMIvSkNhQoRX3ujIiZkbyCMjVEDkbb91W1C7RgPE7EW28fYxaLKwE0KXeIy4i0v9sGX
-         YksoWKf98vnzi2tCHC0syYd2i93CYXi1PiN1E5OoIGSFyQRri9i3OU01lILtSabDT/fR
-         Sp5g==
-X-Gm-Message-State: ANoB5pmYfGg72ksytkqmkwoEqL3Pfpm+WWxs3qSDzmET5PtEIcZ3GbQo
-        eLyP81q/I5MfInhBgoR7HhY=
-X-Google-Smtp-Source: AA0mqf5fbxnDNw0pxU2VtPnYdOTuwUwOhWk3ENQ83l+WSeM50DRdYxkZWaPzy7QhUIvcuvw4japzkw==
-X-Received: by 2002:a05:6214:43:b0:4b4:a3d5:17da with SMTP id c3-20020a056214004300b004b4a3d517damr16910109qvr.14.1670803933010;
-        Sun, 11 Dec 2022 16:12:13 -0800 (PST)
+        bh=uspk5Nv9SyM61iM2cOfEA5hsUJIN1WzruNiZhWdpdfk=;
+        b=Rgo3cIgwUUnut+4g9Gf4kZYW4ae/AcVQm+Nbt32q0X6rkz0nkfDIV/zzeU+VWV+i/w
+         lmI/ew9cgaTxjvds+zmOIT5DNdb/TmGkOPwIVL5WGCGGKHEPzlgYHeKcajYU74PZomi5
+         UENTOe4JMKIOJdYbF5MH/SywaSfhXSP+pe4drY0gFh+6wtxrlKbVDhidDdxcB7Inh9SE
+         sKH28poqovXBIOdvcKLYUVEIQQ6QTkv3X5IpOWUZVIrZ3ZAhayLFBpenWDy+XVesDD6o
+         /KPPHStcNdoPA5pdyq5EZkEV+vpaVTtQg5ApOiyspOWvo4LwNzzwU5joS+SBximV27Fv
+         LRNQ==
+X-Gm-Message-State: ANoB5pn2zEGOty9ANZOeh+AQdHru9ZgWh/3NLl2TrSEBNwFCe7TlGW2B
+        KbZ1A1GDpm46/fao9F3R+es=
+X-Google-Smtp-Source: AA0mqf4scmrbSQfQBvwEHlOtvweKsOroN/veicb8XTYNkzJVzh8GqL1iVLjA6sexXTfsFYh40ZF7Mw==
+X-Received: by 2002:ad4:4388:0:b0:4c7:8c96:d2ca with SMTP id s8-20020ad44388000000b004c78c96d2camr18234098qvr.15.1670804379896;
+        Sun, 11 Dec 2022 16:19:39 -0800 (PST)
 Received: from [10.205.211.210] ([67.142.235.252])
-        by smtp.gmail.com with ESMTPSA id bi35-20020a05620a31a300b006faa88ba2b5sm3267251qkb.7.2022.12.11.16.11.51
+        by smtp.gmail.com with ESMTPSA id bs40-20020a05620a472800b006cbc6e1478csm4742570qkb.57.2022.12.11.16.19.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 11 Dec 2022 16:12:12 -0800 (PST)
-Message-ID: <d9837210-aacb-4941-a9bd-beed6de86aec@acm.org>
-Date:   Sun, 11 Dec 2022 16:11:42 -0800
+        Sun, 11 Dec 2022 16:19:39 -0800 (PST)
+Message-ID: <71a10a4c-a726-edac-c5d3-1bfded690503@acm.org>
+Date:   Sun, 11 Dec 2022 16:18:59 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.0
-Subject: Re: [PATCH v5 2/4] ufs: core: Remove redundant desc_size variable
- from hba
+Subject: Re: [PATCH v5 4/4] ufs: core: Remove ufshcd_map_desc_id_to_length
+ function
 Content-Language: en-US
 To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         martin.petersen@oracle.com
 Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
 References: <1670763911-8695-1-git-send-email-Arthur.Simchaev@wdc.com>
- <1670763911-8695-3-git-send-email-Arthur.Simchaev@wdc.com>
+ <1670763911-8695-5-git-send-email-Arthur.Simchaev@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1670763911-8695-3-git-send-email-Arthur.Simchaev@wdc.com>
+In-Reply-To: <1670763911-8695-5-git-send-email-Arthur.Simchaev@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -60,7 +60,27 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 12/11/22 05:05, Arthur Simchaev wrote:
-> Always read the descriptor with QUERY_DESC_MAX_SIZE.
-> According to the spec, the device returns the actual size
+> There shouldn't be any restriction of the descriptor size
+> (not the descriptor id for that matter) up to QUERY_DESC_MAX_SIZE.
+> According to the spec, the caller can use any descriptor size,
+> and it is up to the device to return the actual size.
+> Therefore there shouldn't be any sizes hardcoded in the kernel,
+> nor any need to cache it, hence ufshcd_map_desc_id_to_length function is
+> redundant. Always read the descriptors with QUERY_DESC_MAX_SIZE size.
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+I have not yet replied with "Reviewed-by" to this patch so you are not
+yet allowed to add my Reviewed-by tag to this patch.
+
+> +	/* Update descriptor length */
+> +	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
+
+Should a check be added here that desc_buf[QUERY_DESC_LENGTH_OFFSET]
+<= QUERY_DESC_MAX_SIZE to protect against firmware bugs? Since
+QUERY_DESC_MAX_SIZE == 255, adding BUILD_BUG_ON(QUERY_DESC_SIZE != 255)
+and a comment may be sufficient.
+
+Thanks,
+
+Bart.
