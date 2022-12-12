@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D9BC001B2
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Dec 2022 01:57:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE40C4167B
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Dec 2022 01:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231147AbiLLB5N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Dec 2022 20:57:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36222 "EHLO
+        id S230490AbiLLB5O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Dec 2022 20:57:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230490AbiLLB5K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 20:57:10 -0500
+        with ESMTP id S230466AbiLLB5M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2022 20:57:12 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB8D6DE99
-        for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2022 17:57:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2848DD105
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2022 17:57:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670810229; x=1702346229;
+  t=1670810231; x=1702346231;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=c7DlJEoSy5dFeLuCVeM7Q58VrgwXGA454i+kY3FoAZo=;
-  b=DwExcBOBlq9aoHPvdygkZijvfLGhR420K8EIJSPCyR4UQWbbB6RnMsSs
-   n8PV1ltAD8C9BCkX6a9RyjaTgvucqcG2R5JEDdjkj9pqvt3dkhqheSalo
-   Mpvvuxq8Fw0fUVJYd1ct0ISKKnKx84dc1llZ17HHSJRyhyZso5/KXLv9a
-   QFfTq4ezA4xk17iUIm75KQ+j44FKiP3cjB94HFGhxia9Fwcxb0BqsRRk6
-   ng+SM+qidxYWVEo4vvWJJ02b9GS9VMXFdV1TlXcRVXw3VeB1Dqzys99U7
-   zMHUiMAqGnNsjY+0uqZ4wQx6CSAGw1DUALsA7PuLN6KeqS3Ash4EpiEHA
-   Q==;
+  bh=O05rZULrHHkSjmvsVyESJCuotaDAlzqN1bbUwhFACh8=;
+  b=TGZfh9RRTGKw/jMZ9P0uAYaVH9Ej763fqWtX8UUVmd+1LYfEVOOFUAy4
+   10WOxhYJSzZq7PQEn9eg/4q/QTguQt8nrIWUom42O8/qhGYizg5NK+w0q
+   Qbe2yHL8WoZ1RoeaxjZxSL+fYcx5gx9RKlhOzx2D36bz7ZaEClQ04vX0m
+   XWn60Mo/rxfPi3iulbvJiLRd2aTMruLv7lFctKM1gCHOAHQi5HKnXAnza
+   sC0DgFi3KhbileFHS6bzXFcYiOzB/Hs21z9E85QXJt4WxR5+u2ZCtss0Q
+   R7rYOjaH5PSwCRC0QHsUmG26J/S8f3Bqx2wkQ/NVCt+smvKYufdaplsUq
+   A==;
 X-IronPort-AV: E=Sophos;i="5.96,237,1665417600"; 
-   d="scan'208";a="218660140"
+   d="scan'208";a="218660145"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Dec 2022 09:57:09 +0800
-IronPort-SDR: oovD4HqZH5jJz/9LT5KMMNczXLiutD3F/2FoH446NlQ36iPj1NF8XuamhC/9SF+MkXUK3h0Clt
- VX00nabdckU5xwEF+eSKfYJs++Wb2Kwm93Wk5Ya0nd3aucEWJedQuSHd8JfBpyPWnRuoxvRo8Y
- w1rKFsimo/7pKmn0Xj3G+IDivPwSuF9WqCcS9Bk67tPC/BAgARWXjo8Zh7rdPZZwOB/ElXZOVp
- gzxxqGNVplsHhzSQkXhU4rqTLrX4LTuo2//M3/MwOiAX0TbIcfIMfKYSrxa6e9sIGBqlNwG1ex
- fKs=
+  by ob1.hgst.iphmx.com with ESMTP; 12 Dec 2022 09:57:10 +0800
+IronPort-SDR: gQNbEOmJlLL/0J16TOQgnMo1kIR0lByfzL0UPg3sPRTeeKizjg5j1s1yhGis/ovUQIifUmpDSl
+ WtMjivy1GrPEjXHGF98iCGrOlsG3c5cSHg6NNEanTJEWCWwaa7uESa4nZJ7wIlaDq+9onXjFnV
+ JqAOt/IrxNGIPQtlaLic2CZN+mLy9hNpaC33Sd80CVRQFCOSIWzvTV9JJH5Ojc4LWR/x/YUTua
+ wODERZ2dy3+X/Ih0JjmABbjmg35ziFMugQfAPGEmN2pFhjlz0n8hK1Y4EsWTF9qiM60/Qb02v/
+ oyI=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Dec 2022 17:15:34 -0800
-IronPort-SDR: FMxloDTFd2TgW4l6/ybeUh7LiWh3kqhijoAQWLU5W3XlC0Mrm8xu+yi4SpJz+Y92k95ewPPXWg
- QUNXN3feZbJTI3iLmbPEVWCe4U/9s/R3WREh5p8RNd4olpxGGGAFn0V4NTH8CnZEreFuZ15mly
- CXfgjDNfzsWHIgL32z0fragw4hHYUUCq6DwsKGp5BBjTsfL3El3sHouko8AHyyEkGTKVN2aCdM
- Vr7ryUCLkrzZiepsME1ZpUA2+HzvNmaYOInRvinikHMG0Q0omJx8XabZIL7USi2B3zKCl+g8zv
- MsY=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Dec 2022 17:15:36 -0800
+IronPort-SDR: vZxV3EAWUSGp6Qwf7ljLZA/wPJwEiZuvcxbkhBgRTgvYK4D8JgZuzNF2nco2+gvfbvLutozMeC
+ JbIGyNJxD/lPp2IBajM7ezpWwbCFSh8guSSVDAb3Us1k7ViTpBJMXjGVgHxPxEDcQQWvQzICzH
+ Wmg33pIou3nHhTfGW0XuQ10st2hWhLfQ86igfFsptSMdAutjxkQ58UzNvylhPqBptZ5/oUkksr
+ /eFUNl9g/FlbTQ3LkL/6xAOoNVBrg8fRCZb86EwG3n6VTsfbKoutxPjqlYs6WBCxI4CEibKl8r
+ MN4=
 WDCIronportException: Internal
 Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.207])
-  by uls-op-cesaip02.wdc.com with ESMTP; 11 Dec 2022 17:57:08 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 11 Dec 2022 17:57:09 -0800
 From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 To:     linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com
 Cc:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
@@ -54,9 +54,9 @@ Cc:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH 1/3] scsi: mpi3mr: fix alltgt_info copy size in mpi3mr_get_all_tgt_info
-Date:   Mon, 12 Dec 2022 10:57:04 +0900
-Message-Id: <20221212015706.2609544-2-shinichiro.kawasaki@wdc.com>
+Subject: [PATCH 2/3] scsi: mpi3mr: fix bitmap memory size calculation
+Date:   Mon, 12 Dec 2022 10:57:05 +0900
+Message-Id: <20221212015706.2609544-3-shinichiro.kawasaki@wdc.com>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20221212015706.2609544-1-shinichiro.kawasaki@wdc.com>
 References: <20221212015706.2609544-1-shinichiro.kawasaki@wdc.com>
@@ -66,54 +66,88 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function mpi3mr_get_all_tgt_info calculates size of alltgt_info and
-allocate memory for it. After preparing valid data in alltgt_info, it
-calls sg_copy_from_buffer to copy alltgt_info to job->request_payload,
-specifying length of the payload as copy length. This length is larger
-than the calculated alltgt_info size. It causes memory access to invalid
-address and results in "BUG: KASAN: slab-out-of-bounds". The BUG was
-observed during boot using systems with eHBA-9600. By updating the HBA
-firmware to latest version 8.3.1.0 the BUG was not observed during boot,
-but still observed when command "storcli2 /c0 show" is executed.
+To allocate memory for bitmaps, the mpi3mr driver calculates sizes of
+each bitmap using byte as unit. However, bit operation helper functions
+assume that bitmaps are allocated using unsigned long as unit. This gap
+causes memory access beyond the bitmap memory size and results in "BUG:
+KASAN: slab-out-of-bounds". The BUG was observed at firmware download to
+eHBA-9600. Call trace indicated that the out-of-bounds access happened
+in find_first_zero_bit called from mpi3mr_send_event_ack for the bitmap
+miroc->evtack_cmds_bitmap.
 
-Fix the BUG by specifying the calculated alltgt_info size as copy
-length. Also check that the copy destination payload length is larger
-than the copy length.
+To avoid the BUG, fix bitmap size calculations using unsigned long as
+unit. Apply this fix to five places to cover all bitmap size
+calculations in the driver.
 
-Fixes: f5e6d5a34376 ("scsi: mpi3mr: Add support for driver commands")
-Cc: stable@vger.kernel.org
+Fixes: c5758fc72b92 ("scsi: mpi3mr: Gracefully handle online FW update operation")
+Fixes: e844adb1fbdc ("scsi: mpi3mr: Implement SCSI error handler hooks")
+Fixes: c1af985d27da ("scsi: mpi3mr: Add Event acknowledgment logic")
+Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
 Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 9baac224b213..f14556d50832 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -322,6 +322,13 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 0c4aabaefdcc..272c318387b7 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1160,9 +1160,8 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
+ 		    "\tcontroller while sas transport support is enabled at the\n"
+ 		    "\tdriver, please reboot the system or reload the driver\n");
  
- 	kern_entrylen = (num_devices - 1) * sizeof(*devmap_info);
- 	size = sizeof(*alltgt_info) + kern_entrylen;
-+
-+	if (size > job->request_payload.payload_len) {
-+		dprint_bsg_err(mrioc, "%s: too small payload length\n",
-+			       __func__);
-+		return rval;
-+	}
-+
- 	alltgt_info = kzalloc(size, GFP_KERNEL);
- 	if (!alltgt_info)
- 		return -ENOMEM;
-@@ -358,7 +365,7 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+-	dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
+-	if (mrioc->facts.max_devhandle % 8)
+-		dev_handle_bitmap_sz++;
++	dev_handle_bitmap_sz = sizeof(unsigned long) *
++		DIV_ROUND_UP(mrioc->facts.max_devhandle, BITS_PER_LONG);
+ 	if (dev_handle_bitmap_sz > mrioc->dev_handle_bitmap_sz) {
+ 		removepend_bitmap = krealloc(mrioc->removepend_bitmap,
+ 		    dev_handle_bitmap_sz, GFP_KERNEL);
+@@ -2957,25 +2956,22 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
+ 	if (!mrioc->pel_abort_cmd.reply)
+ 		goto out_failed;
  
- 	sg_copy_from_buffer(job->request_payload.sg_list,
- 			    job->request_payload.sg_cnt,
--			    alltgt_info, job->request_payload.payload_len);
-+			    alltgt_info, size);
- 	rval = 0;
- out:
- 	kfree(alltgt_info);
+-	mrioc->dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
+-	if (mrioc->facts.max_devhandle % 8)
+-		mrioc->dev_handle_bitmap_sz++;
++	mrioc->dev_handle_bitmap_sz = sizeof(unsigned long) *
++		DIV_ROUND_UP(mrioc->facts.max_devhandle, BITS_PER_LONG);
+ 	mrioc->removepend_bitmap = kzalloc(mrioc->dev_handle_bitmap_sz,
+ 	    GFP_KERNEL);
+ 	if (!mrioc->removepend_bitmap)
+ 		goto out_failed;
+ 
+-	mrioc->devrem_bitmap_sz = MPI3MR_NUM_DEVRMCMD / 8;
+-	if (MPI3MR_NUM_DEVRMCMD % 8)
+-		mrioc->devrem_bitmap_sz++;
++	mrioc->devrem_bitmap_sz = sizeof(unsigned long) *
++		DIV_ROUND_UP(MPI3MR_NUM_DEVRMCMD, BITS_PER_LONG);
+ 	mrioc->devrem_bitmap = kzalloc(mrioc->devrem_bitmap_sz,
+ 	    GFP_KERNEL);
+ 	if (!mrioc->devrem_bitmap)
+ 		goto out_failed;
+ 
+-	mrioc->evtack_cmds_bitmap_sz = MPI3MR_NUM_EVTACKCMD / 8;
+-	if (MPI3MR_NUM_EVTACKCMD % 8)
+-		mrioc->evtack_cmds_bitmap_sz++;
++	mrioc->evtack_cmds_bitmap_sz = sizeof(unsigned long) *
++		DIV_ROUND_UP(MPI3MR_NUM_EVTACKCMD, BITS_PER_LONG);
+ 	mrioc->evtack_cmds_bitmap = kzalloc(mrioc->evtack_cmds_bitmap_sz,
+ 	    GFP_KERNEL);
+ 	if (!mrioc->evtack_cmds_bitmap)
+@@ -3415,9 +3411,8 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
+ 		if (!mrioc->chain_sgl_list[i].addr)
+ 			goto out_failed;
+ 	}
+-	mrioc->chain_bitmap_sz = num_chains / 8;
+-	if (num_chains % 8)
+-		mrioc->chain_bitmap_sz++;
++	mrioc->chain_bitmap_sz = sizeof(unsigned long) *
++		DIV_ROUND_UP(num_chains, BITS_PER_LONG);
+ 	mrioc->chain_bitmap = kzalloc(mrioc->chain_bitmap_sz, GFP_KERNEL);
+ 	if (!mrioc->chain_bitmap)
+ 		goto out_failed;
 -- 
 2.37.1
 
