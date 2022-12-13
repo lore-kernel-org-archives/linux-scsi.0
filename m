@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE7FCC00145
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 01:35:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51DEDC4167B
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 01:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234107AbiLMBf5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Dec 2022 20:35:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51950 "EHLO
+        id S234194AbiLMBgj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Dec 2022 20:36:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234140AbiLMBfy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 20:35:54 -0500
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73C671D334;
-        Mon, 12 Dec 2022 17:35:51 -0800 (PST)
-Received: by mail-lf1-x133.google.com with SMTP id p36so2488743lfa.12;
-        Mon, 12 Dec 2022 17:35:51 -0800 (PST)
+        with ESMTP id S234180AbiLMBgg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 20:36:36 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27B651D642;
+        Mon, 12 Dec 2022 17:36:35 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id z26so2515172lfu.8;
+        Mon, 12 Dec 2022 17:36:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=30U9RseqGKfwyGVXa0b/Q1IAyRMAB0Es1Wq7/iCU9Wg=;
-        b=o9juF837/EiQLtFz9n2pD0pRgQb6NB8Ve4n25hehNtG99jcMdZUmeOp0kQ0tbip+Un
-         xTKy3zLMVbpwFDOC+o7yrUM6PMogCq/UYCrJr/QbXMp+nR3/N5C7r/ZPymCT4P4Y59x7
-         LXuQTyJe7QCYhQ9cFWXjUeUMJei/q1uPoN9PuunQ9lIBjT4yqHqYkNUjIF1eFaU3Bc5u
-         d3GsqILZ4tW7odLyzq6xRZD4WvZS3opwlsYcGDBj2iaVkN0xf02UXlH96UuNCh/pAJol
-         DPuYjtTjjqM80DiRhmdl4CePTGksOuv9QH9oPPDYnKPv0nO2tiORQ41XHUb8fvBaiXqg
-         ZL+A==
+        bh=gkXRGTeYk3totrxjicy/YMmtCnEnptDqd4J8k9vI8nY=;
+        b=jtzJPT36io9O+jtDg+i02EFBIsisrizM6g9Wcksnq3ss1gwhzHkqhwxZidqcIAzTGa
+         eB/n80jEOnOmEekXkVpirjTJ65wxlZTfcFRoAk8b0ak2aWR9Hb8KOprrjBQBeBTOFnr4
+         JBd5/JAUXtmGgyX+t5J8KyipwZYK0BPbTiQ4093rvLtRZ/PqVyxjn9jLJMX5/RMH1QZm
+         L+U/NMOVUOmqilghc/5tQ1Z73MvxtZRF7zAx9q1IDRYBPCPYacp/dLD/NEaOZy4xai9f
+         FRFoN6AR8bqk3zvytCFLKeXYXSTpsU3LIEsRg5SGXxbSczTYWGXB9KRv5eQviCHJBu2V
+         5HeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=30U9RseqGKfwyGVXa0b/Q1IAyRMAB0Es1Wq7/iCU9Wg=;
-        b=DBnjMkYP8SaQDiK8l93aFeYfyTzj+EOYkHSt9xHYGUAjvP9JntZGvJUf86DmiCa3RQ
-         bt0x5wYCttR7cpP+OIxmx6b+7EXJKIekhJDvtL9MZGOoLabYIU6E+UVA1ouCSUYjlSKx
-         qmyGOQ9Xf85PmEd6YDDove4ta7KET4ceOCaArvBCGc13Kdo84iQd24dz8VZDBmFMEe76
-         JHoh0KxtSf85abckpQvlpwK4sIX4O4w/9GM72e+iytPlI/LVCgOVw5aCofz4h2CDILg4
-         kqbVx+H8kUKQMzVncZycQOpJD9v3K/E/FCWNBQ7dIgUb4aNGURvFNZ1WoeyA4L6GKnBg
-         srhA==
-X-Gm-Message-State: ANoB5pkReGvzeiJpQaIU+K1grX81rJ/zQUtf+zXrMA7HyYHzxRVjDxKp
-        baVCefnXbXihYkk2qS4TL84UcM5d3vsxCZaRsg==
-X-Google-Smtp-Source: AA0mqf5sGCmOeRTT5bapPst5F9cgZvwXmhZZldMvOEPDGzDoFADAQC0MATqlzFDmAV6OwEVcdrKbrh5DjcqCaKfNUd0=
-X-Received: by 2002:a05:6512:3da9:b0:4b6:ee79:63ab with SMTP id
- k41-20020a0565123da900b004b6ee7963abmr250256lfv.662.1670895349526; Mon, 12
- Dec 2022 17:35:49 -0800 (PST)
+        bh=gkXRGTeYk3totrxjicy/YMmtCnEnptDqd4J8k9vI8nY=;
+        b=R/oKdbVhsjVXSSjTrRFkFakdAxv9KyByp39xY4vB8DXYFhX+ScXL75Un5uSVPMNJ9G
+         wDUvQo4vFW7B9M2dPxWKgAt9MVQRilBs0PQdckU9NXntoLkGc9+chZpJqmCvZXhJ7eNI
+         x08RYa4LI++Vi0FQb729tbabi7fLieEPNwPrH9QeU/BQRkpFrXL4HjtJsDcqd3MC1oo+
+         VJmD+vBJbreLBhGL3TwNyZFQKGEf+cdubZIxeLT2mWycMVo9L6EbxyZ5OT4whsfQXFsT
+         NL67NAcwBDRfleDhoZnebe1OSK6Lbr7jvlKg9+j8PKcRLWxneEZVMeV9HTNkqRHv0ijp
+         CGWg==
+X-Gm-Message-State: ANoB5plKMUnK0pnmg4BEEnqY0X1599+7Q+2bKayR4ukQr7+gb0U6v2LU
+        BibXTILXuePfagmsrhQ6fiZoeWNu/t9PTXI7eg==
+X-Google-Smtp-Source: AA0mqf4VT4kUSse4hGyGngXID4CFSPgFNvw0mlASJB2/gRLS9q54bJwO6ectd11va4JINTv+9LAWMOhTTJHLhKvgZ+w=
+X-Received: by 2002:a05:6512:104a:b0:4b5:6683:795c with SMTP id
+ c10-20020a056512104a00b004b56683795cmr7038881lfb.101.1670895393221; Mon, 12
+ Dec 2022 17:36:33 -0800 (PST)
 MIME-Version: 1.0
-References: <cover.1670541363.git.quic_asutoshd@quicinc.com> <a6ef5951dbefd6e8cc9a670cc48ad1ae70fd61f9.1670541364.git.quic_asutoshd@quicinc.com>
-In-Reply-To: <a6ef5951dbefd6e8cc9a670cc48ad1ae70fd61f9.1670541364.git.quic_asutoshd@quicinc.com>
+References: <cover.1670541363.git.quic_asutoshd@quicinc.com> <2d0824aaad6624aba41b3b5546e7473033c6b920.1670541364.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <2d0824aaad6624aba41b3b5546e7473033c6b920.1670541364.git.quic_asutoshd@quicinc.com>
 From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Tue, 13 Dec 2022 09:35:37 +0800
-Message-ID: <CAGaU9a-3r-mhSLmU6MxmvxgQT+TC6szScn7orv2wvNvsrg=rJQ@mail.gmail.com>
-Subject: Re: [PATCH v11 14/16] ufs: mcq: Add completion support of a cqe
+Date:   Tue, 13 Dec 2022 09:36:21 +0800
+Message-ID: <CAGaU9a-R6CbEZBW5x1_+eMYhORHLya-5CRFv+LCKSTi-7xeqwQ@mail.gmail.com>
+Subject: Re: [PATCH v11 15/16] ufs: core: mcq: Add completion support in poll
 To:     Asutosh Das <quic_asutoshd@quicinc.com>
 Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
@@ -61,31 +61,22 @@ Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
         beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Keoseong Park <keosung.park@samsung.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 9, 2022 at 7:33 AM Asutosh Das <quic_asutoshd@quicinc.com> wrote:
+On Fri, Dec 9, 2022 at 7:32 AM Asutosh Das <quic_asutoshd@quicinc.com> wrote:
 >
-> Add support for completing requests from Completion Queue.
-> Some host controllers support vendor specific registers
-> that provide a bitmap of all CQ's which have at least one
-> completed CQE. Add this support.
-> The MCQ specification doesn't provide the Task Tag or its
-> equivalent in the Completion Queue Entry.
-> So use an indirect method to find the Task Tag from the
-> Completion Queue Entry.
+> Complete cqe requests in poll. Assumption is that
+> several poll completion may happen in different CPUs
+> for the same completion queue. Hence a spin lock
+> protection is added.
 >
 > Co-developed-by: Can Guo <quic_cang@quicinc.com>
 > Signed-off-by: Can Guo <quic_cang@quicinc.com>
