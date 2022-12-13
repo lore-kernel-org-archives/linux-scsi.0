@@ -2,104 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D246FC00145
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 00:53:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4B1C00145
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 01:11:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233793AbiLMAxT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Dec 2022 19:53:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35064 "EHLO
+        id S233880AbiLMBLG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Dec 2022 20:11:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234119AbiLMAw6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 19:52:58 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D43461835D
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Dec 2022 16:52:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670892769; x=1702428769;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=4PK7nvRMaWEcQvAKNkN0dpGBS7mYjwV4UHTvedImHPw=;
-  b=FG8UCKyLuHwt9FC+iXjlEwAphbG6YNbPd8CCcg5hPx7HmAijZ+E2zV1o
-   rF4Nk/pVCUcfy07B9LVhaHdS8kR3vGTAYTCBtbdi0uXU/nc35OFkziVlM
-   xBo3C2nrSeCyAPEc+xLYhggB6L3BbT6r4grv8V8yoOdPfVgXHQ5VSQb7R
-   ggpyJ8SdzlJlWWYjAw1q/r5U7GaRnF2CuFCOFQvriv/7icppcaCd5FR8A
-   r1XBK1wFJMWXRUPJQTHrCgcvUmVTJjzJygRm+ebCWMaZ2lQjPMcBjaV1x
-   rm5pwTThYVf/622iAC0FGcZRPRQx3wfJ0KFCdTj1Q1amsAsAU04QMbQy2
-   g==;
-X-IronPort-AV: E=Sophos;i="5.96,239,1665417600"; 
-   d="scan'208";a="223646017"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Dec 2022 08:52:49 +0800
-IronPort-SDR: ty6vr798cR8TJqlhJFTsj3/Sf/le3UVMk13DQl5VVZA47QgiYsjtRSf81lkACK9bMqsTcywnHT
- qhIvOieOwtJ/FdTwjdYj6Utl7CPghrVYRLwn2g8iqilwGaLacq0qH2JWWwiPl+slA/V4VOLEwv
- jvhOgT+D2nMsBNXIeeK8flV5Nx734lPoqLZKgv/yGL0EMpk0WdNps+NCh0A8HZ73rP08mQHCXo
- 5omEi5GZ0fvJyZespiMM9lt4b7sbmiy1ZxMQy0WgNhVRZBrFUdNT8Q0/b3FoU8qT0KZymcXEcL
- tOo=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Dec 2022 16:11:13 -0800
-IronPort-SDR: QX5yya+1cR/b1FB90eQ/rbmIuSuygW3snM0fk05tp3np0Uf9dd8G/laYyuTeUDkkt725CdXOzx
- R4ZpdXALn+T7OWyn3ukJ3Longsk/6MMtNIPTF2lGWWgKVQCPdQ6qaJ/qUHRCFdNNY5AcHvqcIS
- 72JzKiYMnBPScyWM9cRcIyBVJ944uPEoKptRUTvK3D11HB8OfRqYPZ4S/rCZUrafpyhf91Nype
- nJ9fJrVJYwv65v3GHFii+glBbbkc/AsyCZCZzln0ExUKhddiw/uS8VQXaP+YNZBazOpqewWVdA
- to0=
-WDCIronportException: Internal
-Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.207])
-  by uls-op-cesaip02.wdc.com with ESMTP; 12 Dec 2022 16:52:49 -0800
-From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com
-Cc:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH v2 3/3] scsi: mpi3mr: fix missing mrioc->evtack_cmds initialization
-Date:   Tue, 13 Dec 2022 09:52:43 +0900
-Message-Id: <20221213005243.2727877-4-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20221213005243.2727877-1-shinichiro.kawasaki@wdc.com>
-References: <20221213005243.2727877-1-shinichiro.kawasaki@wdc.com>
+        with ESMTP id S233867AbiLMBLB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 20:11:01 -0500
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 724B51BE96;
+        Mon, 12 Dec 2022 17:11:00 -0800 (PST)
+Received: by mail-lf1-x131.google.com with SMTP id p36so2417574lfa.12;
+        Mon, 12 Dec 2022 17:11:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=esoVLCCBYM+KX0CUdhS5Tl7OrN1x4of3zTJl3qN9icA=;
+        b=NMuhfgNsuogs/lKBdTzTSxywh7B2zonZdSfUoK/QPlQUZ/DQv7izsLVlBcVk0O5MZn
+         Nn7FJSFaQ8TFy+/u/3L9TQqRaeEkVfJHNfmLV8ZmkNhWl852vmPc0u7i9BhDuilMbTEh
+         RstFtmGbUu82ABJkPyur8h/J6d1RBKwLWDxYT+lJhlfw7bOR00ewNx6nqa799DiHjdEk
+         MnfAUi6Z+F9h9bYT4i0aaBs8DMizbPNVzmGxo1ZuILxQgrhIqq+ssQpc4LXDeq2Nir07
+         a1sq6TVT49UJXdHvXdb4lgJEkQQtz0VbY5Emrae7Uzwm52SEP9zOnfUEl/l95Ma0vuYN
+         c1EQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=esoVLCCBYM+KX0CUdhS5Tl7OrN1x4of3zTJl3qN9icA=;
+        b=cg0R1/XHRltUYV6IuebKbzLgwBamN3G5sOzwZJmwc4FEbzckT4x6Tm6S4E4HlcCUMt
+         qDPTbtU3MnaDO7QIB8+nrzTTJ8QG3qHYWB05qTxGlWUNBj9FR6Cnx5ZHOno8BOD7LV3E
+         3Hnrqp7gOpuP219fC2NLN80hrj0Zwlr0YwnP+sUyHQVPlxRQm+uGwXimDkMQHr51XJB2
+         QSE5D6cE++DszyBndXcYlzGmIGutGbYCKXe8nYCSriZ38UEqNXN9k/FGdzTGf1E22yET
+         VPXaRZhjgKtPChTijQG0u6TGWg08faDgznj9crL9Gws1T7TsxcJsCTnlc77cJD0l12bm
+         6oNQ==
+X-Gm-Message-State: ANoB5pkOj1kWFzmdncdNKmokJSPH1DD06lkN1dv/lHAxDETsHKOaWavl
+        qaitMyjmkOEvmPf+J8O6yOrFwALd3RQ2FV5yLteGLM6b9/5R
+X-Google-Smtp-Source: AA0mqf58RZyS51eX38TmMel2o8skD5TQBzq3b+UAV6YS6xaih8iPW7Gjp7uYZtWR9RNFDqIDjwrAniqVO8EF3DtGd1k=
+X-Received: by 2002:a05:6512:96b:b0:4b6:ea33:d0b6 with SMTP id
+ v11-20020a056512096b00b004b6ea33d0b6mr331622lft.651.1670893858419; Mon, 12
+ Dec 2022 17:10:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <cover.1670541363.git.quic_asutoshd@quicinc.com> <d3bb47811bbdbb273f4a307ff514820d5be0f8fd.1670541364.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <d3bb47811bbdbb273f4a307ff514820d5be0f8fd.1670541364.git.quic_asutoshd@quicinc.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Tue, 13 Dec 2022 09:10:46 +0800
+Message-ID: <CAGaU9a-dCqgwNvqb+CXWuAtAxt06D2bUDD=FjoWs6m-fmiTUkA@mail.gmail.com>
+Subject: Re: [PATCH v11 06/16] ufs: core: mcq: Configure resource regions
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
+        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
+        eddie.huang@mediatek.com, daejun7.park@samsung.com,
+        bvanassche@acm.org, avri.altman@wdc.com, mani@kernel.org,
+        beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The commit c1af985d27da ("scsi: mpi3mr: Add Event acknowledgment logic")
-introduced an array mrioc->evtack_cmds. But initialization of the array
-elements was missed. They are just zero cleared. The function
-mpi3mr_complete_evt_ack refers host_tag field of the elements. Due to
-zero value of the host_tag field, the functions calls clear_bit for
-mrico->evtack_cmds_bitmap with wrong bit index. This results in memory
-access to invalid address and "BUG: KASAN: use-after-free". This BUG was
-observed at eHBA-9600 firmware update to version 8.3.1.0. To fix it, add
-the missing initialization of mrioc->evtack_cmds.
+On Fri, Dec 9, 2022 at 7:24 AM Asutosh Das <quic_asutoshd@quicinc.com> wrote:
+>
+> Define the mcq resources and add support to ioremap
+> the resource regions.
+>
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Fixes: c1af985d27da ("scsi: mpi3mr: Add Event acknowledgment logic")
-Cc: stable@vger.kernel.org
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 3306de7170f6..6eaeba41072c 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4952,6 +4952,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
- 		    MPI3MR_HOSTTAG_DEVRMCMD_MIN + i);
- 
-+	for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++)
-+		mpi3mr_init_drv_cmd(&mrioc->evtack_cmds[i],
-+				    MPI3MR_HOSTTAG_EVTACKCMD_MIN + i);
-+
- 	if (pdev->revision)
- 		mrioc->enable_segqueue = true;
- 
--- 
-2.37.1
-
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
