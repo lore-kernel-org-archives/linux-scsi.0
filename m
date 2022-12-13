@@ -2,272 +2,183 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1890C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 07:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C5CC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 09:05:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234587AbiLMHSF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Dec 2022 02:18:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47458 "EHLO
+        id S235105AbiLMJFq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Dec 2022 04:05:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233753AbiLMHSD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2022 02:18:03 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6981CFD12
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Dec 2022 23:17:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670915880; x=1702451880;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=BXzbN+fDLiMa0k5Jn6+UiYApJD4c1B+HX8uVrzEhyh0=;
-  b=LFoKtED4PKzzlSfUg3yorards+S7CoT4i92exUXXdo/jMtBEVbW53BbQ
-   Xx9xwcHZgIaEa9lcQFLBbmEUZSwaxZxUkqzCMfHZYoBxvo+cmx91siwZ3
-   LSkPGlj6l+ivnkdLA3yQlBMJVs7dZFRLPxh33tmi3+8gRvB5LTMS2m5Je
-   ZpGBMwRa/d7FS7iplWuRaLf4RNm8D0YZRx0cRBxJlQyYRxnv5L2kE1F+b
-   fpuQgeC+bIzHRQs2IJGrFHGY9vg2SLR6BgNech0ovMvFhl9nWG6MLYE9x
-   vPr2o4UeyPY/Q5cE4k9+sSSvlV1N24LuF2tYFkMEwPrufv8ArAJJchZXQ
-   g==;
-X-IronPort-AV: E=Sophos;i="5.96,240,1665417600"; 
-   d="scan'208";a="216720048"
-Received: from mail-co1nam11lp2175.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.175])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Dec 2022 15:17:57 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YBWkz9jhvozfKqT5ZzjhxyFQOcZ0svb/OVZoOKZixSCUSXhePF6ZeOX7BTCSXFbwU/r+W5F8/5T3ugJmWmvIL71cfCxpQjPIg5mrrAQQ/uuxtYewtZLy+aQFJ+tRn1MJd1sBCP4RSPcLTmbuH4w96pt2e77LHsTIcx+uTmtjYTczviGkpbxK+6mMoBH4k6hmaoVqsRG7S0rVm6QyqrVtN84Rmvu5ob3rqJ65fjfqaTAvblf+M7i2BNCAXzjlIEmbWRoNPk3asq5LMwPqUYr1FYCJMulKTYRaqvbz6p9hNGRnBABcCYMYMcB2nJJX5IY0MCCmW4szcbzlTwB6oz22ew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Q0nYj/ceOJkxctYuKNL29wSSOgMBO3eA/7SJNbSeswE=;
- b=g5wHyHesnKIkK1ipLNBfGa1Eh7CEgXzLS9efnZAEwf9+C+szhI4uEAcUa3q6nst64xYehvixnuSgZikwt8uS9zBMLDqXMczA1qiqWuei2JMPhMKkO3lvUyL2aDszSH/cUIszM71/Dga6JwgRBeNzzq32tv3qA4ngLqoRXDWVqBPWrjyFIdS5V1B1pAhlEi5hidjBrv4mv7pMGQ134/iuv6vGbW3Xiw2r5tQAUCbeF2gNa/WBTuhddRx/mRqzYQzRHNAvfaqrhI+TdKdCtRH+Aw+llMP71FR1UKpojwjbk3wv+g1yINxJrJ8x1CsVL6TYBaocb81TEzV9mv1MhrJZrw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q0nYj/ceOJkxctYuKNL29wSSOgMBO3eA/7SJNbSeswE=;
- b=zQvD3U2+k493qJhV79Dq/BRPE37WRYIiCw5RFw8mAlirIHJG9igItHCT0e6+jIdUJd8sAM+Xty11t1i26y8PPVsB5w/RF3Vwz7sOEvSPK0DQRDA1RVqZ7fMEqF1bfWrvqRC61esVRo0MHlAlmXhsUYJcPNZUkHQmTue8xj91Evc=
-Received: from DM8PR04MB8037.namprd04.prod.outlook.com (2603:10b6:8:f::6) by
- BN6PR04MB1013.namprd04.prod.outlook.com (2603:10b6:405:43::10) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5880.19; Tue, 13 Dec 2022 07:17:53 +0000
-Received: from DM8PR04MB8037.namprd04.prod.outlook.com
- ([fe80::d4b9:86e9:4fc8:d6e0]) by DM8PR04MB8037.namprd04.prod.outlook.com
- ([fe80::d4b9:86e9:4fc8:d6e0%5]) with mapi id 15.20.5880.019; Tue, 13 Dec 2022
- 07:17:53 +0000
-From:   Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "mpi3mr-linuxdrv.pdl@broadcom.com" <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: Re: [PATCH v2 1/3] scsi: mpi3mr: fix alltgt_info copy size in
- mpi3mr_get_all_tgt_info
-Thread-Topic: [PATCH v2 1/3] scsi: mpi3mr: fix alltgt_info copy size in
- mpi3mr_get_all_tgt_info
-Thread-Index: AQHZDo05JVp6pb1K10SXikuESH7thK5rTRmAgAAb0YA=
-Date:   Tue, 13 Dec 2022 07:17:53 +0000
-Message-ID: <20221213071751.qfxh5wjrwyiwvpat@shindev>
-References: <20221213005243.2727877-1-shinichiro.kawasaki@wdc.com>
- <20221213005243.2727877-2-shinichiro.kawasaki@wdc.com>
- <CAFdVvOyyw3Ri8BW3U=vqtyDq6fiBoJVQSqP=2ib6-WAHFaunLA@mail.gmail.com>
-In-Reply-To: <CAFdVvOyyw3Ri8BW3U=vqtyDq6fiBoJVQSqP=2ib6-WAHFaunLA@mail.gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM8PR04MB8037:EE_|BN6PR04MB1013:EE_
-x-ms-office365-filtering-correlation-id: 66abad1f-e413-455d-f807-08dadcda26c9
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: A/lQLuF13BAm4Boq1m2AfwN7erM/4jHv7uL5Y45FsttVLExEDHGE0g+nzGUPhjZw33A1ZFRQ+Jkj/BxS7XWkPgbHdeH0MAQWFKeyBIJMbnCYCj4sR2W5voYVS48QHpGRYS8XqnNPOz6rba+B7+zLRUw78YQqDhteUyvHcIDE5cAX3Lfc3kI0BeQnAyJGA8rr2mUhJDHOuvfFvzPKKaJJAEV7H/mTZufepgQgwfE2YuLFtqmUWDSF4+bvsQeq0oSiZxKOd++rJvzfDS7axyGBP7ueOYRzCRuZh8F7AKILBhP4SSO7ROImfupiYYMjbBJ0fqFGuT+E0hS56SoYdX8llaKDUsqMP4mxZrTFkuetmJSD6nOBPV7730BDQuXbprQ+0V7MMqOaPj6knNwP8eEB44ycGa1TzP2B3uPMZ1XeOtURjGOTKoCN0yDvCjWS8ww/3/pgrL1t6CY3cz/5XJGSdNe42OdHZIf9Rg/J4oelE42hn5gLul+bZsaAOkJAdt/rKYoU3/gzPgcWPT8MEzBtCFBRBX7P3wtPvlwooESge1SnKJzxwflB/qfi/D51tr7EBHvp7v2x/0PcEQKdy4NRM7zsPyM+dWy4P8NsMz4ap+zDxD7QV2eOq9Tr7O6dYNCrj/A0QkE2JuPH31MuKn7Q5P5omyQO8l5WIt/tM9NpLwTcgrd1d69NhkgQtRGhNW7pzN+AetmaaRhyMDF1IExq/rX+/MSrheTHYpULc+hWvXg=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM8PR04MB8037.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(4636009)(346002)(376002)(136003)(39860400002)(396003)(366004)(451199015)(6512007)(86362001)(41300700001)(71200400001)(9686003)(38070700005)(26005)(8936002)(6486002)(478600001)(33716001)(66946007)(6506007)(53546011)(66446008)(91956017)(66556008)(76116006)(4326008)(64756008)(8676002)(66476007)(54906003)(6916009)(5660300002)(316002)(83380400001)(44832011)(122000001)(38100700002)(1076003)(186003)(2906002)(82960400001)(32563001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?e/OvgPDwN5z3NMrHFjFjUikoGnuSFLq/HBL65+xtM1YM/hl9xw1uvIL3TyJg?=
- =?us-ascii?Q?IExUkzNeXltp93hDA2UKGimCYnpcHsn7k5+BjDlUZY+/ECf9pN8uX5KJf1nH?=
- =?us-ascii?Q?h+6+ktHFpN0JoWHMkrD8QrjfxFyH2D2pmv9qpGI2tf8tNOtrDhbuHaPHPqxC?=
- =?us-ascii?Q?7YyhUuJL8+3VHRerPa5dxRX2vO2QXMr/tQM0gOT9Lk2CZFiisIaKPF9qlHAv?=
- =?us-ascii?Q?U61ijuTKYMduudB+N9/qjXhGqoKSVk4SozPHJj5omcVAX2woYeq8qH57jpgp?=
- =?us-ascii?Q?1m5QGL5YM1iAL6IS0ayTMZQvLJl+wcVnIslQhNA8Dp9N3kcfbAdJIjybXp8f?=
- =?us-ascii?Q?DhVw5X55C9NjpAZeLfcSNL+p8z+dYX0dZobdrQcBUKxeZ5Q9KU2VOWjbcFnd?=
- =?us-ascii?Q?wdOSg+b0M6eYQIG7Kdkurh35aazaob9E9N5z02pnbrP2NunIQ4qZOF6Yp9QU?=
- =?us-ascii?Q?3JjxfAGDPi4RT8iSnwGvG2vUMK4xQVSK3LEc0nneQq3u2ZZCSUFRFniRqfyj?=
- =?us-ascii?Q?y2Mxm1gmZ4dW3FPUnH6iOx2B8q09I8zyIDl5vv+B1jrC2Z/P+2/dhZnSmxku?=
- =?us-ascii?Q?leXB5DxoOIpnj/4z3pZkw86Vy0j1jrHXu4S9ov4JQM4JXSrP/SoSOnRPMQm1?=
- =?us-ascii?Q?6JHvykMuLStX+wsS+zf246n8i6U5mge1HgOl2Yh4FQZrr9KBwZiSBXq+OpXG?=
- =?us-ascii?Q?6eokU8tDEAgn6r0O82C9VlqoGQLxtffHlY2bowHdK09nsyWOdFfQr32iGzzP?=
- =?us-ascii?Q?V5lhLFL6YEVtau7q1/waddkXVyx9i2xrW9bhm6w6SERNXsAo0jgSQ7UJ95bv?=
- =?us-ascii?Q?B7uKHphpvH38CQQ1/TMKTKH4XOOsZljRvdYvlrEBZIazqjb+SiAA6oqyYPcP?=
- =?us-ascii?Q?E5SZ150LyMnLZMeXsz0GOnuzj8/kPCixMiZr7MJ2afHeHBc1hJ05J8WM6g95?=
- =?us-ascii?Q?S1KiHDAI4/DCJDH8E0ZF9TpCOrGg3vs8MN4lRjCAVyE4jYfduyHU4vTKWH8S?=
- =?us-ascii?Q?PpmxhgiMOvrPI8HA0E7o2YL2kpIASGVZywQP6oW/Din9eeKXFIcuei3bxZk0?=
- =?us-ascii?Q?nxqWiNXfWbt4SrgqPZkCWV5qK4N0Exi0N94A9XTnA24FrimG9jWVhwZ4ovgO?=
- =?us-ascii?Q?ic/FFw9Y9EDGSzVozGymKxQ90WRR+TlJ/CMETtNGVJ5sd1ftDLr5Q/+NBCxN?=
- =?us-ascii?Q?94oxSqsYkiSN8s0vS/bRf1SLzqAFWeXH462i5ELbHXUj/+DmrS7Kd5nKsqv+?=
- =?us-ascii?Q?THIkk/gIcvT/uAF8IvVg3LhFrwnzOSs+6kHSFyoMZ+Wv+YpeOdCg0u2eb0pE?=
- =?us-ascii?Q?aNbAFPgPt0Ut7G0ElucBKyLEQndcwAIIi+jZQm+p3/0KB+ntVbCvKPsOQIco?=
- =?us-ascii?Q?qILSfTVpYpIgGPJPnu0qgvEU1p/9NBxqHz2L24knq2OPOURONWm0ZyiZRFHw?=
- =?us-ascii?Q?d8DxBkIurVve2p19oQBzmkaDMX3R5FvnaMzmCtAVkc+yeZpL/TgdiI4HQXFN?=
- =?us-ascii?Q?z9NWpxwmP5TXAqxEbhUd6FHidvpqCFeT9yaxSAfqnn06C5ADfNhHS8rxvxL6?=
- =?us-ascii?Q?omVwx87bY6LtbsLZbdOe8kYIYs6QmW0bf5fCUXWQs3jI6wAtdoW6cj7vRnFj?=
- =?us-ascii?Q?DzcImhONv/CGDAfY3xALeAQ=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <99A998A26634BA4BBCF591ADC883FFE6@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S234847AbiLMJEg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2022 04:04:36 -0500
+Received: from mail-m12746.qiye.163.com (mail-m12746.qiye.163.com [115.236.127.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B5A215A35;
+        Tue, 13 Dec 2022 01:03:08 -0800 (PST)
+Received: from [0.0.0.0] (unknown [172.96.223.238])
+        by mail-m12746.qiye.163.com (Hmail) with ESMTPA id AF687BC03F5;
+        Tue, 13 Dec 2022 17:02:58 +0800 (CST)
+Message-ID: <e61b69d9-390c-d38d-8df1-5804e5f1ba9d@sangfor.com.cn>
+Date:   Tue, 13 Dec 2022 17:03:42 +0800
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM8PR04MB8037.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 66abad1f-e413-455d-f807-08dadcda26c9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Dec 2022 07:17:53.7941
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kjwpaYqYw/GnlfVDallsdYs5FR1pUZF/DNHqlrnGh8GMAD/Ea7M4qBGPNR+79xzKFl+FOWT4vpmP0wG5dJiZRfKwHTp2TRpY0Y8wrlK3MWg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR04MB1013
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] scsi: iscsi_tcp: Fix UAF when access shost attr during
+ session logout
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        Wenchao Hao <haowenchao22@gmail.com>
+Cc:     lduncan@suse.com, cleech@redhat.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221209082247.6330-1-dinghui@sangfor.com.cn>
+ <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
+ <CAOptpSO-TMhqR35RW4Sssm29NA=8rJ6-9TgjTVpGKpYOeS_8sA@mail.gmail.com>
+ <a60661e9-0ea5-1087-4fbe-27a11cf7edf0@oracle.com>
+From:   Ding Hui <dinghui@sangfor.com.cn>
+In-Reply-To: <a60661e9-0ea5-1087-4fbe-27a11cf7edf0@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDH01JVkhDQkxMHxhDTEsaHVUTARMWGhIXJBQOD1
+        lXWRgSC1lBWUpMSVVCTVVJSUhVSUhDWVdZFhoPEhUdFFlBWU9LSFVKSktPSEhVSktLVUtZBg++
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OlE6TQw*AT0oAk1JCS0YKwk1
+        QhFPCyJVSlVKTUxLQklJSkNIQ0lKVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlKTElVQk1VSUlIVUlIQ1lXWQgBWUFDTUNLNwY+
+X-HM-Tid: 0a850ab92039b219kuuuaf687bc03f5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Sathya, thanks for the comment.
+On 2022/12/13 1:00, Mike Christie wrote:
+> On 12/11/22 8:32 AM, Wenchao Hao wrote:
+>> On Sun, Dec 11, 2022 at 6:07 AM Mike Christie
+>> <michael.christie@oracle.com> wrote:
+>>>
+>>> On 12/9/22 2:22 AM, Ding Hui wrote:
+>>>> During iscsi session logout, if another task accessing shost ipaddress
+>>>> attr at this time, we can get a KASAN UAF report like this:
+>>>>
+>>>> [  276.941685] ==================================================================
+>>>> [  276.942144] BUG: KASAN: use-after-free in _raw_spin_lock_bh+0x78/0xe0
+>>>> [  276.942535] Write of size 4 at addr ffff8881053b45b8 by task cat/4088
+>>>> [  276.943511] CPU: 2 PID: 4088 Comm: cat Tainted: G            E      6.1.0-rc8+ #3
+>>>> [  276.943997] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
+>>>> [  276.944470] Call Trace:
+>>>> [  276.944943]  <TASK>
+>>>> [  276.945397]  dump_stack_lvl+0x34/0x48
+>>>> [  276.945887]  print_address_description.constprop.0+0x86/0x1e7
+>>>> [  276.946421]  print_report+0x36/0x4f
+>>>> [  276.947358]  kasan_report+0xad/0x130
+>>>> [  276.948234]  kasan_check_range+0x35/0x1c0
+>>>> [  276.948674]  _raw_spin_lock_bh+0x78/0xe0
+>>>> [  276.949989]  iscsi_sw_tcp_host_get_param+0xad/0x2e0 [iscsi_tcp]
+>>>> [  276.951765]  show_host_param_ISCSI_HOST_PARAM_IPADDRESS+0xe9/0x130 [scsi_transport_iscsi]
+>>>> [  276.952185]  dev_attr_show+0x3f/0x80
+>>>> [  276.953005]  sysfs_kf_seq_show+0x1fb/0x3e0
+>>>> [  276.953401]  seq_read_iter+0x402/0x1020
+>>>> [  276.954260]  vfs_read+0x532/0x7b0
+>>>> [  276.955113]  ksys_read+0xed/0x1c0
+>>>> [  276.955952]  do_syscall_64+0x38/0x90
+>>>> [  276.956347]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>>>> [  276.956769] RIP: 0033:0x7f5d3a679222
+>>>> [  276.957161] Code: c0 e9 b2 fe ff ff 50 48 8d 3d 32 c0 0b 00 e8 a5 fe 01 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
+>>>> [  276.958009] RSP: 002b:00007ffc864d16a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+>>>> [  276.958431] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f5d3a679222
+>>>> [  276.958857] RDX: 0000000000020000 RSI: 00007f5d3a4fe000 RDI: 0000000000000003
+>>>> [  276.959281] RBP: 00007f5d3a4fe000 R08: 00000000ffffffff R09: 0000000000000000
+>>>> [  276.959682] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000020000
+>>>> [  276.960126] R13: 0000000000000003 R14: 0000000000000000 R15: 0000557a26dada58
+>>>> [  276.960536]  </TASK>
+>>>> [  276.961357] Allocated by task 2209:
+>>>> [  276.961756]  kasan_save_stack+0x1e/0x40
+>>>> [  276.962170]  kasan_set_track+0x21/0x30
+>>>> [  276.962557]  __kasan_kmalloc+0x7e/0x90
+>>>> [  276.962923]  __kmalloc+0x5b/0x140
+>>>> [  276.963308]  iscsi_alloc_session+0x28/0x840 [scsi_transport_iscsi]
+>>>> [  276.963712]  iscsi_session_setup+0xda/0xba0 [libiscsi]
+>>>> [  276.964078]  iscsi_sw_tcp_session_create+0x1fd/0x330 [iscsi_tcp]
+>>>> [  276.964431]  iscsi_if_create_session.isra.0+0x50/0x260 [scsi_transport_iscsi]
+>>>> [  276.964793]  iscsi_if_recv_msg+0xc5a/0x2660 [scsi_transport_iscsi]
+>>>> [  276.965153]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
+>>>> [  276.965546]  netlink_unicast+0x4d5/0x7b0
+>>>> [  276.965905]  netlink_sendmsg+0x78d/0xc30
+>>>> [  276.966236]  sock_sendmsg+0xe5/0x120
+>>>> [  276.966576]  ____sys_sendmsg+0x5fe/0x860
+>>>> [  276.966923]  ___sys_sendmsg+0xe0/0x170
+>>>> [  276.967300]  __sys_sendmsg+0xc8/0x170
+>>>> [  276.967666]  do_syscall_64+0x38/0x90
+>>>> [  276.968028]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>>>> [  276.968773] Freed by task 2209:
+>>>> [  276.969111]  kasan_save_stack+0x1e/0x40
+>>>> [  276.969449]  kasan_set_track+0x21/0x30
+>>>> [  276.969789]  kasan_save_free_info+0x2a/0x50
+>>>> [  276.970146]  __kasan_slab_free+0x106/0x190
+>>>> [  276.970470]  __kmem_cache_free+0x133/0x270
+>>>> [  276.970816]  device_release+0x98/0x210
+>>>> [  276.971145]  kobject_cleanup+0x101/0x360
+>>>> [  276.971462]  iscsi_session_teardown+0x3fb/0x530 [libiscsi]
+>>>> [  276.971775]  iscsi_sw_tcp_session_destroy+0xd8/0x130 [iscsi_tcp]
+>>>> [  276.972143]  iscsi_if_recv_msg+0x1bf1/0x2660 [scsi_transport_iscsi]
+>>>> [  276.972485]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
+>>>> [  276.972808]  netlink_unicast+0x4d5/0x7b0
+>>>> [  276.973201]  netlink_sendmsg+0x78d/0xc30
+>>>> [  276.973544]  sock_sendmsg+0xe5/0x120
+>>>> [  276.973864]  ____sys_sendmsg+0x5fe/0x860
+>>>> [  276.974248]  ___sys_sendmsg+0xe0/0x170
+>>>> [  276.974583]  __sys_sendmsg+0xc8/0x170
+>>>> [  276.974891]  do_syscall_64+0x38/0x90
+>>>> [  276.975216]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>>>>
+>>>> We can easily reproduce by two tasks:
+>>>> 1. while :; do iscsiadm -m node --login; iscsiadm -m node --logout; done
+>>>> 2. while :; do cat /sys/devices/platform/host*/iscsi_host/host*/ipaddress; done
+>>>>
+>>>>              iscsid                |        cat
+>>>> ----------------------------------+-------------------------------------------------
+>>>> |- iscsi_sw_tcp_session_destroy   |
+>>>>    |- iscsi_session_teardown       |
+>>>>      |- device_release             |
+>>>>        |- iscsi_session_release    |  |- dev_attr_show
+>>>>          |- kfree                  |    |- show_host_param_ISCSI_HOST_PARAM_IPADDRESS
+>>>>                                    |      |- iscsi_sw_tcp_host_get_param
+>>>>                                    |        |- r/w tcp_sw_host->session (UAF)
+>>>>    |- iscsi_host_remove            |
+>>>>    |- iscsi_host_free              |
+>>>>
+>>>> Since shost hold a pointer to session which is belong to cls_session by its
+>>>> priv tcp_sw_host, so we should get a ref of cls_session, and after
+>>>> iscsi_host_remove() the sysfs is cleared, then we can drop the ref.
+>>>>
+>>>
+>>> Nice bug report and thanks for the patch. I think though we should just
+>>> split the removal from the freeing. The removal will wait on users
+>>> accessing sysfs files for us, so once they return we know we can just
+>>> free things.
+>>>
+>>> Something like this:
+>>>
+>>>
+>>
+>> Hi, dinghui and Mike, I submitted patches to fix this issue one year
+>> ago. But I missed Mike's
+>> reply because I was new to the community, so the patches did not keep on.
+>>
+>> https://lore.kernel.org/linux-scsi/20210407012450.97754-1-haowenchao@huawei.com/
+>>
+>> Because of my negligence, this bug has been discovered so far, and I
+>> apologize for this.
+> 
+> Ah yeah, I remember that now. Don't worry about it. It was also my fault
+> for not pinging you.
+> 
+> I'll fix up my patches into a proper patchset and submit.
+> 
 
-On Dec 12, 2022 / 22:38, Sathya Prakash Veerichetty wrote:
-> On Mon, Dec 12, 2022 at 5:52 PM Shin'ichiro Kawasaki
-> <shinichiro.kawasaki@wdc.com> wrote:
-> >
-> > The function mpi3mr_get_all_tgt_info calculates size of alltgt_info and
-> > allocate memory for it. After preparing valid data in alltgt_info, it
-> > calls sg_copy_from_buffer to copy alltgt_info to job->request_payload,
-> > specifying length of the payload as copy length. This length is larger
-> > than the calculated alltgt_info size. It causes memory access to invali=
-d
-> > address and results in "BUG: KASAN: slab-out-of-bounds". The BUG was
-> > observed during boot using systems with eHBA-9600. By updating the HBA
-> > firmware to latest version 8.3.1.0 the BUG was not observed during boot=
-,
-> > but still observed when command "storcli2 /c0 show" is executed.
-> >
-> > Fix the BUG by specifying the calculated alltgt_info size as copy
-> > length. Also check that the copy destination payload length is larger
-> > than the copy length.
-> >
-> > Fixes: f5e6d5a34376 ("scsi: mpi3mr: Add support for driver commands")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> > Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->=20
-> Thanks for the patch, though this code needs a fix, the changes are
-> not correct and needs modification.
-> > ---
-> >  drivers/scsi/mpi3mr/mpi3mr_app.c | 9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi=
-3mr_app.c
-> > index 9baac224b213..2e35b0fece9c 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> > @@ -322,6 +322,13 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_=
-ioc *mrioc,
-> >
-> >         kern_entrylen =3D (num_devices - 1) * sizeof(*devmap_info);
-> >         size =3D sizeof(*alltgt_info) + kern_entrylen;
-> > +
-> > +       if (size > job->request_payload.payload_len) {
-> > +               dprint_bsg_err(mrioc, "%s: payload length is too small\=
-n",
-> > +                              __func__);
-> > +               return rval;
-> > +       }
-> > +
-> This check is not needed, this is already handled by reducing the size
-> to be copied to the given payload size
+Hi Wenchao and Mike,
 
-Ah, I see that min_entrylen is prepared to copy bytes smaller than the payl=
-oad
-size.
+Thanks for your work, I am looking forward to it.
 
-> >         alltgt_info =3D kzalloc(size, GFP_KERNEL);
-> >         if (!alltgt_info)
-> >                 return -ENOMEM;
-> > @@ -358,7 +365,7 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_i=
-oc *mrioc,
-> >
-> >         sg_copy_from_buffer(job->request_payload.sg_list,
-> >                             job->request_payload.sg_cnt,
-> > -                           alltgt_info, job->request_payload.payload_l=
-en);
-> > +                           alltgt_info, size);
-> instead of size, this should be min_entry_len+sizeof(u32).
+-- 
+Thanks,
+- Ding Hui
 
-Thanks for the comment. I read through mpi3mr_get_all_tgt_info() again. I s=
-till
-have three unclear points. Your comments on them will be appreciated.
-
-1) copy length
-
-The pointer alltgt_info points to the struct below, which is defined in
-include/uapi/scsi/scsi_bsg_mpi3mr.h (I refer kernel code at v6.1):
-
-struct mpi3mr_all_tgt_info {
-	__u16	num_devices;
-	__u16	rsvd1;
-	__u32	rsvd2;
-	struct mpi3mr_device_map_info dmi[1];
-};
-
-When we copy "min_entrylen+sizeof(u32)", it looks for me that the struct is
-copied partially. The expected length is as follows, isn't it?
-
-  "min_entrylen + sizeof(u16) + sizeof(u16) + sizeof(u32)"
-
-Regarding the min_entrylen, I find code in mpi3mr_get_all_tgt_info:
-
-	usr_entrylen =3D (job->request_payload.payload_len - sizeof(u32)) / sizeof=
-(*devmap_info);
-	usr_entrylen *=3D sizeof(*devmap_info);
-	min_entrylen =3D min(usr_entrylen, kern_entrylen);
-
-The usr_entrylen calculation subtracts sizeof(u32). I guess the line also
-needs change to subtract sizeof(u16) + sizeof(u16) + sizeof(u32).
-
-
-2) kern_entrylen
-
-usr_entrylen is compared with kern_entrylen to get min_etnrylen. And
-kern_entrylen covers (num_devices - 1) entries:
-
-	kern_entrylen =3D (num_devices - 1) * sizeof(*devmap_info);
-	size =3D sizeof(*alltgt_info) + kern_entrylen;
-
-Is it ok to cover only (num_devices - 1) for comparison with usr_entrylen?
-Don't we need to cover all num_devices?
-
-
-3) memcpy from devmap_info to alltgt_info->dmi
-
-Also regarding the min_entrylen, I find a line below:
-
-	if (min_entrylen && (!memcpy(&alltgt_info->dmi, devmap_info, min_entrylen)=
-)) {
-
-The memcpy copies data from devmap_info to alltgt_inf->dmi, but it looks fo=
-r me
-that these two points to same address. Do we really need this memcpy?
-
-
-I'm new to the mpi3mr driver. If I overlook or misunderstand anything, plea=
-se
-let me know.
-
---=20
-Shin'ichiro Kawasaki=
