@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4B1C00145
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 01:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 321E4C4167B
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 01:13:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233880AbiLMBLG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Dec 2022 20:11:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41196 "EHLO
+        id S233468AbiLMBNR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Dec 2022 20:13:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233867AbiLMBLB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 20:11:01 -0500
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 724B51BE96;
-        Mon, 12 Dec 2022 17:11:00 -0800 (PST)
-Received: by mail-lf1-x131.google.com with SMTP id p36so2417574lfa.12;
-        Mon, 12 Dec 2022 17:11:00 -0800 (PST)
+        with ESMTP id S233942AbiLMBNP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2022 20:13:15 -0500
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A55B4EB;
+        Mon, 12 Dec 2022 17:13:11 -0800 (PST)
+Received: by mail-lf1-x12f.google.com with SMTP id z26so2448876lfu.8;
+        Mon, 12 Dec 2022 17:13:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=esoVLCCBYM+KX0CUdhS5Tl7OrN1x4of3zTJl3qN9icA=;
-        b=NMuhfgNsuogs/lKBdTzTSxywh7B2zonZdSfUoK/QPlQUZ/DQv7izsLVlBcVk0O5MZn
-         Nn7FJSFaQ8TFy+/u/3L9TQqRaeEkVfJHNfmLV8ZmkNhWl852vmPc0u7i9BhDuilMbTEh
-         RstFtmGbUu82ABJkPyur8h/J6d1RBKwLWDxYT+lJhlfw7bOR00ewNx6nqa799DiHjdEk
-         MnfAUi6Z+F9h9bYT4i0aaBs8DMizbPNVzmGxo1ZuILxQgrhIqq+ssQpc4LXDeq2Nir07
-         a1sq6TVT49UJXdHvXdb4lgJEkQQtz0VbY5Emrae7Uzwm52SEP9zOnfUEl/l95Ma0vuYN
-         c1EQ==
+        bh=EKDJvcddAYwbAW0mH7+IQB9ua0CLyFoaLjvLSx1u/ZA=;
+        b=YdDNgMeg7uqDlxuuIdmBC3boBUMsKD29rz+wZxxl8r3ws1RyZpw/KvrwkVoatQfcm1
+         Sl+NZuT9aTf8uMsoXq5ivIwqbgcGgsF0ayx+W3A6O+1TnHm2Y36GBtcvxJPmWy+p6Hb/
+         xAZSgJ+5dHVCZ6mdygn+zEp60PjW5Y8ynIlZDEbaiR+BRgYIv4D8/GJPlz/VM1bJAZuW
+         /4HgR/bkuj0WbBozcR6zWuzHZIOTKkwNy1199HalbkLfeArLmhitR1nILYbMZgU0veq7
+         GXc+UN2sc6QeWkNyab8DZ85M0rkaRoUgc316JpXVAbw5DrA5n/0Cwx6GCHyECwmPZ2gM
+         /Cww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=esoVLCCBYM+KX0CUdhS5Tl7OrN1x4of3zTJl3qN9icA=;
-        b=cg0R1/XHRltUYV6IuebKbzLgwBamN3G5sOzwZJmwc4FEbzckT4x6Tm6S4E4HlcCUMt
-         qDPTbtU3MnaDO7QIB8+nrzTTJ8QG3qHYWB05qTxGlWUNBj9FR6Cnx5ZHOno8BOD7LV3E
-         3Hnrqp7gOpuP219fC2NLN80hrj0Zwlr0YwnP+sUyHQVPlxRQm+uGwXimDkMQHr51XJB2
-         QSE5D6cE++DszyBndXcYlzGmIGutGbYCKXe8nYCSriZ38UEqNXN9k/FGdzTGf1E22yET
-         VPXaRZhjgKtPChTijQG0u6TGWg08faDgznj9crL9Gws1T7TsxcJsCTnlc77cJD0l12bm
-         6oNQ==
-X-Gm-Message-State: ANoB5pkOj1kWFzmdncdNKmokJSPH1DD06lkN1dv/lHAxDETsHKOaWavl
-        qaitMyjmkOEvmPf+J8O6yOrFwALd3RQ2FV5yLteGLM6b9/5R
-X-Google-Smtp-Source: AA0mqf58RZyS51eX38TmMel2o8skD5TQBzq3b+UAV6YS6xaih8iPW7Gjp7uYZtWR9RNFDqIDjwrAniqVO8EF3DtGd1k=
-X-Received: by 2002:a05:6512:96b:b0:4b6:ea33:d0b6 with SMTP id
- v11-20020a056512096b00b004b6ea33d0b6mr331622lft.651.1670893858419; Mon, 12
- Dec 2022 17:10:58 -0800 (PST)
+        bh=EKDJvcddAYwbAW0mH7+IQB9ua0CLyFoaLjvLSx1u/ZA=;
+        b=bqqUvqSGHKtWJcclzoAuzKV0lIQchBBEBq+GbosWMxF33OKKPvwXUS/BGbZH/aMhqB
+         XC+lYwwYXRFFhbsjD2HFhql002uIzzJTwLYfzOz+2Rwwj1eZObpVupGBM6Ti19txiJja
+         oY8ehcqKVorNK8zlxPVjMC2/1VTJhlNNiDxPWfu8vB9CAXahmm4FWzf+AhpMxi7U9H0E
+         MZ9gBwqwyWQUlm3KbqgWWqpt7ZR5SQ9jVm9WomhQB1pKhdIYO8dAFDLZiCUbLo3O1O1t
+         Lq6q2zHlfdyCePqzGwzTLPy3WIJwME/sf4LRnjHLsKTolDnlyxe5rmXK1lrRpdCk+wfy
+         33Xw==
+X-Gm-Message-State: ANoB5plofR7pjzDVqgMu05x8aWGh1bCByi/aLPLARSYfN8HaYXse/2SM
+        mphGG87DHF8MTKcTppaRkgY37ppJKWqN/6CAgQ==
+X-Google-Smtp-Source: AA0mqf7Nnn7C3m9Wu6Wj9Miucmzcl5jnAUisCV/GR9Nvk00rerYfzP6+3kP/1yc/pjxqkBgn7ke2NvAEWT4qd8MHYxs=
+X-Received: by 2002:a05:6512:3da9:b0:4b6:ee79:63ab with SMTP id
+ k41-20020a0565123da900b004b6ee7963abmr247034lfv.662.1670893989730; Mon, 12
+ Dec 2022 17:13:09 -0800 (PST)
 MIME-Version: 1.0
-References: <cover.1670541363.git.quic_asutoshd@quicinc.com> <d3bb47811bbdbb273f4a307ff514820d5be0f8fd.1670541364.git.quic_asutoshd@quicinc.com>
-In-Reply-To: <d3bb47811bbdbb273f4a307ff514820d5be0f8fd.1670541364.git.quic_asutoshd@quicinc.com>
+References: <cover.1670541363.git.quic_asutoshd@quicinc.com> <e1410d416fcea75e7f96d0ed2c4df8708798ca94.1670541364.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <e1410d416fcea75e7f96d0ed2c4df8708798ca94.1670541364.git.quic_asutoshd@quicinc.com>
 From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Tue, 13 Dec 2022 09:10:46 +0800
-Message-ID: <CAGaU9a-dCqgwNvqb+CXWuAtAxt06D2bUDD=FjoWs6m-fmiTUkA@mail.gmail.com>
-Subject: Re: [PATCH v11 06/16] ufs: core: mcq: Configure resource regions
+Date:   Tue, 13 Dec 2022 09:12:57 +0800
+Message-ID: <CAGaU9a-uQW9a=oZS2zwGb3XTsfx54zOyM0+459_nH8BOE0pzdw@mail.gmail.com>
+Subject: Re: [PATCH v11 07/16] ufs: core: mcq: Calculate queue depth
 To:     Asutosh Das <quic_asutoshd@quicinc.com>
 Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
@@ -64,20 +64,27 @@ Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
         Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Jinyoung Choi <j-young.choi@samsung.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Keoseong Park <keosung.park@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 9, 2022 at 7:24 AM Asutosh Das <quic_asutoshd@quicinc.com> wrote:
+On Fri, Dec 9, 2022 at 7:25 AM Asutosh Das <quic_asutoshd@quicinc.com> wrote:
 >
-> Define the mcq resources and add support to ioremap
-> the resource regions.
+> The ufs device defines the supported queuedepth by
+> bqueuedepth which has a max value of 256.
+> The HC defines MAC (Max Active Commands) that define
+> the max number of commands that in flight to the ufs
+> device.
+> Calculate and configure the nutrs based on both these
+> values.
 >
 > Co-developed-by: Can Guo <quic_cang@quicinc.com>
 > Signed-off-by: Can Guo <quic_cang@quicinc.com>
