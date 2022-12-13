@@ -2,183 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C5CC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 09:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF05CC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Dec 2022 14:21:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235105AbiLMJFq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Dec 2022 04:05:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37088 "EHLO
+        id S235548AbiLMOVp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Dec 2022 09:21:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234847AbiLMJEg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2022 04:04:36 -0500
-Received: from mail-m12746.qiye.163.com (mail-m12746.qiye.163.com [115.236.127.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B5A215A35;
-        Tue, 13 Dec 2022 01:03:08 -0800 (PST)
-Received: from [0.0.0.0] (unknown [172.96.223.238])
-        by mail-m12746.qiye.163.com (Hmail) with ESMTPA id AF687BC03F5;
-        Tue, 13 Dec 2022 17:02:58 +0800 (CST)
-Message-ID: <e61b69d9-390c-d38d-8df1-5804e5f1ba9d@sangfor.com.cn>
-Date:   Tue, 13 Dec 2022 17:03:42 +0800
+        with ESMTP id S234673AbiLMOVm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2022 09:21:42 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70B11FF8B;
+        Tue, 13 Dec 2022 06:21:41 -0800 (PST)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BDDtNbm028415;
+        Tue, 13 Dec 2022 14:21:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=cnqBfdVZbw85DPH1nQCNAH9P9t5OdF++7AtyCjDd4AQ=;
+ b=GGH30OAYrxKEgxudqCKMU0S47pIjFWXhzkyq470QB1j+DSXZokRnsmLu9RAo+Tj3sWRb
+ we3zmclVmmtQqzyI5QbV/qx1dKhtu5xT2X0KLCw2BDZ743sBNfexjc6XDG1wsRZv69Jt
+ 2YQ7C8rVuhtOtQh38wAHYTkzhxXEA7j/tcqgoMugwwFJJbLuzzhFf8bDzFzBekh7Wdte
+ wiMNffAj5UDRwh16BqCDsVonxjmYga1NYt9iHNdC7nDvIYxDbRlXThNFut6tEzlBCmVE
+ 9syWSoaASYKa4JtnNghS4Bo9rURFdZnfFCpaTHjVYTN5czU622nEN9yDWpAkGMlxXrPW bA== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mcjnswcre-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Dec 2022 14:21:39 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2BDDhHFW031740;
+        Tue, 13 Dec 2022 14:21:38 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2170.outbound.protection.outlook.com [104.47.56.170])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3mcgj5s1ap-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Dec 2022 14:21:38 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=V0+DHUGf7BFpsDOlzTIdivTFTjlmK7R5QUgCW4dsVzEPAvOEH60Ci8E/br4gdzwp4PPqXLhYQ26wjlUTq5y4FRZziH/p4LasyFfpWjeTKPpx2uRS9ncNNyQk2SmRM8eXmozA/VZRFzNDfIWaaYKHz9l271jmotE5/J0SldX41ksCKpbltj0StSCEMRCjY9kW9HznswWxnvmxv8UbPyL4kLD+jxOqnuPrpf1JQJX+fxbJd4AoHOvjDZaqVwUfsxMQKCeM2rzKh2kSWxxhjfD7ana9TXut5jLLhQ/9cjREdS8c6YM9VgJGD0dQUXC2HqoQ1mKE1vcQeqxVhYivbztlHQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cnqBfdVZbw85DPH1nQCNAH9P9t5OdF++7AtyCjDd4AQ=;
+ b=Zk2MCCKXHvGiffCpTAaSwLSRfQ23Vt+YvGZp8I50+nLznD31Kbm4g3HdJm++Mhwk7YZ1HjTnByYhttnoFELu/Hjib33sow6pb0+wIGaph8eunhLW23IhBIuClrYF89q7ApyRSFfhuiNa06fn4N30M2Xa37FJxX4iCsmaKNV5JfXLk7DZvcC/NdtkbGfkj6R5iTB8bV2jMJaub4cqyiAayXV/s77umky2QOKN9e3EvwFZPjZFLVaKhVflz9KIiFNdbD82MvnFv4esaUxhUwqUXv+vTlGQ4/hpD1Hcap/e/GI0GE9J6ErojHNg0cvIcpa1tSmZgNE+jzcyTlIbwn/noQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cnqBfdVZbw85DPH1nQCNAH9P9t5OdF++7AtyCjDd4AQ=;
+ b=PvjWMJxUtBpv1eXRvUDKDANb7kBr+m9SyRYOju/Mx2b7vviAtoVRiK4QMhB0V4m4oFEEaczgIxRCc2bWlz44wVFyV26edP/wlsk5xh11IvNzgVsi9KBuzEjzU56T1iaxEPATDp8vhLVMd7MiqpIcae53XaPXqVXXHv+QmcWvBl0=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by MN2PR10MB4141.namprd10.prod.outlook.com (2603:10b6:208:1df::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5880.19; Tue, 13 Dec
+ 2022 14:21:36 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::5984:a376:6e91:ac0d]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::5984:a376:6e91:ac0d%9]) with mapi id 15.20.5880.019; Tue, 13 Dec 2022
+ 14:21:36 +0000
+From:   John Garry <john.g.garry@oracle.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        dgilbert@interlog.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH] scsi: scsi_debug: Delete unreachable code in inquiry_vpd_b0()
+Date:   Tue, 13 Dec 2022 14:21:22 +0000
+Message-Id: <20221213142122.1011886-1-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR03CA0055.namprd03.prod.outlook.com
+ (2603:10b6:a03:33e::30) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] scsi: iscsi_tcp: Fix UAF when access shost attr during
- session logout
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        Wenchao Hao <haowenchao22@gmail.com>
-Cc:     lduncan@suse.com, cleech@redhat.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221209082247.6330-1-dinghui@sangfor.com.cn>
- <ae9ee90e-e890-e054-6cf9-8acadd6012b9@oracle.com>
- <CAOptpSO-TMhqR35RW4Sssm29NA=8rJ6-9TgjTVpGKpYOeS_8sA@mail.gmail.com>
- <a60661e9-0ea5-1087-4fbe-27a11cf7edf0@oracle.com>
-From:   Ding Hui <dinghui@sangfor.com.cn>
-In-Reply-To: <a60661e9-0ea5-1087-4fbe-27a11cf7edf0@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDH01JVkhDQkxMHxhDTEsaHVUTARMWGhIXJBQOD1
-        lXWRgSC1lBWUpMSVVCTVVJSUhVSUhDWVdZFhoPEhUdFFlBWU9LSFVKSktPSEhVSktLVUtZBg++
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OlE6TQw*AT0oAk1JCS0YKwk1
-        QhFPCyJVSlVKTUxLQklJSkNIQ0lKVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-        QVlKTElVQk1VSUlIVUlIQ1lXWQgBWUFDTUNLNwY+
-X-HM-Tid: 0a850ab92039b219kuuuaf687bc03f5
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|MN2PR10MB4141:EE_
+X-MS-Office365-Filtering-Correlation-Id: 81b51229-2559-4d32-d94a-08dadd15578f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: WSWVlpnFbnS8ipyrO88WKkQVZQhs/chL3UslFb7mKHaSrVp3+8DpVb+Zn1b9uOG0Ic74BCegfS8zio6KNHTXimAOYNmc60GIyEfb18JdQ2kR3GKh1GzpaT/eO09NLP2/oNwIn2apSWw5Br0uF0hcHulV4eMdwjvK8PyyYhZY+67duZ5aD/zt59Bv94hBsiGLtsuAHQjnR9XHoYmuaztzj+uMtEWc0E6dtbQN5+KAkO5pq2Ph/w6efdBekDghPhonO8XngTWmtCYnOBfsS3+Q8Z4vMcO5vXM8PBLA9AlFJmlZcu4U02rwkPUU1VtQaFjnjSehGIF9H/EZme7aeLoXhaVlwCeCzVCzV4Ps9OicRCjz6DiRcX12A0wavnYH0vTQHw97+Vf8L3wGr0SDWr7xuudAMD16oGKA4yqwhvoRZgpIVSTvopodnL+HyDKXHp7a8xtJ0CxVw6FUrfYEymtQW9nk5eNVvWTp7/WHnY7POqPZ1fjoK0CMyS6Bs+H5trWCib+ESFsTlkBe90gtO5CRDN1L1sJzUIkWTEdwKy6yrWp+TJU7gr5GiwxEFsaQnHZfkbJ28xkgVimrE256HY0lH5+BAdi7mfriZpUV9kiCQlOebv2xN5SgUVDaV+5BULNvNzqOi7KVtGuBXuTHMN1IjA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(136003)(366004)(396003)(346002)(39860400002)(451199015)(83380400001)(66476007)(66556008)(41300700001)(8676002)(86362001)(66946007)(5660300002)(38100700002)(4326008)(8936002)(316002)(6506007)(6666004)(186003)(6512007)(2906002)(26005)(1076003)(107886003)(2616005)(6486002)(478600001)(4744005)(36756003)(103116003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YzzQH0Th292cNRrWmMppQ1MDdP9AcYiG5Cf7xqKdP0myLcZhhyVisNqusO+w?=
+ =?us-ascii?Q?ff5O9fh8InH1G+OisrPR6uTKh6D1aSOwEd/p1io9kEQ+3VCZ6gGTil5dVpwn?=
+ =?us-ascii?Q?QmTsD1etosRi+q4eYEwvoZ3mzLFpMq2Eu5+4UbIsNFb9oMHRo9zNS8cd+mm6?=
+ =?us-ascii?Q?asTrt6sPVq5NM4XJnlK+ZeIap4AqJV38zgD0BtrMbJm6+xKrs3uxy0r5O/DT?=
+ =?us-ascii?Q?LG3kC02NI1Vw0SWki4bnbDpk7CPHwO5sot/M4j4uhdO7m1K5Tj/Bo41+RNG5?=
+ =?us-ascii?Q?dc4bDs2VRnjAQYgUOZfPhJXtIMRvAVAkGqiCqljOfHLHDiZ1PUAKAd2+Whyp?=
+ =?us-ascii?Q?iMDihAleAgQzitqv/oTQ1+wk1SpPOJ0GKkkrlk9Zt2HhNrtOOGPUHyJjdWY/?=
+ =?us-ascii?Q?y6e0rzOH/IA1I68JEM9LvCfU1qo72Z05ilH0WywR0NtoMz8lUV0GnUbNo71b?=
+ =?us-ascii?Q?3KdPY3dGpZfD7lN6+bf9onfpq20I53f3GbOTNic6woq714lEKvpVR85UeuwE?=
+ =?us-ascii?Q?vD54pqjqoEA1JXvl/kPgvopIc15YejIU1xnzNj7miv6EihgFMUwdF8Ded7gd?=
+ =?us-ascii?Q?P0iMzmDucyajU7qvHOivW9Y1ccGA8D9lCLVLStgEP3t7Q13CkTjtF8SSFTI7?=
+ =?us-ascii?Q?TueX5Ucgl/6lhGTNv+L4IB3YtpIdrIQGh9q3GKK9luHkMs4/cAeVQEbF9WI/?=
+ =?us-ascii?Q?ln8g5FDtO2JWHeIPOKEMB7arBYTlxhKe7KE+O91kLWa4RfWU2mJfNsSrSMf2?=
+ =?us-ascii?Q?sQHPxLotWCZ6zYwnchgrZM/gWTYA/f99++fFgfLWqGiSt+tosDfuOgv21Y43?=
+ =?us-ascii?Q?EUDlG2YJF4tWMPyRcvabjZ9lKbd52EWw+m3A3AR4X0hnMufN2v4pmI/MXsx0?=
+ =?us-ascii?Q?xZpTWTHcNeGeZq00mipymXRWJBt3ddVLEksjPMbxKhgibqoxN3l7Cl/l9cTd?=
+ =?us-ascii?Q?3KpfmbM6KFZzVnPQf2x1DnGnAJDL21EWkOygT4KSvzBBK6nqm8t6Hvcl94+Z?=
+ =?us-ascii?Q?fHg2PPaL9nGth0hjupwCSTecq3lHjb3r0d9q/Rs4ZTnP5fJdEojrTE1k0Yg+?=
+ =?us-ascii?Q?lBXlRcTmItXHB+sFRrNmQu/jnjWL2zab9hD8x8SF3YrHbU1Y1rxKlZ2gHAKJ?=
+ =?us-ascii?Q?L+tYpeR+ArybCyErzo1pDH+m4f7ELlOHGkLpAoKABbnCG2nHgeXEn7BHx3fp?=
+ =?us-ascii?Q?4giM/gX/cem0K4qJ94W3NR8kVzuwPwLiUrxe6NsExvcBvztp/NYNL3Hw4DOh?=
+ =?us-ascii?Q?kEclv6j3wdETFMN9Hm7jCNEj6jMPETpNWdcef/+K5X8D7ro2HeVEW68O3He1?=
+ =?us-ascii?Q?eu4T+rYDTMGdZyY240BUZ/gAU2O7Qkhvo8rSKtQVxExjwdsQg/nCuMR19D7d?=
+ =?us-ascii?Q?u+35n2F8ZNBo5ey+zAgNAcP+AfdD+329OnCqZ+dmUnljQTe8DHhryMvt2k+s?=
+ =?us-ascii?Q?UygjqUpDJZtBV5PegvSn5GUzMbsqJkmr/SVfejDdcihV91P6XWvpZdse2h1+?=
+ =?us-ascii?Q?vOWVCyhcCqKZqn71PalG4ld9J2sm6MTx177FFfRryLQVXBa3DsnHvCZi2N0/?=
+ =?us-ascii?Q?thXngbFEQHmYOccmSyIOEyRzKCXvKkKKbxTVGmTzxaaa3AORWSAgDOPYcbk0?=
+ =?us-ascii?Q?YA=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 81b51229-2559-4d32-d94a-08dadd15578f
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Dec 2022 14:21:36.0224
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3KiS2Zk9bQG8HgonZKX1qbv6BOz0rRitA7R2FF7nMQxOFO4LYHTgxQcbKw8DDA9mXtmkF5P7AnIScJqeyAiMAw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR10MB4141
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-12-13_03,2022-12-13_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 adultscore=0 malwarescore=0 phishscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2212130127
+X-Proofpoint-GUID: u6leWyS-c73EkImH32QSeXx4PdZzQbOY
+X-Proofpoint-ORIG-GUID: u6leWyS-c73EkImH32QSeXx4PdZzQbOY
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/12/13 1:00, Mike Christie wrote:
-> On 12/11/22 8:32 AM, Wenchao Hao wrote:
->> On Sun, Dec 11, 2022 at 6:07 AM Mike Christie
->> <michael.christie@oracle.com> wrote:
->>>
->>> On 12/9/22 2:22 AM, Ding Hui wrote:
->>>> During iscsi session logout, if another task accessing shost ipaddress
->>>> attr at this time, we can get a KASAN UAF report like this:
->>>>
->>>> [  276.941685] ==================================================================
->>>> [  276.942144] BUG: KASAN: use-after-free in _raw_spin_lock_bh+0x78/0xe0
->>>> [  276.942535] Write of size 4 at addr ffff8881053b45b8 by task cat/4088
->>>> [  276.943511] CPU: 2 PID: 4088 Comm: cat Tainted: G            E      6.1.0-rc8+ #3
->>>> [  276.943997] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
->>>> [  276.944470] Call Trace:
->>>> [  276.944943]  <TASK>
->>>> [  276.945397]  dump_stack_lvl+0x34/0x48
->>>> [  276.945887]  print_address_description.constprop.0+0x86/0x1e7
->>>> [  276.946421]  print_report+0x36/0x4f
->>>> [  276.947358]  kasan_report+0xad/0x130
->>>> [  276.948234]  kasan_check_range+0x35/0x1c0
->>>> [  276.948674]  _raw_spin_lock_bh+0x78/0xe0
->>>> [  276.949989]  iscsi_sw_tcp_host_get_param+0xad/0x2e0 [iscsi_tcp]
->>>> [  276.951765]  show_host_param_ISCSI_HOST_PARAM_IPADDRESS+0xe9/0x130 [scsi_transport_iscsi]
->>>> [  276.952185]  dev_attr_show+0x3f/0x80
->>>> [  276.953005]  sysfs_kf_seq_show+0x1fb/0x3e0
->>>> [  276.953401]  seq_read_iter+0x402/0x1020
->>>> [  276.954260]  vfs_read+0x532/0x7b0
->>>> [  276.955113]  ksys_read+0xed/0x1c0
->>>> [  276.955952]  do_syscall_64+0x38/0x90
->>>> [  276.956347]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->>>> [  276.956769] RIP: 0033:0x7f5d3a679222
->>>> [  276.957161] Code: c0 e9 b2 fe ff ff 50 48 8d 3d 32 c0 0b 00 e8 a5 fe 01 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
->>>> [  276.958009] RSP: 002b:00007ffc864d16a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
->>>> [  276.958431] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f5d3a679222
->>>> [  276.958857] RDX: 0000000000020000 RSI: 00007f5d3a4fe000 RDI: 0000000000000003
->>>> [  276.959281] RBP: 00007f5d3a4fe000 R08: 00000000ffffffff R09: 0000000000000000
->>>> [  276.959682] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000020000
->>>> [  276.960126] R13: 0000000000000003 R14: 0000000000000000 R15: 0000557a26dada58
->>>> [  276.960536]  </TASK>
->>>> [  276.961357] Allocated by task 2209:
->>>> [  276.961756]  kasan_save_stack+0x1e/0x40
->>>> [  276.962170]  kasan_set_track+0x21/0x30
->>>> [  276.962557]  __kasan_kmalloc+0x7e/0x90
->>>> [  276.962923]  __kmalloc+0x5b/0x140
->>>> [  276.963308]  iscsi_alloc_session+0x28/0x840 [scsi_transport_iscsi]
->>>> [  276.963712]  iscsi_session_setup+0xda/0xba0 [libiscsi]
->>>> [  276.964078]  iscsi_sw_tcp_session_create+0x1fd/0x330 [iscsi_tcp]
->>>> [  276.964431]  iscsi_if_create_session.isra.0+0x50/0x260 [scsi_transport_iscsi]
->>>> [  276.964793]  iscsi_if_recv_msg+0xc5a/0x2660 [scsi_transport_iscsi]
->>>> [  276.965153]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
->>>> [  276.965546]  netlink_unicast+0x4d5/0x7b0
->>>> [  276.965905]  netlink_sendmsg+0x78d/0xc30
->>>> [  276.966236]  sock_sendmsg+0xe5/0x120
->>>> [  276.966576]  ____sys_sendmsg+0x5fe/0x860
->>>> [  276.966923]  ___sys_sendmsg+0xe0/0x170
->>>> [  276.967300]  __sys_sendmsg+0xc8/0x170
->>>> [  276.967666]  do_syscall_64+0x38/0x90
->>>> [  276.968028]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->>>> [  276.968773] Freed by task 2209:
->>>> [  276.969111]  kasan_save_stack+0x1e/0x40
->>>> [  276.969449]  kasan_set_track+0x21/0x30
->>>> [  276.969789]  kasan_save_free_info+0x2a/0x50
->>>> [  276.970146]  __kasan_slab_free+0x106/0x190
->>>> [  276.970470]  __kmem_cache_free+0x133/0x270
->>>> [  276.970816]  device_release+0x98/0x210
->>>> [  276.971145]  kobject_cleanup+0x101/0x360
->>>> [  276.971462]  iscsi_session_teardown+0x3fb/0x530 [libiscsi]
->>>> [  276.971775]  iscsi_sw_tcp_session_destroy+0xd8/0x130 [iscsi_tcp]
->>>> [  276.972143]  iscsi_if_recv_msg+0x1bf1/0x2660 [scsi_transport_iscsi]
->>>> [  276.972485]  iscsi_if_rx+0x198/0x4b0 [scsi_transport_iscsi]
->>>> [  276.972808]  netlink_unicast+0x4d5/0x7b0
->>>> [  276.973201]  netlink_sendmsg+0x78d/0xc30
->>>> [  276.973544]  sock_sendmsg+0xe5/0x120
->>>> [  276.973864]  ____sys_sendmsg+0x5fe/0x860
->>>> [  276.974248]  ___sys_sendmsg+0xe0/0x170
->>>> [  276.974583]  __sys_sendmsg+0xc8/0x170
->>>> [  276.974891]  do_syscall_64+0x38/0x90
->>>> [  276.975216]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->>>>
->>>> We can easily reproduce by two tasks:
->>>> 1. while :; do iscsiadm -m node --login; iscsiadm -m node --logout; done
->>>> 2. while :; do cat /sys/devices/platform/host*/iscsi_host/host*/ipaddress; done
->>>>
->>>>              iscsid                |        cat
->>>> ----------------------------------+-------------------------------------------------
->>>> |- iscsi_sw_tcp_session_destroy   |
->>>>    |- iscsi_session_teardown       |
->>>>      |- device_release             |
->>>>        |- iscsi_session_release    |  |- dev_attr_show
->>>>          |- kfree                  |    |- show_host_param_ISCSI_HOST_PARAM_IPADDRESS
->>>>                                    |      |- iscsi_sw_tcp_host_get_param
->>>>                                    |        |- r/w tcp_sw_host->session (UAF)
->>>>    |- iscsi_host_remove            |
->>>>    |- iscsi_host_free              |
->>>>
->>>> Since shost hold a pointer to session which is belong to cls_session by its
->>>> priv tcp_sw_host, so we should get a ref of cls_session, and after
->>>> iscsi_host_remove() the sysfs is cleared, then we can drop the ref.
->>>>
->>>
->>> Nice bug report and thanks for the patch. I think though we should just
->>> split the removal from the freeing. The removal will wait on users
->>> accessing sysfs files for us, so once they return we know we can just
->>> free things.
->>>
->>> Something like this:
->>>
->>>
->>
->> Hi, dinghui and Mike, I submitted patches to fix this issue one year
->> ago. But I missed Mike's
->> reply because I was new to the community, so the patches did not keep on.
->>
->> https://lore.kernel.org/linux-scsi/20210407012450.97754-1-haowenchao@huawei.com/
->>
->> Because of my negligence, this bug has been discovered so far, and I
->> apologize for this.
-> 
-> Ah yeah, I remember that now. Don't worry about it. It was also my fault
-> for not pinging you.
-> 
-> I'll fix up my patches into a proper patchset and submit.
-> 
+The 2nd return statement in inquiry_vpd_b0() is unreachable, so delete it.
 
-Hi Wenchao and Mike,
+Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-Thanks for your work, I am looking forward to it.
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index b8a76b89f85a..6f637501539c 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1511,8 +1511,6 @@ static int inquiry_vpd_b0(unsigned char *arr)
+ 	put_unaligned_be64(sdebug_write_same_length, &arr[32]);
+ 
+ 	return 0x3c; /* Mandatory page length for Logical Block Provisioning */
+-
+-	return sizeof(vpdb0_data);
+ }
+ 
+ /* Block device characteristics VPD page (SBC-3) */
 -- 
-Thanks,
-- Ding Hui
+2.35.3
 
