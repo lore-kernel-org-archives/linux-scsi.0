@@ -2,132 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4663C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 15:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2644C46467
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 15:56:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238769AbiLNPQO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Dec 2022 10:16:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37122 "EHLO
+        id S238630AbiLNP40 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Dec 2022 10:56:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238245AbiLNPQG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 10:16:06 -0500
-Received: from mail-yw1-x1135.google.com (mail-yw1-x1135.google.com [IPv6:2607:f8b0:4864:20::1135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68F8112AB5
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 07:16:02 -0800 (PST)
-Received: by mail-yw1-x1135.google.com with SMTP id 00721157ae682-3b56782b3f6so240132947b3.13
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 07:16:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=i8/7ompYoprPv6p5gopqt1zlXtmepYGFLCWXe2gsqzg=;
-        b=BUfL3YrZ28K+1n6E2SQ9fOqgRKi2RgeotU3ckXNn8xFWPTs42cuoGfphfjNQOV0pgx
-         7/jp35I3w0HRIOFVcsghYPgMBrhr8AMNN8/bTKnJa17Hz49AiqnR3KxJME/VVIigK+sS
-         o/Lm4IOiEo8w6nxX4t2A4IzKZLODEjcrKKDsdmGKLI1atzrsu3mpNZREk5A83gxmOZAt
-         L+k/IzYKvXs7B7hnKP1erYHIobJ4iQu87BD3pnHQtG8fBQOI4ExEQ0QtE/CElufFbNCA
-         yV0c98uSdPhEqukbLuFuzz8L6ZLLU8J5/FlBKjiGFYDWzKiB3XFMXdMwK39OTfRDW0AO
-         GSIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=i8/7ompYoprPv6p5gopqt1zlXtmepYGFLCWXe2gsqzg=;
-        b=YmCDPuvXacxCiT8Lza5g3d5UWoss9zCnBP0hOeHDHp4i03Q2YT24s7K7pv9YqcH27m
-         jfHtufRes9hHBOh8KGkG7m6ycCWNuIktmWs5MxfSq6yqCwJrAe+7kwMtRMIqrc+RFiPo
-         ZhbrXraI5BM8jMo0iTUnQwH1AHiKFEtxCbj11axwQ5zYOGUav/ii78zl4+MRGSsKVJKj
-         z/ssuJP83LRwF6KiEA3Plf25kpPdUyASztUVNAbLroHuK0w87VBuf6NHEA1xgtd+qSMo
-         j6apZqtR37PNqFjPUjq11P6HhbFt5LMIC2VEiT1aNRi/sGhNEjYSzJ1fU85bZe7jnU7b
-         dBHQ==
-X-Gm-Message-State: ANoB5pnItqTc6Z/mq2XaLrV6skk6DkViFMzbuq9A679JUaCFoGTH69EM
-        fFC4YJ8hnHbV4XQB9FO5F8uIo69GOiWcKHUQfzt5hQ==
-X-Google-Smtp-Source: AA0mqf6N7NofCRVaBdlZmzX/2IFdQaSJdENS2yaazN5Bc4VEowcispQ6llOh6euNJwrBHENhxHLAYZsrXmLpw9L8cy4=
-X-Received: by 2002:a81:1e44:0:b0:370:7a9a:564 with SMTP id
- e65-20020a811e44000000b003707a9a0564mr27785992ywe.278.1671030961275; Wed, 14
- Dec 2022 07:16:01 -0800 (PST)
-MIME-Version: 1.0
+        with ESMTP id S238855AbiLNP4A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 10:56:00 -0500
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65A232314C;
+        Wed, 14 Dec 2022 07:53:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671033239; x=1702569239;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=12BnbcHagZMkwl9OeOA4D0nsPFyieVD2ck3mCiVJ72w=;
+  b=h6PL/+6dLs5+Gpxr8c4tc3r5F+WFquxrdMSSjYsVOxpbOqewub25mPz4
+   ThkkUdN9OXqFnDVHZWoHRdQNEdhhsF9bnReRYZWQbMdfCScad2wAzL4J0
+   n9HIlh6AWB4jHw/jgGWAjcfHJroVQw0d8Lxr/fwblhGmYdyS8FuJ9LN0X
+   YNMydrEuYPt0/i9HXFYVJaHABUIqj9X1qKiPqKa6TqSJVmB5+bCnzlEO8
+   QQgNmgP1OFPS2pRzJJ5i0eLwzRsi5Qg7xGwdvBUF1aq7ngoCAmgXBnzyW
+   p0xDGittwLVbFQ9f26qRKaZaj6Hb3WfSnVTi7d9P3mPVrdVynHCauYS5h
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="382739966"
+X-IronPort-AV: E=Sophos;i="5.96,244,1665471600"; 
+   d="scan'208";a="382739966"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Dec 2022 07:53:58 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="642545781"
+X-IronPort-AV: E=Sophos;i="5.96,244,1665471600"; 
+   d="scan'208";a="642545781"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga007.jf.intel.com with ESMTP; 14 Dec 2022 07:53:54 -0800
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1p5U4u-009sxL-0B;
+        Wed, 14 Dec 2022 17:53:52 +0200
+Date:   Wed, 14 Dec 2022 17:53:51 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Eric Dumazet <edumazet@google.com>
+Cc:     Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>,
+        david.keisarschm@mail.huji.ac.il, dri-devel@lists.freedesktop.org,
+        linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-mm@kvack.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] Renaming weak prng invocations -
+ prandom_bytes_state, prandom_u32_state
+Message-ID: <Y5nxjzV0Mio86NU6@smile.fi.intel.com>
 References: <cover.1670778651.git.david.keisarschm@mail.huji.ac.il>
  <b3caaa5ac5fca4b729bf1ecd0d01968c09e6d083.1670778652.git.david.keisarschm@mail.huji.ac.il>
- <Y5c8KLzJFz/XZMiM@zx2c4.com> <20221214123358.GA1062210@linux.intel.com>
-In-Reply-To: <20221214123358.GA1062210@linux.intel.com>
-From:   Eric Dumazet <edumazet@google.com>
-Date:   Wed, 14 Dec 2022 16:15:49 +0100
-Message-ID: <CANn89iJtK4m1cWvCwp=L_rEOEBa+B1kLZJAw0D9_cYPQcAj+Mw@mail.gmail.com>
-Subject: Re: [PATCH 1/5] Renaming weak prng invocations - prandom_bytes_state, prandom_u32_state
-To:     Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        david.keisarschm@mail.huji.ac.il,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        Alexei Starovoitov <ast@kernel.org>,
-        dri-devel@lists.freedesktop.org, Song Liu <song@kernel.org>,
-        linux-mtd@lists.infradead.org, Stanislav Fomichev <sdf@google.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Christoph Lameter <cl@linux.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Richard Weinberger <richard@nod.at>, x86@kernel.org,
-        John Fastabend <john.fastabend@gmail.com>,
-        Andrii Nakryiko <andrii@kernel.org>, ilay.bahat1@gmail.com,
-        Ingo Molnar <mingo@redhat.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Jiri Pirko <jiri@nvidia.com>,
-        David Rientjes <rientjes@google.com>,
-        Yonghong Song <yhs@fb.com>, Paolo Abeni <pabeni@redhat.com>,
-        intel-gfx@lists.freedesktop.org, Petr Mladek <pmladek@suse.com>,
-        Jiri Olsa <jolsa@kernel.org>, Hao Luo <haoluo@google.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Borislav Petkov <bp@alien8.de>, Hannes Reinecke <hare@suse.de>,
-        Andy Lutomirski <luto@kernel.org>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-mm@kvack.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        aksecurity@gmail.com, Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Martin KaFai Lau <martin.lau@linux.dev>,
-        "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
+ <Y5c8KLzJFz/XZMiM@zx2c4.com>
+ <20221214123358.GA1062210@linux.intel.com>
+ <CANn89iJtK4m1cWvCwp=L_rEOEBa+B1kLZJAw0D9_cYPQcAj+Mw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANn89iJtK4m1cWvCwp=L_rEOEBa+B1kLZJAw0D9_cYPQcAj+Mw@mail.gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 14, 2022 at 1:34 PM Stanislaw Gruszka
-<stanislaw.gruszka@linux.intel.com> wrote:
->
-> On Mon, Dec 12, 2022 at 03:35:20PM +0100, Jason A. Donenfeld wrote:
-> > Please CC me on future revisions.
+On Wed, Dec 14, 2022 at 04:15:49PM +0100, Eric Dumazet wrote:
+> On Wed, Dec 14, 2022 at 1:34 PM Stanislaw Gruszka
+> <stanislaw.gruszka@linux.intel.com> wrote:
+> > On Mon, Dec 12, 2022 at 03:35:20PM +0100, Jason A. Donenfeld wrote:
+> > > Please CC me on future revisions.
+> > >
+> > > As of 6.2, the prandom namespace is *only* for predictable randomness.
+> > > There's no need to rename anything. So nack on this patch 1/5.
 > >
-> > As of 6.2, the prandom namespace is *only* for predictable randomness.
-> > There's no need to rename anything. So nack on this patch 1/5.
->
-> It is not obvious (for casual developers like me) that p in prandom
-> stands for predictable. Some renaming would be useful IMHO.
+> > It is not obvious (for casual developers like me) that p in prandom
+> > stands for predictable. Some renaming would be useful IMHO.
+> 
+> Renaming makes backports more complicated, because stable teams will
+> have to 'undo' name changes.
+> Stable teams are already overwhelmed by the amount of backports, and
+> silly merge conflicts.
+> 
+> Take another example :
+> 
+> u64 timecounter_read(struct timecounter *tc)
+> 
+> You would think this function would read the timecounter, right ?
+> 
+> Well, it _updates_ many fields from @tc, so a 'better name' would also
+> be useful.
 
-Renaming makes backports more complicated, because stable teams will
-have to 'undo' name changes.
-Stable teams are already overwhelmed by the amount of backports, and
-silly merge conflicts.
+Right, at some point we become into the world of
 
-Take another example :
+#define true 0
 
-u64 timecounter_read(struct timecounter *tc)
+because... (read below)
 
-You would think this function would read the timecounter, right ?
+> linux kernel is not for casual readers.
 
-Well, it _updates_ many fields from @tc, so a 'better name' would also
-be useful.
+P.S. I believe you applied a common sense and in some cases
+     the renames are necessary.
 
-linux kernel is not for casual readers.
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
