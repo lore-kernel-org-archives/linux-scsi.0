@@ -2,20 +2,20 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7DDEC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 13:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9243CC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 13:17:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237935AbiLNNRb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Dec 2022 08:17:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44102 "EHLO
+        id S238271AbiLNNRc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Dec 2022 08:17:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238131AbiLNNR3 (ORCPT
+        with ESMTP id S238033AbiLNNR3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 08:17:29 -0500
 Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25FBD205CD
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 05:17:27 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3415205CB
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 05:17:26 -0800 (PST)
 Received: from canpemm500004.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NXG8p1qxyz16Ld2;
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NXG8p5rP1z16Ld3;
         Wed, 14 Dec 2022 21:16:26 +0800 (CST)
 Received: from huawei.com (10.175.127.227) by canpemm500004.china.huawei.com
  (7.192.104.92) with Microsoft SMTP Server (version=TLS1_2,
@@ -26,11 +26,10 @@ To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
 CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
         <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
         <damien.lemoal@opensource.wdc.com>, <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Jack Wang <jinpu.wang@ionos.com>
-Subject: [PATCH v4 2/5] scsi: libsas: change the coding style of sas_discover_sata()
-Date:   Wed, 14 Dec 2022 21:38:05 +0800
-Message-ID: <20221214133808.1649122-3-yanaijie@huawei.com>
+        Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v4 3/5] scsi: libsas: remove useless dev_list delete in sas_ex_discover_end_dev()
+Date:   Wed, 14 Dec 2022 21:38:06 +0800
+Message-ID: <20221214133808.1649122-4-yanaijie@huawei.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20221214133808.1649122-1-yanaijie@huawei.com>
 References: <20221214133808.1649122-1-yanaijie@huawei.com>
@@ -45,93 +44,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The coding style where calling this interface is inconsistent with other
-interfaces for SATA devices. The standard style for other SATA interfaces
-is like:
+The domain device 'child' is allocated in sas_ex_discover_end_dev() and
+never been added to dev_list. It used to be added to the dev_list in this
+function. But after the following two fixes it is added to the disco_list
+instead. So the list_del() and locking left is useless now.
 
-    #ifdefine CONFIG_SCSI_SAS_ATA
-    void sas_ata_task_abort(struct sas_task *task);
-    #else
-    static inline void sas_ata_task_abort(struct sas_task *task)
-    {
-    }
-    #endif
-
-And the callers does not have to do things like "#ifdefine CONFIG_SCSI_SAS_ATA"
-and may call the interface directly. So follow the standard style here.
-
+Fixes: 87c8331fcf72 ("[SCSI] libsas: prevent domain rediscovery competing with ata error handling")
+Fixes: 92625f9bff38 ("[SCSI] libsas: restore scan order")
 Cc: John Garry <john.g.garry@oracle.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
-Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/libsas/sas_discover.c |  6 ------
- include/scsi/libsas.h              |  1 -
- include/scsi/sas_ata.h             | 11 +++++++++++
- 3 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index d5bc1314c341..72fdb2e5d047 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -455,14 +455,8 @@ static void sas_discover_domain(struct work_struct *work)
- 		break;
- 	case SAS_SATA_DEV:
- 	case SAS_SATA_PM:
--#ifdef CONFIG_SCSI_SAS_ATA
- 		error = sas_discover_sata(dev);
- 		break;
--#else
--		pr_notice("ATA device seen but CONFIG_SCSI_SAS_ATA=N so cannot attach\n");
--		fallthrough;
--#endif
--		/* Fall through - only for the #else condition above. */
- 	default:
- 		error = -ENXIO;
- 		pr_err("unhandled device %d\n", dev->dev_type);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 1aee3d0ebbb2..159823e0afbf 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -735,7 +735,6 @@ void sas_unregister_domain_devices(struct asd_sas_port *port, int gone);
- void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *);
- void sas_discover_event(struct asd_sas_port *, enum discover_event ev);
- 
--int  sas_discover_sata(struct domain_device *);
- int  sas_discover_end_dev(struct domain_device *);
- 
- void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *);
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index 9c927d46f136..606b4496ecaf 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -36,8 +36,13 @@ void sas_ata_device_link_abort(struct domain_device *dev, bool force_reset);
- int sas_execute_ata_cmd(struct domain_device *device, u8 *fis,
- 			int force_phy_id);
- int smp_ata_check_ready_type(struct ata_link *link);
-+int sas_discover_sata(struct domain_device *dev);
- #else
- 
-+static inline void sas_ata_disabled_notice(void)
-+{
-+	pr_notice_once("ATA device seen but CONFIG_SCSI_SAS_ATA=N\n");
-+}
- 
- static inline int dev_is_sata(struct domain_device *dev)
- {
-@@ -103,6 +108,12 @@ static inline int smp_ata_check_ready_type(struct ata_link *link)
- {
- 	return 0;
- }
-+
-+static inline int sas_discover_sata(struct domain_device *dev)
-+{
-+	sas_ata_disabled_notice();
-+	return -ENXIO;
-+}
- #endif
- 
- #endif /* _SAS_ATA_H_ */
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index a04cad620e93..29e1b93b0964 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -875,9 +875,6 @@ static struct domain_device *sas_ex_discover_end_dev(
+  out_list_del:
+ 	sas_rphy_free(child->rphy);
+ 	list_del(&child->disco_list_node);
+-	spin_lock_irq(&parent->port->dev_list_lock);
+-	list_del(&child->dev_list_node);
+-	spin_unlock_irq(&parent->port->dev_list_lock);
+  out_free:
+ 	sas_port_delete(phy->port);
+  out_err:
 -- 
 2.31.1
 
