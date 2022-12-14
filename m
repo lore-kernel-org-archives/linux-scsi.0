@@ -2,78 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7459DC001B2
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 13:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4663C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 15:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237918AbiLNN3G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Dec 2022 08:29:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48022 "EHLO
+        id S238769AbiLNPQO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Dec 2022 10:16:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229883AbiLNN3F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 08:29:05 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE7BB240BD
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 05:29:03 -0800 (PST)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NXGPz601BzlVpZ;
-        Wed, 14 Dec 2022 21:27:51 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Wed, 14 Dec 2022 21:28:50 +0800
-Subject: Re: [PATCH v3 4/5] scsi: libsas: factor out sas_ata_add_dev()
-To:     John Garry <john.g.garry@oracle.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>
-References: <20221214070608.4128546-1-yanaijie@huawei.com>
- <20221214070608.4128546-5-yanaijie@huawei.com>
- <f808191f-6723-257b-6cd6-3e2db2fa4b27@oracle.com>
- <913a6c69-6aa4-2d18-ecee-2fa8b97c888e@huawei.com>
- <113358cf-dde7-2494-744b-e5017db30948@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <e177044b-f10b-8a7b-9048-060c31b398ad@huawei.com>
-Date:   Wed, 14 Dec 2022 21:28:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S238245AbiLNPQG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 10:16:06 -0500
+Received: from mail-yw1-x1135.google.com (mail-yw1-x1135.google.com [IPv6:2607:f8b0:4864:20::1135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68F8112AB5
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 07:16:02 -0800 (PST)
+Received: by mail-yw1-x1135.google.com with SMTP id 00721157ae682-3b56782b3f6so240132947b3.13
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 07:16:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=i8/7ompYoprPv6p5gopqt1zlXtmepYGFLCWXe2gsqzg=;
+        b=BUfL3YrZ28K+1n6E2SQ9fOqgRKi2RgeotU3ckXNn8xFWPTs42cuoGfphfjNQOV0pgx
+         7/jp35I3w0HRIOFVcsghYPgMBrhr8AMNN8/bTKnJa17Hz49AiqnR3KxJME/VVIigK+sS
+         o/Lm4IOiEo8w6nxX4t2A4IzKZLODEjcrKKDsdmGKLI1atzrsu3mpNZREk5A83gxmOZAt
+         L+k/IzYKvXs7B7hnKP1erYHIobJ4iQu87BD3pnHQtG8fBQOI4ExEQ0QtE/CElufFbNCA
+         yV0c98uSdPhEqukbLuFuzz8L6ZLLU8J5/FlBKjiGFYDWzKiB3XFMXdMwK39OTfRDW0AO
+         GSIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=i8/7ompYoprPv6p5gopqt1zlXtmepYGFLCWXe2gsqzg=;
+        b=YmCDPuvXacxCiT8Lza5g3d5UWoss9zCnBP0hOeHDHp4i03Q2YT24s7K7pv9YqcH27m
+         jfHtufRes9hHBOh8KGkG7m6ycCWNuIktmWs5MxfSq6yqCwJrAe+7kwMtRMIqrc+RFiPo
+         ZhbrXraI5BM8jMo0iTUnQwH1AHiKFEtxCbj11axwQ5zYOGUav/ii78zl4+MRGSsKVJKj
+         z/ssuJP83LRwF6KiEA3Plf25kpPdUyASztUVNAbLroHuK0w87VBuf6NHEA1xgtd+qSMo
+         j6apZqtR37PNqFjPUjq11P6HhbFt5LMIC2VEiT1aNRi/sGhNEjYSzJ1fU85bZe7jnU7b
+         dBHQ==
+X-Gm-Message-State: ANoB5pnItqTc6Z/mq2XaLrV6skk6DkViFMzbuq9A679JUaCFoGTH69EM
+        fFC4YJ8hnHbV4XQB9FO5F8uIo69GOiWcKHUQfzt5hQ==
+X-Google-Smtp-Source: AA0mqf6N7NofCRVaBdlZmzX/2IFdQaSJdENS2yaazN5Bc4VEowcispQ6llOh6euNJwrBHENhxHLAYZsrXmLpw9L8cy4=
+X-Received: by 2002:a81:1e44:0:b0:370:7a9a:564 with SMTP id
+ e65-20020a811e44000000b003707a9a0564mr27785992ywe.278.1671030961275; Wed, 14
+ Dec 2022 07:16:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <113358cf-dde7-2494-744b-e5017db30948@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
+References: <cover.1670778651.git.david.keisarschm@mail.huji.ac.il>
+ <b3caaa5ac5fca4b729bf1ecd0d01968c09e6d083.1670778652.git.david.keisarschm@mail.huji.ac.il>
+ <Y5c8KLzJFz/XZMiM@zx2c4.com> <20221214123358.GA1062210@linux.intel.com>
+In-Reply-To: <20221214123358.GA1062210@linux.intel.com>
+From:   Eric Dumazet <edumazet@google.com>
+Date:   Wed, 14 Dec 2022 16:15:49 +0100
+Message-ID: <CANn89iJtK4m1cWvCwp=L_rEOEBa+B1kLZJAw0D9_cYPQcAj+Mw@mail.gmail.com>
+Subject: Re: [PATCH 1/5] Renaming weak prng invocations - prandom_bytes_state, prandom_u32_state
+To:     Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        david.keisarschm@mail.huji.ac.il,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Alexei Starovoitov <ast@kernel.org>,
+        dri-devel@lists.freedesktop.org, Song Liu <song@kernel.org>,
+        linux-mtd@lists.infradead.org, Stanislav Fomichev <sdf@google.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Christoph Lameter <cl@linux.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Richard Weinberger <richard@nod.at>, x86@kernel.org,
+        John Fastabend <john.fastabend@gmail.com>,
+        Andrii Nakryiko <andrii@kernel.org>, ilay.bahat1@gmail.com,
+        Ingo Molnar <mingo@redhat.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Jiri Pirko <jiri@nvidia.com>,
+        David Rientjes <rientjes@google.com>,
+        Yonghong Song <yhs@fb.com>, Paolo Abeni <pabeni@redhat.com>,
+        intel-gfx@lists.freedesktop.org, Petr Mladek <pmladek@suse.com>,
+        Jiri Olsa <jolsa@kernel.org>, Hao Luo <haoluo@google.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        KP Singh <kpsingh@kernel.org>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Borislav Petkov <bp@alien8.de>, Hannes Reinecke <hare@suse.de>,
+        Andy Lutomirski <luto@kernel.org>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-mm@kvack.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        aksecurity@gmail.com, Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Martin KaFai Lau <martin.lau@linux.dev>,
+        "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/12/14 21:16, John Garry wrote:
-> On 14/12/2022 12:47, Jason Yan wrote:
->>> Note: you made the changes as I suggested, so I think that you could 
->>> have picked up my RB tag from v2 series, thanks.
->>
->> Yeah I used to do that before. But last time Damien educated me that I
->> must drop all the RB tags after the patch is changed so I didn't take
->> it.
-> 
-> I think that they should be dropped if significant changes are made 
-> since the original tag was granted - that's for sure.
-> 
+On Wed, Dec 14, 2022 at 1:34 PM Stanislaw Gruszka
+<stanislaw.gruszka@linux.intel.com> wrote:
+>
+> On Mon, Dec 12, 2022 at 03:35:20PM +0100, Jason A. Donenfeld wrote:
+> > Please CC me on future revisions.
+> >
+> > As of 6.2, the prandom namespace is *only* for predictable randomness.
+> > There's no need to rename anything. So nack on this patch 1/5.
+>
+> It is not obvious (for casual developers like me) that p in prandom
+> stands for predictable. Some renaming would be useful IMHO.
 
-Yes, definitely.
+Renaming makes backports more complicated, because stable teams will
+have to 'undo' name changes.
+Stable teams are already overwhelmed by the amount of backports, and
+silly merge conflicts.
 
-> However if I supply a RB tag but also suggest a smallish change along 
-> with it and you implement that change in a new version, then it's ok to 
-> pick up the tag.
+Take another example :
 
-Thanks for the explanation. I'm not sure if Damien agree with that.
+u64 timecounter_read(struct timecounter *tc)
 
-> 
-> At a brief glance, I could not see this policy mentioned in 
-> submitting-patches.rst .
-> 
-> Thanks!
-> .
+You would think this function would read the timecounter, right ?
+
+Well, it _updates_ many fields from @tc, so a 'better name' would also
+be useful.
+
+linux kernel is not for casual readers.
