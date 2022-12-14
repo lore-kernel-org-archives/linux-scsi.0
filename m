@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9243CC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 13:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 041A8C001B2
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 13:17:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238271AbiLNNRc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Dec 2022 08:17:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44100 "EHLO
+        id S238327AbiLNNRf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Dec 2022 08:17:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238033AbiLNNR3 (ORCPT
+        with ESMTP id S238054AbiLNNR3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 08:17:29 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3415205CB
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 05:17:26 -0800 (PST)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NXG8p5rP1z16Ld3;
-        Wed, 14 Dec 2022 21:16:26 +0800 (CST)
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF0FA205D4
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 05:17:27 -0800 (PST)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NXG8v1g7nzFqx3;
+        Wed, 14 Dec 2022 21:16:31 +0800 (CST)
 Received: from huawei.com (10.175.127.227) by canpemm500004.china.huawei.com
  (7.192.104.92) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Wed, 14 Dec
- 2022 21:17:24 +0800
+ 2022 21:17:25 +0800
 From:   Jason Yan <yanaijie@huawei.com>
 To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
 CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
         <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
         <damien.lemoal@opensource.wdc.com>, <john.g.garry@oracle.com>,
         Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v4 3/5] scsi: libsas: remove useless dev_list delete in sas_ex_discover_end_dev()
-Date:   Wed, 14 Dec 2022 21:38:06 +0800
-Message-ID: <20221214133808.1649122-4-yanaijie@huawei.com>
+Subject: [PATCH v4 4/5] scsi: libsas: factor out sas_ata_add_dev()
+Date:   Wed, 14 Dec 2022 21:38:07 +0800
+Message-ID: <20221214133808.1649122-5-yanaijie@huawei.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20221214133808.1649122-1-yanaijie@huawei.com>
 References: <20221214133808.1649122-1-yanaijie@huawei.com>
@@ -44,34 +44,187 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The domain device 'child' is allocated in sas_ex_discover_end_dev() and
-never been added to dev_list. It used to be added to the dev_list in this
-function. But after the following two fixes it is added to the disco_list
-instead. So the list_del() and locking left is useless now.
+Factor out sas_ata_add_dev() and put it in sas_ata.c since it is a sata
+related interface. Also follow the standard coding style to define an
+inline empty function when CONFIG_SCSI_SAS_ATA is not enabled.
 
-Fixes: 87c8331fcf72 ("[SCSI] libsas: prevent domain rediscovery competing with ata error handling")
-Fixes: 92625f9bff38 ("[SCSI] libsas: restore scan order")
 Cc: John Garry <john.g.garry@oracle.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/libsas/sas_ata.c      | 62 ++++++++++++++++++++++++++++++
+ drivers/scsi/libsas/sas_expander.c | 54 +-------------------------
+ include/scsi/sas_ata.h             |  9 +++++
+ 3 files changed, 73 insertions(+), 52 deletions(-)
 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index de3439ae358d..13fbb8629057 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -675,6 +675,68 @@ void sas_probe_sata(struct asd_sas_port *port)
+ 
+ }
+ 
++int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
++		    struct domain_device *child, int phy_id)
++{
++	struct sas_rphy *rphy;
++	int ret;
++
++	if (child->linkrate > parent->min_linkrate) {
++		struct sas_phy *cphy = child->phy;
++		enum sas_linkrate min_prate = cphy->minimum_linkrate,
++			parent_min_lrate = parent->min_linkrate,
++			min_linkrate = (min_prate > parent_min_lrate) ?
++					parent_min_lrate : 0;
++		struct sas_phy_linkrates rates = {
++			.maximum_linkrate = parent->min_linkrate,
++			.minimum_linkrate = min_linkrate,
++		};
++
++		pr_notice("ex %016llx phy%02d SATA device linkrate > min pathway connection rate, attempting to lower device linkrate\n",
++			  SAS_ADDR(child->sas_addr), phy_id);
++		ret = sas_smp_phy_control(parent, phy_id,
++					  PHY_FUNC_LINK_RESET, &rates);
++		if (ret) {
++			pr_err("ex %016llx phy%02d SATA device could not set linkrate (%d)\n",
++			       SAS_ADDR(child->sas_addr), phy_id, ret);
++			return ret;
++		}
++		pr_notice("ex %016llx phy%02d SATA device set linkrate successfully\n",
++			  SAS_ADDR(child->sas_addr), phy_id);
++		child->linkrate = child->min_linkrate;
++	}
++	ret = sas_get_ata_info(child, phy);
++	if (ret)
++		return ret;
++
++	sas_init_dev(child);
++	ret = sas_ata_init(child);
++	if (ret)
++		return ret;
++
++	rphy = sas_end_device_alloc(phy->port);
++	if (!rphy)
++		return ret;
++
++	rphy->identify.phy_identifier = phy_id;
++	child->rphy = rphy;
++	get_device(&rphy->dev);
++
++	list_add_tail(&child->disco_list_node, &parent->port->disco_list);
++
++	ret = sas_discover_sata(child);
++	if (ret) {
++		pr_notice("sas_discover_sata() for device %16llx at %016llx:%02d returned 0x%x\n",
++			  SAS_ADDR(child->sas_addr),
++			  SAS_ADDR(parent->sas_addr), phy_id, ret);
++		sas_rphy_free(child->rphy);
++		list_del(&child->disco_list_node);
++		return ret;
++	}
++
++	return 0;
++}
++
+ static void sas_ata_flush_pm_eh(struct asd_sas_port *port, const char *func)
+ {
+ 	struct domain_device *dev, *n;
 diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index a04cad620e93..29e1b93b0964 100644
+index 29e1b93b0964..0e4e09a0286a 100644
 --- a/drivers/scsi/libsas/sas_expander.c
 +++ b/drivers/scsi/libsas/sas_expander.c
-@@ -875,9 +875,6 @@ static struct domain_device *sas_ex_discover_end_dev(
-  out_list_del:
- 	sas_rphy_free(child->rphy);
- 	list_del(&child->disco_list_node);
--	spin_lock_irq(&parent->port->dev_list_lock);
--	list_del(&child->dev_list_node);
--	spin_unlock_irq(&parent->port->dev_list_lock);
-  out_free:
- 	sas_port_delete(phy->port);
-  out_err:
+@@ -785,61 +785,11 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 	sas_ex_get_linkrate(parent, child, phy);
+ 	sas_device_set_phy(child, phy->port);
+ 
+-#ifdef CONFIG_SCSI_SAS_ATA
+ 	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
+-		if (child->linkrate > parent->min_linkrate) {
+-			struct sas_phy *cphy = child->phy;
+-			enum sas_linkrate min_prate = cphy->minimum_linkrate,
+-				parent_min_lrate = parent->min_linkrate,
+-				min_linkrate = (min_prate > parent_min_lrate) ?
+-					       parent_min_lrate : 0;
+-			struct sas_phy_linkrates rates = {
+-				.maximum_linkrate = parent->min_linkrate,
+-				.minimum_linkrate = min_linkrate,
+-			};
+-			int ret;
+-
+-			pr_notice("ex %016llx phy%02d SATA device linkrate > min pathway connection rate, attempting to lower device linkrate\n",
+-				   SAS_ADDR(child->sas_addr), phy_id);
+-			ret = sas_smp_phy_control(parent, phy_id,
+-						  PHY_FUNC_LINK_RESET, &rates);
+-			if (ret) {
+-				pr_err("ex %016llx phy%02d SATA device could not set linkrate (%d)\n",
+-				       SAS_ADDR(child->sas_addr), phy_id, ret);
+-				goto out_free;
+-			}
+-			pr_notice("ex %016llx phy%02d SATA device set linkrate successfully\n",
+-				  SAS_ADDR(child->sas_addr), phy_id);
+-			child->linkrate = child->min_linkrate;
+-		}
+-		res = sas_get_ata_info(child, phy);
+-		if (res)
+-			goto out_free;
+-
+-		sas_init_dev(child);
+-		res = sas_ata_init(child);
++		res = sas_ata_add_dev(parent, phy, child, phy_id);
+ 		if (res)
+ 			goto out_free;
+-		rphy = sas_end_device_alloc(phy->port);
+-		if (!rphy)
+-			goto out_free;
+-		rphy->identify.phy_identifier = phy_id;
+-
+-		child->rphy = rphy;
+-		get_device(&rphy->dev);
+-
+-		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
+-
+-		res = sas_discover_sata(child);
+-		if (res) {
+-			pr_notice("sas_discover_sata() for device %16llx at %016llx:%02d returned 0x%x\n",
+-				  SAS_ADDR(child->sas_addr),
+-				  SAS_ADDR(parent->sas_addr), phy_id, res);
+-			goto out_list_del;
+-		}
+-	} else
+-#endif
+-	  if (phy->attached_tproto & SAS_PROTOCOL_SSP) {
++	} else if (phy->attached_tproto & SAS_PROTOCOL_SSP) {
+ 		child->dev_type = SAS_END_DEVICE;
+ 		rphy = sas_end_device_alloc(phy->port);
+ 		/* FIXME: error handling */
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index 606b4496ecaf..2f8c719840a6 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -37,6 +37,8 @@ int sas_execute_ata_cmd(struct domain_device *device, u8 *fis,
+ 			int force_phy_id);
+ int smp_ata_check_ready_type(struct ata_link *link);
+ int sas_discover_sata(struct domain_device *dev);
++int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
++		    struct domain_device *child, int phy_id);
+ #else
+ 
+ static inline void sas_ata_disabled_notice(void)
+@@ -114,6 +116,13 @@ static inline int sas_discover_sata(struct domain_device *dev)
+ 	sas_ata_disabled_notice();
+ 	return -ENXIO;
+ }
++
++static inline int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
++				  struct domain_device *child, int phy_id)
++{
++	sas_ata_disabled_notice();
++	return -ENODEV;
++}
+ #endif
+ 
+ #endif /* _SAS_ATA_H_ */
 -- 
 2.31.1
 
