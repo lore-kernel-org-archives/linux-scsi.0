@@ -2,129 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBB5AC10F31
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 16:21:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A86ACC4167B
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 18:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238795AbiLNQVh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Dec 2022 11:21:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44162 "EHLO
+        id S239299AbiLNSFw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Dec 2022 13:05:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238711AbiLNQVf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 11:21:35 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C92282C9;
-        Wed, 14 Dec 2022 08:21:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1671034893; x=1702570893;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=sugwmwrUIAbwUVd9kUUcbnqMzWklglljdUgzpTG789o=;
-  b=HGnDWEVEEFs82G5oXn1K7JNd1hyZhblpDhYzT/48TneA7w9Hi1QUek5s
-   YS1RcYq9PW4xVQ2RYbAIoxgh04wfoffBtejEO4tX35Umv0JE8C0xWldEJ
-   rGfIBd/AOoT6ASYeZRe5CNLe9qgz7F9DT0kK6/VIuHIOjAusqHnKc0W8e
-   YK61SXjAen1i72ek46pYydcKTNrDiGtXQHhnvwU+J/b6ESj1WDrclo5wY
-   gtZCyC3iBLeI0Fmr6sgsHOK4+5d732V+YgABIVdgL/1EjNtHR2PmCwwNW
-   nqC32EZ8EllECpFl+mXn5bReoihuL89Ukv3eY6wdOclvdHaa5Qk4kCqiH
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="404716272"
-X-IronPort-AV: E=Sophos;i="5.96,244,1665471600"; 
-   d="scan'208";a="404716272"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Dec 2022 08:21:32 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="642559944"
-X-IronPort-AV: E=Sophos;i="5.96,244,1665471600"; 
-   d="scan'208";a="642559944"
-Received: from joe-255.igk.intel.com (HELO localhost) ([172.22.229.67])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Dec 2022 08:21:20 -0800
-Date:   Wed, 14 Dec 2022 17:21:17 +0100
-From:   Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
-To:     Eric Dumazet <edumazet@google.com>
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        Alexei Starovoitov <ast@kernel.org>,
-        dri-devel@lists.freedesktop.org, Song Liu <song@kernel.org>,
-        linux-mtd@lists.infradead.org, Stanislav Fomichev <sdf@google.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        Christoph Lameter <cl@linux.com>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Richard Weinberger <richard@nod.at>, x86@kernel.org,
-        John Fastabend <john.fastabend@gmail.com>,
-        Andrii Nakryiko <andrii@kernel.org>, ilay.bahat1@gmail.com,
-        Ingo Molnar <mingo@redhat.com>,
-        David Rientjes <rientjes@google.com>,
-        Yonghong Song <yhs@fb.com>, Paolo Abeni <pabeni@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Petr Mladek <pmladek@suse.com>,
-        david.keisarschm@mail.huji.ac.il,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        intel-gfx@lists.freedesktop.org,
-        Steven Rostedt <rostedt@goodmis.org>,
-        KP Singh <kpsingh@kernel.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Borislav Petkov <bp@alien8.de>, Hannes Reinecke <hare@suse.de>,
-        Andy Lutomirski <luto@kernel.org>,
-        Jiri Pirko <jiri@nvidia.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        bpf@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>,
-        Hao Luo <haoluo@google.com>, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-mm@kvack.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        aksecurity@gmail.com, Jiri Olsa <jolsa@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Martin KaFai Lau <martin.lau@linux.dev>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 1/5] Renaming weak prng invocations -
- prandom_bytes_state, prandom_u32_state
-Message-ID: <20221214162117.GC1062210@linux.intel.com>
-References: <cover.1670778651.git.david.keisarschm@mail.huji.ac.il>
- <b3caaa5ac5fca4b729bf1ecd0d01968c09e6d083.1670778652.git.david.keisarschm@mail.huji.ac.il>
- <Y5c8KLzJFz/XZMiM@zx2c4.com>
- <20221214123358.GA1062210@linux.intel.com>
- <CANn89iJtK4m1cWvCwp=L_rEOEBa+B1kLZJAw0D9_cYPQcAj+Mw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CANn89iJtK4m1cWvCwp=L_rEOEBa+B1kLZJAw0D9_cYPQcAj+Mw@mail.gmail.com>
+        with ESMTP id S239286AbiLNSF0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 13:05:26 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1E7828E39;
+        Wed, 14 Dec 2022 10:04:41 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5E17B61B66;
+        Wed, 14 Dec 2022 18:04:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C1127C433D2;
+        Wed, 14 Dec 2022 18:04:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671041080;
+        bh=6LDCGolDwZ8alpXMtS3bCYGOIj3nKnVNbso3r+MjeBI=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=FkupPgeVv+OQffKEWVzvzwPjHq7bB8/BBH0VTknN4zkgIETDsk1YQcQWZT0++iZkn
+         wjXtu3gov83ZlVu/s/6jGdu+W7/QADs7JEZ2CqraWrwSuvxlVILkwuUefuxKv1q9gl
+         V7oHmAsT1pgnqd28cQPy8ZGJVHIrLb5Qu2qiNfkfSafVt5VEVdQoVqIUJGh7Zn1qH4
+         usLl0dlNYvV0qG1Nq31YG4a4VBuMsQswPDnTVA0vyURr/+reebnTNsOfZeRk6JEyhx
+         Y+Jo4IfAuezlMcRH17/avpM6rHveu3JRWfRO48Bw44CMwGE+VTM6IWQKZWG1LxtY1n
+         pSyxb3d9vb/9g==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id B00AFC41612;
+        Wed, 14 Dec 2022 18:04:40 +0000 (UTC)
+Subject: Re: [GIT PULL] first round of SCSI updates for the 6.1+ merge window
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <b2e824bbd1e40da64d2d01657f2f7a67b98919fb.camel@HansenPartnership.com>
+References: <b2e824bbd1e40da64d2d01657f2f7a67b98919fb.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <b2e824bbd1e40da64d2d01657f2f7a67b98919fb.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+X-PR-Tracked-Commit-Id: 4e80eef45ad775a54fb06a66bf8267a154781ce5
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: aa5ad10f6cca6d42f3fef6cb862e03b220ea19a6
+Message-Id: <167104108071.17244.15947057902300430122.pr-tracker-bot@kernel.org>
+Date:   Wed, 14 Dec 2022 18:04:40 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 14, 2022 at 04:15:49PM +0100, Eric Dumazet wrote:
-> On Wed, Dec 14, 2022 at 1:34 PM Stanislaw Gruszka
-> <stanislaw.gruszka@linux.intel.com> wrote:
-> >
-> > On Mon, Dec 12, 2022 at 03:35:20PM +0100, Jason A. Donenfeld wrote:
-> > > Please CC me on future revisions.
-> > >
-> > > As of 6.2, the prandom namespace is *only* for predictable randomness.
-> > > There's no need to rename anything. So nack on this patch 1/5.
-> >
-> > It is not obvious (for casual developers like me) that p in prandom
-> > stands for predictable. Some renaming would be useful IMHO.
-> 
-> Renaming makes backports more complicated, because stable teams will
-> have to 'undo' name changes.
-> Stable teams are already overwhelmed by the amount of backports, and
-> silly merge conflicts.
+The pull request you sent on Tue, 13 Dec 2022 15:45:55 -0500:
 
-Since when backporting problems is valid argument for stop making
-changes? That's new for me.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-> linux kernel is not for casual readers.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/aa5ad10f6cca6d42f3fef6cb862e03b220ea19a6
 
-Sure.
+Thank you!
 
-Regards
-Stanislaw
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
