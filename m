@@ -2,80 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D57B2C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 03:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD1E2C001B2
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Dec 2022 04:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236968AbiLND3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Dec 2022 22:29:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37016 "EHLO
+        id S237446AbiLNEGV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Dec 2022 23:06:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236844AbiLND27 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2022 22:28:59 -0500
-X-Greylist: delayed 418 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 13 Dec 2022 19:28:58 PST
-Received: from cstnet.cn (smtp23.cstnet.cn [159.226.251.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B4F2F222A3
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2022 19:28:58 -0800 (PST)
-Received: from localhost.localdomain (unknown [124.16.138.125])
-        by APP-03 (Coremail) with SMTP id rQCowABXX5dTQZljo1eqBg--.32359S2;
-        Wed, 14 Dec 2022 11:21:55 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     aacraid@microsemi.com, jejb@linux.ibm.com,
+        with ESMTP id S237320AbiLNEGL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2022 23:06:11 -0500
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D02527B02
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2022 20:06:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1670990767; x=1702526767;
+  h=from:to:cc:subject:date:message-id;
+  bh=f0NrloGx4sYI8QnunbFIYxQ8S+X2eigK1ncPp/vBLX0=;
+  b=K/6XmXRFopjiuHPUmKYeWsBYBFpb04p5xvVuk7Lj6REvc4X9cddH7BVr
+   aQtXbFWvfWATtU2N1/IkVEyP6cvmX5osUNIKGHtHmBmuHegd96eh+aN4e
+   Ce4Ivo8TYq7e1B+Wm4heGS0+RKXPa8aShOiw/KX0VgoteNy2tFZfWDb8D
+   k=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 13 Dec 2022 20:06:05 -0800
+X-QCInternal: smtphost
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 13 Dec 2022 20:06:05 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id BDD9220DF0; Tue, 13 Dec 2022 20:06:05 -0800 (PST)
+From:   Can Guo <quic_cang@quicinc.com>
+To:     quic_asutoshd@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
         martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] scsi: ips: Add missing check for dma_alloc_coherent
-Date:   Wed, 14 Dec 2022 11:21:54 +0800
-Message-Id: <20221214032154.41665-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: rQCowABXX5dTQZljo1eqBg--.32359S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrZr4rCr48Zw17KFy7KF48JFb_yoWfAwb_Ww
-        4UAr9rW34UCr4Igr18J348AryIkrs8Zry093ZYqr1a9ry3ur1kAr9Fyr97Gr48W3ykZFWU
-        JwnrtrWYvw17KjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbc8FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-        Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY02Avz4vE14v_Gr4l
-        42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJV
-        WUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAK
-        I48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r
-        4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY
-        6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU84SoDUUUU
-X-Originating-IP: [124.16.138.125]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+Cc:     linux-scsi@vger.kernel.org, Can Guo <quic_cang@quicinc.com>
+Subject: [PATCH v2 0/3] Add support for UFS Event Specific Interrupt
+Date:   Tue, 13 Dec 2022 20:05:59 -0800
+Message-Id: <1670990763-30806-1-git-send-email-quic_cang@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add check for the return value of the dma_alloc_coherent in order to
-avoid NULL pointer dereference.
+UFS Multi-Circular Queue (MCQ) driver is on the way. This patch series is
+to enable Event Specific Interrupt (ESI), which can used in MCQ mode.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
----
- drivers/scsi/ips.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Please note that this series is developed and tested based on the latest MCQ
+driver (v11) pushed by Asutosh Das.
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 16419aeec02d..26101f5b0434 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -6932,6 +6932,11 @@ ips_init_phase1(struct pci_dev *pci_dev, int *indexPtr)
- 	if(ips_cd_boot && !ips_FlashData){
- 		ips_FlashData = dma_alloc_coherent(&pci_dev->dev,
- 				PAGE_SIZE << 7, &ips_flashbusaddr, GFP_KERNEL);
-+		if (!ips_FlashData) {
-+			IPS_PRINTK(KERN_WARNING, pci_dev,
-+				   "Unable to allocate ips FlashData structure\n");
-+			return ips_abort_init(ha, index);
-+		}
- 	}
- 
- 	ha->enq = dma_alloc_coherent(&pci_dev->dev, sizeof (IPS_ENQ),
+v1 -> v2:
+- Improved QCOM specific ESI configuration flow
+	
+Can Guo (3):
+  ufs: core: Add Event Specific Interrupt configuration vendor specific
+    ops
+  ufs: core: mcq: Add Event Specific Interrupt enable and config APIs
+  ufs-host: qcom: Add MCQ ESI config vendor specific ops
+
+ drivers/ufs/core/ufs-mcq.c     | 16 +++++++
+ drivers/ufs/core/ufshcd-priv.h |  8 ++++
+ drivers/ufs/core/ufshcd.c      |  5 +++
+ drivers/ufs/host/ufs-qcom.c    | 97 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h    |  5 +++
+ include/ufs/ufshcd.h           |  8 ++++
+ include/ufs/ufshci.h           |  2 +
+ 7 files changed, 141 insertions(+)
+
 -- 
-2.25.1
+2.7.4
 
