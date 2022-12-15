@@ -2,85 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F42C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 16:06:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD400C46467
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 16:13:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbiLOQG3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Dec 2022 11:06:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39694 "EHLO
+        id S229917AbiLOQNX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Dec 2022 11:13:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbiLOQG2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 11:06:28 -0500
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642E32F01F;
-        Thu, 15 Dec 2022 08:06:27 -0800 (PST)
-Received: by mail-ej1-x629.google.com with SMTP id gh17so53396125ejb.6;
-        Thu, 15 Dec 2022 08:06:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=VX4tYAPYLAMSU6fO3spNXqyMkb66pqQTAjpl3aq1zuQ=;
-        b=GWBnyoHAA4uuPna3v/35bGgAJvbIxWQFhSwiaoRJaPyUyyyYqPJwYGDoI1S3sFvgxK
-         j+7LAeFy10FMq6c63BYBFsfHrifTgk9B9EXOevUjiO160b7y+sZiskKGYbuP4h519Xmp
-         zOPWoAcoUaROHPOVxxdG8mpTvNwgRBQgK/8gSCVTfcBosdPLdA6I+qDPK3IRuQ3SUadr
-         IunoZWtkKPwcWolvlS3VPWxJJJTd23j4SZKp1Ydgl+SVgyks/E6crRAaxHlx05tuT3Ry
-         0RpRuSzxBv2pEKcP0WknB3mfSVGi75E/UC2lDd4Datw8wpp8Wg2s2HeBjALa9wc0LNHb
-         hgCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=VX4tYAPYLAMSU6fO3spNXqyMkb66pqQTAjpl3aq1zuQ=;
-        b=IDgq64hbWDxeRZV4l7p6sqtOcVcL57FLe2wABH6xskQFRvzVoJU/2FtD3/kbqAN2Pd
-         6B4iHozJYxdkUnNZCozJuM6RprVBaPieYr6UidfuadrIrmCn4dDQBrYUkuRsuvVbnRiZ
-         YaI4unEomkxz35AOYcTwQQ6RmaOzxl1JrHBKzbBeV8dTRSTrTqeXtP1+xq98cDPmedx4
-         57XkyEEXzrjdD3cDBNeIpyOyjPHTnTJMouOBrjPtRfPdNb2GB6eV+QfaTJoi5UlQcZws
-         WO6g61FdDluWdjSFqcgtHC5ttxL6b8mo5rEgwVVF95R0G40t7unRs4japuhA3iATV4Ve
-         83DA==
-X-Gm-Message-State: ANoB5pnzEh0Z0LSw2/wifx5mar9sshQy/0pCI/mxtDDbutKvqXnR9Szn
-        hTxp34KFDovjEp09NtLNX5Q=
-X-Google-Smtp-Source: AA0mqf5EEV2czRxfkopfAWcm9WKOBOg+Eq4ctkV9J11cqBj5ap/VWx8Y5GVDB1hQCFT5rOYU9q+v/w==
-X-Received: by 2002:a17:906:2bd7:b0:7c1:4c46:30a0 with SMTP id n23-20020a1709062bd700b007c14c4630a0mr20392793ejg.65.1671120385883;
-        Thu, 15 Dec 2022 08:06:25 -0800 (PST)
-Received: from ?IPV6:2003:c5:871f:9993:b1c0:fc77:1081:c93c? (p200300c5871f9993b1c0fc771081c93c.dip0.t-ipconnect.de. [2003:c5:871f:9993:b1c0:fc77:1081:c93c])
-        by smtp.gmail.com with ESMTPSA id k18-20020a17090632d200b0073de0506745sm7156471ejk.197.2022.12.15.08.06.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Dec 2022 08:06:25 -0800 (PST)
-Message-ID: <9dd400a9-272d-caa0-13d0-20a47745da22@gmail.com>
-Date:   Thu, 15 Dec 2022 17:06:22 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH v6 1/4] ufs: core: Remove redundant wb check
-Content-Language: en-US
-To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        martin.petersen@oracle.com
-Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        with ESMTP id S229838AbiLOQNU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 11:13:20 -0500
+Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCC6F31EE7
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 08:13:19 -0800 (PST)
+Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
+        by amity.mint.lgbt (Postfix) with ESMTP id 4NXy2Q1VDWz1S5D1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 11:13:18 -0500 (EST)
+Authentication-Results: amity.mint.lgbt (amavisd-new);
+        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
+        header.d=mint.lgbt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
+        content-transfer-encoding:mime-version:x-mailer:message-id:date
+        :subject:to:from; s=dkim; t=1671120797; x=1671984798; bh=We5xjhG
+        qrFdJQxR93Npt09VH/7a6fXPhQTRN9HYr93I=; b=MRpzEE+Z7zP8IwDwvLo5Gf0
+        O0JrPZxOnieXnJjS2Ntj/BMqdVROkik02wrU7SLH83iBh6fC0KBB2y5PRdgGwzdq
+        QqLsJSk2IWWDxJ0ev2kZxO/xzCu+E75dp8m/ZGo4MhOPPdtrtuawGdoK8YjeG9UU
+        nYY+uW/NH9AhuOyBEbaK9R1Y7MFvut1mEmHb+veTNyLU1/5tgn5vFe5jUqlK/tlN
+        w6GOFqVo5lhC4ulaIWbkWoP77PUNMIU+5jizpcUKr7t67YE9THqBVV0u0ESqyjsi
+        LxvFmPJR1q4gWfCOlRYOC0UapZwqv9fQCmBRe9acQ07NVX89ERy4vLyrI+ymQoQ=
+        =
+X-Virus-Scanned: amavisd-new at amity.mint.lgbt
+Received: from amity.mint.lgbt ([127.0.0.1])
+        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id f2IWf3X1qTqf for <linux-scsi@vger.kernel.org>;
+        Thu, 15 Dec 2022 11:13:17 -0500 (EST)
+Received: from dorothy.. (unknown [190.196.92.66])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4NXy2H493zz1S4t9;
+        Thu, 15 Dec 2022 11:13:11 -0500 (EST)
+From:   Lux Aliaga <they@mint.lgbt>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc:     Lux Aliaga <they@mint.lgbt>, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
-References: <1671011427-26184-1-git-send-email-Arthur.Simchaev@wdc.com>
- <1671011427-26184-2-git-send-email-Arthur.Simchaev@wdc.com>
-From:   Bean Huo <huobean@gmail.com>
-In-Reply-To: <1671011427-26184-2-git-send-email-Arthur.Simchaev@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v2 1/4] dt-bindings: ufs: qcom: Add SM6125 compatible string
+Date:   Thu, 15 Dec 2022 13:12:54 -0300
+Message-Id: <20221215161258.355962-1-they@mint.lgbt>
+X-Mailer: git-send-email 2.38.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Arthur,
+Document the compatible for UFS found on the SM6125.
 
-You forgot to add Stanley's reviewed tag:
+Signed-off-by: Lux Aliaga <they@mint.lgbt>
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Reviewed-by: Stanley Chu<stanley.chu@mediatek.com>
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Docume=
+ntation/devicetree/bindings/ufs/qcom,ufs.yaml
+index b517d76215e3..42422f3471b3 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -29,6 +29,7 @@ properties:
+           - qcom,sc8280xp-ufshc
+           - qcom,sdm845-ufshc
+           - qcom,sm6115-ufshc
++          - qcom,sm6125-ufshc
+           - qcom,sm6350-ufshc
+           - qcom,sm8150-ufshc
+           - qcom,sm8250-ufshc
+@@ -185,6 +186,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,sm6115-ufshc
++              - qcom,sm6125-ufshc
+     then:
+       properties:
+         clocks:
+--=20
+2.38.1
 
-On 14.12.22 10:50 AM, Arthur Simchaev wrote:
-> We used to use the extended-feature field in the device descriptor,
-> as an indication that the device supports ufs2.2 or later.
-> Remove that as this check is specifically done few lines above.
->
-> Reviewed-by: Bart Van Assche<bvanassche@acm.org>
-> Reviewed-by: Bean Huo<beanhuo@micron.com>
-> Signed-off-by: Arthur Simchaev<Arthur.Simchaev@wdc.com>
