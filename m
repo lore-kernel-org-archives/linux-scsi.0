@@ -2,80 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B201C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 01:13:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0CDDC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 02:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229558AbiLOBN6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Dec 2022 20:13:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35120 "EHLO
+        id S229543AbiLOCHH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Dec 2022 21:07:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229543AbiLOBN5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 20:13:57 -0500
-Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B844554E6
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 17:13:56 -0800 (PST)
-Received: by mail-qt1-f171.google.com with SMTP id s9so4038404qtx.6
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2022 17:13:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hh7Y8c7kvM/HzlfphURCvdoZB61L69AgI7sozF0odnw=;
-        b=WyEKaiw4hsPd/RK2c/3I+UqN2lDednbmJXo1xuzKXr4mgrNYAmEibCW07006JUDRce
-         Nnn+KrjG3KbpEyT8N2bBwh65DkvQjnrOsVNK3eySp8K7zRpc5ePEgLzzpR6cirSKukIe
-         Ps1/oRhdqM8yX5gD5KOxWq1lsAJC+6vBKb7E4e6gzQjSVkj/lcqTAfjSTReoixCm/OhD
-         oVsS2btDc9N4X7/pWh55zW0MygsFvRBoEcJFf2KEjqEk/72LSyodT3a7bMIvDr5RAOde
-         1Xz+vn3zc+iui6u0H5kS+7rjXgKn4b2OU0k9yvS2Qwzs33OKFoxoeW71/3k0S6ue22AR
-         I2sA==
-X-Gm-Message-State: ANoB5plq99pTbABEOn7VhGS/LX7uUxbf0ebSlZ46PIZErrbqKYBjETCe
-        rGtDySY2r47DJ5uVWl9okBI=
-X-Google-Smtp-Source: AA0mqf5gr4fUOl4PHC52ELfYuwxzadRK63bvLkHOyNragrm72gOt+dTbFGrD7T6+fT54kj+RWWZ1XA==
-X-Received: by 2002:ac8:7383:0:b0:3a8:2bf6:85ea with SMTP id t3-20020ac87383000000b003a82bf685eamr6981131qtp.49.1671066835352;
-        Wed, 14 Dec 2022 17:13:55 -0800 (PST)
-Received: from [172.22.37.189] (rrcs-76-81-102-5.west.biz.rr.com. [76.81.102.5])
-        by smtp.gmail.com with ESMTPSA id d6-20020a05620a240600b006fcb4e01345sm11332645qkn.24.2022.12.14.17.13.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Dec 2022 17:13:54 -0800 (PST)
-Message-ID: <40a872ea-c3c8-965d-6671-94d69480802b@acm.org>
-Date:   Wed, 14 Dec 2022 15:13:51 -1000
+        with ESMTP id S229632AbiLOCHG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2022 21:07:06 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15DC336C42;
+        Wed, 14 Dec 2022 18:07:05 -0800 (PST)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BELoELT007319;
+        Thu, 15 Dec 2022 02:06:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=gE007DxYZgdgs2mVn1V5/kYJmCVeBF+/XYbJuzRSCfs=;
+ b=U95QCCl3JNSo7AE8GJeAgCSbEUiKI6YcqL/JbsDUIFFSB3eyJSEZyvTQ/WPkLlgoBaHB
+ Ehy9txYSaq4pRcYSbpQyDao44EM2E4UunhyWFPZ6MdvFycnNVhlXONbdxIlR+WdncMkF
+ VnkOx5VE6tGLmw+elYSOscjRcACX2LT0G81BFLkmGYP95RJLzu5T3Ed/dNVSZUsCDTKf
+ 1cw/u39VFMyefyx/GH93gic3XFZCpFH2TvNvU16kJZTZ+/p/4LTzyG891vKiKlJZ1UAK
+ Uuz5c73OfdZpjQjr5Nlyo6S9phTplHUJtFvhcmTH7/+whBGvz2M9wJG+hS8qMFPG/QAP UQ== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3mf6rkjy79-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 15 Dec 2022 02:06:42 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2BF26f3I022214
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 15 Dec 2022 02:06:41 GMT
+Received: from [10.253.35.151] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Wed, 14 Dec
+ 2022 18:06:37 -0800
+Message-ID: <4ebba197-b6b8-8acc-d5dc-e4b36c17a4c1@quicinc.com>
+Date:   Thu, 15 Dec 2022 10:06:22 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH v3 01/15] scsi: Add struct for args to execution functions
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [PATCH v2 2/3] ufs: core: mcq: Add Event Specific Interrupt
+ enable and config APIs
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <mani@kernel.org>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+References: <1670990763-30806-1-git-send-email-quic_cang@quicinc.com>
+ <1670990763-30806-3-git-send-email-quic_cang@quicinc.com>
+ <1e224fa1-7cb3-25cb-8e63-df42b137e96a@acm.org>
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        john.g.garry@oracle.com, mwilck@suse.com, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20221214235001.57267-1-michael.christie@oracle.com>
- <20221214235001.57267-2-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221214235001.57267-2-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <1e224fa1-7cb3-25cb-8e63-df42b137e96a@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Pmb9Y0qZE_EftX02cQRFi07XvVrRn1TT
+X-Proofpoint-ORIG-GUID: Pmb9Y0qZE_EftX02cQRFi07XvVrRn1TT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-12-14_12,2022-12-14_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 spamscore=0
+ lowpriorityscore=0 phishscore=0 priorityscore=1501 bulkscore=0
+ adultscore=0 suspectscore=0 mlxlogscore=819 mlxscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2212150013
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/14/22 15:49, Mike Christie wrote:
-> This begins to move the SCSI execution functions to use a struct for
-> passing in optional args. This patch adds the new struct, temporarily
-> converts scsi_execute and scsi_execute_req ands a new helper,
-> scsi_execute_cmd, which takes the scsi_exec_args struct.
-> 
-> There should be no change in behavior. We no longer alilow users to pass
-                                                       ^^^^^^
-                                                       allow?
-> in any request->rq_flags valu, but they were only passing in RQF_QUIET
-                            ^^^^                                ^^^^^^^^^
-                            value?                              RQF_PM?
-> which we do support by allowing users to pass in the BLK_MQ_REQ flags used
-> by blk_mq_alloc_request.
-> 
-> The next patches will convert scsi_execute and scsi_execute_req users to
-> the new helpers then remove scsi_execute and scsi_execute_req.
+Hi Bart,
 
-After the patch description has been updated, please add:
+On 12/15/2022 9:05 AM, Bart Van Assche wrote:
+> On 12/13/22 20:06, Can Guo wrote:
+>> Add two APIs to enable ESI and config ESI base addresses.
+>
+> If this patch is reposted, please change "APIs" into "functions" and 
+> add a sentence to explain that calls to the exported functions will be 
+> added by the next patch in this series.
+>
+> Thanks,
+>
+> Bart.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
+Thank you Bart for your review. I will upload a new version to adopt 
+your comments.
+
+Best Regard,
+
+Can Guo.
+
