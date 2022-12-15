@@ -2,156 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C5A7C3DA78
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 11:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F42C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 16:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbiLOL6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Dec 2022 06:58:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57750 "EHLO
+        id S229517AbiLOQG3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Dec 2022 11:06:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230155AbiLOL6J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 06:58:09 -0500
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CF222ED58
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 03:58:07 -0800 (PST)
-Received: by mail-pg1-x531.google.com with SMTP id 79so3987502pgf.11
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 03:58:07 -0800 (PST)
+        with ESMTP id S229488AbiLOQG2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 11:06:28 -0500
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642E32F01F;
+        Thu, 15 Dec 2022 08:06:27 -0800 (PST)
+Received: by mail-ej1-x629.google.com with SMTP id gh17so53396125ejb.6;
+        Thu, 15 Dec 2022 08:06:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=gmail.com; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=pZOfOCT1uqUyQOZ3Q6ejDEihZSzQYrZucgCadknyvEo=;
-        b=TaTybFJOhH5EPK/eBhO184gTI9rZ6NpPjNfPTGQmv+4pde+ovnS4o3OcSTPB07hU3j
-         u8Gyneh47OfOatEVMn3wPktBWSiEx17Hm2qO/9QkhlOpPHF4cESHo62ysUOcZjFY1UgW
-         46qjT3Wvo4pE17HeOcATjOBvTJdy3LzoYMors5zHe7mX7B3BLz3LEP6fnNuGiKxaXZZY
-         KsH/VLtse+zcMYOJ2Mwrbu4HzaTUx12stdo25n1fyi4kfyjqVV/KGeFtufPgS4e4ZoQu
-         94kCq1g/b7CCX8aW/1AaQk1I6DccFrnHOdxDBPOTDmYJi1rAlE3T2tMbtlW2BhxhuP21
-         4Zcg==
+        bh=VX4tYAPYLAMSU6fO3spNXqyMkb66pqQTAjpl3aq1zuQ=;
+        b=GWBnyoHAA4uuPna3v/35bGgAJvbIxWQFhSwiaoRJaPyUyyyYqPJwYGDoI1S3sFvgxK
+         j+7LAeFy10FMq6c63BYBFsfHrifTgk9B9EXOevUjiO160b7y+sZiskKGYbuP4h519Xmp
+         zOPWoAcoUaROHPOVxxdG8mpTvNwgRBQgK/8gSCVTfcBosdPLdA6I+qDPK3IRuQ3SUadr
+         IunoZWtkKPwcWolvlS3VPWxJJJTd23j4SZKp1Ydgl+SVgyks/E6crRAaxHlx05tuT3Ry
+         0RpRuSzxBv2pEKcP0WknB3mfSVGi75E/UC2lDd4Datw8wpp8Wg2s2HeBjALa9wc0LNHb
+         hgCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pZOfOCT1uqUyQOZ3Q6ejDEihZSzQYrZucgCadknyvEo=;
-        b=iFlKrEt92c4cqjWmwe4UtzE6XS3HuriIn7GNlSEafSdyZCf5pkDZqWy/doJwHTH/go
-         zpqX034AKz+hXDs2RGLkoxhIkKT3/RiSXPP0ef2JiSMG+jGPuxKMJxTK3wr2QiLMPK1G
-         NfXpZdiMAB1nC7lEcPQ1iE0LC4EYvkDJzxkPVSmtMr8HXDv0rMKJLiqVDL1qqNBQO/+V
-         /zniMl+GBw6IyG5rWCArCU9XYAfTQ/7Bza2ZCTIKCCfHqD/d4Y/gyBFPzibuPRRqtR/o
-         OPVrDZQUoBwXlD5hnaLy+yCAI0JULtYQco995x5HNHumZv0vYqX6e/NYyddrr2ez/V60
-         gFEw==
-X-Gm-Message-State: ANoB5pkE6hnExpKpC2jtIJo69GemHEJzayHBuKvc1p9V2u14vUmsRzUb
-        tNAmaAqn4x3KPdM1iEKrpOm4jQ==
-X-Google-Smtp-Source: AA0mqf6zAOBI8FNjjz3fd3sqz5D+xV3IlJL7UUHXxCKfMPTOyHmWW9qt9YBU98dbCUcKtQgdAWvb4g==
-X-Received: by 2002:a62:e814:0:b0:577:271e:e66f with SMTP id c20-20020a62e814000000b00577271ee66fmr28704053pfi.27.1671105487018;
-        Thu, 15 Dec 2022 03:58:07 -0800 (PST)
-Received: from ?IPV6:2401:4900:1c5f:4e45:ae49:8018:6d22:e5b4? ([2401:4900:1c5f:4e45:ae49:8018:6d22:e5b4])
-        by smtp.gmail.com with ESMTPSA id h66-20020a62de45000000b00576145a9bd0sm1554392pfg.127.2022.12.15.03.57.59
+        bh=VX4tYAPYLAMSU6fO3spNXqyMkb66pqQTAjpl3aq1zuQ=;
+        b=IDgq64hbWDxeRZV4l7p6sqtOcVcL57FLe2wABH6xskQFRvzVoJU/2FtD3/kbqAN2Pd
+         6B4iHozJYxdkUnNZCozJuM6RprVBaPieYr6UidfuadrIrmCn4dDQBrYUkuRsuvVbnRiZ
+         YaI4unEomkxz35AOYcTwQQ6RmaOzxl1JrHBKzbBeV8dTRSTrTqeXtP1+xq98cDPmedx4
+         57XkyEEXzrjdD3cDBNeIpyOyjPHTnTJMouOBrjPtRfPdNb2GB6eV+QfaTJoi5UlQcZws
+         WO6g61FdDluWdjSFqcgtHC5ttxL6b8mo5rEgwVVF95R0G40t7unRs4japuhA3iATV4Ve
+         83DA==
+X-Gm-Message-State: ANoB5pnzEh0Z0LSw2/wifx5mar9sshQy/0pCI/mxtDDbutKvqXnR9Szn
+        hTxp34KFDovjEp09NtLNX5Q=
+X-Google-Smtp-Source: AA0mqf5EEV2czRxfkopfAWcm9WKOBOg+Eq4ctkV9J11cqBj5ap/VWx8Y5GVDB1hQCFT5rOYU9q+v/w==
+X-Received: by 2002:a17:906:2bd7:b0:7c1:4c46:30a0 with SMTP id n23-20020a1709062bd700b007c14c4630a0mr20392793ejg.65.1671120385883;
+        Thu, 15 Dec 2022 08:06:25 -0800 (PST)
+Received: from ?IPV6:2003:c5:871f:9993:b1c0:fc77:1081:c93c? (p200300c5871f9993b1c0fc771081c93c.dip0.t-ipconnect.de. [2003:c5:871f:9993:b1c0:fc77:1081:c93c])
+        by smtp.gmail.com with ESMTPSA id k18-20020a17090632d200b0073de0506745sm7156471ejk.197.2022.12.15.08.06.24
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Dec 2022 03:58:06 -0800 (PST)
-Message-ID: <1d3d8169-1011-cdfd-f9f7-b7828acdc1ac@linaro.org>
-Date:   Thu, 15 Dec 2022 17:27:57 +0530
+        Thu, 15 Dec 2022 08:06:25 -0800 (PST)
+Message-ID: <9dd400a9-272d-caa0-13d0-20a47745da22@gmail.com>
+Date:   Thu, 15 Dec 2022 17:06:22 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
-Subject: Re: [PATCH v5 1/8] dt-bindings: ufs: qcom: Add sm6115 binding
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v6 1/4] ufs: core: Remove redundant wb check
 Content-Language: en-US
-To:     Iskren Chernev <iskren.chernev@gmail.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221030094258.486428-1-iskren.chernev@gmail.com>
- <20221030094258.486428-2-iskren.chernev@gmail.com>
-From:   Bhupesh Sharma <bhupesh.sharma@linaro.org>
-In-Reply-To: <20221030094258.486428-2-iskren.chernev@gmail.com>
+To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1671011427-26184-1-git-send-email-Arthur.Simchaev@wdc.com>
+ <1671011427-26184-2-git-send-email-Arthur.Simchaev@wdc.com>
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <1671011427-26184-2-git-send-email-Arthur.Simchaev@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Arthur,
 
-On 10/30/22 3:12 PM, Iskren Chernev wrote:
-> Add SM6115 UFS to DT schema.
-> 
-> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->   .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
->   1 file changed, 26 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index f2d6298d926c..b517d76215e3 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -28,6 +28,7 @@ properties:
->             - qcom,msm8998-ufshc
->             - qcom,sc8280xp-ufshc
->             - qcom,sdm845-ufshc
-> +          - qcom,sm6115-ufshc
->             - qcom,sm6350-ufshc
->             - qcom,sm8150-ufshc
->             - qcom,sm8250-ufshc
-> @@ -178,6 +179,31 @@ allOf:
->             minItems: 1
->             maxItems: 1
->   
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - qcom,sm6115-ufshc
-> +    then:
-> +      properties:
-> +        clocks:
-> +          minItems: 8
-> +          maxItems: 8
-> +        clock-names:
-> +          items:
-> +            - const: core_clk
-> +            - const: bus_aggr_clk
-> +            - const: iface_clk
-> +            - const: core_clk_unipro
-> +            - const: ref_clk
-> +            - const: tx_lane0_sync_clk
-> +            - const: rx_lane0_sync_clk
-> +            - const: ice_core_clk
-> +        reg:
-> +          minItems: 2
-> +          maxItems: 2
-> +
->       # TODO: define clock bindings for qcom,msm8994-ufshc
->   
->   unevaluatedProperties: false
+You forgot to add Stanley's reviewed tag:
 
-Seems this hasn't made way to linux-next yet. Hence we get the following 
-error with $ make dtbs_check:
+Reviewed-by: Stanley Chu<stanley.chu@mediatek.com>
 
-arch/arm64/boot/dts/qcom/sm4250-oneplus-billie2.dtb: ufs@4804000: 
-compatible:0: 'qcom,sm6115-ufshc' is not one of ['qcom,msm8994-ufshc', 
-'qcom,msm8996-ufshc', 'qcom,msm8998-ufshc', 'qcom,sc8280xp-ufshc', 
-'qcom,sdm845-ufshc', 'qcom,sm6350-ufshc', 'qcom,sm8150-ufshc', 
-'qcom,sm8250-ufshc', 'qcom,sm8350-ufshc', 'qcom,sm8450-ufshc']
-	From schema: Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-
-arch/arm64/boot/dts/qcom/sm4250-oneplus-billie2.dtb: ufs@4804000: 
-Unevaluated properties are not allowed ('compatible' was unexpected)
-	From schema: Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-
-If, it helps to get the review / merge happen:
-
-Reviewed-by: Bhupesh Sharma <bhupesh.sharma@linaro.org>
-
-@Rob, @Krzysztof: Please help merge this.
-
-Thanks.
+On 14.12.22 10:50 AM, Arthur Simchaev wrote:
+> We used to use the extended-feature field in the device descriptor,
+> as an indication that the device supports ufs2.2 or later.
+> Remove that as this check is specifically done few lines above.
+>
+> Reviewed-by: Bart Van Assche<bvanassche@acm.org>
+> Reviewed-by: Bean Huo<beanhuo@micron.com>
+> Signed-off-by: Arthur Simchaev<Arthur.Simchaev@wdc.com>
