@@ -2,92 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD400C46467
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 16:13:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC3FC4167B
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 16:45:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229917AbiLOQNX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Dec 2022 11:13:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43418 "EHLO
+        id S230178AbiLOQpF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Dec 2022 11:45:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbiLOQNU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 11:13:20 -0500
-Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCC6F31EE7
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 08:13:19 -0800 (PST)
-Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
-        by amity.mint.lgbt (Postfix) with ESMTP id 4NXy2Q1VDWz1S5D1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 11:13:18 -0500 (EST)
-Authentication-Results: amity.mint.lgbt (amavisd-new);
-        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
-        header.d=mint.lgbt
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
-        content-transfer-encoding:mime-version:x-mailer:message-id:date
-        :subject:to:from; s=dkim; t=1671120797; x=1671984798; bh=We5xjhG
-        qrFdJQxR93Npt09VH/7a6fXPhQTRN9HYr93I=; b=MRpzEE+Z7zP8IwDwvLo5Gf0
-        O0JrPZxOnieXnJjS2Ntj/BMqdVROkik02wrU7SLH83iBh6fC0KBB2y5PRdgGwzdq
-        QqLsJSk2IWWDxJ0ev2kZxO/xzCu+E75dp8m/ZGo4MhOPPdtrtuawGdoK8YjeG9UU
-        nYY+uW/NH9AhuOyBEbaK9R1Y7MFvut1mEmHb+veTNyLU1/5tgn5vFe5jUqlK/tlN
-        w6GOFqVo5lhC4ulaIWbkWoP77PUNMIU+5jizpcUKr7t67YE9THqBVV0u0ESqyjsi
-        LxvFmPJR1q4gWfCOlRYOC0UapZwqv9fQCmBRe9acQ07NVX89ERy4vLyrI+ymQoQ=
-        =
-X-Virus-Scanned: amavisd-new at amity.mint.lgbt
-Received: from amity.mint.lgbt ([127.0.0.1])
-        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id f2IWf3X1qTqf for <linux-scsi@vger.kernel.org>;
-        Thu, 15 Dec 2022 11:13:17 -0500 (EST)
-Received: from dorothy.. (unknown [190.196.92.66])
-        by amity.mint.lgbt (Postfix) with ESMTPSA id 4NXy2H493zz1S4t9;
-        Thu, 15 Dec 2022 11:13:11 -0500 (EST)
-From:   Lux Aliaga <they@mint.lgbt>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     Lux Aliaga <they@mint.lgbt>, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/4] dt-bindings: ufs: qcom: Add SM6125 compatible string
-Date:   Thu, 15 Dec 2022 13:12:54 -0300
-Message-Id: <20221215161258.355962-1-they@mint.lgbt>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S230039AbiLOQpC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 11:45:02 -0500
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 795D337FBA;
+        Thu, 15 Dec 2022 08:45:01 -0800 (PST)
+Received: by mail-ed1-x52e.google.com with SMTP id a16so27860588edb.9;
+        Thu, 15 Dec 2022 08:45:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Fdysh/ijYewRV7bbddoJgpW8W2b/pWo97s985wV5pOE=;
+        b=l43YPQBwPDpWHKLNjBQoFqrC0/4N+jGpwN+XEb8FFKxxf2FifYF+vz7mpBMZ2a1XXN
+         94NBYk4aDFLF1mx/wNkTSR0YEBRNwmye72EF91SRz1Iptzfm4yLAA/x7CBDhLi+Yq5AO
+         6dMowHOgi7GDSZrNEgJGgbwrmWSOYuGIdLpw9RuJRx/JbZe03Ee3+caPsH9VTlQ8xeRt
+         mSMRJfzHSL97rEl0VCjEZhO2duM3+NY1YuxHZ2O+NDoBq+12rxIcez7O8GV/jXlgTKcI
+         vdb5HG4Vpyt8FyGEcxZYAF+NPN3xr4jq0p5hv8iloBUjEbMneJhcJAD9zwUQ24ZzDWCc
+         Pc3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Fdysh/ijYewRV7bbddoJgpW8W2b/pWo97s985wV5pOE=;
+        b=vae5tiRkMX19FUU+dxLt1VP+XS2Z0fr6KV+4UIf7n/Ad8gjwsZtZKsqu4R1wZpUeyO
+         FKSsjiH5V6OkHVRyGaugv+iyTtaI7li/l5BJzjP1dcqwL5WndcTm42anBZBtRlAJ7/y9
+         hqO5Z7Q0rS6JlhHkOuRPGuKE/JSh3KTVFavWD+/iyD6F81eNuavYABgCx63/XOOkEw7F
+         p77SgBxgs3mQqEHrENquUw9o7saeiZNm7ueu3+3EIEkKEBocp/h5WdNICntDgmND+F8W
+         KKG13krj99nDBSr8Cpo9lVQPyA+ox85szjyFQKH1tqE8A7b8dRlk1MItVhvh8yEUwATa
+         OPxg==
+X-Gm-Message-State: AFqh2kqMZ8DbHTAnJsHD6Ux7m6XDG67Rnq6UvxSv71f+rdSFzGYPbgwR
+        pVhN7yX9s6g5YehHJZkBgw0=
+X-Google-Smtp-Source: AMrXdXvQrHfotHCvkzUGBDmw98seVFtR2I7MIBfvPATXve2iauxvcnzNJePNvumxSQb3pCgDN4t1hA==
+X-Received: by 2002:aa7:d384:0:b0:472:7c75:832 with SMTP id x4-20020aa7d384000000b004727c750832mr6025450edq.16.1671122699985;
+        Thu, 15 Dec 2022 08:44:59 -0800 (PST)
+Received: from ?IPV6:2003:c5:871f:9993:b1c0:fc77:1081:c93c? (p200300c5871f9993b1c0fc771081c93c.dip0.t-ipconnect.de. [2003:c5:871f:9993:b1c0:fc77:1081:c93c])
+        by smtp.gmail.com with ESMTPSA id kv4-20020a17090778c400b007c0b530f3cfsm7216202ejc.72.2022.12.15.08.44.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Dec 2022 08:44:59 -0800 (PST)
+Message-ID: <4d8e2b27-2804-e8ad-1e35-0942538b5617@gmail.com>
+Date:   Thu, 15 Dec 2022 17:44:58 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v11 00/16] Add Multi Circular Queue Support
+Content-Language: en-US
+To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        stanley.chu@mediatek.com, eddie.huang@mediatek.com,
+        daejun7.park@samsung.com, bvanassche@acm.org, avri.altman@wdc.com,
+        mani@kernel.org, beanhuo@micron.com, linux-arm-msm@vger.kernel.org
+References: <cover.1670541363.git.quic_asutoshd@quicinc.com>
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <cover.1670541363.git.quic_asutoshd@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Document the compatible for UFS found on the SM6125.
+Asutosh,
 
-Signed-off-by: Lux Aliaga <they@mint.lgbt>
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+I reviewed the entire patch series and applied them to Martin's 
+6.2/staging branch,
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Docume=
-ntation/devicetree/bindings/ufs/qcom,ufs.yaml
-index b517d76215e3..42422f3471b3 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -29,6 +29,7 @@ properties:
-           - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-           - qcom,sm6115-ufshc
-+          - qcom,sm6125-ufshc
-           - qcom,sm6350-ufshc
-           - qcom,sm8150-ufshc
-           - qcom,sm8250-ufshc
-@@ -185,6 +186,7 @@ allOf:
-           contains:
-             enum:
-               - qcom,sm6115-ufshc
-+              - qcom,sm6125-ufshc
-     then:
-       properties:
-         clocks:
---=20
-2.38.1
+
+No logic issues were found, other than these minor compilation warnings:
+
+
+drivers/ufs/core/ufs-mcq.c:87: warning: Function parameter or member 
+'hba' not described in 'ufshcd_mcq_config_mac'
+drivers/ufs/core/ufs-mcq.c:87: warning: Function parameter or member 
+'max_active_cmds' not described in 'ufshcd_mcq_config_mac'
+drivers/ufs/core/ufs-mcq.c:107: warning: Function parameter or member 
+'hba' not described in 'ufshcd_mcq_req_to_hwq'
+drivers/ufs/core/ufs-mcq.c:107: warning: Function parameter or member 
+'req' not described in 'ufshcd_mcq_req_to_hwq'
+drivers/ufs/core/ufs-mcq.c:128: warning: Function parameter or member 
+'hba' not described in 'ufshcd_mcq_decide_queue_depth'
+
+so:
+
+
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+
+
+
+Kind regards,
+
+Bean
 
