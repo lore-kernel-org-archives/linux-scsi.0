@@ -2,58 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A9F0C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 07:12:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29CD4C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 08:07:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229460AbiLOHMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Dec 2022 02:12:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34286 "EHLO
+        id S229600AbiLOIHl convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Dec 2022 03:07:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229899AbiLOHKj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 02:10:39 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B41872982B;
-        Wed, 14 Dec 2022 23:06:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=pJM1bQVht4KEa8PGX0/1qnwZOWHWJSoGpR3/A3VryPg=; b=ESzkO2WQa0U25HA1PWM7bSYurV
-        JCKPgXrwTOSW0/xC8moOmFvPhN4mKddp4eQN70NaNYjham+ZD6sk0BHTAok4nzqj0Nfu8Rs5QgVQH
-        0XubeyMZdOHnf25Ypo3qHcZe5+xgUHpOzFcRLDXePFVRV6cMyXSt/D6eP52tZfYM6FE0GIUJJkKcw
-        4JaJvicTcx7a7BpmQArlsYGv/3ovVUzXW1/1+I/TkBWeLfgMdM2KrLP1gcJNuguREdBmA93E/vtwY
-        EvUeHkx7jBSkAQllxQWPBZURqEwfSuKpWVOIeNXOlI91MNKPG1TQ4tAmym9uxnKbxR70aRwEhVzJj
-        9dqvdn2A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1p5iJj-00742L-1i; Thu, 15 Dec 2022 07:06:07 +0000
-Date:   Wed, 14 Dec 2022 23:06:07 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Wenchao Hao <haowenchao@huawei.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com,
-        linfeilong@huawei.com
-Subject: Re: [PATCH 0/2] scsi:donot skip lun if inquiry returns PQ=1 for all
- hosts
-Message-ID: <Y5rHX95Vvl1aLhbp@infradead.org>
+        with ESMTP id S229522AbiLOIHk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 03:07:40 -0500
+Received: from mx3.uni-regensburg.de (mx3.uni-regensburg.de [194.94.157.148])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C34C91F624;
+        Thu, 15 Dec 2022 00:07:37 -0800 (PST)
+Received: from mx3.uni-regensburg.de (localhost [127.0.0.1])
+        by localhost (Postfix) with SMTP id 1E6F7600005B;
+        Thu, 15 Dec 2022 09:07:35 +0100 (CET)
+Received: from gwsmtp.uni-regensburg.de (gwsmtp1.uni-regensburg.de [132.199.5.51])
+        by mx3.uni-regensburg.de (Postfix) with ESMTP id 08156600004D;
+        Thu, 15 Dec 2022 09:07:30 +0100 (CET)
+Received: from uni-regensburg-smtp1-MTA by gwsmtp.uni-regensburg.de
+        with Novell_GroupWise; Thu, 15 Dec 2022 09:07:31 +0100
+Message-Id: <639AD5C0020000A100050749@gwsmtp.uni-regensburg.de>
+X-Mailer: Novell GroupWise Internet Agent 18.4.2 
+Date:   Thu, 15 Dec 2022 09:07:28 +0100
+From:   "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
+To:     <haowenchao@huawei.com>
+Cc:     "open-iscsi" <open-iscsi@googlegroups.com>,
+        <linfeilong@huawei.com>, <liuzhiqiang26@huawei.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <michael.christie@oracle.com>, "Chris Leech" <cleech@redhat.com>,
+        "Lee Duncan" <lduncan@suse.com>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+Subject: Antw: [EXT] Re: [PATCH 0/2] scsi:donot skip lun if inquiry
+ returns PQ=1 for all hosts
 References: <20221214070846.1808300-1-haowenchao@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+ <Y5rHX95Vvl1aLhbp@infradead.org>
+In-Reply-To: <Y5rHX95Vvl1aLhbp@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Content-Disposition: inline
-In-Reply-To: <20221214070846.1808300-1-haowenchao@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 14, 2022 at 03:08:44PM +0800, Wenchao Hao wrote:
-> When iSCSI initiator logged in target, the target attached none valid
-> lun but lun0. lun0 is not an valid disk, while it would response
-> inquiry command with PQ=1 and other general scsi commands like probe lun.
-> The others luns of target is added/removed dynamicly.
+>>> Christoph Hellwig <hch@infradead.org> schrieb am 15.12.2022 um 08:06 in
+Nachricht <Y5rHX95Vvl1aLhbp@infradead.org>:
+> On Wed, Dec 14, 2022 at 03:08:44PM +0800, Wenchao Hao wrote:
+>> When iSCSI initiator logged in target, the target attached none valid
+>> lun but lun0. lun0 is not an valid disk, while it would response
+>> inquiry command with PQ=1 and other general scsi commands like probe lun.
+>> The others luns of target is added/removed dynamicly.
+> 
+> I can't find any special casing of LUN0 in RFC7144, can you clarify
+> where you think that treats LUN0 any differently than other transports?
 
-I can't find any special casing of LUN0 in RFC7144, can you clarify
-where you think that treats LUN0 any differently than other transports?
+Actusally I have no idea, but as a user of FC SAN systems I can remember a case when a storage system had to present a dummy LUN0 to enable hosts to find other LUNs (while LUN0 was never actually used). Maybe the client code was imperfect, I don't know.
+
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups 
+> "open-iscsi" group.
+> To unsubscribe from this group and stop receiving emails from it, send an 
+> email to open-iscsi+unsubscribe@googlegroups.com.
+> To view this discussion on the web visit 
+> https://groups.google.com/d/msgid/open-iscsi/Y5rHX95Vvl1aLhbp%40infradead.org 
+> .
+
+
+
+
