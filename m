@@ -2,92 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E626AC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 10:31:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8EDC46467
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 11:25:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229785AbiLPKbW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Dec 2022 05:31:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58564 "EHLO
+        id S230232AbiLPLZz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Dec 2022 06:25:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229611AbiLPKbV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2022 05:31:21 -0500
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ED74A9
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2022 02:31:20 -0800 (PST)
-Received: by mail-lf1-x12f.google.com with SMTP id c1so2806396lfi.7
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2022 02:31:20 -0800 (PST)
+        with ESMTP id S230510AbiLPLZw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2022 06:25:52 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 640CD165B9
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2022 03:25:50 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id q6so2987517lfm.10
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2022 03:25:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bell-sw-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ujLcEs9OZfxXjj4LGeopcn3nQj+r8roHK6DbvG+ywu0=;
-        b=kSUTaLL90Ia11hSaKByOUcrBlJHALRPJiWh6stR50HEcpjSQkK3MWWtxujJ/Y2kUZO
-         9LbcPM5yAvcwynndf04lKvy5RRWojemK0xbskHrGD4ax0UqiI4+qOJX8P0t9mLRV3VPS
-         QvzMJD/01q4rPw8CyIHy/8TCs3T+rT3YKgf7MnAzPt8sMYqwF1wz/oePhQlXk2u4VVtE
-         CxqMiWOR8yIxAINp2cW0DAvzWBv1k3O0LPCcc3kCMrYeGjOk8l21JSl6wKC6D7PP5f6n
-         ZV8jcUuVorkMSL/MkZgkoyso87bT+0XCcu7BWWZFWWmqQ3FkmJK/WWkm6O1GD63/2lib
-         kBWw==
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Jq34xZSUT8QsMyztxfKEALtkriwch3PoCGhlEfPa3GQ=;
+        b=LkAyUjpNX35mihFXiQlkEnMc5deO2cakn0tU3MPYR6UVfWffBFoOVMIS4jj337q+BJ
+         mL17jgD7gMi9Eyqy+aoyL85bb6V2Y2vUsgWl+LG6D9+k7s6VigssHH1J0kkKHu/yB+Or
+         uzuaKVAx5CrGLggEo7ndLKznDfyUA87rPaMTPaekDXnZj0szgrdMyFz9Q44Q9/CnfZZ9
+         J8SnrsSphkexeZxxUfkBfIpsEpXrwocaNLN/74+hzhti7GfV34By+v4SkxhGBwWVN9P3
+         nvbVNEbhdwgGt/KuzMFJy8XuYeY2ISZn4eR4SWTgHmGkP4Bq6yhyqjuB31tj1MwR6UbH
+         neew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ujLcEs9OZfxXjj4LGeopcn3nQj+r8roHK6DbvG+ywu0=;
-        b=2SQLsU/afYwaamRNCE5H7dZqzrRDVgK7Z1J9Lj81nGtoqc1HOXjOJBGUI1JRuxQC4f
-         pTnAZYJv/Dm10nA5guIt8OQ1Kxy8kGZKFJcePh75uShPPd1EBQNe4XUnOZB5f2LiCHpz
-         bs8si3LwLfaE35julvrTa04KAlw/QKeZVz9E1/pWJUcA7E2br0Ah35KnEDH2QeYHCzov
-         ED4iIJts4KKHYc3R9QV8WTo4dGflT8mjJxorLH2UEYqHWFTyzq+yP+02gx/dpWImaS75
-         KyxEYR682CShrN0NOf/vFeyPgLk/xc/3T5ZtkquakNs7pXQUV/JLupvmkkP2eL+IRmZk
-         NBhQ==
-X-Gm-Message-State: ANoB5pnRzEFYVzzJmuve8vLYxwzwGnvGvEdRdapq+pZkFTu3GG1ZtrmY
-        6CAFY9ECiIKK6sy6H0D1G8Y4N0dcj9RDdao=
-X-Google-Smtp-Source: AA0mqf4OSZbtItzojYkfU49CsDr2agq9fakGwrErwr2H++kZqrZ01Aum+fmIzcrPDz2Wuxbz9t10tQ==
-X-Received: by 2002:a05:6512:487:b0:4b5:936e:69df with SMTP id v7-20020a056512048700b004b5936e69dfmr8433736lfq.53.1671186678383;
-        Fri, 16 Dec 2022 02:31:18 -0800 (PST)
-Received: from localhost.localdomain ([95.161.223.113])
-        by smtp.gmail.com with ESMTPSA id e14-20020a05651236ce00b004b58500383bsm180164lfs.272.2022.12.16.02.31.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Dec 2022 02:31:16 -0800 (PST)
-From:   Alexey Kodanev <aleksei.kodanev@bell-sw.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Alexey Kodanev <aleksei.kodanev@bell-sw.com>
-Subject: [PATCH] scsi: fnic: drop unnecessary NULL check in is_fnic_fip_flogi_reject()
-Date:   Fri, 16 Dec 2022 13:30:39 +0300
-Message-Id: <20221216103039.202774-1-aleksei.kodanev@bell-sw.com>
-X-Mailer: git-send-email 2.25.1
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Jq34xZSUT8QsMyztxfKEALtkriwch3PoCGhlEfPa3GQ=;
+        b=z+NFxouImvZz8KYhme5S6VCANHx8z+ZKjr/g2R3qdQfkCKAgAnuHnalNeWhri2EIT1
+         mXHPvEMDkBsmJxxd7YKXnmIG8AeJJCk/uds68eMwcBOh7rlcATd8qRxElc7xgqYyn4Vj
+         nEEmYED/O/u7nULiB1k0qLC8VbV3vfgFurJ6YZRXObYYrE0CfvMJ+miWWJ1hF33XoU7X
+         eFPXdk54Jz+ctv232OrvTPho4uMv70IXYLl/j8vwEbNuze2lJRbKMpE6dV8whpfBzmar
+         pYzCg4uDHFqkYe5cl5FZz+V/Ll1VaM0KV6sRl1IFLSOwhBfxuC8k2AZt3Xfz1slAiG9s
+         kqvg==
+X-Gm-Message-State: ANoB5pllO0y/XE7sH637IA+DHy5RsezYePr5lftXsM2sZpOtKxEwnhV6
+        gH/rP3eA1xn2EDRNnRzrJE/wSQ==
+X-Google-Smtp-Source: AA0mqf6vfu4R9gsLSvdGIsOl2P+MeUnboQi0ZGy6b1tPRuGfMFVAhR0T9oajRy8PIo8lDi00UT7rQg==
+X-Received: by 2002:a05:6512:114e:b0:4b5:a4ef:fca3 with SMTP id m14-20020a056512114e00b004b5a4effca3mr10534762lfg.38.1671189948800;
+        Fri, 16 Dec 2022 03:25:48 -0800 (PST)
+Received: from [192.168.0.20] (088156142067.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.67])
+        by smtp.gmail.com with ESMTPSA id s10-20020a056512214a00b004b52f4ea0d3sm192459lfr.192.2022.12.16.03.25.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Dec 2022 03:25:48 -0800 (PST)
+Message-ID: <2f31c3a0-572d-41c4-4724-85d64394aa66@linaro.org>
+Date:   Fri, 16 Dec 2022 12:25:47 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH v4 1/4] dt-bindings: ufs: qcom: Add SM6125 compatible
+ string
+Content-Language: en-US
+To:     Lux Aliaga <they@mint.lgbt>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221215190404.398788-1-they@mint.lgbt>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20221215190404.398788-1-they@mint.lgbt>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-    if (desc->fip_dtype == FIP_DT_FLOGI) {
-        ...
-        els = (struct fip_encaps *)desc;
-        fh = (struct fc_frame_header *)(els + 1);
+On 15/12/2022 20:04, Lux Aliaga wrote:
+> Document the compatible for UFS found on the SM6125.
+> 
+> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+> ---
 
-'fh' can't be NULL here after shifting a valid pointer 'desc'.
+Three versions the same day? It's too much.
 
-Detected using the static analysis tool - Svace.
-Signed-off-by: Alexey Kodanev <aleksei.kodanev@bell-sw.com>
----
- drivers/scsi/fnic/fnic_fcs.c | 3 ---
- 1 file changed, 3 deletions(-)
+Where is the changelog? What happened here?
 
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 79ddfaaf71a4..acf593467012 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -337,9 +337,6 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
- 		els = (struct fip_encaps *)desc;
- 		fh = (struct fc_frame_header *)(els + 1);
- 
--		if (!fh)
--			return 0;
--
- 		/*
- 		 * ELS command code, reason and explanation should be = Reject,
- 		 * unsupported command and insufficient resource
--- 
-2.25.1
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+
+Best regards,
+Krzysztof
 
