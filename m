@@ -2,138 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84180C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 03:39:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F5C8C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 03:54:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229956AbiLPDj4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Dec 2022 22:39:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55824 "EHLO
+        id S230091AbiLPDx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Dec 2022 22:53:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbiLPDjy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 22:39:54 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C43DE1DA75;
-        Thu, 15 Dec 2022 19:39:48 -0800 (PST)
-X-UUID: 8865c7dc9d054114adf3e15032581b2e-20221216
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=2mEp0WUODIj5kqMh7KIiuG3LhKqtAh/A0pYoODwnxvo=;
-        b=lf0awVcrPxcEiPYwpvOUKpgNM6b4SYn93zh8CqcisLxmswYIQ3o6BWojRCEUkvScLWehpgpUg225tiYwmVmfqA3uuTpkjWKrMcHWe490vOfnlhVdijyAI6q4IlyQAJYq4b7AM5wytFE18Hdum4Iz9PO4NZ/5tPTRIiW08ZFxN14=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:ed6ab05b-1234-4959-972f-4e0a0a7cf244,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:dcaaed0,CLOUDID:82d1c0b4-d2e2-434d-b6d3-aeae88dfcc78,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 8865c7dc9d054114adf3e15032581b2e-20221216
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <mason.zhang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 517239489; Fri, 16 Dec 2022 11:39:42 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Fri, 16 Dec 2022 11:39:41 +0800
-Received: from mbjsdccf07.mediatek.inc (10.15.20.246) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Fri, 16 Dec 2022 11:39:40 +0800
-From:   Mason Zhang <mason.zhang@mediatek.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
+        with ESMTP id S229910AbiLPDx5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 22:53:57 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 845B2554D3;
+        Thu, 15 Dec 2022 19:53:55 -0800 (PST)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NYFYd1BgYz16LdJ;
+        Fri, 16 Dec 2022 11:52:53 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Fri, 16 Dec 2022 11:53:53 +0800
+Subject: Re: [PATCH] scsi: libsas: Directly kick-off EH when ATA device fell
+ off
+To:     Xingui Yang <yangxingui@huawei.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <john.g.garry@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Peng Zhou <peng.zhou@mediatek.com>,
-        <wsd_upstream@mediatek.com>, Mason Zhang <Mason.Zhang@mediatek.com>
-Subject: [PATCH v4 1/1] scsi: ufs: core: fix device management cmd timeout flow
-Date:   Fri, 16 Dec 2022 11:25:33 +0800
-Message-ID: <20221216032532.1280-1-mason.zhang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>
+References: <20221216032936.17841-1-yangxingui@huawei.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <5dd4740a-0301-d195-a368-462010da7927@huawei.com>
+Date:   Fri, 16 Dec 2022 11:53:52 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+In-Reply-To: <20221216032936.17841-1-yangxingui@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ canpemm500004.china.huawei.com (7.192.104.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mason Zhang <Mason.Zhang@mediatek.com>
+Hi Xingui,
 
-In ufs error handler flow, host will send device management cmd(NOP OUT)
-to device for recovery link. If cmd response timeout, and clear doorbell
-fail, ufshcd_wait_for_dev_cmd will do nothing and return,
-hba->dev_cmd.complete struct not set to null.
+On 2022/12/16 11:29, Xingui Yang wrote:
+> If the ATA device fell off, call sas_ata_device_link_abort() directly and
+> mark all outstanding QCs as failed and kick-off EH Immediately. This avoids
+> having to wait for block layer timeouts.
+> 
 
-In this time, if cmd has been responsed by device, then it will
-call complete() in __ufshcd_transfer_req_compl, because of complete
-struct is alloced in stack, then the KE will occur.
+Why does ATA device need this special operation? SAS device does not 
+have to wait for block layer timeouts?
 
-Fix the following crash:
-  ipanic_die+0x24/0x38 [mrdump]
-  die+0x344/0x748
-  arm64_notify_die+0x44/0x104
-  do_debug_exception+0x104/0x1e0
-  el1_dbg+0x38/0x54
-  el1_sync_handler+0x40/0x88
-  el1_sync+0x8c/0x140
-  queued_spin_lock_slowpath+0x2e4/0x3c0
-  __ufshcd_transfer_req_compl+0x3b0/0x1164
-  ufshcd_trc_handler+0x15c/0x308
-  ufshcd_host_reset_and_restore+0x54/0x260
-  ufshcd_reset_and_restore+0x28c/0x57c
-  ufshcd_err_handler+0xeb8/0x1b6c
-  process_one_work+0x288/0x964
-  worker_thread+0x4bc/0xc7c
-  kthread+0x15c/0x264
-  ret_from_fork+0x10/0x30
+Thanks,
+Jason
 
-Signed-off-by: Mason Zhang <Mason.Zhang@mediatek.com>
----
-Changes since v3:
-* Not clear outstanding_reqs if clear cmds fail.
-  Updated the patch in v4.
-Changes since v2:
-* Modified comment after clear doorbell.
-Changes since v1:
-* Remove change id.
----
- drivers/ufs/core/ufshcd.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b1f59a5fe632..fa86ce80f350 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3008,6 +3008,22 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		} else {
- 			dev_err(hba->dev, "%s: failed to clear tag %d\n",
- 				__func__, lrbp->task_tag);
-+
-+			spin_lock_irqsave(&hba->outstanding_lock, flags);
-+			pending = test_bit(lrbp->task_tag,
-+					   &hba->outstanding_reqs);
-+			if (pending)
-+				hba->dev_cmd.complete = NULL;
-+			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+
-+			if (!pending) {
-+				/*
-+				 * The completion handler ran while we tried to
-+				 * clear the command.
-+				 */
-+				time_left = 1;
-+				goto retry;
-+			}
- 		}
- 	}
- 
--- 
-2.18.0
-
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> ---
+>   drivers/scsi/libsas/sas_discover.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> index d5bc1314c341..bd22741daa99 100644
+> --- a/drivers/scsi/libsas/sas_discover.c
+> +++ b/drivers/scsi/libsas/sas_discover.c
+> @@ -362,6 +362,11 @@ static void sas_destruct_ports(struct asd_sas_port *port)
+>   
+>   void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
+>   {
+> +	if (test_bit(SAS_DEV_GONE, &dev->state) &&
+> +	    (dev->dev_type == SAS_SATA_DEV ||
+> +	    (dev->tproto & SAS_PROTOCOL_STP)))
+> +		sas_ata_device_link_abort(dev, false);
+> +
+>   	if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
+>   	    !list_empty(&dev->disco_list_node)) {
+>   		/* this rphy never saw sas_rphy_add */
+>
