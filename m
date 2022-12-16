@@ -2,92 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D1BC3DA71
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Dec 2022 19:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8152AC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 03:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231133AbiLOTEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Dec 2022 14:04:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53854 "EHLO
+        id S229782AbiLPDgJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Dec 2022 22:36:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230498AbiLOTEV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 14:04:21 -0500
-Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C16B2379D4
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 11:04:20 -0800 (PST)
-Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
-        by amity.mint.lgbt (Postfix) with ESMTP id 4NY1ql1ygRz1S5D2
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2022 14:04:19 -0500 (EST)
-Authentication-Results: amity.mint.lgbt (amavisd-new);
-        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
-        header.d=mint.lgbt
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
-        content-transfer-encoding:mime-version:x-mailer:message-id:date
-        :subject:to:from; s=dkim; t=1671131058; x=1671995059; bh=We5xjhG
-        qrFdJQxR93Npt09VH/7a6fXPhQTRN9HYr93I=; b=i/wA5B90bKG6yMpIqJBpB/U
-        4Rps2rqYAkjkqaeCBl+/vixjnB8T9C5hTCzcuLiHcBau7NzjO/IQUeWt0vKzROHN
-        AjVxLx4dbiY1/vomsa63+GRumbUcS9LhSN2X+NUZxeYQvRsLa7aA5QOpolRZlo60
-        aSUuvHzoT0GD9JFiUgKKrX8eYIlW2Sc2Uj5stZfK8iorbl4TfdD606+m75O0Ndfi
-        AakAzflHXFQlSff+SFVwIt0Zdp+kYSVtxRxWl7fxuKjxNh0gqdnBvfDvN/3oW/Ou
-        7eKKTTltTNSribRtCMldA3b3XgjnuCdgj+3vTaTzH9aZG84oiXyw0oqTjqK2SLA=
-        =
-X-Virus-Scanned: amavisd-new at amity.mint.lgbt
-Received: from amity.mint.lgbt ([127.0.0.1])
-        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id BXiZx1x74O96 for <linux-scsi@vger.kernel.org>;
-        Thu, 15 Dec 2022 14:04:18 -0500 (EST)
-Received: from dorothy.. (unknown [190.196.92.66])
-        by amity.mint.lgbt (Postfix) with ESMTPSA id 4NY1qb10q2z1S4yj;
-        Thu, 15 Dec 2022 14:04:10 -0500 (EST)
-From:   Lux Aliaga <they@mint.lgbt>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     Lux Aliaga <they@mint.lgbt>, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 1/4] dt-bindings: ufs: qcom: Add SM6125 compatible string
-Date:   Thu, 15 Dec 2022 16:04:01 -0300
-Message-Id: <20221215190404.398788-1-they@mint.lgbt>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S229705AbiLPDgH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2022 22:36:07 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9ADD6564;
+        Thu, 15 Dec 2022 19:36:06 -0800 (PST)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NYF605SPLzJpPf;
+        Fri, 16 Dec 2022 11:32:24 +0800 (CST)
+Received: from localhost.localdomain (10.67.165.24) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Fri, 16 Dec 2022 11:36:04 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
+Subject: [PATCH] scsi: libsas: Directly kick-off EH when ATA device fell off
+Date:   Fri, 16 Dec 2022 03:29:36 +0000
+Message-ID: <20221216032936.17841-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.67.165.24]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Document the compatible for UFS found on the SM6125.
+If the ATA device fell off, call sas_ata_device_link_abort() directly and
+mark all outstanding QCs as failed and kick-off EH Immediately. This avoids
+having to wait for block layer timeouts.
 
-Signed-off-by: Lux Aliaga <they@mint.lgbt>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 ---
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/libsas/sas_discover.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Docume=
-ntation/devicetree/bindings/ufs/qcom,ufs.yaml
-index b517d76215e3..42422f3471b3 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -29,6 +29,7 @@ properties:
-           - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-           - qcom,sm6115-ufshc
-+          - qcom,sm6125-ufshc
-           - qcom,sm6350-ufshc
-           - qcom,sm8150-ufshc
-           - qcom,sm8250-ufshc
-@@ -185,6 +186,7 @@ allOf:
-           contains:
-             enum:
-               - qcom,sm6115-ufshc
-+              - qcom,sm6125-ufshc
-     then:
-       properties:
-         clocks:
---=20
-2.38.1
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index d5bc1314c341..bd22741daa99 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -362,6 +362,11 @@ static void sas_destruct_ports(struct asd_sas_port *port)
+ 
+ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
+ {
++	if (test_bit(SAS_DEV_GONE, &dev->state) &&
++	    (dev->dev_type == SAS_SATA_DEV ||
++	    (dev->tproto & SAS_PROTOCOL_STP)))
++		sas_ata_device_link_abort(dev, false);
++
+ 	if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
+ 	    !list_empty(&dev->disco_list_node)) {
+ 		/* this rphy never saw sas_rphy_add */
+-- 
+2.17.1
 
