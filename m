@@ -2,63 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 247AAC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 07:14:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 993BFC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Dec 2022 07:55:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229965AbiLPHOH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Dec 2022 02:14:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41240 "EHLO
+        id S229891AbiLPHzd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Dec 2022 02:55:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229836AbiLPHNY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2022 02:13:24 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 006AB19002;
-        Thu, 15 Dec 2022 23:13:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vqRMSpD1eVYXTGaFFnMc2dvCJYloydrqlHDvsUDDbr0=; b=b7yHcHD4T9me5R9OFJ2iJjtZr+
-        mVKbrMop8uy2T3Qy2LUeiDHQSyWbAxNBLRHN1r2vxuWF3lgKf5T9/vuSqXAmnigQxfW+M10JGCnqi
-        SbCcTBqebh6gbSocryrcZEK18rhNfIYgnE0VQX+l3fqeK+/Sq+kLaYNW7GEAaACXQvVVTEVT7Z7bn
-        Tgw8h1U46sFnFjmY/RdrDZydrhJH5HI8izJgOVns8PxsmiET63z8Ic74YNSl6+VPJelsY/7pQIOz7
-        T1JNurmE16AyMkkPPlushDL+VscpM4mKjRH3HBVVK9zXVEAEJKTFT//7g/ibVtc7q9J4OWtJg78HM
-        +IWF6Q2A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1p64tu-00DL2R-5w; Fri, 16 Dec 2022 07:12:58 +0000
-Date:   Thu, 15 Dec 2022 23:12:58 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Wenchao Hao <haowenchao@huawei.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com,
-        linfeilong@huawei.com
-Subject: Re: [PATCH 0/2] scsi:donot skip lun if inquiry returns PQ=1 for all
- hosts
-Message-ID: <Y5waet8RoXKQHDR7@infradead.org>
-References: <20221214070846.1808300-1-haowenchao@huawei.com>
- <Y5rHX95Vvl1aLhbp@infradead.org>
- <57c12317-c229-8cbe-b3d2-d799ea5f554c@huawei.com>
+        with ESMTP id S229881AbiLPHzb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2022 02:55:31 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67A5F220E8;
+        Thu, 15 Dec 2022 23:55:30 -0800 (PST)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NYLwS1fhdzJqYT;
+        Fri, 16 Dec 2022 15:54:32 +0800 (CST)
+Received: from [10.67.101.126] (10.67.101.126) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Fri, 16 Dec 2022 15:55:28 +0800
+Message-ID: <0f87f968-eb63-6b32-cfe7-b5d399a7d541@huawei.com>
+Date:   Fri, 16 Dec 2022 15:55:27 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <57c12317-c229-8cbe-b3d2-d799ea5f554c@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: libsas: Directly kick-off EH when ATA device fell
+ off
+Content-Language: en-CA
+To:     Jason Yan <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>
+References: <20221216032936.17841-1-yangxingui@huawei.com>
+ <5dd4740a-0301-d195-a368-462010da7927@huawei.com>
+From:   yangxingui <yangxingui@huawei.com>
+In-Reply-To: <5dd4740a-0301-d195-a368-462010da7927@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.67.101.126]
+X-ClientProxiedBy: dggpemm500023.china.huawei.com (7.185.36.83) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Dec 15, 2022 at 05:09:31PM +0800, Wenchao Hao wrote:
-> In my opinion, if the addressed lun still response the
-> inquiry and other commands, we should not skip it,
-> maybe let the scsi drivers like sd/st/sg to determine
-> how to handle this lun accordint to the PQ value.
-> 
-> As discussed in following mail, another drivers would
-> be broken too.
 
-So why do you force a specific behavior for iSCSI?
+
+On 2022/12/16 11:53, Jason Yan wrote:
+> Hi Xingui,
+> 
+> On 2022/12/16 11:29, Xingui Yang wrote:
+>> If the ATA device fell off, call sas_ata_device_link_abort() directly and
+>> mark all outstanding QCs as failed and kick-off EH Immediately. This 
+>> avoids
+>> having to wait for block layer timeouts.
+>>
+> 
+> Why does ATA device need this special operation? SAS device does not 
+> have to wait for block layer timeouts?
+Hi Jason,
+Applications that depend on I/O return may be blocked for 30 seconds, 
+and this can be optimized for SATA disks.
+
+Different from SATA disks, I/Os on SAS disks can still be returned if 
+they are quickly plugged in after the SAS disks fall off. So I'm not 
+sure if this is appropriate for a sas disk.
+BTW, I wish the sas disk did the same.
+
+Thanks,
+Xingui
+> 
+> Thanks,
+> Jason
+> 
+>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>> ---
+>>   drivers/scsi/libsas/sas_discover.c | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_discover.c 
+>> b/drivers/scsi/libsas/sas_discover.c
+>> index d5bc1314c341..bd22741daa99 100644
+>> --- a/drivers/scsi/libsas/sas_discover.c
+>> +++ b/drivers/scsi/libsas/sas_discover.c
+>> @@ -362,6 +362,11 @@ static void sas_destruct_ports(struct 
+>> asd_sas_port *port)
+>>   void sas_unregister_dev(struct asd_sas_port *port, struct 
+>> domain_device *dev)
+>>   {
+>> +    if (test_bit(SAS_DEV_GONE, &dev->state) &&
+>> +        (dev->dev_type == SAS_SATA_DEV ||
+>> +        (dev->tproto & SAS_PROTOCOL_STP)))
+>> +        sas_ata_device_link_abort(dev, false);
+>> +
+>>       if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
+>>           !list_empty(&dev->disco_list_node)) {
+>>           /* this rphy never saw sas_rphy_add */
+>>
+> .
