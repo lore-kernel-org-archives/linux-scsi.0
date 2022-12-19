@@ -2,214 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A45C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Dec 2022 20:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0ECDC001B2
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Dec 2022 22:59:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231305AbiLSUxZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 15:53:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34920 "EHLO
+        id S232444AbiLSW7O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 17:59:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232559AbiLSUxW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 15:53:22 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC5AF95BB;
-        Mon, 19 Dec 2022 12:53:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1671483190; bh=p/gQJhr994QueR5DCQ02g1AeDDewrUyc8tKh6QiFUkY=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
-         MIME-Version:Content-Type:In-Reply-To;
-        b=HoSm133nBavBRfcicEpLqQ+jRK961tUApRYIQ8pDgIxxofMXWkygWczd/fJE6+/ic
-         Ddxwd4DaigF7a2OKLqu8uG3DH1G4Ie1WgT5+hTRRZLvzsvoSRcSmrP8ha5J5lGQ0Fz
-         Zro/l0IX/xXdS5Dw+4yxv7SB4K3Yr3LxK9N9dP/M=
-Received: by b-1.in.mailobj.net [192.168.90.11] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Mon, 19 Dec 2022 21:53:10 +0100 (CET)
-X-EA-Auth: +h2tLTIwcg0ajAKuBXmzbKsnCnk2zDEhM6dJi882wT8DN3KzYR/3+5BACGCSRR5Q+YR5WyE8C8ku02eMcjcEXmrxEU07Owm8
-Date:   Tue, 20 Dec 2022 02:23:06 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>, drv@mailo.com
-Subject: Re: [PATCH] scsi: qla4xxx: Use sysfs_emit in show function callsbacks
-Message-ID: <Y6DPMipC0V00uUu0@qemulion>
-References: <Y5RF+PGBuiXu7UrX@qemulion>
+        with ESMTP id S231702AbiLSW7N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 17:59:13 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C07279FC5
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 14:59:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1671490752; x=1703026752;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=nBOnBM2AbYb8rMTgdV7VKM1gSLrZ9214921NLXhZivI=;
+  b=F7pCc8TxoNQXJedG2BsSB2L2vsjFLULKuWlzoENUxM0tUsN2Wr/5lrOO
+   vrIZNSjOd5lKxQUME0JbogU+lWcZ/jIthYfmV9MtiD7xuojkpU1RlYcQS
+   N9JeI1w5qDD9+irbCADLpYLR3oy2j+nnwbwf1STbkE8lmzriZLJj8YL4/
+   Uo0Th8K6YRr92CA2pJ21KzC4FPeIRKE8DSU7IRxTWGghFIJlz5ILM+oCB
+   WfpxCo1TYB5Oy16leQj8C5Ci6uUVeW+DlNifCtF1z/uH2kcNwfQLXGJq6
+   iu7ZRDMz8+xDtZ/qkG/cE/rs9smfpyGQv1l+rALf44cliI31IyPxxiXIT
+   A==;
+X-IronPort-AV: E=Sophos;i="5.96,257,1665417600"; 
+   d="scan'208";a="219253040"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Dec 2022 06:59:10 +0800
+IronPort-SDR: 9NtK+RrBPWbG63Qgb6ccoLVKe/BNk14NA6XlenRCCSRecP4dSjtynqYzyn7cXkQCYoYMKt4+9Q
+ bypetCC3QSIFvVYs2geuORRFqtSmYdxebXXVuKXVVIwolzPZsPKaarOtJ8zS7rhBdnZ+uxUsX3
+ Yy8ktdQVrDzwRmRMjmegPdWJvjafs8CrdQnP8L8oq/X3sPMIBuVS+5lO1yj1gb+CEzrNObP8Tb
+ IHi1w8kg1irMx/FlJ6LVuoPEsrTgHnCc/osY6nsaSk+yYxV/kIB7FMnZiByS2YsRBRoKrkhczv
+ eYI=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Dec 2022 14:17:27 -0800
+IronPort-SDR: 1ck/dPErJGUvPU1FfmQCQ3RM1qA/4wkog+hG2gFoRCUqbT942/0vI/pn40qaTsj+UCtWO+waCg
+ VREfnAZ1n+NL1wQyBuJ1Q/Adap4OFeXY9S+Bj7DhIekOXVDPTqTKpanqRYENgWacOe8CZM7GnY
+ 6CqzWnzNL4HGSmWrseAFV6innpV4ou7j7JOdpSYvWhmArVoNEi960v5tcqVwYkMLRzVn2zUHJg
+ +lNjqVXOyjDpRNTa+gtX8cpuIdBroLdeBVAF2bFJY0RvH69eErEKu1qnNhsVZTVAVKf4m7ctSp
+ dA8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Dec 2022 14:59:11 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NbZrt4Q1zz1Rwt8
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 14:59:10 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:content-language:references:to
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1671490749; x=1674082750; bh=nBOnBM2AbYb8rMTgdV7VKM1gSLrZ9214921
+        NLXhZivI=; b=Dtvc58csZf+Jy7BMgd54A35CyniVwl59EYZIhYNurtF/xBMu56w
+        aSTwVhUJdfeY3rAyGpVaB3hf7kgh7USFI3c46nN5rRB81SThKZXvLW3BhR74A2yo
+        xJqNAvKRADNFIncenxq/iSiE/HDaR+PD+NUxUcvuz23qpVsNHj9xf5yUSr1svTIE
+        /PFTMPuI4JQ52cBlgVkWaUR4m7dTE6p/b0kSS5Ao/HAXqHmdujvImuxkEynuNcrm
+        XuiYsFa1kpKYrieFAA0JSUr3HG8j+/H/VRtQRtKHJeNLQq/aLs0pCaXJmEs2pGQQ
+        fW+DnOs3HkX5ULaM/N7q4GNTB/NoBJAkK/g==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id GV87MgVfbfUJ for <linux-scsi@vger.kernel.org>;
+        Mon, 19 Dec 2022 14:59:09 -0800 (PST)
+Received: from [10.225.163.106] (unknown [10.225.163.106])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NbZrq4hc6z1RvLy;
+        Mon, 19 Dec 2022 14:59:07 -0800 (PST)
+Message-ID: <234e04db-7539-07e4-a6b8-c6b05f78193d@opensource.wdc.com>
+Date:   Tue, 20 Dec 2022 07:59:06 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y5RF+PGBuiXu7UrX@qemulion>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH V2] scsi: libsas: Directly kick-off EH when ATA device
+ fell off
+To:     Jason Yan <yanaijie@huawei.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Xingui Yang <yangxingui@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-ide@vger.kernel.org,
+        hare@suse.com, hch@lst.de
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, prime.zeng@hisilicon.com,
+        kangfenglong@huawei.com
+References: <20221216100327.7386-1-yangxingui@huawei.com>
+ <565fcf28-ec53-8d74-00a3-94be8e5b60e4@oracle.com>
+ <60ace19e-d029-f14d-9aac-d5cef83b5b64@huawei.com>
+Content-Language: en-US
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <60ace19e-d029-f14d-9aac-d5cef83b5b64@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Dec 10, 2022 at 02:10:24PM +0530, Deepak R Varma wrote:
-> According to Documentation/filesystems/sysfs.rst, the show() callback
-> function of kobject attributes should strictly use sysfs_emit instead
-> of sprintf family functions.
-> Issue identified using the coccinelle device_attr_show.cocci script.
->
-> Signed-off-by: Deepak R Varma <drv@mailo.com>
+On 12/20/22 00:28, Jason Yan wrote:
+> On 2022/12/19 17:23, John Garry wrote:
+>> On 16/12/2022 10:03, Xingui Yang wrote:
+>>> If the ATA device fell off, call sas_ata_device_link_abort() directly=
+ and
+>>> mark all outstanding QCs as failed and kick-off EH Immediately. This=20
+>>> avoids
+>>> having to wait for block layer timeouts.
+>>>
+>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>> ---
+>>> Changes to v1:
+>>> - Use dev_is_sata() to check ATA device type
+>>> =C2=A0 drivers/scsi/libsas/sas_discover.c | 3 +++
+>>> =C2=A0 1 file changed, 3 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_discover.c=20
+>>> b/drivers/scsi/libsas/sas_discover.c
+>>> index d5bc1314c341..a12b65eb4a2a 100644
+>>> --- a/drivers/scsi/libsas/sas_discover.c
+>>> +++ b/drivers/scsi/libsas/sas_discover.c
+>>> @@ -362,6 +362,9 @@ static void sas_destruct_ports(struct asd_sas_por=
+t=20
+>>> *port)
+>>> =C2=A0 void sas_unregister_dev(struct asd_sas_port *port, struct=20
+>>> domain_device *dev)
+>>> =C2=A0 {
+>>> +=C2=A0=C2=A0=C2=A0 if (test_bit(SAS_DEV_GONE, &dev->state) && dev_is=
+_sata(dev))
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sas_ata_device_link_abort=
+(dev, false);
+>>
+>> Firstly, I think that there is a bug in sas_ata_device_link_abort() ->=
+=20
+>> ata_link_abort() code in that the host lock in not grabbed, as the=20
+>> comment in ata_port_abort() mentions. Having said that, libsas had=20
+>> already some dodgy host locking usage - specifically dropping the lock=
+=20
+>> for the queuing path (that's something else to be fixed up ... I think=
+=20
+>=20
+> Taking big locks in queuing path is not a good idea. This will bring=20
+> down performance.
 
-Hello,
-May I please request a review and feedback on this patch?
+With HDDs ? You will not see any difference (and SATA SSDs are not a thin=
+g
+anymore, enough that we should worry too much. NVMe took over). And that
+"big lock" is libata is really an integral part of the design. To remove
+it, you will need to rewrite libata entirely...
 
-Thank you,
-./drv
+>=20
+>=20
+>> that is due to queue command CB calling task_done() in some cases), bu=
+t=20
+>> I still think that sas_ata_device_link_abort() should be fixed (to gra=
+b=20
+>> the host lock).
+>=20
+> For sas_ata_device_link_abort(), it should grab ap->lock.
 
-> ---
->  drivers/scsi/qla4xxx/ql4_attr.c | 32 ++++++++++++++++----------------
->  1 file changed, 16 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
-> index abfa6ef60480..773b8dbe1121 100644
-> --- a/drivers/scsi/qla4xxx/ql4_attr.c
-> +++ b/drivers/scsi/qla4xxx/ql4_attr.c
-> @@ -156,11 +156,11 @@ qla4xxx_fw_version_show(struct device *dev,
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
->
->  	if (is_qla80XX(ha))
-> -		return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%x)\n",
-> +		return sysfs_emit(buf, "%d.%02d.%02d (%x)\n",
->  				ha->fw_info.fw_major, ha->fw_info.fw_minor,
->  				ha->fw_info.fw_patch, ha->fw_info.fw_build);
->  	else
-> -		return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d.%02d\n",
-> +		return sysfs_emit(buf, "%d.%02d.%02d.%02d\n",
->  				ha->fw_info.fw_major, ha->fw_info.fw_minor,
->  				ha->fw_info.fw_patch, ha->fw_info.fw_build);
->  }
-> @@ -170,7 +170,7 @@ qla4xxx_serial_num_show(struct device *dev, struct device_attribute *attr,
->  			char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%s\n", ha->serial_number);
-> +	return sysfs_emit(buf, "%s\n", ha->serial_number);
->  }
->
->  static ssize_t
-> @@ -178,7 +178,7 @@ qla4xxx_iscsi_version_show(struct device *dev, struct device_attribute *attr,
->  			   char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fw_info.iscsi_major,
-> +	return sysfs_emit(buf, "%d.%02d\n", ha->fw_info.iscsi_major,
->  			ha->fw_info.iscsi_minor);
->  }
->
-> @@ -187,7 +187,7 @@ qla4xxx_optrom_version_show(struct device *dev, struct device_attribute *attr,
->  			    char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d.%02d\n",
-> +	return sysfs_emit(buf, "%d.%02d.%02d.%02d\n",
->  			ha->fw_info.bootload_major, ha->fw_info.bootload_minor,
->  			ha->fw_info.bootload_patch, ha->fw_info.bootload_build);
->  }
-> @@ -197,7 +197,7 @@ qla4xxx_board_id_show(struct device *dev, struct device_attribute *attr,
->  		      char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "0x%08X\n", ha->board_id);
-> +	return sysfs_emit(buf, "0x%08X\n", ha->board_id);
->  }
->
->  static ssize_t
-> @@ -207,7 +207,7 @@ qla4xxx_fw_state_show(struct device *dev, struct device_attribute *attr,
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
->
->  	qla4xxx_get_firmware_state(ha);
-> -	return snprintf(buf, PAGE_SIZE, "0x%08X%8X\n", ha->firmware_state,
-> +	return sysfs_emit(buf, "0x%08X%8X\n", ha->firmware_state,
->  			ha->addl_fw_state);
->  }
->
-> @@ -220,7 +220,7 @@ qla4xxx_phy_port_cnt_show(struct device *dev, struct device_attribute *attr,
->  	if (is_qla40XX(ha))
->  		return -ENOSYS;
->
-> -	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_cnt);
-> +	return sysfs_emit(buf, "0x%04X\n", ha->phy_port_cnt);
->  }
->
->  static ssize_t
-> @@ -232,7 +232,7 @@ qla4xxx_phy_port_num_show(struct device *dev, struct device_attribute *attr,
->  	if (is_qla40XX(ha))
->  		return -ENOSYS;
->
-> -	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_num);
-> +	return sysfs_emit(buf, "0x%04X\n", ha->phy_port_num);
->  }
->
->  static ssize_t
-> @@ -244,7 +244,7 @@ qla4xxx_iscsi_func_cnt_show(struct device *dev, struct device_attribute *attr,
->  	if (is_qla40XX(ha))
->  		return -ENOSYS;
->
-> -	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->iscsi_pci_func_cnt);
-> +	return sysfs_emit(buf, "0x%04X\n", ha->iscsi_pci_func_cnt);
->  }
->
->  static ssize_t
-> @@ -253,7 +253,7 @@ qla4xxx_hba_model_show(struct device *dev, struct device_attribute *attr,
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
->
-> -	return snprintf(buf, PAGE_SIZE, "%s\n", ha->model_name);
-> +	return sysfs_emit(buf, "%s\n", ha->model_name);
->  }
->
->  static ssize_t
-> @@ -261,7 +261,7 @@ qla4xxx_fw_timestamp_show(struct device *dev, struct device_attribute *attr,
->  			  char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%s %s\n", ha->fw_info.fw_build_date,
-> +	return sysfs_emit(buf, "%s %s\n", ha->fw_info.fw_build_date,
->  			ha->fw_info.fw_build_time);
->  }
->
-> @@ -270,7 +270,7 @@ qla4xxx_fw_build_user_show(struct device *dev, struct device_attribute *attr,
->  			   char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%s\n", ha->fw_info.fw_build_user);
-> +	return sysfs_emit(buf, "%s\n", ha->fw_info.fw_build_user);
->  }
->
->  static ssize_t
-> @@ -278,7 +278,7 @@ qla4xxx_fw_ext_timestamp_show(struct device *dev, struct device_attribute *attr,
->  			      char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%s\n", ha->fw_info.extended_timestamp);
-> +	return sysfs_emit(buf, "%s\n", ha->fw_info.extended_timestamp);
->  }
->
->  static ssize_t
-> @@ -300,7 +300,7 @@ qla4xxx_fw_load_src_show(struct device *dev, struct device_attribute *attr,
->  		break;
->  	}
->
-> -	return snprintf(buf, PAGE_SIZE, "%s\n", load_src);
-> +	return sysfs_emit(buf, "%s\n", load_src);
->  }
->
->  static ssize_t
-> @@ -309,7 +309,7 @@ qla4xxx_fw_uptime_show(struct device *dev, struct device_attribute *attr,
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
->  	qla4xxx_about_firmware(ha);
-> -	return snprintf(buf, PAGE_SIZE, "%u.%u secs\n", ha->fw_uptime_secs,
-> +	return sysfs_emit(buf, "%u.%u secs\n", ha->fw_uptime_secs,
->  			ha->fw_uptime_msecs);
->  }
->
-> --
-> 2.34.1
->
+Which is what libata code comments (mistakenly in many places) always
+refer as host lock.
 
+>=20
+> Thanks,
+> Jason
+
+--=20
+Damien Le Moal
+Western Digital Research
 
