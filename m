@@ -2,124 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63F2FC4167B
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Dec 2022 12:59:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9924C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Dec 2022 14:39:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231600AbiLSM7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 07:59:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58628 "EHLO
+        id S232282AbiLSOjW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 09:39:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231292AbiLSM7J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 07:59:09 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03C7FF59C;
-        Mon, 19 Dec 2022 04:59:08 -0800 (PST)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NbKWD4YLvzmWZC;
-        Mon, 19 Dec 2022 20:58:00 +0800 (CST)
-Received: from [10.67.101.126] (10.67.101.126) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Mon, 19 Dec 2022 20:59:06 +0800
-Message-ID: <f15c142c-669d-6bc7-f9b9-c05cc3df1542@huawei.com>
-Date:   Mon, 19 Dec 2022 20:59:05 +0800
+        with ESMTP id S231743AbiLSOjT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 09:39:19 -0500
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A66F2198
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 06:39:18 -0800 (PST)
+Received: by mail-wr1-x429.google.com with SMTP id bx10so8903143wrb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 06:39:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=arrikto-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=yGMLsH8dgzcahtBgx80OpxckreFvsodbzajyjupc3Ck=;
+        b=VT1BFOOZBN2F54VOA5DbCEiDLjMvyAoExiqGeHO3SWZgE1VGL1FR7HaceCyrlMNcpt
+         oO/xHErMVV4ixh2giC0zjgvauQbju6Sf5hHRubr7AZIBkNcywFmNr6MEdlyYtrKtxaNL
+         Js5ZJJfQ5QZkJfmtTQzLzK+Rbc7aVRuG+7URjn9EgR05H8CvulGE9ROW6umO7cCDMdFW
+         gZOkvE2J9xveWWbz/aitCcw7UjKFAF5mUmJ3cYOgGIA8tfNvTcmE+PQFn0ETqRNSmybm
+         8z2/KHe4XbPhd3FAUP5qe2eDTeiGKu9FUaXgOPbHMCTf03oJczu9VW8q0d0rIg/1KBZk
+         1JxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=yGMLsH8dgzcahtBgx80OpxckreFvsodbzajyjupc3Ck=;
+        b=nFudNnkshpYYqbZaStH5zlJLgfNfndZ9kCzB6oN5Pt1AcpIjCW1QeM3QxWhjZLYd1s
+         CPPNVQo/O15u/tgoTGN85AsTsuEgwVDi8YUo1rdPtxweK7K5sQhUXrvW/VZxBEfHj3iY
+         lPgDyiUWLgudITHoH7wCBq/6DjvbnuGWkAITb+BPmIsr/wKVgEe5swTtRvOHuqyxIO5g
+         05+uX1xYi7g7D13ixdj7RzaP79VRW239KFU4oXjmQtL5foWZmwPCJRxXeFM0zzvhFK0O
+         EiRyfWgAQP1558uRUYIADqxRmWVEcPgcoPYip+ISFyjlZbUUPe/d3bnbDygs2YoYFqk9
+         N6wA==
+X-Gm-Message-State: ANoB5pnSHpaNWg9/755jnyN1Uww8+tQe1CiUOkrXZQmLehQqjSYjmf5H
+        XqD6hQVixPXXrRgNh3Ka0GkB+g==
+X-Google-Smtp-Source: AA0mqf5/VyOUBf9M76A2ciHOjRS4N/9IXTIhrdBesQDhgDxyOax74woFyxZrsxJtJgKa1C/SuM19qQ==
+X-Received: by 2002:a5d:4242:0:b0:242:5ed6:a09f with SMTP id s2-20020a5d4242000000b002425ed6a09fmr25001217wrr.44.1671460757191;
+        Mon, 19 Dec 2022 06:39:17 -0800 (PST)
+Received: from [10.94.1.166] ([185.109.18.135])
+        by smtp.gmail.com with ESMTPSA id y1-20020adfd081000000b002421a8f4fa6sm10246190wrh.92.2022.12.19.06.39.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Dec 2022 06:39:16 -0800 (PST)
+Message-ID: <da4f53f3-4e13-1259-b0a6-cc28160be23b@arrikto.com>
+Date:   Mon, 19 Dec 2022 16:39:15 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH V2] scsi: libsas: Directly kick-off EH when ATA device
- fell off
-Content-Language: en-CA
-To:     John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>
-References: <20221216100327.7386-1-yangxingui@huawei.com>
- <565fcf28-ec53-8d74-00a3-94be8e5b60e4@oracle.com>
-From:   yangxingui <yangxingui@huawei.com>
-In-Reply-To: <565fcf28-ec53-8d74-00a3-94be8e5b60e4@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.101.126]
-X-ClientProxiedBy: dggpemm500008.china.huawei.com (7.185.36.136) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH] tcm_loop: Increase maximum request size
+To:     Christoph Hellwig <hch@infradead.org>,
+        Mike Christie <michael.christie@oracle.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+References: <20220929115504.23806-1-ntsironis@arrikto.com>
+ <ed3e5f22-dd2c-2952-dc7e-c47bccf66611@oracle.com>
+ <Y5Dc66mOzBfBhUGY@infradead.org>
+Content-Language: en-US
+From:   Nikos Tsironis <ntsironis@arrikto.com>
+In-Reply-To: <Y5Dc66mOzBfBhUGY@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2022/12/19 17:23, John Garry wrote:
-> On 16/12/2022 10:03, Xingui Yang wrote:
->> If the ATA device fell off, call sas_ata_device_link_abort() directly and
->> mark all outstanding QCs as failed and kick-off EH Immediately. This 
->> avoids
->> having to wait for block layer timeouts.
+On 12/7/22 20:35, Christoph Hellwig wrote:
+> On Wed, Dec 07, 2022 at 12:29:56PM -0600, Mike Christie wrote:
+>> I think you need to make this configurable.
 >>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> ---
->> Changes to v1:
->> - Use dev_is_sata() to check ATA device type
->>   drivers/scsi/libsas/sas_discover.c | 3 +++
->>   1 file changed, 3 insertions(+)
+>> If you use loop with pscsi, then the sgl that loop now gets might be too
+>> big for the backend device so we now fail in:
 >>
->> diff --git a/drivers/scsi/libsas/sas_discover.c 
->> b/drivers/scsi/libsas/sas_discover.c
->> index d5bc1314c341..a12b65eb4a2a 100644
->> --- a/drivers/scsi/libsas/sas_discover.c
->> +++ b/drivers/scsi/libsas/sas_discover.c
->> @@ -362,6 +362,9 @@ static void sas_destruct_ports(struct asd_sas_port 
->> *port)
->>   void sas_unregister_dev(struct asd_sas_port *port, struct 
->> domain_device *dev)
->>   {
->> +    if (test_bit(SAS_DEV_GONE, &dev->state) && dev_is_sata(dev))
->> +        sas_ata_device_link_abort(dev, false);
+>> pscsi_map_sg -> blk_rq_append_bio -> ll_back_merge_fn
+>>
+>> So some users might be relying on the smaller limit.
 > 
-Hi, John
-> Firstly, I think that there is a bug in sas_ata_device_link_abort() -> 
-> ata_link_abort() code in that the host lock in not grabbed, as the 
-> comment in ata_port_abort() mentions. Having said that, libsas had 
-> already some dodgy host locking usage - specifically dropping the lock 
-> for the queuing path (that's something else to be fixed up ... I think 
-> that is due to queue command CB calling task_done() in some cases), but 
-> I still think that sas_ata_device_link_abort() should be fixed (to grab 
-> the host lock).
-ok, I agree with you very much for this, I had doubts about whether we 
-needed to grab lock before.
-> 
-> Secondly, this just seems like a half solution to the age-old problem - 
-> that is, EH eventually kicking in only after 30 seconds when a disk is 
-> removed with active IO. I say half solution as SAS disks still have this 
-> issue for libsas. Can we instead push to try to solve both of them now?
+> Note that this could happen even now, you just need sufficiently
+> horrible hardware to pass through for it.  But yes, for pscsi
+> this needs to look at the underlying device, and increasing the
+> limit might be a good point to do that.  I'm not sure it's worth
+> to add user configuration, though.
 
-Jason said you must have such an opinion "a half solution". As libsas 
-does not have any interface to mark all outstanding commands as failed 
-for SAS disk currently and SAS disk support I/O resumable transmission 
-after intermittent disconnections, so I want to optimize sata disk first.
-If we want to achieve a complete solution, perhaps we need to define 
-such an interface in libsas and implement it by lldd. My current idea is 
-to call sas_abort_task() for all outstanding commands in lldd. I wonder 
-if you approve of this?
+Thanks for the feedback.
 
-Thanks,
-Xingui
-> 
-> There was a broad previous discussion on this:
-> https://urldefense.com/v3/__https://lore.kernel.org/linux-scsi/Ykqg0kr0F*2Fyzk2XW@infradead.org/__;JQ!!ACWV5N9M2RV99hQ!MwAZFXXIwuP0lv-kuUIJ0ekUiGBWlTBhU3oQjyOf_yuP1rHDJb8UKMzJjndXNQ-W1PQGJXzgc0bQUsHh4NGh21EOc50$ 
-> 
-> 
->  From that discussion, Hannes was doing some related prep work series, 
-> but I don't think it got completed.
-> 
-> Thanks,
-> John
-> 
->> +
->>       if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
->>           !list_empty(&dev->disco_list_node)) {
->>           /* this rphy never saw sas_rphy_add */
-> 
-> .
+What should I do? Change pscsi to look at the underlying device limits?
+
+Nikos
