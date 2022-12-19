@@ -2,84 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0ECDC001B2
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Dec 2022 22:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35112C4167B
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Dec 2022 23:03:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232444AbiLSW7O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 17:59:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52692 "EHLO
+        id S233007AbiLSXDh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 18:03:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231702AbiLSW7N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 17:59:13 -0500
+        with ESMTP id S233006AbiLSXB6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 18:01:58 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C07279FC5
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 14:59:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDDD211823
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 15:00:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1671490752; x=1703026752;
+  t=1671490849; x=1703026849;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=nBOnBM2AbYb8rMTgdV7VKM1gSLrZ9214921NLXhZivI=;
-  b=F7pCc8TxoNQXJedG2BsSB2L2vsjFLULKuWlzoENUxM0tUsN2Wr/5lrOO
-   vrIZNSjOd5lKxQUME0JbogU+lWcZ/jIthYfmV9MtiD7xuojkpU1RlYcQS
-   N9JeI1w5qDD9+irbCADLpYLR3oy2j+nnwbwf1STbkE8lmzriZLJj8YL4/
-   Uo0Th8K6YRr92CA2pJ21KzC4FPeIRKE8DSU7IRxTWGghFIJlz5ILM+oCB
-   WfpxCo1TYB5Oy16leQj8C5Ci6uUVeW+DlNifCtF1z/uH2kcNwfQLXGJq6
-   iu7ZRDMz8+xDtZ/qkG/cE/rs9smfpyGQv1l+rALf44cliI31IyPxxiXIT
-   A==;
+  bh=ECzHKD874L/2s+q5yE96TXJkBaCiaKo5Ubu4WxCLDKE=;
+  b=U/bzOA+fHymbWKWaPqBUEanIYoswFQHjJW3Cg6rTovjOWmKfjsMl6oVP
+   q+WaIqmhoarpFNhPW8kYrFE+hk5/J7GwoFPZJtMayWj1oOZZq8QVgc3q9
+   +cwN4thReSLZPLlTtZXBktSHAYl6Zpf8zRKqhu0n5nBrjZMUofU+Hd8JB
+   YRNs08yN18ZFhuwjXLs3wEBIxcYSCqqqb7wh48VBoIyxAqIN+/B4WNtDq
+   Bcddd6H/hMZMnzXpZ6m9AcNGQjau2bg4vjq+hAnbQ05hyOxkahkNvKeFk
+   veq5BOZCNcoIfdzFxArXVhjgSJySkaJYIfTlEgpfBE7nBGxll8wXngSvx
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.96,257,1665417600"; 
-   d="scan'208";a="219253040"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Dec 2022 06:59:10 +0800
-IronPort-SDR: 9NtK+RrBPWbG63Qgb6ccoLVKe/BNk14NA6XlenRCCSRecP4dSjtynqYzyn7cXkQCYoYMKt4+9Q
- bypetCC3QSIFvVYs2geuORRFqtSmYdxebXXVuKXVVIwolzPZsPKaarOtJ8zS7rhBdnZ+uxUsX3
- Yy8ktdQVrDzwRmRMjmegPdWJvjafs8CrdQnP8L8oq/X3sPMIBuVS+5lO1yj1gb+CEzrNObP8Tb
- IHi1w8kg1irMx/FlJ6LVuoPEsrTgHnCc/osY6nsaSk+yYxV/kIB7FMnZiByS2YsRBRoKrkhczv
- eYI=
+   d="scan'208";a="219253133"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Dec 2022 07:00:49 +0800
+IronPort-SDR: AFKmK5Ih7/EhSuiNnYNjfdRwQ2U05bPnLUAu6I+dfnC3e/n1Owig1qhc3cA7R9PoWvY2kdxOKJ
+ xM2HG8pwzWNaV5KbBUlaHASep+NGaJKe0/AwAhHMNmUfHlboeKPBgUtBCwhAeBnF78aaqcPGl+
+ QfiE5bHzOC8XoZexQcxGZsa7/sFpRYMMVClZNFJO6RgnaAeFd3CalLCNq/iwNFDDner58SfzRF
+ Mtv+FFHZxdVYUeNMZEhSNi+ln3EB1FKdUUudFzHaK+nXXRoUjgYETSHaTZleiAy3qMnOjdrXJT
+ Cpc=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Dec 2022 14:17:27 -0800
-IronPort-SDR: 1ck/dPErJGUvPU1FfmQCQ3RM1qA/4wkog+hG2gFoRCUqbT942/0vI/pn40qaTsj+UCtWO+waCg
- VREfnAZ1n+NL1wQyBuJ1Q/Adap4OFeXY9S+Bj7DhIekOXVDPTqTKpanqRYENgWacOe8CZM7GnY
- 6CqzWnzNL4HGSmWrseAFV6innpV4ou7j7JOdpSYvWhmArVoNEi960v5tcqVwYkMLRzVn2zUHJg
- +lNjqVXOyjDpRNTa+gtX8cpuIdBroLdeBVAF2bFJY0RvH69eErEKu1qnNhsVZTVAVKf4m7ctSp
- dA8=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Dec 2022 14:13:19 -0800
+IronPort-SDR: q0SMicFiFAlRkTTjLH4jyLBSlt2XHgrcspPNyYuFI5fhEs8bEZ+Jz0eL6zDnyOuO26d4hu6oM1
+ S8qLPR8O36cCbptYVd6V8Eojgk3I+vXeDlpIZQ+cG1d5MhxXm2s2Wpp2EAmSvHf3zjxi9YsDKj
+ MWgivFAcvqIpe1TXtP5gEMV0aOCQ7ZQ4wo+CdTEvGU9ASNvCLqm3pc05Xdn/1FbGwtX9oEpyak
+ lvLtxd4IH6LJg3NYzyX0NVWzFT7cgE+U7kR2PGJw9WvKFtu1q39t5wNPPMoLBgcp4QU0+xwlnG
+ qpo=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Dec 2022 14:59:11 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Dec 2022 15:00:49 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NbZrt4Q1zz1Rwt8
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 14:59:10 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NbZtl6K4Lz1RvTr
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2022 15:00:47 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:content-language:references:to
+        :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1671490749; x=1674082750; bh=nBOnBM2AbYb8rMTgdV7VKM1gSLrZ9214921
-        NLXhZivI=; b=Dtvc58csZf+Jy7BMgd54A35CyniVwl59EYZIhYNurtF/xBMu56w
-        aSTwVhUJdfeY3rAyGpVaB3hf7kgh7USFI3c46nN5rRB81SThKZXvLW3BhR74A2yo
-        xJqNAvKRADNFIncenxq/iSiE/HDaR+PD+NUxUcvuz23qpVsNHj9xf5yUSr1svTIE
-        /PFTMPuI4JQ52cBlgVkWaUR4m7dTE6p/b0kSS5Ao/HAXqHmdujvImuxkEynuNcrm
-        XuiYsFa1kpKYrieFAA0JSUr3HG8j+/H/VRtQRtKHJeNLQq/aLs0pCaXJmEs2pGQQ
-        fW+DnOs3HkX5ULaM/N7q4GNTB/NoBJAkK/g==
+        1671490846; x=1674082847; bh=ECzHKD874L/2s+q5yE96TXJkBaCiaKo5Ubu
+        4WxCLDKE=; b=me+2UvV2aY1MHUjEtnV2BXljahbxCr7z4uvHHA6KBbrnXDUez3d
+        Oz6bUwywYmSFcCAa40sacJUC+8+Qmd8VFKYApHMx4Hq2zBnYWr+a8bsdXa0mFoGX
+        Uij1pHUq7GkqTTE5Qm+7dJCSxb0S7+dwkW6sFseouLr1P+gqqtNnM8m3zCROE6h6
+        0TfuJVBZc/mTGn9vog47jFRGHv+hh2A2MOTcgNXdPAPy5VhZgUb6V/G5EXRicHjt
+        XaEwT1h+ghp4wDVhWWnHuK4Rsgo9NMWXL+7y6GzzX2KYFyygv6dCt6K1+vy5VwyQ
+        RzkAak8uiNAHcoVAULf69ZljDCVEsKqYRRw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GV87MgVfbfUJ for <linux-scsi@vger.kernel.org>;
-        Mon, 19 Dec 2022 14:59:09 -0800 (PST)
+        with ESMTP id JRT0wly6jrfJ for <linux-scsi@vger.kernel.org>;
+        Mon, 19 Dec 2022 15:00:46 -0800 (PST)
 Received: from [10.225.163.106] (unknown [10.225.163.106])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NbZrq4hc6z1RvLy;
-        Mon, 19 Dec 2022 14:59:07 -0800 (PST)
-Message-ID: <234e04db-7539-07e4-a6b8-c6b05f78193d@opensource.wdc.com>
-Date:   Tue, 20 Dec 2022 07:59:06 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NbZtj0MVHz1RvLy;
+        Mon, 19 Dec 2022 15:00:44 -0800 (PST)
+Message-ID: <4489f80f-9f39-8f3f-5d10-6b113131e65c@opensource.wdc.com>
+Date:   Tue, 20 Dec 2022 08:00:43 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.1
 Subject: Re: [PATCH V2] scsi: libsas: Directly kick-off EH when ATA device
  fell off
-To:     Jason Yan <yanaijie@huawei.com>,
-        John Garry <john.g.garry@oracle.com>,
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
         Xingui Yang <yangxingui@huawei.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, linux-ide@vger.kernel.org,
         hare@suse.com, hch@lst.de
@@ -89,82 +90,53 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
 References: <20221216100327.7386-1-yangxingui@huawei.com>
  <565fcf28-ec53-8d74-00a3-94be8e5b60e4@oracle.com>
  <60ace19e-d029-f14d-9aac-d5cef83b5b64@huawei.com>
-Content-Language: en-US
+ <257dcd6c-2ffd-f518-9b13-c309348088d9@oracle.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <60ace19e-d029-f14d-9aac-d5cef83b5b64@huawei.com>
+In-Reply-To: <257dcd6c-2ffd-f518-9b13-c309348088d9@oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/20/22 00:28, Jason Yan wrote:
-> On 2022/12/19 17:23, John Garry wrote:
->> On 16/12/2022 10:03, Xingui Yang wrote:
->>> If the ATA device fell off, call sas_ata_device_link_abort() directly=
- and
->>> mark all outstanding QCs as failed and kick-off EH Immediately. This=20
->>> avoids
->>> having to wait for block layer timeouts.
+On 12/20/22 00:55, John Garry wrote:
+> On 19/12/2022 15:28, Jason Yan wrote:
+>>>> +=C2=A0=C2=A0=C2=A0 if (test_bit(SAS_DEV_GONE, &dev->state) && dev_i=
+s_sata(dev))
+>>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sas_ata_device_link_abor=
+t(dev, false);
 >>>
->>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>> ---
->>> Changes to v1:
->>> - Use dev_is_sata() to check ATA device type
->>> =C2=A0 drivers/scsi/libsas/sas_discover.c | 3 +++
->>> =C2=A0 1 file changed, 3 insertions(+)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_discover.c=20
->>> b/drivers/scsi/libsas/sas_discover.c
->>> index d5bc1314c341..a12b65eb4a2a 100644
->>> --- a/drivers/scsi/libsas/sas_discover.c
->>> +++ b/drivers/scsi/libsas/sas_discover.c
->>> @@ -362,6 +362,9 @@ static void sas_destruct_ports(struct asd_sas_por=
-t=20
->>> *port)
->>> =C2=A0 void sas_unregister_dev(struct asd_sas_port *port, struct=20
->>> domain_device *dev)
->>> =C2=A0 {
->>> +=C2=A0=C2=A0=C2=A0 if (test_bit(SAS_DEV_GONE, &dev->state) && dev_is=
-_sata(dev))
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sas_ata_device_link_abort=
-(dev, false);
+>>> Firstly, I think that there is a bug in sas_ata_device_link_abort() -=
+>=20
+>>> ata_link_abort() code in that the host lock in not grabbed, as the=20
+>>> comment in ata_port_abort() mentions. Having said that, libsas had=20
+>>> already some dodgy host locking usage - specifically dropping the loc=
+k=20
+>>> for the queuing path (that's something else to be fixed up ... I thin=
+k=20
 >>
->> Firstly, I think that there is a bug in sas_ata_device_link_abort() ->=
-=20
->> ata_link_abort() code in that the host lock in not grabbed, as the=20
->> comment in ata_port_abort() mentions. Having said that, libsas had=20
->> already some dodgy host locking usage - specifically dropping the lock=
-=20
->> for the queuing path (that's something else to be fixed up ... I think=
-=20
+>> Taking big locks in queuing path is not a good idea. This will bring=20
+>> down performance.
 >=20
-> Taking big locks in queuing path is not a good idea. This will bring=20
-> down performance.
+> But it is expected that ata_qc_issue() should be called with that the=20
+> host lock grabbed (and keep it).
+>=20
+> I think that the reason libsas drops the lock is because some LLDD=20
+> queuecommand CBs calls task_done() in some error paths. If we kept the=20
+> lock held, then we could have a deadlock, for example:
+>=20
+> sas_ata_qc_issue (has lock) -> lldd_execute_task() =3D=20
+> pm8001_queue_command() -> task_done() =3D sas_ata_task_done() -> grab h=
+ost=20
+> lock =3D> deadlock.
 
-With HDDs ? You will not see any difference (and SATA SSDs are not a thin=
-g
-anymore, enough that we should worry too much. NVMe took over). And that
-"big lock" is libata is really an integral part of the design. To remove
-it, you will need to rewrite libata entirely...
-
->=20
->=20
->> that is due to queue command CB calling task_done() in some cases), bu=
-t=20
->> I still think that sas_ata_device_link_abort() should be fixed (to gra=
-b=20
->> the host lock).
->=20
-> For sas_ata_device_link_abort(), it should grab ap->lock.
-
-Which is what libata code comments (mistakenly in many places) always
-refer as host lock.
+That should be easily solvable using a workqueue for doing task_done(), n=
+o ?
 
 >=20
 > Thanks,
-> Jason
+> John
 
 --=20
 Damien Le Moal
