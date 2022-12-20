@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E222C10F1D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 780AAC4708E
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:22:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232432AbiLTBWJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 20:22:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51806 "EHLO
+        id S232642AbiLTBWN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 20:22:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232938AbiLTBV2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:28 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E21D5FAC0;
+        with ESMTP id S232691AbiLTBV1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:27 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2717FD1B;
         Mon, 19 Dec 2022 17:21:13 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 59D63CE1142;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 62D9B61210;
+        Tue, 20 Dec 2022 01:21:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD646C433F0;
         Tue, 20 Dec 2022 01:21:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49DC1C433EF;
-        Tue, 20 Dec 2022 01:21:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671499269;
-        bh=GfROr8HR6qZP6TAhiHR0HybOQfzTNxipuRy8eXjgMtc=;
+        s=k20201202; t=1671499272;
+        bh=Yhax/MwVbtU6W9yuuNo0wM5O1TjPnhk2PUjHwj/80aA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o/mMHEUdg1xJYqkHvbnaZeAWCJhGbsOlGgf8Trg0CkNLyilB4ANHWJQQdBqrpPrmW
-         GMU+tCoe4+LChVCJGEP11suX8SbkoCFssyyor0YFa8e5SZEagtsz1M+hxE0WWX3NQP
-         Ik2Q4ogPViLBVUTl8AUZjxgLivERmu3qQ45XFRDD/ixqdMZfoCHkIRzmg5JdfxWKUV
-         Bp6GPqbSkUiDTtYP9OdpgfOSzWxTF1TUPHj90++OCI61xUdgquELxRuGcj29w8Vb6O
-         tjNyn4BjZK57OlRT/5dxLxDJSZvXRzShfCZb0m2yD4GNDv6ixpd2MBni8/+u9ofhFa
-         +YQBc2Bc66MUA==
+        b=YlLsGMTK+wW6K4QPPyHaE0YGXDxfETtyO1zNaoYST664PL/KMwqdduqTrfOyEzLLi
+         xhDkzwkw0jBYRWDJLxU7IBiDjUhTYVS/IGBLCDTy0Rcvha/C2zWlCaSOC4dYJm9LWZ
+         EeZhjzx3Jpu3tWTeepcxZ21z3GYsDqesiRX0Bv8TfJzPsEvslkYBxnN12npDdeXr9a
+         7SG/6unjvq2jLoU5JokKsfVo52JtMcyfL9QtQYKOzMcLDMS90m7OMakVS9Bcm8Fpzj
+         /ESB6ua/7jcEzHSuhEaKM/bJvOL2Ai80o7+xFxzVTNHVujnhX6ke8b3Wbqb/wuI3Ai
+         z724P6SggOzGw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <nathan@kernel.org>,
-        Sami Tolvanen <samitolvanen@google.com>,
-        Kees Cook <keescook@chromium.org>,
+Cc:     Mike McGowen <mike.mcgowen@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        ram.vegesna@broadcom.com, jejb@linux.ibm.com,
-        ndesaulniers@google.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, llvm@lists.linux.dev
-Subject: [PATCH AUTOSEL 6.1 06/16] scsi: elx: libefc: Fix second parameter type in state callbacks
-Date:   Mon, 19 Dec 2022 20:20:43 -0500
-Message-Id: <20221220012053.1222101-6-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        storagedev@microchip.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 08/16] scsi: smartpqi: Add new controller PCI IDs
+Date:   Mon, 19 Dec 2022 20:20:45 -0500
+Message-Id: <20221220012053.1222101-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221220012053.1222101-1-sashal@kernel.org>
 References: <20221220012053.1222101-1-sashal@kernel.org>
@@ -55,79 +54,132 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nathan Chancellor <nathan@kernel.org>
+From: Mike McGowen <mike.mcgowen@microchip.com>
 
-[ Upstream commit 3d75e766b58a7410d4e835c534e1b4664a8f62d0 ]
+[ Upstream commit 0b93cf2a9097b1c3d75642ef878ba87f15f03043 ]
 
-With clang's kernel control flow integrity (kCFI, CONFIG_CFI_CLANG),
-indirect call targets are validated against the expected function pointer
-prototype to make sure the call target is valid to help mitigate ROP
-attacks. If they are not identical, there is a failure at run time, which
-manifests as either a kernel panic or thread getting killed. A proposed
-warning in clang aims to catch these at compile time, which reveals:
+All PCI ID entries in Hex.
+Add PCI IDs for ByteDance controllers:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+    ByteHBA JGH43024-8                      9005 / 028f / 1e93 / 1000
+    ByteHBA JGH43034-8                      9005 / 028f / 1e93 / 1001
+    ByteHBA JGH44014-8                      9005 / 028f / 1e93 / 1002
 
-  drivers/scsi/elx/libefc/efc_node.c:811:22: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
-                  ctx->current_state = state;
-                                    ^ ~~~~~
-  drivers/scsi/elx/libefc/efc_node.c:878:21: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
-          node->nodedb_state = state;
-                            ^ ~~~~~
-  drivers/scsi/elx/libefc/efc_node.c:905:6: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' from 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') [-Werror,-Wincompatible-function-pointer-types-strict]
-                  pf = node->nodedb_state;
-                    ^ ~~~~~~~~~~~~~~~~~~
+Add PCI IDs for new Inspur controllers:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+    INSPUR RT0800M7E                        9005 / 028f / 1bd4 / 0086
+    INSPUR RT0800M7H                        9005 / 028f / 1bd4 / 0087
+    INSPUR RT0804M7R                        9005 / 028f / 1bd4 / 0088
+    INSPUR RT0808M7R                        9005 / 028f / 1bd4 / 0089
 
-  drivers/scsi/elx/libefc/efc_device.c:455:22: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
-                  node->nodedb_state = __efc_d_init;
-                                    ^ ~~~~~~~~~~~~
+Add PCI IDs for new FAB A controllers:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+    Adaptec SmartRAID 3254-16e /e           9005 / 028f / 9005 / 1475
+    Adaptec HBA 1200-16e                    9005 / 028f / 9005 / 14c3
+    Adaptec HBA 1200-8e                     9005 / 028f / 9005 / 14c4
 
-  drivers/scsi/elx/libefc/efc_sm.c:41:22: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
-                  ctx->current_state = state;
-                                    ^ ~~~~~
+Add H3C controller PCI IDs:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+    H3C H4508-Mf-8i                         9005 / 028f / 193d / 110b
 
-The type of the second parameter in the prototypes of ->current_state() and
-->nodedb_state() ('u32') does not match the implementations, which have a
-second parameter type of 'enum efc_sm_event'. Update the prototypes to have
-the correct second parameter type, clearing up all the warnings and CFI
-failures.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/1750
-Reported-by: Sami Tolvanen <samitolvanen@google.com>
-Signed-off-by: Nathan Chancellor <nathan@kernel.org>
-Link: https://lore.kernel.org/r/20221102161906.2781508-1-nathan@kernel.org
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/166793530327.322537.6056884426657539311.stgit@brunhilda
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/elx/libefc/efclib.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 44 +++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-diff --git a/drivers/scsi/elx/libefc/efclib.h b/drivers/scsi/elx/libefc/efclib.h
-index dde20891c2dd..57e338612812 100644
---- a/drivers/scsi/elx/libefc/efclib.h
-+++ b/drivers/scsi/elx/libefc/efclib.h
-@@ -58,10 +58,12 @@ enum efc_node_send_ls_acc {
- #define EFC_LINK_STATUS_UP		0
- #define EFC_LINK_STATUS_DOWN		1
- 
-+enum efc_sm_event;
-+
- /* State machine context header  */
- struct efc_sm_ctx {
- 	void (*current_state)(struct efc_sm_ctx *ctx,
--			      u32 evt, void *arg);
-+			      enum efc_sm_event evt, void *arg);
- 
- 	const char	*description;
- 	void		*app;
-@@ -365,7 +367,7 @@ struct efc_node {
- 	int			prev_evt;
- 
- 	void (*nodedb_state)(struct efc_sm_ctx *ctx,
--			     u32 evt, void *arg);
-+			     enum efc_sm_event evt, void *arg);
- 	struct timer_list	gidpt_delay_timer;
- 	u64			time_last_gidpt_msec;
- 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index b971fbe3b3a1..78fc743f46e4 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -9302,6 +9302,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x193d, 0x1109)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x193d, 0x110b)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x193d, 0x8460)
+@@ -9402,6 +9406,22 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x1bd4, 0x0072)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1bd4, 0x0086)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1bd4, 0x0087)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1bd4, 0x0088)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1bd4, 0x0089)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x19e5, 0xd227)
+@@ -9650,6 +9670,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_ADAPTEC2, 0x1474)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1475)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_ADAPTEC2, 0x1480)
+@@ -9706,6 +9730,14 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_ADAPTEC2, 0x14c2)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_ADAPTEC2, 0x14c3)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_ADAPTEC2, 0x14c4)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_ADAPTEC2, 0x14d0)
+@@ -9942,6 +9974,18 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_LENOVO, 0x0623)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++				0x1e93, 0x1000)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++				0x1e93, 0x1001)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++				0x1e93, 0x1002)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_ANY_ID, PCI_ANY_ID)
 -- 
 2.35.1
 
