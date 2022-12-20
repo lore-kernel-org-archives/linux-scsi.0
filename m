@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E83CC46467
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 251ADC3DA7B
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:23:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233048AbiLTBWn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 20:22:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51792 "EHLO
+        id S233070AbiLTBWo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 20:22:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233066AbiLTBVw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:52 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A41D65FD;
-        Mon, 19 Dec 2022 17:21:22 -0800 (PST)
+        with ESMTP id S233153AbiLTBWD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:22:03 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E92112AEA;
+        Mon, 19 Dec 2022 17:21:33 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0779E61209;
-        Tue, 20 Dec 2022 01:21:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29D2EC433D2;
-        Tue, 20 Dec 2022 01:21:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4F1DCB81104;
+        Tue, 20 Dec 2022 01:21:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 095A5C433F1;
+        Tue, 20 Dec 2022 01:21:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671499281;
-        bh=meXrmIHc4uB22MVvnpTkZ0t6/lXPGSax7WRu1NPzbQo=;
+        s=k20201202; t=1671499290;
+        bh=ld4GI8IxkG5GhH1HYhSS/uEu2E7iHy1QQzt0YzYVSSA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IRmTVQ58fDbEybf9e/FmU/Ivf9Ok5zxlzQ6pzsRXYAQA1saHM1lAfXZOcl10oWEZR
-         OYacF2Ag1KjKL7txnxoHC19ujh6AuzdYmGhjZw981abT6kHYDg7cFrXFWge+/ntYVv
-         J03w/V2C399GVKqE4m5aMdoFfZmpLwFys8/BKkO2ts/YuJcPwFq27c6uJt6J+Yyr86
-         6iB+iP6fhQgjFVsFH2pxuHShLtfbMnb2M6yfkpk4B/o3o6g13IuKlHUPNs2OEs0zV2
-         7eeR43l4EpZb4UGpre+MiTIFyMeSCRJNmFUVKA7CY5KQlYUHDFRqCNxjUzv924V9L+
-         JD7FaZiDSmOBg==
+        b=f9m7sZxwhmPYtBsQrNoqPglEchC2bEqP38IDox+RH/OMCqhkTjIDzijOar4sWpdG5
+         sI7rQIJWfMvyg0IwRrVwb3PPrqoa0ICsqvv28hb6lXpVhb9rETDipwUWAT5xsmhFKq
+         ljIHZFpqqM5tGRu3C8Z/rwKoeUHpwJjS2GZbEyDaT7GDgBB5Mv3hpqnsEkF2LMhHRK
+         wx07zCD8tQzlBCb51wA9HlaPdM3GffHEZoO5aJg4fhx2BEXVaU/dISLPH0e4vLZtOq
+         qes88NhQXjPA70Wa1aVVRbneop2+K92HWKYmbKmuhIdXZsNBc98Tnb6PE7HeuO/KS9
+         DebxGDkfYtpew==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maurizio Lombardi <mlombard@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, d.bogdanov@yadro.com,
-        r.bolshakov@yadro.com, k.shelekhin@yadro.com, mgurtovoy@nvidia.com,
-        yang.lee@linux.alibaba.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 12/16] scsi: target: iscsi: Fix a race condition between login_work and the login thread
-Date:   Mon, 19 Dec 2022 20:20:49 -0500
-Message-Id: <20221220012053.1222101-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 02/16] scsi: lpfc: Fix hard lockup when reading the rx_monitor from debugfs
+Date:   Mon, 19 Dec 2022 20:21:12 -0500
+Message-Id: <20221220012127.1222311-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221220012053.1222101-1-sashal@kernel.org>
-References: <20221220012053.1222101-1-sashal@kernel.org>
+In-Reply-To: <20221220012127.1222311-1-sashal@kernel.org>
+References: <20221220012127.1222311-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,78 +52,74 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit fec1b2fa62c162d03f5dcd7b03e3c89d3116d49f ]
+[ Upstream commit c44e50f4a0ec00c2298f31f91bc2c3e9bbd81c7e ]
 
-In case a malicious initiator sends some random data immediately after a
-login PDU; the iscsi_target_sk_data_ready() callback will schedule the
-login_work and, at the same time, the negotiation may end without clearing
-the LOGIN_FLAGS_INITIAL_PDU flag (because no additional PDU exchanges are
-required to complete the login).
+During I/O and simultaneous cat of /sys/kernel/debug/lpfc/fnX/rx_monitor, a
+hard lockup similar to the call trace below may occur.
 
-The login has been completed but the login_work function will find the
-LOGIN_FLAGS_INITIAL_PDU flag set and will never stop from rescheduling
-itself; at this point, if the initiator drops the connection, the
-iscsit_conn structure will be freed, login_work will dereference a released
-socket structure and the kernel crashes.
+The spin_lock_bh in lpfc_rx_monitor_report is not protecting from timer
+interrupts as expected, so change the strength of the spin lock to _irq.
 
-BUG: kernel NULL pointer dereference, address: 0000000000000230
-PF: supervisor write access in kernel mode
-PF: error_code(0x0002) - not-present page
-Workqueue: events iscsi_target_do_login_rx [iscsi_target_mod]
-RIP: 0010:_raw_read_lock_bh+0x15/0x30
-Call trace:
- iscsi_target_do_login_rx+0x75/0x3f0 [iscsi_target_mod]
- process_one_work+0x1e8/0x3c0
+Kernel panic - not syncing: Hard LOCKUP
+CPU: 3 PID: 110402 Comm: cat Kdump: loaded
 
-Fix this bug by forcing login_work to stop after the login has been
-completed and the socket callbacks have been restored.
+exception RIP: native_queued_spin_lock_slowpath+91
 
-Add a comment to clearify the return values of iscsi_target_do_login()
+[IRQ stack]
+ native_queued_spin_lock_slowpath at ffffffffb814e30b
+ _raw_spin_lock at ffffffffb89a667a
+ lpfc_rx_monitor_record at ffffffffc0a73a36 [lpfc]
+ lpfc_cmf_timer at ffffffffc0abbc67 [lpfc]
+ __hrtimer_run_queues at ffffffffb8184250
+ hrtimer_interrupt at ffffffffb8184ab0
+ smp_apic_timer_interrupt at ffffffffb8a026ba
+ apic_timer_interrupt at ffffffffb8a01c4f
+[End of IRQ stack]
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Link: https://lore.kernel.org/r/20221115125638.102517-1-mlombard@redhat.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+ apic_timer_interrupt at ffffffffb8a01c4f
+ lpfc_rx_monitor_report at ffffffffc0a73c80 [lpfc]
+ lpfc_rx_monitor_read at ffffffffc0addde1 [lpfc]
+ full_proxy_read at ffffffffb83e7fc3
+ vfs_read at ffffffffb833fe71
+ ksys_read at ffffffffb83402af
+ do_syscall_64 at ffffffffb800430b
+ entry_SYSCALL_64_after_hwframe at ffffffffb8a000ad
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20221017164323.14536-2-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_nego.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index f2919319ad38..ff49c8f3fe24 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -1018,6 +1018,13 @@ static int iscsi_target_handle_csg_one(struct iscsit_conn *conn, struct iscsi_lo
- 	return 0;
- }
- 
-+/*
-+ * RETURN VALUE:
-+ *
-+ *  1 = Login successful
-+ * -1 = Login failed
-+ *  0 = More PDU exchanges required
-+ */
- static int iscsi_target_do_login(struct iscsit_conn *conn, struct iscsi_login *login)
- {
- 	int pdu_count = 0;
-@@ -1363,12 +1370,13 @@ int iscsi_target_start_negotiation(
- 		ret = -1;
- 
- 	if (ret < 0) {
--		cancel_delayed_work_sync(&conn->login_work);
- 		iscsi_target_restore_sock_callbacks(conn);
- 		iscsi_remove_failed_auth_entry(conn);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 03c21167fc85..c4960da4c1c4 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -8076,10 +8076,10 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
+ 					"IO_cnt", "Info", "BWutil(ms)");
  	}
--	if (ret != 0)
-+	if (ret != 0) {
-+		cancel_delayed_work_sync(&conn->login_work);
- 		iscsi_target_nego_release(conn);
-+	}
  
- 	return ret;
+-	/* Needs to be _bh because record is called from timer interrupt
++	/* Needs to be _irq because record is called from timer interrupt
+ 	 * context
+ 	 */
+-	spin_lock_bh(ring_lock);
++	spin_lock_irq(ring_lock);
+ 	while (*head_idx != *tail_idx) {
+ 		entry = &ring[*head_idx];
+ 
+@@ -8123,7 +8123,7 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
+ 		if (cnt >= max_read_entries)
+ 			break;
+ 	}
+-	spin_unlock_bh(ring_lock);
++	spin_unlock_irq(ring_lock);
+ 
+ 	return cnt;
  }
 -- 
 2.35.1
