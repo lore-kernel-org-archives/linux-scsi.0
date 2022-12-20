@@ -2,45 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 980ADC001B2
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEA7BC4167B
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:22:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232809AbiLTBVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 20:21:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51342 "EHLO
+        id S232653AbiLTBWM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 20:22:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232532AbiLTBVH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:07 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4199C658C;
-        Mon, 19 Dec 2022 17:21:06 -0800 (PST)
+        with ESMTP id S233020AbiLTBVr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:47 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34F7D11469;
+        Mon, 19 Dec 2022 17:21:17 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E9B33B80FA6;
-        Tue, 20 Dec 2022 01:21:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9209DC433EF;
-        Tue, 20 Dec 2022 01:21:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E38ABB80FA6;
+        Tue, 20 Dec 2022 01:21:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5036BC43392;
+        Tue, 20 Dec 2022 01:21:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671499263;
-        bh=lHZsqiEbP+pPwp+3p7Q67f989/+cmYxndfu5Owgyd3A=;
+        s=k20201202; t=1671499274;
+        bh=Y/Vay+/JbI8G6+W5iGyTt9B8uqjSBD3oCJgRX1GagCw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XOAp3YeLTz2GgmCmKYdmIWUk7Ke3k7LSNRAexFg697mMNlV6GGsWv3gokHzINKRgB
-         /Y9lgEBpkCtA+DGzGJZdYVSNL0Zrzth4xZtOSNbt4YFxgg3lBYIYt75wifUMQ/luwg
-         NVyeV25sv3mX8WgZK//qv7bHFDndGpZJOXCr3NFoZLuYeTHG6XEysZ4a3P7Y6QwiXA
-         H3e9RddphoI5qNZOY7PEkSzXYItAZUYJqhL15UGKqjWM0EcqmI7I4o0kEwtbbu4sbf
-         8YRtKpQ6kAqNUOn0CMTe8dp2vHRL37Ybi+uY8h6Psrmp14NuJItrkSMqAsktyRBm1f
-         71A5f8VQlic5w==
+        b=PICMxruB/5OjLMM2lYkvA7Zegwd/af65uAogcUIxihiy8DrILm9v3Pb2NMX5DpQ6n
+         wtTrcTTsumyUYNLgrEObKlxCQV6sTDOvOzscSWNVtK1PuJ4rJ4IAjqWu7uvRCLnxVO
+         7S+X7SYzSkNPOs/0l1xbwc25CcO+BIxeGE95dXcBF7WIc+YZXJuNYLKmIVJAFDgvDF
+         zZLZeOU9xpHHHmjCFgElJXyjVlI2GMvNA+Tk0q/sWcYhSNoIvwwiKA2a6q5uvg+mrI
+         8O2GwbVi3m1huMDdvUCpaS/esyEx547lFy7bGdjnsRpOTrGRyndHZmpyvUDxrm6hAT
+         tUJO+SuqLIVLQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
+Cc:     Kumar Meiyappan <Kumar.Meiyappan@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Mike Mcgowan <mike.mcgowan@microchip.com>,
+        Kevin Barnett <kevin.barnett@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        avri.altman@wdc.com, beanhuo@micron.com, stanley.chu@mediatek.com,
-        j-young.choi@samsung.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 03/16] scsi: ufs: Reduce the START STOP UNIT timeout
-Date:   Mon, 19 Dec 2022 20:20:40 -0500
-Message-Id: <20221220012053.1222101-3-sashal@kernel.org>
+        storagedev@microchip.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 09/16] scsi: smartpqi: Correct device removal for multi-actuator devices
+Date:   Mon, 19 Dec 2022 20:20:46 -0500
+Message-Id: <20221220012053.1222101-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221220012053.1222101-1-sashal@kernel.org>
 References: <20221220012053.1222101-1-sashal@kernel.org>
@@ -52,53 +56,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Kumar Meiyappan <Kumar.Meiyappan@microchip.com>
 
-[ Upstream commit dcd5b7637c6d442d957f73780a03047413ed3a10 ]
+[ Upstream commit cc9befcbbb5ebce77726f938508700d913530035 ]
 
-Reduce the START STOP UNIT command timeout to one second since on Android
-devices a kernel panic is triggered if an attempt to suspend the system
-takes more than 20 seconds. One second should be enough for the START STOP
-UNIT command since this command completes in less than a millisecond for
-the UFS devices I have access to.
+Correct device count for multi-actuator drives which can cause kernel
+panics.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Link: https://lore.kernel.org/r/20221018202958.1902564-7-bvanassche@acm.org
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Mike Mcgowan <mike.mcgowan@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Kumar Meiyappan <Kumar.Meiyappan@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/166793531872.322537.9003385780343419275.stgit@brunhilda
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |  2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c | 33 +++++++++++++++++++--------
+ 2 files changed, 25 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b1f59a5fe632..bcc4b8a3c3bc 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8747,8 +8747,6 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 	struct scsi_device *sdp;
- 	unsigned long flags;
- 	int ret, retries;
--	unsigned long deadline;
--	int32_t remaining;
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index e550b12e525a..c8235f15728b 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1130,7 +1130,7 @@ struct pqi_scsi_dev {
+ 	u8	phy_id;
+ 	u8	ncq_prio_enable;
+ 	u8	ncq_prio_support;
+-	u8	multi_lun_device_lun_count;
++	u8	lun_count;
+ 	bool	raid_bypass_configured;	/* RAID bypass configured */
+ 	bool	raid_bypass_enabled;	/* RAID bypass enabled */
+ 	u32	next_bypass_group[RAID_MAP_MAX_DATA_DISKS_PER_ROW];
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 78fc743f46e4..9f0f69c1ed66 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -1610,9 +1610,7 @@ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 		&id_phys->alternate_paths_phys_connector,
+ 		sizeof(device->phys_connector));
+ 	device->bay = id_phys->phys_bay_in_box;
+-	device->multi_lun_device_lun_count = id_phys->multi_lun_device_lun_count;
+-	if (!device->multi_lun_device_lun_count)
+-		device->multi_lun_device_lun_count = 1;
++	device->lun_count = id_phys->multi_lun_device_lun_count;
+ 	if ((id_phys->even_more_flags & PQI_DEVICE_PHY_MAP_SUPPORTED) &&
+ 		id_phys->phy_count)
+ 		device->phy_id =
+@@ -1746,7 +1744,7 @@ static bool pqi_keep_device_offline(struct pqi_ctrl_info *ctrl_info,
+ 	return offline;
+ }
  
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	sdp = hba->ufs_device_wlun;
-@@ -8781,14 +8779,9 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
- 	 * already suspended childs.
- 	 */
--	deadline = jiffies + 10 * HZ;
- 	for (retries = 3; retries > 0; --retries) {
--		ret = -ETIMEDOUT;
--		remaining = deadline - jiffies;
--		if (remaining <= 0)
--			break;
- 		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
--				   remaining / HZ, 0, 0, RQF_PM, NULL);
-+				   HZ, 0, 0, RQF_PM, NULL);
- 		if (!scsi_status_is_check_condition(ret) ||
- 				!scsi_sense_valid(&sshdr) ||
- 				sshdr.sense_key != UNIT_ATTENTION)
+-static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
++static int pqi_get_device_info_phys_logical(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device,
+ 	struct bmic_identify_physical_device *id_phys)
+ {
+@@ -1763,6 +1761,20 @@ static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	return rc;
+ }
+ 
++static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
++	struct pqi_scsi_dev *device,
++	struct bmic_identify_physical_device *id_phys)
++{
++	int rc;
++
++	rc = pqi_get_device_info_phys_logical(ctrl_info, device, id_phys);
++
++	if (rc == 0 && device->lun_count == 0)
++		device->lun_count = 1;
++
++	return rc;
++}
++
+ static void pqi_show_volume_status(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device)
+ {
+@@ -1897,7 +1909,7 @@ static inline void pqi_remove_device(struct pqi_ctrl_info *ctrl_info, struct pqi
+ 	int rc;
+ 	int lun;
+ 
+-	for (lun = 0; lun < device->multi_lun_device_lun_count; lun++) {
++	for (lun = 0; lun < device->lun_count; lun++) {
+ 		rc = pqi_device_wait_for_pending_io(ctrl_info, device, lun,
+ 			PQI_REMOVE_DEVICE_PENDING_IO_TIMEOUT_MSECS);
+ 		if (rc)
+@@ -2076,6 +2088,7 @@ static void pqi_scsi_update_device(struct pqi_ctrl_info *ctrl_info,
+ 	existing_device->sas_address = new_device->sas_address;
+ 	existing_device->queue_depth = new_device->queue_depth;
+ 	existing_device->device_offline = false;
++	existing_device->lun_count = new_device->lun_count;
+ 
+ 	if (pqi_is_logical_device(existing_device)) {
+ 		existing_device->is_external_raid_device = new_device->is_external_raid_device;
+@@ -2108,10 +2121,6 @@ static void pqi_scsi_update_device(struct pqi_ctrl_info *ctrl_info,
+ 		existing_device->phy_connected_dev_type = new_device->phy_connected_dev_type;
+ 		memcpy(existing_device->box, new_device->box, sizeof(existing_device->box));
+ 		memcpy(existing_device->phys_connector, new_device->phys_connector, sizeof(existing_device->phys_connector));
+-
+-		existing_device->multi_lun_device_lun_count = new_device->multi_lun_device_lun_count;
+-		if (existing_device->multi_lun_device_lun_count == 0)
+-			existing_device->multi_lun_device_lun_count = 1;
+ 	}
+ }
+ 
+@@ -6484,6 +6493,12 @@ static void pqi_slave_destroy(struct scsi_device *sdev)
+ 		return;
+ 	}
+ 
++	device->lun_count--;
++	if (device->lun_count > 0) {
++		mutex_unlock(&ctrl_info->scan_mutex);
++		return;
++	}
++
+ 	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
+ 	list_del(&device->scsi_device_list_entry);
+ 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
 -- 
 2.35.1
 
