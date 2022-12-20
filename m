@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 780AAC4708E
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E83CC46467
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:23:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232642AbiLTBWN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 20:22:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51480 "EHLO
+        id S233048AbiLTBWn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 20:22:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232691AbiLTBV1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:27 -0500
+        with ESMTP id S233066AbiLTBVw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:21:52 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2717FD1B;
-        Mon, 19 Dec 2022 17:21:13 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A41D65FD;
+        Mon, 19 Dec 2022 17:21:22 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 62D9B61210;
-        Tue, 20 Dec 2022 01:21:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD646C433F0;
-        Tue, 20 Dec 2022 01:21:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0779E61209;
+        Tue, 20 Dec 2022 01:21:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29D2EC433D2;
+        Tue, 20 Dec 2022 01:21:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671499272;
-        bh=Yhax/MwVbtU6W9yuuNo0wM5O1TjPnhk2PUjHwj/80aA=;
+        s=k20201202; t=1671499281;
+        bh=meXrmIHc4uB22MVvnpTkZ0t6/lXPGSax7WRu1NPzbQo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YlLsGMTK+wW6K4QPPyHaE0YGXDxfETtyO1zNaoYST664PL/KMwqdduqTrfOyEzLLi
-         xhDkzwkw0jBYRWDJLxU7IBiDjUhTYVS/IGBLCDTy0Rcvha/C2zWlCaSOC4dYJm9LWZ
-         EeZhjzx3Jpu3tWTeepcxZ21z3GYsDqesiRX0Bv8TfJzPsEvslkYBxnN12npDdeXr9a
-         7SG/6unjvq2jLoU5JokKsfVo52JtMcyfL9QtQYKOzMcLDMS90m7OMakVS9Bcm8Fpzj
-         /ESB6ua/7jcEzHSuhEaKM/bJvOL2Ai80o7+xFxzVTNHVujnhX6ke8b3Wbqb/wuI3Ai
-         z724P6SggOzGw==
+        b=IRmTVQ58fDbEybf9e/FmU/Ivf9Ok5zxlzQ6pzsRXYAQA1saHM1lAfXZOcl10oWEZR
+         OYacF2Ag1KjKL7txnxoHC19ujh6AuzdYmGhjZw981abT6kHYDg7cFrXFWge+/ntYVv
+         J03w/V2C399GVKqE4m5aMdoFfZmpLwFys8/BKkO2ts/YuJcPwFq27c6uJt6J+Yyr86
+         6iB+iP6fhQgjFVsFH2pxuHShLtfbMnb2M6yfkpk4B/o3o6g13IuKlHUPNs2OEs0zV2
+         7eeR43l4EpZb4UGpre+MiTIFyMeSCRJNmFUVKA7CY5KQlYUHDFRqCNxjUzv924V9L+
+         JD7FaZiDSmOBg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike McGowen <mike.mcgowen@microchip.com>,
-        Scott Benesh <scott.benesh@microchip.com>,
-        Scott Teel <scott.teel@microchip.com>,
-        Don Brace <don.brace@microchip.com>,
+Cc:     Maurizio Lombardi <mlombard@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 08/16] scsi: smartpqi: Add new controller PCI IDs
-Date:   Mon, 19 Dec 2022 20:20:45 -0500
-Message-Id: <20221220012053.1222101-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, d.bogdanov@yadro.com,
+        r.bolshakov@yadro.com, k.shelekhin@yadro.com, mgurtovoy@nvidia.com,
+        yang.lee@linux.alibaba.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 12/16] scsi: target: iscsi: Fix a race condition between login_work and the login thread
+Date:   Mon, 19 Dec 2022 20:20:49 -0500
+Message-Id: <20221220012053.1222101-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221220012053.1222101-1-sashal@kernel.org>
 References: <20221220012053.1222101-1-sashal@kernel.org>
@@ -54,132 +54,79 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <mike.mcgowen@microchip.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
 
-[ Upstream commit 0b93cf2a9097b1c3d75642ef878ba87f15f03043 ]
+[ Upstream commit fec1b2fa62c162d03f5dcd7b03e3c89d3116d49f ]
 
-All PCI ID entries in Hex.
-Add PCI IDs for ByteDance controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    ByteHBA JGH43024-8                      9005 / 028f / 1e93 / 1000
-    ByteHBA JGH43034-8                      9005 / 028f / 1e93 / 1001
-    ByteHBA JGH44014-8                      9005 / 028f / 1e93 / 1002
+In case a malicious initiator sends some random data immediately after a
+login PDU; the iscsi_target_sk_data_ready() callback will schedule the
+login_work and, at the same time, the negotiation may end without clearing
+the LOGIN_FLAGS_INITIAL_PDU flag (because no additional PDU exchanges are
+required to complete the login).
 
-Add PCI IDs for new Inspur controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    INSPUR RT0800M7E                        9005 / 028f / 1bd4 / 0086
-    INSPUR RT0800M7H                        9005 / 028f / 1bd4 / 0087
-    INSPUR RT0804M7R                        9005 / 028f / 1bd4 / 0088
-    INSPUR RT0808M7R                        9005 / 028f / 1bd4 / 0089
+The login has been completed but the login_work function will find the
+LOGIN_FLAGS_INITIAL_PDU flag set and will never stop from rescheduling
+itself; at this point, if the initiator drops the connection, the
+iscsit_conn structure will be freed, login_work will dereference a released
+socket structure and the kernel crashes.
 
-Add PCI IDs for new FAB A controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    Adaptec SmartRAID 3254-16e /e           9005 / 028f / 9005 / 1475
-    Adaptec HBA 1200-16e                    9005 / 028f / 9005 / 14c3
-    Adaptec HBA 1200-8e                     9005 / 028f / 9005 / 14c4
+BUG: kernel NULL pointer dereference, address: 0000000000000230
+PF: supervisor write access in kernel mode
+PF: error_code(0x0002) - not-present page
+Workqueue: events iscsi_target_do_login_rx [iscsi_target_mod]
+RIP: 0010:_raw_read_lock_bh+0x15/0x30
+Call trace:
+ iscsi_target_do_login_rx+0x75/0x3f0 [iscsi_target_mod]
+ process_one_work+0x1e8/0x3c0
 
-Add H3C controller PCI IDs:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    H3C H4508-Mf-8i                         9005 / 028f / 193d / 110b
+Fix this bug by forcing login_work to stop after the login has been
+completed and the socket callbacks have been restored.
 
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
-Link: https://lore.kernel.org/r/166793530327.322537.6056884426657539311.stgit@brunhilda
+Add a comment to clearify the return values of iscsi_target_do_login()
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Link: https://lore.kernel.org/r/20221115125638.102517-1-mlombard@redhat.com
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 44 +++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ drivers/target/iscsi/iscsi_target_nego.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index b971fbe3b3a1..78fc743f46e4 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9302,6 +9302,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0x1109)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x193d, 0x110b)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0x8460)
-@@ -9402,6 +9406,22 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1bd4, 0x0072)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1bd4, 0x0086)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1bd4, 0x0087)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1bd4, 0x0088)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1bd4, 0x0089)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x19e5, 0xd227)
-@@ -9650,6 +9670,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x1474)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_ADAPTEC2, 0x1475)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x1480)
-@@ -9706,6 +9730,14 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x14c2)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_ADAPTEC2, 0x14c3)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_ADAPTEC2, 0x14c4)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x14d0)
-@@ -9942,6 +9974,18 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0623)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1e93, 0x1000)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1e93, 0x1001)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1e93, 0x1002)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_ANY_ID, PCI_ANY_ID)
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index f2919319ad38..ff49c8f3fe24 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -1018,6 +1018,13 @@ static int iscsi_target_handle_csg_one(struct iscsit_conn *conn, struct iscsi_lo
+ 	return 0;
+ }
+ 
++/*
++ * RETURN VALUE:
++ *
++ *  1 = Login successful
++ * -1 = Login failed
++ *  0 = More PDU exchanges required
++ */
+ static int iscsi_target_do_login(struct iscsit_conn *conn, struct iscsi_login *login)
+ {
+ 	int pdu_count = 0;
+@@ -1363,12 +1370,13 @@ int iscsi_target_start_negotiation(
+ 		ret = -1;
+ 
+ 	if (ret < 0) {
+-		cancel_delayed_work_sync(&conn->login_work);
+ 		iscsi_target_restore_sock_callbacks(conn);
+ 		iscsi_remove_failed_auth_entry(conn);
+ 	}
+-	if (ret != 0)
++	if (ret != 0) {
++		cancel_delayed_work_sync(&conn->login_work);
+ 		iscsi_target_nego_release(conn);
++	}
+ 
+ 	return ret;
+ }
 -- 
 2.35.1
 
