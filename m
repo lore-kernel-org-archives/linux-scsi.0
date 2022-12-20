@@ -2,50 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA45C3DA7D
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:25:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6821CC4708D
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Dec 2022 01:25:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233092AbiLTBYv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Dec 2022 20:24:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51724 "EHLO
+        id S233122AbiLTBZW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Dec 2022 20:25:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233202AbiLTBWk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:22:40 -0500
+        with ESMTP id S232743AbiLTBXU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2022 20:23:20 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3AEBFCCE;
-        Mon, 19 Dec 2022 17:21:54 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DF99A1B3;
+        Mon, 19 Dec 2022 17:22:08 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 641F56122C;
-        Tue, 20 Dec 2022 01:21:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1F5BC433F0;
-        Tue, 20 Dec 2022 01:21:52 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BA65661171;
+        Tue, 20 Dec 2022 01:22:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 009ECC433EF;
+        Tue, 20 Dec 2022 01:22:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671499313;
-        bh=meXrmIHc4uB22MVvnpTkZ0t6/lXPGSax7WRu1NPzbQo=;
+        s=k20201202; t=1671499327;
+        bh=FKtCj8p/pFb9w5475+Qx7EIJbbFLYrGQLnNpQwnJEmc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CY8/VzROTZcB8q71U70ILPgIXT1JwhIJfYS4CqGFlffiPRUPExsVF9ZkfSjGA14+1
-         pWIObzXHVF4QznJ+IYky/Mb+ic+825GuE/I2416CyOH1+LGqf7+QZbOlmBRWWd5vLX
-         HmuvXZxNBrc9lnMBSwNI7MirrTQWKYq7as/5R4V21zsB5VFauLq0tpHvoWpA7j+GEK
-         MFssHw3Kg1eFFfJK4YgUdjcSWL1yeu6mg6lRVSchhOe0X7x0qu7JiKqFL4LLpJKrlY
-         r8tNPhMZTefyee0CfaIBAdApmjtAh4hfUGsMqswXk06jAZNRNcqk0h3iXNCO9DLVbW
-         zzNd1gqQyjcAQ==
+        b=WqbuFFB+abKUvW65bo3Pp1s/UHxJNgR51NxXtpJ7oUgdhvW/NosZ0q19L0wIn+mxW
+         zH5ijWR00zAqY9ZUBmFM+tN87uhOq/OhrIbWlwxlE6ecAiiW2sivmbY3udQxjv9nPA
+         b/g7CcF/HQ3lnaamCYc3OftE0aHEm7X3xYLcXrswx0PdSPZeoJeVGKoyT6grvL/TWZ
+         MggAhDhMP2SAnpgyUz+hU//piDCbOl+ytC0ZyBzsum6AIk5sp6oRZl9Eeswze3NBtf
+         gOxmpSuuTrun2tJWQXPxbbgt0GruvzDTUOgf4ZOJO/UbzmCrDaYGI+3hzPLeCId7k4
+         mhiElu3jbNhug==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maurizio Lombardi <mlombard@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, d.bogdanov@yadro.com,
-        k.shelekhin@yadro.com, mgurtovoy@nvidia.com,
-        yang.lee@linux.alibaba.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.0 12/16] scsi: target: iscsi: Fix a race condition between login_work and the login thread
-Date:   Mon, 19 Dec 2022 20:21:22 -0500
-Message-Id: <20221220012127.1222311-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        beanhuo@micron.com, avri.altman@wdc.com, keosung.park@samsung.com,
+        kwmad.kim@samsung.com, j-young.choi@samsung.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 3/9] scsi: ufs: Reduce the START STOP UNIT timeout
+Date:   Mon, 19 Dec 2022 20:21:53 -0500
+Message-Id: <20221220012159.1222517-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221220012127.1222311-1-sashal@kernel.org>
-References: <20221220012127.1222311-1-sashal@kernel.org>
+In-Reply-To: <20221220012159.1222517-1-sashal@kernel.org>
+References: <20221220012159.1222517-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,79 +53,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit fec1b2fa62c162d03f5dcd7b03e3c89d3116d49f ]
+[ Upstream commit dcd5b7637c6d442d957f73780a03047413ed3a10 ]
 
-In case a malicious initiator sends some random data immediately after a
-login PDU; the iscsi_target_sk_data_ready() callback will schedule the
-login_work and, at the same time, the negotiation may end without clearing
-the LOGIN_FLAGS_INITIAL_PDU flag (because no additional PDU exchanges are
-required to complete the login).
+Reduce the START STOP UNIT command timeout to one second since on Android
+devices a kernel panic is triggered if an attempt to suspend the system
+takes more than 20 seconds. One second should be enough for the START STOP
+UNIT command since this command completes in less than a millisecond for
+the UFS devices I have access to.
 
-The login has been completed but the login_work function will find the
-LOGIN_FLAGS_INITIAL_PDU flag set and will never stop from rescheduling
-itself; at this point, if the initiator drops the connection, the
-iscsit_conn structure will be freed, login_work will dereference a released
-socket structure and the kernel crashes.
-
-BUG: kernel NULL pointer dereference, address: 0000000000000230
-PF: supervisor write access in kernel mode
-PF: error_code(0x0002) - not-present page
-Workqueue: events iscsi_target_do_login_rx [iscsi_target_mod]
-RIP: 0010:_raw_read_lock_bh+0x15/0x30
-Call trace:
- iscsi_target_do_login_rx+0x75/0x3f0 [iscsi_target_mod]
- process_one_work+0x1e8/0x3c0
-
-Fix this bug by forcing login_work to stop after the login has been
-completed and the socket callbacks have been restored.
-
-Add a comment to clearify the return values of iscsi_target_do_login()
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Link: https://lore.kernel.org/r/20221115125638.102517-1-mlombard@redhat.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20221018202958.1902564-7-bvanassche@acm.org
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_nego.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index f2919319ad38..ff49c8f3fe24 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -1018,6 +1018,13 @@ static int iscsi_target_handle_csg_one(struct iscsit_conn *conn, struct iscsi_lo
- 	return 0;
- }
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index dae1a85f1512..a428b8145dcc 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8476,8 +8476,6 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	struct scsi_device *sdp;
+ 	unsigned long flags;
+ 	int ret, retries;
+-	unsigned long deadline;
+-	int32_t remaining;
  
-+/*
-+ * RETURN VALUE:
-+ *
-+ *  1 = Login successful
-+ * -1 = Login failed
-+ *  0 = More PDU exchanges required
-+ */
- static int iscsi_target_do_login(struct iscsit_conn *conn, struct iscsi_login *login)
- {
- 	int pdu_count = 0;
-@@ -1363,12 +1370,13 @@ int iscsi_target_start_negotiation(
- 		ret = -1;
- 
- 	if (ret < 0) {
--		cancel_delayed_work_sync(&conn->login_work);
- 		iscsi_target_restore_sock_callbacks(conn);
- 		iscsi_remove_failed_auth_entry(conn);
- 	}
--	if (ret != 0)
-+	if (ret != 0) {
-+		cancel_delayed_work_sync(&conn->login_work);
- 		iscsi_target_nego_release(conn);
-+	}
- 
- 	return ret;
- }
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	sdp = hba->sdev_ufs_device;
+@@ -8510,14 +8508,9 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+ 	 * already suspended childs.
+ 	 */
+-	deadline = jiffies + 10 * HZ;
+ 	for (retries = 3; retries > 0; --retries) {
+-		ret = -ETIMEDOUT;
+-		remaining = deadline - jiffies;
+-		if (remaining <= 0)
+-			break;
+ 		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+-				   remaining / HZ, 0, 0, RQF_PM, NULL);
++				   HZ, 0, 0, RQF_PM, NULL);
+ 		if (!scsi_status_is_check_condition(ret) ||
+ 				!scsi_sense_valid(&sshdr) ||
+ 				sshdr.sense_key != UNIT_ATTENTION)
 -- 
 2.35.1
 
