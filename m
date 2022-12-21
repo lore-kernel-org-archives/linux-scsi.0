@@ -2,81 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6D4C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Dec 2022 01:58:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AF12C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Dec 2022 02:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233491AbiLUB6l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Dec 2022 20:58:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51774 "EHLO
+        id S234238AbiLUCnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Dec 2022 21:43:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229899AbiLUB6k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2022 20:58:40 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB257DFE;
-        Tue, 20 Dec 2022 17:58:37 -0800 (PST)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NcGj70KtgzHqYZ;
-        Wed, 21 Dec 2022 09:54:51 +0800 (CST)
-Received: from localhost.localdomain (10.67.165.24) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+        with ESMTP id S229482AbiLUCm5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2022 21:42:57 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97111D0EE;
+        Tue, 20 Dec 2022 18:42:55 -0800 (PST)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NcHlP64hHzJqV3;
+        Wed, 21 Dec 2022 10:41:53 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Wed, 21 Dec 2022 09:58:36 +0800
-From:   Xingui Yang <yangxingui@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.g.garry@oracle.com>
+ 15.1.2375.34; Wed, 21 Dec 2022 10:42:53 +0800
+Subject: Re: [PATCH] scsi: libsas: Grab the host lock in
+ sas_ata_device_link_abort()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Xingui Yang <yangxingui@huawei.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <niklas.cassel@wdc.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v2] scsi: libsas: Fix did not grab the ata port lock in sas_ata_device_link_abort()
-Date:   Wed, 21 Dec 2022 01:52:03 +0000
-Message-ID: <20221221015203.46367-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>
+References: <20221220125349.45091-1-yangxingui@huawei.com>
+ <4ec9dbed-1758-d6b4-dc1d-ac42e8c22731@oracle.com>
+ <c8387766-2ca0-51f3-e332-71492b13e5c1@opensource.wdc.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <7347d117-6e0b-dd18-90a8-25685f757689@huawei.com>
+Date:   Wed, 21 Dec 2022 10:42:52 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.165.24]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500012.china.huawei.com (7.185.36.89)
+In-Reply-To: <c8387766-2ca0-51f3-e332-71492b13e5c1@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm500004.china.huawei.com (7.192.104.92)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Grab the ata port lock in sas_ata_device_link_abort() before calling
-ata_link_abort(), as the comment in ata_link_abort() mentions.
+On 2022/12/21 8:36, Damien Le Moal wrote:
+> On 2022/12/20 23:59, John Garry wrote:
+>> On 20/12/2022 12:53, Xingui Yang wrote:
+>>> Grab the host lock in sas_ata_device_link_abort() before calling
+>>
+>> This is should be the ata port lock, right? I know that the ata comments
+>> say differently.
+>>
+>>> ata_link_abort(), as the comment in ata_link_abort() mentions.
+>>>
+>>
+>> Can you please add a fixes tag?
+>>
+>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>
+>> Reviewed-by: John Garry <john.g.garry@oracle.com>
+>>
+>>> ---
+>>>    drivers/scsi/libsas/sas_ata.c | 3 +++
+>>>    1 file changed, 3 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+>>> index f7439bf9cdc6..4f2017b21e6d 100644
+>>> --- a/drivers/scsi/libsas/sas_ata.c
+>>> +++ b/drivers/scsi/libsas/sas_ata.c
+>>> @@ -889,7 +889,9 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
+>>>    {
+>>>    	struct ata_port *ap = device->sata_dev.ap;
+>>>    	struct ata_link *link = &ap->link;
+>>> +	unsigned long flags;
+>>>    
+>>> +	spin_lock_irqsave(ap->lock, flags);
+>>>    	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
+>>>    	device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
+>>>    
+>>> @@ -897,6 +899,7 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
+>>>    	if (force_reset)
+>>>    		link->eh_info.action |= ATA_EH_RESET;
+>>>    	ata_link_abort(link);
+> 
+> Really need to add lockdep annotations in libata to avoid/catch such bugs...
+> Will work on that.
 
-Fixes: 44112922674b ("scsi: libsas: Add sas_ata_device_link_abort()")
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
----
-Changes to v1:
-- Add a fixes tag
-- Update commit message
----
- drivers/scsi/libsas/sas_ata.c | 3 +++
- 1 file changed, 3 insertions(+)
+Actually in libata there are many places calling ata_link_abort() not 
+holding port lock. And some places are holding the real host 
+lock(ata_host->lock) while calling ata_link_abort(). So if you add the 
+lockdep annotations, there may be too many warnings. If these are real 
+issues, we should fix them first.
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index f7439bf9cdc6..4f2017b21e6d 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -889,7 +889,9 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
- {
- 	struct ata_port *ap = device->sata_dev.ap;
- 	struct ata_link *link = &ap->link;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(ap->lock, flags);
- 	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
- 	device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
- 
-@@ -897,6 +899,7 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
- 	if (force_reset)
- 		link->eh_info.action |= ATA_EH_RESET;
- 	ata_link_abort(link);
-+	spin_unlock_irqrestore(ap->lock, flags);
- }
- EXPORT_SYMBOL_GPL(sas_ata_device_link_abort);
- 
--- 
-2.17.1
-
+Thanks,
+Jason
