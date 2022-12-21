@@ -2,112 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6946C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Dec 2022 06:35:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70DC1C4167B
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Dec 2022 08:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234097AbiLUGfU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Dec 2022 01:35:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43462 "EHLO
+        id S234434AbiLUIaS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Dec 2022 03:30:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233763AbiLUGfQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2022 01:35:16 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DADD1DF30;
-        Tue, 20 Dec 2022 22:35:11 -0800 (PST)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NcNvP30bFzJqVh;
-        Wed, 21 Dec 2022 14:34:09 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Wed, 21 Dec 2022 14:35:09 +0800
-Subject: Re: [PATCH] scsi: libsas: Grab the host lock in
- sas_ata_device_link_abort()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Xingui Yang <yangxingui@huawei.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <niklas.cassel@wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>
-References: <20221220125349.45091-1-yangxingui@huawei.com>
- <4ec9dbed-1758-d6b4-dc1d-ac42e8c22731@oracle.com>
- <c8387766-2ca0-51f3-e332-71492b13e5c1@opensource.wdc.com>
- <7347d117-6e0b-dd18-90a8-25685f757689@huawei.com>
- <4ff0ca00-31f5-2867-ff59-cecb5d6d1048@opensource.wdc.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <755d7a9c-427e-024a-8509-449ebc5a00e6@huawei.com>
-Date:   Wed, 21 Dec 2022 14:35:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S234368AbiLUIaE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2022 03:30:04 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B60E1EEEB;
+        Wed, 21 Dec 2022 00:30:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=8o2dl4ijxnaplHp86fDPd2csqnysj6w/EhAfWcPqQcI=; b=ala1+9it2j9oUjd+IUL0Fg3RAc
+        V6TGuA+Ha9KKb0Oda0aAtysmqpJeP8XadRd4yEcAWeYzeBH25K24bSoj+1htWQxU1nHwPl5yKVY8H
+        RGCK0Ev4NRSqoUbuHNvi0LGLLW2W/dT55aiFDbyrpjVmZLIoqoA65Tzte4nNHn7TAvZ9BEJAWxY5o
+        vd3BWmF8ImCKq1wgSDy1W4LZCnM94IoMN3YCo0Cu6lSCB9PzL6RvvcpJt2n5wnzKL6yJ/kPVw/6Oa
+        xnAJ8j0sotip5GYarzj1w5rX0LGmug1F0JkOCDgTocMUdXg+4UyIL5I+CYWrHQvcFd5c2JDlZhDcu
+        deGfaDDA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1p7uUC-00CAAx-4i; Wed, 21 Dec 2022 08:30:00 +0000
+Date:   Wed, 21 Dec 2022 00:30:00 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     Nikos Tsironis <ntsironis@arrikto.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: Re: [PATCH] tcm_loop: Increase maximum request size
+Message-ID: <Y6LECFb7wPn2Z0yJ@infradead.org>
+References: <20220929115504.23806-1-ntsironis@arrikto.com>
+ <ed3e5f22-dd2c-2952-dc7e-c47bccf66611@oracle.com>
+ <Y5Dc66mOzBfBhUGY@infradead.org>
+ <da4f53f3-4e13-1259-b0a6-cc28160be23b@arrikto.com>
+ <6ae8a2b8-9720-8e60-4431-072218e57e28@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <4ff0ca00-31f5-2867-ff59-cecb5d6d1048@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6ae8a2b8-9720-8e60-4431-072218e57e28@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/12/21 11:59, Damien Le Moal wrote:
-> On 2022/12/21 11:42, Jason Yan wrote:
->> On 2022/12/21 8:36, Damien Le Moal wrote:
->>> On 2022/12/20 23:59, John Garry wrote:
->>>> On 20/12/2022 12:53, Xingui Yang wrote:
->>>>> Grab the host lock in sas_ata_device_link_abort() before calling
->>>>
->>>> This is should be the ata port lock, right? I know that the ata comments
->>>> say differently.
->>>>
->>>>> ata_link_abort(), as the comment in ata_link_abort() mentions.
->>>>>
->>>>
->>>> Can you please add a fixes tag?
->>>>
->>>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>>>
->>>> Reviewed-by: John Garry <john.g.garry@oracle.com>
->>>>
->>>>> ---
->>>>>     drivers/scsi/libsas/sas_ata.c | 3 +++
->>>>>     1 file changed, 3 insertions(+)
->>>>>
->>>>> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
->>>>> index f7439bf9cdc6..4f2017b21e6d 100644
->>>>> --- a/drivers/scsi/libsas/sas_ata.c
->>>>> +++ b/drivers/scsi/libsas/sas_ata.c
->>>>> @@ -889,7 +889,9 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
->>>>>     {
->>>>>     	struct ata_port *ap = device->sata_dev.ap;
->>>>>     	struct ata_link *link = &ap->link;
->>>>> +	unsigned long flags;
->>>>>     
->>>>> +	spin_lock_irqsave(ap->lock, flags);
->>>>>     	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
->>>>>     	device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
->>>>>     
->>>>> @@ -897,6 +899,7 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
->>>>>     	if (force_reset)
->>>>>     		link->eh_info.action |= ATA_EH_RESET;
->>>>>     	ata_link_abort(link);
->>>
->>> Really need to add lockdep annotations in libata to avoid/catch such bugs...
->>> Will work on that.
->>
->> Actually in libata there are many places calling ata_link_abort() not
->> holding port lock. And some places are holding the real host
->> lock(ata_host->lock) while calling ata_link_abort(). So if you add the
->> lockdep annotations, there may be too many warnings. If these are real
->> issues, we should fix them first.
-> 
-> libata-EH does most of its work without the port lock held because by the time
-> we get EH started, we are guaranteed to be idle with no commands in flight. That
-> is why the calls you mention look like "bugs" but are not.
+> Christoph is that what you were thinking?
 
-What about the interrupt handler such as ahci_error_intr()? I didn't see 
-the callers hold the port lock too. Do they need the port lock?
-
+Yes.
