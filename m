@@ -2,20 +2,20 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE74C4167B
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Dec 2022 09:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7D0C10F1B
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Dec 2022 09:32:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234546AbiLUJcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Dec 2022 04:32:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45754 "EHLO
+        id S234534AbiLUJcF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Dec 2022 04:32:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231614AbiLUJbx (ORCPT
+        with ESMTP id S234073AbiLUJbx (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2022 04:31:53 -0500
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C91E8FCC;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9F2205D7;
         Wed, 21 Dec 2022 01:31:49 -0800 (PST)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NcSq33Lm7zmWfc;
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NcSq35yNJzmWZ8;
         Wed, 21 Dec 2022 17:30:39 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
@@ -27,9 +27,9 @@ To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, <yangxingui@huawei.com>,
         <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v3 1/3] scsi: libsas: Add sas_device_task_abort()
-Date:   Wed, 21 Dec 2022 09:25:12 +0000
-Message-ID: <20221221092514.4091-2-yangxingui@huawei.com>
+Subject: [PATCH v3 3/3] scsi: hisi_sas: Implement lldd_device_task_abort()
+Date:   Wed, 21 Dec 2022 09:25:14 +0000
+Message-ID: <20221221092514.4091-4-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20221221092514.4091-1-yangxingui@huawei.com>
 References: <20221221092514.4091-1-yangxingui@huawei.com>
@@ -43,55 +43,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add support for abort all active IOs for device, and define a LLDD
-interface lldd_device_task_abort for LLDD to implement.
+Implement lldd_device_task_abort() to abort active io for device.
 
 Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 9 +++++++++
- include/scsi/libsas.h               | 2 ++
- 2 files changed, 11 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index a36fa1c128a8..4ac7cffcbada 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -1230,6 +1230,15 @@ void sas_task_abort(struct sas_task *task)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 41ba22f6c7f0..647479e54b62 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1839,6 +1839,24 @@ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
+ 	return TMF_RESP_FUNC_COMPLETE;
  }
- EXPORT_SYMBOL_GPL(sas_task_abort);
  
-+void sas_device_task_abort(struct domain_device *dev)
++static int hisi_sas_device_task_abort(struct domain_device *dev)
 +{
-+	struct sas_internal *i =
-+		to_sas_internal(dev->port->ha->core.shost->transportt);
-+	if (i->dft->lldd_device_task_abort)
-+		i->dft->lldd_device_task_abort(dev);
-+}
-+EXPORT_SYMBOL_GPL(sas_device_task_abort);
++	struct hisi_sas_device *sas_dev = dev->lldd_dev;
++	struct hisi_sas_slot *slot, *slot2;
++	struct sas_task *task;
 +
- int sas_slave_alloc(struct scsi_device *sdev)
++	spin_lock(&sas_dev->lock);
++	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry) {
++		task = slot->task;
++		if (unlikely(!task || !task->lldd_task || !task->dev))
++			continue;
++		sas_task_abort(task);
++	}
++	spin_unlock(&sas_dev->lock);
++
++	return 0;
++}
++
+ static int hisi_sas_query_task(struct sas_task *task)
  {
- 	if (dev_is_sata(sdev_to_domain_dev(sdev)) && sdev->lun)
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 1aee3d0ebbb2..1bf1cfb13912 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -678,6 +678,7 @@ struct sas_domain_function_template {
- 	int (*lldd_abort_task_set)(struct domain_device *, u8 *lun);
- 	int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
- 	int (*lldd_I_T_nexus_reset)(struct domain_device *);
-+	int (*lldd_device_task_abort)(struct domain_device *dev);
- 	int (*lldd_ata_check_ready)(struct domain_device *);
- 	void (*lldd_ata_set_dmamode)(struct domain_device *);
- 	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
-@@ -743,6 +744,7 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *);
- void sas_init_dev(struct domain_device *);
- 
- void sas_task_abort(struct sas_task *);
-+void sas_device_task_abort(struct domain_device *dev);
- int sas_eh_abort_handler(struct scsi_cmnd *cmd);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
- int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
+ 	int rc = TMF_RESP_FUNC_FAILED;
+@@ -2029,6 +2047,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_abort_task_set	= hisi_sas_abort_task_set,
+ 	.lldd_I_T_nexus_reset	= hisi_sas_I_T_nexus_reset,
+ 	.lldd_lu_reset		= hisi_sas_lu_reset,
++	.lldd_device_task_abort = hisi_sas_device_task_abort,
+ 	.lldd_query_task	= hisi_sas_query_task,
+ 	.lldd_clear_nexus_ha	= hisi_sas_clear_nexus_ha,
+ 	.lldd_port_formed	= hisi_sas_port_formed,
 -- 
 2.17.1
 
