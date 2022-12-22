@@ -2,69 +2,146 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFE7C001B2
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 19:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D36D8C4167B
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 22:17:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229868AbiLVT3F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Dec 2022 14:29:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53994 "EHLO
+        id S235432AbiLVWRa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Dec 2022 17:17:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235746AbiLVT25 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2022 14:28:57 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC6E822B31;
-        Thu, 22 Dec 2022 11:28:49 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8E7CDB81F51;
-        Thu, 22 Dec 2022 19:28:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 3E79CC433A0;
-        Thu, 22 Dec 2022 19:28:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671737328;
-        bh=j7KyGEafhU7rjZ2E+koeYs4kwfiSe1BCplgkWA5MAN0=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=S75mbAbk5M7/RK8F1F6f4IS4wKNrxcA86AH24/GwL4IKRZBNoxokQqgXyYwzpa3BT
-         pATR2N5YNSQ+ctxANeBMFVGoQFU+7LXUv/ye3DB8n0Mb6giISHlmjyLZz6K44kXd14
-         m8kt1Pa1JXCPU65c3p/lqdjFZt5qIrnYt0/+GBs/gmSIHd5cNCL3tJep5CtFD0KO2p
-         CPHKu6Fe7rro/irB1LcabLIRbIpHS1HIkv7eCDJ2ZB1ka9ZX7NII57KJMEBJMPJFBf
-         e+JpVuPpX3y6vqcRhNFgWgNhaQ8jRqWrZqF7pHEhTKF5NEbEWpF5jtPHxtSgfVhxoc
-         1SIlesCDDAXvA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 2D019C43141;
-        Thu, 22 Dec 2022 19:28:48 +0000 (UTC)
-Subject: Re: [GIT PULL] final round of SCSI updates for the 6.1+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <65d488496e9889d1c2d3faf06bfa7c22f3807ef2.camel@HansenPartnership.com>
-References: <65d488496e9889d1c2d3faf06bfa7c22f3807ef2.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <65d488496e9889d1c2d3faf06bfa7c22f3807ef2.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 68ad83188d782b2ecef2e41ac245d27e0710fe8e
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8395ae05cb5a2e31d36106e8c85efa11cda849be
-Message-Id: <167173732817.14570.14536275017186165421.pr-tracker-bot@kernel.org>
-Date:   Thu, 22 Dec 2022 19:28:48 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S230273AbiLVWR2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2022 17:17:28 -0500
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C688A27B28
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2022 14:17:26 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id b3so4711269lfv.2
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2022 14:17:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S54q1Ly25fucvW8wy0dU1/tQS+0Zh9k/n0J/KMOoAU0=;
+        b=UW/yqmwPTVLenNcJd2Qd9e0NTgzQmDmaeg/bt/1PlCivJ63Y0t909OjvU07U0fiXq5
+         F+fAfdqnxDQCZ3CD1hBEotehTTTx9o02Jrp9q4h5qnUGBTYTyZuyM/4nsDCaMpRFE6bn
+         yxw1PjO7chlYHaKDLmRK/jM3xriUiZsxpwOJQmd4PMJpNJ5ftd11U64ACeCg8Yo6a02d
+         ziaB+GPZOefHkuvljAfNwQo7C5F0DVM2QOHfxosbMflSALoeveHH9J85byzk0nDEFU0y
+         rMrqkMl04eBixz/FrvumqndbNMhC/JV4CE0W4pXBfE2zdOsiCkiYVWb1D6f04Jj0wmJT
+         DQtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=S54q1Ly25fucvW8wy0dU1/tQS+0Zh9k/n0J/KMOoAU0=;
+        b=WxByTuGFnDIiujD3Q2+fx0r21hiu7gve2TFU1MtbrzWxlzIFTmZX66ZVeEsMa+S6fI
+         jl8xH5YeRXjslMLuZzTfRDMb4CvRHD8vyfp7r1Wj/ey0czebELTt2UsOjECTzAFf8Nei
+         jifNgYDD5r03hF4zqW5NOnSY0VERIxIVHwc4QIo1cYxlQlGQOHjLxW1Q6286OkuhTVz7
+         NdSMtPLrPbDpGzTeuk2aJiEcAwCjjV5PCI33nKGgqRG7eN2yBhYgkHHADMMCqBIYSmRe
+         kbWgBP+LkDKAwinTsZL5Nrn8J8jWe7CTJ8b9mKvcSj0bRJfJj4IjEsUYM/R3PjpYnMhd
+         5i1w==
+X-Gm-Message-State: AFqh2kpnorbPbpmHjySQ6hfh0bca5RvNVmlAXu3jnGh890o7X9cvOgE3
+        c28Fq/FWbPJ/a0eQI7o53QW2Bg==
+X-Google-Smtp-Source: AMrXdXtWAyVvjnaVxKo6msD2MtpwrZhPvPMCjOS4jjqOp4cyiwI3D+yRNc34Pp4Vgq6Bd/bxog2D0g==
+X-Received: by 2002:a05:6512:3e0d:b0:4a9:a1f1:3f57 with SMTP id i13-20020a0565123e0d00b004a9a1f13f57mr2962950lfv.50.1671747445066;
+        Thu, 22 Dec 2022 14:17:25 -0800 (PST)
+Received: from ?IPV6:2001:14ba:a085:4d00::8a5? (dzccz6yyyyyyyyyyybcwt-3.rev.dnainternet.fi. [2001:14ba:a085:4d00::8a5])
+        by smtp.gmail.com with ESMTPSA id x11-20020a0565123f8b00b004b5adb59ed5sm222468lfa.297.2022.12.22.14.17.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Dec 2022 14:17:23 -0800 (PST)
+Message-ID: <71bf6521-71d7-ec45-912f-e3dc6038d3a4@linaro.org>
+Date:   Fri, 23 Dec 2022 00:17:23 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH 1/2] scsi: ufs: ufs-qcom: add basic interconnect support
+Content-Language: en-GB
+To:     Brian Masney <bmasney@redhat.com>, andersson@kernel.org
+Cc:     agross@kernel.org, konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20221117104957.254648-1-bmasney@redhat.com>
+ <20221117104957.254648-2-bmasney@redhat.com>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+In-Reply-To: <20221117104957.254648-2-bmasney@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Thu, 22 Dec 2022 13:05:12 -0500:
+On 17/11/2022 12:49, Brian Masney wrote:
+> The firmware on the Qualcomm platforms expects the interconnect votes to
+> be present. Let's add very basic support where the maximum throughput is
+> requested to match what's done in a few other drivers.
+> 
+> This will not break boot on systems where the interconnects and
+> interconnect-names properties are not specified in device tree for UFS
+> since the interconnect framework will silently return.
+> 
+> Signed-off-by: Brian Masney <bmasney@redhat.com>
+> ---
+>   drivers/ufs/host/ufs-qcom.c | 25 +++++++++++++++++++++++++
+>   1 file changed, 25 insertions(+)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 8ad1415e10b6..55bf8dd88985 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -7,6 +7,7 @@
+>   #include <linux/time.h>
+>   #include <linux/clk.h>
+>   #include <linux/delay.h>
+> +#include <linux/interconnect.h>
+>   #include <linux/module.h>
+>   #include <linux/of.h>
+>   #include <linux/platform_device.h>
+> @@ -936,6 +937,22 @@ static const struct reset_control_ops ufs_qcom_reset_ops = {
+>   	.deassert = ufs_qcom_reset_deassert,
+>   };
+>   
+> +static int ufs_qcom_icc_init(struct device *dev, char *pathname)
+> +{
+> +	struct icc_path *path;
+> +	int ret;
+> +
+> +	path = devm_of_icc_get(dev, pathname);
+> +	if (IS_ERR(path))
+> +		return dev_err_probe(dev, PTR_ERR(path), "failed to acquire interconnect path\n");
+> +
+> +	ret = icc_set_bw(path, 0, UINT_MAX);
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+I noticed that this patch bumps peak_bw (and leaves average_bw as 0), 
+while vendor kernels bump average_bw, but ib (peak_bw) is set to 0.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8395ae05cb5a2e31d36106e8c85efa11cda849be
-
-Thank you!
+> +	if (ret < 0)
+> +		return dev_err_probe(dev, ret, "failed to set bandwidth request\n");
+> +
+> +	return 0;
+> +}
+> +
+>   /**
+>    * ufs_qcom_init - bind phy with controller
+>    * @hba: host controller instance
+> @@ -991,6 +1008,14 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>   			err = dev_err_probe(dev, PTR_ERR(host->generic_phy), "Failed to get PHY\n");
+>   			goto out_variant_clear;
+>   		}
+> +
+> +		err = ufs_qcom_icc_init(dev, "ufs-ddr");
+> +		if (err)
+> +			goto out_variant_clear;
+> +
+> +		err = ufs_qcom_icc_init(dev, "cpu-ufs");
+> +		if (err)
+> +			goto out_variant_clear;
+>   	}
+>   
+>   	host->device_reset = devm_gpiod_get_optional(dev, "reset",
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+With best wishes
+Dmitry
+
