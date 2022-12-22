@@ -2,181 +2,275 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F84C41535
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 10:04:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D79CC4167B
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 10:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235328AbiLVKEo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Dec 2022 05:04:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57516 "EHLO
+        id S235288AbiLVKXJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Dec 2022 05:23:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235335AbiLVKEd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2022 05:04:33 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81ECF26AB4
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2022 02:02:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671703335;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=o6jO/LCV2IF2UxvEuH5GPFWr6SJ3JZsJjPnFQmLY128=;
-        b=J8KWvYrdRMUcYz7OnJvR3piSBL6vCgwTYe3bO3Dqtp49Sg6Y/qebYMpzuIEshDIJG8Qt3y
-        lS2qdgP1B3JZgpTOOj6uaU1Y9PF8OUSt5m6erW4AHvpyUR3x9R1GtjSpneZ2cHHuffH6kI
-        Zvnnxi2agB3WktngJWxi5AbDBdsHoCk=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-626-03fAWM1BMC-21pk2jdJmeg-1; Thu, 22 Dec 2022 05:02:11 -0500
-X-MC-Unique: 03fAWM1BMC-21pk2jdJmeg-1
-Received: by mail-qv1-f72.google.com with SMTP id q17-20020a056214019100b004b1d3c9f3acso755847qvr.0
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2022 02:02:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:user-agent:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=o6jO/LCV2IF2UxvEuH5GPFWr6SJ3JZsJjPnFQmLY128=;
-        b=wqPr1/cnjitBmTjrClHW6odClrjR0xxxeDU9T7t9zamzv3wft9pH34FBPD4VcNlid7
-         8XI3E7QkcNYMEaZ74SiYmuu3RBi3myOxsfh/YFb4OEJzJj6MymeboceC7omVEXPV+ME6
-         Q+XyhqO5lPni/kAItK0GUa83sXL0akxbay1+h+0StFHWHEGGzX/ZbXxsjR91zVt5P5mf
-         Ot7ciryG/CjPfPSsxzLKyPT/s8di9ADCHnagutaN6VFE8HUqtN7E3EmxocqwBqNCGye9
-         jcqxSIk3s7MA3VWIKu1qr6kQSjHVF0cU3Cs63ttQ0v2wgBAMESbCE2WCU+/GZD+lHxMT
-         2GEA==
-X-Gm-Message-State: AFqh2kqVhn9AAR7YCSqqYNYX2b13Av+NOy8fL9+Yn4JtbIeI2m6bdKBG
-        qRDjBoOVuXoZ1Kgv4dk6VLtAdGa+csPyE2mlp5BrcD2zn+3sNRjH2jE/zox3dyy6X7zxgQog583
-        k739bYkxXPhY/AAltzlXpAA==
-X-Received: by 2002:a0c:c508:0:b0:4e5:a127:382f with SMTP id x8-20020a0cc508000000b004e5a127382fmr6466229qvi.48.1671703331047;
-        Thu, 22 Dec 2022 02:02:11 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXtZnBvcAi4VqZ0nAfseRa5ZZncJObkgh59kN1yODkWBS5WICo+kLsdO+KK5pqcbrrZqdW1DHQ==
-X-Received: by 2002:a0c:c508:0:b0:4e5:a127:382f with SMTP id x8-20020a0cc508000000b004e5a127382fmr6466171qvi.48.1671703330733;
-        Thu, 22 Dec 2022 02:02:10 -0800 (PST)
-Received: from gerbillo.redhat.com (146-241-101-173.dyn.eolo.it. [146.241.101.173])
-        by smtp.gmail.com with ESMTPSA id f1-20020a05620a408100b006cfc9846594sm4269qko.93.2022.12.22.02.02.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Dec 2022 02:02:10 -0800 (PST)
-Message-ID: <8d91ab13f56e88af0f6133130808f9623b3adb2e.camel@redhat.com>
-Subject: Re: [PATCH] treewide: Convert del_timer*() to timer_shutdown*()
-From:   Paolo Abeni <pabeni@redhat.com>
-To:     Steven Rostedt <rostedt@goodmis.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Julia Lawall <Julia.Lawall@inria.fr>, linux-sh@vger.kernel.org,
-        cgroups@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-acpi@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-bluetooth@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-media@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, linux-scsi@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-ext4@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, bridge@lists.linux-foundation.org,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        lvs-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net, alsa-devel@alsa-project.org
-Date:   Thu, 22 Dec 2022 11:02:01 +0100
-In-Reply-To: <20221220134519.3dd1318b@gandalf.local.home>
-References: <20221220134519.3dd1318b@gandalf.local.home>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 (3.42.4-2.fc35) 
+        with ESMTP id S229817AbiLVKXB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2022 05:23:01 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A51371AA0C;
+        Thu, 22 Dec 2022 02:22:58 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3423061A43;
+        Thu, 22 Dec 2022 10:22:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71A5CC433D2;
+        Thu, 22 Dec 2022 10:22:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671704577;
+        bh=cM7TUd+Vfgn4cVRylX8wENasOWsMi1NSfeV+TnAKspU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oP27wqV+6wPSFOVUlj2bwtJLJXFS4BNjkkEYu3CYae2Pwr+9i1Np+6f0BlWCxD7S2
+         qXamNN6X0tVmbY4qyWd276Oy6MXmrFpHAE2H+XNM6EDHuhN4p0lXBeLt1jkGtQ43g5
+         KqJE5NsxizzfSvT+/y6HU4G+yM7jKtxSu0e5gHVfNlv1GminMAffKx4bvtcoCavJbe
+         j9Rgoc3rvKNXugi79pmMDrTCGraPoTf6IZacqL4o2bcyQgzdMH31s6lAbT/1w8sQnX
+         EBeMXvZBmTmIh7+sPzomlScUYA4QwbSQLtOH/5my+gxY2t6AIwqU5/vQWsnCRBTbuN
+         Q+bMUkXnmaGSw==
+Received: from johan by xi.lan with local (Exim 4.94.2)
+        (envelope-from <johan+linaro@kernel.org>)
+        id 1p8Ijr-0004tZ-Og; Thu, 22 Dec 2022 11:23:47 +0100
+From:   Johan Hovold <johan+linaro@kernel.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johan Hovold <johan+linaro@kernel.org>, stable@vger.kernel.org,
+        Can Guo <quic_cang@quicinc.com>
+Subject: [PATCH] scsi: ufs: core: fix devfreq deadlocks
+Date:   Thu, 22 Dec 2022 11:21:21 +0100
+Message-Id: <20221222102121.18682-1-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.37.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-12-20 at 13:45 -0500, Steven Rostedt wrote:
-> [
->   Linus,
-> 
->     I ran the script against your latest master branch:
->     commit b6bb9676f2165d518b35ba3bea5f1fcfc0d969bf
-> 
->     As the timer_shutdown*() code is now in your tree, I figured
->     we can start doing the conversions. At least add the trivial ones
->     now as Thomas suggested that this gets applied at the end of the
->     merge window, to avoid conflicts with linux-next during the
->     development cycle. I can wait to Friday to run it again, and
->     resubmit.
-> 
->     What is the best way to handle this?
-> ]
-> 
-> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
-> 
-> Due to several bugs caused by timers being re-armed after they are
-> shutdown and just before they are freed, a new state of timers was added
-> called "shutdown". After a timer is set to this state, then it can no
-> longer be re-armed.
-> 
-> The following script was run to find all the trivial locations where
-> del_timer() or del_timer_sync() is called in the same function that the
-> object holding the timer is freed. It also ignores any locations where the
-> timer->function is modified between the del_timer*() and the free(), as
-> that is not considered a "trivial" case.
-> 
-> This was created by using a coccinelle script and the following commands:
-> 
->  $ cat timer.cocci
-> @@
-> expression ptr, slab;
-> identifier timer, rfield;
-> @@
-> (
-> -       del_timer(&ptr->timer);
-> +       timer_shutdown(&ptr->timer);
-> > 
-> -       del_timer_sync(&ptr->timer);
-> +       timer_shutdown_sync(&ptr->timer);
-> )
->   ... when strict
->       when != ptr->timer
-> (
->         kfree_rcu(ptr, rfield);
-> > 
->         kmem_cache_free(slab, ptr);
-> > 
->         kfree(ptr);
-> )
-> 
->  $ spatch timer.cocci . > /tmp/t.patch
->  $ patch -p1 < /tmp/t.patch
-> 
-> Link: https://lore.kernel.org/lkml/20221123201306.823305113@linutronix.de/
-> 
-> Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
+There is a lock inversion and rwsem read-lock recursion in the devfreq
+target callback which can lead to deadlocks.
 
-For the networking bits:
+Specifically, ufshcd_devfreq_scale() already holds a clk_scaling_lock
+read lock when toggling the write booster, which involves taking the
+dev_cmd mutex before taking another clk_scaling_lock read lock.
 
->  drivers/net/ethernet/intel/i40e/i40e_main.c      |  6 +++---
->  drivers/net/ethernet/marvell/sky2.c              |  2 +-
->  drivers/net/ethernet/sun/sunvnet.c               |  2 +-
->  drivers/net/usb/sierra_net.c                     |  2 +-
->  net/802/garp.c                                   |  2 +-
->  net/802/mrp.c                                    |  4 ++--
->  net/bridge/br_multicast.c                        |  8 ++++----
->  net/bridge/br_multicast_eht.c                    |  4 ++--
->  net/core/gen_estimator.c                         |  2 +-
->  net/ipv4/ipmr.c                                  |  2 +-
->  net/ipv6/ip6mr.c                                 |  2 +-
->  net/mac80211/mesh_pathtbl.c                      |  2 +-
->  net/netfilter/ipset/ip_set_list_set.c            |  2 +-
->  net/netfilter/ipvs/ip_vs_lblc.c                  |  2 +-
->  net/netfilter/ipvs/ip_vs_lblcr.c                 |  2 +-
->  net/netfilter/xt_IDLETIMER.c                     |  4 ++--
->  net/netfilter/xt_LED.c                           |  2 +-
->  net/sched/cls_flow.c                             |  2 +-
->  net/sunrpc/svc.c                                 |  2 +-
->  net/tipc/discover.c                              |  2 +-
->  net/tipc/monitor.c                               |  2 +-
+This can lead to a deadlock if another thread:
 
-Acked-by: Paolo Abeni <pabeni@redhat.com>
+  1) tries to acquire the dev_cmd and clk_scaling locks in the correct
+     order, or
+
+  2) takes a clk_scaling write lock before the attempt to take the
+     clk_scaling read lock a second time.
+
+Fix this by dropping the clk_scaling_lock before toggling the write
+booster as was done before commit 0e9d4ca43ba8 ("scsi: ufs: Protect some
+contexts from unexpected clock scaling").
+
+While the devfreq callbacks are already serialised, add a second
+serialising mutex to handle the unlikely case where a callback triggered
+through the devfreq sysfs interface is racing with a request to disable
+clock scaling through the UFS controller 'clkscale_enable' sysfs
+attribute. This could otherwise lead to the write booster being left
+disabled after having disabled clock scaling.
+
+Also take the new mutex in ufshcd_clk_scaling_allow() to make sure that
+any pending write booster update has completed on return.
+
+Note that this currently only affects Qualcomm platforms since commit
+87bd05016a64 ("scsi: ufs: core: Allow host driver to disable wb toggling
+during clock scaling").
+
+The lock inversion (i.e. 1 above) was reported by lockdep as:
+
+ ======================================================
+ WARNING: possible circular locking dependency detected
+ 6.1.0-next-20221216 #211 Not tainted
+ ------------------------------------------------------
+ kworker/u16:2/71 is trying to acquire lock:
+ ffff076280ba98a0 (&hba->dev_cmd.lock){+.+.}-{3:3}, at: ufshcd_query_flag+0x50/0x1c0
+
+ but task is already holding lock:
+ ffff076280ba9cf0 (&hba->clk_scaling_lock){++++}-{3:3}, at: ufshcd_devfreq_scale+0x2b8/0x380
+
+ which lock already depends on the new lock.
+[  +0.011606]
+ the existing dependency chain (in reverse order) is:
+
+ -> #1 (&hba->clk_scaling_lock){++++}-{3:3}:
+        lock_acquire+0x68/0x90
+        down_read+0x58/0x80
+        ufshcd_exec_dev_cmd+0x70/0x2c0
+        ufshcd_verify_dev_init+0x68/0x170
+        ufshcd_probe_hba+0x398/0x1180
+        ufshcd_async_scan+0x30/0x320
+        async_run_entry_fn+0x34/0x150
+        process_one_work+0x288/0x6c0
+        worker_thread+0x74/0x450
+        kthread+0x118/0x120
+        ret_from_fork+0x10/0x20
+
+ -> #0 (&hba->dev_cmd.lock){+.+.}-{3:3}:
+        __lock_acquire+0x12a0/0x2240
+        lock_acquire.part.0+0xcc/0x220
+        lock_acquire+0x68/0x90
+        __mutex_lock+0x98/0x430
+        mutex_lock_nested+0x2c/0x40
+        ufshcd_query_flag+0x50/0x1c0
+        ufshcd_query_flag_retry+0x64/0x100
+        ufshcd_wb_toggle+0x5c/0x120
+        ufshcd_devfreq_scale+0x2c4/0x380
+        ufshcd_devfreq_target+0xf4/0x230
+        devfreq_set_target+0x84/0x2f0
+        devfreq_update_target+0xc4/0xf0
+        devfreq_monitor+0x38/0x1f0
+        process_one_work+0x288/0x6c0
+        worker_thread+0x74/0x450
+        kthread+0x118/0x120
+        ret_from_fork+0x10/0x20
+
+ other info that might help us debug this:
+  Possible unsafe locking scenario:
+        CPU0                    CPU1
+        ----                    ----
+   lock(&hba->clk_scaling_lock);
+                                lock(&hba->dev_cmd.lock);
+                                lock(&hba->clk_scaling_lock);
+   lock(&hba->dev_cmd.lock);
+
+  *** DEADLOCK ***
+
+Fixes: 0e9d4ca43ba8 ("scsi: ufs: Protect some contexts from unexpected clock scaling")
+Cc: stable@vger.kernel.org      # 5.12
+Cc: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+
+This issue has apparently been known for over a year [1] without anyone
+bothering to fix it. Aside from the potential deadlocks, this also leads
+to developers using Qualcomm platforms not being able to use lockdep to
+prevent further issues like this from being introduced in other places.
+
+Johan
+
+[1] https://lore.kernel.org/lkml/1631843521-2863-1-git-send-email-cang@codeaurora.org
+
+
+ drivers/ufs/core/ufshcd.c | 29 +++++++++++++++--------------
+ include/ufs/ufshcd.h      |  2 ++
+ 2 files changed, 17 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bda61be5f035..5c3821b2fcf8 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1234,12 +1234,14 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ 	 * clock scaling is in progress
+ 	 */
+ 	ufshcd_scsi_block_requests(hba);
++	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
+ 
+ 	if (!hba->clk_scaling.is_allowed ||
+ 	    ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+ 		ret = -EBUSY;
+ 		up_write(&hba->clk_scaling_lock);
++		mutex_unlock(&hba->wb_mutex);
+ 		ufshcd_scsi_unblock_requests(hba);
+ 		goto out;
+ 	}
+@@ -1251,12 +1253,16 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
+-static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
++static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool scale_up)
+ {
+-	if (writelock)
+-		up_write(&hba->clk_scaling_lock);
+-	else
+-		up_read(&hba->clk_scaling_lock);
++	up_write(&hba->clk_scaling_lock);
++
++	/* Enable Write Booster if we have scaled up else disable it */
++	if (ufshcd_enable_wb_if_scaling_up(hba))
++		ufshcd_wb_toggle(hba, scale_up);
++
++	mutex_unlock(&hba->wb_mutex);
++
+ 	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_release(hba);
+ }
+@@ -1273,7 +1279,6 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
+ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ {
+ 	int ret = 0;
+-	bool is_writelock = true;
+ 
+ 	ret = ufshcd_clock_scaling_prepare(hba);
+ 	if (ret)
+@@ -1302,15 +1307,8 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 		}
+ 	}
+ 
+-	/* Enable Write Booster if we have scaled up else disable it */
+-	if (ufshcd_enable_wb_if_scaling_up(hba)) {
+-		downgrade_write(&hba->clk_scaling_lock);
+-		is_writelock = false;
+-		ufshcd_wb_toggle(hba, scale_up);
+-	}
+-
+ out_unprepare:
+-	ufshcd_clock_scaling_unprepare(hba, is_writelock);
++	ufshcd_clock_scaling_unprepare(hba, scale_up);
+ 	return ret;
+ }
+ 
+@@ -6066,9 +6064,11 @@ static void ufshcd_force_error_recovery(struct ufs_hba *hba)
+ 
+ static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
+ {
++	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
+ 	hba->clk_scaling.is_allowed = allow;
+ 	up_write(&hba->clk_scaling_lock);
++	mutex_unlock(&hba->wb_mutex);
+ }
+ 
+ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
+@@ -9793,6 +9793,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Initialize mutex for exception event control */
+ 	mutex_init(&hba->ee_ctrl_mutex);
+ 
++	mutex_init(&hba->wb_mutex);
+ 	init_rwsem(&hba->clk_scaling_lock);
+ 
+ 	ufshcd_init_clk_gating(hba);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 5cf81dff60aa..727084cd79be 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -808,6 +808,7 @@ struct ufs_hba_monitor {
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+  *  device is known or not.
++ * @wb_mutex: used to serialize devfreq and sysfs write booster toggling
+  * @clk_scaling_lock: used to serialize device commands and clock scaling
+  * @desc_size: descriptor sizes reported by device
+  * @scsi_block_reqs_cnt: reference counting for scsi block requests
+@@ -951,6 +952,7 @@ struct ufs_hba {
+ 	enum bkops_status urgent_bkops_lvl;
+ 	bool is_urgent_bkops_lvl_checked;
+ 
++	struct mutex wb_mutex;
+ 	struct rw_semaphore clk_scaling_lock;
+ 	unsigned char desc_size[QUERY_DESC_IDN_MAX];
+ 	atomic_t scsi_block_reqs_cnt;
+-- 
+2.37.4
 
