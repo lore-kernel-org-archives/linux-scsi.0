@@ -2,103 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7FF7C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 14:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D426EC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 18:05:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235731AbiLVOQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Dec 2022 09:16:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46706 "EHLO
+        id S229745AbiLVSFV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Dec 2022 13:05:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235340AbiLVOPb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2022 09:15:31 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6B0D2B259
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2022 06:13:02 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id hd14-20020a17090b458e00b0021909875bccso5709010pjb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2022 06:13:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+9vMWr+QReiCFTMChXS+VaiIVai5hcXHpa8PnZ2xGs0=;
-        b=CdISaZLIaDAiejs3ebXWfckHizcdGNVuYMECOILk4yH8xwZVwxG4rqfNknKiQ9bMxv
-         K6t7qbFpxglLraOezwuKyzjqE8CILTiYQ8fqC9spqWBaWJemqGlFl9HcxUr/IKp4GiVs
-         lmvYjvo5Xsua2Dr3Hikt0B9Qgo+BR+9rdhHGiGch3nEldEUjjhkJEPBqpNEJNmNBWlR7
-         afSp0RPecbEl4ZEjX8yxe7ItSy8y0659l6Vht++AZTi1zjiu/7I/OJvwdg/hfknwmO05
-         fKeR62Njz+K0Ku39QJtMu4hAR3KOVexrkaHShOcxUgXcwsBT/pNtnOm1BuGm8aBWvH1H
-         26Vw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+9vMWr+QReiCFTMChXS+VaiIVai5hcXHpa8PnZ2xGs0=;
-        b=YOm/EsQ29d3mFOOFK15ZWVq9uIMil0+lX8Y10bUNBy3nEsiKOx8y31wUd7YMQRaOsR
-         evDDso/gwZalmO+Oxwoqw3uIkDw+RzoWvoD1o/r3odvT1QbDt+5N0O+UvqNJ3M5aNQlK
-         iKVe1SkOmErPKp3L5zMLRumuGKPzH4EXXg0gfDWPN6jL+Pr/5doVBpwzMOOVyCQYABt+
-         hsjmRerOUGprbpdI1UkWQHgAJsfY9iGrZhUPqWuJ8jopTG6Pg/m5sHLt0+b9d82XcpvH
-         gJvDHidGGkQy799lnO5tOkCy10gK23VDczG7xvw3x10E1AMUmENijm87wR2YcEvuU+vE
-         xSmA==
-X-Gm-Message-State: AFqh2kqnNYEhuf9pJ3ZlEODmGpV32nt15GrhmZl+FIhaZ1+zjM6xLIXH
-        unSS91u7OVcd/bvQEIq42YR0
-X-Google-Smtp-Source: AMrXdXsteySjBHCQNu+U2EA0Z9ki5BDJhCG3tehQDYHTLHrsEX/9rNG3ICW7RmKBQP2Yjf+3ELN7ag==
-X-Received: by 2002:a17:90b:3712:b0:223:ceed:ef6f with SMTP id mg18-20020a17090b371200b00223ceedef6fmr6803083pjb.10.1671718382131;
-        Thu, 22 Dec 2022 06:13:02 -0800 (PST)
-Received: from localhost.localdomain ([117.217.177.177])
-        by smtp.gmail.com with ESMTPSA id f8-20020a655908000000b0047829d1b8eesm832031pgu.31.2022.12.22.06.12.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Dec 2022 06:13:01 -0800 (PST)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org
-Cc:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
-        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v5 23/23] MAINTAINERS: Add myself as the maintainer for Qcom UFS drivers
-Date:   Thu, 22 Dec 2022 19:40:01 +0530
-Message-Id: <20221222141001.54849-24-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221222141001.54849-1-manivannan.sadhasivam@linaro.org>
-References: <20221222141001.54849-1-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S229545AbiLVSFT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2022 13:05:19 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B8082A506;
+        Thu, 22 Dec 2022 10:05:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1671732315;
+        bh=8Gvtla9eOExxVtnWvUKbqdIg4zvAE4R1modqbMCzaNU=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=lQZPuGoWytIGINrGEwQ2+WwmbVeP9eBXGZ5+/H7p+LKfphTRVGYulQLyoJ6KkLKgf
+         SxDsFXVfWio8Rs8Go1yrEUkLCYFNr5ySbAbQ3xwL2Ov1uZLZ790pWl7p8lv0PB9mdv
+         d328yMrC6ZT1rzZLunxLpAcgQX1R1FB7vwkp8C3I=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D8B8C1281D7E;
+        Thu, 22 Dec 2022 13:05:15 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id QHJwNOgMcJhX; Thu, 22 Dec 2022 13:05:15 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1671732315;
+        bh=8Gvtla9eOExxVtnWvUKbqdIg4zvAE4R1modqbMCzaNU=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=lQZPuGoWytIGINrGEwQ2+WwmbVeP9eBXGZ5+/H7p+LKfphTRVGYulQLyoJ6KkLKgf
+         SxDsFXVfWio8Rs8Go1yrEUkLCYFNr5ySbAbQ3xwL2Ov1uZLZ790pWl7p8lv0PB9mdv
+         d328yMrC6ZT1rzZLunxLpAcgQX1R1FB7vwkp8C3I=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 2E9291281A28;
+        Thu, 22 Dec 2022 13:05:15 -0500 (EST)
+Message-ID: <65d488496e9889d1c2d3faf06bfa7c22f3807ef2.camel@HansenPartnership.com>
+Subject: [GIT PULL] final round of SCSI updates for the 6.1+ merge window
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Thu, 22 Dec 2022 13:05:12 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Qcom UFS drivers are left un-maintained till now. I'd like to step up to
-maintain the drivers and the binding.
+Mostly small bug fixes and small updates.  The only things of note is a
+qla2xxx fix for crash on hotplug and timeout and the addition of a user
+exposed abstraction layer for persistent reservation error return
+handling (which necessitates the conversion of nvme.c as well as SCSI).
 
-Acked-by: Bjorn Andersson <andersson@kernel.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+The patch is available here:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7729a30b9609..7638c749a63f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -21411,6 +21411,14 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/ufs/host/ufs-mediatek*
- 
-+UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER QUALCOMM HOOKS
-+M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+L:	linux-arm-msm@vger.kernel.org
-+L:	linux-scsi@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+F:	drivers/ufs/host/ufs-qcom*
-+
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
- M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
- L:	linux-renesas-soc@vger.kernel.org
--- 
-2.25.1
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Arun Easi (1):
+      scsi: qla2xxx: Fix crash when I/O abort times out
+
+Christophe JAILLET (1):
+      scsi: libfc: Include the correct header
+
+Johannes Thumshirn (1):
+      scsi: sd: sd_zbc: Trace zone append emulation
+
+Mike Christie (4):
+      nvme: Convert NVMe errors to PR errors
+      scsi: sd: Convert SCSI errors to PR errors
+      scsi: core: Rename status_byte to sg_status_byte
+      block: Add error codes for common PR failures
+
+And the diffstat:
+
+ drivers/nvme/host/core.c        | 33 +++++++++++++++-
+ drivers/scsi/libfc/fc_disc.c    |  2 +-
+ drivers/scsi/qla2xxx/qla_init.c | 14 +++++--
+ drivers/scsi/scsi_ioctl.c       |  2 +-
+ drivers/scsi/sd.c               | 35 ++++++++++++++++-
+ drivers/scsi/sd_trace.h         | 84 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd_zbc.c           |  6 +++
+ drivers/scsi/sg.c               |  2 +-
+ include/scsi/scsi.h             |  1 +
+ include/scsi/sg.h               |  2 +-
+ include/uapi/linux/pr.h         | 17 +++++++++
+ 11 files changed, 187 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/scsi/sd_trace.h
+
+James
+
 
