@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C50FFC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 04:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8872CC4167B
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Dec 2022 04:40:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235038AbiLVEkB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Dec 2022 23:40:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52368 "EHLO
+        id S235041AbiLVEkD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Dec 2022 23:40:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234995AbiLVEjp (ORCPT
+        with ESMTP id S235005AbiLVEjp (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2022 23:39:45 -0500
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE8441A204
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2022 20:39:43 -0800 (PST)
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BM1SDgI018335
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6686B1A235
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2022 20:39:44 -0800 (PST)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BM4OKMl020309
         for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2022 20:39:43 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=GQGNPom8kgHOsS0LlASm3LzC3cvR5CEbsQ0v79hjkxE=;
- b=DkAmA9d1Pot8b+X8cWpgwNpPn/qVe0NNM0750FFqmGdr0WTTc7iXkveM/1oINcL/IPCI
- eMkyZ4j5WxzgNK3iZSjWX/P9YRuQvVBqneIsvjGWHjoB8ehS46KaOpea4TRFdPDQCqCV
- +B0TEkKQ8L8bnxmY0HMB+b/NwWIjbxm/Yn5vzySpTwYG/xdf506a1AD/hjE4+eMOMkMJ
- JZ+0l5osv+Xex9pIdzpOrnZAz7Oyu1/QqIEKbljVDSO1i1y9xpHs5iEujnWeKNFzOk0T
- ZV/aMXCRh24P27vOcLPjGIAo7EIGn/bsFTo0Zgqw6tjsCRVOog4ydJdIIw5BHuz7TPli hw== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3mm79c2j8t-3
+ content-type; s=pfpt0220; bh=C8SQt44vyoeVB8rAajyHSy8XSyuNPN39TmAN30dj3Ro=;
+ b=fozkPeLpp0jz+1NE5oMaPy0DsBALTbUA79K0+GzkVk/Q2+5UapANkoVpFjx0qpTE+WyU
+ 0Sz4kXnEEPhQfF1aLi7KsqkjAc7Uod8gWI+w0TXcxZAPPtvHG/MgYc4foFC0jeyVjZlq
+ i9M8IG4qYAxKcYzZwnERw1tlv8Et0HxM2vyyv7vgWpa/zEPsoJYn+zeUj2Dd11poWLIC
+ FwZdwfNnJUUPbaG2qtX4UY1+xfl6M886M45LJn4yGicczFoZ/w9yQt8GQKoMq0ltGEQ8
+ xDjSsB/iMHe5m8+hBK4btZA47SuJVzCcSJREwhwsMbTBdxYj/ipqsXxXOq3cJnzKa2Af Tg== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3mhe5rsdhc-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
         for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2022 20:39:43 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 21 Dec
- 2022 20:39:41 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.42 via Frontend
- Transport; Wed, 21 Dec 2022 20:39:41 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 21 Dec
+ 2022 20:39:40 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.42 via Frontend
+ Transport; Wed, 21 Dec 2022 20:39:40 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id D21E15B694B;
+        by maili.marvell.com (Postfix) with ESMTP id 82CDE3F7069;
         Wed, 21 Dec 2022 20:39:40 -0800 (PST)
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
-Subject: [PATCH 04/10] qla2xxx: relocate/rename vp map
-Date:   Wed, 21 Dec 2022 20:39:27 -0800
-Message-ID: <20221222043933.2825-5-njavali@marvell.com>
+Subject: [PATCH 02/10] qla2xxx: Remove dead code (GPNID)
+Date:   Wed, 21 Dec 2022 20:39:25 -0800
+Message-ID: <20221222043933.2825-3-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20221222043933.2825-1-njavali@marvell.com>
 References: <20221222043933.2825-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: ha3S9Nc5MZ152eXwOtJ1_TytcvRqNtdA
-X-Proofpoint-GUID: ha3S9Nc5MZ152eXwOtJ1_TytcvRqNtdA
+X-Proofpoint-GUID: v56kk5SiuUtf7eqAF0faBdG49n1clD9P
+X-Proofpoint-ORIG-GUID: v56kk5SiuUtf7eqAF0faBdG49n1clD9P
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-12-22_01,2022-12-21_01,2022-06-22_01
@@ -62,511 +62,437 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-There is no functional change in this patch.
-VP map resource is renamed and relocated so
-it is not viewed as just a target mode resource.
+Remove stale unused code for GPNID.
 
 Cc: stable@vger.kernel.org
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |   4 +-
- drivers/scsi/qla2xxx/qla_edif.h   |   2 +
- drivers/scsi/qla2xxx/qla_gbl.h    |   5 +-
- drivers/scsi/qla2xxx/qla_init.c   |   4 +-
- drivers/scsi/qla2xxx/qla_mbx.c    |   8 +--
- drivers/scsi/qla2xxx/qla_mid.c    |  83 ++++++++++++++++++++++--
- drivers/scsi/qla2xxx/qla_os.c     |  13 +++-
- drivers/scsi/qla2xxx/qla_target.c | 103 +++---------------------------
- drivers/scsi/qla2xxx/qla_target.h |   1 -
- 9 files changed, 113 insertions(+), 110 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |   7 +-
+ drivers/scsi/qla2xxx/qla_gbl.h  |   4 -
+ drivers/scsi/qla2xxx/qla_gs.c   | 297 --------------------------------
+ drivers/scsi/qla2xxx/qla_init.c |   2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c |   2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |   4 -
+ 6 files changed, 3 insertions(+), 313 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 2ed04f71cfc5..4bf167c00569 100644
+index 0dde3fa9e258..9ee9ce613c75 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3935,7 +3935,6 @@ struct qlt_hw_data {
- 	__le32 __iomem *atio_q_out;
+@@ -3479,7 +3479,6 @@ enum qla_work_type {
+ 	QLA_EVT_ASYNC_ADISC,
+ 	QLA_EVT_UEVENT,
+ 	QLA_EVT_AENFX,
+-	QLA_EVT_GPNID,
+ 	QLA_EVT_UNMAP,
+ 	QLA_EVT_NEW_SESS,
+ 	QLA_EVT_GPDB,
+@@ -3534,9 +3533,6 @@ struct qla_work_evt {
+ 		struct {
+ 			srb_t *sp;
+ 		} iosb;
+-		struct {
+-			port_id_t id;
+-		} gpnid;
+ 		struct {
+ 			port_id_t id;
+ 			u8 port_name[8];
+@@ -3544,7 +3540,7 @@ struct qla_work_evt {
+ 			void *pla;
+ 			u8 fc4_type;
+ 		} new_sess;
+-		struct { /*Get PDB, Get Speed, update fcport, gnl, gidpn */
++		struct { /*Get PDB, Get Speed, update fcport, gnl */
+ 			fc_port_t *fcport;
+ 			u8 opt;
+ 		} fcport;
+@@ -5025,7 +5021,6 @@ typedef struct scsi_qla_host {
+ 	uint8_t n2n_port_name[WWN_SIZE];
+ 	uint16_t	n2n_id;
+ 	__le16 dport_data[4];
+-	struct list_head gpnid_list;
+ 	struct fab_scan scan;
+ 	uint8_t	scm_fabric_connection_flags;
  
- 	const struct qla_tgt_func_tmpl *tgt_ops;
--	struct qla_tgt_vp_map *tgt_vp_map;
- 
- 	int saved_set;
- 	__le16	saved_exchange_count;
-@@ -4759,6 +4758,7 @@ struct qla_hw_data {
- 	spinlock_t sadb_lock;	/* protects list */
- 	struct els_reject elsrej;
- 	u8 edif_post_stop_cnt_down;
-+	struct qla_vp_map *vp_map;
- };
- 
- #define RX_ELS_SIZE (roundup(sizeof(struct enode) + ELS_MAX_PAYLOAD, SMP_CACHE_BYTES))
-@@ -5059,7 +5059,7 @@ struct qla27xx_image_status {
- #define SET_AL_PA	2
- #define RESET_VP_IDX	3
- #define RESET_AL_PA	4
--struct qla_tgt_vp_map {
-+struct qla_vp_map {
- 	uint8_t	idx;
- 	scsi_qla_host_t *vha;
- };
-diff --git a/drivers/scsi/qla2xxx/qla_edif.h b/drivers/scsi/qla2xxx/qla_edif.h
-index 7cdb89ccdc6e..aa566cdb77e5 100644
---- a/drivers/scsi/qla2xxx/qla_edif.h
-+++ b/drivers/scsi/qla2xxx/qla_edif.h
-@@ -145,4 +145,6 @@ struct enode {
- 	(qla_ini_mode_enabled(_s->vha) && (_s->disc_state == DSC_DELETE_PEND || \
- 	 _s->disc_state == DSC_DELETED))
- 
-+#define EDIF_CAP(_ha) (ql2xsecenable && IS_QLA28XX(_ha))
-+
- #endif	/* __QLA_EDIF_H */
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 08ea8dc6c6bb..958892766321 100644
+index e3256e721be1..2acddc8dc943 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -257,6 +257,7 @@ struct edif_sa_ctl *qla_edif_find_sa_ctl_by_index(fc_port_t *fcport,
- /*
-  * Global Functions in qla_mid.c source file.
-  */
-+extern void qla_update_vp_map(struct scsi_qla_host *, int);
- extern struct scsi_host_template qla2xxx_driver_template;
- extern struct scsi_transport_template *qla2xxx_transport_vport_template;
- extern void qla2x00_timer(struct timer_list *);
-@@ -955,7 +956,7 @@ extern struct fc_port *qlt_find_sess_invalidate_other(scsi_qla_host_t *,
- 	uint64_t wwn, port_id_t port_id, uint16_t loop_id, struct fc_port **);
- void qla24xx_delete_sess_fn(struct work_struct *);
- void qlt_unknown_atio_work_fn(struct work_struct *);
--void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
-+void qla_update_host_map(struct scsi_qla_host *, port_id_t);
- void qla_remove_hostmap(struct qla_hw_data *ha);
- void qlt_clr_qp_table(struct scsi_qla_host *vha);
- void qlt_set_mode(struct scsi_qla_host *);
-@@ -968,6 +969,8 @@ extern void qla_nvme_abort_set_option
- 		(struct abort_entry_24xx *abt, srb_t *sp);
- extern void qla_nvme_abort_process_comp_status
- 		(struct abort_entry_24xx *abt, srb_t *sp);
-+struct scsi_qla_host *qla_find_host_by_vp_idx(struct scsi_qla_host *vha,
-+	uint16_t vp_idx);
+@@ -721,10 +721,6 @@ extern int qla2x00_chk_ms_status(scsi_qla_host_t *, ms_iocb_entry_t *,
+ 	struct ct_sns_rsp *, const char *);
+ extern void qla2x00_async_iocb_timeout(void *data);
  
- /* nvme.c */
- void qla_nvme_unregister_remote_port(struct fc_port *fcport);
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index a23cb2e5ab58..fc540bd13a90 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4822,9 +4822,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	if (vha->hw->flags.edif_enabled) {
- 		if (topo != 2)
--			qlt_update_host_map(vha, id);
-+			qla_update_host_map(vha, id);
- 	} else if (!(topo == 2 && ha->flags.n2n_bigger))
--		qlt_update_host_map(vha, id);
-+		qla_update_host_map(vha, id);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	if (!vha->flags.init_done)
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 359595a64664..254fd4c64262 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4010,7 +4010,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
- 		    rptid_entry->port_id[0]);
- 		ha->current_topology = ISP_CFG_NL;
--		qlt_update_host_map(vha, id);
-+		qla_update_host_map(vha, id);
- 
- 	} else if (rptid_entry->format == 1) {
- 		/* fabric */
-@@ -4126,7 +4126,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 					    WWN_SIZE);
- 				}
- 
--				qlt_update_host_map(vha, id);
-+				qla_update_host_map(vha, id);
- 			}
- 
- 			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
-@@ -4153,7 +4153,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 			if (!found)
- 				return;
- 
--			qlt_update_host_map(vp, id);
-+			qla_update_host_map(vp, id);
- 
- 			/*
- 			 * Cannot configure here as we are still sitting on the
-@@ -4184,7 +4184,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 
- 		ha->flags.n2n_ae = 1;
- 		spin_lock_irqsave(&ha->vport_slock, flags);
--		qlt_update_vp_map(vha, SET_AL_PA);
-+		qla_update_vp_map(vha, SET_AL_PA);
- 		spin_unlock_irqrestore(&ha->vport_slock, flags);
- 
- 		list_for_each_entry(fcport, &vha->vp_fcports, list) {
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 5fff17da0202..274d2ba70b81 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -52,7 +52,7 @@ qla24xx_allocate_vp_id(scsi_qla_host_t *vha)
- 	spin_unlock_irqrestore(&ha->vport_slock, flags);
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
--	qlt_update_vp_map(vha, SET_VP_IDX);
-+	qla_update_vp_map(vha, SET_VP_IDX);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	mutex_unlock(&ha->vport_lock);
-@@ -80,7 +80,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
- 		spin_lock_irqsave(&ha->vport_slock, flags);
- 		if (atomic_read(&vha->vref_count) == 0) {
- 			list_del(&vha->list);
--			qlt_update_vp_map(vha, RESET_VP_IDX);
-+			qla_update_vp_map(vha, RESET_VP_IDX);
- 			bailout = 1;
- 		}
- 		spin_unlock_irqrestore(&ha->vport_slock, flags);
-@@ -95,7 +95,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
- 			"vha->vref_count=%u timeout\n", vha->vref_count.counter);
- 		spin_lock_irqsave(&ha->vport_slock, flags);
- 		list_del(&vha->list);
--		qlt_update_vp_map(vha, RESET_VP_IDX);
-+		qla_update_vp_map(vha, RESET_VP_IDX);
- 		spin_unlock_irqrestore(&ha->vport_slock, flags);
- 	}
- 
-@@ -187,7 +187,7 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
- 
- 	/* Remove port id from vp target map */
- 	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
--	qlt_update_vp_map(vha, RESET_AL_PA);
-+	qla_update_vp_map(vha, RESET_AL_PA);
- 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
- 
- 	qla2x00_mark_vp_devices_dead(vha);
-@@ -1005,3 +1005,78 @@ int qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
- 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-extern int qla24xx_post_gpnid_work(struct scsi_qla_host *, port_id_t *);
+-extern int qla24xx_async_gpnid(scsi_qla_host_t *, port_id_t *);
+-void qla24xx_handle_gpnid_event(scsi_qla_host_t *, struct event_arg *);
+-
+ int qla24xx_post_gpsc_work(struct scsi_qla_host *, fc_port_t *);
+ int qla24xx_async_gpsc(scsi_qla_host_t *, fc_port_t *);
+ void qla24xx_handle_gpsc_event(scsi_qla_host_t *, struct event_arg *);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 64ab070b8716..fe1eb06db654 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -2949,22 +2949,6 @@ int qla24xx_async_gpsc(scsi_qla_host_t *vha, fc_port_t *fcport)
  	return rval;
  }
-+
-+struct scsi_qla_host *qla_find_host_by_vp_idx(struct scsi_qla_host *vha, uint16_t vp_idx)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (vha->vp_idx == vp_idx)
-+		return vha;
-+
-+	BUG_ON(ha->vp_map == NULL);
-+	if (likely(test_bit(vp_idx, ha->vp_idx_map)))
-+		return ha->vp_map[vp_idx].vha;
-+
-+	return NULL;
-+}
-+
-+/* vport_slock to be held by the caller */
-+void
-+qla_update_vp_map(struct scsi_qla_host *vha, int cmd)
-+{
-+	void *slot;
-+	u32 key;
-+	int rc;
-+
-+	if (!vha->hw->vp_map)
-+		return;
-+
-+	key = vha->d_id.b24;
-+
-+	switch (cmd) {
-+	case SET_VP_IDX:
-+		vha->hw->vp_map[vha->vp_idx].vha = vha;
-+		break;
-+	case SET_AL_PA:
-+		slot = btree_lookup32(&vha->hw->host_map, key);
-+		if (!slot) {
-+			ql_dbg(ql_dbg_disc, vha, 0xf018,
-+			    "Save vha in host_map %p %06x\n", vha, key);
-+			rc = btree_insert32(&vha->hw->host_map,
-+			    key, vha, GFP_ATOMIC);
-+			if (rc)
-+				ql_log(ql_log_info, vha, 0xd03e,
-+				    "Unable to insert s_id into host_map: %06x\n",
-+				    key);
-+			return;
-+		}
-+		ql_dbg(ql_dbg_disc, vha, 0xf019,
-+		    "replace existing vha in host_map %p %06x\n", vha, key);
-+		btree_update32(&vha->hw->host_map, key, vha);
-+		break;
-+	case RESET_VP_IDX:
-+		vha->hw->vp_map[vha->vp_idx].vha = NULL;
-+		break;
-+	case RESET_AL_PA:
-+		ql_dbg(ql_dbg_disc, vha, 0xf01a,
-+		    "clear vha in host_map %p %06x\n", vha, key);
-+		slot = btree_lookup32(&vha->hw->host_map, key);
-+		if (slot)
-+			btree_remove32(&vha->hw->host_map, key);
-+		vha->d_id.b24 = 0;
-+		break;
-+	}
-+}
-+
-+void qla_update_host_map(struct scsi_qla_host *vha, port_id_t id)
-+{
-+
-+	if (!vha->d_id.b24) {
-+		vha->d_id = id;
-+		qla_update_vp_map(vha, SET_AL_PA);
-+	} else if (vha->d_id.b24 != id.b24) {
-+		qla_update_vp_map(vha, RESET_AL_PA);
-+		vha->d_id = id;
-+		qla_update_vp_map(vha, SET_AL_PA);
-+	}
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c0ac6bfeeafe..ac3d0bc1b230 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4118,10 +4118,16 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	char	name[16];
- 	int rc;
  
-+	if (QLA_TGT_MODE_ENABLED() || EDIF_CAP(ha)) {
-+		ha->vp_map = kcalloc(MAX_MULTI_ID_FABRIC, sizeof(struct qla_vp_map), GFP_KERNEL);
-+		if (!ha->vp_map)
-+			goto fail;
-+	}
-+
- 	ha->init_cb = dma_alloc_coherent(&ha->pdev->dev, ha->init_cb_size,
- 		&ha->init_cb_dma, GFP_KERNEL);
- 	if (!ha->init_cb)
--		goto fail;
-+		goto fail_free_vp_map;
- 
- 	rc = btree_init32(&ha->host_map);
- 	if (rc)
-@@ -4540,6 +4546,8 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	ha->init_cb_dma);
- 	ha->init_cb = NULL;
- 	ha->init_cb_dma = 0;
-+fail_free_vp_map:
-+	kfree(ha->vp_map);
- fail:
- 	ql_log(ql_log_fatal, NULL, 0x0030,
- 	    "Memory allocation failure.\n");
-@@ -4981,6 +4989,9 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->sf_init_cb = NULL;
- 	ha->sf_init_cb_dma = 0;
- 	ha->loop_id_map = NULL;
-+
-+	kfree(ha->vp_map);
-+	ha->vp_map = NULL;
- }
- 
- struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 548f22705ddc..dbd6660c0bf8 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -198,22 +198,6 @@ struct scsi_qla_host *qla_find_host_by_d_id(struct scsi_qla_host *vha,
- 	return host;
- }
- 
--static inline
--struct scsi_qla_host *qlt_find_host_by_vp_idx(struct scsi_qla_host *vha,
--	uint16_t vp_idx)
+-int qla24xx_post_gpnid_work(struct scsi_qla_host *vha, port_id_t *id)
 -{
--	struct qla_hw_data *ha = vha->hw;
+-	struct qla_work_evt *e;
 -
--	if (vha->vp_idx == vp_idx)
--		return vha;
+-	if (test_bit(UNLOADING, &vha->dpc_flags) ||
+-	    (vha->vp_idx && test_bit(VPORT_DELETE, &vha->dpc_flags)))
+-		return 0;
 -
--	BUG_ON(ha->tgt.tgt_vp_map == NULL);
--	if (likely(test_bit(vp_idx, ha->vp_idx_map)))
--		return ha->tgt.tgt_vp_map[vp_idx].vha;
+-	e = qla2x00_alloc_work(vha, QLA_EVT_GPNID);
+-	if (!e)
+-		return QLA_FUNCTION_FAILED;
 -
--	return NULL;
+-	e->u.gpnid.id = *id;
+-	return qla2x00_post_work(vha, e);
 -}
 -
- static inline void qlt_incr_num_pend_cmds(struct scsi_qla_host *vha)
+ void qla24xx_sp_unmap(scsi_qla_host_t *vha, srb_t *sp)
  {
- 	unsigned long flags;
-@@ -371,7 +355,7 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 
- 		if ((entry->u.isp24.vp_index != 0xFF) &&
- 		    (entry->u.isp24.nport_handle != cpu_to_le16(0xFFFF))) {
--			host = qlt_find_host_by_vp_idx(vha,
-+			host = qla_find_host_by_vp_idx(vha,
- 			    entry->u.isp24.vp_index);
- 			if (unlikely(!host)) {
- 				ql_dbg(ql_dbg_tgt, vha, 0xe03f,
-@@ -395,7 +379,7 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 	{
- 		struct abts_recv_from_24xx *entry =
- 			(struct abts_recv_from_24xx *)atio;
--		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
-+		struct scsi_qla_host *host = qla_find_host_by_vp_idx(vha,
- 			entry->vp_index);
- 		unsigned long flags;
- 
-@@ -438,7 +422,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha,
- 	case CTIO_TYPE7:
- 	{
- 		struct ctio7_from_24xx *entry = (struct ctio7_from_24xx *)pkt;
--		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
-+		struct scsi_qla_host *host = qla_find_host_by_vp_idx(vha,
- 		    entry->vp_index);
- 		if (unlikely(!host)) {
- 			ql_dbg(ql_dbg_tgt, vha, 0xe041,
-@@ -457,7 +441,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha,
- 		struct imm_ntfy_from_isp *entry =
- 		    (struct imm_ntfy_from_isp *)pkt;
- 
--		host = qlt_find_host_by_vp_idx(vha, entry->u.isp24.vp_index);
-+		host = qla_find_host_by_vp_idx(vha, entry->u.isp24.vp_index);
- 		if (unlikely(!host)) {
- 			ql_dbg(ql_dbg_tgt, vha, 0xe042,
- 			    "qla_target(%d): Response pkt (IMMED_NOTIFY_TYPE) "
-@@ -475,7 +459,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha,
- 		struct nack_to_isp *entry = (struct nack_to_isp *)pkt;
- 
- 		if (0xFF != entry->u.isp24.vp_index) {
--			host = qlt_find_host_by_vp_idx(vha,
-+			host = qla_find_host_by_vp_idx(vha,
- 			    entry->u.isp24.vp_index);
- 			if (unlikely(!host)) {
- 				ql_dbg(ql_dbg_tgt, vha, 0xe043,
-@@ -495,7 +479,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha,
- 	{
- 		struct abts_recv_from_24xx *entry =
- 		    (struct abts_recv_from_24xx *)pkt;
--		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
-+		struct scsi_qla_host *host = qla_find_host_by_vp_idx(vha,
- 		    entry->vp_index);
- 		if (unlikely(!host)) {
- 			ql_dbg(ql_dbg_tgt, vha, 0xe044,
-@@ -512,7 +496,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha,
- 	{
- 		struct abts_resp_to_24xx *entry =
- 		    (struct abts_resp_to_24xx *)pkt;
--		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
-+		struct scsi_qla_host *host = qla_find_host_by_vp_idx(vha,
- 		    entry->vp_index);
- 		if (unlikely(!host)) {
- 			ql_dbg(ql_dbg_tgt, vha, 0xe045,
-@@ -7145,7 +7129,7 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
- 
- 	qlt_clear_mode(base_vha);
- 
--	qlt_update_vp_map(base_vha, SET_VP_IDX);
-+	qla_update_vp_map(base_vha, SET_VP_IDX);
+ 	struct srb_iocb *c = &sp->u.iocb_cmd;
+@@ -2997,287 +2981,6 @@ void qla24xx_sp_unmap(scsi_qla_host_t *vha, srb_t *sp)
+ 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
  }
  
- irqreturn_t
-@@ -7224,17 +7208,10 @@ qlt_mem_alloc(struct qla_hw_data *ha)
- 	if (!QLA_TGT_MODE_ENABLED())
- 		return 0;
- 
--	ha->tgt.tgt_vp_map = kcalloc(MAX_MULTI_ID_FABRIC,
--				     sizeof(struct qla_tgt_vp_map),
--				     GFP_KERNEL);
--	if (!ha->tgt.tgt_vp_map)
--		return -ENOMEM;
+-void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *ea)
+-{
+-	fc_port_t *fcport, *conflict, *t;
+-	u16 data[2];
 -
- 	ha->tgt.atio_ring = dma_alloc_coherent(&ha->pdev->dev,
- 	    (ha->tgt.atio_q_length + 1) * sizeof(struct atio_from_isp),
- 	    &ha->tgt.atio_dma, GFP_KERNEL);
- 	if (!ha->tgt.atio_ring) {
--		kfree(ha->tgt.tgt_vp_map);
- 		return -ENOMEM;
- 	}
- 	return 0;
-@@ -7253,70 +7230,6 @@ qlt_mem_free(struct qla_hw_data *ha)
- 	}
- 	ha->tgt.atio_ring = NULL;
- 	ha->tgt.atio_dma = 0;
--	kfree(ha->tgt.tgt_vp_map);
--	ha->tgt.tgt_vp_map = NULL;
+-	ql_dbg(ql_dbg_disc, vha, 0xffff,
+-	    "%s %d port_id: %06x\n",
+-	    __func__, __LINE__, ea->id.b24);
+-
+-	if (ea->rc) {
+-		/* cable is disconnected */
+-		list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
+-			if (fcport->d_id.b24 == ea->id.b24)
+-				fcport->scan_state = QLA_FCPORT_SCAN;
+-
+-			qlt_schedule_sess_for_deletion(fcport);
+-		}
+-	} else {
+-		/* cable is connected */
+-		fcport = qla2x00_find_fcport_by_wwpn(vha, ea->port_name, 1);
+-		if (fcport) {
+-			list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
+-			    list) {
+-				if ((conflict->d_id.b24 == ea->id.b24) &&
+-				    (fcport != conflict))
+-					/*
+-					 * 2 fcports with conflict Nport ID or
+-					 * an existing fcport is having nport ID
+-					 * conflict with new fcport.
+-					 */
+-
+-					conflict->scan_state = QLA_FCPORT_SCAN;
+-
+-				qlt_schedule_sess_for_deletion(conflict);
+-			}
+-
+-			fcport->scan_needed = 0;
+-			fcport->rscn_gen++;
+-			fcport->scan_state = QLA_FCPORT_FOUND;
+-			fcport->flags |= FCF_FABRIC_DEVICE;
+-			if (fcport->login_retry == 0) {
+-				fcport->login_retry =
+-					vha->hw->login_retry_count;
+-				ql_dbg(ql_dbg_disc, vha, 0xffff,
+-				    "Port login retry %8phN, lid 0x%04x cnt=%d.\n",
+-				    fcport->port_name, fcport->loop_id,
+-				    fcport->login_retry);
+-			}
+-			switch (fcport->disc_state) {
+-			case DSC_LOGIN_COMPLETE:
+-				/* recheck session is still intact. */
+-				ql_dbg(ql_dbg_disc, vha, 0x210d,
+-				    "%s %d %8phC revalidate session with ADISC\n",
+-				    __func__, __LINE__, fcport->port_name);
+-				data[0] = data[1] = 0;
+-				qla2x00_post_async_adisc_work(vha, fcport,
+-				    data);
+-				break;
+-			case DSC_DELETED:
+-				ql_dbg(ql_dbg_disc, vha, 0x210d,
+-				    "%s %d %8phC login\n", __func__, __LINE__,
+-				    fcport->port_name);
+-				fcport->d_id = ea->id;
+-				qla24xx_fcport_handle_login(vha, fcport);
+-				break;
+-			case DSC_DELETE_PEND:
+-				fcport->d_id = ea->id;
+-				break;
+-			default:
+-				fcport->d_id = ea->id;
+-				break;
+-			}
+-		} else {
+-			list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
+-			    list) {
+-				if (conflict->d_id.b24 == ea->id.b24) {
+-					/* 2 fcports with conflict Nport ID or
+-					 * an existing fcport is having nport ID
+-					 * conflict with new fcport.
+-					 */
+-					ql_dbg(ql_dbg_disc, vha, 0xffff,
+-					    "%s %d %8phC DS %d\n",
+-					    __func__, __LINE__,
+-					    conflict->port_name,
+-					    conflict->disc_state);
+-
+-					conflict->scan_state = QLA_FCPORT_SCAN;
+-					qlt_schedule_sess_for_deletion(conflict);
+-				}
+-			}
+-
+-			/* create new fcport */
+-			ql_dbg(ql_dbg_disc, vha, 0x2065,
+-			    "%s %d %8phC post new sess\n",
+-			    __func__, __LINE__, ea->port_name);
+-			qla24xx_post_newsess_work(vha, &ea->id,
+-			    ea->port_name, NULL, NULL, 0);
+-		}
+-	}
 -}
 -
--/* vport_slock to be held by the caller */
--void
--qlt_update_vp_map(struct scsi_qla_host *vha, int cmd)
+-static void qla2x00_async_gpnid_sp_done(srb_t *sp, int res)
 -{
--	void *slot;
--	u32 key;
--	int rc;
+-	struct scsi_qla_host *vha = sp->vha;
+-	struct ct_sns_req *ct_req =
+-	    (struct ct_sns_req *)sp->u.iocb_cmd.u.ctarg.req;
+-	struct ct_sns_rsp *ct_rsp =
+-	    (struct ct_sns_rsp *)sp->u.iocb_cmd.u.ctarg.rsp;
+-	struct event_arg ea;
+-	struct qla_work_evt *e;
+-	unsigned long flags;
 -
--	key = vha->d_id.b24;
+-	if (res)
+-		ql_dbg(ql_dbg_disc, vha, 0x2066,
+-		    "Async done-%s fail res %x rscn gen %d ID %3phC. %8phC\n",
+-		    sp->name, res, sp->gen1, &ct_req->req.port_id.port_id,
+-		    ct_rsp->rsp.gpn_id.port_name);
+-	else
+-		ql_dbg(ql_dbg_disc, vha, 0x2066,
+-		    "Async done-%s good rscn gen %d ID %3phC. %8phC\n",
+-		    sp->name, sp->gen1, &ct_req->req.port_id.port_id,
+-		    ct_rsp->rsp.gpn_id.port_name);
 -
--	switch (cmd) {
--	case SET_VP_IDX:
--		if (!QLA_TGT_MODE_ENABLED())
--			return;
--		vha->hw->tgt.tgt_vp_map[vha->vp_idx].vha = vha;
--		break;
--	case SET_AL_PA:
--		slot = btree_lookup32(&vha->hw->host_map, key);
--		if (!slot) {
--			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf018,
--			    "Save vha in host_map %p %06x\n", vha, key);
--			rc = btree_insert32(&vha->hw->host_map,
--				key, vha, GFP_ATOMIC);
--			if (rc)
--				ql_log(ql_log_info, vha, 0xd03e,
--				    "Unable to insert s_id into host_map: %06x\n",
--				    key);
+-	memset(&ea, 0, sizeof(ea));
+-	memcpy(ea.port_name, ct_rsp->rsp.gpn_id.port_name, WWN_SIZE);
+-	ea.sp = sp;
+-	ea.id = be_to_port_id(ct_req->req.port_id.port_id);
+-	ea.rc = res;
+-
+-	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+-	list_del(&sp->elem);
+-	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+-
+-	if (res) {
+-		if (res == QLA_FUNCTION_TIMEOUT) {
+-			qla24xx_post_gpnid_work(sp->vha, &ea.id);
+-			/* ref: INIT */
+-			kref_put(&sp->cmd_kref, qla2x00_sp_release);
 -			return;
 -		}
--		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf019,
--		    "replace existing vha in host_map %p %06x\n", vha, key);
--		btree_update32(&vha->hw->host_map, key, vha);
--		break;
--	case RESET_VP_IDX:
--		if (!QLA_TGT_MODE_ENABLED())
--			return;
--		vha->hw->tgt.tgt_vp_map[vha->vp_idx].vha = NULL;
--		break;
--	case RESET_AL_PA:
--		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01a,
--		   "clear vha in host_map %p %06x\n", vha, key);
--		slot = btree_lookup32(&vha->hw->host_map, key);
--		if (slot)
--			btree_remove32(&vha->hw->host_map, key);
--		vha->d_id.b24 = 0;
--		break;
+-	} else if (sp->gen1) {
+-		/* There was another RSCN for this Nport ID */
+-		qla24xx_post_gpnid_work(sp->vha, &ea.id);
+-		/* ref: INIT */
+-		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		return;
 -	}
+-
+-	qla24xx_handle_gpnid_event(vha, &ea);
+-
+-	e = qla2x00_alloc_work(vha, QLA_EVT_UNMAP);
+-	if (!e) {
+-		/* please ignore kernel warning. otherwise, we have mem leak. */
+-		dma_free_coherent(&vha->hw->pdev->dev,
+-				  sp->u.iocb_cmd.u.ctarg.req_allocated_size,
+-				  sp->u.iocb_cmd.u.ctarg.req,
+-				  sp->u.iocb_cmd.u.ctarg.req_dma);
+-		sp->u.iocb_cmd.u.ctarg.req = NULL;
+-
+-		dma_free_coherent(&vha->hw->pdev->dev,
+-				  sp->u.iocb_cmd.u.ctarg.rsp_allocated_size,
+-				  sp->u.iocb_cmd.u.ctarg.rsp,
+-				  sp->u.iocb_cmd.u.ctarg.rsp_dma);
+-		sp->u.iocb_cmd.u.ctarg.rsp = NULL;
+-
+-		/* ref: INIT */
+-		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		return;
+-	}
+-
+-	e->u.iosb.sp = sp;
+-	qla2x00_post_work(vha, e);
 -}
 -
--void qlt_update_host_map(struct scsi_qla_host *vha, port_id_t id)
+-/* Get WWPN with Nport ID. */
+-int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
 -{
+-	int rval = QLA_FUNCTION_FAILED;
+-	struct ct_sns_req       *ct_req;
+-	srb_t *sp, *tsp;
+-	struct ct_sns_pkt *ct_sns;
+-	unsigned long flags;
 -
--	if (!vha->d_id.b24) {
--		vha->d_id = id;
--		qlt_update_vp_map(vha, SET_AL_PA);
--	} else if (vha->d_id.b24 != id.b24) {
--		qlt_update_vp_map(vha, RESET_AL_PA);
--		vha->d_id = id;
--		qlt_update_vp_map(vha, SET_AL_PA);
+-	if (!vha->flags.online)
+-		goto done;
+-
+-	/* ref: INIT */
+-	sp = qla2x00_get_sp(vha, NULL, GFP_KERNEL);
+-	if (!sp)
+-		goto done;
+-
+-	sp->type = SRB_CT_PTHRU_CMD;
+-	sp->name = "gpnid";
+-	sp->u.iocb_cmd.u.ctarg.id = *id;
+-	sp->gen1 = 0;
+-	qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha) + 2,
+-			      qla2x00_async_gpnid_sp_done);
+-
+-	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+-	list_for_each_entry(tsp, &vha->gpnid_list, elem) {
+-		if (tsp->u.iocb_cmd.u.ctarg.id.b24 == id->b24) {
+-			tsp->gen1++;
+-			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+-			/* ref: INIT */
+-			kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-			goto done;
+-		}
 -	}
- }
+-	list_add_tail(&sp->elem, &vha->gpnid_list);
+-	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+-
+-	sp->u.iocb_cmd.u.ctarg.req = dma_alloc_coherent(&vha->hw->pdev->dev,
+-		sizeof(struct ct_sns_pkt), &sp->u.iocb_cmd.u.ctarg.req_dma,
+-		GFP_KERNEL);
+-	sp->u.iocb_cmd.u.ctarg.req_allocated_size = sizeof(struct ct_sns_pkt);
+-	if (!sp->u.iocb_cmd.u.ctarg.req) {
+-		ql_log(ql_log_warn, vha, 0xd041,
+-		    "Failed to allocate ct_sns request.\n");
+-		goto done_free_sp;
+-	}
+-
+-	sp->u.iocb_cmd.u.ctarg.rsp = dma_alloc_coherent(&vha->hw->pdev->dev,
+-		sizeof(struct ct_sns_pkt), &sp->u.iocb_cmd.u.ctarg.rsp_dma,
+-		GFP_KERNEL);
+-	sp->u.iocb_cmd.u.ctarg.rsp_allocated_size = sizeof(struct ct_sns_pkt);
+-	if (!sp->u.iocb_cmd.u.ctarg.rsp) {
+-		ql_log(ql_log_warn, vha, 0xd042,
+-		    "Failed to allocate ct_sns request.\n");
+-		goto done_free_sp;
+-	}
+-
+-	ct_sns = (struct ct_sns_pkt *)sp->u.iocb_cmd.u.ctarg.rsp;
+-	memset(ct_sns, 0, sizeof(*ct_sns));
+-
+-	ct_sns = (struct ct_sns_pkt *)sp->u.iocb_cmd.u.ctarg.req;
+-	/* CT_IU preamble  */
+-	ct_req = qla2x00_prep_ct_req(ct_sns, GPN_ID_CMD, GPN_ID_RSP_SIZE);
+-
+-	/* GPN_ID req */
+-	ct_req->req.port_id.port_id = port_id_to_be_id(*id);
+-
+-	sp->u.iocb_cmd.u.ctarg.req_size = GPN_ID_REQ_SIZE;
+-	sp->u.iocb_cmd.u.ctarg.rsp_size = GPN_ID_RSP_SIZE;
+-	sp->u.iocb_cmd.u.ctarg.nport_handle = NPH_SNS;
+-
+-	ql_dbg(ql_dbg_disc, vha, 0x2067,
+-	    "Async-%s hdl=%x ID %3phC.\n", sp->name,
+-	    sp->handle, &ct_req->req.port_id.port_id);
+-
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+-
+-	return rval;
+-
+-done_free_sp:
+-	spin_lock_irqsave(&vha->hw->vport_slock, flags);
+-	list_del(&sp->elem);
+-	spin_unlock_irqrestore(&vha->hw->vport_slock, flags);
+-
+-	if (sp->u.iocb_cmd.u.ctarg.req) {
+-		dma_free_coherent(&vha->hw->pdev->dev,
+-			sizeof(struct ct_sns_pkt),
+-			sp->u.iocb_cmd.u.ctarg.req,
+-			sp->u.iocb_cmd.u.ctarg.req_dma);
+-		sp->u.iocb_cmd.u.ctarg.req = NULL;
+-	}
+-	if (sp->u.iocb_cmd.u.ctarg.rsp) {
+-		dma_free_coherent(&vha->hw->pdev->dev,
+-			sizeof(struct ct_sns_pkt),
+-			sp->u.iocb_cmd.u.ctarg.rsp,
+-			sp->u.iocb_cmd.u.ctarg.rsp_dma);
+-		sp->u.iocb_cmd.u.ctarg.rsp = NULL;
+-	}
+-	/* ref: INIT */
+-	kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-done:
+-	return rval;
+-}
+-
+-
+ void qla24xx_async_gffid_sp_done(srb_t *sp, int res)
+ {
+ 	struct scsi_qla_host *vha = sp->vha;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ca216b820b1c..c66a0106a7fc 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2323,7 +2323,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 			ea->fcport->login_pause = 1;
  
- static int __init qlt_parse_ini_mode(void)
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 7df86578214f..354fca2e7feb 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -1017,7 +1017,6 @@ extern void qlt_fc_port_added(struct scsi_qla_host *, fc_port_t *);
- extern void qlt_fc_port_deleted(struct scsi_qla_host *, fc_port_t *, int);
- extern int __init qlt_init(void);
- extern void qlt_exit(void);
--extern void qlt_update_vp_map(struct scsi_qla_host *, int);
- extern void qlt_free_session_done(struct work_struct *);
- /*
-  * This macro is used during early initializations when host->active_mode
+ 			ql_dbg(ql_dbg_disc, vha, 0x20ed,
+-			    "%s %d %8phC NPortId %06x inuse with loopid 0x%x. post gidpn\n",
++			    "%s %d %8phC NPortId %06x inuse with loopid 0x%x.\n",
+ 			    __func__, __LINE__, ea->fcport->port_name,
+ 			    ea->fcport->d_id.b24, lid);
+ 		} else {
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 6b91dcfd994d..9a7cc0ba5f58 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2920,7 +2920,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, int res)
+ 					conflict_fcport->conflict = fcport;
+ 					fcport->login_pause = 1;
+ 					ql_dbg(ql_dbg_disc, vha, 0x20ed,
+-					    "%s %d %8phC pid %06x inuse with lid %#x post gidpn\n",
++					    "%s %d %8phC pid %06x inuse with lid %#x.\n",
+ 					    __func__, __LINE__,
+ 					    fcport->port_name,
+ 					    fcport->d_id.b24, lid);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 078b63b89189..bbbdf2ffb682 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -5016,7 +5016,6 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	INIT_LIST_HEAD(&vha->plogi_ack_list);
+ 	INIT_LIST_HEAD(&vha->qp_list);
+ 	INIT_LIST_HEAD(&vha->gnl.fcports);
+-	INIT_LIST_HEAD(&vha->gpnid_list);
+ 	INIT_WORK(&vha->iocb_work, qla2x00_iocb_work_fn);
+ 
+ 	INIT_LIST_HEAD(&vha->purex_list.head);
+@@ -5461,9 +5460,6 @@ qla2x00_do_work(struct scsi_qla_host *vha)
+ 		case QLA_EVT_AENFX:
+ 			qlafx00_process_aen(vha, e);
+ 			break;
+-		case QLA_EVT_GPNID:
+-			qla24xx_async_gpnid(vha, &e->u.gpnid.id);
+-			break;
+ 		case QLA_EVT_UNMAP:
+ 			qla24xx_sp_unmap(vha, e->u.iosb.sp);
+ 			break;
 -- 
 2.19.0.rc0
 
