@@ -2,59 +2,176 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1764FC3DA79
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Dec 2022 15:57:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFE9C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Dec 2022 17:53:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236566AbiLWP5o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Dec 2022 10:57:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33930 "EHLO
+        id S231714AbiLWRxF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Dec 2022 12:53:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231345AbiLWP5f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2022 10:57:35 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C7BF4AF27
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2022 07:57:31 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id DADCB68AA6; Fri, 23 Dec 2022 16:57:27 +0100 (CET)
-Date:   Fri, 23 Dec 2022 16:57:27 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, john.g.garry@oracle.com,
-        bvanassche@acm.org, mwilck@suse.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
-Subject: Re: [PATCH v3 12/15] scsi: virtio_scsi: Convert to scsi_execute_cmd
-Message-ID: <20221223155727.GA30763@lst.de>
-References: <20221214235001.57267-1-michael.christie@oracle.com> <20221214235001.57267-13-michael.christie@oracle.com> <20221215081540.GG3308@lst.de> <0771d185-107a-e3fa-aa61-9dbd1da36a61@oracle.com>
+        with ESMTP id S230366AbiLWRxE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2022 12:53:04 -0500
+X-Greylist: delayed 169 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 23 Dec 2022 09:53:03 PST
+Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7874413D16;
+        Fri, 23 Dec 2022 09:53:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1671817975; bh=vic0AKsJwRQB5l4OjER1p+febXfqn7JDFSD0OPmAFL0=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=aYGw+ohRTozbpJf4Zqv7qZLzF2LfJXIsULJeAwvOlWJsECw+G1Wj7ak8io6NdrFD4
+         /dBlk3AMMJmwM/CILoXTGn5JNJf+NNWZiKhN8BUorDY5uem5rkybOnNDVq97+FQZU3
+         cXixDDugS8NKKjni6aLf59BAzO0sMBRzIAfa0Nb8=
+Received: by b-1.in.mailobj.net [192.168.90.11] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Fri, 23 Dec 2022 18:52:55 +0100 (CET)
+X-EA-Auth: +8N21lyApftGT6DNzN3hcEBdXdk1JiW/qk9Iw6HjijP+lHSWgf8kECEJnufHGTjQ6UgP1Aptkv5THegbpFTf8qF4I/nSv5ym
+Date:   Fri, 23 Dec 2022 23:22:51 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>, drv@mailo.com
+Subject: [PATCH] scsi: arcmsr: Use sysfs_emit in show function callsbacks
+Message-ID: <Y6Xq8480vxO1JKRh@qemulion>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0771d185-107a-e3fa-aa61-9dbd1da36a61@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Dec 18, 2022 at 03:40:48PM -0600, Mike Christie wrote:
-> It looks like a hack around scsi_scan_host not removing devices.
-> Going forward, it looks like we can remove the inquiry code by having
-> scsi_scan_host be able to remove devices that are no longer returned.
+According to Documentation/filesystems/sysfs.rst, the show() callback
+function of kobject attributes should strictly use sysfs_emit instead
+of sprintf family functions.
+Issue identified using the coccinelle device_attr_show.cocci script.
 
-Yes, that's the place to do it.  I can see arguments for and against
-that, but doing it from and LLDD (and including sd.h in the LLDD
-implementation!) just doesn't make sense.
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+ drivers/scsi/arcmsr/arcmsr_attr.c | 44 ++++++++++---------------------
+ 1 file changed, 14 insertions(+), 30 deletions(-)
 
-> I was thinking to handle the DID_BAD_TARGET use case above and this type
-> of issue:
-> 
-> https://lore.kernel.org/linux-scsi/CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com/
-> 
-> maybe we want to have a driver level BLIST like:
+diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
+index baeb5e795690..feec18222f8c 100644
+--- a/drivers/scsi/arcmsr/arcmsr_attr.c
++++ b/drivers/scsi/arcmsr/arcmsr_attr.c
+@@ -258,9 +258,7 @@ static ssize_t
+ arcmsr_attr_host_driver_version(struct device *dev,
+ 				struct device_attribute *attr, char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE,
+-			"%s\n",
+-			ARCMSR_DRIVER_VERSION);
++	return sysfs_emit(buf, "%s\n", ARCMSR_DRIVER_VERSION);
+ }
 
-Maybe instead of a blist we just need better way to communicate
-this rather than abusing DID_BAD_TARGET?
+ static ssize_t
+@@ -270,9 +268,8 @@ arcmsr_attr_host_driver_posted_cmd(struct device *dev,
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			atomic_read(&acb->ccboutstandingcount));
++
++	return sysfs_emit(buf, "%4d\n", atomic_read(&acb->ccboutstandingcount));
+ }
 
-> One other question, can I do this work after the patchset in this email, the
-> scsi_cmnd retry patches and the actual PR ones? I keep going off track on these
-> side adventures.
+ static ssize_t
+@@ -282,9 +279,8 @@ arcmsr_attr_host_driver_reset(struct device *dev,
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			acb->num_resets);
++
++	return sysfs_emit(buf, "%4d\n", acb->num_resets);
+ }
 
-Yes, please.  I think we need to finish this series first.
+ static ssize_t
+@@ -294,9 +290,8 @@ arcmsr_attr_host_driver_abort(struct device *dev,
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			acb->num_aborts);
++
++	return sysfs_emit(buf, "%4d\n", acb->num_aborts);
+ }
+
+ static ssize_t
+@@ -306,9 +301,8 @@ arcmsr_attr_host_fw_model(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+-	return snprintf(buf, PAGE_SIZE,
+-			"%s\n",
+-			acb->firm_model);
++
++	return sysfs_emit(buf, "%s\n", acb->firm_model);
+ }
+
+ static ssize_t
+@@ -319,9 +313,7 @@ arcmsr_attr_host_fw_version(struct device *dev,
+ 	struct AdapterControlBlock *acb =
+ 			(struct AdapterControlBlock *) host->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE,
+-			"%s\n",
+-			acb->firm_version);
++	return sysfs_emit(buf, "%s\n", acb->firm_version);
+ }
+
+ static ssize_t
+@@ -332,9 +324,7 @@ arcmsr_attr_host_fw_request_len(struct device *dev,
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			acb->firm_request_len);
++	return sysfs_emit(buf, "%4d\n", acb->firm_request_len);
+ }
+
+ static ssize_t
+@@ -345,9 +335,7 @@ arcmsr_attr_host_fw_numbers_queue(struct device *dev,
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			acb->firm_numbers_queue);
++	return sysfs_emit(buf, "%4d\n", acb->firm_numbers_queue);
+ }
+
+ static ssize_t
+@@ -358,9 +346,7 @@ arcmsr_attr_host_fw_sdram_size(struct device *dev,
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			acb->firm_sdram_size);
++	return sysfs_emit(buf, "%4d\n", acb->firm_sdram_size);
+ }
+
+ static ssize_t
+@@ -371,9 +357,7 @@ arcmsr_attr_host_fw_hd_channels(struct device *dev,
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE,
+-			"%4d\n",
+-			acb->firm_hd_channels);
++	return sysfs_emit(buf, "%4d\n", acb->firm_hd_channels);
+ }
+
+ static DEVICE_ATTR(host_driver_version, S_IRUGO, arcmsr_attr_host_driver_version, NULL);
+--
+2.34.1
+
+
+
