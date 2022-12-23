@@ -2,41 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 705CBC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Dec 2022 19:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0326C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Dec 2022 19:46:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231584AbiLWTe0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Dec 2022 14:34:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39692 "EHLO
+        id S232915AbiLWTqE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Dec 2022 14:46:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230195AbiLWTeZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2022 14:34:25 -0500
+        with ESMTP id S232814AbiLWTqB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2022 14:46:01 -0500
 Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83B7F1F9E6;
-        Fri, 23 Dec 2022 11:34:23 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01D23630A;
+        Fri, 23 Dec 2022 11:45:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1671823994; bh=WO06F4+3LP+PUS7vNlhJpQqJsk7T8QkJB749mQn/WnA=;
+        t=1671824742; bh=blHvl4TwFi6Skuv7VrvkLrtt2LPWZsPhT59Ln7QToC0=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
          Content-Type;
-        b=IFyt1uTY+qT7XW9kPNJzWSXVrmOQNgSWmwHi1AzIi8X56iP+bgALulyAaKt+OQBDL
-         L3N1JCRV9rHAixgvlRm0FhqkTqzJBh4eJedH00Y27XdrHs09CKacAvThcoWSUrgPsK
-         Fq9Yd2UM8qF5+r98V4QmbXUTASd6DSVJJosvFUrA=
-Received: by b-5.in.mailobj.net [192.168.90.15] with ESMTP
+        b=BWqqKwNT+21sNLvupwmjKXe/uMjPS7JDfTbdIDkU26N4ANxF4mQoQnGmpQtrERXoz
+         RxwaUWl8Oi1wavFWAFmwp9pN2JohJbtF7PN0+9WNKANZmyINUwj1Zo4LQPOZ6PPP2f
+         AgsavzcvRZmhIOf5tt5HPZyR7jAOgV0QueJlSfOs=
+Received: by b-2.in.mailobj.net [192.168.90.12] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Fri, 23 Dec 2022 20:33:14 +0100 (CET)
-X-EA-Auth: tYf7JlHV5yJoXQVqHEb8JXftfLRxMz/Bd0h2loUWHyS4uY67PTszEL7O2O+kd3l5uZ1DlSw/x0zHZyD+UcxbPUmDaKJy+Q7/
-Date:   Sat, 24 Dec 2022 01:03:07 +0530
+        Fri, 23 Dec 2022 20:45:42 +0100 (CET)
+X-EA-Auth: Jkjzspo6MwUxQr8f8PpkqhxDaeHVHWwM9XEEMi6XVUeXbBe9SOg1BaM5HVpi4EeR6T6Fgem9bs0G5dYVjj78dqCrvScd/0rz
+Date:   Sat, 24 Dec 2022 01:15:35 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     Don Brace <don.brace@microchip.com>,
+To:     Hannes Reinecke <hare@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>,
         Deepak R Varma <drv@mailo.com>
-Subject: [PATCH] scsi: hpsa: Use sysfs_emit in show function callsbacks
-Message-ID: <Y6YCcyihZCWZH9dj@qemulion>
+Subject: [PATCH] scsi: myrb: Use sysfs_emit in show function callsbacks
+Message-ID: <Y6YFX3d9JP8CIzal@qemulion>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -53,130 +52,87 @@ Issue identified using the coccinelle device_attr_show.cocci script.
 
 Signed-off-by: Deepak R Varma <drv@mailo.com>
 ---
- drivers/scsi/hpsa.c | 39 ++++++++++++++++++---------------------
- 1 file changed, 18 insertions(+), 21 deletions(-)
+ drivers/scsi/myrb.c | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 4dbf51e2623a..1fc359cd05f3 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -525,8 +525,7 @@ static ssize_t host_show_firmware_revision(struct device *dev,
- 	if (!h->hba_inquiry_data)
- 		return 0;
- 	fwrev = &h->hba_inquiry_data[32];
--	return snprintf(buf, 20, "%c%c%c%c\n",
--		fwrev[0], fwrev[1], fwrev[2], fwrev[3]);
-+	return sysfs_emit(buf, "%c%c%c%c\n", fwrev[0], fwrev[1], fwrev[2], fwrev[3]);
- }
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index e885c1dbf61f..ab7eab0dfa38 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1767,7 +1767,7 @@ static ssize_t raid_state_show(struct device *dev,
+ 	int ret;
 
- static ssize_t host_show_commands_outstanding(struct device *dev,
-@@ -535,8 +534,7 @@ static ssize_t host_show_commands_outstanding(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ctlr_info *h = shost_to_hba(shost);
+ 	if (!sdev->hostdata)
+-		return snprintf(buf, 16, "Unknown\n");
++		return sysfs_emit(buf, "Unknown\n");
 
--	return snprintf(buf, 20, "%d\n",
--			atomic_read(&h->commands_outstanding));
-+	return sysfs_emit(buf, "%d\n", atomic_read(&h->commands_outstanding));
- }
+ 	if (sdev->channel == myrb_logical_channel(sdev->host)) {
+ 		struct myrb_ldev_info *ldev_info = sdev->hostdata;
+@@ -1886,11 +1886,10 @@ static ssize_t raid_level_show(struct device *dev,
 
- static ssize_t host_show_transport_mode(struct device *dev,
-@@ -546,7 +544,7 @@ static ssize_t host_show_transport_mode(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
-
- 	h = shost_to_hba(shost);
--	return snprintf(buf, 20, "%s\n",
-+	return sysfs_emit(buf, "%s\n",
- 		h->transMethod & CFGTBL_Trans_Performant ?
- 			"performant" : "simple");
- }
-@@ -558,7 +556,7 @@ static ssize_t host_show_hp_ssd_smart_path_status(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
-
- 	h = shost_to_hba(shost);
--	return snprintf(buf, 30, "HP SSD Smart Path %s\n",
-+	return sysfs_emit(buf, "HP SSD Smart Path %s\n",
- 		(h->acciopath_status == 1) ?  "enabled" : "disabled");
- }
-
-@@ -642,7 +640,7 @@ static ssize_t host_show_resettable(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
-
- 	h = shost_to_hba(shost);
--	return snprintf(buf, 20, "%d\n", ctlr_is_resettable(h->board_id));
-+	return sysfs_emit(buf, "%d\n", ctlr_is_resettable(h->board_id));
- }
-
- static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
-@@ -721,7 +719,7 @@ static ssize_t lunid_show(struct device *dev,
+ 		name = myrb_raidlevel_name(ldev_info->raid_level);
+ 		if (!name)
+-			return snprintf(buf, 32, "Invalid (%02X)\n",
+-					ldev_info->state);
+-		return snprintf(buf, 32, "%s\n", name);
++			return sysfs_emit(buf, "Invalid (%02X)\n", ldev_info->state);
++		return sysfs_emit(buf, "%s\n", name);
  	}
- 	memcpy(lunid, hdev->scsi3addr, sizeof(lunid));
- 	spin_unlock_irqrestore(&h->lock, flags);
--	return snprintf(buf, 20, "0x%8phN\n", lunid);
-+	return sysfs_emit(buf, "0x%8phN\n", lunid);
+-	return snprintf(buf, 32, "Physical Drive\n");
++	return sysfs_emit(buf, "Physical Drive\n");
  }
-
- static ssize_t unique_id_show(struct device *dev,
-@@ -743,13 +741,13 @@ static ssize_t unique_id_show(struct device *dev,
- 	}
- 	memcpy(sn, hdev->device_id, sizeof(sn));
- 	spin_unlock_irqrestore(&h->lock, flags);
--	return snprintf(buf, 16 * 2 + 2,
--			"%02X%02X%02X%02X%02X%02X%02X%02X"
--			"%02X%02X%02X%02X%02X%02X%02X%02X\n",
--			sn[0], sn[1], sn[2], sn[3],
--			sn[4], sn[5], sn[6], sn[7],
--			sn[8], sn[9], sn[10], sn[11],
--			sn[12], sn[13], sn[14], sn[15]);
-+	return sysfs_emit(buf,
-+			  "%02X%02X%02X%02X%02X%02X%02X%02X"
-+			  "%02X%02X%02X%02X%02X%02X%02X%02X\n",
-+			  sn[0], sn[1], sn[2], sn[3],
-+			  sn[4], sn[5], sn[6], sn[7],
-+			  sn[8], sn[9], sn[10], sn[11],
-+			  sn[12], sn[13], sn[14], sn[15]);
- }
-
- static ssize_t sas_address_show(struct device *dev,
-@@ -772,7 +770,7 @@ static ssize_t sas_address_show(struct device *dev,
- 	sas_address = hdev->sas_address;
- 	spin_unlock_irqrestore(&h->lock, flags);
-
--	return snprintf(buf, PAGE_SIZE, "0x%016llx\n", sas_address);
-+	return sysfs_emit(buf, "0x%016llx\n", sas_address);
- }
-
- static ssize_t host_show_hp_ssd_smart_path_enabled(struct device *dev,
-@@ -796,10 +794,9 @@ static ssize_t host_show_hp_ssd_smart_path_enabled(struct device *dev,
- 	spin_unlock_irqrestore(&h->lock, flags);
-
- 	if (hdev->devtype == TYPE_DISK || hdev->devtype == TYPE_ZBC)
--		return snprintf(buf, 20, "%d\n", offload_enabled);
-+		return sysfs_emit(buf, "%d\n", offload_enabled);
- 	else
--		return snprintf(buf, 40, "%s\n",
--				"Not applicable for a controller");
-+		return sysfs_emit(buf, "%s\n", "Not applicable for a controller");
- }
-
- #define MAX_PATHS 8
-@@ -895,7 +892,7 @@ static ssize_t host_show_ctlr_num(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
-
- 	h = shost_to_hba(shost);
--	return snprintf(buf, 20, "%d\n", h->ctlr);
-+	return sysfs_emit(buf, "%d\n", h->ctlr);
- }
-
- static ssize_t host_show_legacy_board(struct device *dev,
-@@ -905,7 +902,7 @@ static ssize_t host_show_legacy_board(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
-
- 	h = shost_to_hba(shost);
--	return snprintf(buf, 20, "%d\n", h->legacy_board ? 1 : 0);
-+	return sysfs_emit(buf, "%d\n", h->legacy_board ? 1 : 0);
- }
-
  static DEVICE_ATTR_RO(raid_level);
+
+@@ -1903,17 +1902,17 @@ static ssize_t rebuild_show(struct device *dev,
+ 	unsigned char status;
+
+ 	if (sdev->channel < myrb_logical_channel(sdev->host))
+-		return snprintf(buf, 32, "physical device - not rebuilding\n");
++		return sysfs_emit(buf, "physical device - not rebuilding\n");
+
+ 	status = myrb_get_rbld_progress(cb, &rbld_buf);
+
+ 	if (rbld_buf.ldev_num != sdev->id ||
+ 	    status != MYRB_STATUS_SUCCESS)
+-		return snprintf(buf, 32, "not rebuilding\n");
++		return sysfs_emit(buf, "not rebuilding\n");
+
+-	return snprintf(buf, 32, "rebuilding block %u of %u\n",
+-			rbld_buf.ldev_size - rbld_buf.blocks_left,
+-			rbld_buf.ldev_size);
++	return sysfs_emit(buf, "rebuilding block %u of %u\n",
++			  rbld_buf.ldev_size - rbld_buf.blocks_left,
++			  rbld_buf.ldev_size);
+ }
+
+ static ssize_t rebuild_store(struct device *dev,
+@@ -2140,7 +2139,7 @@ static ssize_t ctlr_num_show(struct device *dev,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct myrb_hba *cb = shost_priv(shost);
+
+-	return snprintf(buf, 20, "%u\n", cb->ctlr_num);
++	return sysfs_emit(buf, "%u\n", cb->ctlr_num);
+ }
+ static DEVICE_ATTR_RO(ctlr_num);
+
+@@ -2150,7 +2149,7 @@ static ssize_t firmware_show(struct device *dev,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct myrb_hba *cb = shost_priv(shost);
+
+-	return snprintf(buf, 16, "%s\n", cb->fw_version);
++	return sysfs_emit(buf, "%s\n", cb->fw_version);
+ }
+ static DEVICE_ATTR_RO(firmware);
+
+@@ -2160,7 +2159,7 @@ static ssize_t model_show(struct device *dev,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct myrb_hba *cb = shost_priv(shost);
+
+-	return snprintf(buf, 16, "%s\n", cb->model_name);
++	return sysfs_emit(buf, "%s\n", cb->model_name);
+ }
+ static DEVICE_ATTR_RO(model);
+
 --
 2.34.1
 
