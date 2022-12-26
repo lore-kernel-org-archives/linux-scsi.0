@@ -2,126 +2,342 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E5D9C4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Dec 2022 10:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25FC8C46467
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Dec 2022 09:08:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229530AbiLYKSk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Dec 2022 05:18:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38630 "EHLO
+        id S231854AbiLZJIj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Dec 2022 04:08:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbiLYKSj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Dec 2022 05:18:39 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7D3338B5;
-        Sun, 25 Dec 2022 02:18:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1671963503; bh=VKddANfidYSZkl7mhdUiLj9w4dOBYWTjz1jmCI1ynMI=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-         Content-Type;
-        b=MRQvcu3IL2zD8cij4DfSH9/IzQpmWZJEJj/9lUCCecdfz88tvfA+VrJFgi9q2paXY
-         b+USkBlZ0rFyAVRULXj9lEBxlg+0IocPnw94CZXSwFzERO6ZpT0F+2XYIaterjlqyO
-         3aumgzQ4nZT4JPbcElyX5QFlz37RO0B/u6WEXJjo=
-Received: by b-2.in.mailobj.net [192.168.90.12] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Sun, 25 Dec 2022 11:18:23 +0100 (CET)
-X-EA-Auth: 8X9Yb/Jt7KQNXICzc/RUtRooJc4xrAVX0UPML0Ft13Dlg18UFZEObQLOEhLF7LD9mfkZTaJ6saww7zT8cF6mKnK6q8PhTMNh
-Date:   Sun, 25 Dec 2022 15:48:18 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        with ESMTP id S231723AbiLZJIh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2022 04:08:37 -0500
+X-Greylist: delayed 134 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 26 Dec 2022 01:08:36 PST
+Received: from forwardcorp1b.mail.yandex.net (forwardcorp1b.mail.yandex.net [178.154.239.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8281CD8;
+        Mon, 26 Dec 2022 01:08:35 -0800 (PST)
+Received: from myt5-8800bd68420f.qloud-c.yandex.net (myt5-8800bd68420f.qloud-c.yandex.net [IPv6:2a02:6b8:c12:4615:0:640:8800:bd68])
+        by forwardcorp1b.mail.yandex.net (Yandex) with ESMTP id 5EA9D5FCEF;
+        Mon, 26 Dec 2022 12:06:19 +0300 (MSK)
+Received: from d-tatianin-nix.yandex-team.ru (unknown [2a02:6b8:b081:1::1:f])
+        by myt5-8800bd68420f.qloud-c.yandex.net (smtpcorp/Yandex) with ESMTPSA id D6KfxX0ReqM1-CeqjHN3x;
+        Mon, 26 Dec 2022 12:06:17 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1672045577; bh=hreEt9oBsbG7JpAJajQXCkDGpKyNaPQ4PR/13o4Hum8=;
+        h=Message-Id:Date:Cc:Subject:To:From;
+        b=FDPwZddpeGNhoWfyPPtFZMHB8HDH6VkJWYc2dDIUr23c1K915T5eyXVE7ctFDtZvl
+         cHc4rsIx/fFm8YDlKfgGca2HbJvhvuTjxA36oLUbCfvH8zRO7D/lF7ve4mBYncQLYx
+         l9HLYED7E/FdQWDj3R/VlG52FptdR4IFeEHBNrS0=
+Authentication-Results: myt5-8800bd68420f.qloud-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+From:   Daniil Tatianin <d-tatianin@yandex-team.ru>
+To:     "David S. Miller" <davem@davemloft.net>
+Cc:     Daniil Tatianin <d-tatianin@yandex-team.ru>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Varun Prakash <varun@chelsio.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
-        Deepak R Varma <drv@mailo.com>
-Subject: [PATCH] scsi: aacraid: Use sysfs_emit in show function callsbacks
-Message-ID: <Y6gjaqV3UvnXaVxZ@qemulion>
+        Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>, Wu Bo <wubo40@huawei.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Max Gurtovoy <mgurtovoy@nvidia.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [RESEND PATCH v2] cxgbi: move cxgbi_ddp_set_one_ppod to cxgb_ppm and remove its duplicate
+Date:   Mon, 26 Dec 2022 12:06:09 +0300
+Message-Id: <20221226090609.1917788-1-d-tatianin@yandex-team.ru>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-According to Documentation/filesystems/sysfs.rst, the show() callback
-function of kobject attributes should strictly use sysfs_emit() instead
-of sprintf() family functions. So, make this change.
-Also, change in length of lines enables code allows to reformat code for
-improved readability.
-Issue identified using the coccinelle device_attr_show.cocci script.
+cxgbit and libcxgbi both used the exact same function but with slightly
+different names, and a missing NULL check in one case. Move the function
+to libcxgb/libcxgb_ppm.c and nuke the duplicate.
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
+This also renames the function to cxgbi_ppm_set_one_ppod so that it
+matches the rest of the functions in cxgb_ppm.
+
+Found by Linux Verification Center (linuxtesting.org) with the SVACE
+static analysis tool.
+
+Signed-off-by: Daniil Tatianin <d-tatianin@yandex-team.ru>
+Acked-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/scsi/aacraid/linit.c | 27 ++++++++++++---------------
- 1 file changed, 12 insertions(+), 15 deletions(-)
+ .../ethernet/chelsio/libcxgb/libcxgb_ppm.c    | 56 ++++++++++++++++++
+ .../ethernet/chelsio/libcxgb/libcxgb_ppm.h    |  5 ++
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c            |  2 +-
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c            |  2 +-
+ drivers/scsi/cxgbi/libcxgbi.c                 | 55 ------------------
+ drivers/scsi/cxgbi/libcxgbi.h                 |  3 -
+ drivers/target/iscsi/cxgbit/cxgbit_ddp.c      | 57 +------------------
+ 7 files changed, 64 insertions(+), 116 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 5ba5c18b77b4..7ef31dc4cb8d 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -559,11 +559,9 @@ static ssize_t aac_show_raid_level(struct device *dev, struct device_attribute *
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct aac_dev *aac = (struct aac_dev *)(sdev->host->hostdata);
- 	if (sdev_channel(sdev) != CONTAINER_CHANNEL)
--		return snprintf(buf, PAGE_SIZE, sdev->no_uld_attach
--		  ? "Hidden\n" :
-+		return sysfs_emit(buf, sdev->no_uld_attach ? "Hidden\n" :
- 		  ((aac->jbod && (sdev->type == TYPE_DISK)) ? "JBOD\n" : ""));
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--	  get_container_type(aac->fsa_dev[sdev_id(sdev)].type));
-+	return sysfs_emit(buf, "%s\n", get_container_type(aac->fsa_dev[sdev_id(sdev)].type));
+diff --git a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+index 854d87e1125c..9103826b0d27 100644
+--- a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
++++ b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+@@ -527,6 +527,62 @@ unsigned int cxgbi_tagmask_set(unsigned int ppmax)
  }
-
- static struct device_attribute aac_raid_level_attr = {
-@@ -586,12 +584,13 @@ static ssize_t aac_show_unique_id(struct device *dev,
- 	if (sdev_channel(sdev) == CONTAINER_CHANNEL)
- 		memcpy(sn, aac->fsa_dev[sdev_id(sdev)].identifier, sizeof(sn));
-
--	return snprintf(buf, 16 * 2 + 2,
--		"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
--		sn[0], sn[1], sn[2], sn[3],
--		sn[4], sn[5], sn[6], sn[7],
--		sn[8], sn[9], sn[10], sn[11],
--		sn[12], sn[13], sn[14], sn[15]);
-+	return sysfs_emit(buf,
-+			  "%02X%02X%02X%02X%02X%02X%02X%02X"
-+			  "%02X%02X%02X%02X%02X%02X%02X%02X\n",
-+			  sn[0], sn[1], sn[2], sn[3],
-+			  sn[4], sn[5], sn[6], sn[7],
-+			  sn[8], sn[9], sn[10], sn[11],
-+			  sn[12], sn[13], sn[14], sn[15]);
+ EXPORT_SYMBOL(cxgbi_tagmask_set);
+ 
++void
++cxgbi_ppm_set_one_ppod(struct cxgbi_pagepod *ppod,
++		       struct cxgbi_task_tag_info *ttinfo,
++		       struct scatterlist **sg_pp, unsigned int *sg_off)
++{
++	struct scatterlist *sg = sg_pp ? *sg_pp : NULL;
++	unsigned int offset = sg_off ? *sg_off : 0;
++	dma_addr_t addr = 0UL;
++	unsigned int len = 0;
++	int i;
++
++	memcpy(ppod, &ttinfo->hdr, sizeof(struct cxgbi_pagepod_hdr));
++
++	if (sg) {
++		addr = sg_dma_address(sg);
++		len = sg_dma_len(sg);
++	}
++
++	for (i = 0; i < PPOD_PAGES_MAX; i++) {
++		if (sg) {
++			ppod->addr[i] = cpu_to_be64(addr + offset);
++			offset += PAGE_SIZE;
++			if (offset == (len + sg->offset)) {
++				offset = 0;
++				sg = sg_next(sg);
++				if (sg) {
++					addr = sg_dma_address(sg);
++					len = sg_dma_len(sg);
++				}
++			}
++		} else {
++			ppod->addr[i] = 0ULL;
++		}
++	}
++
++	/*
++	 * the fifth address needs to be repeated in the next ppod, so do
++	 * not move sg
++	 */
++	if (sg_pp) {
++		*sg_pp = sg;
++		*sg_off = offset;
++	}
++
++	if (offset == len) {
++		offset = 0;
++		if (sg) {
++			sg = sg_next(sg);
++			if (sg)
++				addr = sg_dma_address(sg);
++		}
++	}
++	ppod->addr[i] = sg ? cpu_to_be64(addr + offset) : 0ULL;
++}
++EXPORT_SYMBOL(cxgbi_ppm_set_one_ppod);
++
+ MODULE_AUTHOR("Chelsio Communications");
+ MODULE_DESCRIPTION("Chelsio common library");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h
+index 1b4156461ba1..f2178ee0b18a 100644
+--- a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h
++++ b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h
+@@ -332,4 +332,9 @@ int cxgbi_ppm_release(struct cxgbi_ppm *ppm);
+ void cxgbi_tagmask_check(unsigned int tagmask, struct cxgbi_tag_format *);
+ unsigned int cxgbi_tagmask_set(unsigned int ppmax);
+ 
++void
++cxgbi_ppm_set_one_ppod(struct cxgbi_pagepod *ppod,
++		       struct cxgbi_task_tag_info *ttinfo,
++		       struct scatterlist **sg_pp, unsigned int *sg_off);
++
+ #endif	/*__LIBCXGB_PPM_H__*/
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index ff9d4287937a..0399e82362b7 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -1115,7 +1115,7 @@ static int ddp_set_map(struct cxgbi_ppm *ppm, struct cxgbi_sock *csk,
+ 		req = (struct ulp_mem_io *)skb->head;
+ 		ppod = (struct cxgbi_pagepod *)(req + 1);
+ 		sg_off = i * PPOD_PAGES_MAX;
+-		cxgbi_ddp_set_one_ppod(ppod, ttinfo, &sg,
++		cxgbi_ppm_set_one_ppod(ppod, ttinfo, &sg,
+ 				       &sg_off);
+ 		skb->priority = CPL_PRIORITY_CONTROL;
+ 		cxgb3_ofld_send(ppm->lldev, skb);
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index c07d2e3b4bcf..1f768cc3fbfb 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -2035,7 +2035,7 @@ static int ddp_ppod_write_idata(struct cxgbi_ppm *ppm, struct cxgbi_sock *csk,
+ 	ppod = (struct cxgbi_pagepod *)(idata + 1);
+ 
+ 	for (i = 0; i < npods; i++, ppod++)
+-		cxgbi_ddp_set_one_ppod(ppod, ttinfo, sg_pp, sg_off);
++		cxgbi_ppm_set_one_ppod(ppod, ttinfo, sg_pp, sg_off);
+ 
+ 	cxgbi_skcb_set_flag(skb, SKCBF_TX_MEM_WRITE);
+ 	cxgbi_skcb_set_flag(skb, SKCBF_TX_FLAG_COMPL);
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index af281e271f88..6a2627a73f26 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1151,61 +1151,6 @@ scmd_get_params(struct scsi_cmnd *sc, struct scatterlist **sgl,
+ 	/* Caution: for protection sdb, sdb->length is invalid */
  }
-
- static struct device_attribute aac_unique_id_attr = {
-@@ -1297,7 +1296,7 @@ static ssize_t aac_show_driver_version(struct device *device,
- 					struct device_attribute *attr,
- 					char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%s\n", aac_driver_version);
-+	return sysfs_emit(buf, "%s\n", aac_driver_version);
- }
-
- static ssize_t aac_show_serial_number(struct device *device,
-@@ -1323,15 +1322,13 @@ static ssize_t aac_show_serial_number(struct device *device,
- static ssize_t aac_show_max_channel(struct device *device,
- 				    struct device_attribute *attr, char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%d\n",
--	  class_to_shost(device)->max_channel);
-+	return sysfs_emit(buf, "%d\n", class_to_shost(device)->max_channel);
- }
-
- static ssize_t aac_show_max_id(struct device *device,
- 			       struct device_attribute *attr, char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%d\n",
--	  class_to_shost(device)->max_id);
-+	return sysfs_emit(buf, "%d\n", class_to_shost(device)->max_id);
- }
-
- static ssize_t aac_store_reset_adapter(struct device *device,
---
-2.34.1
-
-
+ 
+-void cxgbi_ddp_set_one_ppod(struct cxgbi_pagepod *ppod,
+-			    struct cxgbi_task_tag_info *ttinfo,
+-			    struct scatterlist **sg_pp, unsigned int *sg_off)
+-{
+-	struct scatterlist *sg = sg_pp ? *sg_pp : NULL;
+-	unsigned int offset = sg_off ? *sg_off : 0;
+-	dma_addr_t addr = 0UL;
+-	unsigned int len = 0;
+-	int i;
+-
+-	memcpy(ppod, &ttinfo->hdr, sizeof(struct cxgbi_pagepod_hdr));
+-
+-	if (sg) {
+-		addr = sg_dma_address(sg);
+-		len = sg_dma_len(sg);
+-	}
+-
+-	for (i = 0; i < PPOD_PAGES_MAX; i++) {
+-		if (sg) {
+-			ppod->addr[i] = cpu_to_be64(addr + offset);
+-			offset += PAGE_SIZE;
+-			if (offset == (len + sg->offset)) {
+-				offset = 0;
+-				sg = sg_next(sg);
+-				if (sg) {
+-					addr = sg_dma_address(sg);
+-					len = sg_dma_len(sg);
+-				}
+-			}
+-		} else {
+-			ppod->addr[i] = 0ULL;
+-		}
+-	}
+-
+-	/*
+-	 * the fifth address needs to be repeated in the next ppod, so do
+-	 * not move sg
+-	 */
+-	if (sg_pp) {
+-		*sg_pp = sg;
+-		*sg_off = offset;
+-	}
+-
+-	if (offset == len) {
+-		offset = 0;
+-		sg = sg_next(sg);
+-		if (sg) {
+-			addr = sg_dma_address(sg);
+-			len = sg_dma_len(sg);
+-		}
+-	}
+-	ppod->addr[i] = sg ? cpu_to_be64(addr + offset) : 0ULL;
+-}
+-EXPORT_SYMBOL_GPL(cxgbi_ddp_set_one_ppod);
+-
+ /*
+  * APIs interacting with open-iscsi libraries
+  */
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index 3687b5c0cf90..f90e747bcb4f 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -636,9 +636,6 @@ int cxgbi_ddp_init(struct cxgbi_device *, unsigned int, unsigned int,
+ 			unsigned int, unsigned int);
+ int cxgbi_ddp_cleanup(struct cxgbi_device *);
+ void cxgbi_ddp_page_size_factor(int *);
+-void cxgbi_ddp_set_one_ppod(struct cxgbi_pagepod *,
+-			    struct cxgbi_task_tag_info *,
+-			    struct scatterlist **sg_pp, unsigned int *sg_off);
+ int cxgbi_ddp_ppm_setup(void **ppm_pp, struct cxgbi_device *cdev,
+ 			struct cxgbi_tag_format *tformat,
+ 			unsigned int iscsi_size, unsigned int llimit,
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+index 17fd0d8cc490..fe29f4962058 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+@@ -5,61 +5,6 @@
+ 
+ #include "cxgbit.h"
+ 
+-static void
+-cxgbit_set_one_ppod(struct cxgbi_pagepod *ppod,
+-		    struct cxgbi_task_tag_info *ttinfo,
+-		    struct scatterlist **sg_pp, unsigned int *sg_off)
+-{
+-	struct scatterlist *sg = sg_pp ? *sg_pp : NULL;
+-	unsigned int offset = sg_off ? *sg_off : 0;
+-	dma_addr_t addr = 0UL;
+-	unsigned int len = 0;
+-	int i;
+-
+-	memcpy(ppod, &ttinfo->hdr, sizeof(struct cxgbi_pagepod_hdr));
+-
+-	if (sg) {
+-		addr = sg_dma_address(sg);
+-		len = sg_dma_len(sg);
+-	}
+-
+-	for (i = 0; i < PPOD_PAGES_MAX; i++) {
+-		if (sg) {
+-			ppod->addr[i] = cpu_to_be64(addr + offset);
+-			offset += PAGE_SIZE;
+-			if (offset == (len + sg->offset)) {
+-				offset = 0;
+-				sg = sg_next(sg);
+-				if (sg) {
+-					addr = sg_dma_address(sg);
+-					len = sg_dma_len(sg);
+-				}
+-			}
+-		} else {
+-			ppod->addr[i] = 0ULL;
+-		}
+-	}
+-
+-	/*
+-	 * the fifth address needs to be repeated in the next ppod, so do
+-	 * not move sg
+-	 */
+-	if (sg_pp) {
+-		*sg_pp = sg;
+-		*sg_off = offset;
+-	}
+-
+-	if (offset == len) {
+-		offset = 0;
+-		if (sg) {
+-			sg = sg_next(sg);
+-			if (sg)
+-				addr = sg_dma_address(sg);
+-		}
+-	}
+-	ppod->addr[i] = sg ? cpu_to_be64(addr + offset) : 0ULL;
+-}
+-
+ static struct sk_buff *
+ cxgbit_ppod_init_idata(struct cxgbit_device *cdev, struct cxgbi_ppm *ppm,
+ 		       unsigned int idx, unsigned int npods, unsigned int tid)
+@@ -116,7 +61,7 @@ cxgbit_ppod_write_idata(struct cxgbi_ppm *ppm, struct cxgbit_sock *csk,
+ 	ppod = (struct cxgbi_pagepod *)(idata + 1);
+ 
+ 	for (i = 0; i < npods; i++, ppod++)
+-		cxgbit_set_one_ppod(ppod, ttinfo, sg_pp, sg_off);
++		cxgbi_ppm_set_one_ppod(ppod, ttinfo, sg_pp, sg_off);
+ 
+ 	__skb_queue_tail(&csk->ppodq, skb);
+ 
+-- 
+2.25.1
 
