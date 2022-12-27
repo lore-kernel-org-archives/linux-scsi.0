@@ -2,111 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0563C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Dec 2022 00:11:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D174BC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Dec 2022 02:33:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232549AbiL0AKg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Dec 2022 19:10:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34742 "EHLO
+        id S231566AbiL0Cdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Dec 2022 21:33:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiL0AKf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2022 19:10:35 -0500
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32FC825F6;
-        Mon, 26 Dec 2022 16:10:34 -0800 (PST)
-Received: by mail-oi1-x232.google.com with SMTP id r205so11257853oib.9;
-        Mon, 26 Dec 2022 16:10:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=m08v6vPEyDDdbiE9IGFPtfPiAZQ8HDk4iklrra/12x8=;
-        b=G45XIwj4Il212n7mpbzK72STiB3ip0uqIccsOUkmD0QTCYigka54gS895KbNtSDyZb
-         R8Bckg+N2m1CTo0KxsFb7wxDBfFoh+c3d7le+e7Qvt+b85JjNFDGB9Cusu0fIzYju6jh
-         CPAqZXyFplo8uA8KFh9fg7aZ9SOe2v0S0LfKqknnCq8DhJCu3KnyQ6cN2Y9XTMNnCdVs
-         idKy5UMvIIQA886+mFO8bB1+YlgUON4rFWXUFI3Os7HtAR8V6Vx+cvirL5PzYUgPZ/xg
-         it0wAPcQrZdfptEjyYd7u96lS0LJJsDVXjSpIlGI+IMeXPdtCmgdM0Cd6Vc6rpIeubHp
-         DBaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=m08v6vPEyDDdbiE9IGFPtfPiAZQ8HDk4iklrra/12x8=;
-        b=HDze14V+ER6RFx8I7IWH4yKE1Su4bzAp1OAHLaChIYjH7cItu1l/0wdw17nBk0BOHk
-         0MDRgHx0katOOFOGN/DBrU+ddiHI2x1HQD+Y21Db5EouKqMKDDgmeQnYEAZrVbYvcW/y
-         53gC9OYaTCY17YWoeHTWAgM7AhNN0AlX+1DbQvgE34tZe4PLi8TurtZzBTBgJdSqegWf
-         KT/Ch4b0aB3CGBGjDvayuF308ekmO6oWAIa1Uvqzq8eqDFOd04uKsG+eBRBdgmPsM5/Z
-         8QvEyEZa35tXTA5dmxa7s+5bRQ/1z56Zy9ZWEYsV0+iZreAC+pqNP8NlxoogE9JxbVln
-         hVkA==
-X-Gm-Message-State: AFqh2ko/1Ger0IPnDTICtR8KRVNzEI1AIck+kxrpJdhXtH72S37kjD5x
-        H2QB4OdgCN5oWAIUN/L8EWI=
-X-Google-Smtp-Source: AMrXdXtLnHFkjVZ3zRiOuLt6VtehV+wKidFbi4wKby3Ipp5jWpYTGmuHZfNj167cMwzgwLWvXyGyWA==
-X-Received: by 2002:aca:1c19:0:b0:355:1de8:de4b with SMTP id c25-20020aca1c19000000b003551de8de4bmr9317317oic.36.1672099833535;
-        Mon, 26 Dec 2022 16:10:33 -0800 (PST)
-Received: from protoss.cs.ucr.edu (protoss.cs.ucr.edu. [169.235.26.60])
-        by smtp.gmail.com with ESMTPSA id q43-20020a056830442b00b006393ea22c1csm5955080otv.16.2022.12.26.16.10.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Dec 2022 16:10:33 -0800 (PST)
-From:   Hang Zhang <zh.nvgt@gmail.com>
-Cc:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Hang Zhang <zh.nvgt@gmail.com>
-Subject: [PATCH] scsi: dpt_i2o: fix a potential use-after-free in __adpt_reset()
-Date:   Mon, 26 Dec 2022 16:10:01 -0800
-Message-Id: <20221227001001.51626-1-zh.nvgt@gmail.com>
-X-Mailer: git-send-email 2.39.0
+        with ESMTP id S231175AbiL0Cd3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2022 21:33:29 -0500
+Received: from jari.cn (unknown [218.92.28.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 43B9610CA;
+        Mon, 26 Dec 2022 18:33:18 -0800 (PST)
+Received: by ajax-webmail-localhost.localdomain (Coremail) ; Tue, 27 Dec
+ 2022 10:32:17 +0800 (GMT+08:00)
+X-Originating-IP: [182.148.15.35]
+Date:   Tue, 27 Dec 2022 10:32:17 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   "KaiLong Wang" <wangkailong@jari.cn>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: scsi_transport_sas: Fix the following coccicheck
+ warning:
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT6.0.1 build 20210329(c53f3fee)
+ Copyright (c) 2002-2022 www.mailtech.cn
+ mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+Message-ID: <4a48b6f.39a.185516c69cd.Coremail.wangkailong@jari.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: AQAAfwCXn+AxWapj12IKAA--.229W
+X-CM-SenderInfo: 5zdqwypdlo00nj6mt2flof0/1tbiAQADB2FEYx0G1gAVsb
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-__adpt_reset() invokes adpt_hba_reset(), which can free "pHba"
-on error paths and return an negative error code in those
-situations. The problem is that "pHba" is from the global pointer
-"cmd->device->host->hostdata[0]", regardless of the possible free
-of "pHba", that original global pointer is never nullified and
-thus may become a dangling pointer and be dereferenced later,
-potentially causing a use-after-free.
-
-Fix the issue by nullifying "cmd->device->host->hostdata[0]" if
-adpt_hba_reset() returns a negative error code to __adpt_reset(),
-which indicates the free of "pHba". Also add a NULL check before
-any dereference of "pHba", or the aliased global pointer. Note
-that the similar NULL check already exists at other places, like
-in adpt_queue_lck().
-
-Signed-off-by: Hang Zhang <zh.nvgt@gmail.com>
----
- drivers/scsi/dpt_i2o.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 2e9155ba7408..9827517a1898 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -753,6 +753,9 @@ static int __adpt_reset(struct scsi_cmnd* cmd)
- 	char name[32];
- 
- 	pHba = (adpt_hba*)cmd->device->host->hostdata[0];
-+	if (!pHba) {
-+		return FAILED;
-+	}
- 	strncpy(name, pHba->name, sizeof(name));
- 	printk(KERN_WARNING"%s: Hba Reset: scsi id %d: tid: %d\n", name, cmd->device->channel, pHba->channel[cmd->device->channel].tid);
- 	rcode =  adpt_hba_reset(pHba);
-@@ -760,6 +763,7 @@ static int __adpt_reset(struct scsi_cmnd* cmd)
- 		printk(KERN_WARNING"%s: HBA reset complete\n", name);
- 		return SUCCESS;
- 	} else {
-+		cmd->device->host->hostdata[0] = NULL;
- 		printk(KERN_WARNING"%s: HBA reset failed (%x)\n", name, rcode);
- 		return FAILED;
- 	}
--- 
-2.39.0
-
+CmRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzo1MjU6OS0xNzogV0FSTklORzogdXNl
+IHNjbnByaW50ZiBvciBzcHJpbnRmCmRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzo1
+NzI6OC0xNjogV0FSTklORzogdXNlIHNjbnByaW50ZiBvciBzcHJpbnRmCmRyaXZlcnMvc2NzaS9z
+Y3NpX3RyYW5zcG9ydF9zYXMuYzoxMTgwOjktMTc6IFdBUk5JTkc6IHVzZSBzY25wcmludGYgb3Ig
+c3ByaW50ZgoKU2lnbmVkLW9mZi1ieTogS2FpTG9uZyBXYW5nIDx3YW5na2FpbG9uZ0BqYXJpLmNu
+PgotLS0KIGRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYyB8IDYgKysrLS0tCiAxIGZp
+bGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3Ry
+YW5zcG9ydF9zYXMuYwppbmRleCA3NGI5OWYyYjBiNzQuLjU1MDQwNjdhZGNmMSAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nhcy5jCisrKyBiL2RyaXZlcnMvc2NzaS9z
+Y3NpX3RyYW5zcG9ydF9zYXMuYwpAQCAtNTIyLDcgKzUyMiw3IEBAIHNob3dfc2FzX2RldmljZV90
+eXBlKHN0cnVjdCBkZXZpY2UgKmRldiwKIAlzdHJ1Y3Qgc2FzX3BoeSAqcGh5ID0gdHJhbnNwb3J0
+X2NsYXNzX3RvX3BoeShkZXYpOwogCiAJaWYgKCFwaHktPmlkZW50aWZ5LmRldmljZV90eXBlKQot
+CQlyZXR1cm4gc25wcmludGYoYnVmLCAyMCwgIm5vbmVcbiIpOworCQlyZXR1cm4gc3lzZnNfZW1p
+dChidWYsICJub25lXG4iKTsKIAlyZXR1cm4gZ2V0X3Nhc19kZXZpY2VfdHlwZV9uYW1lcyhwaHkt
+PmlkZW50aWZ5LmRldmljZV90eXBlLCBidWYpOwogfQogc3RhdGljIERFVklDRV9BVFRSKGRldmlj
+ZV90eXBlLCBTX0lSVUdPLCBzaG93X3Nhc19kZXZpY2VfdHlwZSwgTlVMTCk7CkBAIC01NjksNyAr
+NTY5LDcgQEAgc2hvd19zYXNfcGh5X2VuYWJsZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdCBk
+ZXZpY2VfYXR0cmlidXRlICphdHRyLAogewogCXN0cnVjdCBzYXNfcGh5ICpwaHkgPSB0cmFuc3Bv
+cnRfY2xhc3NfdG9fcGh5KGRldik7CiAKLQlyZXR1cm4gc25wcmludGYoYnVmLCAyMCwgIiVkXG4i
+LCBwaHktPmVuYWJsZWQpOworCXJldHVybiBzeXNmc19lbWl0KGJ1ZiwgIiVkXG4iLCBwaHktPmVu
+YWJsZWQpOwogfQogCiBzdGF0aWMgREVWSUNFX0FUVFIoZW5hYmxlLCBTX0lSVUdPIHwgU19JV1VT
+Uiwgc2hvd19zYXNfcGh5X2VuYWJsZSwKQEAgLTExNzcsNyArMTE3Nyw3IEBAIHNob3dfc2FzX3Jw
+aHlfZGV2aWNlX3R5cGUoc3RydWN0IGRldmljZSAqZGV2LAogCXN0cnVjdCBzYXNfcnBoeSAqcnBo
+eSA9IHRyYW5zcG9ydF9jbGFzc190b19ycGh5KGRldik7CiAKIAlpZiAoIXJwaHktPmlkZW50aWZ5
+LmRldmljZV90eXBlKQotCQlyZXR1cm4gc25wcmludGYoYnVmLCAyMCwgIm5vbmVcbiIpOworCQly
+ZXR1cm4gc3lzZnNfZW1pdChidWYsICJub25lXG4iKTsKIAlyZXR1cm4gZ2V0X3Nhc19kZXZpY2Vf
+dHlwZV9uYW1lcygKIAkJCXJwaHktPmlkZW50aWZ5LmRldmljZV90eXBlLCBidWYpOwogfQotLSAK
+Mi4zNi4xCg==
