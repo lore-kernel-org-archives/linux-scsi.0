@@ -2,72 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D174BC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Dec 2022 02:33:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF3AC10F1B
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Dec 2022 08:18:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231566AbiL0Cdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Dec 2022 21:33:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57416 "EHLO
+        id S229604AbiL0IRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Dec 2022 03:17:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231175AbiL0Cd3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2022 21:33:29 -0500
-Received: from jari.cn (unknown [218.92.28.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 43B9610CA;
-        Mon, 26 Dec 2022 18:33:18 -0800 (PST)
-Received: by ajax-webmail-localhost.localdomain (Coremail) ; Tue, 27 Dec
- 2022 10:32:17 +0800 (GMT+08:00)
-X-Originating-IP: [182.148.15.35]
-Date:   Tue, 27 Dec 2022 10:32:17 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   "KaiLong Wang" <wangkailong@jari.cn>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: scsi_transport_sas: Fix the following coccicheck
- warning:
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version XT6.0.1 build 20210329(c53f3fee)
- Copyright (c) 2002-2022 www.mailtech.cn
- mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S229730AbiL0IRc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2022 03:17:32 -0500
+Received: from out30-57.freemail.mail.aliyun.com (out30-57.freemail.mail.aliyun.com [115.124.30.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 798252604;
+        Tue, 27 Dec 2022 00:17:31 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R301e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0VYCh-M8_1672129042;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VYCh-M8_1672129042)
+          by smtp.aliyun-inc.com;
+          Tue, 27 Dec 2022 16:17:29 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] scsi: lpfc: lpfc_bsg: Remove set but unused variable 'offset'
+Date:   Tue, 27 Dec 2022 16:16:34 +0800
+Message-Id: <20221227081634.52182-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-Message-ID: <4a48b6f.39a.185516c69cd.Coremail.wangkailong@jari.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwCXn+AxWapj12IKAA--.229W
-X-CM-SenderInfo: 5zdqwypdlo00nj6mt2flof0/1tbiAQADB2FEYx0G1gAVsb
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-        daVFxhVjvjDU=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-CmRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzo1MjU6OS0xNzogV0FSTklORzogdXNl
-IHNjbnByaW50ZiBvciBzcHJpbnRmCmRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzo1
-NzI6OC0xNjogV0FSTklORzogdXNlIHNjbnByaW50ZiBvciBzcHJpbnRmCmRyaXZlcnMvc2NzaS9z
-Y3NpX3RyYW5zcG9ydF9zYXMuYzoxMTgwOjktMTc6IFdBUk5JTkc6IHVzZSBzY25wcmludGYgb3Ig
-c3ByaW50ZgoKU2lnbmVkLW9mZi1ieTogS2FpTG9uZyBXYW5nIDx3YW5na2FpbG9uZ0BqYXJpLmNu
-PgotLS0KIGRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYyB8IDYgKysrLS0tCiAxIGZp
-bGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3Ry
-YW5zcG9ydF9zYXMuYwppbmRleCA3NGI5OWYyYjBiNzQuLjU1MDQwNjdhZGNmMSAxMDA2NDQKLS0t
-IGEvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nhcy5jCisrKyBiL2RyaXZlcnMvc2NzaS9z
-Y3NpX3RyYW5zcG9ydF9zYXMuYwpAQCAtNTIyLDcgKzUyMiw3IEBAIHNob3dfc2FzX2RldmljZV90
-eXBlKHN0cnVjdCBkZXZpY2UgKmRldiwKIAlzdHJ1Y3Qgc2FzX3BoeSAqcGh5ID0gdHJhbnNwb3J0
-X2NsYXNzX3RvX3BoeShkZXYpOwogCiAJaWYgKCFwaHktPmlkZW50aWZ5LmRldmljZV90eXBlKQot
-CQlyZXR1cm4gc25wcmludGYoYnVmLCAyMCwgIm5vbmVcbiIpOworCQlyZXR1cm4gc3lzZnNfZW1p
-dChidWYsICJub25lXG4iKTsKIAlyZXR1cm4gZ2V0X3Nhc19kZXZpY2VfdHlwZV9uYW1lcyhwaHkt
-PmlkZW50aWZ5LmRldmljZV90eXBlLCBidWYpOwogfQogc3RhdGljIERFVklDRV9BVFRSKGRldmlj
-ZV90eXBlLCBTX0lSVUdPLCBzaG93X3Nhc19kZXZpY2VfdHlwZSwgTlVMTCk7CkBAIC01NjksNyAr
-NTY5LDcgQEAgc2hvd19zYXNfcGh5X2VuYWJsZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdCBk
-ZXZpY2VfYXR0cmlidXRlICphdHRyLAogewogCXN0cnVjdCBzYXNfcGh5ICpwaHkgPSB0cmFuc3Bv
-cnRfY2xhc3NfdG9fcGh5KGRldik7CiAKLQlyZXR1cm4gc25wcmludGYoYnVmLCAyMCwgIiVkXG4i
-LCBwaHktPmVuYWJsZWQpOworCXJldHVybiBzeXNmc19lbWl0KGJ1ZiwgIiVkXG4iLCBwaHktPmVu
-YWJsZWQpOwogfQogCiBzdGF0aWMgREVWSUNFX0FUVFIoZW5hYmxlLCBTX0lSVUdPIHwgU19JV1VT
-Uiwgc2hvd19zYXNfcGh5X2VuYWJsZSwKQEAgLTExNzcsNyArMTE3Nyw3IEBAIHNob3dfc2FzX3Jw
-aHlfZGV2aWNlX3R5cGUoc3RydWN0IGRldmljZSAqZGV2LAogCXN0cnVjdCBzYXNfcnBoeSAqcnBo
-eSA9IHRyYW5zcG9ydF9jbGFzc190b19ycGh5KGRldik7CiAKIAlpZiAoIXJwaHktPmlkZW50aWZ5
-LmRldmljZV90eXBlKQotCQlyZXR1cm4gc25wcmludGYoYnVmLCAyMCwgIm5vbmVcbiIpOworCQly
-ZXR1cm4gc3lzZnNfZW1pdChidWYsICJub25lXG4iKTsKIAlyZXR1cm4gZ2V0X3Nhc19kZXZpY2Vf
-dHlwZV9uYW1lcygKIAkJCXJwaHktPmlkZW50aWZ5LmRldmljZV90eXBlLCBidWYpOwogfQotLSAK
-Mi4zNi4xCg==
+Variable offset is not effectively used in the function, so delete it.
+
+drivers/scsi/lpfc/lpfc_bsg.c:2806:11: warning: variable 'offset' set but not used.
+
+Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3559
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 852b025e2fec..dd304f899f78 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -2803,7 +2803,7 @@ diag_cmd_data_alloc(struct lpfc_hba *phba,
+ {
+ 	struct lpfc_dmabufext *mlist = NULL;
+ 	struct lpfc_dmabufext *dmp;
+-	int cnt, offset = 0, i = 0;
++	int cnt, i = 0;
+ 	struct pci_dev *pcidev;
+ 
+ 	pcidev = phba->pcidev;
+@@ -2854,7 +2854,6 @@ diag_cmd_data_alloc(struct lpfc_hba *phba,
+ 		bpl++;
+ 
+ 		i++;
+-		offset += cnt;
+ 		size -= cnt;
+ 	}
+ 
+-- 
+2.20.1.7.g153144c
+
