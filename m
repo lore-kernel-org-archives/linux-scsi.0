@@ -2,179 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D93A8C4708D
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 08:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C5BC46467
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 09:36:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232760AbiL1ItY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Dec 2022 03:49:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52524 "EHLO
+        id S232499AbiL1JgA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Dec 2022 04:36:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232810AbiL1Is5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 03:48:57 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D921FCD4;
-        Wed, 28 Dec 2022 00:47:00 -0800 (PST)
+        with ESMTP id S232494AbiL1Jfz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 04:35:55 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D931D2D2;
+        Wed, 28 Dec 2022 01:35:54 -0800 (PST)
 Received: from dggpemm500017.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NhlTx3DyRzmWts;
-        Wed, 28 Dec 2022 16:45:41 +0800 (CST)
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NhmWM3whyz9t29;
+        Wed, 28 Dec 2022 17:31:59 +0800 (CST)
 Received: from [10.174.178.220] (10.174.178.220) by
  dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Wed, 28 Dec 2022 16:46:52 +0800
-Message-ID: <2002bec1-27af-5b4f-7bea-fca62506ca59@huawei.com>
-Date:   Wed, 28 Dec 2022 16:46:51 +0800
+ 15.1.2375.34; Wed, 28 Dec 2022 17:35:51 +0800
+Message-ID: <25b89f97-0cac-7611-c20f-3140565219c4@huawei.com>
+Date:   Wed, 28 Dec 2022 17:35:51 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
-Subject: Re: [PATCH 1/2] scsi:core:Add sysfs interface to control if skip lun
- with PQ=1
+Subject: Re: [PATCH 0/2] scsi:donot skip lun if inquiry returns PQ=1 for all
+ hosts
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <liuzhiqiang26@huawei.com>,
-        <linfeilong@huawei.com>
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        linfeilong <linfeilong@huawei.com>,
+        Andrey Melnikov <temnota.am@gmail.com>
 References: <20221214070846.1808300-1-haowenchao@huawei.com>
- <20221214070846.1808300-2-haowenchao@huawei.com>
- <536981a8-76a3-54b9-a70c-a86994c027dd@oracle.com>
+ <Y5rHX95Vvl1aLhbp@infradead.org>
+ <57c12317-c229-8cbe-b3d2-d799ea5f554c@huawei.com>
+ <Y5waet8RoXKQHDR7@infradead.org>
+ <5129c84b-38e5-8be4-6411-fcc003776d70@huawei.com>
+ <Y6XPRfgLSUShN+mY@infradead.org>
 From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <536981a8-76a3-54b9-a70c-a86994c027dd@oracle.com>
+In-Reply-To: <Y6XPRfgLSUShN+mY@infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggpeml500013.china.huawei.com (7.185.36.41) To
+X-ClientProxiedBy: dggpeml500003.china.huawei.com (7.185.36.200) To
  dggpemm500017.china.huawei.com (7.185.36.178)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/12/19 5:37, Mike Christie wrote:
-> On 12/14/22 1:08 AM, Wenchao Hao wrote:
->>
->> When iSCSI initiator logged in target, the target attached none valid
->> lun but lun0. lun0 is not an valid disk, while it would response
->> inquiry command with PQ=1 and other general scsi commands like probe lun.
->> The others luns of target is added/removed dynamicly.
->>
->> We want the lun0 to be mapped to an sg device in initiator, so we can
->> probe luns of target based on lun0.
+On 2022/12/23 23:54, Christoph Hellwig wrote:
+> On Fri, Dec 16, 2022 at 07:41:26PM +0800, Wenchao Hao wrote:
+>> For nothing, I want the iscsi_tcp transport do not skip PQ=1 default
+>> as what it did before commit 948e922fc4461 ("scsi: core: map PQ=1,
+>> PDT=other values to SCSI_SCAN_TARGET_PRESENT").
 > 
-> What do you want to do exactly? Is the idea with your patch we would create
-> an sg device, then in userpsace you would do some scan related commands. If
-> you find devices then you use sysfs to have scsi-ml scan/add a specific device
-> like
+> Well, that commit was very much intentional and is now three an a half
+> years old, so we've not just going to partially revert it on a
+> per-transport basis when it is in no way transport related.
 > 
-> echo 5 0 0 8 > host5/scan
-> 
-> ?
-> 
-> It's not really clear to me why you need the sg device, and can't just do?
-> 
-> echo - - - > .../hostN/scan
->
-We do not directly echo - - - > .../hostN/scan. Instead, we use rescan-scsi-bus.sh
-defined in sg3_utils to scan luns. If no sg device mapped to this host, the default
-scan operations could not recognize luns.
-
-We can simulate this with scsi_debug by following steps:
-
-1. build scsi debug with following changes;
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 8553277effb3..36dcdd2c3fe4 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -836,6 +836,7 @@ static int dif_errors;
- static bool sdeb_zbc_in_use;   /* true for host-aware and host-managed disks */
- static int sdeb_zbc_zone_cap_mb;
- static int sdeb_zbc_zone_size_mb;
-+static int sdeb_pq_type;
- static int sdeb_zbc_max_open = DEF_ZBC_MAX_OPEN_ZONES;
- static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
- 
-@@ -1583,6 +1584,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-        u32 alloc_len, n;
-        int ret;
-        bool have_wlun, is_disk, is_zbc, is_disk_zbc;
-+       struct scsi_device *sdev = scp->device;
- 
-        alloc_len = get_unaligned_be16(cmd + 3);
-        arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
-@@ -1598,7 +1600,11 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-                pq_pdt = 0x7f;  /* not present, PQ=3, PDT=0x1f */
-        else
-                pq_pdt = (sdebug_ptype & 0x1f);
--       arr[0] = pq_pdt;
-+       if (sdev->lun == 0) {
-+               arr[0] = pq_pdt | (sdeb_pq_type << 5);
-+       } else {
-+               arr[0] = pq_pdt;
-+       }
-        if (0x2 & cmd[1]) {  /* CMDDT bit set */
-                mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 1);
-                kfree(arr);
-@@ -5883,6 +5889,7 @@ module_param_named(zone_cap_mb, sdeb_zbc_zone_cap_mb, int, S_IRUGO);
- module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
- module_param_named(zone_nr_conv, sdeb_zbc_nr_conv, int, S_IRUGO);
- module_param_named(zone_size_mb, sdeb_zbc_zone_size_mb, int, S_IRUGO);
-+module_param_named(pq_type, sdeb_pq_type, int, S_IRUGO);
- 
- MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI debug adapter driver");
-@@ -7825,6 +7832,7 @@ static int sdebug_driver_probe(struct device *dev)
-                error = -ENODEV;
-                return error;
-        }
-+       //hpnt->no_skip_pq1 = 1;
-        if (submit_queues > nr_cpu_ids) {
-                pr_warn("%s: trim submit_queues (was %d) to nr_cpu_ids=%u\n",
-                        my_name, submit_queues, nr_cpu_ids);
-
-2. insmod scsi_debug with modparam max_luns=4 pq_type=1, we would get following scsi devices
-
-# lsscsi -g
-[0:0:0:1]    disk    Linux    scsi_debug       0191  /dev/sda   /dev/sg0 
-[0:0:0:2]    disk    Linux    scsi_debug       0191  /dev/sdb   /dev/sg1 
-[0:0:0:3]    disk    Linux    scsi_debug       0191  /dev/sdc   /dev/sg2 
-
-3. remove the scsi_debug disks
-
-echo 1 > /sys/block/sda/device/delete
-echo 1 > /sys/block/sdb/device/delete
-echo 1 > /sys/block/sdc/device/delete
-
-4. scan with rescan-scsi-bus.sh would failed to discovery luns.
-
-# rescan-scsi-bus.sh 
-Scanning SCSI subsystem for new devices
-Scanning host 0 for  SCSI target IDs 0 1 2 3 4 5 6 7, all LUNs
-0 new or changed device(s) found.          
-0 remapped or resized device(s) found.
-0 device(s) removed.
-
-Did not add the luns. If do not comment the line hpnt->no_skip_pq1 = 1 in
-scsi_debug.c, the scan operations would found these luns succeed.
-
-> ? Do you only want to add specific devices like you are doing some sort of
-> LUN masking on the initiator side?
-> 
-> Is the issue that you need the sg device there, so you can detect when a device
-> is no longer present on the target and then you will have userspace remove the
-> device via the sysfs delete file?
+> If you can come up with a good enough rationale we could do the
+> sysfs override, but so far the reason mostly seems to be "I want"
+> and not anctual explanation of why it is useful.
 > .
 
-Yes, this is one scenarios. luns on the target are removed or added dynamically,
-the only fixed one is LUN0 which response PQ=1.
 
-If luns are removed from target after been added by initiator, we could know which
-one should be removed from initiator via LUN0.
+Sorry, I did not describe in detail.
 
-We can think LUN0 with PQ=1 is a dummy lun, which is fixed and can tell luns info on
-the target.
+Here is the reason of my patches.
 
-According to the SPC, PQ=1 means the addressed logical unit having the
-indicated device type is not accessible, it does not mean the addressed
-logical unit is invalid. So I think we still can map this lun to an sg device.
+1. The SPC did not tell PQ=1 means the addressed lun is invalid explicitly.
+2. scsi_bus_match() would prevent luns with PQ=1 be handled by any scsi
+   drivers, so the only influence if we do not skip luns with PQ=1 is we
+   would add an scsi_device and an sg device.
+
+The reason I force a specific behavior for iSCSI:
+
+1. This issue is occurred with iSCSI, it means there are scenarios where
+   targets would return PQ=1 for an valid LUN which should not be skipped.
+2. The changes for iSCSI could be tested
+
+I did not change other transports' behavior is because I do not know if PQ=1
+would be returned, and I do not have the related environment. If other
+transports like adaptec raid also needs these changes, they can override
+the default value by other patches.
+
+Thanks.
+
