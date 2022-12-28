@@ -2,148 +2,214 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8284C46467
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 15:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A190DC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 20:41:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233716AbiL1PYl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Dec 2022 10:24:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43252 "EHLO
+        id S230158AbiL1Ul1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Dec 2022 15:41:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233718AbiL1PYh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 10:24:37 -0500
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 950DF14032
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 07:24:35 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id bg13-20020a05600c3c8d00b003d9712b29d2so8923447wmb.2
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 07:24:35 -0800 (PST)
+        with ESMTP id S229668AbiL1UlZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 15:41:25 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E8EC10C2
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 12:41:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1672260084; x=1703796084;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=evRAtayQgeC02bC/KMf3QIOSETHo/LafMwoDQTTgj+U=;
+  b=mFGbOQZ67JjxI8tlUQq+oXsyVHj1YGHGzzxP8VCJDG6RmFQd9PgilV3L
+   ebujk2mCTxhCa4XEm/xmH7K6LmEiiC3r6xUdDOXDlVuTHSqh3cRCtBYPj
+   qOAS20swLErlGtVO1D3bAwLkIBPkdO/hQC8zadRF2y8MS7jQl2IqIYDdS
+   X79yUhl1VXyXud1melRN0n60gfINKnGl8cJCpAw6r1RXlSSS8RAB0XG8u
+   P+Gk88HdDpL2vXwZvpN0ePiIvN5539+7gN6TR0Nv74/qhyPJ5fkbfw29m
+   XCxXzURwEccbNYNEdAbxxd48zSc6tkovazFOjOOutXo626olF9m9zgrAj
+   w==;
+X-IronPort-AV: E=Sophos;i="5.96,281,1665417600"; 
+   d="scan'208";a="224719891"
+Received: from mail-dm6nam12lp2170.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.170])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Dec 2022 04:41:22 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kNxs34n1jq6Vp8NW4qh0bJwUo9nLZIQP66D/VktMoRtfMsAjPSPX+i9is40cVwSsBygCLdslgWNq05wlXT7owxhOmF75EkTPyAAzYzSZnbF9Lv1tUJS1uk+JmYIn/3EVJA/kWJ7lF3sAGfq4tvtBHTpKIgD+Qx8MkHPBcIFXItthF/A5L504EWBLXp52afhjkhlskY5utGs2XTzib+TrZHBICjPgBCnggWAzNqFDwCqdJvb8nWrDI8w7ht9NSU/0Q1JFEVYZgQiIM7eEk0hkXuoykbl0aYaAKEKN2jvfU69J+gBUUEwuZy4jJyyseJhkFRtxz3PaIdOw6YwOOdtdFw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9HL2z6uB6Ljqd9QH/VxnAWvGgC3Gm4HLVdB9b2Q8U6Q=;
+ b=eBI/wtpwtWpIGxImgB40/Bro7TMLB97B5zgKcsQukjp8Uw6jakior5xXVd7GPL2s85kdgf0/WVqIpifVoWbVT6oswl0MfVBWKL2bJC1o5w6GwvFNcnsM4u8SIZho1xuJNBOT4XFFI30o27tyKOPjXe4tMCwH+IRs4i/YwtlTDUr0aRBhCWhGC0xgsjutcwfzW22IOZBTv0fTAeTkZNWfqlVN0b2fLO4K+9Zsff6lkdEr5vE/SeIVV9Q52AdBMxjE4ICbu86hfmut/763xEk4iUR6k9Eg+EbsY+6iQ47Hx40d+e76I/1CKnYv6X+k/mIW1ww9045/Cb1VHsjlKdR+Pg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8nXKCVyOIX4nL784wtZ3ILMzCso/8DNyZaBxq04sqn0=;
-        b=HsmTzuhMZWa6Oxk/vOaMQqv2DO5KR6hoG7P4Waf31F+8oxMU2lCAMeICEaWOvObyIM
-         mVtuQeDpHICUTJwZRM8Rj+Se1bo5qnuUMJlauo1VtOkHNlhpnesn9L3SYGugl/EkHWMd
-         NU/WwKpsTxKFT8eTSsZeYaTJilYE+4iP5IPbGVzx8LMgKBgpJSTXdNbvfJbFr99CLuIc
-         Q2MGijvcB1SX37e5Yrc/BZKPCd7zKm/W8ulUFXoPpZwHamrUIFTRm8X/XNGtPjA1ehJB
-         hcTmOx1+ZOUoeDDmdAkgAKSnL7PAcBHzgfw0lv1yca0TMzp5UhtEmJQry9d21P/WeZey
-         w1Pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=8nXKCVyOIX4nL784wtZ3ILMzCso/8DNyZaBxq04sqn0=;
-        b=5DKpJXPOsevQuF/jUf6lovmmqxmT0nJ6lB+CTcekOyO+gmDCioQPqBo/xSeGINtEUn
-         Y7Vn1LeKG1sw38lk5IQaxHvbCA8Z/BH8sGma55ed7OilSNWI3SNJgsESofcVQm4B9/mu
-         gp+NY0F2m+RFkH5wIIgsDTYyPzqhITfp64fMjVNy8ForFEwlCqotQ5iXddy4SFoUUnXi
-         Q+9ah44XZpCV/Zd+fsrXlVJua9eed5ASyy94vHOd66bP+IV+M2JD5CMORe7qfQ4V1jQB
-         ybWgYvxZkRT3zEAdvbUSnRmY/DYD0CjGRkbZ3gTUB+IWQYhTQ3dAhCPU695yg6xholUY
-         tc5w==
-X-Gm-Message-State: AFqh2kpc5bi2Fj12VWs6iZtgBIWYd85jXn/hXyMEWzqa7i9z08EUQzx7
-        yfPP4LtA6+OOzSiLRkcb5bIEIA==
-X-Google-Smtp-Source: AMrXdXtCg+Zy0Gj3Bdwd1XS/UTyFga3yDiwuZtjI5i4ejJyCw9JYw95SPFwBVkaqRN9O3lknqx5kEg==
-X-Received: by 2002:a05:600c:4191:b0:3d7:9ae7:e4f2 with SMTP id p17-20020a05600c419100b003d79ae7e4f2mr18470609wmh.35.1672241074108;
-        Wed, 28 Dec 2022 07:24:34 -0800 (PST)
-Received: from localhost (2a02-8388-6582-fe80-0000-0000-0000-0006.cable.dynamic.v6.surfer.at. [2a02:8388:6582:fe80::6])
-        by smtp.gmail.com with ESMTPSA id h15-20020adfaa8f000000b002421888a011sm15870418wrc.69.2022.12.28.07.24.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Dec 2022 07:24:33 -0800 (PST)
-Mime-Version: 1.0
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9HL2z6uB6Ljqd9QH/VxnAWvGgC3Gm4HLVdB9b2Q8U6Q=;
+ b=cTmf/wgae7RQUtGKQpabGpArcEIFvS48DQQdj43cL8JYqc8VFj8UKOo0A+TfsIeXU70DSN2JbhLtJW7f4nWSm8WXaenAwUVNsLL33lpcn3l6WGVxGYCOLkroTjVORbntPei3V63VhhyiDGHwZhF0eh54G9Dp7/aisIS1eQJnRT4=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by BYAPR04MB5095.namprd04.prod.outlook.com (2603:10b6:a03:4f::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5944.16; Wed, 28 Dec
+ 2022 20:41:17 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::a65a:f2ad:4c7b:3164]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::a65a:f2ad:4c7b:3164%4]) with mapi id 15.20.5944.016; Wed, 28 Dec 2022
+ 20:41:17 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 11/25] scsi: move get_scsi_ml_byte() to scsi_priv.h
+Thread-Topic: [PATCH 11/25] scsi: move get_scsi_ml_byte() to scsi_priv.h
+Thread-Index: AQHZCvRnEGSJHjnZ006NN6aDgUkK0q5kq+WAgB83qAA=
+Date:   Wed, 28 Dec 2022 20:41:17 +0000
+Message-ID: <Y6yp7G5WEWOwe+DB@x1-carbon>
+References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
+ <20221208105947.2399894-12-niklas.cassel@wdc.com>
+ <598b6852-06f6-af3f-57a9-63cee9865b99@oracle.com>
+In-Reply-To: <598b6852-06f6-af3f-57a9-63cee9865b99@oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|BYAPR04MB5095:EE_
+x-ms-office365-filtering-correlation-id: 987b98c7-c1f7-4a39-1cc5-08dae913debf
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: /XX9geFjxkdr+El7BFWaMYxCfc4u6bjAMbgtA23Dy+lEpEzOKPAl/YzFMh8xraLDjqh6JIIkCMrRNDb6o5Pb2zBmoKDvzKipuCW4Fun2iZO3jQm5Ah2PCETSQfzrXeAHJf/rDtJYYL0G7NenIj/syd4Q6LuHfG7IQqwEUrnxonqdMDf/Ih9472jdfIXmnyZg8YYyiK60RSmQS883U/K2Lusc2KSjAz41xGC5EVbiMWq2oQyVf5hgia5kaaMtRRTRhhPKYJ9trWN3XUOgEe+M2j/dcQXEzbLkRfBeK2PfQrX2SLjDtSfUTEGTkGGqBmWYgrb3FjfTXWmPKwx8ovulAmO3nG/dXvRNbPCRd373/GzIYIE+lDMmu95/jv1aX9TVJVDW2gchcKwvkEQjM0Nm6S+aBjpmMaQpH0lbtMXclvaaxDoaoVndod6J5Ne8HtNMoDEMxsYC5nfvFIyNmF4TbshYrBe5LxCvdIyZ1FxPSjTVqup7URKWl+ktq1aMnrgtXVn0FZUzL082ncsN++oyQB8Xbv/mC7bfIX4WDHxa6/3yLig+30Lj0ihDtL4ilWYg87a1wr7uaiClu0OW/gVE//ZPcwYT8L+hoTADbsjH6nYzK+x0uiiHIiMXGlgxoyuJTvePtSPLZXp5i/4B5xh+wGDo5TyjYF3EeA6Uvu/AtUCZr3b6XEfYN5OfByonS8EaEQI7UIkIWS8z1pj9WlKzHPMje4MN5HFi/yjiQymyiZ4=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(7916004)(39860400002)(376002)(366004)(346002)(396003)(136003)(451199015)(86362001)(316002)(6916009)(2906002)(38100700002)(9686003)(186003)(53546011)(6506007)(6512007)(26005)(6486002)(478600001)(71200400001)(41300700001)(122000001)(54906003)(33716001)(8676002)(64756008)(4326008)(83380400001)(8936002)(66446008)(66476007)(76116006)(66556008)(66946007)(91956017)(5660300002)(82960400001)(38070700005)(67856001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?hQj/UkB+/5eeHpZKrFJuYhM/8PksoztYNGM3hCZ8dCLIjWVYPxKwSZbZe3c3?=
+ =?us-ascii?Q?d8dHTV6USBVf7VjBU5JTqyKGX9WUdQeFI4BnPcYuLkswBg/NCV/4mNtltx93?=
+ =?us-ascii?Q?v69JCZiST670/nxaxX6XXxBwoRUOxJCZnEwUufLSHwzLy3k0Wsmbj3+aJFdh?=
+ =?us-ascii?Q?5K6mZXy+tJZbvTy0uF1fsE0SGL7tizHh3UY3gYkbfQLVyWhHaSC7Q993TFUc?=
+ =?us-ascii?Q?pHlbJEKA8gv13pQRUyXkqt6smFlSRqEQ2pPfHaTtieiWXlQTH9nwQ57OaSKR?=
+ =?us-ascii?Q?xwrRDbXeRmBkHAwsokOHEm4z8B7cMnLnXXCHTQyyYmCwuldEf/AqVw1cwZ+D?=
+ =?us-ascii?Q?VlkgFqEQUt2s1QbaLJNfHJFr32ihcm/JFLWdZYTz1UbhIxh1EN6jZwtRCBR3?=
+ =?us-ascii?Q?Xn7dkCgyq9Af+WQBtxO5A0a4aTDBdZg+Trb6Ys76rGZqjNiVPDXdnsnir8qH?=
+ =?us-ascii?Q?CfJnD1FAdRrooWEsW+jV1TVWIi8oh0GpxX7jpG5HX+7E3CSVay2LryrMOWGU?=
+ =?us-ascii?Q?Iz65XYy39JlR7rz7aGoZnlDCThSmlGECGciMTId7YS90Nd6PRcPfG2AF1tOV?=
+ =?us-ascii?Q?zlU8HapyD85kKOoutHaQ+g6MLTfnu84YZ3pBxPgJh0GM4MWhIyyRlClWzE6e?=
+ =?us-ascii?Q?XbcxYtdR62HMK5ssWFbSmlF4UU9YEtpukwe6Qfbk3wN0uIFJ1mE19RHpUJa+?=
+ =?us-ascii?Q?Eywph5IjdHCv8MES9Ebs/H76ztiM6SgD06PFsWBmP3yRWaLZACEocroMcPUy?=
+ =?us-ascii?Q?Q5iITXTedTeEvNVdrABKbhZewswQJQikTg28ilrIBX5hkuHWA/0EhZHB2nrj?=
+ =?us-ascii?Q?wD7FzbRpVhQ88/B085tTApsbYZ3R4gXNohsOdEGP2GQTvFVP/fQ6rLy9umDM?=
+ =?us-ascii?Q?lGQH3eIhMe9cc/ETodoisgmxLrt6pEu1OB9Ui02vKHjTuLzW14SRy4vNG9Ja?=
+ =?us-ascii?Q?JBf7JGXN3TzzBOasPnsUJq8Fwsls/A596jYe/tqRewQwXgOc/HQVh4VSGm6o?=
+ =?us-ascii?Q?Dt0rhNy6SgNxMhR8U07ERG+LwWntTmHpiqqG9SxT7J6Z5JZJhxT50S7PJqMl?=
+ =?us-ascii?Q?8Xk20apYOdG9y5s22I2Gii4p6/u4qMDv9KjJYv5jfwXE/DE3Wwgm3ezmB/bY?=
+ =?us-ascii?Q?5BfsRSDW/rLSorIFoIEpZ5PY3UhUYk+pZWHRuY68/eYE+wH5O/GHVbRhjVhr?=
+ =?us-ascii?Q?QLEtKKl1USxGO+J7DrG6uWvSu8MZOGcW05QIBb7jXZFs8O353z04nwcortjh?=
+ =?us-ascii?Q?LWGoNhBS7fDCYQN0iXxW/X3nqmcy8sP5JlLez1869ajUgb+wdgenEGDbP2op?=
+ =?us-ascii?Q?38OKW61ZXbNYbhJtFFu4OY9aWh5Ochm6yj+ZiA57WbWznbiFyLCaAfOcE1PZ?=
+ =?us-ascii?Q?OwdQfLCg08n5yFfE4zAiYRHoLlZkHerNF2wmjjcuBrEPwvXyTVxQeNMAQOxQ?=
+ =?us-ascii?Q?BhV5YxwHmeJiCcdlakxR0eeZRLjy5dxQa1DcGneOS7NRhAAp1mO8VlqnJfVx?=
+ =?us-ascii?Q?EFQuF0/Juw2XIY/vTFmFc6u4NzYg71muwqPsKtufsMBV1hvPkwIeFcDG4orG?=
+ =?us-ascii?Q?A3oLzJWyueMI+h4d1AKRkI01I9+WrJpKFWSCA9H6DVPEwe4WWkezBfQ/pCTC?=
+ =?us-ascii?Q?SQ=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <B01427E152557D4491C51538A5F60B75@namprd04.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date:   Wed, 28 Dec 2022 16:24:32 +0100
-Message-Id: <CPDJZJHDL1XJ.2UY1U1E19CTUH@otso>
-From:   "Luca Weiss" <luca.weiss@fairphone.com>
-To:     "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>,
-        <~postmarketos/upstreaming@lists.sr.ht>,
-        <phone-devel@vger.kernel.org>, "Andy Gross" <agross@kernel.org>,
-        "Bjorn Andersson" <andersson@kernel.org>,
-        "Konrad Dybcio" <konrad.dybcio@linaro.org>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>
-Cc:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] dt-bindings: ufs: qcom: Add reg-names property for ICE
-X-Mailer: aerc 0.13.0
-References: <20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com>
- <c4109766-22f1-7227-47bb-9273a027bb0c@linaro.org>
- <CPDFHXBPSP76.5CWNQK4N1KGI@otso>
- <5391e6e5-3773-a012-c396-b59b1f54ea51@linaro.org>
-In-Reply-To: <5391e6e5-3773-a012-c396-b59b1f54ea51@linaro.org>
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 987b98c7-c1f7-4a39-1cc5-08dae913debf
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Dec 2022 20:41:17.6438
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: yq5E/vOs0B4QsGErJrcARbKfUDHLVNZImIS1huShundccTe+Y2FjxGFmdRkHSe+2E1VxHdrqE7Nxen2jHrwuRQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5095
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed Dec 28, 2022 at 12:58 PM CET, Krzysztof Kozlowski wrote:
-> On 28/12/2022 12:53, Luca Weiss wrote:
-> > Hi Krzysztof,
+On Thu, Dec 08, 2022 at 05:58:01PM -0600, Mike Christie wrote:
+> On 12/8/22 4:59 AM, Niklas Cassel wrote:
+> > Move get_scsi_ml_byte() to scsi_priv.h since both scsi_lib.c and
+> > scsi_error.c will need to use this helper in a follow-up patch.
 > >=20
-> > On Wed Dec 28, 2022 at 12:50 PM CET, Krzysztof Kozlowski wrote:
-> >> On 09/12/2022 15:29, Luca Weiss wrote:
-> >>> The code in ufs-qcom-ice.c needs the ICE reg to be named "ice". Add t=
-his
-> >>> in the bindings so the existing dts can validate successfully.
-> >>>
-> >>> Also sm8450 is using ICE since commit 276ee34a40c1 ("arm64: dts: qcom=
-:
-> >>> sm8450: add Inline Crypto Engine registers and clock") so move the
-> >>> compatible to the correct if.
-> >>>
-> >>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> >>> ---
-> >>> (no cover subject)
-> >>>
-> >>> The only remaining validation issues I see is the following on sc8280=
-xp-crd.dtb
-> >>> and sa8540p-ride.dtb:
-> >>>
-> >>
-> >> Any plans on fixing the patch (after testing it) and resending?
+> > Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+> > ---
+> >  drivers/scsi/scsi_lib.c  | 5 -----
+> >  drivers/scsi/scsi_priv.h | 5 +++++
+> >  2 files changed, 5 insertions(+), 5 deletions(-)
 > >=20
-> > I wasn't quite sure how to fix the comments, but re-reading them this
-> > comment from you is how you expect it to be in v2?
->
-> The patch fails testing, so I meant this.
->
-> >=20
-> >> Just add it to top-level with minItems: 1 and per variant customize:
-> >> 1. maxItems: 1
-> >> 2. minItems: 2 + required
-> >=20
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 9ed1ebcb7443..d243ebc5ad54 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -579,11 +579,6 @@ static bool scsi_end_request(struct request *req, =
+blk_status_t error,
+> >  	return false;
+> >  }
+> > =20
+> > -static inline u8 get_scsi_ml_byte(int result)
+> > -{
+> > -	return (result >> 8) & 0xff;
+> > -}
+> > -
+> >  /**
+> >   * scsi_result_to_blk_status - translate a SCSI result code into blk_s=
+tatus_t
+> >   * @result:	scsi error code
+> > diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> > index 96284a0e13fe..4f97e126c6fb 100644
+> > --- a/drivers/scsi/scsi_priv.h
+> > +++ b/drivers/scsi/scsi_priv.h
+> > @@ -29,6 +29,11 @@ enum scsi_ml_status {
+> >  	SCSIML_STAT_TGT_FAILURE		=3D 0x04,	/* Permanent target failure */
+> >  };
+> > =20
+> > +static inline u8 get_scsi_ml_byte(int result)
+> > +{
+> > +	return (result >> 8) & 0xff;
+> > +}
+> > +
+>=20
+> I made a mistake in the naming of this function. The get_* functions take=
+ a
+> scsi_cmnd. The ones without the "get_" prefix take the scsi_cmnd->result.
+>=20
+> Could you rename it to scsi_ml_byte() when you move it so the mistake doe=
+s not
+> get used in multiple places?
 
-I tried a bit now but couldn't get it to work when using 'items' so that
-we have the "std" and "ice" names in there.
+Hello Mike,
 
-Documentation/devicetree/bindings/ufs/qcom,ufs.yaml: allOf:2:then:propertie=
-s:reg-names: 'oneOf' conditional failed, one must be fixed:
-        [{'const': 'std'}, {'const': 'ice'}] is too long
-        [{'const': 'std'}, {'const': 'ice'}] is too short
-        False schema does not allow 2
-        1 was expected
-        hint: "minItems" is only needed if less than the "items" list lengt=
-h
-        from schema $id: http://devicetree.org/meta-schemas/items.yaml#
+In scsi.h we have:
+#define status_byte(result) (result & 0xff)
+#define host_byte(result)   (((result) >> 16) & 0xff)
 
-Since I have 'minItems: 1' in top-level I seemingly cannot use 'items'
-in the 'if' neither alone nor with 'minItems' and/or 'maxItems', getting
-different errors when doing that.
+In scsi_cmnd.h we have:
+static inline u8 get_status_byte(struct scsi_cmnd *cmd)
+static inline u8 get_host_byte(struct scsi_cmnd *cmd)
 
-Can I just put 'reg-names: true' top-level and then specify either items
-for the ones that use ICE or for the others use the 'maxItems: 1'?
+So I see your point.
 
-Or am I supposed to ignore 'items' completely but driver expects 'ice'
-name so I'd rather include it.
 
-Regards
-Luca
+I understand that you intentionally didn't put the ML byte getter in scsi.h=
+,
+as you intentionally didn't want a LLDD to be able to get the SCSI ML byte.
 
->
-> Yes.
->
-> Best regards,
-> Krzysztof
+However, isn't the important thing that that a LLDD can't *set* the SCSI ML
+byte?
+Does it really matter if a LLDD can *get* the SCSI ML byte?
 
+If you think that it is fine that a LLD can get the SCSI ML byte,
+then perhaps we should move the getter to scsi.h instead, such that
+it is defined together with the other getters (which lacks a get_ prefix).
+
+
+Kind regards,
+Niklas=
