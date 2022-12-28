@@ -2,133 +2,179 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E41C4167B
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 06:02:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D93A8C4708D
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 08:49:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbiL1GCO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Dec 2022 01:02:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58864 "EHLO
+        id S232760AbiL1ItY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Dec 2022 03:49:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbiL1GCN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 01:02:13 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B05DE8E
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Dec 2022 22:02:07 -0800 (PST)
-X-UUID: 297fa804a4884dfcb8bcc1fe266ecf21-20221228
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=wiYFVfxNlNI/ohkpHnj9j4/4wiWx5D1lBRjT+uCIufQ=;
-        b=V3MU+Cp/7WOg2Bm2eE0KzpLNIOCglwQdV1lXpJVEdakxe3d/3aozNgIrBZcA04XNJP2k9sbu/kFsqYh3dgqY6Fkc8y0nuwamrjRrCiaPvgBh8YW92dDS2MzCXDsrj0NhNKSKgCj6ti2lohlkMDcSPxLOnOBX8CVB41AZl8rcvEo=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:cc57b839-f974-486e-b6e1-5ed5317fd7f1,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:dcaaed0,CLOUDID:cb5b29f4-ff42-4fb0-b929-626456a83c14,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 297fa804a4884dfcb8bcc1fe266ecf21-20221228
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1734289878; Wed, 28 Dec 2022 14:02:00 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Wed, 28 Dec 2022 14:01:59 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Wed, 28 Dec 2022 14:01:59 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <tun-yu.yu@mediatek.com>,
-        <eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>
-Subject: [PATCH v3] ufs: core: wlun resume SSU(Acitve) fail recovery
-Date:   Wed, 28 Dec 2022 14:01:57 +0800
-Message-ID: <20221228060157.24852-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S232810AbiL1Is5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 03:48:57 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D921FCD4;
+        Wed, 28 Dec 2022 00:47:00 -0800 (PST)
+Received: from dggpemm500017.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NhlTx3DyRzmWts;
+        Wed, 28 Dec 2022 16:45:41 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Wed, 28 Dec 2022 16:46:52 +0800
+Message-ID: <2002bec1-27af-5b4f-7bea-fca62506ca59@huawei.com>
+Date:   Wed, 28 Dec 2022 16:46:51 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH 1/2] scsi:core:Add sysfs interface to control if skip lun
+ with PQ=1
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+References: <20221214070846.1808300-1-haowenchao@huawei.com>
+ <20221214070846.1808300-2-haowenchao@huawei.com>
+ <536981a8-76a3-54b9-a70c-a86994c027dd@oracle.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <536981a8-76a3-54b9-a70c-a86994c027dd@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml500013.china.huawei.com (7.185.36.41) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 2022/12/19 5:37, Mike Christie wrote:
+> On 12/14/22 1:08 AM, Wenchao Hao wrote:
+>>
+>> When iSCSI initiator logged in target, the target attached none valid
+>> lun but lun0. lun0 is not an valid disk, while it would response
+>> inquiry command with PQ=1 and other general scsi commands like probe lun.
+>> The others luns of target is added/removed dynamicly.
+>>
+>> We want the lun0 to be mapped to an sg device in initiator, so we can
+>> probe luns of target based on lun0.
+> 
+> What do you want to do exactly? Is the idea with your patch we would create
+> an sg device, then in userpsace you would do some scan related commands. If
+> you find devices then you use sysfs to have scsi-ml scan/add a specific device
+> like
+> 
+> echo 5 0 0 8 > host5/scan
+> 
+> ?
+> 
+> It's not really clear to me why you need the sg device, and can't just do?
+> 
+> echo - - - > .../hostN/scan
+>
+We do not directly echo - - - > .../hostN/scan. Instead, we use rescan-scsi-bus.sh
+defined in sg3_utils to scan luns. If no sg device mapped to this host, the default
+scan operations could not recognize luns.
 
-When wlun resume SSU(Active) timeout, scsi try eh_host_reset_handler.
-But ufshcd_eh_host_reset_handler hang at wait flush_work(&hba->eh_work).
-And ufshcd_err_handler hang at wait rpm resume.
-Do link recovery only in this case. Below is IO hang stack dump.
+We can simulate this with scsi_debug by following steps:
 
-<ffffffdd78e02b34> schedule+0x110/0x204
-<ffffffdd78e0be60> schedule_timeout+0x98/0x138
-<ffffffdd78e040e8> wait_for_common_io+0x130/0x2d0
-<ffffffdd77d6a000> blk_execute_rq+0x10c/0x16c
-<ffffffdd78126d90> __scsi_execute+0xfc/0x278
-<ffffffdd7813891c> ufshcd_set_dev_pwr_mode+0x1c8/0x40c
-<ffffffdd78137d1c> __ufshcd_wl_resume+0xf0/0x5cc
-<ffffffdd78137ae0> ufshcd_wl_runtime_resume+0x40/0x18c
-<ffffffdd78136108> scsi_runtime_resume+0x88/0x104
-<ffffffdd7809a4f8> __rpm_callback+0x1a0/0xaec
-<ffffffdd7809b624> rpm_resume+0x7e0/0xcd0
-<ffffffdd7809a788> __rpm_callback+0x430/0xaec
-<ffffffdd7809b644> rpm_resume+0x800/0xcd0
-<ffffffdd780a0778> pm_runtime_work+0x148/0x198
+1. build scsi debug with following changes;
 
-<ffffffdd78e02b34> schedule+0x110/0x204
-<ffffffdd78e0be10> schedule_timeout+0x48/0x138
-<ffffffdd78e03d9c> wait_for_common+0x144/0x2dc
-<ffffffdd7758bba4> __flush_work+0x3d0/0x508
-<ffffffdd7815572c> ufshcd_eh_host_reset_handler+0x134/0x3a8
-<ffffffdd781216f4> scsi_try_host_reset+0x54/0x204
-<ffffffdd78120594> scsi_eh_ready_devs+0xb30/0xd48
-<ffffffdd7812373c> scsi_error_handler+0x260/0x874
-
-<ffffffdd78e02b34> schedule+0x110/0x204
-<ffffffdd7809af64> rpm_resume+0x120/0xcd0
-<ffffffdd7809fde8> __pm_runtime_resume+0xa0/0x17c
-<ffffffdd7815193c> ufshcd_err_handling_prepare+0x40/0x430
-<ffffffdd7814cce8> ufshcd_err_handler+0x1c4/0xd4c
-
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e18c9f4463ec..0dfb9a35bf66 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7366,6 +7366,23 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 8553277effb3..36dcdd2c3fe4 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -836,6 +836,7 @@ static int dif_errors;
+ static bool sdeb_zbc_in_use;   /* true for host-aware and host-managed disks */
+ static int sdeb_zbc_zone_cap_mb;
+ static int sdeb_zbc_zone_size_mb;
++static int sdeb_pq_type;
+ static int sdeb_zbc_max_open = DEF_ZBC_MAX_OPEN_ZONES;
+ static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
  
- 	hba = shost_priv(cmd->device->host);
+@@ -1583,6 +1584,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+        u32 alloc_len, n;
+        int ret;
+        bool have_wlun, is_disk, is_zbc, is_disk_zbc;
++       struct scsi_device *sdev = scp->device;
  
-+	/*
-+	 * If pm op resume fail and wait err recovery, do link recovery only.
-+	 * Because schedule eh work will get dead lock in ufshcd_rpm_get_sync
-+	 * and wait wlun resume, but wlun resume error wait eh work finish.
-+	 */
-+	if (hba->pm_op_in_progress &&
-+	    hba->curr_dev_pwr_mode != UFS_ACTIVE_PWR_MODE) {
-+		err = ufshcd_link_recovery(hba);
-+		if (err) {
-+			dev_err(hba->dev, "%s: power state %d pm_progress %d",
-+				__func__,
-+				hba->curr_dev_pwr_mode,
-+				hba->pm_op_in_progress);
-+		}
-+		return err;
-+	}
-+
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->force_reset = true;
- 	ufshcd_schedule_eh_work(hba);
--- 
-2.18.0
+        alloc_len = get_unaligned_be16(cmd + 3);
+        arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
+@@ -1598,7 +1600,11 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+                pq_pdt = 0x7f;  /* not present, PQ=3, PDT=0x1f */
+        else
+                pq_pdt = (sdebug_ptype & 0x1f);
+-       arr[0] = pq_pdt;
++       if (sdev->lun == 0) {
++               arr[0] = pq_pdt | (sdeb_pq_type << 5);
++       } else {
++               arr[0] = pq_pdt;
++       }
+        if (0x2 & cmd[1]) {  /* CMDDT bit set */
+                mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 1);
+                kfree(arr);
+@@ -5883,6 +5889,7 @@ module_param_named(zone_cap_mb, sdeb_zbc_zone_cap_mb, int, S_IRUGO);
+ module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
+ module_param_named(zone_nr_conv, sdeb_zbc_nr_conv, int, S_IRUGO);
+ module_param_named(zone_size_mb, sdeb_zbc_zone_size_mb, int, S_IRUGO);
++module_param_named(pq_type, sdeb_pq_type, int, S_IRUGO);
+ 
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+@@ -7825,6 +7832,7 @@ static int sdebug_driver_probe(struct device *dev)
+                error = -ENODEV;
+                return error;
+        }
++       //hpnt->no_skip_pq1 = 1;
+        if (submit_queues > nr_cpu_ids) {
+                pr_warn("%s: trim submit_queues (was %d) to nr_cpu_ids=%u\n",
+                        my_name, submit_queues, nr_cpu_ids);
 
+2. insmod scsi_debug with modparam max_luns=4 pq_type=1, we would get following scsi devices
+
+# lsscsi -g
+[0:0:0:1]    disk    Linux    scsi_debug       0191  /dev/sda   /dev/sg0 
+[0:0:0:2]    disk    Linux    scsi_debug       0191  /dev/sdb   /dev/sg1 
+[0:0:0:3]    disk    Linux    scsi_debug       0191  /dev/sdc   /dev/sg2 
+
+3. remove the scsi_debug disks
+
+echo 1 > /sys/block/sda/device/delete
+echo 1 > /sys/block/sdb/device/delete
+echo 1 > /sys/block/sdc/device/delete
+
+4. scan with rescan-scsi-bus.sh would failed to discovery luns.
+
+# rescan-scsi-bus.sh 
+Scanning SCSI subsystem for new devices
+Scanning host 0 for  SCSI target IDs 0 1 2 3 4 5 6 7, all LUNs
+0 new or changed device(s) found.          
+0 remapped or resized device(s) found.
+0 device(s) removed.
+
+Did not add the luns. If do not comment the line hpnt->no_skip_pq1 = 1 in
+scsi_debug.c, the scan operations would found these luns succeed.
+
+> ? Do you only want to add specific devices like you are doing some sort of
+> LUN masking on the initiator side?
+> 
+> Is the issue that you need the sg device there, so you can detect when a device
+> is no longer present on the target and then you will have userspace remove the
+> device via the sysfs delete file?
+> .
+
+Yes, this is one scenarios. luns on the target are removed or added dynamically,
+the only fixed one is LUN0 which response PQ=1.
+
+If luns are removed from target after been added by initiator, we could know which
+one should be removed from initiator via LUN0.
+
+We can think LUN0 with PQ=1 is a dummy lun, which is fixed and can tell luns info on
+the target.
+
+According to the SPC, PQ=1 means the addressed logical unit having the
+indicated device type is not accessible, it does not mean the addressed
+logical unit is invalid. So I think we still can map this lun to an sg device.
