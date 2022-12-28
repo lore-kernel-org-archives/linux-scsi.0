@@ -2,118 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 813EFC3DA7A
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 11:59:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C1EFC3DA7D
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Dec 2022 12:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233049AbiL1L6k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Dec 2022 06:58:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40236 "EHLO
+        id S230508AbiL1Mnl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Dec 2022 07:43:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233013AbiL1L6g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 06:58:36 -0500
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10B8A11457
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 03:58:33 -0800 (PST)
-Received: by mail-lf1-x136.google.com with SMTP id y25so23321389lfa.9
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 03:58:32 -0800 (PST)
+        with ESMTP id S230071AbiL1Mnk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 07:43:40 -0500
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AE56F5AC
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 04:43:39 -0800 (PST)
+Received: by mail-lf1-x12b.google.com with SMTP id g13so23453500lfv.7
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2022 04:43:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=WnXYH4qLynXgTdL39MoHqXN5EMW38TQiUZiVR1DxEeQ=;
-        b=JJVU3PTcvSE3KUUGIfvJBRh97Si8pN9Fapb4MGpR2amkOIBxz5I+yTHUpNOH0RpIgR
-         6q8PQ5nwQOCVfGdeY3kZcX9NdSciVOjRc/iCixqoHqERLuNAeu2xCF4CXSiZEIXNU6AQ
-         S78hOnlQKQGlpZ4LDmtPmh05YO34NuncA1fB4OHXsFSWmYcKISoOYEQ6kRVzF+ZkZRSG
-         AswvNzlIZViD+b7bWrk+ps9a3jD6/MkeJDKR7hIeI7rkJ3yVmioOP3xlSW4rRdJdNIYn
-         JA6h2U4GrJBAvpaFbRSYAplAcPsPDcW40+Pk4PsnXiyWYs5zEHiVAZjXwa4GwwgaD0wU
-         YC8Q==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wyLEEKIyqkAjb9IQ0Oi9TdXRS+RdmpHpVD+IMGR2Kbs=;
+        b=Y2dv+v5dkIAzONv9TPRC7w/+PzHLta6hYhIHZA/4acoueQatOfsspyB144denkYekh
+         DuJ+mf9M+cyqWx//dBNZLvQTnyDQF06A5/ilUVpYmS5LgDZMWRDVwORd9kDBj+1CxTLY
+         qOXWKtrgCb0n6HOCoYN3in5OJHIzAoBVOW6OtIv3/yeLi+0TJ1b+oM2Ib9nJ28ThxNwf
+         y55psogOh1MG0bszg1YtBGJ0F4+fqqnxsNCm/nIkIoSSRIQ27vxyX391u3EtdCUyV6F6
+         zqNKnm1ObLwQMYxYNLaareaMMPDTUIA6la9CXa5VTuPVyYN0dzSRgyyKWwz3knS0tl+r
+         9KYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=WnXYH4qLynXgTdL39MoHqXN5EMW38TQiUZiVR1DxEeQ=;
-        b=zioAh/lk323MlrrzPifOJzTaRZgkJXXfZFrrRoB//Cm1+ELCIbrT6ELWtgQlfCuKEk
-         4pRU7SKZ3qBX9pF/e4nNlFOlM2OioONMFOdXXUF7cHnDXZP3HZ/8vb19u58zaIzGW6O2
-         JJeQ/8rBEpmbK53970Y1JVnMVhvNVeMt3m954HELUWp/NnYF/J3l2JE/4/aG2YKsreSv
-         psxAilC5smrqYDq7cSB1xKiM7PgW7q4nm8NsOKVfTbtl/m8Q4QhzVQ/oH4xnmF6Ama7n
-         ziclWOKfGGs22KMUFOCR4MTu0pocUWrKAvKL6TP43WgQqCb8RJoKngsleF3IXiThH0/V
-         CDSg==
-X-Gm-Message-State: AFqh2kqP4nI9Sh86f3ZqSvIm4H8MyKEY+Xp2b00PcJdgCaD/6uzLnGKc
-        27eXzJOxv395L5aK4Ue+upjBlg==
-X-Google-Smtp-Source: AMrXdXt4PV8yq8guZTESHWBuI7Pgb3yXXbymZcLJRNWE/tWew9Yf+0+pOCQKIAX0t7/max5UYbBgZQ==
-X-Received: by 2002:ac2:46f8:0:b0:4b5:9ec5:dbed with SMTP id q24-20020ac246f8000000b004b59ec5dbedmr8003412lfo.40.1672228711451;
-        Wed, 28 Dec 2022 03:58:31 -0800 (PST)
-Received: from [192.168.0.20] (088156142067.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.67])
-        by smtp.gmail.com with ESMTPSA id d21-20020ac24c95000000b0049465afdd38sm2637727lfl.108.2022.12.28.03.58.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Dec 2022 03:58:30 -0800 (PST)
-Message-ID: <5391e6e5-3773-a012-c396-b59b1f54ea51@linaro.org>
-Date:   Wed, 28 Dec 2022 12:58:29 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH] dt-bindings: ufs: qcom: Add reg-names property for ICE
-Content-Language: en-US
-To:     Luca Weiss <luca.weiss@fairphone.com>,
-        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wyLEEKIyqkAjb9IQ0Oi9TdXRS+RdmpHpVD+IMGR2Kbs=;
+        b=bXgp2HAnZKckOuAWauHKhipSIh3XOCSrRTup4TE+FPbnNNMQEWZm0ScUJmlqJRvOwU
+         4vvuEIU1nrYqZNic/Me6L80+C+YI6L01ey2VgSJZztFFAysbCqEVgViRA5ifjNOBG4yF
+         3xGRJ6w/nJH7sBkM7UZOx/bRaNeTPOQbROcyaBIvr/pMigavJ/bl9S03BGiNgpN/SU5G
+         6OW8cQ/4R+ZYIkWLZgFJie/daKPxcRKirz7C5WjtKWnN4ct8XwGyYTq7u+T7o7gkFDb9
+         ONsFUfjuJFEihkDqFySHSzbVCOv9DDB0AS9q+hLDJ8PwkNyC6Y2klfWCrrd/tZRGe1g/
+         cs0Q==
+X-Gm-Message-State: AFqh2krsKjb681tvENDTzEqr+4KooaVz87za5f3iIT4xAg16ur4xFSxH
+        EhsCQ8vnTXlcPNKWpL941IR3X9v78snZn0Ir
+X-Google-Smtp-Source: AMrXdXtJknrPqpsSn+QPvuHwcVlU6sMMhCqPKVdgnUPn88kT7MU7FTU5h/obHREzhpHJTWFCmh6zMA==
+X-Received: by 2002:a05:6512:398c:b0:4ac:ec52:e063 with SMTP id j12-20020a056512398c00b004acec52e063mr7993973lfu.29.1672231417668;
+        Wed, 28 Dec 2022 04:43:37 -0800 (PST)
+Received: from krzk-bin.NAT.warszawa.vectranet.pl (088156142067.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.67])
+        by smtp.gmail.com with ESMTPSA id c1-20020ac25f61000000b0049f54c5f2a4sm2647356lfc.229.2022.12.28.04.43.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Dec 2022 04:43:37 -0800 (PST)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com>
- <c4109766-22f1-7227-47bb-9273a027bb0c@linaro.org>
- <CPDFHXBPSP76.5CWNQK4N1KGI@otso>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <CPDFHXBPSP76.5CWNQK4N1KGI@otso>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH] dt-bindings: ufs: qcom,ufs: document required-opps
+Date:   Wed, 28 Dec 2022 13:43:31 +0100
+Message-Id: <20221228124331.258416-1-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/12/2022 12:53, Luca Weiss wrote:
-> Hi Krzysztof,
-> 
-> On Wed Dec 28, 2022 at 12:50 PM CET, Krzysztof Kozlowski wrote:
->> On 09/12/2022 15:29, Luca Weiss wrote:
->>> The code in ufs-qcom-ice.c needs the ICE reg to be named "ice". Add this
->>> in the bindings so the existing dts can validate successfully.
->>>
->>> Also sm8450 is using ICE since commit 276ee34a40c1 ("arm64: dts: qcom:
->>> sm8450: add Inline Crypto Engine registers and clock") so move the
->>> compatible to the correct if.
->>>
->>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
->>> ---
->>> (no cover subject)
->>>
->>> The only remaining validation issues I see is the following on sc8280xp-crd.dtb
->>> and sa8540p-ride.dtb:
->>>
->>
->> Any plans on fixing the patch (after testing it) and resending?
-> 
-> I wasn't quite sure how to fix the comments, but re-reading them this
-> comment from you is how you expect it to be in v2?
+UFS device node on SC8280XP uses required-opps:
 
-The patch fails testing, so I meant this.
+  sc8280xp-crd.dtb: ufs@1d84000: Unevaluated properties are not allowed ('required-opps' was unexpected)
 
-> 
->> Just add it to top-level with minItems: 1 and per variant customize:
->> 1. maxItems: 1
->> 2. minItems: 2 + required
-> 
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Yes.
-
-Best regards,
-Krzysztof
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index e53c6e203ac8..41ac2fe861f3 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -75,6 +75,9 @@ properties:
+     minItems: 1
+     maxItems: 2
+ 
++  required-opps:
++    maxItems: 1
++
+   resets:
+     maxItems: 1
+ 
+-- 
+2.34.1
 
