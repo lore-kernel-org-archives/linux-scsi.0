@@ -2,89 +2,148 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35562C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Dec 2022 03:07:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B1F6C53210
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Dec 2022 08:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231269AbiL2DH1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Dec 2022 22:07:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59836 "EHLO
+        id S233122AbiL2IGT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Dec 2022 03:06:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230225AbiL2DH0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2022 22:07:26 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77EDAC740;
-        Wed, 28 Dec 2022 19:07:24 -0800 (PST)
-X-UUID: 27deb0d81236403f95e38ab3de441de5-20221229
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=5APWQ/KbXgNbszB/TlGiUT+18qB2uNXqqSohrW/gfYk=;
-        b=M+SEdy1odN/D7M0XvmrsTCkZL4+LGihKK/MHy+ImExNMtwEhw8rg4WxKkSYwEICe3F3L1UooFt0rF8nasF5GuH0ffEqBXno2BaUe19JG5Go0PILseVDes41t5TOmH2PGtUBlcpZ0K9OzW9ZXSD7OiReaaRtKgMiGJ+WTwxRyMY0=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:9876b4b4-a47e-48d0-b3ca-1651564b39dc,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:-5
-X-CID-META: VersionHash:dcaaed0,CLOUDID:6d3b40f4-ff42-4fb0-b929-626456a83c14,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 27deb0d81236403f95e38ab3de441de5-20221229
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-        (envelope-from <ed.tsai@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1651047375; Thu, 29 Dec 2022 11:07:18 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Thu, 29 Dec 2022 11:07:17 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Thu, 29 Dec 2022 11:07:17 +0800
-From:   Ed Tsai <ed.tsai@mediatek.com>
-To:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <matthias.bgg@gmail.com>, <linux-scsi@vger.kernel.org>
-CC:     <peter.wang@mediatek.com>, <alice.chao@mediatek.com>,
-        <powen.kao@mediatek.com>, <naomi.chu@mediatek.com>,
-        <stanley.chu@mediatek.com>, <wsd_upstream@mediatek.com>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ed Tsai <ed.tsai@mediatek.com>
-Subject: [PATCH 1/1] ufs: update the timeout timer after resume
-Date:   Thu, 29 Dec 2022 11:06:45 +0800
-Message-ID: <20221229030645.11558-1-ed.tsai@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S233090AbiL2IGP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2022 03:06:15 -0500
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C67E8BE6
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2022 00:06:13 -0800 (PST)
+Received: by mail-lf1-x135.google.com with SMTP id y25so26571503lfa.9
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2022 00:06:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ben8+4oiArxexQJyJIBwbQtQ9giuKq12emDFPOAB0/A=;
+        b=jufpxaDQuVBA0SebIRrM4IEex4ljQthZbGvev2zfkGOV/gkQ+/y36QDPqFDhUpOLdB
+         md5nPBiW5qSbkYYISL+qf1hh07zuo6X8/peed5sHge+qh0ZCXqT0Gsbq6H8XADK0D7bD
+         fMMDbnIj1oxGmllKQ1upIjpqwH+xb7wfGNsfNDkH0gpv9Xyu2OutUCjKr65X0K4WwdqE
+         CZXCWg6A4TgTvbhOFy0467qt3gdO1easnHGL7bsnu8lVXhu+uocBJLLppPxb9ypvspSj
+         qVSmDLyaDopfP2csfVO8wu0dPb4eafmJiSajVISsX3RCpUFcx4eFL28gH5/ErN+0xSVY
+         eCpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ben8+4oiArxexQJyJIBwbQtQ9giuKq12emDFPOAB0/A=;
+        b=hAY8WhD5fgvHgstXFfqUZC8PMMPz5MLnAEEZlCk7a3BWV+FsmPJwG6PgWvpcjfQCfk
+         6uIwLCBmRtqRkCM8sqv70aHNfsVDPSlDcmOA3NFGdnR5S4BdEa+2+9ABXAk/qiTXAUBd
+         BQh6q/MLOc1s6EBBlwEXHMPbnCRjWJlm74IDENIBetE/tE+bO9J8ihGYbWyjq1N+KRye
+         B2mJsepBFgj5N0SCjWC3c6j27eUxJ2FhvyHoNJiriBu08hbR6tM7mDUbwk9Kf0Sw+oun
+         Y703DXR2VxCmDwu8iCY4SzeRhNoYGZREWWSl83ZLJgnGz5rfA696odKNVIGn22PgzuNr
+         mGUQ==
+X-Gm-Message-State: AFqh2kqSLcg7PQJ3JY3hK7oPH2d7gbk3azt6qNOPg4Oc/BEoFvvzueWe
+        B00fGl8mTI3LJhL8R2xh+zYmBw==
+X-Google-Smtp-Source: AMrXdXtAmfVtj1IoPnGmK4xqeGUXuvnkJ8kCHhPjHiGxwb3HU1LujrXhq0Ja4bqnsKuNo/EyORORyA==
+X-Received: by 2002:ac2:528f:0:b0:4b5:6504:a556 with SMTP id q15-20020ac2528f000000b004b56504a556mr7164960lfm.61.1672301172157;
+        Thu, 29 Dec 2022 00:06:12 -0800 (PST)
+Received: from [192.168.0.20] (088156142067.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.67])
+        by smtp.gmail.com with ESMTPSA id d21-20020ac24c95000000b0049465afdd38sm2979222lfl.108.2022.12.29.00.06.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 29 Dec 2022 00:06:11 -0800 (PST)
+Message-ID: <0180241f-4f10-f914-1288-371106c4fa1c@linaro.org>
+Date:   Thu, 29 Dec 2022 09:06:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH] dt-bindings: ufs: qcom: Add reg-names property for ICE
+Content-Language: en-US
+To:     Luca Weiss <luca.weiss@fairphone.com>,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com>
+ <c4109766-22f1-7227-47bb-9273a027bb0c@linaro.org>
+ <CPDFHXBPSP76.5CWNQK4N1KGI@otso>
+ <5391e6e5-3773-a012-c396-b59b1f54ea51@linaro.org>
+ <CPDJZJHDL1XJ.2UY1U1E19CTUH@otso>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <CPDJZJHDL1XJ.2UY1U1E19CTUH@otso>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The tags allocation is limited by the number of active queues and a
-queue is marked as inactive by the queue timeout worker after up to 30Hz
-by default.
+On 28/12/2022 16:24, Luca Weiss wrote:
+> On Wed Dec 28, 2022 at 12:58 PM CET, Krzysztof Kozlowski wrote:
+>> On 28/12/2022 12:53, Luca Weiss wrote:
+>>> Hi Krzysztof,
+>>>
+>>> On Wed Dec 28, 2022 at 12:50 PM CET, Krzysztof Kozlowski wrote:
+>>>> On 09/12/2022 15:29, Luca Weiss wrote:
+>>>>> The code in ufs-qcom-ice.c needs the ICE reg to be named "ice". Add this
+>>>>> in the bindings so the existing dts can validate successfully.
+>>>>>
+>>>>> Also sm8450 is using ICE since commit 276ee34a40c1 ("arm64: dts: qcom:
+>>>>> sm8450: add Inline Crypto Engine registers and clock") so move the
+>>>>> compatible to the correct if.
+>>>>>
+>>>>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+>>>>> ---
+>>>>> (no cover subject)
+>>>>>
+>>>>> The only remaining validation issues I see is the following on sc8280xp-crd.dtb
+>>>>> and sa8540p-ride.dtb:
+>>>>>
+>>>>
+>>>> Any plans on fixing the patch (after testing it) and resending?
+>>>
+>>> I wasn't quite sure how to fix the comments, but re-reading them this
+>>> comment from you is how you expect it to be in v2?
+>>
+>> The patch fails testing, so I meant this.
+>>
+>>>
+>>>> Just add it to top-level with minItems: 1 and per variant customize:
+>>>> 1. maxItems: 1
+>>>> 2. minItems: 2 + required
+>>>
+> 
+> I tried a bit now but couldn't get it to work when using 'items' so that
+> we have the "std" and "ice" names in there.
+> 
+> Documentation/devicetree/bindings/ufs/qcom,ufs.yaml: allOf:2:then:properties:reg-names: 'oneOf' conditional failed, one must be fixed:
+>         [{'const': 'std'}, {'const': 'ice'}] is too long
+>         [{'const': 'std'}, {'const': 'ice'}] is too short
+>         False schema does not allow 2
+>         1 was expected
+>         hint: "minItems" is only needed if less than the "items" list length
+>         from schema $id: http://devicetree.org/meta-schemas/items.yaml#
+> 
+> Since I have 'minItems: 1' in top-level I seemingly cannot use 'items'
+> in the 'if' neither alone nor with 'minItems' and/or 'maxItems', getting
+> different errors when doing that.
 
-Therefore, tags for the general I/O may be limited to half of the max
-depth up to 30HZ after resume. To make sure the ufs request queue for pm
-usage can be inactive immediately, trigger the timeout worker to release
-the tag set.
+top-level cannot have only minItems:1.
 
-Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+> 
+> Can I just put 'reg-names: true' top-level and then specify either items
+> for the ones that use ICE or for the others use the 'maxItems: 1'?
+> 
+> Or am I supposed to ignore 'items' completely but driver expects 'ice'
+> name so I'd rather include it.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e18c9f4463ec..c77570caa3a8 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8842,6 +8842,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 		hba->curr_dev_pwr_mode = pwr_mode;
- 	}
- 
-+	mod_timer(&sdp->request_queue->timeout, 0);
- 	scsi_device_put(sdp);
- 	hba->host->eh_noresume = 0;
- 	return ret;
--- 
-2.18.0
+Use the syntax like:
+https://elixir.bootlin.com/linux/v5.19-rc6/source/Documentation/devicetree/bindings/clock/samsung,exynos7-clock.yaml#L57
+
+
+Best regards,
+Krzysztof
 
