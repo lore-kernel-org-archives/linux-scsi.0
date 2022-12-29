@@ -2,100 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67924C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Dec 2022 14:12:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B4AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Dec 2022 15:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233380AbiL2OMe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Dec 2022 09:12:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42498 "EHLO
+        id S230173AbiL2PHO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Dec 2022 10:07:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233187AbiL2OMc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2022 09:12:32 -0500
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D684912601;
-        Thu, 29 Dec 2022 06:12:31 -0800 (PST)
-Received: by mail-pl1-f177.google.com with SMTP id d3so19013422plr.10;
-        Thu, 29 Dec 2022 06:12:31 -0800 (PST)
+        with ESMTP id S230175AbiL2PHH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2022 10:07:07 -0500
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2516913DE1;
+        Thu, 29 Dec 2022 07:06:50 -0800 (PST)
+Received: by mail-pj1-f42.google.com with SMTP id m7-20020a17090a730700b00225ebb9cd01so11259176pjk.3;
+        Thu, 29 Dec 2022 07:06:50 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Rcy9ftJKBrRHkC72YgwS3ie0/FVvPrzfi5Sffg9ACpo=;
-        b=TORLYQ8yGzbZQIyLEnNk0Vx6CJzAsFKD/ZBFGME81EPqeE2TmkGC+G9QOMwA4iLCUU
-         l8yoW7qs1w5cRDXkFQUgIGz1l/e8vub53fHKyywfWvuGGUX6S/Ecri/S+aLyQGFcxmdq
-         BceT+7MQ+Hljj8LJoM7Ybn2CpSDA98Tc2zsyRNBR6AxcfyNsQNC5cRpLjkV9ebiGSYE1
-         KlmW1ivriI70kmWfT+OCfCW7mOBSwqazO96oAGxh/jkdhJFMLBY1YtZ5ceeaXQcP806b
-         gsPoZeJlz9LE/2XS38tVf43oa8ul6Z202dzjDc+9lF/bx6AGLkNZHMv1c4Mc/VPbLxwQ
-         BXnw==
-X-Gm-Message-State: AFqh2kpIlHE/ESK7szSblVGfB05ctVH/TKy8Ih5B88mR6qBqrltOz2f0
-        tH+qvjqfa+PN8pr/ATxzwo4=
-X-Google-Smtp-Source: AMrXdXsAqNFfvfsB+SuolGkuRhNtkrezEQ/gDYlfmkotyqEhDt8zMnxQINy6iDMslEl7w7ZNlaGeow==
-X-Received: by 2002:a05:6300:8184:b0:b0:3e0f:508d with SMTP id bt4-20020a056300818400b000b03e0f508dmr34921955pzc.55.1672323151083;
-        Thu, 29 Dec 2022 06:12:31 -0800 (PST)
+        bh=GTJkG9x3God2II1jVKdydXSgUoyIekASVKY7SpXt4ug=;
+        b=iwLZ9Hd+92HKnxIqbDZlYTHzJK9e4yF0Ru3n2gF2xtzewo2vjQFWMFphFkWRslYQU9
+         hK1fJ9H0V9jH1PwmOhUgeq7YBIH/seXxFQEH/6wOX3KS2qmWxYVU/7a3rzOCaHhz+KB8
+         QuEaBPR0P9zdlg9tCwXH+rtI9mD299w2dD0DL84AcY2eipAwAD3KeSxZsXZk6kkwSJLI
+         2Ai3DsGyDIOMbPH297UEvtnraW9PJA5Z1bbJV8xV97nIcfz3SDixNMr4mSj+JhjtD4h9
+         pkaPZ1DmVGIYdoD+Gq6WuwsqnsYCdf2J51ke7+5LahQXIDq97y1fwBQGBv7xo4PzvIIo
+         gQHQ==
+X-Gm-Message-State: AFqh2kphKAVTMYwv+iYS1/GHb528KBkbRYxiw6jl/s3ddf1ccn4Ec12Y
+        lEf+pcd3h/MpYKOzZglBpP0=
+X-Google-Smtp-Source: AMrXdXsiCcxYJCXw8juZUfTXSvDXwzqQz39j+sP+02zeB0gRxX6A0NB2XEDoeFz1tBYQh/LCzztvag==
+X-Received: by 2002:a17:90a:1b2d:b0:225:c9d4:9cd9 with SMTP id q42-20020a17090a1b2d00b00225c9d49cd9mr22266039pjq.32.1672326401876;
+        Thu, 29 Dec 2022 07:06:41 -0800 (PST)
 Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id a23-20020a621a17000000b0057ef155103asm1081113pfa.155.2022.12.29.06.12.28
+        by smtp.gmail.com with ESMTPSA id h19-20020a17090adb9300b0021806f631ccsm11471537pjv.30.2022.12.29.07.06.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 29 Dec 2022 06:12:29 -0800 (PST)
-Message-ID: <46b4a936-c59a-ba04-4395-ed53fb72a67d@acm.org>
-Date:   Thu, 29 Dec 2022 06:12:27 -0800
+        Thu, 29 Dec 2022 07:06:40 -0800 (PST)
+Message-ID: <82272e6d-e175-ad46-e66b-7eb5e51964c3@acm.org>
+Date:   Thu, 29 Dec 2022 07:06:38 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.0
-Subject: Re: [PATCH 1/1] ufs: update the timeout timer after resume
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Add hibernation callbacks
 Content-Language: en-US
-To:     Ed Tsai <ed.tsai@mediatek.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, matthias.bgg@gmail.com,
-        linux-scsi@vger.kernel.org
-Cc:     peter.wang@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        stanley.chu@mediatek.com, wsd_upstream@mediatek.com,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-References: <20221229030645.11558-1-ed.tsai@mediatek.com>
+To:     Anjana Hari <quic_ahari@quicinc.com>, agross@kernel.org,
+        andersson@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        konrad.dybcio@linaro.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_narepall@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com
+References: <20221221171222.19699-1-quic_ahari@quicinc.com>
+ <20221221171222.19699-2-quic_ahari@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221229030645.11558-1-ed.tsai@mediatek.com>
+In-Reply-To: <20221221171222.19699-2-quic_ahari@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/28/22 19:06, Ed Tsai wrote:
-> The tags allocation is limited by the number of active queues and a
-> queue is marked as inactive by the queue timeout worker after up to 30Hz
-> by default.
+On 12/21/22 09:12, Anjana Hari wrote:
+> Add hibernation call backs - freeze, restore and thaw.
+> Add the respective prototypes.
 > 
-> Therefore, tags for the general I/O may be limited to half of the max
-> depth up to 30HZ after resume. To make sure the ufs request queue for pm
-> usage can be inactive immediately, trigger the timeout worker to release
-> the tag set.
-> 
-> Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
+> Signed-off-by: Anjana Hari <quic_ahari@quicinc.com>
 > ---
->   drivers/ufs/core/ufshcd.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/ufs/core/ufshcd.c | 80 +++++++++++++++++++++++++++++++++++++++
+>   include/ufs/ufshcd.h      |  6 +++
+>   2 files changed, 86 insertions(+)
 > 
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index e18c9f4463ec..c77570caa3a8 100644
+> index bda61be5f035..c216a97dc1dd 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8842,6 +8842,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
->   		hba->curr_dev_pwr_mode = pwr_mode;
->   	}
+> @@ -9453,6 +9453,25 @@ static int ufshcd_resume(struct ufs_hba *hba)
 >   
-> +	mod_timer(&sdp->request_queue->timeout, 0);
->   	scsi_device_put(sdp);
->   	hba->host->eh_noresume = 0;
->   	return ret;
+>   	/* enable the host irq as host controller would be active soon */
+>   	ufshcd_enable_irq(hba);
+> +
+> +	if (hba->restore) {
+> +		/* Configure UTRL and UTMRL base address registers */
+> +		ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
+> +			      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
+> +		ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
+> +			      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
+> +		ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
+> +			      REG_UTP_TASK_REQ_LIST_BASE_L);
+> +		ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
+> +			      REG_UTP_TASK_REQ_LIST_BASE_H);
+> +		/* Commit the registers */
+> +		mb();
+> +	}
 
-Where is the code that restores the timeout to the original value?
+The comment above the mb() call is wrong. No matter the type of a 
+barrier, a barrier controls the order in which load, store and/or MMIO 
+operations happen. A barrier does not "commit" register writes.
 
-Additionally, I think that only the block layer core should manipulate 
-the request queue timer directly. Please add a helper function in the 
-block layer and call that helper function from the UFS driver.
+The comment above mb() should explain which load, store and/or MMIO 
+accesses are ordered and also why the ordering is necessary.
+
+> +	/*
+> +	 * Ensure no runtime PM operations take
+> +	 * place in the hibernation and restore sequence
+> +	 * on successful freeze operation.
+> +	 */
+> +	if (!ret)
+> +		pm_runtime_disable(hba->dev);
+
+I think the power management core already serializes system-wide power 
+management state transitions and runtime power management and hence that 
+the above code can be left out.
+
+> +	/*
+> +	 * Now any runtime PM operations can be
+> +	 * allowed on successful restore operation
+> +	 */
+> +	if (!ret)
+> +		pm_runtime_enable(hba->dev);
+
+Same comment for the above code.
+
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_system_restore);
+> +
+> +int ufshcd_system_thaw(struct device *dev)
+> +{
+> +
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	int ret = 0;
+> +
+> +	ret = ufshcd_system_resume(dev);
+> +	if (!ret)
+> +		pm_runtime_enable(hba->dev);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_system_thaw);
+
+Also here, please remove the code related to runtime power management.
+
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 5cf81dff60aa..dadb3c732be4 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -978,6 +978,9 @@ struct ufs_hba {
+>   #endif
+>   	u32 luns_avail;
+>   	bool complete_put;
+> +
+> +	/* Distinguish between resume and restore */
+> +	bool restore;
+>   };
+
+Please convert this member variable into a function argument. This 
+probably will require adding an argument to existing functions.
 
 Thanks,
 
 Bart.
+
