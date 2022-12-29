@@ -2,163 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B4AC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Dec 2022 15:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8542DC3DA79
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Dec 2022 17:00:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230173AbiL2PHO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Dec 2022 10:07:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60840 "EHLO
+        id S233586AbiL2RAT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Dec 2022 12:00:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230175AbiL2PHH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2022 10:07:07 -0500
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2516913DE1;
-        Thu, 29 Dec 2022 07:06:50 -0800 (PST)
-Received: by mail-pj1-f42.google.com with SMTP id m7-20020a17090a730700b00225ebb9cd01so11259176pjk.3;
-        Thu, 29 Dec 2022 07:06:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GTJkG9x3God2II1jVKdydXSgUoyIekASVKY7SpXt4ug=;
-        b=iwLZ9Hd+92HKnxIqbDZlYTHzJK9e4yF0Ru3n2gF2xtzewo2vjQFWMFphFkWRslYQU9
-         hK1fJ9H0V9jH1PwmOhUgeq7YBIH/seXxFQEH/6wOX3KS2qmWxYVU/7a3rzOCaHhz+KB8
-         QuEaBPR0P9zdlg9tCwXH+rtI9mD299w2dD0DL84AcY2eipAwAD3KeSxZsXZk6kkwSJLI
-         2Ai3DsGyDIOMbPH297UEvtnraW9PJA5Z1bbJV8xV97nIcfz3SDixNMr4mSj+JhjtD4h9
-         pkaPZ1DmVGIYdoD+Gq6WuwsqnsYCdf2J51ke7+5LahQXIDq97y1fwBQGBv7xo4PzvIIo
-         gQHQ==
-X-Gm-Message-State: AFqh2kphKAVTMYwv+iYS1/GHb528KBkbRYxiw6jl/s3ddf1ccn4Ec12Y
-        lEf+pcd3h/MpYKOzZglBpP0=
-X-Google-Smtp-Source: AMrXdXsiCcxYJCXw8juZUfTXSvDXwzqQz39j+sP+02zeB0gRxX6A0NB2XEDoeFz1tBYQh/LCzztvag==
-X-Received: by 2002:a17:90a:1b2d:b0:225:c9d4:9cd9 with SMTP id q42-20020a17090a1b2d00b00225c9d49cd9mr22266039pjq.32.1672326401876;
-        Thu, 29 Dec 2022 07:06:41 -0800 (PST)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id h19-20020a17090adb9300b0021806f631ccsm11471537pjv.30.2022.12.29.07.06.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 29 Dec 2022 07:06:40 -0800 (PST)
-Message-ID: <82272e6d-e175-ad46-e66b-7eb5e51964c3@acm.org>
-Date:   Thu, 29 Dec 2022 07:06:38 -0800
+        with ESMTP id S230515AbiL2RAP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2022 12:00:15 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA821F5A7;
+        Thu, 29 Dec 2022 09:00:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1672333210; x=1703869210;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=I7Ty6nXAeA3K0Mt+020OEEFpqiOrEDImBcneZVHCPtQ=;
+  b=e6+7FhbHFQg3ql+6/bPwGY3lCDBv+VR7gBQRvR/6ejNmpW8XQ8Hr2JEq
+   Hrq3OgxrpS5C+LSbti5flOgW5gzmZAi/1RHwtzrkCFcM+JM555t4icj8m
+   GlQcxydV0Rf0QVAhlUlMrC5PNeiDoGdVBOcxAUz//mD/OqRrTXZylmAPw
+   TdzWNaHVJQu4obUTT+eQKgpKVuOCw+QrSJ3wn8knzTgaYqk/Ozy0geYUF
+   kaP4HBdajpOCEtixluYTCOs5t9jGcoavuy5ltSE3gupMHAnhywUXwPRCD
+   PAVh8zkJTFTzQxa5alehO63S9heu6VyMlLsOUffQboG+H98tC9LgTmTfd
+   g==;
+X-IronPort-AV: E=Sophos;i="5.96,284,1665417600"; 
+   d="scan'208";a="323990960"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 30 Dec 2022 01:00:10 +0800
+IronPort-SDR: FKlLMhvy4NjIBaE7BFvQwexVHE6X1W7FroIPNKY75BIYDIat/VHwDO0hK12pFSsZS1NJiEEdPH
+ f+kDQlyo+xrw+un/2vg0y84z1AlgEQQWE0VZh/NYTZ/keJfmHmjGhA8UrOjgl9uTBdEbeo8Z3e
+ acLRoz/98cNr/2pSsgnpSk+NZF7QMD5AltbAdlizQewm7mbh9EGoeDzzgJWG2YW6xyg9l87tO5
+ 8N0xIHjcrJ9p604Ka/joxZk6yL3wGGWtpo/jQJx/kuBcWSENlM3wCYqZIBSRS6fFXBQWQgpnQu
+ J9A=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Dec 2022 08:18:14 -0800
+IronPort-SDR: P4GILmDQHIY93RS5cZP1jiVb7hCqC9CE60g6XDsTyB5POf95Mhfc7CMJWfu2zL8Jlqzu+alKIu
+ CqMMoiARvGjSZjAKVClVjoSbqYG3jpmZqiLlMOYRANOqpZqYD6PVLVBh+VrdTqcg0kkucOpBHz
+ TAFyn3dg0rg3msUexzFtlbV8aJ4NfcllNCfd4LTcNguY3YUMK1RlodobMkNyImkoLVyGc0Ji88
+ YLX/h719XH6xHsI1YlW+CBKkV+xT7LRaZIIAgUbNfsnd8bfrBDLC5qJES8trDbZRTVsvIZRIlI
+ DO8=
+WDCIronportException: Internal
+Received: from unknown (HELO x1-carbon.lan) ([10.225.164.9])
+  by uls-op-cesaip02.wdc.com with ESMTP; 29 Dec 2022 09:00:09 -0800
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v2 0/7] misc libata improvements
+Date:   Thu, 29 Dec 2022 17:59:56 +0100
+Message-Id: <20221229170005.49118-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH 1/2] scsi: ufs: core: Add hibernation callbacks
-Content-Language: en-US
-To:     Anjana Hari <quic_ahari@quicinc.com>, agross@kernel.org,
-        andersson@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        konrad.dybcio@linaro.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, quic_narepall@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com
-References: <20221221171222.19699-1-quic_ahari@quicinc.com>
- <20221221171222.19699-2-quic_ahari@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221221171222.19699-2-quic_ahari@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/21/22 09:12, Anjana Hari wrote:
-> Add hibernation call backs - freeze, restore and thaw.
-> Add the respective prototypes.
-> 
-> Signed-off-by: Anjana Hari <quic_ahari@quicinc.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 80 +++++++++++++++++++++++++++++++++++++++
->   include/ufs/ufshcd.h      |  6 +++
->   2 files changed, 86 insertions(+)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index bda61be5f035..c216a97dc1dd 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -9453,6 +9453,25 @@ static int ufshcd_resume(struct ufs_hba *hba)
->   
->   	/* enable the host irq as host controller would be active soon */
->   	ufshcd_enable_irq(hba);
-> +
-> +	if (hba->restore) {
-> +		/* Configure UTRL and UTMRL base address registers */
-> +		ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-> +			      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
-> +		ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
-> +			      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
-> +		ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
-> +			      REG_UTP_TASK_REQ_LIST_BASE_L);
-> +		ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
-> +			      REG_UTP_TASK_REQ_LIST_BASE_H);
-> +		/* Commit the registers */
-> +		mb();
-> +	}
+Hello there,
 
-The comment above the mb() call is wrong. No matter the type of a 
-barrier, a barrier controls the order in which load, store and/or MMIO 
-operations happen. A barrier does not "commit" register writes.
+This series contains misc libata improvements.
 
-The comment above mb() should explain which load, store and/or MMIO 
-accesses are ordered and also why the ordering is necessary.
+These improvements were identified while developing support for Command
+Duration Limits (CDL). All patches in this series (i.e. V1 of these
+patches) were orignally sent out as part of the CDL series, found here:
+https://lore.kernel.org/linux-scsi/510732e0-7962-cf54-c22c-f1d7066895f5@opensource.wdc.com/T/
 
-> +	/*
-> +	 * Ensure no runtime PM operations take
-> +	 * place in the hibernation and restore sequence
-> +	 * on successful freeze operation.
-> +	 */
-> +	if (!ret)
-> +		pm_runtime_disable(hba->dev);
+However, as these improvements are completely unrelated to CDL, they can
+be merged independently, and should not need to wait for other patches.
 
-I think the power management core already serializes system-wide power 
-management state transitions and runtime power management and hence that 
-the above code can be left out.
 
-> +	/*
-> +	 * Now any runtime PM operations can be
-> +	 * allowed on successful restore operation
-> +	 */
-> +	if (!ret)
-> +		pm_runtime_enable(hba->dev);
+Kind regards,
+Niklas
 
-Same comment for the above code.
 
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_system_restore);
-> +
-> +int ufshcd_system_thaw(struct device *dev)
-> +{
-> +
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	int ret = 0;
-> +
-> +	ret = ufshcd_system_resume(dev);
-> +	if (!ret)
-> +		pm_runtime_enable(hba->dev);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_system_thaw);
+Changes since V1:
+-Added missing chain sign-off (in addition to author sign-off).
+-Picked up tags from John.
+-Rephrased commit message for patch 1/7 as suggested by John.
+-Rephrased commit subject for patch 3/7 to more clearly hightlight
+ that this is simply an improvement, and not strictly a bug fix.
 
-Also here, please remove the code related to runtime power management.
+Damien Le Moal (2):
+  ata: libata: simplify qc_fill_rtf port operation interface
+  ata: libata-scsi: improve ata_scsiop_maint_in()
 
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 5cf81dff60aa..dadb3c732be4 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -978,6 +978,9 @@ struct ufs_hba {
->   #endif
->   	u32 luns_avail;
->   	bool complete_put;
-> +
-> +	/* Distinguish between resume and restore */
-> +	bool restore;
->   };
+Niklas Cassel (5):
+  ata: scsi: rename flag ATA_QCFLAG_FAILED to ATA_QCFLAG_EH
+  ata: libata: read the shared status for successful NCQ commands once
+  ata: libata: respect successfully completed commands during errors
+  ata: libata: move NCQ related ATA_DFLAGs
+  ata: libata-scsi: do not overwrite SCSI ML and status bytes
 
-Please convert this member variable into a function argument. This 
-probably will require adding an argument to existing functions.
+ drivers/ata/acard-ahci.c      |   8 +-
+ drivers/ata/libahci.c         | 171 ++++++++++++++++++++++++++--------
+ drivers/ata/libata-core.c     |  12 +--
+ drivers/ata/libata-eh.c       |  22 ++---
+ drivers/ata/libata-sata.c     |   7 +-
+ drivers/ata/libata-scsi.c     |  11 ++-
+ drivers/ata/libata-sff.c      |  10 +-
+ drivers/ata/libata-trace.c    |   2 +-
+ drivers/ata/sata_fsl.c        |   5 +-
+ drivers/ata/sata_inic162x.c   |  14 ++-
+ drivers/ata/sata_promise.c    |   2 +-
+ drivers/ata/sata_sil24.c      |   7 +-
+ drivers/ata/sata_sx4.c        |   2 +-
+ drivers/scsi/ipr.c            |  11 +--
+ drivers/scsi/libsas/sas_ata.c |  11 +--
+ include/linux/libata.h        |  25 ++---
+ 16 files changed, 201 insertions(+), 119 deletions(-)
 
-Thanks,
-
-Bart.
+-- 
+2.38.1
 
