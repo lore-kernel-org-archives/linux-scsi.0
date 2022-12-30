@@ -2,118 +2,176 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C924C4167B
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Dec 2022 09:17:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95901C4167B
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Dec 2022 15:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234789AbiL3JRV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Dec 2022 04:17:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57838 "EHLO
+        id S235172AbiL3PV7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Dec 2022 10:21:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230186AbiL3JRO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Dec 2022 04:17:14 -0500
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FE651A396
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2022 01:17:13 -0800 (PST)
-Received: by mail-ej1-x632.google.com with SMTP id u9so50317913ejo.0
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2022 01:17:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair;
-        h=in-reply-to:references:cc:to:from:subject:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rUxMUm4HUy6Yckpe/AvN8V7dp0DoIgBNaECuK4JNG4g=;
-        b=XZuGepdH0HvyeQp6+qogQgniYIwMd2yrV2MoB259RLtxcl+LaQrDk57NudMcv3S+oe
-         1tjhN/A6WYcgR53N/A/4wC7GrmuD4xLvefxGXVloCno6dUuS8SOj+zQ6QGNI+lSdR1dp
-         VK65cSs6ZcQ42Rz4bWn1/hLf2mBDnJmRushv6eJW+7cxUqJIzBd34LFqYQ38BGw5ZCD4
-         2/naZU4jr4IxTLIDPveNllMDoqiy9RwuyccbfthasdCT5K8tm2ffF2xyx8mNGStKxYP0
-         4wCV53zE+kmtd+vTjxDOnc9qdRfjnWdaq0mHPV3+rtO/FFrTXzgaBIDrB8h8BmbGRyTE
-         M43A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:references:cc:to:from:subject:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=rUxMUm4HUy6Yckpe/AvN8V7dp0DoIgBNaECuK4JNG4g=;
-        b=q6IaQg4Ev7OA5ciB+ezxPqsc/CX55JI+libJWkCAAnzve4b729T4Nn5ZW5yPQRnY4w
-         to629Mom7sLtK9RhzBk6IVi4JA1NeySw85b2MscK0yXLCIArtnQcb8ma8dHBTIXlLqEg
-         JEgWbfdKqpYxnpcOzCee7KO/ElV6NBJx6tdt4nY6a8/VEVAOi6xbLLQjW4QWBH7QDZPr
-         ZwHP/VGWRk1hWDqTfDDKgh5dOUJTclO55Oqb6Kk52PxytwqCmWSePy5EBfu8b9E7FlIA
-         hw1X3+VzFyPcvhyTidiODIK9uEoRNAGk0JQn9wrPorn4/TokmGgD8L4dStdOBi4Al9ce
-         5d4A==
-X-Gm-Message-State: AFqh2kpFHlupoUtQ5Ml6pjmaQBzV0kzqaWkwVZUagMIddKYn5PQjDsq3
-        P7sYSgrsBMzngyT9kTAAJ08UkQ==
-X-Google-Smtp-Source: AMrXdXsp62WNiKFzlGd4UGKMueL3KaZQLeoEbTjQJh6tTgDO4GAXYtGLBEIbpGWgbqjQzPqLhYkPJw==
-X-Received: by 2002:a17:906:4483:b0:7fd:f028:50ff with SMTP id y3-20020a170906448300b007fdf02850ffmr25321524ejo.49.1672391832036;
-        Fri, 30 Dec 2022 01:17:12 -0800 (PST)
-Received: from localhost (2a02-8388-6582-fe80-0000-0000-0000-0007.cable.dynamic.v6.surfer.at. [2a02:8388:6582:fe80::7])
-        by smtp.gmail.com with ESMTPSA id ky14-20020a170907778e00b007c4f8bc322asm9417498ejc.196.2022.12.30.01.17.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Dec 2022 01:17:11 -0800 (PST)
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 30 Dec 2022 10:17:11 +0100
-Message-Id: <CPF1FCV59AIY.6YVGAUIENHA2@otso>
-Subject: Re: [PATCH v2 1/3] arm64: dts: qcom: sm6115: Add missing reg-names
- property for UFS
-From:   "Luca Weiss" <luca.weiss@fairphone.com>
-To:     "Konrad Dybcio" <konrad.dybcio@linaro.org>,
-        "Andy Gross" <agross@kernel.org>,
-        "Bjorn Andersson" <andersson@kernel.org>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
-        "Iskren Chernev" <me@iskren.info>
-Cc:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <~postmarketos/upstreaming@lists.sr.ht>,
-        <phone-devel@vger.kernel.org>
-X-Mailer: aerc 0.13.0
-References: <20221209-dt-binding-ufs-v2-0-dc7a04699579@fairphone.com>
- <20221209-dt-binding-ufs-v2-1-dc7a04699579@fairphone.com>
- <61cb9bab-aefb-cd45-acb0-ef846a411d76@linaro.org>
-In-Reply-To: <61cb9bab-aefb-cd45-acb0-ef846a411d76@linaro.org>
+        with ESMTP id S234955AbiL3PVu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Dec 2022 10:21:50 -0500
+X-Greylist: delayed 435 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 30 Dec 2022 07:21:48 PST
+Received: from ofcsgdbm.dwd.de (ofcsgdbm.dwd.de [141.38.3.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BE1B186CF
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2022 07:21:47 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+        by ofcsg2dn1.dwd.de (Postfix) with ESMTP id 4Nk81f5mK3z1xcQ
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2022 15:14:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=dwd.de; h=
+        content-type:content-type:mime-version:message-id:subject
+        :subject:from:from:date:date:received:received:received:received
+        :received:received:received:received; s=dwd-csg20210107; t=
+        1672413270; x=1673622871; bh=3qsan0jyqr8GE3J5MzJTpSe93pjJ+4fq1vj
+        UMbYAGt0=; b=R1LJ5muq6XdPBeYvSkk7jOog20VfbnU1wc6ZHp6mzQjRIVkhIvh
+        +kS3aa86WMxslVoTztp4FEA2XYVsFGgXKv7s8m0ncxld6vTEeUxWF1g0AIhPiQpt
+        bL0LUBDY2LFhrl8BVuNbZKlnd2e85rVU4TPb7d99S6ik/A3sHCs5UoQaz5KSNv3Z
+        oPzaszuRMqVbJGfarjS9DaFmU2VdEkxYG3dz1+qsSOQO41+iMEbDSK9vzaT13J/d
+        qJNF1dfJRXiTwUL1KORaPYupjzdp2JXoP55gYrrHEUO7HIK2YrBKhAj9vQyh86aB
+        AYmS+VKI4FYMpPMBCcqItKY7EvR92OpMljw==
+X-Virus-Scanned: by amavisd-new at csg.dwd.de
+Received: from ofcsg2cteh1.dwd.de ([172.30.232.65])
+ by localhost (ofcsg2dn1.dwd.de [172.30.232.24]) (amavisd-new, port 10024)
+ with ESMTP id shfU7K9WWxMl for <linux-scsi@vger.kernel.org>;
+ Fri, 30 Dec 2022 15:14:30 +0000 (UTC)
+Received: from ofcsg2cteh1.dwd.de (unknown [127.0.0.1])
+        by DDEI (Postfix) with ESMTP id 876D5C901B05
+        for <root@ofcsg2dn1.dwd.de>; Fri, 30 Dec 2022 15:14:30 +0000 (UTC)
+Received: from ofcsg2cteh1.dwd.de (unknown [127.0.0.1])
+        by DDEI (Postfix) with ESMTP id 4E450C902C7D
+        for <root@ofcsg2dn1.dwd.de>; Fri, 30 Dec 2022 15:14:30 +0000 (UTC)
+X-DDEI-TLS-USAGE: Unused
+Received: from ofcsgdbm.dwd.de (unknown [172.30.232.24])
+        by ofcsg2cteh1.dwd.de (Postfix) with ESMTP
+        for <root@ofcsg2dn1.dwd.de>; Fri, 30 Dec 2022 15:14:30 +0000 (UTC)
+Received: from ofcsgdbm.dwd.de by localhost (Postfix XFORWARD proxy);
+ Fri, 30 Dec 2022 15:14:30 -0000
+Received: from ofcsg2dvf1.dwd.de (ofcsg2dvf1.dwd.de [172.30.232.10])
+        by ofcsg2dn1.dwd.de (Postfix) with ESMTPS id 4Nk81f1Z5Sz1xZd;
+        Fri, 30 Dec 2022 15:14:30 +0000 (UTC)
+Received: from ofmailhub.dwd.de (ofmailhub.dwd.de [141.38.39.208])
+        by ofcsg2dvf1.dwd.de  with ESMTP id 2BUFET9W015793-2BUFET9X015793;
+        Fri, 30 Dec 2022 15:14:29 GMT
+Received: from diagnostix.dwd.de (diagnostix.dwd.de [141.38.44.45])
+        by ofmailhub.dwd.de (Postfix) with ESMTP id CB29745280;
+        Fri, 30 Dec 2022 15:14:29 +0000 (UTC)
+Date:   Fri, 30 Dec 2022 15:14:29 +0000 (GMT)
+From:   Holger Kiehl <Holger.Kiehl@dwd.de>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: memcpy: detected field-spanning write (size 128) of single field
+ "&r1_cmd->io_request->SGL" at drivers/scsi/megaraid/megaraid_sas_fusion.c:3326
+ (size 16)
+Message-ID: <88de8faa-56c4-693d-2d3-67152ee72057@diagnostix.dwd.de>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="646786348-1378339476-1672413269=:1844100"
+X-FEAS-Client-IP: 141.38.39.208
+X-FE-Last-Public-Client-IP: 141.38.39.208
+X-FE-Policy-ID: 2:2:1:SYSTEM
+X-TMASE-Version: DDEI-5.1-9.0.1002-27356.000
+X-TMASE-Result: 10--11.598100-10.000000
+X-TMASE-MatchedRID: H0y8l0/iTDcq/mR31mzCQJObxJgN/hOxfkuZtv/FS5pKC3gQHLUDUpgU
+        Ly4zAbFBJZyncll9Yioa8S7tBYtNDHN94JK30y2IsApP/McUJK6fmd9HsjZ0U0ekR3VSvOYVyzQ
+        Dw5yHT0HR7gdsg7zrbf73+nTN7plbI3NndjiMExGAwosDBeuPwTYvC/PFFfSAJYvGOWtLLy8t5F
+        ll0ErBKf2xnceIhmwokelBawAEVAmEYjs8p9Au+IXQ/hu1OV/0jkDrBOJwwnS+f7ap9DJaDQ5yy
+        v+x7gEpe+eZU8eiw0bXeRIHS1+6h3RzYmrvNw7ttT4jIeGRd/XT7Anw28zJOZcFdomgH0lngxsf
+        zkNRlfKtIWznhjjBtfoLR4+zsDTtgUicvJ4MChmlT5d7ih0CPHoXIHDkgWPPP3cIGIWi8OixZEn
+        7uOCk8dfNdKo4Qp+n
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
+X-TMASE-INERTIA: 0-0;;;;
+X-DDEI-PROCESSED-RESULT: Safe
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri Dec 30, 2022 at 10:12 AM CET, Konrad Dybcio wrote:
->
->
-> On 30.12.2022 08:42, Luca Weiss wrote:
-> > The UFS driver expects the second reg to be named "ice" otherwise the
-> > Inline Crypto Engine won't get enabled.
-> >=20
-> > Fixes: 97e563bf5ba1 ("arm64: dts: qcom: sm6115: Add basic soc dtsi")
-> > Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> > ---
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=
-=3Dfor-next&id=3D01b6041454e8bc4f5feb76e6bcdc83a48cea21f2
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Oh, thanks!
+--646786348-1378339476-1672413269=:1844100
+Content-Type: text/plain; format=flowed; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Disregard this patch then please.
+Hello,
 
->
-> Konrad
-> >  arch/arm64/boot/dts/qcom/sm6115.dtsi | 1 +
-> >  1 file changed, 1 insertion(+)
-> >=20
-> > diff --git a/arch/arm64/boot/dts/qcom/sm6115.dtsi b/arch/arm64/boot/dts=
-/qcom/sm6115.dtsi
-> > index 572bf04adf90..85673d562723 100644
-> > --- a/arch/arm64/boot/dts/qcom/sm6115.dtsi
-> > +++ b/arch/arm64/boot/dts/qcom/sm6115.dtsi
-> > @@ -704,6 +704,7 @@ opp-202000000 {
-> >  		ufs_mem_hc: ufs@4804000 {
-> >  			compatible =3D "qcom,sm6115-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
-> >  			reg =3D <0x04804000 0x3000>, <0x04810000 0x8000>;
-> > +			reg-names =3D "std", "ice";
-> >  			interrupts =3D <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>;
-> >  			phys =3D <&ufs_mem_phy_lanes>;
-> >  			phy-names =3D "ufsphy";
-> >=20
+I am getting this at boot when filesystems are being mounted on all
+systems with megaraid_sas:
+
+          Starting File System Check…b5c5-42c7-93bc-06a5c05f0141...
+[   25.705445] ------------[ cut here ]------------
+[   25.718769] memcpy: detected field-spanning write (size 128) of single field "&r1_cmd->io_request->SGL" at drivers/scsi/megaraid/megaraid_sas_fusion.c:3326 (size 16)
+[   25.751153] WARNING: CPU: 107 PID: 2741 at drivers/scsi/megaraid/megaraid_sas_fusion.c:3326 megasas_prepare_secondRaid1_IO+0x13d/0x150 [megaraid_sas]
+[   25.783375] Modules linked in: sd_mod sg nvme nvme_core t10_pi crct10dif_pclmul crc32_pclmul crc32c_intel ahci crc64_rocksoft_generic ghash_clmulni_intel crc64_rocksoft ice libahci sha512_ssse3 bnxt_en crc64 sp5100_tco megaraid_sas
+[   25.834579] CPU: 107 PID: 2741 Comm: fsck.ext4 Not tainted 6.1.1 #1
+[   25.854737] Hardware name: Dell Inc. PowerEdge R7525/XXXXXX, BIOS 2.9.3 08/05/2022
+[   25.872776] RIP: 0010:megasas_prepare_secondRaid1_IO+0x13d/0x150 [megaraid_sas]
+[   25.891150] Code: 00 00 0f 85 2f ff ff ff b9 10 00 00 00 48 c7 c2 70 92 6f c0 4c 89 f6 48 c7 c7 c8 92 6f c0 c6 05 51 49 02 00 01 e8 fd 2a 3d d9 <0f> 0b e9 06 ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 90 0f 1f 44
+[   25.931873] RSP: 0018:ffffa5588625f900 EFLAGS: 00010286
+[   25.947337] RAX: 0000000000000000 RBX: ffff8df60693a180 RCX: 0000000000000000
+[   25.966847] RDX: ffff8ff13e4ec700 RSI: ffff8ff13e4e0560 RDI: ffff8ff13e4e0560
+[   25.985757] RBP: ffff8df60680e000 R08: 0000000000000000 R09: ffffffff9b184de0
+[   26.012930] R10: 0000000000000001 R11: 0000000000000001 R12: ffffa5587374f058
+[   26.035873] R13: ffff8df5f9470820 R14: 0000000000000080 R15: ffff8df6191b0750
+[   26.054510] FS:  00007f8dac1e2780(0000) GS:ffff8ff13e4c0000(0000) knlGS:0000000000000000
+[   26.073109] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   26.087901] CR2: 00007ffcd3263fe8 CR3: 00000100ad48e004 CR4: 0000000000770ee0
+[   26.105898] PKRU: 55555554
+[   26.118517] Call Trace:
+[   26.130464]  <TASK>
+[   26.144148]  megasas_build_and_issue_cmd_fusion+0x185/0x230 [megaraid_sas]
+[   26.166138]  scsi_dispatch_cmd+0x8b/0x220
+[   26.181020]  scsi_queue_rq+0x279/0x610
+[   26.197569]  blk_mq_dispatch_rq_list+0x18b/0x690
+[   26.216612]  __blk_mq_do_dispatch_sched+0xba/0x330
+[   26.230539]  ? release_pages+0x15b/0x450
+[   26.244164]  ? elv_attempt_insert_merge+0xbc/0x100
+[   26.257915]  blk_mq_do_dispatch_sched+0x3b/0x70
+[   26.271189]  __blk_mq_sched_dispatch_requests+0xf0/0x140
+[   26.285749]  blk_mq_sched_dispatch_requests+0x34/0x60
+[   26.299851]  __blk_mq_run_hw_queue+0x35/0x90
+[   26.316085]  blk_mq_sched_insert_requests+0x6a/0x150
+[   26.337224]  blk_mq_flush_plug_list+0x122/0x2f0
+[   26.352449]  __blk_flush_plug+0x102/0x160
+[   26.365502]  ? __wake_up_common_lock+0x8a/0xc0
+[   26.379836]  blk_finish_plug+0x25/0x40
+[   26.393678]  generic_writepages+0x5a/0x80
+[   26.408024]  do_writepages+0xcf/0x1d0
+[   26.422927]  filemap_fdatawrite_wbc+0x66/0x90
+[   26.438551]  __filemap_fdatawrite_range+0x54/0x80
+[   26.456288]  file_write_and_wait_range+0x43/0xa0
+[   26.469451]  blkdev_fsync+0x14/0x40
+[   26.481500]  __x64_sys_fsync+0x33/0x60
+[   26.495285]  do_syscall_64+0x5c/0x90
+[   26.509468]  ? ksys_write+0xab/0xe0
+[   26.521848]  ? syscall_exit_to_user_mode+0x12/0x30
+[   26.534957]  ? do_syscall_64+0x69/0x90
+[   26.546588]  ? handle_mm_fault+0xee/0x2e0
+[   26.557927]  ? do_user_addr_fault+0x1d6/0x690
+[   26.569652]  ? exc_page_fault+0x5d/0x120
+[   26.580668]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   26.597062] RIP: 0033:0x7f8dac32c067
+[   26.608530] Code: ff ff ff ff eb b7 e8 38 82 01 00 0f 1f 84 00 00 00 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 b8 4a 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 41 c3 48 83 ec 18 89 7c 24 0c e8 73 6b f5 ff
+[   26.641441] RSP: 002b:00007ffcd3266108 EFLAGS: 00000246 ORIG_RAX: 000000000000004a
+[   26.655857] RAX: ffffffffffffffda RBX: 000055f73742d400 RCX: 00007f8dac32c067
+[   26.670764] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+[   26.685898] RBP: 00007ffcd3266170 R08: 0000000000000000 R09: 0000000000000000
+[   26.702612] R10: 00000000000000c8 R11: 0000000000000246 R12: 0000000000000000
+[   26.721338] R13: 00007ffcd3266178 R14: 000055f73742d1b0 R15: 000055f73742d1b0
+[   26.739231]  </TASK>
+[   26.748275] ---[ end trace 0000000000000000 ]---
+
+Think this was introduced with kernel hardening code
+
+    54d9469bc515 fortify: Add run-time WARN for cross-field memcpy()
+
+CONFIG_FORTIFY_SOURCE=y, committed in 6.0-rc2 as mentioned in
+https://bugzilla.kernel.org/show_bug.cgi?id=216563#c3
+
+Regards,
+Holger
+--646786348-1378339476-1672413269=:1844100--
 
