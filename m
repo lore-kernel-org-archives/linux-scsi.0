@@ -2,60 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A4E7C61DB3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92350C6379F
 	for <linux-scsi@archiver.kernel.org>; Fri, 30 Dec 2022 07:44:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234586AbiL3Hnk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Dec 2022 02:43:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57966 "EHLO
+        id S234734AbiL3Hnl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Dec 2022 02:43:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbiL3Hmt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Dec 2022 02:42:49 -0500
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 247EA1A385
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2022 23:42:31 -0800 (PST)
-Received: by mail-wr1-x430.google.com with SMTP id bk16so6031247wrb.11
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2022 23:42:31 -0800 (PST)
+        with ESMTP id S234654AbiL3Hmp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Dec 2022 02:42:45 -0500
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D91B1A05E
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2022 23:42:29 -0800 (PST)
+Received: by mail-wr1-x42b.google.com with SMTP id h16so19212683wrz.12
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2022 23:42:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fairphone.com; s=fair;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Vm3xbs/GyRNJ6DBbaHm+OuOgD7iBzBULuO7wncj0ttk=;
-        b=YJ3xv/XPA73EvkaW1lBKOVggaYFcs84tPHS+DB5p6ao+VfYOKYLZycW4L+J4AXPXNo
-         hHMgM7Nyc5iQkkJro4aqTvmK1IMYyFyC1Tsqi+lKUVKxmMHBFDWRhe4mugp8+wk1rL34
-         M+ybcXraUP5kFSsAsFmenhVcK70hMCnz2882Ccf0FfUO9rQp0Uwk8bN8nICJjB6HpWp+
-         89ftsz37OPQsnOrW054W+3mfT3Vj7Jqxhrv69cPmVyEeIPWRUcWubxNIeXuBE5FE8jPM
-         kYUa2SitK92OTWyVdctlAtDPk+htFO4PdgJVD6vJE+K1rTn+CuvyX5kRnXcYdPzEQzPG
-         lRgA==
+        bh=2AFK51349QJ0+Ar/9LyUa3RFs2+XbTP6GGanaFPZqqk=;
+        b=4tlJg+Kyqh+spAFYZ6rsYwogBP/vXCAFmaT1XKGDZZDMMUB++fkGLqwyuJbEIJQ7kC
+         ooM9OmaNK6b2hAgY/KK7qEKv3KN8nFmeU+93vJ2LVa6oi0VHaw1R57RcGNWHt5jotVl2
+         uH0zJPNZBuDIbAZgSC+ZTybWeLsn8RfQGcmmGZc7Ky1ghjsNDfF3X5kv1x4KHheduHL4
+         M5FC96CCgsKI3SMPsORry/ecoNGVjM3TBpmb0/4IJrvCh6dEU9aR8ZfWnoWEgl2m7lMX
+         EeAMBk+CIYZVUu8Rorz7Mxa7PMpHN9BlBygFbgLDzvpvTORkFcPs2hRcDZASqoSfpO+/
+         bBDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Vm3xbs/GyRNJ6DBbaHm+OuOgD7iBzBULuO7wncj0ttk=;
-        b=mGSbPSNIbA5+oOerqXnzioBUxzZ3sFpDpSopGF9ibsR4flZCc6ofRQSgA7ZBBtKufe
-         eoKTw1+7KogYd02uV8NjhBu/sqHKNIf/WN25lYNClaExB03NONynQ+OtuP6uIH5tEK+0
-         Mu66pllj86M3lIVIoqfSjZJZOvM9o738204uIgOSnoyt9sSTf7x3RGN8OD+fo7AMnkRJ
-         1ukNvPYlR5c062rj+PFxuRIU2NqQqjqQJ7O0eie6heplUm+oesJeG+rkPyhVUjFBAVGN
-         d/uXfmxaeXqPiD/OwX8+sLTWlykGTUA/fpRPECQOBBqkZYQT0wmgvN/4EVgnYO1dtSyR
-         krGA==
-X-Gm-Message-State: AFqh2kpUM/QTUm8hOJkO3Kk4LeBh/rXJf/qPoavgQX6YaGPZztgM8La6
-        JO4Slt06X0A4DEIQhUjfGNIOKg==
-X-Google-Smtp-Source: AMrXdXt6z1uMHoe7utI/pUhm++yBQy6DLzGRR17VY7G/5v6NkL3RnZ6C3wj1ZihItZ3ZB4PCHTMS1A==
-X-Received: by 2002:a5d:6ac1:0:b0:284:2216:c23e with SMTP id u1-20020a5d6ac1000000b002842216c23emr6917966wrw.44.1672386149693;
-        Thu, 29 Dec 2022 23:42:29 -0800 (PST)
+        bh=2AFK51349QJ0+Ar/9LyUa3RFs2+XbTP6GGanaFPZqqk=;
+        b=me/vieV+XRCdlH24Jj+lSVvwq0CqVZ/0P+bB1wbcD1j5s9VaMb173Zi9y8ArKslWNn
+         asGBi+N8OPE5gfstsvNJPsxMSElDGF7/UpX8EWpwl/TGs9vmAh0KKkabRLCy2lO4iSU3
+         YZEnjb7AtifcgxP+sSrFkENXDUogFJuOKGyrtqahbr/n63hdHNDZnJf2gmEFkeW8NuKc
+         1rAuozS/zTd7aUPhEBoo4ttYu9kUsI64w1HweTozCHWLT2Rnuq4iZuGQ+KkA5j1IoSsU
+         QsXlcWuPujJk1gxK72Z+AQhGcXwMqsFUSDJ2U3RPhIp6ckfy9i7TduN9CKO01Jy0AGx9
+         AuUQ==
+X-Gm-Message-State: AFqh2kptRKenrW/3jeoqCcwVHcm5Q0zus713TIjNVmgqUIfOWBqSjVlV
+        2XnHzOWBv5N29DpRWJ3tyeMJbg==
+X-Google-Smtp-Source: AMrXdXvvSxOl/IYJdRtoKk7/wnZsSzRjN8xIDWKHKQKkGCwAPDL65dluoUtz1mfi8uDEAqt1p56Oug==
+X-Received: by 2002:a5d:66c6:0:b0:277:ae6c:a94d with SMTP id k6-20020a5d66c6000000b00277ae6ca94dmr13187947wrw.68.1672386147843;
+        Thu, 29 Dec 2022 23:42:27 -0800 (PST)
 Received: from [192.168.0.28] (2a02-8388-6582-fe80-0000-0000-0000-0007.cable.dynamic.v6.surfer.at. [2a02:8388:6582:fe80::7])
-        by smtp.gmail.com with ESMTPSA id a6-20020adfed06000000b0028e8693bb75sm1887655wro.63.2022.12.29.23.42.28
+        by smtp.gmail.com with ESMTPSA id a6-20020adfed06000000b0028e8693bb75sm1887655wro.63.2022.12.29.23.42.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Dec 2022 23:42:29 -0800 (PST)
+        Thu, 29 Dec 2022 23:42:27 -0800 (PST)
 From:   Luca Weiss <luca.weiss@fairphone.com>
-Date:   Fri, 30 Dec 2022 08:42:07 +0100
-Subject: [PATCH v2 3/3] dt-bindings: ufs: qcom: Fix sm8450 bindings
+Date:   Fri, 30 Dec 2022 08:42:05 +0100
+Subject: [PATCH v2 1/3] arm64: dts: qcom: sm6115: Add missing reg-names
+ property for UFS
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20221209-dt-binding-ufs-v2-3-dc7a04699579@fairphone.com>
+Message-Id: <20221209-dt-binding-ufs-v2-1-dc7a04699579@fairphone.com>
 References: <20221209-dt-binding-ufs-v2-0-dc7a04699579@fairphone.com>
 In-Reply-To: <20221209-dt-binding-ufs-v2-0-dc7a04699579@fairphone.com>
 To:     Andy Gross <agross@kernel.org>,
@@ -76,74 +77,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SM8450 actually supports ICE (Inline Crypto Engine) so adjust the
-bindings and the example to match.
+The UFS driver expects the second reg to be named "ice" otherwise the
+Inline Crypto Engine won't get enabled.
 
+Fixes: 97e563bf5ba1 ("arm64: dts: qcom: sm6115: Add basic soc dtsi")
 Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 ---
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ arch/arm64/boot/dts/qcom/sm6115.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index a8d896e1617b..2f73a84fcf41 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -107,7 +107,6 @@ allOf:
-               - qcom,sc8280xp-ufshc
-               - qcom,sm8250-ufshc
-               - qcom,sm8350-ufshc
--              - qcom,sm8450-ufshc
-     then:
-       properties:
-         clocks:
-@@ -137,6 +136,7 @@ allOf:
-               - qcom,sdm845-ufshc
-               - qcom,sm6350-ufshc
-               - qcom,sm8150-ufshc
-+              - qcom,sm8450-ufshc
-     then:
-       properties:
-         clocks:
-@@ -243,7 +243,9 @@ examples:
-         ufs@1d84000 {
-             compatible = "qcom,sm8450-ufshc", "qcom,ufshc",
-                          "jedec,ufs-2.0";
--            reg = <0 0x01d84000 0 0x3000>;
-+            reg = <0 0x01d84000 0 0x3000>,
-+                  <0 0x01d88000 0 0x8000>;
-+            reg-names = "std", "ice";
-             interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-             phys = <&ufs_mem_phy_lanes>;
-             phy-names = "ufsphy";
-@@ -271,7 +273,8 @@ examples:
-                           "ref_clk",
-                           "tx_lane0_sync_clk",
-                           "rx_lane0_sync_clk",
--                          "rx_lane1_sync_clk";
-+                          "rx_lane1_sync_clk",
-+                          "ice_core_clk";
-             clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-                      <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-                      <&gcc GCC_UFS_PHY_AHB_CLK>,
-@@ -279,7 +282,8 @@ examples:
-                      <&rpmhcc RPMH_CXO_CLK>,
-                      <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-                      <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--                     <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-+                     <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
-+                     <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-             freq-table-hz = <75000000 300000000>,
-                             <0 0>,
-                             <0 0>,
-@@ -287,6 +291,7 @@ examples:
-                             <75000000 300000000>,
-                             <0 0>,
-                             <0 0>,
--                            <0 0>;
-+                            <0 0>,
-+                            <75000000 300000000>;
-         };
-     };
+diff --git a/arch/arm64/boot/dts/qcom/sm6115.dtsi b/arch/arm64/boot/dts/qcom/sm6115.dtsi
+index 572bf04adf90..85673d562723 100644
+--- a/arch/arm64/boot/dts/qcom/sm6115.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm6115.dtsi
+@@ -704,6 +704,7 @@ opp-202000000 {
+ 		ufs_mem_hc: ufs@4804000 {
+ 			compatible = "qcom,sm6115-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
+ 			reg = <0x04804000 0x3000>, <0x04810000 0x8000>;
++			reg-names = "std", "ice";
+ 			interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>;
+ 			phys = <&ufs_mem_phy_lanes>;
+ 			phy-names = "ufsphy";
 
 -- 
 2.39.0
