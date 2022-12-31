@@ -2,96 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D83A9C3DA7A
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Dec 2022 15:04:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2419C3DA7A
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Dec 2022 21:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232184AbiLaPEW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 31 Dec 2022 10:04:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40418 "EHLO
+        id S235745AbiLaV3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 31 Dec 2022 16:29:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235440AbiLaPEM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Dec 2022 10:04:12 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5FF636A;
-        Sat, 31 Dec 2022 07:04:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1672499042;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=WsIRV1TbJf8eCHpTVnn0dqwbjlhG8WH9NneJ5yoOHH0=;
-    b=kNa+ZehnjsuQOZd+sf90EuqszQoY6esmi3tjB3MgaPIGq/m0cBZ3xC8S58ONtl8Zie
-    4MgmkcgCwcXdgDRIYpbb30PpjWxzVcuM+JICCbzVTG77vCZipJTw/BkUnUDYD3xnonLg
-    fZ8mLcChg9f/MRBPVC8GaA7vhROpOkEG/cgDEkz8FyXTOiOXBcEvfZRWLqNgrZxnjk/f
-    7P8xm8d/35E42QdRWGo4NsXtRG4KeyCrWD+Y8BXJ47h9xhr9QCg0Fy5oKx+J7zwjr2Os
-    YQ8KIgy2REu79RrQtPT1fJBPfkR/PCS6MpNhO+MZ9ta5BdY0pDOVrVqDuvgNx3IXKibr
-    OXlA==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1UnWvo/S/rRtv7EWu+6UqkpHFu65fxzM0xwfgg=="
-X-RZG-CLASS-ID: mo00
-Received: from blinux.speedport.ip
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyBVF41cFo
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Sat, 31 Dec 2022 16:04:01 +0100 (CET)
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        quic_cang@quicinc.com, quic_xiaosenh@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH ] scsi: ufs: core: bsg: Fix sometimes-uninitialized warnings
-Date:   Sat, 31 Dec 2022 16:03:43 +0100
-Message-Id: <20221231150343.146274-1-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229597AbiLaV3A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Dec 2022 16:29:00 -0500
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9F4763D8;
+        Sat, 31 Dec 2022 13:28:59 -0800 (PST)
+Received: by mail-pl1-f180.google.com with SMTP id 20so11937115plo.3;
+        Sat, 31 Dec 2022 13:28:59 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=adjBQcXCLgzOUyvmCAw+CpN46s5Adoe7A7poEBz9+sE=;
+        b=uR7/wVdeMS2tLeetPB7/xo+0sbV7VWs+JdZrD8KjkP2KT/AjYmipUjURNsIv/ANTjU
+         dBe0mHRCHDl+RBXtIga6DqpL1CFr/2rLyYY3XePaG+FePzs+jjj2c7zx0wbKsBKDjfKU
+         MeP1P7zUu2zvaP9uPtt05TgPerdEglFkPF2c93YzS99CAF7jgzD/DFoURcXrqxPS2ueJ
+         Ngjvtyr1WQUpwRK8Z7PTAYERRRPsa0l6dQCw1OZclKZPUijyZE2KHF83Y4XHQq2f4ryq
+         A/oMX/WL8Nad700zLGkpJiDPL+84DrQgU86IssISyYr4F1v40YkqQxGSO2LOvthfRwz5
+         y+Ig==
+X-Gm-Message-State: AFqh2krPDdpyX3mx8PhNjAdL3G6r5TUn2BloK5MWXcgdykJKgOiXzDgy
+        4M+IbA1c5EibNK4vp2gTlBY90UATqgk=
+X-Google-Smtp-Source: AMrXdXtCeSrKhnuxYyEFIv/tHDz2NbBrEOnfT1K153E+dmGEL0qGnvyWjf/x6agZRKB/+fdVqW5P2g==
+X-Received: by 2002:a17:903:2447:b0:191:1a7c:ef9f with SMTP id l7-20020a170903244700b001911a7cef9fmr55949758pls.1.1672522138944;
+        Sat, 31 Dec 2022 13:28:58 -0800 (PST)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id y4-20020a655b44000000b0047899d0d62csm14641850pgr.52.2022.12.31.13.28.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 31 Dec 2022 13:28:57 -0800 (PST)
+Message-ID: <6dc49f2e-1c81-8392-20b4-f79af2abace0@acm.org>
+Date:   Sat, 31 Dec 2022 13:28:54 -0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v5 18/23] scsi: ufs: core: Add reinit_notify() callback
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org
+Cc:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
+        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com
+References: <20221222141001.54849-1-manivannan.sadhasivam@linaro.org>
+ <20221222141001.54849-19-manivannan.sadhasivam@linaro.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221222141001.54849-19-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On 12/22/22 06:09, Manivannan Sadhasivam wrote:
+> reinit_notify() callback can be used by the UFS controller drivers to
+> perform changes required for UFSHCD reinit that can happen during max
+> gear switch.
 
-Compilation complains that two possible variables are used without
-initialization:
-
-drivers/ufs/core/ufs_bsg.c:112:6: warning: variable 'sg_cnt' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-drivers/ufs/core/ufs_bsg.c:112:6: warning: variable 'sg_list' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-
-Fix both warnings by adding initialization with sg_cnt = 0, sg_list = NULL.
-
-Fixes: 6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support in ufs_bsg")
-Signed-off-by: Bean Huo <beanhuo@micron.com>
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Xiaosen He <quic_xiaosenh@quicinc.com>
----
-Hi Martin,
-
-This patch is to fix two compilation warnings introduced by my commit:
-6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support in ufs_bsg").
-
-Apologies for this.
-
----
- drivers/ufs/core/ufs_bsg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 0044029bcf7b..0d38e7fa34cc 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -70,9 +70,9 @@ static int ufs_bsg_exec_advanced_rpmb_req(struct ufs_hba *hba, struct bsg_job *j
- 	struct ufs_rpmb_reply *rpmb_reply = job->reply;
- 	struct bsg_buffer *payload = NULL;
- 	enum dma_data_direction dir;
--	struct scatterlist *sg_list;
-+	struct scatterlist *sg_list = NULL;
- 	int rpmb_req_type;
--	int sg_cnt;
-+	int sg_cnt = 0;
- 	int ret;
- 	int data_len;
- 
--- 
-2.25.1
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
