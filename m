@@ -2,87 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC36C3DA7A
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Dec 2022 22:32:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF719C3DA7D
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Dec 2022 22:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231848AbiLaWch (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 31 Dec 2022 17:32:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59062 "EHLO
+        id S232334AbiLaWxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 31 Dec 2022 17:53:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229684AbiLaWcg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Dec 2022 17:32:36 -0500
-Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B096A6570
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Dec 2022 14:32:35 -0800 (PST)
-Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
-        by amity.mint.lgbt (Postfix) with ESMTP id 4Nkxhf3MpXz1S5Dw
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Dec 2022 17:32:34 -0500 (EST)
-Authentication-Results: amity.mint.lgbt (amavisd-new);
-        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
-        header.d=mint.lgbt
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
-        content-transfer-encoding:content-type:in-reply-to:from
-        :references:to:content-language:subject:user-agent:mime-version
-        :date:message-id; s=dkim; t=1672525953; x=1673389954; bh=Ti0oa6J
-        7bhk8fQrWKmd8muaqULGy5ddsI2uXdrLykkg=; b=SRMNw/2n0OKMVoqWhi/e0Bi
-        oCLdpRvP9RPpfQzL7wSNUcYzUxi+UbUqyXQDMJck2RBpYeYs3TwAWB78ruCeYjz4
-        VCnkQIuZeGW+B5NmV4QnLV6UEQDsJMVegVmqiizQOn2+ysU+/LguHH3iy64wpGd0
-        DhOKPztjWQZXXIcXPpFhn1AtA61j743Lfx42UFGvaAKUgbeusYhplnb/ioIksTpU
-        1CV1e6jyUt7f9px2qVt+INHMLFQUOjhKuW3P7RZzar89Fn3P8wjvKTkxEHAmNkur
-        PWcJIKtsudZTUO1xHzEg7l22/7hcs75K+/d+LjzAr27ut3PFy5aEm6A4kHVEoLw=
-        =
-X-Virus-Scanned: amavisd-new at amity.mint.lgbt
-Received: from amity.mint.lgbt ([127.0.0.1])
-        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 7q2ANeWaR9cV for <linux-scsi@vger.kernel.org>;
-        Sat, 31 Dec 2022 17:32:33 -0500 (EST)
-Received: from [192.168.4.25] (unknown [190.196.92.66])
-        by amity.mint.lgbt (Postfix) with ESMTPSA id 4NkxhY4pc3z1S56h;
-        Sat, 31 Dec 2022 17:32:29 -0500 (EST)
-Message-ID: <38d2c380-1107-9ac9-ca21-d2f5c286de81@mint.lgbt>
-Date:   Sat, 31 Dec 2022 19:32:27 -0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: [PATCH v5 0/6] arm64: dts: qcom: sm6125: UFS and xiaomi-laurel-sprout
- support
-Content-Language: en-US
-To:     Andy Gross <agross@kernel.org>,
+        with ESMTP id S229597AbiLaWxQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Dec 2022 17:53:16 -0500
+Received: from relay06.th.seeweb.it (relay06.th.seeweb.it [IPv6:2001:4b7a:2000:18::167])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEE8C110D;
+        Sat, 31 Dec 2022 14:53:14 -0800 (PST)
+Received: from [192.168.2.144] (adsl-d248.84-47-10.t-com.sk [84.47.10.248])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by m-r2.th.seeweb.it (Postfix) with ESMTPSA id 28B073EBDC;
+        Sat, 31 Dec 2022 23:53:12 +0100 (CET)
+Date:   Sat, 31 Dec 2022 23:53:06 +0100
+From:   Martin Botka <martin.botka@somainline.org>
+Subject: Re: [PATCH v5 1/6] dt-bindings: ufs: qcom: Add SM6125 compatible
+ string
+To:     Lux Aliaga <they@mint.lgbt>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221231222420.75233-1-they@mint.lgbt>
- <20221231222420.75233-2-they@mint.lgbt>
-From:   Lux Aliaga <they@mint.lgbt>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        ~postmarketos/upstreaming@lists.sr.ht,
+        marijn.suijten@somainline.org, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <I82SNR.7YLHMAX9NHSF3@somainline.org>
 In-Reply-To: <20221231222420.75233-2-they@mint.lgbt>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20221231222420.75233-1-they@mint.lgbt>
+        <20221231222420.75233-2-they@mint.lgbt>
+X-Mailer: geary/40.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce Universal Flash Storage support on SM6125 and add support for the Xiaomi Mi A3 based on the former platform.
 
-Changes since v4:
-- Rebase on GPI DMA 0 and IOMMU patches for SM6125
-- Add dedicated compatible for SM6125 UFS PHY
-   - Add offsets to SM6115 UFS PHY config
-   - Document compatible for SM6125 UFS PHY
-- Add IOMMU support for SM6125 UFS Host Controller
-- Modify reserved-memory node names on xiaomi-laurel-sprout
-- Add thermistor support for xiaomi-laurel-sprout
-- Add PON support for xiaomi-laurel-sprout (pwrkey and resin)
-- Add gpio-keys node for Volume Up button
-   - Add PM6125 GPIO node for Volume Up button
-- Add SD card support for xiaomi-laurel-sprout
-- Add regulators to USB PHY for xiaomi-laurel-sprout
-- Removed empty line on UFS host controller and UFS PHY nodes for xiaomi-laurel-sprout
 
-v4:https://lore.kernel.org/linux-devicetree/20221215190404.398788-1-they@mint.lgbt/
+On Sat, Dec 31 2022 at 07:24:15 PM -03:00:00, Lux Aliaga 
+<they@mint.lgbt> wrote:
+> Document the compatible for UFS found on the SM6125.
+> 
+> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml 
+> b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index b517d76215e3..42422f3471b3 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -29,6 +29,7 @@ properties:
+>            - qcom,sc8280xp-ufshc
+>            - qcom,sdm845-ufshc
+>            - qcom,sm6115-ufshc
+> +          - qcom,sm6125-ufshc
+>            - qcom,sm6350-ufshc
+>            - qcom,sm8150-ufshc
+>            - qcom,sm8250-ufshc
+> @@ -185,6 +186,7 @@ allOf:
+>            contains:
+>              enum:
+>                - qcom,sm6115-ufshc
+> +              - qcom,sm6125-ufshc
+>      then:
+>        properties:
+>          clocks:
+> --
+> 2.38.1
+> 
+Reviewed-by: Martin Botka <martin.botka@somainline.org>
+
 
