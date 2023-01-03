@@ -2,68 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 860C8C54EBC
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 18:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77D43C4708D
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 18:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238652AbjACSJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Jan 2023 13:09:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60260 "EHLO
+        id S238820AbjACS0m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Jan 2023 13:26:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233586AbjACSJX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2023 13:09:23 -0500
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB27311477;
-        Tue,  3 Jan 2023 10:09:14 -0800 (PST)
-Received: by mail-pl1-f181.google.com with SMTP id w3so1809607ply.3;
-        Tue, 03 Jan 2023 10:09:14 -0800 (PST)
+        with ESMTP id S238839AbjACS0V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2023 13:26:21 -0500
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E200B6A;
+        Tue,  3 Jan 2023 10:26:02 -0800 (PST)
+Received: by mail-wm1-x330.google.com with SMTP id m3so14619274wmq.0;
+        Tue, 03 Jan 2023 10:26:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=aRzoYepSkl//ziJ1ySsV1tuFv4CAwJQc87Spdth6SZs=;
+        b=LHPtwEsDLxDopS5vPBG5/7yCKyJME02A52f9mbnYvB8qXsIJphtU/CxV+bwqsbv8Je
+         Sq3Rhtiuc4X04lI3z+oTM2s7p+/qQum2zqveO2PDy2nRm4OUJb69g3F48Vg12ozrAB4V
+         BBsXYg4gVe9Ftv9ElQMid3simNahAm5JQy7yGkWEoa6Kp+z4JQzu6yyv15hWAvHQMi8q
+         X11sW1qYuIlek8rkcfcNxcbfQvtaae4oB8u/s8c7wmSsPJ3QeFx9CvgTsx0/ohx6z+Jn
+         2yOKzAUnS8PdeGeGe2bMIGvYyMb8Kr7HMGTXD/43WMosZGVXu0hvoj1jfEN7P45de8AQ
+         InZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ac3xtbao5DPMoj5S4yU2TyUQ2d/DM13Gadih/Ls/XWI=;
-        b=Du1Au1uJNDKPIKiKCZ8PAK9XJHE6ogAv/ZSObFtbh+x3PZlSrNLUwokLuUI4mdH7np
-         O1C0cGdSdZS3e1LLvxYKvYKCV/1/DDQ6F8H9yl3KG9/mvrV2sHf8Z2jETkmG2gGCUJd6
-         XNIxPx1K47kSEaUhqhbbn+WDHwI5C21AfhY4Jy6fQ97QKGkGX1wFrY1W2q5+p0MXNjWG
-         GSy+FPvIVIEgTS29b3fRgRYSFmujA11UJZ5hdfemDB/8YPK1M3Z+bpZVA1wwTZ7kg3WE
-         /IUK1fwr3CSc66O8YnuAMaoFuy4+h9B3uFpEOIFM/ZLTjsf4jm15PBSrxNysyGtouewF
-         7Wkw==
-X-Gm-Message-State: AFqh2kpKqbXo+p7Twz9K1mgLyVtKvVXmil0HZPGCUWiSKXJCcDNWPloq
-        cxwvaKgSGb2NI1K5TsnpCtI=
-X-Google-Smtp-Source: AMrXdXuvRVrhezbxvTauVXRucMNArg/EM5bY7vftUrFEUyc2jqjzQFawPwDxhmMrfk4H5XlLwX/qgA==
-X-Received: by 2002:a17:902:c144:b0:192:e3b6:7410 with SMTP id 4-20020a170902c14400b00192e3b67410mr1182712plj.28.1672769354265;
-        Tue, 03 Jan 2023 10:09:14 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:7da8:fef9:8c31:bf89? ([2620:15c:211:201:7da8:fef9:8c31:bf89])
-        by smtp.gmail.com with ESMTPSA id q13-20020a170902edcd00b001928c204428sm2819292plk.142.2023.01.03.10.09.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Jan 2023 10:09:13 -0800 (PST)
-Message-ID: <d7323ee3-643a-8785-060b-c30eeac30f6a@acm.org>
-Date:   Tue, 3 Jan 2023 10:09:10 -0800
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=aRzoYepSkl//ziJ1ySsV1tuFv4CAwJQc87Spdth6SZs=;
+        b=6Qr/RCmrEsH8lJkLQ4k7/kSssguF4WRRgf+o07ealDut7vLNu8V/uBiXtY66xqn/7s
+         yHdl5jM7PqVnstnGXPCADfFzFZqB3C3rbUr6z8m1d1PUxoSEUFGCiwDcWFTT805Gltpw
+         SxZMQIQgTE3+9CnyMxlOzelCoZLFovh53hzuZgYOrS2kEyCuR/q3tAOCMT4H7/o4OgKA
+         gA6W5GwNbw6fMQy93aI+aUubAQAnVPubRIzoWhXIzDROwlUaEy7mSHnyZCNvqYPPmJSi
+         Phypm/D6o1RWTfZW1rEsrsGBl3rzYq/lcPuVXt/kSSoRxnnW1vgCU6PdcJAmXZcoV0Mf
+         BqpA==
+X-Gm-Message-State: AFqh2kqtUTwWAToWsezEU1Jy0rY8kXRW3YKVDDFD59lP1qWMdor7eCkB
+        R/s597ipgadDTmBepHDZlvTpN7xNRmY=
+X-Google-Smtp-Source: AMrXdXvTgaLqJaIX0z7u6gR4WtDhUDjJxeU6g8nd6mOzh+aOlhG38dQ+rO49Ieue3d9OtXykXgBP/g==
+X-Received: by 2002:a05:600c:601e:b0:3d0:7fee:8a70 with SMTP id az30-20020a05600c601e00b003d07fee8a70mr34287826wmb.19.1672770360793;
+        Tue, 03 Jan 2023 10:26:00 -0800 (PST)
+Received: from localhost.localdomain (host-79-56-217-20.retail.telecomitalia.it. [79.56.217.20])
+        by smtp.gmail.com with ESMTPSA id m22-20020a05600c161600b003cfa622a18asm45156598wmn.3.2023.01.03.10.25.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Jan 2023 10:26:00 -0800 (PST)
+From:   "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+To:     Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "Fabio M. De Francesco" <fmdefrancesco@gmail.com>,
+        Ira Weiny <ira.weiny@intel.com>
+Subject: [PATCH] scsi: ipr: Replace kmap() with kmap_local_page()
+Date:   Tue,  3 Jan 2023 19:25:56 +0100
+Message-Id: <20230103182556.29080-1-fmdefrancesco@gmail.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v4 2/2] scsi: ufs-unisoc: Add support for Unisoc UFS host
- controller
-Content-Language: en-US
-To:     Zhe Wang <zhe.wang1@unisoc.com>, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, krzysztof.kozlowski+dt@linaro.org,
-        robh+dt@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com
-Cc:     linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        orsonzhai@gmail.com, yuelin.tang@unisoc.com,
-        zhenxiong.lai@unisoc.com, zhang.lyra@gmail.com,
-        zhewang116@gmail.com
-References: <20221209124121.20306-1-zhe.wang1@unisoc.com>
- <20221209124121.20306-3-zhe.wang1@unisoc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221209124121.20306-3-zhe.wang1@unisoc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/9/22 04:41, Zhe Wang wrote:
-> Add driver code for Unisoc ufs host controller, along with ufs
-> initialization.
+The use of kmap() is deprecated in favor of kmap_local_page().
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+There are two main problems with kmap(): (1) It comes with an overhead as
+the mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when the
+kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again, the
+kernel virtual addresses are restored and still valid.
+
+Therefore, replace kmap() with kmap_local_page() in
+ipr_copy_ucode_buffer() and, instead of open-coding local mappings +
+memcpy() + local un-mappings, use the better suited memcpy_to_page()
+helper.
+
+Suggested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+---
+ drivers/scsi/ipr.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 2022ffb45041..7dff517a0858 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3912,7 +3912,6 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ {
+ 	int bsize_elem, i, result = 0;
+ 	struct scatterlist *sg;
+-	void *kaddr;
+ 
+ 	/* Determine the actual number of bytes per element */
+ 	bsize_elem = PAGE_SIZE * (1 << sglist->order);
+@@ -3923,9 +3922,7 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ 			buffer += bsize_elem) {
+ 		struct page *page = sg_page(sg);
+ 
+-		kaddr = kmap(page);
+-		memcpy(kaddr, buffer, bsize_elem);
+-		kunmap(page);
++		memcpy_to_page(page, 0, buffer, bsize_elem);
+ 
+ 		sg->length = bsize_elem;
+ 
+@@ -3938,9 +3935,7 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ 	if (len % bsize_elem) {
+ 		struct page *page = sg_page(sg);
+ 
+-		kaddr = kmap(page);
+-		memcpy(kaddr, buffer, len % bsize_elem);
+-		kunmap(page);
++		memcpy_to_page(page, 0, buffer, len % bsize_elem);
+ 
+ 		sg->length = len % bsize_elem;
+ 	}
+-- 
+2.39.0
+
