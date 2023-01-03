@@ -2,189 +2,185 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13048C4708D
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 19:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B4EC5479D
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 21:29:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238958AbjACTQt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Jan 2023 14:16:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47060 "EHLO
+        id S233894AbjACV3o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Jan 2023 16:29:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238957AbjACTPo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2023 14:15:44 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2C731403D;
-        Tue,  3 Jan 2023 11:14:40 -0800 (PST)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 303Ii2Pn009653;
-        Tue, 3 Jan 2023 19:14:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=KlZhINR6GHC8AxP9B6PXhqEqqyEfkDNxrP8vR37yibg=;
- b=ppbZc0EOB1H1IrUSr0EVx/Ps0n1THrPDYgb+mZgOyeEbH/c86hv1duHYIo1vUhXyj2GR
- +r7fq3OngGs7j/x6tSk7CBJaf7cp2RDBGug5Z+bstVcUrg/0JnLkNsinbCV+zuZ/p7ju
- 7H89bkQ9u3OXjOkKQ7Nb1ss6hW0ledkzJ6EarsMPsiD4beHpXInpzS6MM1kjpmhp0k/V
- cctIXQQ4XGkmYGLP9SAsa1sg8z9Ft7BPsN3c88SB0pSYN7y1r0P6anZ9gZN1hWDIeZiU
- 1FERLmaSAiSxg/NBVm6+JqjrcOgQYE1k9CgGxPs9fKq14oFejThbTZvG3iaSWHSOha47 6g== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3mvsveg1s3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 03 Jan 2023 19:14:19 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 303JEIlf017299
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 3 Jan 2023 19:14:18 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 3 Jan 2023 11:14:18 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
-        <beanhuo@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
+        with ESMTP id S238221AbjACV3m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2023 16:29:42 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE0761573B
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Jan 2023 13:28:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1672781331;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZnLAtcqTp9v7CKNQz0A0gkDdGfLpyhj/luPVno9CpPo=;
+        b=MFnEdnz6pagmYqoltG8fqF2J42y0A1Km6tGw4TCMZS38K5cAbBi0DCCbHdVHIlqbdhfBOH
+        jYlRoCkSjHsUsbDxly0NAgFD4P20kXSdvf9jZ2uXAkYa58Y5WKqVXIE7LUw359aDu4d9d0
+        Z7lNRDCdYAfZp1sDz9+YHTFYo8G49mM=
+Received: from mail-ot1-f71.google.com (mail-ot1-f71.google.com
+ [209.85.210.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-256-EoXGt8K5McK9hOzxuZJ1gQ-1; Tue, 03 Jan 2023 16:28:50 -0500
+X-MC-Unique: EoXGt8K5McK9hOzxuZJ1gQ-1
+Received: by mail-ot1-f71.google.com with SMTP id e15-20020a0568301e4f00b006783b3a27c3so16501918otj.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Jan 2023 13:28:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZnLAtcqTp9v7CKNQz0A0gkDdGfLpyhj/luPVno9CpPo=;
+        b=nzSALGxnkkO8D+ScEc164cuRzDsW6kBoID/0o+NIhWWLzGtfJYJfWi1dilABjhGhVu
+         ZAUd/08hI1ZueqaZYa0mS2znG91qIAIzBPHzrprIF1yegXSG4PIVlPmTLEmOB6jUvJnf
+         lRE3Rfxi/nCA4IpBD5iS7+H4Qaa5WO2A0tRSsCrqqPHs07AesVEv9g0L4SwZVhqW+I4/
+         EGSVhD+XiwDTY4iD+LKy2rLvmZ6HM7/iRqXIhXv0c6xAPFBCJBMsQ4+j+oGn+5zBAOuw
+         lYF/rfy6JD8uwM3WjbWmuEr29ETlEU+cePGG1C6nuzF+APJQaGMUHnrrTXUvXreBxQDH
+         eT7Q==
+X-Gm-Message-State: AFqh2kqLwSs2uerOZ5U6aA3YJ6QORxxr+iN6lHVcursSKgGR2kyD3Iuj
+        YBCzcPL+KdUCSsacTu/FA1MakUWFUOkr2G7ntkF2dd5vF1K9RaTufJrHN2zzxNNZ9tWveUQkGpo
+        BDxf9zALiDcqimz7mUJgehQ==
+X-Received: by 2002:a05:6870:8e08:b0:150:4af9:b29e with SMTP id lw8-20020a0568708e0800b001504af9b29emr10527777oab.33.1672781329451;
+        Tue, 03 Jan 2023 13:28:49 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXukaFuUEzWapjWhOMxeon1UwGobABlsmOcJqe5BEVcQ7D1b4lncU6TrtoORrUZv+gkj4jsiQQ==
+X-Received: by 2002:a05:6870:8e08:b0:150:4af9:b29e with SMTP id lw8-20020a0568708e0800b001504af9b29emr10527771oab.33.1672781329192;
+        Tue, 03 Jan 2023 13:28:49 -0800 (PST)
+Received: from halaney-x13s ([2600:1700:1ff0:d0e0::11])
+        by smtp.gmail.com with ESMTPSA id h11-20020a056870d24b00b00150aca072e8sm3201153oac.38.2023.01.03.13.28.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Jan 2023 13:28:48 -0800 (PST)
+Date:   Tue, 3 Jan 2023 15:28:46 -0600
+From:   Andrew Halaney <ahalaney@redhat.com>
+To:     Johan Hovold <johan+linaro@kernel.org>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        "Keoseong Park" <keosung.park@samsung.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v12 14/15] ufs: core: mcq: Add completion support in poll
-Date:   Tue, 3 Jan 2023 11:09:33 -0800
-Message-ID: <aca68dc46c241447e19180e7d2e1b8f9b6b22032.1672771664.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1672771664.git.quic_asutoshd@quicinc.com>
-References: <cover.1672771664.git.quic_asutoshd@quicinc.com>
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org, Can Guo <quic_cang@quicinc.com>
+Subject: Re: [PATCH] scsi: ufs: core: fix devfreq deadlocks
+Message-ID: <20230103212846.2zwooig4c5sp4rl7@halaney-x13s>
+References: <20221222102121.18682-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Au2qtghJZRujSsYEv08nUSCiITG4N0gO
-X-Proofpoint-ORIG-GUID: Au2qtghJZRujSsYEv08nUSCiITG4N0gO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2023-01-03_07,2023-01-03_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- lowpriorityscore=0 phishscore=0 malwarescore=0 bulkscore=0 adultscore=0
- suspectscore=0 clxscore=1015 mlxscore=0 priorityscore=1501 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2301030165
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221222102121.18682-1-johan+linaro@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Complete cqe requests in poll. Assumption is that
-several poll completion may happen in different CPUs
-for the same completion queue. Hence a spin lock
-protection is added.
+On Thu, Dec 22, 2022 at 11:21:21AM +0100, Johan Hovold wrote:
+> There is a lock inversion and rwsem read-lock recursion in the devfreq
+> target callback which can lead to deadlocks.
+> 
+> Specifically, ufshcd_devfreq_scale() already holds a clk_scaling_lock
+> read lock when toggling the write booster, which involves taking the
+> dev_cmd mutex before taking another clk_scaling_lock read lock.
+> 
+> This can lead to a deadlock if another thread:
+> 
+>   1) tries to acquire the dev_cmd and clk_scaling locks in the correct
+>      order, or
+> 
+>   2) takes a clk_scaling write lock before the attempt to take the
+>      clk_scaling read lock a second time.
+> 
+> Fix this by dropping the clk_scaling_lock before toggling the write
+> booster as was done before commit 0e9d4ca43ba8 ("scsi: ufs: Protect some
+> contexts from unexpected clock scaling").
+> 
+> While the devfreq callbacks are already serialised, add a second
+> serialising mutex to handle the unlikely case where a callback triggered
+> through the devfreq sysfs interface is racing with a request to disable
+> clock scaling through the UFS controller 'clkscale_enable' sysfs
+> attribute. This could otherwise lead to the write booster being left
+> disabled after having disabled clock scaling.
+> 
+> Also take the new mutex in ufshcd_clk_scaling_allow() to make sure that
+> any pending write booster update has completed on return.
+> 
+> Note that this currently only affects Qualcomm platforms since commit
+> 87bd05016a64 ("scsi: ufs: core: Allow host driver to disable wb toggling
+> during clock scaling").
+> 
+> The lock inversion (i.e. 1 above) was reported by lockdep as:
+> 
+>  ======================================================
+>  WARNING: possible circular locking dependency detected
+>  6.1.0-next-20221216 #211 Not tainted
+>  ------------------------------------------------------
+>  kworker/u16:2/71 is trying to acquire lock:
+>  ffff076280ba98a0 (&hba->dev_cmd.lock){+.+.}-{3:3}, at: ufshcd_query_flag+0x50/0x1c0
+> 
+>  but task is already holding lock:
+>  ffff076280ba9cf0 (&hba->clk_scaling_lock){++++}-{3:3}, at: ufshcd_devfreq_scale+0x2b8/0x380
+> 
+>  which lock already depends on the new lock.
+> [  +0.011606]
+>  the existing dependency chain (in reverse order) is:
+> 
+>  -> #1 (&hba->clk_scaling_lock){++++}-{3:3}:
+>         lock_acquire+0x68/0x90
+>         down_read+0x58/0x80
+>         ufshcd_exec_dev_cmd+0x70/0x2c0
+>         ufshcd_verify_dev_init+0x68/0x170
+>         ufshcd_probe_hba+0x398/0x1180
+>         ufshcd_async_scan+0x30/0x320
+>         async_run_entry_fn+0x34/0x150
+>         process_one_work+0x288/0x6c0
+>         worker_thread+0x74/0x450
+>         kthread+0x118/0x120
+>         ret_from_fork+0x10/0x20
+> 
+>  -> #0 (&hba->dev_cmd.lock){+.+.}-{3:3}:
+>         __lock_acquire+0x12a0/0x2240
+>         lock_acquire.part.0+0xcc/0x220
+>         lock_acquire+0x68/0x90
+>         __mutex_lock+0x98/0x430
+>         mutex_lock_nested+0x2c/0x40
+>         ufshcd_query_flag+0x50/0x1c0
+>         ufshcd_query_flag_retry+0x64/0x100
+>         ufshcd_wb_toggle+0x5c/0x120
+>         ufshcd_devfreq_scale+0x2c4/0x380
+>         ufshcd_devfreq_target+0xf4/0x230
+>         devfreq_set_target+0x84/0x2f0
+>         devfreq_update_target+0xc4/0xf0
+>         devfreq_monitor+0x38/0x1f0
+>         process_one_work+0x288/0x6c0
+>         worker_thread+0x74/0x450
+>         kthread+0x118/0x120
+>         ret_from_fork+0x10/0x20
+> 
+>  other info that might help us debug this:
+>   Possible unsafe locking scenario:
+>         CPU0                    CPU1
+>         ----                    ----
+>    lock(&hba->clk_scaling_lock);
+>                                 lock(&hba->dev_cmd.lock);
+>                                 lock(&hba->clk_scaling_lock);
+>    lock(&hba->dev_cmd.lock);
+> 
+>   *** DEADLOCK ***
+> 
+> Fixes: 0e9d4ca43ba8 ("scsi: ufs: Protect some contexts from unexpected clock scaling")
+> Cc: stable@vger.kernel.org      # 5.12
+> Cc: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/ufs/core/ufs-mcq.c     | 13 +++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  2 ++
- drivers/ufs/core/ufshcd.c      |  7 +++++++
- include/ufs/ufshcd.h           |  2 ++
- 4 files changed, 24 insertions(+)
+Tested-by: Andrew Halaney <ahalaney@redhat.com>
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index cd10d59..e710d19 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -294,6 +294,18 @@ unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
- 	return completed_reqs;
- }
- 
-+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-+				       struct ufs_hw_queue *hwq)
-+{
-+	unsigned long completed_reqs;
-+
-+	spin_lock(&hwq->cq_lock);
-+	completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
-+	spin_unlock(&hwq->cq_lock);
-+
-+	return completed_reqs;
-+}
-+
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
- {
- 	struct ufs_hw_queue *hwq;
-@@ -390,6 +402,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
- 		hwq = &hba->uhq[i];
- 		hwq->max_entries = hba->nutrs;
- 		spin_lock_init(&hwq->sq_lock);
-+		spin_lock_init(&hwq->cq_lock);
- 	}
- 
- 	/* The very first HW queue serves device commands */
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 1691fc0..b1c5a15 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -75,6 +75,8 @@ unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
- 					 struct ufs_hw_queue *hwq);
- struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
- 					   struct request *req);
-+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-+				       struct ufs_hw_queue *hwq);
- 
- #define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
- #define SD_ASCII_STD true
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2635570..4d31131 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5461,6 +5461,13 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
- 	struct ufs_hba *hba = shost_priv(shost);
- 	unsigned long completed_reqs, flags;
- 	u32 tr_doorbell;
-+	struct ufs_hw_queue *hwq;
-+
-+	if (is_mcq_enabled(hba)) {
-+		hwq = &hba->uhq[queue_num + UFSHCD_MCQ_IO_QUEUE_OFFSET];
-+
-+		return ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+	}
- 
- 	spin_lock_irqsave(&hba->outstanding_lock, flags);
- 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 1c4d5f8..2f36351 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1076,6 +1076,7 @@ struct ufs_hba {
-  * @sq_lock: serialize submission queue access
-  * @cq_tail_slot: current slot to which CQ tail pointer is pointing
-  * @cq_head_slot: current slot to which CQ head pointer is pointing
-+ * @cq_lock: Synchronize between multiple polling instances
-  */
- struct ufs_hw_queue {
- 	void __iomem *mcq_sq_head;
-@@ -1093,6 +1094,7 @@ struct ufs_hw_queue {
- 	spinlock_t sq_lock;
- 	u32 cq_tail_slot;
- 	u32 cq_head_slot;
-+	spinlock_t cq_lock;
- };
- 
- static inline bool is_mcq_enabled(struct ufs_hba *hba)
--- 
-2.7.4
+Thanks for taking the time to fix this, I can't get any UFS related
+splats to show after a brief round of testing now.
+
+For what it is worth, the change looks good to me as well but I'll leave
+it to someone familiar with the UFS core to add a proper Reviewed-by tag.
+
+Thanks,
+Andrew
 
