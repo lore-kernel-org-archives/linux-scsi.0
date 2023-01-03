@@ -2,144 +2,675 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C5CC46467
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 00:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE2CC53210
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 01:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233786AbjACA3d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Jan 2023 19:29:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33586 "EHLO
+        id S236460AbjACBYN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Jan 2023 20:24:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbjACA3b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jan 2023 19:29:31 -0500
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 529801014
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Jan 2023 16:29:30 -0800 (PST)
-Received: by mail-pl1-f169.google.com with SMTP id p24so8462434plw.11
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Jan 2023 16:29:30 -0800 (PST)
+        with ESMTP id S230080AbjACBYK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jan 2023 20:24:10 -0500
+Received: from mail-yb1-xb33.google.com (mail-yb1-xb33.google.com [IPv6:2607:f8b0:4864:20::b33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FBD495AA;
+        Mon,  2 Jan 2023 17:24:08 -0800 (PST)
+Received: by mail-yb1-xb33.google.com with SMTP id t15so31619655ybq.4;
+        Mon, 02 Jan 2023 17:24:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=hJozCzn75mLxI20UVLrjGIXqOHGToFWmpjvpa0R3oz0=;
+        b=HTcGqH7wOq8rD7gz/E9TAStUfBM1a1U1fudWzUYew3hTAzSg5INWooA9CeiIDXy7Vi
+         PC5XfUrJFFbVBmD0fciBweXr8XeiwkOgIs73grmjpz8vEsLkhF72enpxP34eTsIvN13C
+         JKGYht/bt7VxXaRCvdJfkxGRrZYshGqrfZwspENU/4Nzuv/5NbjltYKDszsLlFUlcmlW
+         IhrwPe2c60kT9H/Y4O0WfL6JKMCwTWxxpHglKakTWgwi9q9P1uh7rcOuvXVnUCzvJsTB
+         5xcv5/pJkyNMFLC5g0fCSdHnA4w1ESZqvqUDfMTou7nFtK9YKwDg03PFMDWhwgNgo36m
+         8zhg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/MnITQApAqGQU0QBeGTJ/eq1/ZzbivYJ6b2oO8a28Ng=;
-        b=Iy3GtnG2QcwZJpYSzkWtl30obJFwjf5oSTaIgbGMXiHLVCpMHs5MRJrVZ1mEL6VZhb
-         Jvyb4k8pOHr3h3EUSOUSgmgxOOK4DGLKzNf+UHY5EgnpbcxHUdm85u3LCbQKhEZ//5dJ
-         OfbaT5y2Ksq/onvoKa+eg1lWF5sltCFHTXONsdardo+ldGyL5pDLgeNDa90fJiYP8ROP
-         CrzGRzp6BFb1zfJm2kmV6Fx1Cian0OdLq94TqQRJmZGkuTmaYvWkcTm9e8oD1C3w1ZeX
-         qd3GodLa9ZR7UZRcnBwd43Te3qSD6vvRVjyZucgkdFuFjXfzdL0pQKCj/LoU45/Vff9F
-         YVeQ==
-X-Gm-Message-State: AFqh2kqLfn0BIgWw5aei+zvNTvH42Sce8gLbjrhSdXoxw4q2wgrgu68Z
-        6xBUJoQ4C+9e2VVJ85njqEw=
-X-Google-Smtp-Source: AMrXdXtqfub/hBM0Uw1eKDREL7qYr9jb50OAT5j+Dudh7sJ5HdcFhy0szSnXcAt0K2XEEtznLuhLvg==
-X-Received: by 2002:a17:90b:601:b0:20d:bd5f:ced2 with SMTP id gb1-20020a17090b060100b0020dbd5fced2mr46820362pjb.34.1672705769653;
-        Mon, 02 Jan 2023 16:29:29 -0800 (PST)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id nk7-20020a17090b194700b00225d7c0dc14sm15185653pjb.28.2023.01.02.16.29.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Jan 2023 16:29:28 -0800 (PST)
-Message-ID: <9d142dc5-6a31-3f79-69c8-9967e833a671@acm.org>
-Date:   Mon, 2 Jan 2023 16:29:26 -0800
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hJozCzn75mLxI20UVLrjGIXqOHGToFWmpjvpa0R3oz0=;
+        b=hJQBJoCsSvUoQ9Y6Q0JtxnYIoZfhGXEFy7DprzN+SzzYNn+DNzmE79Nlxc613Pnfwm
+         6llNvTd7bPtZBfHuwXANtOe7umhEvS19O/eQQgs8cJ1dKqQ5neXQ412cVe+fBnNWpS+q
+         H2KUeXKI08cmvC9S3dRD3O7lwor6rxi5FeVmC8zu5za9Awyh3gqCnMY4jACha6lSkHKW
+         DoB/kF1KsG1eTwPPFj0zDGxNHySyGuUtA649v/760RyVvTehNDR0HCVcYr/Ls6kjtGae
+         LxxD2XUEv2cWo7I8DF09SZCYmEKwghL9HNOYYt+smfrNVeTilUFMhfyPiyOkUYyWguxn
+         j+6w==
+X-Gm-Message-State: AFqh2koANOtbG4+Rjaf2l7TWPOzeQv3Luu3UqJv5Ramj63Qe2UgXGfZ4
+        +XGszMEv8jTUTeZqPQnp+Tqw76MPpSE7LICKaVgPmIjnoI0=
+X-Google-Smtp-Source: AMrXdXvHr3H8KcEK968ETONeewnxKxzq09kPA5EBATq/7lgo2WkBWVIPvGHbmXUhiecvDZd1Hbg4P6Rln9wG+8mX1bM=
+X-Received: by 2002:a25:d60a:0:b0:713:5263:3442 with SMTP id
+ n10-20020a25d60a000000b0071352633442mr2828916ybg.362.1672709047708; Mon, 02
+ Jan 2023 17:24:07 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v3] ufs: core: wlun resume SSU(Acitve) fail recovery
-Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com,
-        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
-        naomi.chu@mediatek.com
-References: <20221228060157.24852-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221228060157.24852-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20221209124121.20306-1-zhe.wang1@unisoc.com> <20221209124121.20306-3-zhe.wang1@unisoc.com>
+In-Reply-To: <20221209124121.20306-3-zhe.wang1@unisoc.com>
+From:   Zhe Wang <zhewang116@gmail.com>
+Date:   Tue, 3 Jan 2023 09:23:56 +0800
+Message-ID: <CAJxzgGr2SOXHzQ_XMEBM7uV2kCZsN4kxvydT+px8YOaOZ+CLfQ@mail.gmail.com>
+Subject: Re: [PATCH v4 2/2] scsi: ufs-unisoc: Add support for Unisoc UFS host controller
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com
+Cc:     linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        orsonzhai@gmail.com, yuelin.tang@unisoc.com,
+        zhenxiong.lai@unisoc.com, zhang.lyra@gmail.com,
+        Zhe Wang <zhe.wang1@unisoc.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/27/22 22:01, peter.wang@mediatek.com wrote:
-> When wlun resume SSU(Active) timeout, scsi try eh_host_reset_handler.
-                    ^^^^^^^^^^^
-Please use the same spelling in the patch subject (Acitve -> Active).
+Hi,
 
-timeout -> times out
-scsi try -> the SCSI core invokes
+A gentle ping.
 
-> But ufshcd_eh_host_reset_handler hang at wait flush_work(&hba->eh_work).
+Best regards,
+Zhe
 
-hang at -> hangs in
-
-> And ufshcd_err_handler hang at wait rpm resume.
-
-hang at wait rpm resume -> hangs in rpm_resume().
-
- > <ffffffdd78e02b34> schedule+0x110/0x204
- > <ffffffdd78e0be60> schedule_timeout+0x98/0x138
- > <ffffffdd78e040e8> wait_for_common_io+0x130/0x2d0
- > <ffffffdd77d6a000> blk_execute_rq+0x10c/0x16c
- > <ffffffdd78126d90> __scsi_execute+0xfc/0x278
- > <ffffffdd7813891c> ufshcd_set_dev_pwr_mode+0x1c8/0x40c
- > <ffffffdd78137d1c> __ufshcd_wl_resume+0xf0/0x5cc
- > <ffffffdd78137ae0> ufshcd_wl_runtime_resume+0x40/0x18c
- > <ffffffdd78136108> scsi_runtime_resume+0x88/0x104
- > <ffffffdd7809a4f8> __rpm_callback+0x1a0/0xaec
- > <ffffffdd7809b624> rpm_resume+0x7e0/0xcd0
- > <ffffffdd7809a788> __rpm_callback+0x430/0xaec
- > <ffffffdd7809b644> rpm_resume+0x800/0xcd0
- > <ffffffdd780a0778> pm_runtime_work+0x148/0x198
- >
- > <ffffffdd78e02b34> schedule+0x110/0x204
- > <ffffffdd78e0be10> schedule_timeout+0x48/0x138
- > <ffffffdd78e03d9c> wait_for_common+0x144/0x2dc
- > <ffffffdd7758bba4> __flush_work+0x3d0/0x508
- > <ffffffdd7815572c> ufshcd_eh_host_reset_handler+0x134/0x3a8
- > <ffffffdd781216f4> scsi_try_host_reset+0x54/0x204
- > <ffffffdd78120594> scsi_eh_ready_devs+0xb30/0xd48
- > <ffffffdd7812373c> scsi_error_handler+0x260/0x874
- >
- > <ffffffdd78e02b34> schedule+0x110/0x204
- > <ffffffdd7809af64> rpm_resume+0x120/0xcd0
- > <ffffffdd7809fde8> __pm_runtime_resume+0xa0/0x17c
- > <ffffffdd7815193c> ufshcd_err_handling_prepare+0x40/0x430
- > <ffffffdd7814cce8> ufshcd_err_handler+0x1c4/0xd4c
-
-On top of which kernel version has this patch been developed?
-I think this deadlock has already been fixed by commit 7029e2151a7c 
-("scsi: ufs: Fix a deadlock between PM and the SCSI error handler").
-Please check whether that commit by itself (without this patch) is 
-sufficient to fix the reported deadlock.
-
+On Fri, Dec 9, 2022 at 8:45 PM Zhe Wang <zhe.wang1@unisoc.com> wrote:
+>
+> Add driver code for Unisoc ufs host controller, along with ufs
+> initialization.
+>
+> Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
 > ---
->   drivers/ufs/core/ufshcd.c | 17 +++++++++++++++++
->   1 file changed, 17 insertions(+)
-
-The changelog is missing. Please include a changelog when posting v2 or 
-a later version of a patch.
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index e18c9f4463ec..0dfb9a35bf66 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7366,6 +7366,23 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
->   
->   	hba = shost_priv(cmd->device->host);
->   
-> +	/*
-> +	 * If pm op resume fail and wait err recovery, do link recovery only.
-> +	 * Because schedule eh work will get dead lock in ufshcd_rpm_get_sync
-> +	 * and wait wlun resume, but wlun resume error wait eh work finish.
-> +	 */
-
-The above comment has grammar issues and some parts are 
-incomprehensible. What does e.g. "wait err recovery" mean? Please 
-improve this source code comment.
-
-Thanks,
-
-Bart.
+>  drivers/ufs/host/Kconfig    |  12 +
+>  drivers/ufs/host/Makefile   |   1 +
+>  drivers/ufs/host/ufs-sprd.c | 458 ++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-sprd.h |  85 +++++++
+>  4 files changed, 556 insertions(+)
+>  create mode 100644 drivers/ufs/host/ufs-sprd.c
+>  create mode 100644 drivers/ufs/host/ufs-sprd.h
+>
+> diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+> index 4cc2dbd79ed0..90a7142ec846 100644
+> --- a/drivers/ufs/host/Kconfig
+> +++ b/drivers/ufs/host/Kconfig
+> @@ -124,3 +124,15 @@ config SCSI_UFS_EXYNOS
+>
+>           Select this if you have UFS host controller on Samsung Exynos SoC.
+>           If unsure, say N.
+> +
+> +config SCSI_UFS_SPRD
+> +       tristate "Unisoc specific hooks to UFS controller platform driver"
+> +       depends on SCSI_UFSHCD_PLATFORM && (ARCH_SPRD || COMPILE_TEST)
+> +       help
+> +         This selects the Unisoc specific additions to UFSHCD platform driver.
+> +         UFS host on Unisoc needs some vendor specific configuration before
+> +         accessing the hardware which includes PHY configuration and vendor
+> +         specific registers.
+> +
+> +         Select this if you have UFS controller on Unisoc chipset.
+> +         If unsure, say N.
+> diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
+> index 7717ca93e7d5..d7c5bf7fa512 100644
+> --- a/drivers/ufs/host/Makefile
+> +++ b/drivers/ufs/host/Makefile
+> @@ -12,4 +12,5 @@ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>  obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
+>  obj-$(CONFIG_SCSI_UFS_RENESAS) += ufs-renesas.o
+> +obj-$(CONFIG_SCSI_UFS_SPRD) += ufs-sprd.o
+>  obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
+> diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
+> new file mode 100644
+> index 000000000000..051f3f40d92c
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-sprd.c
+> @@ -0,0 +1,458 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * UNISOC UFS Host Controller driver
+> + *
+> + * Copyright (C) 2022 Unisoc, Inc.
+> + * Author: Zhe Wang <zhe.wang1@unisoc.com>
+> + */
+> +
+> +#include <linux/arm-smccc.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/of.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/regmap.h>
+> +#include <linux/reset.h>
+> +#include <linux/regulator/consumer.h>
+> +
+> +#include <ufs/ufshcd.h>
+> +#include "ufshcd-pltfrm.h"
+> +#include "ufs-sprd.h"
+> +
+> +static const struct of_device_id ufs_sprd_of_match[];
+> +
+> +static struct ufs_sprd_priv *ufs_sprd_get_priv_data(struct ufs_hba *hba)
+> +{
+> +       struct ufs_sprd_host *host = ufshcd_get_variant(hba);
+> +
+> +       WARN_ON(!host->priv);
+> +       return host->priv;
+> +}
+> +
+> +static void ufs_sprd_regmap_update(struct ufs_sprd_priv *priv, unsigned int index,
+> +                               unsigned int reg, unsigned int bits,  unsigned int val)
+> +{
+> +       regmap_update_bits(priv->sysci[index].regmap, reg, bits, val);
+> +}
+> +
+> +static void ufs_sprd_regmap_read(struct ufs_sprd_priv *priv, unsigned int index,
+> +                               unsigned int reg, unsigned int *val)
+> +{
+> +       regmap_read(priv->sysci[index].regmap, reg, val);
+> +}
+> +
+> +static void ufs_sprd_get_unipro_ver(struct ufs_hba *hba)
+> +{
+> +       struct ufs_sprd_host *host = ufshcd_get_variant(hba);
+> +
+> +       if (ufshcd_dme_get(hba, UIC_ARG_MIB(PA_LOCALVERINFO), &host->unipro_ver))
+> +               host->unipro_ver = 0;
+> +}
+> +
+> +static void ufs_sprd_ctrl_uic_compl(struct ufs_hba *hba, bool enable)
+> +{
+> +       u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+> +
+> +       if (enable == true)
+> +               set |= UIC_COMMAND_COMPL;
+> +       else
+> +               set &= ~UIC_COMMAND_COMPL;
+> +       ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
+> +}
+> +
+> +static int ufs_sprd_get_reset_ctrl(struct device *dev, struct ufs_sprd_rst *rci)
+> +{
+> +       rci->rc = devm_reset_control_get(dev, rci->name);
+> +       if (IS_ERR(rci->rc)) {
+> +               dev_err(dev, "failed to get reset ctrl:%s\n", rci->name);
+> +               return PTR_ERR(rci->rc);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_sprd_get_syscon_reg(struct device *dev, struct ufs_sprd_syscon *sysci)
+> +{
+> +       sysci->regmap = syscon_regmap_lookup_by_phandle(dev->of_node, sysci->name);
+> +       if (IS_ERR(sysci->regmap)) {
+> +               dev_err(dev, "failed to get ufs syscon:%s\n", sysci->name);
+> +               return PTR_ERR(sysci->regmap);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_sprd_get_vreg(struct device *dev, struct ufs_sprd_vreg *vregi)
+> +{
+> +       vregi->vreg = devm_regulator_get(dev, vregi->name);
+> +       if (IS_ERR(vregi->vreg)) {
+> +               dev_err(dev, "failed to get vreg:%s\n", vregi->name);
+> +               return PTR_ERR(vregi->vreg);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_sprd_parse_dt(struct device *dev, struct ufs_hba *hba, struct ufs_sprd_host *host)
+> +{
+> +       u32 i;
+> +       struct ufs_sprd_priv *priv = host->priv;
+> +       int ret = 0;
+> +
+> +       /* Parse UFS reset ctrl info */
+> +       for (i = 0; i < SPRD_UFS_RST_MAX; i++) {
+> +               if (!priv->rci[i].name)
+> +                       continue;
+> +               ret = ufs_sprd_get_reset_ctrl(dev, &priv->rci[i]);
+> +               if (ret)
+> +                       goto out;
+> +       }
+> +
+> +       /* Parse UFS syscon reg info */
+> +       for (i = 0; i < SPRD_UFS_SYSCON_MAX; i++) {
+> +               if (!priv->sysci[i].name)
+> +                       continue;
+> +               ret = ufs_sprd_get_syscon_reg(dev, &priv->sysci[i]);
+> +               if (ret)
+> +                       goto out;
+> +       }
+> +
+> +       /* Parse UFS vreg info */
+> +       for (i = 0; i < SPRD_UFS_VREG_MAX; i++) {
+> +               if (!priv->vregi[i].name)
+> +                       continue;
+> +               ret = ufs_sprd_get_vreg(dev, &priv->vregi[i]);
+> +               if (ret)
+> +                       goto out;
+> +       }
+> +
+> +out:
+> +       return ret;
+> +}
+> +
+> +static int ufs_sprd_common_init(struct ufs_hba *hba)
+> +{
+> +       struct device *dev = hba->dev;
+> +       struct ufs_sprd_host *host;
+> +       struct platform_device __maybe_unused *pdev = to_platform_device(dev);
+> +       const struct of_device_id *of_id;
+> +       int ret = 0;
+> +
+> +       host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> +       if (!host)
+> +               return -ENOMEM;
+> +
+> +       of_id = of_match_node(ufs_sprd_of_match, pdev->dev.of_node);
+> +       if (of_id->data != NULL)
+> +               host->priv = container_of(of_id->data, struct ufs_sprd_priv,
+> +                                         ufs_hba_sprd_vops);
+> +
+> +       host->hba = hba;
+> +       ufshcd_set_variant(hba, host);
+> +
+> +       hba->caps |= UFSHCD_CAP_CLK_GATING |
+> +               UFSHCD_CAP_CRYPTO |
+> +               UFSHCD_CAP_WB_EN;
+> +       hba->quirks |= UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS;
+> +
+> +       ret = ufs_sprd_parse_dt(dev, hba, host);
+> +
+> +       return ret;
+> +}
+> +
+> +static int sprd_ufs_pwr_change_notify(struct ufs_hba *hba,
+> +                                     enum ufs_notify_change_status status,
+> +                                     struct ufs_pa_layer_attr *dev_max_params,
+> +                                     struct ufs_pa_layer_attr *dev_req_params)
+> +{
+> +       struct ufs_sprd_host *host = ufshcd_get_variant(hba);
+> +
+> +       if (status == PRE_CHANGE) {
+> +               memcpy(dev_req_params, dev_max_params,
+> +                       sizeof(struct ufs_pa_layer_attr));
+> +               if (host->unipro_ver >= UFS_UNIPRO_VER_1_8)
+> +                       ufshcd_dme_configure_adapt(hba, dev_req_params->gear_tx,
+> +                                                  PA_INITIAL_ADAPT);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_sprd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+> +                           enum ufs_notify_change_status status)
+> +{
+> +       unsigned long flags;
+> +
+> +       if (status == PRE_CHANGE) {
+> +               if (ufshcd_is_auto_hibern8_supported(hba)) {
+> +                       spin_lock_irqsave(hba->host->host_lock, flags);
+> +                       ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +                       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +               }
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static void ufs_sprd_n6_host_reset(struct ufs_hba *hba)
+> +{
+> +       struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
+> +
+> +       dev_info(hba->dev, "ufs host reset!\n");
+> +
+> +       reset_control_assert(priv->rci[SPRD_UFSHCI_SOFT_RST].rc);
+> +       usleep_range(1000, 1100);
+> +       reset_control_deassert(priv->rci[SPRD_UFSHCI_SOFT_RST].rc);
+> +}
+> +
+> +static int ufs_sprd_n6_device_reset(struct ufs_hba *hba)
+> +{
+> +       struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
+> +
+> +       dev_info(hba->dev, "ufs device reset!\n");
+> +
+> +       reset_control_assert(priv->rci[SPRD_UFS_DEV_RST].rc);
+> +       usleep_range(1000, 1100);
+> +       reset_control_deassert(priv->rci[SPRD_UFS_DEV_RST].rc);
+> +
+> +       return 0;
+> +}
+> +
+> +static void ufs_sprd_n6_key_acc_enable(struct ufs_hba *hba)
+> +{
+> +       u32 val;
+> +       u32 retry = 10;
+> +       struct arm_smccc_res res;
+> +
+> +check_hce:
+> +       /* Key access only can be enabled under HCE enable */
+> +       val = ufshcd_readl(hba, REG_CONTROLLER_ENABLE);
+> +       if (!(val & CONTROLLER_ENABLE)) {
+> +               ufs_sprd_n6_host_reset(hba);
+> +               val |= CONTROLLER_ENABLE;
+> +               ufshcd_writel(hba, val, REG_CONTROLLER_ENABLE);
+> +               usleep_range(1000, 1100);
+> +               if (retry) {
+> +                       retry--;
+> +                       goto check_hce;
+> +               }
+> +               goto disable_crypto;
+> +       }
+> +
+> +       arm_smccc_smc(SPRD_SIP_SVC_STORAGE_UFS_CRYPTO_ENABLE,
+> +                     0, 0, 0, 0, 0, 0, 0, &res);
+> +       if (!res.a0)
+> +               return;
+> +
+> +disable_crypto:
+> +       dev_err(hba->dev, "key reg access enable fail, disable crypto\n");
+> +       hba->caps &= ~UFSHCD_CAP_CRYPTO;
+> +}
+> +
+> +static int ufs_sprd_n6_init(struct ufs_hba *hba)
+> +{
+> +       struct ufs_sprd_priv *priv;
+> +       int ret = 0;
+> +
+> +       ret = ufs_sprd_common_init(hba);
+> +       if (ret != 0)
+> +               return ret;
+> +
+> +       priv = ufs_sprd_get_priv_data(hba);
+> +
+> +       ret = regulator_enable(priv->vregi[SPRD_UFS_VDD_MPHY].vreg);
+> +       if (ret)
+> +               return -ENODEV;
+> +
+> +       if (hba->caps & UFSHCD_CAP_CRYPTO)
+> +               ufs_sprd_n6_key_acc_enable(hba);
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_sprd_n6_phy_init(struct ufs_hba *hba)
+> +{
+> +       int ret = 0;
+> +       uint32_t val = 0;
+> +       uint32_t retry = 10;
+> +       uint32_t offset;
+> +       struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
+> +
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(CBREFCLKCTRL2), 0x90);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(CBCRCTRL), 0x01);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RXSQCONTROL,
+> +                               UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)), 0x01);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RXSQCONTROL,
+> +                               UIC_ARG_MPHY_RX_GEN_SEL_INDEX(1)), 0x01);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(CBRATESEL), 0x01);
+> +
+> +       do {
+> +               /* phy_sram_init_done */
+> +               ufs_sprd_regmap_read(priv, SPRD_UFS_ANLG, 0xc, &val);
+> +               if ((val & 0x1) == 0x1) {
+> +                       for (offset = 0x40; offset < 0x42; offset++) {
+> +                               /* Lane afe calibration */
+> +                               ufshcd_dme_set(hba, UIC_ARG_MIB(CBCREGADDRLSB), 0x1c);
+> +                               ufshcd_dme_set(hba, UIC_ARG_MIB(CBCREGADDRMSB), offset);
+> +                               ufshcd_dme_set(hba, UIC_ARG_MIB(CBCREGWRLSB), 0x04);
+> +                               ufshcd_dme_set(hba, UIC_ARG_MIB(CBCREGWRMSB), 0x00);
+> +                               ufshcd_dme_set(hba, UIC_ARG_MIB(CBCREGRDWRSEL), 0x01);
+> +                               ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
+> +                       }
+> +
+> +                       goto update_phy;
+> +               }
+> +               udelay(1000);
+> +               retry--;
+> +       } while (retry > 0);
+> +
+> +       ret = -ETIMEDOUT;
+> +       goto out;
+> +
+> +update_phy:
+> +       /* phy_sram_ext_ld_done */
+> +       ufs_sprd_regmap_update(priv, SPRD_UFS_ANLG, 0xc, 0x2, 0);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYDISABLE), 0x0);
+> +out:
+> +       return ret;
+> +}
+> +
+> +
+> +static int sprd_ufs_n6_hce_enable_notify(struct ufs_hba *hba,
+> +                                        enum ufs_notify_change_status status)
+> +{
+> +       int err = 0;
+> +       struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
+> +
+> +       if (status == PRE_CHANGE) {
+> +               /* phy_sram_ext_ld_done */
+> +               ufs_sprd_regmap_update(priv, SPRD_UFS_ANLG, 0xc, 0x2, 0x2);
+> +               /* phy_sram_bypass */
+> +               ufs_sprd_regmap_update(priv, SPRD_UFS_ANLG, 0xc, 0x4, 0x4);
+> +
+> +               ufs_sprd_n6_host_reset(hba);
+> +
+> +               if (hba->caps & UFSHCD_CAP_CRYPTO)
+> +                       ufs_sprd_n6_key_acc_enable(hba);
+> +       }
+> +
+> +       if (status == POST_CHANGE) {
+> +               err = ufs_sprd_n6_phy_init(hba);
+> +               if (err) {
+> +                       dev_err(hba->dev, "Phy setup failed (%d)\n", err);
+> +                       goto out;
+> +               }
+> +
+> +               ufs_sprd_get_unipro_ver(hba);
+> +       }
+> +out:
+> +       return err;
+> +}
+> +
+> +static void sprd_ufs_n6_h8_notify(struct ufs_hba *hba,
+> +                                 enum uic_cmd_dme cmd,
+> +                                 enum ufs_notify_change_status status)
+> +{
+> +       struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
+> +
+> +       if (status == PRE_CHANGE) {
+> +               if (cmd == UIC_CMD_DME_HIBER_ENTER)
+> +                       /*
+> +                        * Disable UIC COMPL INTR to prevent access to UFSHCI after
+> +                        * checking HCS.UPMCRS
+> +                        */
+> +                       ufs_sprd_ctrl_uic_compl(hba, false);
+> +
+> +               if (cmd == UIC_CMD_DME_HIBER_EXIT) {
+> +                       ufs_sprd_regmap_update(priv, SPRD_UFS_AON_APB, APB_UFSDEV_REG,
+> +                               APB_UFSDEV_REFCLK_EN, APB_UFSDEV_REFCLK_EN);
+> +                       ufs_sprd_regmap_update(priv, SPRD_UFS_AON_APB, APB_USB31PLL_CTRL,
+> +                               APB_USB31PLLV_REF2MPHY, APB_USB31PLLV_REF2MPHY);
+> +               }
+> +       }
+> +
+> +       if (status == POST_CHANGE) {
+> +               if (cmd == UIC_CMD_DME_HIBER_EXIT)
+> +                       ufs_sprd_ctrl_uic_compl(hba, true);
+> +
+> +               if (cmd == UIC_CMD_DME_HIBER_ENTER) {
+> +                       ufs_sprd_regmap_update(priv, SPRD_UFS_AON_APB, APB_UFSDEV_REG,
+> +                               APB_UFSDEV_REFCLK_EN, 0);
+> +                       ufs_sprd_regmap_update(priv, SPRD_UFS_AON_APB, APB_USB31PLL_CTRL,
+> +                               APB_USB31PLLV_REF2MPHY, 0);
+> +               }
+> +       }
+> +}
+> +
+> +static struct ufs_sprd_priv n6_ufs = {
+> +       .rci[SPRD_UFSHCI_SOFT_RST] = { .name = "controller", },
+> +       .rci[SPRD_UFS_DEV_RST] = { .name = "device", },
+> +
+> +       .sysci[SPRD_UFS_ANLG] = { .name = "sprd,ufs-anlg-syscon", },
+> +       .sysci[SPRD_UFS_AON_APB] = { .name = "sprd,aon-apb-syscon", },
+> +
+> +       .vregi[SPRD_UFS_VDD_MPHY] = { .name = "vdd-mphy", },
+> +
+> +       .ufs_hba_sprd_vops = {
+> +               .name = "sprd,ums9620-ufs",
+> +               .init = ufs_sprd_n6_init,
+> +               .hce_enable_notify = sprd_ufs_n6_hce_enable_notify,
+> +               .pwr_change_notify = sprd_ufs_pwr_change_notify,
+> +               .hibern8_notify = sprd_ufs_n6_h8_notify,
+> +               .device_reset = ufs_sprd_n6_device_reset,
+> +               .suspend = ufs_sprd_suspend,
+> +       },
+> +};
+> +
+> +static const struct of_device_id __maybe_unused ufs_sprd_of_match[] = {
+> +       { .compatible = "sprd,ums9620-ufs", .data = &n6_ufs.ufs_hba_sprd_vops},
+> +       {},
+> +};
+> +MODULE_DEVICE_TABLE(of, ufs_sprd_of_match);
+> +
+> +static int ufs_sprd_probe(struct platform_device *pdev)
+> +{
+> +       int err;
+> +       struct device *dev = &pdev->dev;
+> +       const struct of_device_id *of_id;
+> +
+> +       of_id = of_match_node(ufs_sprd_of_match, dev->of_node);
+> +       err = ufshcd_pltfrm_init(pdev, of_id->data);
+> +       if (err)
+> +               dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
+> +
+> +       return err;
+> +}
+> +
+> +static int ufs_sprd_remove(struct platform_device *pdev)
+> +{
+> +       struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +
+> +       pm_runtime_get_sync(&(pdev)->dev);
+> +       ufshcd_remove(hba);
+> +       return 0;
+> +}
+> +
+> +static const struct dev_pm_ops ufs_sprd_pm_ops = {
+> +       SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
+> +       SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+> +       .prepare         = ufshcd_suspend_prepare,
+> +       .complete        = ufshcd_resume_complete,
+> +};
+> +
+> +static struct platform_driver ufs_sprd_pltform = {
+> +       .probe = ufs_sprd_probe,
+> +       .remove = ufs_sprd_remove,
+> +       .shutdown = ufshcd_pltfrm_shutdown,
+> +       .driver = {
+> +               .name = "ufshcd-sprd",
+> +               .pm = &ufs_sprd_pm_ops,
+> +               .of_match_table = of_match_ptr(ufs_sprd_of_match),
+> +       },
+> +};
+> +module_platform_driver(ufs_sprd_pltform);
+> +
+> +MODULE_AUTHOR("Zhe Wang <zhe.wang1@unisoc.com>");
+> +MODULE_DESCRIPTION("Unisoc UFS Host Driver");
+> +MODULE_LICENSE("GPL v2");
+> diff --git a/drivers/ufs/host/ufs-sprd.h b/drivers/ufs/host/ufs-sprd.h
+> new file mode 100644
+> index 000000000000..d0cf4d8335d0
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-sprd.h
+> @@ -0,0 +1,85 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only */
+> +/*
+> + * UNISOC UFS Host Controller driver
+> + *
+> + * Copyright (C) 2022 Unisoc, Inc.
+> + * Author: Zhe Wang <zhe.wang1@unisoc.com>
+> + */
+> +
+> +#ifndef _UFS_SPRD_H_
+> +#define _UFS_SPRD_H_
+> +
+> +/* Vendor specific attributes */
+> +#define RXSQCONTROL    0x8009
+> +#define CBRATESEL      0x8114
+> +#define CBCREGADDRLSB  0x8116
+> +#define CBCREGADDRMSB  0x8117
+> +#define CBCREGWRLSB    0x8118
+> +#define CBCREGWRMSB    0x8119
+> +#define CBCREGRDWRSEL  0x811C
+> +#define CBCRCTRL       0x811F
+> +#define CBREFCLKCTRL2  0x8132
+> +#define VS_MPHYDISABLE 0xD0C1
+> +
+> +#define APB_UFSDEV_REG         0xCE8
+> +#define APB_UFSDEV_REFCLK_EN   0x2
+> +#define APB_USB31PLL_CTRL      0xCFC
+> +#define APB_USB31PLLV_REF2MPHY 0x1
+> +
+> +#define SPRD_SIP_SVC_STORAGE_UFS_CRYPTO_ENABLE                         \
+> +       ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL,                         \
+> +                          ARM_SMCCC_SMC_32,                            \
+> +                          ARM_SMCCC_OWNER_SIP,                         \
+> +                          0x0301)
+> +
+> +enum SPRD_UFS_RST_INDEX {
+> +       SPRD_UFSHCI_SOFT_RST,
+> +       SPRD_UFS_DEV_RST,
+> +
+> +       SPRD_UFS_RST_MAX
+> +};
+> +
+> +enum SPRD_UFS_SYSCON_INDEX {
+> +       SPRD_UFS_ANLG,
+> +       SPRD_UFS_AON_APB,
+> +
+> +       SPRD_UFS_SYSCON_MAX
+> +};
+> +
+> +enum SPRD_UFS_VREG_INDEX {
+> +       SPRD_UFS_VDD_MPHY,
+> +
+> +       SPRD_UFS_VREG_MAX
+> +};
+> +
+> +struct ufs_sprd_rst {
+> +       const char *name;
+> +       struct reset_control *rc;
+> +};
+> +
+> +struct ufs_sprd_syscon {
+> +       const char *name;
+> +       struct regmap *regmap;
+> +};
+> +
+> +struct ufs_sprd_vreg {
+> +       const char *name;
+> +       struct regulator *vreg;
+> +};
+> +
+> +struct ufs_sprd_priv {
+> +       struct ufs_sprd_rst rci[SPRD_UFS_RST_MAX];
+> +       struct ufs_sprd_syscon sysci[SPRD_UFS_SYSCON_MAX];
+> +       struct ufs_sprd_vreg vregi[SPRD_UFS_VREG_MAX];
+> +       const struct ufs_hba_variant_ops ufs_hba_sprd_vops;
+> +};
+> +
+> +struct ufs_sprd_host {
+> +       struct ufs_hba *hba;
+> +       struct ufs_sprd_priv *priv;
+> +       void __iomem *ufs_dbg_mmio;
+> +
+> +       enum ufs_unipro_ver unipro_ver;
+> +};
+> +
+> +#endif /* _UFS_SPRD_H_ */
+> --
+> 2.17.1
+>
