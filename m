@@ -2,78 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEF6BC4708E
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Jan 2023 21:45:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CF9C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Jan 2023 03:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233719AbjACVp1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Jan 2023 16:45:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34222 "EHLO
+        id S233384AbjADDct (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Jan 2023 22:32:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231949AbjACVpZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2023 16:45:25 -0500
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 058AAB48E;
-        Tue,  3 Jan 2023 13:45:25 -0800 (PST)
-Received: by mail-pf1-f169.google.com with SMTP id k137so16746138pfd.8;
-        Tue, 03 Jan 2023 13:45:25 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=o7Jv5muMEwbo/g8i6mc6MDy/iv+Z0WW/HWuFgl0aO8w=;
-        b=G1XzyG44yM3TE0/eMOvLDsbbP6SZZ4p04Ey1pg7cw2R57XUSUK5rEnu52o6UPSJZZW
-         AkVHcliPL2UvIqUJb2Zmfu4kJoFpFuT3E1RlAQBwQ22qktz6/dbdv7Q1pXyac/dNoFGd
-         dNap7R9+or7e77CvaK83kiuz/jqDpy4ec1NU9Va5I2A1wiE4g/rN4EFQW8iTvXsY0fgW
-         2nFh70Ggot1h19k6YgItOlWOLz6L4zJtfgKljCJPGC9Ay+a/ma0vpTyzKc27+JH+ZxLc
-         Qvwe2JR+KjS7ueG4c15x7QbeWkYaybD4iVTQpIPhYCQU8r6Sb6h/2fBJeQQWTsg6njRP
-         xwIw==
-X-Gm-Message-State: AFqh2koxEG0OWFuPchz4PqmYKvl6LXnjhvXl/KHsKkpefUv2/RjTYLHX
-        teTiaJXbT0cc7XWKkP2ZjHM=
-X-Google-Smtp-Source: AMrXdXv+VDgcsAMMYubJX3gPMMPS447LrTmW5ZaJO+72jSR8Bc3UkXLp/ep5sS2sefEQKBegZIyOzQ==
-X-Received: by 2002:aa7:804a:0:b0:576:ebfe:e9c1 with SMTP id y10-20020aa7804a000000b00576ebfee9c1mr44658779pfm.20.1672782324469;
-        Tue, 03 Jan 2023 13:45:24 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:7da8:fef9:8c31:bf89? ([2620:15c:211:201:7da8:fef9:8c31:bf89])
-        by smtp.gmail.com with ESMTPSA id x15-20020aa7940f000000b00574c54423d3sm12373019pfo.145.2023.01.03.13.45.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Jan 2023 13:45:23 -0800 (PST)
-Message-ID: <85e91255-1e6f-f428-5376-08416d2107a2@acm.org>
-Date:   Tue, 3 Jan 2023 13:45:21 -0800
+        with ESMTP id S229473AbjADDcr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2023 22:32:47 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4674317428
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Jan 2023 19:32:45 -0800 (PST)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Nmw9q3y0nzRqgZ;
+        Wed,  4 Jan 2023 11:31:11 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Wed, 4 Jan 2023 11:32:42 +0800
+From:   chenxiang <chenxiang66@hisilicon.com>
+To:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>
+Subject: [PATCH 0/2] hisi_sas: Some misc update
+Date:   Wed, 4 Jan 2023 12:03:18 +0800
+Message-ID: <1672805000-141102-1-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] scsi: ufs: core: fix devfreq deadlocks
-Content-Language: en-US
-To:     Johan Hovold <johan+linaro@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Can Guo <quic_cang@quicinc.com>
-References: <20221222102121.18682-1-johan+linaro@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221222102121.18682-1-johan+linaro@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/22/22 02:21, Johan Hovold wrote:
-> +	/* Enable Write Booster if we have scaled up else disable it */
-> +	if (ufshcd_enable_wb_if_scaling_up(hba))
-> +		ufshcd_wb_toggle(hba, scale_up);
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Hi Asutosh,
+There are two bugfixes related to hisi sas driver:
+- Use abort task set command to reset SAS disks when discovered;
+- Set a port invalid only if there is no devices attached when refreshing
+port id;
 
-This patch is the second complaint about the mechanism that toggles the 
-WriteBooster during clock scaling. Can this mechanism be removed entirely?
+Xingui Yang (1):
+  scsi: hisi_sas: Use abort task set to reset SAS disks when discovered
 
-I think this commit introduced that mechanism: 3d17b9b5ab11 ("scsi: ufs: 
-Add write booster feature support"; v5.8).
+Yihang Li (1):
+  scsi: hisi_sas: Set a port invalid only if there is no devices
+    attached when refreshing port id
 
-Thanks,
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Bart.
+-- 
+2.8.1
 
