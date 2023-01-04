@@ -2,104 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AA07C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Jan 2023 14:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91C27C46467
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Jan 2023 22:31:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235011AbjADOMU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Jan 2023 09:12:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36624 "EHLO
+        id S240347AbjADWbl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Jan 2023 17:31:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239678AbjADOLv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2023 09:11:51 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C5F811A1A;
-        Wed,  4 Jan 2023 06:10:58 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 304DcWhg021439;
-        Wed, 4 Jan 2023 14:10:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
- cc : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=qcppdkim1; bh=x9OOQVyq/BLgjeDzLgMuVgKdwd13+INdbkP4hoyCx8M=;
- b=bJGXPFvwLGBs9NEGo/ZbNduNVWLWAJfUYlYhcyAvUD3ECmRrdNURr84t85beyjtUUSBu
- bQXBeUEVlKmtf889NvVg6pNJSsU08LtEi9ztzZKkfEGXq+OokDDuKAvayuVRdb/rntab
- +jOS9Ec1/Igkm/r1xRq4JP89xGAtDFNcw2+OPgssAVfI/zdnqvWyUjVW/xRLFI5HTB2c
- OOMCKo0TrdsQLy9ySpU9+0eQvogfXq1/sn1bjyuzL76luoPTJ5BGqIULN1tga3a8tXZy
- 2Ua4NB+IJClbUslNhdgrosiCjvyQ/e8DQcdIR7sdECCcmExbUf0IelyhFoVEWM2i9f6V tQ== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3mvsvf9xtn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 04 Jan 2023 14:10:48 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 304EAjoK014467
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 4 Jan 2023 14:10:45 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 4 Jan 2023 06:10:45 -0800
-Date:   Wed, 4 Jan 2023 06:10:45 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     Johan Hovold <johan+linaro@kernel.org>,
+        with ESMTP id S240297AbjADWbh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2023 17:31:37 -0500
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE4ECC778;
+        Wed,  4 Jan 2023 14:31:35 -0800 (PST)
+Received: by mail-pf1-f169.google.com with SMTP id a184so13173075pfa.9;
+        Wed, 04 Jan 2023 14:31:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rE/XSL3eCp2mV2wORWtmG2PyI2xCMLuVm583jQV+GOw=;
+        b=vm0irkdtNVTpJOWpYL1nMVsUuTflR/PEGO+nnFeKEhjOOOPrIwNQcjPlYbO3UZI9nz
+         Pju1unUOgFy2CVTHBbLO4V1zG+y318PhQTV2ioJogGpoYZsK6HIUgWRrECGZnpcLkqTQ
+         xKVcKskX+GwPE/v0NsNUdVEEGOFtGLWZL13ZKRDmopA3S94WWghF7L2id+2jUUU5fEnu
+         jm4xIkx6fqygFKtPOXtufmxammFp6fnzxGGFXDRCoRX8KLyLJ6It19YJyM/pSg9Mfxw3
+         Kbzi6lA8PUCD7IfrsCY/WQ1flU+OWhrakHp/vixyQY0uIXzJvq5byTEXK3n9OEUcAHVc
+         DC0A==
+X-Gm-Message-State: AFqh2ko5tl+NW0A5eeT4PC8/yb9ybhYdPLYv3OAzUKZir2AhfvMug+kz
+        kkCPz2Sq+ZA9Y+69+2p2xu8=
+X-Google-Smtp-Source: AMrXdXv8NcxogYPwXAxiLkK2N+rGKjTZjehxFMMTGR681zYPUVvThikpNmHpuoJhgExHnDWpuoq5Dg==
+X-Received: by 2002:aa7:8b1a:0:b0:582:26bc:a75b with SMTP id f26-20020aa78b1a000000b0058226bca75bmr15743628pfd.9.1672871494911;
+        Wed, 04 Jan 2023 14:31:34 -0800 (PST)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id f3-20020aa79d83000000b0058193135f6bsm13978144pfq.84.2023.01.04.14.31.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Jan 2023 14:31:33 -0800 (PST)
+Message-ID: <3db8c140-2e4e-0d75-4d81-b2c1f22f68d1@acm.org>
+Date:   Wed, 4 Jan 2023 14:31:31 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH] scsi: ufs: core: fix devfreq deadlocks
+Content-Language: en-US
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     Johan Hovold <johan+linaro@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <stable@vger.kernel.org>, Can Guo <quic_cang@quicinc.com>
-Subject: Re: [PATCH] scsi: ufs: core: fix devfreq deadlocks
-Message-ID: <20230104141045.GB8114@asutoshd-linux1.qualcomm.com>
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Can Guo <quic_cang@quicinc.com>
 References: <20221222102121.18682-1-johan+linaro@kernel.org>
  <85e91255-1e6f-f428-5376-08416d2107a2@acm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Content-Disposition: inline
-In-Reply-To: <85e91255-1e6f-f428-5376-08416d2107a2@acm.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: zEqWUFqKC9RYj1dTlGriAwsalX9RpyWw
-X-Proofpoint-GUID: zEqWUFqKC9RYj1dTlGriAwsalX9RpyWw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2023-01-04_07,2023-01-04_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- clxscore=1011 mlxlogscore=767 priorityscore=1501 malwarescore=0
- adultscore=0 impostorscore=0 mlxscore=0 lowpriorityscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2301040120
+ <20230104141045.GB8114@asutoshd-linux1.qualcomm.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230104141045.GB8114@asutoshd-linux1.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 03 2023 at 13:45 -0800, Bart Van Assche wrote:
->On 12/22/22 02:21, Johan Hovold wrote:
->>+	/* Enable Write Booster if we have scaled up else disable it */
->>+	if (ufshcd_enable_wb_if_scaling_up(hba))
->>+		ufshcd_wb_toggle(hba, scale_up);
->
->Hi Asutosh,
->
->This patch is the second complaint about the mechanism that toggles 
->the WriteBooster during clock scaling. Can this mechanism be removed 
->entirely?
->
->I think this commit introduced that mechanism: 3d17b9b5ab11 ("scsi: 
->ufs: Add write booster feature support"; v5.8).
->
->Thanks,
->
->Bart.
+On 1/4/23 06:10, Asutosh Das wrote:
+> Load based toggling of WB seemed fine to me then.
+> I haven't thought about another method to toggle WriteBooster yet.
+> Let me see if I can come up with something.
+> IMT if you have a mechanism in mind, please let me know.
 
-Hello Bart,
-Load based toggling of WB seemed fine to me then.
-I haven't thought about another method to toggle WriteBooster yet.
-Let me see if I can come up with something.
-IMT if you have a mechanism in mind, please let me know.
+Hi Asutosh,
 
--asd
+Which UFS devices need this mechanism? All UFS devices I'm familiar with 
+can achieve wire speed for large write requests without enabling the 
+WriteBooster.
 
->
+Thanks,
+
+Bart.
+
