@@ -2,150 +2,142 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADDA9C3DA7A
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 18:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B89E3C3DA7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 18:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235123AbjAESNG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Jan 2023 13:13:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45174 "EHLO
+        id S235132AbjAESjM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Jan 2023 13:39:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235353AbjAESMi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 13:12:38 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D625D656C;
-        Thu,  5 Jan 2023 10:12:35 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8A6F0B81B3E;
-        Thu,  5 Jan 2023 18:12:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93DF1C433EF;
-        Thu,  5 Jan 2023 18:12:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672942353;
-        bh=t2Ard4AIZn0bA5uFWm/ttV/iCirtM24HVwYbrcC4K3A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lrOfgsZMDbPRtl8slDBwDJZFOdlkc17CWZXXZsO3gihzjMvNtpEpTZUNPQgXSmnRW
-         AMo8wYCj5ZIOd/OMwz+6UDTA/VirogVeVdk2y0iJL5r2c1ButggZqcPWHCBpIEdtEf
-         Qz+yRG9lYKPgDDgwZfLEcqyhIYANjimi8InflhhxSNeLZNoSjei3T8z8biPItnc6hi
-         QTfRlbmqwYnLucUyFjNAHCM9LMcfiN2R98F7XwJ9SU/gMt+umplcZXPK8+KsN4s7b4
-         BPT0YhrJ85XoMPIWDJWcInppc5xnQ48DszfH5DSe4BCnWTe22EFYKw7deBEFCxtrIJ
-         Q0T5415rskytA==
-Date:   Thu, 5 Jan 2023 12:12:37 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: mvumi: Replace 1-element arrays with flexible
- array members
-Message-ID: <Y7cTFfWzLeHKuGWC@work>
-References: <20230105011143.never.569-kees@kernel.org>
+        with ESMTP id S235088AbjAESjH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 13:39:07 -0500
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A47658822;
+        Thu,  5 Jan 2023 10:39:01 -0800 (PST)
+Received: by mail-pj1-f50.google.com with SMTP id q64so2304262pjq.4;
+        Thu, 05 Jan 2023 10:39:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6z58OIH54ss9cN62GyLhaIjgexylm6sw14uIEBRIwWs=;
+        b=zXpoZeXA3/ahCbiHHNwzsWN4kLqTYNGUbh3iJVxnEo18G7Ypy/IyyohsBEVIHiHmr9
+         kekNVBTs1o8kmpYekuYm6mQ0QmeYyzC7iLk+UhuBlmSQSH4jOCHvn2W1+N1PqV0LxkJu
+         fOszP2a2A3OyH7ojHBAvDrryiwZdm0NlcUwQb29XCpKkHeuJziXvV9GV5yG2drXN/vac
+         PNIICWVNtAxMjrj+6nQk1UhRMpD40iA+e++zwFKq3bcx7A+CpPXwYoIjjCe4999mrWSL
+         KEVv4l4IqKXewYFLw+Ge2G8iedL/QP2Zf/tN9I08odhYSBzG5LCgeWQ45MKZJSzwUj9N
+         04TA==
+X-Gm-Message-State: AFqh2kro7BoHxO8DSEQD+0wGHl8tstKzOhOtzC61H2Mc4wIPEStYe6U2
+        5HtPrcT0rM2t/aSRibfZ8o0=
+X-Google-Smtp-Source: AMrXdXuuDIwImr2AW4/8U7pEe9cDrH/4IUfr35rdJ/vKQ5tn+g3Eex2Pqs8cXFI/4iePpMvHBDAOsg==
+X-Received: by 2002:a17:90a:4804:b0:220:bad8:b4e7 with SMTP id a4-20020a17090a480400b00220bad8b4e7mr57715911pjh.7.1672943940910;
+        Thu, 05 Jan 2023 10:39:00 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:f9eb:49b6:75b:111e? ([2620:15c:211:201:f9eb:49b6:75b:111e])
+        by smtp.gmail.com with ESMTPSA id k60-20020a17090a14c200b00225bc0e5f19sm1668520pja.1.2023.01.05.10.38.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Jan 2023 10:39:00 -0800 (PST)
+Message-ID: <349e3564-10d4-9429-93d2-7bb639253fc2@acm.org>
+Date:   Thu, 5 Jan 2023 10:38:58 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230105011143.never.569-kees@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] scsi: ufs: core: fix devfreq deadlocks
+Content-Language: en-US
+To:     Johan Hovold <johan+linaro@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Can Guo <quic_cang@quicinc.com>
+References: <20221222102121.18682-1-johan+linaro@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221222102121.18682-1-johan+linaro@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 04, 2023 at 05:11:50PM -0800, Kees Cook wrote:
-> One-element arrays (and multi-element arrays being treated as
-> dynamically sized) are deprecated[1] and are being replaced with
-> flexible array members in support of the ongoing efforts to tighten the
-> FORTIFY_SOURCE routines on memcpy(), correctly instrument array indexing
-> with UBSAN_BOUNDS, and to globally enable -fstrict-flex-arrays=3.
-> 
-> Replace one-element arrays with flexible-array member in struct
-> mvumi_msg_frame, struct mvumi_rsp_frame, and struct mvumi_hs_header,
-> adjusting the explicit sizing calculations at the same time.
-> 
-> This results in no functional differences in binary output. An explicit
-> add is now folded into the size calculation:
-> 
-> │       mov    0x1070(%r14),%eax
-> │ -     add    $0x4,%eax
-> │ -     movabs $0xfffffffdc,%rbx
-> │ +     movabs $0xfffffffe0,%rbx
-> │       add    %rax,%rbx
-> 
-> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#zero-length-and-one-element-arrays
-> 
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+On 12/22/22 02:21, Johan Hovold wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index bda61be5f035..5c3821b2fcf8 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -1234,12 +1234,14 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+>   	 * clock scaling is in progress
+>   	 */
+>   	ufshcd_scsi_block_requests(hba);
+> +	mutex_lock(&hba->wb_mutex);
+>   	down_write(&hba->clk_scaling_lock);
+>   
+>   	if (!hba->clk_scaling.is_allowed ||
+>   	    ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+>   		ret = -EBUSY;
+>   		up_write(&hba->clk_scaling_lock);
+> +		mutex_unlock(&hba->wb_mutex);
+>   		ufshcd_scsi_unblock_requests(hba);
+>   		goto out;
+>   	}
+> @@ -1251,12 +1253,16 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+>   	return ret;
+>   }
 
-Wow, those "magical" 4s seem quite elusive. It's more common to see people
-using sizeof applied to the element type, like sizeof(u32).
+Please add an __acquires(&hba->wb_mutex) annotation for sparse.
 
-Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> -static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
+> +static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool scale_up)
+>   {
+> -	if (writelock)
+> -		up_write(&hba->clk_scaling_lock);
+> -	else
+> -		up_read(&hba->clk_scaling_lock);
+> +	up_write(&hba->clk_scaling_lock);
+> +
+> +	/* Enable Write Booster if we have scaled up else disable it */
+> +	if (ufshcd_enable_wb_if_scaling_up(hba))
+> +		ufshcd_wb_toggle(hba, scale_up);
+> +
+> +	mutex_unlock(&hba->wb_mutex);
+> +
+>   	ufshcd_scsi_unblock_requests(hba);
+>   	ufshcd_release(hba);
+>   }
 
-Thanks!
---
-Gustavo
+Please add a __releases(&hba->wb_mutex) annotation for sparse.
 
-> ---
->  drivers/scsi/mvumi.c | 4 ++--
->  drivers/scsi/mvumi.h | 6 +++---
->  2 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index b3dcb8918618..60c65586f30e 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-> @@ -1841,7 +1841,7 @@ static enum mvumi_qc_result mvumi_send_command(struct mvumi_hba *mhba,
->  	cmd->frame->request_id = mhba->io_seq++;
->  	cmd->request_id = cmd->frame->request_id;
->  	mhba->tag_cmd[cmd->frame->tag] = cmd;
-> -	frame_len = sizeof(*ib_frame) - 4 +
-> +	frame_len = sizeof(*ib_frame) +
->  				ib_frame->sg_counts * sizeof(struct mvumi_sgl);
->  	if (mhba->hba_capability & HS_CAPABILITY_SUPPORT_DYN_SRC) {
->  		struct mvumi_dyn_list_entry *dle;
-> @@ -2387,7 +2387,7 @@ static int mvumi_io_attach(struct mvumi_hba *mhba)
->  	struct Scsi_Host *host = mhba->shost;
->  	struct scsi_device *sdev = NULL;
->  	int ret;
-> -	unsigned int max_sg = (mhba->ib_max_size + 4 -
-> +	unsigned int max_sg = (mhba->ib_max_size -
->  		sizeof(struct mvumi_msg_frame)) / sizeof(struct mvumi_sgl);
->  
->  	host->irq = mhba->pdev->irq;
-> diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
-> index a88c58787b68..1306a4abf19a 100644
-> --- a/drivers/scsi/mvumi.h
-> +++ b/drivers/scsi/mvumi.h
-> @@ -279,7 +279,7 @@ struct mvumi_msg_frame {
->  	u16 request_id;
->  	u16 reserved1;
->  	u8 cdb[MAX_COMMAND_SIZE];
-> -	u32 payload[1];
-> +	u32 payload[];
->  };
->  
->  /*
-> @@ -294,7 +294,7 @@ struct mvumi_rsp_frame {
->  	u8 req_status;
->  	u8 rsp_flag;	/* Indicates the type of Data_Payload.*/
->  	u16 request_id;
-> -	u32 payload[1];
-> +	u32 payload[];
->  };
->  
->  struct mvumi_ob_data {
-> @@ -380,7 +380,7 @@ struct mvumi_hs_header {
->  	u8	page_code;
->  	u8	checksum;
->  	u16	frame_length;
-> -	u32	frame_content[1];
-> +	u32	frame_content[];
->  };
->  
->  /*
-> -- 
-> 2.34.1
-> 
+> @@ -1273,7 +1279,6 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
+>   static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+>   {
+>   	int ret = 0;
+> -	bool is_writelock = true;
+>   
+>   	ret = ufshcd_clock_scaling_prepare(hba);
+>   	if (ret)
+> @@ -1302,15 +1307,8 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+>   		}
+>   	}
+>   
+> -	/* Enable Write Booster if we have scaled up else disable it */
+> -	if (ufshcd_enable_wb_if_scaling_up(hba)) {
+> -		downgrade_write(&hba->clk_scaling_lock);
+> -		is_writelock = false;
+> -		ufshcd_wb_toggle(hba, scale_up);
+> -	}
+> -
+>   out_unprepare:
+> -	ufshcd_clock_scaling_unprepare(hba, is_writelock);
+> +	ufshcd_clock_scaling_unprepare(hba, scale_up);
+>   	return ret;
+>   }
+
+This patch moves the ufshcd_wb_toggle() from before the out_unprepare 
+label to after the out_unprepare label (into 
+ufshcd_clock_scaling_unprepare()). Does this change perhaps introduce a 
+new call to ufshcd_wb_toggle() in error paths?
+
+Thanks,
+
+Bart.
+
