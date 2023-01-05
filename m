@@ -2,99 +2,206 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BA7C3DA7A
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 22:37:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C65DFC4708E
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 23:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236145AbjAEWhX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Jan 2023 17:37:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37326 "EHLO
+        id S236357AbjAEXZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Jan 2023 18:25:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235668AbjAEWhW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 17:37:22 -0500
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 706F511A1A;
-        Thu,  5 Jan 2023 14:37:21 -0800 (PST)
-Received: by mail-pl1-f175.google.com with SMTP id p24so18350742plw.11;
-        Thu, 05 Jan 2023 14:37:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PCTlzFm5fJtKAO2V8wQaI92SjSB9L9pSd5yrDbFK4ZI=;
-        b=Ta62VKCsdH3CYXCmweqLae5Hn912pOhv1wF8ae9jYnLyey+j0CiVBcnI3uBVfoOY6n
-         UAAQ4+Uv/EJF5s+jEnQ6IRM2JgfvE3eYX2uik9k473OdOfceN+YKKy3xLHZTFrdjerIj
-         Gcionrh2QPOuJmPn6VFPFb16aqvyLbTp/kXEztHsXdkr0vsF+ndWy6pm3K/kfG0Qx7CC
-         OuANi/qYP04+mwf2Za/m7qtYUWY1T5WCCgXp4gR9FAbxEK9HKc0I2eDPcB0YUjW5xkkw
-         HJRqGJc3AyuU0H9lCkjtvOXjLit2e5z06/bO+vsX2Y125Z7GrgOavvoIZQAfbRxC0527
-         AG6A==
-X-Gm-Message-State: AFqh2kqeaZljuNOMuvkJDfDP0xyYcRfp4H75kTHhWWcgD345GmK1te6M
-        NO8z2uoctLn5XTkoj37xKlw=
-X-Google-Smtp-Source: AMrXdXuHU/eFew8BTXJhLBgH4SuzgVSzYb7kCXylY0BzdjufeEvmH9cDwEf+OM38vM/80N78Q7XQZg==
-X-Received: by 2002:a17:903:41c6:b0:186:8238:bc9 with SMTP id u6-20020a17090341c600b0018682380bc9mr76005463ple.2.1672958240740;
-        Thu, 05 Jan 2023 14:37:20 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:f9eb:49b6:75b:111e? ([2620:15c:211:201:f9eb:49b6:75b:111e])
-        by smtp.gmail.com with ESMTPSA id k1-20020a170902c40100b001886ff822ffsm26633693plk.186.2023.01.05.14.37.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Jan 2023 14:37:19 -0800 (PST)
-Message-ID: <81a10cd9-7b0b-e982-5d24-5f0438e37b63@acm.org>
-Date:   Thu, 5 Jan 2023 14:37:17 -0800
+        with ESMTP id S235302AbjAEXZG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 18:25:06 -0500
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5569B6E40C;
+        Thu,  5 Jan 2023 15:25:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1672961105; x=1704497105;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=hXqUVT/upEnUUi7fjaPVeLYwfxFzq9DTbBRm52nCOqI=;
+  b=EYSf/iU7XJPq8K26JuMdlXNYzRE2gu6yNOlNBLcD06RQyuwZVEqJ4C9q
+   oAC1TXZYJWgSM3xsFaf5IMeol4EFX+7VgNJzUAMt+yAo1iSRsDIwiiaMX
+   7O7gayxmlTdhEqBQwHkQtw+5POVueneouyq6nam/f3cmeHvzSfYPzPMkb
+   SuKBvkTcMK2IDmlu2tjf0ftkkBFTdIPEG7MzdjMaqBEUCDA+ZfWQUGqId
+   5iKRYRI/39C9xiCvMFjaPsJNl9cXyX7lkCrKCaXlEgsYxnMu7cDqZ0paX
+   h7Tv0iKwO96H1/CA39K+9w/5XulCRJKzLoRMSrCnpfiWc0y2PJn168GpQ
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10581"; a="323602872"
+X-IronPort-AV: E=Sophos;i="5.96,303,1665471600"; 
+   d="scan'208";a="323602872"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jan 2023 15:25:04 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10581"; a="633323775"
+X-IronPort-AV: E=Sophos;i="5.96,303,1665471600"; 
+   d="scan'208";a="633323775"
+Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
+  by orsmga006.jf.intel.com with ESMTP; 05 Jan 2023 15:25:04 -0800
+Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.16; Thu, 5 Jan 2023 15:25:04 -0800
+Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
+ ORSMSX611.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.16; Thu, 5 Jan 2023 15:25:03 -0800
+Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
+ orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.16 via Frontend Transport; Thu, 5 Jan 2023 15:25:03 -0800
+Received: from NAM04-MW2-obe.outbound.protection.outlook.com (104.47.73.173)
+ by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.16; Thu, 5 Jan 2023 15:25:03 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SgnmVoBdZVOFPpWirhq1txlq1tP0sUCtfXFr3uo+RpZ32Ne9lUFR7DbgtyNMMyXMMFk4FJqHuuiP5GU3ollRCC6OhBofgDmfHV27g/I8CtgSiXn2739YWuPFL805zn7GWz1gqPC3trqTMoxn85SuP+ErEWuXXfuBTgWU+0pMQ8yjiw6xa9a+GyjbYWs6PBdWv1mbY9p37sIsIP9Ibvsy6W8VOs80r8STnFMCDxSdxCkUP9rDoGDVOAatWYoENGXnmLg2hhJXPWpi8u6OZD+Mm8/1MMFTdNEPjyItJgsiNAy9DwBt37ooJKPMKF1nED3MDIZ+3v7JOee0V6SyjqRqxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=P4igUcGBXORv/1NSWMlpdMTglxw+/wVxFLUnKYeXsPI=;
+ b=hr6F0d2z3D8PxFIF8USDl+yzeVOKf4beZ60neyOlpETPfBX0Pn4rM2z8MDNO2LCEIqZALVtyeQjr1Bo8hpm6v4Yu6/eu5ZM4LpnUqbWVnT+WOdp2FmcS6/vqGr/KND/kJZfYEYqrcUwrHML6stKYPFpnn8L1/siRZe8MWgF5HrHg8YCdlIV8uRf0gghtGNBlYDLB2Xg07f0BRt0a+kdYr0W4c0An5xlKJSSIJ/Wfxh5EoTO+KnYD6mthDNJoUHFOH/60dCmcDKA6ie6/lghSxPA6xY4K6Gamq8Wx7eBrwRz8iJF8ipSXEIRGNWd/srq81w1B/xFSapv4Nlv2cclu2g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from SA1PR11MB6733.namprd11.prod.outlook.com (2603:10b6:806:25c::17)
+ by DM4PR11MB7375.namprd11.prod.outlook.com (2603:10b6:8:101::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5944.19; Thu, 5 Jan
+ 2023 23:25:02 +0000
+Received: from SA1PR11MB6733.namprd11.prod.outlook.com
+ ([fe80::288d:5cae:2f30:828b]) by SA1PR11MB6733.namprd11.prod.outlook.com
+ ([fe80::288d:5cae:2f30:828b%7]) with mapi id 15.20.5944.019; Thu, 5 Jan 2023
+ 23:25:02 +0000
+Date:   Thu, 5 Jan 2023 15:24:58 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+CC:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: ips: Replace kmap_atomic() with kmap_local_page()
+Message-ID: <Y7dcSswZppY4hn3H@iweiny-desk3>
+References: <20230103173131.21259-1-fmdefrancesco@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20230103173131.21259-1-fmdefrancesco@gmail.com>
+X-ClientProxiedBy: BYAPR11CA0093.namprd11.prod.outlook.com
+ (2603:10b6:a03:f4::34) To SA1PR11MB6733.namprd11.prod.outlook.com
+ (2603:10b6:806:25c::17)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v3 7/7] ufs: core: Add advanced RPMB support in ufs_bsg
-Content-Language: en-US
-To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com,
-        daejun7.park@samsung.com, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221201140437.549272-1-beanhuo@iokpp.de>
- <20221201140437.549272-8-beanhuo@iokpp.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221201140437.549272-8-beanhuo@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR11MB6733:EE_|DM4PR11MB7375:EE_
+X-MS-Office365-Filtering-Correlation-Id: d44ea8b0-74fe-4ebc-82bc-08daef7411a1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zaSciA6KWdXGcR40aiDrYb9z5Vj7vm4STrFAooerVG8YYTlZvjG89GavCzwixPwrn/I3rB3KeDvdjFevin0BZd3M8KmPSNBlNpaxgjyRVYCyznMhXUS8RQCkBnaHnxws9fZDyrJvXtYWuVE9QCN1qRvHSnY16z0h2jAVm0D5ptk9hQ/U4y/Lxdizc+IlTHoouyYtGN0qaK66EfFF6Jv0QPhgl6R99pXXFOLpzcSxWy2x+fLcX/3JyfkC2ih5IsEr+6AooXNtKNr91E5pWB80m5ivuZl0/NmHFssEm1ZdKrkkA73PCRTQdoBw0vSnSIoy/Rv4QHZH5+Yx7oteuynYgXNKtej3QjeYjz8iO+ki1WLe/sN42kzwkYRoNLssdgzj9a+cjMHxRMverpe85Qoshjf3ViQAPnQoYro+lt12OlEWrCH4e6IU6g0OctvvJ0RORY7hDyOfiMm3PtCn9mzeMUX8yj4WTEey7PXoTnpFWGov7KzCSi8SKxqoOdEjc+CgooUyd55prqkH8GgmoxUBdmrK0vKKpA2BwSbIrKf1Zex3Y34YCii2OCpuUHSRgxllbvdNHHQTsQgwBmQND9FauFo12Zn/Y4xa6lSvbA+M/e6daF7iXaDAhJZIAAMmyFxDmQVRjJa5B0pw1+ZR8U6APg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR11MB6733.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(346002)(396003)(136003)(39860400002)(376002)(366004)(451199015)(6916009)(478600001)(33716001)(86362001)(82960400001)(316002)(54906003)(2906002)(38100700002)(6486002)(6506007)(44832011)(8936002)(5660300002)(8676002)(66476007)(4326008)(26005)(6666004)(66946007)(41300700001)(66556008)(6512007)(186003)(83380400001)(9686003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EpTqEmeRL/VdsDB+MhRJgY8w9N2SlfkShxL9OvgI9sK9eFLe/jEtRSa+y4bq?=
+ =?us-ascii?Q?J0IRtOi4TKbPGTpD0Q2zB6DFF1fmqywkRXr8lRq5Y+7MtgSgkgc+BMo8xGHf?=
+ =?us-ascii?Q?09Q9AHZI6eE2u6K2xAW6tQJutVr42qCPbdOw72RI/gMIVeW2TrjNuGvvI5Cs?=
+ =?us-ascii?Q?VN6QCGTCEXUVBch0Qir7HoFPXaIVT/Ch4fqOJpxPrC3zmxpNah0DZ2t9Cb4p?=
+ =?us-ascii?Q?BhJAzvEb6dKNXu9vdFGnf+j7KyDpx1LnAYp0k7UzLiHYfVTkWje3Qr4V4Ev2?=
+ =?us-ascii?Q?SLZOL05r0eHrynyTgnzh6CC6Kr2ujwzqOYiopTev9Uvjr4dV78X16t6PVvmn?=
+ =?us-ascii?Q?7cw+v4jewaEVBRLt16/vjmmqj9oQmKtQxZofr4rbYaz5Mm9KL4ztB11xijPW?=
+ =?us-ascii?Q?YXxJEgRk5ktBw8EYT/HcNuQ31B8N1ZZduT8vbDJDlF9j4Xriyg3crEjx2z92?=
+ =?us-ascii?Q?NrrAmgSR+gizjqwXeslphGFKOuvqvkyeggaHeJNHVrv6aqyBiSivwm2/9rJi?=
+ =?us-ascii?Q?ZkNcB5zEgRucNKGnZ8GAjwAz8jWCH8yeod79djD1sLkhXk38Z2e64F2zY/Vg?=
+ =?us-ascii?Q?dUWCh+hIFfyaWp/r9aK0dpir2g/10sgKmeSsDmSH99/BoHFSECU2FvWYlVRS?=
+ =?us-ascii?Q?/sCLaxLrb7bHehv1ZaM8n2+tWN5+yv6p0WqWC2EhndG2I7ANjZyFAytIVGrd?=
+ =?us-ascii?Q?qvqkMKNDzQLS05bcHwVWVfS9X6ZgqbQZy3e0OrmZAOxykIGczGBiJ5n1ARsN?=
+ =?us-ascii?Q?ZkqxzBBZrPV3X9LD9VLB1LQ1Yu52Iqi1Cg6WT9atCvgzNHRbBRfS3gjEA/5s?=
+ =?us-ascii?Q?w1EyEK2jOFoD2HwlPnemTzi/gsJ9QHVS8HYVYyeUCXAFQpXBj9DOpPiqONeO?=
+ =?us-ascii?Q?B/u/ZfD9gI7J0rISX5zfL0WEKNVFtUIfiAOWJ3bZc0NHIk5th3svODIn981J?=
+ =?us-ascii?Q?7bJUbED4NQW4hFv7dWdxaRCaUUocslH9QcV3vyoVpxWuRSufDJeQVUbu1o/e?=
+ =?us-ascii?Q?L7ymTvsTr7qoqow6zGOajhhkmsXK2YwsD4gbEdsg33mV8hPxXJ8WkSH2NiI6?=
+ =?us-ascii?Q?4YGFbda5JF1xvl4268FX6c7GoUidhYrNqg8fRCiOvuWBLfCxcx9LuRn2jSu9?=
+ =?us-ascii?Q?gi5gDBKKdMxmhIOj4eQK7xWSkTQOE5j/Je7cY+b29iSAWbTeDAPZfkEQUEfh?=
+ =?us-ascii?Q?TxYvGaxHc8urHf/m6JZhUvLfF2Py7tgibjWj2yrUr0q5pHocwuBvIKV84NYT?=
+ =?us-ascii?Q?u7RD70/Lwg4oyLcc1nRc5d2Jak4gBwqhSguye2wRbueNh90MpHU71T9J2fzS?=
+ =?us-ascii?Q?1/6IQmq9yAojUzKUX4gk9c7/mMhHTqPvR+/MHesqSV+40JkHUS4ru0z8KGDU?=
+ =?us-ascii?Q?g5UyqF048EuKPR1VFIkf4IRme/aSXXVrEMhsAXsaEMql8xwsNXWiuAmfXWiX?=
+ =?us-ascii?Q?Pq5JIQNwgyA/Q7Bxcr48Yl9vVEntb3DBqypm0VX7FAztLspl5OLJaGAZLx9x?=
+ =?us-ascii?Q?RLIoA2liYVQEPu9uKQQvsjE26PdSz7ERAykV1ZxQGQ53pLa3EkwqBkyNb4rV?=
+ =?us-ascii?Q?XHM3HZyXWKK84VeARPrFdA5VONL2O70OOU78n5latkqjQ6yywwxRFRe8r9ej?=
+ =?us-ascii?Q?GQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: d44ea8b0-74fe-4ebc-82bc-08daef7411a1
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR11MB6733.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jan 2023 23:25:01.9732
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yQES8KeOVZpKNfcD+ZAHFQBykro+DACJVWBhKe5wd6WDn6IF3mBRNT9btCqjzrzmC4/k1G6xcXX2AgoGlO55ZQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR11MB7375
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/1/22 06:04, Bean Huo wrote:
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 5cf81dff60aa..c3dfa8084b5c 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> +int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *req_upiu,
-> +				     struct utp_upiu_req *rsp_upiu, struct ufs_ehs *ehs_req,
-> +				     struct ufs_ehs *ehs_rsp, int sg_cnt,
-> +				     struct scatterlist *sg_list, enum dma_data_direction dir);
+On Tue, Jan 03, 2023 at 06:31:31PM +0100, Fabio M. De Francesco wrote:
+> kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
+> replace kmap_atomic() with kmap_local_page() in ips_is_passthru(). In
+> the meantime remove an unnecessary comment soon before local mapping,
+> align code and remove spaces (the function is short, therefore the
+> reviewers job won't be over-complicated by these logically unrelated
+> clean-ups).
+> 
+> kmap_atomic() is implemented like a kmap_local_page() which also disables
+> page-faults and preemption (the latter only for !PREEMPT_RT kernels).
+> The code within the mapping/unmapping in ips_is_passthru() is already
+> in atomic context because of a call to local_irq_save() and
+> kmap_local_page() can be called in atomic context too (including
+> interrupts).
+> 
+> Therefore, a mere replacement of the old API with the new one is all it
+> is required (i.e., there is no need to explicitly add any calls to
+> pagefault_disable() and/or preempt_disable()).
+> 
+> Suggested-by: Ira Weiny <ira.weiny@intel.com>
 
-Hi Bean,
+The discussion about preemption is irrelevant AFAICS.  But what you say above
+is not wrong and the code looks right.
 
-I think this patch is the first patch that adds a declaration in 
-ufshcd.h that uses the enum dma_data_direction data type. That leads to 
-the following compiler warning:
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 
-In file included from drivers/ufs/host/tc-dwc-g210-pci.c:10:
-./include/ufs/ufshcd.h:1282:72: warning: ‘enum dma_data_direction’ 
-declared inside parameter list will not be visible outside of this 
-definition or declaration
-  1282 |                                      struct scatterlist 
-*sg_list, enum dma_data_direction dir);
-       | 
-        ^~~~~~~~~~~~~~~~~~
-
-Can you please post a patch to fix this? Adding the following line is 
-probably sufficient:
-
-#include <linux/dma-direction.h>
-
-This has been detected with the following script:
-https://github.com/bvanassche/build-scsi-drivers/blob/main/build-scsi-drivers
-
-Thanks,
-
-Bart.
+> Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+> ---
+>  drivers/scsi/ips.c | 11 +++++------
+>  1 file changed, 5 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index 16419aeec02d..bb206509265e 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -1499,17 +1499,16 @@ static int ips_is_passthru(struct scsi_cmnd *SC)
+>                  struct scatterlist *sg = scsi_sglist(SC);
+>                  char  *buffer;
+>  
+> -                /* kmap_atomic() ensures addressability of the user buffer.*/
+>                  /* local_irq_save() protects the KM_IRQ0 address slot.     */
+>                  local_irq_save(flags);
+> -                buffer = kmap_atomic(sg_page(sg)) + sg->offset;
+> -                if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
+> -                    buffer[2] == 'P' && buffer[3] == 'P') {
+> -                        kunmap_atomic(buffer - sg->offset);
+> +		buffer = kmap_local_page(sg_page(sg)) + sg->offset;
+> +		if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
+> +		    buffer[2] == 'P' && buffer[3] == 'P') {
+> +			kunmap_local(buffer);
+>                          local_irq_restore(flags);
+>                          return 1;
+>                  }
+> -                kunmap_atomic(buffer - sg->offset);
+> +		kunmap_local(buffer);
+>                  local_irq_restore(flags);
+>  	}
+>  	return 0;
+> -- 
+> 2.39.0
+> 
