@@ -2,122 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09306C3DA7A
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 21:47:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BA7C3DA7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 22:37:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236065AbjAEVrr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Jan 2023 16:47:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34066 "EHLO
+        id S236145AbjAEWhX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Jan 2023 17:37:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236007AbjAEVrY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 16:47:24 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAB0E63199
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Jan 2023 13:46:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1672955201;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=RJxX8F2Oi9p4ox5AYCJudMMSN3aLdKu313AtW9TP9ck=;
-        b=Sq+qngd9FJpOAuTyAeugbH/NwrQueo/+/RPHrJkwAAdSlLoQ3yQ3J4r/Yv94e7gpu8LOZD
-        uWDy9a+31Mzbnr9a+9Q5Dfdt1AzTXkdmJETKVJtOk8MzqKExr+okrzQAWVd4t3WwnvYW9r
-        bkHmwpkHX2u79tDLRr+pjVo2E+hlpcU=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-342-EPNpXWjoMGCVNkzZkZxVyQ-1; Thu, 05 Jan 2023 16:46:39 -0500
-X-MC-Unique: EPNpXWjoMGCVNkzZkZxVyQ-1
-Received: by mail-qk1-f199.google.com with SMTP id h13-20020a05620a244d00b006fb713618b8so25845607qkn.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Jan 2023 13:46:39 -0800 (PST)
+        with ESMTP id S235668AbjAEWhW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 17:37:22 -0500
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 706F511A1A;
+        Thu,  5 Jan 2023 14:37:21 -0800 (PST)
+Received: by mail-pl1-f175.google.com with SMTP id p24so18350742plw.11;
+        Thu, 05 Jan 2023 14:37:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=RJxX8F2Oi9p4ox5AYCJudMMSN3aLdKu313AtW9TP9ck=;
-        b=ldnXqZhj2ssQih4EN16KHrxItqevkRyqP7ZyrtjYkIW9vYsvDvu1HZudfKiYxf2P7V
-         pR2pdNdOExVDuxVrcqbTxZ+3QXvbq76rrOTi81VUggituDyRO+xEo0s42U9SKjQokWei
-         zovjzXMfydhlgMcvwGMQp0yAzSPXcbb/tXtTjfmOSbehFHkroltGJ+TWY+2txivKPdYp
-         NflDhe/ggRIkeZ0MSrEm/fyWaSV0PiFgLjEOkshxlv2azfJNQ3Q3LvoykeTh4n5O5SKz
-         RnsbfAhh1FerQOxJckyWUCcUFTEu2Z6mY3pLUEG9cVRW690vV1q8sK8Fmvzourl4Lq0d
-         /IEA==
-X-Gm-Message-State: AFqh2kpAxiWk+rMGIor76kQqGrKPyMKQfJxoKVa1XzT5/ruKhu7l/taM
-        Ur52Igjc9bUysvJKqsnP3F6SDs7JsZKZvrK9XTY8zKvTAaAX0EilaHwEHlYHVdutkyRirXC+bEj
-        pcyGzenE3VP6NtHuNyRcHww==
-X-Received: by 2002:a05:622a:4d98:b0:3a5:24ac:a175 with SMTP id ff24-20020a05622a4d9800b003a524aca175mr79247732qtb.56.1672955199436;
-        Thu, 05 Jan 2023 13:46:39 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXtOxlIpJae+yvLp/3VsoqW8D9MXFVzcQIHBPniSyIwWqQ9/WnS8U1M90QS9GG96j49U3uDZDA==
-X-Received: by 2002:a05:622a:4d98:b0:3a5:24ac:a175 with SMTP id ff24-20020a05622a4d9800b003a524aca175mr79247709qtb.56.1672955199240;
-        Thu, 05 Jan 2023 13:46:39 -0800 (PST)
-Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
-        by smtp.gmail.com with ESMTPSA id bq22-20020a05622a1c1600b0039c7b9522ecsm22189237qtb.35.2023.01.05.13.46.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Jan 2023 13:46:38 -0800 (PST)
-From:   Tom Rix <trix@redhat.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, nathan@kernel.org,
-        ndesaulniers@google.com, beanhuo@micron.com,
-        Arthur.Simchaev@wdc.com, stanley.chu@mediatek.com,
-        j-young.choi@samsung.com, peter.wang@mediatek.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev, Tom Rix <trix@redhat.com>
-Subject: [PATCH] scsi: ufs: core: initialize sg_cnt, sg_list
-Date:   Thu,  5 Jan 2023 16:46:35 -0500
-Message-Id: <20230105214635.874609-1-trix@redhat.com>
-X-Mailer: git-send-email 2.27.0
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PCTlzFm5fJtKAO2V8wQaI92SjSB9L9pSd5yrDbFK4ZI=;
+        b=Ta62VKCsdH3CYXCmweqLae5Hn912pOhv1wF8ae9jYnLyey+j0CiVBcnI3uBVfoOY6n
+         UAAQ4+Uv/EJF5s+jEnQ6IRM2JgfvE3eYX2uik9k473OdOfceN+YKKy3xLHZTFrdjerIj
+         Gcionrh2QPOuJmPn6VFPFb16aqvyLbTp/kXEztHsXdkr0vsF+ndWy6pm3K/kfG0Qx7CC
+         OuANi/qYP04+mwf2Za/m7qtYUWY1T5WCCgXp4gR9FAbxEK9HKc0I2eDPcB0YUjW5xkkw
+         HJRqGJc3AyuU0H9lCkjtvOXjLit2e5z06/bO+vsX2Y125Z7GrgOavvoIZQAfbRxC0527
+         AG6A==
+X-Gm-Message-State: AFqh2kqeaZljuNOMuvkJDfDP0xyYcRfp4H75kTHhWWcgD345GmK1te6M
+        NO8z2uoctLn5XTkoj37xKlw=
+X-Google-Smtp-Source: AMrXdXuHU/eFew8BTXJhLBgH4SuzgVSzYb7kCXylY0BzdjufeEvmH9cDwEf+OM38vM/80N78Q7XQZg==
+X-Received: by 2002:a17:903:41c6:b0:186:8238:bc9 with SMTP id u6-20020a17090341c600b0018682380bc9mr76005463ple.2.1672958240740;
+        Thu, 05 Jan 2023 14:37:20 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:f9eb:49b6:75b:111e? ([2620:15c:211:201:f9eb:49b6:75b:111e])
+        by smtp.gmail.com with ESMTPSA id k1-20020a170902c40100b001886ff822ffsm26633693plk.186.2023.01.05.14.37.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Jan 2023 14:37:19 -0800 (PST)
+Message-ID: <81a10cd9-7b0b-e982-5d24-5f0438e37b63@acm.org>
+Date:   Thu, 5 Jan 2023 14:37:17 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH v3 7/7] ufs: core: Add advanced RPMB support in ufs_bsg
+Content-Language: en-US
+To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, tomas.winkler@intel.com,
+        daejun7.park@samsung.com, quic_cang@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221201140437.549272-1-beanhuo@iokpp.de>
+ <20221201140437.549272-8-beanhuo@iokpp.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221201140437.549272-8-beanhuo@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The clang build fails with
-drivers/ufs/core/ufs_bsg.c:107:6: error: variable 'sg_cnt' is used
-  uninitialized whenever 'if' condition is false [-Werror,-Wsometimes-uninitialized]
-        if (dir != DMA_NONE) {
-            ^~~~~~~~~~~~~~~
-Similar for sg_list.
+On 12/1/22 06:04, Bean Huo wrote:
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 5cf81dff60aa..c3dfa8084b5c 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> +int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *req_upiu,
+> +				     struct utp_upiu_req *rsp_upiu, struct ufs_ehs *ehs_req,
+> +				     struct ufs_ehs *ehs_rsp, int sg_cnt,
+> +				     struct scatterlist *sg_list, enum dma_data_direction dir);
 
-This is not an error because ufshcd_advanced_rpmb_req_handler() does a
-similar check, but that check can be reduced if sg_list is initialized to NULL.
-Initialize sg_cnt to silence its error.
+Hi Bean,
 
-Signed-off-by: Tom Rix <trix@redhat.com>
----
- drivers/ufs/core/ufs_bsg.c | 4 ++--
- drivers/ufs/core/ufshcd.c  | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+I think this patch is the first patch that adds a declaration in 
+ufshcd.h that uses the enum dma_data_direction data type. That leads to 
+the following compiler warning:
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 0044029bcf7b..0d38e7fa34cc 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -70,9 +70,9 @@ static int ufs_bsg_exec_advanced_rpmb_req(struct ufs_hba *hba, struct bsg_job *j
- 	struct ufs_rpmb_reply *rpmb_reply = job->reply;
- 	struct bsg_buffer *payload = NULL;
- 	enum dma_data_direction dir;
--	struct scatterlist *sg_list;
-+	struct scatterlist *sg_list = NULL;
- 	int rpmb_req_type;
--	int sg_cnt;
-+	int sg_cnt = 0;
- 	int ret;
- 	int data_len;
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index da81eafc19d5..6ed728885650 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7051,7 +7051,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
- 	/* Copy EHS, starting with byte32, immediately after the CDB package */
- 	memcpy(lrbp->ucd_req_ptr + 1, req_ehs, sizeof(*req_ehs));
- 
--	if (dir != DMA_NONE && sg_list)
-+	if (sg_list)
- 		ufshcd_sgl_to_prdt(hba, lrbp, sg_cnt, sg_list);
- 
- 	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
--- 
-2.27.0
+In file included from drivers/ufs/host/tc-dwc-g210-pci.c:10:
+./include/ufs/ufshcd.h:1282:72: warning: ‘enum dma_data_direction’ 
+declared inside parameter list will not be visible outside of this 
+definition or declaration
+  1282 |                                      struct scatterlist 
+*sg_list, enum dma_data_direction dir);
+       | 
+        ^~~~~~~~~~~~~~~~~~
 
+Can you please post a patch to fix this? Adding the following line is 
+probably sufficient:
+
+#include <linux/dma-direction.h>
+
+This has been detected with the following script:
+https://github.com/bvanassche/build-scsi-drivers/blob/main/build-scsi-drivers
+
+Thanks,
+
+Bart.
