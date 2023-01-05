@@ -2,93 +2,170 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB96DC54EBD
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Jan 2023 22:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65914C53210
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 00:52:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240573AbjADWeS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Jan 2023 17:34:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49812 "EHLO
+        id S230063AbjAEAww (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Jan 2023 19:52:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240518AbjADWeQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2023 17:34:16 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5815642E06;
-        Wed,  4 Jan 2023 14:34:14 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id v23so37797573pju.3;
-        Wed, 04 Jan 2023 14:34:14 -0800 (PST)
+        with ESMTP id S229882AbjAEAwX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2023 19:52:23 -0500
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C8272008
+        for <linux-scsi@vger.kernel.org>; Wed,  4 Jan 2023 16:48:05 -0800 (PST)
+Received: by mail-pj1-x1030.google.com with SMTP id v13-20020a17090a6b0d00b00219c3be9830so457177pjj.4
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Jan 2023 16:48:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qmx16UuQhO5rZu2O4slHfWVCdmlFd6cA9JuWyhm5rnA=;
+        b=QWJVknkQ4DnD/ayIlD5UFOKldJWRzve9KTy5wyE6+Mp3ZKKSktyLlD2gDetG4fPgCT
+         NC7DFI4iiSawaeo7pOJu3NUieI7dM0IUa4XP8KeJsYU0JqtqRW3VewKL4SklusEMI0nI
+         YuAWzITODQhqY03mM90/8RPSh8kWFxIgj8z/4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wFcGgrlnInq+98rpZdTRIXveI0p5krEuOABzJSNz1vE=;
-        b=JUVYZzP4yyyRRW3q7H7+iD+H7LOg/LZY3YrcKnZBSFf1D9lzjmy5tvu/2ykyyjWKwy
-         WM/25S81Rk4wiXB4Ktv+9ToXWLo2cHy9xZl8amx0CntM6Y3xFp0C7UNDW6EPG3ir63Su
-         Vjq7N7RhFS6++GNkxqS6+gVsRdzml8XR0TnedMCTG0RsrtbxpQH1YVKD5FBlfsbfeuD5
-         vHEh5zPjgTjFWsRy2aLoyQhL6uw/ysB81zep+Hhsdv3sTzq6giTnMPsO7S0XTDE/Rohe
-         LizkibOL1bGYsmFM2MXzKQgbha9NQ69lw3IXWmAf+aGNs1U00+/cTHFr5+u+lAnzaYeb
-         C5yA==
-X-Gm-Message-State: AFqh2krREZFfmTUxEt7S9usyXu9efNezi3MBQc746fLxe9N3OjlbpQpC
-        SWXDkDZ89ZKpGVewRWQ5hzw=
-X-Google-Smtp-Source: AMrXdXvvk5tMtlkFlL4QSprV6QfqR2bYRvQpuF4tJgaecnG8lmz0yz44H7JTvnKqjINdoXDG2s81hQ==
-X-Received: by 2002:a17:902:ab11:b0:191:33e2:452d with SMTP id ik17-20020a170902ab1100b0019133e2452dmr46100755plb.24.1672871653665;
-        Wed, 04 Jan 2023 14:34:13 -0800 (PST)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id r10-20020a170902c60a00b001869b988d93sm24621987plr.187.2023.01.04.14.34.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Jan 2023 14:34:12 -0800 (PST)
-Message-ID: <32c122e6-d87d-307b-72c8-a0ac74c42602@acm.org>
-Date:   Wed, 4 Jan 2023 14:34:11 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH] scsi: ufs: core: fix devfreq deadlocks
-Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Johan Hovold <johan+linaro@kernel.org>,
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=qmx16UuQhO5rZu2O4slHfWVCdmlFd6cA9JuWyhm5rnA=;
+        b=kWB+O7DKe/iBVcPmwpVPJtZc7ixtd5oYJ2VJRZ37a9VpMi35wZklNg1cncpakYI9qX
+         /H7v5ace825bOO61TQfPjOZSp6UviyJg9amhjSpK8hA1uyjKqIth35jAk6ye05m4yVX9
+         mTKiELhY2VLY3/VcfNbvcjHuO0FDgLHmPhe0h7CafGFKmR4GYET4Ghe0dkEwOQJAOxIK
+         Ai6eoW74PAtzXx5A1mTQoE1IRRX/9DWuVqOB2DEEmo0qJB2WIKR//jm+w9mT3DFlI/NZ
+         YGOzDWb5XEjcoVo6AI2m0qidi9JPxIN/C3UZ229gFKR/1e6OnxpEoZ/FPj0b0YdVkXRT
+         hAkg==
+X-Gm-Message-State: AFqh2krubFe4asP2aLXam1Xt1GX/Z/fmVGEqqNE8hyHMJwcOZALlTyPN
+        gqfvo/iYexHGxhTtxsKCa6GyPQ==
+X-Google-Smtp-Source: AMrXdXupL+sr3HUkoy2bfjrW7IqsfGOud1IYdPVIlbzhbmE04NN1d5x29xV3kREuH7iPBzwDP4yOBw==
+X-Received: by 2002:a17:903:3311:b0:189:6522:7cc0 with SMTP id jk17-20020a170903331100b0018965227cc0mr52406794plb.50.1672879685109;
+        Wed, 04 Jan 2023 16:48:05 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id a2-20020a170902ecc200b0017f64ab80e5sm24706484plh.179.2023.01.04.16.48.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Jan 2023 16:48:04 -0800 (PST)
+From:   Kees Cook <keescook@chromium.org>
+To:     Adam Radford <aradford@gmail.com>
+Cc:     Kees Cook <keescook@chromium.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Can Guo <quic_cang@quicinc.com>
-References: <20221222102121.18682-1-johan+linaro@kernel.org>
- <85e91255-1e6f-f428-5376-08416d2107a2@acm.org>
- <DM6PR04MB657555DBC49DF54716A98B6DFCF59@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB657555DBC49DF54716A98B6DFCF59@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: 3w-sas: Replace 1-element arrays with flexible array members
+Date:   Wed,  4 Jan 2023 16:48:01 -0800
+Message-Id: <20230105004757.never.017-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4853; h=from:subject:message-id; bh=fngDH2oJss4+sESGmI2fY1x2FAgrFeUQkGfTN9+iocQ=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBjth5Bain+6puH3Sb3/JrYRy2oc/pRGmxm11AX/0Xw s2+izlqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCY7YeQQAKCRCJcvTf3G3AJlLPD/ 9l+/uUbl6Loft70IysZLVyMfYPnC8y2klp3eiLSnUsKn91TtjHZeowcGK4tk7km3fjHMLs1X2jdlMU HuKWnuIDSv9ElQq/uXaZTex55zFG7tc4PcKrylYLH0k+dhFto2PMsqrn3NeVGymysBHeo8J3rAZxbB qVS0Bg/8023frYnGayhasJYv5JKSQZoFi5Q2PErnInysyP8Ry4vZTqF8hm33zegRD16Qkc7ubi9AEE 8nbrxrtSagUm9iJmVnUkdmrKlGZzQp9TuNfWgYAKZEp64WrjWOaYWOgAQzE7QzotkwT+DzkdoJ4UND 6dG9H+hjXstjjA3MpP51T1Gds8f1cG3oAw6Q+kwLxDM4dYees+GPWQs71TxfscAtqKrNqke/6vDNDz /elJwgBuu+JWhf8XzW7sUsuh3iSKP2SA5TzCZbh21lONJpHHzMbVHmgauTMS3U2KMbAdkSJlxfRUGu l+ZywrFDWli5lWVbE+/iCW5zoPMVBvxBeuuoFRoX6Kb2yvGW+D390mZcSASCkvT8qcij4VYo2FhlKi s36wFv3yhnt9/Rhfp6Bp25WguyKISinr2gNIaJTjgCIU43m7u+NW5c10FjwLT1zHXrh1/2tKfIFmVI FNCu8BAP+AkVReKvwKXfnx0fbGsFmYF+5xwniFOjFP/9328k2m4m69VKhBuw==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/3/23 00:24, Avri Altman wrote:
->   
->> On 12/22/22 02:21, Johan Hovold wrote:
->>> +     /* Enable Write Booster if we have scaled up else disable it */
->>> +     if (ufshcd_enable_wb_if_scaling_up(hba))
->>> +             ufshcd_wb_toggle(hba, scale_up);
->>
->> Hi Asutosh,
->>
->> This patch is the second complaint about the mechanism that toggles the
->> WriteBooster during clock scaling. Can this mechanism be removed entirely?
-> commit 87bd05016a64 that introduced UFSHCD_CAP_WB_WITH_CLK_SCALING enables
-> the platform vendors and OEMs to maintain wb toggling - should they choose so.
-> Why remove it in its entirety?
+One-element arrays (and multi-element arrays being treated as
+dynamically sized) are deprecated[1] and are being replaced with
+flexible array members in support of the ongoing efforts to tighten the
+FORTIFY_SOURCE routines on memcpy(), correctly instrument array indexing
+with UBSAN_BOUNDS, and to globally enable -fstrict-flex-arrays=3.
 
-Hi Avri,
+Replace one-element arrays with flexible-array member in TW_Ioctl_Buf_Apache
+and TW_Param_Apache, adjusting the explicit sizing calculations at the
+same time.
 
-I'm in favor of keeping kernel code simple :-)
+This results in no differences in binary output.
 
-UFSHCD_CAP_WB_WITH_CLK_SCALING controls whether or not clock scaling 
-affects the WriteBooster depending on which host controller is in use. 
-Shouldn't this depend on which UFS device is present instead of on the 
-type of host controller?
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#zero-length-and-one-element-arrays
 
-Thanks,
+Cc: Adam Radford <aradford@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/scsi/3w-sas.c | 12 ++++++------
+ drivers/scsi/3w-sas.h |  4 ++--
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index 3ebe66151dcb..f41c93454f0c 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -690,7 +690,7 @@ static void twl_load_sgl(TW_Device_Extension *tw_dev, TW_Command_Full *full_comm
+ 		newcommand->request_id__lunl =
+ 			cpu_to_le16(TW_REQ_LUN_IN(TW_LUN_OUT(newcommand->request_id__lunl), request_id));
+ 		if (length) {
+-			newcommand->sg_list[0].address = TW_CPU_TO_SGL(dma_handle + sizeof(TW_Ioctl_Buf_Apache) - 1);
++			newcommand->sg_list[0].address = TW_CPU_TO_SGL(dma_handle + sizeof(TW_Ioctl_Buf_Apache));
+ 			newcommand->sg_list[0].length = TW_CPU_TO_SGL(length);
+ 		}
+ 		newcommand->sgl_entries__lunh =
+@@ -702,7 +702,7 @@ static void twl_load_sgl(TW_Device_Extension *tw_dev, TW_Command_Full *full_comm
+ 		if (TW_SGL_OUT(oldcommand->opcode__sgloffset)) {
+ 			/* Load the sg list */
+ 			sgl = (TW_SG_Entry_ISO *)((u32 *)oldcommand+oldcommand->size - (sizeof(TW_SG_Entry_ISO)/4) + pae + (sizeof(dma_addr_t) > 4 ? 1 : 0));
+-			sgl->address = TW_CPU_TO_SGL(dma_handle + sizeof(TW_Ioctl_Buf_Apache) - 1);
++			sgl->address = TW_CPU_TO_SGL(dma_handle + sizeof(TW_Ioctl_Buf_Apache));
+ 			sgl->length = TW_CPU_TO_SGL(length);
+ 			oldcommand->size += pae;
+ 			oldcommand->size += sizeof(dma_addr_t) > 4 ? 1 : 0;
+@@ -748,7 +748,7 @@ static long twl_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+ 	data_buffer_length_adjusted = (driver_command.buffer_length + 511) & ~511;
+ 
+ 	/* Now allocate ioctl buf memory */
+-	cpu_addr = dma_alloc_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted+sizeof(TW_Ioctl_Buf_Apache) - 1, &dma_handle, GFP_KERNEL);
++	cpu_addr = dma_alloc_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted + sizeof(TW_Ioctl_Buf_Apache), &dma_handle, GFP_KERNEL);
+ 	if (!cpu_addr) {
+ 		retval = -ENOMEM;
+ 		goto out2;
+@@ -757,7 +757,7 @@ static long twl_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+ 	tw_ioctl = (TW_Ioctl_Buf_Apache *)cpu_addr;
+ 
+ 	/* Now copy down the entire ioctl */
+-	if (copy_from_user(tw_ioctl, argp, driver_command.buffer_length + sizeof(TW_Ioctl_Buf_Apache) - 1))
++	if (copy_from_user(tw_ioctl, argp, driver_command.buffer_length + sizeof(TW_Ioctl_Buf_Apache)))
+ 		goto out3;
+ 
+ 	/* See which ioctl we are doing */
+@@ -815,11 +815,11 @@ static long twl_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+ 	}
+ 
+ 	/* Now copy the entire response to userspace */
+-	if (copy_to_user(argp, tw_ioctl, sizeof(TW_Ioctl_Buf_Apache) + driver_command.buffer_length - 1) == 0)
++	if (copy_to_user(argp, tw_ioctl, sizeof(TW_Ioctl_Buf_Apache) + driver_command.buffer_length) == 0)
+ 		retval = 0;
+ out3:
+ 	/* Now free ioctl buf memory */
+-	dma_free_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted+sizeof(TW_Ioctl_Buf_Apache) - 1, cpu_addr, dma_handle);
++	dma_free_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted + sizeof(TW_Ioctl_Buf_Apache), cpu_addr, dma_handle);
+ out2:
+ 	mutex_unlock(&tw_dev->ioctl_lock);
+ out:
+diff --git a/drivers/scsi/3w-sas.h b/drivers/scsi/3w-sas.h
+index b0508039a280..096dec29e2ac 100644
+--- a/drivers/scsi/3w-sas.h
++++ b/drivers/scsi/3w-sas.h
+@@ -335,7 +335,7 @@ typedef struct TAG_TW_Ioctl_Apache {
+ 	TW_Ioctl_Driver_Command driver_command;
+ 	char padding[488];
+ 	TW_Command_Full firmware_command;
+-	char data_buffer[1];
++	char data_buffer[];
+ } TW_Ioctl_Buf_Apache;
+ 
+ /* GetParam descriptor */
+@@ -344,7 +344,7 @@ typedef struct {
+ 	unsigned short	parameter_id;
+ 	unsigned short	parameter_size_bytes;
+ 	unsigned short  actual_parameter_size_bytes;
+-	unsigned char	data[1];
++	unsigned char	data[];
+ } TW_Param_Apache;
+ 
+ /* Compatibility information structure */
+-- 
+2.34.1
 
