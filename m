@@ -2,206 +2,135 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C65DFC4708E
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Jan 2023 23:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3C5C4708E
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Jan 2023 02:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236357AbjAEXZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Jan 2023 18:25:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51026 "EHLO
+        id S229781AbjAFCZG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Jan 2023 21:25:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235302AbjAEXZG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 18:25:06 -0500
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5569B6E40C;
-        Thu,  5 Jan 2023 15:25:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672961105; x=1704497105;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=hXqUVT/upEnUUi7fjaPVeLYwfxFzq9DTbBRm52nCOqI=;
-  b=EYSf/iU7XJPq8K26JuMdlXNYzRE2gu6yNOlNBLcD06RQyuwZVEqJ4C9q
-   oAC1TXZYJWgSM3xsFaf5IMeol4EFX+7VgNJzUAMt+yAo1iSRsDIwiiaMX
-   7O7gayxmlTdhEqBQwHkQtw+5POVueneouyq6nam/f3cmeHvzSfYPzPMkb
-   SuKBvkTcMK2IDmlu2tjf0ftkkBFTdIPEG7MzdjMaqBEUCDA+ZfWQUGqId
-   5iKRYRI/39C9xiCvMFjaPsJNl9cXyX7lkCrKCaXlEgsYxnMu7cDqZ0paX
-   h7Tv0iKwO96H1/CA39K+9w/5XulCRJKzLoRMSrCnpfiWc0y2PJn168GpQ
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10581"; a="323602872"
-X-IronPort-AV: E=Sophos;i="5.96,303,1665471600"; 
-   d="scan'208";a="323602872"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jan 2023 15:25:04 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10581"; a="633323775"
-X-IronPort-AV: E=Sophos;i="5.96,303,1665471600"; 
-   d="scan'208";a="633323775"
-Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
-  by orsmga006.jf.intel.com with ESMTP; 05 Jan 2023 15:25:04 -0800
-Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
- ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.16; Thu, 5 Jan 2023 15:25:04 -0800
-Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
- ORSMSX611.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.16; Thu, 5 Jan 2023 15:25:03 -0800
-Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
- orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.16 via Frontend Transport; Thu, 5 Jan 2023 15:25:03 -0800
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (104.47.73.173)
- by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.16; Thu, 5 Jan 2023 15:25:03 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SgnmVoBdZVOFPpWirhq1txlq1tP0sUCtfXFr3uo+RpZ32Ne9lUFR7DbgtyNMMyXMMFk4FJqHuuiP5GU3ollRCC6OhBofgDmfHV27g/I8CtgSiXn2739YWuPFL805zn7GWz1gqPC3trqTMoxn85SuP+ErEWuXXfuBTgWU+0pMQ8yjiw6xa9a+GyjbYWs6PBdWv1mbY9p37sIsIP9Ibvsy6W8VOs80r8STnFMCDxSdxCkUP9rDoGDVOAatWYoENGXnmLg2hhJXPWpi8u6OZD+Mm8/1MMFTdNEPjyItJgsiNAy9DwBt37ooJKPMKF1nED3MDIZ+3v7JOee0V6SyjqRqxA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=P4igUcGBXORv/1NSWMlpdMTglxw+/wVxFLUnKYeXsPI=;
- b=hr6F0d2z3D8PxFIF8USDl+yzeVOKf4beZ60neyOlpETPfBX0Pn4rM2z8MDNO2LCEIqZALVtyeQjr1Bo8hpm6v4Yu6/eu5ZM4LpnUqbWVnT+WOdp2FmcS6/vqGr/KND/kJZfYEYqrcUwrHML6stKYPFpnn8L1/siRZe8MWgF5HrHg8YCdlIV8uRf0gghtGNBlYDLB2Xg07f0BRt0a+kdYr0W4c0An5xlKJSSIJ/Wfxh5EoTO+KnYD6mthDNJoUHFOH/60dCmcDKA6ie6/lghSxPA6xY4K6Gamq8Wx7eBrwRz8iJF8ipSXEIRGNWd/srq81w1B/xFSapv4Nlv2cclu2g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from SA1PR11MB6733.namprd11.prod.outlook.com (2603:10b6:806:25c::17)
- by DM4PR11MB7375.namprd11.prod.outlook.com (2603:10b6:8:101::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5944.19; Thu, 5 Jan
- 2023 23:25:02 +0000
-Received: from SA1PR11MB6733.namprd11.prod.outlook.com
- ([fe80::288d:5cae:2f30:828b]) by SA1PR11MB6733.namprd11.prod.outlook.com
- ([fe80::288d:5cae:2f30:828b%7]) with mapi id 15.20.5944.019; Thu, 5 Jan 2023
- 23:25:02 +0000
-Date:   Thu, 5 Jan 2023 15:24:58 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-CC:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        with ESMTP id S229532AbjAFCZE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2023 21:25:04 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0136E63F58
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Jan 2023 18:25:00 -0800 (PST)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230106022457epoutp03359b3cf8ddf4c5b8ee360ff604669649~3lxO3X5BY1662016620epoutp03t
+        for <linux-scsi@vger.kernel.org>; Fri,  6 Jan 2023 02:24:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230106022457epoutp03359b3cf8ddf4c5b8ee360ff604669649~3lxO3X5BY1662016620epoutp03t
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1672971897;
+        bh=zYAVVwKbYWstk25NjpAYrxBF81yAcrHna5VCyCM4pz8=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=mtMuKQAPQ5gb4u0njOYlSAGUXfO60S83nMptdarFtNEE07qbA+XQpbza2kUocTw2i
+         f5OvZIsYVsK10mFrw0NAMK0d5CYOSUBx7ex60BKAQ2dqd5ezUq/uUK7f5XN8tuSaye
+         BoSddzSg6iwwWUpjCWBXTPNoE/Xw3E2LROsf3yaY=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230106022457epcas2p1e8b266521fd8f3ab2e6b8cec6ec29135~3lxOdNyH42057020570epcas2p1i;
+        Fri,  6 Jan 2023 02:24:57 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.102]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4Np6cS3djLz4x9Q0; Fri,  6 Jan
+        2023 02:24:56 +0000 (GMT)
+X-AuditID: b6c32a47-619ff7000000f187-f5-63b786783a81
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        51.0F.61831.87687B36; Fri,  6 Jan 2023 11:24:56 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH] scsi: ufs: core: fix devfreq deadlocks
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>
+CC:     Johan Hovold <johan+linaro@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: ips: Replace kmap_atomic() with kmap_local_page()
-Message-ID: <Y7dcSswZppY4hn3H@iweiny-desk3>
-References: <20230103173131.21259-1-fmdefrancesco@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20230103173131.21259-1-fmdefrancesco@gmail.com>
-X-ClientProxiedBy: BYAPR11CA0093.namprd11.prod.outlook.com
- (2603:10b6:a03:f4::34) To SA1PR11MB6733.namprd11.prod.outlook.com
- (2603:10b6:806:25c::17)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR11MB6733:EE_|DM4PR11MB7375:EE_
-X-MS-Office365-Filtering-Correlation-Id: d44ea8b0-74fe-4ebc-82bc-08daef7411a1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zaSciA6KWdXGcR40aiDrYb9z5Vj7vm4STrFAooerVG8YYTlZvjG89GavCzwixPwrn/I3rB3KeDvdjFevin0BZd3M8KmPSNBlNpaxgjyRVYCyznMhXUS8RQCkBnaHnxws9fZDyrJvXtYWuVE9QCN1qRvHSnY16z0h2jAVm0D5ptk9hQ/U4y/Lxdizc+IlTHoouyYtGN0qaK66EfFF6Jv0QPhgl6R99pXXFOLpzcSxWy2x+fLcX/3JyfkC2ih5IsEr+6AooXNtKNr91E5pWB80m5ivuZl0/NmHFssEm1ZdKrkkA73PCRTQdoBw0vSnSIoy/Rv4QHZH5+Yx7oteuynYgXNKtej3QjeYjz8iO+ki1WLe/sN42kzwkYRoNLssdgzj9a+cjMHxRMverpe85Qoshjf3ViQAPnQoYro+lt12OlEWrCH4e6IU6g0OctvvJ0RORY7hDyOfiMm3PtCn9mzeMUX8yj4WTEey7PXoTnpFWGov7KzCSi8SKxqoOdEjc+CgooUyd55prqkH8GgmoxUBdmrK0vKKpA2BwSbIrKf1Zex3Y34YCii2OCpuUHSRgxllbvdNHHQTsQgwBmQND9FauFo12Zn/Y4xa6lSvbA+M/e6daF7iXaDAhJZIAAMmyFxDmQVRjJa5B0pw1+ZR8U6APg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR11MB6733.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(346002)(396003)(136003)(39860400002)(376002)(366004)(451199015)(6916009)(478600001)(33716001)(86362001)(82960400001)(316002)(54906003)(2906002)(38100700002)(6486002)(6506007)(44832011)(8936002)(5660300002)(8676002)(66476007)(4326008)(26005)(6666004)(66946007)(41300700001)(66556008)(6512007)(186003)(83380400001)(9686003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EpTqEmeRL/VdsDB+MhRJgY8w9N2SlfkShxL9OvgI9sK9eFLe/jEtRSa+y4bq?=
- =?us-ascii?Q?J0IRtOi4TKbPGTpD0Q2zB6DFF1fmqywkRXr8lRq5Y+7MtgSgkgc+BMo8xGHf?=
- =?us-ascii?Q?09Q9AHZI6eE2u6K2xAW6tQJutVr42qCPbdOw72RI/gMIVeW2TrjNuGvvI5Cs?=
- =?us-ascii?Q?VN6QCGTCEXUVBch0Qir7HoFPXaIVT/Ch4fqOJpxPrC3zmxpNah0DZ2t9Cb4p?=
- =?us-ascii?Q?BhJAzvEb6dKNXu9vdFGnf+j7KyDpx1LnAYp0k7UzLiHYfVTkWje3Qr4V4Ev2?=
- =?us-ascii?Q?SLZOL05r0eHrynyTgnzh6CC6Kr2ujwzqOYiopTev9Uvjr4dV78X16t6PVvmn?=
- =?us-ascii?Q?7cw+v4jewaEVBRLt16/vjmmqj9oQmKtQxZofr4rbYaz5Mm9KL4ztB11xijPW?=
- =?us-ascii?Q?YXxJEgRk5ktBw8EYT/HcNuQ31B8N1ZZduT8vbDJDlF9j4Xriyg3crEjx2z92?=
- =?us-ascii?Q?NrrAmgSR+gizjqwXeslphGFKOuvqvkyeggaHeJNHVrv6aqyBiSivwm2/9rJi?=
- =?us-ascii?Q?ZkNcB5zEgRucNKGnZ8GAjwAz8jWCH8yeod79djD1sLkhXk38Z2e64F2zY/Vg?=
- =?us-ascii?Q?dUWCh+hIFfyaWp/r9aK0dpir2g/10sgKmeSsDmSH99/BoHFSECU2FvWYlVRS?=
- =?us-ascii?Q?/sCLaxLrb7bHehv1ZaM8n2+tWN5+yv6p0WqWC2EhndG2I7ANjZyFAytIVGrd?=
- =?us-ascii?Q?qvqkMKNDzQLS05bcHwVWVfS9X6ZgqbQZy3e0OrmZAOxykIGczGBiJ5n1ARsN?=
- =?us-ascii?Q?ZkqxzBBZrPV3X9LD9VLB1LQ1Yu52Iqi1Cg6WT9atCvgzNHRbBRfS3gjEA/5s?=
- =?us-ascii?Q?w1EyEK2jOFoD2HwlPnemTzi/gsJ9QHVS8HYVYyeUCXAFQpXBj9DOpPiqONeO?=
- =?us-ascii?Q?B/u/ZfD9gI7J0rISX5zfL0WEKNVFtUIfiAOWJ3bZc0NHIk5th3svODIn981J?=
- =?us-ascii?Q?7bJUbED4NQW4hFv7dWdxaRCaUUocslH9QcV3vyoVpxWuRSufDJeQVUbu1o/e?=
- =?us-ascii?Q?L7ymTvsTr7qoqow6zGOajhhkmsXK2YwsD4gbEdsg33mV8hPxXJ8WkSH2NiI6?=
- =?us-ascii?Q?4YGFbda5JF1xvl4268FX6c7GoUidhYrNqg8fRCiOvuWBLfCxcx9LuRn2jSu9?=
- =?us-ascii?Q?gi5gDBKKdMxmhIOj4eQK7xWSkTQOE5j/Je7cY+b29iSAWbTeDAPZfkEQUEfh?=
- =?us-ascii?Q?TxYvGaxHc8urHf/m6JZhUvLfF2Py7tgibjWj2yrUr0q5pHocwuBvIKV84NYT?=
- =?us-ascii?Q?u7RD70/Lwg4oyLcc1nRc5d2Jak4gBwqhSguye2wRbueNh90MpHU71T9J2fzS?=
- =?us-ascii?Q?1/6IQmq9yAojUzKUX4gk9c7/mMhHTqPvR+/MHesqSV+40JkHUS4ru0z8KGDU?=
- =?us-ascii?Q?g5UyqF048EuKPR1VFIkf4IRme/aSXXVrEMhsAXsaEMql8xwsNXWiuAmfXWiX?=
- =?us-ascii?Q?Pq5JIQNwgyA/Q7Bxcr48Yl9vVEntb3DBqypm0VX7FAztLspl5OLJaGAZLx9x?=
- =?us-ascii?Q?RLIoA2liYVQEPu9uKQQvsjE26PdSz7ERAykV1ZxQGQ53pLa3EkwqBkyNb4rV?=
- =?us-ascii?Q?XHM3HZyXWKK84VeARPrFdA5VONL2O70OOU78n5latkqjQ6yywwxRFRe8r9ej?=
- =?us-ascii?Q?GQ=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: d44ea8b0-74fe-4ebc-82bc-08daef7411a1
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR11MB6733.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jan 2023 23:25:01.9732
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: yQES8KeOVZpKNfcD+ZAHFQBykro+DACJVWBhKe5wd6WDn6IF3mBRNT9btCqjzrzmC4/k1G6xcXX2AgoGlO55ZQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR11MB7375
-X-OriginatorOrg: intel.com
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Can Guo <quic_cang@quicinc.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <DM6PR04MB65750DE015FA51FDC08D994BFCFA9@DM6PR04MB6575.namprd04.prod.outlook.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230106022456epcms2p784b3cf9115f6b170bdef0732258381ba@epcms2p7>
+Date:   Fri, 06 Jan 2023 11:24:56 +0900
+X-CMS-MailID: 20230106022456epcms2p784b3cf9115f6b170bdef0732258381ba
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMJsWRmVeSWpSXmKPExsWy7bCmuW5F2/Zkg0+XxSwezNvGZvHy51U2
+        i2kffjJbvDykabHoxjYmixWVFpd3zWGz6L6+g81i+fF/TBYLO+ayWEy6toHNYsHGR4wOPB6X
+        r3h7bFrVyeYxYdEBRo+PT2+xeEzcU+fRt2UVo8fnTXIe7Qe6mQI4orJtMlITU1KLFFLzkvNT
+        MvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4AuVVIoS8wpBQoFJBYXK+nb2RTl
+        l5akKmTkF5fYKqUWpOQUmBfoFSfmFpfmpevlpZZYGRoYGJkCFSZkZ9x9/pCpYBVnxew5p5ka
+        GFexdzFyckgImEj0Tl3FCmILCexglDjaYdXFyMHBKyAo8XeHMEhYWMBOYs+x68wQJUoS59bM
+        YgQpERYwkLjVaw4SZhPQk/i5ZAYbSFhEoEzizeWYLkYuDmaBTmaJB3sXQ23ilZjR/pQFwpaW
+        2L58KyOIzSkQK7H60wxmiLiGxI9lvVC2qMTN1W/ZYez3x+YzQtgiEq33zkLVCEo8+LkbKi4p
+        cejQV7AbJATyJTYcCIQI10i8XX4AqkRf4lrHRhaIB30lvvV5gIRZBFQl/k2/CDXRReL8vD6w
+        rcwC8hLb385hBilnFtCUWL9LH2K4ssSRWywwPzVs/M2OzmYW4JPoOPwXLr5j3hMmiFY1iUVN
+        RhMYlWchwngWklWzEFYtYGRexSiWWlCcm55abFRgDI/V5PzcTYzg1KrlvoNxxtsPeocYmTgY
+        DzFKcDArifCW9W9LFuJNSaysSi3Kjy8qzUktPsRoCvTkRGYp0eR8YHLPK4k3NLE0MDEzMzQ3
+        MjUwVxLnDdo6P1lIID2xJDU7NbUgtQimj4mDU6qBiel2a1D0/xDdE5+WTnwUvEqAXf8Yi/ak
+        SFUG13+m8kvNW1jXPzvxsaFW7siX34cOc+463PP6Mff2YxvcIwLXdjWHfvv2zJTpXqZKUKNc
+        laTdVOcU6z0PFujW8P230z1ed7XlSXJF0eyFS24Z9oflihhPYb3mzbHVddLRyyt+b9hhezQ8
+        wSJrc65WX4wC3+w3X5LlnKXWPWS5tXH9uUNStcGLtwsucTfeWlVzRPmDVuJ6RVuW1dUn+ESq
+        zh87NmlN1pH7LFZzp9qeyZade5OvpdS81GkuY8nVlR5HLYI1+id6+ky8saLWun/zqrXl6d+j
+        IkS2HLj8WO6nlPTTecubku8oxLw223/x+qRH1qy1k5RYijMSDbWYi4oTAbW/Hvo2BAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230105072134epcas2p47a72da1ee48e341295575770d3eb573c
+References: <DM6PR04MB65750DE015FA51FDC08D994BFCFA9@DM6PR04MB6575.namprd04.prod.outlook.com>
+        <20221222102121.18682-1-johan+linaro@kernel.org>
+        <85e91255-1e6f-f428-5376-08416d2107a2@acm.org>
+        <20230104141045.GB8114@asutoshd-linux1.qualcomm.com>
+        <3db8c140-2e4e-0d75-4d81-b2c1f22f68d1@acm.org>
+        <CGME20230105072134epcas2p47a72da1ee48e341295575770d3eb573c@epcms2p7>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 03, 2023 at 06:31:31PM +0100, Fabio M. De Francesco wrote:
-> kmap_atomic() is deprecated in favor of kmap_local_page(). Therefore,
-> replace kmap_atomic() with kmap_local_page() in ips_is_passthru(). In
-> the meantime remove an unnecessary comment soon before local mapping,
-> align code and remove spaces (the function is short, therefore the
-> reviewers job won't be over-complicated by these logically unrelated
-> clean-ups).
-> 
-> kmap_atomic() is implemented like a kmap_local_page() which also disables
-> page-faults and preemption (the latter only for !PREEMPT_RT kernels).
-> The code within the mapping/unmapping in ips_is_passthru() is already
-> in atomic context because of a call to local_irq_save() and
-> kmap_local_page() can be called in atomic context too (including
-> interrupts).
-> 
-> Therefore, a mere replacement of the old API with the new one is all it
-> is required (i.e., there is no need to explicitly add any calls to
-> pagefault_disable() and/or preempt_disable()).
-> 
-> Suggested-by: Ira Weiny <ira.weiny@intel.com>
+>> On 1/4/23 06:10, Asutosh Das wrote:
+>> > Load based toggling of WB seemed fine to me then.
+>> > I haven't thought about another method to toggle WriteBooster yet.
+>> > Let me see if I can come up with something.
+>> > IMT if you have a mechanism in mind, please let me know.
+>> 
+>> Hi Asutosh,
+>> 
+>> Which UFS devices need this mechanism? All UFS devices I'm familiar with can
+>> achieve wire speed for large write requests without enabling the WriteBooster.
+>This feature assures SLC-performance for writes to the WriteBooster buffer.
+>So enabling it is advantageous as far as write performance.
 
-The discussion about preemption is irrelevant AFAICS.  But what you say above
-is not wrong and the code looks right.
+I agree with you. Also, it can be used in various ways.
 
-Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+>As for the toggling functionality, compared to e.g. enabling it on init and leave it on,
+>some flash vendors require it because of device health considerations.
+>This is not the case for us, so let others to comment.
 
-> Signed-off-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
-> ---
->  drivers/scsi/ips.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-> index 16419aeec02d..bb206509265e 100644
-> --- a/drivers/scsi/ips.c
-> +++ b/drivers/scsi/ips.c
-> @@ -1499,17 +1499,16 @@ static int ips_is_passthru(struct scsi_cmnd *SC)
->                  struct scatterlist *sg = scsi_sglist(SC);
->                  char  *buffer;
->  
-> -                /* kmap_atomic() ensures addressability of the user buffer.*/
->                  /* local_irq_save() protects the KM_IRQ0 address slot.     */
->                  local_irq_save(flags);
-> -                buffer = kmap_atomic(sg_page(sg)) + sg->offset;
-> -                if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
-> -                    buffer[2] == 'P' && buffer[3] == 'P') {
-> -                        kunmap_atomic(buffer - sg->offset);
-> +		buffer = kmap_local_page(sg_page(sg)) + sg->offset;
-> +		if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
-> +		    buffer[2] == 'P' && buffer[3] == 'P') {
-> +			kunmap_local(buffer);
->                          local_irq_restore(flags);
->                          return 1;
->                  }
-> -                kunmap_atomic(buffer - sg->offset);
-> +		kunmap_local(buffer);
->                  local_irq_restore(flags);
->  	}
->  	return 0;
-> -- 
-> 2.39.0
-> 
+In our case, it does not matter whether to toggle or not.
+To make the code simple, it seems to be a good way to enable it on init and leave it on.
+Considering device health, WB can be disabled through lifetime check.
+
+Thanks,
+Jinyoung.
+
+>
+>Thanks,
+>Avri
+>> 
+>> Thanks,
+>> 
+>> Bart.
+
