@@ -2,145 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 678ECC3DA7A
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Jan 2023 09:02:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6989C3DA7A
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Jan 2023 11:49:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231838AbjAFJCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Jan 2023 04:02:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35964 "EHLO
+        id S232222AbjAFLtQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Jan 2023 06:49:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbjAFJCE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2023 04:02:04 -0500
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8387A68C94
-        for <linux-scsi@vger.kernel.org>; Fri,  6 Jan 2023 01:01:56 -0800 (PST)
-Received: by mail-wr1-x430.google.com with SMTP id d4so684598wrw.6
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2023 01:01:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=oeoUVwbyr4T0WhSWYBbCj9LHSWdSauqLNBIHP/UJ/i8=;
-        b=jFwCEv3OjdJFI1FFvAXD9B5iaSureTg5EcD0/kOS3sXy5O1Tqr0HIFlzRUnCs8s9S3
-         m91tfwHBy6P8tZ2I+JhTKcp/H0us2FuTL4ho1WfHCOhsBKFS8Woc/wAc1hiaU35ABMDF
-         pKQiMwPUBQ1aE1lOisWJ+i9IwR6XIKTIebtoIfR8MwARO1vHbwUIMWiZ/fNdENeMibAa
-         EGmUihyVj+NtsfGnRdxqlfGoqnPRMuG6ZoEQJx+sptCBEP/H6FP0u4n447CUb+NbiRHl
-         NqPyKXrlpT28qRa5w6FEoyIM0n4NOA2WBzCMW9DAmfPFdmXcN/vdF4cagiqe+AKfDfJi
-         0w2Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oeoUVwbyr4T0WhSWYBbCj9LHSWdSauqLNBIHP/UJ/i8=;
-        b=MUZfCw8BRjMkRBWEWBTijWIjedhQSe7ciobUXxejSEE/WUBcBe3VENYOCuh48aXLsd
-         XAfkhZUIe8FR/uPfmRYdCpNYTkIHRKcJv2DpzbsD2Pyxc4uR25ljtsTbtb8gd0siJmlc
-         kaW0LBRJgH9N6ZeS23ILyGGuP1kyliWUKEVRpHso3LRDdE77ssWt51RNFeE7xaSd3xQJ
-         vkKTh1H3hmvNo1n9cD1IGk2VVhHkRrkxgDDWwzza3xWosphTvEatq+nPS4w4xOgZ4Ve8
-         s+q3Vmvac9+VBBPXSasikpAxpN/7nutEAa9zdUwzQUN3AK9a5OZsMP8DbW2IpBJ1TE+K
-         Bf6A==
-X-Gm-Message-State: AFqh2kpVdqPkL1br4uLEB2Tc7XONcMCrA0CmuJZsW6MnaBQGKflEryrH
-        u0KODCnbyFMImVG9jCnyiwc=
-X-Google-Smtp-Source: AMrXdXvJQ8AS0SjJ5/3wsXRs4WVVPqs6JHdN1c/ihusDZIOrWaTWIJnzY8guFyrtd1R8AT/jUw4J6A==
-X-Received: by 2002:a5d:4849:0:b0:284:58c:b125 with SMTP id n9-20020a5d4849000000b00284058cb125mr24132316wrs.52.1672995715073;
-        Fri, 06 Jan 2023 01:01:55 -0800 (PST)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id g1-20020a5d46c1000000b00241cfe6e286sm532804wrs.98.2023.01.06.01.01.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Jan 2023 01:01:54 -0800 (PST)
-Date:   Fri, 6 Jan 2023 12:01:47 +0300
-From:   Dan Carpenter <error27@gmail.com>
-To:     beanhuo@micron.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: ufs: core: bsg: Add advanced RPMB support in
- ufs_bsg
-Message-ID: <Y7fje9NDkF/NDZus@kili>
+        with ESMTP id S229597AbjAFLtP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2023 06:49:15 -0500
+Received: from ofcsgdbm.dwd.de (ofcsgdbm.dwd.de [141.38.3.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB85A6A0D6
+        for <linux-scsi@vger.kernel.org>; Fri,  6 Jan 2023 03:49:13 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+        by ofcsg2dn3.dwd.de (Postfix) with ESMTP id 4NpM7W63v5z2xMd
+        for <linux-scsi@vger.kernel.org>; Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=dwd.de; h=
+        content-type:content-type:mime-version:references:message-id
+        :in-reply-to:subject:subject:from:from:date:date:received
+        :received:received:received:received:received:received:received;
+         s=dwd-csg20210107; t=1673005751; x=1674215352; bh=u7IIxirkt76f0
+        g/Rwq/qlgaw6SWFuad1KaMroHH8eUE=; b=2PqXxk2MOSsTLaRIPMNup6O+DNjww
+        7ZWBJwYJHa64pebtAsDl7kBLBtBn7887IC+cgtPTEfjsv1+II9Tyr45Z0bOAJJKy
+        09exeAlKx9zIinLepv7EF+xexYVV5VMPNMYvzm2JOM5/sy1A5YqL36Dm/mfvSGrt
+        OIvEruabyM33qH5YSZ6QWlj1hW/xvjmPjE+N/ttf+V7ECY/VR82GYqC3WnGcYuch
+        H3RjGGOGu2s0P6pXIENsELaPmjeaMl5deEKk2Q3klgDI/Zy+6AbnOvp0rhsiuZIk
+        RZMv530gPSoE7T3BJB5p5Oe5Lf6hhEeZUFdbzVogY46FDU1gqf5IgPLcg==
+X-Virus-Scanned: by amavisd-new at csg.dwd.de
+Received: from ofcsg2cteh1.dwd.de ([172.30.232.65])
+ by localhost (ofcsg2dn3.dwd.de [172.30.232.26]) (amavisd-new, port 10024)
+ with ESMTP id 0srujgEa_8Vq for <linux-scsi@vger.kernel.org>;
+ Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+Received: from ofcsg2cteh1.dwd.de (unknown [127.0.0.1])
+        by DDEI (Postfix) with ESMTP id A7991C902615
+        for <root@ofcsg2dn3.dwd.de>; Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+Received: from ofcsg2cteh1.dwd.de (unknown [127.0.0.1])
+        by DDEI (Postfix) with ESMTP id 9C1C9C90271B
+        for <root@ofcsg2dn3.dwd.de>; Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+X-DDEI-TLS-USAGE: Unused
+Received: from ofcsgdbm.dwd.de (unknown [172.30.232.26])
+        by ofcsg2cteh1.dwd.de (Postfix) with ESMTP
+        for <root@ofcsg2dn3.dwd.de>; Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+Received: from ofcsgdbm.dwd.de by localhost (Postfix XFORWARD proxy);
+ Fri, 06 Jan 2023 11:49:11 -0000
+Received: from ofcsg2dvf2.dwd.de (ofcsg2dvf2.dwd.de [172.30.232.11])
+        by ofcsg2dn3.dwd.de (Postfix) with ESMTPS id 4NpM7W3wZjz2xMJ;
+        Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+Received: from ofmailhub.dwd.de (ofldap.dwd.de [141.38.39.208])
+        by ofcsg2dvf2.dwd.de  with ESMTP id 306BnB0j022256-306BnB0k022256;
+        Fri, 6 Jan 2023 11:49:11 GMT
+Received: from diagnostix.dwd.de (diagnostix.dwd.de [141.38.44.45])
+        by ofmailhub.dwd.de (Postfix) with ESMTP id 451534529B;
+        Fri,  6 Jan 2023 11:49:11 +0000 (UTC)
+Date:   Fri, 6 Jan 2023 11:49:11 +0000 (GMT)
+From:   Holger Kiehl <Holger.Kiehl@dwd.de>
+To:     Kees Cook <keescook@chromium.org>
+cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_sas: Add flexible array member for SGLs
+In-Reply-To: <20230106053153.never.999-kees@kernel.org>
+Message-ID: <7cc1efed-1241-112d-2a12-6abeea323284@diagnostix.dwd.de>
+References: <20230106053153.never.999-kees@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+X-FEAS-Client-IP: 141.38.39.208
+X-FE-Last-Public-Client-IP: 141.38.39.208
+X-FE-Policy-ID: 2:2:1:SYSTEM
+X-TMASE-Version: DDEI-5.1-9.0.1002-27368.007
+X-TMASE-Result: 10--11.765800-10.000000
+X-TMASE-MatchedRID: scwq2vQP8OH/9O/B1c/Qy65i3jK3KDOoC/ExpXrHizxnyL8x0tKlOwpz
+        5A3IIcOFQMOJEqjTDADg9GpkpL2zRfvwmMFLImuh72Rb2bEJC+14/L/eKkYod2vlGb+24NaZwis
+        nIbO8h0PqNXg27YCW5IyCITJXo1Pu38rWKQkiws4y0WOtNS62pHLhUU/qa4OGXfUB/fqAxpO4kR
+        SZ1g8ZJSurxuGphsNqV5Y/cGuAJ/uR9GF2J2xqM/7E6GNqs6ce3x1YNh2+qanUZxEAlFPo846HM
+        5rqDwqtp9yvkxek7WN9ypEcdRqjcrWm5vJecezqWXZQfz2GkfqotqABjxieXQ==
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
+X-TMASE-INERTIA: 0-0;;;;
+X-DDEI-PROCESSED-RESULT: Safe
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Bean Huo,
+On Thu, 5 Jan 2023, Kees Cook wrote:
 
-The patch 6ff265fc5ef6: "scsi: ufs: core: bsg: Add advanced RPMB
-support in ufs_bsg" from Dec 1, 2022, leads to the following Smatch
-static checker warning:
+> struct MPI2_RAID_SCSI_IO_REQUEST ends with a single SGL, but expects to
+> copy multiple. Add a flexible array member so the compiler can reason
+> about the size of the memcpy(). This will avoid the run-time false
+> positive warning:
+>
+>  memcpy: detected field-spanning write (size 128) of single field "&r1_cmd->io_request->SGL" at drivers/scsi/megaraid/megaraid_sas_fusion.c:3326 (size 16)
+>
+> This change results in no binary output differences.
+>
+> Reported-by: Holger Kiehl <Holger.Kiehl@dwd.de>
+> Link: https://lore.kernel.org/all/88de8faa-56c4-693d-2d3-67152ee72057@diagnostix.dwd.de/
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+> Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: megaraidlinux.pdl@broadcom.com
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+> Holger, are you able to test this change? I expect it should do the
+> trick, but I don't have the hardware.
+>
+Yes, that does work. I no longer see 'memcpy: detected field-spanning
+write (size 128)'. Tested this on 6.1.4-rc1. Did not see any other
+regression.
 
-	drivers/ufs/core/ufs_bsg.c:121 ufs_bsg_exec_advanced_rpmb_req()
-	error: uninitialized symbol 'sg_cnt'.
-
-drivers/ufs/core/ufs_bsg.c
-    67 static int ufs_bsg_exec_advanced_rpmb_req(struct ufs_hba *hba, struct bsg_job *job)
-    68 {
-    69         struct ufs_rpmb_request *rpmb_request = job->request;
-    70         struct ufs_rpmb_reply *rpmb_reply = job->reply;
-    71         struct bsg_buffer *payload = NULL;
-    72         enum dma_data_direction dir;
-    73         struct scatterlist *sg_list;
-    74         int rpmb_req_type;
-    75         int sg_cnt;
-    76         int ret;
-    77         int data_len;
-    78 
-    79         if (hba->ufs_version < ufshci_version(4, 0) || !hba->dev_info.b_advanced_rpmb_en ||
-    80             !(hba->capabilities & MASK_EHSLUTRD_SUPPORTED))
-    81                 return -EINVAL;
-    82 
-    83         if (rpmb_request->ehs_req.length != 2 || rpmb_request->ehs_req.ehs_type != 1)
-    84                 return -EINVAL;
-    85 
-    86         rpmb_req_type = be16_to_cpu(rpmb_request->ehs_req.meta.req_resp_type);
-    87 
-    88         switch (rpmb_req_type) {
-    89         case UFS_RPMB_WRITE_KEY:
-    90         case UFS_RPMB_READ_CNT:
-    91         case UFS_RPMB_PURGE_ENABLE:
-    92                 dir = DMA_NONE;
-    93                 break;
-    94         case UFS_RPMB_WRITE:
-    95         case UFS_RPMB_SEC_CONF_WRITE:
-    96                 dir = DMA_TO_DEVICE;
-    97                 break;
-    98         case UFS_RPMB_READ:
-    99         case UFS_RPMB_SEC_CONF_READ:
-    100         case UFS_RPMB_PURGE_STATUS_READ:
-    101                 dir = DMA_FROM_DEVICE;
-    102                 break;
-    103         default:
-    104                 return -EINVAL;
-    105         }
-    106 
-    107         if (dir != DMA_NONE) {
-    108                 payload = &job->request_payload;
-    109                 if (!payload || !payload->payload_len || !payload->sg_cnt)
-    110                         return -EINVAL;
-    111 
-    112                 sg_cnt = dma_map_sg(hba->host->dma_dev, payload->sg_list, payload->sg_cnt, dir);
-    113                 if (unlikely(!sg_cnt))
-    114                         return -ENOMEM;
-    115                 sg_list = payload->sg_list;
-    116                 data_len = payload->payload_len;
-    117         }
-
-"sg_cnt" not initialized on else path.
-
-    118 
-    119         ret = ufshcd_advanced_rpmb_req_handler(hba, &rpmb_request->bsg_request.upiu_req,
-    120                                    &rpmb_reply->bsg_reply.upiu_rsp, &rpmb_request->ehs_req,
---> 121                                    &rpmb_reply->ehs_rsp, sg_cnt, sg_list, dir);
-                                                                 ^^^^^^
-
-    122 
-    123         if (dir != DMA_NONE) {
-    124                 dma_unmap_sg(hba->host->dma_dev, payload->sg_list, payload->sg_cnt, dir);
-    125 
-    126                 if (!ret)
-    127                         rpmb_reply->bsg_reply.reply_payload_rcv_len = data_len;
-    128         }
-    129 
-    130         return ret;
-    131 }
-
-regards,
-dan carpenter
+Regards,
+Holger
