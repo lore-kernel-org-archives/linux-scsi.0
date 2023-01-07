@@ -2,86 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 132E4C46467
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Jan 2023 12:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C07A5C54EBC
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Jan 2023 20:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232172AbjAGMtg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Jan 2023 07:49:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47184 "EHLO
+        id S232671AbjAGUOE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Jan 2023 15:14:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229974AbjAGMtd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2023 07:49:33 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 023E972D2A;
-        Sat,  7 Jan 2023 04:49:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1673095769;
-        bh=J9tEidszI5OSDhNzxxshU4pDGQyqa/HcrqWXQLTX1+Q=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=oU41UjFYG+eCt7E7Qi19rAuNq3fOT/3mL/J0KltS9wIbPzqrWI4rSwgtL5OdagsNd
-         mzgzDVwGEHf7gOTadqCKosXxc/DJUCC0SuU3/6KyRI7HsHMLR1EW7vAHCOJ3S8/jn1
-         hDE3E4LbuHXLMMXGFJDHMeFIF5fisC+nFgNEMGu0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id ECA671286196;
-        Sat,  7 Jan 2023 07:49:29 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id i4Z1xiuT9A2D; Sat,  7 Jan 2023 07:49:29 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1673095769;
-        bh=J9tEidszI5OSDhNzxxshU4pDGQyqa/HcrqWXQLTX1+Q=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=oU41UjFYG+eCt7E7Qi19rAuNq3fOT/3mL/J0KltS9wIbPzqrWI4rSwgtL5OdagsNd
-         mzgzDVwGEHf7gOTadqCKosXxc/DJUCC0SuU3/6KyRI7HsHMLR1EW7vAHCOJ3S8/jn1
-         hDE3E4LbuHXLMMXGFJDHMeFIF5fisC+nFgNEMGu0=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1AD161286190;
-        Sat,  7 Jan 2023 07:49:29 -0500 (EST)
-Message-ID: <cefe7e4b604c11dfd3f8b934d53307c364e28d97.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] SCSI fixes for 6.1-rc2
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>
-Date:   Sat, 07 Jan 2023 07:49:27 -0500
-In-Reply-To: <yq1h6x2zj3f.fsf@ca-mkp.ca.oracle.com>
-References: <f0bc7090c04bc6c0b08471494324a3a577c2d2a1.camel@HansenPartnership.com>
-         <20230107182826.1ae7b32c@canb.auug.org.au>
-         <yq1h6x2zj3f.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S230092AbjAGUOC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2023 15:14:02 -0500
+Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54EF9C757;
+        Sat,  7 Jan 2023 12:13:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1673122432; bh=HH2eHEZl+y1J6jyFsw9Q2SOJYnKKPuwBJha+gp4jMQ0=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
+         MIME-Version:Content-Type:In-Reply-To;
+        b=mVJXLZ0lmxF42piqDigDJ7sT4KMkjheq7qi2x/2WdCpQ0d/Nn5AZiQgwPnG/ZMsgf
+         8FX9uVlNjmUgqoW82cDztUYMVM3jCBPdXiN3OlBfcQqh8+Xki10DlsCpGHJK/h1vzM
+         YBk/Js7kcCAx56OWmGW9QQ2jlgE7hQ4mRHW5lmbE=
+Received: by b-3.in.mailobj.net [192.168.90.13] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Sat,  7 Jan 2023 21:13:52 +0100 (CET)
+X-EA-Auth: f8+D3POIM0XIqxl0YFEXEeqrBSqzRYP54X7B2nIiew85XgmFGfAKu6vONn6S+H4kXL3dVGALL9yErZamsD/QHyTYkOMaoWOu
+Date:   Sun, 8 Jan 2023 01:43:43 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
+        Deepak R Varma <drv@mailo.com>
+Subject: Re: [PATCH] scsi: aic94xx: Use sysfs_emit in show function callsbacks
+Message-ID: <Y7nSd3MYaXr9llSa@ubun2204.myguest.virtualbox.org>
+References: <Y6XqSnPb/y/GMTiX@qemulion>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y6XqSnPb/y/GMTiX@qemulion>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2023-01-07 at 06:50 -0500, Martin K. Petersen wrote:
-> 
-> Stephen,
-> 
-> > I thought that this one was to be removed as the pktcdvd drivers
-> > removal is being reverted in the block tree in linux-next (and the
-> > revert caused a build failure in linux-next due to this scsi
-> > commit).
-> 
-> Yep, my bad. Got sidetracked debugging a few unrelated issues
-> yesterday and didn't get to the point where I finish up and push my
-> trees out.
-> 
-> I have dropped the offending commit and pushed 6.2/scsi-fixes
-> separately.
+On Fri, Dec 23, 2022 at 11:20:02PM +0530, Deepak R Varma wrote:
+> According to Documentation/filesystems/sysfs.rst, the show() callback
+> function of kobject attributes should strictly use sysfs_emit instead
+> of sprintf family functions.
+> Issue identified using the coccinelle device_attr_show.cocci script.
+>
+> Signed-off-by: Deepak R Varma <drv@mailo.com>
+> ---
 
-OK, I've got the new tree queued up.  Since the removal caused quite a
-bit of patch motion, let's give it at least one -next run, so I won't
-resend the pull request until Tuesday.
+Hello,
+Requesting a review and feedback on this patch proposal. There are a few other
+similar patches for other scsi drivers that also need your comments. Request to
+also review those.
 
-James
+Thank you,
+./drv
+
+
 
