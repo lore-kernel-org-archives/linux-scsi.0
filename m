@@ -2,82 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85327C46467
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Jan 2023 20:15:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CAA5C46467
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Jan 2023 23:27:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232699AbjAGUPe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Jan 2023 15:15:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56822 "EHLO
+        id S232596AbjAGX14 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Jan 2023 18:27:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230092AbjAGUPd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2023 15:15:33 -0500
-Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89041C757;
-        Sat,  7 Jan 2023 12:15:31 -0800 (PST)
+        with ESMTP id S229627AbjAGX1z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2023 18:27:55 -0500
+Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE1B8B29;
+        Sat,  7 Jan 2023 15:27:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1673122522; bh=bKvF6XExzpo3tcJFGudrK7bxCVIytgLcfpKjdb6b1QA=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
-         MIME-Version:Content-Type:In-Reply-To;
-        b=hh6pKazAq12vT2zUTST3nlwysEicp8c9P9I2aphc24cMn/r7jRB3k6j5JysAwUN7s
-         ozkUpTPK1b6K9Bkr1I6McswLcFlPasdKfgOMEi2kgAddOPZ68RMzS1zfWqAzlkyfKK
-         Nm+wNKoQlV9+3ek9SlzNS4GuEUdwKIi/isCnDPZY=
+        t=1673134064; bh=243Y0TzJ2D908v665xahpwQFJSh6hNC7mDR/20UOnKs=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=MSojlK4Y3uTQeDIrPA85syXVgUiNaCPqOYoimBfHLPOKfoj1idE3cvx/akKaLLwAh
+         imy9wU64dwn38JGEUCxihO/YJnTfK0nzPurH5ZTpPFqC422fsTQ0xrGCEZgdcsHFBU
+         Sv4ksY5vZpMh2eal51n/YrkzX3pXLj1iK94YPH70=
 Received: by b-3.in.mailobj.net [192.168.90.13] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Sat,  7 Jan 2023 21:15:22 +0100 (CET)
-X-EA-Auth: 4UjjkrvfeD6qjgZdzzR81CZATUZCbhLGQGkkS3hP1MhWCYBT2rnPHF837zWj8vAPGNpeOTr137d7A0iDFINztbF9DaRuUydl
-Date:   Sun, 8 Jan 2023 01:45:13 +0530
+        Sun,  8 Jan 2023 00:27:44 +0100 (CET)
+X-EA-Auth: UMiRvEteWx7loArsC6EMhcnhAXqKgsRmaWo8RYB7LYSw+k2e8VklI5XMtcUsExo8E3EuU7LzyqXlqLeh4MXK9JHdMWo16H6C
+Date:   Sun, 8 Jan 2023 04:57:38 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+To:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>,
         Deepak R Varma <drv@mailo.com>
-Subject: Re: [PATCH] scsi: qla4xxx: Use sysfs_emit in show function callsbacks
-Message-ID: <Y7nS0fxWvWnAqRJ4@ubun2204.myguest.virtualbox.org>
-References: <Y5RF+PGBuiXu7UrX@qemulion>
- <Y6DPMipC0V00uUu0@qemulion>
- <Y6wXX9X7TkpnoXZC@qemulion>
+Subject: [PATCH] scsi: elx: libefc_sli: Optimize the same if/else blocks
+Message-ID: <Y7n/6ls2xpUkiGQf@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y6wXX9X7TkpnoXZC@qemulion>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 28, 2022 at 03:45:59PM +0530, Deepak R Varma wrote:
-> On Tue, Dec 20, 2022 at 02:23:06AM +0530, Deepak R Varma wrote:
-> > On Sat, Dec 10, 2022 at 02:10:24PM +0530, Deepak R Varma wrote:
-> > > According to Documentation/filesystems/sysfs.rst, the show() callback
-> > > function of kobject attributes should strictly use sysfs_emit instead
-> > > of sprintf family functions.
-> > > Issue identified using the coccinelle device_attr_show.cocci script.
-> > >
-> > > Signed-off-by: Deepak R Varma <drv@mailo.com>
-> >
-> > Hello,
-> > May I please request a review and feedback on this patch?
->
-> Hello,
-> Requesting a review and feedback on this patch proposal please.
->
-> Thank you,
-> ./drv
+The if and else branches have the exact same code, which then always
+executes independent of the condition evaluation. Simplify the code by
+removing the redundant branching.
+Issue identified using the cond_no_effect Coccinelle semantic patch.
 
-Hello,
-Any comment on this patch proposal please?
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+ drivers/scsi/elx/libefc_sli/sli4.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-Thank you,
-./drv
+diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+index b8c048cdb17f..833fe4bd012e 100644
+--- a/drivers/scsi/elx/libefc_sli/sli4.c
++++ b/drivers/scsi/elx/libefc_sli/sli4.c
+@@ -2317,12 +2317,7 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
+ 		SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
+ 		bls->context_tag = cpu_to_le16(params->vpi);
 
->
-> >
-> > Thank you,
-> > ./drv
-> >
+-		if (params->s_id != U32_MAX)
+-			bls->local_n_port_id_dword |=
+-				cpu_to_le32(params->s_id & 0x00ffffff);
+-		else
+-			bls->local_n_port_id_dword |=
+-				cpu_to_le32(params->s_id & 0x00ffffff);
++		bls->local_n_port_id_dword |= cpu_to_le32(params->s_id & 0x00ffffff);
+
+ 		dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
+ 			       (params->d_id & SLI4_BLS_RSP_RID);
+--
+2.34.1
+
 
 
