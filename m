@@ -2,88 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 300B5C54EBD
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 19:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA314C61DB3
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 19:54:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233268AbjAHTOL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Jan 2023 14:14:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42782 "EHLO
+        id S234046AbjAHTyB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Jan 2023 14:54:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233104AbjAHTOK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 14:14:10 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9541964D1;
-        Sun,  8 Jan 2023 11:14:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1673205241; bh=3IgVzGcbKlvB9iXK55wFWtWMolgT1lNBS+PC0hqxscw=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-         Content-Type;
-        b=mTWVk3o4hQ4l049eOGat8J9TwAcHF+OEF2WPdZG2gmlSSFeA6hOfJVb4VWyimbCYK
-         YbPjal41i6J5nB8p82eJJcxEmJEgb9U0T+GLeXiIEMykkE0PGx/Xij8lMUJPV0s/l+
-         T8MxhDisbghNhyYQ4fV7Dfc8++TYU1Y0b25Y2jag=
-Received: by b-3.in.mailobj.net [192.168.90.13] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Sun,  8 Jan 2023 20:14:01 +0100 (CET)
-X-EA-Auth: CYo250FgwwXLDinjEhWIxunfu44PrNgg365QQUi/nkLXQDHLIAwfIj1J7A/8XMObPNptZNvzbbsysxgpl5lJTs5HVeZ3w5V9
-Date:   Mon, 9 Jan 2023 00:43:56 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: [PATCH] scsi: Replace printk+WARN_ON by WARN macro
-Message-ID: <Y7sV9A+lE5uN9AxT@ubun2204.myguest.virtualbox.org>
+        with ESMTP id S233293AbjAHTx7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 14:53:59 -0500
+Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7B31D137
+        for <linux-scsi@vger.kernel.org>; Sun,  8 Jan 2023 11:53:58 -0800 (PST)
+Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
+        by amity.mint.lgbt (Postfix) with ESMTP id 4Nqnnx27N4z1S5FQ
+        for <linux-scsi@vger.kernel.org>; Sun,  8 Jan 2023 14:53:57 -0500 (EST)
+Authentication-Results: amity.mint.lgbt (amavisd-new);
+        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
+        header.d=mint.lgbt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
+        content-transfer-encoding:mime-version:x-mailer:message-id:date
+        :subject:to:from; s=dkim; t=1673207636; x=1674071637; bh=9dsgbhg
+        A9vnJIYjG6YuVbFl47O4RVEcVJHNR4rpiPy0=; b=pXks/KWScelK/lBld7jZJZo
+        b4I5e0ozw49Dhv0+vcX9G5q9mK1iPpe8mpFMU0CC8M6Kv+qr27mPl1dnTQU6lEXn
+        X95pVy3nMlpLa7nYkcGO0IJx7G5YRTKz603oydBk45+qj4AXQ7mmmPQKhVSfy9c2
+        V+AhsGQAxhCzRwxGVFQf9QNisS0ves8+2wK1lvehW+8M1SXbaCXaYDxWymu/yJmo
+        gBIgAZAqdt5ZNeeCIHlGfKwY8MlOXy7MfXW+5YvbfvpTxF9jyU/0EnzKgVBrG1QL
+        6hBym9KB6RGEHx7N/+WodRy4aJZOOslAl8KJgJSWxcoqQGUaFSo6KlpT+tRUSfg=
+        =
+X-Virus-Scanned: amavisd-new at amity.mint.lgbt
+Received: from amity.mint.lgbt ([127.0.0.1])
+        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id lgErADerkXLq for <linux-scsi@vger.kernel.org>;
+        Sun,  8 Jan 2023 14:53:56 -0500 (EST)
+Received: from dorothy.. (unknown [186.105.5.197])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4Nqnnj34NHz1S56d;
+        Sun,  8 Jan 2023 14:53:45 -0500 (EST)
+From:   Lux Aliaga <they@mint.lgbt>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org, keescook@chromium.org,
+        tony.luck@intel.com, gpiccoli@igalia.com
+Cc:     ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
+        phone-devel@vger.kernel.org, martin.botka@somainline.org,
+        marijn.suijten@somainline.org
+Subject: [PATCH v6 0/6] arm64: dts: qcom: sm6125: UFS and xiaomi-laurel-sprout support
+Date:   Sun,  8 Jan 2023 16:53:30 -0300
+Message-Id: <20230108195336.388349-1-they@mint.lgbt>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A combination of printk() followed by WARN_ON() macro can be simplified
-using a single WARN(1, ...) macro. Patch change suggested by warn.cocci
-Coccinelle semantic patch.
+Introduce Universal Flash Storage support on SM6125 and add support for t=
+he Xiaomi Mi A3 based on the former platform. Uses the name xiaomi-laurel=
+-sprout instead of the official codename (laurel_sprout) due to naming li=
+mitations in the kernel.
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
----
- drivers/scsi/initio.c   | 3 +--
- drivers/scsi/scsi_lib.c | 6 ++----
- 2 files changed, 3 insertions(+), 6 deletions(-)
+Changes since v5:
+- Drop "non-removable" property from ufs_mem_hc for sm6125 platform
+- Drop "status" and "autorepeat" properties from gpio-keys node for xiaom=
+i-laurel-sprout
+- Rename "key-vol-up" node to "key-volume-up" for xiaomi-laurel-sprout
+- Drop "gpio-key,wakeup" property from key-volume-up node for xiaomi-laur=
+el-sprout
+- Set "linux,input-type" and "wakeup-source" properties on key-volume-up =
+node for xiaomi-laurel-sprout
+- Change "key_vol_up" node name to "vol-up-n-state" and its label to "vol=
+_up_n" in PM6125 GPIO node for xiaomi-laurel-sprout
+- Use labels instead of node names for PM6125 ADC channels in xiaomi laur=
+el-sprout
+- Set "regulator-allow-set-load" properties on l4, l5, l10, l11, l18 and =
+l24 regulators on xiaomi-laurel-sprout
 
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 375261d67619..fea591d9d292 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2738,8 +2738,7 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
- 	host = (struct initio_host *) host_mem;
- 	cblk = (struct scsi_ctrl_blk *) cblk_mem;
- 	if ((cmnd = cblk->srb) == NULL) {
--		printk(KERN_ERR "i91uSCBPost: SRB pointer is empty\n");
--		WARN_ON(1);
-+		WARN(1, KERN_ERR "i91uSCBPost: SRB pointer is empty\n");
- 		initio_release_scb(host, cblk);	/* Release SCB for current channel */
- 		return;
- 	}
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9ed1ebcb7443..96c9a561973e 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3009,10 +3009,8 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
- 	}
- 
- 	if (unlikely(i == sg_count)) {
--		printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
--			"elements %d\n",
--		       __func__, sg_len, *offset, sg_count);
--		WARN_ON(1);
-+		WARN(1, printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, elements %d\n",
-+					__func__, sg_len, *offset, sg_count);
- 		return NULL;
- 	}
- 
--- 
-2.34.1
+v5: https://lore.kernel.org/linux-devicetree/20221231222420.75233-2-they@=
+mint.lgbt/
 
 
 
