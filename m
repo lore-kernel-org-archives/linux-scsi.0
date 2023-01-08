@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A47FC53210
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 15:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3FF4C54EBE
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 16:29:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234558AbjAHPTW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Jan 2023 10:19:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46606 "EHLO
+        id S236091AbjAHQ3P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Jan 2023 11:29:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233807AbjAHPTL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 10:19:11 -0500
+        with ESMTP id S234911AbjAHQ3N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 11:29:13 -0500
 Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82547DF32;
-        Sun,  8 Jan 2023 07:19:10 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D91459FE0;
+        Sun,  8 Jan 2023 08:29:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1673191141; bh=A/eTZH7R8HYi3G8I9qn02EbBgc4fZ4a7jDAb8QMp5Ys=;
+        t=1673195336; bh=3tCq7DRIRkJTLbdjKV6gP++U0oYYC0TWrEsd3ZKpEU4=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
          Content-Type;
-        b=osnVmplmhvSBBoGzBLw94CL+qOdSJTKctykFzv6GB1khlj1gNR42T6cuXJ5wCiWRk
-         D43WD9rTDMX4po3OPLawBkHpncJDRiqamwm1u29RAfaCGq0BGITF4hXvp0wBJWZNQZ
-         AvXdJdESSornM0VrIbiTZcP3rn2wXtoCrG1WR04I=
-Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
+        b=KBhSLm0HH2jhGgyH/gtvMHnhnuyw2vmFTcCbU8xMLmJpr6CLa+i2+FHtfSKyrpgxU
+         rZzwmRZW97s+QlwzJw+aofqRk9AhZ5l41cOXAHW4kU9XrV7LArCZwfaB/bkBNuWIfA
+         Jh8Awvj3wd2vEOVdCOZWhptWu9DPegJvaKRse2QY=
+Received: by b-5.in.mailobj.net [192.168.90.15] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Sun,  8 Jan 2023 16:19:01 +0100 (CET)
-X-EA-Auth: +LxKYHCdtFrREOXbK0ZeZCL9zE7QZ+NmrD0pJzlqCIVZmuEPfq60W4RWKXNWI4IyuKpPOJwbR5xYtnq3/cO2C8Tkc9zImSv6
-Date:   Sun, 8 Jan 2023 20:48:56 +0530
+        Sun,  8 Jan 2023 17:28:56 +0100 (CET)
+X-EA-Auth: WXvDAjjwuLqpyOTH6avyGjsi3RNEzYCUpX0Cbj/7dwRDF+CtlaXdIhtiLmLfBJn422sz3zAWdjDHgvJdmjnPVhYz3pncpjMd
+Date:   Sun, 8 Jan 2023 21:58:51 +0530
 From:   Deepak R Varma <drv@mailo.com>
 To:     Brian King <brking@us.ibm.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -33,8 +33,8 @@ To:     Brian King <brking@us.ibm.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: [PATCH] scsi: ipr: Convert ipr_probe_ioa_part2 as void
-Message-ID: <Y7re4OsT80mLPbQI@ubun2204.myguest.virtualbox.org>
+Subject: [PATCH v2] scsi: ipr: Convert ipr_probe_ioa_part2 as void
+Message-ID: <Y7rvQyMOGcPKPTv8@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -50,19 +50,22 @@ Issue identified using returnvar Coccinelle semantic patch.
 
 Signed-off-by: Deepak R Varma <drv@mailo.com>
 ---
- drivers/scsi/ipr.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+Changes in v2:
+   - retain and update Return value comment in function documentation
+
+ drivers/scsi/ipr.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 2022ffb45041..2e3e12c83277 100644
+index 2022ffb45041..dfb759fbbd87 100644
 --- a/drivers/scsi/ipr.c
 +++ b/drivers/scsi/ipr.c
-@@ -9504,12 +9504,9 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
-  * Description: This is the second phase of adapter initialization
+@@ -9505,11 +9505,10 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
   * This function takes care of initilizing the adapter to the point
   * where it can accept new commands.
-- * Return value:
+  * Return value:
 - * 	0 on success / -EIO on failure
++ *     none
   **/
 -static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
 +static void ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
@@ -71,7 +74,7 @@ index 2022ffb45041..2e3e12c83277 100644
  	unsigned long host_lock_flags = 0;
 
  	ENTER;
-@@ -9525,7 +9522,6 @@ static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+@@ -9525,7 +9524,6 @@ static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
  	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
 
  	LEAVE;
@@ -79,7 +82,7 @@ index 2022ffb45041..2e3e12c83277 100644
  }
 
  /**
-@@ -10568,12 +10564,7 @@ static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+@@ -10568,12 +10566,7 @@ static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
  		return rc;
 
  	ioa_cfg = pci_get_drvdata(pdev);
