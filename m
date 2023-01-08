@@ -2,95 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 226B7C54EBD
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 20:38:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F18D3C54EBC
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 22:41:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234936AbjAHUil (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Jan 2023 15:38:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45316 "EHLO
+        id S229613AbjAHWlR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Jan 2023 17:41:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233278AbjAHUii (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 15:38:38 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24C53B7CB;
-        Sun,  8 Jan 2023 12:38:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1673210308; bh=W+GnkAId60B8+kx0qvRInY7BmXQ5CWhNPxJNlVxnWps=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-         Content-Type;
-        b=WO8xqzGC5rsnJJdsnSP6uUJG+ofmj5qDZXnzRzc/SLs2pt1Ov/ZN4l4DCVvtoWO21
-         8T5KPzjrQ6P21iP69LyeqB5CAdt/YR/1SmJGKM1bWYO4R8OetQKjq2kEGB9QE/qsBX
-         PdbVrWh3kG28Hb4gTLGjLByPc2osXE6lUEk6gLaM=
-Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Sun,  8 Jan 2023 21:38:28 +0100 (CET)
-X-EA-Auth: RDzrUikqaR2vh1gQOWWDaBwjRimXsJMMIR4iHIYZyDQbTtUHXyag5PB6pfZf1T3uhwuhbmm6qlgjgxxm5+SLT+gno3cQLH6p
-Date:   Mon, 9 Jan 2023 02:08:24 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: [PATCH] scsi: qla2xxx: Use a variable for repeated mem_size
- computation
-Message-ID: <Y7spwF8HTt0c0l7y@ubun2204.myguest.virtualbox.org>
+        with ESMTP id S233365AbjAHWlP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 17:41:15 -0500
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AAA2F58A;
+        Sun,  8 Jan 2023 14:41:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1673217670;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=f16eun26LqjQiVPkfU+1B6k/v64vZBOWJYXVU/5iBzc=;
+    b=Wkv2DjaDALvsJWnsQ8U71alglK4S2WOD6ForyqaLmTL3cGonUixvePG2qOS0ieupIx
+    MYDlrrFlWNLecCdf6SvUSy3ZVwJEE4kVQ9unwyPSwliZCGCTg1vlM6BzlBkbQPpCAXJ6
+    5PZ84xw2IKOez/+LI00xqLPe16rPppg0B9x1rI1uK94EzWpKUkGNOFT5nXs6qOOE2GXn
+    +jO31jVaO/Ynj4NwwTqwBlYiej/CXvNulhKxChzsIo6UX0o543KYha+5F9X1R4fiX8/A
+    pnvfa040zuHRPMLtqLEE6n/a3drumGIcr32u5bV8pndmdV0mT0d1AD9/jnKVC0lUjafg
+    sgUg==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1UnWvo/SqbTSXcQZxAZvLxWc5msS6txu0oUh"
+X-RZG-CLASS-ID: mo00
+Received: from blinux.speedport.ip
+    by smtp.strato.de (RZmta 48.2.1 AUTH)
+    with ESMTPSA id 905423z08Mf8Ae8
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Sun, 8 Jan 2023 23:41:08 +0100 (CET)
+From:   Bean Huo <beanhuo@iokpp.de>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+        quic_cang@quicinc.com, quic_xiaosenh@quicinc.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bean Huo <beanhuo@iokpp.de>
+Subject: [PATCH v2 0/3] Several compilation warnings fixes for UFS Advanced RPMB
+Date:   Sun,  8 Jan 2023 23:40:54 +0100
+Message-Id: <20230108224057.354438-1-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use a variable to upfront compute memory size to be allocated, instead of
-repeatedly computing the memory size at different instructions. The reduced
-instruction length also allows to tidy up the code. Issue identified using
-the array_size_dup Coccinelle semantic patch.
+Hi Martin,
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+These patches are to fix several compilation warnings introduced by my commit:
+6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support in ufs_bsg"),
+please consider this patch series for the next your merge window.
+Apologies for this!!
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 8fa0056b56dd..8024322c9c5a 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1552,6 +1552,7 @@ static const struct qla_tgt_func_tmpl tcm_qla2xxx_template = {
- static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
- {
- 	int rc;
-+	size_t map_sz;
- 
- 	rc = btree_init32(&lport->lport_fcport_map);
- 	if (rc) {
-@@ -1559,17 +1560,15 @@ static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
- 		return rc;
- 	}
- 
--	lport->lport_loopid_map =
--		vzalloc(array_size(65536,
--				   sizeof(struct tcm_qla2xxx_fc_loopid)));
-+	map_sz = array_size(65536, sizeof(struct tcm_qla2xxx_fc_loopid));
-+
-+	lport->lport_loopid_map = vzalloc(map_sz);
- 	if (!lport->lport_loopid_map) {
--		pr_err("Unable to allocate lport->lport_loopid_map of %zu bytes\n",
--		    sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
-+		pr_err("Unable to allocate lport->lport_loopid_map of %zu bytes\n", map_sz);
- 		btree_destroy32(&lport->lport_fcport_map);
- 		return -ENOMEM;
- 	}
--	pr_debug("qla2xxx: Allocated lport_loopid_map of %zu bytes\n",
--	       sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
-+	pr_debug("qla2xxx: Allocated lport_loopid_map of %zu bytes\n", map_sz);
- 	return 0;
- }
- 
+
+
+Changelog:
+
+V1--V2:
+    1. Add new patches 2/3 and 3/3.
+
+
+Bean Huo (3):
+  scsi: ufs: core: bsg: Fix sometimes-uninitialized warnings
+  scsi: core: Fix invisible definition compilation warning
+  scsi: ufs: core: bsg: Fix cast to restricted __be16 warning
+
+ drivers/ufs/core/ufs_bsg.c       |  4 ++--
+ include/uapi/scsi/scsi_bsg_ufs.h | 12 ++++++------
+ include/ufs/ufshcd.h             |  1 +
+ 3 files changed, 9 insertions(+), 8 deletions(-)
+
 -- 
-2.34.1
-
-
+2.25.1
 
