@@ -2,88 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7121C54EBD
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 22:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2B9C54EBD
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Jan 2023 23:40:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231378AbjAHWoy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Jan 2023 17:44:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34250 "EHLO
+        id S231229AbjAHXkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Jan 2023 18:40:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229937AbjAHWot (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 17:44:49 -0500
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA577F036;
-        Sun,  8 Jan 2023 14:44:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1673217671;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=gaLa1rSJhxlmjdIWXyAhwDAq4r+726KZF2WV60kFgUw=;
-    b=fZY2SLl7U6f8IAx1H6o6cM6awDRvZZOvSh9gE8wDoNzM5D8zGYwervlmL8XKgiDxXI
-    UkBcsVrmVvmLBOD303uyd537xPTnXWXVlG4K6DfeLiqvZ10nNiJZrYM5epRt2Y+1JObe
-    swK5COZHXDKT7tWzgxXtTOMheoWHrqUygpDvSz0T0QEvY28/lOK3hA1Gn73+RP18C7f3
-    +W3DSCMHo6dMaTlDVhF0WBQR7qW/6CG8bQ3cW2CFn6mLaicM1JVLvsjUtGpjtrsMrOwK
-    bEmseA/N20T54Kb/MHsU7J6anrdLZUeRAjX1sAv6f4WkHgZ9cabYqs5cRenk0O2ogHvD
-    S5ng==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1UnWvo/SqbTSXcQZxAZvLxWc5msS6txu0oUh"
-X-RZG-CLASS-ID: mo02
-Received: from blinux.speedport.ip
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id 905423z08MfAAeA
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Sun, 8 Jan 2023 23:41:10 +0100 (CET)
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+        with ESMTP id S230334AbjAHXkp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jan 2023 18:40:45 -0500
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58AD310566;
+        Sun,  8 Jan 2023 15:40:23 -0800 (PST)
+Received: by mail-pj1-f54.google.com with SMTP id o8-20020a17090a9f8800b00223de0364beso10991720pjp.4;
+        Sun, 08 Jan 2023 15:40:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=aSpsWrXJfBg68rx5ebvZJ1VDSNR4IRkVbz99lzlH66o=;
+        b=WEe/LJ7HDr8ZklF999jVMAE0k+lGnRFFaDNkHrKvg2ngJjePn0101mrZQJJpb5zDNp
+         PuNnpVQdvEHw+BP8wMcwiDhyILEemrkM/OyGZxXj1m3o08to5h8hNen+oM49hlWfo1Z9
+         5fpdldtM2r527dQpSAzdmvJWYaq5WPfcuzy2eDwop4OwvOsUV+dKL8WzBGxoIT5qodgX
+         wnGsD1ZdG+G5CJLAqmBql+mMdkS9US6Ez9cbKRkMbnAp6/D5czSwixCBTHUHXE+xMEtD
+         qWIGrU2rwdbdIEXBWyPZsABsHS/qC997CBDMpbh5Q/LXbZVWAoWSHl74wafHLxJezAJb
+         FqwA==
+X-Gm-Message-State: AFqh2ko+x6vJRQYIqj5hSWcjn+A3DR2rkTs1dn3svQ0vOsJyfCcae7L4
+        7LgPAE5xFkuXCeBQ1YDeq1I=
+X-Google-Smtp-Source: AMrXdXvxoJkajP6OPO7YWgY41e11NI+SxAug0wlOqSZMf+SPUffR/T0+ZgBTolRa1gfQo8+YiMLPsA==
+X-Received: by 2002:a17:902:f80c:b0:189:a934:ee3e with SMTP id ix12-20020a170902f80c00b00189a934ee3emr72416345plb.62.1673221222742;
+        Sun, 08 Jan 2023 15:40:22 -0800 (PST)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id q5-20020a170902eb8500b001801aec1f6bsm4654584plg.141.2023.01.08.15.40.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 08 Jan 2023 15:40:21 -0800 (PST)
+Message-ID: <c948ae95-e543-7a03-db76-711eed624b94@acm.org>
+Date:   Sun, 8 Jan 2023 15:40:20 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH v2 0/3] Several compilation warnings fixes for UFS
+ Advanced RPMB
+Content-Language: en-US
+To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
         quic_cang@quicinc.com, quic_xiaosenh@quicinc.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] scsi: core: Fix invisible definition compilation warning
-Date:   Sun,  8 Jan 2023 23:40:56 +0100
-Message-Id: <20230108224057.354438-3-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230108224057.354438-1-beanhuo@iokpp.de>
 References: <20230108224057.354438-1-beanhuo@iokpp.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230108224057.354438-1-beanhuo@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On 1/8/23 14:40, Bean Huo wrote:
+> These patches are to fix several compilation warnings introduced by my commit:
+> 6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support in ufs_bsg"),
+> please consider this patch series for the next your merge window.
 
-In 'include/ufs/ufshcd.h' file, 'enum dma_data_direction' will be used,
-which is defined in linux/dma-direction.h, however, this header file is
-not included in ufshcd.h, thus causing the following compilation warning:
+For the entire series:
 
-"warning: ‘enum dma_data_direction’ declared inside parameter list will
-not be visible outside of this definition or declaration"
-
-Fix this warning by including 'linux/dma-direction.h'.
-
-Fixes: 6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support in ufs_bsg")
-Reported-by: Xiaosen He <quic_xiaosenh@quicinc.com>
-Reported-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- include/ufs/ufshcd.h | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index dd5912b4db77..e44a41abcc05 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -17,6 +17,7 @@
- #include <linux/blk-mq.h>
- #include <linux/devfreq.h>
- #include <linux/pm_runtime.h>
-+#include <linux/dma-direction.h>
- #include <scsi/scsi_device.h>
- #include <ufs/unipro.h>
- #include <ufs/ufs.h>
--- 
-2.25.1
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
