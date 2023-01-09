@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4107C54EBE
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Jan 2023 23:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF0A4C54EBD
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Jan 2023 23:22:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237743AbjAIXWy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Jan 2023 18:22:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52928 "EHLO
+        id S235571AbjAIXWz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Jan 2023 18:22:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237616AbjAIXWv (ORCPT
+        with ESMTP id S237653AbjAIXWv (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2023 18:22:51 -0500
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CEDD959C
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2023 15:22:47 -0800 (PST)
-Received: by mail-pl1-x62c.google.com with SMTP id jl4so11288692plb.8
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Jan 2023 15:22:47 -0800 (PST)
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8D305FFD
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2023 15:22:50 -0800 (PST)
+Received: by mail-pl1-x62d.google.com with SMTP id jn22so11266665plb.13
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Jan 2023 15:22:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Ir9HGZ45FJzt0JfYeTk3McJ+X2KaO54ZpeNTElTDStE=;
-        b=oKLj8WKoCvLJ0Y+mWcyeGfwvr3lXIr3dcv3KW2NjBwWN6+O7MAc8L200WPbdpYCP1X
-         8N6nOwSANteq0xVV6uYwf5iJi/UCatoNk/4r31OpX1r6jaf2dXIr8EREr8u5KIMmDJi2
-         tJnF8BuAdeworZLeHfp8elobwRCKAN0PkRqkqclo7k6n03SgYQxR8qb1sh5AA5mdGOa2
-         V6BtJ0tKfg/1a8hue/ST6Cd++S0VjdFjNF+uZ8D+Paf/vCfN77tyAalY7FYNYMvKPurf
-         gamTt74IMwmu4BN4zK8BXqHBuudynGS8Qt9IyEf0LQgF6fqdQUqCg5exmgEq1qeC65qV
-         4HlQ==
+        bh=sTGlDQjCAI8x+EKU12D0EsHSkX6w9bmXQmp0JVE1HUE=;
+        b=EfZ3JgQ49IdE4G8GUjHUT2/Cvwe951W1bS9tuM+cUhJFAP5xj+Yy9WLSDeNE1HkEmR
+         6NnNlRu87OVw9ES0xqkutooDB+8Y4ckKWgBlPNuwQJgytDDnj688rORN2t6EvCpQcJZB
+         VRdbGi6jYJJwJAy3yBoqcFlp0/qLAqfEuXDbWTodWNcizmC1sYtaz4AqJwCT/5lYUKW3
+         zto0+dLXwSS5AvZXC6l5PuupeBytaVFWMljpquUEgEXrojFF2JVfx758f+YSVH77y5PU
+         wx7kZ5sW9rZeWfGMFMqP7k/Hoqv5tTRt8p2zSTgVTPnEW7Vho2u8Z1sZJeXoFgjNyT5G
+         QhfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Ir9HGZ45FJzt0JfYeTk3McJ+X2KaO54ZpeNTElTDStE=;
-        b=kAIgBdBQo/j8mPNrihb2Xw90yL053ckmUDS9PtXd0nAlGhI6thS4EFT7ahWz06cA4v
-         p1ExdEVCze/0jDrLbw0P457sbW0QPm/Bha+hvN5k+fLHlEMZVIh9OanZ1MD48hbr1dds
-         nN7rtNEESkcUoLd8mAtlliTYUpaevwD48k436KSeXq+X34pg62uFvJU1aNnzrFEqD1Jj
-         YA3wHqrF8SusyjGUhGYkZog1BruJhXrKJ7IYYpl/lJrV7vGgtlVV3cKaylHD/0Nl4TYk
-         tlSDMp0JFAyp1Y/lvbdNgUGqV14agwwqPEUpOdLZn2XsOYqsImALDE3Ku2dk822nH2Ov
-         3LlA==
-X-Gm-Message-State: AFqh2kp0OmFTCWcyV8HURJC3ddrxrNnr0Ium/z8SdqTmibYjMuyL7elw
-        rGp3AH6JtMJOmazHS/GEyLWdteEsIt0=
-X-Google-Smtp-Source: AMrXdXsrqGevRoCXUPf5LTStJbPKSBfAkN1qAFYPNkvqF6FYaOUIy4GQPJjftOHIednitIvwlilTPg==
-X-Received: by 2002:a17:902:74c1:b0:193:2bc9:eb25 with SMTP id f1-20020a17090274c100b001932bc9eb25mr6146244plt.20.1673306566478;
-        Mon, 09 Jan 2023 15:22:46 -0800 (PST)
+        bh=sTGlDQjCAI8x+EKU12D0EsHSkX6w9bmXQmp0JVE1HUE=;
+        b=bTZWimm03/BOSv9xIrnVpa5sZDpb5ni7Jc0tPEJfE+cljlQ2MA+3306EqHZkcvFcgs
+         ST467wW9gB3Ti1iyFiFp6PzADKir4yQvANRKfOjAdFP1T3Qq9dQF1KRLu1HW7ZqvvprI
+         mya3mD3VoHXdQ2Nvtmd6UV4qh4czXT5HNao7TnyB9l0//QPjJ9qJqpYdmEj7sDsJUiSZ
+         RwNc/QqIOjThLYotM+pojyETFa/Lmn5EyxiZXe8IilpmeWL0rJfKLfbAShtdvAHDrHLj
+         1TIj9xvSXHc+AgZl6yzAOeEeUnI7S63OJqdhIxX8elrCwJAC8U0lxk4c3jZWcyTJvm3T
+         fdhQ==
+X-Gm-Message-State: AFqh2kqwWajU3CQeXTch3T0u/Bpuq58XpVWgl44Ul/epLWr7s9Rd/CeL
+        MdBTYT2tSz67J8VTq0obtBJ6p5nUrEQ=
+X-Google-Smtp-Source: AMrXdXtg1QlkaT9H8QMRxure/acA2kdIH4LufT2ZeyRwoSBoX1nTboTg7RArJdyJCcAXdwTiFM5YCQ==
+X-Received: by 2002:a17:903:240b:b0:192:991f:d8e8 with SMTP id e11-20020a170903240b00b00192991fd8e8mr47417222plo.53.1673306570073;
+        Mon, 09 Jan 2023 15:22:50 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d22-20020a170902aa9600b001871461688esm6628572plr.175.2023.01.09.15.22.45
+        by smtp.gmail.com with ESMTPSA id d22-20020a170902aa9600b001871461688esm6628572plr.175.2023.01.09.15.22.49
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 09 Jan 2023 15:22:46 -0800 (PST)
+        Mon, 09 Jan 2023 15:22:49 -0800 (PST)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
         Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 05/12] lpfc: Remove redundant clean up code in disable_vport
-Date:   Mon,  9 Jan 2023 15:33:10 -0800
-Message-Id: <20230109233317.54737-6-justintee8345@gmail.com>
+Subject: [PATCH 07/12] lpfc: Exit PRLI completion handling early if ndlp not in PRLI_ISSUE state
+Date:   Mon,  9 Jan 2023 15:33:12 -0800
+Message-Id: <20230109233317.54737-8-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20230109233317.54737-1-justintee8345@gmail.com>
 References: <20230109233317.54737-1-justintee8345@gmail.com>
@@ -65,53 +65,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The disable_vport path calls the discovery state machine on all ndlps, puts
-them into NPR state, and then calls lpfc_cleanup_rpis with the remove flag
-set.  This unintentionally decrements an ndlp's kref twice and can result
-in premature release of an ndlp because lpfc_dev_loss_tmo_handler triggers
-clean up of the ndlp again later.
+In a large SAN testing configuration, frequent target port toggle tests are
+occasionally resulting in missing lun path rediscoveries.  An outstanding
+PRLI can be inflight when a target RSCN dissappearance occurs, causing
+the driver to retry PRLIs using invalid rpi contexts.
 
-Remove redundant code in disable_vport that sets all the ndlps to NPR, and
-change the call to cleanup_rpis to not remove the ndlps.
-lpfc_dev_loss_tmo_handler will handle final removal of the ndlps.
+Fix by verifying that an ndlp's state was not restarted from PRLI_ISSUE
+due to an intermediate RSCN.  If not in a valid state, early exit PRLI
+completion handling.
+
+The last follow up RSCN indicating target reappearance retriggers
+PLOGI/PRLI with a valid rpi context and is expected to succeed in lun path
+rediscovery.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_vport.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-index 4d171f5c213f..5aeda245369b 100644
---- a/drivers/scsi/lpfc/lpfc_vport.c
-+++ b/drivers/scsi/lpfc/lpfc_vport.c
-@@ -534,7 +534,7 @@ disable_vport(struct fc_vport *fc_vport)
- {
- 	struct lpfc_vport *vport = *(struct lpfc_vport **)fc_vport->dd_data;
- 	struct lpfc_hba   *phba = vport->phba;
--	struct lpfc_nodelist *ndlp = NULL, *next_ndlp = NULL;
-+	struct lpfc_nodelist *ndlp = NULL;
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 919741bbe267..4d3b8f2036d2 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2373,15 +2373,30 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		/* PRLI failed */
+ 		lpfc_printf_vlog(vport, mode, loglevel,
+ 				 "2754 PRLI failure DID:%06X Status:x%x/x%x, "
+-				 "data: x%x\n",
++				 "data: x%x x%x\n",
+ 				 ndlp->nlp_DID, ulp_status,
+-				 ulp_word4, ndlp->fc4_prli_sent);
++				 ulp_word4, ndlp->nlp_state,
++				 ndlp->fc4_prli_sent);
  
- 	/* Can't disable during an outstanding delete. */
-@@ -546,17 +546,7 @@ disable_vport(struct fc_vport *fc_vport)
- 		(void)lpfc_send_npiv_logo(vport, ndlp);
+ 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+ 		if (!lpfc_error_lost_link(ulp_status, ulp_word4))
+ 			lpfc_disc_state_machine(vport, ndlp, cmdiocb,
+ 						NLP_EVT_CMPL_PRLI);
  
- 	lpfc_sli_host_down(vport);
--
--	/* Mark all nodes for discovery so we can remove them by
--	 * calling lpfc_cleanup_rpis(vport, 1)
--	 */
--	list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes, nlp_listp) {
--		if (ndlp->nlp_state == NLP_STE_UNUSED_NODE)
--			continue;
--		lpfc_disc_state_machine(vport, ndlp, NULL,
--					NLP_EVT_DEVICE_RECOVERY);
--	}
--	lpfc_cleanup_rpis(vport, 1);
-+	lpfc_cleanup_rpis(vport, 0);
- 
- 	lpfc_stop_vport_timers(vport);
- 	lpfc_unreg_all_rpis(vport);
++		/* The following condition catches an inflight transition
++		 * mismatch typically caused by an RSCN. Skip any
++		 * processing to allow recovery.
++		 */
++		if (ndlp->nlp_state >= NLP_STE_PLOGI_ISSUE &&
++		    ndlp->nlp_state <= NLP_STE_REG_LOGIN_ISSUE) {
++			lpfc_printf_vlog(vport, KERN_WARNING, LOG_NODE,
++					 "2784 PRLI cmpl: state mismatch "
++					 "DID x%06x nstate x%x nflag x%x\n",
++					 ndlp->nlp_DID, ndlp->nlp_state,
++					 ndlp->nlp_flag);
++				goto out;
++		}
++
+ 		/*
+ 		 * For P2P topology, retain the node so that PLOGI can be
+ 		 * attempted on it again.
+@@ -4673,6 +4688,15 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				/* the nameserver fails */
+ 				maxretry = 0;
+ 				delay = 100;
++			} else if (cmd == ELS_CMD_PRLI &&
++				   ndlp->nlp_state != NLP_STE_PRLI_ISSUE) {
++				/* State-command disagreement.  The PRLI was
++				 * failed with an invalid rpi meaning there
++				 * some unexpected state change.  Don't retry.
++				 */
++				maxretry = 0;
++				retry = 0;
++				break;
+ 			}
+ 			retry = 1;
+ 			break;
 -- 
 2.38.0
 
