@@ -2,150 +2,151 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7FC5C54EBD
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Jan 2023 20:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88C6DC54EBD
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Jan 2023 20:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237264AbjAIUHK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Jan 2023 15:07:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34172 "EHLO
+        id S237550AbjAIUHh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Jan 2023 15:07:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237609AbjAIUHH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2023 15:07:07 -0500
+        with ESMTP id S236528AbjAIUHf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2023 15:07:35 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A497A193C8
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2023 12:07:06 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 309JvNYf005070;
-        Mon, 9 Jan 2023 20:07:05 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AE5118E1C
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2023 12:07:34 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 309K1vUi028676;
+        Mon, 9 Jan 2023 20:07:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=ESyPDxtcODJaqxFn4b1BsHosQyP2Fu28hZ6QBB3N78w=;
- b=KWtEjMagbxPNgU2GqtygqMqU8jvQqzCUttJONj7a8v+p7XSyimwQq6pWgu8Jju4Kqxbl
- s7PcaqRF75ms5g+obznqMJkLVegtjevTxXoXWu5CKqZYRyF/6tJLvsmGMfH1MLGY7nNV
- yLLjiei4zlKHpvg13b8JEDbLo6UeGjiWlB4g5zQwvg6WImhlmh3mPIYIsbzFEVDk9A79
- vbmboYtT+r37u7mCTsqxoCM9SPz/CMixw/iMTbW8EeM4QhTeo0R5XS2psS2UUtDZY6VZ
- 5bLmUYVTattOdSiDocr/Cj5ZI/sNmEND6PJRKsBZ1SKkHHXi9ne8YD6HO/2RckfWrjHy HA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mydxmayu8-1
+ bh=PE4eUuITQPGDfbeOVm7phYlTvJTxNV7sIpHU3Y+OO3E=;
+ b=Uo/iabM1MOID1pUmzwXTPtOGHWzkWzkcM7XaK7yfAqt4B8RSZAtdoZnyclvRYt8yjuoX
+ cj5L08NbsX7i6INQjt2Uv9mQOFfMDS+rjfjkbnr87Xx5C4ZpalBGxCTmnjsxV0Ak9OpD
+ Y+sF0J1PqNASrilpjKy3fygdA7pXZ0zR9j45fiU0S49d5k610ldhudW21yvvGdHz0dLA
+ N9VaPNxFBpKcxHRwFV/M/Nho/aA4nH94DsnQj0p6od7ufrYN4R8UV4GKQ9ucUdTIGdcC
+ YM3LcY/LpanDuLabIULwMUOMwFZYcWsainl0sXUKxN+h84vlfQJ1NCp22HZ5FGlkVQ6t Sw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mycxbb2wh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 09 Jan 2023 20:07:04 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 309JpeiT035357;
-        Mon, 9 Jan 2023 20:07:04 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2175.outbound.protection.outlook.com [104.47.57.175])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n0h8umx7u-1
+        Mon, 09 Jan 2023 20:07:32 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 309JGhlZ004497;
+        Mon, 9 Jan 2023 20:07:31 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2173.outbound.protection.outlook.com [104.47.56.173])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3mxy6ag9p3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 09 Jan 2023 20:07:03 +0000
+        Mon, 09 Jan 2023 20:07:31 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZK6V9MSkv9ld9JqjMkTethkHnL8EdxA1OeScRZZ0UqeaJLxgJSSeg12Qhke3wqO3eFXDsi5/6KR6EtocKJjjx7eTzKSVPGHjfMwHGSTseZZleKXTBl2GaRwewnFF3o+2Et0DdQyHXjrjDRmPbYuo8UOvKmqmL3vO6FMH2oZI4Jzo0hahGnK2jksKe3Q2vYBgAwzNaJ1NaVAUL8RnUjLLeRCIrilmbfuwilPjMV10pFBYahqfA4yYRkfAKJiz15hUUxe0ykkr7sCZai5y+CBGcqKAFODddKsDZqomh9d0Zgs/9wMn5suurDmNXnCxpDnq62j2Dzf6r4OX8vX/d05krw==
+ b=llYHz6aLyk8nac7o9tc4mWjomUQ6tArattLx7eXatdFHJKolpIt+GtWRVuExiqgmeshnLmdvFbZEe+81MurqFKtJo8Vi4hM/wg17241ANFKEQDpeNkXd+I4VvXkCH72kZy3lhPLIHnQ3zEf6kAMIUnLcecRPxgWjywyVO8UtCqkvSeqj9Nom/RnBl57fJkm+JrUWlenNXIJie4Jd3yLm00IZCJz7e+YImCeGR1ziFGuW6TRzVwS1jnL/v8DNmjF2wWQs7E4kYCZ3OnzKWyDB5PaMc2f3E4fWtya3xkewzrZMiGnc2jglXe5eiKTwiObBmtQwfGZ3ae6Ubb/0k/XBlA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ESyPDxtcODJaqxFn4b1BsHosQyP2Fu28hZ6QBB3N78w=;
- b=QrfsZIXu38z3mXKUh8ltwmYpw609XAph5x9juz9YKPBr4AImXQz4ejwZwAZlp1ufT9z3v2KdbMS1/hQS50MqogaUeWy/bcofiZCAqVHz/lRuY1EkDIqgtAAkRpDs1gPT9AQUUzyExkc2riMUNazqA/rOcG3M1xQ2m3PM4Kf2DWqzg18GblxQOG2xIMs8W8zyNhuL5yGrbFOEoh4lAnkHrPoG6LLRhVqA4MXKDqWUCcNboRMdpW6IpENVa3O/5swLwNZYKBVStcqpHlDK/gxEcyE3I8GCMI+/rbtcIHRWoktdYcCw7MwWShxe4/KzBZaRMhzKr+zsjpQuUW4uRYTYwg==
+ bh=PE4eUuITQPGDfbeOVm7phYlTvJTxNV7sIpHU3Y+OO3E=;
+ b=TqrE0sReQUzaET6LoOXcn7xRS4JxTb/xTIB/ezhNxWtGnDKCeOvUuX0sr9xRyFgw+bE3jkDIWbFuOMoiZv5s7Vc8oN9TkWlM66XmjyTqcZHhrdhx+KUJFx095/yJOeKo9iv4wP7wIlZaP3Nq8Sf38cZ1YOlMjQevBL9I1DSu3nDyQAAMa6+aeReG3uu8eX5oSwM9tkrTSqzEAoB2XtGdAYkpd6RqnC15bM1ij6SkL2PLPecjtp06nWDEjL7vKi9bIKoQNvaDKZT2Gcpo4pSDoMlTpbkO96s9omWjJKtd4PtH2/fxJAKbN7NF0SeW3FMwTygVLCmD91nn6t6XmnVmnA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ESyPDxtcODJaqxFn4b1BsHosQyP2Fu28hZ6QBB3N78w=;
- b=qzWZ+C8fmYrlqNuiCOhiWy8nLjyd1H9LJfdtmByT6UasjyOPcSwopfjU8DW5n/hpG2x7aaBDcsNdvfJvMgGC6VVCMZ7mIp3QBlJC+jADBFMhJWK0aEeR14dJQaZ46s0g+YImLJOCIbkM8leARkKJeJL5SD+Ya+L+kdpAFgmDi8o=
+ bh=PE4eUuITQPGDfbeOVm7phYlTvJTxNV7sIpHU3Y+OO3E=;
+ b=Goz9cWZkdd3CBqVpIECvR2FocbyHZpTWpgdRVKSw3SHcH+i1tIjMHwR8JKraMw5lPFuZFzLheqH0IyupPtC2Kzo5IHNUTpCL+LVYLtIaOQ7iB15yzqALfL26qAIm3jl7qM5JJQ/K5F5AvltCIWWiIO72jbwvyvLZXI6yXXhpU4E=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by BN0PR10MB5191.namprd10.prod.outlook.com (2603:10b6:408:116::6) with
+ by SA2PR10MB4665.namprd10.prod.outlook.com (2603:10b6:806:fb::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.10; Mon, 9 Jan
- 2023 20:07:01 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.11; Mon, 9 Jan
+ 2023 20:07:29 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::bc55:518f:9d06:9762]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::bc55:518f:9d06:9762%2]) with mapi id 15.20.5944.019; Mon, 9 Jan 2023
- 20:07:01 +0000
+ 20:07:28 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Nilesh Javali <njavali@marvell.com>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>,
         "bhazarika@marvell.com" <bhazarika@marvell.com>,
         "agurumurthy@marvell.com" <agurumurthy@marvell.com>,
         "sdeodhar@marvell.com" <sdeodhar@marvell.com>
-Subject: Re: [PATCH 02/10] qla2xxx: Remove dead code (GPNID)
-Thread-Topic: [PATCH 02/10] qla2xxx: Remove dead code (GPNID)
-Thread-Index: AQHZFb95aQYf2eMM8UqyG7fwaZCsY66WoF4A
-Date:   Mon, 9 Jan 2023 20:07:01 +0000
-Message-ID: <BCB04BBD-15C3-4D38-8C21-541F5CF9FF3A@oracle.com>
+Subject: Re: [PATCH 03/10] qla2xxx: Remove dead code (GNN ID)
+Thread-Topic: [PATCH 03/10] qla2xxx: Remove dead code (GNN ID)
+Thread-Index: AQHZFb9xHkLZoLDMUkGjM/S2APo69K6WoH8A
+Date:   Mon, 9 Jan 2023 20:07:28 +0000
+Message-ID: <DDDB0B86-CC89-4626-BA7F-6C81EA247348@oracle.com>
 References: <20221222043933.2825-1-njavali@marvell.com>
- <20221222043933.2825-3-njavali@marvell.com>
-In-Reply-To: <20221222043933.2825-3-njavali@marvell.com>
+ <20221222043933.2825-4-njavali@marvell.com>
+In-Reply-To: <20221222043933.2825-4-njavali@marvell.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3696.120.41.1.1)
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR10MB2943:EE_|BN0PR10MB5191:EE_
-x-ms-office365-filtering-correlation-id: 860737c1-cb9a-402b-93e1-08daf27d11fb
+x-ms-traffictypediagnostic: SN6PR10MB2943:EE_|SA2PR10MB4665:EE_
+x-ms-office365-filtering-correlation-id: 72f95689-bd34-4cb1-8722-08daf27d2272
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 3B0FYEo2yLhypacrRuwIM0claCrky2jFeuBuY3IkUbf4zZ55xPGvKZVDJLQIl05HKTbqojM5u6MoXKEtvzHKp0kfsRPlryURUaL0JIhqRl+3sf8vnra7AV7F59pvg7JcnJWBlNluBf4vpwQ8HEfl4BWhKP8eB96qt+JEfdb+xKWBjSVGIcawvFhC5d/XydTTDwT+trXoE2wusXhKaBt42/XbEMgLt9+kAkPAcfIAW5BTyeWmZcMSLzZKCTdSFiyIMdeJrdBVMs7jazUHKKx73ZfecKNc169c4sSgx/CsxmAsp4J+s/v7PHGaIUc5r9wG44brGN0rlpz37qIU7c+BnreJpd/i/cF7yr1xhAs719BSIKsJaoaiLoDXU05A3p5TGBh9F3K+tV8T0WBvJ2C9vQXoQkua8zURMoUB0mlydVanBHF7gInaeSr/kHOVbYExvmeYMSUMg5PqTDwxcLGLH1yym0Xd/Ct+IjICyQjmf5igF/xbzgG3ZnkKefoqkxPQtdGGXa6ce7CYPXpJLsLYk0l+hHvmfWBfqnODh4cwQjFUaCIK8lPH0LX1/Ec9DaW33AWbqbS7n1E12P7yG3JS8KBwjbys99P0XPVsZxpBvDTJrLCVh+5wyeaSwelOaLNjL4qFnFq+rw2vsch7rJFjF+ts176KPEOK1uMrYcjCTS12O/7GWIO1OAG72BoQ/pJ/3hFdqrjmiTp4UpMxd80kWvegp2UHgDjG+Ee404w4k6o=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(346002)(366004)(376002)(396003)(136003)(451199015)(83380400001)(122000001)(2906002)(30864003)(41300700001)(44832011)(8936002)(5660300002)(38100700002)(186003)(53546011)(6506007)(478600001)(2616005)(6512007)(66446008)(4326008)(6486002)(66476007)(8676002)(64756008)(316002)(6916009)(54906003)(91956017)(71200400001)(66946007)(86362001)(66556008)(76116006)(38070700005)(36756003)(33656002)(45980500001);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: I/cys9Nh5ZPXugqTu/Q6BNN0ZZcSRXCq5y/Rnql4dbEh9exs0FF4h72JdL6jJ2ODOV4xBZKdfQUgxYtPlQ/8LyMB2PqGpK/d7SuMcknF9ULCHjoVapZR1h1M/WbH5qI1ZRxUtMJ+ue+WybZwJxBZoCXLNS0/flt1LzEPcatZWX8vqzs0LJGg2CCm5pTV68HUDaU5wCx5eFDJOft6elJmdoTQUPQY5gsWiZiDfTqkA6uTo6MvNmQkSrkK8eqBeSKqJOZu/TMH9sFPM2ZvZRs4bnNXC4Jmf9BDRRQDN21GB26wH6wOcH9SxF31L5o35sXqOoYEyNbrpcyKL8X498++JeDy/6az6mJoZ06F5MI2kMiCVUZa0KU8pgelDlhOjH3WYS1cL1B2L6SwegWYaN/eOEafaDKsMnwFFzgK9GlehLi0KQcXlgTsDAfHqQhKRqLom9EOkuivOjghU9jaXYB+deNC4fA8kL/U+Q3MHuHO0d6PvuDmOKlAEUFt7rxhFSljPibyA27fQO1vkTNi7ktPe71xLbxhxv72Hu/0JC3PZP+7ZWbdxjyfgUnGmR5KwG9y6Jum5txa8bkNyldrTGiCeSnJAlPExYB2v6g3qLVEWBrCg1VZm1e1l8M7vpqgCzZefKgJpVnHQ+rkG/pNChpJKnMJYTPsWJEJVXZw/EOWidOkBCYxvU/2PQqGwTzWRSuVQz4270yW8wxkm0sX3J0M6lFgXMEKWqy2gGRkCHRjLPI=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(366004)(376002)(39860400002)(346002)(396003)(451199015)(36756003)(38070700005)(86362001)(66446008)(8676002)(76116006)(64756008)(66946007)(66556008)(8936002)(4326008)(2906002)(66476007)(44832011)(6916009)(5660300002)(33656002)(122000001)(83380400001)(38100700002)(478600001)(316002)(71200400001)(91956017)(54906003)(6486002)(41300700001)(53546011)(2616005)(6512007)(186003)(6506007)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?anzUaHV/pByAZHplECTtktF+70HaeAh91TtuTpOaAOHtKivGNHqB3rFaypdD?=
- =?us-ascii?Q?s5qHBPPxWBWMT96KvG7/VS6rUL2bSSbZlwMritNBN58jp8qtmKlBnCaQLQ1H?=
- =?us-ascii?Q?kiQyWMOABZNxG3b+umYiHnnJtTAi40Bd/0uJXhMn8/1Lmtzg4D+90uO2I88s?=
- =?us-ascii?Q?NNOSGpaGA9suN2QLzXE9hWzVRQVetsfGPNZTHplyLiq4HvgAGZPNVzFLPWJ9?=
- =?us-ascii?Q?baaMHGkZM0FHao6ZhP0l4Ocy9/6iY3WjGOU8ocj1qnw807XTOI2+9iamdxyG?=
- =?us-ascii?Q?eG6VtPfF7DVkmImN0icfXu8jClJsvTBogED8TCAExJg8V6ay/rIgzRFEpFAi?=
- =?us-ascii?Q?Bf47SyvmeOuuDXMVIj8wGQNNfnh3DShisSTRqc1W1EKCHFiBGZA7tztIffoq?=
- =?us-ascii?Q?xR+JwXsfjaRL9X1XrNU+RGK9ObuE6dgSoxQhYjf2L+l4aVSkgd5MygfWkB4J?=
- =?us-ascii?Q?sc6OXEc/WsB4tcoR0yVdojZyAHLKTDdUvaeBIu9O1D2iXY0ZRRvYUavjTDWU?=
- =?us-ascii?Q?EidhgTqqJ9UcqXtTuxyVKSv2aMaREBzLiHRbeegryO25JnaLr5+4bECSsnQm?=
- =?us-ascii?Q?HWBjwLjtbHkhZtJ9Gx3lHBHYlyZy9lHc0qkzMfVW2WO0hX2vLwpUiXQaiPJk?=
- =?us-ascii?Q?vqHmzV46/T8Ok3GvN9lisSHAQ0gkIew0OlW+P6FGciNuTeeeetJFJ6MdlJHR?=
- =?us-ascii?Q?4WTeEA8/t2fy6V47NxT6HjLBgOVr17Wa5apvO3TqZEv4yrHb1gWuYZCJ5RQ6?=
- =?us-ascii?Q?DcsMxAAdEUrFkXeh2sFQNY9pLSTFQw78d2H/b75huyFOXcOx8rsyIMtSaaei?=
- =?us-ascii?Q?rwYVUs9dx5/KuXF1djtHsv/bLKfmVDOc4CCEo3tzzMOrovRWkHIcdOjnVtxT?=
- =?us-ascii?Q?w2g3BwgyuTh5IDFIFtyhFX3UezTeIvucjslVZjfqGHVSvvsdQHWSYbK4HA3Q?=
- =?us-ascii?Q?HxIVo5k3VedZwGQAWOUaSGlrlf0rywlPmr0emk3gJ82IOlQtQtAg87U5NN3u?=
- =?us-ascii?Q?XUbDZCs29no+V9tuN4JjBdZL5qpPByp22pWezsjIb7VHkrkSotKAtmQHdC5G?=
- =?us-ascii?Q?VawH2Y65UHtTFy/uPSi372z+p1BNkYLm7o8wsrd6tCWSJUglF58zpLjA0WuG?=
- =?us-ascii?Q?E3R7ATExslCEkJNKXcibWrZWbD+5kStUm4a2ZTSg8mtIo8CYM5y4LDmUQQzC?=
- =?us-ascii?Q?lEl0M4tw2RRO34BEU8hVKFomNBn92ASw09aPJYH323HP+2TTkIHGoyfKjAiE?=
- =?us-ascii?Q?t7zzeiWOUrBuroRzy1Hu89I2IFxQKB430p4W7kv7kK6bQBBCGsoQi8D0Rxbp?=
- =?us-ascii?Q?r/sgUz/yRJzmQQXYQ6M6T8iYYtabd0m8S+4H4POtdzGprLfUuZBAU8avR7Op?=
- =?us-ascii?Q?YYG77gsg5BuAFBTNIMYUAg3vbo38a42pJcTnJmVLXRLidarXavAkU24rpv4y?=
- =?us-ascii?Q?dA6XLiEMCGxtlD67IAl7jhvwOomgPBFpe1S+qQWGaOuDc7Q8RDZw7/IDuDv4?=
- =?us-ascii?Q?1k60ji/HMasEgCtOYX2YIyykzNdgXStDed9dTMpxhixVUHupsOxA2JDTBFht?=
- =?us-ascii?Q?mgsbAysNJ2ID8roBa7/k+2ZHTmPgDd6Xq0Ee62AEIKM9JFUMCsQidByz/q0b?=
- =?us-ascii?Q?oD3jMiSgwaL5+mViTU/dJ9fJ1HJNTd5CBW4KamrHzdWTZ0QACE2TCIlzW4X8?=
- =?us-ascii?Q?yjFoKYdVSp1s5IzZ1aIqWVgEjfE=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?4+AFihH7wSWD+TMkj3YaedOxCyL9Y+zPwYJq7TBcxWZPFWnpeqrc1PGSUsQM?=
+ =?us-ascii?Q?mLmEA4gmTQ1NfOLwMDjb2cFxvyWZb+KxBkVyDm0rNSlooioJb/VnuYhliWqT?=
+ =?us-ascii?Q?O7sCQKhFBhiIGZEU/5knGngjP0CMOIq3vFnEOiWTcV9aw78XpipjNeMrtk4r?=
+ =?us-ascii?Q?ILcZuC3UawwCIvE3LkIK8ashpffBrgDshShfJJ8qIG+7eJ5H9SDYJCB5ZjfW?=
+ =?us-ascii?Q?YR/i18gmoX7zpRBanYbz4xEVUCsNffipf1Dz3K/pIv6GxX0gbtmJFMPGYq0i?=
+ =?us-ascii?Q?MfgxWXnXKgLDcn8t3Kbk29DeKt2KXeZj2eHpZCLJ+rWwV6AuRauHCTlH/WeH?=
+ =?us-ascii?Q?y+eOClooeOT6mLaSY1URVs8UJl/3aUJGSS3/zsb7kJIYzKMK7hk0bMrhEKOd?=
+ =?us-ascii?Q?7xEKPx0t0MGWBLIxuC+Xb+sZ3KZijTIpw7pQg2sxkpRRs47whdrv9DnCMwlS?=
+ =?us-ascii?Q?S8XmdX4cmQn2VsUjrpcUwnkjUw+FlRumDEMWoAeOdLHuDdrNvyF8ElTY4bdg?=
+ =?us-ascii?Q?HCCZnMM/l4m5zVk7yYdjUQMn3kitD0kvaRvJbM/Ta7h+T2nIlrBnlDn9Tie7?=
+ =?us-ascii?Q?dqvR20vAkS7+RxX0rH/3qKql4g3PKxZA5hETYstc/akCGydk8gkg9sh73v1l?=
+ =?us-ascii?Q?ucvCPcOfuj5KoQPnzW06UAW6bq+lI7kdyuSJl+Bt9G7MlZ6GEhfD/TvNTk66?=
+ =?us-ascii?Q?bFbttfPNwjJDh4ykXGXhTLlZXYxORWc2zuDYL+li3/o9Fj2FfmD27aA8ITAR?=
+ =?us-ascii?Q?R5+GP62drDxGe2X8s1qbdxsYG+uIYzHl8gyq3Vo9EsYvneVc5lV1znzHb1LP?=
+ =?us-ascii?Q?FxPjqFqi5k4WmjrbD1aREVdIDsFWEzwJJjRb++X/nY5izwZFV7vNJCyHSWVC?=
+ =?us-ascii?Q?mXuPwJqYFknAUDLqlUFF/irxWbe7Bbd/NVDXLn3P+Kx03ziAGbHDuzv+8PcR?=
+ =?us-ascii?Q?EeiSYJcJl5V5PNHQp3HvdvhktyApqRhM6UIfI/qm1yyJvbvx65bZxFDJOiAC?=
+ =?us-ascii?Q?AP/ueV809eH7cN7cRETwu55ANIOzwzGEBLCZoYQyYbPfwpdU1xVQ1zWcSq1G?=
+ =?us-ascii?Q?zNOvCZuQrKBiQj3vaQCSKdOVT/vJjRV+OrFQsv37ZE0sQV8PUguuxSvkDYgN?=
+ =?us-ascii?Q?z6wyFER9wHkv0JKqTL4+9l8BwRgNLBnEUtxfpAe9mcJPxf7HqQUnZfjJPgDv?=
+ =?us-ascii?Q?67vPRiql9Ic/wCUBSSqyzx7GXsRzPACV0JHq7V8iHxAg9PDDXkL1MhcmulDT?=
+ =?us-ascii?Q?e7aGHCupx0DemXQmnX/4wWi2cEX4zNJt91mFfJLOvX4ERl36x8fIgbcy5pLn?=
+ =?us-ascii?Q?aNG9aqmi/j3SzcB3Pm0GyrvgiG8qz56i9mo17Zc9pkt0h/8fDP9qe2uYN6aV?=
+ =?us-ascii?Q?XiBDyAkyWVGQ5yDW+gcWf5410qx09QmgA9TF0bJFbOT3Zuta0BykMmU42BG4?=
+ =?us-ascii?Q?pAYEHyLEvsVKMnwi0TAxZIdqpgftQrHFE8RDH9w6Vo9LRgHfOns13Wj3mOzz?=
+ =?us-ascii?Q?sUDq//OzGs07UBonEWZc718/INqLAzykWjFRJuJ9c91euU9IkldqJtci+Uz7?=
+ =?us-ascii?Q?jd3QPjxsylVLaF55BGYzhI+es2PLK/sUVEqmaSBxPY/rM5bmzDMoYkGqSMFj?=
+ =?us-ascii?Q?Ubp1n9IOA6XJscgleHcBLbPQBUG4oWSjD0kHXfFfOoZFDiUpgIIw2FCRdyC0?=
+ =?us-ascii?Q?fJ2UcEhXda0rEtyYr75Iy5e7PcE=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <AC2B6E3DA2E87845B26A08D70AE594B8@namprd10.prod.outlook.com>
+Content-ID: <14139419AB3EA94DAD7F338C17842BFB@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: AHnsBOoyz0JszDgysn7XkSDSHudxnOdCuxUfcOX0MORPVAx4JtVt2otjdhKUWF+D+XDa4bisHKBIFUvt2eLPPX4HjyVHW9Xs1ZfztR7HUfSxMm8K9AC0ucHBZ0Ybn26FXf6Xu/pYcrqtOKMyedvOuT1ZD7SnZg/KX8Cn4JW8fUz90K+mmQOyvbXtGssNiV2Cxe03p5kYeuXYpIFGeIDw5w4S4ajOzBmqljLJwV9Q6v+eSjBLpfeEi2f5l2nGRFXIHuuSDlz9iVPUpho3WpVK50+Hht8GH+mWvEmJfP11TYhNOv+QaFxdq/98W/1cdB+UhWiFkXVXj31e8uG/sny2t6Ei15tuIG66ujx6VG5GLmrvLcf991lBLKnGepdWvdQ93jWbzvKE5Ul4u73MQnlC+UoM6/X5Roo6H1kb3+N48aAqCID+iMRhusZZ8Hmzo7vip9qfKPORy+oxRFrQ7l/osPRxMOU6C7sSzw35EG3ryF2C74qR7xJk6c6YurPFvzCsXB/bJZm37zx4xsDCyO7q0Wmh1yDiWXKErufAYk8/65Qcg3oGqOBKwX4S1HzG6L6GxMC+8IQdYITkVBeJwPF7/nxt0oPmqZLz1vTwYjSW/w3ZOXtXkMNctibxEk9LHxYsW/byhppATu4PnTT0lycUQWuKYkopG9r/laXvNjvqX5sF6zgDfgeQYTa5+mUTU1EumPROA0myrExeyIL0kJz8tktV60fB5Ml3GETaCZeXP2FyrPCma8ox96S/bbkWp4AbjN82DdzMIAFvI/8+81SpzSpQufvMlTdRR1x8fUts90c=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: h0c1aK1IQAvDrzKAS52JhvK4fexhY3AiyTWTi3HWo18pXcV1zpd22gpAYJ/cHAJgI+8LyuWWzJp3Xz4GsBRT/zZzJAqcTP3QpGaYxG8DC4vYRVCcoomO2U4NjGLUlSukfo1GC6GQUhSTXuHLkH/vAZkn86Di3gh6kl/oMo3OrM6qUxjbRh/t57Swlr2/XI/s1iVTKYChNd97HGetFksZjk2n7MvGNRRIlPu4WFG6bMWXSUYMMGofjZIp2JSZBncg9B49bXib1rKQ+m1n3/9hByqQHd+662l58aOBdh7IAen2wSWVj3EWYGDvL8ybuXFbDadR0+IOsX79LRANXg7diQ833Pzz2/dNUQTW2YLuA2AwYrI09WriDog+u09dz0X9bYHRK2b25HPGa29LmjnnkxIuh49czRmSKJ/m4tdFyhb4fBXmrj/52wJPOzlUWzhlaT2jtCRD8NRGwL2OeVvUlInZNGEFt/fD4KbSLg9K3/9h+mPsYY409DBhUMoMXhokla/0qw78NyRFotK8pji6Lr8mwhbNSV99dFZJRfT2Cz5AdwZ2oYe/ESwEvci4hH36ovgATEbJamuBB4vGJmP+00pWm7D78qXBiz+JG/LBAyrvuz/s5zqOOjr76T+PA0NjflpqAFdmud9v+kSn6FnDSWqz6ZuRpSH+dkdDpCevoiQlL2kMrl7k8Go6qv4lc7X9BGQAXNh/hRszpD6H5n490Q4mT0OKc9TsTeuaNP7YEdT5HzBL05dtO/aH161ZH83wl0ipZZ/oNiexKGXbvmG46q29sG5FHAtwmrwU3JsMacM=
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 860737c1-cb9a-402b-93e1-08daf27d11fb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2023 20:07:01.2567
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72f95689-bd34-4cb1-8722-08daf27d2272
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2023 20:07:28.8642
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8FsGUvVnBJVavJUx/Z2My2NGXgsgoDJB9CtOHqVH8DXncl2FJhPGqzXd8z/usHUQdo2G4klrIv8j5pjakjtXMGlBnbFVnwIKlF6HCdQIuzs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5191
+X-MS-Exchange-CrossTenant-userprincipalname: XVnF5lEAtHYU+0J87i5XPN8b95L71ZDFQwDdhnxNUjO+r2Y87uoYP/ecFWjxo0MGFAN2aSmrV5IOADT1lUS+nNwfXqsf/w7vJyxxchkUVks=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4665
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2023-01-09_14,2023-01-09_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- bulkscore=0 adultscore=0 mlxlogscore=999 phishscore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
+ malwarescore=0 bulkscore=0 phishscore=0 mlxlogscore=999 spamscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2301090141
-X-Proofpoint-ORIG-GUID: oLMNaJ9TQJri3V17ePuOUjeovpo3QKCE
-X-Proofpoint-GUID: oLMNaJ9TQJri3V17ePuOUjeovpo3QKCE
+X-Proofpoint-GUID: tpzMCHDJMtQQu-vQMFAtpETZEPfA0ooL
+X-Proofpoint-ORIG-GUID: tpzMCHDJMtQQu-vQMFAtpETZEPfA0ooL
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -156,451 +157,223 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 >=20
 > From: Quinn Tran <qutran@marvell.com>
 >=20
-> Remove stale unused code for GPNID.
+> Remove stale/unused code (GNN ID).
 >=20
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Quinn Tran <qutran@marvell.com>
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
-> drivers/scsi/qla2xxx/qla_def.h  |   7 +-
-> drivers/scsi/qla2xxx/qla_gbl.h  |   4 -
-> drivers/scsi/qla2xxx/qla_gs.c   | 297 --------------------------------
-> drivers/scsi/qla2xxx/qla_init.c |   2 +-
-> drivers/scsi/qla2xxx/qla_iocb.c |   2 +-
-> drivers/scsi/qla2xxx/qla_os.c   |   4 -
-> 6 files changed, 3 insertions(+), 313 deletions(-)
+> drivers/scsi/qla2xxx/qla_def.h  |   3 -
+> drivers/scsi/qla2xxx/qla_gbl.h  |   3 -
+> drivers/scsi/qla2xxx/qla_gs.c   | 110 --------------------------------
+> drivers/scsi/qla2xxx/qla_init.c |   7 +-
+> drivers/scsi/qla2xxx/qla_os.c   |   3 -
+> 5 files changed, 1 insertion(+), 125 deletions(-)
 >=20
 > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
 f.h
-> index 0dde3fa9e258..9ee9ce613c75 100644
+> index 9ee9ce613c75..2ed04f71cfc5 100644
 > --- a/drivers/scsi/qla2xxx/qla_def.h
 > +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -3479,7 +3479,6 @@ enum qla_work_type {
-> 	QLA_EVT_ASYNC_ADISC,
-> 	QLA_EVT_UEVENT,
-> 	QLA_EVT_AENFX,
-> -	QLA_EVT_GPNID,
-> 	QLA_EVT_UNMAP,
-> 	QLA_EVT_NEW_SESS,
-> 	QLA_EVT_GPDB,
-> @@ -3534,9 +3533,6 @@ struct qla_work_evt {
-> 		struct {
-> 			srb_t *sp;
-> 		} iosb;
-> -		struct {
-> -			port_id_t id;
-> -		} gpnid;
-> 		struct {
-> 			port_id_t id;
-> 			u8 port_name[8];
-> @@ -3544,7 +3540,7 @@ struct qla_work_evt {
-> 			void *pla;
-> 			u8 fc4_type;
-> 		} new_sess;
-> -		struct { /*Get PDB, Get Speed, update fcport, gnl, gidpn */
-> +		struct { /*Get PDB, Get Speed, update fcport, gnl */
-> 			fc_port_t *fcport;
-> 			u8 opt;
-> 		} fcport;
-> @@ -5025,7 +5021,6 @@ typedef struct scsi_qla_host {
-> 	uint8_t n2n_port_name[WWN_SIZE];
-> 	uint16_t	n2n_id;
-> 	__le16 dport_data[4];
-> -	struct list_head gpnid_list;
-> 	struct fab_scan scan;
-> 	uint8_t	scm_fabric_connection_flags;
+> @@ -2485,7 +2485,6 @@ struct ct_sns_desc {
 >=20
+> enum discovery_state {
+> 	DSC_DELETED,
+> -	DSC_GNN_ID,
+> 	DSC_GNL,
+> 	DSC_LOGIN_PEND,
+> 	DSC_LOGIN_FAILED,
+> @@ -2699,7 +2698,6 @@ extern const char *const port_state_str[5];
+>=20
+> static const char *const port_dstate_str[] =3D {
+> 	[DSC_DELETED]		=3D "DELETED",
+> -	[DSC_GNN_ID]		=3D "GNN_ID",
+> 	[DSC_GNL]		=3D "GNL",
+> 	[DSC_LOGIN_PEND]	=3D "LOGIN_PEND",
+> 	[DSC_LOGIN_FAILED]	=3D "LOGIN_FAILED",
+> @@ -3492,7 +3490,6 @@ enum qla_work_type {
+> 	QLA_EVT_GPNFT,
+> 	QLA_EVT_GPNFT_DONE,
+> 	QLA_EVT_GNNFT_DONE,
+> -	QLA_EVT_GNNID,
+> 	QLA_EVT_GFPNID,
+> 	QLA_EVT_SP_RETRY,
+> 	QLA_EVT_IIDMA,
 > diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gb=
 l.h
-> index e3256e721be1..2acddc8dc943 100644
+> index 2acddc8dc943..08ea8dc6c6bb 100644
 > --- a/drivers/scsi/qla2xxx/qla_gbl.h
 > +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-> @@ -721,10 +721,6 @@ extern int qla2x00_chk_ms_status(scsi_qla_host_t *, =
-ms_iocb_entry_t *,
-> 	struct ct_sns_rsp *, const char *);
-> extern void qla2x00_async_iocb_timeout(void *data);
->=20
-> -extern int qla24xx_post_gpnid_work(struct scsi_qla_host *, port_id_t *);
-> -extern int qla24xx_async_gpnid(scsi_qla_host_t *, port_id_t *);
-> -void qla24xx_handle_gpnid_event(scsi_qla_host_t *, struct event_arg *);
-> -
-> int qla24xx_post_gpsc_work(struct scsi_qla_host *, fc_port_t *);
-> int qla24xx_async_gpsc(scsi_qla_host_t *, fc_port_t *);
-> void qla24xx_handle_gpsc_event(scsi_qla_host_t *, struct event_arg *);
+> @@ -730,9 +730,6 @@ int qla24xx_async_gffid(scsi_qla_host_t *vha, fc_port=
+_t *fcport, bool);
+> int qla24xx_async_gpnft(scsi_qla_host_t *, u8, srb_t *);
+> void qla24xx_async_gpnft_done(scsi_qla_host_t *, srb_t *);
+> void qla24xx_async_gnnft_done(scsi_qla_host_t *, srb_t *);
+> -int qla24xx_async_gnnid(scsi_qla_host_t *, fc_port_t *);
+> -void qla24xx_handle_gnnid_event(scsi_qla_host_t *, struct event_arg *);
+> -int qla24xx_post_gnnid_work(struct scsi_qla_host *, fc_port_t *);
+> int qla24xx_post_gfpnid_work(struct scsi_qla_host *, fc_port_t *);
+> int qla24xx_async_gfpnid(scsi_qla_host_t *, fc_port_t *);
+> void qla24xx_handle_gfpnid_event(scsi_qla_host_t *, struct event_arg *);
 > diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.=
 c
-> index 64ab070b8716..fe1eb06db654 100644
+> index fe1eb06db654..4738f8935f7f 100644
 > --- a/drivers/scsi/qla2xxx/qla_gs.c
 > +++ b/drivers/scsi/qla2xxx/qla_gs.c
-> @@ -2949,22 +2949,6 @@ int qla24xx_async_gpsc(scsi_qla_host_t *vha, fc_po=
-rt_t *fcport)
-> 	return rval;
+> @@ -3893,116 +3893,6 @@ void qla_scan_work_fn(struct work_struct *work)
+> 	spin_unlock_irqrestore(&vha->work_lock, flags);
 > }
 >=20
-> -int qla24xx_post_gpnid_work(struct scsi_qla_host *vha, port_id_t *id)
-> -{
-> -	struct qla_work_evt *e;
-> -
-> -	if (test_bit(UNLOADING, &vha->dpc_flags) ||
-> -	    (vha->vp_idx && test_bit(VPORT_DELETE, &vha->dpc_flags)))
-> -		return 0;
-> -
-> -	e =3D qla2x00_alloc_work(vha, QLA_EVT_GPNID);
-> -	if (!e)
-> -		return QLA_FUNCTION_FAILED;
-> -
-> -	e->u.gpnid.id =3D *id;
-> -	return qla2x00_post_work(vha, e);
-> -}
-> -
-> void qla24xx_sp_unmap(scsi_qla_host_t *vha, srb_t *sp)
-> {
-> 	struct srb_iocb *c =3D &sp->u.iocb_cmd;
-> @@ -2997,287 +2981,6 @@ void qla24xx_sp_unmap(scsi_qla_host_t *vha, srb_t=
- *sp)
-> 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
-> }
->=20
-> -void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *=
+> -/* GNN_ID */
+> -void qla24xx_handle_gnnid_event(scsi_qla_host_t *vha, struct event_arg *=
 ea)
 > -{
-> -	fc_port_t *fcport, *conflict, *t;
-> -	u16 data[2];
-> -
-> -	ql_dbg(ql_dbg_disc, vha, 0xffff,
-> -	    "%s %d port_id: %06x\n",
-> -	    __func__, __LINE__, ea->id.b24);
-> -
-> -	if (ea->rc) {
-> -		/* cable is disconnected */
-> -		list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
-> -			if (fcport->d_id.b24 =3D=3D ea->id.b24)
-> -				fcport->scan_state =3D QLA_FCPORT_SCAN;
-> -
-> -			qlt_schedule_sess_for_deletion(fcport);
-> -		}
-> -	} else {
-> -		/* cable is connected */
-> -		fcport =3D qla2x00_find_fcport_by_wwpn(vha, ea->port_name, 1);
-> -		if (fcport) {
-> -			list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
-> -			    list) {
-> -				if ((conflict->d_id.b24 =3D=3D ea->id.b24) &&
-> -				    (fcport !=3D conflict))
-> -					/*
-> -					 * 2 fcports with conflict Nport ID or
-> -					 * an existing fcport is having nport ID
-> -					 * conflict with new fcport.
-> -					 */
-> -
-> -					conflict->scan_state =3D QLA_FCPORT_SCAN;
-> -
-> -				qlt_schedule_sess_for_deletion(conflict);
-> -			}
-> -
-> -			fcport->scan_needed =3D 0;
-> -			fcport->rscn_gen++;
-> -			fcport->scan_state =3D QLA_FCPORT_FOUND;
-> -			fcport->flags |=3D FCF_FABRIC_DEVICE;
-> -			if (fcport->login_retry =3D=3D 0) {
-> -				fcport->login_retry =3D
-> -					vha->hw->login_retry_count;
-> -				ql_dbg(ql_dbg_disc, vha, 0xffff,
-> -				    "Port login retry %8phN, lid 0x%04x cnt=3D%d.\n",
-> -				    fcport->port_name, fcport->loop_id,
-> -				    fcport->login_retry);
-> -			}
-> -			switch (fcport->disc_state) {
-> -			case DSC_LOGIN_COMPLETE:
-> -				/* recheck session is still intact. */
-> -				ql_dbg(ql_dbg_disc, vha, 0x210d,
-> -				    "%s %d %8phC revalidate session with ADISC\n",
-> -				    __func__, __LINE__, fcport->port_name);
-> -				data[0] =3D data[1] =3D 0;
-> -				qla2x00_post_async_adisc_work(vha, fcport,
-> -				    data);
-> -				break;
-> -			case DSC_DELETED:
-> -				ql_dbg(ql_dbg_disc, vha, 0x210d,
-> -				    "%s %d %8phC login\n", __func__, __LINE__,
-> -				    fcport->port_name);
-> -				fcport->d_id =3D ea->id;
-> -				qla24xx_fcport_handle_login(vha, fcport);
-> -				break;
-> -			case DSC_DELETE_PEND:
-> -				fcport->d_id =3D ea->id;
-> -				break;
-> -			default:
-> -				fcport->d_id =3D ea->id;
-> -				break;
-> -			}
-> -		} else {
-> -			list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
-> -			    list) {
-> -				if (conflict->d_id.b24 =3D=3D ea->id.b24) {
-> -					/* 2 fcports with conflict Nport ID or
-> -					 * an existing fcport is having nport ID
-> -					 * conflict with new fcport.
-> -					 */
-> -					ql_dbg(ql_dbg_disc, vha, 0xffff,
-> -					    "%s %d %8phC DS %d\n",
-> -					    __func__, __LINE__,
-> -					    conflict->port_name,
-> -					    conflict->disc_state);
-> -
-> -					conflict->scan_state =3D QLA_FCPORT_SCAN;
-> -					qlt_schedule_sess_for_deletion(conflict);
-> -				}
-> -			}
-> -
-> -			/* create new fcport */
-> -			ql_dbg(ql_dbg_disc, vha, 0x2065,
-> -			    "%s %d %8phC post new sess\n",
-> -			    __func__, __LINE__, ea->port_name);
-> -			qla24xx_post_newsess_work(vha, &ea->id,
-> -			    ea->port_name, NULL, NULL, 0);
-> -		}
-> -	}
+> -	qla24xx_post_gnl_work(vha, ea->fcport);
 > -}
 > -
-> -static void qla2x00_async_gpnid_sp_done(srb_t *sp, int res)
+> -static void qla2x00_async_gnnid_sp_done(srb_t *sp, int res)
 > -{
 > -	struct scsi_qla_host *vha =3D sp->vha;
-> -	struct ct_sns_req *ct_req =3D
-> -	    (struct ct_sns_req *)sp->u.iocb_cmd.u.ctarg.req;
-> -	struct ct_sns_rsp *ct_rsp =3D
-> -	    (struct ct_sns_rsp *)sp->u.iocb_cmd.u.ctarg.rsp;
+> -	fc_port_t *fcport =3D sp->fcport;
+> -	u8 *node_name =3D fcport->ct_desc.ct_sns->p.rsp.rsp.gnn_id.node_name;
 > -	struct event_arg ea;
-> -	struct qla_work_evt *e;
-> -	unsigned long flags;
+> -	u64 wwnn;
 > -
-> -	if (res)
-> -		ql_dbg(ql_dbg_disc, vha, 0x2066,
-> -		    "Async done-%s fail res %x rscn gen %d ID %3phC. %8phC\n",
-> -		    sp->name, res, sp->gen1, &ct_req->req.port_id.port_id,
-> -		    ct_rsp->rsp.gpn_id.port_name);
-> -	else
-> -		ql_dbg(ql_dbg_disc, vha, 0x2066,
-> -		    "Async done-%s good rscn gen %d ID %3phC. %8phC\n",
-> -		    sp->name, sp->gen1, &ct_req->req.port_id.port_id,
-> -		    ct_rsp->rsp.gpn_id.port_name);
+> -	fcport->flags &=3D ~FCF_ASYNC_SENT;
+> -	wwnn =3D wwn_to_u64(node_name);
+> -	if (wwnn)
+> -		memcpy(fcport->node_name, node_name, WWN_SIZE);
 > -
 > -	memset(&ea, 0, sizeof(ea));
-> -	memcpy(ea.port_name, ct_rsp->rsp.gpn_id.port_name, WWN_SIZE);
+> -	ea.fcport =3D fcport;
 > -	ea.sp =3D sp;
-> -	ea.id =3D be_to_port_id(ct_req->req.port_id.port_id);
 > -	ea.rc =3D res;
 > -
-> -	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-> -	list_del(&sp->elem);
-> -	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+> -	ql_dbg(ql_dbg_disc, vha, 0x204f,
+> -	    "Async done-%s res %x, WWPN %8phC %8phC\n",
+> -	    sp->name, res, fcport->port_name, fcport->node_name);
 > -
-> -	if (res) {
-> -		if (res =3D=3D QLA_FUNCTION_TIMEOUT) {
-> -			qla24xx_post_gpnid_work(sp->vha, &ea.id);
-> -			/* ref: INIT */
-> -			kref_put(&sp->cmd_kref, qla2x00_sp_release);
-> -			return;
-> -		}
-> -	} else if (sp->gen1) {
-> -		/* There was another RSCN for this Nport ID */
-> -		qla24xx_post_gpnid_work(sp->vha, &ea.id);
-> -		/* ref: INIT */
-> -		kref_put(&sp->cmd_kref, qla2x00_sp_release);
-> -		return;
-> -	}
+> -	qla24xx_handle_gnnid_event(vha, &ea);
 > -
-> -	qla24xx_handle_gpnid_event(vha, &ea);
-> -
-> -	e =3D qla2x00_alloc_work(vha, QLA_EVT_UNMAP);
-> -	if (!e) {
-> -		/* please ignore kernel warning. otherwise, we have mem leak. */
-> -		dma_free_coherent(&vha->hw->pdev->dev,
-> -				  sp->u.iocb_cmd.u.ctarg.req_allocated_size,
-> -				  sp->u.iocb_cmd.u.ctarg.req,
-> -				  sp->u.iocb_cmd.u.ctarg.req_dma);
-> -		sp->u.iocb_cmd.u.ctarg.req =3D NULL;
-> -
-> -		dma_free_coherent(&vha->hw->pdev->dev,
-> -				  sp->u.iocb_cmd.u.ctarg.rsp_allocated_size,
-> -				  sp->u.iocb_cmd.u.ctarg.rsp,
-> -				  sp->u.iocb_cmd.u.ctarg.rsp_dma);
-> -		sp->u.iocb_cmd.u.ctarg.rsp =3D NULL;
-> -
-> -		/* ref: INIT */
-> -		kref_put(&sp->cmd_kref, qla2x00_sp_release);
-> -		return;
-> -	}
-> -
-> -	e->u.iosb.sp =3D sp;
-> -	qla2x00_post_work(vha, e);
+> -	/* ref: INIT */
+> -	kref_put(&sp->cmd_kref, qla2x00_sp_release);
 > -}
 > -
-> -/* Get WWPN with Nport ID. */
-> -int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
+> -int qla24xx_async_gnnid(scsi_qla_host_t *vha, fc_port_t *fcport)
 > -{
 > -	int rval =3D QLA_FUNCTION_FAILED;
 > -	struct ct_sns_req       *ct_req;
-> -	srb_t *sp, *tsp;
-> -	struct ct_sns_pkt *ct_sns;
-> -	unsigned long flags;
+> -	srb_t *sp;
 > -
-> -	if (!vha->flags.online)
-> -		goto done;
+> -	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
+> -		return rval;
 > -
+> -	qla2x00_set_fcport_disc_state(fcport, DSC_GNN_ID);
 > -	/* ref: INIT */
-> -	sp =3D qla2x00_get_sp(vha, NULL, GFP_KERNEL);
+> -	sp =3D qla2x00_get_sp(vha, fcport, GFP_ATOMIC);
 > -	if (!sp)
 > -		goto done;
 > -
+> -	fcport->flags |=3D FCF_ASYNC_SENT;
 > -	sp->type =3D SRB_CT_PTHRU_CMD;
-> -	sp->name =3D "gpnid";
-> -	sp->u.iocb_cmd.u.ctarg.id =3D *id;
-> -	sp->gen1 =3D 0;
+> -	sp->name =3D "gnnid";
+> -	sp->gen1 =3D fcport->rscn_gen;
+> -	sp->gen2 =3D fcport->login_gen;
 > -	qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha) + 2,
-> -			      qla2x00_async_gpnid_sp_done);
+> -			      qla2x00_async_gnnid_sp_done);
 > -
-> -	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-> -	list_for_each_entry(tsp, &vha->gpnid_list, elem) {
-> -		if (tsp->u.iocb_cmd.u.ctarg.id.b24 =3D=3D id->b24) {
-> -			tsp->gen1++;
-> -			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-> -			/* ref: INIT */
-> -			kref_put(&sp->cmd_kref, qla2x00_sp_release);
-> -			goto done;
-> -		}
-> -	}
-> -	list_add_tail(&sp->elem, &vha->gpnid_list);
-> -	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-> -
-> -	sp->u.iocb_cmd.u.ctarg.req =3D dma_alloc_coherent(&vha->hw->pdev->dev,
-> -		sizeof(struct ct_sns_pkt), &sp->u.iocb_cmd.u.ctarg.req_dma,
-> -		GFP_KERNEL);
-> -	sp->u.iocb_cmd.u.ctarg.req_allocated_size =3D sizeof(struct ct_sns_pkt)=
-;
-> -	if (!sp->u.iocb_cmd.u.ctarg.req) {
-> -		ql_log(ql_log_warn, vha, 0xd041,
-> -		    "Failed to allocate ct_sns request.\n");
-> -		goto done_free_sp;
-> -	}
-> -
-> -	sp->u.iocb_cmd.u.ctarg.rsp =3D dma_alloc_coherent(&vha->hw->pdev->dev,
-> -		sizeof(struct ct_sns_pkt), &sp->u.iocb_cmd.u.ctarg.rsp_dma,
-> -		GFP_KERNEL);
-> -	sp->u.iocb_cmd.u.ctarg.rsp_allocated_size =3D sizeof(struct ct_sns_pkt)=
-;
-> -	if (!sp->u.iocb_cmd.u.ctarg.rsp) {
-> -		ql_log(ql_log_warn, vha, 0xd042,
-> -		    "Failed to allocate ct_sns request.\n");
-> -		goto done_free_sp;
-> -	}
-> -
-> -	ct_sns =3D (struct ct_sns_pkt *)sp->u.iocb_cmd.u.ctarg.rsp;
-> -	memset(ct_sns, 0, sizeof(*ct_sns));
-> -
-> -	ct_sns =3D (struct ct_sns_pkt *)sp->u.iocb_cmd.u.ctarg.req;
 > -	/* CT_IU preamble  */
-> -	ct_req =3D qla2x00_prep_ct_req(ct_sns, GPN_ID_CMD, GPN_ID_RSP_SIZE);
+> -	ct_req =3D qla2x00_prep_ct_req(fcport->ct_desc.ct_sns, GNN_ID_CMD,
+> -	    GNN_ID_RSP_SIZE);
 > -
-> -	/* GPN_ID req */
-> -	ct_req->req.port_id.port_id =3D port_id_to_be_id(*id);
+> -	/* GNN_ID req */
+> -	ct_req->req.port_id.port_id =3D port_id_to_be_id(fcport->d_id);
 > -
-> -	sp->u.iocb_cmd.u.ctarg.req_size =3D GPN_ID_REQ_SIZE;
-> -	sp->u.iocb_cmd.u.ctarg.rsp_size =3D GPN_ID_RSP_SIZE;
+> -
+> -	/* req & rsp use the same buffer */
+> -	sp->u.iocb_cmd.u.ctarg.req =3D fcport->ct_desc.ct_sns;
+> -	sp->u.iocb_cmd.u.ctarg.req_dma =3D fcport->ct_desc.ct_sns_dma;
+> -	sp->u.iocb_cmd.u.ctarg.rsp =3D fcport->ct_desc.ct_sns;
+> -	sp->u.iocb_cmd.u.ctarg.rsp_dma =3D fcport->ct_desc.ct_sns_dma;
+> -	sp->u.iocb_cmd.u.ctarg.req_size =3D GNN_ID_REQ_SIZE;
+> -	sp->u.iocb_cmd.u.ctarg.rsp_size =3D GNN_ID_RSP_SIZE;
 > -	sp->u.iocb_cmd.u.ctarg.nport_handle =3D NPH_SNS;
 > -
-> -	ql_dbg(ql_dbg_disc, vha, 0x2067,
-> -	    "Async-%s hdl=3D%x ID %3phC.\n", sp->name,
-> -	    sp->handle, &ct_req->req.port_id.port_id);
+> -	ql_dbg(ql_dbg_disc, vha, 0xffff,
+> -	    "Async-%s - %8phC hdl=3D%x loopid=3D%x portid %06x.\n",
+> -	    sp->name, fcport->port_name,
+> -	    sp->handle, fcport->loop_id, fcport->d_id.b24);
 > -
 > -	rval =3D qla2x00_start_sp(sp);
 > -	if (rval !=3D QLA_SUCCESS)
 > -		goto done_free_sp;
-> -
 > -	return rval;
 > -
 > -done_free_sp:
-> -	spin_lock_irqsave(&vha->hw->vport_slock, flags);
-> -	list_del(&sp->elem);
-> -	spin_unlock_irqrestore(&vha->hw->vport_slock, flags);
-> -
-> -	if (sp->u.iocb_cmd.u.ctarg.req) {
-> -		dma_free_coherent(&vha->hw->pdev->dev,
-> -			sizeof(struct ct_sns_pkt),
-> -			sp->u.iocb_cmd.u.ctarg.req,
-> -			sp->u.iocb_cmd.u.ctarg.req_dma);
-> -		sp->u.iocb_cmd.u.ctarg.req =3D NULL;
-> -	}
-> -	if (sp->u.iocb_cmd.u.ctarg.rsp) {
-> -		dma_free_coherent(&vha->hw->pdev->dev,
-> -			sizeof(struct ct_sns_pkt),
-> -			sp->u.iocb_cmd.u.ctarg.rsp,
-> -			sp->u.iocb_cmd.u.ctarg.rsp_dma);
-> -		sp->u.iocb_cmd.u.ctarg.rsp =3D NULL;
-> -	}
 > -	/* ref: INIT */
 > -	kref_put(&sp->cmd_kref, qla2x00_sp_release);
+> -	fcport->flags &=3D ~FCF_ASYNC_SENT;
 > -done:
 > -	return rval;
 > -}
 > -
+> -int qla24xx_post_gnnid_work(struct scsi_qla_host *vha, fc_port_t *fcport=
+)
+> -{
+> -	struct qla_work_evt *e;
+> -	int ls;
 > -
-> void qla24xx_async_gffid_sp_done(srb_t *sp, int res)
+> -	ls =3D atomic_read(&vha->loop_state);
+> -	if (((ls !=3D LOOP_READY) && (ls !=3D LOOP_UP)) ||
+> -		test_bit(UNLOADING, &vha->dpc_flags))
+> -		return 0;
+> -
+> -	e =3D qla2x00_alloc_work(vha, QLA_EVT_GNNID);
+> -	if (!e)
+> -		return QLA_FUNCTION_FAILED;
+> -
+> -	e->u.fcport.fcport =3D fcport;
+> -	return qla2x00_post_work(vha, e);
+> -}
+> -
+> /* GPFN_ID */
+> void qla24xx_handle_gfpnid_event(scsi_qla_host_t *vha, struct event_arg *=
+ea)
 > {
-> 	struct scsi_qla_host *vha =3D sp->vha;
 > diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
 nit.c
-> index ca216b820b1c..c66a0106a7fc 100644
+> index c66a0106a7fc..a23cb2e5ab58 100644
 > --- a/drivers/scsi/qla2xxx/qla_init.c
 > +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2323,7 +2323,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_hos=
-t *vha, struct event_arg *ea)
-> 			ea->fcport->login_pause =3D 1;
->=20
-> 			ql_dbg(ql_dbg_disc, vha, 0x20ed,
-> -			    "%s %d %8phC NPortId %06x inuse with loopid 0x%x. post gidpn\n",
-> +			    "%s %d %8phC NPortId %06x inuse with loopid 0x%x.\n",
-> 			    __func__, __LINE__, ea->fcport->port_name,
-> 			    ea->fcport->d_id.b24, lid);
-> 		} else {
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
-ocb.c
-> index 6b91dcfd994d..9a7cc0ba5f58 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -2920,7 +2920,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, in=
-t res)
-> 					conflict_fcport->conflict =3D fcport;
-> 					fcport->login_pause =3D 1;
-> 					ql_dbg(ql_dbg_disc, vha, 0x20ed,
-> -					    "%s %d %8phC pid %06x inuse with lid %#x post gidpn\n",
-> +					    "%s %d %8phC pid %06x inuse with lid %#x.\n",
-> 					    __func__, __LINE__,
-> 					    fcport->port_name,
-> 					    fcport->d_id.b24, lid);
+> @@ -1718,12 +1718,7 @@ int qla24xx_fcport_handle_login(struct scsi_qla_ho=
+st *vha, fc_port_t *fcport)
+> 			}
+> 			break;
+> 		default:
+> -			if (wwn =3D=3D 0)    {
+> -				ql_dbg(ql_dbg_disc, vha, 0xffff,
+> -				    "%s %d %8phC post GNNID\n",
+> -				    __func__, __LINE__, fcport->port_name);
+> -				qla24xx_post_gnnid_work(vha, fcport);
+> -			} else if (fcport->loop_id =3D=3D FC_NO_LOOP_ID) {
+> +			if (fcport->loop_id =3D=3D FC_NO_LOOP_ID) {
+> 				ql_dbg(ql_dbg_disc, vha, 0x20bd,
+> 				    "%s %d %8phC post gnl\n",
+> 				    __func__, __LINE__, fcport->port_name);
 > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
 c
-> index 078b63b89189..bbbdf2ffb682 100644
+> index bbbdf2ffb682..c0ac6bfeeafe 100644
 > --- a/drivers/scsi/qla2xxx/qla_os.c
 > +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -5016,7 +5016,6 @@ struct scsi_qla_host *qla2x00_create_host(struct sc=
-si_host_template *sht,
-> 	INIT_LIST_HEAD(&vha->plogi_ack_list);
-> 	INIT_LIST_HEAD(&vha->qp_list);
-> 	INIT_LIST_HEAD(&vha->gnl.fcports);
-> -	INIT_LIST_HEAD(&vha->gpnid_list);
-> 	INIT_WORK(&vha->iocb_work, qla2x00_iocb_work_fn);
->=20
-> 	INIT_LIST_HEAD(&vha->purex_list.head);
-> @@ -5461,9 +5460,6 @@ qla2x00_do_work(struct scsi_qla_host *vha)
-> 		case QLA_EVT_AENFX:
-> 			qlafx00_process_aen(vha, e);
+> @@ -5502,9 +5502,6 @@ qla2x00_do_work(struct scsi_qla_host *vha)
+> 		case QLA_EVT_GNNFT_DONE:
+> 			qla24xx_async_gnnft_done(vha, e->u.iosb.sp);
 > 			break;
-> -		case QLA_EVT_GPNID:
-> -			qla24xx_async_gpnid(vha, &e->u.gpnid.id);
+> -		case QLA_EVT_GNNID:
+> -			qla24xx_async_gnnid(vha, e->u.fcport.fcport);
 > -			break;
-> 		case QLA_EVT_UNMAP:
-> 			qla24xx_sp_unmap(vha, e->u.iosb.sp);
+> 		case QLA_EVT_GFPNID:
+> 			qla24xx_async_gfpnid(vha, e->u.fcport.fcport);
 > 			break;
 > --=20
 > 2.19.0.rc0
