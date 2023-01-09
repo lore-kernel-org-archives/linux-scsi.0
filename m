@@ -2,154 +2,156 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A0E4C5479D
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Jan 2023 20:14:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E2FBC5479D
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Jan 2023 21:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237643AbjAIUOu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Jan 2023 15:14:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38238 "EHLO
+        id S237397AbjAIVZO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Jan 2023 16:25:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237762AbjAIUO1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2023 15:14:27 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 203E032182
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2023 12:14:25 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 309K9UvK001999;
-        Mon, 9 Jan 2023 20:14:23 GMT
+        with ESMTP id S237825AbjAIVYm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2023 16:24:42 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B85C1D10D
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2023 13:23:37 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 309L5iaw017489;
+        Mon, 9 Jan 2023 21:23:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=1XP3cjpi6Ghtre3XjPzNuOuIIbmL/m+G0C6H71Mb3So=;
- b=y8ZLf6YF6jiMtkDnrv8UfuZv0//ALkMnJUSLQD2Z+W3FYYRTjKT5pmGHXp9Webyls574
- DeGkEI6MF+A9WgCveNqEZ9bSfT7yJPgejGmQeT7YiY/bMemO8sOVWj7e2Us/eh4uwdI1
- /QR07CfPxhk4AyYWqRyVVCiq4tcdtzYnmK37Mnn5YZ0NIBOioekYMd7GVLJccp56mbmz
- Ce6ZNITAbVsssbOsGLoJSrFUg2WjZUV05q2o38MVQ1IMzt6BOJCG4PKsE3vkvQyJBgyy
- DhSkq1FV1DQ2qRgCDiTx1rdoLe05PKJzTsYKWZY5sqk9AcKZr7qrqe0Zx1k8m4mUSrLj XQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mydxmb0db-1
+ bh=jx4ckawpwCXqe3JsHNXWskjX7t5pgOwY8clFYauZ7q4=;
+ b=nHtFzOWxXqi5Eydw+vgREcuUIE6NWSfgZh3+O9+QXp0XhRwrA/c0RG/gilck6ipk/lwx
+ 4D+mUH4oHyjBaziFtFW7ky8pE3nOHNJOR8ay6kXUeB5djHo2ZdfISrXkoMJtkhsAJUJV
+ 2MAXMLpkvkcCnJhd+hla7X9sxuml1dQoZC2GhUWeq4P/X6g6YwmxpniAIu7qCjz5SwGm
+ 2SbB1+OinlHhpHXluzvtsmL2XtySN3rBDpunvvIES2SuLJzcQSQiOyhyhPmIyrRzc7XQ
+ phhq4TAeivSZjdhQDe0RjRVHUFCvRkUSf+CbDFBJz0bTniaUFvgEKO4OJoS7CdLu3uUa Rw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3my0btkrjs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 09 Jan 2023 20:14:23 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 309IO4ag035380;
-        Mon, 9 Jan 2023 20:09:22 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2102.outbound.protection.outlook.com [104.47.55.102])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n0h8un063-1
+        Mon, 09 Jan 2023 21:23:35 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 309KHZ6l007710;
+        Mon, 9 Jan 2023 21:23:34 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2105.outbound.protection.outlook.com [104.47.58.105])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3mxy64haty-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 09 Jan 2023 20:09:22 +0000
+        Mon, 09 Jan 2023 21:23:34 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gGuD0GE8lQT71Ozt3XgGzAr60t19rhlQvE3r5MEZ0AxA0liN1g8Qv3gT+Nh4FVHmcwUwVIXt/VSH3fXnooArWb9uTRUKYyWd1K3KBEpkIDhGDfC/dh+rmcjf2AHPYangRvHXgtuVTEShRl21Infr/apC2EpX12FPR0gA+mCxeMiV3kCK4CBcx6HMV4w6CjbNMwF2t07sWDLkBz1+NA8f5Z5ujokVz7YUurK2tdiNmtRhGMN54pfh1dwUvsSxU0BjKzwE7S/WJJisUXiCSa1wXK7cEZH5ajP6MEDVy/GTq9u+S50t9Wjv/QXF2ZiO1Gf3DBCPBHv41K+b7R+Z9tK2mw==
+ b=a99PVtEzVCbhKHY1j46vXbDFw24n19F72hQE+sxchHHHuYvydjRhHfmaeENbqeJR7TSktReWO4FgHz1FTii+0ZMHngc3KLjbq34Fi0ioJi+Zc+DU+s0MLb42J0Bo/s18aozrAykWBU/Zv6xrUFHEPKmPAb5i3V7lNh4kuxleGjLL8HaUpdg7yKJhK+YeKygNvIFDYV60CN6I6BCWlGn8teAaL8+OrZtxFi5zVq/Pj9baOJNbcGz+aVWwU3MDkre1fSoVVgVCW23xYa5Oo4S/WCsKazZ8wtNBCC8xcG1hT5X7N8mmitaifTuwz3E/5tapjAvcoX5P7NVUJPU8w/Tt8Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1XP3cjpi6Ghtre3XjPzNuOuIIbmL/m+G0C6H71Mb3So=;
- b=YFMs8lo8ss4n1Tcgba4iKMDt+Cc19O+03zKDAh6IdbDf8eLtGVEaNah0mafVmvR51sPiE7GmwrK8UCD+foGUk12D416WffO48IEkYkOFxUrNLHKOoAxGuDHYNO4G/1SnS0CeOFFrx1pTE8pJjXnl31jCgxDeJTCuMUUrSmz1aOwkgeo40ndbpdrvBerun6gnNIwxODPpIfklrrH26ynyd6adeb6ZYNCLNGm7N52h81wl2tuirC6UFbPnDw6FSdyAsIZcuVj/1BPw880mDIHLeGBtxSwKsVjeVyBl0yrvpEwY/Pk4OBPGYZ5rllzlCsOulRQE0uV0iywDeWBPa1NWPQ==
+ bh=jx4ckawpwCXqe3JsHNXWskjX7t5pgOwY8clFYauZ7q4=;
+ b=P4zSuxAQg8suFaeYXUE9f8mszARjkQT6hlYaz6sXU5gqtCgM+vwEsmpMT9MbVf32XnHRUicO+zRJ1c3rCZgAeZayqLtoPEugRtl0CFdU8Q2CwbchqHd5+swHIy1BP+5qd+hub0ju3xCFQ8dpyNPKHUpFJ9ksjrreuUFM8kcLDGLGEr2Qhuqpa0E4e2g0JBoseUxLncfW1ucFDaLNhwvYIHKdn90Tjj9uh0OUFoT6P6VjBN/Q4tVGbEMo58AsCKCKp3Nb0IhbkKTwJYPstTgGXe7uFfA7Sj37XyckzsDaQUJEi7tiDlPPx4/QtZBjVQlSpyydV90mKmmC0ocawAhWnw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1XP3cjpi6Ghtre3XjPzNuOuIIbmL/m+G0C6H71Mb3So=;
- b=RbqfhVcAySg8A5ODbC5JNbBBZL8IRtEWj3K19dxkDp2AZTTrNuJSCIPBXTHGT0WKLJxcjWFw6xL2tLO6sqk3rv9lyZKRjs5drOkOymTdO8hZ2+zw2Q8UtYwalPhc13l1+lerxIgm8RT1VMxM7MGe+9EZR89JhP3/vGHcrwZ42Y0=
+ bh=jx4ckawpwCXqe3JsHNXWskjX7t5pgOwY8clFYauZ7q4=;
+ b=aHn+A3BCUSohXYFJRaeJO68sdzyCbSCjUDHJe/nU6TWexJ9TKEZ/Uh6SBYTSRytH1tCPK3zyk+2eEh0uKDMKHV8sBl9zwAdZB2VubLYMd8Zeoe7WYILBcTR1hFeANm1JBwfoLpw9FYpDSxhVYuYAQ0utu+LvXszHmmVTWtopLX8=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by SA2PR10MB4665.namprd10.prod.outlook.com (2603:10b6:806:fb::17) with
+ by DM6PR10MB4234.namprd10.prod.outlook.com (2603:10b6:5:21f::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.11; Mon, 9 Jan
- 2023 20:09:20 +0000
+ 2023 21:23:32 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::bc55:518f:9d06:9762]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::bc55:518f:9d06:9762%2]) with mapi id 15.20.5944.019; Mon, 9 Jan 2023
- 20:09:20 +0000
+ 21:23:32 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Nilesh Javali <njavali@marvell.com>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "GR-QLogic-Storage-Upstream@marvell.com" 
-        <GR-QLogic-Storage-Upstream@marvell.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
         "bhazarika@marvell.com" <bhazarika@marvell.com>,
         "agurumurthy@marvell.com" <agurumurthy@marvell.com>,
         "sdeodhar@marvell.com" <sdeodhar@marvell.com>
-Subject: Re: [PATCH 04/10] qla2xxx: relocate/rename vp map
-Thread-Topic: [PATCH 04/10] qla2xxx: relocate/rename vp map
-Thread-Index: AQHZFb959j3yvY4T4UqFo//KeC/HrK6WoQSA
-Date:   Mon, 9 Jan 2023 20:09:19 +0000
-Message-ID: <329E664B-6613-4F6A-A244-17208F49E499@oracle.com>
+Subject: Re: [PATCH 05/10] qla2xxx: edif - Fix performance dip due to lock
+ contention
+Thread-Topic: [PATCH 05/10] qla2xxx: edif - Fix performance dip due to lock
+ contention
+Thread-Index: AQHZFb92vl3+A+jXTku1T44O7uMXq66WtbOA
+Date:   Mon, 9 Jan 2023 21:23:32 +0000
+Message-ID: <65B9EAB4-5C08-419B-9976-381FA59E4540@oracle.com>
 References: <20221222043933.2825-1-njavali@marvell.com>
- <20221222043933.2825-5-njavali@marvell.com>
-In-Reply-To: <20221222043933.2825-5-njavali@marvell.com>
+ <20221222043933.2825-6-njavali@marvell.com>
+In-Reply-To: <20221222043933.2825-6-njavali@marvell.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3696.120.41.1.1)
+x-mailer: Apple Mail (2.3731.300.101.1.3)
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR10MB2943:EE_|SA2PR10MB4665:EE_
-x-ms-office365-filtering-correlation-id: d104e0e0-8cdd-4192-7546-08daf27d64b2
+x-ms-traffictypediagnostic: SN6PR10MB2943:EE_|DM6PR10MB4234:EE_
+x-ms-office365-filtering-correlation-id: f5291b8a-4d73-4a02-0753-08daf287c24f
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: QnD1mpagVd987aIJjo0VfLVyO1UZe/psQcBokHBUp1uX27Tsm1Zi6pstmxZ6onWstz0AXllYxhVTz5yase0NoxX3XVP04qLKQg5ZbEZSLPhrFyAKINdb7Srs1xl8xJ/+znRqIoSHZMQt3p0ye0wKqsold9xeGSc3onR1Jxsm+3OuH9sfmN+ASSzi6rPjh3EBO2+BOU/gRrBGo1XvCvCGfMOM9jdMjWRCIwBN9Hbg4ImWPbYK5CDPqXyOZy6xkBbcjr2yjzOQfsedJMl4/QjIg4vk67EjO4Y4rnpGNLTG6hX3uH+Pv4xfJnlclsJ3guw39ksHbg4Ut9dpSCqeY7C8X5ZHQLPQV+coDi2OorgfMjxzZbtnAN/h/8brZNYStoztC46dnbK2ym25uzb0/WRPr7k42/puaRpL65yH4mdhUY0pqG62V86KQKA5Ryt1EMu3K+fDJd5uOQdUojcFgWtXfZW1IZ6jYPVCbJex6QBHJ9eacggPrJOhH2S40u04hIyV9XRbDGYIJhFlvors8Z75AJUwig/RByJEFMg7DBbcbj9m9Jk1zFINfAy9K/oFEcmhLFcj4XSL5qx1AYJHEDSnD4SyWkJEuo8Diw2nXVpbU1mo+0vE54MQQGIZG/51xAxxVNX3StVLHPukdDca8YC59wghi3Wnwyp+bVMr+eGUX9vrUKELV16HiAboXuwsVOi0hTOpP2BC8vmOMQKQGrvLuePd0rJjwRC/UVrGUqXMbgs=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(366004)(376002)(39860400002)(346002)(396003)(451199015)(66899015)(36756003)(38070700005)(86362001)(66446008)(8676002)(76116006)(64756008)(66946007)(66556008)(8936002)(30864003)(4326008)(2906002)(66476007)(44832011)(6916009)(5660300002)(33656002)(122000001)(83380400001)(38100700002)(478600001)(316002)(71200400001)(91956017)(54906003)(6486002)(41300700001)(53546011)(2616005)(6512007)(186003)(6506007)(45980500001)(579004);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: StUtjVOp7KgPAFeeps25HewOOq6zHpz75BUrDhcyv2RAiE0njIPN2urOvsoza1pMGjKdfz3WSK2u+uqEM2ImUqqeoJv/a8mUi1O43jyDDj3cBUtdE7eGFI0IDNPv4rVIkLAi12FG/bqnaGcQCJHnxk560onVJn7gSOSKheDnYlTGM+7mkXHAuTX4ZgQogHrPEEsRCAwEZymULrrF+/TzH8xpwu2CkMcfkZ9z3ajoDau8GRgEJgenEUH/Y4KaLF/X8SiZMfM5VMgnW6KXz41CQcAXBu1FCvEswapxPQJb/iBrNvioYzMj96Z3DSzVK3VOipiLro1qKGSXTp/q5Q3W6F5j1OBW+PocJuxRPIzPjcEqe4v1/FMMeqEh/57LSq/3hm7kcMXJQDYD4uqjkg9FWPyfHcmM77krrHbnJy1S3C9h9LiKQAAyQ42DtIy5XwAyI7QSAz5H3ibCZw0umt0g7ddwXfKViIpVJgMJdL9ONV5/VcbZwnyAU06Cot1mKkMfrdXJCVYH9h7JEiZ8S1ArT3JUDrWq+Pk3E2A43SISJl+qM8bKtbINkh3ZnJQPJGtQkaePMubNhMOL4iAQFaUna1wIp4hLX3Msl7ZSvZ5X4NcJFUIXBXcdvh5gq2Vy8N4aFMdCi7oTeG5oiwxCXS4r7r6I3wpiEiSm3xSeJYSQDy8tmakYIvLwKBilXnRSnA2D+HFTpSU02horEGnKhp7UuVTnMNdWDUdlHf0gmuF7wMg=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(136003)(346002)(396003)(39860400002)(376002)(451199015)(36756003)(38070700005)(86362001)(66446008)(8676002)(64756008)(66946007)(66556008)(8936002)(76116006)(30864003)(4326008)(2906002)(66476007)(44832011)(6916009)(5660300002)(33656002)(38100700002)(122000001)(83380400001)(478600001)(316002)(71200400001)(91956017)(54906003)(6486002)(41300700001)(53546011)(2616005)(186003)(6506007)(6512007)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Qo0hghiX/gh9jjr+zHiNwiMj/xrrLlnnSsotYbJHACKpGjBqh4WKgsF1gRQE?=
- =?us-ascii?Q?Fyoa0hocvzEsLw51xlMgMoAh2yEoIi6+wAXUIMHxQo2ahS6pFiPQldv+/uXR?=
- =?us-ascii?Q?hG3uo5db1dyUGXh6ynZbU/9oQeKS7OACHg8rzS4DYBHooNF/pnRY2bTbcAoP?=
- =?us-ascii?Q?BNx/rctEt9F/mQI/lVmSkxM5kKXNez0XSR5sJAxXbV89Ek6ZwfmC5UprsSHG?=
- =?us-ascii?Q?43xohJwWgcG5Gjk2qUPC8WmeLW3KEpslrFgNNCgt6QzigBjM8wP5fsQDNQ+i?=
- =?us-ascii?Q?J4eeT8LYuHsweAhG9cxURz1ksdrKj+iJ/mP1gzVP8y6PAScRFt6PXtYUqYrZ?=
- =?us-ascii?Q?wV5asy4p+AAX0rr+rQFkGf1Fta1RAzkFlN4uwtIsCn/cLxSJZHn/4kn9dMko?=
- =?us-ascii?Q?cQ9tYa6P8Bq9zgqA9WYCZ//ELmIN+Y9sOhcEsSKGnw9+/yYJeG0AaXJzWh22?=
- =?us-ascii?Q?SGuIzOuPctkHdGk5NVWzdUpB+9T8AiuKoiUcNq+R01e0nZulmfwqxoioZ+W+?=
- =?us-ascii?Q?szRETVOGctRs3BcEDrP+7l7tBsmiB8RwoAWLqxzG9pyoB1aTct4fd8JZU4/D?=
- =?us-ascii?Q?Q5ykTZI4ojVaLG+lz9ldtZ5xTJSCXhd+R6W9HpT0AgtWPgqXmwxABKQmakLS?=
- =?us-ascii?Q?hAMPUGBEX6LfCY5Di4OPV1kIH1A2iJPkYx3XkVJ0Mb+ravY1LAQMki8YaZu9?=
- =?us-ascii?Q?ehUPyu0f8r0wpBLTjpcS89re9oy4V6iVTovqB/jhRTQVavpltR46Oh4o1WMD?=
- =?us-ascii?Q?TA1JNv+bDGcEt7NbI0dJaS3AMq/ShoF/0U4M4zV1OryiM0IatIUETfoz8uOX?=
- =?us-ascii?Q?zIm78VCG+jBm0kxMskKHe+4a7JdzF2p2vRRvYI9R8Ybn2lxyHyY7GIn8xdhQ?=
- =?us-ascii?Q?jTJ4R4OxBdqmF8nIBR/zm/N8xnnzrA4cvgZpcZ8sXnW1hqv9GgH0koHg21Zj?=
- =?us-ascii?Q?g2RRT7K/KUFaaMDzp8A05IQ/dlgIytWOM6atbzQ5AZ8Ylhg6DVm0Zl+n6dBI?=
- =?us-ascii?Q?+/W8Tm5jYyw4GQgyUXbPchyqALRIlC2bExVj0j2Vf5pJ4v9t+VgZlFatMhyW?=
- =?us-ascii?Q?3uv/bMmlMKlWRL3ZKoAvyNeyD30XXIzf0919VTFojFwp1WQd+5WK/ZnFz3SB?=
- =?us-ascii?Q?ZWM1lIPP52qkFJSoT4cN8FRXa2cJwv3OgU3xtuQ20duReOmxuwkfLWJCA0sX?=
- =?us-ascii?Q?XS7vzyg/lz3QDkiqoEbI6E7q+bkzniT1DUVXguLv1lYfOP7qGT42Korbsoo+?=
- =?us-ascii?Q?JlXavQfzYujaLr8p054xbbx5DgqoWMUrJCuK+uk3SKcQv1OH8ixa3j22kvU/?=
- =?us-ascii?Q?5UPvYkiQr0D3nBuqvTBlhSyio3zJhSx0ryO2GXrZTueNVTUuG2Np2xZ5rb+p?=
- =?us-ascii?Q?NRGiU6Li6+SodyyYZo6stMPdD71GUb2RhqifmH8WyHi34Z51zqWtVbmjdFSc?=
- =?us-ascii?Q?SWD3TA2mmy5nsRwKu0xPla2NMfO+eTXcnESAf/TRNsTWq4FKZ1yoQtq9yhvF?=
- =?us-ascii?Q?cPzQs3oFtiCTTf3oS+SPmlU5lx1QhMwuW3C/OdSK9wSJTfswLTOzGCb7liNY?=
- =?us-ascii?Q?mQQAHFHmVoZYYcny8VlWeE5jq90mkEiAX0K1JDYQw6qhhTmMMOcOh7C0bKo+?=
- =?us-ascii?Q?MmVlxGIfnkr9Rl6yN1k2PixtiHbqPQyVO8uHwiHLqjLz/heE+W81z1sn7ncc?=
- =?us-ascii?Q?lJP01PUPZUlP5QgVD0uMFQR7Oxk=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Ix357klKdZgjNhmqrWdPfRENkJBKBX+bSgjyC8IHvHkgE2go1FubyxUYkZai?=
+ =?us-ascii?Q?k+XuT/zOE0H/or01nbhwOJrAv9mSWwAdjT7cERADky3pGdUfvCC9yX9nMl0f?=
+ =?us-ascii?Q?DGI1r69HN/CnmGRU6YvUEM4p0AQ2/iFJAdPX8w08JDQE9v1G+C4FrRAWEA3T?=
+ =?us-ascii?Q?Q1mzCGJXnDtAyPLoRRZI8T8wDYTT2xQiIf4LOngcTZ/1QThk4H288zXojciY?=
+ =?us-ascii?Q?e4eFDjEuVSEXGy+4SHoKgUkemrMwTepxz3t4j7JrafewDeMeXSdpp+2Mhl+l?=
+ =?us-ascii?Q?2DjIRIVyi39Xu+fY01W90SnzZid3FJ3YE/6Nix/raBt3L+RbBeRQQTRJOfXk?=
+ =?us-ascii?Q?lQWT2NG8CWeGDmCi5Z8JN2n1RZo/FbrTStZEgYE64xXT/8IV42ZU3PBIFqiD?=
+ =?us-ascii?Q?hd2F3kObwbn/TWRENk15xVI25AiWqVlKvY+z2Z1JljJyYF6W8J5uP4nefDnp?=
+ =?us-ascii?Q?VKXyNq6mjKEa35mL+W4rqrnjTgBKvogw+xUqxd2H5yYQKSjy49jwYxkFHFXr?=
+ =?us-ascii?Q?Hy+YdEeZ8bnlsqQ2iU22OOsusG4TRlP/aEJERzWnxTtx1w47feLJ3biOe8H3?=
+ =?us-ascii?Q?6IY2fHc3a0tFal4Xzc9XY0EYIolxxGpuPJ0NmouZRQkNUUP8ECt0NMQJg0kx?=
+ =?us-ascii?Q?xn2Q+z3TuopOSylhVCMWQ3YaMoN8h9qVkzg1gS0n3oJ1wqI9LC5h3WQE2Wf9?=
+ =?us-ascii?Q?XOLiQM3aQxbyXcXJdMzEDvIzZnHBb3J18mI3A3+i9+Xv1EUTfGURtLpExWrX?=
+ =?us-ascii?Q?Km2UiHU0qdByk9Td1s+UGB2fJcWX/2qRRxIQODnG6Yrze3sCD72bB8Owd1tQ?=
+ =?us-ascii?Q?NeE3PoAxP8rmLHS0/M21wcYCYCSLE7prfnO/xn9phzja1ZMN+zbHDYwg61in?=
+ =?us-ascii?Q?85Epviib4iJDKsf5MMU9AoEA06KYRLdZjUszHgWmDY81YvVhd59DCPohP0nH?=
+ =?us-ascii?Q?rp+lyzGjRjSP+8p1P2FycoZrYMqh3sRNAcxUa1euWQ65/ulDGJLVurB9ns21?=
+ =?us-ascii?Q?x9qCcRqmWGetX/SWdYNVVk5gQu46gCAGzblI9DPZJ4o306TKsjXYfI9FmH8Y?=
+ =?us-ascii?Q?nUh8iqm7CNg8/PwuQ3C408FyiW+bj+lEJfNG8A+JTsTjx644+HXZFu6Jinim?=
+ =?us-ascii?Q?jyyBqn7XuNr7CVokJdRWCOm9dPLQMOr6GvbEjVk3/Hh9G4f5/jS1l8hmq8vG?=
+ =?us-ascii?Q?luS2K46eRlqIsgTAndYvYV+AQewIsJFXNSAfpuZMQP16csB0vJ8maGN1ojlv?=
+ =?us-ascii?Q?iQdFRTdzAMKhhHobL+pRrvFlz1muasAehxPbtD/7rGTek9JhI1IoKDOR0gRB?=
+ =?us-ascii?Q?vlsdEGPmry8gkvgk0+HWJinJyVbBAaaSsjIP953k9cq2fNaV8+K49IDTV+22?=
+ =?us-ascii?Q?IsXXN2YSndMC5HaGjDBEnkpqDuns1a7lgs3ty/tKwrWgfXz63dPrbmnFAhQA?=
+ =?us-ascii?Q?Pm0n3NOzUznN7Gbtu0wfqgAiB8yej5P2iixAADnq/caY0qC9Koprjv26TLOk?=
+ =?us-ascii?Q?hkHHL77ukmy95QTNOG4BdQZLH4OXxPETgSwG1yip0A/SVmYJBtOy/CHhEaq6?=
+ =?us-ascii?Q?3PDJ8uCA6HgELaAcSyf/WuyM3yiqCCpG6rtjpgilMexsRAQ802W76WJKf2vC?=
+ =?us-ascii?Q?vkdfpnwoXtUkt09v7hFlPdpxPPoaTzLvEy5PIewYMCR3wMvzCvk/E2gZevH6?=
+ =?us-ascii?Q?Vh9UDKoGVTn1q+IHmcSwGs06Hu8=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <67CD4F1F8A232644B15C931D1073D5E6@namprd10.prod.outlook.com>
+Content-ID: <6D4E4408A8240F4EBB5FABB9975B7CAC@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: tmoUbieOngDukjdTqtJfvFF5RsGLx7V0d8K//4dtJFVRSXokcVFpurMdSUHz0P3QODd4/h9t/ufSn/Rf1Lw8TXtb4ei4XpXl6dhv6hjue4ao2zq4uU39kovXED1LO0jT5QqB2T1+SfDKmTPYVtQdwAvhSVOTtzChAnPiAJrl84b6Rgx1p41AcvKmIKwAYxW27W52k8vYiFh+NCxnGTkrlAqszbYWGvRuOqFT+Dq1ZHR0uxoBNiAJNk3bAkJGSmsrY7/qPCTaUDuepDzj8cv4YHwpoqda4F28rvpCNusssYm3jXHtrpDz0x+/J9Bh50fv7i7UIwN3Uqm5GP/Wehp1nXvIT/9wuGYTiO1vxMxofGO2EOZ4HhJ1rDsrYYzhrB22Xx3s3nkEq8EFDkBRuncgmP9/Q84gWBB5DMcEBpj/zXwSUA9exBRQXGWxBb3oapj9fxjVS8NRMqsmpIhiCvZMujEuc5L2PtI8sVfXOCzhieU8xAGknzpDwuiKsIIvLNrBktvtq76pq1UixD0DjlgjrSpZ4EohBeVy5B3yhjkMv6sbXcZZuXnIvP0bHf5ZVSn2DGoUu1XUW+ssihOYnm6Lf/nNrNpqouQIheNur9NnN69TOkJTX6nhmwSbdUvY2CIwQYDApxsmXnJ5xe5d0WqnNV6Ai597cKXTtJ2s1+6TGv8IEw6FYXJWZ9ZPhFvMSfcIUshiHl9zXNI876Bn/YXxntw57NufgzhQ7Aky/2jysPE3Xs3Mf3+mOXTLDLOv+OLga3jcVnZOjGtVZUA8weXyGFooh5iDEtzY1R/yl406esU=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ivx6Riw2Nud8Fd9MDmSHM1gPzSiOvfcoBh6reEabbyYkm4xvS2ZwYzdONArNA5SGnoGYq/IAgXP16HlRDE2TW83jGdLZ5w6FyHJCvAtt7k25Dzzb7w52n308PsfBO8/+IcoaGEC77TOu0dcBPWd98B7M7L60efABNFkBt+FSzrQkVaE0eOBAgrBhi82JMDawGsoNJiLeS4w4ZgwFBw3uLkgeNtXVslrejTmCWV86GvOMgwjI9hN3GCUsi8tqCpSutjFM1CUWy+CgyZXg1hcXw9B2pzzUJ6NB5HvrSTwwPMYcdWAjg/bicEbijLjLmb7loLOuDtmyfxDKuybIJctVrcpspDOMeafD/D//5xweMSoaC/gZYwvrHGSaVsVkVxFtwK+AURJBaQ6Ue2FQgPUUbBhWPaDDBkjTOkAasYqiggJEn8DKhu3xQ3ZS4mrY3tOji2bTOtT5WR4A7AcPaErvbB7W/LDkztumEt7Z9ToZfcoSh5tDFwLJJO/xhrQhxBzNwm4zawe7iw9omPUred0GHK0kAtSPrqPo4iIIm7LsSuGgUQmz/Bh4mTNJ/4srh/YtxvcPjZQoKjsB1PoeTaoUFvb0Q/5dPlVQhtDodmZrfO+Dp1+GfI4lBSkAgPbQWeg6kLdk4PTwkbo4jKKtW+XUvXRrYf5ZeLgenuqir1CNpK+3pyn8dB67GIMw1jUc7C4yr6J8uN2ILYjv+kIt+JU4cg+WN/tzmyfcnuVLlBC9LbxKz4ZypaJh6GgYOBieoJ0XLuhS334+ceNWDdpisF/2WT0AME8oGKClW5eeaFFKEiY=
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d104e0e0-8cdd-4192-7546-08daf27d64b2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2023 20:09:20.0128
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5291b8a-4d73-4a02-0753-08daf287c24f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2023 21:23:32.0187
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: XxD8lXC4qELChKkMroHn9akMrR88TtT+LIYPz+SApw1AIgbzPVGqcBW9QrR6pK6gp/GQX5HOlG1qyCaeuXxkNODflkTCli6ARM/9J8iC1zA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4665
+X-MS-Exchange-CrossTenant-userprincipalname: swYo7x4U6Cx65I9cHOS5RaBsR0B4uGks/Hi5Y9y4n/87MisEJspkgpLj6hCNyJRg7gyKVuWBB9CaJ/CAntEfEZ0fhItk0dItExAKhEgEWBI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4234
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2023-01-09_14,2023-01-09_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- bulkscore=0 adultscore=0 mlxlogscore=999 phishscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2301090142
-X-Proofpoint-ORIG-GUID: 0dFNAzkffKRmMwuI2OR4lzsWMVWTT2RA
-X-Proofpoint-GUID: 0dFNAzkffKRmMwuI2OR4lzsWMVWTT2RA
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0
+ malwarescore=0 mlxscore=0 adultscore=0 spamscore=0 bulkscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2301090149
+X-Proofpoint-GUID: v0JGNgMjOtLMKlJ5GtNWuNaTeB4Z2Alh
+X-Proofpoint-ORIG-GUID: v0JGNgMjOtLMKlJ5GtNWuNaTeB4Z2Alh
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
+
 
 
 
@@ -157,540 +159,418 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 >=20
 > From: Quinn Tran <qutran@marvell.com>
 >=20
-> There is no functional change in this patch.
-> VP map resource is renamed and relocated so
-> it is not viewed as just a target mode resource.
+> User experienced performance dip on measuring IOPS while
+> EDIF enabled. During IO time, driver uses dma_pool_zalloc call
+> to allocate a chunk of memory. This call contains a lock behind the
+> scene which contribute to lock contention.
+> Save the allocated memory for reuse and avoid the lock.
 >=20
-> Cc: stable@vger.kernel.org
 > Signed-off-by: Quinn Tran <qutran@marvell.com>
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
-> drivers/scsi/qla2xxx/qla_def.h    |   4 +-
-> drivers/scsi/qla2xxx/qla_edif.h   |   2 +
-> drivers/scsi/qla2xxx/qla_gbl.h    |   5 +-
-> drivers/scsi/qla2xxx/qla_init.c   |   4 +-
-> drivers/scsi/qla2xxx/qla_mbx.c    |   8 +--
-> drivers/scsi/qla2xxx/qla_mid.c    |  83 ++++++++++++++++++++++--
-> drivers/scsi/qla2xxx/qla_os.c     |  13 +++-
-> drivers/scsi/qla2xxx/qla_target.c | 103 +++---------------------------
-> drivers/scsi/qla2xxx/qla_target.h |   1 -
-> 9 files changed, 113 insertions(+), 110 deletions(-)
+> drivers/scsi/qla2xxx/qla_def.h  |  22 +++++-
+> drivers/scsi/qla2xxx/qla_edif.c |  29 ++------
+> drivers/scsi/qla2xxx/qla_gbl.h  |   5 +-
+> drivers/scsi/qla2xxx/qla_init.c |  12 ++++
+> drivers/scsi/qla2xxx/qla_iocb.c |  10 +--
+> drivers/scsi/qla2xxx/qla_mid.c  | 116 ++++++++++++++++++++++++++++++++
+> drivers/scsi/qla2xxx/qla_os.c   |  12 ++--
+> 7 files changed, 170 insertions(+), 36 deletions(-)
 >=20
 > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
 f.h
-> index 2ed04f71cfc5..4bf167c00569 100644
+> index 4bf167c00569..6f6190404939 100644
 > --- a/drivers/scsi/qla2xxx/qla_def.h
 > +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -3935,7 +3935,6 @@ struct qlt_hw_data {
-> 	__le32 __iomem *atio_q_out;
+> @@ -384,6 +384,13 @@ struct els_reject {
+> struct req_que;
+> struct qla_tgt_sess;
 >=20
-> 	const struct qla_tgt_func_tmpl *tgt_ops;
-> -	struct qla_tgt_vp_map *tgt_vp_map;
->=20
-> 	int saved_set;
-> 	__le16	saved_exchange_count;
-> @@ -4759,6 +4758,7 @@ struct qla_hw_data {
-> 	spinlock_t sadb_lock;	/* protects list */
-> 	struct els_reject elsrej;
-> 	u8 edif_post_stop_cnt_down;
-> +	struct qla_vp_map *vp_map;
-> };
->=20
-> #define RX_ELS_SIZE (roundup(sizeof(struct enode) + ELS_MAX_PAYLOAD, SMP_=
-CACHE_BYTES))
-> @@ -5059,7 +5059,7 @@ struct qla27xx_image_status {
-> #define SET_AL_PA	2
-> #define RESET_VP_IDX	3
-> #define RESET_AL_PA	4
-> -struct qla_tgt_vp_map {
-> +struct qla_vp_map {
-> 	uint8_t	idx;
-> 	scsi_qla_host_t *vha;
-> };
-> diff --git a/drivers/scsi/qla2xxx/qla_edif.h b/drivers/scsi/qla2xxx/qla_e=
-dif.h
-> index 7cdb89ccdc6e..aa566cdb77e5 100644
-> --- a/drivers/scsi/qla2xxx/qla_edif.h
-> +++ b/drivers/scsi/qla2xxx/qla_edif.h
-> @@ -145,4 +145,6 @@ struct enode {
-> 	(qla_ini_mode_enabled(_s->vha) && (_s->disc_state =3D=3D DSC_DELETE_PEND=
- || \
-> 	 _s->disc_state =3D=3D DSC_DELETED))
->=20
-> +#define EDIF_CAP(_ha) (ql2xsecenable && IS_QLA28XX(_ha))
+> +struct qla_buf_dsc {
+> + u16 tag;
+> +#define TAG_FREED 0xffff
+> + void *buf;
+> + dma_addr_t buf_dma;
+> +};
 > +
-> #endif	/* __QLA_EDIF_H */
+> /*
+>  * SCSI Request Block
+>  */
+> @@ -392,14 +399,16 @@ struct srb_cmd {
+> uint32_t request_sense_length;
+> uint32_t fw_sense_length;
+> uint8_t *request_sense_ptr;
+> - struct ct6_dsd *ct6_ctx;
+> struct crc_context *crc_ctx;
+> + struct ct6_dsd ct6_ctx;
+> + struct qla_buf_dsc buf_dsc;
+> };
+>=20
+> /*
+>  * SRB flag definitions
+>  */
+> #define SRB_DMA_VALID BIT_0 /* Command sent to ISP */
+> +#define SRB_GOT_BUF BIT_1
+> #define SRB_FCP_CMND_DMA_VALID BIT_12 /* DIF: DSD List valid */
+> #define SRB_CRC_CTX_DMA_VALID BIT_2 /* DIF: context DMA valid */
+> #define SRB_CRC_PROT_DMA_VALID BIT_4 /* DIF: prot DMA valid */
+> @@ -3722,6 +3731,16 @@ struct qla_fw_resources {
+>=20
+> #define QLA_IOCB_PCT_LIMIT 95
+>=20
+> +struct  qla_buf_pool {
+> + u16 num_bufs;
+> + u16 num_active;
+> + u16 max_used;
+> + u16 reserved;
+> + unsigned long *buf_map;
+> + void **buf_array;
+> + dma_addr_t *dma_array;
+> +};
+> +
+> /*Queue pair data structure */
+> struct qla_qpair {
+> spinlock_t qp_lock;
+> @@ -3775,6 +3794,7 @@ struct qla_qpair {
+> struct qla_tgt_counters tgt_counters;
+> uint16_t cpuid;
+> struct qla_fw_resources fwres ____cacheline_aligned;
+> + struct  qla_buf_pool buf_pool;
+> u32 cmd_cnt;
+> u32 cmd_completion_cnt;
+> u32 prev_completion_cnt;
+> diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_e=
+dif.c
+> index d17ba6275b68..8374cbe8993b 100644
+> --- a/drivers/scsi/qla2xxx/qla_edif.c
+> +++ b/drivers/scsi/qla2xxx/qla_edif.c
+> @@ -3007,26 +3007,16 @@ qla28xx_start_scsi_edif(srb_t *sp)
+> goto queuing_error;
+> }
+>=20
+> - ctx =3D sp->u.scmd.ct6_ctx =3D
+> -    mempool_alloc(ha->ctx_mempool, GFP_ATOMIC);
+> - if (!ctx) {
+> - ql_log(ql_log_fatal, vha, 0x3010,
+> -    "Failed to allocate ctx for cmd=3D%p.\n", cmd);
+> - goto queuing_error;
+> - }
+> -
+> - memset(ctx, 0, sizeof(struct ct6_dsd));
+> - ctx->fcp_cmnd =3D dma_pool_zalloc(ha->fcp_cmnd_dma_pool,
+> -    GFP_ATOMIC, &ctx->fcp_cmnd_dma);
+> - if (!ctx->fcp_cmnd) {
+> + if (qla_get_buf(vha, sp->qpair, &sp->u.scmd.buf_dsc)) {
+> ql_log(ql_log_fatal, vha, 0x3011,
+> -    "Failed to allocate fcp_cmnd for cmd=3D%p.\n", cmd);
+> +    "Failed to allocate buf for fcp_cmnd for cmd=3D%p.\n", cmd);
+> goto queuing_error;
+> }
+>=20
+> - /* Initialize the DSD list and dma handle */
+> - INIT_LIST_HEAD(&ctx->dsd_list);
+> - ctx->dsd_use_cnt =3D 0;
+> + sp->flags |=3D SRB_GOT_BUF;
+> + ctx =3D &sp->u.scmd.ct6_ctx;
+> + ctx->fcp_cmnd =3D sp->u.scmd.buf_dsc.buf;
+> + ctx->fcp_cmnd_dma =3D sp->u.scmd.buf_dsc.buf_dma;
+>=20
+> if (cmd->cmd_len > 16) {
+> additional_cdb_len =3D cmd->cmd_len - 16;
+> @@ -3145,7 +3135,6 @@ qla28xx_start_scsi_edif(srb_t *sp)
+> cmd_pkt->fcp_cmnd_dseg_len =3D cpu_to_le16(ctx->fcp_cmnd_len);
+> put_unaligned_le64(ctx->fcp_cmnd_dma, &cmd_pkt->fcp_cmnd_dseg_address);
+>=20
+> - sp->flags |=3D SRB_FCP_CMND_DMA_VALID;
+> cmd_pkt->byte_count =3D cpu_to_le32((uint32_t)scsi_bufflen(cmd));
+> /* Set total data segment count. */
+> cmd_pkt->entry_count =3D (uint8_t)req_cnt;
+> @@ -3177,15 +3166,11 @@ qla28xx_start_scsi_edif(srb_t *sp)
+> return QLA_SUCCESS;
+>=20
+> queuing_error_fcp_cmnd:
+> - dma_pool_free(ha->fcp_cmnd_dma_pool, ctx->fcp_cmnd, ctx->fcp_cmnd_dma);
+> queuing_error:
+> if (tot_dsds)
+> scsi_dma_unmap(cmd);
+>=20
+> - if (sp->u.scmd.ct6_ctx) {
+> - mempool_free(sp->u.scmd.ct6_ctx, ha->ctx_mempool);
+> - sp->u.scmd.ct6_ctx =3D NULL;
+> - }
+> + qla_put_buf(sp->qpair, &sp->u.scmd.buf_dsc);
+> qla_put_fw_resources(sp->qpair, &sp->iores);
+> spin_unlock_irqrestore(lock, flags);
+>=20
 > diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gb=
 l.h
-> index 08ea8dc6c6bb..958892766321 100644
+> index 958892766321..d802d37fe739 100644
 > --- a/drivers/scsi/qla2xxx/qla_gbl.h
 > +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-> @@ -257,6 +257,7 @@ struct edif_sa_ctl *qla_edif_find_sa_ctl_by_index(fc_=
-port_t *fcport,
-> /*
->  * Global Functions in qla_mid.c source file.
->  */
-> +extern void qla_update_vp_map(struct scsi_qla_host *, int);
-> extern struct scsi_host_template qla2xxx_driver_template;
-> extern struct scsi_transport_template *qla2xxx_transport_vport_template;
-> extern void qla2x00_timer(struct timer_list *);
-> @@ -955,7 +956,7 @@ extern struct fc_port *qlt_find_sess_invalidate_other=
-(scsi_qla_host_t *,
-> 	uint64_t wwn, port_id_t port_id, uint16_t loop_id, struct fc_port **);
-> void qla24xx_delete_sess_fn(struct work_struct *);
-> void qlt_unknown_atio_work_fn(struct work_struct *);
-> -void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
-> +void qla_update_host_map(struct scsi_qla_host *, port_id_t);
-> void qla_remove_hostmap(struct qla_hw_data *ha);
-> void qlt_clr_qp_table(struct scsi_qla_host *vha);
-> void qlt_set_mode(struct scsi_qla_host *);
-> @@ -968,6 +969,8 @@ extern void qla_nvme_abort_set_option
-> 		(struct abort_entry_24xx *abt, srb_t *sp);
-> extern void qla_nvme_abort_process_comp_status
-> 		(struct abort_entry_24xx *abt, srb_t *sp);
-> +struct scsi_qla_host *qla_find_host_by_vp_idx(struct scsi_qla_host *vha,
-> +	uint16_t vp_idx);
+> @@ -1015,5 +1015,8 @@ int qla2xxx_enable_port(struct Scsi_Host *shost);
 >=20
-> /* nvme.c */
-> void qla_nvme_unregister_remote_port(struct fc_port *fcport);
+> uint64_t qla2x00_get_num_tgts(scsi_qla_host_t *vha);
+> uint64_t qla2x00_count_set_bits(u32 num);
+> -
+> +int qla_create_buf_pool(struct scsi_qla_host *, struct qla_qpair *);
+> +void qla_free_buf_pool(struct qla_qpair *);
+> +int qla_get_buf(struct scsi_qla_host *, struct qla_qpair *, struct qla_b=
+uf_dsc *);
+> +void qla_put_buf(struct qla_qpair *, struct qla_buf_dsc *);
+> #endif /* _QLA_GBL_H */
 > diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
 nit.c
-> index a23cb2e5ab58..fc540bd13a90 100644
+> index fc540bd13a90..ce9e28b4d339 100644
 > --- a/drivers/scsi/qla2xxx/qla_init.c
 > +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -4822,9 +4822,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
-> 	spin_lock_irqsave(&ha->hardware_lock, flags);
-> 	if (vha->hw->flags.edif_enabled) {
-> 		if (topo !=3D 2)
-> -			qlt_update_host_map(vha, id);
-> +			qla_update_host_map(vha, id);
-> 	} else if (!(topo =3D=3D 2 && ha->flags.n2n_bigger))
-> -		qlt_update_host_map(vha, id);
-> +		qla_update_host_map(vha, id);
-> 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> @@ -9442,6 +9442,13 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi=
+_qla_host *vha, int qos,
+> goto fail_mempool;
+> }
 >=20
-> 	if (!vha->flags.init_done)
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index 359595a64664..254fd4c64262 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -4010,7 +4010,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
-> 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
-> 		    rptid_entry->port_id[0]);
-> 		ha->current_topology =3D ISP_CFG_NL;
-> -		qlt_update_host_map(vha, id);
-> +		qla_update_host_map(vha, id);
+> + if (qla_create_buf_pool(vha, qpair)) {
+> + ql_log(ql_log_warn, vha, 0xd036,
+> +    "Failed to initialize buf pool for qpair %d\n",
+> +    qpair->id);
+> + goto fail_bufpool;
+> + }
+> +
+> /* Mark as online */
+> qpair->online =3D 1;
 >=20
-> 	} else if (rptid_entry->format =3D=3D 1) {
-> 		/* fabric */
-> @@ -4126,7 +4126,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
-> 					    WWN_SIZE);
-> 				}
+> @@ -9457,7 +9464,10 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi=
+_qla_host *vha, int qos,
+> }
+> return qpair;
 >=20
-> -				qlt_update_host_map(vha, id);
-> +				qla_update_host_map(vha, id);
-> 			}
+> +fail_bufpool:
+> + mempool_destroy(qpair->srb_mempool);
+> fail_mempool:
+> + qla25xx_delete_req_que(vha, qpair->req);
+> fail_req:
+> qla25xx_delete_rsp_que(vha, qpair->rsp);
+> fail_rsp:
+> @@ -9483,6 +9493,8 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha,=
+ struct qla_qpair *qpair)
 >=20
-> 			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
-> @@ -4153,7 +4153,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
-> 			if (!found)
-> 				return;
+> qpair->delete_in_progress =3D 1;
 >=20
-> -			qlt_update_host_map(vp, id);
-> +			qla_update_host_map(vp, id);
+> + qla_free_buf_pool(qpair);
+> +
+> ret =3D qla25xx_delete_req_que(vha, qpair->req);
+> if (ret !=3D QLA_SUCCESS)
+> goto fail;
+> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
+ocb.c
+> index 9a7cc0ba5f58..b9b3e6f80ea9 100644
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+> @@ -623,7 +623,7 @@ qla24xx_build_scsi_type_6_iocbs(srb_t *sp, struct cmd=
+_type_6 *cmd_pkt,
+> }
 >=20
-> 			/*
-> 			 * Cannot configure here as we are still sitting on the
-> @@ -4184,7 +4184,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+> cur_seg =3D scsi_sglist(cmd);
+> - ctx =3D sp->u.scmd.ct6_ctx;
+> + ctx =3D &sp->u.scmd.ct6_ctx;
 >=20
-> 		ha->flags.n2n_ae =3D 1;
-> 		spin_lock_irqsave(&ha->vport_slock, flags);
-> -		qlt_update_vp_map(vha, SET_AL_PA);
-> +		qla_update_vp_map(vha, SET_AL_PA);
-> 		spin_unlock_irqrestore(&ha->vport_slock, flags);
+> while (tot_dsds) {
+> avail_dsds =3D (tot_dsds > QLA_DSDS_PER_IOCB) ?
+> @@ -3459,13 +3459,7 @@ qla82xx_start_scsi(srb_t *sp)
+> goto queuing_error;
+> }
 >=20
-> 		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+> - ctx =3D sp->u.scmd.ct6_ctx =3D
+> -    mempool_alloc(ha->ctx_mempool, GFP_ATOMIC);
+> - if (!ctx) {
+> - ql_log(ql_log_fatal, vha, 0x3010,
+> -    "Failed to allocate ctx for cmd=3D%p.\n", cmd);
+> - goto queuing_error;
+> - }
+> + ctx =3D &sp->u.scmd.ct6_ctx;
+>=20
+> memset(ctx, 0, sizeof(struct ct6_dsd));
+> ctx->fcp_cmnd =3D dma_pool_zalloc(ha->fcp_cmnd_dma_pool,
 > diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mi=
 d.c
-> index 5fff17da0202..274d2ba70b81 100644
+> index 274d2ba70b81..5976a2f036e6 100644
 > --- a/drivers/scsi/qla2xxx/qla_mid.c
 > +++ b/drivers/scsi/qla2xxx/qla_mid.c
-> @@ -52,7 +52,7 @@ qla24xx_allocate_vp_id(scsi_qla_host_t *vha)
-> 	spin_unlock_irqrestore(&ha->vport_slock, flags);
->=20
-> 	spin_lock_irqsave(&ha->hardware_lock, flags);
-> -	qlt_update_vp_map(vha, SET_VP_IDX);
-> +	qla_update_vp_map(vha, SET_VP_IDX);
-> 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
->=20
-> 	mutex_unlock(&ha->vport_lock);
-> @@ -80,7 +80,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
-> 		spin_lock_irqsave(&ha->vport_slock, flags);
-> 		if (atomic_read(&vha->vref_count) =3D=3D 0) {
-> 			list_del(&vha->list);
-> -			qlt_update_vp_map(vha, RESET_VP_IDX);
-> +			qla_update_vp_map(vha, RESET_VP_IDX);
-> 			bailout =3D 1;
-> 		}
-> 		spin_unlock_irqrestore(&ha->vport_slock, flags);
-> @@ -95,7 +95,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
-> 			"vha->vref_count=3D%u timeout\n", vha->vref_count.counter);
-> 		spin_lock_irqsave(&ha->vport_slock, flags);
-> 		list_del(&vha->list);
-> -		qlt_update_vp_map(vha, RESET_VP_IDX);
-> +		qla_update_vp_map(vha, RESET_VP_IDX);
-> 		spin_unlock_irqrestore(&ha->vport_slock, flags);
-> 	}
->=20
-> @@ -187,7 +187,7 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
->=20
-> 	/* Remove port id from vp target map */
-> 	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
-> -	qlt_update_vp_map(vha, RESET_AL_PA);
-> +	qla_update_vp_map(vha, RESET_AL_PA);
-> 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
->=20
-> 	qla2x00_mark_vp_devices_dead(vha);
-> @@ -1005,3 +1005,78 @@ int qla24xx_control_vp(scsi_qla_host_t *vha, int c=
-md)
-> 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
-> 	return rval;
+> @@ -1080,3 +1080,119 @@ void qla_update_host_map(struct scsi_qla_host *vh=
+a, port_id_t id)
+> qla_update_vp_map(vha, SET_AL_PA);
+> }
 > }
 > +
-> +struct scsi_qla_host *qla_find_host_by_vp_idx(struct scsi_qla_host *vha,=
- uint16_t vp_idx)
+> +int qla_create_buf_pool(struct scsi_qla_host *vha, struct qla_qpair *qp)
 > +{
-> +	struct qla_hw_data *ha =3D vha->hw;
+> + int sz;
 > +
-> +	if (vha->vp_idx =3D=3D vp_idx)
-> +		return vha;
+> + qp->buf_pool.num_bufs =3D qp->req->length;
 > +
-> +	BUG_ON(ha->vp_map =3D=3D NULL);
-> +	if (likely(test_bit(vp_idx, ha->vp_idx_map)))
-> +		return ha->vp_map[vp_idx].vha;
-> +
-> +	return NULL;
+> + sz =3D BITS_TO_LONGS(qp->req->length);
+> + qp->buf_pool.buf_map   =3D kcalloc(sz, sizeof(long), GFP_KERNEL);
+> + if (!qp->buf_pool.buf_map) {
+> + ql_log(ql_log_warn, vha, 0x0186,
+> +    "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
+> + return -ENOMEM;
+> + }
+> + sz =3D qp->req->length * sizeof(void *);
+> + qp->buf_pool.buf_array =3D kcalloc(qp->req->length, sizeof(void *), GFP=
+_KERNEL);
+> + if (!qp->buf_pool.buf_array) {
+> + ql_log(ql_log_warn, vha, 0x0186,
+> +    "Failed to allocate buf_array(%d).\n", sz);
+> + kfree(qp->buf_pool.buf_map);
+> + return -ENOMEM;
+> + }
+> + sz =3D qp->req->length * sizeof(dma_addr_t);
+> + qp->buf_pool.dma_array =3D kcalloc(qp->req->length, sizeof(dma_addr_t),=
+ GFP_KERNEL);
+> + if (!qp->buf_pool.dma_array) {
+> + ql_log(ql_log_warn, vha, 0x0186,
+> +    "Failed to allocate dma_array(%d).\n", sz);
+> + kfree(qp->buf_pool.buf_map);
+> + kfree(qp->buf_pool.buf_array);
+> + return -ENOMEM;
+> + }
+> + set_bit(0, qp->buf_pool.buf_map);
+> + return 0;
 > +}
 > +
-> +/* vport_slock to be held by the caller */
-> +void
-> +qla_update_vp_map(struct scsi_qla_host *vha, int cmd)
+> +void qla_free_buf_pool(struct qla_qpair *qp)
 > +{
-> +	void *slot;
-> +	u32 key;
-> +	int rc;
+> + int i;
+> + struct qla_hw_data *ha =3D qp->vha->hw;
 > +
-> +	if (!vha->hw->vp_map)
-> +		return;
+> + for (i =3D 0; i < qp->buf_pool.num_bufs; i++) {
+> + if (qp->buf_pool.buf_array[i] && qp->buf_pool.dma_array[i])
+> + dma_pool_free(ha->fcp_cmnd_dma_pool, qp->buf_pool.buf_array[i],
+> +    qp->buf_pool.dma_array[i]);
+> + qp->buf_pool.buf_array[i] =3D NULL;
+> + qp->buf_pool.dma_array[i] =3D 0;
+> + }
 > +
-> +	key =3D vha->d_id.b24;
-> +
-> +	switch (cmd) {
-> +	case SET_VP_IDX:
-> +		vha->hw->vp_map[vha->vp_idx].vha =3D vha;
-> +		break;
-> +	case SET_AL_PA:
-> +		slot =3D btree_lookup32(&vha->hw->host_map, key);
-> +		if (!slot) {
-> +			ql_dbg(ql_dbg_disc, vha, 0xf018,
-> +			    "Save vha in host_map %p %06x\n", vha, key);
-> +			rc =3D btree_insert32(&vha->hw->host_map,
-> +			    key, vha, GFP_ATOMIC);
-> +			if (rc)
-> +				ql_log(ql_log_info, vha, 0xd03e,
-> +				    "Unable to insert s_id into host_map: %06x\n",
-> +				    key);
-> +			return;
-> +		}
-> +		ql_dbg(ql_dbg_disc, vha, 0xf019,
-> +		    "replace existing vha in host_map %p %06x\n", vha, key);
-> +		btree_update32(&vha->hw->host_map, key, vha);
-> +		break;
-> +	case RESET_VP_IDX:
-> +		vha->hw->vp_map[vha->vp_idx].vha =3D NULL;
-> +		break;
-> +	case RESET_AL_PA:
-> +		ql_dbg(ql_dbg_disc, vha, 0xf01a,
-> +		    "clear vha in host_map %p %06x\n", vha, key);
-> +		slot =3D btree_lookup32(&vha->hw->host_map, key);
-> +		if (slot)
-> +			btree_remove32(&vha->hw->host_map, key);
-> +		vha->d_id.b24 =3D 0;
-> +		break;
-> +	}
+> + kfree(qp->buf_pool.dma_array);
+> + kfree(qp->buf_pool.buf_array);
+> + kfree(qp->buf_pool.buf_map);
 > +}
 > +
-> +void qla_update_host_map(struct scsi_qla_host *vha, port_id_t id)
+> +/* it is assume qp->qp_lock is held at this point */
+> +int qla_get_buf(struct scsi_qla_host *vha, struct qla_qpair *qp, struct =
+qla_buf_dsc *dsc)
 > +{
+> + u16 tag, i =3D 0;
+> + void *buf;
+> + dma_addr_t buf_dma;
+> + struct qla_hw_data *ha =3D vha->hw;
 > +
-> +	if (!vha->d_id.b24) {
-> +		vha->d_id =3D id;
-> +		qla_update_vp_map(vha, SET_AL_PA);
-> +	} else if (vha->d_id.b24 !=3D id.b24) {
-> +		qla_update_vp_map(vha, RESET_AL_PA);
-> +		vha->d_id =3D id;
-> +		qla_update_vp_map(vha, SET_AL_PA);
-> +	}
+> + dsc->tag =3D TAG_FREED;
+> +again:
+> + tag =3D find_first_zero_bit(qp->buf_pool.buf_map, qp->buf_pool.num_bufs=
+);
+> + if (tag >=3D qp->buf_pool.num_bufs) {
+> + ql_dbg(ql_dbg_io, vha, 0x00e2,
+> +    "qp(%d) ran out of buf resource.\n", qp->id);
+> + return  -EIO;
+> + }
+> + if (tag =3D=3D 0) {
+> + set_bit(0, qp->buf_pool.buf_map);
+> + i++;
+> + if (i =3D=3D 5) {
+> + ql_dbg(ql_dbg_io, vha, 0x00e3,
+> +    "qp(%d) unable to get tag.\n", qp->id);
+> + return -EIO;
+> + }
+> + goto again;
+> + }
+> +
+> + if (!qp->buf_pool.buf_array[tag]) {
+> + buf =3D dma_pool_zalloc(ha->fcp_cmnd_dma_pool, GFP_ATOMIC, &buf_dma);
+> + if (!buf) {
+> + ql_log(ql_log_fatal, vha, 0x13b1,
+> +    "Failed to allocate buf.\n");
+> + return -ENOMEM;
+> + }
+> +
+> + dsc->buf =3D qp->buf_pool.buf_array[tag] =3D buf;
+> + dsc->buf_dma =3D qp->buf_pool.dma_array[tag] =3D buf_dma;
+> + } else {
+> + dsc->buf =3D qp->buf_pool.buf_array[tag];
+> + dsc->buf_dma =3D qp->buf_pool.dma_array[tag];
+> + memset(dsc->buf, 0, FCP_CMND_DMA_POOL_SIZE);
+> + }
+> +
+> + qp->buf_pool.num_active++;
+> + if (qp->buf_pool.num_active > qp->buf_pool.max_used)
+> + qp->buf_pool.max_used =3D qp->buf_pool.num_active;
+> +
+> + dsc->tag =3D tag;
+> + set_bit(tag, qp->buf_pool.buf_map);
+> + return 0;
+> +}
+> +
+> +
+> +/* it is assume qp->qp_lock is held at this point */
+> +void qla_put_buf(struct qla_qpair *qp, struct qla_buf_dsc *dsc)
+> +{
+> + if (dsc->tag =3D=3D TAG_FREED)
+> + return;
+> +
+> + clear_bit(dsc->tag, qp->buf_pool.buf_map);
+> + qp->buf_pool.num_active--;
+> + dsc->tag =3D TAG_FREED;
 > +}
 > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
 c
-> index c0ac6bfeeafe..ac3d0bc1b230 100644
+> index ac3d0bc1b230..f8758cea11d6 100644
 > --- a/drivers/scsi/qla2xxx/qla_os.c
 > +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -4118,10 +4118,16 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_=
-t req_len, uint16_t rsp_len,
-> 	char	name[16];
-> 	int rc;
+> @@ -733,15 +733,17 @@ void qla2x00_sp_free_dma(srb_t *sp)
+> }
 >=20
-> +	if (QLA_TGT_MODE_ENABLED() || EDIF_CAP(ha)) {
-> +		ha->vp_map =3D kcalloc(MAX_MULTI_ID_FABRIC, sizeof(struct qla_vp_map),=
- GFP_KERNEL);
-> +		if (!ha->vp_map)
-> +			goto fail;
-> +	}
+> if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
+> - struct ct6_dsd *ctx1 =3D sp->u.scmd.ct6_ctx;
+> + struct ct6_dsd *ctx1 =3D &sp->u.scmd.ct6_ctx;
+>=20
+> dma_pool_free(ha->fcp_cmnd_dma_pool, ctx1->fcp_cmnd,
+>    ctx1->fcp_cmnd_dma);
+> list_splice(&ctx1->dsd_list, &ha->gbl_dsd_list);
+> ha->gbl_dsd_inuse -=3D ctx1->dsd_use_cnt;
+> ha->gbl_dsd_avail +=3D ctx1->dsd_use_cnt;
+> - mempool_free(ctx1, ha->ctx_mempool);
+> }
 > +
-> 	ha->init_cb =3D dma_alloc_coherent(&ha->pdev->dev, ha->init_cb_size,
-> 		&ha->init_cb_dma, GFP_KERNEL);
-> 	if (!ha->init_cb)
-> -		goto fail;
-> +		goto fail_free_vp_map;
+> + if (sp->flags & SRB_GOT_BUF)
+> + qla_put_buf(sp->qpair, &sp->u.scmd.buf_dsc);
+> }
 >=20
-> 	rc =3D btree_init32(&ha->host_map);
-> 	if (rc)
-> @@ -4540,6 +4546,8 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t =
-req_len, uint16_t rsp_len,
-> 	ha->init_cb_dma);
-> 	ha->init_cb =3D NULL;
-> 	ha->init_cb_dma =3D 0;
-> +fail_free_vp_map:
-> +	kfree(ha->vp_map);
-> fail:
-> 	ql_log(ql_log_fatal, NULL, 0x0030,
-> 	    "Memory allocation failure.\n");
-> @@ -4981,6 +4989,9 @@ qla2x00_mem_free(struct qla_hw_data *ha)
-> 	ha->sf_init_cb =3D NULL;
-> 	ha->sf_init_cb_dma =3D 0;
-> 	ha->loop_id_map =3D NULL;
+> void qla2x00_sp_compl(srb_t *sp, int res)
+> @@ -817,14 +819,13 @@ void qla2xxx_qpair_sp_free_dma(srb_t *sp)
+> }
+>=20
+> if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
+> - struct ct6_dsd *ctx1 =3D sp->u.scmd.ct6_ctx;
+> + struct ct6_dsd *ctx1 =3D &sp->u.scmd.ct6_ctx;
+>=20
+> dma_pool_free(ha->fcp_cmnd_dma_pool, ctx1->fcp_cmnd,
+>    ctx1->fcp_cmnd_dma);
+> list_splice(&ctx1->dsd_list, &ha->gbl_dsd_list);
+> ha->gbl_dsd_inuse -=3D ctx1->dsd_use_cnt;
+> ha->gbl_dsd_avail +=3D ctx1->dsd_use_cnt;
+> - mempool_free(ctx1, ha->ctx_mempool);
+> sp->flags &=3D ~SRB_FCP_CMND_DMA_VALID;
+> }
+>=20
+> @@ -834,6 +835,9 @@ void qla2xxx_qpair_sp_free_dma(srb_t *sp)
+> dma_pool_free(ha->dl_dma_pool, ctx0, ctx0->crc_ctx_dma);
+> sp->flags &=3D ~SRB_CRC_CTX_DMA_VALID;
+> }
 > +
-> +	kfree(ha->vp_map);
-> +	ha->vp_map =3D NULL;
+> + if (sp->flags & SRB_GOT_BUF)
+> + qla_put_buf(sp->qpair, &sp->u.scmd.buf_dsc);
 > }
 >=20
-> struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla=
-_target.c
-> index 548f22705ddc..dbd6660c0bf8 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -198,22 +198,6 @@ struct scsi_qla_host *qla_find_host_by_d_id(struct s=
-csi_qla_host *vha,
-> 	return host;
-> }
->=20
-> -static inline
-> -struct scsi_qla_host *qlt_find_host_by_vp_idx(struct scsi_qla_host *vha,
-> -	uint16_t vp_idx)
-> -{
-> -	struct qla_hw_data *ha =3D vha->hw;
-> -
-> -	if (vha->vp_idx =3D=3D vp_idx)
-> -		return vha;
-> -
-> -	BUG_ON(ha->tgt.tgt_vp_map =3D=3D NULL);
-> -	if (likely(test_bit(vp_idx, ha->vp_idx_map)))
-> -		return ha->tgt.tgt_vp_map[vp_idx].vha;
-> -
-> -	return NULL;
-> -}
-> -
-> static inline void qlt_incr_num_pend_cmds(struct scsi_qla_host *vha)
-> {
-> 	unsigned long flags;
-> @@ -371,7 +355,7 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla=
-_host *vha,
->=20
-> 		if ((entry->u.isp24.vp_index !=3D 0xFF) &&
-> 		    (entry->u.isp24.nport_handle !=3D cpu_to_le16(0xFFFF))) {
-> -			host =3D qlt_find_host_by_vp_idx(vha,
-> +			host =3D qla_find_host_by_vp_idx(vha,
-> 			    entry->u.isp24.vp_index);
-> 			if (unlikely(!host)) {
-> 				ql_dbg(ql_dbg_tgt, vha, 0xe03f,
-> @@ -395,7 +379,7 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla=
-_host *vha,
-> 	{
-> 		struct abts_recv_from_24xx *entry =3D
-> 			(struct abts_recv_from_24xx *)atio;
-> -		struct scsi_qla_host *host =3D qlt_find_host_by_vp_idx(vha,
-> +		struct scsi_qla_host *host =3D qla_find_host_by_vp_idx(vha,
-> 			entry->vp_index);
-> 		unsigned long flags;
->=20
-> @@ -438,7 +422,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *v=
-ha,
-> 	case CTIO_TYPE7:
-> 	{
-> 		struct ctio7_from_24xx *entry =3D (struct ctio7_from_24xx *)pkt;
-> -		struct scsi_qla_host *host =3D qlt_find_host_by_vp_idx(vha,
-> +		struct scsi_qla_host *host =3D qla_find_host_by_vp_idx(vha,
-> 		    entry->vp_index);
-> 		if (unlikely(!host)) {
-> 			ql_dbg(ql_dbg_tgt, vha, 0xe041,
-> @@ -457,7 +441,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *v=
-ha,
-> 		struct imm_ntfy_from_isp *entry =3D
-> 		    (struct imm_ntfy_from_isp *)pkt;
->=20
-> -		host =3D qlt_find_host_by_vp_idx(vha, entry->u.isp24.vp_index);
-> +		host =3D qla_find_host_by_vp_idx(vha, entry->u.isp24.vp_index);
-> 		if (unlikely(!host)) {
-> 			ql_dbg(ql_dbg_tgt, vha, 0xe042,
-> 			    "qla_target(%d): Response pkt (IMMED_NOTIFY_TYPE) "
-> @@ -475,7 +459,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *v=
-ha,
-> 		struct nack_to_isp *entry =3D (struct nack_to_isp *)pkt;
->=20
-> 		if (0xFF !=3D entry->u.isp24.vp_index) {
-> -			host =3D qlt_find_host_by_vp_idx(vha,
-> +			host =3D qla_find_host_by_vp_idx(vha,
-> 			    entry->u.isp24.vp_index);
-> 			if (unlikely(!host)) {
-> 				ql_dbg(ql_dbg_tgt, vha, 0xe043,
-> @@ -495,7 +479,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *v=
-ha,
-> 	{
-> 		struct abts_recv_from_24xx *entry =3D
-> 		    (struct abts_recv_from_24xx *)pkt;
-> -		struct scsi_qla_host *host =3D qlt_find_host_by_vp_idx(vha,
-> +		struct scsi_qla_host *host =3D qla_find_host_by_vp_idx(vha,
-> 		    entry->vp_index);
-> 		if (unlikely(!host)) {
-> 			ql_dbg(ql_dbg_tgt, vha, 0xe044,
-> @@ -512,7 +496,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *v=
-ha,
-> 	{
-> 		struct abts_resp_to_24xx *entry =3D
-> 		    (struct abts_resp_to_24xx *)pkt;
-> -		struct scsi_qla_host *host =3D qlt_find_host_by_vp_idx(vha,
-> +		struct scsi_qla_host *host =3D qla_find_host_by_vp_idx(vha,
-> 		    entry->vp_index);
-> 		if (unlikely(!host)) {
-> 			ql_dbg(ql_dbg_tgt, vha, 0xe045,
-> @@ -7145,7 +7129,7 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha=
-, struct qla_hw_data *ha)
->=20
-> 	qlt_clear_mode(base_vha);
->=20
-> -	qlt_update_vp_map(base_vha, SET_VP_IDX);
-> +	qla_update_vp_map(base_vha, SET_VP_IDX);
-> }
->=20
-> irqreturn_t
-> @@ -7224,17 +7208,10 @@ qlt_mem_alloc(struct qla_hw_data *ha)
-> 	if (!QLA_TGT_MODE_ENABLED())
-> 		return 0;
->=20
-> -	ha->tgt.tgt_vp_map =3D kcalloc(MAX_MULTI_ID_FABRIC,
-> -				     sizeof(struct qla_tgt_vp_map),
-> -				     GFP_KERNEL);
-> -	if (!ha->tgt.tgt_vp_map)
-> -		return -ENOMEM;
-> -
-> 	ha->tgt.atio_ring =3D dma_alloc_coherent(&ha->pdev->dev,
-> 	    (ha->tgt.atio_q_length + 1) * sizeof(struct atio_from_isp),
-> 	    &ha->tgt.atio_dma, GFP_KERNEL);
-> 	if (!ha->tgt.atio_ring) {
-> -		kfree(ha->tgt.tgt_vp_map);
-> 		return -ENOMEM;
-> 	}
-> 	return 0;
-> @@ -7253,70 +7230,6 @@ qlt_mem_free(struct qla_hw_data *ha)
-> 	}
-> 	ha->tgt.atio_ring =3D NULL;
-> 	ha->tgt.atio_dma =3D 0;
-> -	kfree(ha->tgt.tgt_vp_map);
-> -	ha->tgt.tgt_vp_map =3D NULL;
-> -}
-> -
-> -/* vport_slock to be held by the caller */
-> -void
-> -qlt_update_vp_map(struct scsi_qla_host *vha, int cmd)
-> -{
-> -	void *slot;
-> -	u32 key;
-> -	int rc;
-> -
-> -	key =3D vha->d_id.b24;
-> -
-> -	switch (cmd) {
-> -	case SET_VP_IDX:
-> -		if (!QLA_TGT_MODE_ENABLED())
-> -			return;
-> -		vha->hw->tgt.tgt_vp_map[vha->vp_idx].vha =3D vha;
-> -		break;
-> -	case SET_AL_PA:
-> -		slot =3D btree_lookup32(&vha->hw->host_map, key);
-> -		if (!slot) {
-> -			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf018,
-> -			    "Save vha in host_map %p %06x\n", vha, key);
-> -			rc =3D btree_insert32(&vha->hw->host_map,
-> -				key, vha, GFP_ATOMIC);
-> -			if (rc)
-> -				ql_log(ql_log_info, vha, 0xd03e,
-> -				    "Unable to insert s_id into host_map: %06x\n",
-> -				    key);
-> -			return;
-> -		}
-> -		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf019,
-> -		    "replace existing vha in host_map %p %06x\n", vha, key);
-> -		btree_update32(&vha->hw->host_map, key, vha);
-> -		break;
-> -	case RESET_VP_IDX:
-> -		if (!QLA_TGT_MODE_ENABLED())
-> -			return;
-> -		vha->hw->tgt.tgt_vp_map[vha->vp_idx].vha =3D NULL;
-> -		break;
-> -	case RESET_AL_PA:
-> -		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01a,
-> -		   "clear vha in host_map %p %06x\n", vha, key);
-> -		slot =3D btree_lookup32(&vha->hw->host_map, key);
-> -		if (slot)
-> -			btree_remove32(&vha->hw->host_map, key);
-> -		vha->d_id.b24 =3D 0;
-> -		break;
-> -	}
-> -}
-> -
-> -void qlt_update_host_map(struct scsi_qla_host *vha, port_id_t id)
-> -{
-> -
-> -	if (!vha->d_id.b24) {
-> -		vha->d_id =3D id;
-> -		qlt_update_vp_map(vha, SET_AL_PA);
-> -	} else if (vha->d_id.b24 !=3D id.b24) {
-> -		qlt_update_vp_map(vha, RESET_AL_PA);
-> -		vha->d_id =3D id;
-> -		qlt_update_vp_map(vha, SET_AL_PA);
-> -	}
-> }
->=20
-> static int __init qlt_parse_ini_mode(void)
-> diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla=
-_target.h
-> index 7df86578214f..354fca2e7feb 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.h
-> +++ b/drivers/scsi/qla2xxx/qla_target.h
-> @@ -1017,7 +1017,6 @@ extern void qlt_fc_port_added(struct scsi_qla_host =
-*, fc_port_t *);
-> extern void qlt_fc_port_deleted(struct scsi_qla_host *, fc_port_t *, int)=
-;
-> extern int __init qlt_init(void);
-> extern void qlt_exit(void);
-> -extern void qlt_update_vp_map(struct scsi_qla_host *, int);
-> extern void qlt_free_session_done(struct work_struct *);
-> /*
->  * This macro is used during early initializations when host->active_mode
+> void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
 > --=20
 > 2.19.0.rc0
 >=20
@@ -698,5 +578,5 @@ _target.h
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
 --=20
-Himanshu Madhani	Oracle Linux Engineering
+Himanshu Madhani 			Oracle Linux Engineering
 
