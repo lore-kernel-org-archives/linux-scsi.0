@@ -2,93 +2,144 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F9FAC46467
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Jan 2023 12:03:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 733A7C54EBC
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 02:53:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238301AbjAJMDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Jan 2023 07:03:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49218 "EHLO
+        id S233306AbjAKCxy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Jan 2023 21:53:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238284AbjAJMD1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2023 07:03:27 -0500
-X-Greylist: delayed 381 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 10 Jan 2023 04:03:24 PST
-Received: from relay05.th.seeweb.it (relay05.th.seeweb.it [IPv6:2001:4b7a:2000:18::166])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 611C959310
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2023 04:03:24 -0800 (PST)
-Received: from SoMainline.org (94-211-6-86.cable.dynamic.v4.ziggo.nl [94.211.6.86])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by m-r2.th.seeweb.it (Postfix) with ESMTPSA id D44123F272;
-        Tue, 10 Jan 2023 13:03:16 +0100 (CET)
-Date:   Tue, 10 Jan 2023 13:03:15 +0100
-From:   Marijn Suijten <marijn.suijten@somainline.org>
-To:     Lux Aliaga <they@mint.lgbt>
-Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, keescook@chromium.org,
-        tony.luck@intel.com, gpiccoli@igalia.com,
-        ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
-        phone-devel@vger.kernel.org, martin.botka@somainline.org
-Subject: Re: [PATCH v6 0/6] arm64: dts: qcom: sm6125: UFS and
- xiaomi-laurel-sprout support
-Message-ID: <20230110120315.53edpr334vlpaxc4@SoMainline.org>
-Mail-Followup-To: Marijn Suijten <marijn.suijten@somainline.org>,
-        Lux Aliaga <they@mint.lgbt>, agross@kernel.org,
-        andersson@kernel.org, konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        with ESMTP id S229816AbjAKCxx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2023 21:53:53 -0500
+Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E810165A1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2023 18:53:50 -0800 (PST)
+Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
+        by amity.mint.lgbt (Postfix) with ESMTP id 4NsC1T2wm5z1S5Fd
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2023 21:53:49 -0500 (EST)
+Authentication-Results: amity.mint.lgbt (amavisd-new);
+        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
+        header.d=mint.lgbt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
+        content-transfer-encoding:content-type:in-reply-to:from
+        :references:to:content-language:subject:user-agent:mime-version
+        :date:message-id; s=dkim; t=1673405628; x=1674269629; bh=8i4jmOu
+        APCAp11p4DZJjHBlsAcEc2Uu0uW9fgZ3zFUU=; b=l2rt7HZQe1rwy8LwQ+mvR9s
+        ghIi4RanvHXb5D/8oOnFQXPnDLRd5Eni5PfUYb2Yo0Ri2cmtTDD6WZ0b5jhqBSAJ
+        5XzksWHGpEQrFkqNYAM/6XDHiQ/TypWOJZ2g5MxKLZQelFOPHKKdjvlsw8rH0r0a
+        R+XSjrRYCBDSMeKihasqs0QTs5XmOlU+KKtSThmmwyZwJU8i3ZCplxt7AmQt7++5
+        RV5Qn/AYGO2SpmPoniBX2GI5sjHsLeaFW13aZsxWggn6dSnICqgEgjrdO77I7N1U
+        8D1Sg7XrfmSIVm3g74a/niYgEW1NlGtTwsZ5J5rtk017cJ70UN7qM8JQFZ7FoAA=
+        =
+X-Virus-Scanned: amavisd-new at amity.mint.lgbt
+Received: from amity.mint.lgbt ([127.0.0.1])
+        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id CeeUluOCl1ep for <linux-scsi@vger.kernel.org>;
+        Tue, 10 Jan 2023 21:53:48 -0500 (EST)
+Received: from [192.168.4.25] (unknown [190.196.92.66])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4NsC1B5blwz1S4tq;
+        Tue, 10 Jan 2023 21:53:34 -0500 (EST)
+Message-ID: <f1f1337a-30cc-df3c-81d5-2daac61e874c@mint.lgbt>
+Date:   Tue, 10 Jan 2023 23:53:31 -0300
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v6 4/6] arm64: dts: qcom: sm6125: Add UFS nodes
+Content-Language: en-US
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>, agross@kernel.org,
+        andersson@kernel.org, robh+dt@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
         kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
         bvanassche@acm.org, keescook@chromium.org, tony.luck@intel.com,
-        gpiccoli@igalia.com, ~postmarketos/upstreaming@lists.sr.ht,
+        gpiccoli@igalia.com
+Cc:     ~postmarketos/upstreaming@lists.sr.ht,
         linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
-        phone-devel@vger.kernel.org, martin.botka@somainline.org
+        phone-devel@vger.kernel.org, martin.botka@somainline.org,
+        marijn.suijten@somainline.org
 References: <20230108195336.388349-1-they@mint.lgbt>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230108195336.388349-1-they@mint.lgbt>
+ <20230108195336.388349-5-they@mint.lgbt>
+ <475d3f2f-114f-d6d2-89db-465ba7acd0d6@linaro.org>
+From:   Lux Aliaga <they@mint.lgbt>
+In-Reply-To: <475d3f2f-114f-d6d2-89db-465ba7acd0d6@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-01-08 16:53:30, Lux Aliaga wrote:
-> Introduce Universal Flash Storage support on SM6125 and add support for the Xiaomi Mi A3 based on the former platform. Uses the name xiaomi-laurel-sprout instead of the official codename (laurel_sprout)
 
-Don't forget to wrap these lines properly, same for the changelog below.
+On 09/01/2023 09:18, Konrad Dybcio wrote:
+>
+> On 8.01.2023 20:53, Lux Aliaga wrote:
+>> Adds a UFS host controller node and its corresponding PHY to
+>> the sm6125 platform.
+>>
+>> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+>> ---
+>>   arch/arm64/boot/dts/qcom/sm6125.dtsi | 57 ++++++++++++++++++++++++++++
+>>   1 file changed, 57 insertions(+)
+>>
+>> diff --git a/arch/arm64/boot/dts/qcom/sm6125.dtsi b/arch/arm64/boot/dts/qcom/sm6125.dtsi
+>> index df5453fcf2b9..cec7071d5279 100644
+>> --- a/arch/arm64/boot/dts/qcom/sm6125.dtsi
+>> +++ b/arch/arm64/boot/dts/qcom/sm6125.dtsi
+>> @@ -511,6 +511,63 @@ sdhc_2: mmc@4784000 {
+>>   			status = "disabled";
+>>   		};
+>>   
+>> +		ufs_mem_hc: ufs@4804000 {
+>> +			compatible = "qcom,sm6125-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
+>> +			reg = <0x04804000 0x3000>, <0x04810000 0x8000>;
+> You need reg-names for ICE to probe, otherwise the second reg sits unused.
+>
+>> +			interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>;
+>> +			phys = <&ufs_mem_phy>;
+>> +			phy-names = "ufsphy";
+>> +			lanes-per-direction = <1>;
+>> +			#reset-cells = <1>;
+>> +			resets = <&gcc GCC_UFS_PHY_BCR>;
+>> +			reset-names = "rst";
+>> +			iommus = <&apps_smmu 0x200 0x0>;
+>> +
+>> +			clock-names = "core_clk",
+>> +				      "bus_aggr_clk",
+>> +				      "iface_clk",
+>> +				      "core_clk_unipro",
+>> +				      "ref_clk",
+>> +				      "tx_lane0_sync_clk",
+>> +				      "rx_lane0_sync_clk",
+>> +				      "ice_core_clk";
+>> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+>> +				 <&gcc GCC_SYS_NOC_UFS_PHY_AXI_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+>> +				 <&rpmcc RPM_SMD_XO_CLK_SRC>,
+>> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
+>> +			freq-table-hz = <50000000 240000000>,
+>> +					<0 0>,
+>> +					<0 0>,
+>> +					<37500000 150000000>,
+>> +					<0 0>,
+>> +					<0 0>,
+>> +					<0 0>,
+>> +					<75000000 300000000>;
+>> +
+>> +			status = "disabled";
+>> +		};
+>> +
+>> +		ufs_mem_phy: phy@4807000 {
+>> +			compatible = "qcom,sm6125-qmp-ufs-phy";
+>> +			reg = <0x04807000 0x1c4>;
+> Isn't this too small? Downstream says 0xdb8, but it's probably even bigger..
+What do you think could help me find the new length of the registers? I 
+tried 0x1000 and it probed just fine, but I'm not really sure until what 
+extent I could push it.
 
-> due to naming limitations in the kernel.
+-- 
+Lux Aliaga
+https://nixgoat.me/
 
-I doubt it's a limitation, more like a convention.
-
-> Changes since v5:
-> - Drop "non-removable" property from ufs_mem_hc for sm6125 platform
-> - Drop "status" and "autorepeat" properties from gpio-keys node for xiaomi-laurel-sprout
-> - Rename "key-vol-up" node to "key-volume-up" for xiaomi-laurel-sprout
-> - Drop "gpio-key,wakeup" property from key-volume-up node for xiaomi-laurel-sprout
-
-No, you /replaced/ this deprecated property with wakeup-source, which
-has the same meaning.
-
-> - Set "linux,input-type" and "wakeup-source" properties on key-volume-up node for xiaomi-laurel-sprout
-
-No, you /removed/ linux,input-type because its value 1 for EV_KEY is
-already the default.
-
-> - Change "key_vol_up" node name to "vol-up-n-state" and its label to "vol_up_n" in PM6125 GPIO node for xiaomi-laurel-sprout
-> - Use labels instead of node names for PM6125 ADC channels in xiaomi laurel-sprout
-> - Set "regulator-allow-set-load" properties on l4, l5, l10, l11, l18 and l24 regulators on xiaomi-laurel-sprout
-> 
-> v5: https://lore.kernel.org/linux-devicetree/20221231222420.75233-2-they@mint.lgbt/
-> 
-> 
-> 
-
-No need for excessive newlines here.
-
-- Marijn
