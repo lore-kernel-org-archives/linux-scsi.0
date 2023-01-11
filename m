@@ -2,436 +2,238 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 809C3C46467
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 14:11:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65796C5479D
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 14:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234457AbjAKOLQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Jan 2023 09:11:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54772 "EHLO
+        id S235940AbjAKOlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Jan 2023 09:41:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234704AbjAKOK6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2023 09:10:58 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F1C5E8A;
-        Wed, 11 Jan 2023 06:10:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1673446254;
-        bh=Z6QWCskzxQAy5YA4YgclS6LLCZOsAgzACMWEKbzWI6I=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=YjpuXzaq0fb0K9UKhpEE8ne8NZ0VDH/s6qcVf/PNr8pBg3xQWa+Q1h7X6UijdDyp3
-         N9KInqwPBgNOH5haw3WrSkbOWSQaCFmSqCg/v3wl1gzQWF5EmMqcvqk14aU1540/8v
-         1H6d3Z4wKG+JPXI4ZPRPgVechosB6ia4VYe2x3b0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C49E41285FCF;
-        Wed, 11 Jan 2023 09:10:54 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id UYoWIV4Lr-bn; Wed, 11 Jan 2023 09:10:54 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1673446253;
-        bh=Z6QWCskzxQAy5YA4YgclS6LLCZOsAgzACMWEKbzWI6I=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=F13CaQWqc8xzXaMS9ANrXdf1KVIsjge+sIyd4nIdTkA+6fLM0C8fEvTnwCYhzafUF
-         79Dq110AkB3CTLLW+hyu2yzJ7S4g8OpVex8OCRHt5ZKYnGEf46xNDwirOzh0Z9AorR
-         OibjXDAYh+/MDm3cG1c/wrtiqgITB5RGVPMIR6bU=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 7F0861285F5F;
-        Wed, 11 Jan 2023 09:10:53 -0500 (EST)
-Message-ID: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
-Subject: [GIT PULL resend] SCSI fixes for 6.1-rc3
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Wed, 11 Jan 2023 09:10:52 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S238898AbjAKOlI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2023 09:41:08 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B82915599;
+        Wed, 11 Jan 2023 06:39:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1673447941; x=1704983941;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=YIrfLu2jFkZQf9qp2PFLagwS3+JxFEOeWs90kSYFFno=;
+  b=LU/wpLTNN5KF/raEpQlW8vRJSUeGFDoBEULFoZYe/FgKl4UwL3fzyYy8
+   TH31UbF+nHKS7sjIYIXyKUSwyaTtCGIbaiuCB2YblvGen4p5MODJt96Wv
+   OyaH3YFYeFu2HFR6GZ2/AhAhSmmawYyn/gkXaIreWC+sB1pR1urwySQ79
+   +n2TxTgdTIIWJJYv1YWq6BlqyPoGLL+rapiQu8tacchgzL9ubsI0tUM0L
+   Ax12nQwhkdJym1ZrLSh2bvUhxOy7jgoRfesdn/njC0mByZDLbaD8j6F1B
+   i3AZmKpoif4ss+eXvU708zqdcXJfEzKLqdd7Us1iSO3uaF3NlC2h8kiez
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.96,317,1665417600"; 
+   d="scan'208";a="324837319"
+Received: from mail-bn8nam04lp2049.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.49])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jan 2023 22:38:59 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=P32g1SqNWXgprpRGA62rxk0M4DYrylZEoPKEC3yMYf5ot8izcJ+VLYHwv6SEtiJhMVV3MfthHbzlstHNboW4zG4JPWC1Diw1bVxIiIXKMvfWSwLwZmoZw6cVwPEo2kXtUL784UbLLySFXXqnRcmIKgs1TTa3AoBY4m/AVmvvx6yGq9kf89ixxy/oxyaQCFKT0b1OHG+627VCwAUzisOKWcRQu3wqHhh0Oa6D5EjMpW6HPLuXA/ISIMC8gPcy114FnTsNlurVw014quSKCH2pDw52BXWm/7bWwrv8NAaKYeeLPLl97stjvlYz35ezzuNoZMPBQcB58MhMdUVObUCE5g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LfA/bO/uFO5QisOf7JuL16e6nhpq2Uv7ZUpng/5DK90=;
+ b=m3ToDgICOyROrrsoCYlRuUHmLQLRW1cCgHbkoZ+/G1/5CvdUMP+iR+EzQyDyEAHQNRWVXLDflQV2tFR1JSy3mlRNwWOa1+qOchhnSo8KsYXtoFZGKcFVpKvLBSxLnBselvlaWPedRLTxYMe+GsxGVFKHTp5bVguO1qPXEMB+CEqfPiRG/AXTizEATwyJ2ngt9WJcpq89ODA1ocat2k4bTZFKHhkizFqZ4jdGsUhwiV1gkifwbJTsRM8/2PNhBaA424oFKRCX9JsfR78WxpOCvqvuCAUgJ9FOop9dpiP3rRPMTEWHO6Nji9mQjAZww9pDJ0aRAI/2ejOmcIPT/vH3nA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LfA/bO/uFO5QisOf7JuL16e6nhpq2Uv7ZUpng/5DK90=;
+ b=XLZEmZEXvWI7knETqBlcYxxzs0QEXqK4CkrwO9yRR8rW6tkv0ofYqrhNsqtyTaTP6Gtm9hktO6XdGRwFpZRzzVllPtfh2tlAbldzKlrL4QxPKelWkERu3d28qIBYC/KIp/KelOELq3kIcFigzlVLaBLCVwrp4cq/EDyZZt/sfos=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by PH0PR04MB8401.namprd04.prod.outlook.com (2603:10b6:510:f0::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5986.18; Wed, 11 Jan
+ 2023 14:38:56 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::a65a:f2ad:4c7b:3164]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::a65a:f2ad:4c7b:3164%4]) with mapi id 15.20.5986.018; Wed, 11 Jan 2023
+ 14:38:56 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Keith Busch <kbusch@kernel.org>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jens Axboe <axboe@kernel.dk>
+Subject: SG_IO ioctl regression
+Thread-Topic: SG_IO ioctl regression
+Thread-Index: AQHZJcpv4zcdEFqMEkWWhhQqiPkdrA==
+Date:   Wed, 11 Jan 2023 14:38:56 +0000
+Message-ID: <Y77J/w0gf2nIDMd/@x1-carbon>
+References: <20230105190741.2405013-6-kbuschmeta!com>
+In-Reply-To: <20230105190741.2405013-6-kbuschmeta!com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|PH0PR04MB8401:EE_
+x-ms-office365-filtering-correlation-id: 48c47792-1011-4050-f133-08daf3e191d4
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: A5T2IF+iAQ6p7YwvYN3nwO/YRrsdEk2KLtjXoAJPvL5cR6xIPb/gQoAJqRFXh4kD2ocMEIyKmMTnFdg0w+OTHWmZMVY9IdoZeDeotbIXojQfSkZvyZm7bIqILScmntEDFBtHkveSwT4GX+US9+heBBzh2WSFBFbe26TsohqzNimnIWyXLwmfZ5VtncgsnAGMh2y6apoTYXBNfqKbrQtEE3Tq3M32vmjrMTmbBqxTrTcRo2UqCxLI3ld0Ms22vkYBpI4SVHJsFlMSHJsa0YquGpp3k1rfVaqTRKEuOK20LrE8iPlKS5Cez6C2QsfJtgPY+0/wJ1AuaRm5dfmN0Lf828PnGKP8BZjH0CJ+Lh7kcbYviu51SYmzZjQts2yveTXKyPxA/qOLbE8iB8PvI3hhhAhwnn1alnjEWZHsSB+7cmcBGlLqIf0t8mP8ceLfjP6JfqlZuo331ETePLnKCpngaX6aWXrRUgKKW4GDJXubhc5ZE2/pNkIV+X7qCBhSpwoPwmj09QrJVOQE0Tg8o0LI69+onn/TOxat5njaFW5aQjqczcIFS7hsCCsaeoKu2+xBzcZS2aYrG9KAm/f1RSmFf7KEiSWY3wDjOVUV44Qe/AwcvT1NSAGrCglyro8BE5n4N3B7EHVe2lASXLj0lvAxLzGMEJ9N2QGreryJa8qtUXFC/WeSTGNDFhnTOx9sMeJnENhdaYWDeDp79t0aEfRu4SgglSq7k7s91ZEK4uNayjc=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(4636009)(346002)(396003)(366004)(376002)(136003)(39860400002)(451199015)(6506007)(478600001)(82960400001)(122000001)(38100700002)(2906002)(6486002)(9686003)(26005)(33716001)(71200400001)(186003)(5660300002)(316002)(8936002)(86362001)(83380400001)(38070700005)(6512007)(66476007)(64756008)(8676002)(7116003)(41300700001)(6916009)(76116006)(66446008)(4326008)(66946007)(54906003)(91956017)(66556008)(299355004);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?TZfrDYkW1RUGQOoXYSiLJLQOpXpa72syWki0owJb4/uej4zUfnh7wxkBdIqp?=
+ =?us-ascii?Q?+j4XH5NVmY/w9xQXEx2binLhDGIOnA08lW8N3eL3xm5S3IG329oM2NLu5b5N?=
+ =?us-ascii?Q?8O/Oky86MtCZ9oebfUX3JdW6e9O7ppKoFV4cZ09rRy/PI+QUgKwrmGg014x8?=
+ =?us-ascii?Q?1w+wWE2kqLLB8ZbChJ81mQywFqBLkMgJP7Hv8G1sZ9+bv2NhDR2TzJ1VPaLk?=
+ =?us-ascii?Q?Lhr2YuMhSEx9vuGxo6ZthCNgB1snqjmeICFO1ao8asxOW1MHvzE5Q3Ird4OS?=
+ =?us-ascii?Q?Bp8OdFJ4pyBcTm/j9o4M80kNhmSevoFDM6P/n7/FLADYWejRzSqFyTO6Sx6r?=
+ =?us-ascii?Q?zyaxjx+ejo3JWEMsIa8g+yZFNLnQ8s+DS3Myk8DuBhKDNn21wBRc8zyUzvvg?=
+ =?us-ascii?Q?NWqBkbudLWGK3w5opC0QWjjizjKWfzBTqDDFLkiL1Gu1QRf7sA5GNdjOWB2L?=
+ =?us-ascii?Q?AduhaTg7Gc/MkO21e9GkT57tJn5US9q9dG2QU7eoY91Oaf0rSJh/wZNsRiy/?=
+ =?us-ascii?Q?cjwIBFxfqMGPkHImP4EF1l46MX9zhxEVqn+h/bu6HxwvueGiKw7w3dsr9jpx?=
+ =?us-ascii?Q?GtJojdmVfgjUAQoCtTjY5inUb2qWjc/n7/izZYhT7VyheDZDM5qCghgGYA/R?=
+ =?us-ascii?Q?CMetJ8sNQqzdUlyLt8UtvyNf+eSmjj9vlGmHVR28DT64YkE3JPQsTjiG+cKs?=
+ =?us-ascii?Q?CQzAuAmabtNrM/GW1ghv/9z2cnj6dwwEnUAdgkI78ra70UZ4Z9shsjsX86r6?=
+ =?us-ascii?Q?S8yS/Twj49ClbhmJwii9Gbm1/egq2/58v34KToGCfJ0Gaf1tn6wToK/WD+GH?=
+ =?us-ascii?Q?wzclHz2xsGmJ/33GvaDKmQuzT6qg5EQqQKtIXU+99pwSjR4OvLCmpbW0yFRc?=
+ =?us-ascii?Q?iFdUqdZRHEQRZuONllVVOwh2/asCie5F5H1auPfAhkPUBN+DUxsKaFKt604q?=
+ =?us-ascii?Q?yehxTo7Oidj4d1+6PWfPcaYFJr3YZiexQ5m5UDL0ryhrpAX8jIRUI73FHF9+?=
+ =?us-ascii?Q?zD77VsnSmBQIZuEHpjIaN4YK2bqhqpvf8el/BUeKc7OHyMkWZ/jvEA5/IQ7W?=
+ =?us-ascii?Q?VpjPS7C3stR5yuX71Xhw5PtR7WC1K2/QT0RzDQJLjI4I1bm7utAUaRHPpscw?=
+ =?us-ascii?Q?YZ3r6btikChbcc7e0RiNLbxYNCgWWRGByF6mph7084NzR7GH+Oa8SPeiQB3v?=
+ =?us-ascii?Q?Ez7vWReM82vgINbrKs/7+xFQJ0T7dw/UWeEluuJEGZ0kQLGKL8V2rfgWkSvH?=
+ =?us-ascii?Q?X4nLGcjMXqSjSv5DxfIPTS3OoEKY/qWY1x9zEJ8UeWjlDD1y/1etDmeLFPIl?=
+ =?us-ascii?Q?CYGuU5hh/K/UkeKbhMV6hCOj98S4A049K9eBfdhOWzRdYYVnvY2twIhcWOU+?=
+ =?us-ascii?Q?zYGjYQUhciaIRWlkxMqSpU7riN9otgoyfu53e+kn6keO+f1VvV/EhiNrssrz?=
+ =?us-ascii?Q?W82ok3a6+WDBmyC2wfn5jbLS8yO3nN/F7vM63XXMUKmHQ2OnLkfIrLKWE1h3?=
+ =?us-ascii?Q?JebczGbSsHzVb6t35UkGy/IgATP14+cf0760U2tKEhz81hEdxPywnrXsp3kU?=
+ =?us-ascii?Q?PzrcC2aRFrnkMokWdJEtE0bgETLHIhEncNTfB3ruWRrQvEqV3tr7tW4pdARL?=
+ =?us-ascii?Q?yw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <C4CF87234C7AFF4A803F034892C703D7@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ZAO4sL/mIzQo4GVkRK0nTTT884NkxKuKNxeQn9Dp0oU8li//NgrP+ngTu6dY3xEaeoU1aBVrzRoP8bI3HqILgSO4LdtZe2/ATDV96JrqnGaRp4KHFH62nU5pwjgFHXJOZ14xe+ffvY6H75T74mC+M7BStMPln1mIhoqF6ECDUuvGRxcr+60WZMLGQisBgV5dnfAi0d4njkNYles0qHzYFlNjTivAX3o595ED6qTCfGqRo0Rpf8pqKgCweXeQH+Ktoi/zNJGEr7rT/2eyWydMLRMyvVJltFuQi8h3fZ9qN+gITGyHzLoCKzBz5lgE4KS9tsJOQ3wdEYw5QtiFA6egvvZPRCvg27D5ZWObAt1CvJz99XaN0uwHI41J7cqjKRC9PRzEdN4sl0mKcHxTTRQRSBuJWas+qdCIr4Yn7Mo3g+Q5+b+yMXxfUXv4geC1inPnU8SBLizO2r47q31FNNm2JMFahsBH3+nlQ3Yu3blHlwY3k4HAzj0RqBgLHT9ei8d+Sv0NDcewYIrBHez4X+gwaMaEtHb8Yb5fo+SRL3uxUBy+6H36YUkQo7D+BNG35xH3axZTtOuEjLoItnd9QmXa8VrQwiEJUh8pq4USqnEgYJpci5KMfkhKJpz3/+pQ/y5jZdPHyb6oiOEu13HAkLtGoG/qZFi5pdqE+pYaLfkU+kUd49xM+G5pZnDztjcGg1E7xXIDrCx0JWkb0XvNKdKCGPPiwPDL/d6KUk/mNtk3FsWaQoi88d4t4oFlmwkdKd4vQF+Bec69NhqDxGYY9PeuCtYLBp5RPphIJ+hfYtxoTMFgln8rWouEXH8dyz49ctr5jIZ6+DCMT8WXKKkb2cSkFkkoVu8A/dIJ8qmNDbpeoSQk5qiTLLGWaa3UGezLzIjl
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 48c47792-1011-4050-f133-08daf3e191d4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jan 2023 14:38:56.5876
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: cdISaPjoPIA5S/SK8TpVSC9nuHMIvH0Ee17Zuznvb+Ch5+1cSWZvXhJ5qqYIWspTz81rDs6AFY/3EcKO+Z4QAA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB8401
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-10 small fixes (less the one that cleaned up a reverted removal), 9 in
-drivers of which the ufs one is the most critical. The single core
-patch is a minor speedup to error handling.
+On Thu, Jan 05, 2023 at 07:07:34PM +0000, Keith Busch wrote:
+> From: Keith Busch <kbusch@kernel.org>
+>
+> This is more efficient that iter_iov.
+>
+> Signed-off-by: Keith Busch <kbusch@kernel.org>
+> ---
+>  block/blk-map.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/block/blk-map.c b/block/blk-map.c
+> index 19940c978c73b..4cf83eae9f2e8 100644
+> --- a/block/blk-map.c
+> +++ b/block/blk-map.c
+> @@ -641,7 +641,7 @@ int blk_rq_map_user_iov(struct request_queue *q, stru=
+=3D
+> ct request *rq,
+>		copy =3D3D true;
+>	else if (iov_iter_is_bvec(iter))
+>		map_bvec =3D3D true;
+> -	else if (!iter_is_iovec(iter))
+> +	else if (!user_backed_iter(iter))
+>		copy =3D3D true;
+>	else if (queue_virt_boundary(q))
+>		copy =3D3D queue_virt_boundary(q) & iov_iter_gap_alignment(iter);
+> @@ -682,9 +682,8 @@ int blk_rq_map_user(struct request_queue *q, struct r=
+=3D
+> equest *rq,
+>		    struct rq_map_data *map_data, void __user *ubuf,
+>		    unsigned long len, gfp_t gfp_mask)
+>  {
+> -	struct iovec iov;
+>	struct iov_iter i;
+> -	int ret =3D3D import_single_range(rq_data_dir(rq), ubuf, len, &iov, &i)=
+;
+> +	int ret =3D3D import_ubuf(rq_data_dir(rq), ubuf, len, &i);
+> =3D20
+>	if (unlikely(ret < 0))
+>		return ret;
+> --=3D20
+> 2.30.2
+>
+>
+> --
 
-The patch is available here:
+Hello Keith,
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-The short changelog is:
+It appears that this commit breaks SG_IO ioctl.
 
-Hannes Reinecke (1):
-      scsi: core: scsi_error: Do not queue pointless abort workqueue functions
+A git bisect returned the following commit:
 
-Jason Yan (1):
-      scsi: hisi_sas: Fix tag freeing for reserved tags
+commit a696647a3b58c7a2dddd6eabfc824be826613211
+Author: Keith Busch <kbusch@kernel.org>
+Date:   Thu Jan 5 11:07:34 2023 -0800
 
-John Garry (1):
-      scsi: scsi_debug: Delete unreachable code in inquiry_vpd_b0()
+    block: use iter_ubuf for single range
 
-Michael Kelley (1):
-      scsi: storvsc: Fix swiotlb bounce buffer leak in confidential VM
+    This is more efficient than iter_iov.
 
-Peter Wang (1):
-      scsi: ufs: core: WLUN suspend SSU/enter hibern8 fail recovery
+    Signed-off-by: Keith Busch <kbusch@kernel.org>
+    Signed-off-by: Jens Axboe <axboe@kernel.dk>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Shin'ichiro Kawasaki (1):
-      scsi: mpi3mr: Refer CONFIG_SCSI_MPI3MR in Makefile
+ block/blk-map.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Sreekanth Reddy (2):
-      scsi: mpi3mr: Remove usage of dma_get_required_mask() API
-      scsi: mpt3sas: Remove usage of dma_get_required_mask() API
 
-Wenchao Hao (1):
-      scsi: iscsi: Fix multiple iSCSI session unbind events sent to userspace
 
-Xingui Yang (1):
-      scsi: libsas: Grab the ATA port lock in sas_ata_device_link_abort()
+When using linux-next tag next-20230111 :
 
-And the diffstat:
+$ sudo sg_inq /dev/sg0
+sg_inq failed: Bad address
 
- drivers/scsi/hisi_sas/hisi_sas_main.c |  2 +-
- drivers/scsi/libsas/sas_ata.c         |  3 +++
- drivers/scsi/mpi3mr/Makefile          |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c       |  3 +--
- drivers/scsi/mpt3sas/mpt3sas_base.c   |  3 +--
- drivers/scsi/scsi_debug.c             |  2 --
- drivers/scsi/scsi_error.c             |  5 ++++
- drivers/scsi/scsi_transport_iscsi.c   | 50 +++++++++++++++++++++++++++++++----
- drivers/scsi/storvsc_drv.c            |  3 +++
- drivers/ufs/core/ufshcd.c             | 26 ++++++++++++++++++
- include/scsi/scsi_transport_iscsi.h   |  9 +++++++
- 11 files changed, 95 insertions(+), 13 deletions(-)
 
-With full diff below.
+If I simply revert your commit
+a696647a3b58 ("block: use iter_ubuf for single range"),
+things start working again:
 
-James
+$ sudo sg_inq /dev/sg0
+standard INQUIRY:
+  PQual=3D0  PDT=3D0  RMB=3D0  LU_CONG=3D0  hot_pluggable=3D0  version=3D0x=
+05  [SPC-3]
+  [AERC=3D0]  [TrmTsk=3D0]  NormACA=3D0  HiSUP=3D0  Resp_data_format=3D2
+  SCCS=3D0  ACC=3D0  TPGS=3D0  3PC=3D0  Protect=3D0  [BQue=3D0]
+  EncServ=3D0  MultiP=3D0  [MChngr=3D0]  [ACKREQQ=3D0]  Addr16=3D0
+  [RelAdr=3D0]  WBus16=3D0  Sync=3D0  [Linked=3D0]  [TranDis=3D0]  CmdQue=
+=3D1
+  [SPI: Clocking=3D0x0  QAS=3D0  IUS=3D0]
+    length=3D96 (0x60)   Peripheral device type: disk
+ Vendor identification: ATA
+ Product identification: QEMU HARDDISK
+ Product revision level: 2.5+
+ Unit serial number: QM00005
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 41ba22f6c7f0..e9c2d306ed87 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -162,7 +162,7 @@ static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
- static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
- {
- 	if (hisi_hba->hw->slot_index_alloc ||
--	    slot_idx >= HISI_SAS_UNRESERVED_IPTT) {
-+	    slot_idx < HISI_SAS_RESERVED_IPTT) {
- 		spin_lock(&hisi_hba->lock);
- 		hisi_sas_slot_index_clear(hisi_hba, slot_idx);
- 		spin_unlock(&hisi_hba->lock);
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 1ccce706167a..5e80225b5308 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -889,7 +889,9 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
- {
- 	struct ata_port *ap = device->sata_dev.ap;
- 	struct ata_link *link = &ap->link;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(ap->lock, flags);
- 	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
- 	device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
- 
-@@ -897,6 +899,7 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
- 	if (force_reset)
- 		link->eh_info.action |= ATA_EH_RESET;
- 	ata_link_abort(link);
-+	spin_unlock_irqrestore(ap->lock, flags);
- }
- EXPORT_SYMBOL_GPL(sas_ata_device_link_abort);
- 
-diff --git a/drivers/scsi/mpi3mr/Makefile b/drivers/scsi/mpi3mr/Makefile
-index ef86ca46646b..3bf8cf34e1c3 100644
---- a/drivers/scsi/mpi3mr/Makefile
-+++ b/drivers/scsi/mpi3mr/Makefile
-@@ -1,5 +1,5 @@
- # mpi3mr makefile
--obj-m += mpi3mr.o
-+obj-$(CONFIG_SCSI_MPI3MR) += mpi3mr.o
- mpi3mr-y +=  mpi3mr_os.o     \
- 		mpi3mr_fw.o \
- 		mpi3mr_app.o \
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 0c4aabaefdcc..286a44506578 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3633,8 +3633,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
- 	int i, retval = 0, capb = 0;
- 	u16 message_control;
- 	u64 dma_mask = mrioc->dma_mask ? mrioc->dma_mask :
--	    (((dma_get_required_mask(&pdev->dev) > DMA_BIT_MASK(32)) &&
--	    (sizeof(dma_addr_t) > 4)) ? DMA_BIT_MASK(64) : DMA_BIT_MASK(32));
-+	    ((sizeof(dma_addr_t) > 4) ? DMA_BIT_MASK(64) : DMA_BIT_MASK(32));
- 
- 	if (pci_enable_device_mem(pdev)) {
- 		ioc_err(mrioc, "pci_enable_device_mem: failed\n");
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 4e981ccaac41..69061545d9d2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2992,8 +2992,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- 	struct sysinfo s;
- 	u64 coherent_dma_mask, dma_mask;
- 
--	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
--	    dma_get_required_mask(&pdev->dev) <= DMA_BIT_MASK(32)) {
-+	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4) {
- 		ioc->dma_mask = 32;
- 		coherent_dma_mask = dma_mask = DMA_BIT_MASK(32);
- 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index cc6953809a24..8553277effb3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1511,8 +1511,6 @@ static int inquiry_vpd_b0(unsigned char *arr)
- 	put_unaligned_be64(sdebug_write_same_length, &arr[32]);
- 
- 	return 0x3c; /* Mandatory page length for Logical Block Provisioning */
--
--	return sizeof(vpdb0_data);
- }
- 
- /* Block device characteristics VPD page (SBC-3) */
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a7960ad2d386..2aa2c2aee6e7 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -231,6 +231,11 @@ scsi_abort_command(struct scsi_cmnd *scmd)
- 	struct Scsi_Host *shost = sdev->host;
- 	unsigned long flags;
- 
-+	if (!shost->hostt->eh_abort_handler) {
-+		/* No abort handler, fail command directly */
-+		return FAILED;
-+	}
-+
- 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
- 		/*
- 		 * Retry after abort failed, escalate to next level.
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 13cfd3e317cc..b9b97300e3b3 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1677,6 +1677,13 @@ static const char *iscsi_session_state_name(int state)
- 	return name;
- }
- 
-+static char *iscsi_session_target_state_name[] = {
-+	[ISCSI_SESSION_TARGET_UNBOUND]   = "UNBOUND",
-+	[ISCSI_SESSION_TARGET_ALLOCATED] = "ALLOCATED",
-+	[ISCSI_SESSION_TARGET_SCANNED]   = "SCANNED",
-+	[ISCSI_SESSION_TARGET_UNBINDING] = "UNBINDING",
-+};
-+
- int iscsi_session_chkready(struct iscsi_cls_session *session)
- {
- 	int err;
-@@ -1786,9 +1793,13 @@ static int iscsi_user_scan_session(struct device *dev, void *data)
- 		if ((scan_data->channel == SCAN_WILD_CARD ||
- 		     scan_data->channel == 0) &&
- 		    (scan_data->id == SCAN_WILD_CARD ||
--		     scan_data->id == id))
-+		     scan_data->id == id)) {
- 			scsi_scan_target(&session->dev, 0, id,
- 					 scan_data->lun, scan_data->rescan);
-+			spin_lock_irqsave(&session->lock, flags);
-+			session->target_state = ISCSI_SESSION_TARGET_SCANNED;
-+			spin_unlock_irqrestore(&session->lock, flags);
-+		}
- 	}
- 
- user_scan_exit:
-@@ -1961,31 +1972,41 @@ static void __iscsi_unbind_session(struct work_struct *work)
- 	struct iscsi_cls_host *ihost = shost->shost_data;
- 	unsigned long flags;
- 	unsigned int target_id;
-+	bool remove_target = true;
- 
- 	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
- 
- 	/* Prevent new scans and make sure scanning is not in progress */
- 	mutex_lock(&ihost->mutex);
- 	spin_lock_irqsave(&session->lock, flags);
--	if (session->target_id == ISCSI_MAX_TARGET) {
-+	if (session->target_state == ISCSI_SESSION_TARGET_ALLOCATED) {
-+		remove_target = false;
-+	} else if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
- 		spin_unlock_irqrestore(&session->lock, flags);
- 		mutex_unlock(&ihost->mutex);
--		goto unbind_session_exit;
-+		ISCSI_DBG_TRANS_SESSION(session,
-+			"Skipping target unbinding: Session is unbound/unbinding.\n");
-+		return;
- 	}
- 
-+	session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
- 	target_id = session->target_id;
- 	session->target_id = ISCSI_MAX_TARGET;
- 	spin_unlock_irqrestore(&session->lock, flags);
- 	mutex_unlock(&ihost->mutex);
- 
--	scsi_remove_target(&session->dev);
-+	if (remove_target)
-+		scsi_remove_target(&session->dev);
- 
- 	if (session->ida_used)
- 		ida_free(&iscsi_sess_ida, target_id);
- 
--unbind_session_exit:
- 	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
-+
-+	spin_lock_irqsave(&session->lock, flags);
-+	session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
-+	spin_unlock_irqrestore(&session->lock, flags);
- }
- 
- static void __iscsi_destroy_session(struct work_struct *work)
-@@ -2062,6 +2083,9 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
- 		session->ida_used = true;
- 	} else
- 		session->target_id = target_id;
-+	spin_lock_irqsave(&session->lock, flags);
-+	session->target_state = ISCSI_SESSION_TARGET_ALLOCATED;
-+	spin_unlock_irqrestore(&session->lock, flags);
- 
- 	dev_set_name(&session->dev, "session%u", session->sid);
- 	err = device_add(&session->dev);
-@@ -4369,6 +4393,19 @@ iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
- iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
- iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
- 
-+static ssize_t
-+show_priv_session_target_state(struct device *dev, struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct iscsi_cls_session *session = iscsi_dev_to_session(dev->parent);
-+
-+	return sysfs_emit(buf, "%s\n",
-+			iscsi_session_target_state_name[session->target_state]);
-+}
-+
-+static ISCSI_CLASS_ATTR(priv_sess, target_state, S_IRUGO,
-+			show_priv_session_target_state, NULL);
-+
- static ssize_t
- show_priv_session_state(struct device *dev, struct device_attribute *attr,
- 			char *buf)
-@@ -4471,6 +4508,7 @@ static struct attribute *iscsi_session_attrs[] = {
- 	&dev_attr_sess_boot_target.attr,
- 	&dev_attr_priv_sess_recovery_tmo.attr,
- 	&dev_attr_priv_sess_state.attr,
-+	&dev_attr_priv_sess_target_state.attr,
- 	&dev_attr_priv_sess_creator.attr,
- 	&dev_attr_sess_chap_out_idx.attr,
- 	&dev_attr_sess_chap_in_idx.attr,
-@@ -4584,6 +4622,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
- 		return S_IRUGO | S_IWUSR;
- 	else if (attr == &dev_attr_priv_sess_state.attr)
- 		return S_IRUGO;
-+	else if (attr == &dev_attr_priv_sess_target_state.attr)
-+		return S_IRUGO;
- 	else if (attr == &dev_attr_priv_sess_creator.attr)
- 		return S_IRUGO;
- 	else if (attr == &dev_attr_priv_sess_target_id.attr)
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index d7a84c0bfaeb..22705eb781b0 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1823,6 +1823,9 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	ret = storvsc_do_io(dev, cmd_request, get_cpu());
- 	put_cpu();
- 
-+	if (ret)
-+		scsi_dma_unmap(scmnd);
-+
- 	if (ret == -EAGAIN) {
- 		/* no more space */
- 		ret = SCSI_MLQUEUE_DEVICE_BUSY;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e18c9f4463ec..bda61be5f035 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6056,6 +6056,14 @@ void ufshcd_schedule_eh_work(struct ufs_hba *hba)
- 	}
- }
- 
-+static void ufshcd_force_error_recovery(struct ufs_hba *hba)
-+{
-+	spin_lock_irq(hba->host->host_lock);
-+	hba->force_reset = true;
-+	ufshcd_schedule_eh_work(hba);
-+	spin_unlock_irq(hba->host->host_lock);
-+}
-+
- static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
- {
- 	down_write(&hba->clk_scaling_lock);
-@@ -9083,6 +9091,15 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 
- 		if (!hba->dev_info.b_rpm_dev_flush_capable) {
- 			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
-+			if (ret && pm_op != UFS_SHUTDOWN_PM) {
-+				/*
-+				 * If return err in suspend flow, IO will hang.
-+				 * Trigger error handler and break suspend for
-+				 * error recovery.
-+				 */
-+				ufshcd_force_error_recovery(hba);
-+				ret = -EBUSY;
-+			}
- 			if (ret)
- 				goto enable_scaling;
- 		}
-@@ -9094,6 +9111,15 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 */
- 	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
- 	ret = ufshcd_link_state_transition(hba, req_link_state, check_for_bkops);
-+	if (ret && pm_op != UFS_SHUTDOWN_PM) {
-+		/*
-+		 * If return err in suspend flow, IO will hang.
-+		 * Trigger error handler and break suspend for
-+		 * error recovery.
-+		 */
-+		ufshcd_force_error_recovery(hba);
-+		ret = -EBUSY;
-+	}
- 	if (ret)
- 		goto set_dev_active;
- 
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index cab52b0f11d0..34c03707fb6e 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -236,6 +236,14 @@ enum {
- 	ISCSI_SESSION_FREE,
- };
- 
-+enum {
-+	ISCSI_SESSION_TARGET_UNBOUND,
-+	ISCSI_SESSION_TARGET_ALLOCATED,
-+	ISCSI_SESSION_TARGET_SCANNED,
-+	ISCSI_SESSION_TARGET_UNBINDING,
-+	ISCSI_SESSION_TARGET_MAX,
-+};
-+
- #define ISCSI_MAX_TARGET -1
- 
- struct iscsi_cls_session {
-@@ -264,6 +272,7 @@ struct iscsi_cls_session {
- 	 */
- 	pid_t creator;
- 	int state;
-+	int target_state;			/* session target bind state */
- 	int sid;				/* session id */
- 	void *dd_data;				/* LLD private data */
- 	struct device dev;	/* sysfs transport/container device */
 
+I'm quite surprised that we don't have any automated tests that
+have caught/reported this already, as SG is quite heavily used.
+
+
+Kind regards,
+Niklas=
