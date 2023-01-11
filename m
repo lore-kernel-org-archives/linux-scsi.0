@@ -2,43 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61D81C46467
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 18:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A23C46467
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 19:02:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235818AbjAKSrs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Jan 2023 13:47:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46264 "EHLO
+        id S235770AbjAKTCM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Jan 2023 14:02:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234867AbjAKSrr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2023 13:47:47 -0500
+        with ESMTP id S231527AbjAKTCJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2023 14:02:09 -0500
 Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8F8E3C727;
-        Wed, 11 Jan 2023 10:47:45 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0FFF3D9F2;
+        Wed, 11 Jan 2023 11:02:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1673462856; bh=jopGRroUzLR4tIlqsfXJiaUefPtk1/CDxZDkEHglVwI=;
+        t=1673463717; bh=z4mIkRGmW/UOlyaWLzMaGS4Bp7aO/qtky3A43RvUivg=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
          Content-Type;
-        b=bmEem5USpbJZI5DkvWTiaHiU3SWR8vvmliR2hbKL+uXKkbSl6uhMI/otwTW1cRPdB
-         DxWgJk6+bntH4t4s7UWJuwTtFQAqlNzTK2vj/JCKoSXLzFtONf94n5vrzvQJtD6GuI
-         haXjY8+F0x51uHKovMUcgFQGF6nLfixnEuVOxFrk=
-Received: by b-2.in.mailobj.net [192.168.90.12] with ESMTP
+        b=jAwLC/0I1G8qcyvZt4T119gmSNgDdHHM5K0TbaC6QyZjQwnnOMhiBYNzCELTcmkxh
+         RuXzm1imEOwpF5UGiIxwPsKMG7EoTqmfS1RmGh4cVOZV1Lg1KXxrx//nWKXMgSePcr
+         9iMvzBmIZLVSHRzKfZJiam15LHzsIICgpfZ+CFRk=
+Received: by b-1.in.mailobj.net [192.168.90.11] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Wed, 11 Jan 2023 19:47:31 +0100 (CET)
-X-EA-Auth: sME8AV4L7mHKGVO2EY/d0CLsKyWhtWFXdco2VEzHxLa+vDKwbgQivgHsMLs+dDkIdDhqk4I+68aGalNmD9TArn+bLadrCNj7
-Date:   Thu, 12 Jan 2023 00:17:27 +0530
+        Wed, 11 Jan 2023 20:01:57 +0100 (CET)
+X-EA-Auth: CBO1VB7wv7T14fzmCZcRvdILkqKtqF5NZHt40nUuTS+YdQ8EqGZfqd7HPpEaP38NZFt+5jZa6GESvjQnldTM2f+rthHICo9/
+Date:   Thu, 12 Jan 2023 00:31:54 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: [PATCH] scsi: megaraid_sas: Use a variable for repeated mem_size
- computation
-Message-ID: <Y78EP0Fznl8h4XVs@ubun2204.myguest.virtualbox.org>
+Subject: [PATCH] scsi: qla2xxx: Simplify if condition evaluation
+Message-ID: <Y78HoiOWkc3RrEgN@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -46,67 +43,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use a variable to upfront compute memory size to be allocated,
-instead of repeatedly computing it at different instructions.
-The reduced instruction length also allows to tidy up the code.
-Issue identified using the array_size_dup Coccinelle semantic
+A logical evaluation of type (!A || A && B) can be simplified as
+(!A || B).
+Improvement by suggested by excluded_middle.cocci Coccinelel semantic
 patch.
 
 Signed-off-by: Deepak R Varma <drv@mailo.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+Please note: Change is compile tested only.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index fe70f8f11435..efb25af80664 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -5287,6 +5287,7 @@ int
- megasas_alloc_fusion_context(struct megasas_instance *instance)
- {
- 	struct fusion_context *fusion;
-+	size_t sz;
- 
- 	instance->ctrl_context = kzalloc(sizeof(struct fusion_context),
- 					 GFP_KERNEL);
-@@ -5298,15 +5299,13 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
- 
- 	fusion = instance->ctrl_context;
- 
--	fusion->log_to_span_pages = get_order(MAX_LOGICAL_DRIVES_EXT *
--					      sizeof(LD_SPAN_INFO));
-+	sz = array_size(MAX_LOGICAL_DRIVES_EXT, sizeof(LD_SPAN_INFO));
-+	fusion->log_to_span_pages = get_order(sz);
- 	fusion->log_to_span =
- 		(PLD_SPAN_INFO)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
- 						fusion->log_to_span_pages);
- 	if (!fusion->log_to_span) {
--		fusion->log_to_span =
--			vzalloc(array_size(MAX_LOGICAL_DRIVES_EXT,
--					   sizeof(LD_SPAN_INFO)));
-+		fusion->log_to_span = vzalloc(sz);
- 		if (!fusion->log_to_span) {
- 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 				__func__, __LINE__);
-@@ -5314,15 +5313,13 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
+ drivers/scsi/qla2xxx/qla_target.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 548f22705ddc..bf6aacf4dbd1 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1028,8 +1028,7 @@ void qlt_free_session_done(struct work_struct *work)
  		}
- 	}
  
--	fusion->load_balance_info_pages = get_order(MAX_LOGICAL_DRIVES_EXT *
--		sizeof(struct LD_LOAD_BALANCE_INFO));
-+	sz = array_size(MAX_LOGICAL_DRIVES_EXT, sizeof(struct LD_LOAD_BALANCE_INFO));
-+	fusion->load_balance_info_pages = get_order(sz);
- 	fusion->load_balance_info =
- 		(struct LD_LOAD_BALANCE_INFO *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
- 		fusion->load_balance_info_pages);
- 	if (!fusion->load_balance_info) {
--		fusion->load_balance_info =
--			vzalloc(array_size(MAX_LOGICAL_DRIVES_EXT,
--					   sizeof(struct LD_LOAD_BALANCE_INFO)));
-+		fusion->load_balance_info = vzalloc(sz);
- 		if (!fusion->load_balance_info)
- 			dev_err(&instance->pdev->dev, "Failed to allocate load_balance_info, "
- 				"continuing without Load Balance support\n");
+ 		if (ha->flags.edif_enabled &&
+-		    (!own || (own &&
+-			      own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
++				(own && own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
+ 			sess->edif.authok = 0;
+ 			if (!ha->flags.host_shutting_down) {
+ 				ql_dbg(ql_dbg_edif, vha, 0x911e,
 -- 
 2.34.1
 
