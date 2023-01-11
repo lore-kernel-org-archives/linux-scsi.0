@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8875C54EBC
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 11:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AE55C5479D
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Jan 2023 11:40:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230112AbjAKLXx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Jan 2023 06:23:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53510 "EHLO
+        id S235407AbjAKLkX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Jan 2023 06:40:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232109AbjAKLXq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2023 06:23:46 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE1689F;
-        Wed, 11 Jan 2023 03:23:44 -0800 (PST)
+        with ESMTP id S234100AbjAKLjx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2023 06:39:53 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48FBA19C06;
+        Wed, 11 Jan 2023 03:38:50 -0800 (PST)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 4877346D1;
-        Wed, 11 Jan 2023 11:23:43 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id 7D9C74741;
+        Wed, 11 Jan 2023 11:38:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1673436223; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1673437128; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=k16DrpOUxbhsRxLzoa57Nj/MLqGxBj4Ih9CJHaqI8AM=;
-        b=zQ96q5P8kUwlq2ViOTDco7zZr/gpS/0twHmZfwGz/P2yAoTiaHrxYjq0FfLUtr8HSAmP6o
-        Ih19Wn6UaimUC6uX8gG+xWQhHmuS8hdE1VQiLJgwzd3/A/Agzp14WEhyKXIzUiAnOlHwMO
-        +XdrujHDUFXYz5fc9eX/cwbF7BshnJ4=
+        bh=UwPyPIetNY3DBB0fSVp3q4vAm/+Fo0XhsHWOsHHGIUI=;
+        b=YY0V/kE2OIgigKX91FgSqFdKg1MvTPPtnW+FU7rFyf9gBrBmitP+fmgRZrVbi0waj6TG2e
+        6nD/o5PaB+ipjykGZ5pK7x0m6Qo+Dgo6IkCwZZWSmTTttvikXVb0/U9c2kpM1vUNb35L+M
+        lYUiuOhw6CqV+dLakwbaOyPia6GL0Nk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1673436223;
+        s=susede2_ed25519; t=1673437128;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=k16DrpOUxbhsRxLzoa57Nj/MLqGxBj4Ih9CJHaqI8AM=;
-        b=dHdmhZkL+TL95cqdFa4Gj8iJ75m4pUBgVFN6iMRTLm0KmS0U+ABS2rzuMRzcJpfJ5mw6vS
-        kQN0/Qdd2oBhvJCQ==
+        bh=UwPyPIetNY3DBB0fSVp3q4vAm/+Fo0XhsHWOsHHGIUI=;
+        b=J2Cr3bxyA6vSXDDHYjJWLmQKMnj36Cssv1mwlSS9oTAr/yA1bznUNLMdhW49WszAmc0kBh
+        aRL/p95Lm84tWwAg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 420922C141;
-        Wed, 11 Jan 2023 11:23:43 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 761A52C141;
+        Wed, 11 Jan 2023 11:38:48 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 17828)
-        id 3636051B7AB8; Wed, 11 Jan 2023 12:23:43 +0100 (CET)
+        id 6AC7E51B7ABB; Wed, 11 Jan 2023 12:38:48 +0100 (CET)
 From:   Daniel Wagner <dwagner@suse.de>
 To:     James Smart <jsmart2021@gmail.com>
 Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH] lpfc: Handle gracefully failed FLOGI attempts in devloss callback
-Date:   Wed, 11 Jan 2023 12:23:41 +0100
-Message-Id: <20230111112341.107989-1-dwagner@suse.de>
+Subject: [PATCH v2] lpfc: Handle gracefully failed FLOGI attempts in devloss callback
+Date:   Wed, 11 Jan 2023 12:38:41 +0100
+Message-Id: <20230111113841.108588-1-dwagner@suse.de>
 X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -65,6 +65,13 @@ state and issue a warning if we have an inconsistency.
 
 Signed-off-by: Daniel Wagner <dwagner@suse.de>
 ---
+changes:
+v2:
+  - this time with code (/me fights with evil-mode)
+
+v1:
+  - initial version
+
 
 lpfc 0000:65:00.1: 94: [20252.520693] 7:0357 ELS CQE error: status=x3: CQE: 116b0300 00000000 31420002 90010000
 lpfc 0000:65:00.1: 95: [20252.520707] 7:0321 Rsp Ring 2 error: IOCB Data: x116b0300 x0 x31420002 x90010000
@@ -103,6 +110,7 @@ Call Trace:
  </TASK>
 
 
+
  drivers/scsi/lpfc/lpfc_hbadisc.c | 13 +++++++++++++
  1 file changed, 13 insertions(+)
 
@@ -110,6 +118,26 @@ diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
 index 83d2b29ee2a6..e7dd5f90d6c4 100644
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
 +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -160,6 +160,19 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 	if (!ndlp)
+ 		return;
+ 
++	if (!ndlp->vport) {
++		/*
++		 * dev loss timer from the scsi layer might time out after
++		 * failed FLOGI attempts. In this case the node will alreay be
++		 * freed via lpfc_nlp_release(), which frees the vport pointer
++		 * and sets the state to NLP_STE_FREED_NODE.
++		 */
++		WARN_ONCE(ndlp->nlp_state != NLP_STE_FREED_NODE,
++			  "**** %s, vport NULL but ntp_state is not in freed state",
++			  __func__);
++		return;
++	}
++
+ 	vport = ndlp->vport;
+ 	phba  = vport->phba;
+ 
 -- 
 2.35.3
 
