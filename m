@@ -2,62 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C523C54EBD
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Jan 2023 08:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B6CC61DB3
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Jan 2023 12:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239908AbjALI5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Jan 2023 03:57:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48796 "EHLO
+        id S234305AbjALMQd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Jan 2023 07:16:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236736AbjALI4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2023 03:56:55 -0500
-Received: from mail.glencoeaur.com (mail.glencoeaur.com [217.61.97.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56C8350E43
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2023 00:54:57 -0800 (PST)
-Received: by mail.glencoeaur.com (Postfix, from userid 1001)
-        id 0876181FFA; Thu, 12 Jan 2023 08:35:46 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=glencoeaur.com;
-        s=mail; t=1673512552;
-        bh=2S0GQFScndXkBEK4sqdoOhOYLqsB2sEH8Q5XQfVvKpo=;
-        h=Date:From:To:Subject:From;
-        b=WZMd2wrHGDYhQSB8U6j0kft7uMGeikRU+VjFbMdxCyIwLo51u9+dNcMxZvhR0h+7f
-         nbtqs3WQcmnIO+IO2SpzeoLjp4fk6wplBJn3vv7hDaQK7PI3ZCRud1HmCyxCYO+Pmt
-         G0XliqTsdVTmhBsxN5uOZau/bAC7T9j2LrK7KfxovyAm2wQIwGzXbc5gdWp697TBFb
-         A1AjjVunJ6hJk+lswb61MhcXJlhncp3A5Gmof1bEkHtPDQDlxRUb2M4XDmU3g/TT6E
-         Dt3HVItaWpRjX1PBrctUBoYQzci7bqgy7L4PHkooqWM0GAwfwzi+43Ny3heo5G+Y9l
-         SIH2zYNQMAXNg==
-Received: by mail.glencoeaur.com for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2023 08:35:33 GMT
-Message-ID: <20230112074500-0.1.z.3ftn.0.4wty6p67d2@glencoeaur.com>
-Date:   Thu, 12 Jan 2023 08:35:33 GMT
-From:   "Zbynek Spacek" <zbynek.spacek@glencoeaur.com>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Silikonmischungen
-X-Mailer: mail.glencoeaur.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S232564AbjALMQO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2023 07:16:14 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B450DEC9;
+        Thu, 12 Jan 2023 04:16:08 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D017562020;
+        Thu, 12 Jan 2023 12:16:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 415E5C433D2;
+        Thu, 12 Jan 2023 12:16:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673525767;
+        bh=tTMm4Uwh5blTeztGRAXxQApMhmA2p7m4kMVmAg1nAGE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=fN76Sw6Z+Jd2YctH7BMwxUt5HfBAINlI7bQlPWwncJkjCGRnf3UQDmEv0lwY9tlKJ
+         mQoF3dnls/ldwT/zOr8RA13T3qJPtOmmwUivOwzIHle3wTFPZ4OXLgpZ2XLT8SVpF8
+         gfsKV4MLQM80EAQfmp5J0z+Oj81/L9pEhRasnpIMxEb2H5R7WYyeesI68V/9XoK9Sa
+         UIw2Sfbu/aHi79QscGBkbH2XU5DCrG/PXZ6Z8FSN+fcRbZHesNWapy/kDlQu0MXDOF
+         01AWU8uDuMtJw7x1Was8qhmylpQ1ISL7D7fKvEOABOT9qFvraOQX8wMgMitpPI3pOM
+         F1FPLiYpLj+wg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 2F1F7C395C9;
+        Thu, 12 Jan 2023 12:16:07 +0000 (UTC)
+Subject: Re: [GIT PULL resend] SCSI fixes for 6.1-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
+References: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: a67aad57d9aee41180aff36e54cb72fe4b8d5a5a
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 23025cbccada8908fc6cd4d09e851de66898d2d7
+Message-Id: <167352576718.4374.1927272577136703195.pr-tracker-bot@kernel.org>
+Date:   Thu, 12 Jan 2023 12:16:07 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Good morning,
+The pull request you sent on Wed, 11 Jan 2023 09:10:52 -0500:
 
-do you need intermediates for processing, plastics (e.g. rubber) or silic=
-one mixtures?
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-We provide a wide range of silicone rubbers with various properties, sili=
-cone mixtures from renowned manufacturers such as Wacker, Elastosil LR an=
-d dyes, stabilizers, primers and anti-adhesive additives.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/23025cbccada8908fc6cd4d09e851de66898d2d7
 
-We also produce technical silicone compounds with increased resistance to=
- oils, resistant to high temperatures and water vapor, conductive and man=
-y more.
+Thank you!
 
-We provide fast order fulfillment, timely deliveries and cost optimizatio=
-n.
-
-Can I introduce what we can offer you?
-
-
-Best regards
-Zbynek Spacek
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
