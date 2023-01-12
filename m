@@ -2,69 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B6CC61DB3
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Jan 2023 12:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1A5C54EBC
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Jan 2023 12:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234305AbjALMQd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Jan 2023 07:16:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49978 "EHLO
+        id S232184AbjALM0i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Jan 2023 07:26:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232564AbjALMQO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2023 07:16:14 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B450DEC9;
-        Thu, 12 Jan 2023 04:16:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D017562020;
-        Thu, 12 Jan 2023 12:16:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 415E5C433D2;
-        Thu, 12 Jan 2023 12:16:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673525767;
-        bh=tTMm4Uwh5blTeztGRAXxQApMhmA2p7m4kMVmAg1nAGE=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=fN76Sw6Z+Jd2YctH7BMwxUt5HfBAINlI7bQlPWwncJkjCGRnf3UQDmEv0lwY9tlKJ
-         mQoF3dnls/ldwT/zOr8RA13T3qJPtOmmwUivOwzIHle3wTFPZ4OXLgpZ2XLT8SVpF8
-         gfsKV4MLQM80EAQfmp5J0z+Oj81/L9pEhRasnpIMxEb2H5R7WYyeesI68V/9XoK9Sa
-         UIw2Sfbu/aHi79QscGBkbH2XU5DCrG/PXZ6Z8FSN+fcRbZHesNWapy/kDlQu0MXDOF
-         01AWU8uDuMtJw7x1Was8qhmylpQ1ISL7D7fKvEOABOT9qFvraOQX8wMgMitpPI3pOM
-         F1FPLiYpLj+wg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 2F1F7C395C9;
-        Thu, 12 Jan 2023 12:16:07 +0000 (UTC)
-Subject: Re: [GIT PULL resend] SCSI fixes for 6.1-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
-References: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <255063201faa447278f005a52ef3c4cd22409cbd.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: a67aad57d9aee41180aff36e54cb72fe4b8d5a5a
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 23025cbccada8908fc6cd4d09e851de66898d2d7
-Message-Id: <167352576718.4374.1927272577136703195.pr-tracker-bot@kernel.org>
-Date:   Thu, 12 Jan 2023 12:16:07 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S233393AbjALM0R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2023 07:26:17 -0500
+Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76B55496F4;
+        Thu, 12 Jan 2023 04:26:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1673526362; bh=OsbxLgpenh3EmaJqVO2D5pKj+O3xzETqZGytw+PMepM=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=gCQq8YfKeCDxCd8mHHPKSlFxYxq2Vx/KJ6RyfcCAS6ZOliJS9/LIZwxEsZr9I69F1
+         E9oG9SDnP62gqwcL6yb+c7ubjDXxV/0RvQCtRwhCb9jbx8av9Q2GLX0R9ROk2+2tEu
+         Zj0ZpBspBPc3zDmQO4CQY8ygZkscRaY414GNIkBQ=
+Received: by b-1.in.mailobj.net [192.168.90.11] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Thu, 12 Jan 2023 13:26:02 +0100 (CET)
+X-EA-Auth: zKf4La/UoBbkbkJBV4yz8GHr94GydOUPwZmccHa9aCZx+8idzk8fE2Xao4lY0aXrBYf5G3IZ40c4vyYqRf1miESw+BK/stO1
+Date:   Thu, 12 Jan 2023 17:55:57 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>
+Subject: [PATCH] scsi: csiostor: use *ptr instead of ptr with sizeof
+Message-ID: <Y7/8VUXJSFXTpYlz@ubun2204.myguest.virtualbox.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Wed, 11 Jan 2023 09:10:52 -0500:
+The function csio_enqueue_evt() should be passed the actual length of
+the event/message so that it can be fully copied over to the event
+queue. Use the sizeof(*ptr) to get the real message length instead of
+sizeof(ptr).
+Issue identified using the noderef,cocci coccinelle semantic patch.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+Please note: The change is compile tested only.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/23025cbccada8908fc6cd4d09e851de66898d2d7
+ drivers/scsi/csiostor/csio_mb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you!
-
+diff --git a/drivers/scsi/csiostor/csio_mb.c b/drivers/scsi/csiostor/csio_mb.c
+index 94810b19e747..4df8a4df4408 100644
+--- a/drivers/scsi/csiostor/csio_mb.c
++++ b/drivers/scsi/csiostor/csio_mb.c
+@@ -1551,7 +1551,7 @@ csio_mb_isr_handler(struct csio_hw *hw)
+ 		 * Enqueue event to EventQ. Events processing happens
+ 		 * in Event worker thread context
+ 		 */
+-		if (csio_enqueue_evt(hw, CSIO_EVT_MBX, mbp, sizeof(mbp)))
++		if (csio_enqueue_evt(hw, CSIO_EVT_MBX, mbp, sizeof(*mbp)))
+ 			CSIO_INC_STATS(hw, n_evt_drop);
+ 
+ 		return 0;
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.34.1
+
+
+
