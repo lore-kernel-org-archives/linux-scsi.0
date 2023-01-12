@@ -2,60 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8A49C67871
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Jan 2023 14:10:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F84C677F1
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Jan 2023 14:11:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234982AbjALOKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Jan 2023 09:10:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35544 "EHLO
+        id S235451AbjALOLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Jan 2023 09:11:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230497AbjALOJ6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2023 09:09:58 -0500
+        with ESMTP id S234352AbjALOK2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2023 09:10:28 -0500
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B6658D10;
-        Thu, 12 Jan 2023 06:05:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C5B58D2F;
+        Thu, 12 Jan 2023 06:05:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1673532319; x=1705068319;
+  t=1673532326; x=1705068326;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=1f7zHLpGMm9g1WnrgGxTA6e76XFBUATSXLYVFXzagpA=;
-  b=EuETioCMypNA5iAv05LvpYkrFt6AJajPyOPRqE1NrmOHYGXG792mQcX3
-   SSgCAHKr2hAC/BhmM7ihw5DJYnC7f4Y2/7or/L5X5zdBCjZBCGZVycSEK
-   n2LnKquQCOhw4Cqk/zVutz7xvCGiYZxhwoiPdYH1RSPVA75/e32lPR9jU
-   xy2AEbu6TPVLFd1IHah+jipiAk/2pLTGgaR5NS8tk5pBBbc4dwQejMpjv
-   /BHjMS2CD8Zpv8mlub6S1UgAAcloREmOPh1ydB3ynexElm4Gz/PhYxP8n
-   7aE2m7J3/IUjcB3P6MN7tHhNdqOwZlYVacwhCN/7fMm0c9H/4qQ6VvFY2
-   g==;
+  bh=iJuqTlHbB+r3PzdoLMxijeGItAuqi1spp9PVHEVw1+Q=;
+  b=BB+ZEaRH048ynRkNCF6qZEDWEHQVFxHpjVczowpFFkVSrzGzAUGjchmi
+   VdYNx8Key3AyHS+JdOBGj0jnH1oqwuhNap2GNcCjvYTvYuhNuNJPuq5i0
+   YMYGyrXA/GVKtEUUI+w8JI7no5CT04FbfDK7aZvAzyWbnvujb3QTAgnlS
+   qopJdWv3EwZss+bFSDQg9YEF8A+UMdTvCfqiaJhHBe0CBaTBVFtR8NFwu
+   peI8GSBOlAkicyVQNthI6hW8IpiEu9Mo3sjjVH2Wj4TrbbBcDT23vuPAn
+   gQ/mef8cYJCZuaS+Rxc2ypAZVuuCRFQ8ub87KMq4IEq99Zlj2HUOJx22R
+   A==;
 X-IronPort-AV: E=Sophos;i="5.97,211,1669046400"; 
-   d="scan'208";a="332632749"
+   d="scan'208";a="332632758"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Jan 2023 22:05:05 +0800
-IronPort-SDR: PC+hahFSnhm7oGzGfLE7OfxADTo+uL5WeCvT4JSG4WQxCd7S0sscAGIuiNLK4WtprygUeGlS9t
- EnBB8pMyU9nSGoRdQIaLRfXw2wPJbRIvpJNfH6QhWqhBm1DFeXNE7y+ur1hC9nKq14H1OIWPsf
- jdiHKaB6CSWrfK631D/KXlgDZlTclWN75eJskpaLDNb/BQCQKBdUOyKj1vqQI0n35vBm7H4pWr
- xtKAq2ILgjMZz+IIWxM8i6Q+Bd5Xe6imdFJD+pvRjoPmdtx4lNTLmTytYoh6D7q+3xfRW4zOCc
- Q8I=
+  by ob1.hgst.iphmx.com with ESMTP; 12 Jan 2023 22:05:11 +0800
+IronPort-SDR: 22K2g1Z8G7SXmFvm94GpnZ7kqixbQVzvSEyFyHhykCFwL0cdcUUpJ9BesneZAzy8au7IpZJHJd
+ A4maT8dAUvq20aYBQyLug5R1OeRZF3Vcgzq3pwRVvfjZa1+D09xTI4B9HghdC9gS6bVOzpFuMa
+ athrdrRBEEADbTcprihRV1ivrYjbUHwe1owQiNQyxgjH6lF+RM/LUPapnKzXYSfoKJrAkgI6YD
+ tVdgAdPAlRngnav3ygh2YuacPuRiMv2xeXkffCtPWClrJNl0tXWx6ecrzCd+SkeXQfdLXAhwBp
+ AkI=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jan 2023 05:17:09 -0800
-IronPort-SDR: tPnPlSHdk/WuxeYIpwzgwjgcaZ4zbIwxsapujAwRoPQAmIymye0ZDQacuzoG9ZbHlxWg13HrrC
- ugzdDVuT7z2OjLNAA2UXFKSPKq4CJVGf0qlD/1oOq+cT40jTGNk7FQSKxYju90ar2s3Joq73OF
- rDDrViqVgM6RriubwKhDQPKYLi+zrZObc4XfebJ9hy6qgRdtwAHmftncvEITOtson4A9/hOqEb
- 2N1NYAHYlDqpnkf6pkJ3I6O0OnmyytimpEqpWz9hP0GBgfG14d9/X5MEAbB/4hZ/qTsxaFxVLl
- Z0k=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jan 2023 05:17:15 -0800
+IronPort-SDR: mJE5jswxrS6xxVKtsQhZZpLT6y1e0Rb01aQCv8cd82+fdSPygaN36UdtAPmGHiVsiXI7cQphlY
+ bkUYjmvKmoVoNPdT9itS62M+rlmp69nkf+xhYqc59a8A/76yRaVBMNQeSJeE+8uQ/OLA+z28g0
+ Yvn80elQQrR1aPyAwNCRJkSUhdhq/EpsN4b3v6C/nkQKnMcJAKxpqoQ2MPLrp5/9tKGpDf4dRi
+ cOEb1Yxiy8fGRTGV+G+pAXEtNFU46a/q9U12kfTmFvY+9tdI8pyk+v+tWchCkgtoF9fp48t9ey
+ txs=
 WDCIronportException: Internal
 Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.12])
-  by uls-op-cesaip01.wdc.com with ESMTP; 12 Jan 2023 06:05:04 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 12 Jan 2023 06:05:10 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-kernel@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v2 16/18] scsi: sd: handle read/write CDL timeout failures
-Date:   Thu, 12 Jan 2023 15:04:05 +0100
-Message-Id: <20230112140412.667308-17-niklas.cassel@wdc.com>
+Subject: [PATCH v2 18/18] Documentation: sysfs-block-device: document command duration limits
+Date:   Thu, 12 Jan 2023 15:04:07 +0100
+Message-Id: <20230112140412.667308-19-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230112140412.667308-1-niklas.cassel@wdc.com>
 References: <20230112140412.667308-1-niklas.cassel@wdc.com>
@@ -65,178 +64,176 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commands using a duration limit descriptor that has limit policies set
-to a value other than 0x0 may be failed by the device if one of the
-limits are exceeded. For such commands, since the failure is the result
-of the user duration limit configuration and workload, the commands
-should not be retried and terminated immediately. Furthermore, to allow
-the user to differentiate these "soft" failures from hard errors due to
-hardware problem, a different error code than EIO should be returned.
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-There are 2 cases to consider:
-(1) The failure is due to a limit policy failing the command with a
-check condition sense key, that is, any limit policy other than 0xD.
-For this case, scsi_check_sense() is modified to detect failures with
-the ABORTED COMMAND sense key and the COMMAND TIMEOUT BEFORE PROCESSING
-or COMMAND TIMEOUT DURING PROCESSING or COMMAND TIMEOUT DURING
-PROCESSING DUE TO ERROR RECOVERY additional sense code. For these
-failures, a SUCCESS disposition is returned so that
-scsi_finish_command() is called to terminate the command.
+Document ABI/testing/sysfs-block-device the sysfs attributes present
+under /sys/block/*/device/duration_limits for ATA and SCSI devices
+supporting the command duration limits feature.
 
-(2) The failure is due to a limit policy set to 0xD, which result in the
-command being terminated with a GOOD status, COMPLETED sense key, and
-DATA CURRENTLY UNAVAILABLE additional sense code. To handle this case,
-the scsi_check_sense() is modified to return a SUCCESS disposition so
-that scsi_finish_command() is called to terminate the command.
-In addition, scsi_decide_disposition() has to be modified to see if a
-command being terminated with GOOD status has sense data.
-This is as defined in SCSI Primary Commands - 6 (SPC-6), so all
-according to spec, even if GOOD status commands were not checked before.
-
-If scsi_check_sense() detects sense data representing a duration limit,
-scsi_check_sense() will set the newly introduced SCSI ML byte
-SCSIML_STAT_DL_TIMEOUT. This SCSI ML byte is checked in
-scsi_noretry_cmd(), so that a command that failed because of a CDL
-timeout cannot be retried. The SCSI ML byte is also checked in
-scsi_result_to_blk_status() to complete the command request with the
-BLK_STS_DURATION_LIMIT status, which result in the user seeing ETIME
-errors for the failed commands.
-
-Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- drivers/scsi/scsi_error.c | 46 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c   |  4 ++++
- drivers/scsi/scsi_priv.h  |  1 +
- 3 files changed, 51 insertions(+)
+ Documentation/ABI/testing/sysfs-block-device | 150 +++++++++++++++++++
+ 1 file changed, 150 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 51aa5c1e31b5..e7103bf3ab23 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -536,6 +536,7 @@ static inline void set_scsi_ml_byte(struct scsi_cmnd *cmd, u8 status)
-  */
- enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- {
-+	struct request *req = scsi_cmd_to_rq(scmd);
- 	struct scsi_device *sdev = scmd->device;
- 	struct scsi_sense_hdr sshdr;
- 
-@@ -595,6 +596,22 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (sshdr.asc == 0x10) /* DIF */
- 			return SUCCESS;
- 
-+		/*
-+		 * Check aborts due to command duration limit policy:
-+		 * ABORTED COMMAND additional sense code with the
-+		 * COMMAND TIMEOUT BEFORE PROCESSING or
-+		 * COMMAND TIMEOUT DURING PROCESSING or
-+		 * COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY
-+		 * additional sense code qualifiers.
-+		 */
-+		if (sshdr.asc == 0x2e &&
-+		    sshdr.ascq >= 0x01 && sshdr.ascq <= 0x03) {
-+			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
-+			req->cmd_flags |= REQ_FAILFAST_DEV;
-+			req->rq_flags |= RQF_QUIET;
-+			return SUCCESS;
-+		}
+diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
+index 7ac7b19b2f72..3a32c86942f5 100644
+--- a/Documentation/ABI/testing/sysfs-block-device
++++ b/Documentation/ABI/testing/sysfs-block-device
+@@ -95,3 +95,153 @@ Description:
+ 		This file does not exist if the HBA driver does not implement
+ 		support for the SATA NCQ priority feature, regardless of the
+ 		device support for this feature.
 +
- 		if (sshdr.asc == 0x44 && sdev->sdev_bflags & BLIST_RETRY_ITF)
- 			return ADD_TO_MLQUEUE;
- 		if (sshdr.asc == 0xc1 && sshdr.ascq == 0x01 &&
-@@ -691,6 +708,15 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- 		}
- 		return SUCCESS;
- 
-+	case COMPLETED:
-+		if (sshdr.asc == 0x55 && sshdr.ascq == 0x0a) {
-+			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
-+			req->cmd_flags |= REQ_FAILFAST_DEV;
-+			req->rq_flags |= RQF_QUIET;
-+			return SUCCESS;
-+		}
-+		return SUCCESS;
 +
- 	default:
- 		return SUCCESS;
- 	}
-@@ -785,6 +811,14 @@ static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	switch (get_status_byte(scmd)) {
- 	case SAM_STAT_GOOD:
- 		scsi_handle_queue_ramp_up(scmd->device);
-+		if (scmd->sense_buffer && SCSI_SENSE_VALID(scmd))
-+			/*
-+			 * If we have sense data, call scsi_check_sense() in
-+			 * order to set the correct SCSI ML byte (if any).
-+			 * No point in checking the return value, since the
-+			 * command has already completed successfully.
-+			 */
-+			scsi_check_sense(scmd);
- 		fallthrough;
- 	case SAM_STAT_COMMAND_TERMINATED:
- 		return SUCCESS;
-@@ -1807,6 +1841,10 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 		return !!(req->cmd_flags & REQ_FAILFAST_DRIVER);
- 	}
- 
-+	/* Never retry commands aborted due to a duration limit timeout */
-+	if (scsi_ml_byte(scmd->result) == SCSIML_STAT_DL_TIMEOUT)
-+		return true;
++What:		/sys/block/*/device/duration_limits/enable
++Date:		Dec, 2022
++KernelVersion:	v6.3
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RW) For ATA and SCSI devices supporting the command duration
++		limits feature, write to the file to turn on or off the
++		feature. By default this feature is turned off. If the device
++		does not support the command duration limits feature, this
++		attribute does not exist (the directory
++		"/sys/block/\*/device/duration_limits" does not exist).
++		Writing "1" to this file enables the use of command duration
++		limits for read and write commands in the kernel and turns on
++		the feature on the device. Writing "0" disables the feature.
 +
- 	if (!scsi_status_is_check_condition(scmd->result))
- 		return false;
- 
-@@ -1966,6 +2004,14 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		if (scmd->cmnd[0] == REPORT_LUNS)
- 			scmd->device->sdev_target->expecting_lun_change = 0;
- 		scsi_handle_queue_ramp_up(scmd->device);
-+		if (scmd->sense_buffer && SCSI_SENSE_VALID(scmd))
-+			/*
-+			 * If we have sense data, call scsi_check_sense() in
-+			 * order to set the correct SCSI ML byte (if any).
-+			 * No point in checking the return value, since the
-+			 * command has already completed successfully.
-+			 */
-+			scsi_check_sense(scmd);
- 		fallthrough;
- 	case SAM_STAT_COMMAND_TERMINATED:
- 		return SUCCESS;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 79cece5eff5d..5923873f09e5 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -602,6 +602,8 @@ static blk_status_t scsi_result_to_blk_status(int result)
- 		return BLK_STS_MEDIUM;
- 	case SCSIML_STAT_TGT_FAILURE:
- 		return BLK_STS_TARGET;
-+	case SCSIML_STAT_DL_TIMEOUT:
-+		return BLK_STS_DURATION_LIMIT;
- 	}
- 
- 	switch (host_byte(result)) {
-@@ -799,6 +801,8 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 				blk_stat = BLK_STS_ZONE_OPEN_RESOURCE;
- 			}
- 			break;
-+		case COMPLETED:
-+			fallthrough;
- 		default:
- 			action = ACTION_FAIL;
- 			break;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 74324fba4281..f42388ecb024 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -27,6 +27,7 @@ enum scsi_ml_status {
- 	SCSIML_STAT_NOSPC		= 0x02,	/* Space allocation on the dev failed */
- 	SCSIML_STAT_MED_ERROR		= 0x03,	/* Medium error */
- 	SCSIML_STAT_TGT_FAILURE		= 0x04,	/* Permanent target failure */
-+	SCSIML_STAT_DL_TIMEOUT		= 0x05, /* Command Duration Limit timeout */
- };
- 
- static inline u8 scsi_ml_byte(int result)
++
++What:		/sys/block/*/device/duration_limits/read/[1-7]/*
++Date:		Dec, 2022
++KernelVersion:	v6.3
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RO) For ATA and SCSI devices supporting the command duration
++		limits feature, this shows the set of 7 command duration limits
++		descriptors for read commands currently set on the device. For
++		each of the 7 descritors, the following read-only attributes
++		are present:
++
++		  - duration_guideline: specifies the preferred length of time
++		    in microseconds for the completion of a command.
++
++		  - duration_guideline_policy: specifies the policy action
++		    taken if the duration_guideline attribute specifies a
++		    non-zero command duration guideline that the device is
++		    unable to achieve for a command.
++
++		    Possible values are:
++
++		      - 0x0: The device will complete the command at the
++			earliest possible time consistent with the specified
++			command duration guideline.
++
++		      - 0x1: If the specified command duration guideline has not
++			been achieved and the command duration guideline policy
++			field is not in the seventh command duration limits
++			descriptor, then the device continues processing that
++			command using the command duration limits descriptor
++			that has the next higher number.
++
++		      - 0x2: The device will continue processing the command as
++			with no command duration limits descriptor being used.
++
++		      - 0xD: The device will complete the command and an IO
++			failure will be reported to the user with the ETIME
++			error code.
++
++		      - 0xF: Same as 0xD.
++
++		  - max_active_time: specifies an upper limit in microseconds
++		    on the time that elapses from the time at which the device
++		    initiates actions to access, transfer, or act upon the
++		    specified data until the time the device returns status for
++		    the command.
++
++		  - max_active_time_policy: specifies the policy action taken
++		    if the time used to process a command exceeds a non-zero
++		    time specified by the max_active_time attribute.
++
++		    Possible values are:
++
++		      - 0x0: The device will complete the command at the
++			earliest possible time (i.e, do nothing based on the max
++			time limit not being met).
++
++		      - 0xD: The device will complete the command and an IO
++			failure will be reported to the user with the ETIME
++			error code.
++
++		      - 0xE: Same as 0xD.
++
++		      - 0xF: Same as 0xD.
++
++		  - max_inactive_time: specifies an upper limit in microseconds
++		    on the time that elapses from the time at which the device
++		    receives the command until the time at which the device
++		    initiates actions to access, transfer, or act upon the
++		    specified data.
++
++		  - max_inactive_time_policy: specifies the policy action taken
++		    if a non-zero max_inactive_time limit is not met.
++
++		    Possible values are:
++
++		      - 0x0: The device will complete the command at the
++			earliest possible time (i.e, do nothing based on the max
++			time limit not being met).
++
++		      - 0xD: The device will complete the command and an IO
++			failure will be reported to the user with the ETIME
++			error code.
++
++		      - 0xF: Same as 0xD.
++
++
++What:		/sys/block/*/device/duration_limits/read/page
++Date:		Dec, 2022
++KernelVersion:	v6.3
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RO) For ATA and SCSI devices supporting the command duration
++		limits feature, this shows the name of the device VPD page
++		specifying the set of 7 command duration limits descriptors for
++		read commands. Possible values are "T2A" and "T2B".
++
++
++What:		/sys/block/*/device/duration_limits/write/[1-7]/*
++Date:		Dec, 2022
++KernelVersion:	v6.3
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RO) For ATA and SCSI devices supporting the command duration
++		limits feature, this shows the set of 7 command duration limits
++		descriptors for write commands currently set on the device. For
++		each of the 7 descritors, the same set of read-only attributes
++		as for read commands is present.
++
++
++What:		/sys/block/*/device/duration_limits/write/page
++Date:		Dec, 2022
++KernelVersion:	v6.3
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RO) For ATA and SCSI devices supporting the command duration
++		limits feature, this shows the name of the device VPD page
++		specifying the set of 7 command duration limits descriptors for
++		write commands. Possible values are "T2A" and "T2B".
++
++
++What:		/sys/block/*/device/duration_limits/perf_vs_duration_guideline
++Date:		Dec, 2022
++KernelVersion:	v6.3
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RO) For ATA and SCSI devices supporting the command duration
++		limits feature, this specifies the maximum percentage increase
++		in average command completion times (reduction in IOPS) that
++		is allowed for the device to perform actions based on the
++		contents of the duration guideline field in every command
++		duration limit descriptor for both read and write commands.
 -- 
 2.39.0
 
