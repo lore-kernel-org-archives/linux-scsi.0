@@ -2,160 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 776ACC54EBE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Jan 2023 12:57:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 264B7C54EBE
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Jan 2023 14:12:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241737AbjAMM5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Jan 2023 07:57:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34532 "EHLO
+        id S234059AbjAMOMh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Jan 2023 09:12:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241379AbjAMM4o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 07:56:44 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44685E09B
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 04:44:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1673613885; x=1705149885;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=nwIB1nGyZudFYRb5MpHF4y/OzH5EuTi5rHTGvLHv0q0=;
-  b=XGw/1v6plpzJhV9PTGXXSxe3f9rF8cXZ73YC422SOPxPJ/aVpEos2IRk
-   WprcMMtcxQJiMK85UWuVp3G9QDwmstcDs6DqB0BHsTI+NQaub94brETPx
-   w95gMwjTsZx4LVyLuwWXP0XzYwNDNQnenEupZ6U/ukTVPZhOqvB05ezYc
-   /7kCrxvgkGgD74eLpUijR8P4qevfGnJa6Q2J8ykzxZN2eeqkPD/gO6f0O
-   mlReY0esAfrnmCf3eaua05Oyr/FOcp6jMNzTSIZtBaxIewua2dBLPtAeA
-   TSRfuvd6Fs++tiz6K4EaNBycwdWaQenivx1aGBLg28CpE8lZvPxLej+zG
-   w==;
-X-IronPort-AV: E=Sophos;i="5.97,213,1669046400"; 
-   d="scan'208";a="325046270"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Jan 2023 20:44:43 +0800
-IronPort-SDR: SuTNL4pOU1j8MNgGib9gQR90xh1VXusGgxf1ba/ovPEtOMs5N1pAjGZnqSzYAU+nYoKKxb/kCb
- 2D3vBMYEkoi5F0xpMMbKulVxZlW7rNoeqVjmPGh3J9G+55+ASt5Y8Qoi7lrvwDa4k1B4kQcisb
- MfPlOS8uiReRi+2qh+5uEqxmFQ6iLXHEB01Ae0Kk7VYgG9rgizUG8dEtSjoNLOJ89+h7xtA623
- zhz36U3nNKWisj+7iRhUlTmQABmZjAg2sz5S630rzokqAgSwTSRaNAjFwc6ZrcU2yWjbLFPKdJ
- E6g=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Jan 2023 04:02:29 -0800
-IronPort-SDR: 48pqlBh3CZtJsINp4m45A31/szVVa150BMCoLr2j7ZoeM1PIsVpkc0lV+c5MnRUyD/okFoJPon
- OUzETZ+08n5mXRNHyVhTCpKxdp5nF9DKRAOhARICyE9ay9NVXVAC5LEW/lCzjt+xFolpDmcYQG
- 7YaVADzkAqbZ7L4GrE8D3yFLSFbE2gD30gSSA9aOQZicP7Dc9ifgaCIqcfjUpwuk0yq5iyKwRj
- L9tCXy8/aekIjvKxIA4Ix2f3sisHSBu3attsK43Fve59KVTM3boVHtOhkYI3Zt+KsB5/CXXEv8
- 6kA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Jan 2023 04:44:43 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Nth2L5rsXz1RwtC
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 04:44:42 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1673613882; x=1676205883; bh=nwIB1nGyZudFYRb5MpHF4y/OzH5EuTi5rHT
-        GvLHv0q0=; b=LGvKvK2yFcWkgTyoViWNLaJCvJ6GDYWwb+EXW8eAFUzhX5H2xu2
-        HHYg5c6M1WvjntAuUTfRMkPLQnsdrnXohNT9UTDLRlbiFmPODpyrLhpwc+jwcipF
-        1j84nSeX5hQJtqLmL2N1QUcIxu9i9TDGqG7bEoRwPxlFUe3YLzN4GA+lZHUdC04x
-        lkPW1fIKKZsQCOADQ8oNrvOSkI7foRAuqoFa5QBuUmr+XGUuTmsAAB6opn9/pUgB
-        pV9ClQh7qHfYOPIGmgNetFVrqJifRuXr48umUgZBBSJzWZFpv7Q0T7/v7X34nfEh
-        z/V4/0BxDCAteuMZ/HK/B5WJk7HrdPJF4ow==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id u7tbCv_-heIA for <linux-scsi@vger.kernel.org>;
-        Fri, 13 Jan 2023 04:44:42 -0800 (PST)
-Received: from [10.225.163.24] (unknown [10.225.163.24])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Nth2J6YZHz1RvLy;
-        Fri, 13 Jan 2023 04:44:40 -0800 (PST)
-Message-ID: <c1423109-dd39-11a3-58eb-5dc8c3e56520@opensource.wdc.com>
-Date:   Fri, 13 Jan 2023 21:44:39 +0900
+        with ESMTP id S241320AbjAMOMO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 09:12:14 -0500
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9773E8D5E5;
+        Fri, 13 Jan 2023 06:08:19 -0800 (PST)
+Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
+        by mta-01.yadro.com (Proxmox) with ESMTP id 7155E341746;
+        Fri, 13 Jan 2023 17:08:17 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
+        :cc:content-type:content-type:date:from:from:in-reply-to
+        :message-id:mime-version:references:reply-to:subject:subject:to
+        :to; s=mta-01; bh=wUB2XrlKQCI2b2IvULO1TtTfCjn0ogMQX5Y6hiYqPIA=; b=
+        nOX/3M2oODZ98+LgHCPnhqmeLdTWiN0be2b6yIQ11mLyWhvGQ+GQAb5Uk2WLERao
+        MyqRH6Lm+HNk9MKTnOHAa5cSBRGIs7jEMtZrkVvN0glsLvn+bLVVORidO+m2VVjK
+        zQOS3jwoaBX0mAimMhd+I6eUroq/2O+gI1DMqI0LQio=
+Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id 65A0E34173F;
+        Fri, 13 Jan 2023 17:08:17 +0300 (MSK)
+Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Fri, 13 Jan
+ 2023 17:08:16 +0300
+Date:   Fri, 13 Jan 2023 17:08:16 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     <mlombard@redhat.com>, <martin.petersen@oracle.com>,
+        <mgurtovoy@nvidia.com>, <sagi@grimberg.me>,
+        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
+Subject: Re: [PATCH v2 09/13] scsi: target: iscsit: Fix isert disconnect
+ handling during login
+Message-ID: <20230113140816.GA31614@yadro.com>
+References: <20230112030832.110143-1-michael.christie@oracle.com>
+ <20230112030832.110143-10-michael.christie@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v2 07/18] block: introduce duration-limits priority class
-Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20230112140412.667308-1-niklas.cassel@wdc.com>
- <20230112140412.667308-8-niklas.cassel@wdc.com>
- <08d6acff-9aaf-7c2f-6b4d-7fd83c7a68c6@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <08d6acff-9aaf-7c2f-6b4d-7fd83c7a68c6@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20230112030832.110143-10-michael.christie@oracle.com>
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/13/23 20:55, Hannes Reinecke wrote:
-> On 1/12/23 15:03, Niklas Cassel wrote:
->> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>
->> Introduce the IOPRIO_CLASS_DL priority class to indicate that IOs should
->> be executed using duration-limits targets. The duration target to apply
->> to a command is indicated using the priority level. Up to 8 levels are
->> supported, with level 0 indiating "no limit".
->>
->> This priority class has effect only if the target device supports the
->> command duration limits feature and this feature is enabled by the user.
->> In BFQ and mq-deadline, all requests with this new priority class are
->> handled using the highest priority class RT and priority level 0.
->>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->> ---
->>   block/bfq-iosched.c         | 10 ++++++++++
->>   block/blk-ioprio.c          |  3 +++
->>   block/ioprio.c              |  3 ++-
->>   block/mq-deadline.c         |  1 +
->>   include/linux/ioprio.h      |  2 +-
->>   include/uapi/linux/ioprio.h |  7 +++++++
->>   6 files changed, 24 insertions(+), 2 deletions(-)
->>
-> I wonder.
+On Wed, Jan 11, 2023 at 09:08:28PM -0600, Mike Christie wrote:
 > 
-> _Normally_ a command timeout is only in force once the command is being 
-> handed off to the driver. As such it doesn't apply for any scheduling 
-> being done before that; most notably the I/O scheduler is not affected 
-> by any command timeout.
+> If we get a disconnect event while logging in we can end up in a state
+> where will never be able to relogin. This happens when:
 > 
-> And I was under the impression that CDL really only allows the drive to 
-> impose a command timeout on its own.
-> (Pray correct me if I'm mistaken)
+> 1. login thread has put us into TARG_CONN_STATE_IN_LOGIN
+> 2. isert then does
+> 
+> isert_disconnected_handler -> iscsit_cause_connection_reinstatement
+> 
+> which sets the conn connection_reinstatement flag. Nothing else happens
+> because we are only in IN_LOGIN. The tx/rx threads are not running yet
+> so we can't start recovery from those contexts at this time.
+> 
+> 3. The login thread finishes processing the login pdu and thinks login is
+> done. It sets us into TARG_CONN_STATE_LOGGED_IN/TARG_SESS_STATE_LOGGED_IN.
+> This starts the rx/tx threads.
+> 
+> 4. The initiator thought it disconnected the connection at 2, and has
+> since sent a new connect which is now handled. This leads us to eventually
+> run:
+> 
+> iscsi_check_for_session_reinstatement-> iscsit_stop_session ->
+> iscsit_cause_connection_reinstatement
+> 
+> iscsit_stop_session sees the old conn and does
+> iscsit_cause_connection_reinstatement which sees connection_reinstatement
+> is set so it just returns instead of trying to kill the tx/rx threads
+> which would have caused recovery to start.
+> 
+> 5. iscsit_stop_session then waits on session_wait_comp which will never
+> happen since we didn't kill the tx/rx threads.
+> 
+> This has the iscsit login code check if a fabric driver ran
+> iscsit_cause_connection_reinstatement during the login process similar
+> to how we check for the sk state for tcp based iscsit. This will prevent
+> us from getting into 3 and creating a ghost session.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/target/iscsi/iscsi_target_nego.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+> index ff49c8f3fe24..2dd81752d4c9 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.c
+> +++ b/drivers/target/iscsi/iscsi_target_nego.c
+> @@ -350,6 +350,16 @@ static int iscsi_target_do_tx_login_io(struct iscsit_conn *conn, struct iscsi_lo
+>                                             ISCSI_LOGIN_STATUS_NO_RESOURCES);
+>                         return -1;
+>                 }
+> +
+> +               /*
+> +                * isert doesn't know the iscsit state and uses
+> +                * iscsit_cause_connection_reinstatement as a generic error
+> +                * notification system. It may call it before we are in FFP.
+> +                * Handle this now in case it signaled a failure before the
+> +                * rx/tx threads were up and could start recovery.
+> +                */
+> +               if (atomic_read(&conn->connection_reinstatement))
+> +                       goto err;
 
-The CDL descriptors to be used for read/write commands are defined by the
-user and set on the drive (write log command). By default, the drive does
-not have any CDL descriptor set, so no limit == regular behavior (no
-timeout aborts). Also keep in mind that CDLs may be of the (1) "best
-effort" flavor, or the (2) "abort" flavor. For (2), a command missing its
-CDL limit will be aborted by the device (limit set by the user !). But for
-(1), the drive will continue executing the command even if the CDL limit
-is exceeded, so no timeout error.
+Why only for login->login_complete case? In other case the session will
+not hang? Will it be droppped on login timeout or something else?
 
-> Hence: does CDL really impinge on the I/O scheduler? Or shouldn't we 
-> treat CDL just like a 'normal' command timeout, only to be activated 
-> when normal command timeout is enabled?
+May be the root cause is point 2 itself - calling iscsit_cause_connection_reinstatement
+in not ISER_CONN_FULL_FEATURE state where there are no TX_RX threads?
+I mean that was a misuse of iscsit_cause_connection_reinstatement?
 
-No impact on the IO scheduler, at least for now. But given that CDL is all
-about controlling IO latency, we would miss that goal if we have an IO
-scheduler that excessively delays a request with a short CDL set...
-
-The main point of this patch is to have CDL commands treated similarly to
-high priority commands to avoid such delays. This is also consistant with
-the fact that CDL and ATA NCQ priority commands are mutually exclusive
-features. They cannot be used together. So there we cannot have a mix of
-CDL and NCQ prio commands together to the same drive.
-
--- 
-Damien Le Moal
-Western Digital Research
+>         }
+> 
+>         if (conn->conn_transport->iscsit_put_login_tx(conn, login,
+> --
+> 2.31.1
+> 
+> 
 
