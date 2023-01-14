@@ -2,106 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93AC6C3DA78
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 13:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0EF8C3DA78
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 14:17:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229780AbjANNs5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 14 Jan 2023 08:48:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54690 "EHLO
+        id S229739AbjANORN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 14 Jan 2023 09:17:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbjANNsz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Jan 2023 08:48:55 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41DE830C4;
-        Sat, 14 Jan 2023 05:48:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1673704134;
-        bh=MHib5s2xnggvAckPp9rWBYUxkS6Gf8A8iqIhBu+vGyE=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=Qp5jBEc8VaYBfFV+FetHQwVRsu9Rk7UUaaKhksuoU6cWcJCrUwSC2jgWdnAouYbom
-         BMpB/MihtDx5PUjVSrVv679u/lhATJheuQW0IQfUZgZNrn9SVhaOfEFXHFAvu+DTX+
-         9TDGyZEArMUCNZD7gTUGTmXGbrjbN89MHgqycnmY=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 768F91280EA0;
-        Sat, 14 Jan 2023 08:48:54 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Z4bFrfYNfPCJ; Sat, 14 Jan 2023 08:48:54 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1673704134;
-        bh=MHib5s2xnggvAckPp9rWBYUxkS6Gf8A8iqIhBu+vGyE=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=Qp5jBEc8VaYBfFV+FetHQwVRsu9Rk7UUaaKhksuoU6cWcJCrUwSC2jgWdnAouYbom
-         BMpB/MihtDx5PUjVSrVv679u/lhATJheuQW0IQfUZgZNrn9SVhaOfEFXHFAvu+DTX+
-         9TDGyZEArMUCNZD7gTUGTmXGbrjbN89MHgqycnmY=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E2D021280414;
-        Sat, 14 Jan 2023 08:48:53 -0500 (EST)
-Message-ID: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.1-rc3
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        with ESMTP id S229550AbjANORM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Jan 2023 09:17:12 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D44F7ED5;
+        Sat, 14 Jan 2023 06:17:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B788660AFF;
+        Sat, 14 Jan 2023 14:17:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 15016C433D2;
+        Sat, 14 Jan 2023 14:17:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673705831;
+        bh=76Eo+v4Q7tefkzplW7b6RVNNI+llnGU5klxSKe8aQZ8=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=tE9f03bHnBqkglKj0CoNQe1f2lAkWz0Ns3U6iVniY1Q9H9CG89Xz9jRPeqL+VQX2d
+         bjgahF9iiFGwmSCEuqz3ZmiX2XIbR0BqiPWWBU1LIOUy9YfZkAcybtdVrESw3SLUAC
+         u1xaaMyVWMv+a3tPAMj0Opu4aVVJtYAYAx7H6h7Z9AwLpfI2jTmEewX0dlOlTCwwr0
+         DcT2G2rj2B6kMjCipquIzs5U5UZYo+KifUgW9ZBGQwE/whBd/Le+WwS7eOApmx9oVT
+         AOrsqREpFNEyXL5aTYfQNu3BBc2S0JVoujbROsfBopOzwZ0jkKyln8GxGlMg1pEX1s
+         on2woGOQ96W6A==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id EA268C395C8;
+        Sat, 14 Jan 2023 14:17:10 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.1-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
+References: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: f58c89700630da6554b24fd3df293a24874c10c1
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 8e768130857d08a6765f3287ad3f89c1b7d50e53
+Message-Id: <167370583072.24149.7151261857788868933.pr-tracker-bot@kernel.org>
+Date:   Sat, 14 Jan 2023 14:17:10 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 14 Jan 2023 08:48:52 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two minor fixes in the hisi_sas driver which only impact enterprise
-style multi-expander and shared disk situations and no core changes.
+The pull request you sent on Sat, 14 Jan 2023 08:48:52 -0500:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/8e768130857d08a6765f3287ad3f89c1b7d50e53
 
-The short changelog is:
+Thank you!
 
-Xingui Yang (1):
-      scsi: hisi_sas: Use abort task set to reset SAS disks when discovered
-
-Yihang Li (1):
-      scsi: hisi_sas: Set a port invalid only if there are no devices attached when refreshing port id
-
-And the diffstat:
-
- drivers/scsi/hisi_sas/hisi_sas_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-With full diff below
-
-James
-
----
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index e9c2d306ed87..8c038ccf1c09 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -704,7 +704,7 @@ static int hisi_sas_init_device(struct domain_device *device)
- 		int_to_scsilun(0, &lun);
- 
- 		while (retry-- > 0) {
--			rc = sas_clear_task_set(device, lun.scsi_lun);
-+			rc = sas_abort_task_set(device, lun.scsi_lun);
- 			if (rc == TMF_RESP_FUNC_COMPLETE) {
- 				hisi_sas_release_task(hisi_hba, device);
- 				break;
-@@ -1316,7 +1316,7 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
- 				device->linkrate = phy->sas_phy.linkrate;
- 
- 			hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
--		} else
-+		} else if (!port->port_attached)
- 			port->id = 0xff;
- 	}
- }
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
