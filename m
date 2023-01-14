@@ -2,110 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC62C6379F
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 03:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B960BC46467
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 03:19:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229793AbjANDTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Jan 2023 22:19:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59638 "EHLO
+        id S230418AbjANDTj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Jan 2023 22:19:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230019AbjANDTg (ORCPT
+        with ESMTP id S230324AbjANDTg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 22:19:36 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0709B892ED
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5189E88DEA
         for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 19:19:36 -0800 (PST)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30E2vw6U023661;
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30E3Bfk8008561;
         Sat, 14 Jan 2023 03:19:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=pkffGIpZBNdI3TASeJWTkWR7Bdi+LB0HcGWCVPw+pEw=;
- b=i9BvjIBiFt8Grw7ElZ/7g/Gnr5SaQooGBl9ZCdJGQYIVww9unp+Qs1m+b2CWotUHr2dN
- 5/sxy7rghKrC9QSmGgMcZ80VG9aAHfad6i9zY7BbFxJ539J1E/zTBlmzjHgqXwFPRdIY
- wiUrJGnr4bOXixv9p1bfPa+phdId3508GIqaDRPo4Oud8e/XtNir0gnTALkV3nh36iPd
- D2wMI6cmEI+S7Jfh5S31BLCtwAkY4NCdrAxQI7RfGKgg4GrQDTwQ/9cQL+q1nMp7G5ms
- dH5S06T0a6EkRwAv/1SUc6ZUzHfQT4L1Jrq1glslLpmi6vHESCdvgH5lq9gZwwR1wUhF Ng== 
+ bh=ljW/eRIXR9s6eaujZFS+EGnD+JtZRNkM3JsRsg17xkc=;
+ b=d+cq+8o92WYfTSXcwQbugH2UHPmyR8O7xn0Cfjbtd/t50JHK/RPL/Usmtnk69mklcHLg
+ tuCAzT058VDNwOSprFYgCQJpX18lYrkEMbvFCrCmqHowwJy3qKt9MteAWh5ZygpVoylA
+ rV76H2c7t/IV6ZWgRgc95bU+1fV52QfEunBiawZRbZWtGMsgYoLzfotTZ6CrzsZxrRsB
+ p0rFdG0El+08/RY3CXZRsReCpoZe241+yZJyBVPMuNNFLp6po4Bhk1gxF2Pc0iuAPX6u
+ hQ0DaF113dO7qXxvsYxpi++1m9HDYbhv1hlnJS2svNy4u8DP7+GisitcpweAzcjXSxWC Dg== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3kaa813t-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3m998046-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Jan 2023 03:19:33 +0000
+        Sat, 14 Jan 2023 03:19:34 +0000
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30E2mjk4005846;
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30E2mkmh005925;
         Sat, 14 Jan 2023 03:19:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3n3kxgrjut-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3n3kxgrjv2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Sat, 14 Jan 2023 03:19:32 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30E3JVop032298;
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30E3JVor032298;
         Sat, 14 Jan 2023 03:19:32 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3n3kxgrjun-1;
-        Sat, 14 Jan 2023 03:19:31 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3n3kxgrjun-2;
+        Sat, 14 Jan 2023 03:19:32 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, Justin Tee <justintee8345@gmail.com>
+To:     Nilesh Javali <njavali@marvell.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        jsmart2021@gmail.com, justin.tee@broadcom.com
-Subject: Re: [PATCH 00/12] lpfc: Update lpfc to revision 14.2.0.10
-Date:   Fri, 13 Jan 2023 22:19:25 -0500
-Message-Id: <167366567316.3069740.1027608315657447483.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+        bhazarika@marvell.com, agurumurthy@marvell.com,
+        sdeodhar@marvell.com
+Subject: Re: [PATCH 00/10] qla2xxx driver enhancements
+Date:   Fri, 13 Jan 2023 22:19:26 -0500
+Message-Id: <167366567314.3069740.6813421771139280513.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230109233317.54737-1-justintee8345@gmail.com>
-References: <20230109233317.54737-1-justintee8345@gmail.com>
+In-Reply-To: <20221222043933.2825-1-njavali@marvell.com>
+References: <20221222043933.2825-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-01-13_12,2023-01-13_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=881 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=774 phishscore=0
  bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0 adultscore=0
  suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2301140021
-X-Proofpoint-GUID: oTXXg5gqf-eUBUxCDpku1CwSkVy9dSGu
-X-Proofpoint-ORIG-GUID: oTXXg5gqf-eUBUxCDpku1CwSkVy9dSGu
+X-Proofpoint-GUID: u5gTeWKUDu25_s44HhP-MfAM8Ezj6Ks6
+X-Proofpoint-ORIG-GUID: u5gTeWKUDu25_s44HhP-MfAM8Ezj6Ks6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 09 Jan 2023 15:33:05 -0800, Justin Tee wrote:
+On Wed, 21 Dec 2022 20:39:23 -0800, Nilesh Javali wrote:
 
-> Update lpfc to revision 14.2.0.10
+> Martin,
 > 
-> This patch set contains fixes for bugs, kernel test robot, and introduces
-> new attention type event handling.
+> Please apply the qla2xxx driver enhancements to the scsi tree
+> at your earliest convenience.
 > 
-> The patches were cut against Martin's 6.3/scsi-queue tree.
+> Thanks,
+> Nilesh
 > 
 > [...]
 
 Applied to 6.3/scsi-queue, thanks!
 
-[01/12] lpfc: Fix space indentation in lpfc_xcvr_data
-	https://git.kernel.org/mkp/scsi/c/6058304a66ba
-[02/12] lpfc: Replace outdated strncpy with strscpy
-	https://git.kernel.org/mkp/scsi/c/1f7b5f94f8d0
-[03/12] lpfc: Resolve miscellaneous variable set but not used compiler warnings
-	https://git.kernel.org/mkp/scsi/c/7ab07683aa4c
-[04/12] lpfc: Set max dma segment size to hba supported SGE length
-	https://git.kernel.org/mkp/scsi/c/b5c894cf430e
-[05/12] lpfc: Remove redundant clean up code in disable_vport
-	https://git.kernel.org/mkp/scsi/c/f81395570e6c
-[06/12] lpfc: Remove duplicate ndlp kref decrement in lpfc_cleanup_rpis
-	https://git.kernel.org/mkp/scsi/c/ecdf4ddf4eb7
-[07/12] lpfc: Exit PRLI completion handling early if ndlp not in PRLI_ISSUE state
-	https://git.kernel.org/mkp/scsi/c/c051f1a424a1
-[08/12] lpfc: Fix use-after-free KFENCE violation during sysfs firmware write
-	https://git.kernel.org/mkp/scsi/c/21681b81b9ae
-[09/12] lpfc: Reinitialize internal VMID data structures after FLOGI completion
-	https://git.kernel.org/mkp/scsi/c/f1d2337d3e58
-[10/12] lpfc: Introduce new attention types for lpfc_sli4_async_fc_evt hdlr
-	https://git.kernel.org/mkp/scsi/c/96fb8c34e5c1
-[11/12] lpfc: Update lpfc version to 14.2.0.10
-	https://git.kernel.org/mkp/scsi/c/41cf6bbe3d99
-[12/12] Copyright updates for 14.2.0.10 patches
-	https://git.kernel.org/mkp/scsi/c/191b5a38771d
+[01/10] qla2xxx: Remove dead code
+	https://git.kernel.org/mkp/scsi/c/efd1bd12a04d
+[02/10] qla2xxx: Remove dead code (GPNID)
+	https://git.kernel.org/mkp/scsi/c/b9d87b60aaeb
+[03/10] qla2xxx: Remove dead code (GNN ID)
+	https://git.kernel.org/mkp/scsi/c/87f6dafd50fb
+[04/10] qla2xxx: relocate/rename vp map
+	https://git.kernel.org/mkp/scsi/c/430eef03a763
+[05/10] qla2xxx: edif - Fix performance dip due to lock contention
+	https://git.kernel.org/mkp/scsi/c/82d8dfd2a238
+[06/10] qla2xxx: edif - Fix stall session after app start
+	https://git.kernel.org/mkp/scsi/c/129a7c40294f
+[07/10] qla2xxx: edif - Reduce memory usage during low IO
+	https://git.kernel.org/mkp/scsi/c/1f8f9c34127e
+[08/10] qla2xxx: edif - fix clang warning
+	https://git.kernel.org/mkp/scsi/c/2f5fab1b6c3a
+[09/10] qla2xxx: Select qpair depending on which CPU post_cmd() gets called
+	https://git.kernel.org/mkp/scsi/c/1d201c81d4cc
+[10/10] qla2xxx: Update version to 10.02.08.200-k
+	https://git.kernel.org/mkp/scsi/c/f7d1ba350fb3
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
