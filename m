@@ -2,113 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A476C6379F
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Jan 2023 20:55:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7E5C3DA78
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 01:38:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231391AbjAMUzI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Jan 2023 15:55:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36516 "EHLO
+        id S231363AbjANBiT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Jan 2023 20:38:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231348AbjAMUyi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 15:54:38 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 419AA8CBD7;
-        Fri, 13 Jan 2023 12:53:58 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30DKmYYP018224;
-        Fri, 13 Jan 2023 20:53:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=2gnvKmQQsZNTmUuHgm3zwNFDqUUkz6YkNKxFpEYsREs=;
- b=MDc+EloaPbilFlagWJ8kJ0HBb+UNlSsm8ZBZ5NEoA2xR/efYPRVr0pRMb7kfD7QKe4qr
- ZI6LpPdKlKSGSJK5oo2g7XKnfzVidLK5AziskUofaljKYbOeg9GQRXY+GUXHT0KiYB/2
- DIlJOjvc3UU8cMjwg3kFZCWYvAiy/rpvpmLuuPm0zFKW02NBmciwvPAokBQ2qJqm7Io4
- jIE3v0ihCNI2b/wAtWBU1i1BBk/nBE7N0Zv30OqPeXUdR43C6Zt1cOIq0vgQ6Pcm8p+t
- KQ6RDcWq+JkWbQeQBcT7G+QSmXZ+eqKBOP513j2RPe4smvSBz5VGjKTRq9o502NU42Px /g== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3n3a8mgj2c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 13 Jan 2023 20:53:44 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 30DKrhKc025709
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 13 Jan 2023 20:53:43 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Fri, 13 Jan 2023 12:53:42 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
-        <beanhuo@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v13 15/15] ufs: core: mcq: Enable Multi Circular Queue
-Date:   Fri, 13 Jan 2023 12:48:52 -0800
-Message-ID: <1dc2055e6ef1b0b080e2881bd15851dbf1cdc397.1673557949.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1673557949.git.quic_asutoshd@quicinc.com>
-References: <cover.1673557949.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S231340AbjANBiR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 20:38:17 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1325C7F462
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 17:37:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1673660250;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=VZy8c8fy0bsQa5T6EMyPtDGsQiznRhGW5hoUl+VQVKY=;
+        b=aoE3aras4QEBwRor5GtbLdPac9jzFSoJDWQW/a99v+I6iUWab0hWDcIv4lqeK/Cei/e8bz
+        kOsy9gd9Xj6U3e+4DJllY8u04aO7kDd5Y3hhr6eY0BGvN4WTpsJ94pKH0tVwV6YE0lfA8b
+        yZOndSUhO9P1V9Fpx+9bUJuBGyk1tWs=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-586-Za5gRPaTNA2eVyjlVZYSjA-1; Fri, 13 Jan 2023 20:37:28 -0500
+X-MC-Unique: Za5gRPaTNA2eVyjlVZYSjA-1
+Received: by mail-qv1-f71.google.com with SMTP id o95-20020a0c9068000000b005320eb4e959so12316770qvo.16
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 17:37:28 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VZy8c8fy0bsQa5T6EMyPtDGsQiznRhGW5hoUl+VQVKY=;
+        b=JysMNSowK//Q2cxIOGpCdd44OslpwnzssSoToo/+0mn30zASAWToKXSdh0RVuRiBun
+         ss+FavSnFvmE8v1v9AL2aIToz/foRe13wb9G3zsd6ClPQQaryHgFjwija37BVLDT4pI1
+         GSqd+xdmPEFGHlxQsxd3CoZANX5C5q6qarlfqGmBXwlYyD1K3qVLle7pUzwg8hfWxBZ9
+         G+VslvnOnsLBihFxY6ENxZVMwYTQB9f/E6KT1Kd39CxVQd/AAsqsvs0Db+Pp3wyOUszV
+         7CwOSMRWZHTqWvCUf8zkNK3ajty98KubFYcVFiTGyazCGBSSFiH7kP7TG8T5pxjAKz9N
+         SyKw==
+X-Gm-Message-State: AFqh2kpnEuGMwBUGJqZ5xjzI5rXaNqbuw9b6GeDsO6Fez78Aq0onbqkS
+        8TNX1BkL8SblHrW8FdSMlHAgZ4Vl/JJeuEW+8EfSpTIm9Xk/ABeobED7tsI/A+O4UEUxctSURTd
+        9jsHddhaHrellQqpCq74nZg==
+X-Received: by 2002:a05:622a:5a85:b0:3a8:28fb:b076 with SMTP id fz5-20020a05622a5a8500b003a828fbb076mr107846184qtb.31.1673660247672;
+        Fri, 13 Jan 2023 17:37:27 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXvb2Tb9KjAktZHd4kQ+lb1N0KtnEmqYLvasUGIsxQAbnMndD0u7XJmgxkam6UrQA6YDD+2hMw==
+X-Received: by 2002:a05:622a:5a85:b0:3a8:28fb:b076 with SMTP id fz5-20020a05622a5a8500b003a828fbb076mr107846169qtb.31.1673660247477;
+        Fri, 13 Jan 2023 17:37:27 -0800 (PST)
+Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id bp32-20020a05620a45a000b00705b4001fbasm10673981qkb.128.2023.01.13.17.37.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Jan 2023 17:37:27 -0800 (PST)
+From:   Tom Rix <trix@redhat.com>
+To:     njavali@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, qutran@marvell.com
+Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Tom Rix <trix@redhat.com>
+Subject: [PATCH] scsi: qla2xxx: Change qla_trim_buf,__qla_adjust_buf functions to static
+Date:   Fri, 13 Jan 2023 20:37:24 -0500
+Message-Id: <20230114013724.3943580-1-trix@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: YM6usDvVXS49QQ1xSnV_rOzwzfhrN6oM
-X-Proofpoint-ORIG-GUID: YM6usDvVXS49QQ1xSnV_rOzwzfhrN6oM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-01-13_10,2023-01-13_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
- impostorscore=0 spamscore=0 lowpriorityscore=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 adultscore=0 phishscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2301130142
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable MCQ in the Host Controller.
+Smatch reports
+drivers/scsi/qla2xxx/qla_mid.c:1189:6: warning: symbol 'qla_trim_buf' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_mid.c:1221:6: warning: symbol '__qla_adjust_buf' was not declared. Should it be static?
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+These functions are only used in qla_mid.c, so they should be static.
+
+Fixes: 1f8f9c34127e ("scsi: qla2xxx: edif: Reduce memory usage during low I/O")
+Signed-off-by: Tom Rix <trix@redhat.com>
 ---
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/qla2xxx/qla_mid.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cb1bca4..54717c4 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8455,6 +8455,12 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index c6ca39b8e23d..bd6bc1a968b2 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -1186,7 +1186,7 @@ int qla_get_buf(struct scsi_qla_host *vha, struct qla_qpair *qp, struct qla_buf_
+ 	return 0;
+ }
  
- 	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
-+
-+	/* Select MCQ mode */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-+		      REG_UFS_MEM_CFG);
-+	hba->mcq_enabled = true;
-+
- 	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
- 		 hba->nr_hw_queues, hba->nr_queues[HCTX_TYPE_DEFAULT],
- 		 hba->nr_queues[HCTX_TYPE_READ], hba->nr_queues[HCTX_TYPE_POLL],
+-void qla_trim_buf(struct qla_qpair *qp, u16 trim)
++static void qla_trim_buf(struct qla_qpair *qp, u16 trim)
+ {
+ 	int i, j;
+ 	struct qla_hw_data *ha = qp->vha->hw;
+@@ -1218,7 +1218,7 @@ void qla_trim_buf(struct qla_qpair *qp, u16 trim)
+ 	       qp->id, trim, qp->buf_pool.num_alloc);
+ }
+ 
+-void __qla_adjust_buf(struct qla_qpair *qp)
++static void __qla_adjust_buf(struct qla_qpair *qp)
+ {
+ 	u32 trim;
+ 
 -- 
-2.7.4
+2.27.0
 
