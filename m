@@ -2,114 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C68C6379F
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 03:07:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 743B6C3DA78
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 03:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231546AbjANDHl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Jan 2023 22:07:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56730 "EHLO
+        id S230347AbjANDTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Jan 2023 22:19:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231516AbjANDHd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 22:07:33 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C1418D3B2;
-        Fri, 13 Jan 2023 19:07:25 -0800 (PST)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30E2wNNT023855;
-        Sat, 14 Jan 2023 03:07:09 GMT
+        with ESMTP id S229911AbjANDTf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 22:19:35 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 124C488DEA
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 19:19:35 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30E1vdZm023241;
+        Sat, 14 Jan 2023 03:19:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=FqBQjREvcACjBzDkIhCAkhf57aXLYf5/WwuqqldkKiI=;
- b=mrVXInI9EN+EES05LTP4C+nza58a0R8xZYXjSwUkoaB7ToaXwxbckIZdf7VxybybU9NC
- LweBF4iDZoaSXWbn2cybWT3jFpUM+gsyTCi0AL27r+e7xDdlvEidieyJokAuHnpnhGo5
- DTULO3MmbO0rtBetqnNXhwWiSnkinJZ6byJBAhXCTrs2JhScjdVCvixlKcr2d5/fML5P
- wLqG3fuhGgg4liegee4ZF2DGT0cbTve62xoScc5gORDy0vwnHdT2B3rI8jXF/dP9AgGc
- Y1A9Dpd/kIoH8LpDqadK1Md0N7rFfDbAjOI8Wcfnhbiy0aP7NsniTL2JU3wymjM6yAUG qQ== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3kaa80vy-1
+ bh=hv3FSE9JZD44qVZScbhICXzAShqUY9qs5x8MSCcKjDw=;
+ b=zTKH0SoVG8mJk2dp7quLtZY1s8ae+HRcV5Yl8njTCjhGbkTzgRkSSRGvO5iQ9SoIuaG9
+ bf1tSZpECY0S3ZeEPHbATi2Ns8yjv7CQT41qkq0KSrkbHdy4+V/j7MT2BB/U2XJTy8as
+ ymdFeLEsT/dXSFqT0sCsH3JfVPmiMZ6l9iZumATqg7uD//d1sH0JcJyMSKs3krrbqv+L
+ XpR+aJyTQs8vBjuJoCif35aCLoHjgm2AzB9msuStjFpaRGFIWZ5FZMsbuVuKZZxmu7wh
+ +wPVs9pJbglsOhU2RdRf+3+FdspEPRANZAWP5It3pVXrqAM3RlDgrWk4BWH5zG3hX19P Ww== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3k6c01bk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Jan 2023 03:07:09 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30E2xIfM018721;
-        Sat, 14 Jan 2023 03:07:07 GMT
+        Sat, 14 Jan 2023 03:19:33 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30E2mekF005656;
+        Sat, 14 Jan 2023 03:19:33 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3n3m3d85tb-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3n3kxgrjv7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Jan 2023 03:07:07 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30E375hH035466;
-        Sat, 14 Jan 2023 03:07:06 GMT
+        Sat, 14 Jan 2023 03:19:33 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30E3JVot032298;
+        Sat, 14 Jan 2023 03:19:32 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3n3m3d85sp-4;
-        Sat, 14 Jan 2023 03:07:06 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3n3kxgrjun-3;
+        Sat, 14 Jan 2023 03:19:32 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, andersson@kernel.org, vkoul@kernel.org,
-        Manivannan Sadhasivam <mani@kernel.org>
+To:     Nilesh Javali <njavali@marvell.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
-        abel.vesa@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org
-Subject: Re: (subset) [PATCH v5 00/23] ufs: qcom: Add HS-G4 support
-Date:   Fri, 13 Jan 2023 22:06:42 -0500
-Message-Id: <167366469091.3069139.11760332738434847058.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+        bhazarika@marvell.com, agurumurthy@marvell.com,
+        sdeodhar@marvell.com
+Subject: Re: [PATCH v2 00/11] Misc. qla2xxx driver bug fixes
+Date:   Fri, 13 Jan 2023 22:19:27 -0500
+Message-Id: <167366567314.3069740.9144617147876623251.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221222141001.54849-1-manivannan.sadhasivam@linaro.org>
-References: <20221222141001.54849-1-manivannan.sadhasivam@linaro.org>
+In-Reply-To: <20221219110748.7039-1-njavali@marvell.com>
+References: <20221219110748.7039-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-01-13_12,2023-01-13_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
- mlxscore=0 mlxlogscore=999 bulkscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301140019
-X-Proofpoint-GUID: 2Pb_fdYL-h4NF2yuk3MPFoRKBCY-MtfP
-X-Proofpoint-ORIG-GUID: 2Pb_fdYL-h4NF2yuk3MPFoRKBCY-MtfP
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=837 phishscore=0
+ bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2301140021
+X-Proofpoint-GUID: _DK2mi-8c83YJPIFulsT8E_0PfSFwm-F
+X-Proofpoint-ORIG-GUID: _DK2mi-8c83YJPIFulsT8E_0PfSFwm-F
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 22 Dec 2022 19:39:38 +0530, Manivannan Sadhasivam wrote:
+On Mon, 19 Dec 2022 03:07:37 -0800, Nilesh Javali wrote:
 
-> This series adds HS-G4 support to the Qcom UFS driver and PHY driver.
-> The newer Qcom platforms support configuring the UFS controller and PHY
-> in dual gears (i.e., controller/PHY can be configured to run in two gear
-> speeds). This is accomplished by adding two different PHY init sequences
-> to the PHY driver and the UFS driver requesting the one that's required
-> based on the platform configuration.
+> Martin,
+> 
+> Please apply the miscellaneous qla2xxx driver bug fixes to the scsi tree
+> at your earliest convenience.
+> 
+> v2:
+> - Fix prototype warning reported by kernel test robot
+> - Add Reviewed-by tag
 > 
 > [...]
 
 Applied to 6.3/scsi-queue, thanks!
 
-[13/23] scsi: ufs: ufs-qcom: Remove un-necessary goto statements
-        https://git.kernel.org/mkp/scsi/c/031312dbc695
-[14/23] scsi: ufs: ufs-qcom: Remove un-necessary WARN_ON()
-        https://git.kernel.org/mkp/scsi/c/a98c2183e81d
-[15/23] scsi: ufs: ufs-qcom: Use bitfields where appropriate
-        https://git.kernel.org/mkp/scsi/c/18fe2ab79bcf
-[16/23] scsi: ufs: ufs-qcom: Use dev_err_probe() for printing probe error
-        https://git.kernel.org/mkp/scsi/c/132b027205ef
-[17/23] scsi: ufs: ufs-qcom: Fix the Qcom register name for offset 0xD0
-        https://git.kernel.org/mkp/scsi/c/7959587f3284
-[18/23] scsi: ufs: core: Add reinit_notify() callback
-        https://git.kernel.org/mkp/scsi/c/c2c38c573a2e
-[19/23] scsi: ufs: core: Add support for reinitializing the UFS device
-        https://git.kernel.org/mkp/scsi/c/96a7141da332
-[20/23] scsi: ufs: ufs-qcom: Factor out the logic finding the HS Gear
-        https://git.kernel.org/mkp/scsi/c/c270986527f9
-[21/23] scsi: ufs: ufs-qcom: Add support for reinitializing the UFS device
-        https://git.kernel.org/mkp/scsi/c/baf5ddac90dc
-[22/23] scsi: ufs: ufs-qcom: Add support for finding max gear on new platforms
-        https://git.kernel.org/mkp/scsi/c/2c407fe97015
-[23/23] MAINTAINERS: Add myself as the maintainer for Qcom UFS drivers
-        https://git.kernel.org/mkp/scsi/c/39beef59128f
+[01/11] qla2xxx: Check if port is online before sending ELS
+	https://git.kernel.org/mkp/scsi/c/0c227dc22ca1
+[02/11] qla2xxx: Fix link failure in NPIV environment
+	https://git.kernel.org/mkp/scsi/c/b1ae65c082f7
+[03/11] qla2xxx: Fix DMA-API call trace on NVME LS requests
+	https://git.kernel.org/mkp/scsi/c/c75e6aef5039
+[04/11] qla2xxx: Fix exchange over subscription
+	https://git.kernel.org/mkp/scsi/c/41e5afe51f75
+[05/11] qla2xxx: Fix exchange over subscription for mgt cmd
+	https://git.kernel.org/mkp/scsi/c/5f63a163ed2f
+[06/11] qla2xxx: Fix stalled login
+	https://git.kernel.org/mkp/scsi/c/40f5b1b9a4af
+[07/11] qla2xxx: Remove unintended flag clearing
+	https://git.kernel.org/mkp/scsi/c/7e8a936a2d0f
+[08/11] qla2xxx: Fix erroneous link down
+	https://git.kernel.org/mkp/scsi/c/3fbc74feb642
+[09/11] qla2xxx: Remove increment of interface err cnt
+	https://git.kernel.org/mkp/scsi/c/d676a9e3d9ef
+[10/11] qla2xxx: fix iocb resource check warning
+	https://git.kernel.org/mkp/scsi/c/1e27648c8482
+[11/11] qla2xxx: Update version to 10.02.08.100-k
+	https://git.kernel.org/mkp/scsi/c/f590c2554c77
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
