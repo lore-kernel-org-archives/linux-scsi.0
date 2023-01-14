@@ -2,91 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A45C3DA78
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 03:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E6A0C3DA78
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 07:12:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230411AbjANDUd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Jan 2023 22:20:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59920 "EHLO
+        id S229918AbjANHMv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 14 Jan 2023 02:12:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230193AbjANDUb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2023 22:20:31 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80B1088DEA
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 19:20:30 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30E2u45u007316;
-        Sat, 14 Jan 2023 03:20:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=/xkg1Dk049/5CCQUFIMTQ5eYRNUMqmiBq8WkiveaFBE=;
- b=XxKgASYDWVjnAUqRg6P665zkN7iLHrAxREYzqSTM60JMTCvVcPABWCMvlM4/BG+ih2gR
- LH7xLQreYzECN/FVi0nBlFZeVhOtoB54aJ1CrqzvpnxazMJWQ7aU//a7hbLv/1fdUldR
- xNpEuvHqb8BnTwNp4nOK7XDCIdh9CkxhDSFE985LmYRB6gzyHLwvdkVotG/XwfmtY6PF
- RedivkjEBnqfN1CfpTg4ywg7mqB0g+LLpI/qpqK+GiTBIOGG4u+ilnBWYlsG5OMyLx52
- Xs8XFvpC3ptOObeReawZZ6wGaXWqi5j2F+LQ3U6nljllMvKbXOxm95r9K2WjnOOV+9IR fA== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3jtug2fw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Jan 2023 03:20:13 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30E2d4ZJ008300;
-        Sat, 14 Jan 2023 03:20:12 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n3ksx0pde-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Jan 2023 03:20:12 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30E3KBJK012010;
-        Sat, 14 Jan 2023 03:20:11 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n3ksx0pcp-1;
-        Sat, 14 Jan 2023 03:20:11 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.vnet.ibm.com, chenxiang <chenxiang66@hisilicon.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linuxarm@huawei.com
-Subject: Re: [PATCH 0/2] hisi_sas: Some misc update
-Date:   Fri, 13 Jan 2023 22:20:06 -0500
-Message-Id: <167366638827.3070030.2753985937564950422.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <1672805000-141102-1-git-send-email-chenxiang66@hisilicon.com>
-References: <1672805000-141102-1-git-send-email-chenxiang66@hisilicon.com>
+        with ESMTP id S229914AbjANHM1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Jan 2023 02:12:27 -0500
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167F2C13E1
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 23:11:31 -0800 (PST)
+Received: by mail-pj1-x1030.google.com with SMTP id cx21-20020a17090afd9500b00228f2ecc6dbso3043124pjb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2023 23:11:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=1hhoYOhdFd/1XWBMyQAS/0V7h4xRZx/EixJ0JzHFu+g=;
+        b=s/rwqXRQRrL287PIModN2dUSPDh/Rdn5QjNd5Xp+Axm/oMwq7OfgSfuDuisdK92Hq5
+         MTLo1kefENmoT+Q58au/HYoJ7/OhtfVipv0+5dmgr8+c4+Q7Hvxbxjsj+5nOA0MLeWVN
+         DZR+h96VSYYvWFA2l9s8uXTAmA8dvCNTT6eoE8OZ4jbckdImpMl0O4UCDnMxY3h9cCNC
+         6rOTpmW/MGaeggiUS23KBUei63wgqnewzos/1PZYDzseOX5DojemX+yAlGmZW6kx2Hok
+         3qYLB75spkgntclw0xXCtIluVmHzwlWYz9Gx4TPqTBOz1t/vZa0Xd/p/WDU0cOXB9M7d
+         THVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1hhoYOhdFd/1XWBMyQAS/0V7h4xRZx/EixJ0JzHFu+g=;
+        b=zJzmYR52xgDLkd84GTeT1YkdWEz1rrDlcN3XLar2caYqaLpF+ewzgadv6/+XCLoYAt
+         khGp1GkHx5qV4LMbF6R+N8smPFvsSP9BNhVi0bEDrb9Nn+kEehH+2mIuMmRFzZnkrLeF
+         lYLyp5QFMVJDcI9I3Ulxa8sBbsoXMa3DUZySsgOjoP6PvGz+R7x66qy4yCsbhZsDlrOz
+         36eg44NrFVXnuKR18mhrbiYsX3jsmF5EFxL8htNUKgBkggn4QpJrpxKWg8cOvUrceeWE
+         Fp3DKc7MFYkR0WrgvKLWSqf0Eqjxu2FkYiAwX+u9wiclAY4qJHqMggutG37jgNLOJdyP
+         rafA==
+X-Gm-Message-State: AFqh2kq4sU7AoJiuorLcQzWvA5rn1y15YfQkWf1TvJWfje8+pVQNxxnw
+        fznZHc5EmebObX7HLxPjHP2I
+X-Google-Smtp-Source: AMrXdXuRiszNGrahdiih775tFedEbPuYrEDVDujrhEjX5i2q3iO2KN2NrvpKq7SntYHOH003BwajVw==
+X-Received: by 2002:a17:902:e5cd:b0:192:9140:ee76 with SMTP id u13-20020a170902e5cd00b001929140ee76mr86976458plf.37.1673680290585;
+        Fri, 13 Jan 2023 23:11:30 -0800 (PST)
+Received: from thinkpad ([220.158.159.156])
+        by smtp.gmail.com with ESMTPSA id n6-20020a170903110600b00192d9258532sm15316913plh.150.2023.01.13.23.11.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Jan 2023 23:11:29 -0800 (PST)
+Date:   Sat, 14 Jan 2023 12:41:24 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, quic_cang@quicinc.com,
+        quic_asutoshd@quicinc.com, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, dmitry.baryshkov@linaro.org,
+        ahalaney@redhat.com, abel.vesa@linaro.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org
+Subject: Re: [PATCH v5 00/23] ufs: qcom: Add HS-G4 support
+Message-ID: <20230114071124.GA6992@thinkpad>
+References: <20221222141001.54849-1-manivannan.sadhasivam@linaro.org>
+ <Y8BNQZ/CFljuxsSL@matsya>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-01-13_12,2023-01-13_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 spamscore=0
- malwarescore=0 bulkscore=0 phishscore=0 mlxlogscore=748 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301140021
-X-Proofpoint-GUID: _bM6hZEsOcfco7c0_XnHHqsj8hMvT2md
-X-Proofpoint-ORIG-GUID: _bM6hZEsOcfco7c0_XnHHqsj8hMvT2md
+In-Reply-To: <Y8BNQZ/CFljuxsSL@matsya>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 04 Jan 2023 12:03:18 +0800, chenxiang wrote:
-
-> There are two bugfixes related to hisi sas driver:
-> - Use abort task set command to reset SAS disks when discovered;
-> - Set a port invalid only if there is no devices attached when refreshing
-> port id;
+On Thu, Jan 12, 2023 at 11:41:13PM +0530, Vinod Koul wrote:
+> On 22-12-22, 19:39, Manivannan Sadhasivam wrote:
+> > Hello,
+> > 
+> > This series adds HS-G4 support to the Qcom UFS driver and PHY driver.
+> > The newer Qcom platforms support configuring the UFS controller and PHY
+> > in dual gears (i.e., controller/PHY can be configured to run in two gear
+> > speeds). This is accomplished by adding two different PHY init sequences
+> > to the PHY driver and the UFS driver requesting the one that's required
+> > based on the platform configuration.
+> > 
+> > Initially the ufs-qcom driver will use the default gear G2 for enumerating
+> > the UFS device. Afer enumeration, the max gear supported by both the
+> > controller and device would be found out and that will be used thereafter.
+> > But for using the max gear after enumeration, the ufs-qcom driver requires
+> > the UFS device to be reinitialized. For this purpose, a separate quirk has
+> > been introduced in the UFS core along with a callback and those will be used
+> > by the ufs-qcom driver.
 > 
-> Xingui Yang (1):
->   scsi: hisi_sas: Use abort task set to reset SAS disks when discovered
+> The series lgtm. This fails for me to apply though due to other patches
+> I have picked up.
 > 
-> [...]
+> Can you please rebase the phy patches and send those 
+> 
 
-Applied to 6.2/scsi-fixes, thanks!
+Done!
 
-[1/2] scsi: hisi_sas: Use abort task set to reset SAS disks when discovered
-      https://git.kernel.org/mkp/scsi/c/037b48057e8b
-[2/2] scsi: hisi_sas: Set a port invalid only if there is no devices attached when refreshing port id
-      https://git.kernel.org/mkp/scsi/c/f58c89700630
+Thanks,
+Mani
+
+> -- 
+> ~Vinod
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+மணிவண்ணன் சதாசிவம்
