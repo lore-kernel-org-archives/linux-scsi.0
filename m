@@ -2,69 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0EF8C3DA78
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Jan 2023 14:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 725C7C3DA78
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Jan 2023 07:56:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229739AbjANORN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 14 Jan 2023 09:17:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59970 "EHLO
+        id S229817AbjAOH4I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Jan 2023 02:56:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229550AbjANORM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Jan 2023 09:17:12 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D44F7ED5;
-        Sat, 14 Jan 2023 06:17:12 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B788660AFF;
-        Sat, 14 Jan 2023 14:17:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 15016C433D2;
-        Sat, 14 Jan 2023 14:17:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673705831;
-        bh=76Eo+v4Q7tefkzplW7b6RVNNI+llnGU5klxSKe8aQZ8=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=tE9f03bHnBqkglKj0CoNQe1f2lAkWz0Ns3U6iVniY1Q9H9CG89Xz9jRPeqL+VQX2d
-         bjgahF9iiFGwmSCEuqz3ZmiX2XIbR0BqiPWWBU1LIOUy9YfZkAcybtdVrESw3SLUAC
-         u1xaaMyVWMv+a3tPAMj0Opu4aVVJtYAYAx7H6h7Z9AwLpfI2jTmEewX0dlOlTCwwr0
-         DcT2G2rj2B6kMjCipquIzs5U5UZYo+KifUgW9ZBGQwE/whBd/Le+WwS7eOApmx9oVT
-         AOrsqREpFNEyXL5aTYfQNu3BBc2S0JVoujbROsfBopOzwZ0jkKyln8GxGlMg1pEX1s
-         on2woGOQ96W6A==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id EA268C395C8;
-        Sat, 14 Jan 2023 14:17:10 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.1-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
-References: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <dae9db6e4507011bffe3beef9528c3dd7ee363a9.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: f58c89700630da6554b24fd3df293a24874c10c1
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8e768130857d08a6765f3287ad3f89c1b7d50e53
-Message-Id: <167370583072.24149.7151261857788868933.pr-tracker-bot@kernel.org>
-Date:   Sat, 14 Jan 2023 14:17:10 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229715AbjAOH4G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Jan 2023 02:56:06 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1FC844B5
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2023 23:56:04 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id 20so13516410pfu.13
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2023 23:56:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=solid-run-com.20210112.gappssmtp.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=7mPR+tYk06dWyheXQlcDvaKFF6VE45BY4pbiBRMyTf0=;
+        b=3NkR14+qMITtW5c/bhsV3TZxEqserp/0VOuYZNP4g42CclG/xB4agcQEBFDlmIceTy
+         Dnb+Gl8ZEbazw6K9BfxSDP353kv8wFoCOzjafOmUpIbb4bA7nygi/+rMVSO+5njloKYR
+         CozVxIQlSZAJd9UjP1d+cle8o4s32xooYBqoBz9VDUN4Kv2V66W4gZ/lzxrzL1gZJnQp
+         K0Y17q39OljeeFaoVglpyHwGXhK4Mt6LJ+78vfLmrPrS6m4q6R7Fp2b5nvw978ioGuYa
+         DvfLxm5eVIN11nZKAUWWpvXXHr/Z67Zvf6tZ92vL3945LZ7OFwpYeJ/q/rEZb0zOV70O
+         U5bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=7mPR+tYk06dWyheXQlcDvaKFF6VE45BY4pbiBRMyTf0=;
+        b=h2jpeoTv21blwuChH5OXl0KnxlZDI9eCOzgVaB+jQUqvGRN9HqHXHMSkZ+6nS2CFHA
+         BfDS0qWEiX68Zi5Y7bgaO+9S4BiZVLOLRZ5jZWtza9MScm9aJd5ZYysoin0OPs3i1bGd
+         6F4pDL2kgo+bw0/XciA5ML6CvCnVTw8S2FQ3UiH64qzXB7B4um4zphnB4AQOuQZjvP1H
+         GnXKCw+a2md2PrPf5axI9k9GFyhCoI243d8S9zFuYej0krlrFLG9TlLhksqxnf1NUnKA
+         yx15jmGo9Qs5h8/BnqzWCKSPut4iAJzb2KfLWTtyx/1iq+heqiog/3SJFxDSae9T+thQ
+         yjSw==
+X-Gm-Message-State: AFqh2kryh1ct/mGQRAgXSjaFiT6JByny02KXAVOVRZGLBswSj4El6XNv
+        UDvcV+1RHsXu7E7gvxK5Vn0ByqFD9gIXtUgQZeqtYg==
+X-Google-Smtp-Source: AMrXdXvAiyCmTWvJ9EHpfBDvUbeHLHSy+j5Yk8c2u2aPfRmZEEnLTIdJUxpu9gEHkkwwhxqg/OcINr2IlsC0dkOvol4=
+X-Received: by 2002:a65:45c8:0:b0:48c:5903:2f5b with SMTP id
+ m8-20020a6545c8000000b0048c59032f5bmr4778556pgr.504.1673769363038; Sat, 14
+ Jan 2023 23:56:03 -0800 (PST)
+MIME-Version: 1.0
+From:   Alvaro Karsz <alvaro.karsz@solid-run.com>
+Date:   Sun, 15 Jan 2023 09:55:26 +0200
+Message-ID: <CAJs=3_C+K0iumqYyKhphYLp=Qd7i6-Y6aDUgmYyY_rdnN1NAag@mail.gmail.com>
+Subject: Virtio-blk extended lifetime feature
+To:     virtualization <virtualization@lists.linux-foundation.org>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, egranata@google.com,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 14 Jan 2023 08:48:52 -0500:
+Hi guys,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+While trying to upstream the implementation of VIRTIO_BLK_F_LIFETIME
+feature, many developers suggested that this feature should be
+extended to include more cell types, since its current implementation
+in virtio spec is relevant for MMC and UFS devices only.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8e768130857d08a6765f3287ad3f89c1b7d50e53
+The VIRTIO_BLK_F_LIFETIME defines the following fields:
 
-Thank you!
+- pre_eol_info:  the percentage of reserved blocks that are consumed.
+- device_lifetime_est_typ_a: wear of SLC cells.
+- device_lifetime_est_typ_b: wear of MLC cells.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+(https://docs.oasis-open.org/virtio/virtio/v1.2/virtio-v1.2.html)
+
+Following Michael's suggestion, I'd like to add to the virtio spec
+with a new, extended lifetime command.
+Since I'm more familiar with embedded type storage devices, I'd like
+to ask you guys what fields you think should be included in the
+extended command.
+
+Thanks,
+
+Alvaro
