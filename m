@@ -2,96 +2,242 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E025CC46467
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 13:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4AB7C63797
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 14:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231216AbjAPNiO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Jan 2023 08:38:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54300 "EHLO
+        id S230295AbjAPOCB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Jan 2023 09:02:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231194AbjAPNiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 08:38:11 -0500
-X-Greylist: delayed 384 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 16 Jan 2023 05:38:09 PST
-Received: from air.basealt.ru (air.basealt.ru [194.107.17.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C80571A4B1
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Jan 2023 05:38:09 -0800 (PST)
-Received: by air.basealt.ru (Postfix, from userid 490)
-        id BED632F2022D; Mon, 16 Jan 2023 13:31:43 +0000 (UTC)
-Received: from localhost (broadband-188-32-10-232.ip.moscow.rt.ru [188.32.10.232])
-        by air.basealt.ru (Postfix) with ESMTPSA id 16BE12F2022E;
-        Mon, 16 Jan 2023 13:31:41 +0000 (UTC)
-Date:   Mon, 16 Jan 2023 16:31:40 +0300
-From:   "Alexey V. Vissarionov" <gremlin@altlinux.org>
-To:     Don Brace <don.brace@microchip.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        James Bottomley <JBottomley@parallels.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        lvc-project@linuxtesting.org, gremlin@altlinux.org
-Subject: [PATCH] scsi: hpsa: fix allocation size for scsi_host_alloc()
-Message-ID: <20230116133140.GB8107@altlinux.org>
+        with ESMTP id S229925AbjAPOCA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 09:02:00 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEC1F3C3A;
+        Mon, 16 Jan 2023 06:01:59 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 925F0B80F3B;
+        Mon, 16 Jan 2023 14:01:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03537C433EF;
+        Mon, 16 Jan 2023 14:01:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673877717;
+        bh=BSAcwLMTx/yE34ezcXKU8xlUBDvyc4IpIZkamS7Taak=;
+        h=From:To:Cc:Subject:Date:From;
+        b=cUAfqa6PnwKhrWvpJKNDoYH/sMf7q5l+pl8cP/pXHKoM82E6RL+mn1ZlHDv4DbfOT
+         NQ3+9olfJvncoZd53ymTJhronarZ2RufjpkhFehXv/dtphzDGwoHAGP/bnvkU9ad6V
+         hKaq2ggwLYWSBXayLBJeon/ROFE9v/BAlMyK8WbFCQs2z76yhblpPg4fXr8EoReWIE
+         b9efVA6zepOCTxzx2WJ/OoLqOCvxrKauBTF69XtdNFEfJctdDlqazxC4fznxbc8+6P
+         tsHvO5PrEE2IrAYJKJxPCRqVKjc+GeiIgOD4YqVXZgugrrvaxoKzY6Sn1Q2E5O94dS
+         MGPDsnd7S26jQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Wenchao Hao <haowenchao@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Wu Bo <wubo40@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, lduncan@suse.com,
+        cleech@redhat.com, jejb@linux.ibm.com, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 01/53] scsi: iscsi: Fix multiple iSCSI session unbind events sent to userspace
+Date:   Mon, 16 Jan 2023 09:01:01 -0500
+Message-Id: <20230116140154.114951-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="PmA2V3Z32TCmWXqI"
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Wenchao Hao <haowenchao@huawei.com>
 
---PmA2V3Z32TCmWXqI
-Content-Type: text/plain; charset=koi8-r
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+[ Upstream commit a3be19b91ea7121d388084e8c07f5b1b982eb40c ]
 
-The 'h' is a pointer to struct ctlr_info, so it's just 4 or 8
-bytes, while the structure itself is much bigger.
+It was observed that the kernel would potentially send
+ISCSI_KEVENT_UNBIND_SESSION multiple times. Introduce 'target_state' in
+iscsi_cls_session() to make sure session will send only one unbind session
+event.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+This introduces a regression wrt. the issue fixed in commit 13e60d3ba287
+("scsi: iscsi: Report unbind session event when the target has been
+removed"). If iscsid dies for any reason after sending an unbind session to
+kernel, once iscsid is restarted, the kernel's ISCSI_KEVENT_UNBIND_SESSION
+event is lost and userspace is then unable to logout. However, the session
+is actually in invalid state (its target_id is INVALID) so iscsid should
+not sync this session during restart.
 
-Fixes: b705690d8d16f708 ("[SCSI] hpsa: combine hpsa_scsi_detect and hpsa_re=
-gister_scsi")
-Signed-off-by: Alexey V. Vissarionov <gremlin@altlinux.org>
+Consequently we need to check the session's target state during iscsid
+restart.  If session is in unbound state, do not sync this session and
+perform session teardown. This is OK because once a session is unbound, we
+can not recover it any more (mainly because its target id is INVALID).
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 4dbf51e2623ad543..f6da34850af9dd46 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5850,7 +5850,7 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+Link: https://lore.kernel.org/r/20221126010752.231917-1-haowenchao@huawei.com
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Reviewed-by: Wu Bo <wubo40@huawei.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 50 ++++++++++++++++++++++++++---
+ include/scsi/scsi_transport_iscsi.h |  9 ++++++
+ 2 files changed, 54 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index f473c002fa4d..bf834e72595a 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1677,6 +1677,13 @@ static const char *iscsi_session_state_name(int state)
+ 	return name;
+ }
+ 
++static char *iscsi_session_target_state_name[] = {
++	[ISCSI_SESSION_TARGET_UNBOUND]   = "UNBOUND",
++	[ISCSI_SESSION_TARGET_ALLOCATED] = "ALLOCATED",
++	[ISCSI_SESSION_TARGET_SCANNED]   = "SCANNED",
++	[ISCSI_SESSION_TARGET_UNBINDING] = "UNBINDING",
++};
++
+ int iscsi_session_chkready(struct iscsi_cls_session *session)
  {
- 	struct Scsi_Host *sh;
-=20
--	sh =3D scsi_host_alloc(&hpsa_driver_template, sizeof(h));
-+	sh =3D scsi_host_alloc(&hpsa_driver_template, sizeof(struct ctlr_info));
- 	if (sh =3D=3D NULL) {
- 		dev_err(&h->pdev->dev, "scsi_host_alloc failed\n");
- 		return -ENOMEM;
+ 	int err;
+@@ -1786,9 +1793,13 @@ static int iscsi_user_scan_session(struct device *dev, void *data)
+ 		if ((scan_data->channel == SCAN_WILD_CARD ||
+ 		     scan_data->channel == 0) &&
+ 		    (scan_data->id == SCAN_WILD_CARD ||
+-		     scan_data->id == id))
++		     scan_data->id == id)) {
+ 			scsi_scan_target(&session->dev, 0, id,
+ 					 scan_data->lun, scan_data->rescan);
++			spin_lock_irqsave(&session->lock, flags);
++			session->target_state = ISCSI_SESSION_TARGET_SCANNED;
++			spin_unlock_irqrestore(&session->lock, flags);
++		}
+ 	}
+ 
+ user_scan_exit:
+@@ -1961,31 +1972,41 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 	struct iscsi_cls_host *ihost = shost->shost_data;
+ 	unsigned long flags;
+ 	unsigned int target_id;
++	bool remove_target = true;
+ 
+ 	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+ 
+ 	/* Prevent new scans and make sure scanning is not in progress */
+ 	mutex_lock(&ihost->mutex);
+ 	spin_lock_irqsave(&session->lock, flags);
+-	if (session->target_id == ISCSI_MAX_TARGET) {
++	if (session->target_state == ISCSI_SESSION_TARGET_ALLOCATED) {
++		remove_target = false;
++	} else if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
+ 		spin_unlock_irqrestore(&session->lock, flags);
+ 		mutex_unlock(&ihost->mutex);
+-		goto unbind_session_exit;
++		ISCSI_DBG_TRANS_SESSION(session,
++			"Skipping target unbinding: Session is unbound/unbinding.\n");
++		return;
+ 	}
+ 
++	session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
+ 	target_id = session->target_id;
+ 	session->target_id = ISCSI_MAX_TARGET;
+ 	spin_unlock_irqrestore(&session->lock, flags);
+ 	mutex_unlock(&ihost->mutex);
+ 
+-	scsi_remove_target(&session->dev);
++	if (remove_target)
++		scsi_remove_target(&session->dev);
+ 
+ 	if (session->ida_used)
+ 		ida_free(&iscsi_sess_ida, target_id);
+ 
+-unbind_session_exit:
+ 	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
++
++	spin_lock_irqsave(&session->lock, flags);
++	session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
++	spin_unlock_irqrestore(&session->lock, flags);
+ }
+ 
+ static void __iscsi_destroy_session(struct work_struct *work)
+@@ -2062,6 +2083,9 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
+ 		session->ida_used = true;
+ 	} else
+ 		session->target_id = target_id;
++	spin_lock_irqsave(&session->lock, flags);
++	session->target_state = ISCSI_SESSION_TARGET_ALLOCATED;
++	spin_unlock_irqrestore(&session->lock, flags);
+ 
+ 	dev_set_name(&session->dev, "session%u", session->sid);
+ 	err = device_add(&session->dev);
+@@ -4369,6 +4393,19 @@ iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
+ iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
+ iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
+ 
++static ssize_t
++show_priv_session_target_state(struct device *dev, struct device_attribute *attr,
++			char *buf)
++{
++	struct iscsi_cls_session *session = iscsi_dev_to_session(dev->parent);
++
++	return sysfs_emit(buf, "%s\n",
++			iscsi_session_target_state_name[session->target_state]);
++}
++
++static ISCSI_CLASS_ATTR(priv_sess, target_state, S_IRUGO,
++			show_priv_session_target_state, NULL);
++
+ static ssize_t
+ show_priv_session_state(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+@@ -4471,6 +4508,7 @@ static struct attribute *iscsi_session_attrs[] = {
+ 	&dev_attr_sess_boot_target.attr,
+ 	&dev_attr_priv_sess_recovery_tmo.attr,
+ 	&dev_attr_priv_sess_state.attr,
++	&dev_attr_priv_sess_target_state.attr,
+ 	&dev_attr_priv_sess_creator.attr,
+ 	&dev_attr_sess_chap_out_idx.attr,
+ 	&dev_attr_sess_chap_in_idx.attr,
+@@ -4584,6 +4622,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
+ 		return S_IRUGO | S_IWUSR;
+ 	else if (attr == &dev_attr_priv_sess_state.attr)
+ 		return S_IRUGO;
++	else if (attr == &dev_attr_priv_sess_target_state.attr)
++		return S_IRUGO;
+ 	else if (attr == &dev_attr_priv_sess_creator.attr)
+ 		return S_IRUGO;
+ 	else if (attr == &dev_attr_priv_sess_target_id.attr)
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index cab52b0f11d0..34c03707fb6e 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -236,6 +236,14 @@ enum {
+ 	ISCSI_SESSION_FREE,
+ };
+ 
++enum {
++	ISCSI_SESSION_TARGET_UNBOUND,
++	ISCSI_SESSION_TARGET_ALLOCATED,
++	ISCSI_SESSION_TARGET_SCANNED,
++	ISCSI_SESSION_TARGET_UNBINDING,
++	ISCSI_SESSION_TARGET_MAX,
++};
++
+ #define ISCSI_MAX_TARGET -1
+ 
+ struct iscsi_cls_session {
+@@ -264,6 +272,7 @@ struct iscsi_cls_session {
+ 	 */
+ 	pid_t creator;
+ 	int state;
++	int target_state;			/* session target bind state */
+ 	int sid;				/* session id */
+ 	void *dd_data;				/* LLD private data */
+ 	struct device dev;	/* sysfs transport/container device */
+-- 
+2.35.1
 
-
---=20
-Alexey V. Vissarionov
-gremlin =F0=F2=E9 altlinux =F4=FE=EB org; +vii-cmiii-ccxxix-lxxix-xlii
-GPG: 0D92F19E1C0DC36E27F61A29CD17E2B43D879005 @ hkp://keys.gnupg.net
-
---PmA2V3Z32TCmWXqI
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCgAGBQJjxVG8AAoJEFv2F9znRj5KLF8P/0ureOLmo2M7KtLbUtJOTEsh
-a0JuFf6hA1CLa0w2Yinj6JQdskBpTtFYEoNQouSvor50PuKyWXiwqNrwRZ2ghwWh
-tupS/vo5FATutuPgCGthaf1lD6YYiYZd0KYKxIbf7Wf9/CGtlpA0Rd4ldGOhvjgH
-HoCfppM98lhakaCLeVSQTfv+5vAK8W89LpBjPdjWTxFsVLMkBOVWaZwrL0DU8GEC
-MJE/KPAHoea0Ie/fdxc/SAym7ClfVvCnaEsb2grInHgYHI/NiIwyCEGwFI2hEYYw
-a36MfQtrVd8swgy3RCOEhdnmERfRRWDFl779e4oZ+aHvNZsTbwsRIFzPtznIlj2X
-rOD5CXMEJFyEpzZY3EG8jGEq3V6LRKyXlN+9wZj4uwtgSab+6PCzMnORymJhDouE
-xn6HJnx5rAfMLO1y6IYwFU1ZQLiEy9bdzmKlnfnPkFDq6iR2UV5WHWxPZ3KrEMye
-6Lq/EfO8wbYr5dKAxIuyo+j+vQ0aiswr1xsEt97NasVClD7piZ7jYHsPeiCvXYmF
-LP5AWUcD/aAXX/H3bIXm24H6dWg92sdN8iFs0IK7gsAFVVwwWAuiTilinr843d4l
-4iOdDh1PWc3zSFX+cjYhVmQLhthfK2HfXfRYJAXeZN/fnK1VnIZiddiQKWuJo10J
-xal3nYUbq0H7YOEQyXoJ
-=1reu
------END PGP SIGNATURE-----
-
---PmA2V3Z32TCmWXqI--
