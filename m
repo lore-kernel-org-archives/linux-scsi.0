@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2009AC46467
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 14:14:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F6AC677F1
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 14:16:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232308AbjAPOOx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Jan 2023 09:14:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40140 "EHLO
+        id S232108AbjAPOQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Jan 2023 09:16:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232481AbjAPONn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 09:13:43 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A73E925E09;
-        Mon, 16 Jan 2023 06:05:14 -0800 (PST)
+        with ESMTP id S232791AbjAPOOk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 09:14:40 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F54C233E8;
+        Mon, 16 Jan 2023 06:05:42 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 87C8B60FD2;
-        Mon, 16 Jan 2023 14:05:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39F63C433D2;
-        Mon, 16 Jan 2023 14:05:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E3D1760FDD;
+        Mon, 16 Jan 2023 14:05:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94D81C433EF;
+        Mon, 16 Jan 2023 14:05:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673877914;
-        bh=dccJRID2/H5or6ii2rYhXgU7IXZtPIgvFhUmSQ+8IME=;
+        s=k20201202; t=1673877941;
+        bh=jxRk/3po3zwHzlOmefLkoIwHFneUHHpPpdaXfpXPihk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=b/WbkQITleww6Q+2YjgUeOU5BQB+sTEA+L3XKRV7L7f2isARXjaRVGDIzOmb9LDWC
-         ZwGeUypZbM1P0J5+4/1reXBk3GF70nyHAMQ5TRqpUtaLVVyv8gNWh52wxR4qmAZ+rO
-         GkryCflhSEuHmC99GLiBUu0d8CFPmjpthrTQQWY2OeiWjZdfQgqpFHnFAmK1leh/m4
-         RGCe9t1Z/HYLJYOed4pYsm8X6IWqTcjxzapxBnYLI9FVTYvZ5t9ORgE6M5RnLWITI/
-         gh7HB6sN2C//76BHv8BxL8bFuJDTvirDBGTTk05X+6FExK8JQf72Js6QgyGI6B1bDK
-         WnK4Pxt44GQ6w==
+        b=O3c4+YoQ1FA3cHWX1mvj3EQcXDHKH1AMQbdU3roaPBK9j4TKkkkgtBQ6kBcfYwNz1
+         4KX4dks8U68+847jPjMfc+AkC/y0r7t3O2DhghmE9TxSgK/Utpw3qdt4XIY8Sw6r13
+         ixXGZJItrJmJNUOGy6fhK6fiM58P9z8Rm/egiBGwkgPYWcF46VbVZ2fYm9dlkn+92/
+         UJgR+RpcWeumg4VU8tWqrJ/Y0hXnOebFZS1YYlrwivRvOjHvaQBzCFwX7JK4D/0SDM
+         ZKgZvSaIOtG9cAiltGJ4gjmP52UvS4fOIqyWqx6UixilCWGN8YjOkbu23s/Wl07Yus
+         n+Z5FEEjkP32g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Yihang Li <liyihang9@huawei.com>,
@@ -38,12 +38,12 @@ Cc:     Yihang Li <liyihang9@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 14/17] scsi: hisi_sas: Set a port invalid only if there are no devices attached when refreshing port id
-Date:   Mon, 16 Jan 2023 09:04:45 -0500
-Message-Id: <20230116140448.116034-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 12/16] scsi: hisi_sas: Set a port invalid only if there are no devices attached when refreshing port id
+Date:   Mon, 16 Jan 2023 09:05:15 -0500
+Message-Id: <20230116140520.116257-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20230116140448.116034-1-sashal@kernel.org>
-References: <20230116140448.116034-1-sashal@kernel.org>
+In-Reply-To: <20230116140520.116257-1-sashal@kernel.org>
+References: <20230116140520.116257-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1feca45384c7..e5b9229310a0 100644
+index 031aa4043c5e..7135bbe5abb8 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1408,7 +1408,7 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
+@@ -1397,7 +1397,7 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
  				device->linkrate = phy->sas_phy.linkrate;
  
  			hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
