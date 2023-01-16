@@ -2,90 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F6AC677F1
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 14:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5571C63797
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 14:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232108AbjAPOQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Jan 2023 09:16:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41036 "EHLO
+        id S230456AbjAPOoz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Jan 2023 09:44:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232791AbjAPOOk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 09:14:40 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F54C233E8;
-        Mon, 16 Jan 2023 06:05:42 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229491AbjAPOoS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 09:44:18 -0500
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B571241D3;
+        Mon, 16 Jan 2023 06:23:50 -0800 (PST)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E3D1760FDD;
-        Mon, 16 Jan 2023 14:05:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94D81C433EF;
-        Mon, 16 Jan 2023 14:05:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673877941;
-        bh=jxRk/3po3zwHzlOmefLkoIwHFneUHHpPpdaXfpXPihk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O3c4+YoQ1FA3cHWX1mvj3EQcXDHKH1AMQbdU3roaPBK9j4TKkkkgtBQ6kBcfYwNz1
-         4KX4dks8U68+847jPjMfc+AkC/y0r7t3O2DhghmE9TxSgK/Utpw3qdt4XIY8Sw6r13
-         ixXGZJItrJmJNUOGy6fhK6fiM58P9z8Rm/egiBGwkgPYWcF46VbVZ2fYm9dlkn+92/
-         UJgR+RpcWeumg4VU8tWqrJ/Y0hXnOebFZS1YYlrwivRvOjHvaQBzCFwX7JK4D/0SDM
-         ZKgZvSaIOtG9cAiltGJ4gjmP52UvS4fOIqyWqx6UixilCWGN8YjOkbu23s/Wl07Yus
-         n+Z5FEEjkP32g==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yihang Li <liyihang9@huawei.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 12/16] scsi: hisi_sas: Set a port invalid only if there are no devices attached when refreshing port id
-Date:   Mon, 16 Jan 2023 09:05:15 -0500
-Message-Id: <20230116140520.116257-12-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20230116140520.116257-1-sashal@kernel.org>
-References: <20230116140520.116257-1-sashal@kernel.org>
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 1BBB561CC457B;
+        Mon, 16 Jan 2023 15:23:47 +0100 (CET)
+Message-ID: <693e9047-f52a-b426-616a-6157505e5165@molgen.mpg.de>
+Date:   Mon, 16 Jan 2023 15:23:46 +0100
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Content-Language: en-US
+To:     stable@vger.kernel.org
+Cc:     Greg KH <gregkh@linuxfoundation.org>, regressions@lists.linux.dev,
+        Christoph Hellwig <hch@lst.de>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Pittman <jpittman@redhat.com>, linux-scsi@vger.kernel.org,
+        it+linux-scsi@molgen.mpg.de
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [5.15] Backport commit 0c25422d34b4 (scsi: mpt3sas: Remove
+ scsi_dma_map() error messages)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yihang Li <liyihang9@huawei.com>
+Dear Linux folks,
 
-[ Upstream commit f58c89700630da6554b24fd3df293a24874c10c1 ]
 
-Currently the driver sets the port invalid if one phy in the port is not
-enabled, which may cause issues in expander situation. In directly attached
-situation, if phy up doesn't occur in time when refreshing port id, the
-port is incorrectly set to invalid which will also cause disk lost.
+Could you please apply commit 0c25422d34b4 (scsi: mpt3sas: Remove 
+scsi_dma_map() error messages) to the 5.15.y series?
 
-Therefore set a port invalid only if there are no devices attached to the
-port.
+commit 0c25422d34b4726b2707d5f38560943155a91b80
+Author: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Thu Mar 3 19:32:03 2022 +0530
 
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Link: https://lore.kernel.org/r/1672805000-141102-3-git-send-email-chenxiang66@hisilicon.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+     scsi: mpt3sas: Remove scsi_dma_map() error messages
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 031aa4043c5e..7135bbe5abb8 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1397,7 +1397,7 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
- 				device->linkrate = phy->sas_phy.linkrate;
- 
- 			hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
--		} else
-+		} else if (!port->port_attached)
- 			port->id = 0xff;
- 	}
- }
--- 
-2.35.1
+     When scsi_dma_map() fails by returning a sges_left value less than 
+zero,
+     the amount of logging produced can be extremely high.  In a recent 
+end-user
+     environment, 1200 messages per second were being sent to the log 
+buffer.
+     This eventually overwhelmed the system and it stalled.
 
+     These error messages are not needed. Remove them.
+
+     Link: 
+https://lore.kernel.org/r/20220303140203.12642-1-sreekanth.reddy@broadcom.com
+     Suggested-by: Christoph Hellwig <hch@lst.de>
+     Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+We see this regression after upgrading from Linux 5.10 to 5.15 on our 
+file servers with Broadcom/LSI SAS3008 PCI-Express Fusion-MPT SAS-3 
+(mpt3sas) – though luckily our systems do not stall/crash.
+
+The commit message does not say anything about, what commit caused these 
+error to be appearing – the log statements have been there since 
+v4.20-rc1, if I am not mistaken, so it must be something else –, and 
+also do not mention, why these log messages are not needed, but the new 
+error condition is actually expected.
+
+In the Canonical/Ubuntu bug tracker I found the explanation below [2].
+
+> 2. mpt3sas: Remove scsi_dma_map errors messages:
+> When driver set the DMA mask to 32bit then we observe that the
+> SWIOTLB bounce buffers are getting exhausted quickly. For most of the
+> IOs driver observe that scsi_dma_map() API returned with failure
+> status and hence driver was printing below error message. Since this
+> error message is getting printed per IO and if user issues heavy IOs
+> then we observe that kernel overwhelmed with this error message. Also
+> we will observe the kernel panic when the serial console is enabled.
+> So to limit this issue, we removed this error message though this
+> patch.
+> "scsi_dma_map failed: request for 1310720 bytes!"
+
+The Launchpad issue was created in March 2022, and the fixed Linux 
+kernel package 5.15.0-53.59 for Ubuntu 22.04 released on November 15th, 
+2022.
+
+Sreekanth, looking again, you are the patch author, one of the Broadcom 
+maintainers (LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)) and created the 
+Launchpad bug report. I am surprised you didn’t get it backported upstream.
+
+
+Kind regards,
+
+Paul
+
+
+[1]: 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=master&id=0c25422d34b4726b2707d5f38560943155a91b80
+[2]: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1965927
+      "[Ubuntu 22.04] mpt3sas: Request to include latest bug fix patches"
