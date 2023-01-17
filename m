@@ -2,107 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA9EC677F1
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 19:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B14DC54E76
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 21:03:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230426AbjAQT7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Jan 2023 14:59:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41056 "EHLO
+        id S229504AbjAQVDX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Jan 2023 16:03:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232377AbjAQT5m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 14:57:42 -0500
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C81394DCC3;
-        Tue, 17 Jan 2023 10:50:41 -0800 (PST)
-Received: by mail-pj1-f41.google.com with SMTP id d8so2165922pjc.3;
-        Tue, 17 Jan 2023 10:50:41 -0800 (PST)
+        with ESMTP id S229496AbjAQVCi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 16:02:38 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20DD64A1F3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2023 11:29:44 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id d8so2270362pjc.3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2023 11:29:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gRpqq+2LxugqpZNX3s+wDiUYVm6GWNq9r7NcJVznttI=;
+        b=DDL10rALn1z1FRoOFnw2dnP+4blUFM0iSm4tQ+rKvADmrEBfKO4DE+cHNhsOUk/lZM
+         2xlZ5mLD71Pan3w8wL/z1Z3QPjnt3q+svnrggrB32gsUHn7e+LA1RgeXFKfKp60gvb0c
+         3BYQ+iVZEa1Ulyahd4XWoCOV7Yat17xcCUUXrfNxxqhTR2+tza0X6jlZ6grUng+a/y1y
+         iY+FHGeS5IDHLwUsft7YY/YHKIsFpq8qKQPNSDdaWabVD1GEMZNexuHF3nx1sur5GuO4
+         yYrwdnSb9kbKnEJ/wwYeoNqyRIgTVT1WOwHluYP/L902eOEFRKQ13yP5sfQSMYdqSDoB
+         Djcw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/HQGg/8vq5SlsczjXKDNJxmMvwo3J64W2HmBDEDQXxI=;
-        b=y/PlpQs+LAbuxydTDMVvH5V2DVF0/8wtqV1onh7XlWvom6KBsXZ1HzthhKsi2TinN3
-         Hau772Bi2EnP41ptiPWduAXqW+MUrGKC1t4656NvMpIcujsDpT7wtITNWFm7ke4Fnr+5
-         OixaruQ5/zIMf+Ucu5cd2KaHASdA96SVdjQr3wWcWXNrQTRikcnuBHXTEtTtK9b3zo+w
-         41stWHI4t6RPLhifrNU07Ne1Cb5UjDGnTRTrL/wPEtpeXNmlr6mjqN1duf/SHf9ElU6f
-         riIJuKfLcEAq1b+XPZYYK6tWjogr+I+vzgy1cSm8BGBZQecszMIfck3acw7GArWpCvYf
-         u+fA==
-X-Gm-Message-State: AFqh2kqVKLWgSDUPpq51iEWmxIrXJpwS53aKWxEW2TYxs1gBcWQMyr8D
-        JyZhccNU8RSefaHlKkKld0Q=
-X-Google-Smtp-Source: AMrXdXtC63QxLhrrBGZ5gaUkg1Tui5HCgbg5MDGgGgT/75UxeGbHBmIoukfx00Xrj5uTEYxKD9nduA==
-X-Received: by 2002:a17:902:6904:b0:193:3354:1c22 with SMTP id j4-20020a170902690400b0019333541c22mr3354629plk.39.1673981441139;
-        Tue, 17 Jan 2023 10:50:41 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:f632:d9f5:6cbb:17d0? ([2620:15c:211:201:f632:d9f5:6cbb:17d0])
-        by smtp.gmail.com with ESMTPSA id c1-20020a170903234100b0017f48a9e2d6sm21427456plh.292.2023.01.17.10.50.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Jan 2023 10:50:40 -0800 (PST)
-Message-ID: <c23a6bf4-0b6e-0bbb-b74d-af69756bcf9a@acm.org>
-Date:   Tue, 17 Jan 2023 10:50:37 -0800
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gRpqq+2LxugqpZNX3s+wDiUYVm6GWNq9r7NcJVznttI=;
+        b=fbaeH45DznBlF3ehXuyH0mU29vimEkw2gz3aiUS7BQB243ajAE5TdkZJjrESIZFfTS
+         3IfTOKwE+0GGvdzEec0Ih2OTRhjDyvHIzOQEqDUYmRBGr0q/I9SqMS6DIQ4sUiyvopbi
+         QMltmrhqniNZM0paIYYYbl1YBfWTWGrZgkmgGI/66Xi9esbPrNCtSdxR5Qa7scmEnbEb
+         +FZN/H3cBNfH26eRzYxFB8ISjeFxNzMX532mYom/tVdiRfCoehVVh5dQOgla9e/WV1iT
+         odXo5OLkR1FrCcDBQnrpKtNu/4IGGEE1zvi86w7SFSQ46mZZBUJ11/Wm2yaNjHvrlhuq
+         nBXg==
+X-Gm-Message-State: AFqh2kpHk26msFPyIkCuty2DAJG0qtYqf3YDOXv23yO18jK+P7coai/N
+        s07uK5t5me5pJBi6uP+7uXNuFw==
+X-Google-Smtp-Source: AMrXdXs5jEoPdwvpIvhpWsoNZ3dwLlPfm/N/TqJwrTUTJCQIR/xEnhuSGfUHyd3nbcshsUxFjBAa6w==
+X-Received: by 2002:a17:902:ec82:b0:194:9874:7ece with SMTP id x2-20020a170902ec8200b0019498747ecemr5863503plg.29.1673983783644;
+        Tue, 17 Jan 2023 11:29:43 -0800 (PST)
+Received: from google.com ([2620:15c:2d1:203:c3b2:a57d:8316:74e6])
+        by smtp.gmail.com with ESMTPSA id j2-20020a170902da8200b00188ea79fae0sm21625839plx.48.2023.01.17.11.29.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Jan 2023 11:29:43 -0800 (PST)
+Date:   Tue, 17 Jan 2023 11:29:38 -0800
+From:   Nick Desaulniers <ndesaulniers@google.com>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Quinn Tran <qutran@marvell.com>, Arnd Bergmann <arnd@arndb.de>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Tom Rix <trix@redhat.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Subject: Re: [PATCH] qla2xxx: fix printk format string
+Message-ID: <20230117192938.nryt2tlgjymkr5ux@google.com>
+References: <20230117170029.2387516-1-arnd@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: kernel BUG scsi_dh_alua sleeping from invalid context && kernel
- WARNING do not call blocking ops when !TASK_RUNNING
-Content-Language: en-US
-To:     Martin Wilck <mwilck@suse.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Sachin Sant <sachinp@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        linux-s390 <linux-s390@vger.kernel.org>
-References: <b49e37d5-edfb-4c56-3eeb-62c7d5855c00@linux.ibm.com>
- <017b6c73f56505e63519e4b79fe69d66abddf810.camel@suse.com>
- <a9da2b27-882f-bc8e-3400-cb53440e2159@acm.org>
- <125f247806396f19fd27dcfa71f530b5b4a529a6.camel@suse.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <125f247806396f19fd27dcfa71f530b5b4a529a6.camel@suse.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230117170029.2387516-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/17/23 01:28, Martin Wilck wrote:
-> On Mon, 2023-01-16 at 09:48 -0800, Bart Van Assche wrote:
->> On 1/16/23 08:57, Martin Wilck wrote:
->>> Can we simply defer the scsi_device_put() to a workqueue?
->>
->> I'm concerned that would reintroduce a race condition when LLD kernel
->> modules are removed.
+On Tue, Jan 17, 2023 at 06:00:15PM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> I don't follow. Normally, alua_rtpg_queue() queues rtpg_work, and
-> alua_rtpg_work() will be called from the work queue and will eventually
-> call scsi_device_put() when the RTPG is finished.
+> Printing a size_t value that is the result of the sizeof() operator requires
+> using the %z format string modifier to avoid a warning on 32-bit architectures:
 > 
-> alua_rtpg_queue() only calls scsi_device_put() if queueing rtpg_work
-> fails[*]. If we deferred this scsi_device_put() call to a work queue,
-> what would be the difference (wrt a module_put() race condition)
-> compared to the case where queue_delayed_work() succeeds?
-> In both cases, scsi_device_put() would be called from a work queue.
+> drivers/scsi/qla2xxx/qla_mid.c: In function 'qla_create_buf_pool':
+> drivers/scsi/qla2xxx/qla_mid.c:1094:51: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Werror=format=]
+>  1094 |                     "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
+>       |                                                 ~~^       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+>       |                                                   |          |
+>       |                                                   long int   unsigned int
+>       |                                                 %d
 > 
-> Given that alua_rtpg_queue() must take a reference to the scsi device
-> for the case that queueing succeeds, and that alua_rtpg_queue() is
-> sometimes called in atomic context, I think deferring the
-> scsi_device_put() call is the only option we have.
+> Fixes: 82d8dfd2a238 ("scsi: qla2xxx: edif: Fix performance dip due to lock contention")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Hi Martin,
+Thanks for the patch!
 
-Before commit f93ed747e2c7 ("scsi: core: Release SCSI devices 
-synchronously") the SCSI device release code could continue running 
-asynchronously after the last module_put() call of the LLD associated 
-with the SCSI device.
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Reported-by: "kernelci.org bot" <bot@kernelci.org>
+Link: https://lore.kernel.org/llvm/63c4ddba.170a0220.1547e.db75@mx.google.com/
 
-Since commit f93ed747e2c7 it is guaranteed that freeing device memory 
-(scsi_device_dev_release()) has finished before the last LLD 
-module_put() call happens.
-
-Do you perhaps plan to defer the scsi_device_put() calls in the ALUA 
-device handler to a workqueue?
-
-Thanks,
-
-Bart.
+> ---
+>  drivers/scsi/qla2xxx/qla_mid.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+> index c6ca39b8e23d..1483f6258f92 100644
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
+> @@ -1091,7 +1091,7 @@ int qla_create_buf_pool(struct scsi_qla_host *vha, struct qla_qpair *qp)
+>  	qp->buf_pool.buf_map   = kcalloc(sz, sizeof(long), GFP_KERNEL);
+>  	if (!qp->buf_pool.buf_map) {
+>  		ql_log(ql_log_warn, vha, 0x0186,
+> -		    "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
+> +		    "Failed to allocate buf_map(%zd).\n", sz * sizeof(unsigned long));
+>  		return -ENOMEM;
+>  	}
+>  	sz = qp->req->length * sizeof(void *);
+> -- 
+> 2.39.0
+> 
+> 
