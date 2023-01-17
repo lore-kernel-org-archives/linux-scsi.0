@@ -2,127 +2,232 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00365C67871
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 10:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 714BDC3DA78
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 11:44:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235916AbjAQKjm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Jan 2023 05:39:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44516 "EHLO
+        id S236715AbjAQLog (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Jan 2023 06:44:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235615AbjAQKjD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 05:39:03 -0500
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3A379026
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2023 02:35:57 -0800 (PST)
-Received: from [10.10.2.52] (unknown [10.10.2.52])
-        by mail.ispras.ru (Postfix) with ESMTPSA id 3012F44C1019;
-        Tue, 17 Jan 2023 10:35:54 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 3012F44C1019
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-        s=default; t=1673951754;
-        bh=J6rDcRYc0oD7CHQRGCzNkbhnZknAUqDhFqy1x4iJy18=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=PkQIixaAjM7pNSLFrHgwimD1W1RV2F2XiHRvYDTfTY2c5sWraABUzXEDi2N9VCoWf
-         Hc7EJCNw4knOPwEZ05yypyrLiP+xe2GPUKraJnouXhOcA0MI6RJojj71dfL7+u1Qpd
-         8WExSdYaGWFERkKfy6QPgxnNIB2c3SKMB2LfUv9o=
-Subject: Re: [lvc-project] [PATCH] scsi: hpsa: fix allocation size for
- scsi_host_alloc()
-To:     "Alexey V. Vissarionov" <gremlin@altlinux.org>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-        storagedev@microchip.com, Don Brace <don.brace@microchip.com>,
-        lvc-project@linuxtesting.org
-References: <20230116133140.GB8107@altlinux.org>
- <39006233-ff6f-82ad-b772-e00e789375a5@acm.org>
- <20230117095644.GA12547@altlinux.org>
-From:   Alexey Khoroshilov <khoroshilov@ispras.ru>
-Autocrypt: addr=khoroshilov@ispras.ru; prefer-encrypt=mutual; keydata=
- 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
- kK2E04Fb+Zk1eJvHYRc=
-Message-ID: <30d3e555-4fb0-23df-abeb-e1c3dc41543e@ispras.ru>
-Date:   Tue, 17 Jan 2023 13:35:54 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S236580AbjAQLof (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 06:44:35 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FBD29012;
+        Tue, 17 Jan 2023 03:44:34 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id BD4E23453B;
+        Tue, 17 Jan 2023 11:44:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1673955872; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5ole6isE4RExd/uxxeZuPvFlLXIRWIIDWEltEeqOodo=;
+        b=oXCvkkZH8Qh6p/q9dIUf+LvjViezQNXRxe3SQ97YDxKHQJXYUL74TYrqbGkKfZNFm21ihH
+        FQa18NyRudcGHd4tvB7LS+GaSFPfUUwESBQGY0ExF5eRxy3B8T9fkdDz6rbtNthV1We++Z
+        R3btKdeyFOnTkK23A6JdjintVSJpNPw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1673955872;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5ole6isE4RExd/uxxeZuPvFlLXIRWIIDWEltEeqOodo=;
+        b=Flz8OS1zLtVdgcyg24JF30m5Ftf75Ep+rCQyrEdIFB8hMYvjwzN8bKPswfntZ1/Sz+mcbk
+        rAIoXimX7GBnlcCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AC04A13357;
+        Tue, 17 Jan 2023 11:44:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ksW2KSCKxmMnSAAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 17 Jan 2023 11:44:32 +0000
+Message-ID: <c48cb125-dcde-d1a1-3b99-f85b3348b4bc@suse.de>
+Date:   Tue, 17 Jan 2023 12:44:32 +0100
 MIME-Version: 1.0
-In-Reply-To: <20230117095644.GA12547@altlinux.org>
-Content-Type: text/plain; charset=koi8-r
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v2 03/18] scsi: core: allow libata to complete successful
+ commands via EH
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20230112140412.667308-1-niklas.cassel@wdc.com>
+ <20230112140412.667308-4-niklas.cassel@wdc.com>
+ <ab23c5dd-3a61-452c-52c9-43b6b18f2c8e@suse.de> <Y8VGeFSKuIr0nwC3@x1-carbon>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <Y8VGeFSKuIr0nwC3@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17.01.2023 12:56, Alexey V. Vissarionov wrote:
-> On 2023-01-16 14:41:08 -0800, Bart Van Assche wrote:
+On 1/16/23 13:43, Niklas Cassel wrote:
+> On Fri, Jan 13, 2023 at 08:57:37AM +0100, Hannes Reinecke wrote:
+>> On 1/12/23 15:03, Niklas Cassel wrote:
+>>> In SCSI, we get the sense data as part of the completion, for ATA
+>>> however, we need to fetch the sense data as an extra step. For an
+>>> aborted ATA command the sense data is fetched via libata's
+>>> ->eh_strategy_handler().
+>>>
+>>> For Command Duration Limits policy 0xD:
+>>> The device shall complete the command without error with the additional
+>>> sense code set to DATA CURRENTLY UNAVAILABLE.
+>>>
+>>> In order to handle this policy in libata, we intend to send a successful
+>>> command via SCSI EH, and let libata's ->eh_strategy_handler() fetch the
+>>> sense data for the good command. This is similar to how we handle an
+>>> aborted ATA command, just that we need to read the Successful NCQ
+>>> Commands log instead of the NCQ Command Error log.
+>>>
+>>> When we get a SATA completion with successful commands, ATA_SENSE will
+>>> be set, indicating that some commands in the completion have sense data.
+>>>
+>>> The sense_valid bitmask in the Sense Data for Successful NCQ Commands
+>>> log will inform exactly which commands that had sense data, which might
+>>> be a subset of all the commands that was completed in the same
+>>> completion. (Yet all will have ATA_SENSE set, since the status is per
+>>> completion.)
+>>>
+>>> The successful commands that have e.g. a "DATA CURRENTLY UNAVAILABLE"
+>>> sense data will have a SCSI ML byte set, so scsi_eh_flush_done_q() will
+>>> not set the scmd->result to DID_TIME_OUT for these commands. However,
+>>> the successful commands that did not have sense data, must not get their
+>>> result marked as DID_TIME_OUT by SCSI EH.
+>>>
+>>> Add a new flag SCMD_EH_SUCCESS_CMD, which tells SCSI EH to not mark a
+>>> command as DID_TIME_OUT, even if it has scmd->result == SAM_STAT_GOOD.
+>>>
+>>> This will be used by libata in a follow-up patch.
+>>>
+>>> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+>>> ---
+>>>    drivers/scsi/scsi_error.c | 3 ++-
+>>>    include/scsi/scsi_cmnd.h  | 5 +++++
+>>>    2 files changed, 7 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>>> index 2aa2c2aee6e7..51aa5c1e31b5 100644
+>>> --- a/drivers/scsi/scsi_error.c
+>>> +++ b/drivers/scsi/scsi_error.c
+>>> @@ -2165,7 +2165,8 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+>>>    			 * scsi_eh_get_sense), scmd->result is already
+>>>    			 * set, do not set DID_TIME_OUT.
+>>>    			 */
+>>> -			if (!scmd->result)
+>>> +			if (!scmd->result &&
+>>> +			    !(scmd->flags & SCMD_EH_SUCCESS_CMD))
+>>>    				scmd->result |= (DID_TIME_OUT << 16);
+>>>    			SCSI_LOG_ERROR_RECOVERY(3,
+>>>    				scmd_printk(KERN_INFO, scmd,
+>> Wouldn't it be better to use '!scmd->result && !scsi_sense_valid(scmd)'
+>> instead of a new flag?
+>> After all, if we have a valid sense code we _have_ been able to communicate
+>> with the device. And as we did so it's questionable whether it should count
+>> as a command time out ...
 > 
->  >> Fixes: b705690d8d16f708 ("[SCSI] hpsa: combine hpsa_scsi_detect
->  >> and hpsa_register_scsi")
->  > That seems incorrect to me. Shouldn't the Fixes tag be changed
->  > into the following?
->  > Fixes: edd163687ea5 ("[SCSI] hpsa: add driver for HP Smart Array
->  > controllers.")
+> Hello Hannes,
 > 
-> % git blame -L 5853,+1 -- drivers/scsi/hpsa.c
-> b705690d8d16f7081 (Stephen M. Cameron 2012-01-19 14:00:53 -0600 5853)
-> 	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
+> Thanks a lot for helping out reviewing this series!
 > 
-> Is anything wrong here?
+> Unfortunately, your suggestion won't work.
+> 
+> 
+> Let me explain:
+> 
+> When you get a FIS, the ACT register will have a bit set for each
+> command that finished, however, all the commands will share a single
+> STATUS value (since there is just a shared STATUS field in the FIS).
+> 
+> So let's say that tags 0-3 got finished (i.e. bits 0-3 are set in the
+> ACT field) and the STATUS field has the "Sense Data Available" bit set.
+> 
+> This just tells us that at least one of tags 0-3 has sense data.
+> 
+> 
+> In order to know which of these tags that actually has sense data,
+> we need to read the "Sense Data for Successful NCQ Commands log",
+> which contains a sense_valid bitmask (which contains one bit for
+> each of the 32 tags).
+> 
+> So reading the "Sense Data for Successful NCQ Commands log" might
+> tell us that just tag 0-1 have sense data.
+> 
+> So, libata calls ata_qc_schedule_eh() on tags 0-3, wait until SCSI calls
+> libata .eh_strategy_handler(). libata .eh_strategy_handler() will read the
+> "Sense Data for Successful NCQ Commands log", which will see that there is
+> sense data for tags 0-1, and will add sense data for those commands, and
+> call scsi_check_sense() for tags 0-1.
+> 
+> ata_eh_finish() will finally be called, to determine what to do with the
+> commands that belonged to EH.
+> 
+> The code looks like this:
+> if (qc->flags & ATA_QCFLAG_SENSE_VALID ||
+>      qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) {
+> 	ata_eh_qc_complete(qc);
+> }
+> 
+> So it will call complete for all 4 tags, regardless is they had sense data
+> or not.
+> 
+> 
+> scsi_eh_flush_done_q() will soon be called, and since ata_eh_qc_complete()
+> sets scmd->retries == scmd->allowed, none of the four commands will be retired.
+> 
+> if (!scmd->result &&
+>      !(scmd->flags & SCMD_EH_SUCCESS_CMD))
+> 	scmd->result |= (DID_TIME_OUT << 16);
+> 
+> The 2 commands with sense data will not get DID_TIMEOUT,
+> because scmd->result has the SCSI ML byte set
+> (which is set by scsi_check_sense()).
+> 
+> The 2 commands without sense data will have scmd->result == 0,
+> so they will get DID_TIME_OUT set if we don't have the extra
+> !(scmd->flags & SCMD_EH_SUCCESS_CMD)) condition.
+> 
+> 
+> SCSI could add an additional check for:
+> 
+> if (!scmd->result && !scsi_sense_valid(scmd) &&
+>      !(scmd->flags & SCMD_EH_SUCCESS_CMD))
+> 	scmd->result |= (DID_TIME_OUT << 16);
+> 
+> so that a command with does have sense data, but scsi_check_sense()
+> did not set any SCSI ML byte, does not get DID_TIME_OUT set.
+> 
+> However, for CDL policy 0xD, which this patch cares about,
+> we would still need the "&& !(scmd->flags & SCMD_EH_SUCCESS_CMD))",
+> so at least from a CDL perspective, I don't see how any benefit of
+> also adding a check for "&& !scsi_sense_valid(scmd)".
+> 
 
-Yes, this commit just moves
+Right, I see.
+Thanks for the explanation.
 
-  sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
+You can add:
 
-from one function to another one.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
 
-edd163687ea5 ("[SCSI] hpsa: add driver for HP Smart Array controllers.")
-is the correct commit introducing the bug.
-
---
-Alexey
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
 
