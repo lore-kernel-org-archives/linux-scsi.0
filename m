@@ -2,221 +2,195 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B5AC678D4
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Jan 2023 23:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78203C46467
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 02:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235246AbjAPXOP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Jan 2023 18:14:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48820 "EHLO
+        id S235754AbjAQCzc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Jan 2023 21:55:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235418AbjAPXNh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 18:13:37 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1EF32ED75
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Jan 2023 15:10:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1673910611;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EU0pOV6WBLH3AThSCCtWqw1z4qNF39IxpGe04ts73SI=;
-        b=KMOzHRIJJUWXBlyRWBI/M6tafkITKUDRyjvzdXGhznL4aBIYbHRP/+WCdb4MA9aTTbHWHZ
-        y870npR6fRffOMvDSkMlXyJoGzcAWt+LULKM/5GvfFBbFg/8GCXuuVFlOCgNI46H1jSj+L
-        gRGm52/wLSvCgTqwuCVjUZuOJGKdn74=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-185-RByxuKzUOKioXzZbR3mJUw-1; Mon, 16 Jan 2023 18:10:06 -0500
-X-MC-Unique: RByxuKzUOKioXzZbR3mJUw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0ACC71C0432B;
-        Mon, 16 Jan 2023 23:10:06 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.33.36.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 57C3C1121319;
-        Mon, 16 Jan 2023 23:10:04 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-Subject: [PATCH v6 17/34] scsi: [RFC] Use netfs_extract_iter_to_sg()
-From:   David Howells <dhowells@redhat.com>
-To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
-        Jeff Layton <jlayton@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 16 Jan 2023 23:10:03 +0000
-Message-ID: <167391060380.2311931.5962669831677025433.stgit@warthog.procyon.org.uk>
-In-Reply-To: <167391047703.2311931.8115712773222260073.stgit@warthog.procyon.org.uk>
-References: <167391047703.2311931.8115712773222260073.stgit@warthog.procyon.org.uk>
-User-Agent: StGit/1.5
+        with ESMTP id S235783AbjAQCzL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2023 21:55:11 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E208E22DF0;
+        Mon, 16 Jan 2023 18:52:57 -0800 (PST)
+Received: from kwepemm600002.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NwtKG4p9qz16Mq8;
+        Tue, 17 Jan 2023 10:35:14 +0800 (CST)
+Received: from localhost.localdomain (10.175.127.227) by
+ kwepemm600002.china.huawei.com (7.193.23.29) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Tue, 17 Jan 2023 10:36:55 +0800
+From:   Zhong Jinghua <zhongjinghua@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <bvanassche@acm.org>, <emilne@redhat.com>, <hare@suse.de>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <zhongjinghua@huawei.com>, <yi.zhang@huawei.com>,
+        <yukuai3@huawei.com>, <houtao1@huawei.com>
+Subject: [PATCH] scsi: fix iscsi rescan fails to create block
+Date:   Tue, 17 Jan 2023 11:01:14 +0800
+Message-ID: <20230117030114.2131734-1-zhongjinghua@huawei.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600002.china.huawei.com (7.193.23.29)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use netfs_extract_iter_to_sg() to build a scatterlist from an iterator.
+When the three iscsi operations delete, logout, and rescan are concurrent
+at the same time, there is a probability of failure to add disk through
+device_add_disk(). The concurrent process is as follows:
 
-Note that if this fits, netfs_extract_iter_to_sg() should move to core
-code.
+T0: scan host // echo 1 > /sys/devices/platform/host1/scsi_host/host1/scan
+T1: delete target // echo 1 > /sys/devices/platform/host1/session1/target1:0:0/1:0:0:1/delete
+T2: logout // iscsiadm -m node --login
+T3: T2 scsi_queue_work
+T4: T0 bus_probe_device
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: James E.J. Bottomley <jejb@linux.ibm.com>
-cc: Martin K. Petersen <martin.petersen@oracle.com>
-cc: Christoph Hellwig <hch@lst.de>
-cc: linux-scsi@vger.kernel.org
+T0                          T1                     T2                     T3
+scsi_scan_target
+ mutex_lock(&shost->scan_mutex);
+  __scsi_scan_target
+   scsi_report_lun_scan
+    scsi_add_lun
+     scsi_sysfs_add_sdev
+      device_add
+       kobject_add
+       //create session1/target1:0:0/1:0:0:1/
+       ...
+       bus_probe_device
+       // Create block asynchronously
+ mutex_unlock(&shost->scan_mutex);
+                       sdev_store_delete
+                        scsi_remove_device
+                         device_remove_file
+                          mutex_lock(scan_mutex)
+                           __scsi_remove_device
+                            res = scsi_device_set_state(sdev, SDEV_CANCEL)
+                                             iscsi_if_recv_msg
+                                              scsi_queue_work
+                                                                 __iscsi_unbind_session
+                                                                 session->target_id = ISCSI_MAX_TARGET
+                                                                   __scsi_remove_target
+                                                                   sdev->sdev_state == SDEV_CANCEL
+                                                                   continue;
+                                                                   // end, No delete kobject 1:0:0:1
+                                             iscsi_if_recv_msg
+                                              transport->destroy_session(session)
+                                               __iscsi_destroy_session
+                                               iscsi_session_teardown
+                                                iscsi_remove_session
+                                                 __iscsi_unbind_session
+                                                  iscsi_session_event
+                                                 device_del
+                                                 // delete session
+T4:
+// create the block, its parent is 1:0:0:1
+// If kobject 1:0:0:1 does not exist, it won't go down
+__device_attach_async_helper
+ device_lock
+ ...
+ __device_attach_driver
+  driver_probe_device
+   really_probe
+    sd_probe
+     device_add_disk
+      register_disk
+       device_add
+      // error
+
+The block is created after the seesion is deleted.
+When T2 deletes the session, it will mark block'parent 1:0:01 as unusable:
+T2
+device_del
+ kobject_del
+  sysfs_remove_dir
+   __kernfs_remove
+   // Mark the children under the session as unusable
+    while ((pos = kernfs_next_descendant_post(pos, kn)))
+		if (kernfs_active(pos))
+			atomic_add(KN_DEACTIVATED_BIAS, &pos->active);
+
+Then, create the block:
+T4
+device_add
+ kobject_add
+  kobject_add_varg
+   kobject_add_internal
+    create_dir
+     sysfs_create_dir_ns
+      kernfs_create_dir_ns
+       kernfs_add_one
+        if ((parent->flags & KERNFS_ACTIVATED) && !kernfs_active(parent))
+		goto out_unlock;
+		// return error
+
+This error will cause a warning:
+kobject_add_internal failed for block (error: -2 parent: 1:0:0:1).
+In the lower version (such as 5.10), there is no corresponding error handling, continuing
+to go down will trigger a kernel panic, so cc stable.
+
+Therefore, creating the block should not be done after deleting the session.
+More practically, we should ensure that the target under the session is deleted first,
+and then the session is deleted. In this way, there are two possibilities:
+
+1) if the process(T1) of deleting the target execute first, it will grab the device_lock(),
+and the process(T4) of creating the block will wait for the deletion to complete.
+Then, block's parent 1:0:0:1 has been deleted, it won't go down.
+
+2) if the process(T4) of creating block execute first, it will grab the device_lock(),
+and the process(T1) of deleting the target will wait for the creation block to complete.
+Then, the process(T2) of deleting the session should need wait for the deletion to complete.
+
+Fix it by removing the judgment of state equal to SDEV_CANCEL in
+__scsi_remove_target() to ensure the order of deletion. Then, it will wait for
+T1's mutex_lock(scan_mutex) and device_del() in __scsi_remove_device() will wait for
+T4's device_lock(dev).
+But we found that such a fix would cause the previous problem:
+commit 81b6c9998979 ("scsi: core: check for device state in __scsi_remove_target()").
+So we use scsi_device_try_get() instead of get_devcie() to fix the previous problem.
+
+Fixes: 81b6c9998979 ("scsi: core: check for device state in __scsi_remove_target()")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Zhong Jinghua <zhongjinghua@huawei.com>
 ---
+ drivers/scsi/scsi_sysfs.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
- drivers/vhost/scsi.c |   78 +++++++++++++++-----------------------------------
- 1 file changed, 23 insertions(+), 55 deletions(-)
-
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 5d10837d19ec..af897cc4036d 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -34,6 +34,7 @@
- #include <linux/virtio_scsi.h>
- #include <linux/llist.h>
- #include <linux/bitmap.h>
-+#include <linux/netfs.h>
- 
- #include "vhost.h"
- 
-@@ -75,6 +76,9 @@ struct vhost_scsi_cmd {
- 	u32 tvc_prot_sgl_count;
- 	/* Saved unpacked SCSI LUN for vhost_scsi_target_queue_cmd() */
- 	u32 tvc_lun;
-+	/* Cleanup modes for scatterlists */
-+	unsigned int tvc_cleanup_mode;
-+	unsigned int tvc_prot_cleanup_mode;
- 	/* Pointer to the SGL formatted memory from virtio-scsi */
- 	struct scatterlist *tvc_sgl;
- 	struct scatterlist *tvc_prot_sgl;
-@@ -339,11 +343,13 @@ static void vhost_scsi_release_cmd_res(struct se_cmd *se_cmd)
- 
- 	if (tv_cmd->tvc_sgl_count) {
- 		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
--			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
-+			page_put_unpin(sg_page(&tv_cmd->tvc_sgl[i]),
-+				       tv_cmd->tvc_cleanup_mode);
- 	}
- 	if (tv_cmd->tvc_prot_sgl_count) {
- 		for (i = 0; i < tv_cmd->tvc_prot_sgl_count; i++)
--			put_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
-+			page_put_unpin(sg_page(&tv_cmd->tvc_prot_sgl[i]),
-+				       tv_cmd->tvc_prot_cleanup_mode);
- 	}
- 
- 	sbitmap_clear_bit(&svq->scsi_tags, se_cmd->map_tag);
-@@ -631,41 +637,6 @@ vhost_scsi_get_cmd(struct vhost_virtqueue *vq, struct vhost_scsi_tpg *tpg,
- 	return cmd;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 42db9c52208e..e7893835b99a 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1503,6 +1503,13 @@ void scsi_remove_device(struct scsi_device *sdev)
  }
+ EXPORT_SYMBOL(scsi_remove_device);
  
--/*
-- * Map a user memory range into a scatterlist
-- *
-- * Returns the number of scatterlist entries used or -errno on error.
-- */
--static int
--vhost_scsi_map_to_sgl(struct vhost_scsi_cmd *cmd,
--		      struct iov_iter *iter,
--		      struct scatterlist *sgl,
--		      bool write)
--{
--	struct page **pages = cmd->tvc_upages;
--	struct scatterlist *sg = sgl;
--	ssize_t bytes;
--	size_t offset;
--	unsigned int npages = 0, gup_flags = 0;
--
--	gup_flags |= write ? FOLL_SOURCE_BUF : FOLL_DEST_BUF;
--
--	bytes = iov_iter_get_pages(iter, pages, LONG_MAX,
--				   VHOST_SCSI_PREALLOC_UPAGES, &offset,
--				   gup_flags);
--	/* No pages were pinned */
--	if (bytes <= 0)
--		return bytes < 0 ? bytes : -EFAULT;
--
--	while (bytes) {
--		unsigned n = min_t(unsigned, PAGE_SIZE - offset, bytes);
--		sg_set_page(sg++, pages[npages++], n, offset);
--		bytes -= n;
--		offset = 0;
--	}
--	return npages;
--}
--
- static int
- vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
- {
-@@ -689,24 +660,19 @@ vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
- static int
- vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
- 		      struct iov_iter *iter,
--		      struct scatterlist *sg, int sg_count)
-+		      struct scatterlist *sg, int sg_count,
-+		      unsigned int *cleanup_mode)
- {
--	struct scatterlist *p = sg;
--	int ret;
-+	struct sg_table sgt = { .sgl = sg };
-+	unsigned int gup_flags = write ? FOLL_SOURCE_BUF : FOLL_DEST_BUF;
-+	ssize_t ret;
- 
--	while (iov_iter_count(iter)) {
--		ret = vhost_scsi_map_to_sgl(cmd, iter, sg, write);
--		if (ret < 0) {
--			while (p < sg) {
--				struct page *page = sg_page(p++);
--				if (page)
--					put_page(page);
--			}
--			return ret;
--		}
--		sg += ret;
--	}
--	return 0;
-+	ret = netfs_extract_iter_to_sg(iter, LONG_MAX, &sgt, sg_count, gup_flags);
-+	if (ret > 0)
-+		sg_mark_end(sg + sgt.nents - 1);
++static int scsi_device_try_get(struct scsi_device *sdev)
++{
++	if (!kobject_get_unless_zero(&sdev->sdev_gendev.kobj))
++		return -ENXIO;
++	return 0;
++}
 +
-+	*cleanup_mode = iov_iter_extract_mode(iter, gup_flags);
-+	return ret;
- }
- 
- static int
-@@ -730,7 +696,8 @@ vhost_scsi_mapal(struct vhost_scsi_cmd *cmd,
- 
- 		ret = vhost_scsi_iov_to_sgl(cmd, write, prot_iter,
- 					    cmd->tvc_prot_sgl,
--					    cmd->tvc_prot_sgl_count);
-+					    cmd->tvc_prot_sgl_count,
-+					    &cmd->tvc_prot_cleanup_mode);
- 		if (ret < 0) {
- 			cmd->tvc_prot_sgl_count = 0;
- 			return ret;
-@@ -747,7 +714,8 @@ vhost_scsi_mapal(struct vhost_scsi_cmd *cmd,
- 		  cmd->tvc_sgl, cmd->tvc_sgl_count);
- 
- 	ret = vhost_scsi_iov_to_sgl(cmd, write, data_iter,
--				    cmd->tvc_sgl, cmd->tvc_sgl_count);
-+				    cmd->tvc_sgl, cmd->tvc_sgl_count,
-+				    &cmd->tvc_cleanup_mode);
- 	if (ret < 0) {
- 		cmd->tvc_sgl_count = 0;
- 		return ret;
-
+ static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -1521,9 +1528,7 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ 		if (sdev->channel != starget->channel ||
+ 		    sdev->id != starget->id)
+ 			continue;
+-		if (sdev->sdev_state == SDEV_DEL ||
+-		    sdev->sdev_state == SDEV_CANCEL ||
+-		    !get_device(&sdev->sdev_gendev))
++		if (scsi_device_try_get(sdev))
+ 			continue;
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		scsi_remove_device(sdev);
+-- 
+2.31.1
 
