@@ -2,119 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE3B0C677F1
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 12:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B71C3DA78
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 16:38:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236702AbjAQMPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Jan 2023 07:15:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47620 "EHLO
+        id S232077AbjAQQiz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Jan 2023 11:38:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236200AbjAQMPY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 07:15:24 -0500
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4A092A173;
-        Tue, 17 Jan 2023 04:15:22 -0800 (PST)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        with ESMTP id S230453AbjAQQik (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 11:38:40 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E161303CD;
+        Tue, 17 Jan 2023 08:38:39 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id E671E61CC40F9;
-        Tue, 17 Jan 2023 13:15:18 +0100 (CET)
-Message-ID: <90dab560-da68-6fa1-57e5-7afa8aedfe4c@molgen.mpg.de>
-Date:   Tue, 17 Jan 2023 13:15:18 +0100
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 27951614DB;
+        Tue, 17 Jan 2023 16:38:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 263ABC433D2;
+        Tue, 17 Jan 2023 16:38:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673973518;
+        bh=K6sp7vxwz2kbyJDM0TQqlfRJA30AWKr6mOQv83dI0PA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Wfs8Li5beijwB4/pPLy54lafHB/pKGjIBEDJqNJykOC0XG7rusmyBtaWLETWAGofy
+         iDG2fPKsnqZYSgdCdoxcYOP84l4oIvbEHcv4vI23t+amVbLbhWA2ewK0tvfAUDpbIZ
+         qaLOKpM2kvCzH0nxGXt6ATu/J7NMSKj1ZZM5mpsY3peQASWh+cS6iDI9RlgTAeLIxo
+         XCy2iHVSmDQq4nQGHuCpE5AAEaakJ/GUKKjjQnweunX/D5UArtHUKFioUHDlXA3Pr9
+         s4wFY/NeVhKCJQcHotuuLdzsy1+JD9ENKh/5aYLjSGgAi10F3bzEDEYLP5jQgf2hqm
+         PcC6ed4Ui6mrw==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: stex: fix MU_MAX_DELAY typecheck
+Date:   Tue, 17 Jan 2023 17:38:27 +0100
+Message-Id: <20230117163834.1053763-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [5.15] Backport commit 0c25422d34b4 (scsi: mpt3sas: Remove
- scsi_dma_map() error messages)
-Content-Language: en-US
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-To:     stable@vger.kernel.org
-Cc:     Greg KH <gregkh@linuxfoundation.org>, regressions@lists.linux.dev,
-        Christoph Hellwig <hch@lst.de>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Pittman <jpittman@redhat.com>, linux-scsi@vger.kernel.org,
-        it+linux-scsi@molgen.mpg.de,
-        Laurence Oberman <loberman@redhat.com>, djeffery@redhat.com
-References: <693e9047-f52a-b426-616a-6157505e5165@molgen.mpg.de>
-In-Reply-To: <693e9047-f52a-b426-616a-6157505e5165@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[Cc: +loberman@redhat.com, +djeffery@redhat.com]
+From: Arnd Bergmann <arnd@arndb.de>
 
-Am 16.01.23 um 15:23 schrieb Paul Menzel:
-> Dear Linux folks,
-> 
-> 
-> Could you please apply commit 0c25422d34b4 (scsi: mpt3sas: Remove 
-> scsi_dma_map() error messages) to the 5.15.y series?
-> 
-> commit 0c25422d34b4726b2707d5f38560943155a91b80
-> Author: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-> Date:   Thu Mar 3 19:32:03 2022 +0530
-> 
->      scsi: mpt3sas: Remove scsi_dma_map() error messages
-> 
->      When scsi_dma_map() fails by returning a sges_left value less than zero,
->      the amount of logging produced can be extremely high.  In a recent end-user
->      environment, 1200 messages per second were being sent to the log buffer.
->      This eventually overwhelmed the system and it stalled.
-> 
->      These error messages are not needed. Remove them.
-> 
->      Link: https://lore.kernel.org/r/20220303140203.12642-1-sreekanth.reddy@broadcom.com
->      Suggested-by: Christoph Hellwig <hch@lst.de>
->      Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
->      Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> We see this regression after upgrading from Linux 5.10 to 5.15 on our 
-> file servers with Broadcom/LSI SAS3008 PCI-Express Fusion-MPT SAS-3 
-> (mpt3sas) – though luckily our systems do not stall/crash.
-> 
-> The commit message does not say anything about, what commit caused these 
-> error to be appearing – the log statements have been there since 
-> v4.20-rc1, if I am not mistaken, so it must be something else –, and 
-> also do not mention, why these log messages are not needed, but the new 
-> error condition is actually expected.
-> 
-> In the Canonical/Ubuntu bug tracker I found the explanation below [2].
-> 
->> 2. mpt3sas: Remove scsi_dma_map errors messages:
->> When driver set the DMA mask to 32bit then we observe that the
->> SWIOTLB bounce buffers are getting exhausted quickly. For most of the
->> IOs driver observe that scsi_dma_map() API returned with failure
->> status and hence driver was printing below error message. Since this
->> error message is getting printed per IO and if user issues heavy IOs
->> then we observe that kernel overwhelmed with this error message. Also
->> we will observe the kernel panic when the serial console is enabled.
->> So to limit this issue, we removed this error message though this
->> patch.
->> "scsi_dma_map failed: request for 1310720 bytes!"
-> 
-> The Launchpad issue was created in March 2022, and the fixed Linux 
-> kernel package 5.15.0-53.59 for Ubuntu 22.04 released on November 15th, 
-> 2022.
-> 
-> Sreekanth, looking again, you are the patch author, one of the Broadcom 
-> maintainers (LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)) and created the 
-> Launchpad bug report. I am surprised you didn’t get it backported upstream.
-> 
-> 
-> Kind regards,
-> 
-> Paul
-> 
-> 
-> [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=master&id=0c25422d34b4726b2707d5f38560943155a91b80
-> [2]: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1965927
->      "[Ubuntu 22.04] mpt3sas: Request to include latest bug fix patches"
+time_after() expects arguments of the same type, but gcc-13 changed the
+way that typeof(MU_MAX_DELAY) is determined, causing a build warning as
+'before + MU_MAX_DELAY * HZ' gets promoted to a 64-bit integer:
+
+In file included from include/linux/bitops.h:7,
+                 from include/linux/kernel.h:22,
+                 from drivers/scsi/stex.c:13:
+drivers/scsi/stex.c: In function 'stex_common_handshake':
+include/linux/typecheck.h:12:25: error: comparison of distinct pointer types lacks a cast [-Werror]
+   12 |         (void)(&__dummy == &__dummy2); \
+      |                         ^~
+include/linux/jiffies.h:106:10: note: in expansion of macro 'typecheck'
+  106 |          typecheck(unsigned long, b) && \
+      |          ^~~~~~~~~
+drivers/scsi/stex.c:1035:29: note: in expansion of macro 'time_after'
+ 1035 |                         if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
+
+Change the enum definition so all values fit into an unsigned
+32-bit number.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/stex.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 8def242675ef..23462d3c9850 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -110,7 +110,7 @@ enum {
+ 	TASK_ATTRIBUTE_ORDERED			= 0x2,
+ 	TASK_ATTRIBUTE_ACA			= 0x4,
+ 
+-	SS_STS_NORMAL				= 0x80000000,
++	SS_STS_NORMAL				= 0x80000000u,
+ 	SS_STS_DONE				= 0x40000000,
+ 	SS_STS_HANDSHAKE			= 0x20000000,
+ 
+@@ -120,7 +120,7 @@ enum {
+ 
+ 	SS_I2H_REQUEST_RESET			= 0x2000,
+ 
+-	SS_MU_OPERATIONAL			= 0x80000000,
++	SS_MU_OPERATIONAL			= 0x80000000u,
+ 
+ 	STEX_CDB_LENGTH				= 16,
+ 	STATUS_VAR_LEN				= 128,
+@@ -173,7 +173,7 @@ enum {
+ 	ST_ADDITIONAL_MEM_MIN			= 0x80000,
+ 	PMIC_SHUTDOWN				= 0x0D,
+ 	PMIC_REUMSE					= 0x10,
+-	ST_IGNORED					= -1,
++	ST_IGNORED					= -1u,
+ 	ST_NOTHANDLED				= 7,
+ 	ST_S3						= 3,
+ 	ST_S4						= 4,
+-- 
+2.39.0
+
