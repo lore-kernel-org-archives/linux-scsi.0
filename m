@@ -2,37 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07670C3DA78
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 17:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED179C3DA78
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Jan 2023 17:53:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233689AbjAQRAh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Jan 2023 12:00:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35996 "EHLO
+        id S231348AbjAQRxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Jan 2023 12:53:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231180AbjAQRAg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 12:00:36 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8268D39BA3;
-        Tue, 17 Jan 2023 09:00:35 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1E91F61265;
-        Tue, 17 Jan 2023 17:00:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6AD1C433D2;
-        Tue, 17 Jan 2023 17:00:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673974834;
-        bh=QNh3TQFYT4vMIEZ85frVh2PselKngIOifHgEhRG2e2g=;
-        h=From:To:Cc:Subject:Date:From;
-        b=LshBPt+3eewDOD7tj/cucbMXW6k1B8XFb+oCnEqLFpvmE1yH9w2RNJnKY+1VFBYpo
-         xbENILpXu9oRXczijjo7D2QE6shiBcY4Np9QJZWM30C/dS2Erg2ADSW1YoUK2al/SU
-         3Mz+fRPFgFsRaxyN2LPVv8ZDkAuBIYpFIVGIuTqmZpF1T3opvPFnShmflH3tK0K723
-         JDH8TVHw36EpBKXfraEBSqcWp+kBVslAPY7t/ho2TaoA4farpBXCrJ2wjL7KmlNFOL
-         9Uqentqldnz+onLbGiCkbpuvM89TdUF1AkSN49hZkzf2bnjQLorSLy8ogGFp9TGk46
-         Kzd6N6KBKbC+A==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Nilesh Javali <njavali@marvell.com>,
+        with ESMTP id S230448AbjAQRuh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2023 12:50:37 -0500
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B22BD4C0ED;
+        Tue, 17 Jan 2023 09:39:42 -0800 (PST)
+Received: by mail-pl1-f174.google.com with SMTP id b17so26783855pld.7;
+        Tue, 17 Jan 2023 09:39:42 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=l0Bl9DHBHJ8aVewkblTNTyqqFzHO/bksoIQSiFnCMsI=;
+        b=oxp0XZe7dAeDBRhRR3sdS70e3NEZS7qFKpwi440rTpNa3i+BefYLDYSyTXSfmYkaN3
+         HSbKpI21GPBxegLPP64PCT7bQcI7IWMjJudtw9Rjp4w67cLcGmsWJfpLG67OmJRQeSlt
+         nxwHPhyUamvIPhh1VMYeLkd2YBvyZiODE+ud5gAfwzqPrJp7cbSkUZnfEId0gq7w7H+f
+         sGwSm7azty8rpfQnwauyErEJWg48uPK8ksczOpjvlTR5lVQ/v40a8dNX+SO1eoCnV0Rk
+         WsG7pavg9HMCwzSGv/rXvdayLBzZr+Bs6cwIf2+PSFwvnZsfecoRJr5kUbueX7MZUS63
+         AIXA==
+X-Gm-Message-State: AFqh2kqY07PEM1TE//tJ+VptcQjDxWIeHpprz/X4oya+IaSNNqqIEYQc
+        jFbJnM4My7nwxLPhwbB6u4I=
+X-Google-Smtp-Source: AMrXdXtH8e1aiVkRGfVOydjbOOyk4U68xnYWdn8ym5N+grRWQauq5PKf01E85tokrV6/bQURz1fPSQ==
+X-Received: by 2002:a05:6a20:2d10:b0:b8:7389:2760 with SMTP id g16-20020a056a202d1000b000b873892760mr3841790pzl.44.1673977182028;
+        Tue, 17 Jan 2023 09:39:42 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:f632:d9f5:6cbb:17d0? ([2620:15c:211:201:f632:d9f5:6cbb:17d0])
+        by smtp.gmail.com with ESMTPSA id p13-20020a65490d000000b0048f8efc53a6sm17589946pgs.80.2023.01.17.09.39.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Jan 2023 09:39:41 -0800 (PST)
+Message-ID: <bc47c99a-8315-ab73-8ab2-a26674cadf95@acm.org>
+Date:   Tue, 17 Jan 2023 09:39:38 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] qla2xxx: fix printk format string
+Content-Language: en-US
+To:     Arnd Bergmann <arnd@kernel.org>,
+        Nilesh Javali <njavali@marvell.com>,
         GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -42,48 +55,47 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         Saurav Kashyap <skashyap@marvell.com>,
         Tom Rix <trix@redhat.com>, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] qla2xxx: fix printk format string
-Date:   Tue, 17 Jan 2023 18:00:15 +0100
-Message-Id: <20230117170029.2387516-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230117170029.2387516-1-arnd@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230117170029.2387516-1-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+On 1/17/23 09:00, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Printing a size_t value that is the result of the sizeof() operator requires
+> using the %z format string modifier to avoid a warning on 32-bit architectures:
+> 
+> drivers/scsi/qla2xxx/qla_mid.c: In function 'qla_create_buf_pool':
+> drivers/scsi/qla2xxx/qla_mid.c:1094:51: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Werror=format=]
+>   1094 |                     "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
+>        |                                                 ~~^       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+>        |                                                   |          |
+>        |                                                   long int   unsigned int
+>        |                                                 %d
+> 
+> Fixes: 82d8dfd2a238 ("scsi: qla2xxx: edif: Fix performance dip due to lock contention")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>   drivers/scsi/qla2xxx/qla_mid.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+> index c6ca39b8e23d..1483f6258f92 100644
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
+> @@ -1091,7 +1091,7 @@ int qla_create_buf_pool(struct scsi_qla_host *vha, struct qla_qpair *qp)
+>   	qp->buf_pool.buf_map   = kcalloc(sz, sizeof(long), GFP_KERNEL);
+>   	if (!qp->buf_pool.buf_map) {
+>   		ql_log(ql_log_warn, vha, 0x0186,
+> -		    "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
+> +		    "Failed to allocate buf_map(%zd).\n", sz * sizeof(unsigned long));
+>   		return -ENOMEM;
+>   	}
+>   	sz = qp->req->length * sizeof(void *);
 
-Printing a size_t value that is the result of the sizeof() operator requires
-using the %z format string modifier to avoid a warning on 32-bit architectures:
-
-drivers/scsi/qla2xxx/qla_mid.c: In function 'qla_create_buf_pool':
-drivers/scsi/qla2xxx/qla_mid.c:1094:51: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Werror=format=]
- 1094 |                     "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
-      |                                                 ~~^       ~~~~~~~~~~~~~~~~~~~~~~~~~~
-      |                                                   |          |
-      |                                                   long int   unsigned int
-      |                                                 %d
-
-Fixes: 82d8dfd2a238 ("scsi: qla2xxx: edif: Fix performance dip due to lock contention")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/qla2xxx/qla_mid.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index c6ca39b8e23d..1483f6258f92 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -1091,7 +1091,7 @@ int qla_create_buf_pool(struct scsi_qla_host *vha, struct qla_qpair *qp)
- 	qp->buf_pool.buf_map   = kcalloc(sz, sizeof(long), GFP_KERNEL);
- 	if (!qp->buf_pool.buf_map) {
- 		ql_log(ql_log_warn, vha, 0x0186,
--		    "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
-+		    "Failed to allocate buf_map(%zd).\n", sz * sizeof(unsigned long));
- 		return -ENOMEM;
- 	}
- 	sz = qp->req->length * sizeof(void *);
--- 
-2.39.0
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
