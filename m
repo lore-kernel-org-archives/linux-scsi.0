@@ -2,67 +2,85 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F40BC38159
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 21:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72542C32793
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 21:16:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230379AbjARVPc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Jan 2023 16:15:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44204 "EHLO
+        id S230426AbjARVP6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Jan 2023 16:15:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231232AbjARVOz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 16:14:55 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E64A14EC9;
-        Wed, 18 Jan 2023 13:14:53 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id s13-20020a17090a6e4d00b0022900843652so3811609pjm.1;
-        Wed, 18 Jan 2023 13:14:53 -0800 (PST)
+        with ESMTP id S230415AbjARVPi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 16:15:38 -0500
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C4EC63E1F;
+        Wed, 18 Jan 2023 13:15:21 -0800 (PST)
+Received: by mail-pl1-f170.google.com with SMTP id k13so409482plg.0;
+        Wed, 18 Jan 2023 13:15:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dv90MU3s7P6C1enlVNdFxj7LNTywIPZMW/7xiG3iIug=;
-        b=r81jXquB9LOALENvwG3VmOcEqNwmEgotG+mXDYdnMYb7Blw3f7n8oYe7hqhYZD9bSS
-         yzRp2TSJJtzvSuq7BgMe5aTfwy3Wax7Mm0aWtgca5apTOZOrQ/yrQucgTIOGs5c4eRUf
-         iurXY1w4MrJsrSqAOgrIGDIllpzKCk1PHy2eM9qxxMPW4ujuoNB379XV4r5D7W13RLwT
-         Pvpw270WUNIqnZpbEun3e7OJKsrQUVf7xmNGK1ZEdB9K9DI+Gnz5uUHcQswUvAHxUGGO
-         GOoIOGc+waNTj+PW0Tzz0x9JdkRjvrMBrnrUfYOolaOX17cfLYRLtR0+HMZLdxrcb5IQ
-         qMTQ==
-X-Gm-Message-State: AFqh2krP6S9n2gWV1AHAaSo/6CUOw3ZNfuCxEqrvr2lRt/0iIH97lG66
-        9no5VPn1IQI+zgTXMOWbiD0=
-X-Google-Smtp-Source: AMrXdXuD+IpP5W5cjMy3ZqxMBCedqoDJ4KIYHyhExt2x2UOUjVDJRKOZSwo5cIcOcDRGOjQOd/50uA==
-X-Received: by 2002:a17:90a:d306:b0:229:7d9d:c47f with SMTP id p6-20020a17090ad30600b002297d9dc47fmr8672239pju.41.1674076493311;
-        Wed, 18 Jan 2023 13:14:53 -0800 (PST)
+        bh=VfYeoPZtVQr6RUjpHn+YzmJhfEx/kDkA6rxpThlAcYE=;
+        b=zZWCNTblv+5Sm37kImrZ7N+TqiAXDLoqiI/vqVGkmU+ugcZP8IW7YUPK/XCo7Qu6zy
+         orPr2Qv1+57x+PNqN9ebGA8uoYY3hPiTJBEcel0hDb/snOlKLzrcUMkONCbREACtqmUB
+         Hq4hmLEvSpP26VgCd3qQjcDs7oru5dSDg6P6ACg21JQexFnhzywhnvpOpGyUNJWMFYHr
+         tFctx4VubDwBO7HRLr8hoqVvXn7Z5zcxhuQwd+XxYZGHYS5V3FGWrqVO7ksYAHb6F4M6
+         tQ/AjsDLAQ99Ha3B9B6xwCo7ZEUfx/AVJOHPpxqP2aXBaqY7qpoAHC8anHc8X9k74QP0
+         y3Ng==
+X-Gm-Message-State: AFqh2kr5caOyYS+Tx2H13NT2olTdqFaT4iv8WWI5oEbKLEPJXWd1oi0N
+        pf9JOir0zqw69xO8xPHo0LY=
+X-Google-Smtp-Source: AMrXdXutlXFWfVgcDAhZIIV7axYmi0fKCKZsAkx3faC454CblA1coJQ2Xu64WKn1Dbt/NkUSasU2bA==
+X-Received: by 2002:a17:903:cd:b0:194:721e:611d with SMTP id x13-20020a17090300cd00b00194721e611dmr7215057plc.14.1674076520987;
+        Wed, 18 Jan 2023 13:15:20 -0800 (PST)
 Received: from ?IPV6:2620:15c:211:201:22ae:3ae3:fde6:2308? ([2620:15c:211:201:22ae:3ae3:fde6:2308])
-        by smtp.gmail.com with ESMTPSA id kx8-20020a17090b228800b00218d894fac3sm1811640pjb.3.2023.01.18.13.14.51
+        by smtp.gmail.com with ESMTPSA id h2-20020a170902f7c200b0019327f40bfasm20784319plw.119.2023.01.18.13.15.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Jan 2023 13:14:52 -0800 (PST)
-Message-ID: <638f5b7f-e0af-1021-24a6-d8bdc4101af7@acm.org>
-Date:   Wed, 18 Jan 2023 13:14:50 -0800
+        Wed, 18 Jan 2023 13:15:20 -0800 (PST)
+Message-ID: <52f6c811-bda9-7ae6-645b-daffe1ba7be3@acm.org>
+Date:   Wed, 18 Jan 2023 13:15:18 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.1
-Subject: Re: [PATCH v2] scsi: ufs: core: fix devfreq deadlocks
+Subject: Re: [PATCH] scsi: MAINTAINERS: Add entry for Exynos UFS driver
 Content-Language: en-US
-To:     Johan Hovold <johan+linaro@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Can Guo <quic_cang@quicinc.com>,
-        Andrew Halaney <ahalaney@redhat.com>
-References: <20230116161201.16923-1-johan+linaro@kernel.org>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     avri.altman@wdc.com, martin.petersen@oracle.com
+References: <CGME20230114023022epcas5p37521ca1f5a34c36e33e0d73bd0066aa8@epcas5p3.samsung.com>
+ <20230114080247.601312-1-alim.akhtar@samsung.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230116161201.16923-1-johan+linaro@kernel.org>
+In-Reply-To: <20230114080247.601312-1-alim.akhtar@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/16/23 08:12, Johan Hovold wrote:
-> There is a lock inversion and rwsem read-lock recursion in the devfreq
-> target callback which can lead to deadlocks.
+On 1/14/23 00:02, Alim Akhtar wrote:
+> Add maintainer entry for Exynos UFS driver.
+> 
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> ---
+>   MAINTAINERS | 6 ++++++
+>   1 file changed, 6 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 9033d9ec7196..a960327de27f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -21444,6 +21444,12 @@ L:	linux-scsi@vger.kernel.org
+>   S:	Supported
+>   F:	drivers/ufs/host/*dwc*
+>   
+> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER EXYNOS HOOKS
+> +M:	Alim Akhtar <alim.akhtar@samsung.com>
+> +L:	linux-scsi@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/ufs/host/ufs-exynos*
+> +
+>   UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER MEDIATEK HOOKS
+>   M:	Stanley Chu <stanley.chu@mediatek.com>
+>   L:	linux-scsi@vger.kernel.org
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
