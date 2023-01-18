@@ -2,98 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F21FC32793
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 21:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BA8C32793
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 22:55:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229746AbjARV7q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Jan 2023 16:59:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48202 "EHLO
+        id S230095AbjARWzX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Jan 2023 17:55:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbjARV7k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 16:59:40 -0500
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 143A65EFB4;
-        Wed, 18 Jan 2023 13:59:40 -0800 (PST)
-Received: by mail-pl1-f172.google.com with SMTP id y1so480091plb.2;
-        Wed, 18 Jan 2023 13:59:40 -0800 (PST)
+        with ESMTP id S229909AbjARWy4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 17:54:56 -0500
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF9D64EE3;
+        Wed, 18 Jan 2023 14:54:55 -0800 (PST)
+Received: by mail-pj1-f54.google.com with SMTP id v10-20020a17090abb8a00b00229c517a6eeso4012427pjr.5;
+        Wed, 18 Jan 2023 14:54:55 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Q5Lvd5Mvxqck3fJBa5/+a5U8omDaF2GvQNzIqnYVLL0=;
-        b=g0I3M9JpaPXCdnK5sQU1LXAUREXYcKu63qOVs66rnMKDdtBc6G48p/gl5xYpO3UNwz
-         aTWSed+kWYzYhvJLYVIKR7mLH+ea7M235yZIFPDACUVDbWansklQ22n+aoKjx8aNcEC7
-         YVmbNenl/KeyOsCxh3m1OE88ryvMEmfXlB9JfKwusYvpgI/iJNc/UCBu/M49eacNH0nN
-         slS4yO5+JveWNzELC3MGNat2/MVDyd6VglNPL/kw3FjRbdOALIDiuzqJpjQ7YuGjMffI
-         8QF4T78caEK6RwYjt3cr6NSV/iQkr6EEmIUprDUt02GNQP9u3MVJC0v+y38hynfsbXno
-         5JPQ==
-X-Gm-Message-State: AFqh2kq9dMSw4jmP6nUCW+wZeyMBhZs2NFAYiQtoh/YyPHAvujNYF7i4
-        yD4tLn/cNy3wOF/ix2Q6jsc=
-X-Google-Smtp-Source: AMrXdXuAQfX7bnbd32O521ddbozFMQNiGD8+kGTXJCZGdTXWHS48iW72QMEKxv6bCZZI5ND3GbUz/g==
-X-Received: by 2002:a17:902:bd83:b0:193:2bc9:eb25 with SMTP id q3-20020a170902bd8300b001932bc9eb25mr8807142pls.20.1674079179442;
-        Wed, 18 Jan 2023 13:59:39 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:22ae:3ae3:fde6:2308? ([2620:15c:211:201:22ae:3ae3:fde6:2308])
-        by smtp.gmail.com with ESMTPSA id a7-20020a1709027e4700b00192740bb02dsm22260907pln.45.2023.01.18.13.59.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Jan 2023 13:59:38 -0800 (PST)
-Message-ID: <4bedb8bf-241f-03d8-9f84-1e070ab4c3d8@acm.org>
-Date:   Wed, 18 Jan 2023 13:59:36 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v4 1/1] scsi: ufs: core: fix device management cmd timeout
- flow
-Content-Language: en-US
-To:     Mason Zhang <mason.zhang@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Peter Wang <peter.wang@mediatek.com>,
-        Peng Zhou <peng.zhou@mediatek.com>, wsd_upstream@mediatek.com
-References: <20221216032532.1280-1-mason.zhang@mediatek.com>
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=KlYumYyYBJmIWh0Km6C1yyftclaPkipz1dA+5CLJEE0=;
+        b=Q60Z3QgjXurT6mln/hXAQa4vxAXeM9qoQ7SS/4qsj9qV9SUyEd3MhigVrIhzsd5dkU
+         FO2ZYXxmqemY71QusFTiW0k5ckqvfPl1LdomG7uLUp3RPK6HSbYAVnjQ7EnFo5x7LLl2
+         9Rd8ppelRLKgsfy+G8M8dxm3EzmQWgc3iOgvILJDcV6h4RShki2A6GzuoRVQXQ+ublot
+         /s2oEYBuH1IW2wAx6hfzTVcQY78CWNuVq7zV3r6t/ke9nWZUCjkX0ZHbxBLI1BVMMm9E
+         W8rHE+tNFlFhmKlmrp8Lye7WJmegPOA9LYKVQabZOhfrBzGFCnRX+SNargi0nAxldc7u
+         IxRQ==
+X-Gm-Message-State: AFqh2koLL3X/UJCOFwH0chhcXXkoVnTHJAyLbELWSTSOYrP68FkKIlb/
+        2oOCKDysOyIOmsbbUGaeV7XglyAp5Ig=
+X-Google-Smtp-Source: AMrXdXtL0n7lBIbFjpdDrKzJVsIIzbhUts2scfbuzZzuwj9JMQtzgn8jpyvLJBkcez8sz24LMd39NQ==
+X-Received: by 2002:a17:902:f650:b0:192:b43e:272 with SMTP id m16-20020a170902f65000b00192b43e0272mr10623725plg.53.1674082495430;
+        Wed, 18 Jan 2023 14:54:55 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:22ae:3ae3:fde6:2308])
+        by smtp.gmail.com with ESMTPSA id u7-20020a17090341c700b00186e34524e3sm23649466ple.136.2023.01.18.14.54.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Jan 2023 14:54:54 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221216032532.1280-1-mason.zhang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 0/9] Add support for segments smaller than one page
+Date:   Wed, 18 Jan 2023 14:54:38 -0800
+Message-Id: <20230118225447.2809787-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.39.0.246.g2a6d74b583-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/15/22 19:25, Mason Zhang wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index b1f59a5fe632..fa86ce80f350 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -3008,6 +3008,22 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
->   		} else {
->   			dev_err(hba->dev, "%s: failed to clear tag %d\n",
->   				__func__, lrbp->task_tag);
-> +
-> +			spin_lock_irqsave(&hba->outstanding_lock, flags);
-> +			pending = test_bit(lrbp->task_tag,
-> +					   &hba->outstanding_reqs);
-> +			if (pending)
-> +				hba->dev_cmd.complete = NULL;
-> +			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> +
-> +			if (!pending) {
-> +				/*
-> +				 * The completion handler ran while we tried to
-> +				 * clear the command.
-> +				 */
-> +				time_left = 1;
-> +				goto retry;
-> +			}
->   		}
->   	}
+Hi Jens,
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Several embedded storage controllers need support for DMA segments that are
+smaller than the size of one virtual memory page. Hence this patch series.
+Please consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Changes compared to v2:
+- For SCSI drivers, only set flag QUEUE_FLAG_SUB_PAGE_SEGMENTS if necessary.
+- In the scsi_debug patch, sorted kernel module parameters alphabetically.
+  Only set flag QUEUE_FLAG_SUB_PAGE_SEGMENTS if necessary.
+- Added a patch for the UFS Exynos driver that enables
+  CONFIG_BLK_SUB_PAGE_SEGMENTS if the page size exceeds 4 KiB.
+
+Changes compared to v1:
+- Added a CONFIG variable that controls whether or not small segment support
+  is enabled.
+- Improved patch descriptions.
+
+Bart Van Assche (9):
+  block: Introduce QUEUE_FLAG_SUB_PAGE_SEGMENTS and
+    CONFIG_BLK_SUB_PAGE_SEGMENTS
+  block: Support configuring limits below the page size
+  block: Support submitting passthrough requests with small segments
+  block: Add support for filesystem requests and small segments
+  block: Add support for small segments in blk_rq_map_user_iov()
+  scsi_debug: Support configuring the maximum segment size
+  null_blk: Support configuring the maximum segment size
+  scsi: core: Set BLK_SUB_PAGE_SEGMENTS for small max_segment_size
+    values
+  scsi: ufs: exynos: Select CONFIG_BLK_SUB_PAGE_SEGMENTS for lage page
+    sizes
+
+ block/Kconfig                     |  9 +++++++
+ block/blk-map.c                   | 43 ++++++++++++++++++++++++++-----
+ block/blk-merge.c                 |  6 +++--
+ block/blk-mq.c                    |  2 ++
+ block/blk-settings.c              | 20 ++++++++------
+ block/blk.h                       | 22 +++++++++++-----
+ drivers/block/null_blk/main.c     | 21 ++++++++++++---
+ drivers/block/null_blk/null_blk.h |  1 +
+ drivers/scsi/scsi_debug.c         | 15 +++++++++++
+ drivers/scsi/scsi_lib.c           |  3 +++
+ drivers/ufs/host/Kconfig          |  1 +
+ include/linux/blkdev.h            |  7 +++++
+ 12 files changed, 125 insertions(+), 25 deletions(-)
+
