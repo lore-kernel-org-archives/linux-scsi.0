@@ -2,83 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087E2C38147
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 22:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF39C32793
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 23:02:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230115AbjARWzd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Jan 2023 17:55:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50774 "EHLO
+        id S229626AbjARXCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Jan 2023 18:02:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230152AbjARWzL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 17:55:11 -0500
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04F33B468;
-        Wed, 18 Jan 2023 14:55:11 -0800 (PST)
-Received: by mail-pl1-f178.google.com with SMTP id d3so566319plr.10;
-        Wed, 18 Jan 2023 14:55:11 -0800 (PST)
+        with ESMTP id S229476AbjARXCu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 18:02:50 -0500
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C20B818B29
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2023 15:02:48 -0800 (PST)
+Received: by mail-pj1-x102a.google.com with SMTP id z1-20020a17090a66c100b00226f05b9595so133074pjl.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2023 15:02:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=07OSw5FmIQ7xXLdCpaMJ2YrxM41emfDFK9D8MsKkq8M=;
+        b=zq2N4WrKYZfksw4OJ5HtwizKo1VarEriJOuecPceQLTn6xFyO5y3qnCR4TnpbXg8u4
+         xo1XHvkvAHpi15WGwuQ7IQvMTQx1JUOyrNtgYM5H9+GXw02jL2XKSND+JMKZ0oQ3j62z
+         EH0p418lWAsVP0OJP6UgVzus76ocox/OGzSFdqe9PjaH5UCJ0L31YLofs+AE+cuB5hj7
+         MAMgAGa00GPb8s7XCwSgFnZSh7ssNGe2DQcZLv17hdqY8c6Bza9qZD/9+T4zIdnrKu86
+         KtLZ6n3QyczTmPm44ESNP0wcYTpfxzq0Hy5t7lG/FNSQsyogC2ekIZJgsBSYMWTiqgjt
+         yNbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=O4iBtXHjSJgcJqJAuc3ZI/3Wh+WcZqDuUJSQ66mgoGQ=;
-        b=7BtFzqL3fmAmgJyx6xo4SAoRIuFxQ8uykPMYDjUuGmxeqOvX7PSaJ2bpjdaA5XXcDo
-         N5UzQ0eIGVvkuWP4a8B7UFYgu3aFAujY5mABwPJc+stS1RK/dZTryaD+6nD9e45NuiQF
-         YvKlWbTTtwI8CoOUUvuDEW9sVedjgpuKgDHDu4rNvbiKaevpe+EzJbV4MRyGJWyF9KMZ
-         uDpFoA+2jPtrzPyrsTT7czBSKk4rJcRYZSAQoVvJSVRF5MB3tPMg+AJBD5QuxmYFZ6ML
-         ju6TRmwXxpvjkZ91fjWvj669k8Du04lxh6Zz1go5B1P1PYOp3/hnMHedStm2QqRY+GqZ
-         RqsA==
-X-Gm-Message-State: AFqh2kq2UmHYoh5GhSqozbsXK52aSzazmsga34/mrjB3YVH4BzMdro+v
-        qGd64Ck3Vlttbr+1pEtS+CE=
-X-Google-Smtp-Source: AMrXdXs478pkhRkiVXxjniYY/Ww1GTTsv4PcTU8Ab9oYSqljYBV19BC4RHPZlTH4dDBaIRS+PadWuQ==
-X-Received: by 2002:a17:903:32c1:b0:194:7c95:dc3c with SMTP id i1-20020a17090332c100b001947c95dc3cmr12594316plr.12.1674082510455;
-        Wed, 18 Jan 2023 14:55:10 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:22ae:3ae3:fde6:2308])
-        by smtp.gmail.com with ESMTPSA id u7-20020a17090341c700b00186e34524e3sm23649466ple.136.2023.01.18.14.55.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jan 2023 14:55:09 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     Jens Axboe <axboe@kernel.dk>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=07OSw5FmIQ7xXLdCpaMJ2YrxM41emfDFK9D8MsKkq8M=;
+        b=cejzW6pByByvg/XR3L8tuXI0Ie7FA9HsOrElPwqS+a3pKUOTNlJhAx20cRSBK+hfEs
+         Xz3JggfbqsGWbXC5B3BxGibPi1ay8cAAiW5/v9aw3EW1RhefcUG51trP0Tape7VxrnSH
+         uabExF2sI7M8dNRixPzb82XNb4xS6ZKLxiwa0bSuLLOGBhe714jDsHkbFSHTIqG656BF
+         X4kiXDGV6obDikT2Ouxl3Iz6d2AzMSOl57nmR6+1ENynsN1A17peoZwiJDZuaNBgPTMn
+         Gnr5mofGR5GP8PLIgQzqiqoD0UsLb20gE1mX3jV2ELNLJNLorWGSuzyguDcFCr+7Gg+X
+         wwXw==
+X-Gm-Message-State: AFqh2kq/WfTM/IRCsBOJ/WbrOA+Xk2fwCzUSLs7S4U1ELJ0c6XjajXuz
+        efgNvANmpb6NLeB+JdzXElBn+w==
+X-Google-Smtp-Source: AMrXdXvDv5AwrPXgKuAokTxyziBbKpue7MJv/IAdgGNI4xoTM3/KrTc3+qwAkAsD4lO4plESqF3NGg==
+X-Received: by 2002:a05:6a20:e685:b0:b6:3e6e:af95 with SMTP id mz5-20020a056a20e68500b000b63e6eaf95mr1986348pzb.2.1674082968107;
+        Wed, 18 Jan 2023 15:02:48 -0800 (PST)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id n15-20020a170902d2cf00b00194bea457e7sm1507551plc.292.2023.01.18.15.02.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Jan 2023 15:02:47 -0800 (PST)
+Message-ID: <4f308b47-e08c-efa6-6a86-965ba6761350@kernel.dk>
+Date:   Wed, 18 Jan 2023 16:02:45 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3 1/9] block: Introduce QUEUE_FLAG_SUB_PAGE_SEGMENTS and
+ CONFIG_BLK_SUB_PAGE_SEGMENTS
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v3 9/9] scsi: ufs: exynos: Select CONFIG_BLK_SUB_PAGE_SEGMENTS for lage page sizes
-Date:   Wed, 18 Jan 2023 14:54:47 -0800
-Message-Id: <20230118225447.2809787-10-bvanassche@acm.org>
-X-Mailer: git-send-email 2.39.0.246.g2a6d74b583-goog
-In-Reply-To: <20230118225447.2809787-1-bvanassche@acm.org>
+        Keith Busch <kbusch@kernel.org>
 References: <20230118225447.2809787-1-bvanassche@acm.org>
-MIME-Version: 1.0
+ <20230118225447.2809787-2-bvanassche@acm.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20230118225447.2809787-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since the maximum segment size supported by the Exynos controller is 4
-KiB, this controller needs CONFIG_BLK_SUB_PAGE_SEGMENTS if the page size
-exceeds 4 KiB.
+On 1/18/23 3:54 PM, Bart Van Assche wrote:
+> Prepare for introducing support for segments smaller than the page size
+> by introducing the request queue flag QUEUE_FLAG_SUB_PAGE_SEGMENTS.
+> Introduce CONFIG_BLK_SUB_PAGE_SEGMENTS to prevent that performance of
+> block drivers that support segments >= PAGE_SIZE would be affected.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Keith Busch <kbusch@kernel.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  block/Kconfig          | 9 +++++++++
+>  include/linux/blkdev.h | 7 +++++++
+>  2 files changed, 16 insertions(+)
+> 
+> diff --git a/block/Kconfig b/block/Kconfig
+> index 5d9d9c84d516..e85061d2175b 100644
+> --- a/block/Kconfig
+> +++ b/block/Kconfig
+> @@ -35,6 +35,15 @@ config BLOCK_LEGACY_AUTOLOAD
+>  	  created on demand, but scripts that manually create device nodes and
+>  	  then call losetup might rely on this behavior.
+>  
+> +config BLK_SUB_PAGE_SEGMENTS
+> +       bool "Support segments smaller than the page size"
+> +       default n
+> +       help
+> +	  Most storage controllers support DMA segments larger than the typical
+> +	  size of a virtual memory page. Some embedded controllers only support
+> +	  DMA segments smaller than the page size. Enable this option to support
+> +	  such controllers.
 
-Cc: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Kiwoong Kim <kwmad.kim@samsung.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+This should not be a visible option at all, affected drivers should just
+select it.
 
-diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
-index 4cc2dbd79ed0..376a4039912d 100644
---- a/drivers/ufs/host/Kconfig
-+++ b/drivers/ufs/host/Kconfig
-@@ -117,6 +117,7 @@ config SCSI_UFS_TI_J721E
- config SCSI_UFS_EXYNOS
- 	tristate "Exynos specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && (ARCH_EXYNOS || COMPILE_TEST)
-+	select BLK_SUB_PAGE_SEGMENTS if PAGE_SIZE > 4096
- 	help
- 	  This selects the Samsung Exynos SoC specific additions to UFSHCD
- 	  platform driver.  UFS host on Samsung Exynos SoC includes HCI and
+-- 
+Jens Axboe
+
+
