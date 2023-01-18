@@ -2,80 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8A35C32793
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 21:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F21FC32793
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Jan 2023 21:59:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbjARVQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Jan 2023 16:16:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44482 "EHLO
+        id S229746AbjARV7q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Jan 2023 16:59:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230430AbjARVQp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 16:16:45 -0500
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7795E37543;
-        Wed, 18 Jan 2023 13:16:44 -0800 (PST)
-Received: by mail-pl1-f170.google.com with SMTP id y1so374241plb.2;
-        Wed, 18 Jan 2023 13:16:44 -0800 (PST)
+        with ESMTP id S229608AbjARV7k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 16:59:40 -0500
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 143A65EFB4;
+        Wed, 18 Jan 2023 13:59:40 -0800 (PST)
+Received: by mail-pl1-f172.google.com with SMTP id y1so480091plb.2;
+        Wed, 18 Jan 2023 13:59:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XjsummV7518A+4FcdJk2/pYHPUTTMOOZZxC0gC0Y1Jo=;
-        b=oDnHKnSmaxosdOGI8rnBTaqK7Qvzg1KPD+rQiqJrexqaLD+Je3aIQe3xn5QNBXjhKW
-         DHLzIVXBn/kAMRU1z5fZqN9WiMSzxxcM2PMOSjmgmuNvzH6ekYIZVLeesRLnOg3ahJDE
-         DILNo1Q2cjZ9ZpWsNs6RpMOxD+CKhxRrUdgvqPnv0b3xplVzp05tmC8ae+sfuRwalPP3
-         ADlVWqEm0JqDxRzM4kWwRwjchmQsPbPe6Va2aunzGeAIP1+kJOi1y8zO87ZpVj8/lsEM
-         /ddK6ocQ7Fbm0Mj3mTCMlaY+d0IPE8WnS9QBiYye3fo6iRLbb1NkyOfSAUAfac2ZDIBY
-         QOtw==
-X-Gm-Message-State: AFqh2krrx07zmk1EP1mCbw7NR+Lph7hwyvUgTZCLG5nXaA/mSaOiy9CK
-        UY5b5Zrz3L94BKUDHGd/Qyw=
-X-Google-Smtp-Source: AMrXdXtbrdnw+aYJeP5KSNkywGAs872/lpchih0psx1ivHb9yNa6lmnXblMOkpKgSDsL5S43w1nLaQ==
-X-Received: by 2002:a17:902:aa48:b0:194:892b:8654 with SMTP id c8-20020a170902aa4800b00194892b8654mr8788300plr.17.1674076603915;
-        Wed, 18 Jan 2023 13:16:43 -0800 (PST)
+        bh=Q5Lvd5Mvxqck3fJBa5/+a5U8omDaF2GvQNzIqnYVLL0=;
+        b=g0I3M9JpaPXCdnK5sQU1LXAUREXYcKu63qOVs66rnMKDdtBc6G48p/gl5xYpO3UNwz
+         aTWSed+kWYzYhvJLYVIKR7mLH+ea7M235yZIFPDACUVDbWansklQ22n+aoKjx8aNcEC7
+         YVmbNenl/KeyOsCxh3m1OE88ryvMEmfXlB9JfKwusYvpgI/iJNc/UCBu/M49eacNH0nN
+         slS4yO5+JveWNzELC3MGNat2/MVDyd6VglNPL/kw3FjRbdOALIDiuzqJpjQ7YuGjMffI
+         8QF4T78caEK6RwYjt3cr6NSV/iQkr6EEmIUprDUt02GNQP9u3MVJC0v+y38hynfsbXno
+         5JPQ==
+X-Gm-Message-State: AFqh2kq9dMSw4jmP6nUCW+wZeyMBhZs2NFAYiQtoh/YyPHAvujNYF7i4
+        yD4tLn/cNy3wOF/ix2Q6jsc=
+X-Google-Smtp-Source: AMrXdXuAQfX7bnbd32O521ddbozFMQNiGD8+kGTXJCZGdTXWHS48iW72QMEKxv6bCZZI5ND3GbUz/g==
+X-Received: by 2002:a17:902:bd83:b0:193:2bc9:eb25 with SMTP id q3-20020a170902bd8300b001932bc9eb25mr8807142pls.20.1674079179442;
+        Wed, 18 Jan 2023 13:59:39 -0800 (PST)
 Received: from ?IPV6:2620:15c:211:201:22ae:3ae3:fde6:2308? ([2620:15c:211:201:22ae:3ae3:fde6:2308])
-        by smtp.gmail.com with ESMTPSA id p7-20020a170902e74700b001885041d7b8sm12609262plf.293.2023.01.18.13.16.42
+        by smtp.gmail.com with ESMTPSA id a7-20020a1709027e4700b00192740bb02dsm22260907pln.45.2023.01.18.13.59.37
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Jan 2023 13:16:43 -0800 (PST)
-Message-ID: <377df20f-332e-4ec4-16ac-ca4359e0919d@acm.org>
-Date:   Wed, 18 Jan 2023 13:16:41 -0800
+        Wed, 18 Jan 2023 13:59:38 -0800 (PST)
+Message-ID: <4bedb8bf-241f-03d8-9f84-1e070ab4c3d8@acm.org>
+Date:   Wed, 18 Jan 2023 13:59:36 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.1
-Subject: Re: [PATCH] include: ufs: Remove duplicate entry
+Subject: Re: [PATCH v4 1/1] scsi: ufs: core: fix device management cmd timeout
+ flow
 Content-Language: en-US
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     avri.altman@wdc.com, martin.petersen@oracle.com
-References: <CGME20230114022406epcas5p4963a02aee5acb201c5e3495b6cfd44fe@epcas5p4.samsung.com>
- <20230114022010.27088-1-alim.akhtar@samsung.com>
+To:     Mason Zhang <mason.zhang@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Peter Wang <peter.wang@mediatek.com>,
+        Peng Zhou <peng.zhou@mediatek.com>, wsd_upstream@mediatek.com
+References: <20221216032532.1280-1-mason.zhang@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230114022010.27088-1-alim.akhtar@samsung.com>
+In-Reply-To: <20221216032532.1280-1-mason.zhang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/13/23 18:20, Alim Akhtar wrote:
-> PA_GRANULARITY is duplicated, let's delete one of the entry.
-> 
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> ---
->   include/ufs/unipro.h | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
-> index 6c553f98fe57..dc9dd1d23f0f 100644
-> --- a/include/ufs/unipro.h
-> +++ b/include/ufs/unipro.h
-> @@ -141,7 +141,6 @@
->   #define PA_SAVECONFIGTIME	0x15A4
->   #define PA_RXHSUNTERMCAP	0x15A5
->   #define PA_RXLSTERMCAP		0x15A6
-> -#define PA_GRANULARITY		0x15AA
->   #define PA_HIBERN8TIME		0x15A7
->   #define PA_LOCALVERINFO		0x15A9
->   #define PA_GRANULARITY		0x15AA
+On 12/15/22 19:25, Mason Zhang wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index b1f59a5fe632..fa86ce80f350 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -3008,6 +3008,22 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+>   		} else {
+>   			dev_err(hba->dev, "%s: failed to clear tag %d\n",
+>   				__func__, lrbp->task_tag);
+> +
+> +			spin_lock_irqsave(&hba->outstanding_lock, flags);
+> +			pending = test_bit(lrbp->task_tag,
+> +					   &hba->outstanding_reqs);
+> +			if (pending)
+> +				hba->dev_cmd.complete = NULL;
+> +			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+> +
+> +			if (!pending) {
+> +				/*
+> +				 * The completion handler ran while we tried to
+> +				 * clear the command.
+> +				 */
+> +				time_left = 1;
+> +				goto retry;
+> +			}
+>   		}
+>   	}
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
