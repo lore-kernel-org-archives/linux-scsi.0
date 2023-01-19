@@ -2,80 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA333C678D4
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 21:26:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB6CC46467
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 22:18:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230331AbjASV0f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Jan 2023 16:26:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39952 "EHLO
+        id S229752AbjASWSE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Jan 2023 17:18:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230329AbjASVYh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2023 16:24:37 -0500
-Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB19783D7
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 13:20:04 -0800 (PST)
-Received: from localhost (unknown [IPv6:2601:281:8300:73::5f6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id 6E5152C0;
-        Thu, 19 Jan 2023 21:20:04 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 6E5152C0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1674163204; bh=bwJ8EaHnQJNTxU8cdm67Qd0Ex0YLDXztdVnkHzGC0dM=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=KZhBHBSYoplpG5b7ZUE8sZQkftfWubHImSH8tuglQV4FZvCKItlEtVNQTFaiHE77a
-         nbFMXOdT/7flIS+IM0zx+XLjGeIY3zGPWVM+hSnYXYmgWxJcc35iyYfgmlyOMtrrLm
-         S/vrLil27HZ/9H4cgWoUf6Gn2mggR9oEZL9vIyNOjPKo4Aqcw4dGgY+2rhuySdIq4O
-         8s59MCAL7IgmERlv7BIOIUSouo6lAvS1N3iqIxY0Ks4Mby8bq7BNYiaaa5gV/3g0od
-         gZFLWlAit9+/GLvCS/5e9eVXpssrca0wwqCZ4+PQKJOwhEjhcDW/G2oJ7wT4eb3gx0
-         Do3EpA9pAfe0g==
-From:   Jonathan Corbet <Corbet@lwn.net>
-To:     shijm <junming@nfschina.com>
-Cc:     linux-scsi@vger.kernel.org, shijm <junming@nfschina.com>
-Subject: Re: [PATCH] Documentation: add exception capture function
-In-Reply-To: <20230115110535.5597-1-junming@nfschina.com>
-References: <20230115110535.5597-1-junming@nfschina.com>
-Date:   Thu, 19 Jan 2023 14:20:03 -0700
-Message-ID: <87zgae6x30.fsf@meer.lwn.net>
+        with ESMTP id S229688AbjASWRb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2023 17:17:31 -0500
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9117B58973
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 14:00:00 -0800 (PST)
+Received: by mail-pg1-f177.google.com with SMTP id e10so2680839pgc.9
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 14:00:00 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=k6+z3RrBrGOdhuWsw6owQDU00pyPrBlvynhUoTqUjz4=;
+        b=aEHY9VFZWQNrykXQtYDlhz3eqvIRAhnj49KGkQkuDNgHzJS2W5fsn5bSRKTdifI3Rx
+         dUgw5BjNXMlBXr2g/BkttracoERnGGjvoP1eJnz3NwKxw6uB2LmKnZ6QL2qxH7zzYDcm
+         hDwJy59+UyUCILC5c2bKhcYhDoc8rW8vjyy2DYDcGrBTo9gw5z7XfrCqXRSWtlUn73hD
+         z9Iq/4/Vr+KakzfnTCJa9Y0VxroPi301H2wK+BjJZlrm/ugTbDtsY7qe70ftqETJfy0c
+         7BvoTqtd5wF7fuuuOvJxQdeBdWGP32kaCo0hKpQoFiLoajEHLVhKGuQekh09K9MbVHF0
+         Dmdw==
+X-Gm-Message-State: AFqh2koHsRUMh8Wf9nMbIgXYfWH1LIOWl54jh0n+x6e8uCSddmvCAA+i
+        V7+C5WPK8WfTg7L39DoAFpbBfc2d1tc=
+X-Google-Smtp-Source: AMrXdXtLu0shDZ2J/lHbNJVZyl9K0SYd6jTGk9O5iobNllCgwszGmhyvCJtIgAKE4Wi2qHP/qqUvgw==
+X-Received: by 2002:a05:6a00:2147:b0:58d:e2b0:e480 with SMTP id o7-20020a056a00214700b0058de2b0e480mr7986455pfk.17.1674165599127;
+        Thu, 19 Jan 2023 13:59:59 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:ff60:f896:307d:56f7? ([2620:15c:211:201:ff60:f896:307d:56f7])
+        by smtp.gmail.com with ESMTPSA id c205-20020a624ed6000000b00580a0bb411fsm3721868pfb.174.2023.01.19.13.59.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Jan 2023 13:59:58 -0800 (PST)
+Message-ID: <34076291-619f-203d-c019-7b3e303daaf2@acm.org>
+Date:   Thu, 19 Jan 2023 13:59:56 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] Documentation: add exception capture function
+Content-Language: en-US
+To:     Jonathan Corbet <Corbet@lwn.net>, shijm <junming@nfschina.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Mike Christie <michael.christie@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20230115110535.5597-1-junming@nfschina.com>
+ <87zgae6x30.fsf@meer.lwn.net>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <87zgae6x30.fsf@meer.lwn.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-shijm <junming@nfschina.com> writes:
+On 1/19/23 13:20, Jonathan Corbet wrote:
+> Assuming that this script is still useful, we should consider moving it
+> to tools/.
 
-> Add exception capture function
->
-> Signed-off-by: shijm <junming@nfschina.com>
-
-This says what you are doing but not why; nobody has felt the need to
-mess with this script for a while; why do we need to change it now?
-
->  Documentation/target/tcm_mod_builder.py | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
-> index 54492aa813b9..5b28d50ed80f 100755
-> --- a/Documentation/target/tcm_mod_builder.py
-> +++ b/Documentation/target/tcm_mod_builder.py
-> @@ -29,8 +29,9 @@ def tcm_mod_create_module_subdir(fabric_mod_dir_var):
->  		return 1
->  
->  	print "Creating fabric_mod_dir: " + fabric_mod_dir_var
-> -	ret = os.mkdir(fabric_mod_dir_var)
-> -	if ret:
-> +    try:
-> +	    ret = os.mkdir(fabric_mod_dir_var)
-> +	except:
->  		tcm_mod_err("Unable to mkdir " + fabric_mod_dir_var)
-
-Bare "except" clauses are generally a bad idea in my exception; I assume
-you want to catch IOError here?
-
-Assuming that this script is still useful, we should consider moving it
-to tools/.
+I'm not sure this script has ever been used after it was added to the 
+kernel tree.
 
 Thanks,
 
-jon
+Bart.
+
