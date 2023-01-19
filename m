@@ -2,94 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06F92C38159
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 00:30:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A77C38159
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 00:45:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229563AbjASAaP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Jan 2023 19:30:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46070 "EHLO
+        id S229620AbjASApA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Jan 2023 19:45:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbjASAaO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 19:30:14 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98DE15FD72
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2023 16:30:13 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30ILmja2006391;
-        Thu, 19 Jan 2023 00:21:36 GMT
+        with ESMTP id S229379AbjASApA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2023 19:45:00 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E291577C6;
+        Wed, 18 Jan 2023 16:44:58 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30ILmxVX008047;
+        Thu, 19 Jan 2023 00:44:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=t77aBzxSMH4KCpgSGEHktj+qXI4T7eae+gvXnwxz2xw=;
- b=mLZ9kdg/Pa6XLTXZ8Hh4hfN69wnCowR0gQx4gzJfCxOgR6BQqN2JYlxQ9AruaIxWFnKf
- C2UIHEL34az7zFUQhR1NOsVwoJcXhaa00P75ejAj07Hd89cCSACzM/MLiLjykMyLAcyw
- bWPS0KEYHCu3uJQXSZ2yL5Y4gPH3QkoNJcH94TLbbSfsDC2Flr0A2eAwlP/hOZDmcp3f
- vvOg7BAxjKluaGYhcPFX00A41A78a6/bx+bkx2Iv7QGLSPIb1CDt/BNeSum26JRj+sWA
- J7uZXx9nZNfdEyd/pRTMA2V6YicIuddxcqm2SPNLd07CquZ3ek9yp7kX3oL8Wjm3KTmr Zw== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3mxt90a8-1
+ bh=GO2Z0ZHviyURBdvfR5AJmLQs5r5kf1lyD4v2iGNIJ1k=;
+ b=ss0b8p3uYgeGTugsfTF08d66nPPryrTBkOZgxSX+4KHv/zJKURgy7T2NVATcTUArxtE6
+ 7+jjfP8ieow9KHyN9tGbkEb3/Bwehw6dnBu5dYkgghFslZrU/0gkyT1GRjowQUDA3Uli
+ +3cmOy8FPT3GTdTVUdvMAZEBYzgEC23Y6BqD5ABjQsAcYZqDyT1OPlo/8wkvNavwcj92
+ pgEwCf5KQSbljjBVVKOO4MJ7m81uTmQIThIYp5hn9PaoDpSlzldTi3NBVS3xIvu0MniH
+ IbiznfRape4XphX7flNOWdn7cRa/A6MJwyF7LY97p14lF5pgQS1QW+Fl2YATVFg8govo pQ== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n3k6c90vh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Jan 2023 00:21:35 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30IMGfuu030120;
-        Thu, 19 Jan 2023 00:21:35 GMT
+        Thu, 19 Jan 2023 00:44:46 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30INUfhg033974;
+        Thu, 19 Jan 2023 00:44:45 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n6quaxw6y-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n6rgcdnmn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Jan 2023 00:21:35 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30J0LYOw007137;
-        Thu, 19 Jan 2023 00:21:34 GMT
+        Thu, 19 Jan 2023 00:44:45 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30J0ijFv007831;
+        Thu, 19 Jan 2023 00:44:45 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n6quaxw6c-1;
-        Thu, 19 Jan 2023 00:21:34 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n6rgcdnm5-1;
+        Thu, 19 Jan 2023 00:44:45 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Alexey V. Vissarionov" <gremlin@altlinux.org>
+To:     quic_cang@quicinc.com, linux-scsi@vger.kernel.org,
+        Asutosh Das <quic_asutoshd@quicinc.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-        storagedev@microchip.com, Don Brace <don.brace@microchip.com>,
-        lvc-project@linuxtesting.org
-Subject: Re: [PATCH] scsi: hpsa: fix allocation size for scsi_host_alloc()
-Date:   Wed, 18 Jan 2023 19:21:27 -0500
-Message-Id: <167408762163.3511288.15375211470460588388.b4-ty@oracle.com>
+        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        bvanassche@acm.org, avri.altman@wdc.com, mani@kernel.org,
+        beanhuo@micron.com, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v13 00/15] Add Multi Circular Queue Support
+Date:   Wed, 18 Jan 2023 19:44:39 -0500
+Message-Id: <167408782522.3511660.1673114118879533180.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230118031255.GE15213@altlinux.org>
-References: <20230116133140.GB8107@altlinux.org> <39006233-ff6f-82ad-b772-e00e789375a5@acm.org> <20230117095644.GA12547@altlinux.org> <30d3e555-4fb0-23df-abeb-e1c3dc41543e@ispras.ru> <20230117211201.GD15213@altlinux.org> <531f3f82-712c-eb0b-d22d-710e8a36b3c2@acm.org> <20230118031255.GE15213@altlinux.org>
+In-Reply-To: <cover.1673557949.git.quic_asutoshd@quicinc.com>
+References: <cover.1673557949.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.923,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-01-18_05,2023-01-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
- spamscore=0 malwarescore=0 mlxscore=0 mlxlogscore=903 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 mlxscore=0
+ malwarescore=0 spamscore=0 bulkscore=0 adultscore=0 mlxlogscore=753
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301190000
-X-Proofpoint-GUID: oTWeqShnIXp94XDq4-ax4wMBDB5lJhCF
-X-Proofpoint-ORIG-GUID: oTWeqShnIXp94XDq4-ax4wMBDB5lJhCF
+ definitions=main-2301190001
+X-Proofpoint-GUID: 2Yi9DElvndsguW6qHpp5o4dFwEPInyPe
+X-Proofpoint-ORIG-GUID: 2Yi9DElvndsguW6qHpp5o4dFwEPInyPe
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 18 Jan 2023 06:12:55 +0300, Alexey V. Vissarionov wrote:
+On Fri, 13 Jan 2023 12:48:37 -0800, Asutosh Das wrote:
 
-> On 2023-01-17 13:23:19 -0800, Bart Van Assche wrote:
+> This patch series is an implementation of UFS Multi-Circular Queue.
+> Please consider this series for next merge window.
+> This implementation has been verified on a Qualcomm & MediaTek platform.
 > 
->  > My understanding is that you used an incorrect commit hash.
->  > Hence, it is up to you to fix the commit hash.
-> 
-> ACK. Resending:
+> Thanks,
+> Asutosh
 > 
 > [...]
 
-Applied to 6.2/scsi-fixes, thanks!
+Applied to 6.3/scsi-queue, thanks!
 
-[1/1] scsi: hpsa: fix allocation size for scsi_host_alloc()
-      https://git.kernel.org/mkp/scsi/c/bbbd25499100
+[01/15] ufs: core: Probe for ext_iid support
+        https://git.kernel.org/mkp/scsi/c/6e1d850acff9
+[02/15] ufs: core: Introduce Multi-circular queue capability
+        https://git.kernel.org/mkp/scsi/c/305a357d3595
+[03/15] ufs: core: Defer adding host to scsi if mcq is supported
+        https://git.kernel.org/mkp/scsi/c/0cab4023ec7b
+[04/15] ufs: core: mcq: Add support to allocate multiple queues
+        https://git.kernel.org/mkp/scsi/c/57b1c0ef89ac
+[05/15] ufs: core: mcq: Configure resource regions
+        https://git.kernel.org/mkp/scsi/c/c263b4ef737e
+[06/15] ufs: core: mcq: Calculate queue depth
+        https://git.kernel.org/mkp/scsi/c/7224c806876e
+[07/15] ufs: core: mcq: Allocate memory for mcq mode
+        https://git.kernel.org/mkp/scsi/c/4682abfae2eb
+[08/15] ufs: core: mcq: Configure operation and runtime interface
+        https://git.kernel.org/mkp/scsi/c/2468da61ea09
+[09/15] ufs: core: mcq: Use shared tags for MCQ mode
+        https://git.kernel.org/mkp/scsi/c/0d33728fc0e7
+[10/15] ufs: core: Prepare ufshcd_send_command for mcq
+        https://git.kernel.org/mkp/scsi/c/22a2d563de14
+[11/15] ufs: core: mcq: Find hardware queue to queue request
+        https://git.kernel.org/mkp/scsi/c/854f84e7feeb
+[12/15] ufs: core: Prepare for completion in mcq
+        https://git.kernel.org/mkp/scsi/c/c30d8d010b5e
+[13/15] ufs: mcq: Add completion support of a cqe
+        https://git.kernel.org/mkp/scsi/c/f87b2c41822a
+[14/15] ufs: core: mcq: Add completion support in poll
+        https://git.kernel.org/mkp/scsi/c/ed975065c31c
+[15/15] ufs: core: mcq: Enable Multi Circular Queue
+        https://git.kernel.org/mkp/scsi/c/eacb139b77ff
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
