@@ -2,118 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60AF4C00A5A
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 16:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74970C46467
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 16:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229634AbjASQuJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Jan 2023 11:50:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42242 "EHLO
+        id S230303AbjASQvz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Jan 2023 11:51:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230359AbjASQuC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2023 11:50:02 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAFDC6A4C
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 08:49:57 -0800 (PST)
+        with ESMTP id S230210AbjASQvt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2023 11:51:49 -0500
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03A598CE60
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 08:51:45 -0800 (PST)
 Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230119164951epoutp02c14fbd41589867bd8947a9933d196332~7w9G0oCB30630606306epoutp02J
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 16:49:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230119164951epoutp02c14fbd41589867bd8947a9933d196332~7w9G0oCB30630606306epoutp02J
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230119165144epoutp046056e9550aa90d0bde1dd74dc584bdc6~7w_vL1NFI0362003620epoutp04F
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 16:51:44 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230119165144epoutp046056e9550aa90d0bde1dd74dc584bdc6~7w_vL1NFI0362003620epoutp04F
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1674146991;
-        bh=Y77O+7tmZm0PpAgkke1OEWnIQEpL6I3OPl40gRrIy9k=;
+        s=mail20170921; t=1674147104;
+        bh=exifaxuy3w7f0HxDChS6uAK5ne3KNv4/UnmsP89OK6s=;
         h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=a/tGy009mnpDBQ4tyxV4RzcbmZ2+VA6TqEvzlynn+lc9hEREit4rH/xpgNRjFetLF
-         jVgoQw3DSr/QebQaKmJ+aciZZeLpzeq7az56BZ7xwGjnTDEgPzhocKHQWRogMEcT64
-         a/aWdc16/pGWrxLruOYhW+a9RQt3eLMRYCZ4YlTM=
+        b=HAxZ5ckgNZ+N/VWMkfElwmlltmNlL9lK1AJ0kN18QigadW74Fgnp3fMMeBUAGvyT1
+         200L3dhUIj5eU5zUmPbIk4sRTh72lWmb2AeNe0bAGkZ6C7XGoHf28A5GHtrFjhqcGB
+         k128mWu6Mzi/BIhASrjP8FggKH4zpUdhowUhUX3A=
 Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20230119164950epcas5p21377f124fda2dc213214d17e22d54d32~7w9F32oLS0924509245epcas5p2I;
-        Thu, 19 Jan 2023 16:49:50 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.175]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4NyTBP1X2kz4x9Pp; Thu, 19 Jan
-        2023 16:49:49 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20230119165143epcas5p4f4fdbf7aa99fc3a09b03c26254c2705f~7w_uzVN3W2429924299epcas5p4G;
+        Thu, 19 Jan 2023 16:51:43 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.178]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4NyTDZ096dz4x9Pp; Thu, 19 Jan
+        2023 16:51:42 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
         epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        48.0E.10528.DA479C36; Fri, 20 Jan 2023 01:49:49 +0900 (KST)
+        1E.2E.10528.D1579C36; Fri, 20 Jan 2023 01:51:41 +0900 (KST)
 Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230119164948epcas5p1dc8143fe200f8dc2c3bee87e67e13477~7w9D3rZ0Z0064700647epcas5p14;
-        Thu, 19 Jan 2023 16:49:48 +0000 (GMT)
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20230119165141epcas5p454b53c718ae71ffe835b27c64452c712~7w_sqEVVL2429924299epcas5p4D;
+        Thu, 19 Jan 2023 16:51:41 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230119164948epsmtrp1bb92d39102cdc445c43abf68488e0677~7w9D2_QA92601726017epsmtrp13;
-        Thu, 19 Jan 2023 16:49:48 +0000 (GMT)
-X-AuditID: b6c32a49-c17ff70000012920-e9-63c974adc92b
+        20230119165141epsmtrp170c25026c83a550d8145d8695fcee449~7w_spL3bI2601726017epsmtrp1k;
+        Thu, 19 Jan 2023 16:51:41 +0000 (GMT)
+X-AuditID: b6c32a49-e75fa70000012920-b6-63c9751d6246
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        54.8A.17995.CA479C36; Fri, 20 Jan 2023 01:49:48 +0900 (KST)
+        25.9A.17995.D1579C36; Fri, 20 Jan 2023 01:51:41 +0900 (KST)
 Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
         (KnoxPortal) with ESMTPA id
-        20230119164947epsmtip1e5b94e1874e5bd3e05b243dafe0c82db~7w9CYpamk3183231832epsmtip1G;
-        Thu, 19 Jan 2023 16:49:47 +0000 (GMT)
+        20230119165139epsmtip18c91e3a5329958f2aa0df3d212db4f5a~7w_rEM7ma2568525685epsmtip1i;
+        Thu, 19 Jan 2023 16:51:39 +0000 (GMT)
 From:   "Alim Akhtar" <alim.akhtar@samsung.com>
 To:     "'Bart Van Assche'" <bvanassche@acm.org>,
         "'Martin K . Petersen'" <martin.petersen@oracle.com>
 Cc:     "'Jaegeuk Kim'" <jaegeuk@kernel.org>, <linux-scsi@vger.kernel.org>,
         "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
         "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
         "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Krzysztof Kozlowski'" <krzysztof.kozlowski@linaro.org>,
-        "'Chanho Park'" <chanho61.park@samsung.com>,
-        "'Bean Huo'" <beanhuo@micron.com>
-In-Reply-To: <20230112234215.2630817-3-bvanassche@acm.org>
-Subject: RE: [PATCH v2 2/3] scsi: ufs: Exynos: Fix the maximum segment size
-Date:   Thu, 19 Jan 2023 22:19:45 +0530
-Message-ID: <0a3601d92c26$0ac62f00$20528d00$@samsung.com>
+        "'Bean Huo'" <beanhuo@micron.com>,
+        "'Stanley Chu'" <stanley.chu@mediatek.com>,
+        "'Jinyoung Choi'" <j-young.choi@samsung.com>
+In-Reply-To: <20230112234215.2630817-4-bvanassche@acm.org>
+Subject: RE: [PATCH v2 3/3] scsi: ufs: Enable DMA clustering
+Date:   Thu, 19 Jan 2023 22:21:38 +0530
+Message-ID: <0a3701d92c26$4ddb0900$e9911b00$@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQMm5ykAdtwQU0o+6B5Pbw7bIF/e7AJG/876ATSzCQ2r7p+3QA==
+Thread-Index: AQMm5ykAdtwQU0o+6B5Pbw7bIF/e7ACiTKZFAMM6HQur/1HAcA==
 Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Tf0wTZxjHfe+OayEWzvLrpQOsN8iCpNBq2x2kDDM6d7NLZFn8Yy6uu7UX
-        irTX0itsMy7RaEAhU5sZpoXEBTJ0OG3osDSAKyAM6jaDg01gawKKiThKcAQ2ozFrOdj47/s8
-        7+d5v8/z/hCj0gAuE1dyLtbJMVYST8D8t/LyFNdcIZMyHMKp0Ny3ODUwexqjmpaeotR4MJ+a
-        83pQqnXSj1A3/7whoqa6hjGq8V4Apy6PvED2JNDjEwa6rW8eoX0dp3H6j9/6cPpcaz+g//ae
-        wuknD6cx+kxXB6CXfdnl8QerdBaWMbNOOcuZ7OZKrqKENLxrLDNqtEqVQlVEvUrKOcbGlpD6
-        t8sVeyut0T5JeS1jrYmmyhmeJwtf0zntNS5WbrHzrhKSdZitDrWjgGdsfA1XUcCxrmKVUrlL
-        EwU/rLJ03pnGHKvEJyvex3HHwNXEBhAvhoQaBgMTcTEtJXoBfDab3QASovovAG+fP48KwTKA
-        F3w3sY0K76WF9YUeAJvHgogQzAMYPvkjEqNwQgEDbXV4AxCLUwgzDM5kxBiUCCOwb6YfjzHx
-        RDE8/t31tV2TCQOc7BgCMR4jcuHAydJYWkIUwc65MVTQ22Do4twajhLbYXekBRUaksOnD9vX
-        RkghXofuE4MigUmH88NDopgvJH4Sw/pQ2/oEerja0owIOhk+HukSCVoG58/WiWI9QIKGrc9l
-        QtoCI5e9QNClsH+iBYshKJEHvT2FglUi/PzZHCJUSuCpOqlA58ITi7+um74E3Y2NcRubj3bu
-        Pwd2eDbN5dk0l2dT/57/vb4CWAfIYB28rYLlNQ4Vx37832Wb7DYfWHvCO98KgPDMUsEgQMRg
-        EEAxSqZIkrwjJqnEzHx6hHXajc4aK8sPAk30rN2oLNVkj/4BzmVUqYuUaq1Wqy7arVWR6ZJX
-        SkImKVHBuNgqlnWwzo06RBwvO4bU+l/e05Tt3juZ1vT1z+lfPtG3Xxrboc/RNV+8rYtc2//g
-        gzfzp6Zsi1hioOt+9xfDhueerAXZO1eQg/985G9tud4e4NsMqVm/bL0VSdd8X5buIGsn9tmq
-        JEfLwvRdWeYPBwLTSWP+ANufpiiuNmQc7c9XpCV9duRA/ZJ7ofpBgWQgS2ZkVnJSiG2RLYeC
-        U4fuROJ3ZfZmQpPhfexw/ZlvdJYL4sm+WenZ8cyC1IZqkigbs/1+X1eqHj3OmN9LC09wV1ds
-        1OEVfeGNxWXfI9FqbU91b7Mu2Tr6xqO7fonZhcXJh5TdWGdu7oLc3vFieMvWvqbtosoB072c
-        5ZzdYTuJ8RZGtRN18sy/ndNpI0sEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMIsWRmVeSWpSXmKPExsWy7bCSnO6akpPJBm8b1C1OPlnDZnHwYSeL
-        xbQPP5ktLu/XtniyfhazxaIb25gs9r7eym5xc8tRFovu6zvYLJYf/8fkwOVx+Yq3x+I9L5k8
-        Nq3qZPO4c20Pm8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8kFcEZx2aSk5mSWpRbp2yVwZWw8
-        d4ul4JtAxdf1r1gbGFfzdTFyckgImEisn/+GuYuRi0NIYAejxMtDC5kgEtIS1zdOYIewhSVW
-        /nvODlH0nFFi4fPnrCAJNgFdiR2L29hAbBGBFIkZCz6CFTELPGaSeNraxATRsZNRouvcU0aQ
-        Kk4BK4nGzetYQGxhAW+JG6uOAMU5OFgEVCUOttiDhHkFLCU2PrnADGELSpyc+YQFpIRZQE+i
-        bSPYFGYBeYntb+cwQxynIPHz6TJWiBucJCY2H2KHqBGXeHn0CPsERuFZSCbNQpg0C8mkWUg6
-        FjCyrGKUTC0ozk3PLTYsMMpLLdcrTswtLs1L10vOz93ECI5HLa0djHtWfdA7xMjEwXiIUYKD
-        WUmEl3/98WQh3pTEyqrUovz4otKc1OJDjNIcLErivBe6TsYLCaQnlqRmp6YWpBbBZJk4OKUa
-        mLwixA16uq1rH6zmXvDunPOn/ztD32wtZH7q1r+/2LbLYKH+ksUc75Xm3/nZYZ57Qzgy+qWY
-        6497V8Ievqkpipu6fsWcg+qisRuFZvHPPPmn6J7bh+kia1M27HR0nn3NdaZLTHSHZuG13NIt
-        F7IfyeYLxWwVyUm48CGt4HSZ6GPp2PaMmNrwkxtbz1z56eCq0ue3zakvfHN6pVq29KqWjy8n
-        f5opr7vCV+pFLkNdkWLyueopzNkvBGMOWGRkas9f+lla1lPpye4zi5zNBKOktiUbqllXBxiW
-        MIYJBZb+4P676d6F9AeZcaki2lNbXRsrNL2s8hTjZpz75CnzUOPLcfeHLm3z1m0rkO2svMOr
-        xFKckWioxVxUnAgACKJH1DYDAAA=
-X-CMS-MailID: 20230119164948epcas5p1dc8143fe200f8dc2c3bee87e67e13477
+X-Brightmail-Tracker: H4sIAAAAAAAAA01TfUwbZRz2vTuOgoHdCoOXmkLXBB0kZa1ry/FR3NhCziAOs0XjpsClPT5C
+        aWuvHW4misgYUAsli2ZrJsMS3CwLjRUqsgkdG+uabEsUKoKbgoKxS9hABC2YRcqB8t/ze97n
+        eX/P7/3gofxRXMCr0pkYo47WivFozHMjbY9EaParpdbJbNI/ewUng6EATl6facbIjxdCKGlt
+        68fJWZcdJR0/eBBysm8UIy0TAzh5yfcEIbv7J8H+p6mx8UKq61oQodzOZpyyObyAavAPY9Rf
+        riacWpybwqjWPiegltzJ1BmvBSmOPladW8nQGsYoYnRqvaZKV6ESFx4pPViqUEplElkWmSkW
+        6egaRiU+9FKxpKBKux5ZLDpBa83rVDHNsuK9eblGvdnEiCr1rEklZgwarUFuyGDpGtasq8jQ
+        MaZsmVT6vGJdWFZd+XXoCjD0xr/tnwtidaBzZwuI4kFCDn/sbwctIJrHJ64COPJlA8YVfwDY
+        0XN7s1gCcMb2Lbpl6b54M5JbGATwl/fdKFcEAZwfHgJhFU5I4EBXI94CeLx4QgOHp5PCGpQI
+        IbB+cRULa6KIbDjh+zwijOOIXGjzfIKHMUakwvbr4xt8DJEFl30BhMM7of/87IYXJVLgV/MX
+        NhOJYGjusw19PJEPXb2PUU6TCIOjXFJIjPPg0M3hSM5wCP7+52WEw3Hwoa9vkxfAYFtjZDg0
+        JCjo+EfA0ZVw/pILcPgF6B2/gIUlKJEGXYN7uVax0Lo2i3DOGNjUyOfUqfCDRwGMw8/Adosl
+        YmvzxdUcG9ht3zaXfdtc9m357f/36gSYEyQxBramgmEVBpmOqf3vutX6GjfYeM/pLw6AB9ML
+        GSMA4YERAHmoOD5mh8un5sdo6JOnGKO+1GjWMuwIUKwfdjsq2KXWr38InalUJs+SypVKpTxr
+        n1ImTox5TuVX84kK2sRUM4yBMW75EF6UoA7RdMQmpgjvZu9vPT3Q4TKPLR7LMT51cfeY0y37
+        qDzzwNEQ2aM6GDie+aDe2lXxZs7tkpVdU0nPluXm1ia3Lhfhp+99x/91/OUSKmltWZCSML1W
+        tJZ8H5syyS4runvL51mH6O+7qfK8kil0T41kdeFcYW2Ptuln75k6KMTi0q/2O0LerPv2k7bX
+        qGvVTucEsaNt0NPw7tmiGwXaW1rq1XujwrNVh1sEZunKhytpT754Kx+3BAwnvNHDeUOPE88J
+        yyLqZ2KJI99Y195LqPPTS+WG5rHDWDSWbBn5bdXz+p3vjz56p1N1p+enV944XnBqOlBSfgt+
+        2m3ZV1CQ8LD4vD5fe0CMsZW0LB01svS/PfCpH1gEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDIsWRmVeSWpSXmKPExsWy7bCSnK5s6clkg7+ruC1OPlnDZvHy51U2
+        i4MPO1kspn34yWzR27+VzeLJ+lnMFotubGOyuLnlKItF9/UdbBbLj/9jsli69SajA7fH5Sve
+        Hov3vGTy2LSqk81jwqIDjB4tJ/ezeHxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAFcVlk5Ka
+        k1mWWqRvl8CVsfPnGsaCdSIVJ5++ZGlgXCDYxcjJISFgIrF0/hH2LkYuDiGBHYwSx09+ZoRI
+        SEtc3ziBHcIWllj57zmYLSTwnFHi7U0hEJtNQFdix+I2NhBbRCBFYsaCj2A1zAL/mSSaW2Mg
+        6ncySiz6Gg5icwpYSVw/vpIVxBYWsJGYsG0uWC+LgKrExINXwOK8ApYSX49fZYKwBSVOznzC
+        0sXIATRTT6JtIyPEeHmJ7W/nMEOcpiDx8+kyVogTnCTWr3vPDFEjLvHy6BH2CYzCs5BMmoUw
+        aRaSSbOQdCxgZFnFKJlaUJybnltsWGCUl1quV5yYW1yal66XnJ+7iREcoVpaOxj3rPqgd4iR
+        iYPxEKMEB7OSCC//+uPJQrwpiZVVqUX58UWlOanFhxilOViUxHkvdJ2MFxJITyxJzU5NLUgt
+        gskycXBKNTBpLs22ESmIC3edwyRbYse8/efR4yqe3C9VFqxvf7bcKlXi5q3VfbOyZjErhLOt
+        teScX91+6fGzm8KGUe/7ijkLav+cX7GM1aDrQv2tl9P+X4l2jwvmOMjGmBjBWHFr2ycpvgnK
+        Jqe3GHgb5RRW+c+ssJuhd09BYM7Veby8s5yVnpzf/EGgctERg9DGayaP7ZMra20ylea9e16y
+        +qy0xsy7s2IPuoWa89+JEp4SavNsc6CMoechZdbJnVfDjGVFNJsystdw1Rx/6pDp4Fuiaype
+        vEnttf2rBvZj//+9TStZNNHi4fvas9myF//6Pgpym6i2oqK/KtZzqvqys8kXn/y9pvD2WhiX
+        DNOzaHm7BUosxRmJhlrMRcWJAJYWnCY/AwAA
+X-CMS-MailID: 20230119165141epcas5p454b53c718ae71ffe835b27c64452c712
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230112234317epcas5p4f010c4801e7553d76aecb15308ff353d
+X-CMS-RootMailID: 20230112234327epcas5p18cee53e3d0a473f52d3347437a4ea72e
 References: <20230112234215.2630817-1-bvanassche@acm.org>
-        <CGME20230112234317epcas5p4f010c4801e7553d76aecb15308ff353d@epcas5p4.samsung.com>
-        <20230112234215.2630817-3-bvanassche@acm.org>
+        <CGME20230112234327epcas5p18cee53e3d0a473f52d3347437a4ea72e@epcas5p1.samsung.com>
+        <20230112234215.2630817-4-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -126,22 +127,37 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 >To: Martin K . Petersen <martin.petersen@oracle.com>
 >Cc: Jaegeuk Kim <jaegeuk@kernel.org>; linux-scsi@vger.kernel.org; Adrian
 >Hunter <adrian.hunter@intel.com>; Alim Akhtar
-><alim.akhtar@samsung.com>; Bart Van Assche <bvanassche@acm.org>;
->Kiwoong Kim <kwmad.kim@samsung.com>; James E.J. Bottomley
-><jejb@linux.ibm.com>; Krzysztof Kozlowski
-><krzysztof.kozlowski@linaro.org>; Chanho Park
-><chanho61.park@samsung.com>; Bean Huo <beanhuo@micron.com>
->Subject: [PATCH v2 2/3] scsi: ufs: Exynos: Fix the maximum segment size
+><alim.akhtar@samsung.com>; Bart Van Assche <bvanassche@acm.org>; Avri
+>Altman <avri.altman@wdc.com>; Kiwoong Kim <kwmad.kim@samsung.com>;
+>James E.J. Bottomley <jejb@linux.ibm.com>; Bean Huo
+><beanhuo@micron.com>; Stanley Chu <stanley.chu@mediatek.com>;
+>Jinyoung Choi <j-young.choi@samsung.com>
+>Subject: [PATCH v2 3/3] scsi: ufs: Enable DMA clustering
 >
->Prepare for enabling DMA clustering and also for supporting PAGE_SIZE !=
->4096 by declaring explicitly that the maximum segment size is 4096 bytes
-for
->Exynos UFS host controllers. Add this code in
->exynos_ufs_hce_enable_notify() such that it happens after
->scsi_host_alloc() and before __scsi_init_queue() is called by the LUN
-scanning
->code.
+>All UFS host controllers support DMA clustering. Hence enable DMA
+>clustering.
 >
+>Notes:
+>- The max_segment_size parameter implements the 256 KiB limit for the
+>  PRDT. The dma_boundary parameter represents a boundary that must not
+>  be crossed by DMA scatter/gather lists. I'm not aware of any
+>  restrictions on DMA scatter/gather lists in the UFSHCI specification
+>  other than the 256 KiB limit for the PRDT and the 32-bit address
+>  restriction for controllers that only support 32-bits DMA. The latter
+>  restriction is already handled by ufshcd_set_dma_mask().
+>- Without patch "Exynos: Fix the maximum segment size", this patch
+>  breaks support for the Exynos controller.
+>
+>The history of the dma_boundary parameter in the UFS driver is as
+>follows:
+>* The initial UFS driver did not set the dma_boundary parameter.
+>* Commit 4dd4130a722f ("scsi: make sure all drivers set the
+>  use_clustering flag") set the .use_clustering flag.
+>* Commit 4af14d113bcf ("scsi: remove the use_clustering flag") removed
+>  the use_clustering flag and set the dma_boundary parameter instead.
+>
+>Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+>Cc: Avri Altman <avri.altman@wdc.com>
 >Cc: Alim Akhtar <alim.akhtar@samsung.com>
 >Cc: Kiwoong Kim <kwmad.kim@samsung.com>
 >Signed-off-by: Bart Van Assche <bvanassche@acm.org>
@@ -149,33 +165,21 @@ scanning
 
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-Tested basic read/write on platform containing Exynos UFS HCI, so 
 
-Tested-by: Alim Akhtar <alim.akhtar@samsung.com>
-
-> drivers/ufs/host/ufs-exynos.c | 8 ++++++++
-> 1 file changed, 8 insertions(+)
+> drivers/ufs/core/ufshcd.c | 1 -
+> 1 file changed, 1 deletion(-)
 >
->diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
->index 3cdac89a28b8..7c985fc38db1 100644
->--- a/drivers/ufs/host/ufs-exynos.c
->+++ b/drivers/ufs/host/ufs-exynos.c
->@@ -1300,6 +1300,14 @@ static int exynos_ufs_hce_enable_notify(struct
->ufs_hba *hba,
+>diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
+>5fdbc983ce2e..d28b44a1ffcf 100644
+>--- a/drivers/ufs/core/ufshcd.c
+>+++ b/drivers/ufs/core/ufshcd.c
+>@@ -8460,7 +8460,6 @@ static struct scsi_host_template
+>ufshcd_driver_template = {
+> 	.max_host_blocked	= 1,
+> 	.track_queue_depth	= 1,
+> 	.sdev_groups		= ufshcd_driver_groups,
+>-	.dma_boundary		= PAGE_SIZE - 1,
+> 	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
+> };
 >
-> 	switch (status) {
-> 	case PRE_CHANGE:
->+		/*
->+		 * The maximum segment size must be set after
->scsi_host_alloc()
->+		 * has been called and before LUN scanning starts
->+		 * (ufshcd_async_scan()). Note: this callback may also be
->called
->+		 * from other functions than ufshcd_init().
->+		 */
->+		hba->host->max_segment_size = 4096;
->+
-> 		if (ufs->drv_data->pre_hce_enable) {
-> 			ret = ufs->drv_data->pre_hce_enable(ufs);
-> 			if (ret)
 
