@@ -2,70 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB6CC46467
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Jan 2023 22:18:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC9E7C05027
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Jan 2023 11:06:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229752AbjASWSE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Jan 2023 17:18:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51580 "EHLO
+        id S230111AbjATLGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Jan 2023 06:06:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229688AbjASWRb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2023 17:17:31 -0500
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9117B58973
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 14:00:00 -0800 (PST)
-Received: by mail-pg1-f177.google.com with SMTP id e10so2680839pgc.9
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2023 14:00:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=k6+z3RrBrGOdhuWsw6owQDU00pyPrBlvynhUoTqUjz4=;
-        b=aEHY9VFZWQNrykXQtYDlhz3eqvIRAhnj49KGkQkuDNgHzJS2W5fsn5bSRKTdifI3Rx
-         dUgw5BjNXMlBXr2g/BkttracoERnGGjvoP1eJnz3NwKxw6uB2LmKnZ6QL2qxH7zzYDcm
-         hDwJy59+UyUCILC5c2bKhcYhDoc8rW8vjyy2DYDcGrBTo9gw5z7XfrCqXRSWtlUn73hD
-         z9Iq/4/Vr+KakzfnTCJa9Y0VxroPi301H2wK+BjJZlrm/ugTbDtsY7qe70ftqETJfy0c
-         7BvoTqtd5wF7fuuuOvJxQdeBdWGP32kaCo0hKpQoFiLoajEHLVhKGuQekh09K9MbVHF0
-         Dmdw==
-X-Gm-Message-State: AFqh2koHsRUMh8Wf9nMbIgXYfWH1LIOWl54jh0n+x6e8uCSddmvCAA+i
-        V7+C5WPK8WfTg7L39DoAFpbBfc2d1tc=
-X-Google-Smtp-Source: AMrXdXtLu0shDZ2J/lHbNJVZyl9K0SYd6jTGk9O5iobNllCgwszGmhyvCJtIgAKE4Wi2qHP/qqUvgw==
-X-Received: by 2002:a05:6a00:2147:b0:58d:e2b0:e480 with SMTP id o7-20020a056a00214700b0058de2b0e480mr7986455pfk.17.1674165599127;
-        Thu, 19 Jan 2023 13:59:59 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:ff60:f896:307d:56f7? ([2620:15c:211:201:ff60:f896:307d:56f7])
-        by smtp.gmail.com with ESMTPSA id c205-20020a624ed6000000b00580a0bb411fsm3721868pfb.174.2023.01.19.13.59.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Jan 2023 13:59:58 -0800 (PST)
-Message-ID: <34076291-619f-203d-c019-7b3e303daaf2@acm.org>
-Date:   Thu, 19 Jan 2023 13:59:56 -0800
+        with ESMTP id S229928AbjATLGc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2023 06:06:32 -0500
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2E1C26589;
+        Fri, 20 Jan 2023 03:06:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1674212791; x=1705748791;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=r4eVcY5PWTSkhuZjkCI/FpAddwZzhCktbJKHEhuYyT4=;
+  b=hBKiuYbO0Fhq9Z6Mx4FlC1yahmtf+/3hZehK6jfnufglMb4OAzqzKbfA
+   DJ4d5sp7GaSGNxHPNjeTZG59AEal/4yapihM648dixB0D/Y+T7Hrcw29H
+   VCtHvA8WMkZBxaaKvRTZ13xbWvv+cQf3eUHp834vmWkE76dupm2B1wlYZ
+   Y=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 20 Jan 2023 03:06:31 -0800
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2023 03:06:31 -0800
+Received: from hu-ahari-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Fri, 20 Jan 2023 03:06:25 -0800
+From:   Anjana Hari <quic_ahari@quicinc.com>
+To:     <agross@kernel.org>, <andersson@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <bvanassche@acm.org>, <konrad.dybcio@linaro.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_narepall@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_rampraka@quicinc.com>, Anjana Hari <quic_ahari@quicinc.com>
+Subject: [PATCH v2 0/1] scsi: ufs: Add hibernation callbacks
+Date:   Fri, 20 Jan 2023 16:36:04 +0530
+Message-ID: <20230120110605.9090-1-quic_ahari@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] Documentation: add exception capture function
-Content-Language: en-US
-To:     Jonathan Corbet <Corbet@lwn.net>, shijm <junming@nfschina.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20230115110535.5597-1-junming@nfschina.com>
- <87zgae6x30.fsf@meer.lwn.net>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <87zgae6x30.fsf@meer.lwn.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/19/23 13:20, Jonathan Corbet wrote:
-> Assuming that this script is still useful, we should consider moving it
-> to tools/.
+This patch adds hibernation callbacks in UFS driver.
+Please take a look and let us know your thoughts.
 
-I'm not sure this script has ever been used after it was added to the 
-kernel tree.
+v1:
+ - Addressed Bart's comments
+ - Moved core and host related changes to single patch
+ - Note to Bart: Regrading the comment to pass "restore" as an
+ argument instead of adding a new member to ufs_hba structure, adding
+ new function argument in core file (ufshcd.c) is forcing us to make
+ changes to other vendor files to fix the compilation errors. Hence
+ we have retained our original change. Please let us know your inputs
+ on this.
 
-Thanks,
+Initial version:
+ - Adds hibernation callbacks - freeze, restore and thaw,
+ required for suspend to disk feature.
 
-Bart.
+Anjana Hari (1):
+  scsi: ufs: Add hibernation callbacks
+
+ drivers/ufs/core/ufshcd.c   | 60 +++++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.c |  6 +++-
+ include/ufs/ufshcd.h        |  8 +++++
+ 3 files changed, 73 insertions(+), 1 deletion(-)
+
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
 
