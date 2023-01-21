@@ -2,140 +2,188 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51FE3C05027
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Jan 2023 02:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 158BCC38141
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Jan 2023 04:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229694AbjAUCnQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Jan 2023 21:43:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35458 "EHLO
+        id S229667AbjAUEm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Jan 2023 23:42:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229566AbjAUCnP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2023 21:43:15 -0500
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44A747CCE8
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Jan 2023 18:43:14 -0800 (PST)
-Received: by mail-pl1-x635.google.com with SMTP id z20so4897322plc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Jan 2023 18:43:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=op5hDwjbzfVECTXQOpZ3gZ09SxcA7kYJCe8wIzxibno=;
-        b=fSup2CufQIQ67ziFp10s273fFAtZB5VClW3NgZsl3MYhnAt9Krio8iNmZDpRx4F07W
-         vYPX6P7gXQoLSIr3iXb5w8Zs0Fb50JuK3Xn6qDAYSZvE4Y2ShCt9OojDs47+VTUqbkkN
-         OBk6cN87lXPRq9KT+4OTULPSDTdm3OBfCoTkkaIv6u9ZIGsEfaGbqEMNshqsmBHaXvVN
-         DZGztUPRFHftTFo0yNM0JnK1rJJ+gwYZLKJF2aIsBLNmP89t2kT58dYCAwTocaUjKlyu
-         OVuVsrg2SizQ6JszpnmN1F9pOddPrhTbrRtq/8wpuWvjQnqgaEM+D9gyMLqIOhf1VoLn
-         GuFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=op5hDwjbzfVECTXQOpZ3gZ09SxcA7kYJCe8wIzxibno=;
-        b=NPQbVWTIzGGyr/51bo8tBfwO4yuJ0mrvAx3sHldtmCp8u1mFeB/yzVK7FLEJpnjo39
-         l3CwDFDhYZEwqZo3Dzv1sxxcK+UesiA2bKSZObcTsg8kJE+k23m60vl5tK2vgbxbtHpw
-         eoQHS/SVOUb1xWQ3Qo0dATmNAamUSHqeM1Wgd+ZJ6rn2+i7zqThXV27vCEeLcei1GNlw
-         KBMnJW0+ldwbVwJapMyRD6/ojNhBGoep+fSder6l18PqFJIGToQOxzje/jvFMEV9U9gS
-         LnTlCaIrwuwiwNyBEvD1F8uw6BmgFpCpZ4GgX/efRyzGcSasg2vRPTGQZr45glH8rK7P
-         Lu6A==
-X-Gm-Message-State: AFqh2kp3Z16MSrKTAPWDX4jPOYowB4IJvGNvipKA7KNxaeAoGCB85mAm
-        0lDxCf/2O46tlIx/gBD7M2HcjA==
-X-Google-Smtp-Source: AMrXdXuRWWnHng24jf4RnPPsvZIjmw9iXlZwxFx0aMH9XB1abOpKOB1bostUWA3clzV4umNAzybvtA==
-X-Received: by 2002:a17:903:32c2:b0:195:e437:ba2 with SMTP id i2-20020a17090332c200b00195e4370ba2mr1077515plr.6.1674268993690;
-        Fri, 20 Jan 2023 18:43:13 -0800 (PST)
-Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id j5-20020a170902758500b00192d9258512sm27578041pll.154.2023.01.20.18.43.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Jan 2023 18:43:13 -0800 (PST)
-Message-ID: <6b1fa9a4-a06b-4b47-023d-b52f4efae6e5@kernel.dk>
-Date:   Fri, 20 Jan 2023 19:43:11 -0700
+        with ESMTP id S229464AbjAUEm6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2023 23:42:58 -0500
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5B9C50853;
+        Fri, 20 Jan 2023 20:42:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674276176; x=1705812176;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=MjbzbjiZDXv+mKGfE+rmDazoRKi5ngCxDJGRVWJTC3o=;
+  b=e/Fz5oBlXL5nffGjkxhMkRIUHKAQzq1dtR+epnYBV8GkOyGdd6YrSXfZ
+   tJKbYY80tF9TdBzfoz/a9vAVG+1oATXFz2wMqE1HTZq31Qdwp5dkpBz8O
+   7mw8K8pX1oauRiqG15ZIjIBGzF+ls3u0AR+6jbHTzPl/MUolr5EQ0eru1
+   udYYnzJUfVa6r9T2LfmfOg2Ls2UZnQrQGH/VFqOcUvT00iU7MKo9YiOxN
+   57B0LVGsBLSFw4TpFNWHEQRlkbwWQE0+e2MmgOLfsj+tu0nrElKaYiccO
+   HDR0hYtdRI3fEg5o00xRbmg7k+2Zvuz52Bs3I9foVGN8ACzrQu/lk/nEw
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10596"; a="306117873"
+X-IronPort-AV: E=Sophos;i="5.97,234,1669104000"; 
+   d="scan'208";a="306117873"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2023 20:42:55 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10596"; a="662767019"
+X-IronPort-AV: E=Sophos;i="5.97,234,1669104000"; 
+   d="scan'208";a="662767019"
+Received: from lkp-server01.sh.intel.com (HELO 5646d64e7320) ([10.239.97.150])
+  by fmsmga007.fm.intel.com with ESMTP; 20 Jan 2023 20:42:52 -0800
+Received: from kbuild by 5646d64e7320 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pJ5iN-0003UY-0W;
+        Sat, 21 Jan 2023 04:42:51 +0000
+Date:   Sat, 21 Jan 2023 12:42:41 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Anjana Hari <quic_ahari@quicinc.com>, agross@kernel.org,
+        andersson@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        konrad.dybcio@linaro.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_narepall@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com,
+        Anjana Hari <quic_ahari@quicinc.com>
+Subject: Re: [PATCH v3 1/1] scsi: ufs: Add hibernation callbacks
+Message-ID: <202301211209.4byNcJjL-lkp@intel.com>
+References: <20230120113321.30433-2-quic_ahari@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v3 1/9] block: Introduce QUEUE_FLAG_SUB_PAGE_SEGMENTS and
- CONFIG_BLK_SUB_PAGE_SEGMENTS
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <kbusch@kernel.org>
-References: <20230118225447.2809787-1-bvanassche@acm.org>
- <20230118225447.2809787-2-bvanassche@acm.org>
- <4f308b47-e08c-efa6-6a86-965ba6761350@kernel.dk>
- <f1317a6f-9c74-b41d-749e-f9dc34f0ad80@acm.org>
-Content-Language: en-US
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <f1317a6f-9c74-b41d-749e-f9dc34f0ad80@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230120113321.30433-2-quic_ahari@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/20/23 5:11?PM, Bart Van Assche wrote:
-> On 1/18/23 15:02, Jens Axboe wrote:
->> On 1/18/23 3:54?PM, Bart Van Assche wrote:
->>> Prepare for introducing support for segments smaller than the page size
->>> by introducing the request queue flag QUEUE_FLAG_SUB_PAGE_SEGMENTS.
->>> Introduce CONFIG_BLK_SUB_PAGE_SEGMENTS to prevent that performance of
->>> block drivers that support segments >= PAGE_SIZE would be affected.
->>>
->>> Cc: Christoph Hellwig <hch@lst.de>
->>> Cc: Ming Lei <ming.lei@redhat.com>
->>> Cc: Keith Busch <kbusch@kernel.org>
->>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>> ---
->>>   block/Kconfig          | 9 +++++++++
->>>   include/linux/blkdev.h | 7 +++++++
->>>   2 files changed, 16 insertions(+)
->>>
->>> diff --git a/block/Kconfig b/block/Kconfig
->>> index 5d9d9c84d516..e85061d2175b 100644
->>> --- a/block/Kconfig
->>> +++ b/block/Kconfig
->>> @@ -35,6 +35,15 @@ config BLOCK_LEGACY_AUTOLOAD
->>>         created on demand, but scripts that manually create device nodes and
->>>         then call losetup might rely on this behavior.
->>>   +config BLK_SUB_PAGE_SEGMENTS
->>> +       bool "Support segments smaller than the page size"
->>> +       default n
->>> +       help
->>> +      Most storage controllers support DMA segments larger than the typical
->>> +      size of a virtual memory page. Some embedded controllers only support
->>> +      DMA segments smaller than the page size. Enable this option to support
->>> +      such controllers.
->>
->> This should not be a visible option at all, affected drivers should just
->> select it.
-> 
-> Hi Jens,
-> 
-> If CONFIG_BLK_SUB_PAGE_SEGMENTS is made invisible, how should this
-> option be enabled for the scsi_debug and null_blk drivers? Adding
-> "select BLK_SUB_PAGE_SEGMENTS" to the Kconfig section of these drivers
-> would have the unfortunate side effect that enabling either driver
-> would make all block drivers slower. How about making sub-page segment
-> support configurable for the scsi_debug and null_blk drivers only?
-> That would allow kernel developers who want to test the sub-page
-> segment support to enable this functionality without making e.g.
-> distro kernels slower.
+Hi Anjana,
 
-You'd need to have a separate sub-option for each of them, Kconfig
-style. But this also highlights the usual issue with pretending that
-Kconfig options means that this doesn't matter, because inevitably they
-end up getting enabled by default in distros anyway. And then you may as
-well not even have them...
+Thank you for the patch! Yet something to improve:
 
-Why can't we just handle this in the driver? The segment path is hard
-enough to grok in the first place, and this just makes it worse.
-Generally not a huge fan of punting this to the driver, but just maybe
-it'd make sense in this case since it's just the one. At least that
-seems a lot more palatable than the alternative.
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on next-20230120]
+[cannot apply to jejb-scsi/for-next linus/master v6.2-rc4]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Anjana-Hari/scsi-ufs-Add-hibernation-callbacks/20230120-193447
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230120113321.30433-2-quic_ahari%40quicinc.com
+patch subject: [PATCH v3 1/1] scsi: ufs: Add hibernation callbacks
+config: riscv-randconfig-r042-20230119 (https://download.01.org/0day-ci/archive/20230121/202301211209.4byNcJjL-lkp@intel.com/config)
+compiler: clang version 16.0.0 (https://github.com/llvm/llvm-project 4196ca3278f78c6e19246e54ab0ecb364e37d66a)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install riscv cross compiling tool for clang build
+        # apt-get install binutils-riscv64-linux-gnu
+        # https://github.com/intel-lab-lkp/linux/commit/239ad2244616006dd39bc9a5380108435d168a86
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Anjana-Hari/scsi-ufs-Add-hibernation-callbacks/20230120-193447
+        git checkout 239ad2244616006dd39bc9a5380108435d168a86
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/ufs/core/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+>> drivers/ufs/core/ufshcd.c:10004:8: error: call to undeclared function 'ufshcd_system_suspend'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           ret = ufshcd_system_suspend(dev);
+                 ^
+>> drivers/ufs/core/ufshcd.c:10017:9: error: call to undeclared function 'ufshcd_system_resume'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           return ufshcd_system_resume(dev);
+                  ^
+   drivers/ufs/core/ufshcd.c:10017:9: note: did you mean 'ufshcd_system_restore'?
+   drivers/ufs/core/ufshcd.c:10011:5: note: 'ufshcd_system_restore' declared here
+   int ufshcd_system_restore(struct device *dev)
+       ^
+   drivers/ufs/core/ufshcd.c:10024:9: error: call to undeclared function 'ufshcd_system_resume'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           return ufshcd_system_resume(dev);
+                  ^
+   drivers/ufs/core/ufshcd.c:10048:44: warning: shift count >= width of type [-Wshift-count-overflow]
+                   if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:76:54: note: expanded from macro 'DMA_BIT_MASK'
+   #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+                                                        ^
+   include/linux/compiler.h:56:47: note: expanded from macro 'if'
+   #define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
+                              ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/compiler.h:58:52: note: expanded from macro '__trace_if_var'
+   #define __trace_if_var(cond) (__builtin_constant_p(cond) ? (cond) : __trace_if_value(cond))
+                                                      ^~~~
+   drivers/ufs/core/ufshcd.c:10048:44: warning: shift count >= width of type [-Wshift-count-overflow]
+                   if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:76:54: note: expanded from macro 'DMA_BIT_MASK'
+   #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+                                                        ^
+   include/linux/compiler.h:56:47: note: expanded from macro 'if'
+   #define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
+                              ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/compiler.h:58:61: note: expanded from macro '__trace_if_var'
+   #define __trace_if_var(cond) (__builtin_constant_p(cond) ? (cond) : __trace_if_value(cond))
+                                                               ^~~~
+   drivers/ufs/core/ufshcd.c:10048:44: warning: shift count >= width of type [-Wshift-count-overflow]
+                   if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:76:54: note: expanded from macro 'DMA_BIT_MASK'
+   #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+                                                        ^
+   include/linux/compiler.h:56:47: note: expanded from macro 'if'
+   #define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
+                              ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/compiler.h:58:86: note: expanded from macro '__trace_if_var'
+   #define __trace_if_var(cond) (__builtin_constant_p(cond) ? (cond) : __trace_if_value(cond))
+                                                                       ~~~~~~~~~~~~~~~~~^~~~~
+   include/linux/compiler.h:69:3: note: expanded from macro '__trace_if_value'
+           (cond) ?                                        \
+            ^~~~
+   3 warnings and 3 errors generated.
+
+
+vim +/ufshcd_system_suspend +10004 drivers/ufs/core/ufshcd.c
+
+  9993	
+  9994		struct ufs_hba *hba = dev_get_drvdata(dev);
+  9995		int ret = 0;
+  9996	
+  9997		/*
+  9998		 * Run time resume the controller to make sure
+  9999		 * the PM work queue threads do not try to resume
+ 10000		 * the child (scsi host), which leads to errors as
+ 10001		 * the controller is not yet resumed.
+ 10002		 */
+ 10003		pm_runtime_get_sync(hba->dev);
+ 10004		ret = ufshcd_system_suspend(dev);
+ 10005		pm_runtime_put_sync(hba->dev);
+ 10006	
+ 10007		return ret;
+ 10008	}
+ 10009	EXPORT_SYMBOL_GPL(ufshcd_system_freeze);
+ 10010	
+ 10011	int ufshcd_system_restore(struct device *dev)
+ 10012	{
+ 10013	
+ 10014		struct ufs_hba *hba = dev_get_drvdata(dev);
+ 10015	
+ 10016		hba->restore = true;
+ 10017		return ufshcd_system_resume(dev);
+ 10018	
 
 -- 
-Jens Axboe
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
