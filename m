@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 883D3C25B4E
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Jan 2023 19:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8465C25B4E
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Jan 2023 19:18:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231548AbjAVTRI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Jan 2023 14:17:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47564 "EHLO
+        id S230109AbjAVTSm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Jan 2023 14:18:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231352AbjAVTRH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jan 2023 14:17:07 -0500
-Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0016017140;
-        Sun, 22 Jan 2023 11:17:04 -0800 (PST)
+        with ESMTP id S229814AbjAVTSl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jan 2023 14:18:41 -0500
+Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55F4E17CD2;
+        Sun, 22 Jan 2023 11:18:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1674415017; bh=c1IRj/bXs0ZSnBzNS6Vm6yrTRBHjo0gnt7Wwh6wxKNY=;
+        t=1674415105; bh=tkp8AA/WrbPSyED/4I0Us07lzEcW/rBKuLqIvF64Fxw=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
          MIME-Version:Content-Type:In-Reply-To;
-        b=nNozw9Nwl+1DCds7iMk1s9TIhXB5hLPZp7L54uWiwhyebNbPTpCtqXWcenVm2/65k
-         FY9ug+2hKn2TvKlAdHbUwEZ6+uf8aIAufBKAj18q6CvBpTWnB+XTTkhIwst4m3KiBv
-         P7hBGC0FwHrrSu7Stq+0/zPo6MLXDLXV5wdEG++w=
-Received: by b-1.in.mailobj.net [192.168.90.11] with ESMTP
+        b=l3Yak0+JQQp+Pq909XjXnE1opG4cxxAmEJ67WhxV8OUew+BnNbJFsIbNZ7+P3TvBp
+         j39yMzTveiYU6YkaKSIUY4rq5w0Xh1RomCkdg4rw2Ztx+IbvEE6tZF233VOtsYyugK
+         pAinFq0JxOnVYqfLgR9MCgX9E7qld77TLcWNAxOY=
+Received: by b-3.in.mailobj.net [192.168.90.13] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Sun, 22 Jan 2023 20:16:57 +0100 (CET)
-X-EA-Auth: lsVo5PQ3/JpvafZJkIhgD9/MbsoLUtOI5uigvOhUb9vByVwrHNpBZkXelbNH8jRvWvSgn61MHDPamW/fr4AICvQUxXmDPjAZ
-Date:   Mon, 23 Jan 2023 00:46:53 +0530
+        Sun, 22 Jan 2023 20:18:25 +0100 (CET)
+X-EA-Auth: LdDGcmlyCDifsT5HiIapm2X/hnFbkOzUYkONQlTh1pl4H71cRRgUK7ZBETGADFOUHZvCz941mATWu+S9bUSmGyulD29wydo2
+Date:   Mon, 23 Jan 2023 00:48:22 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: Re: [PATCH v2] scsi: Replace printk+WARN_ON by WARN macro
-Message-ID: <Y82LpRtFFux4wUaD@ubun2204.myguest.virtualbox.org>
-References: <Y7sj22gCmnYqTzP4@ubun2204.myguest.virtualbox.org>
+Subject: Re: [PATCH] scsi: qla2xxx: Use a variable for repeated mem_size
+ computation
+Message-ID: <Y82L/iFjguJwuPC1@ubun2204.myguest.virtualbox.org>
+References: <Y7spwF8HTt0c0l7y@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y7sj22gCmnYqTzP4@ubun2204.myguest.virtualbox.org>
+In-Reply-To: <Y7spwF8HTt0c0l7y@ubun2204.myguest.virtualbox.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 09, 2023 at 01:43:15AM +0530, Deepak R Varma wrote:
-> A combination of printk() followed by WARN_ON() macro can be simplified
-> using a single WARN(1, ...) macro. Patch change suggested by warn.cocci
-> Coccinelle semantic patch.
+On Mon, Jan 09, 2023 at 02:08:24AM +0530, Deepak R Varma wrote:
+> Use a variable to upfront compute memory size to be allocated, instead of
+> repeatedly computing the memory size at different instructions. The reduced
+> instruction length also allows to tidy up the code. Issue identified using
+> the array_size_dup Coccinelle semantic patch.
 > 
 > Signed-off-by: Deepak R Varma <drv@mailo.com>
 > ---
-> Changes in v2:
->    - Remove printk() from the WARN macro to avoid build warning
->    - I missed to build the change before sending the earlier version which
->      results in a build error due to incorrect brace balancing. Fixed it.
 
 Hello,
 May I request a review and feedback comments on this patch proposal?
@@ -61,41 +61,43 @@ May I request a review and feedback comments on this patch proposal?
 Thank you,
 ./drv
 
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
 > 
->  drivers/scsi/initio.c   | 3 +--
->  drivers/scsi/scsi_lib.c | 6 ++----
->  2 files changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-> index 375261d67619..fea591d9d292 100644
-> --- a/drivers/scsi/initio.c
-> +++ b/drivers/scsi/initio.c
-> @@ -2738,8 +2738,7 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
->  	host = (struct initio_host *) host_mem;
->  	cblk = (struct scsi_ctrl_blk *) cblk_mem;
->  	if ((cmnd = cblk->srb) == NULL) {
-> -		printk(KERN_ERR "i91uSCBPost: SRB pointer is empty\n");
-> -		WARN_ON(1);
-> +		WARN(1, KERN_ERR "i91uSCBPost: SRB pointer is empty\n");
->  		initio_release_scb(host, cblk);	/* Release SCB for current channel */
->  		return;
->  	}
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 9ed1ebcb7443..0f1e9ee4591b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -3009,10 +3009,8 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 8fa0056b56dd..8024322c9c5a 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -1552,6 +1552,7 @@ static const struct qla_tgt_func_tmpl tcm_qla2xxx_template = {
+>  static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
+>  {
+>  	int rc;
+> +	size_t map_sz;
+>  
+>  	rc = btree_init32(&lport->lport_fcport_map);
+>  	if (rc) {
+> @@ -1559,17 +1560,15 @@ static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
+>  		return rc;
 >  	}
 >  
->  	if (unlikely(i == sg_count)) {
-> -		printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
-> -			"elements %d\n",
-> -		       __func__, sg_len, *offset, sg_count);
-> -		WARN_ON(1);
-> +		WARN(1, KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, elements %d\n",
-> +				__func__, sg_len, *offset, sg_count);
->  		return NULL;
+> -	lport->lport_loopid_map =
+> -		vzalloc(array_size(65536,
+> -				   sizeof(struct tcm_qla2xxx_fc_loopid)));
+> +	map_sz = array_size(65536, sizeof(struct tcm_qla2xxx_fc_loopid));
+> +
+> +	lport->lport_loopid_map = vzalloc(map_sz);
+>  	if (!lport->lport_loopid_map) {
+> -		pr_err("Unable to allocate lport->lport_loopid_map of %zu bytes\n",
+> -		    sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
+> +		pr_err("Unable to allocate lport->lport_loopid_map of %zu bytes\n", map_sz);
+>  		btree_destroy32(&lport->lport_fcport_map);
+>  		return -ENOMEM;
 >  	}
+> -	pr_debug("qla2xxx: Allocated lport_loopid_map of %zu bytes\n",
+> -	       sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
+> +	pr_debug("qla2xxx: Allocated lport_loopid_map of %zu bytes\n", map_sz);
+>  	return 0;
+>  }
 >  
 > -- 
 > 2.34.1
