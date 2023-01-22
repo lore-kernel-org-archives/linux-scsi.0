@@ -2,82 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB101C38142
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Jan 2023 18:32:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0976C38142
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Jan 2023 19:13:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231515AbjAVScB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Jan 2023 13:32:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35082 "EHLO
+        id S231483AbjAVTNS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Jan 2023 14:13:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229811AbjAVSb7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jan 2023 13:31:59 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 878B91BAC3;
-        Sun, 22 Jan 2023 10:31:58 -0800 (PST)
+        with ESMTP id S229973AbjAVTNS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jan 2023 14:13:18 -0500
+Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18D2216ADA;
+        Sun, 22 Jan 2023 11:13:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1674412311; bh=pZYbLu9bebSDoKCfGEX/1j8ZiKjZCw98agjNII8NLOg=;
+        t=1674414786; bh=SBqVqS4LKg/DS4+t9zAGPsAMuWTf8+G8D2fmWn+PcNg=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
          MIME-Version:Content-Type:In-Reply-To;
-        b=PWKBOAlZOjhTTbujYkNjnQkKBNnXvzcZ3tCmC+epFMVB+r/gNaAnf+z/vlR2jscEA
-         GEFxln74sDkfpNIAlxm/RiOTT4rL0p6tjCdp5UUq0/3VQPVUpkp+2RvKcbNcYdjzQ0
-         c1MnQ3XY8KeaAJMWxIowYRC/zEfCibzUf5RhfUN4=
+        b=ErXFIzwPiZZgfb9vTAHzbq4oNJyAb1x+waP5zaT+j9gWeVJ9Yle+nV6thIO99lwgX
+         U/g83SdMIYE6aObgOss6dHf/zJI7FQEljj3bu+op8XxYk9T+XB+VJeCSnL17CXag/U
+         EaM483nKvLy9m/rq4er/hqi1cU2AELtxDOZTJdJs=
 Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Sun, 22 Jan 2023 19:31:51 +0100 (CET)
-X-EA-Auth: pYwFouFgiBnqX63s88Aa0Ha28O8LCr5CKpkGpHy24mru8pIgBhbNa7r97GyK7VfP0PVzzaqSl/UozqzDarSzIZgyU/4aDhQq
-Date:   Mon, 23 Jan 2023 00:01:48 +0530
+        Sun, 22 Jan 2023 20:13:06 +0100 (CET)
+X-EA-Auth: l140IjyIAec0AOtVEwHQCkfNdmmJ8jtxInQPV5dv0mDGpfmeWEAzqlWnFeYAZW4JqJQuaa4HR/sGQl/DmyU4R+3CFWwvtuJ1
+Date:   Mon, 23 Jan 2023 00:43:02 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+To:     Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: Re: [PATCH] scsi: csiostor: use *ptr instead of ptr with sizeof
-Message-ID: <Y82BFDTF0cQC/goK@ubun2204.myguest.virtualbox.org>
-References: <Y7/8VUXJSFXTpYlz@ubun2204.myguest.virtualbox.org>
+Subject: Re: [PATCH v2] scsi: ipr: Convert ipr_probe_ioa_part2 as void
+Message-ID: <Y82KvqXU9bX04jut@ubun2204.myguest.virtualbox.org>
+References: <Y7rvQyMOGcPKPTv8@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y7/8VUXJSFXTpYlz@ubun2204.myguest.virtualbox.org>
+In-Reply-To: <Y7rvQyMOGcPKPTv8@ubun2204.myguest.virtualbox.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 12, 2023 at 05:55:57PM +0530, Deepak R Varma wrote:
-> The function csio_enqueue_evt() should be passed the actual length of
-> the event/message so that it can be fully copied over to the event
-> queue. Use the sizeof(*ptr) to get the real message length instead of
-> sizeof(ptr).
-> Issue identified using the noderef,cocci coccinelle semantic patch.
+On Sun, Jan 08, 2023 at 09:58:51PM +0530, Deepak R Varma wrote:
+> Convert function ipr_probe_ioa_part2() to return void instead
+> of int since the current implementation always returns 0 to the caller.
+> The transformation also eliminates the dead code when calling
+> ipr_probe_ioa_part2() function.
+> Issue identified using returnvar Coccinelle semantic patch.
 > 
 > Signed-off-by: Deepak R Varma <drv@mailo.com>
 > ---
+> Changes in v2:
+>    - retain and update Return value comment in function documentation
 
 Hello,
-Requesting a review and feedback comments on this patch proposal please.
+May I request a review and feedback comments on this patch proposal please?
 
 Thank you,
 ./drv
 
-> Please note: The change is compile tested only.
 > 
->  drivers/scsi/csiostor/csio_mb.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/ipr.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/scsi/csiostor/csio_mb.c b/drivers/scsi/csiostor/csio_mb.c
-> index 94810b19e747..4df8a4df4408 100644
-> --- a/drivers/scsi/csiostor/csio_mb.c
-> +++ b/drivers/scsi/csiostor/csio_mb.c
-> @@ -1551,7 +1551,7 @@ csio_mb_isr_handler(struct csio_hw *hw)
->  		 * Enqueue event to EventQ. Events processing happens
->  		 * in Event worker thread context
->  		 */
-> -		if (csio_enqueue_evt(hw, CSIO_EVT_MBX, mbp, sizeof(mbp)))
-> +		if (csio_enqueue_evt(hw, CSIO_EVT_MBX, mbp, sizeof(*mbp)))
->  			CSIO_INC_STATS(hw, n_evt_drop);
->  
->  		return 0;
-> -- 
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index 2022ffb45041..dfb759fbbd87 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -9505,11 +9505,10 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
+>   * This function takes care of initilizing the adapter to the point
+>   * where it can accept new commands.
+>   * Return value:
+> - * 	0 on success / -EIO on failure
+> + *     none
+>   **/
+> -static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+> +static void ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+>  {
+> -	int rc = 0;
+>  	unsigned long host_lock_flags = 0;
+> 
+>  	ENTER;
+> @@ -9525,7 +9524,6 @@ static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+>  	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
+> 
+>  	LEAVE;
+> -	return rc;
+>  }
+> 
+>  /**
+> @@ -10568,12 +10566,7 @@ static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>  		return rc;
+> 
+>  	ioa_cfg = pci_get_drvdata(pdev);
+> -	rc = ipr_probe_ioa_part2(ioa_cfg);
+> -
+> -	if (rc) {
+> -		__ipr_remove(pdev);
+> -		return rc;
+> -	}
+> +	ipr_probe_ioa_part2(ioa_cfg);
+> 
+>  	rc = scsi_add_host(ioa_cfg->host, &pdev->dev);
+> 
+> --
 > 2.34.1
 > 
 > 
