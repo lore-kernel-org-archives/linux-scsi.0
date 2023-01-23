@@ -2,115 +2,395 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E17C25B50
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Jan 2023 19:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F696C25B50
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Jan 2023 20:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230129AbjAWT6d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Jan 2023 14:58:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59328 "EHLO
+        id S231822AbjAWUFU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Jan 2023 15:05:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232456AbjAWT6c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2023 14:58:32 -0500
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CA7E27D68;
-        Mon, 23 Jan 2023 11:58:31 -0800 (PST)
-Received: by mail-pj1-f50.google.com with SMTP id z4-20020a17090a170400b00226d331390cso12000560pjd.5;
-        Mon, 23 Jan 2023 11:58:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GImCMdHtN1051Hi4rO3ytDSWOitU9SLLUPh7VcfKUPs=;
-        b=3YO8nf3sW93cLd8duQGu8N8F2g1g1738+s1cIK252627puN1KVe24/CHLG8+O4KHzI
-         nyP76TV8KtYthcGycwUf21VJK9MBSvpedohgMiqFXiPkUwcmDPceHLj5L86+ZYQzmG9D
-         yI5sVeF1y7T4zsRTbpv2QyYgOP99L5APX9G9AXTgK383nlv33cmYQzEaC94dPjjsdgUC
-         bXsfcHwEnJUUbo28c5p3WU6cZ9PnaFdcj5zU8vEqS0gtQHcjOD0MiQ0P9y7fIvOkPBsf
-         oFaE6a5HQAx3hNh6VGmNkK7vmglBW/dAgLxn4nzpc4jACW2e/87wU76oxeegGaf+ruyo
-         3NWA==
-X-Gm-Message-State: AFqh2kpw5dcuBA59vuo1QHTHTQFYqQHgRTjc1MfvXCGWqy7rMpP9GRsp
-        4C1QFbmwtp6J2iShyY8zSFk=
-X-Google-Smtp-Source: AMrXdXu1JCYGeF5F1CTumxD6hcIEXhDzQgrqyZL2V1zDBop8nlkjgsb/ryVYzQswxSJ5coB092jCmw==
-X-Received: by 2002:a17:90a:460f:b0:227:23c3:5db1 with SMTP id w15-20020a17090a460f00b0022723c35db1mr26623924pjg.47.1674503911026;
-        Mon, 23 Jan 2023 11:58:31 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:dbe2:4986:5f46:bb00? ([2620:15c:211:201:dbe2:4986:5f46:bb00])
-        by smtp.gmail.com with ESMTPSA id p9-20020a17090a284900b0022b787fb08dsm6986130pjf.5.2023.01.23.11.58.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Jan 2023 11:58:30 -0800 (PST)
-Message-ID: <31b21272-a17b-0dc6-756c-c990ff2c7ea7@acm.org>
-Date:   Mon, 23 Jan 2023 11:58:28 -0800
+        with ESMTP id S231951AbjAWUFT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2023 15:05:19 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B73BE10FF;
+        Mon, 23 Jan 2023 12:05:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1674504311;
+        bh=aQ5YOIM1ra3YARccrkKwJgESOHM0e6DhFasW8i0W6jk=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=L8OTHGcr0s6GhVJEryRlWPyNtbUFlIvNBZDbEvVl7sYumJmX5+M+MCoNUoq6b5RWN
+         rI8vuEqiaAlWyviJnYbtQR9c5v2qwdfobHq/qYfjJV+5BAcrEE6WFob6IO6ztVwF0d
+         6UntV+RRNVMf5EcqgAC5Lm/2WKCvxT51st2qTYM8=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 6BB6C128644A;
+        Mon, 23 Jan 2023 15:05:11 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 9tljaDrGIn8u; Mon, 23 Jan 2023 15:05:11 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1674504311;
+        bh=aQ5YOIM1ra3YARccrkKwJgESOHM0e6DhFasW8i0W6jk=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=L8OTHGcr0s6GhVJEryRlWPyNtbUFlIvNBZDbEvVl7sYumJmX5+M+MCoNUoq6b5RWN
+         rI8vuEqiaAlWyviJnYbtQR9c5v2qwdfobHq/qYfjJV+5BAcrEE6WFob6IO6ztVwF0d
+         6UntV+RRNVMf5EcqgAC5Lm/2WKCvxT51st2qTYM8=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id B9DE31286425;
+        Mon, 23 Jan 2023 15:05:10 -0500 (EST)
+Message-ID: <87b5e16ec007de3523fd78534a48d6244bda3f46.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.1-rc5
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Mon, 23 Jan 2023 15:05:08 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v3 1/9] block: Introduce QUEUE_FLAG_SUB_PAGE_SEGMENTS and
- CONFIG_BLK_SUB_PAGE_SEGMENTS
-Content-Language: en-US
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <kbusch@kernel.org>
-References: <20230118225447.2809787-1-bvanassche@acm.org>
- <20230118225447.2809787-2-bvanassche@acm.org>
- <4f308b47-e08c-efa6-6a86-965ba6761350@kernel.dk>
- <f1317a6f-9c74-b41d-749e-f9dc34f0ad80@acm.org>
- <6b1fa9a4-a06b-4b47-023d-b52f4efae6e5@kernel.dk>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6b1fa9a4-a06b-4b47-023d-b52f4efae6e5@kernel.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/20/23 18:43, Jens Axboe wrote:
-> On 1/20/23 5:11?PM, Bart Van Assche wrote:
->> If CONFIG_BLK_SUB_PAGE_SEGMENTS is made invisible, how should this
->> option be enabled for the scsi_debug and null_blk drivers? Adding
->> "select BLK_SUB_PAGE_SEGMENTS" to the Kconfig section of these drivers
->> would have the unfortunate side effect that enabling either driver
->> would make all block drivers slower. How about making sub-page segment
->> support configurable for the scsi_debug and null_blk drivers only?
->> That would allow kernel developers who want to test the sub-page
->> segment support to enable this functionality without making e.g.
->> distro kernels slower.
-> 
-> You'd need to have a separate sub-option for each of them, Kconfig
-> style. But this also highlights the usual issue with pretending that
-> Kconfig options means that this doesn't matter, because inevitably they
-> end up getting enabled by default in distros anyway. And then you may as
-> well not even have them...
+Six fixes, all in drivers.  The biggest are the UFS devfreq fixes which
+address a lock inversion and the two iscsi_tcp fixes which try to
+prevent a use after free from userspace still accessing an area which
+the kernel has released (seen by KASAN).
 
-Hi Jens,
+The patch is available here:
 
-How about the following approach?
-* Remove CONFIG_BLK_SUB_PAGE_SEGMENTS.
-* Use the static key mechanism instead of #ifdef
-   CONFIG_BLK_SUB_PAGE_SEGMENTS to prevent that this patch series makes
-   the hot path in the block layer slower.
-* Count the number of request queues that need support for segments
-   smaller than a page or max_hw_sector values smaller than
-   PAGE_SIZE >> SECTOR_SHIFT. If that number changes from zero to one,
-   enable the code introduced by this patch series. If that number drops
-   to zero, toggle the static key such that the overhead of the code that
-   supports small segments is eliminated.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-> Why can't we just handle this in the driver? The segment path is hard
-> enough to grok in the first place, and this just makes it worse.
-> Generally not a huge fan of punting this to the driver, but just maybe
-> it'd make sense in this case since it's just the one. At least that
-> seems a lot more palatable than the alternative.
+The short changelog is:
 
-One of the functions modified by this patch series is 
-blk_rq_append_bio(). That function is called by code that builds a bio 
-(e.g. filesystems). Code that builds a bio does not call any block 
-driver code. This is why I think it would be hard to move the 
-functionality introduced by this patch series into block drivers.
+Alexey V. Vissarionov (1):
+      scsi: hpsa: Fix allocation size for scsi_host_alloc()
 
-Thanks,
+Bart Van Assche (1):
+      scsi: device_handler: alua: Remove a might_sleep() annotation
 
-Bart.
+Johan Hovold (1):
+      scsi: ufs: core: Fix devfreq deadlocks
 
+Maurizio Lombardi (1):
+      scsi: target: core: Fix warning on RT kernels
+
+Mike Christie (2):
+      scsi: iscsi_tcp: Fix UAF during login when accessing the shost ipaddress
+      scsi: iscsi_tcp: Fix UAF during logout when accessing the shost ipaddress
+
+
+And the diffstat:
+
+ drivers/scsi/device_handler/scsi_dh_alua.c |  5 ++--
+ drivers/scsi/hpsa.c                        |  2 +-
+ drivers/scsi/iscsi_tcp.c                   | 20 ++++++++++++----
+ drivers/scsi/libiscsi.c                    | 38 ++++++++++++++++++++++++------
+ drivers/target/target_core_tmr.c           |  4 ++--
+ drivers/ufs/core/ufshcd.c                  | 29 ++++++++++++-----------
+ include/scsi/libiscsi.h                    |  2 ++
+ include/ufs/ufshcd.h                       |  2 ++
+ 8 files changed, 71 insertions(+), 31 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 49cc18a87473..29a2865b8e2e 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -981,6 +981,9 @@ static void alua_rtpg_work(struct work_struct *work)
+  *
+  * Returns true if and only if alua_rtpg_work() will be called asynchronously.
+  * That function is responsible for calling @qdata->fn().
++ *
++ * Context: may be called from atomic context (alua_check()) only if the caller
++ *	holds an sdev reference.
+  */
+ static bool alua_rtpg_queue(struct alua_port_group *pg,
+ 			    struct scsi_device *sdev,
+@@ -989,8 +992,6 @@ static bool alua_rtpg_queue(struct alua_port_group *pg,
+ 	int start_queue = 0;
+ 	unsigned long flags;
+ 
+-	might_sleep();
+-
+ 	if (WARN_ON_ONCE(!pg) || scsi_device_get(sdev))
+ 		return false;
+ 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 4dbf51e2623a..f6da34850af9 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5850,7 +5850,7 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+ {
+ 	struct Scsi_Host *sh;
+ 
+-	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
++	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(struct ctlr_info));
+ 	if (sh == NULL) {
+ 		dev_err(&h->pdev->dev, "scsi_host_alloc failed\n");
+ 		return -ENOMEM;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 1d1cf641937c..0454d94e8cf0 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -849,7 +849,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+ 				       enum iscsi_host_param param, char *buf)
+ {
+ 	struct iscsi_sw_tcp_host *tcp_sw_host = iscsi_host_priv(shost);
+-	struct iscsi_session *session = tcp_sw_host->session;
++	struct iscsi_session *session;
+ 	struct iscsi_conn *conn;
+ 	struct iscsi_tcp_conn *tcp_conn;
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
+@@ -859,6 +859,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+ 
+ 	switch (param) {
+ 	case ISCSI_HOST_PARAM_IPADDRESS:
++		session = tcp_sw_host->session;
+ 		if (!session)
+ 			return -ENOTCONN;
+ 
+@@ -959,11 +960,13 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+ 	if (!cls_session)
+ 		goto remove_host;
+ 	session = cls_session->dd_data;
+-	tcp_sw_host = iscsi_host_priv(shost);
+-	tcp_sw_host->session = session;
+ 
+ 	if (iscsi_tcp_r2tpool_alloc(session))
+ 		goto remove_session;
++
++	/* We are now fully setup so expose the session to sysfs. */
++	tcp_sw_host = iscsi_host_priv(shost);
++	tcp_sw_host->session = session;
+ 	return cls_session;
+ 
+ remove_session:
+@@ -983,10 +986,17 @@ static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
+ 	if (WARN_ON_ONCE(session->leadconn))
+ 		return;
+ 
++	iscsi_session_remove(cls_session);
++	/*
++	 * Our get_host_param needs to access the session, so remove the
++	 * host from sysfs before freeing the session to make sure userspace
++	 * is no longer accessing the callout.
++	 */
++	iscsi_host_remove(shost, false);
++
+ 	iscsi_tcp_r2tpool_free(cls_session->dd_data);
+-	iscsi_session_teardown(cls_session);
+ 
+-	iscsi_host_remove(shost, false);
++	iscsi_session_free(cls_session);
+ 	iscsi_host_free(shost);
+ }
+ 
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index ef2fc860257e..127f3d7f19dc 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -3104,17 +3104,32 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+ }
+ EXPORT_SYMBOL_GPL(iscsi_session_setup);
+ 
+-/**
+- * iscsi_session_teardown - destroy session, host, and cls_session
+- * @cls_session: iscsi session
++/*
++ * issi_session_remove - Remove session from iSCSI class.
+  */
+-void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
++void iscsi_session_remove(struct iscsi_cls_session *cls_session)
+ {
+ 	struct iscsi_session *session = cls_session->dd_data;
+-	struct module *owner = cls_session->transport->owner;
+ 	struct Scsi_Host *shost = session->host;
+ 
+ 	iscsi_remove_session(cls_session);
++	/*
++	 * host removal only has to wait for its children to be removed from
++	 * sysfs, and iscsi_tcp needs to do iscsi_host_remove before freeing
++	 * the session, so drop the session count here.
++	 */
++	iscsi_host_dec_session_cnt(shost);
++}
++EXPORT_SYMBOL_GPL(iscsi_session_remove);
++
++/**
++ * iscsi_session_free - Free iscsi session and it's resources
++ * @cls_session: iscsi session
++ */
++void iscsi_session_free(struct iscsi_cls_session *cls_session)
++{
++	struct iscsi_session *session = cls_session->dd_data;
++	struct module *owner = cls_session->transport->owner;
+ 
+ 	iscsi_pool_free(&session->cmdpool);
+ 	kfree(session->password);
+@@ -3132,10 +3147,19 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+ 	kfree(session->discovery_parent_type);
+ 
+ 	iscsi_free_session(cls_session);
+-
+-	iscsi_host_dec_session_cnt(shost);
+ 	module_put(owner);
+ }
++EXPORT_SYMBOL_GPL(iscsi_session_free);
++
++/**
++ * iscsi_session_teardown - destroy session and cls_session
++ * @cls_session: iscsi session
++ */
++void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
++{
++	iscsi_session_remove(cls_session);
++	iscsi_session_free(cls_session);
++}
+ EXPORT_SYMBOL_GPL(iscsi_session_teardown);
+ 
+ /**
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index bac111456fa1..2b95b4550a63 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -73,8 +73,8 @@ static bool __target_check_io_state(struct se_cmd *se_cmd,
+ {
+ 	struct se_session *sess = se_cmd->se_sess;
+ 
+-	assert_spin_locked(&sess->sess_cmd_lock);
+-	WARN_ON_ONCE(!irqs_disabled());
++	lockdep_assert_held(&sess->sess_cmd_lock);
++
+ 	/*
+ 	 * If command already reached CMD_T_COMPLETE state within
+ 	 * target_complete_cmd() or CMD_T_FABRIC_STOP due to shutdown,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bda61be5f035..3a1c4d31e010 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1234,12 +1234,14 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ 	 * clock scaling is in progress
+ 	 */
+ 	ufshcd_scsi_block_requests(hba);
++	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
+ 
+ 	if (!hba->clk_scaling.is_allowed ||
+ 	    ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+ 		ret = -EBUSY;
+ 		up_write(&hba->clk_scaling_lock);
++		mutex_unlock(&hba->wb_mutex);
+ 		ufshcd_scsi_unblock_requests(hba);
+ 		goto out;
+ 	}
+@@ -1251,12 +1253,16 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
+-static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
++static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool scale_up)
+ {
+-	if (writelock)
+-		up_write(&hba->clk_scaling_lock);
+-	else
+-		up_read(&hba->clk_scaling_lock);
++	up_write(&hba->clk_scaling_lock);
++
++	/* Enable Write Booster if we have scaled up else disable it */
++	if (ufshcd_enable_wb_if_scaling_up(hba) && !err)
++		ufshcd_wb_toggle(hba, scale_up);
++
++	mutex_unlock(&hba->wb_mutex);
++
+ 	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_release(hba);
+ }
+@@ -1273,7 +1279,6 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
+ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ {
+ 	int ret = 0;
+-	bool is_writelock = true;
+ 
+ 	ret = ufshcd_clock_scaling_prepare(hba);
+ 	if (ret)
+@@ -1302,15 +1307,8 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 		}
+ 	}
+ 
+-	/* Enable Write Booster if we have scaled up else disable it */
+-	if (ufshcd_enable_wb_if_scaling_up(hba)) {
+-		downgrade_write(&hba->clk_scaling_lock);
+-		is_writelock = false;
+-		ufshcd_wb_toggle(hba, scale_up);
+-	}
+-
+ out_unprepare:
+-	ufshcd_clock_scaling_unprepare(hba, is_writelock);
++	ufshcd_clock_scaling_unprepare(hba, ret, scale_up);
+ 	return ret;
+ }
+ 
+@@ -6066,9 +6064,11 @@ static void ufshcd_force_error_recovery(struct ufs_hba *hba)
+ 
+ static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
+ {
++	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
+ 	hba->clk_scaling.is_allowed = allow;
+ 	up_write(&hba->clk_scaling_lock);
++	mutex_unlock(&hba->wb_mutex);
+ }
+ 
+ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
+@@ -9793,6 +9793,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Initialize mutex for exception event control */
+ 	mutex_init(&hba->ee_ctrl_mutex);
+ 
++	mutex_init(&hba->wb_mutex);
+ 	init_rwsem(&hba->clk_scaling_lock);
+ 
+ 	ufshcd_init_clk_gating(hba);
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 695eebc6f2c8..e39fb0736ade 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -422,6 +422,8 @@ extern int iscsi_host_get_max_scsi_cmds(struct Scsi_Host *shost,
+ extern struct iscsi_cls_session *
+ iscsi_session_setup(struct iscsi_transport *, struct Scsi_Host *shost,
+ 		    uint16_t, int, int, uint32_t, unsigned int);
++void iscsi_session_remove(struct iscsi_cls_session *cls_session);
++void iscsi_session_free(struct iscsi_cls_session *cls_session);
+ extern void iscsi_session_teardown(struct iscsi_cls_session *);
+ extern void iscsi_session_recovery_timedout(struct iscsi_cls_session *);
+ extern int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 5cf81dff60aa..727084cd79be 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -808,6 +808,7 @@ struct ufs_hba_monitor {
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+  *  device is known or not.
++ * @wb_mutex: used to serialize devfreq and sysfs write booster toggling
+  * @clk_scaling_lock: used to serialize device commands and clock scaling
+  * @desc_size: descriptor sizes reported by device
+  * @scsi_block_reqs_cnt: reference counting for scsi block requests
+@@ -951,6 +952,7 @@ struct ufs_hba {
+ 	enum bkops_status urgent_bkops_lvl;
+ 	bool is_urgent_bkops_lvl_checked;
+ 
++	struct mutex wb_mutex;
+ 	struct rw_semaphore clk_scaling_lock;
+ 	unsigned char desc_size[QUERY_DESC_IDN_MAX];
+ 	atomic_t scsi_block_reqs_cnt;
 
