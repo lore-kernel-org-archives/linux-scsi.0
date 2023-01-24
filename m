@@ -2,83 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E401C54EED
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Jan 2023 21:48:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B5FC54EED
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Jan 2023 22:43:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233356AbjAXVs2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Jan 2023 16:48:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34530 "EHLO
+        id S235224AbjAXWn3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Jan 2023 17:43:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229965AbjAXVs1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 16:48:27 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 800BD46D71
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 13:48:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674596906; x=1706132906;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Kelf/B7Mre/rO8p2LUaVznqJP+lT5xhWFA7LxVASojo=;
-  b=ZFSXC3n1ubdRh+0YR+pgr+vFvqKoIZM+GEYQNDKVifXyY2I1yxWBIMLJ
-   MV2d4Ce3C/eixIiol6ex3aJkuc5TWc62OTqlUx84+6S3VKGrVkOZpN1eD
-   vkRMSArpbHGjHhMpRWzXdsDJhVn4OuO5Qk9bI4LgP67QZK9VSTh36FonT
-   ikZ8Uh5VOMWOz3GRWVZMzYKFc1u1vQVb5aomx7sIvfiydm9OI+jT6aV/6
-   OqZ3azlQPa+BwR8PhOpVItRhl+hPG272eVtWvPPZvoKTeJ1VBNd9nbS8l
-   dCAquXkGFJRgZIUs4RCuP20teV03s0P9iBq5DSi9/D6jVyZl59jl5Jgdu
-   w==;
-X-IronPort-AV: E=Sophos;i="5.97,243,1669046400"; 
-   d="scan'208";a="226654646"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 05:48:25 +0800
-IronPort-SDR: WlS6wIqmBg8kQeErO9nEMoQSqTKgfJVwQbF1EQFWoVFlYMkqNELvQzm9Tf7/ryChLm6kR0mbif
- Kf6P3/bEyA4+6LSauAxMiw6WgtQ+WYCihL+NIikmuFYD1NjYdSuhLaqLiVngurVyN5FmNFmxTJ
- Wx5BTOeuaDZwGtKT5OC844Me0qiKGoONoOALO+qPavOG+t21ZB62vCXpU9W4HlATwJ3Ula6o83
- yDdADM6DYb9PuB9Qn068JE0TUZjvWGIh1sjaFMwq5/mRvFlCePyQ3cLFrEt2DzVU8QEp1i46XA
- Hyc=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 13:00:13 -0800
-IronPort-SDR: NgU5XQVpxXP+mI9Q2HKGI+TSkj3hCdtla0mmAbrva2eugEYOvhMcyhNJSeMqy16aO8+6n99iym
- 5mRuVC9I8yaE/VpbP5CnQ8cu1ZUtx0dVvVVBRNEpNpuJbo2q3KEHVpF6E4PlJcu8jK3TG4YZES
- Ijqsx136yGGvq3HFNEXSzuXzPhmULxyj2hSto2vdBaElwDYpPl+Pbl2hPdU9J8MnQI4oR7v37v
- ILOwU5CjTYeQ5N+SKGiuC4RNCA0++KApT8UExZqVzqV49TvmFBUU6YDH8YLHYkC2b2q3BujIaq
- Utc=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 13:48:26 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P1gZd3gHCz1RvTp
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 13:48:25 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1674596904; x=1677188905; bh=Kelf/B7Mre/rO8p2LUaVznqJP+lT5xhWFA7
-        LxVASojo=; b=o7+SAaye3ovIJEx5yIxrl0iIQ2yovZz/yt2uXCVwOzqDRmqpU3H
-        7sHMdAoi7gRPGGZa0BpXYOCgaZUTjMUroPSvxAVRTtA0Kg/1sx6FpDMRH1JefFlX
-        rr5UalzjPfq3+9faQ3kjG0AabVC6iMnhBiYa2zh/HEuA/VWjSELcknWhFBiZ4tvK
-        eI6wjY0ErKAi79CqESS70rDKyDrb/YSz4Erca1s311ag2UQuK5QYAF70r2azAlmh
-        P36bwsorzn4+ERERaNUF81cpbZxX5lGHM+KH73nFc79UpSUGZj7NW1alyNjgSpQq
-        af+VcPapJ4jWVSvEOinaLGFtDU51jE7GS9Q==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id v9etl_U44f0f for <linux-scsi@vger.kernel.org>;
-        Tue, 24 Jan 2023 13:48:24 -0800 (PST)
-Received: from [10.225.163.56] (unknown [10.225.163.56])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P1gZb2T1kz1RvLy;
-        Tue, 24 Jan 2023 13:48:23 -0800 (PST)
-Message-ID: <6329e4fb-536b-00da-b38c-b6cb95f68994@opensource.wdc.com>
-Date:   Wed, 25 Jan 2023 06:48:21 +0900
+        with ESMTP id S234899AbjAXWn2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 17:43:28 -0500
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DF14BBB2;
+        Tue, 24 Jan 2023 14:43:27 -0800 (PST)
+Received: by mail-pj1-f48.google.com with SMTP id lp10so13217207pjb.4;
+        Tue, 24 Jan 2023 14:43:27 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zNs8jrxoXazdOS9CAZfxUR9chM1rbECw8wTTy2kXKsM=;
+        b=Jcl9caWAKi0B6HrsM8cEzjr4EQ5bceGNdhhSqt+HCG3BBlii3LVL4DfYDGEbeLCbrO
+         Ga3U+PO/XTzFNWuamFmYnJe+TE1s7RJKPi++wHEFl8ngFTSFHXl+wjx5sl7FpsOd9T33
+         eSy9n6hyVaCpIycc8uZ0wSf4Go5hZHyGd9hKqp3kRwauG22L2AGUOrTOA5TArNQ3OdAd
+         fyPWG/2OYkXPw6AYXV9Fkz4EGMlr/smEshfH1o+M0uRXb6epPNInspGlojy03v2gpk7C
+         wL+zW0/iG/fvbPrfI6CBMc55qAjyLP16HIV+oC3349r1Sv5bnApfVEa70tM7V2iZytJt
+         UxAw==
+X-Gm-Message-State: AFqh2krlZBmeKkgr4iUgs4s1625oBu6ZMqIvI9H6wV2+FUblqNJ0CgFt
+        tsEqedkMSS8LNttSo/Ux9fpcoa48DoY=
+X-Google-Smtp-Source: AMrXdXu5y41nH5PJs2rtaGovi14NQ2sfz9TRn+u7wWRakdJ7zqmW12TwELdWrWsPPFqfQ/+q1jiF6A==
+X-Received: by 2002:a05:6a20:c18a:b0:b8:db12:b90c with SMTP id bg10-20020a056a20c18a00b000b8db12b90cmr32163441pzb.17.1674600206789;
+        Tue, 24 Jan 2023 14:43:26 -0800 (PST)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id je19-20020a170903265300b00195f0fb0c18sm2205288plb.31.2023.01.24.14.43.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Jan 2023 14:43:26 -0800 (PST)
+Message-ID: <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+Date:   Tue, 24 Jan 2023 14:43:24 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
+ Thunderbird/102.6.1
 Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Niklas Cassel <niklas.cassel@wdc.com>,
         Paolo Valente <paolo.valente@linaro.org>,
         Jens Axboe <axboe@kernel.dk>
@@ -88,61 +54,56 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
 References: <20230124190308.127318-1-niklas.cassel@wdc.com>
  <20230124190308.127318-2-niklas.cassel@wdc.com>
  <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
- <bd75a7d8-7664-eff5-d417-a2fa8708fb05@acm.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <bd75a7d8-7664-eff5-d417-a2fa8708fb05@acm.org>
-Content-Type: text/plain; charset=UTF-8
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/25/23 05:36, Bart Van Assche wrote:
-> On 1/24/23 11:27, Bart Van Assche wrote:
->> Implementing duration limit support using the I/O priority mechanism 
->> makes it impossible to configure the I/O priority for commands that have 
->> a duration limit. Shouldn't the duration limit be independent of the I/O 
->> priority? Am I perhaps missing something?
+On 1/24/23 13:29, Damien Le Moal wrote:
+> I/O priority at the device level does not exist with SAS and with SATA,
+> the ACS specifications mandates that NCQ I/O priority and CDL cannot be
+> used mixed together. So from the device point of view, I/O priority and
+> CDL are mutually exclusive. No issues.
 > 
-> (replying to my own e-mail)
+> Now, if you are talking about the host level I/O priority scheduling done
+> by mq-deadline and bfq, the CDL priority class maps to the RT class. They
+> are the same, as they should. There is nothing more real-time than CDL in
+> my opinion :)
 > 
-> In SAM-6 I found the following: "The device server may use the duration 
-> expiration time to determine the order of processing commands with
-> the SIMPLE task attribute within the task set. A difference in duration 
-> expiration time between commands may override other scheduling 
-> considerations (e.g., different times to access different logical block 
-> addresses or vendor specific scheduling considerations). Processing of a 
-> collection of commands with different command duration limit settings 
-> should cause a command with an earlier duration expiration time to 
-> complete with status sooner than a command with a later duration 
-> expiration time."
+> Furthermore, if we do not reuse the I/O priority interface, we will have
+> to add another field to BIOs & requests to propagate the cdl index from
+> user space down to the device LLD, almost exactly in the manner of I/O
+> priorities, including all the controls with merging etc. That would be a
+> lot of overhead to achieve the possibility of prioritized CDL commands.
 > 
-> Do I understand correctly that it is optional for a SCSI device to 
-> interpret the command duration as a priority and that this is not mandatory?
+> CDL in of itself allows the user to define "prioritized" commands by
+> defining CDLs on the drive that are sorted in increasing time limit order,
+> i.e. with low CDL index numbers having low limits, and higher priority
+> within the class (as CDL index == prio level). With that, schedulers can
+> still do the right thing as they do now, with the additional benefit that
+> they can even be improved to base their scheduling decisions on a known
+> time limit for the command execution. But such optimization is not
+> implemented by this series.
 
-This describes the expected behavior from the drive in terms of command
-execution ordering when CDL is used. The text is a little "soft" and sound
-as if this behavior is optional because CDL is a combination of time
-limits AND a policy for each time limit. The policy of a CDL indicates
-what the drive behavior should be if a command misses its time limit. In
-short, there are 2 policies:
-1) best-effort: the time limit is a hint of sorts. If the drive fails to
-execute the command before the limit expires, the command is not aborted
-and execution continues.
-2) fast-fail: If the drive fails to execute the command before the time
-limit expires, the command must be completed with an error immediately.
+Hi Damien,
 
-And CDL also has a field, settable by the user, that describes an allowed
-performance degradation to achieve CDL scheduling in time. That is, most
-important for the best-effort case to indicate how "serious" the user is
-about the CDL limit "hint".
+What if a device that supports I/O priorities (e.g. an NVMe device that 
+supports configuring the SQ priority) and a device that supports command 
+duration limits (e.g. a SATA hard disk) are combined via the device 
+mapper into a single block device? Should I/O be submitted to the dm 
+device with one of the existing I/O priority classes (not supported by 
+SATA hard disks) or with I/O priority class IOPRIO_CLASS_DL (not 
+supported by NVMe devices)?
 
-So as you can see I think, the SAM-6 text is vague because of the many
-possible variations in scheduling policies that need to be implemented by
-a drive.
+Shouldn't the ATA core translate the existing I/O priority levels into a 
+command duration limit instead of introducing a new I/O priority class 
+that is only supported by ATA devices?
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+
+Bart.
 
