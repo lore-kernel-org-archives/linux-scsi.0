@@ -2,238 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 349E3C25B50
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Jan 2023 19:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7325C25B4E
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Jan 2023 19:27:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234562AbjAXTFr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Jan 2023 14:05:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42460 "EHLO
+        id S233955AbjAXT1Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Jan 2023 14:27:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234434AbjAXTFJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 14:05:09 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CFC34FCFD;
-        Tue, 24 Jan 2023 11:04:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674587052; x=1706123052;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=OOqiYKfmWDTAp+2e6ZBSGTgyOhzF068SxglszHxUP28=;
-  b=DbQCLA43W7uZiC23d6ii0Y7/wfZEFnF7BqGYLNf2d+bH2euuRofTjk5X
-   jKZU3QQQ8uIGMNCvW6S7+nLuhqbhDSyDN+drPlyA1tQ9NABFlUmCwn5ep
-   kk3XrtG4PGtiGBxM3HtgTbL9xjeHamXqlfM99N9S/UouaC451nuUCtzy7
-   kkgWYF0Ufe8bA/z9wYO+yQzUuobCtzgoI1wGP1KqzMln1VqsSbSCRXjp1
-   JjrE3jBNV6uc1tLfIoOfT/XtBAa5G01qbQx7gCWJIQQ6AkC7lTdSLS1Jy
-   AzPIGY+r/6rtNTFe6gEGbDuz2Dx91n47gBHgCiGiP4qH6HJB04svflogi
-   w==;
-X-IronPort-AV: E=Sophos;i="5.97,243,1669046400"; 
-   d="scan'208";a="221472992"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 03:04:11 +0800
-IronPort-SDR: xR9iu7IKWzhmLgsT9J72gZcikp0axPQQH4kDGrMikRIqGtT1T0O5eRoJU3ZtIYmd3kdp7b9he7
- mBnCwOx2O+SdRhHfkOSBABpyTSTUVYUFNz/FHc6lQDvDi+2lRpE2qlK2lAtbOOym02l6oxIadO
- IX3tf+gSB3alA2IQq910UBprfGwL1QCd4npDy1nJtnuKUdvIoewn7aiIfC4V/IulMYM9qfVBI8
- Kck0u6qPIRwSvb9bLXzdiB8NxDFc/spvEt0gbNEvZ6s2juWJrPQxJDCgIM4dW0XnhQ4umRU5fK
- Upc=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 10:16:00 -0800
-IronPort-SDR: yvox5jcHKJanTm6+tqUTC5eJy6q85LJ2+66/Lv7Twnq4g5JuwnTiKLtmgSMQ/Ds14KgfO+x5kU
- NEEueRAcxYamWS3JJf/z10bawlgkHMmXRRzhgzdWwJHGSf+l7RekM813Zofc2XmigmgTT1401T
- TEm+/ivBrNW7GbIT5PKAZRMDZ0kkXea3bAOrYXGaROrG4wXxBKdQ2mbMJrA/OlVlSZukJQkcNr
- Ul4CbI9iSQ0vxJP+hrX50mRw/0HG2+upeh2YueMZQ6FUHF2TKDxVhpw0YPH7DRD+dwMhCSJt7n
- jU8=
-WDCIronportException: Internal
-Received: from unknown (HELO x1-carbon.lan) ([10.225.164.48])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Jan 2023 11:04:09 -0800
-From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     linux-kernel@vger.kernel.org
+        with ESMTP id S233308AbjAXT1Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 14:27:24 -0500
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95DA5474DD;
+        Tue, 24 Jan 2023 11:27:23 -0800 (PST)
+Received: by mail-pl1-f170.google.com with SMTP id v23so15763842plo.1;
+        Tue, 24 Jan 2023 11:27:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Gw2FyW/YD0inA9y0t6RX6j1hwJWKEzlegEpvBujXKD0=;
+        b=VnxHevzymDm31VMfHw0Xqlt0GFmlvMGzJzfAvuyL/5LM9e07K8KjJhYMIQPzFCmHaz
+         nkNJumaqff3oOe5LJEMoKJObfxwYtM6/G+cdWaQPP5CUZYXTpQul2kra/SxfUbtzKLhU
+         pvwV6VHYR+TF3no6psRk+KnH0/7RxGiaysnc4fjJfCZtdN47dcbWFZT+L5ihV430I4gr
+         RGYhj4DryWOhMY7G0DZI1V/fTqcX/dg2iJ20rV63u/WezQMKW3Xu+dRjKFt71Rl5u/yl
+         7eyVsYUQcHIVLDT3tNfQZeTAnI+npvxVIxQnOWwMxcAAqvc/i+5VFbPF2LtsYskn8eG8
+         +kgQ==
+X-Gm-Message-State: AFqh2kp/1LL9PBOLmhLh/fes4C+eQ3WlFQaXTkR8xNpboJ3DflXr73R1
+        /vPV2RBXNVuxZMjHD2TYHHQ=
+X-Google-Smtp-Source: AMrXdXvAYq4ZzRkTWDjNmXGgIePzTSZN0X78jqlynxTH9OIhtYtCc13jwjmBH7g7U4FxXN1TtvizrA==
+X-Received: by 2002:a17:902:da8d:b0:194:dd88:ea1e with SMTP id j13-20020a170902da8d00b00194dd88ea1emr24383017plx.31.1674588442947;
+        Tue, 24 Jan 2023 11:27:22 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:c69a:cf2c:dc2d:7829? ([2620:15c:211:201:c69a:cf2c:dc2d:7829])
+        by smtp.gmail.com with ESMTPSA id bi8-20020a170902bf0800b0019605a51d50sm2037463plb.61.2023.01.24.11.27.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Jan 2023 11:27:22 -0800 (PST)
+Message-ID: <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
+Date:   Tue, 24 Jan 2023 11:27:20 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Content-Language: en-US
+To:     Niklas Cassel <niklas.cassel@wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v3 18/18] Documentation: sysfs-block-device: document command duration limits
-Date:   Tue, 24 Jan 2023 20:03:04 +0100
-Message-Id: <20230124190308.127318-19-niklas.cassel@wdc.com>
-X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230124190308.127318-1-niklas.cassel@wdc.com>
+        linux-block@vger.kernel.org
 References: <20230124190308.127318-1-niklas.cassel@wdc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+ <20230124190308.127318-2-niklas.cassel@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230124190308.127318-2-niklas.cassel@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+On 1/24/23 11:02, Niklas Cassel wrote:
+> Introduce the IOPRIO_CLASS_DL priority class to indicate that IOs should
+> be executed using duration-limits targets. The duration target to apply
+> to a command is indicated using the priority level. Up to 8 levels are
+> supported, with level 0 indiating "no limit".
+> 
+> This priority class has effect only if the target device supports the
+> command duration limits feature and this feature is enabled by the user.
+> 
+> While it is recommended to not use an ioscheduler when using the
+> IOPRIO_CLASS_DL priority class, if using the BFQ or mq-deadline scheduler,
+> IOPRIO_CLASS_DL is mapped to IOPRIO_CLASS_RT.
+> 
+> The reason for this is twofold:
+> 1) Each priority level for the IOPRIO_CLASS_DL priority class represents a
+> duration limit descriptor (DLD) inside the device. Users can configure
+> these limits themselves using passthrough commands, so from a block layer
+> perspective, Linux has no idea of how each DLD is actually configured.
+> 
+> By mapping a command to IOPRIO_CLASS_RT, the chance that a command exceeds
+> its duration limit (because it was held too long in the scheduler) is
+> decreased. It is still possible to use the IOPRIO_CLASS_DL priority class
+> for "low priority" IOs by configuring a large limit in the respective DLD.
+> 
+> 2) On ATA drives, IOPRIO_CLASS_DL commands and NCQ priority commands
+> (IOPRIO_CLASS_RT) cannot be used together. A mix of CDL and high priority
+> commands cannot be sent to a device. By mapping IOPRIO_CLASS_DL to
+> IOPRIO_CLASS_RT, we ensure that a device will never receive a mix of these
+> two incompatible priority classes.
 
-Document ABI/testing/sysfs-block-device the sysfs attributes present
-under /sys/block/*/device/duration_limits for ATA and SCSI devices
-supporting the command duration limits feature.
+Implementing duration limit support using the I/O priority mechanism 
+makes it impossible to configure the I/O priority for commands that have 
+a duration limit. Shouldn't the duration limit be independent of the I/O 
+priority? Am I perhaps missing something?
 
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
----
- Documentation/ABI/testing/sysfs-block-device | 150 +++++++++++++++++++
- 1 file changed, 150 insertions(+)
+Thanks,
 
-diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
-index 7ac7b19b2f72..3a32c86942f5 100644
---- a/Documentation/ABI/testing/sysfs-block-device
-+++ b/Documentation/ABI/testing/sysfs-block-device
-@@ -95,3 +95,153 @@ Description:
- 		This file does not exist if the HBA driver does not implement
- 		support for the SATA NCQ priority feature, regardless of the
- 		device support for this feature.
-+
-+
-+What:		/sys/block/*/device/duration_limits/enable
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RW) For ATA and SCSI devices supporting the command duration
-+		limits feature, write to the file to turn on or off the
-+		feature. By default this feature is turned off. If the device
-+		does not support the command duration limits feature, this
-+		attribute does not exist (the directory
-+		"/sys/block/\*/device/duration_limits" does not exist).
-+		Writing "1" to this file enables the use of command duration
-+		limits for read and write commands in the kernel and turns on
-+		the feature on the device. Writing "0" disables the feature.
-+
-+
-+What:		/sys/block/*/device/duration_limits/read/[1-7]/*
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the set of 7 command duration limits
-+		descriptors for read commands currently set on the device. For
-+		each of the 7 descritors, the following read-only attributes
-+		are present:
-+
-+		  - duration_guideline: specifies the preferred length of time
-+		    in microseconds for the completion of a command.
-+
-+		  - duration_guideline_policy: specifies the policy action
-+		    taken if the duration_guideline attribute specifies a
-+		    non-zero command duration guideline that the device is
-+		    unable to achieve for a command.
-+
-+		    Possible values are:
-+
-+		      - 0x0: The device will complete the command at the
-+			earliest possible time consistent with the specified
-+			command duration guideline.
-+
-+		      - 0x1: If the specified command duration guideline has not
-+			been achieved and the command duration guideline policy
-+			field is not in the seventh command duration limits
-+			descriptor, then the device continues processing that
-+			command using the command duration limits descriptor
-+			that has the next higher number.
-+
-+		      - 0x2: The device will continue processing the command as
-+			with no command duration limits descriptor being used.
-+
-+		      - 0xD: The device will complete the command and an IO
-+			failure will be reported to the user with the ETIME
-+			error code.
-+
-+		      - 0xF: Same as 0xD.
-+
-+		  - max_active_time: specifies an upper limit in microseconds
-+		    on the time that elapses from the time at which the device
-+		    initiates actions to access, transfer, or act upon the
-+		    specified data until the time the device returns status for
-+		    the command.
-+
-+		  - max_active_time_policy: specifies the policy action taken
-+		    if the time used to process a command exceeds a non-zero
-+		    time specified by the max_active_time attribute.
-+
-+		    Possible values are:
-+
-+		      - 0x0: The device will complete the command at the
-+			earliest possible time (i.e, do nothing based on the max
-+			time limit not being met).
-+
-+		      - 0xD: The device will complete the command and an IO
-+			failure will be reported to the user with the ETIME
-+			error code.
-+
-+		      - 0xE: Same as 0xD.
-+
-+		      - 0xF: Same as 0xD.
-+
-+		  - max_inactive_time: specifies an upper limit in microseconds
-+		    on the time that elapses from the time at which the device
-+		    receives the command until the time at which the device
-+		    initiates actions to access, transfer, or act upon the
-+		    specified data.
-+
-+		  - max_inactive_time_policy: specifies the policy action taken
-+		    if a non-zero max_inactive_time limit is not met.
-+
-+		    Possible values are:
-+
-+		      - 0x0: The device will complete the command at the
-+			earliest possible time (i.e, do nothing based on the max
-+			time limit not being met).
-+
-+		      - 0xD: The device will complete the command and an IO
-+			failure will be reported to the user with the ETIME
-+			error code.
-+
-+		      - 0xF: Same as 0xD.
-+
-+
-+What:		/sys/block/*/device/duration_limits/read/page
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the name of the device VPD page
-+		specifying the set of 7 command duration limits descriptors for
-+		read commands. Possible values are "T2A" and "T2B".
-+
-+
-+What:		/sys/block/*/device/duration_limits/write/[1-7]/*
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the set of 7 command duration limits
-+		descriptors for write commands currently set on the device. For
-+		each of the 7 descritors, the same set of read-only attributes
-+		as for read commands is present.
-+
-+
-+What:		/sys/block/*/device/duration_limits/write/page
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this shows the name of the device VPD page
-+		specifying the set of 7 command duration limits descriptors for
-+		write commands. Possible values are "T2A" and "T2B".
-+
-+
-+What:		/sys/block/*/device/duration_limits/perf_vs_duration_guideline
-+Date:		Dec, 2022
-+KernelVersion:	v6.3
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RO) For ATA and SCSI devices supporting the command duration
-+		limits feature, this specifies the maximum percentage increase
-+		in average command completion times (reduction in IOPS) that
-+		is allowed for the device to perform actions based on the
-+		contents of the duration guideline field in every command
-+		duration limit descriptor for both read and write commands.
--- 
-2.39.1
+Bart.
 
