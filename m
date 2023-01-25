@@ -2,155 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31FA4C27C76
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 19:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F28ACC27C76
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 19:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236242AbjAYTXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Jan 2023 14:23:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38888 "EHLO
+        id S234493AbjAYTnU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Jan 2023 14:43:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235590AbjAYTXG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 14:23:06 -0500
-Received: from mail-yw1-x1129.google.com (mail-yw1-x1129.google.com [IPv6:2607:f8b0:4864:20::1129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFACE72A9
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:22:50 -0800 (PST)
-Received: by mail-yw1-x1129.google.com with SMTP id 00721157ae682-4ff07dae50dso233391297b3.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:22:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=PCnMypYs8jymH6Ufuva+9r/69Y/DZs8kYxwQEYrzQFk=;
-        b=hXTUs83qvSMCw0sqrewtph/1zyRGQA8EwV9VOqASoIhN1O27YlTeLHvU30LwpkaPKE
-         6ZtbduOBpeU0Mk6yScQyxHGjdOZ8W8NbAK7HCSbKR2qQVwpslpoP2Mqh8DnM60UrkSEV
-         Fy/rJx/xAj6ReR1yQheSDvUeiLsUOZe36GsXUe+/pA5dp4+pot+ScO1k5jhTafZOkoJo
-         vEjMe7B3/0BupSIQn5CSlkYjolaKBFMYB73xyId061H8p1ZYZbkvvK9SPdZltanRDpUl
-         vOuM+M/xFo7tmOP85pcv8h038+SVqlBqYWxO3Lgun0O5W06va+PJHK2pFsHgrhvmIiGL
-         lvow==
+        with ESMTP id S233619AbjAYTnT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 14:43:19 -0500
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4003043926
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:43:18 -0800 (PST)
+Received: by mail-pl1-f182.google.com with SMTP id k13so18951155plg.0
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:43:18 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=PCnMypYs8jymH6Ufuva+9r/69Y/DZs8kYxwQEYrzQFk=;
-        b=KNGEmQgjyd77cI12hyJl+w23LKzU2g5BecEd/ML3aY/9pYRUKCwU8S5ac9QBa5WWT4
-         PjnUYyAHflNuBukCRRf2jc6SaMr2NHyqXdtuA5qBeHB12LdLhqd3Xb6JNYrJzVLHvuTn
-         PAfOKGp/k/SYrommYtG6RDBHXE6KEwXe/sL+qJ5ShP+AWZ0nMTIou8poUcb0vuq/JVFE
-         7MQJwMRkE+ZAgQZNpagYpvVj2bVczl0cW5LOLKhXAooOtYyvMb3q7o9Kx2rhSfb55pqY
-         Jd+ayVw52hg0PP5Gql+ph80SIqwk1OuHc60qjc1MYSk/dnSuDd9CDXTlbBJPHMsuPzhV
-         /qKw==
-X-Gm-Message-State: AO0yUKWgjFJJqf51F8D66m9fwXxurOpCNXvv9l0je796vdhJ+DxH51Ai
-        yPzXyYyHNV5TSlvGnc4CCrsuyH61lrfQ7eyLrBSvOg==
-X-Google-Smtp-Source: AK7set/Rj29H3r8vHaYccCmp943Un+QyMRF/w8dcRdt99GFw8apI+/L+5tSmXBTsBLdlTBniti7hA8kyFbpjr3H10kc=
-X-Received: by 2002:a0d:d456:0:b0:507:26dc:ebd with SMTP id
- w83-20020a0dd456000000b0050726dc0ebdmr298632ywd.455.1674674569763; Wed, 25
- Jan 2023 11:22:49 -0800 (PST)
+        bh=xhHqG4Q6Wqwz7zFntIlbEm2+z6QU8BU/fnN4Y+JJnTA=;
+        b=jhNllj+iJl7fXsF+J70F6O9sdio7s2ZR7pwABIUC9vkPffNT73TdwULb5tTAU9wmhT
+         2V7XlkwH9BF60BkHORW5i0P/9uxGWm/5H3pl46ewc5bYasghKGYeolqTA/q4KTOmNJJr
+         grjtx/p7J8hYvCnVqGUr4BD2IaNCYQnXpUwVt6jDRgBJJpX1O4spe4m5lF99PFZiH/2Y
+         eLVMKY88+0RqDBmK5KlTgugqxKQ0G9jSfNj2GhWjIPuVAA0dE9unkScdWclU2X31t+XN
+         Bhp/2WZjDcXeICTnS8CTqJm6UgP6U0sUwoRbTwSr7rj8BkTVglDar0+ElUD7nVXcJgTl
+         e/IQ==
+X-Gm-Message-State: AFqh2krc/BBW6f/AbWMGfE6nCiifgJKSgp9ssyZgNOUlYTEfUqalD0JF
+        dV94xuDLWmApfyFEI4G+3mk=
+X-Google-Smtp-Source: AMrXdXsRHF0GZ5owlu2rN52z48UfPCaU79CGsrU7VP4eghOA7gVn5kTqIbSWdSaT7vRHHjJwFtOB7g==
+X-Received: by 2002:a17:90a:fa43:b0:229:e620:6c19 with SMTP id dt3-20020a17090afa4300b00229e6206c19mr26670003pjb.0.1674675797701;
+        Wed, 25 Jan 2023 11:43:17 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:7512:ed47:db25:4294])
+        by smtp.gmail.com with ESMTPSA id q25-20020a637519000000b004d182686e08sm3612785pgc.39.2023.01.25.11.43.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Jan 2023 11:43:16 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Martin Wilck <mwilck@suse.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Sachin Sant <sachinp@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>
+Subject: [PATCH] scsi: core: Fix the scsi_device_put() might_sleep annotation
+Date:   Wed, 25 Jan 2023 11:43:11 -0800
+Message-Id: <20230125194311.249553-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.39.1.456.gfc5497dd1b-goog
 MIME-Version: 1.0
-References: <20230125083851.27759-1-surenb@google.com> <20230125083851.27759-2-surenb@google.com>
- <Y9F19QEDX5d/44EV@casper.infradead.org>
-In-Reply-To: <Y9F19QEDX5d/44EV@casper.infradead.org>
-From:   Suren Baghdasaryan <surenb@google.com>
-Date:   Wed, 25 Jan 2023 11:22:38 -0800
-Message-ID: <CAJuCfpH+LMFX=TT04gSMA05cz_-CXMum6fobRrduWvzm1HWPmQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/6] mm: introduce vma->vm_flags modifier functions
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     akpm@linux-foundation.org, michel@lespinasse.org,
-        jglisse@google.com, mhocko@suse.com, vbabka@suse.cz,
-        hannes@cmpxchg.org, mgorman@techsingularity.net, dave@stgolabs.net,
-        liam.howlett@oracle.com, peterz@infradead.org,
-        ldufour@linux.ibm.com, paulmck@kernel.org, luto@kernel.org,
-        songliubraving@fb.com, peterx@redhat.com, david@redhat.com,
-        dhowells@redhat.com, hughd@google.com, bigeasy@linutronix.de,
-        kent.overstreet@linux.dev, punit.agrawal@bytedance.com,
-        lstoakes@gmail.com, peterjung1337@gmail.com, rientjes@google.com,
-        axelrasmussen@google.com, joelaf@google.com, minchan@google.com,
-        jannh@google.com, shakeelb@google.com, tatashin@google.com,
-        edumazet@google.com, gthelen@google.com, gurua@google.com,
-        arjunroy@google.com, soheil@google.com, hughlynch@google.com,
-        leewalsh@google.com, posk@google.com, will@kernel.org,
-        aneesh.kumar@linux.ibm.com, npiggin@gmail.com,
-        chenhuacai@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, dave.hansen@linux.intel.com, richard@nod.at,
-        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
-        qianweili@huawei.com, wangzhou1@hisilicon.com,
-        herbert@gondor.apana.org.au, davem@davemloft.net, vkoul@kernel.org,
-        airlied@gmail.com, daniel@ffwll.ch,
-        maarten.lankhorst@linux.intel.com, mripard@kernel.org,
-        tzimmermann@suse.de, l.stach@pengutronix.de,
-        krzysztof.kozlowski@linaro.org, patrik.r.jakobsson@gmail.com,
-        matthias.bgg@gmail.com, robdclark@gmail.com,
-        quic_abhinavk@quicinc.com, dmitry.baryshkov@linaro.org,
-        tomba@kernel.org, hjc@rock-chips.com, heiko@sntech.de,
-        ray.huang@amd.com, kraxel@redhat.com, sre@kernel.org,
-        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
-        tfiga@chromium.org, m.szyprowski@samsung.com, mchehab@kernel.org,
-        dimitri.sivanich@hpe.com, zhangfei.gao@linaro.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        dgilbert@interlog.com, hdegoede@redhat.com, mst@redhat.com,
-        jasowang@redhat.com, alex.williamson@redhat.com, deller@gmx.de,
-        jayalk@intworks.biz, viro@zeniv.linux.org.uk, nico@fluxnic.net,
-        xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-        adilger.kernel@dilger.ca, miklos@szeredi.hu,
-        mike.kravetz@oracle.com, muchun.song@linux.dev, bhe@redhat.com,
-        andrii@kernel.org, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
-        kuba@kernel.org, pabeni@redhat.com, perex@perex.cz, tiwai@suse.com,
-        haojian.zhuang@gmail.com, robert.jarzmik@free.fr,
-        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
-        linux-kernel@vger.kernel.org, linux-graphics-maintainer@vmware.com,
-        linux-ia64@vger.kernel.org, linux-arch@vger.kernel.org,
-        loongarch@lists.linux.dev, kvm@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-sgx@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
-        linux-crypto@vger.kernel.org, nvdimm@lists.linux.dev,
-        dmaengine@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, etnaviv@lists.freedesktop.org,
-        linux-samsung-soc@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-        linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-        freedreno@lists.freedesktop.org,
-        linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-accelerators@lists.ozlabs.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        netdev@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-aio@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        devel@lists.orangefs.org, kexec@lists.infradead.org,
-        linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, kasan-dev@googlegroups.com,
-        selinux@vger.kernel.org, alsa-devel@alsa-project.org,
-        kernel-team@android.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 10:33 AM Matthew Wilcox <willy@infradead.org> wrote:
->
-> On Wed, Jan 25, 2023 at 12:38:46AM -0800, Suren Baghdasaryan wrote:
-> > +/* Use when VMA is not part of the VMA tree and needs no locking */
-> > +static inline void init_vm_flags(struct vm_area_struct *vma,
-> > +                              unsigned long flags)
-> > +{
-> > +     vma->vm_flags = flags;
->
-> vm_flags are supposed to have type vm_flags_t.  That's not been
-> fully realised yet, but perhaps we could avoid making it worse?
->
-> >       pgprot_t vm_page_prot;
-> > -     unsigned long vm_flags;         /* Flags, see mm.h. */
-> > +
-> > +     /*
-> > +      * Flags, see mm.h.
-> > +      * WARNING! Do not modify directly.
-> > +      * Use {init|reset|set|clear|mod}_vm_flags() functions instead.
-> > +      */
-> > +     unsigned long vm_flags;
->
-> Including changing this line to vm_flags_t
+Although most calls of scsi_device_put() happen from non-atomic context,
+alua_rtpg_queue() calls this function from atomic context if
+alua_rtpg_queue() itself is called from atomic context. alua_rtpg_queue()
+is always called from contexts where the caller must hold at least one
+reference to the scsi device in question. This means that the reference
+taken by alua_rtpg_queue() itself can't be the last one, and thus can be
+dropped without entering the code path in which scsi_device_put() might
+actually sleep. Hence move the might_sleep() annotation from
+scsi_device_put() into scsi_device_dev_release().
 
-Good point. Will make the change. Thanks!
+[1] https://lore.kernel.org/linux-scsi/b49e37d5-edfb-4c56-3eeb-62c7d5855c00@linux.ibm.com/
+[2] https://lore.kernel.org/linux-scsi/55c35e64-a7d4-9072-46fd-e8eae6a90e96@linux.ibm.com/
+
+Note: a significant part of the above description was written by Martin
+Wilck.
+
+Fixes: f93ed747e2c7 ("scsi: core: Release SCSI devices synchronously")
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Steffen Maier <maier@linux.ibm.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Sachin Sant <sachinp@linux.ibm.com>
+Cc: Benjamin Block <bblock@linux.ibm.com>
+Reported-by: Steffen Maier <maier@linux.ibm.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi.c       | 2 --
+ drivers/scsi/scsi_sysfs.c | 2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 1426b9b03612..9feb0323bc44 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -588,8 +588,6 @@ void scsi_device_put(struct scsi_device *sdev)
+ {
+ 	struct module *mod = sdev->host->hostt->module;
+ 
+-	might_sleep();
+-
+ 	put_device(&sdev->sdev_gendev);
+ 	module_put(mod);
+ }
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 981d1bab2120..8ef9a5494340 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -451,6 +451,8 @@ static void scsi_device_dev_release(struct device *dev)
+ 	struct scsi_vpd *vpd_pgb0 = NULL, *vpd_pgb1 = NULL, *vpd_pgb2 = NULL;
+ 	unsigned long flags;
+ 
++	might_sleep();
++
+ 	scsi_dh_release_device(sdev);
+ 
+ 	parent = sdev->sdev_gendev.parent;
