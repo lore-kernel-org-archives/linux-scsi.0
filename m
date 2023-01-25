@@ -2,111 +2,168 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F28ACC27C76
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 19:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 603CCC27C76
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 19:57:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234493AbjAYTnU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Jan 2023 14:43:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45956 "EHLO
+        id S235776AbjAYT5g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Jan 2023 14:57:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233619AbjAYTnT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 14:43:19 -0500
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4003043926
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:43:18 -0800 (PST)
-Received: by mail-pl1-f182.google.com with SMTP id k13so18951155plg.0
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:43:18 -0800 (PST)
+        with ESMTP id S235646AbjAYT5e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 14:57:34 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3CF059E55
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:57:13 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id t12-20020a17090aae0c00b00229f4cff534so4374101pjq.1
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 11:57:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ygHMnHsIEZjcgglEGPHyaA5Q1hx5B2oeOu9DAjqK20E=;
+        b=G+w4HqqT+vhbdh3murf5Z2sK3MXOwJ3H+aCJvvPArXwl7cJJ36YMmWcF8Pl6Yg24d7
+         rnrMYh5QUNdVkH9ayWAxmh0wOt8cWa4A2RshRpIiqLNG3T3lZBIYnJDxlAYnO1FiuOU1
+         B7NfS8Ur4lWHL5nRWyLc49qEIyK7Uu1eKyLU9OdBE6uS80Uhvd7qP1XgIrpRBFPbMBpe
+         RWaXtYEp6ctAsDVdpxexhyKIbtxy7gBvOmaQm1leUm8ihyMXhX56Cy2II3eVxxXXOttN
+         AjzWt3yejgu4LLEfxanv28r7gz+gn39FYg3wSpCCjs2vzkBvf9nZneBocvEdBXlhiWq5
+         tmYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=xhHqG4Q6Wqwz7zFntIlbEm2+z6QU8BU/fnN4Y+JJnTA=;
-        b=jhNllj+iJl7fXsF+J70F6O9sdio7s2ZR7pwABIUC9vkPffNT73TdwULb5tTAU9wmhT
-         2V7XlkwH9BF60BkHORW5i0P/9uxGWm/5H3pl46ewc5bYasghKGYeolqTA/q4KTOmNJJr
-         grjtx/p7J8hYvCnVqGUr4BD2IaNCYQnXpUwVt6jDRgBJJpX1O4spe4m5lF99PFZiH/2Y
-         eLVMKY88+0RqDBmK5KlTgugqxKQ0G9jSfNj2GhWjIPuVAA0dE9unkScdWclU2X31t+XN
-         Bhp/2WZjDcXeICTnS8CTqJm6UgP6U0sUwoRbTwSr7rj8BkTVglDar0+ElUD7nVXcJgTl
-         e/IQ==
-X-Gm-Message-State: AFqh2krc/BBW6f/AbWMGfE6nCiifgJKSgp9ssyZgNOUlYTEfUqalD0JF
-        dV94xuDLWmApfyFEI4G+3mk=
-X-Google-Smtp-Source: AMrXdXsRHF0GZ5owlu2rN52z48UfPCaU79CGsrU7VP4eghOA7gVn5kTqIbSWdSaT7vRHHjJwFtOB7g==
-X-Received: by 2002:a17:90a:fa43:b0:229:e620:6c19 with SMTP id dt3-20020a17090afa4300b00229e6206c19mr26670003pjb.0.1674675797701;
-        Wed, 25 Jan 2023 11:43:17 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:7512:ed47:db25:4294])
-        by smtp.gmail.com with ESMTPSA id q25-20020a637519000000b004d182686e08sm3612785pgc.39.2023.01.25.11.43.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Jan 2023 11:43:16 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Martin Wilck <mwilck@suse.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Sachin Sant <sachinp@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>
-Subject: [PATCH] scsi: core: Fix the scsi_device_put() might_sleep annotation
-Date:   Wed, 25 Jan 2023 11:43:11 -0800
-Message-Id: <20230125194311.249553-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.39.1.456.gfc5497dd1b-goog
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ygHMnHsIEZjcgglEGPHyaA5Q1hx5B2oeOu9DAjqK20E=;
+        b=YqgSKUjoaylIrePSta9EbevTYxvNn4GFYEGKTqexwFgZ9V3Ygok7R9JDSpMGVkTg3o
+         OmGqJpf6ll8v88VUsqTEZ9gqjnxprKNdtFRgQ+8HC7zM9U0dDwLQgDY7gGKCjHqnKhF2
+         6JqyqUK+lF9aGTms6BwkCULRYUhrxCDDTqNFpkEBVcQG9t4vDd2Aq/GlGpnKbaMbgb4B
+         7y1hAxecqjpvYtUv4wYROKfNyivsQV/7+0R6wvg85mV2bQizXU3ZHO01JMKOeaenCuo6
+         eU21MtRDbrHTSqG9yZae8fZLTi+6+kF9fBuML9ICzWJ+bDSChMfPm6EpXJYSyak3sggR
+         3/uA==
+X-Gm-Message-State: AFqh2kqbC50XY+QattnGpBHhRvOXzYpnlA9B+yDKaaXJrIg+UQUD6lEh
+        Owy1dhZ7CuVE/smqvLg4dGzm9eiLkZW33NCn
+X-Google-Smtp-Source: AMrXdXsfvnnt1bGQQkjpCy1nk+oBh7Ww/6pIevFLRLnbb7p1/oRss9o5JN6ot9i+fqEz+ZDVqd/2vA==
+X-Received: by 2002:a05:6a20:6697:b0:9d:efbe:a113 with SMTP id o23-20020a056a20669700b0009defbea113mr31043942pzh.35.1674676628538;
+        Wed, 25 Jan 2023 11:57:08 -0800 (PST)
+Received: from smtpclient.apple ([136.226.79.5])
+        by smtp.gmail.com with ESMTPSA id d4-20020a63a704000000b0047850cecbdesm3546932pgf.69.2023.01.25.11.57.07
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 25 Jan 2023 11:57:07 -0800 (PST)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.400.51.1.1\))
+Subject: Re: The PQ=1 saga
+From:   Brian Bunker <brian@purestorage.com>
+In-Reply-To: <yq1a627l4gn.fsf@ca-mkp.ca.oracle.com>
+Date:   Wed, 25 Jan 2023 11:56:55 -0800
+Cc:     linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <446766A5-C12A-4965-85F2-49DEF5D93424@purestorage.com>
+References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
+ <CB441742-2C22-41A4-95A3-10D251C31F5B@purestorage.com>
+ <yq1a627l4gn.fsf@ca-mkp.ca.oracle.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+X-Mailer: Apple Mail (2.3731.400.51.1.1)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Although most calls of scsi_device_put() happen from non-atomic context,
-alua_rtpg_queue() calls this function from atomic context if
-alua_rtpg_queue() itself is called from atomic context. alua_rtpg_queue()
-is always called from contexts where the caller must hold at least one
-reference to the scsi device in question. This means that the reference
-taken by alua_rtpg_queue() itself can't be the last one, and thus can be
-dropped without entering the code path in which scsi_device_put() might
-actually sleep. Hence move the might_sleep() annotation from
-scsi_device_put() into scsi_device_dev_release().
 
-[1] https://lore.kernel.org/linux-scsi/b49e37d5-edfb-4c56-3eeb-62c7d5855c00@linux.ibm.com/
-[2] https://lore.kernel.org/linux-scsi/55c35e64-a7d4-9072-46fd-e8eae6a90e96@linux.ibm.com/
+> On Jan 24, 2023, at 8:04 PM, Martin K. Petersen =
+<martin.petersen@oracle.com> wrote:
+>=20
+>=20
+> Brian,
+>=20
+>> For a completely separate reason I would like to see PQ=3D1 expose =
+the
+>> sd device.
+>=20
+> The host RAID controller case we could probably cover without relying =
+on
+> PQ=3D1 at all (we kind-of already do). But there are also storage =
+arrays
+> out there that rely on PQ=3D1 to inhibit devices being claimed.
+> Historically they did this because some other operating systems =
+couldn't
+> handle a processor device type. So I suspect that keying off of TPGS
+> alone is probably not sufficient to determine whether PQ=3D1 should =
+cause
+> us to attach a ULD or not in your scenario.
+I had the idea to change the check in scsi_sysfs.c from:
+-       return (sdp->inq_periph_qual =3D=3D SCSI_INQ_PQ_CON)? 1: 0;
++       return (sdp->inq_periph_qual !=3D SCSI_INQ_PQ_NOT_CAP)? 1: 0;
 
-Note: a significant part of the above description was written by Martin
-Wilck.
+This would allow PQ=3D1 but not PQ=3D3 which I think is the right thing =
+to do.
+>=20
+>> ALUA state transitions from unavailable back to another state does =
+not
+>> work depending on what state devices are in when they are initially
+>> discovered.  In the ALUA unavailable state the peripheral qualifier =
+of
+>> the device should also be set to 001b.
+>=20
+> Yep, an unfortunate wrinkle in the spec (although it makes sense).
+>=20
+>> This hole makes the unavailable ALUA state unattractive. Allowing the
+>> peripheral qualifier set to 001b to still create an sd device on
+>> discovery corrects this hole.
+>=20
+> Does your implementation actually support READ CAPACITY etc. in
+> unavailable state? Otherwise we'd end up with zero-length, read-only
+> block devices with no logical block size. And we've been down that =
+path
+> before and that is no fun.
+Yes we can support read capacity when in the unavailable state. For
+us the unavailable state means that one controller or array can not
+reach the other controller or array on the backend but the front end
+ports are still connected. They are up from an initiator transport
+perspective.
+>=20
+> I suspect it would be better to trigger a re-probe of the device when
+> transitioning out of unavailable state. Most of the logic is already =
+in
+> place and we reread VPD pages, etc. I believe there are only a few
+> pieces missing from being able to do a full in-place update.
+Unfortunately this doesn=E2=80=99t work. This does work in other OS=E2=80=99=
+s where
+I can logout the connection, and when it comes back it will discover
+that the LUN no longer has the PQ set and will come online fine. But
+in Linux this results in (after the PLOGI and PRLI):
 
-Fixes: f93ed747e2c7 ("scsi: core: Release SCSI devices synchronously")
-Cc: Martin Wilck <mwilck@suse.com>
-Cc: Steffen Maier <maier@linux.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Sachin Sant <sachinp@linux.ibm.com>
-Cc: Benjamin Block <bblock@linux.ibm.com>
-Reported-by: Steffen Maier <maier@linux.ibm.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi.c       | 2 --
- drivers/scsi/scsi_sysfs.c | 2 ++
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: INQUIRY pass 1 =
+length 36
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: INQUIRY =
+successful with code 0x0
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: INQUIRY pass 2 =
+length 96
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: INQUIRY =
+successful with code 0x0
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: peripheral =
+device type of 31, no device added
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: Sending REPORT =
+LUNS to (try 0)
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: REPORT LUNS =
+successful (try 0) result 0x0
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:0: scsi scan: REPORT LUN =
+scan
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:1: scsi scan: device exists =
+on 7:0:0:1
+Jan 25 11:42:28 init72-5 kernel: scsi 7:0:0:2: scsi scan: device exists =
+on 7:0:0:2
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1426b9b03612..9feb0323bc44 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -588,8 +588,6 @@ void scsi_device_put(struct scsi_device *sdev)
- {
- 	struct module *mod = sdev->host->hostt->module;
- 
--	might_sleep();
--
- 	put_device(&sdev->sdev_gendev);
- 	module_put(mod);
- }
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 981d1bab2120..8ef9a5494340 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -451,6 +451,8 @@ static void scsi_device_dev_release(struct device *dev)
- 	struct scsi_vpd *vpd_pgb0 = NULL, *vpd_pgb1 = NULL, *vpd_pgb2 = NULL;
- 	unsigned long flags;
- 
-+	might_sleep();
-+
- 	scsi_dh_release_device(sdev);
- 
- 	parent = sdev->sdev_gendev.parent;
+So unless those devices are removed before the rescan, which I
+cannot control from the target, an sd device will not be created on=20
+the rescanning after the logout.
+
+/dev/sg5  7 0 0 1  0  PURE      FlashArray        8888
+/dev/sg6  7 0 0 2  0  PURE      FlashArray        8888
+
+Thanks,
+Brian
+               =20
+>=20
+> --=20
+> Martin K. Petersen Oracle Linux Engineering
+
