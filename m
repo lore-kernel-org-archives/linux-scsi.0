@@ -2,79 +2,166 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19418C54E94
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 20:36:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0FABC54EED
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 20:51:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235840AbjAYUge (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Jan 2023 15:36:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36848 "EHLO
+        id S236534AbjAYUvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Jan 2023 15:51:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236470AbjAYUgb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 15:36:31 -0500
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C8AD5C0EB
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 12:36:23 -0800 (PST)
-Received: by mail-pj1-f49.google.com with SMTP id e10-20020a17090a630a00b0022bedd66e6dso3328124pjj.1
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 12:36:23 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Nqpyd6U7ytJsqYqXKZug05NlmDN44Dc5KkKhvm2AZWc=;
-        b=Zi0hpzgPDImHLAqqxkX7VByCWm2mB8cqqWyAdZyDKFY3ehKcedZnlYSYdPQFdHa8o+
-         Oh63f4vMwxXNZDOeVG29bEHVHhxZKPagrb54kgdHFPR2odEkVNsNGUzxe4fuIPoM5vGU
-         qD0N/tZ7yOFH3Gp/6EE1gBrlS2xaN1FdaBk7bj1fAyp6E2ovlrqm5cF2cZUoawB0zpPW
-         CrNk8o8N9GazSH+M1yzb/f5OKcaPRTye2DuokKJYVj29dU1RWRND+5tlSLhsAYSzLCIi
-         3MTswM64tMrAQR6XWP0Wc+rVv3tUNhsvG37bOMvtrGiscakb+reWKNp60BG1cOFa2d1k
-         Rckg==
-X-Gm-Message-State: AFqh2kpfK8zGTTENuz0c7BLyW1FNgsWmqPHO8Irq34MlIHtQY49QJheB
-        R+WnmiySEyUTxRB7InRgAg0=
-X-Google-Smtp-Source: AMrXdXs1+3k12HMlVoJTTU5KEhn95la/sGKQC62V8mvOLuJNWZHmMCpi7ACn2gHSkKG6ZPFr7T1VBQ==
-X-Received: by 2002:a17:90a:358:b0:22b:b832:d32 with SMTP id 24-20020a17090a035800b0022bb8320d32mr20103318pjf.9.1674678982583;
-        Wed, 25 Jan 2023 12:36:22 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:7512:ed47:db25:4294? ([2620:15c:211:201:7512:ed47:db25:4294])
-        by smtp.gmail.com with ESMTPSA id c2-20020a17090a1d0200b0022c033f501asm2048638pjd.41.2023.01.25.12.36.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Jan 2023 12:36:21 -0800 (PST)
-Message-ID: <ee600ffc-82c6-1d33-f756-83ac7270366e@acm.org>
-Date:   Wed, 25 Jan 2023 12:36:20 -0800
+        with ESMTP id S235174AbjAYUvC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 15:51:02 -0500
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A60E40C1;
+        Wed, 25 Jan 2023 12:50:59 -0800 (PST)
+Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
+        by mta-01.yadro.com (Proxmox) with ESMTP id 93319341CB9;
+        Wed, 25 Jan 2023 23:50:57 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
+        :cc:content-type:content-type:date:from:from:in-reply-to
+        :message-id:mime-version:references:reply-to:subject:subject:to
+        :to; s=mta-01; bh=GIyOvFMNyA3fCJNpJNPOa+C37WuGFiuD6d3HgX8tf9o=; b=
+        gVVtzkbk+7O/fpFWCAHKw8/tdRCHJYmzkLDdKzsQ5YRgE8vCf9xowRPN+R1nyv6X
+        XchEEwQnkgC8xZW+95Uo6qZSENsgI2Ynk4yetTAcEHQn99ZoE9dsArBEvNR0LPgm
+        WyfBQhvvCDucaOANmBLmipODWDucWQR14k8PYfLMqSE=
+Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id 89113341C77;
+        Wed, 25 Jan 2023 23:50:57 +0300 (MSK)
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Wed, 25 Jan
+ 2023 23:50:57 +0300
+Date:   Wed, 25 Jan 2023 23:50:56 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, Forza <forza@tnonline.net>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: Re: [PATCH 1/2] target: iscs: reject cmd in closed session
+Message-ID: <20230125205056.GI31614@yadro.com>
+References: <20230125083309.24678-1-d.bogdanov@yadro.com>
+ <20230125083309.24678-2-d.bogdanov@yadro.com>
+ <825571ca-4687-4b5c-971f-b9e13efb152d@oracle.com>
+ <478beda7-df98-d925-bfac-2856984c12d7@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: The PQ=1 saga
-Content-Language: en-US
-To:     Brian Bunker <brian@purestorage.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
- <CB441742-2C22-41A4-95A3-10D251C31F5B@purestorage.com>
- <yq1a627l4gn.fsf@ca-mkp.ca.oracle.com>
- <446766A5-C12A-4965-85F2-49DEF5D93424@purestorage.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <446766A5-C12A-4965-85F2-49DEF5D93424@purestorage.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <478beda7-df98-d925-bfac-2856984c12d7@oracle.com>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/25/23 11:56, Brian Bunker wrote:
->> On Jan 24, 2023, at 8:04 PM, Martin K. Petersen <martin.petersen@oracle.com> wrote:
->> I suspect it would be better to trigger a re-probe of the device when
->> transitioning out of unavailable state. Most of the logic is already in
->> place and we reread VPD pages, etc. I believe there are only a few
->> pieces missing from being able to do a full in-place update.
- >
-> Unfortunately this doesn’t work.
+Hi Mike,
 
-If that doesn't work today, how about implementing this functionality?
-How about letting the ALUA device handler do a SCSI rescan if the ALUA state
-changes from a state in which READ CAPACITY does not have to be supported
-(standby, unavailable) to a state in which READ CAPACITY must be supported
-(active/optimized, active/non-optimized)?
+On Wed, Jan 25, 2023 at 11:18:32AM -0600, michael.christie@oracle.com wrote:
+> On 1/25/23 11:03 AM, Mike Christie wrote:
+> > On 1/25/23 02:33, Dmitry Bogdanov wrote:
+> >> Do not handle incoming commands if the session is already closed.
+> >>
+> >> That patch fixes the following stacktrace:
+> >>
+> >>  Decremented iSCSI connection count to 0 from node: iqn.1996-04.com.local:3
+> >>  TARGET_CORE[iSCSI]: Deregistered fabric_sess
+> >>  Moving to TARG_SESS_STATE_FREE.
+> >>  Released iSCSI session from node: iqn.1996-04.com.local:3
+> >>  Decremented number of active iSCSI Sessions on iSCSI TPG: 0 to 1
+> >>  rx_loop: 48, total_rx: 48, data: 48
+> >>  Got SCSI Command, ITT: 0x2000005d, CmdSN: 0x4a020000, ExpXferLen: 0, Length: 0, CID: 0
+> >> BUG: Kernel NULL pointer dereference on read at 0x00000000
+> >>   Faulting instruction address: 0xc008000000a9b574
+> >>   Oops: Kernel access of bad area, sig: 11 [#1]
+> >>   NIP [c008000000a9b574] transport_lookup_cmd_lun+0x37c/0x470 [target_core_mod]
+> >>   LR [c008000001017318] iscsit_setup_scsi_cmd+0x520/0x780 [iscsi_target_mod]
+> >> Call Trace:
+> >>  [c000000059e4fae0] [c000000059e4fb70] 0xc000000059e4fb70 (unreliable)
+> >>  [c000000059e4fb70] [c008000001017318] iscsit_setup_scsi_cmd+0x520/0x780 [iscsi_target_mod]
+> >>  [c000000059e4fc30] [c00800000101c448] iscsit_get_rx_pdu+0x720/0x11d0 [iscsi_target_mod]
+> >>  [c000000059e4fd60] [c00800000101ebc8] iscsi_target_rx_thread+0xb0/0x190 [iscsi_target_mod]
+> >>  [c000000059e4fdb0] [c00000000018c50c] kthread+0x19c/0x1b0
+> >>
+> >> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> >> ---
+> >>  drivers/target/iscsi/iscsi_target.c | 8 ++++++--
+> >>  include/scsi/iscsi_proto.h          | 1 +
+> >>  2 files changed, 7 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> >> index baf4da7bb3b4..f6008675dd3f 100644
+> >> --- a/drivers/target/iscsi/iscsi_target.c
+> >> +++ b/drivers/target/iscsi/iscsi_target.c
+> >> @@ -1199,7 +1199,9 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+> >>              hdr->cmdsn, be32_to_cpu(hdr->data_length), payload_length,
+> >>              conn->cid);
+> >>
+> >> -    target_get_sess_cmd(&cmd->se_cmd, true);
+> >> +    if (target_get_sess_cmd(&cmd->se_cmd, true) < 0)
+> >> +            return iscsit_add_reject_cmd(cmd,
+> >> +                            ISCSI_REASON_WAITING_FOR_LOGOUT, buf);
+> >>
+> > Did this require target_stop_session somewhere? I think this is a possible
 
-Thanks,
+In my private patchset there the third patch was with
+target_stop_session/target_wait_for_sess_cmds right after
+scsit_free_connection_recovery_entries(sess) from the second patch.
+I did not post it because you are preparing a patchset with
+target_wait_for_sess_cmds in iscsi.
 
-Bart.
+Please, take my second patch to your patchset (if Martin will not take
+it separately), it is definitely a bugfix.
+But, please, take care that after
+iscsit_free_connection_recovery_entries iscsi should wait for commands
+complete too to fix that use-after-free completely.
+
+> Oh wait, if there is a use after free like below then iscsit_stop_session
+> won't help since we are trying to stop incoming commands from referencing
+> the se_session/iscsit_session. We would need to check something on the
+> iscsit_conn.
+
+Looking at the log snippet now I see that the call trace is not about
+new command in the dead session. Because iscsi session is closed only
+after both RX and TX threads have been stopped. It was a command in an
+alive session.
+Most likely, that call trace was due to the problem that I fixed in
+dd0a66ada0bd ("scsi: target: core: Fix race during ACL removal") that
+was catched on FC. And this one was on iSCSI. They are about the same
+age.
+
+I am dropping this (1st) patch as it is for an unreal case and actually does
+not solve use-after-free session: iscsit_add_reject_cmd in the end calls
+target_put_sess_cmd(se_cmd);
+	target_free_tag(sess->se_sess, cmd);
+    percpu_ref_put(&se_sess->cmd_count);
+
+
+> > use after free.
+> >
+> > It seems like if we have logged the message:
+> >
+> >>  Moving to TARG_SESS_STATE_FREE.
+> >
+> > then we called:
+> >
+> > transport_deregister_session -> transport_free_session
+> >
+> > and freed the se_session.
+> >
+> > So above if target_get_sess_cmd returns failure then we have run:
+> >
+> > transport_free_session ->transport_uninit_session -> percpu_ref_exit
+> >
+> > and transport_free_session could have done:
+> >
+> > kmem_cache_free(se_sess_cache, se_sess)
+> >
+> > by the time we run the code above and we are now accessing a freed
+> > se_session and iscsit_session.
+
+ 
+BR,
+ Dmitry
 
