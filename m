@@ -2,166 +2,193 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0FABC54EED
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 20:51:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B97E4C54EED
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 21:23:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236534AbjAYUvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Jan 2023 15:51:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53508 "EHLO
+        id S236646AbjAYVXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Jan 2023 16:23:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235174AbjAYUvC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 15:51:02 -0500
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A60E40C1;
-        Wed, 25 Jan 2023 12:50:59 -0800 (PST)
-Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
-        by mta-01.yadro.com (Proxmox) with ESMTP id 93319341CB9;
-        Wed, 25 Jan 2023 23:50:57 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
-        :cc:content-type:content-type:date:from:from:in-reply-to
-        :message-id:mime-version:references:reply-to:subject:subject:to
-        :to; s=mta-01; bh=GIyOvFMNyA3fCJNpJNPOa+C37WuGFiuD6d3HgX8tf9o=; b=
-        gVVtzkbk+7O/fpFWCAHKw8/tdRCHJYmzkLDdKzsQ5YRgE8vCf9xowRPN+R1nyv6X
-        XchEEwQnkgC8xZW+95Uo6qZSENsgI2Ynk4yetTAcEHQn99ZoE9dsArBEvNR0LPgm
-        WyfBQhvvCDucaOANmBLmipODWDucWQR14k8PYfLMqSE=
-Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Proxmox) with ESMTPS id 89113341C77;
-        Wed, 25 Jan 2023 23:50:57 +0300 (MSK)
-Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Wed, 25 Jan
- 2023 23:50:57 +0300
-Date:   Wed, 25 Jan 2023 23:50:56 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, Forza <forza@tnonline.net>,
-        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
-Subject: Re: [PATCH 1/2] target: iscs: reject cmd in closed session
-Message-ID: <20230125205056.GI31614@yadro.com>
-References: <20230125083309.24678-1-d.bogdanov@yadro.com>
- <20230125083309.24678-2-d.bogdanov@yadro.com>
- <825571ca-4687-4b5c-971f-b9e13efb152d@oracle.com>
- <478beda7-df98-d925-bfac-2856984c12d7@oracle.com>
-MIME-Version: 1.0
+        with ESMTP id S229458AbjAYVXj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 16:23:39 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFF1246D59;
+        Wed, 25 Jan 2023 13:23:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1674681818; x=1706217818;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=RYqgM/RFTQIEJh6LZX5yD+m5PN121bY+E2MPDpJtrLI=;
+  b=Drm+9FtOTM6/rEB9ki8v9AlwXmLuFfYL2D1ELOe6K2AdtD+e5D1qHajN
+   vR1PKCICt4vBJRs56Z3XP53dIh1G5oUBDtgdiMzc3Fvg+PAcYTfJmunih
+   wYp8Yi/YoiBxkZoJeYB3/i+LYdkCC6JeR4g69TQdsJe+ambB6wCHe+8wJ
+   d6BPmG5Od1thO6BYXImw0BaKfc4LD44QbXtcQK722IZ/GB+SFDkJi/1vN
+   UNgOkh1VsGXizwKjHaGfPYGyO5il+2ZfYtGGFA1p97Na6jGr4xYq2Ezsm
+   ux78ANrxh9nXAxrw+FqTCBImxO7Uc5TSGHMyDtcxjWKeeh7eBgYIxgisT
+   A==;
+X-IronPort-AV: E=Sophos;i="5.97,246,1669046400"; 
+   d="scan'208";a="326057286"
+Received: from mail-mw2nam10lp2101.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.101])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Jan 2023 05:23:36 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=J109eEFjLn227NR8LSwyBhfqkmNFBmHwsZcgvB3p8ZT4aXGX30aTuhmI0AnW/epsgKzjmhzhb7Tkjcvp6Et22v7zUJIUnwtzTXhoaA1wwl/ZFIew/ee8E9uDrXLUtQNjjud86IFTe6sDhHnr6CbTc20yx8FJmfnkrEGDJE69mfGgd5hUVKChR3dgUvsyuwlUUdqXIrPLLqPcPczth+VG1qp+SF1hzgD6Axwyvs6Fq1B6c5AAb0JSdaPnM+9pjUwAL4J897aw0bcWNBA1InjG04JJg4dds0SFZb8pkeKv2OxRoIH/5AgXjtyTI3QN+MIoY720gnSJsiP/nGBAMkPMsA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RYqgM/RFTQIEJh6LZX5yD+m5PN121bY+E2MPDpJtrLI=;
+ b=iluAYCS/07H0Cz5LLBXxpRPBLsZ328nJO/AqbHIn8uaqJ/DhSCUdgedVITWT/w6qDiHCuW3H3oTynzumNNbgR+BTDX52eyQGXqDUDBLUXq/+nItK5sVwDcmMOM2nMUbMsbHAfP8e2T9vbVDHfZTC2hGSIM//CMrJoio0GWvKDhd4m0tb5fD5tig/bC3LXRtPF14YNC7H2tYfQawu9IMH3ahZrqoTekODed/JS2SG/wHeO7PMJTYxhLR/hXtm1uh3Apt+KF5D6mnTw1oOhykSq9BbgSwlHUAdfCmZ+QXVvQ/Tkzm9zAYvWL9iYplAsGTvmBrccb6MH6GCP49kwbY49A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RYqgM/RFTQIEJh6LZX5yD+m5PN121bY+E2MPDpJtrLI=;
+ b=Muw8fN1odFTBkwHJEluOyyZy+nwhIURu9Vm6IKhtoedxyAgKZwc1A6/qbibv381ip4fGUcsgP85XSC78n0LHtHM5cGZN+BmNsf354GmDoUUQUwetEiBZrCSx5JEIy8de8wSh4XgSnm9OMFbE2Y6z7/B7+mQV3uOlCs/9SpiqMTk=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by BYAPR04MB4312.namprd04.prod.outlook.com (2603:10b6:a02:fe::32) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.33; Wed, 25 Jan
+ 2023 21:23:30 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::4fcf:ae46:b9c4:127a]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::4fcf:ae46:b9c4:127a%7]) with mapi id 15.20.6043.021; Wed, 25 Jan 2023
+ 21:23:30 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Thread-Topic: [PATCH v3 01/18] block: introduce duration-limits priority class
+Thread-Index: AQHZMCaLXQP7EDNJ90KbuyJrXRgwUa6t83MAgAAiHQCAABSrAIAABJMAgAASfYCAABSfgIABIgwAgAAuRoA=
+Date:   Wed, 25 Jan 2023 21:23:30 +0000
+Message-ID: <Y9Gd0eI1t8V61yzO@x1-carbon>
+References: <20230124190308.127318-1-niklas.cassel@wdc.com>
+ <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+ <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+ <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
+ <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+ <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+ <e8324901-7c18-153f-b47f-112a394832bd@acm.org>
+In-Reply-To: <e8324901-7c18-153f-b47f-112a394832bd@acm.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|BYAPR04MB4312:EE_
+x-ms-office365-filtering-correlation-id: 222cae59-0a34-4d0e-8048-08daff1a681f
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: SchGHZ+heLXysuNRUEJ6JZv04deAbOeAf5q/L2RruTgfOCOcZT1knM0HFml3WcfIcN1WJhi9OjeNr+z/r01ZL/ofe/R6SEV6e12jepR+ecMGSPx98S/8aWP2UG64iHsJXBOceOqhohxM4ZP0pMDfec6Ut/9WPcTn3p6/z3/IeoXnCSRqp8GfH82qoxhXQlNWY6Au2E8IQeMcqgiJ/GmDb0ew0RJSRepxvH7fDHkrQv94R8YNkioQy+UuSResOSlLzspuLUeh5f857hPyyZ2NpxCq9Mx31YyX95waSea0iu5pMNrw/1T80sGDKpIBK8ASapZArE85VJQT4VJe5Cb7OJ9679wgUC33EUDQk/ynYiir5bSiPoCbfpiabeQY44Tj0ia/vywFSHnVOQrhgsAMMRfKY8zhGTE1NCZUZpKGKq6+SX7Ns17iXZKbEovlZjG7S6UwU9VBLcE7P1DeI8o8y21cREjHhGUc3HkcxdCcfynNYaJC/FoSlYhUpN4UGHm8Lek4FwJf+mjjaUX+ErYRIYNNS2jcJAd4Hka8AKmRzR83pP39FlO8U8SlUaNoNQUZ/KUFAVSHCn2U7TpGr2BlMJUDotvWsZSII1UECXPMPgv8csay/X2aAPmb7coeDyJJ
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(7916004)(136003)(346002)(366004)(376002)(396003)(39860400002)(451199018)(86362001)(66446008)(6916009)(8676002)(76116006)(66476007)(66946007)(6486002)(66556008)(316002)(33716001)(38100700002)(122000001)(54906003)(64756008)(38070700005)(478600001)(83380400001)(6512007)(41300700001)(26005)(9686003)(8936002)(71200400001)(91956017)(6506007)(5660300002)(2906002)(4326008)(186003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: YL61dxGUIq9JPnJQuZHNMl/tIsJFwVBKvk/l7f25fGp3LBitmkL3UDNbBGIXH7/IoFrPQOOCKER07l+WlQda+pYoEGNhiPs8ETQXFhxhxIz+RLIOXrtgsmwy3JwiBTR4J8fwjoW4gr2lexZmFgsj7lm1lUzZtUaHN8qdRuXY68GYuY0bCe+p1xJHL/tGKN6FsKngiKik7UXhZ51DCBbKvxIHoIyTX2Lz97/8arSuVtATBBlkU8NxsFy54tBankZKWNHBFZImcOYik9I7fCWk0Sbisyxyx3n6Zf91LPblwzW7fkmlxLntD+DDUaX+77xYkIyNMPc64Nh1L5zn0kMTSpcDEEARzF15d4IGDCzsUF1AzgofNO1K2RulRqq3IHjdMQLZuo0P5WOFOGNQPTPrDfeT7vOPf7dDNo+8J2g2Ffs=
 Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <478beda7-df98-d925-bfac-2856984c12d7@oracle.com>
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+Content-ID: <A4116D590927AE46AEDC75AEE2C433D6@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: JdXqIWlqPl/QKQHLz2eUpvMlbi9xSuuHjx6XpHGaFUOg3JHF1rxm76rm9yrFqu0yHRvazVzelbTehOqWnTKmKa+x9OuXDyhEEH2JZLHHaz98nJUBqqOYxf6hoHEGdIkbQxUpf7j4ylpp04p6aQiLkLL9WOhG9fqbVoefWbJW4Gx1oJKtdVphh8kLfqtcSFU4Qmx1WnKnztxEJADWluPwjv48tpn53sp+MrJ4FP/yy78rXY1ho7QsuGlbtn+ezsZJAA0oPfIEpX9Q8cdlhdZzQuFTSKyQ7xE7Pa/erTyBX85M4mb/yuAG0jwolESGnDy3aFWj+IxRcu72S7p44q2Zb1C/uABulz3DxeOgKbOsyaJmIHg5rBFr67mdIN074cilpt7VTd8AQCuZy41yOFyg7BHT0AtUbOC3lfc44O+4jyLZNy8Bul4AEGsBis3fnFz+2PhPiB4TkvlbXcwustJmwnJ19XlGNRd+tsZP1DSiWhmGw3WKsA3T+Yb4D0jGucZx/r5CZVv+Hqj1m1XRelzGsA7lJhk3L/kl7VUMxxlFtEUmSA7xBGH1YHLnGBLHo2aatQxUfAmg8xsxM0Q/nTOi10Kxxh1k+Jj4D0Wd18VGI2GetS/2U665P/bQUklPJwQlgqP7Bjw1A1DEmEUVvKXWq69cj4DKWbY0NRZ/l2m6RFGUbLc3j0TSklhGGp2EKRqGtGrsYiyX+3G2ZnfVk/zkZJuGBN14RWki6LDeE6I9piuq7/wkMTROgMVuMbHLO3DtgE/ol5xC0fKyxJTL/NtEGSFzUTbsMwLgoGBUynLHBbWH6T+z2Uyrax4OlzTpljBK6OM3UO4oMGvCzs+vHyQ0Rj+lPM/JxrABTf6jFs2c7TajpVktlgEO5yNSdstxrszUaGFhuHi0lhDS2XYG9RmgHw==
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 222cae59-0a34-4d0e-8048-08daff1a681f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2023 21:23:30.6849
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 0wnDkhU0hIW1Hi9jsQrztLXyCCWWaaazGY22fkxNwHCH0VYf4kJg2jRal2OVOgzDfXeOBHApd40wHHOLEKuQug==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4312
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Mike,
+On Wed, Jan 25, 2023 at 10:37:52AM -0800, Bart Van Assche wrote:
 
-On Wed, Jan 25, 2023 at 11:18:32AM -0600, michael.christie@oracle.com wrote:
-> On 1/25/23 11:03 AM, Mike Christie wrote:
-> > On 1/25/23 02:33, Dmitry Bogdanov wrote:
-> >> Do not handle incoming commands if the session is already closed.
-> >>
-> >> That patch fixes the following stacktrace:
-> >>
-> >>  Decremented iSCSI connection count to 0 from node: iqn.1996-04.com.local:3
-> >>  TARGET_CORE[iSCSI]: Deregistered fabric_sess
-> >>  Moving to TARG_SESS_STATE_FREE.
-> >>  Released iSCSI session from node: iqn.1996-04.com.local:3
-> >>  Decremented number of active iSCSI Sessions on iSCSI TPG: 0 to 1
-> >>  rx_loop: 48, total_rx: 48, data: 48
-> >>  Got SCSI Command, ITT: 0x2000005d, CmdSN: 0x4a020000, ExpXferLen: 0, Length: 0, CID: 0
-> >> BUG: Kernel NULL pointer dereference on read at 0x00000000
-> >>   Faulting instruction address: 0xc008000000a9b574
-> >>   Oops: Kernel access of bad area, sig: 11 [#1]
-> >>   NIP [c008000000a9b574] transport_lookup_cmd_lun+0x37c/0x470 [target_core_mod]
-> >>   LR [c008000001017318] iscsit_setup_scsi_cmd+0x520/0x780 [iscsi_target_mod]
-> >> Call Trace:
-> >>  [c000000059e4fae0] [c000000059e4fb70] 0xc000000059e4fb70 (unreliable)
-> >>  [c000000059e4fb70] [c008000001017318] iscsit_setup_scsi_cmd+0x520/0x780 [iscsi_target_mod]
-> >>  [c000000059e4fc30] [c00800000101c448] iscsit_get_rx_pdu+0x720/0x11d0 [iscsi_target_mod]
-> >>  [c000000059e4fd60] [c00800000101ebc8] iscsi_target_rx_thread+0xb0/0x190 [iscsi_target_mod]
-> >>  [c000000059e4fdb0] [c00000000018c50c] kthread+0x19c/0x1b0
-> >>
-> >> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-> >> ---
-> >>  drivers/target/iscsi/iscsi_target.c | 8 ++++++--
-> >>  include/scsi/iscsi_proto.h          | 1 +
-> >>  2 files changed, 7 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> >> index baf4da7bb3b4..f6008675dd3f 100644
-> >> --- a/drivers/target/iscsi/iscsi_target.c
-> >> +++ b/drivers/target/iscsi/iscsi_target.c
-> >> @@ -1199,7 +1199,9 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
-> >>              hdr->cmdsn, be32_to_cpu(hdr->data_length), payload_length,
-> >>              conn->cid);
-> >>
-> >> -    target_get_sess_cmd(&cmd->se_cmd, true);
-> >> +    if (target_get_sess_cmd(&cmd->se_cmd, true) < 0)
-> >> +            return iscsit_add_reject_cmd(cmd,
-> >> +                            ISCSI_REASON_WAITING_FOR_LOGOUT, buf);
-> >>
-> > Did this require target_stop_session somewhere? I think this is a possible
+(snip)
 
-In my private patchset there the third patch was with
-target_stop_session/target_wait_for_sess_cmds right after
-scsit_free_connection_recovery_entries(sess) from the second patch.
-I did not post it because you are preparing a patchset with
-target_wait_for_sess_cmds in iscsi.
+> Hi Damien,
+>=20
+> The more I think about this, the more I'm convinced that it would be wron=
+g
+> to introduce IOPRIO_CLASS_DL. Datacenters will have a mix of drives that
+> support CDL and drives that do not support CDL. It seems wrong to me to
+> make user space software responsible for figuring out whether or not the
+> drive supports CDL before it can be decided which I/O priority class shou=
+ld
+> be used. This is something the kernel should do instead of user space
+> software.
 
-Please, take my second patch to your patchset (if Martin will not take
-it separately), it is definitely a bugfix.
-But, please, take care that after
-iscsit_free_connection_recovery_entries iscsi should wait for commands
-complete too to fix that use-after-free completely.
+Well, if we take e.g. NCQ priority as an example, as that is probably
+the only device side I/O priority feature currently supported by the
+kernel.
 
-> Oh wait, if there is a use after free like below then iscsit_stop_session
-> won't help since we are trying to stop incoming commands from referencing
-> the se_session/iscsit_session. We would need to check something on the
-> iscsit_conn.
-
-Looking at the log snippet now I see that the call trace is not about
-new command in the dead session. Because iscsi session is closed only
-after both RX and TX threads have been stopped. It was a command in an
-alive session.
-Most likely, that call trace was due to the problem that I fixed in
-dd0a66ada0bd ("scsi: target: core: Fix race during ACL removal") that
-was catched on FC. And this one was on iSCSI. They are about the same
-age.
-
-I am dropping this (1st) patch as it is for an unreal case and actually does
-not solve use-after-free session: iscsit_add_reject_cmd in the end calls
-target_put_sess_cmd(se_cmd);
-	target_free_tag(sess->se_sess, cmd);
-    percpu_ref_put(&se_sess->cmd_count);
+If you want to use of NCQ priority, you need to first enable
+/sys/block/sdX/device/ncq_prio_enable
+and then submit I/O using IOPRIO_CLASS_RT, so I would argue the user
+already needs to know that a device supports device side I/O priority,
+if he wants to make use of it.
 
 
-> > use after free.
-> >
-> > It seems like if we have logged the message:
-> >
-> >>  Moving to TARG_SESS_STATE_FREE.
-> >
-> > then we called:
-> >
-> > transport_deregister_session -> transport_free_session
-> >
-> > and freed the se_session.
-> >
-> > So above if target_get_sess_cmd returns failure then we have run:
-> >
-> > transport_free_session ->transport_uninit_session -> percpu_ref_exit
-> >
-> > and transport_free_session could have done:
-> >
-> > kmem_cache_free(se_sess_cache, se_sess)
-> >
-> > by the time we run the code above and we are now accessing a freed
-> > se_session and iscsit_session.
+For CDL there are 7 different limits for reads and 7 different
+limits for writes, these limits can be configured by the user.
+So the users that want to get most performance out of their drive
+will most likely analyze their workloads, and set the limits depending
+on how their workload actually looks like.
 
- 
-BR,
- Dmitry
+Bottom line is that heavy users of CDL will absolutely know how the CDL
+limits are configured in user space, as they will pick the correct CDL
+index (prio level) for the descriptor that they want to use for the
+specific I/O that they are doing. An ioscheduler will most likely be
+disabled.
 
+(For CDL, the limit is from the time the command is submitted to the device=
+,
+so from the device's PoV, it does not really matter if a command is queued
+for a long time in a scheduler or not, but from an application PoV, it does
+not make sense to hold back a command for long if it e.g. has a short limit=
+.)
+
+
+If we were to reuse IOPRIO_CLASS_RT, then I guess the best option would be
+to have something like:
+
+$ cat /sys/block/sdX/device/rt_prio_backend
+[none] ncq-prio cdl
+
+Devices that does not support ncq-prio or cdl,
+e.g. currently NVMe, would just have none
+(i.e. RT simply means higher host side priority (if a scheduler is used)).
+
+SCSI would then have none and cdl
+(for SCSI devices supporting CDL.)
+
+ATA would have none, ncq-prio and cdl.
+(for ATA devices supporting CDL.)
+
+That would theoretically avoid another ioprio class, but like I've just
+explained, a user space application making use of CDL would for sure know
+how the descriptors look like anyway, so I'm not sure if there is an actual
+benefit of doing it this way over simply having a IOPRIO_CLASS_DL.
+
+I guess the only benefit would be that we would avoid introducing another
+I/O priority class (at the expense of additional complexity elsewhere).
+
+
+Kind regards,
+Niklas=
