@@ -2,390 +2,220 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D1AFC61D97
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 17:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0266AC54E94
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 17:03:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235942AbjAYRAU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Jan 2023 12:00:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53202 "EHLO
+        id S235949AbjAYRDY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Jan 2023 12:03:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235758AbjAYRAS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 12:00:18 -0500
-Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76F68B46F
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 09:00:14 -0800 (PST)
-Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-4a2f8ad29d5so272108147b3.8
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2023 09:00:14 -0800 (PST)
+        with ESMTP id S235911AbjAYRDW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2023 12:03:22 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B131F4B77C;
+        Wed, 25 Jan 2023 09:03:19 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30PFPxlM029537;
+        Wed, 25 Jan 2023 17:03:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=JpI6phucVGvgpmcYBwWQ8QropSnMwO4iSQthqsBeIRk=;
+ b=CRcjhDdtKEha0Md5/cHLf3ECHUrVDVmv/4+a/Vnx8tjryzZqo5B4JjJvdty9V3nBO7bf
+ L2muF/Ux34T/YtDWaFci4rq7zkMTbL5Qfwr2GhpLUUg8jxWWgVxK0T2jr93nbsVtBuPl
+ NsH+zOx64g0Ysz/iDgc+4fo3hoXOb27zrl0UgMUecQ0n1pus7aRBDkgzlg+KvUrqydPo
+ MR/i7D2FCtJb9BKEY4GE6eBZjS8gkzesk/7Ehs07N+GlbS2pXPi7REjurate6yEKq0+8
+ L2me0W/n/B6vGwwwrl3VRyttRJztbCu9oA90b9BmCQgc02XHebMt+6CAlGWMpEeQfFoh tA== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n86n10jed-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Jan 2023 17:03:16 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30PGJtV3031820;
+        Wed, 25 Jan 2023 17:03:16 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n86g6syvq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Jan 2023 17:03:16 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Il7v+nBwpD/WIf/VmGrxWfw6mDGIVX0Bz+K/1gTUhoadEHVne10hfHMR6KxIN+JZ6oQrzrfRCSEyAKWWZHuvxDGNuQY++Axo4rg0V/06J47GQD4HPCGo84gcmTY/f38qDR8KAq7nzZiOBoVZjlZiaAC7ce6DJ5YROWyS+udTOMOHaOLcFDh3oJp5HjHfTo1vH8qoXmBYo/KLFzpCqQNUbO1WGEd8ARKdM4PF0kdfQ0b1Mo08t5MFWyOKw7uC1A9zNNEPCqfNfwHw+BwiFLvHwopjLEL2lDQD6ci3sE3L+LyXMdjWx4Jo03sN7YloXxoUjzZqbBgd5h0sAV7Efd2NrQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=JpI6phucVGvgpmcYBwWQ8QropSnMwO4iSQthqsBeIRk=;
+ b=boXZGIDNl5iy5Fd6eK4pmUbQok+D2u63UfdH5z2pUIH+mZY3DwZ3Yj2bB8NYJVAYDMOlxCvcvZ1XYhm/OyVfbj7+3mCISwrQSJLNQf8EB84yk9aiOOV2q/BHzLD50mZZvCOZHr5dnwC6fOiCRmCxEcNq36QXO0lXbos0MgqMX+OWvjNp2btNc21DEvqzIqBd84RXQdVXo4xB1HryF4zj4DHEkDunH8ERAp8cldLUraS6BOVstTc9vsMm2NFz+87j0g2jGE2ORFeemRVCdk49kl5HvkdO8Jr0yLWzpakrB0ToQgnY1oKw/TcFQ2BGO85kCTo41f/CmNZHoS8IPnuuLQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=L4MXGiF0uBNS4YdEO04YxfSu/PH3d6GEYxinGGkJ0l0=;
-        b=W2wM+2B23DX4UFGjrNjz2QhZIRJJ0rJbNeAj16MEZr1nVm+y2drgVLMWhYKM+RXZwl
-         LyA9Ln6ru3ELYSr9r7So/z16X90Zls60BXzg/QzJqLOLV/j0Tixqf16TWNyXZGnACB9E
-         QkGJl1ScGfsTp7c4ttit0pgHNn4ey7S424sXU9dWBD5cTrLynb/1YBuhhrezEYSZhLSi
-         3eb09az3BMlgAYXh3d2+5Q7sC0FqvrC0NX040NYjkqv/h2gdKBNO3YpN4EQOf23xtORi
-         NxWfmFe951E1Au7ZDRJqODWALmTWnaVbj7QqRA33jeb/AA79tsFrFPyzpW0c4v2lui2R
-         IvJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=L4MXGiF0uBNS4YdEO04YxfSu/PH3d6GEYxinGGkJ0l0=;
-        b=SkVINhMt6x0112fRyanCiczP9u9g3gTmXx9gXqnhJaWwDryGHg4Ts9I+duQK31OmtW
-         9EHu5yX1yjlbz5ohq2RnRvx7k9W5Rq49ZzPpF8gxeQJO4yqzJr7yeBAMzQYyyDRRF/XM
-         en2vWUdVf1vpB7zXQ7BKljp4LLux73R05pKHepqLjBZZUXEM6x0X/SWqvL6pgkSs4RL7
-         yFrwnbMpncUhtfQtz1OgMw13iEOnsv3qbdw9QawbjJHjDlny3pgLD0DNW/umZNrH8v5X
-         +ykdcjekNZ8OFEqF1RlJuTG7/IZHxRXfu4Ri8eJLN9HQyISIRoCPRwFSRtZb6ZxRoh6i
-         nk3g==
-X-Gm-Message-State: AFqh2koWpIOc6splhjuXcZDnuc2aC2UxnVCPI7aGmstZ0itp6xIdp1jX
-        YINZRnVidB0c29YolJy0iI2JMBCbOFPe+paeaBjBLA==
-X-Google-Smtp-Source: AMrXdXv6WFpwQ2RivVVjLGZIQcqOZe35ABaf7/kGtBR6QRxHke62z7D7Nf0zd78A9HxP1avFtZlnWBmbm7RD5GZUdQA=
-X-Received: by 2002:a0d:c0c7:0:b0:502:30d7:5fff with SMTP id
- b190-20020a0dc0c7000000b0050230d75fffmr2052050ywd.347.1674666013171; Wed, 25
- Jan 2023 09:00:13 -0800 (PST)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=JpI6phucVGvgpmcYBwWQ8QropSnMwO4iSQthqsBeIRk=;
+ b=n46P/kwG1aScF7uHfcj/cPGigTubG/sD+rz2r2vUAuOjXDIUQH1hRezxz9jhrX+y2PIf1eY17P5sURz53XCWhuJg89KYCGka7AACfqqttvFMhvS8Wtb/7sd/D7urO1YwdolxC22Z853jOnP/E6rpeQ31loIeM2v1l23e965voYg=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ IA1PR10MB7166.namprd10.prod.outlook.com (2603:10b6:208:3f4::7) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6043.17; Wed, 25 Jan 2023 17:03:13 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::c888:aca:1eb9:ca4f]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::c888:aca:1eb9:ca4f%5]) with mapi id 15.20.6043.020; Wed, 25 Jan 2023
+ 17:03:13 +0000
+Message-ID: <825571ca-4687-4b5c-971f-b9e13efb152d@oracle.com>
+Date:   Wed, 25 Jan 2023 11:03:11 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 1/2] target: iscs: reject cmd in closed session
+Content-Language: en-US
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org
+Cc:     Forza <forza@tnonline.net>, linux-scsi@vger.kernel.org,
+        linux@yadro.com
+References: <20230125083309.24678-1-d.bogdanov@yadro.com>
+ <20230125083309.24678-2-d.bogdanov@yadro.com>
+From:   Mike Christie <michael.christie@oracle.com>
+In-Reply-To: <20230125083309.24678-2-d.bogdanov@yadro.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH0P223CA0007.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:610:116::31) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
-References: <20230125083851.27759-1-surenb@google.com> <20230125083851.27759-6-surenb@google.com>
- <Y9D5hjcprLI92VKf@dhcp22.suse.cz>
-In-Reply-To: <Y9D5hjcprLI92VKf@dhcp22.suse.cz>
-From:   Suren Baghdasaryan <surenb@google.com>
-Date:   Wed, 25 Jan 2023 09:00:00 -0800
-Message-ID: <CAJuCfpHHPB=VE7Q=hoxVj7GBF18rpSQ-O-5+S3EPxOB5rHOrDg@mail.gmail.com>
-Subject: Re: [PATCH v2 5/6] mm: introduce mod_vm_flags_nolock and use it in untrack_pfn
-To:     Michal Hocko <mhocko@suse.com>
-Cc:     akpm@linux-foundation.org, michel@lespinasse.org,
-        jglisse@google.com, vbabka@suse.cz, hannes@cmpxchg.org,
-        mgorman@techsingularity.net, dave@stgolabs.net,
-        willy@infradead.org, liam.howlett@oracle.com, peterz@infradead.org,
-        ldufour@linux.ibm.com, paulmck@kernel.org, luto@kernel.org,
-        songliubraving@fb.com, peterx@redhat.com, david@redhat.com,
-        dhowells@redhat.com, hughd@google.com, bigeasy@linutronix.de,
-        kent.overstreet@linux.dev, punit.agrawal@bytedance.com,
-        lstoakes@gmail.com, peterjung1337@gmail.com, rientjes@google.com,
-        axelrasmussen@google.com, joelaf@google.com, minchan@google.com,
-        jannh@google.com, shakeelb@google.com, tatashin@google.com,
-        edumazet@google.com, gthelen@google.com, gurua@google.com,
-        arjunroy@google.com, soheil@google.com, hughlynch@google.com,
-        leewalsh@google.com, posk@google.com, will@kernel.org,
-        aneesh.kumar@linux.ibm.com, npiggin@gmail.com,
-        chenhuacai@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, dave.hansen@linux.intel.com, richard@nod.at,
-        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
-        qianweili@huawei.com, wangzhou1@hisilicon.com,
-        herbert@gondor.apana.org.au, davem@davemloft.net, vkoul@kernel.org,
-        airlied@gmail.com, daniel@ffwll.ch,
-        maarten.lankhorst@linux.intel.com, mripard@kernel.org,
-        tzimmermann@suse.de, l.stach@pengutronix.de,
-        krzysztof.kozlowski@linaro.org, patrik.r.jakobsson@gmail.com,
-        matthias.bgg@gmail.com, robdclark@gmail.com,
-        quic_abhinavk@quicinc.com, dmitry.baryshkov@linaro.org,
-        tomba@kernel.org, hjc@rock-chips.com, heiko@sntech.de,
-        ray.huang@amd.com, kraxel@redhat.com, sre@kernel.org,
-        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
-        tfiga@chromium.org, m.szyprowski@samsung.com, mchehab@kernel.org,
-        dimitri.sivanich@hpe.com, zhangfei.gao@linaro.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        dgilbert@interlog.com, hdegoede@redhat.com, mst@redhat.com,
-        jasowang@redhat.com, alex.williamson@redhat.com, deller@gmx.de,
-        jayalk@intworks.biz, viro@zeniv.linux.org.uk, nico@fluxnic.net,
-        xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-        adilger.kernel@dilger.ca, miklos@szeredi.hu,
-        mike.kravetz@oracle.com, muchun.song@linux.dev, bhe@redhat.com,
-        andrii@kernel.org, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
-        kuba@kernel.org, pabeni@redhat.com, perex@perex.cz, tiwai@suse.com,
-        haojian.zhuang@gmail.com, robert.jarzmik@free.fr,
-        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
-        linux-kernel@vger.kernel.org, linux-graphics-maintainer@vmware.com,
-        linux-ia64@vger.kernel.org, linux-arch@vger.kernel.org,
-        loongarch@lists.linux.dev, kvm@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-sgx@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
-        linux-crypto@vger.kernel.org, nvdimm@lists.linux.dev,
-        dmaengine@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, etnaviv@lists.freedesktop.org,
-        linux-samsung-soc@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-        linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-        freedreno@lists.freedesktop.org,
-        linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-accelerators@lists.ozlabs.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        netdev@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-aio@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        devel@lists.orangefs.org, kexec@lists.infradead.org,
-        linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, kasan-dev@googlegroups.com,
-        selinux@vger.kernel.org, alsa-devel@alsa-project.org,
-        kernel-team@android.com
-Content-Type: text/plain; charset="UTF-8"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|IA1PR10MB7166:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3ee985c5-4b45-4799-129d-08dafef60b52
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: v3TZSRkxM4vIESDWxR7fKbT/0v3joKqbcWmnomdnMgGT1kIZ8EvHuFiuzv0QS/xLO6fp1CtlUkbDpunwexJ7YFhdKe6PkqsZTUhgAVMuSg2YHYQE/RlOtaKsfZkFc1ea6lXrHBoybirBmbCVX7b6qXr9PX3gjiJLoxKFeANOt51FrZTbi/l/j6JKigDPNQQeify3f3dAQAqdfMzHW9nkoTGpQ8j6tEPi2ZhyY7evlE+M42J9VVJmDQlkDMw2JZx4k6DMqS47qDdt2pXvsk49/Vv8fXqS6RwqQFUoPh6INS4roUW3yGQOWiJCNj1QgzSHfYMjzJTE1YQptf0zXAflZrdkUbR1cQRVteZqqlOWnB8x3VvomYedfbdMUiU7yzQ89nXmrAYmbnewx5Xsz4wzFM1OTXqjAXa8AZzQOfmRB71UQQHcxfpFrtYSTr3BGXJByO5TR/9Of7lVtoILTAUZ1jc1tfM3LNmT7YnZi2LN/AestP5jNDUuudoNNxcReh41j69k4AjjD7i6QjyaPAnzTZdAyGX48etv9+sc1m6g59edMSThaJOmHY15C2exOs7BJcXicTrwnp47hBg0fWH0nsV6M6czA4lkQAI9/aEJM/VVYKuKGBiWe/K1LPV6l+fO5kkZv+p6g79XM8DubWW/GYra/IvbXcJ4MxpVWRIJMf/gVClMEi30qUl4o+C04jbOpN2Hoddl7z5qMhO6HnE/02IlaQa5hsEVVMCcH8Fe9v8=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(346002)(39860400002)(376002)(396003)(366004)(136003)(451199018)(66556008)(38100700002)(110136005)(478600001)(316002)(31696002)(31686004)(86362001)(36756003)(6506007)(2616005)(53546011)(26005)(83380400001)(186003)(6486002)(5660300002)(2906002)(6512007)(41300700001)(66946007)(8936002)(4326008)(8676002)(66476007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?eXZIMHozRTNYa253eC9ualpDR3oySUY3Rmk3aHFHR25TckNGeStEMDM2NWE0?=
+ =?utf-8?B?ckNKWDVMYXc1NkNiT2ZlYW85b3ZmT3kvTk9saTNRWk1CTWxBenErUCt3OC92?=
+ =?utf-8?B?UzZ5MFFwSGJaTU9HTmIwdnduaW5ER3pCdzgyTTl0eTFYVG9tR0N6SncwckZH?=
+ =?utf-8?B?aDJPZG9MMU5iTjlXWURQaWJ1ckNINEtSQ1c3S1lUbm8raG1hL3NJTUlselpn?=
+ =?utf-8?B?eENia2x3UEhWTG9nT2J5RWtNYWtZQ255MmxpU3lELzJYbHJURlUrcUVQSEV5?=
+ =?utf-8?B?by9tMGNFZXZmUGQ4UmEzM2kzR2F0SjExZU5mQmNkOUM2ak5QZkt2QXhyZE9S?=
+ =?utf-8?B?cldXNE1WcWlyNExVczZlamlrRkxST3F4em80TklTVXVtNEFVak4zUnAvWDkz?=
+ =?utf-8?B?ZmZXQkZOUWRCMi8xMlg5cmpRRThWaGVBdHZ1RXFHWDR5V2QxOGJQWVlodXZG?=
+ =?utf-8?B?ekdBNU5VQWNKM3YrdEI5amQ0NWQ5ZVhJbHdGczdYUmh2d0laSEZ1WmVsNXlF?=
+ =?utf-8?B?dFNHbWhMTkp0ckZkQ09PdGZKVXNRWGVrcHVaYVN3ZkZBVXNaRU82OUMxbmM0?=
+ =?utf-8?B?NjI4S3ptSTNlNjNXcXhYbFg2VG5YQXlPaW90QmlXaml0K291bVoxUnpoME16?=
+ =?utf-8?B?djJPRzNSUERkaWhyUjV3eXFEeDF0L05hWDNIUDNod1hsdXNvQmxxQ25GQXpL?=
+ =?utf-8?B?UEVUZlVLUkFEWWZnL3NJWHRhckx3WktzWXFLZ2ljeFRuN1VTQVRCdy9XZDkx?=
+ =?utf-8?B?SkZZckpoZkdMRTRUSjc2MVVHUVFNRjhXWHNDQW5FdU05UzFlc0ZSdzB6QXg1?=
+ =?utf-8?B?SkYwKzdGUGNFdFNJNnRMOEQrOVJYY1FqMHpaNU1ER3RPRXBucGJPOU1pWkhj?=
+ =?utf-8?B?QVA2bkpHTUlCejUzRE1vQWpBNHlBMmRMMGNoYTZjWWFmUENiai9JZUhwWkFr?=
+ =?utf-8?B?cG1zZEZwTWpzOVozUk12d1hHVWNkVC84czFnYy9tZ2NtT1oyRWE5S2Q0Y3B5?=
+ =?utf-8?B?L04yNnRSV1lBNFhQVXBZL2Ywb3gwdzRQMGp6a3NGUHBTb09DTE16ZGk5WSt0?=
+ =?utf-8?B?VG5wdUdYRjRnQVJOSWdOZzR0WG80SG02NktwYVdSQmlKd0JEVDhKOUpySzhI?=
+ =?utf-8?B?SDdOZkozV2NsMjlDaXd5b0d2TkRGZmN5bnNScWJ6WGF3WUYvbGh3S0R1NitG?=
+ =?utf-8?B?MGlSdVE2RHlyeDBoY2ZaYkdGWTdadGFsNGtOemJ2c05KLzFrMm9JcVJHdFRx?=
+ =?utf-8?B?S3FaNXNwSDAwcmU0UG5rSEVtMEZzdDZaMmxiblIyalpXZ1lCUHp2TFJpMEVE?=
+ =?utf-8?B?NnFOd0RoNmRScFI3Vit0ei9Wd3VXSXZiUXRxVC9BMlEya3NUVFByMWJuaXhP?=
+ =?utf-8?B?MXZUcC9NTjNmTHRxK0tCTlZZSnFqR0c4Snc4SXpveHJWUUdGbzA4VjNOV0c3?=
+ =?utf-8?B?UVV1NGdCNWtFYzNmTUpEZzkyMTNOMlVYQ3k0b3lzK3c3eERLSWFCSG84TFRH?=
+ =?utf-8?B?MTdQbmxyeWVtU0FOd2VWSkJ6UUZrWjduRk85T3g0UzFIeEJhZFpDVENuR0pm?=
+ =?utf-8?B?S1diOHpjUUlWMmczTVpVcHllZXo4cloxUEZvY0lsRTdoQmlzL2NDTjhaTEVz?=
+ =?utf-8?B?TjBkcjdRcHdhLzVpQnl4NkdjdUtXNXhSQ2J1Mkd4Z0hYYTdwSlpxenBUTnBZ?=
+ =?utf-8?B?bTBKWXhUUXM3Z2VDSGViak1ySWpTQ2sxQzdVelc1UE5NL1lJVnNZVThmcFor?=
+ =?utf-8?B?RVBnL3BaaDU3alkwck5qUy9vTHVTRkkvSWFacDR3SXk3M1hlNTY3d3M2R3JV?=
+ =?utf-8?B?VXhjU2JaVUhaUmJNbmJ1aWY0cng0TE4zV0RkbUdjYWwySWlHVmN5eGwyWWps?=
+ =?utf-8?B?T3lGdGdtZTdGV1k4YVF4cHRpZk5lbzUxRjVPU1RWRVJFTFlBaU9GbDBLeU5v?=
+ =?utf-8?B?NkFjS2phUUI5T2F0dG5sSmRuZlBaY0dwd3Ayam9VYWpPVy9yc2VWdVhOMzlz?=
+ =?utf-8?B?MndWRmlPSmkrYXk0bGlNeDFpN09zaHkyOWF6VFV6NFZHNXB4R0s3YVJxQytS?=
+ =?utf-8?B?a0h4TzdoWmRCYzl6ZEphbVh2anpITWFmelBtQnYrclNGS21jUGkwZEJaMy9k?=
+ =?utf-8?B?ZG5mMjVIZzJwbHFsOStEUGdkS09KZWI5YWRpa0RpaXh2M1dPNmFpWXcxOE1v?=
+ =?utf-8?B?aHc9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: Ceq560zdltRrukDawnuXxQ/qr+Tk3vNCqkf83k5lnEGqU8P9UHcHsx2Z2b9agWCNbwJdhfbhhHSFHZTdpfV+/m1k6930i62fLPBmEXuT+n6WefbAoZ7YnrazNyibAKXcYXjmA/5nkuJ76AwklQqV9nc2FTGk8/oRTaSn0e9T+HfqRO6BFhx18ymQK674lFajk4uQWevlJKp+GaSqaPSQAw5hh3Gvqqj/m57kud1Vo941hPxzI3i5PtNK/zYZymzSfca/qWKtqBpgi13iDY3tIq1pNpTu9huwU3n8oBrM4PM4fJxEBahrwGRTmA4gPhY6kWizrm0r4mKq78IwBtzf8eT9Denf2QxlsTO5QPagVyfo9C77pA4KSjlYvv5eMx9pI20kmwnI8COK4vHEEETTkz13Aiy9YLSpi9iNKkDOTXCzsMndm2qAMozLmTCsQv00m/hFx21Wd77HTWj9KlSiHsqRWk/WfnvZdftMbtXs3modOp99XXzzfik6mF32GsaLdzlpSo6d74ya1B7Obes/2VMuP4I2LevGAfy+MrHFwCfPg3dtGwC67MApxcGCx0cwSr0XJfxvNai5+bEsq+ooH51EyGEEvrP3eQRlHpE+IAajzNwfjLcmoKx+PId0kzETmKLZAsJlCiOiYgpOThsdnFgzKaPo91ZLE5RYEzwttCXF7yHfSWC4cHAi4bz0krYnxsC7Y9/NWBUq93JUMrmVbTFTxFLzBClR6ZY+Zi1mmkfgUnx+iXOibz5A33W8kDbEh/h46mNakCho8tlIS+wuyktYpeNruvayrCuXXYO9t3dYKO5vGjxmU/K3+lpDp+cS
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ee985c5-4b45-4799-129d-08dafef60b52
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Jan 2023 17:03:13.3715
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0n71k71bY4ej7UDjRHKfKu/kQjkAPmqn4ekxZXOdqPx/W+OvndGZYjjDf9XilwTQO+Q3Vssi6BKGQuVNjAvmBchBXJ3uwHxsnTC1OnubFm0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB7166
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-01-25_11,2023-01-25_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ bulkscore=0 mlxscore=0 mlxlogscore=999 adultscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2301250152
+X-Proofpoint-GUID: tbjMhNa8P9dNg8FT9PKoNXJwKKVKN8ZQ
+X-Proofpoint-ORIG-GUID: tbjMhNa8P9dNg8FT9PKoNXJwKKVKN8ZQ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 1:42 AM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Wed 25-01-23 00:38:50, Suren Baghdasaryan wrote:
-> > In cases when VMA flags are modified after VMA was isolated and mmap_lock
-> > was downgraded, flags modifications would result in an assertion because
-> > mmap write lock is not held.
-> > Introduce mod_vm_flags_nolock to be used in such situation.
-> > Pass a hint to untrack_pfn to conditionally use mod_vm_flags_nolock for
-> > flags modification and to avoid assertion.
->
-> The changelog nor the documentation of mod_vm_flags_nolock
-> really explain when it is safe to use it. This is really important for
-> future potential users.
+On 1/25/23 02:33, Dmitry Bogdanov wrote:
+> Do not handle incoming commands if the session is already closed.
+> 
+> That patch fixes the following stacktrace:
+> 
+>  Decremented iSCSI connection count to 0 from node: iqn.1996-04.com.local:3
+>  TARGET_CORE[iSCSI]: Deregistered fabric_sess
+>  Moving to TARG_SESS_STATE_FREE.
+>  Released iSCSI session from node: iqn.1996-04.com.local:3
+>  Decremented number of active iSCSI Sessions on iSCSI TPG: 0 to 1
+>  rx_loop: 48, total_rx: 48, data: 48
+>  Got SCSI Command, ITT: 0x2000005d, CmdSN: 0x4a020000, ExpXferLen: 0, Length: 0, CID: 0
+> BUG: Kernel NULL pointer dereference on read at 0x00000000
+>   Faulting instruction address: 0xc008000000a9b574
+>   Oops: Kernel access of bad area, sig: 11 [#1]
+>   NIP [c008000000a9b574] transport_lookup_cmd_lun+0x37c/0x470 [target_core_mod]
+>   LR [c008000001017318] iscsit_setup_scsi_cmd+0x520/0x780 [iscsi_target_mod]
+> Call Trace:
+>  [c000000059e4fae0] [c000000059e4fb70] 0xc000000059e4fb70 (unreliable)
+>  [c000000059e4fb70] [c008000001017318] iscsit_setup_scsi_cmd+0x520/0x780 [iscsi_target_mod]
+>  [c000000059e4fc30] [c00800000101c448] iscsit_get_rx_pdu+0x720/0x11d0 [iscsi_target_mod]
+>  [c000000059e4fd60] [c00800000101ebc8] iscsi_target_rx_thread+0xb0/0x190 [iscsi_target_mod]
+>  [c000000059e4fdb0] [c00000000018c50c] kthread+0x19c/0x1b0
+> 
+> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> ---
+>  drivers/target/iscsi/iscsi_target.c | 8 ++++++--
+>  include/scsi/iscsi_proto.h          | 1 +
+>  2 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index baf4da7bb3b4..f6008675dd3f 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1199,7 +1199,9 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+>  		hdr->cmdsn, be32_to_cpu(hdr->data_length), payload_length,
+>  		conn->cid);
+>  
+> -	target_get_sess_cmd(&cmd->se_cmd, true);
+> +	if (target_get_sess_cmd(&cmd->se_cmd, true) < 0)
+> +		return iscsit_add_reject_cmd(cmd,
+> +				ISCSI_REASON_WAITING_FOR_LOGOUT, buf);
+> 
+Did this require target_stop_session somewhere? I think this is a possible
+use after free.
 
-True. I'll add clarification in the comments and in the changelog. Thanks!
+It seems like if we have logged the message:
 
->
-> > Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> > ---
-> >  arch/x86/mm/pat/memtype.c | 10 +++++++---
-> >  include/linux/mm.h        | 12 +++++++++---
-> >  include/linux/pgtable.h   |  5 +++--
-> >  mm/memory.c               | 13 +++++++------
-> >  mm/memremap.c             |  4 ++--
-> >  mm/mmap.c                 | 16 ++++++++++------
-> >  6 files changed, 38 insertions(+), 22 deletions(-)
-> >
-> > diff --git a/arch/x86/mm/pat/memtype.c b/arch/x86/mm/pat/memtype.c
-> > index ae9645c900fa..d8adc0b42cf2 100644
-> > --- a/arch/x86/mm/pat/memtype.c
-> > +++ b/arch/x86/mm/pat/memtype.c
-> > @@ -1046,7 +1046,7 @@ void track_pfn_insert(struct vm_area_struct *vma, pgprot_t *prot, pfn_t pfn)
-> >   * can be for the entire vma (in which case pfn, size are zero).
-> >   */
-> >  void untrack_pfn(struct vm_area_struct *vma, unsigned long pfn,
-> > -              unsigned long size)
-> > +              unsigned long size, bool mm_wr_locked)
-> >  {
-> >       resource_size_t paddr;
-> >       unsigned long prot;
-> > @@ -1065,8 +1065,12 @@ void untrack_pfn(struct vm_area_struct *vma, unsigned long pfn,
-> >               size = vma->vm_end - vma->vm_start;
-> >       }
-> >       free_pfn_range(paddr, size);
-> > -     if (vma)
-> > -             clear_vm_flags(vma, VM_PAT);
-> > +     if (vma) {
-> > +             if (mm_wr_locked)
-> > +                     clear_vm_flags(vma, VM_PAT);
-> > +             else
-> > +                     mod_vm_flags_nolock(vma, 0, VM_PAT);
-> > +     }
-> >  }
-> >
-> >  /*
-> > diff --git a/include/linux/mm.h b/include/linux/mm.h
-> > index 55335edd1373..48d49930c411 100644
-> > --- a/include/linux/mm.h
-> > +++ b/include/linux/mm.h
-> > @@ -656,12 +656,18 @@ static inline void clear_vm_flags(struct vm_area_struct *vma,
-> >       vma->vm_flags &= ~flags;
-> >  }
-> >
-> > +static inline void mod_vm_flags_nolock(struct vm_area_struct *vma,
-> > +                                    unsigned long set, unsigned long clear)
-> > +{
-> > +     vma->vm_flags |= set;
-> > +     vma->vm_flags &= ~clear;
-> > +}
-> > +
-> >  static inline void mod_vm_flags(struct vm_area_struct *vma,
-> >                               unsigned long set, unsigned long clear)
-> >  {
-> >       mmap_assert_write_locked(vma->vm_mm);
-> > -     vma->vm_flags |= set;
-> > -     vma->vm_flags &= ~clear;
-> > +     mod_vm_flags_nolock(vma, set, clear);
-> >  }
-> >
-> >  static inline void vma_set_anonymous(struct vm_area_struct *vma)
-> > @@ -2087,7 +2093,7 @@ static inline void zap_vma_pages(struct vm_area_struct *vma)
-> >  }
-> >  void unmap_vmas(struct mmu_gather *tlb, struct maple_tree *mt,
-> >               struct vm_area_struct *start_vma, unsigned long start,
-> > -             unsigned long end);
-> > +             unsigned long end, bool mm_wr_locked);
-> >
-> >  struct mmu_notifier_range;
-> >
-> > diff --git a/include/linux/pgtable.h b/include/linux/pgtable.h
-> > index 5fd45454c073..c63cd44777ec 100644
-> > --- a/include/linux/pgtable.h
-> > +++ b/include/linux/pgtable.h
-> > @@ -1185,7 +1185,8 @@ static inline int track_pfn_copy(struct vm_area_struct *vma)
-> >   * can be for the entire vma (in which case pfn, size are zero).
-> >   */
-> >  static inline void untrack_pfn(struct vm_area_struct *vma,
-> > -                            unsigned long pfn, unsigned long size)
-> > +                            unsigned long pfn, unsigned long size,
-> > +                            bool mm_wr_locked)
-> >  {
-> >  }
-> >
-> > @@ -1203,7 +1204,7 @@ extern void track_pfn_insert(struct vm_area_struct *vma, pgprot_t *prot,
-> >                            pfn_t pfn);
-> >  extern int track_pfn_copy(struct vm_area_struct *vma);
-> >  extern void untrack_pfn(struct vm_area_struct *vma, unsigned long pfn,
-> > -                     unsigned long size);
-> > +                     unsigned long size, bool mm_wr_locked);
-> >  extern void untrack_pfn_moved(struct vm_area_struct *vma);
-> >  #endif
-> >
-> > diff --git a/mm/memory.c b/mm/memory.c
-> > index d6902065e558..5b11b50e2c4a 100644
-> > --- a/mm/memory.c
-> > +++ b/mm/memory.c
-> > @@ -1613,7 +1613,7 @@ void unmap_page_range(struct mmu_gather *tlb,
-> >  static void unmap_single_vma(struct mmu_gather *tlb,
-> >               struct vm_area_struct *vma, unsigned long start_addr,
-> >               unsigned long end_addr,
-> > -             struct zap_details *details)
-> > +             struct zap_details *details, bool mm_wr_locked)
-> >  {
-> >       unsigned long start = max(vma->vm_start, start_addr);
-> >       unsigned long end;
-> > @@ -1628,7 +1628,7 @@ static void unmap_single_vma(struct mmu_gather *tlb,
-> >               uprobe_munmap(vma, start, end);
-> >
-> >       if (unlikely(vma->vm_flags & VM_PFNMAP))
-> > -             untrack_pfn(vma, 0, 0);
-> > +             untrack_pfn(vma, 0, 0, mm_wr_locked);
-> >
-> >       if (start != end) {
-> >               if (unlikely(is_vm_hugetlb_page(vma))) {
-> > @@ -1675,7 +1675,7 @@ static void unmap_single_vma(struct mmu_gather *tlb,
-> >   */
-> >  void unmap_vmas(struct mmu_gather *tlb, struct maple_tree *mt,
-> >               struct vm_area_struct *vma, unsigned long start_addr,
-> > -             unsigned long end_addr)
-> > +             unsigned long end_addr, bool mm_wr_locked)
-> >  {
-> >       struct mmu_notifier_range range;
-> >       struct zap_details details = {
-> > @@ -1689,7 +1689,8 @@ void unmap_vmas(struct mmu_gather *tlb, struct maple_tree *mt,
-> >                               start_addr, end_addr);
-> >       mmu_notifier_invalidate_range_start(&range);
-> >       do {
-> > -             unmap_single_vma(tlb, vma, start_addr, end_addr, &details);
-> > +             unmap_single_vma(tlb, vma, start_addr, end_addr, &details,
-> > +                              mm_wr_locked);
-> >       } while ((vma = mas_find(&mas, end_addr - 1)) != NULL);
-> >       mmu_notifier_invalidate_range_end(&range);
-> >  }
-> > @@ -1723,7 +1724,7 @@ void zap_page_range_single(struct vm_area_struct *vma, unsigned long address,
-> >        * unmap 'address-end' not 'range.start-range.end' as range
-> >        * could have been expanded for hugetlb pmd sharing.
-> >        */
-> > -     unmap_single_vma(&tlb, vma, address, end, details);
-> > +     unmap_single_vma(&tlb, vma, address, end, details, false);
-> >       mmu_notifier_invalidate_range_end(&range);
-> >       tlb_finish_mmu(&tlb);
-> >  }
-> > @@ -2492,7 +2493,7 @@ int remap_pfn_range(struct vm_area_struct *vma, unsigned long addr,
-> >
-> >       err = remap_pfn_range_notrack(vma, addr, pfn, size, prot);
-> >       if (err)
-> > -             untrack_pfn(vma, pfn, PAGE_ALIGN(size));
-> > +             untrack_pfn(vma, pfn, PAGE_ALIGN(size), true);
-> >       return err;
-> >  }
-> >  EXPORT_SYMBOL(remap_pfn_range);
-> > diff --git a/mm/memremap.c b/mm/memremap.c
-> > index 08cbf54fe037..2f88f43d4a01 100644
-> > --- a/mm/memremap.c
-> > +++ b/mm/memremap.c
-> > @@ -129,7 +129,7 @@ static void pageunmap_range(struct dev_pagemap *pgmap, int range_id)
-> >       }
-> >       mem_hotplug_done();
-> >
-> > -     untrack_pfn(NULL, PHYS_PFN(range->start), range_len(range));
-> > +     untrack_pfn(NULL, PHYS_PFN(range->start), range_len(range), true);
-> >       pgmap_array_delete(range);
-> >  }
-> >
-> > @@ -276,7 +276,7 @@ static int pagemap_range(struct dev_pagemap *pgmap, struct mhp_params *params,
-> >       if (!is_private)
-> >               kasan_remove_zero_shadow(__va(range->start), range_len(range));
-> >  err_kasan:
-> > -     untrack_pfn(NULL, PHYS_PFN(range->start), range_len(range));
-> > +     untrack_pfn(NULL, PHYS_PFN(range->start), range_len(range), true);
-> >  err_pfn_remap:
-> >       pgmap_array_delete(range);
-> >       return error;
-> > diff --git a/mm/mmap.c b/mm/mmap.c
-> > index 2c6e9072e6a8..69d440997648 100644
-> > --- a/mm/mmap.c
-> > +++ b/mm/mmap.c
-> > @@ -78,7 +78,7 @@ core_param(ignore_rlimit_data, ignore_rlimit_data, bool, 0644);
-> >  static void unmap_region(struct mm_struct *mm, struct maple_tree *mt,
-> >               struct vm_area_struct *vma, struct vm_area_struct *prev,
-> >               struct vm_area_struct *next, unsigned long start,
-> > -             unsigned long end);
-> > +             unsigned long end, bool mm_wr_locked);
-> >
-> >  static pgprot_t vm_pgprot_modify(pgprot_t oldprot, unsigned long vm_flags)
-> >  {
-> > @@ -2136,14 +2136,14 @@ static inline void remove_mt(struct mm_struct *mm, struct ma_state *mas)
-> >  static void unmap_region(struct mm_struct *mm, struct maple_tree *mt,
-> >               struct vm_area_struct *vma, struct vm_area_struct *prev,
-> >               struct vm_area_struct *next,
-> > -             unsigned long start, unsigned long end)
-> > +             unsigned long start, unsigned long end, bool mm_wr_locked)
-> >  {
-> >       struct mmu_gather tlb;
-> >
-> >       lru_add_drain();
-> >       tlb_gather_mmu(&tlb, mm);
-> >       update_hiwater_rss(mm);
-> > -     unmap_vmas(&tlb, mt, vma, start, end);
-> > +     unmap_vmas(&tlb, mt, vma, start, end, mm_wr_locked);
-> >       free_pgtables(&tlb, mt, vma, prev ? prev->vm_end : FIRST_USER_ADDRESS,
-> >                                next ? next->vm_start : USER_PGTABLES_CEILING);
-> >       tlb_finish_mmu(&tlb);
-> > @@ -2391,7 +2391,11 @@ do_vmi_align_munmap(struct vma_iterator *vmi, struct vm_area_struct *vma,
-> >                       mmap_write_downgrade(mm);
-> >       }
-> >
-> > -     unmap_region(mm, &mt_detach, vma, prev, next, start, end);
-> > +     /*
-> > +      * We can free page tables without write-locking mmap_lock because VMAs
-> > +      * were isolated before we downgraded mmap_lock.
-> > +      */
-> > +     unmap_region(mm, &mt_detach, vma, prev, next, start, end, !downgrade);
-> >       /* Statistics and freeing VMAs */
-> >       mas_set(&mas_detach, start);
-> >       remove_mt(mm, &mas_detach);
-> > @@ -2704,7 +2708,7 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
-> >
-> >               /* Undo any partial mapping done by a device driver. */
-> >               unmap_region(mm, &mm->mm_mt, vma, prev, next, vma->vm_start,
-> > -                          vma->vm_end);
-> > +                          vma->vm_end, true);
-> >       }
-> >       if (file && (vm_flags & VM_SHARED))
-> >               mapping_unmap_writable(file->f_mapping);
-> > @@ -3031,7 +3035,7 @@ void exit_mmap(struct mm_struct *mm)
-> >       tlb_gather_mmu_fullmm(&tlb, mm);
-> >       /* update_hiwater_rss(mm) here? but nobody should be looking */
-> >       /* Use ULONG_MAX here to ensure all VMAs in the mm are unmapped */
-> > -     unmap_vmas(&tlb, &mm->mm_mt, vma, 0, ULONG_MAX);
-> > +     unmap_vmas(&tlb, &mm->mm_mt, vma, 0, ULONG_MAX, false);
-> >       mmap_read_unlock(mm);
-> >
-> >       /*
-> > --
-> > 2.39.1
->
-> --
-> Michal Hocko
-> SUSE Labs
+>  Moving to TARG_SESS_STATE_FREE.
+
+then we called:
+
+transport_deregister_session -> transport_free_session
+
+and freed the se_session.
+
+So above if target_get_sess_cmd returns failure then we have run:
+
+transport_free_session ->transport_uninit_session -> percpu_ref_exit
+
+and transport_free_session could have done:
+
+kmem_cache_free(se_sess_cache, se_sess)
+
+by the time we run the code above and we are now accessing a freed
+se_session and iscsit_session.
