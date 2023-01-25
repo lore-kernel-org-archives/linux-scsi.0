@@ -2,68 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D7ADC38142
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 01:41:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58794C54E94
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 02:23:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229778AbjAYBlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Jan 2023 20:41:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40842 "EHLO
+        id S233524AbjAYCXM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Jan 2023 21:23:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229528AbjAYBlM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 20:41:12 -0500
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 558914A1DB
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 17:41:12 -0800 (PST)
-Received: by mail-pj1-f49.google.com with SMTP id m11so5157582pji.0
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 17:41:12 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sG4ozEg9IBA76Fj18+t3iMfOl9gHD0y7SCENIGb/guU=;
-        b=mO59k49XF/3Qer+vA6HSK6KbeipnsNiVlf4GCJMrW3wx7tQlP+oanznRBbF8u94xM2
-         3I6HmWuSsW5rdjPdZuJXHm3u2+zdpM0irqbpgeydZiPyQM1Yiv6kIg0rgbHZOUrAWc11
-         ly2OLWc9xXWfxVHQmzaJ8WK2ya0NeO7JNihYdthmGW3rnjY0RYFA3VwHkqmeIzKK4bMq
-         KtkgAyOzyQC7F0ms6d3oybSEmvGwWrj4KRlToUQdOuXorBuG9Y9B5ByoqfKDEmnAe04c
-         bAdm3HiB8FawDGHqVHDdqad6Se7ez+osTGNelLKmcMYa4y+7t7uk1vsb+T4FR64ZOnRD
-         pI9w==
-X-Gm-Message-State: AFqh2krkEDR4kLozA/BLPWM8eZkO4G6X7knbbS1cF0tklEu0mtXHqeKg
-        4RASJxi0fokby5/2PVQMVk8=
-X-Google-Smtp-Source: AMrXdXst9z28tWrFOSPkgrBWIxc8Jkv2VCGV5pYT9s923RY4fKv3FxnkKPsmdQwEb8wvBRx5eeNPoQ==
-X-Received: by 2002:a17:90a:6e4a:b0:223:f234:6a3 with SMTP id s10-20020a17090a6e4a00b00223f23406a3mr31301035pjm.49.1674610871696;
-        Tue, 24 Jan 2023 17:41:11 -0800 (PST)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id mv17-20020a17090b199100b0022be311523dsm205038pjb.35.2023.01.24.17.41.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Jan 2023 17:41:10 -0800 (PST)
-Message-ID: <4f9794d2-00ed-22da-2b4b-e8afa424bf17@acm.org>
-Date:   Tue, 24 Jan 2023 17:41:09 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: The PQ=1 saga
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Li Zhong <lizhongfs@gmail.com>
-Cc:     Wenchao Hao <haowenchao@huawei.com>,
-        Andrey Melnikov <temnota.am@gmail.com>,
-        Martin Wilck <mwilck@suse.com>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>
-References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S231286AbjAYCXJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 21:23:09 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED85C4ED12;
+        Tue, 24 Jan 2023 18:23:06 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 2154FCE1D41;
+        Wed, 25 Jan 2023 02:23:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 576E5C433EF;
+        Wed, 25 Jan 2023 02:23:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674613383;
+        bh=CSTE5DJCXbzBtGITZ9min3sVYYy4xsqGZc5A41z+ZMg=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=pJUbMJ6Eo4ESVKPhZpfa7bbSGgmflzom4pDwWZGiaYB1tsgKDV0hn6byu23bCrSRt
+         TlKaSLDRKG2BWykYPtkytBRO0g2jhQgTsqW1rx7p5c0nVlPbtzwWCyegonSYfkliFN
+         8Q4QRBRS9bYVZ5tjxeUfU72Bj4kIHqN8QltvAMbrt3tfPev8ErC12sEKlM/KZn/Lcu
+         XgUC1aS673EpAbcPgoCGLaalVhJ3OdxAI7UUn6gBs8ZsZGhOst/6ZNrLKbkeWyeDMG
+         +dLqiw0JEHJ1/D9PZaCF71OuNTfPFPm1dpel1Lsz+MB838dB8dRin0kh3hdBp8GvzD
+         n+RMhTlbSB/5w==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 45F82E52508;
+        Wed, 25 Jan 2023 02:23:03 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.1-rc5
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <87b5e16ec007de3523fd78534a48d6244bda3f46.camel@HansenPartnership.com>
+References: <87b5e16ec007de3523fd78534a48d6244bda3f46.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <87b5e16ec007de3523fd78534a48d6244bda3f46.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 0bfe63d075789456e9589457b29d6f9c279e3252
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 02db81a787e304e5afaa31dc66522d39d3f89f1a
+Message-Id: <167461338327.26446.15357183691109954850.pr-tracker-bot@kernel.org>
+Date:   Wed, 25 Jan 2023 02:23:03 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/24/23 16:01, Martin K. Petersen wrote:
-> I would like to revert commit 948e922fc446 ("scsi: core: map PQ=1,
-> PDT=other values to SCSI_SCAN_TARGET_PRESENT").
+The pull request you sent on Mon, 23 Jan 2023 15:05:08 -0500:
 
-That sounds good to me.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Bart.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/02db81a787e304e5afaa31dc66522d39d3f89f1a
 
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
