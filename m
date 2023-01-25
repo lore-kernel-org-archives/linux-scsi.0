@@ -2,176 +2,182 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2336EC38142
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 01:02:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B16A8C61D9D
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Jan 2023 01:19:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234875AbjAYBCq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Jan 2023 20:02:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57976 "EHLO
+        id S233167AbjAYBT4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Jan 2023 20:19:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234311AbjAYBCm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 20:02:42 -0500
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 404B351C65
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 17:02:29 -0800 (PST)
-Received: by mail-pj1-x1033.google.com with SMTP id b10so16944977pjo.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 17:02:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022;
-        h=message-id:in-reply-to:to:references:date:subject:mime-version
-         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7Z6cu3V3IyRdwM/Tm21lpcemt8ezXFk3PFoqpdkkT7Y=;
-        b=bj6iVHN7GuDi7RD2WS1vGF5//0QQ7mXhw6I5zMv0bQypEwHwd6DEQwtG88gytCG7OU
-         CfdbGtCOGF5h3E3QbkoFloE/SGXQi8l9aBA8+zSFKehp98Of7ivR59d3scfxCUPvGvI1
-         wrla5ZyNnSG6T4ZOqgqg7oDlPvJzmdZO87QQNUFQlIr+KuBPmr1L8fLJdtIKfyFGr3eA
-         Eo9e1Qj35ZS8QU7QsQhdAMyNU+M0bCemAHjt4XO5qnHmCgI1MIzGSEFDdG4EKbI9k3Ua
-         c/VFwD4yPCw4bMH1lBbDEA9FCz0jY8+xvN9pVTcfraQPB9Wjc1ulfw0LGMWCKfzDZ9Xl
-         QTjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=message-id:in-reply-to:to:references:date:subject:mime-version
-         :content-transfer-encoding:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7Z6cu3V3IyRdwM/Tm21lpcemt8ezXFk3PFoqpdkkT7Y=;
-        b=7WJvRARNdyIzNy72ZvM6ODxVwH6mV8nXpyAN16SwScDMkblg/FSP2LIefPs3JC3enw
-         cV7F9FWh/E2aBobKpLoZeDPYcW9rRqtLjLoOEHjrxeJDSietvi9ayV4/pfstE/aTknkR
-         05FEUd1KUruwGcagxhVOzPPhpKAqWel7T4zKL44vV5FMWUNHRegptrnaG8JXIe0osXUT
-         LeHkRw8aGgwjqUJI9FmXKvR+TDZxeduRUYCI7ehvNpas7I1LLxa2fDbGg7+lg0tcSzgZ
-         VfhQscMeby7SBqFx1rLYB+3zbc+vMjpFrUm0S+B7hzcJdItUGvdJRUxcARjmcOg57O6d
-         yr3w==
-X-Gm-Message-State: AFqh2kpSOwy9pUYq5URYDyGuwDWDQgl0Qm9my4zjoreWHnYwtXZ2D1fb
-        6DgWiFYvJtGvW4qAKt35hG2ZUE1RQnyI6Z19
-X-Google-Smtp-Source: AMrXdXvYKjh6G8At5ZjaHo23alSUdmvM+aD6xmmLnQ+6EBMA5EvSUjp8cKn1VHXwwW83MSBtfsxYUg==
-X-Received: by 2002:a17:90a:19d5:b0:223:ed96:e3ca with SMTP id 21-20020a17090a19d500b00223ed96e3camr31985036pjj.28.1674608548481;
-        Tue, 24 Jan 2023 17:02:28 -0800 (PST)
-Received: from smtpclient.apple ([136.226.79.5])
-        by smtp.gmail.com with ESMTPSA id g20-20020a17090a579400b00218a7808ec9sm178988pji.8.2023.01.24.17.02.27
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 24 Jan 2023 17:02:27 -0800 (PST)
-From:   Brian Bunker <brian@purestorage.com>
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.400.51.1.1\))
-Subject: Re: The PQ=1 saga
-Date:   Tue, 24 Jan 2023 17:02:16 -0800
-References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-In-Reply-To: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
-Message-Id: <CB441742-2C22-41A4-95A3-10D251C31F5B@purestorage.com>
-X-Mailer: Apple Mail (2.3731.400.51.1.1)
+        with ESMTP id S232999AbjAYBTy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2023 20:19:54 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560B59778
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 17:19:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1674609593; x=1706145593;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=VfqTjjyMMR9U9lGOBZ0np8BZF5+SYnZqch6Vw3uctbk=;
+  b=Q88L51BsI6atqGOeMwajFo14zZFZc6DxTgxrK6ExdUEnafOo30egXCug
+   Mh3b1jq06cTXZUgXMJq36e0Tfz9tPmVlGfqzhd+3E41wbisHdcOfk8PgA
+   PicDReAvndA3CNBGPzzlrulw2kvjxAnjUqgtvzHdWB7gvf5omaF0eLRZH
+   8MyNkuxY32TEaMlFKE8fLK0B1eRULn4Eyts/OSynw2VBZgHC7dL+K5E5/
+   eKMc4oKIDUwVBWZPH9Y9wIkbkUmAj45isbUZncNRPplCQ4O5u5iulhCJW
+   ym0cqLNfC8NiyzchXy1LHRQiC90fobEoUf1O9EVRMyl2n4i5tpFDdan+j
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.97,244,1669046400"; 
+   d="scan'208";a="325983396"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 09:19:50 +0800
+IronPort-SDR: uOcpfdpDV55lIxsceSzVUp3GBdDmiq2lsMNrbsMqEoxV/fc4avArAwVhzuF4E7KHvyNOorxUQJ
+ FcG5MWhXdkFFVJ2HA9OtWz6xkkQIzyhP8p2CTpmpfVDsctvs0ynOq07pru/58qpd+QFHemIuV8
+ 65dOZ59nZm2a8G4jp4PBCK8VyLhm5+0S6XtYiVUcDL1t+cgzArqT57CNDUyGl2DnUbsLa/8Pb4
+ rECAP9MovbXzfEqRUH+z+fdovZ8uT8Vz7yd+ZwSCE+PN7dQLjSIJXQP8FWYhjA+kYy83Rg/b6l
+ T5Q=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 16:31:38 -0800
+IronPort-SDR: MSHL1vJs84zJhmHUQc5ak8OkEigONo45ZUDbHFk1jwOxIsqLdqoT3d5eL37tAmR2mPhaDIDFXg
+ ryDRUSlfdvrDoxLxn96ogLRoyJAEF2TTkTg/+TyxZPndTjpU4Bnf5jQ8Daz3Vy6f4+PyXRE94l
+ 5pDNu6NYYkJ2BMPlIg1n5AxV9iXqjP7sSuwwNFhDKZFzmLJtbiEd/cP0S6IT/X7HGT3opXUoK3
+ aGjajfilsffOvXxX35bfgAGz50nJhHqqG7iLzbDjy3PKLQxUpxunt+kJno5XEltfDkE/eiYO0l
+ 2j0=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 17:19:50 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P1mGY5vdTz1Rwrq
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2023 17:19:49 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1674609588; x=1677201589; bh=VfqTjjyMMR9U9lGOBZ0np8BZF5+SYnZqch6
+        Vw3uctbk=; b=GZOCjYOoA83AgvwEmfwNHooHA2X22ipXOoXltO+/hPkc4tXu3Mr
+        XcECjsvPiqlUHz8LNPfhXIS7BIAYMaa9AQj1jNGs5AQ6+TJx+Wt2Us2s0aXVZuml
+        Nokt66ImwO7YVzmnfCHIhceZlEuUcVhEPEDUm3hMZAeIlBcLX72DHR8jWDo+2/R2
+        lgG5BFJBGck6dRXo9x3Ml2seHw6MpKxBlyAEDEI+SbWSP7gkMklKILfmISgayrLj
+        tOtssZQpPz6dE30z+a7aapIKAIU5Yo9nal63dUtOfuzWFjj7PSCE8MoA/vbVe/Ct
+        vD8SIBwqtKfRyya5nTbZQQHPljsnLddMQ7A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id Fffh8d2JgG1y for <linux-scsi@vger.kernel.org>;
+        Tue, 24 Jan 2023 17:19:48 -0800 (PST)
+Received: from [10.225.163.56] (unknown [10.225.163.56])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P1mGW0kVVz1RvLy;
+        Tue, 24 Jan 2023 17:19:46 -0800 (PST)
+Message-ID: <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+Date:   Wed, 25 Jan 2023 10:19:45 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org
+References: <20230124190308.127318-1-niklas.cassel@wdc.com>
+ <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+ <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+ <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
+ <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For a completely separate reason I would like to see PQ=3D1 expose the =
-sd device.
+On 1/25/23 09:05, Bart Van Assche wrote:
+> On 1/24/23 14:59, Damien Le Moal wrote:
+>> There is only one priority class that ATA understands: RT (the level is
+>> irrelevant and ignored). All RT class IOs are mapped to high priority NCQ
+>> commands. All other classes map to normal priority (no priority bit set)
+>> commands.
+>>
+>> And sure, we could map the level of RT class IOs to a CDL index, as we do
+>> for the CDL class, but what would be the point ? The user should use the
+>> CDL class in that case.
+>>
+>> Furthermore, there is one additional thing that we do not yet support but
+>> will later: CDL descriptor 0 can be used to set a target time limit for
+>> high priority NCQ commands. Without this new feature introduced with CDL,
+>> the drive is free to schedule high priority NCQ commands as it wants, and
+>> that is hard coded in FW. So you can endup with very aggressive scheduling
+>> leading to significant overall IOPS drop and long tail latency for low
+>> priority commands. See page 11 and 20 of this presentation for an example:
+>>
+>> https://www.snia.org/sites/default/files/SDC/2021/pdfs/SNIA-SDC21-LeMoal-Be-On-Time-command-duration-limits-Feature-Support-in%20Linux.pdf
+>>
+>> For a drive that supports both CDL and NCQ priority, with CDL feature
+>> turned off, CDL descriptor 0 defines the time limit hint for high priority
+>> NCQ commands. Again, CDL and NCQ high priority are mutually exclusive.
+>>
+>> So for clarity, I really would prefer separating CDL and RT classes as we
+>> did. We could integrate CDL support reusing the RT class + level for CDL
+>> index, but I think this may be very confusing for users, especially
+>> considering that the CLDs on a drive can be defined in any order the user
+>> wants, resulting in indexes/levels that does do not have any particular
+>> order, making it impossible for the host to correctly schedule commands.
+> 
+> Hi Damien,
+> 
+> Thanks again for the detailed reply. Your replies are very informative 
+> and help me understand the context better.
+> 
+> However, I'm still less than enthusiast about the introduction of the 
+> I/O priority class IOPRIO_CLASS_DL. To me command duration limits (CDL) 
+> is a mechanism that is supported by one storage standard (SCSI) and of 
 
-ALUA state transitions from unavailable back to another state does not
-work depending on what state devices are in when they are initially =
-discovered.
-In the ALUA unavailable state the peripheral qualifier of the device =
-should also
-be set to 001b.
+And ATA (ACS) too. Not just SCSI. This is actually an improvement over IO
+priority (command priority) that is supported only by ATA NCQ and does not
+exist with SCSI/SBC.
 
-If the device is not in the unavailable state when it is initially =
-discovered
-(PQ not 001b), it can move to and from the unavailable state with the =
-expected
-result like this:
+> which it is not sure that it will be integrated in other storage 
+> standards (NVMe, ...). Isn't the purpose of the block layer to provide 
+> an interface that is independent of the specifics of a single storage 
+> standard? This is why I'm in favor of letting the ATA core translate one 
+> of the existing I/O priority classes into a CDL instead of introducing a 
+> new I/O priority class (IOPRIO_CLASS_DL) in the block layer.
 
-/dev/sg1  7 0 1 1  0  /dev/sdb  PURE      FlashArray        8888
+We discussed CDL with Hannes in the context of NVMe over fabrics. Their
+may be interesting extensions to consider for NVMe in that context (the
+value for local PCI attached NVMe drive is more limited at best).
 
-root@init106-1 class]# sg_inq /dev/sdb
-standard INQUIRY: [qualifier indicates no connected LU]
-PQual=3D1  Device_type=3D0  RMB=3D0  version=3D0x06  [SPC-4]
-[AERC=3D0]  [TrmTsk=3D0]  NormACA=3D1  HiSUP=3D1  Resp_data_format=3D2
-SCCS=3D1  ACC=3D0  TPGS=3D1  3PC=3D1  Protect=3D0  [BQue=3D0]
-EncServ=3D0  MultiP=3D1 (VS=3D0)  [MChngr=3D0]  [ACKREQQ=3D0]  Addr16=3D0
-RelAdr=3D0]  WBus16=3D0  Sync=3D0  Linked=3D0  [TranDis=3D0]  CmdQue=3D1
-[SPI: Clocking=3D0x0  QAS=3D0  IUS=3D0]
-length=3D96 (0x60)   Peripheral device type: disk
-Vendor identification: PURE
-Product identification: FlashArray
-Product revision level: 8888
-Unit serial number: 1D6DB146171D4E32000113E6
+I would argue that IO priority is the same: that is not supported by all
+device classes either, and for those that support it, the semantic is not
+identical (ATA vs NVMe). Yet, we have the RT class that maps to high
+priority for ATA, and nothing else as far as I know.
 
-If, however, the device is already in this state when it is initially
-discovered, no sd device is created like this:
+CDL at least covers SCSI *and* ATA, and as mentioned above, could be used
+by NVMe-of host drivers to do fancy link selection for a multipath setup
+based on the link speed for instance.
 
-/dev/sg2  7 0 1 1  0  PURE      FlashArray        8888
+We could overload the RT class with a mapping to CDL feature on scsi and
+ata, but I think this is more confusing/messy than a separate class as we
+implemented.
 
-Since no sd device is ever created, when the ALUA state changes and the
-peripheral qualifier is set back to 0, manual intervention is required.
-The devices peripheral qualifier is correct after another rescan,
-but no sd device is created.
+> 
+> Others may have a different opinion.
+> 
+> Thanks,
+> 
+> Bart.
 
-[root@init106-1 ~]# sg_inq /dev/sg2
-standard INQUIRY:
-PQual=3D0  Device_type=3D0  RMB=3D0  version=3D0x06  [SPC-4]
-[AERC=3D0]  [TrmTsk=3D0]  NormACA=3D1  HiSUP=3D1  Resp_data_format=3D2
-SCCS=3D1  ACC=3D0  TPGS=3D1  3PC=3D1  Protect=3D0  [BQue=3D0]
-EncServ=3D0  MultiP=3D1 (VS=3D0)  [MChngr=3D0]  [ACKREQQ=3D0]  Addr16=3D0
-[RelAdr=3D0]  WBus16=3D0  Sync=3D0  Linked=3D0  [TranDis=3D0]  CmdQue=3D1
-[SPI: Clocking=3D0x0  QAS=3D0  IUS=3D0]
-length=3D96 (0x60)   Peripheral device type: disk
-Vendor identification: PURE
-Product identification: FlashArray
-Product revision level: 8888
-Unit serial number: 1D6DB146171D4E32000113E6
+-- 
+Damien Le Moal
+Western Digital Research
 
-The existing device must first be removed for another initial
-rediscovery to correct the issue.
-
-This hole makes the unavailable ALUA state unattractive. Allowing
-the peripheral qualifier set to 001b to still create an sd device
-on discovery corrects this hole.
-
-Thanks,
-Brian
-
-On Tue, Jan 24, 2023 at 4:02 PM Martin K. Petersen =
-<martin.petersen@oracle.com> wrote:
->=20
->=20
-> I would like to revert commit 948e922fc446 ("scsi: core: map PQ=3D1,
-> PDT=3Dother values to SCSI_SCAN_TARGET_PRESENT").
->=20
-> I have been spending quite a bit of time digging through old SCSI and
-> controller specs. As far as I can tell the original Linux behavior was
-> correct. Recent SPC specs are very abstract in this department =
-resulting
-> in unfortunate ambiguity. But originally PQ=3D1 meant "LUN supports =
-this
-> peripheral device type but no physical device is currently connected".
->=20
-> Based on this original definition, PQ=3D1 has been widely used =
-throughout
-> the industry as a means to avoid associating an ULD driver with a
-> device. The LUN is accessible (primary commands, etc.) but no media is
-> present (no physical device connected).
->=20
-> Our original algorithm, which I would like to reinstate, is =
-essentially
-> the following (in slightly unrolled form):
->=20
->        if (PQ =3D=3D 3)
->            /* Don't expose device */
->        else if ((PQ =3D=3D 1 || sdev->pdt_1f_for_no_lun) && PDT =3D=3D =
-0x1f)
->            /* Don't expose device */
->        else if (PQ =3D=3D 1) {
->            /* Expose device, don't bind ULD */
->        } else /* PQ =3D=3D 0 */
->            /* Expose device, bind ULD if PDT is supported */
->=20
-> I would like to understand why -- in the case of the IBM 2145 --
-> exposing the sg device caused problems. Li: Can you shed some light on
-> the problems caused by 2145 LUNs reporting PQ=3D1?
->=20
-> Thanks!
->=20
-> --
-> Martin K. Petersen      Oracle Linux Engineering
