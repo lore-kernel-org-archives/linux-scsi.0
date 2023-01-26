@@ -2,47 +2,170 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F28C61D97
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Jan 2023 05:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 877EFC05027
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Jan 2023 07:14:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235786AbjAZF0a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Jan 2023 00:26:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54032 "EHLO
+        id S234095AbjAZHOk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Jan 2023 02:14:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjAZF03 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2023 00:26:29 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9D0A47ED3;
-        Wed, 25 Jan 2023 21:26:28 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 3565968D09; Thu, 26 Jan 2023 06:26:25 +0100 (CET)
-Date:   Thu, 26 Jan 2023 06:26:24 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority
- class
-Message-ID: <20230126052624.GA28310@lst.de>
-References: <20230124190308.127318-1-niklas.cassel@wdc.com> <20230124190308.127318-2-niklas.cassel@wdc.com> <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org> <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com> <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org> <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com> <5066441f-e265-ed64-fa39-f77a931ab998@acm.org> <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com> <Y9G3LUem6X/fUz22@kbusch-mbp.dhcp.thefacebook.com>
+        with ESMTP id S233517AbjAZHOe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2023 02:14:34 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5469C46702;
+        Wed, 25 Jan 2023 23:14:33 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 08256B819AE;
+        Thu, 26 Jan 2023 07:14:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A36E8C4339B;
+        Thu, 26 Jan 2023 07:14:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674717270;
+        bh=ppdyWXNHVoRCfY1wWxqhZ+vENqdZKJiMtvqIlOSU6yg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=MY9g9SQOKWjSyyi2TgKBpP6hHUHhzbSVjwI/JumLoLY3tpA0xpq9adp62lST3d27T
+         pY7RdJx05kLgFaQ2MUu72vUCRRe7r42o9kXjq/TKeCzqirbM6JemRhSxSpJ37shcG5
+         XG3dlRoIfNvbvHWquBuE4TGHG+WizRBE521xjGyHJ+N7zh2APtzVRkbfKECgKDqkvs
+         kGGLpDSFejkX0CZjXMLGebDTrp9vufYfT4v1tyG+WqIdA+Bk/xE7282OK+Jo+zrt94
+         JMXbQK5yVur2/YFsTZl3ymYPIXMCNRbtSmsXvODmuee0SRJor3SY3ZztfQq+C/+moJ
+         Ym8CCJINxL7aw==
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     davem@davemloft.net
+Cc:     netdev@vger.kernel.org, edumazet@google.com, pabeni@redhat.com,
+        Jakub Kicinski <kuba@kernel.org>, yisen.zhuang@huawei.com,
+        salil.mehta@huawei.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, ast@kernel.org, daniel@iogearbox.net,
+        john.fastabend@gmail.com, andrii@kernel.org, martin.lau@linux.dev,
+        song@kernel.org, yhs@fb.com, kpsingh@kernel.org, sdf@google.com,
+        haoluo@google.com, jolsa@kernel.org, santosh.shilimkar@oracle.com,
+        huangguangbin2@huawei.com, lipeng321@huawei.com,
+        linux-scsi@vger.kernel.org, bpf@vger.kernel.org,
+        linux-rdma@vger.kernel.org
+Subject: [PATCH net-next 05/11] net: add missing includes of linux/sched/clock.h
+Date:   Wed, 25 Jan 2023 23:14:18 -0800
+Message-Id: <20230126071424.1250056-6-kuba@kernel.org>
+X-Mailer: git-send-email 2.39.1
+In-Reply-To: <20230126071424.1250056-1-kuba@kernel.org>
+References: <20230126071424.1250056-1-kuba@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y9G3LUem6X/fUz22@kbusch-mbp.dhcp.thefacebook.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 04:11:41PM -0700, Keith Busch wrote:
-> I wouldn't necessarily rule out CDL for PCI attached in some future TP. NVMe
-> does allow rotating media, and they'll want feature parity if CDL is considered
-> useful in other protocols.
+Number of files depend on linux/sched/clock.h getting included
+by linux/skbuff.h which soon will no longer be the case.
 
-NVMe has a TP for CDL that is technically active, although it doesn't
-seem to be actively worked on right now.
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+---
+CC: yisen.zhuang@huawei.com
+CC: salil.mehta@huawei.com
+CC: james.smart@broadcom.com
+CC: dick.kennedy@broadcom.com
+CC: jejb@linux.ibm.com
+CC: martin.petersen@oracle.com
+CC: ast@kernel.org
+CC: daniel@iogearbox.net
+CC: john.fastabend@gmail.com
+CC: andrii@kernel.org
+CC: martin.lau@linux.dev
+CC: song@kernel.org
+CC: yhs@fb.com
+CC: kpsingh@kernel.org
+CC: sdf@google.com
+CC: haoluo@google.com
+CC: jolsa@kernel.org
+CC: santosh.shilimkar@oracle.com
+CC: huangguangbin2@huawei.com
+CC: lipeng321@huawei.com
+CC: linux-scsi@vger.kernel.org
+CC: bpf@vger.kernel.org
+CC: linux-rdma@vger.kernel.org
+---
+ drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_debugfs.c | 1 +
+ drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_err.c     | 2 ++
+ drivers/scsi/lpfc/lpfc_init.c                              | 1 +
+ include/linux/filter.h                                     | 1 +
+ net/rds/ib_recv.c                                          | 1 +
+ net/rds/recv.c                                             | 1 +
+ 6 files changed, 7 insertions(+)
+
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_debugfs.c b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_debugfs.c
+index 142415c84c6b..a0b46e7d863e 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_debugfs.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_debugfs.c
+@@ -2,6 +2,7 @@
+ /* Copyright (c) 2018-2019 Hisilicon Limited. */
+ 
+ #include <linux/device.h>
++#include <linux/sched/clock.h>
+ 
+ #include "hclge_debugfs.h"
+ #include "hclge_err.h"
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_err.c b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_err.c
+index 6efd768cc07c..3f35227ef1fa 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_err.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_err.c
+@@ -1,6 +1,8 @@
+ // SPDX-License-Identifier: GPL-2.0+
+ /* Copyright (c) 2016-2017 Hisilicon Limited. */
+ 
++#include <linux/sched/clock.h>
++
+ #include "hclge_err.h"
+ 
+ static const struct hclge_hw_error hclge_imp_tcm_ecc_int[] = {
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 25ba20e42825..389a35308be3 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -30,6 +30,7 @@
+ #include <linux/kthread.h>
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
++#include <linux/sched/clock.h>
+ #include <linux/ctype.h>
+ #include <linux/aer.h>
+ #include <linux/slab.h>
+diff --git a/include/linux/filter.h b/include/linux/filter.h
+index ccc4a4a58c72..1727898f1641 100644
+--- a/include/linux/filter.h
++++ b/include/linux/filter.h
+@@ -14,6 +14,7 @@
+ #include <linux/printk.h>
+ #include <linux/workqueue.h>
+ #include <linux/sched.h>
++#include <linux/sched/clock.h>
+ #include <linux/capability.h>
+ #include <linux/set_memory.h>
+ #include <linux/kallsyms.h>
+diff --git a/net/rds/ib_recv.c b/net/rds/ib_recv.c
+index cfbf0e129cba..e53b7f266bd7 100644
+--- a/net/rds/ib_recv.c
++++ b/net/rds/ib_recv.c
+@@ -31,6 +31,7 @@
+  *
+  */
+ #include <linux/kernel.h>
++#include <linux/sched/clock.h>
+ #include <linux/slab.h>
+ #include <linux/pci.h>
+ #include <linux/dma-mapping.h>
+diff --git a/net/rds/recv.c b/net/rds/recv.c
+index 5b426dc3634d..c71b923764fd 100644
+--- a/net/rds/recv.c
++++ b/net/rds/recv.c
+@@ -35,6 +35,7 @@
+ #include <net/sock.h>
+ #include <linux/in.h>
+ #include <linux/export.h>
++#include <linux/sched/clock.h>
+ #include <linux/time.h>
+ #include <linux/rds.h>
+ 
+-- 
+2.39.1
+
