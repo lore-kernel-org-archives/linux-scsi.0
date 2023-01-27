@@ -2,151 +2,215 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B65C61D97
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 17:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F6BC54EAA
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 20:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235141AbjA0RXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Jan 2023 12:23:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49932 "EHLO
+        id S232983AbjA0UAb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Jan 2023 15:00:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234510AbjA0RX3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 12:23:29 -0500
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1506227492;
-        Fri, 27 Jan 2023 09:23:26 -0800 (PST)
-Received: by mail-pj1-f50.google.com with SMTP id m11so5241301pji.0;
-        Fri, 27 Jan 2023 09:23:26 -0800 (PST)
+        with ESMTP id S229710AbjA0UAK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 15:00:10 -0500
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 841F38D421
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2023 11:58:24 -0800 (PST)
+Received: by mail-pg1-x52d.google.com with SMTP id v3so3901111pgh.4
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2023 11:58:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=q0ouXMwAwSA4ew0v7a5HC4FOC6lURU3IWi45YzY9INQ=;
+        b=Uydkg4reFRCWTTLDdZjJxeJz6sBqQoLu+7INdlUva7LbECLWHhKBGw5Bw2JuaIaJx+
+         Oh7CrCDULBTXfyFmytr1xJ4LsaI4Xs8/WJZuwu/8PRMRENNvs2cY3ulWN1NeYu4e39s5
+         XAQERR7XhnQymfIe5K/+JardywxJZXQQj6YNLwpZfDwZ0rVFYF9Z8wQZSAZgwBU5tLt+
+         j4A0TwL6u5PWe3qp7jd5oEI9039VlfTDK31FaNjS0yx1i9BMYDyCbA0+ZHYa9SQEq+fy
+         felBBnKZq2TqYxtsnVdQgHySGeRB6U7TiAv3n4kVrUOwaT2KriXdx00zqOvGrLMu5Z1/
+         ZHjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=yjI2o5+xsSKlMtwASoiHazJkcoTLFI5iI/nAJzHdF+M=;
-        b=6QTcDFwb8v9YzX+71/dymVk6Az8o5aym0zSZobKCduqs8k4xL97f7nhMjeR11eFTfD
-         8VZeGDZ2yIsDmOl1aKvJDbotQwpJ7KWQcuV2luppWRk4GUa+4oZBxLo71QZjeyIrDX8F
-         ez+rHcBtuwdihA9FbGQFPn5yY8BWiBk5dJfe/5xKdj1Pr1U0BUaqEeBs1ny2sEGNiVvL
-         pftthPBfCqTjNh2xVKCGQW75+YHmeSVNtc9opbJtT6Wn01/81iYUPx6JC9ff0wmFBo+Q
-         Z2giIHIKP8PGI1z2V2qSYVL3btIjoI4Re2u9OiTEZeceOeQZulolWMHfWZLR9xFvHnJO
-         7soA==
-X-Gm-Message-State: AFqh2kolqDk3fvnQdhWYVaRPKVjdhWDQyW6W29+qX8GrcqOlDie0Nrfk
-        qx9gf9VUiN5ZIMJ5U1+8Q98=
-X-Google-Smtp-Source: AMrXdXt+PvYMWjU69aaZyBTZ086XLxOPQc0GJGaq8H6ao3qPzun4IE+4JOn2Z+/Y5nDlETpnXaSFyA==
-X-Received: by 2002:a17:902:e9cd:b0:194:6627:d7ab with SMTP id 13-20020a170902e9cd00b001946627d7abmr41214554plk.12.1674840205360;
-        Fri, 27 Jan 2023 09:23:25 -0800 (PST)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id c24-20020a170902d91800b00189db296776sm3147226plz.17.2023.01.27.09.23.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 27 Jan 2023 09:23:24 -0800 (PST)
-Message-ID: <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
-Date:   Fri, 27 Jan 2023 09:23:23 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230124190308.127318-2-niklas.cassel@wdc.com>
- <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
- <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
- <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
- <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
- <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
- <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
- <e8324901-7c18-153f-b47f-112a394832bd@acm.org> <Y9Gd0eI1t8V61yzO@x1-carbon>
- <86de1e78-0ff2-be70-f592-673bce76e5ac@opensource.wdc.com>
- <Y9KF5z/v0Qp5E4sI@x1-carbon> <7f0a2464-673a-f64a-4ebb-e599c3123a24@acm.org>
- <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
- <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=q0ouXMwAwSA4ew0v7a5HC4FOC6lURU3IWi45YzY9INQ=;
+        b=xEdqzhwy1s/qeN1asSaMeWTKZBpf6yU3KywvGronxmy6yTTJU7hZFNflFyTuz6FSv1
+         l9W4/UEfF7vM1toV3cc0yvOMKCp6D3HdFOsJrW7u+Raoy7s0KiACT6txnYEc9gR0wPTC
+         VX9GnBXhAKuoSM4/B3iwMfDCNFv9O+TXjms9gKVzssuQoxLvGxyUkHrp1hE75nFbJV0J
+         KsWVAHHu/JNpTHREWkv2kDuqip1ec0a4gv0JQp3WKnAoYCiUJI8j0wrdZiXmUiM8K3wh
+         +BO1xHHHqyTHJYCS04FXLki/7W8ZqE7sDbixarRuTEjOSlKHdzqNZNMN1UPgjFO99190
+         Zk4g==
+X-Gm-Message-State: AO0yUKUvIBrMh8gKX/ctNbdPuaaKB/rRXBDZCl4g1YiQcLz/WCXZ1/gS
+        sDvd988R/KTq5MXzfLmGBimTvt5EU4tAMmMu6XgMkdthNTq2WdN24guxpaoPiChb8JywGuGDBkG
+        NHBV16VjFk3AiA/SaBfr2uHnct8xMKvEN+9EJ/OTzoLP6aoLIHKnwZvfrMsdkca5vocVy5LPhWg
+        /tahQ=
+X-Google-Smtp-Source: AK7set92/5WOfrkBnFK85A9GOhfFTFZFky6hBudHY+SAiUNm66di6Nq1IKDOPvQiI7O4Z8bUqNJXDQ==
+X-Received: by 2002:a05:6a00:278e:b0:592:52a0:6817 with SMTP id bd14-20020a056a00278e00b0059252a06817mr5019200pfb.6.1674849483246;
+        Fri, 27 Jan 2023 11:58:03 -0800 (PST)
+Received: from smtpclient.apple ([2600:1700:6970:bea0:98e4:2c9:4b09:d80d])
+        by smtp.gmail.com with ESMTPSA id q16-20020aa78430000000b00580a0bb411fsm1101401pfn.174.2023.01.27.11.58.01
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 27 Jan 2023 11:58:02 -0800 (PST)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.400.51.1.1\))
+Subject: Re: The PQ=1 saga
+From:   Brian Bunker <brian@purestorage.com>
+In-Reply-To: <9545766a-298d-1358-46f0-64ccfaf30ca0@suse.de>
+Date:   Fri, 27 Jan 2023 11:57:51 -0800
+Cc:     Martin Wilck <mwilck@suse.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <6A8AA317-32B0-48F4-82DC-82B65A221A9F@purestorage.com>
+References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
+ <4f9794d2-00ed-22da-2b4b-e8afa424bf17@acm.org>
+ <d0ac216445c33e9bf98e8c850f4d900acf0787bd.camel@suse.com>
+ <9545766a-298d-1358-46f0-64ccfaf30ca0@suse.de>
+To:     linux-scsi@vger.kernel.org
+X-Mailer: Apple Mail (2.3731.400.51.1.1)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/26/23 17:40, Damien Le Moal wrote:
-> On 1/27/23 09:18, Damien Le Moal wrote:
->> On 1/27/23 02:33, Bart Van Assche wrote:
->>> How about only supporting a subset of the standard such that it becomes
->>> easy to map CDLs to host side priority levels?
->>
->> I am opposed to this, for several reasons:
->>
->> 1) We are seeing different use cases from users that cover a wide range of
->> use of CDL descriptors with various definitions.
->>
->> 2) Passthrough commands can be used by a user to change a drive CDL
->> descriptors without the kernel knowing about it, unless we spend our time
->> revalidating the CDL descriptor log page(s)...
->> 3) CDL standard as is is actually very sensible and not overloaded with
->> stuff that is only useful in niche use cases. For each CDL descriptor, you
->> have:
->>   * The active time limit, which is a clean way to specify how much time
->> you allow a drive to deal with bad sectors (mostly read case). A typical
->> HDD will try very hard to recover data from a sector, always. As a result,
->> the HDD may spend up to several seconds reading a sector again and again
->> applying different signal processing techniques until it gets the sector
->> ECC checked to return valid data. That of course can hugely increase an IO
->> latency seen by the host. In applications such as erasure coded
->> distributed object stores, maximum latency for an object access can thus
->> be kept low using this limit without compromising the data since the
->> object can always be rebuilt from the erasure codes if one HDD is slow to
->> respond. This limit is also interesting for video streaming/playback to
->> avoid video buffer underflow (at the expense of may be some block noise
->> depending on the codec).
->>   * The inactive time limit can be used to tell the drive how long it is
->> allowed to let a command stand in the drive internal queue before
->> processing. This is thus a parameter that allows a host to tune the drive
->> RPO optimization (rotational positioning optimization, e.g. HDD internal
->> command scheduling based on angular sector position on tracks withe the
->> head current position). This is a neat way to control max IOPS vs tail
->> latency since drives tend to privilege maximizing IOPS over lowering max
->> tail latency.
->>   * The duration guideline limit defines an overall time limit for a
->> command without distinguishing between active and inactive time. It is the
->> easiest to use (the easiest one to understand from a beginner user point
->> of view). This is a neat way to define an intelligent IO prioritization in
->> fact, way better than RT class scheduling on the host or the use of ATA
->> NCQ high priority, as it provides more information to the drive about the
->> urgency of a particular command. That allows the drive to still perform
->> RPO to maximize IOPS without long tail latencies. Chaining such limit with
->> an active+inactive time limit descriptor using the "next limit" policy
->> (0x1 policy) can also finely define what the drive should if the guideline
->> limit is exceeded (as the next descriptor can define what to do based on
->> the reason for the limit being exceeded: long internal queueing vs bad
->> sector long access time).
-> 
-> Note that all 3 limits can be used in a single CDL descriptor to precisely
-> define how a command should be processed by the device. That is why it is
-> nearly impossible to come up with a meaningful ordering of CDL descriptors
-> as an increasing set of priority levels.
+I was doing some more testing of this since it has been a while since I=20=
 
-A summary of my concerns is as follows:
-* The current I/O priority levels (RT, BE, IDLE) apply to all block 
-devices. IOPRIO_CLASS_DL is only supported by certain block devices 
-(some but not all SCSI harddisks). This forces applications to check the 
-capabilities of the storage device before it can be decided whether or 
-not IOPRIO_CLASS_DL can be used. This is not something applications 
-should do but something the kernel should do. Additionally, if multiple 
-dm devices are stacked on top of the block device driver, like in 
-Android, it becomes even more cumbersome to check whether or not the 
-block device supports CDL.
-* For the RT, BE and IDLE classes, it is well defined which priority 
-number represents a high priority and which priority number represents a 
-low priority. For CDL, only the drive knows the priority details. I 
-think that application software should be able to select a DL priority 
-without having to read the CDL configuration first.
+ran these tests. It looks like reverting this will make the particular =
+situation
+that I am worried about even worse. I will put the detail in.
 
-I hope that I have it made it clear that I think that the proposed user 
-space API will be very painful to use for application developers.
+With this in place (before you revert it). When SCSI devices are =
+discovered
+and some have a PQ=3D1 because they are in an unavailable ALUA state:
 
-Bart.
+Jan 27 12:05:29 localhost kernel: scsi 7:0:0:1: scsi scan: peripheral =
+device type of 31, no device added
+
+I don=E2=80=99t know if this intentional with the patch or not but any =
+devices with PQ=3D1
+will not create SCSI devices. The logging is deceptive too since the =
+device type
+Is 0 and not 31. In my case I have two paths to LUN 1. One is ALUA AO =
+and the=20
+other in ALUA unavailable.
+
+With this patch in I only get an sd device and an sg device for the AO =
+path.=20
+The other path to LUN 1 gets no devices created because it is caught in =
+the
+If condition logged above.
+
+Because there are no SCSI devices created, when the ALUA state returns
+to an active state, a SCSI rescan, which I can trigger from the target =
+will result
+in the devices getting created since the initial scan never created =
+devices.
+
+Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY pass =
+1 length 36
+Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY =
+successful with code 0x0
+Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY pass =
+2 length 96
+Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY =
+successful with code 0x0
+Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: Direct-Access     PURE   =
+  FlashArray       8888 PQ: 0 ANSI: 6
+
+Things are good with both paths to LUN 1 showing up. It is not optimal =
+since the
+target has to trigger a LUN scan on the initiator affecting all paths to =
+those target
+ports.
+
+With the revert of this, things are a little different, but the way they =
+had been in
+the past.
+
+Jan 27 13:41:19 localhost kernel: sd 7:0:1:1: Asymmetric access state =
+changed
+Jan 27 13:41:56 localhost kernel: scsi 7:0:1:1: alua: Detached
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY pass =
+1 length 36
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY =
+successful with code 0x0
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY pass =
+2 length 96
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY =
+successful with code 0x0
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: Direct-Access     PURE   =
+  FlashArray       8888 PQ: 1 ANSI: 6
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: alua: supports implicit =
+TPGS
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: alua: device =
+naa.624a9370acc31b042de141460001141c port group 0 rel port a
+Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: Attached scsi generic =
+sg7 type 0
+
+Now an sg device is created but not an sd device. This means that there =
+will be
+no way for this device to get an sd device created once the ALUA state =
+goes into
+an active state.
+
+The same thing done on the target that worked above no longer does:
+
+Jan 27 13:47:48 localhost kernel: scsi 7:0:1:1: scsi scan: device exists =
+on 7:0:1:1
+
+To get around this, the existing disk must be deleted so it is not =
+caught in the rescan
+check. This cannot be controlled on the target, but it will require =
+manual intervention
+on the initiator.
+
+So the question becomes how should initial scan work when a LUN has a =
+PQ=3D1 set.
+It is a valid, by spec with ALUA state unavailable but doesn=E2=80=99t =
+seem to be
+handled. Why allow an sg device but not an sd one on initial scan in =
+this case? There
+are probably many ways to fix this. I think the simplest is to allow sd =
+device creation
+on LUNs were PQ=3D1, and only restrict PQ=3D3. I am not sure the side =
+effect of this on other
+targets. The other approach which will no longer work after the revert =
+is to trigger a
+rescan from the target. This is sub-optimal since it is disruptive. Any =
+approach involving
+the ALUA device handler will not help since there is no device to =
+transition if it is
+discovered with PQ=3D1.
+
+Thanks,
+Brian
+
+
+> On Jan 26, 2023, at 1:01 AM, Hannes Reinecke <hare@suse.de> wrote:
+>=20
+> On 1/25/23 09:33, Martin Wilck wrote:
+>> On Tue, 2023-01-24 at 17:41 -0800, Bart Van Assche wrote:
+>>> On 1/24/23 16:01, Martin K. Petersen wrote:
+>>>> I would like to revert commit 948e922fc446 ("scsi: core: map PQ=3D1,
+>>>> PDT=3Dother values to SCSI_SCAN_TARGET_PRESENT").
+>>>=20
+>>> That sounds good to me.
+>>>=20
+>>> Bart.
+>>>=20
+>> I agree.
+> Yep.
+>=20
+> Cheers,
+>=20
+> Hannes
+> --=20
+> Dr. Hannes Reinecke                Kernel Storage Architect
+> hare@suse.de                              +49 911 74053 688
+> SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> HRB 36809 (AG N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, =
+Andrew
+> Myers, Andrew McDonald, Martje Boudien Moerman
+>=20
 
