@@ -2,63 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB742C54EAA
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 03:23:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A55C54EAA
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 03:23:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233357AbjA0DXd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Jan 2023 22:23:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46896 "EHLO
+        id S233369AbjA0DXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Jan 2023 22:23:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233160AbjA0DX3 (ORCPT
+        with ESMTP id S233118AbjA0DX3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2023 22:23:29 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1FE971647;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2675728C3;
         Thu, 26 Jan 2023 19:23:21 -0800 (PST)
 Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30R0O1g3019401;
-        Fri, 27 Jan 2023 03:23:14 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30R0O4B3019439;
+        Fri, 27 Jan 2023 03:23:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=HL8WYkQvLO0YNFWNqYPepfhle6GAhKACxkNdCCuJbQ4=;
- b=Uzb9XTdk6Kfd/xf928+x8oNYWxwjE7bGst6bk4uYky5h7dYXbTP7eljtj3iKdFcpG8+P
- 8Q2M0j1b8QG5rU0ElQLyY7vqZSC/H4uxZq8bCl71K4cyKEY1MAWmBc5K8zVR3KE96o3j
- p3eWsyoaJ5wSNr7xlWZXDpVeMI+e4vGV1cIlL3DZS7sVIxMK4/urz+1ji61pjmHAcTJf
- pjKXzonbhxJzw7d24snxAxh5iCHdII4aVxjnI386uvWRiMVh5W5e54mAMeE5WkdRPPK3
- yLm73CVU4vC85l370sXn3HeOQrcxWhtUdjqMHx4ZQ3ZMNpKiVPiiQ5H+44fI3cAAMmvf fQ== 
+ bh=APQiqFhcmLn0pA4kVPJyftYdBrW0Ss0XbZAnK3xmEIU=;
+ b=ytZ258WvrIJ6CqRt/zmNgiwW6Si5uXaQEMysOG6ZLHFHVJTiTyompdiKrEVtMEX3lAZf
+ m9F6b3drFYFZyyVVCbzJRXMnppLjCA8f7QsHbqmYewuBP1LFFnvK3+kcBhx6R7ZesMFW
+ G9WZwqht8hgkrODbSvVyLbsOG0hoaPZ21NZc5HLpUaPd3PJfDxt9AIpY0/7MIUl8+sJV
+ RVi45FEQgE6bDOZ4bLyrv5rLjss6b9b+EO+UOmFQ6L1L25FespGQ8qjfgJb7UR/Ex58z
+ g+W8ILHQrJmp1BcBeUhZMT59uGgI4H86vsWiSajwWu3S6gwjO/xniDbxW4mQAl3jR5Nz NQ== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n88ku3sy0-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n88ku3sy1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Jan 2023 03:23:14 +0000
+        Fri, 27 Jan 2023 03:23:16 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30QNrJhU006632;
-        Fri, 27 Jan 2023 03:23:13 GMT
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30QNlVcv007006;
+        Fri, 27 Jan 2023 03:23:16 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n86g8nxrx-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n86g8nxsp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Jan 2023 03:23:13 +0000
+        Fri, 27 Jan 2023 03:23:15 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30R3N7eo036358;
-        Fri, 27 Jan 2023 03:23:13 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30R3N7es036358;
+        Fri, 27 Jan 2023 03:23:15 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n86g8nxpp-6;
-        Fri, 27 Jan 2023 03:23:13 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n86g8nxpp-8;
+        Fri, 27 Jan 2023 03:23:15 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Kees Cook <keescook@chromium.org>
+To:     njavali@marvell.com, jejb@linux.ibm.com, qutran@marvell.com,
+        Tom Rix <trix@redhat.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Holger Kiehl <Holger.Kiehl@dwd.de>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: megaraid_sas: Add flexible array member for SGLs
-Date:   Thu, 26 Jan 2023 22:22:59 -0500
-Message-Id: <167478863281.3972592.13981423399363284186.b4-ty@oracle.com>
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Change qla_trim_buf,__qla_adjust_buf functions to static
+Date:   Thu, 26 Jan 2023 22:23:01 -0500
+Message-Id: <167478863297.3972592.6357225235775673779.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230106053153.never.999-kees@kernel.org>
-References: <20230106053153.never.999-kees@kernel.org>
+In-Reply-To: <20230114013724.3943580-1-trix@redhat.com>
+References: <20230114013724.3943580-1-trix@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -66,30 +62,30 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-01-26_09,2023-01-26_01,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- bulkscore=0 mlxscore=0 mlxlogscore=760 adultscore=0 spamscore=0
+ bulkscore=0 mlxscore=0 mlxlogscore=931 adultscore=0 spamscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2301270029
-X-Proofpoint-GUID: 0p9jFL192k_IX8d-xQLOLEtRVYJDLy7D
-X-Proofpoint-ORIG-GUID: 0p9jFL192k_IX8d-xQLOLEtRVYJDLy7D
+X-Proofpoint-GUID: GMC2wvpdUZj6FH-csm-4OaUmSaw6JGYn
+X-Proofpoint-ORIG-GUID: GMC2wvpdUZj6FH-csm-4OaUmSaw6JGYn
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 05 Jan 2023 21:32:00 -0800, Kees Cook wrote:
+On Fri, 13 Jan 2023 20:37:24 -0500, Tom Rix wrote:
 
-> struct MPI2_RAID_SCSI_IO_REQUEST ends with a single SGL, but expects to
-> copy multiple. Add a flexible array member so the compiler can reason
-> about the size of the memcpy(). This will avoid the run-time false
-> positive warning:
+> Smatch reports
+> drivers/scsi/qla2xxx/qla_mid.c:1189:6: warning: symbol 'qla_trim_buf' was not declared. Should it be static?
+> drivers/scsi/qla2xxx/qla_mid.c:1221:6: warning: symbol '__qla_adjust_buf' was not declared. Should it be static?
 > 
->   memcpy: detected field-spanning write (size 128) of single field "&r1_cmd->io_request->SGL" at drivers/scsi/megaraid/megaraid_sas_fusion.c:3326 (size 16)
+> These functions are only used in qla_mid.c, so they should be static.
+> 
 > 
 > [...]
 
 Applied to 6.3/scsi-queue, thanks!
 
-[1/1] scsi: megaraid_sas: Add flexible array member for SGLs
-      https://git.kernel.org/mkp/scsi/c/a9a3629592ab
+[1/1] scsi: qla2xxx: Change qla_trim_buf,__qla_adjust_buf functions to static
+      https://git.kernel.org/mkp/scsi/c/54c51253b3d5
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
