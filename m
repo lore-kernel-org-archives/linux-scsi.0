@@ -2,274 +2,361 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AFCC54EAA
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 06:35:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2A16C636CB
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 06:40:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231781AbjA0GfO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Jan 2023 01:35:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37402 "EHLO
+        id S232159AbjA0Gkj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Jan 2023 01:40:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231774AbjA0GfK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 01:35:10 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3007339BA2
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2023 22:35:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674801309; x=1706337309;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=lCAN8eSFTNovsAnnVv6NKR3w/EzTHchXk7tErIquuL8=;
-  b=rZ55Tqm57LuY29KWaE5XOPlognhT/PCd3UyBB9eu6LY+J1yYYgaGI42G
-   I19SNrmXz7SFq5anxRLAOmW4iskLy23W0lAm9hUViChHd06MPzFFvDc77
-   /NiH4XDnzoktzx6drGvdb58Jv0BM0n1h4Y9d5H26MGwgt5Ky7ti2bAtd/
-   mnPZ5K07vgaP7+NB/wWOhjUgyi3vs4Dx8PDw2QTEX5mWefr4tvVt2+XhL
-   N+Ec5weFERb4yddvzLXb74jx6YC48eb5jEa9mNfsYLsE2z1yvb4SmqO3X
-   5A7OBNA69vOptRzQPMnRLi5OxRd7mHhB3svkk+Q9LKFE5pPpt2WCukrdQ
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.97,250,1669046400"; 
-   d="scan'208";a="221935006"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2023 14:35:08 +0800
-IronPort-SDR: gQYeDElVcRZ+DU0V9bkEWo5eZFOZS7WqPFAgJsLXs4dz8IW4v8eGGTLtmJd8pPFcmQBOqcMMy3
- EaOB62TYIXewA8NvBTV3wWuR+3RlIMfy8CuW7nypYTRQBwqoUpm8KcrE5otocgmzTD1KC1umvO
- tHrYKKLFMcOEqwJ+oFdmZY2oxlFET1J1HwU6oyQF1S/JYnzCkb0KzQrRu1KBKVGAlQb5NDjuA4
- lx7fGRgyeYHwxsLhQkZiIl5i2nwfkW83JF2SIjFJIjX3Wg0NwAHzfF/wm+UfGGv9iPTB9lEaZH
- FnE=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Jan 2023 21:46:53 -0800
-IronPort-SDR: C8a1xxb8mWKDQ1FYZ/q+a+HsPxbWC1QniprqZI/vnu5AxIMF/h1BN+BEPmbf4ijQqwU37l+oSg
- vVB/Fzi7UJLAj61R0+1u3QmzfplkwpTXaMNczfaVwMgQQgQRn9g1oS+uqsEtrTUkBgPF4VqCS5
- U9/zZtW+qYRNX55cU0JV6J0DIRtfSchQMJUtyDLTbWtFDct/G+bAOqQed6mEbBsRMtBOgechjO
- Fk5aIcPAJrkV3LqlpQUrhvETBJN0BT7CIHnGYbvwHHd7EZahxDe/GbMicTepysGXp4UkCrvGkx
- N24=
-WDCIronportException: Internal
-Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.207])
-  by uls-op-cesaip01.wdc.com with ESMTP; 26 Jan 2023 22:35:08 -0800
-From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com
-Cc:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH v4 4/5] scsi: mpi3mr: use number of bits to manage bitmap sizes
-Date:   Fri, 27 Jan 2023 15:34:59 +0900
-Message-Id: <20230127063500.1278068-5-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230127063500.1278068-1-shinichiro.kawasaki@wdc.com>
-References: <20230127063500.1278068-1-shinichiro.kawasaki@wdc.com>
+        with ESMTP id S231904AbjA0GkX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 01:40:23 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFC6069B26;
+        Thu, 26 Jan 2023 22:40:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=u92ZIG8NeiReqULUpJ3dTyWf+uSNhJCKYYthA6vycZI=; b=BHL2yK0mIJr+KABpOGeA+u3Rl4
+        B7i2Rbbg1zsJ5XUcinksH8hUB+n5okYbng9loY48Tjyofjk8OiUG4xkeaXAWl27DOJNOXqOxncMab
+        MYR6RasB+6kB7NBxI5Ptdqc1xJnRvtvJMJgoTVl3e6o9pKE2P3FDcHqx+Z9F/gvv9fPUr/g6wVmk2
+        9Dc/EI24A/yOAoVs8mO3i8ly6BVPoqaTkISl0X1f71XCb1dbLyrGH9wWZnJIw2IzLOYM27mAEX1GD
+        Se8srjkBYH4HkNZB0oYO6bGYGUHrSz2Oe6l41n4L6/KLtiiYAz/bal9B0+Qc6rEeLWb2YaS+NqC6y
+        f2ChDZSQ==;
+Received: from [2601:1c2:d80:3110::9307] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pLIPB-00DM0u-Dt; Fri, 27 Jan 2023 06:40:09 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Jens Axboe <axboe@kernel.dk>,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Vladimir Oltean <olteanv@gmail.com>,
+        Steffen Klassert <steffen.klassert@secunet.com>,
+        Daniel Jordan <daniel.m.jordan@oracle.com>,
+        Akinobu Mita <akinobu.mita@gmail.com>,
+        Helge Deller <deller@gmx.de>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Jiri Kosina <jikos@kernel.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Wolfram Sang <wsa@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Henrik Rydberg <rydberg@bitmath.org>,
+        Karsten Keil <isdn@linux-pingi.de>,
+        Pavel Machek <pavel@ucw.cz>, Lee Jones <lee@kernel.org>,
+        Josh Poimboeuf <jpoimboe@kernel.org>,
+        Miroslav Benes <mbenes@suse.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Naoya Horiguchi <naoya.horiguchi@nec.com>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        Jonas Bonn <jonas@southpole.se>,
+        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+        Stafford Horne <shorne@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Len Brown <len.brown@intel.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Juri Lelli <juri.lelli@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Paul Moore <paul@paul-moore.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, Mark Brown <broonie@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daniel Bristot de Oliveira <bristot@kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Evgeniy Polyakov <zbr@ioremap.net>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        Reinette Chatre <reinette.chatre@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>,
+        Chris Zankel <chris@zankel.net>,
+        Max Filippov <jcmvbkbc@gmail.com>, alsa-devel@alsa-project.org,
+        coresight@lists.linaro.org, bpf@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, isdn4linux@listserv.isdn4linux.de,
+        keyrings@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sgx@vger.kernel.org, linux-spi@vger.kernel.org,
+        linux-trace-devel@vger.kernel.org,
+        linux-trace-kernel@vger.kernel.org, live-patching@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-security-module@vger.kernel.org,
+        linux-usb@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-mm@kvack.org,
+        openrisc@lists.librecores.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-xtensa@linux-xtensa.org, linuxppc-dev@lists.ozlabs.org,
+        x86@kernel.org
+Subject: [PATCH 00/35] Documentation: correct lots of spelling errors (series 1)
+Date:   Thu, 26 Jan 2023 22:39:30 -0800
+Message-Id: <20230127064005.1558-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-To allocate bitmaps, the mpi3mr driver calculates sizes of bitmaps using
-byte as unit. However, bitmap helper functions assume that bitmaps are
-allocated using unsigned long as unit. This gap causes memory access
-beyond the bitmap sizes and results in "BUG: KASAN: slab-out-of-bounds".
-The BUG was observed at firmware download to eHBA-9600. Call trace
-indicated that the out-of-bounds access happened in find_first_zero_bit
-called from mpi3mr_send_event_ack for miroc->evtack_cmds_bitmap.
+Correct many spelling errors in Documentation/ as reported by codespell.
 
-To fix the BUG, do not use bytes to manage bitmap sizes. Instead, use
-number of bits, and call bitmap helper functions which take number of
-bits as arguments. For memory allocation, call bitmap_zalloc instead of
-kzalloc. For zero clear, call bitmap_clear instead of memset. For
-resize, call bitmap_zalloc and bitmap_copy instead of krealloc.
+Maintainers of specific kernel subsystems are only Cc-ed on their
+respective patches, not the entire series. [if all goes well]
 
-Remove three fields for bitmap byte sizes in struct scmd_priv, which are
-no longer required. Replace the field dev_handle_bitmap_sz with
-dev_handle_bitmap_bits to keep number of bits of removepend_bitmap
-across resize.
+These patches are based on linux-next-20230125.
 
-Fixes: c5758fc72b92 ("scsi: mpi3mr: Gracefully handle online FW update operation")
-Fixes: e844adb1fbdc ("scsi: mpi3mr: Implement SCSI error handler hooks")
-Fixes: c1af985d27da ("scsi: mpi3mr: Add Event acknowledgment logic")
-Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- drivers/scsi/mpi3mr/mpi3mr.h    | 10 +----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 68 ++++++++++++++-------------------
- 2 files changed, 30 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index def4c5e15cd8..8a438f248a82 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -955,19 +955,16 @@ struct scmd_priv {
-  * @chain_buf_count: Chain buffer count
-  * @chain_buf_pool: Chain buffer pool
-  * @chain_sgl_list: Chain SGL list
-- * @chain_bitmap_sz: Chain buffer allocator bitmap size
-  * @chain_bitmap: Chain buffer allocator bitmap
-  * @chain_buf_lock: Chain buffer list lock
-  * @bsg_cmds: Command tracker for BSG command
-  * @host_tm_cmds: Command tracker for task management commands
-  * @dev_rmhs_cmds: Command tracker for device removal commands
-  * @evtack_cmds: Command tracker for event ack commands
-- * @devrem_bitmap_sz: Device removal bitmap size
-  * @devrem_bitmap: Device removal bitmap
-- * @dev_handle_bitmap_sz: Device handle bitmap size
-+ * @dev_handle_bitmap_bits: Number of bits in device handle bitmap
-  * @removepend_bitmap: Remove pending bitmap
-  * @delayed_rmhs_list: Delayed device removal list
-- * @evtack_cmds_bitmap_sz: Event Ack bitmap size
-  * @evtack_cmds_bitmap: Event Ack bitmap
-  * @delayed_evtack_cmds_list: Delayed event acknowledgment list
-  * @ts_update_counter: Timestamp update counter
-@@ -1128,7 +1125,6 @@ struct mpi3mr_ioc {
- 	u32 chain_buf_count;
- 	struct dma_pool *chain_buf_pool;
- 	struct chain_element *chain_sgl_list;
--	u16  chain_bitmap_sz;
- 	void *chain_bitmap;
- 	spinlock_t chain_buf_lock;
- 
-@@ -1136,12 +1132,10 @@ struct mpi3mr_ioc {
- 	struct mpi3mr_drv_cmd host_tm_cmds;
- 	struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
- 	struct mpi3mr_drv_cmd evtack_cmds[MPI3MR_NUM_EVTACKCMD];
--	u16 devrem_bitmap_sz;
- 	void *devrem_bitmap;
--	u16 dev_handle_bitmap_sz;
-+	u16 dev_handle_bitmap_bits;
- 	void *removepend_bitmap;
- 	struct list_head delayed_rmhs_list;
--	u16 evtack_cmds_bitmap_sz;
- 	void *evtack_cmds_bitmap;
- 	struct list_head delayed_evtack_cmds_list;
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 286a44506578..d25cd0382e20 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1128,7 +1128,6 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
- static int
- mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
- {
--	u16 dev_handle_bitmap_sz;
- 	void *removepend_bitmap;
- 
- 	if (mrioc->facts.reply_sz > mrioc->reply_sz) {
-@@ -1160,25 +1159,24 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
- 		    "\tcontroller while sas transport support is enabled at the\n"
- 		    "\tdriver, please reboot the system or reload the driver\n");
- 
--	dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
--	if (mrioc->facts.max_devhandle % 8)
--		dev_handle_bitmap_sz++;
--	if (dev_handle_bitmap_sz > mrioc->dev_handle_bitmap_sz) {
--		removepend_bitmap = krealloc(mrioc->removepend_bitmap,
--		    dev_handle_bitmap_sz, GFP_KERNEL);
-+	if (mrioc->facts.max_devhandle > mrioc->dev_handle_bitmap_bits) {
-+		removepend_bitmap = bitmap_zalloc(mrioc->facts.max_devhandle,
-+						  GFP_KERNEL);
- 		if (!removepend_bitmap) {
- 			ioc_err(mrioc,
--			    "failed to increase removepend_bitmap sz from: %d to %d\n",
--			    mrioc->dev_handle_bitmap_sz, dev_handle_bitmap_sz);
-+				"failed to increase removepend_bitmap bits from %d to %d\n",
-+				mrioc->dev_handle_bitmap_bits,
-+				mrioc->facts.max_devhandle);
- 			return -EPERM;
- 		}
--		memset(removepend_bitmap + mrioc->dev_handle_bitmap_sz, 0,
--		    dev_handle_bitmap_sz - mrioc->dev_handle_bitmap_sz);
-+		bitmap_copy(removepend_bitmap, mrioc->removepend_bitmap,
-+			    mrioc->dev_handle_bitmap_bits);
- 		mrioc->removepend_bitmap = removepend_bitmap;
- 		ioc_info(mrioc,
--		    "increased dev_handle_bitmap_sz from %d to %d\n",
--		    mrioc->dev_handle_bitmap_sz, dev_handle_bitmap_sz);
--		mrioc->dev_handle_bitmap_sz = dev_handle_bitmap_sz;
-+			 "increased bits of dev_handle_bitmap from %d to %d\n",
-+			 mrioc->dev_handle_bitmap_bits,
-+			 mrioc->facts.max_devhandle);
-+		mrioc->dev_handle_bitmap_bits = mrioc->facts.max_devhandle;
- 	}
- 
- 	return 0;
-@@ -2957,27 +2955,18 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
- 	if (!mrioc->pel_abort_cmd.reply)
- 		goto out_failed;
- 
--	mrioc->dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
--	if (mrioc->facts.max_devhandle % 8)
--		mrioc->dev_handle_bitmap_sz++;
--	mrioc->removepend_bitmap = kzalloc(mrioc->dev_handle_bitmap_sz,
--	    GFP_KERNEL);
-+	mrioc->dev_handle_bitmap_bits = mrioc->facts.max_devhandle;
-+	mrioc->removepend_bitmap = bitmap_zalloc(mrioc->dev_handle_bitmap_bits,
-+						 GFP_KERNEL);
- 	if (!mrioc->removepend_bitmap)
- 		goto out_failed;
- 
--	mrioc->devrem_bitmap_sz = MPI3MR_NUM_DEVRMCMD / 8;
--	if (MPI3MR_NUM_DEVRMCMD % 8)
--		mrioc->devrem_bitmap_sz++;
--	mrioc->devrem_bitmap = kzalloc(mrioc->devrem_bitmap_sz,
--	    GFP_KERNEL);
-+	mrioc->devrem_bitmap = bitmap_zalloc(MPI3MR_NUM_DEVRMCMD, GFP_KERNEL);
- 	if (!mrioc->devrem_bitmap)
- 		goto out_failed;
- 
--	mrioc->evtack_cmds_bitmap_sz = MPI3MR_NUM_EVTACKCMD / 8;
--	if (MPI3MR_NUM_EVTACKCMD % 8)
--		mrioc->evtack_cmds_bitmap_sz++;
--	mrioc->evtack_cmds_bitmap = kzalloc(mrioc->evtack_cmds_bitmap_sz,
--	    GFP_KERNEL);
-+	mrioc->evtack_cmds_bitmap = bitmap_zalloc(MPI3MR_NUM_EVTACKCMD,
-+						  GFP_KERNEL);
- 	if (!mrioc->evtack_cmds_bitmap)
- 		goto out_failed;
- 
-@@ -3415,10 +3404,7 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
- 		if (!mrioc->chain_sgl_list[i].addr)
- 			goto out_failed;
- 	}
--	mrioc->chain_bitmap_sz = num_chains / 8;
--	if (num_chains % 8)
--		mrioc->chain_bitmap_sz++;
--	mrioc->chain_bitmap = kzalloc(mrioc->chain_bitmap_sz, GFP_KERNEL);
-+	mrioc->chain_bitmap = bitmap_zalloc(num_chains, GFP_KERNEL);
- 	if (!mrioc->chain_bitmap)
- 		goto out_failed;
- 	return retval;
-@@ -4189,10 +4175,11 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 		for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++)
- 			memset(mrioc->evtack_cmds[i].reply, 0,
- 			    sizeof(*mrioc->evtack_cmds[i].reply));
--		memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
--		memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
--		memset(mrioc->evtack_cmds_bitmap, 0,
--		    mrioc->evtack_cmds_bitmap_sz);
-+		bitmap_clear(mrioc->removepend_bitmap, 0,
-+			     mrioc->dev_handle_bitmap_bits);
-+		bitmap_clear(mrioc->devrem_bitmap, 0, MPI3MR_NUM_DEVRMCMD);
-+		bitmap_clear(mrioc->evtack_cmds_bitmap, 0,
-+			     MPI3MR_NUM_EVTACKCMD);
- 	}
- 
- 	for (i = 0; i < mrioc->num_queues; i++) {
-@@ -4886,9 +4873,10 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 
- 	mpi3mr_flush_delayed_cmd_lists(mrioc);
- 	mpi3mr_flush_drv_cmds(mrioc);
--	memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
--	memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
--	memset(mrioc->evtack_cmds_bitmap, 0, mrioc->evtack_cmds_bitmap_sz);
-+	bitmap_clear(mrioc->devrem_bitmap, 0, MPI3MR_NUM_DEVRMCMD);
-+	bitmap_clear(mrioc->removepend_bitmap, 0,
-+		     mrioc->dev_handle_bitmap_bits);
-+	bitmap_clear(mrioc->evtack_cmds_bitmap, 0, MPI3MR_NUM_EVTACKCMD);
- 	mpi3mr_flush_host_io(mrioc);
- 	mpi3mr_cleanup_fwevt_list(mrioc);
- 	mpi3mr_invalidate_devhandles(mrioc);
--- 
-2.38.1
+ [PATCH 01/35] Documentation: arm64: correct spelling
+ [PATCH 02/35] Documentation: arm: correct spelling
+ [PATCH 03/35] Documentation: block: correct spelling
+ [PATCH 04/35] Documentation: bpf: correct spelling
+ [PATCH 05/35] Documentation: core-api: correct spelling
+ [PATCH 06/35] Documentation: fault-injection: correct spelling
+ [PATCH 07/35] Documentation: fb: correct spelling
+ [PATCH 08/35] Documentation: features: correct spelling
+ [PATCH 09/35] Documentation: firmware-guide/acpi: correct spelling
+ [PATCH 10/35] Documentation: hid: correct spelling
+ [PATCH 11/35] Documentation: i2c: correct spelling
+ [PATCH 12/35] Documentation: input: correct spelling
+ [PATCH 13/35] Documentation: isdn: correct spelling
+ [PATCH 14/35] Documentation: leds: correct spelling
+ [PATCH 15/35] Documentation: litmus-tests: correct spelling
+ [PATCH 16/35] Documentation: livepatch: correct spelling
+ [PATCH 17/35] Documentation: locking: correct spelling
+ [PATCH 18/35] Documentation: mm: correct spelling
+ [PATCH 19/35] Documentation: openrisc: correct spelling
+ [PATCH 20/35] Documentation: PCI: correct spelling
+ [PATCH 21/35] Documentation: powerpc: correct spelling
+ [PATCH 22/35] Documentation: power: correct spelling
+ [PATCH 23/35] Documentation: s390: correct spelling
+ [PATCH 24/35] Documentation: scheduler: correct spelling
+ [PATCH 25/35] Documentation: security: correct spelling
+ [PATCH 26/35] Documentation: sound: correct spelling
+ [PATCH 27/35] Documentation: spi: correct spelling
+ [PATCH 28/35] Documentation: target: correct spelling
+ [PATCH 29/35] Documentation: timers: correct spelling
+ [PATCH 30/35] Documentation: tools/rtla: correct spelling
+ [PATCH 31/35] Documentation: trace: correct spelling
+ [PATCH 32/35] Documentation: usb: correct spelling
+ [PATCH 33/35] Documentation: w1: correct spelling
+ [PATCH 34/35] Documentation: x86: correct spelling
+ [PATCH 35/35] Documentation: xtensa: correct spelling
 
+
+ Documentation/PCI/endpoint/pci-vntb-howto.rst                    |    2 -
+ Documentation/PCI/msi-howto.rst                                  |    2 -
+ Documentation/arm/arm.rst                                        |    2 -
+ Documentation/arm/ixp4xx.rst                                     |    4 +-
+ Documentation/arm/keystone/knav-qmss.rst                         |    2 -
+ Documentation/arm/stm32/stm32-dma-mdma-chaining.rst              |    6 +--
+ Documentation/arm/sunxi/clocks.rst                               |    2 -
+ Documentation/arm/swp_emulation.rst                              |    2 -
+ Documentation/arm/tcm.rst                                        |    2 -
+ Documentation/arm/vlocks.rst                                     |    2 -
+ Documentation/arm64/booting.rst                                  |    2 -
+ Documentation/arm64/elf_hwcaps.rst                               |    2 -
+ Documentation/arm64/sve.rst                                      |    4 +-
+ Documentation/block/data-integrity.rst                           |    2 -
+ Documentation/bpf/libbpf/libbpf_naming_convention.rst            |    6 +--
+ Documentation/bpf/map_xskmap.rst                                 |    2 -
+ Documentation/bpf/ringbuf.rst                                    |    4 +-
+ Documentation/bpf/verifier.rst                                   |    2 -
+ Documentation/core-api/packing.rst                               |    2 -
+ Documentation/core-api/padata.rst                                |    2 -
+ Documentation/fault-injection/fault-injection.rst                |    2 -
+ Documentation/fb/sm712fb.rst                                     |    2 -
+ Documentation/fb/sstfb.rst                                       |    2 -
+ Documentation/features/core/thread-info-in-task/arch-support.txt |    2 -
+ Documentation/firmware-guide/acpi/acpi-lid.rst                   |    2 -
+ Documentation/firmware-guide/acpi/namespace.rst                  |    2 -
+ Documentation/hid/hid-alps.rst                                   |    2 -
+ Documentation/hid/hid-bpf.rst                                    |    2 -
+ Documentation/hid/hiddev.rst                                     |    2 -
+ Documentation/hid/hidraw.rst                                     |    2 -
+ Documentation/hid/intel-ish-hid.rst                              |    2 -
+ Documentation/i2c/gpio-fault-injection.rst                       |    2 -
+ Documentation/i2c/smbus-protocol.rst                             |    2 -
+ Documentation/input/devices/iforce-protocol.rst                  |    2 -
+ Documentation/input/multi-touch-protocol.rst                     |    2 -
+ Documentation/isdn/interface_capi.rst                            |    2 -
+ Documentation/isdn/m_isdn.rst                                    |    2 -
+ Documentation/leds/leds-qcom-lpg.rst                             |    4 +-
+ Documentation/litmus-tests/README                                |    2 -
+ Documentation/livepatch/reliable-stacktrace.rst                  |    2 -
+ Documentation/locking/lockdep-design.rst                         |    4 +-
+ Documentation/locking/locktorture.rst                            |    2 -
+ Documentation/locking/locktypes.rst                              |    2 -
+ Documentation/locking/preempt-locking.rst                        |    2 -
+ Documentation/mm/hmm.rst                                         |    4 +-
+ Documentation/mm/hwpoison.rst                                    |    2 -
+ Documentation/openrisc/openrisc_port.rst                         |    4 +-
+ Documentation/power/suspend-and-interrupts.rst                   |    2 -
+ Documentation/powerpc/kasan.txt                                  |    2 -
+ Documentation/powerpc/papr_hcalls.rst                            |    2 -
+ Documentation/powerpc/qe_firmware.rst                            |    4 +-
+ Documentation/powerpc/vas-api.rst                                |    4 +-
+ Documentation/s390/pci.rst                                       |    4 +-
+ Documentation/s390/vfio-ccw.rst                                  |    2 -
+ Documentation/scheduler/sched-bwc.rst                            |    2 -
+ Documentation/scheduler/sched-energy.rst                         |    4 +-
+ Documentation/security/digsig.rst                                |    4 +-
+ Documentation/security/keys/core.rst                             |    2 -
+ Documentation/security/secrets/coco.rst                          |    2 -
+ Documentation/sound/alsa-configuration.rst                       |    8 ++--
+ Documentation/sound/cards/audigy-mixer.rst                       |    2 -
+ Documentation/sound/cards/maya44.rst                             |    2 -
+ Documentation/sound/cards/sb-live-mixer.rst                      |    2 -
+ Documentation/sound/designs/jack-controls.rst                    |    2 -
+ Documentation/sound/designs/seq-oss.rst                          |    2 -
+ Documentation/sound/hd-audio/notes.rst                           |    2 -
+ Documentation/spi/pxa2xx.rst                                     |   12 +++---
+ Documentation/spi/spi-lm70llp.rst                                |    2 -
+ Documentation/spi/spi-summary.rst                                |    2 -
+ Documentation/target/tcmu-design.rst                             |    2 -
+ Documentation/timers/hrtimers.rst                                |    2 -
+ Documentation/tools/rtla/rtla-timerlat-top.rst                   |    2 -
+ Documentation/trace/coresight/coresight-etm4x-reference.rst      |    2 -
+ Documentation/trace/events.rst                                   |    6 +--
+ Documentation/trace/fprobe.rst                                   |    2 -
+ Documentation/trace/ftrace-uses.rst                              |    2 -
+ Documentation/trace/hwlat_detector.rst                           |    2 -
+ Documentation/trace/rv/runtime-verification.rst                  |    2 -
+ Documentation/trace/uprobetracer.rst                             |    2 -
+ Documentation/usb/chipidea.rst                                   |   19 +++++-----
+ Documentation/usb/gadget-testing.rst                             |    2 -
+ Documentation/usb/mass-storage.rst                               |    2 -
+ Documentation/w1/w1-netlink.rst                                  |    2 -
+ Documentation/x86/boot.rst                                       |    2 -
+ Documentation/x86/buslock.rst                                    |    2 -
+ Documentation/x86/mds.rst                                        |    2 -
+ Documentation/x86/resctrl.rst                                    |    2 -
+ Documentation/x86/sgx.rst                                        |    2 -
+ Documentation/xtensa/atomctl.rst                                 |    2 -
+ 89 files changed, 124 insertions(+), 123 deletions(-)
+
+
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Will Deacon <will@kernel.org>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Andrii Nakryiko <andrii@kernel.org>
+Cc: Alexei Starovoitov <ast@kernel.org>
+Cc: Daniel Borkmann <daniel@iogearbox.net>
+Cc: Vladimir Oltean <olteanv@gmail.com>
+Cc: Steffen Klassert <steffen.klassert@secunet.com>
+Cc: Daniel Jordan <daniel.m.jordan@oracle.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Helge Deller <deller@gmx.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Jiri Kosina <jikos@kernel.org>
+Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+Cc: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Cc: Wolfram Sang <wsa@kernel.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Henrik Rydberg <rydberg@bitmath.org>
+Cc: Karsten Keil <isdn@linux-pingi.de>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Lee Jones <lee@kernel.org>
+Cc: Josh Poimboeuf <jpoimboe@kernel.org>
+Cc: Miroslav Benes <mbenes@suse.cz>
+Cc: Petr Mladek <pmladek@suse.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Jérôme Glisse <jglisse@redhat.com>
+Cc: Naoya Horiguchi <naoya.horiguchi@nec.com>
+Cc: Miaohe Lin <linmiaohe@huawei.com>
+Cc: Jonas Bonn <jonas@southpole.se>
+Cc: Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+Cc: Stafford Horne <shorne@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Len Brown <len.brown@intel.com>
+Cc: Heiko Carstens <hca@linux.ibm.com>
+Cc: Vasily Gorbik <gor@linux.ibm.com>
+Cc: Alexander Gordeev <agordeev@linux.ibm.com>
+Cc: Juri Lelli <juri.lelli@redhat.com>
+Cc: Vincent Guittot <vincent.guittot@linaro.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Jarkko Sakkinen <jarkko@kernel.org>
+Cc: Paul Moore <paul@paul-moore.com>
+Cc: James Morris <jmorris@namei.org>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>
+Cc: Jaroslav Kysela <perex@perex.cz>
+Cc: Takashi Iwai <tiwai@suse.com>
+Cc: Mark Brown <broonie@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Daniel Bristot de Oliveira <bristot@kernel.org>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Masami Hiramatsu <mhiramat@kernel.org>
+Cc: Mathieu Poirier <mathieu.poirier@linaro.org>
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
+Cc: Evgeniy Polyakov <zbr@ioremap.net>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Chris Zankel <chris@zankel.net>
+Cc: Max Filippov <jcmvbkbc@gmail.com>
+
+Cc: alsa-devel@alsa-project.org
+Cc: coresight@lists.linaro.org
+Cc: bpf@vger.kernel.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: isdn4linux@listserv.isdn4linux.de
+Cc: keyrings@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-block@vger.kernel.org
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-i2c@vger.kernel.org
+Cc: linux-input@vger.kernel.org
+Cc: linux-leds@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-s390@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-sgx@vger.kernel.org
+Cc: linux-spi@vger.kernel.org
+Cc: linux-trace-devel@vger.kernel.org
+Cc: linux-trace-kernel@vger.kernel.org
+Cc: live-patching@vger.kernel.org
+Cc: linux-pm@vger.kernel.org
+Cc: linux-security-module@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: target-devel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: openrisc@lists.librecores.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-xtensa@linux-xtensa.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: x86@kernel.org
