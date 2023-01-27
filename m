@@ -2,72 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77957C54EAA
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 12:43:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B6FC38142
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 13:00:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234287AbjA0Mnu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Jan 2023 07:43:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57156 "EHLO
+        id S233974AbjA0NAq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Jan 2023 08:00:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234125AbjA0Mnt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 07:43:49 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15E1D1258C;
-        Fri, 27 Jan 2023 04:43:46 -0800 (PST)
+        with ESMTP id S229909AbjA0NAp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 08:00:45 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8689CBB84;
+        Fri, 27 Jan 2023 05:00:44 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C59891FEB5;
-        Fri, 27 Jan 2023 12:43:44 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 44CBA1FF59;
+        Fri, 27 Jan 2023 13:00:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1674823424; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1674824443; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YKbZcZc/4mXDr965fGTr3TWHM/Dw6UDm7skEUHa/txU=;
-        b=ZgVSXqFaZe7sEz9fWOSm+Am8J+dDQXEXDxBMSuW7pnwGcLdG98iJ+DyCdWiOv3TKo0J3I8
-        bG8Xv9DjPmJCWtuitszIDRCFF54R8jk/7bCqwLJrzuqe8WS+7TPitt1Pfv1zpG0idN/JS3
-        jlKNH478DH60gAkjPvvgOt6jQkop7x8=
+        bh=ME628VQG1ftYrq0V4Zr+oJ33XRrdiNp0Y5GKNohMKLY=;
+        b=wQWBnS5gW1rb/gfJCWMFT1dQ0YA10heQl0RKaTMKM1S2hNuuzMqHCC1DJMCMctkss8Ld0j
+        GWC5tpaiPApzkmT23MjIPn1pH3eCFpfYrQaIzQI1AViFsESsf6IsEXZN/tWeA7AocQ5ED2
+        1PdQ6eShRSOA4PUkQuZVsa1+lpgDZxY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1674823424;
+        s=susede2_ed25519; t=1674824443;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YKbZcZc/4mXDr965fGTr3TWHM/Dw6UDm7skEUHa/txU=;
-        b=AZzU7XsG2h9kILGelpyQWLErlF/8xt2hL4AqpaVflfnT73wCg/TIqFgWPp3MkGsJ8O3Yk0
-        tXKfzXmNeONZIqCw==
+        bh=ME628VQG1ftYrq0V4Zr+oJ33XRrdiNp0Y5GKNohMKLY=;
+        b=7CF10NdQ2SlmGKVSATXD3iCpnC211w7c2yNg3zJI+Fn9mSCJycqm07+VHv4KQHt00AlCs+
+        TtEJ1m45sqhmcnBA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B04161336F;
-        Fri, 27 Jan 2023 12:43:44 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 34D171336F;
+        Fri, 27 Jan 2023 13:00:43 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id Bw6SKgDH02P7CQAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 27 Jan 2023 12:43:44 +0000
-Message-ID: <8e5be3df-18ab-a543-0cb1-b4db6009436d@suse.de>
-Date:   Fri, 27 Jan 2023 13:43:44 +0100
+        id vTueDPvK02NfEwAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 27 Jan 2023 13:00:43 +0000
+Message-ID: <f0793325-3022-e7b8-672d-00f2f9ee0cd9@suse.de>
+Date:   Fri, 27 Jan 2023 14:00:42 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.1
-Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Subject: Re: [PATCH v3 07/18] scsi: sd: detect support for command duration
+ limits
 Content-Language: en-US
 To:     Niklas Cassel <niklas.cassel@wdc.com>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org
 References: <20230124190308.127318-1-niklas.cassel@wdc.com>
- <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <20230124190308.127318-8-niklas.cassel@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230124190308.127318-2-niklas.cassel@wdc.com>
+In-Reply-To: <20230124190308.127318-8-niklas.cassel@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -75,49 +76,103 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 1/24/23 20:02, Niklas Cassel wrote:
 > From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > 
-> Introduce the IOPRIO_CLASS_DL priority class to indicate that IOs should
-> be executed using duration-limits targets. The duration target to apply
-> to a command is indicated using the priority level. Up to 8 levels are
-> supported, with level 0 indiating "no limit".
+> Detect if a disk supports command duration limits. Support for
+> the READ 16, WRITE 16, READ 32 and WRITE 32 commands is tested using
+> the function scsi_report_opcode(). For a disk supporting command
+> duration limits, the mode page indicating the command duration limits
+> descriptors that apply to the command is indicated using the rwcdlp
+> and cdlp bits.
 > 
-> This priority class has effect only if the target device supports the
-> command duration limits feature and this feature is enabled by the user.
+> Support duration limits is advertizes through sysfs using the new
+> "duration_limits" sysfs sub-directory of the generic device directory,
+> that is, /sys/block/sdX/device/duration_limits. Within this new
+> directory, the limit descriptors that apply to read and write operations
+> are exposed within the read and write directories, with descriptor
+> attributes grouped together in directories. The overall sysfs structure
+> created is:
 > 
-> While it is recommended to not use an ioscheduler when using the
-> IOPRIO_CLASS_DL priority class, if using the BFQ or mq-deadline scheduler,
-> IOPRIO_CLASS_DL is mapped to IOPRIO_CLASS_RT.
+> /sys/block/sde/device/duration_limits/
+> ├── perf_vs_duration_guideline
+> ├── read
+> │   ├── 1
+> │   │   ├── duration_guideline
+> │   │   ├── duration_guideline_policy
+> │   │   ├── max_active_time
+> │   │   ├── max_active_time_policy
+> │   │   ├── max_inactive_time
+> │   │   └── max_inactive_time_policy
+> │   ├── 2
+> │   │   ├── duration_guideline
+> ...
+> │   └── page
+> └── write
+>      ├── 1
+>      │   ├── duration_guideline
+>      │   ├── duration_guideline_policy
+> ...
 > 
-> The reason for this is twofold:
-> 1) Each priority level for the IOPRIO_CLASS_DL priority class represents a
-> duration limit descriptor (DLD) inside the device. Users can configure
-> these limits themselves using passthrough commands, so from a block layer
-> perspective, Linux has no idea of how each DLD is actually configured.
+> For each of the read and write descriptor directories, the page
+> attribute file indicate the command duration limit page providing the
+> descriptors. The possible values for the page attribute are "A", "B",
+> "T2A" and "T2B".
 > 
-> By mapping a command to IOPRIO_CLASS_RT, the chance that a command exceeds
-> its duration limit (because it was held too long in the scheduler) is
-> decreased. It is still possible to use the IOPRIO_CLASS_DL priority class
-> for "low priority" IOs by configuring a large limit in the respective DLD.
-> 
-> 2) On ATA drives, IOPRIO_CLASS_DL commands and NCQ priority commands
-> (IOPRIO_CLASS_RT) cannot be used together. A mix of CDL and high priority
-> commands cannot be sent to a device. By mapping IOPRIO_CLASS_DL to
-> IOPRIO_CLASS_RT, we ensure that a device will never receive a mix of these
-> two incompatible priority classes.
+> The new "duration_limits" attributes directory is added only for disks
+> that supports command duration limits.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 > ---
->   block/bfq-iosched.c         | 10 ++++++++++
->   block/blk-ioprio.c          |  3 +++
->   block/ioprio.c              |  3 ++-
->   block/mq-deadline.c         |  1 +
->   include/linux/ioprio.h      |  2 +-
->   include/uapi/linux/ioprio.h |  7 +++++++
->   6 files changed, 24 insertions(+), 2 deletions(-)
+>   drivers/scsi/Makefile |   2 +-
+>   drivers/scsi/sd.c     |   2 +
+>   drivers/scsi/sd.h     |  61 ++++
+>   drivers/scsi/sd_cdl.c | 764 ++++++++++++++++++++++++++++++++++++++++++
+>   4 files changed, 828 insertions(+), 1 deletion(-)
+>   create mode 100644 drivers/scsi/sd_cdl.c
 > 
+I'm not particularly happy with having sysfs reflect user settings, but 
+every other place I can think of is even more convoluted.
+So there.
+
+> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+> index f055bfd54a68..0e48cb6d21d6 100644
+> --- a/drivers/scsi/Makefile
+> +++ b/drivers/scsi/Makefile
+> @@ -170,7 +170,7 @@ scsi_mod-$(CONFIG_BLK_DEV_BSG)	+= scsi_bsg.o
+>   
+>   hv_storvsc-y			:= storvsc_drv.o
+>   
+> -sd_mod-objs	:= sd.o
+> +sd_mod-objs	:= sd.o sd_cdl.o
+>   sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
+>   sd_mod-$(CONFIG_BLK_DEV_ZONED) += sd_zbc.o
+>   
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 45945bfeee92..7879a5470773 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3326,6 +3326,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>   		sd_read_write_same(sdkp, buffer);
+>   		sd_read_security(sdkp, buffer);
+>   		sd_config_protection(sdkp);
+> +		sd_read_cdl(sdkp, buffer);
+>   	}
+>   
+>   	/*
+> @@ -3646,6 +3647,7 @@ static void scsi_disk_release(struct device *dev)
+>   
+>   	ida_free(&sd_index_ida, sdkp->index);
+>   	sd_zbc_free_zone_info(sdkp);
+> +	sd_cdl_release(sdkp);
+>   	put_device(&sdkp->device->sdev_gendev);
+>   	free_opal_dev(sdkp->opal_dev);
+>   
+Hmm. Calling this during revalidate() makes sense, but how can we ensure 
+that we call revalidate() when the user issues a MODE_SELECT command?
+
+Other than that:
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
 Hannes
-
