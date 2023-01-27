@@ -2,59 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A55C54EAA
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 03:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9478EC05027
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Jan 2023 03:23:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233369AbjA0DXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Jan 2023 22:23:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46696 "EHLO
+        id S233394AbjA0DXp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Jan 2023 22:23:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233118AbjA0DX3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2023 22:23:29 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2675728C3;
-        Thu, 26 Jan 2023 19:23:21 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30R0O4B3019439;
-        Fri, 27 Jan 2023 03:23:17 GMT
+        with ESMTP id S233301AbjA0DXb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2023 22:23:31 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D7D974A45;
+        Thu, 26 Jan 2023 19:23:23 -0800 (PST)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30R0NY0C007533;
+        Fri, 27 Jan 2023 03:23:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=APQiqFhcmLn0pA4kVPJyftYdBrW0Ss0XbZAnK3xmEIU=;
- b=ytZ258WvrIJ6CqRt/zmNgiwW6Si5uXaQEMysOG6ZLHFHVJTiTyompdiKrEVtMEX3lAZf
- m9F6b3drFYFZyyVVCbzJRXMnppLjCA8f7QsHbqmYewuBP1LFFnvK3+kcBhx6R7ZesMFW
- G9WZwqht8hgkrODbSvVyLbsOG0hoaPZ21NZc5HLpUaPd3PJfDxt9AIpY0/7MIUl8+sJV
- RVi45FEQgE6bDOZ4bLyrv5rLjss6b9b+EO+UOmFQ6L1L25FespGQ8qjfgJb7UR/Ex58z
- g+W8ILHQrJmp1BcBeUhZMT59uGgI4H86vsWiSajwWu3S6gwjO/xniDbxW4mQAl3jR5Nz NQ== 
+ bh=3bFCp52HYNGoANttniclXRjnAoZxtRItZb3E4P416g4=;
+ b=s1vHSPazrFkLTSb0WiX9P/SyV5H4feM2KEEHXVlJeo5YxAtA0Ko2Rl4MDNife0H0hKCf
+ TLtM/dKLbvWl3nlQqJqPw4cVQ3zb13Hd5wNqLPBvOUQR3ab9H46BRmdnNsGj/bxLxP1b
+ UOEym3yZCx+CgIIRnQ5gilJEzAh1F/VSJuBymdVJMvepAN8XpwusNJtf9rJ66wNmku4q
+ KiPEEiDjvkW/9yp5K07GCCLadGrJux5N52Ve7vdGlGiq2eZyPae4cM8x8DY1dew1J4AW
+ Peo9teOKpDxPUaDRPIhDIZVArfSueeEhAMjnbAoI85zJm1Ca6Xjce/dfBTs5nkFdVa9s JA== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n88ku3sy1-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3n883cby80-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Jan 2023 03:23:16 +0000
+        Fri, 27 Jan 2023 03:23:10 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30QNlVcv007006;
-        Fri, 27 Jan 2023 03:23:16 GMT
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30R36aoE006639;
+        Fri, 27 Jan 2023 03:23:09 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n86g8nxsp-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3n86g8nxqp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Jan 2023 03:23:15 +0000
+        Fri, 27 Jan 2023 03:23:09 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30R3N7es036358;
-        Fri, 27 Jan 2023 03:23:15 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30R3N7eg036358;
+        Fri, 27 Jan 2023 03:23:08 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n86g8nxpp-8;
-        Fri, 27 Jan 2023 03:23:15 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3n86g8nxpp-2;
+        Fri, 27 Jan 2023 03:23:08 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     njavali@marvell.com, jejb@linux.ibm.com, qutran@marvell.com,
-        Tom Rix <trix@redhat.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Arnd Bergmann <arnd@kernel.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Tom Rix <trix@redhat.com>, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: qla2xxx: Change qla_trim_buf,__qla_adjust_buf functions to static
-Date:   Thu, 26 Jan 2023 22:23:01 -0500
-Message-Id: <167478863297.3972592.6357225235775673779.b4-ty@oracle.com>
+Subject: Re: [PATCH] qla2xxx: fix printk format string
+Date:   Thu, 26 Jan 2023 22:22:55 -0500
+Message-Id: <167478863289.3972592.8275488978063279225.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230114013724.3943580-1-trix@redhat.com>
-References: <20230114013724.3943580-1-trix@redhat.com>
+In-Reply-To: <20230117170029.2387516-1-arnd@kernel.org>
+References: <20230117170029.2387516-1-arnd@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -62,30 +68,34 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-01-26_09,2023-01-26_01,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- bulkscore=0 mlxscore=0 mlxlogscore=931 adultscore=0 spamscore=0
+ bulkscore=0 mlxscore=0 mlxlogscore=785 adultscore=0 spamscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2301270029
-X-Proofpoint-GUID: GMC2wvpdUZj6FH-csm-4OaUmSaw6JGYn
-X-Proofpoint-ORIG-GUID: GMC2wvpdUZj6FH-csm-4OaUmSaw6JGYn
+X-Proofpoint-ORIG-GUID: gr0kSce90-QiwRIeUh0SSZQOZWNQtU9T
+X-Proofpoint-GUID: gr0kSce90-QiwRIeUh0SSZQOZWNQtU9T
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 13 Jan 2023 20:37:24 -0500, Tom Rix wrote:
+On Tue, 17 Jan 2023 18:00:15 +0100, Arnd Bergmann wrote:
 
-> Smatch reports
-> drivers/scsi/qla2xxx/qla_mid.c:1189:6: warning: symbol 'qla_trim_buf' was not declared. Should it be static?
-> drivers/scsi/qla2xxx/qla_mid.c:1221:6: warning: symbol '__qla_adjust_buf' was not declared. Should it be static?
+> Printing a size_t value that is the result of the sizeof() operator requires
+> using the %z format string modifier to avoid a warning on 32-bit architectures:
 > 
-> These functions are only used in qla_mid.c, so they should be static.
-> 
+> drivers/scsi/qla2xxx/qla_mid.c: In function 'qla_create_buf_pool':
+> drivers/scsi/qla2xxx/qla_mid.c:1094:51: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Werror=format=]
+>  1094 |                     "Failed to allocate buf_map(%ld).\n", sz * sizeof(unsigned long));
+>       |                                                 ~~^       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+>       |                                                   |          |
+>       |                                                   long int   unsigned int
+>       |                                                 %d
 > 
 > [...]
 
 Applied to 6.3/scsi-queue, thanks!
 
-[1/1] scsi: qla2xxx: Change qla_trim_buf,__qla_adjust_buf functions to static
-      https://git.kernel.org/mkp/scsi/c/54c51253b3d5
+[1/1] qla2xxx: fix printk format string
+      https://git.kernel.org/mkp/scsi/c/d794a23113b1
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
