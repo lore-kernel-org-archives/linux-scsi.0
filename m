@@ -2,83 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86843C54EAA
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 00:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25D3DC61DA7
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 00:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233195AbjA1Akw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Jan 2023 19:40:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56036 "EHLO
+        id S233346AbjA1Aru (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Jan 2023 19:47:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229883AbjA1Akt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 19:40:49 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA2B1BE6
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2023 16:40:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674866447; x=1706402447;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=cKFsKpmmzu6Woagk/ZR/i+nzuRdTfU6KzMyBFnPYOU8=;
-  b=cQ0XxMgMTK1x5iq7ctdmHh2lboowYU66LBKNpszHAZPC/MbQ2vxhsA4s
-   Hum6AOutjFC/P0BxuRxgueXHDxYjPclK3++5qVR3BFEBLanotk2NYG3QS
-   pVV1/sWC6Cg6d9Y/JMl/ubVoIB7IAOFsG72JTjOz+ec3IMotIbtmPIl14
-   2fxFgS+qWbKzWmhrs8h4M2ffGSwKcNq0YdLB3KrvMCw6JEb7YZSNDPZW+
-   EBaj+iiUOx65X8OVwV3FANAztezgtA850R9z7X8aQUwyzkJ9o4ytZvQop
-   wefUqwB8I4Pt4cnxqVHh5zufEWzYulQCC/N3mUmiDv0CG4N9SVrmoEPjS
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.97,252,1669046400"; 
-   d="scan'208";a="326238219"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2023 08:40:43 +0800
-IronPort-SDR: X+09u2SakysLXnXjIGLoACEdZs4g1QEMph9GyJJ/9oSmo5oBuNBcWW8fXsOo5s/kkPMZzTob7T
- TitbF+9qYPnYqphcXq4uyxujiJanUxnmMI1uLTA3Nzd99o3alYRBzb+2RNwh8PPEoN1HEZ08f8
- H3ist1NyALMJ8WFMcZW+++tjarv5Jc3muVidhbIE5IN5pTkrrrylFtaf4tb2TIBxn+6R00nU/R
- d1CP9MHkkX09OUK/rPTutQV4hF4zRwsgNdBgwD/ooXydPXqgsoahV38y3u0NjPqCMK8TsyOdAm
- y4c=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jan 2023 15:52:26 -0800
-IronPort-SDR: pxAfYmHTdJSKOXmin2zlVLop//xjjXxAADe1F+PKWc6bG5VRoEhxTuaaNnsQd4Wv2ocMgRdnX4
- qygP+Nj/IGZK+PtHvOxfjY+bxQIUdEUs/FUgcF/JpdeRd+Q9MuAVq3IEF1DrhHqXfBDlqaPfoS
- R68JO7hgkDzj8osgtiiiEqaDnu9sjnuSe3Or1/WXDtdV+pSpXwwfQQqRmvxJ+dZ/umVu/wEVHz
- MoUu9XLpBFrg3lKLluZuV4+urWkTL4S6fIm2vD04WWqZWWlmne++a9rBtWplYhM4vw2dIe+Gs9
- Zuc=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jan 2023 16:40:42 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P3bG20j36z1Rwt8
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2023 16:40:42 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1674866440; x=1677458441; bh=cKFsKpmmzu6Woagk/ZR/i+nzuRdTfU6KzMy
-        BFnPYOU8=; b=FsKlqNxVo6Ji+qZKF4d1kZvenDQREvj2366fo5MCw7gF+RGGZE+
-        oGfNLYtnjV/+HoFdVuAlkhUf090mQrC8qJJifWffyU+ip3Gv0nsG92xI3n7bcVbP
-        4WqBE2ZlbxcF8t4XPpSDZxRiMTK7BKJL9pQwbWFo1oo9U/nhV2WgtGkhnlg+98lA
-        zza5z/cQUqW12jMSjy3bSHho5oDvfqstGQs9f4h/r4VVephhNpXBcYsnjNz5quDf
-        JjdM1yigJxqlnCl771QPR90rw/zvH9D2DIxIofcxNPDY/9kOPHhbWdXHbo/29LuT
-        a9AG77TVcoAbgM6ImK35cMya8aQ0iZa4ZEg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id lciq_RESoGpt for <linux-scsi@vger.kernel.org>;
-        Fri, 27 Jan 2023 16:40:40 -0800 (PST)
-Received: from [10.225.163.66] (unknown [10.225.163.66])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P3bFz2gDbz1RvLy;
-        Fri, 27 Jan 2023 16:40:39 -0800 (PST)
-Message-ID: <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
-Date:   Sat, 28 Jan 2023 09:40:37 +0900
+        with ESMTP id S233276AbjA1Art (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2023 19:47:49 -0500
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BCA746BE;
+        Fri, 27 Jan 2023 16:47:46 -0800 (PST)
+Received: by mail-pl1-f178.google.com with SMTP id k18so6614686pll.5;
+        Fri, 27 Jan 2023 16:47:46 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ryr84wsUJIMZ57kWx2Cs6Q3jzSgpVyG63J+AUfuZris=;
+        b=j5Fhbip82VwDXNg/1VnZtWigYOVkTovV9Xt5jiKR/PAqkSYO8jl2giIueeugkWmjR8
+         DICfiKrrHsTyMMcU+1Z626zi8IyOE7n6U9HmvW7UEmlkZUhijftRi6eHriDiHcsin5RG
+         PoQMHqZFvRx85teYBY2CYus5lBbjdPgFW0koXaeRDek/lcmVYyBXnL7OxP9AHxQrKlVi
+         A/4OcounQxHHypaFDHHBpM+CoEcI3w4ooNEx+xW90zpuYQEKBEqHU7Q6cK0uNoq6FcF9
+         XU17xaLS3h61LwNu9fbkyoKWLv1AhyYxqfJkT1VSeU+DHTG74thbtV5Y6g/6VIEuIOXb
+         maVg==
+X-Gm-Message-State: AO0yUKUGydI94ayi6bbdeI9QjsIkPFBbTRWsS5YzSBO0RqVo++h8QItl
+        wEmCF1nECJ2uyJqDqCf4/Sw=
+X-Google-Smtp-Source: AK7set/uCniHvq1kqtmCrrtwiA5G1QX+e9UIKPItC+M0oDDS4YBbisKOtqTemrfmrhOhagzXUFOJAA==
+X-Received: by 2002:a17:902:d4c7:b0:196:1608:d755 with SMTP id o7-20020a170902d4c700b001961608d755mr17343536plg.60.1674866865539;
+        Fri, 27 Jan 2023 16:47:45 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:5051:6ed0:9022:37aa? ([2620:15c:211:201:5051:6ed0:9022:37aa])
+        by smtp.gmail.com with ESMTPSA id e15-20020a170902784f00b00196048cc113sm1877003pln.126.2023.01.27.16.47.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 27 Jan 2023 16:47:44 -0800 (PST)
+Message-ID: <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
+Date:   Fri, 27 Jan 2023 16:47:42 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
 Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Niklas Cassel <Niklas.Cassel@wdc.com>
 Cc:     Paolo Valente <paolo.valente@linaro.org>,
         Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
@@ -99,112 +65,39 @@ References: <20230124190308.127318-2-niklas.cassel@wdc.com>
  <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
  <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
  <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
-Content-Type: text/plain; charset=UTF-8
+ <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/28/23 02:23, Bart Van Assche wrote:
-> A summary of my concerns is as follows:
-> * The current I/O priority levels (RT, BE, IDLE) apply to all block 
-> devices. IOPRIO_CLASS_DL is only supported by certain block devices 
-> (some but not all SCSI harddisks). This forces applications to check the 
-> capabilities of the storage device before it can be decided whether or 
-> not IOPRIO_CLASS_DL can be used. This is not something applications 
-> should do but something the kernel should do. Additionally, if multiple 
-> dm devices are stacked on top of the block device driver, like in 
-> Android, it becomes even more cumbersome to check whether or not the 
-> block device supports CDL.
-
-Yes, RT, BE and IDLE apply to all block devices. And so does CDL in the sense
-that if a user specifies the CDL class for IOs to a device that does not support
-CDL, then nothing special will happen. There will be no differentiation of the
-IOs. That *exactly* what happens when using RT, BE or IDLE with the none
-scheduler (e.g. default nvme setup). And the same remark applies to RT class
-mapping to ATA NCQ priority feature: the user needs to check the device to know
-if that will happen, *and* also needs to turn on that feature for that mapping
-to be effective.
-
-The levels of the CDL priority class are also very well defined: they map to the
-CDL descriptors defined on the drive, which are consultable by the user through
-sysfs (no special tools needed), so easily discoverable.
-
-As for DM devices, these have no scheduler. So any processing of a priority
-class by a DM target driver is that driver responsibility. Initially, all that
-happens is the block layer passing on that information through the stack with
-the BIOs. That's it. Real action may happen once the physical block device is
-reached with the IO scheduler for that device, if one is set.
-
-At that level, none scheduler is of no concern, nothing will happen. Kyber also
-ignores priorities. We are left with only bfq and mq-deadline. The latter only
-cares about the priority class, ignoring levels. bfq does act on both class and
-level.
-
-IOPRIO_CLASS_DL is equal to 4, so strictly speaking, is of lower priority than
-the IDLE class if you want to consider it as part of that ordering. But we
-defined it as a different class to allow *not* having to do that. IO schedulers
-can be modified to ignore that priority class for now, mapping it to say the
-default BE class for instance. Our current patch set maps the CDL class to the
-RT class for the schedulers, as that made most sense given the time-sensitive
-nature of CDL workloads. But we can change that to actually let the scheduler
-decide if you want. There are no other changes in the block layer that have or
-need special handling of the CDL class. All very clean in my opinion, no special
-conditions for that feature. No additional "if" in the hot path, no overhead added.
-
-> * For the RT, BE and IDLE classes, it is well defined which priority 
-> number represents a high priority and which priority number represents a 
-> low priority. For CDL, only the drive knows the priority details. I 
-> think that application software should be able to select a DL priority 
-> without having to read the CDL configuration first.
-
-The levels of the CDL priority class are also very well defined: they map to the
-CDL descriptors defined on the drive, which are consultable by the user through
-sysfs (no special tools needed), so easily discoverable. And unless we restrict
-how CDL descriptors can be defined, which I explained in my previous email is
-not desirable at all, we cannot and should not try to order levels in some sort
-of priority semantic. CDL semantic does not define directly a priority level,
-only time limits, which may or may not be ordered, depending on the limits
-definitions.
-
-As Niklas pointed out, this is not a "generic" feature that any random
-application can magically use without modifications. The application must be
-aware of what CDL is and if how the descriptors are. And for 99.99% of the use
-cases, the CDL descriptors will be defined in a way usefull for that
-application. There is no magic generic set of descriptors defined by default.
-Though a simple set of increasing time limits that can be cleanly mapped to
-priority levels. A system administrator is free to do that for the system drives
-if that is what the running applications expect. CDL is a very flexible feature
-that can cover a lot of use cases. Trying to shoehorn in into the legacy/classic
-priority semantic framework would only restrict its usefulness.
-
-> I hope that I have it made it clear that I think that the proposed user 
-> space API will be very painful to use for application developers.
-
-I completely disagree. Reusing the prio class/level API made it easy to allow
-applications to use the feature. fio support for CDL requires exactly *one line*
-change, to allow for the CDL class number 4. That's it. From there, one can use
-the --cmdprio_class=4 nd --cmdprio=idx options to exercise a drive. The value of
-"idx" here of course depends on how the descriptors are set on the drive. But
-back to the point above. This depends on the application goals and the
-descriptors are set accordingly for that goal. There is no real discovery needed
-by the application. The application expect a certain set of CDL limits for its
-use case, and checking that this set is the one currently defined on the drive
-is easy to do from an application with the sysfs interface we added.
-
-Many users out there have deployed and using applications taking advantage of
-ATA NCQ priority feature, using class RT for high priority IOs. The new CDL
-class does not require many application changes to be enabled for next gen
-drives that will have CDL.
-
+On 1/27/23 16:40, Damien Le Moal wrote:
+> On 1/28/23 02:23, Bart Van Assche wrote:
+>> I hope that I have it made it clear that I think that the proposed user
+>> space API will be very painful to use for application developers.
 > 
-> Bart.
+> I completely disagree. Reusing the prio class/level API made it easy to allow
+> applications to use the feature. fio support for CDL requires exactly *one line*
+> change, to allow for the CDL class number 4. That's it. From there, one can use
+> the --cmdprio_class=4 nd --cmdprio=idx options to exercise a drive. The value of
+> "idx" here of course depends on how the descriptors are set on the drive. But
+> back to the point above. This depends on the application goals and the
+> descriptors are set accordingly for that goal. There is no real discovery needed
+> by the application. The application expect a certain set of CDL limits for its
+> use case, and checking that this set is the one currently defined on the drive
+> is easy to do from an application with the sysfs interface we added.
 > 
+> Many users out there have deployed and using applications taking advantage of
+> ATA NCQ priority feature, using class RT for high priority IOs. The new CDL
+> class does not require many application changes to be enabled for next gen
+> drives that will have CDL.
+  As I mentioned before, the new I/O priority class IOPRIO_CLASS_DL 
+makes it impossible to use a single I/O priority class across devices 
+that support CDL and devices that do not support CDL. I'm surprised that 
+you keep denying that IOPRIO_CLASS_DL is a royal pain for users who have 
+to support devices that support CDL and devices that do not support CDL.
 
--- 
-Damien Le Moal
-Western Digital Research
-
+Bart.
