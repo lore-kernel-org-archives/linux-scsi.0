@@ -2,80 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A84C27C76
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 10:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 185A4C61DA7
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 10:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234140AbjA1KkU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Jan 2023 05:40:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46418 "EHLO
+        id S234258AbjA1Kn3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Jan 2023 05:43:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233641AbjA1KkS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 05:40:18 -0500
-Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF49F7643D;
-        Sat, 28 Jan 2023 02:40:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1674902395; bh=Y+8/fOapSSmWLEqg7lJpPnADv5hXIKr7UJtI9ZjvAFw=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
-         MIME-Version:Content-Type:In-Reply-To;
-        b=XIkh+hL8vbalP7MRdL/ZgaZpjd2pQ/iG9Qd+TQ/VsdiMWHQPbmKvPzgf0CgNYQdSt
-         wNBH8aPDPOBddzN1/7mOHvJ50H1TUmt4nj4cFVkgGgSaQBHcFGVm3kMzpVIp7VzJFo
-         27l2eqCU/RGvmkPrRveaD5hi+s8nUX5gnt5uAX+o=
-Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Sat, 28 Jan 2023 11:39:55 +0100 (CET)
-X-EA-Auth: 52l/H8g2NG2HneUKl+/V3mX4LOB9amfBJ2uIMcfD2pL8zpPZriS/JRNd3NsdHCPbnQElAYsYvzFR+pHxWdPk8KRkJkpOlbWm
-Date:   Sat, 28 Jan 2023 16:09:51 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
-        Deepak R Varma <drv@mailo.com>
-Subject: [PATCH 2/2] scsi: megaraid_sas: Use max helper for comparison and
- assignment
-Message-ID: <bf5884a7bd7c1c92497664eb793c99051b81d67a.1674900575.git.drv@mailo.com>
-References: <cover.1674900575.git.drv@mailo.com>
+        with ESMTP id S234251AbjA1Kn0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 05:43:26 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9432132E5E;
+        Sat, 28 Jan 2023 02:43:25 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2241760B9C;
+        Sat, 28 Jan 2023 10:43:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E726C433EF;
+        Sat, 28 Jan 2023 10:43:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1674902604;
+        bh=r3AmLMHF37JfCMroLZR9ipVwtwLlfLaX5vP1fJKdhU4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HwjSoMDh8KEyBndqzEUUvkS7HB4UPv1pMDsqrFESp8FwzSwFLQSEYuvorblYsPEj+
+         98TS4nLTbPYoRsDFM/NOGaM7VNUWqc1bxK3LPzPMJ+FUw9n7QUGRpVba0ICj0puGjo
+         gF8VT86DTGzBYVag8K1cEx5V1Wa9YHoqd5PSvY7k=
+Date:   Sat, 28 Jan 2023 11:43:20 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Zhong Jinghua <zhongjinghua@huawei.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de,
+        bvanassche@acm.org, emilne@redhat.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        yi.zhang@huawei.com, yukuai3@huawei.com
+Subject: Re: [PATCH-next v2 1/2] driver core: introduce
+ get_device_unless_zero()
+Message-ID: <Y9T8SION2vDlmaSa@kroah.com>
+References: <20230128094146.205858-1-zhongjinghua@huawei.com>
+ <20230128094146.205858-2-zhongjinghua@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1674900575.git.drv@mailo.com>
+In-Reply-To: <20230128094146.205858-2-zhongjinghua@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify code using max() helper macro for logical evaluation and value
-assignment.
-Proposed change is identified using minmax.cocci semantic patch script.
+On Sat, Jan 28, 2023 at 05:41:45PM +0800, Zhong Jinghua wrote:
+> When the dev reference count is 0, calling get_device will go from 0 to 1,
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+You can NOT have a device reference count that is 0.  If you do, you are
+doing something really really wrong, and there's a bug somewhere else.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 7fa472ab0b94..4ca9b04e1962 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5993,10 +5993,7 @@ megasas_alloc_irq_vectors(struct megasas_instance *instance)
- 			instance->msix_vectors - instance->iopoll_q_count,
- 			i, instance->iopoll_q_count);
- 
--	if (i > 0)
--		instance->msix_vectors = i;
--	else
--		instance->msix_vectors = 0;
-+	instance->msix_vectors = max(i, 0);
- 
- 	if (instance->smp_affinity_enable)
- 		megasas_set_high_iops_queue_affinity_and_hint(instance);
--- 
-2.34.1
+> which will cause errors in some place of the kernel.
 
+It's already an error in the kernel that tries to increment a reference
+count of 0 as that device is already freed and you are working with
+memory that is not present.
 
+> So introduce a
+> get_devcie_unless_zero method that returns NULL when the dev reference
+> count is 0.
 
+No, this is not ok, sorry, please never do this.  Fix the caller.
+
+thanks,
+
+greg k-h
