@@ -2,40 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 052CCC27C76
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 07:59:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47EE5C27C76
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 09:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233348AbjA1H7J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Jan 2023 02:59:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46582 "EHLO
+        id S230104AbjA1JHI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Jan 2023 04:07:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229973AbjA1H7I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 02:59:08 -0500
+        with ESMTP id S229464AbjA1JHH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 04:07:07 -0500
 Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B1824616D;
-        Fri, 27 Jan 2023 23:59:06 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 993BF3A5BF;
+        Sat, 28 Jan 2023 01:07:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1674892733; bh=qMf+Xfzo+BufqPQ/JYYC7vZ8jwBEi6vlqKAvmk8x3H4=;
+        t=1674896816; bh=R22iGH266oHN3h6bLIRI3IU02Lca0t2HNgSH9AFK7xY=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
          Content-Type;
-        b=J6mT4L4ZQxGRbqR2dJy2cRxz+ACZgwokL5It6x0711QYr9Z39yyaEyLLK9dCssfmC
-         zFoB7QcWXieSioe6yKEH4+AktJidBhk7sZxxQaKpJVODvhNMF5sy69KDcsp61LlrBE
-         WAtzF2nT9HE1Jf6c8wmK3vLpOoS8B0aUty0i6Zgg=
+        b=FgY8dCfmlku124IWKVZMOXPGlAfK5Gg2fanHRW1d0Zyw9S45K948vxgwdgsoGrubT
+         9FDJ5u0uLXNgRZta+ZNQpt/ZgWjcjeNvPSTWT7el8zEvjyn4l8Gj4ZZpK43LgVBqHg
+         yalrUzxZh7FDM3rjZCNuCOUhuA6KMBAcYzxbOwlw=
 Received: by b-2.in.mailobj.net [192.168.90.12] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Sat, 28 Jan 2023 08:58:53 +0100 (CET)
-X-EA-Auth: AbVnrGizcFtzXuYqAw3Q9ExojJUsxcVdLH/fMIOfZgK/DtWWIjme5wpWUyT/MEz5Bt3cMParN9MS8TEqjwiWKARGs9R3Nu+I
-Date:   Sat, 28 Jan 2023 13:28:48 +0530
+        Sat, 28 Jan 2023 10:06:56 +0100 (CET)
+X-EA-Auth: SRWUIv6AJgtVE3RQZ67P7FCAUdgrw6wjpl4y1/hi8InCGVwzvJxW8XIpkgCCOobOVDEFmyiIvbqlnftv0WTXBY7q16AYgkjN
+Date:   Sat, 28 Jan 2023 14:36:52 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>,
         Deepak R Varma <drv@mailo.com>
-Subject: [PATCH] scsi: st: Use min/max helpers for comparison and assignment
-Message-ID: <Y9TVuM1az7ajhTlS@ubun2204.myguest.virtualbox.org>
+Subject: [PATCH] scsi: qla2xxx: Use min/max helpers for comparison and
+ assignment
+Message-ID: <Y9TlrA2k85LecxaO@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -43,60 +45,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify code by using min_t helper macro for logical evaluation
-and value assignment. Use the _t variant of min macro since the
-variable types are not same.
-This issue is identified by coccicheck using the minmax.cocci file.
+Simplify code by using min and max helper macro for logical evaluation
+and value assignment.
+Proposed change is identified using minmax.cocci semantic patch script.
 
 Signed-off-by: Deepak R Varma <drv@mailo.com>
 ---
-Please note: Proposed change is only compile/build tested.
+ drivers/scsi/qla2xxx/qla_dbg.c  | 4 ++--
+ drivers/scsi/qla2xxx/qla_init.c | 8 ++------
+ drivers/scsi/qla2xxx/qla_sup.c  | 2 +-
+ 3 files changed, 5 insertions(+), 9 deletions(-)
 
- drivers/scsi/st.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index b90a440e135d..38aa59cba110 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -1574,8 +1574,7 @@ static int setup_buffering(struct scsi_tape *STp, const char __user *buf,
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index d7e8454304ce..02440c595753 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -686,9 +686,9 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ 	mq->type = htonl(DUMP_CHAIN_MQ);
+ 	mq->chain_size = htonl(sizeof(struct qla2xxx_mq_chain));
  
- 	if (!STbp->do_dio) {
- 		if (STp->block_size)
--			bufsize = STp->block_size > st_fixed_buffer_size ?
--				STp->block_size : st_fixed_buffer_size;
-+			bufsize = max(STp->block_size, st_fixed_buffer_size);
- 		else {
- 			bufsize = count;
- 			/* Make sure that data from previous user is not leaked even if
-@@ -2186,8 +2185,7 @@ st_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 					  STps->eof, STbp->buffer_bytes,
- 					  (int)(count - total));
- 			) /* end DEB */
--			transfer = STbp->buffer_bytes < count - total ?
--			    STbp->buffer_bytes : count - total;
-+			transfer = min_t(size_t, STbp->buffer_bytes, (count - total));
- 			if (!do_dio) {
- 				i = from_buffer(STbp, buf, transfer);
- 				if (i) {
-@@ -3996,7 +3994,7 @@ static int append_to_buffer(const char __user *ubp, struct st_buffer * st_bp, in
- 	}
- 	for (; i < st_bp->frp_segs && do_count > 0; i++) {
- 		struct page *page = st_bp->reserved_pages[i];
--		cnt = length - offset < do_count ? length - offset : do_count;
-+		cnt = min((length - offset), do_count);
- 		res = copy_from_user(page_address(page) + offset, ubp, cnt);
- 		if (res)
- 			return (-EFAULT);
-@@ -4028,7 +4026,7 @@ static int from_buffer(struct st_buffer * st_bp, char __user *ubp, int do_count)
- 	}
- 	for (; i < st_bp->frp_segs && do_count > 0; i++) {
- 		struct page *page = st_bp->reserved_pages[i];
--		cnt = length - offset < do_count ? length - offset : do_count;
-+		cnt = min((length - offset), do_count);
- 		res = copy_to_user(ubp, page_address(page) + offset, cnt);
- 		if (res)
- 			return (-EFAULT);
+-	que_cnt = ha->max_req_queues > ha->max_rsp_queues ?
+-		ha->max_req_queues : ha->max_rsp_queues;
++	que_cnt = max(ha->max_req_queues, ha->max_rsp_queues);
+ 	mq->count = htonl(que_cnt);
++
+ 	for (cnt = 0; cnt < que_cnt; cnt++) {
+ 		reg = ISP_QUE_REG(ha, cnt);
+ 		que_idx = cnt * 4;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 8d9ecabb1aac..1250f575fb1e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3734,12 +3734,8 @@ qla2x00_alloc_outstanding_cmds(struct qla_hw_data *ha, struct req_que *req)
+ 
+ 	if (!IS_FWI2_CAPABLE(ha))
+ 		req->num_outstanding_cmds = DEFAULT_OUTSTANDING_COMMANDS;
+-	else {
+-		if (ha->cur_fw_xcb_count <= ha->cur_fw_iocb_count)
+-			req->num_outstanding_cmds = ha->cur_fw_xcb_count;
+-		else
+-			req->num_outstanding_cmds = ha->cur_fw_iocb_count;
+-	}
++	else
++		req->num_outstanding_cmds = min(ha->cur_fw_xcb_count, ha->cur_fw_iocb_count);
+ 
+ 	req->outstanding_cmds = kcalloc(req->num_outstanding_cmds,
+ 					sizeof(srb_t *),
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index c092a6b1ced4..e26f9835c124 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -3625,7 +3625,7 @@ qla24xx_read_fcp_prio_cfg(scsi_qla_host_t *vha)
+ 	max_len = FCP_PRIO_CFG_SIZE - FCP_PRIO_CFG_HDR_SIZE;
+ 
+ 	ha->isp_ops->read_optrom(vha, &ha->fcp_prio_cfg->entry[0],
+-			fcp_prio_addr << 2, (len < max_len ? len : max_len));
++				 fcp_prio_addr << 2, min(len, max_len));
+ 
+ 	/* revalidate the entire FCP priority config data, including entries */
+ 	if (!qla24xx_fcp_prio_cfg_valid(vha, ha->fcp_prio_cfg, 1))
 -- 
 2.34.1
 
