@@ -2,78 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35DA3C38142
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 11:08:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4BFCC61D97
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Jan 2023 13:47:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233724AbjA1LIn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Jan 2023 06:08:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56680 "EHLO
+        id S234543AbjA1NrV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Jan 2023 08:47:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231767AbjA1LIm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 06:08:42 -0500
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 92FAC1EFC5;
-        Sat, 28 Jan 2023 03:08:40 -0800 (PST)
-Received: from localhost.localdomain (unknown [124.16.138.125])
-        by APP-05 (Coremail) with SMTP id zQCowADX3fUyAtVjDVKxAg--.49694S2;
-        Sat, 28 Jan 2023 19:08:34 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     yanaijie@huawei.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        john.garry@huawei.com, damien.lemoal@wdc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] scsi: aic94xx: Add missing check for dma_map_single
-Date:   Sat, 28 Jan 2023 19:08:32 +0800
-Message-Id: <20230128110832.6792-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S234236AbjA1NrU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 08:47:20 -0500
+Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E767B2C67F;
+        Sat, 28 Jan 2023 05:47:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1674913621; bh=gd5UWYqxyut4hFbuycUVp9wAsaqAqcJEe6vfKpfaam8=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=gmJb4ZPTz8TIq/N3zIiOh/kZW/AEttO7GI5GWgEAheoqEumfAvU4cAb1a8Dn+ZFpm
+         BN1ZOUqGOJmsHBY58Q2hjJausL7s9xYnnmK6TF/qTH3ssmITFJZ+XC0nmnXit+dPnh
+         K/f6z4cACCc2SonLcBsezz81CDcQxpKun4Mq7lH8=
+Received: by b-1.in.mailobj.net [192.168.90.11] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Sat, 28 Jan 2023 14:47:01 +0100 (CET)
+X-EA-Auth: oerXmIxjLYD8tGh7VgjiBI5PhYp9cA4egWTF4yfqqtZHb3UknEQUcIXNTiwvgFl8t/W+oXY3LGDKHaKs00E1GTEVe7G1yVsS
+Date:   Sat, 28 Jan 2023 19:16:55 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     Don Brace <don.brace@microchip.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
+        Deepak R Varma <drv@mailo.com>
+Subject: [PATCH] scsi: hpsa: Use min helper for comparison and assignment
+Message-ID: <Y9UnT4j51kHrMvhm@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: zQCowADX3fUyAtVjDVKxAg--.49694S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Gr15ZF1DZw4xZF1UCrWfZrb_yoWfKFb_Cr
-        WUW3Z3WryDCrs3tw1jqFy5ZryFyw4kWFnY9wn2v393A34YqFWfW34jvFy8Zw48Gw4UCFy5
-        Jay7CFs5Cr1DtjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbc8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Jr0_
-        Gr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-        0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r4k
-        MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
-        0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0E
-        wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJV
-        W8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
-        cVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfU0PEfUUUUU
-X-Originating-IP: [124.16.138.125]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add check for dma_map_single and return error if it fails in order
-to avoid invalid dma address.
+Simplify code by using min_t() helper macro for logical evaluation
+and value assignment. Use the _t variant macro since the variable
+types are not same.
+Proposed change is identified using minmax.cocci semantic patch script.
 
-Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
-Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Signed-off-by: Deepak R Varma <drv@mailo.com>
 ---
- drivers/scsi/aic94xx/aic94xx_task.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/hpsa.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index ed119a3f6f2e..7f0208300110 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -50,6 +50,9 @@ static int asd_map_scatterlist(struct sas_task *task,
- 		dma_addr_t dma = dma_map_single(&asd_ha->pcidev->dev, p,
- 						task->total_xfer_len,
- 						task->data_dir);
-+		if (dma_mapping_error(&asd_ha->pcidev->dev, dma))
-+			return -ENOMEM;
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c74fec4c2bd6..e030d07c4341 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2665,12 +2665,10 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	case CMD_TARGET_STATUS:
+ 		cmd->result |= ei->ScsiStatus;
+ 		/* copy the sense data */
+-		if (SCSI_SENSE_BUFFERSIZE < sizeof(ei->SenseInfo))
+-			sense_data_size = SCSI_SENSE_BUFFERSIZE;
+-		else
+-			sense_data_size = sizeof(ei->SenseInfo);
++		sense_data_size = min_t(size_t, SCSI_SENSE_BUFFERSIZE, sizeof(ei->SenseInfo));
+ 		if (ei->SenseLen < sense_data_size)
+ 			sense_data_size = ei->SenseLen;
 +
- 		sg_arr[0].bus_addr = cpu_to_le64((u64)dma);
- 		sg_arr[0].size = cpu_to_le32(task->total_xfer_len);
- 		sg_arr[0].flags |= ASD_SG_EL_LIST_EOL;
+ 		memcpy(cmd->sense_buffer, ei->SenseInfo, sense_data_size);
+ 		if (ei->ScsiStatus)
+ 			decode_sense_data(ei->SenseInfo, sense_data_size,
+@@ -3630,11 +3628,9 @@ static bool hpsa_vpd_page_supported(struct ctlr_info *h,
+ 				buf, HPSA_VPD_HEADER_SZ);
+ 	if (rc != 0)
+ 		goto exit_unsupported;
++
+ 	pages = buf[3];
+-	if ((pages + HPSA_VPD_HEADER_SZ) <= 255)
+-		bufsize = pages + HPSA_VPD_HEADER_SZ;
+-	else
+-		bufsize = 255;
++	bufsize = min_t(uint, (pages + HPSA_VPD_HEADER_SZ), 255);
+ 
+ 	/* Get the whole VPD page list */
+ 	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
 -- 
-2.25.1
+2.34.1
+
+
 
