@@ -2,99 +2,145 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65EDDC61D97
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 01:15:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF251C61D97
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 02:05:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbjA2BPA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Jan 2023 20:15:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42082 "EHLO
+        id S232158AbjA2CFj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Jan 2023 21:05:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232223AbjA2BN7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 20:13:59 -0500
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E70F22DD6;
-        Sat, 28 Jan 2023 17:13:56 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4P4Cxq28T3z4f3nYx;
-        Sun, 29 Jan 2023 09:13:51 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgC3YiBPyNVjsNp1CQ--.6849S3;
-        Sun, 29 Jan 2023 09:13:53 +0800 (CST)
-Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create block
- device
-To:     Greg KH <gregkh@linuxfoundation.org>,
-        Zhong Jinghua <zhongjinghua@huawei.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de,
-        bvanassche@acm.org, emilne@redhat.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230128094146.205858-1-zhongjinghua@huawei.com>
- <20230128094146.205858-3-zhongjinghua@huawei.com>
- <Y9T8uQYEaGUZwpHO@kroah.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <b4927ca9-7330-3f32-f68f-1a449473a0ce@huaweicloud.com>
-Date:   Sun, 29 Jan 2023 09:13:55 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S231673AbjA2CFi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2023 21:05:38 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CD1D206B9
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Jan 2023 18:05:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1674957937; x=1706493937;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=lMWivxvLhEfQDKorNEnMNpMAFprd1R9pddYdWXMbzJo=;
+  b=TOEnp6Dup2h2qVybZ/KEuKwEl20cDPQ4ic4LqDftwXOnf9VI6IFee81w
+   3c+s6Oy+mNkmNn1MVX6fVR2m3GeciPlzCYsPzL9Uc0oUbDdz2zo/I/Ae6
+   AQ8ckY7PJZ2omgke2lviNdfQSsCpiA/UT/iNxCRFMZgSRFdLtMFLFjcJ/
+   00P2hkWeog0G3+XUh8RQt4fwcUMOQgN5kdJDQMTY1+AhFhZ4pI514l/u5
+   mmaKIQg18ft7Ft415+jtLiUhkMQ/KgddEk68jCg7jU1Zjt34uORzG/Nxy
+   7JA+nXnoBfJZlRLZ9fYFA3c+Q2iFRV8nyAXlP7OvKeE2/jqCqa4tCz5V7
+   g==;
+X-IronPort-AV: E=Sophos;i="5.97,254,1669046400"; 
+   d="scan'208";a="326286265"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Jan 2023 10:05:35 +0800
+IronPort-SDR: Ws36KrCpP4eICZYRoc9z8VJe3UpZf+35f35qgFmBOMrm47GgIKdcYNP5GNXxD4gJgxmhMZiBzn
+ 9zqrmgZJ02MZOL8REW+5hDJuy9TEAFjWh4jFXp79ax5IDIUHrCrarspWYCCel9MCa2hi7XvZoC
+ kuAZwu7bla24v2akRLqQQXmqyibBkP4g8GL3+nH6w+dRUhyMIyu8GYBnZtyVEt9BKNK1L4tXle
+ I75npFMNdvEH8Legp0Rfd9BIIhYURfn6sy98pwnWp22gUeFEF2zawN8sUWwj7nUmht5fqLR0WP
+ 8U8=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jan 2023 17:23:03 -0800
+IronPort-SDR: GMPtERHXj/zzgKXcUDS9sVbRNAaKaV0r19VVhaC4ICPA9DmwOy/REIXoNhOoTz1w+cAQv5/uN7
+ R0NPHchUfWEm38Kkid5kQrvnLUNY1FJIKAoxbyAL/xMzW3HN0h0mmvMqpjMHJuXXFoTPFTqTle
+ DUEwRBmCdpT8q9hYTt/F4q07wKsPu6S7qD389SEA1MkxYzGYhC14KhdCV+VHGIopOS9XgBgYe8
+ LDt8HTJYDEWkOxGZp16HA7h076O47D/5/+q3RNRK006iZXN9wSLy3ibyXyIgyMcDZ7twwcSpHT
+ SHQ=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jan 2023 18:05:36 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P4F5W35r0z1RvTr
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Jan 2023 18:05:35 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1674957934; x=1677549935; bh=lMWivxvLhEfQDKorNEnMNpMAFprd1R9pddY
+        dWXMbzJo=; b=ec2bLH+IUZYrP+pzBBc80pTKaFoRH8Q2df9F5NJBguMTqwFuPFh
+        ThGxVPOqe8XBeW/MxwjeVfMmWw85ulzOL2mcfCDFPs+pKvEpv3nke9fnMA0Q+hke
+        KHZfFNEfJoMvWLuJo0CJt5/6CbFDUqrInjKV1cUg3fU0Ir83XfD/RhoBmxQeDqJk
+        uJxXCvxkJ94XhOgxmxyGR6Jgc2IDU9dwpLubAO+elu6F6zh9KYOhHAu+baOLf0mW
+        8Uq/meSrcxfa0v9XqPpu91I7E94ad8FxkVaZlpbHakuBeYulW1cfvXdx3tAC1KlE
+        IVqBf8YxKQvjBG40YffhJLn3PIHFQRRIALg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id wvWMP35YY6VM for <linux-scsi@vger.kernel.org>;
+        Sat, 28 Jan 2023 18:05:34 -0800 (PST)
+Received: from [10.225.163.66] (unknown [10.225.163.66])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P4F5T1WtTz1RvLy;
+        Sat, 28 Jan 2023 18:05:32 -0800 (PST)
+Message-ID: <976c4854-2c98-15f8-12bf-ee08ab86af96@opensource.wdc.com>
+Date:   Sun, 29 Jan 2023 11:05:31 +0900
 MIME-Version: 1.0
-In-Reply-To: <Y9T8uQYEaGUZwpHO@kroah.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgC3YiBPyNVjsNp1CQ--.6849S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrZFW3WFWxZFy7WFyktrWxCrg_yoWDuFb_ur
-        WjyFZ7ur18Xw4rtayrAF1rZrWYqFnaqryxWF1Fqr1vvry7Xr4qqrW29Fy5ZrWDCwsayF15
-        Jr4UC3y3Krs5ZjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbIxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-        67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-        07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-        02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
-        GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-        CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAF
-        wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
-        7IU1zuWJUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3 07/18] scsi: sd: detect support for command duration
+ limits
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
+References: <20230124190308.127318-1-niklas.cassel@wdc.com>
+ <20230124190308.127318-8-niklas.cassel@wdc.com>
+ <f0793325-3022-e7b8-672d-00f2f9ee0cd9@suse.de>
+ <99e6b267-6e2e-2233-19c2-1acf7c9135b2@opensource.wdc.com>
+ <f9fe4e54-563a-c8fa-23ae-88780c4edc54@acm.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <f9fe4e54-563a-c8fa-23ae-88780c4edc54@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi, Greg
-
-ÔÚ 2023/01/28 18:45, Greg KH Ð´µÀ:
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->> index cac7c902cf70..a22109cdb8ef 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -1535,9 +1535,7 @@ static void __scsi_remove_target(struct scsi_target *starget)
->>   		if (sdev->channel != starget->channel ||
->>   		    sdev->id != starget->id)
->>   			continue;
->> -		if (sdev->sdev_state == SDEV_DEL ||
->> -		    sdev->sdev_state == SDEV_CANCEL ||
->> -		    !get_device(&sdev->sdev_gendev))
->> +		if (!get_device_unless_zero(&sdev->sdev_gendev))
+On 1/28/23 11:52, Bart Van Assche wrote:
+> On 1/27/23 16:51, Damien Le Moal wrote:
+>> On 1/27/23 22:00, Hannes Reinecke wrote:
+>>> Hmm. Calling this during revalidate() makes sense, but how can we ensure
+>>> that we call revalidate() when the user issues a MODE_SELECT command?
+>>
+>> Given that CDLs can be changed with a passthrough command, I do not think we can
+>> do anything about that, unfortunately. But I think the same is true of many
+>> things like that. E.g. "let's turn onf/off the write cache without the kernel
+>> noticing"... But given that on a normal system only privileged applications can
+>> do passthrough, if that happens, then the system has been hacked or the user is
+>> shooting himself in the foot.
+>>
+>> cdl-tools project (cdladm utility) uses passtrhough but triggers a revalidate
+>> after changing CDLs to make sure sysfs stays in sync.
+>>
+>> As Christoph suggested, we could change all this to an ioctl(GET_CDL) for
+>> applications... But sysfs is so much simpler in my opinion, not to mention that
+>> it allows access to the information for any application written in a language
+>> that does not have ioctl() or an equivalent.
+>>
+>> cdl-tools has a test suite all written in bash scripts thanks to the sysfs
+>> interface :)
 > 
-> If sdev_gendev is 0 here, the object is gone and you are working with
-> memory that is already freed so something is _VERY_ wrong.
+> My understanding is that combining the sd driver with SCSI pass-through 
+> is not supported and also that there are no plans to support this 
+> combination.
 
-In fact, this patch will work:
+Yes. Correct. Passthrough commands do not use sd. That is why cdl-tools triggers
+a revalidate once it is done with changing the CDL descriptors using passthrough
+commands.
 
-In __scsi_remove_target(), 'host_lock' is held to protect iterating
-siblings, and object will wait for this lock in
-scsi_device_dev_release() to remove siblings. Hence sdev will not be
-freed untill the lock is released.
+> 
+> Martin, please correct me if I got this wrong.
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
-Thanks,
-Kuai
-> 
-> This isn't ok, sorry.
-> 
-> greg k-h
-> .
-> 
+-- 
+Damien Le Moal
+Western Digital Research
 
