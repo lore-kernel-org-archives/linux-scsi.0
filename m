@@ -2,116 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 703A8C05027
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 17:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05EADC64EC4
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 23:11:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235128AbjA2Rbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Jan 2023 12:31:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52268 "EHLO
+        id S235471AbjA2XLL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Jan 2023 18:11:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229617AbjA2Rba (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 12:31:30 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72E021715A;
-        Sun, 29 Jan 2023 09:31:29 -0800 (PST)
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30TDlkJd012236;
-        Sun, 29 Jan 2023 17:31:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=qdC0xyKLoaOTuMWEF/2CnwWlSq5XIkTv79tuQEfcKlM=;
- b=VW8nLNYK+paIbt6urRpNm/3q/sqocgSiDCsaTd1+HCCComNS+Rx0CRUoLxm+ajUV0hf0
- vXutvC0vvAd5GZv3SvwAcZK9E+BU/YlPbNmHhcKzYoB7TFX+VduXJ/hqY1SvBCZuexOY
- 4wkWDCMIIR0HCXZtbfhbkEMEssL4bjh/IhSrLfR8RvtH2t+Jv9SASBI2m603ke5mlzuG
- GsYaioAR+a03HINTT9NMvwDcp4quz214ULy13eTAcabQnpfgeWi0d/vUsGmiL0TUlxll
- L6KcaZ3riJg/CnuLsyAYll6bpwjmsWImFIyHp+Ed+S/+TwTAZGL7hlEINEoCJ1d0/DFx Lw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3nddv1469e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 29 Jan 2023 17:31:06 +0000
-Received: from m0098416.ppops.net (m0098416.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30THV6S6030161;
-        Sun, 29 Jan 2023 17:31:06 GMT
-Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3nddv14699-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 29 Jan 2023 17:31:06 +0000
-Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
-        by ppma01wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 30TDR3Hh026758;
-        Sun, 29 Jan 2023 17:31:05 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([9.208.129.119])
-        by ppma01wdc.us.ibm.com (PPS) with ESMTPS id 3ncvtmpvar-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 29 Jan 2023 17:31:05 +0000
-Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
-        by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 30THV3Zw38994628
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 29 Jan 2023 17:31:04 GMT
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C6B6B6E050;
-        Sun, 29 Jan 2023 17:33:07 +0000 (GMT)
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 31A7E6E04E;
-        Sun, 29 Jan 2023 17:33:05 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.211.110.248])
-        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Sun, 29 Jan 2023 17:33:05 +0000 (GMT)
-Message-ID: <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
-Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create
- block device
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Zhong Jinghua <zhongjinghua@huawei.com>,
-        gregkh@linuxfoundation.org, martin.petersen@oracle.com,
-        hare@suse.de, bvanassche@acm.org, emilne@redhat.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        yi.zhang@huawei.com, yukuai3@huawei.com
-Date:   Sun, 29 Jan 2023 12:30:30 -0500
-In-Reply-To: <20230128094146.205858-3-zhongjinghua@huawei.com>
-References: <20230128094146.205858-1-zhongjinghua@huawei.com>
-         <20230128094146.205858-3-zhongjinghua@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S235278AbjA2XLE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 18:11:04 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A01B18B20;
+        Sun, 29 Jan 2023 15:11:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=MJzgPWsHtZ4MIJfYRUmeJ5lXOh2fWwSP5NQ3iYV5t0E=; b=wOyrw/GlBVKvhMZc65XnR8/tha
+        3X6umCwLj2m37DWnX9MplK6kTJsCiBkWggIO3qoapxG40ZDFLBp0DdLmwq4eoMzNsLMYeLTbmrbmb
+        8a7gf1gR7hdg3MeEZ6pjKp2+uOmjiQAzQIndsQm1fyZkWYzCCxE7zCKwMGKyBW46X7gBcwV0kZRZG
+        BmNWvBQpJtcic4EVS+56qPDKaLs7smB4/2uGWsMn4Qt+NbLRRYCVNbOU8ff/GE5Qy303/98rSkZrV
+        fTXmlNIQPVZ8p/50aumMHDRdQLK99rptR0PimgiIVy2HKa2+mEUPsbcYgyqbZy08Xyk40NF5nf+oR
+        H6xNTnOg==;
+Received: from [2601:1c2:d00:6a60::9526] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pMGpB-0020M2-NV; Sun, 29 Jan 2023 23:11:02 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 7/9] Documentation: scsi: correct spelling
+Date:   Sun, 29 Jan 2023 15:10:51 -0800
+Message-Id: <20230129231053.20863-8-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.39.1
+In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: uaOUbDbeIJ7bzyBQmbqB9mkUuaqfIdK-
-X-Proofpoint-GUID: tLV0rDBztqfXhwftHdWv4OmWn1a9UCGN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-01-29_09,2023-01-27_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
- lowpriorityscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
- clxscore=1011 priorityscore=1501 impostorscore=0 mlxscore=0 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2301290169
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
-> This error will cause a warning:
-> kobject_add_internal failed for block (error: -2 parent: 1:0:0:1).
-> In the lower version (such as 5.10), there is no corresponding error
-> handling, continuing
-> to go down will trigger a kernel panic, so cc stable.
+Correct spelling problems for Documentation/scsi/ as reported
+by codespell.
 
-Is this is important point and what you're saying is that this only
-panics on kernels before 5.10 or so because after that it's correctly
-failed by block device error handling so there's nothing to fix in
-later kernels?
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ Documentation/scsi/ncr53c8xx.rst   |    4 ++--
+ Documentation/scsi/sym53c8xx_2.rst |    2 +-
+ Documentation/scsi/tcm_qla2xxx.rst |    2 +-
+ Documentation/scsi/ufs.rst         |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-In that case, isn't the correct fix to look at backporting the block
-device error handling:
-
-commit 83cbce9574462c6b4eed6797bdaf18fae6859ab3
-Author: Luis Chamberlain <mcgrof@kernel.org>
-Date:   Wed Aug 18 16:45:40 2021 +0200
-
-    block: add error handling for device_add_disk / add_disk
-
-?
-
-James
-
+diff -- a/Documentation/scsi/ncr53c8xx.rst b/Documentation/scsi/ncr53c8xx.rst
+--- a/Documentation/scsi/ncr53c8xx.rst
++++ b/Documentation/scsi/ncr53c8xx.rst
+@@ -906,7 +906,7 @@ burst:#x   burst enabled (1<<#x burst tr
+         led:0      disable LED support
+         =====      ===================
+ 
+-  Donnot enable LED support if your scsi board does not use SDMS BIOS.
++  Do not enable LED support if your scsi board does not use SDMS BIOS.
+   (See 'Configuration parameters')
+ 
+ 10.2.13 Max wide
+@@ -1222,7 +1222,7 @@ Unfortunately, the following common SCSI
+ - Bad quality terminators.
+ 
+ On the other hand, either bad cabling, broken devices, not conformant
+-devices, ... may cause a SCSI signal to be wrong when te driver reads it.
++devices, ... may cause a SCSI signal to be wrong when the driver reads it.
+ 
+ 10.7 IMMEDIATE ARBITRATION boot option
+ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diff -- a/Documentation/scsi/sym53c8xx_2.rst b/Documentation/scsi/sym53c8xx_2.rst
+--- a/Documentation/scsi/sym53c8xx_2.rst
++++ b/Documentation/scsi/sym53c8xx_2.rst
+@@ -703,7 +703,7 @@ Unfortunately, the following common SCSI
+ - Bad quality terminators.
+ 
+ On the other hand, either bad cabling, broken devices, not conformant
+-devices, ... may cause a SCSI signal to be wrong when te driver reads it.
++devices, ... may cause a SCSI signal to be wrong when the driver reads it.
+ 
+ 15. SCSI problem troubleshooting
+ ================================
+diff -- a/Documentation/scsi/tcm_qla2xxx.rst b/Documentation/scsi/tcm_qla2xxx.rst
+--- a/Documentation/scsi/tcm_qla2xxx.rst
++++ b/Documentation/scsi/tcm_qla2xxx.rst
+@@ -6,7 +6,7 @@ tcm_qla2xxx Driver Notes
+ 
+ tcm_qla2xxx jam_host attribute
+ ------------------------------
+-There is now a new module endpoint atribute called jam_host
++There is now a new module endpoint attribute called jam_host
+ attribute::
+ 
+ 	jam_host: boolean=0/1
+diff -- a/Documentation/scsi/ufs.rst b/Documentation/scsi/ufs.rst
+--- a/Documentation/scsi/ufs.rst
++++ b/Documentation/scsi/ufs.rst
+@@ -206,5 +206,5 @@ Device-Specific Data property named "ref
+ is interpreted as frequency in Hz and must match one of the values given in
+ the UFS specification. UFS subsystem will attempt to read the value when
+ executing common controller initialization. If the value is available, UFS
+-subsytem will ensure the bRefClkFreq attribute of the UFS storage device is
++subsystem will ensure the bRefClkFreq attribute of the UFS storage device is
+ set accordingly and will modify it if there is a mismatch.
