@@ -2,446 +2,309 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C743C64EC6
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 23:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7855FC61D97
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 23:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235497AbjA2XLO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Jan 2023 18:11:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50356 "EHLO
+        id S234978AbjA2XpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Jan 2023 18:45:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235349AbjA2XLF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 18:11:05 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE8DE1ABF1;
-        Sun, 29 Jan 2023 15:11:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Oaf2GHg+K6yqAp4oy5GEue7tbGWiGoC46Ts2HOLxmEU=; b=sjYNpeHyRh7Oz7kQ5QXoHI8qcX
-        XN5SUVg3f3MG8/ylkBY8ZPuBhZOgJpxD9wYaSKfJ6Jv7MHr2lAJSTnKz//PAAsj44GbIEA7OhBJLq
-        YDnF/x+iOVpE6D4hJ8LTlNL7cijnceDhbkT2XgTbkRWOclGQqRq7L7k9erzUsaMopBSWicStYY0Wc
-        IOxKN9F1Oyr4A3H2oHkvOZioS5D74DKlDuwWEBpY6RHuS/w0lMZQkPLK42iclTwzQAX6CEP+Xpzac
-        mnQfMIu/dHPHCBODorc6CcvfvIspO2AR3VB3PGYFrtZZqmsukJeir5iON9XPtcsyHGxXBcT9evfwt
-        nCt7HN/w==;
-Received: from [2601:1c2:d00:6a60::9526] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pMGpA-0020M2-6u; Sun, 29 Jan 2023 23:11:00 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
-Date:   Sun, 29 Jan 2023 15:10:50 -0800
-Message-Id: <20230129231053.20863-7-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
-References: <20230129231053.20863-1-rdunlap@infradead.org>
-MIME-Version: 1.0
+        with ESMTP id S230339AbjA2XpG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 18:45:06 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AB1218B13;
+        Sun, 29 Jan 2023 15:45:05 -0800 (PST)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30TMkTq9025111;
+        Sun, 29 Jan 2023 23:44:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
+ bh=j4euk1gcVE9ECbI1zFtyWPtER0ZZeTvaCA+w2iILEP0=;
+ b=WUHGw1WtNUijOFUwdOc9CBRcME+upprifAy91CFDGl/S6GrnOgfP+SNaSNzZgTKeGV2p
+ IZ4nnTfi4GsIXyUH7KP2bI8/gTJvQcoPgaaspCbQlDdhebvAL9zwtwsoWm9Z7DXpaxAl
+ gwR3oK71hWCfLjGn2GPFCvTNKQFyLyXAXodwp+BGzeM58pfqVoMuJ4ZqdC2Ge9P1RKdT
+ Inw7zENk7L4RvKnVE1tnVqAYkwiEBc2liue2KJX57PyTNE6gJT3N9YdbParLVJNT2Gat
+ VWl9gII5zX/hHmq0EnD1fpQjtFibFJGVuqD2pnsjsmuvS1DnxnXBe967JWvM7WJZq5lP gg== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ncvr8hry0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 29 Jan 2023 23:44:57 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 30TIZL1P019074;
+        Sun, 29 Jan 2023 23:44:57 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3nct53n3c9-4
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 29 Jan 2023 23:44:57 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jCq51CZ0DFNjI7cob0gNIlKVvPG+1Q/uxORGDuGSzTP39ud/tQTh52+VFcCYJnhB62zB14heMo9Ovh8A6amKciNM5hDstEcWSuojmiihFjZBrK/8EwKfCoPvR0hF7hZ42vlxmWCBq/KOX8OFkrniKCv8AmkxyX9zSXe8daWM1rSQhDYe1Yxh4sPt0q7UXLBnaByfy0oUG2W8Ts/MaEzfL9tT3S2HKt1m1Fe9VEiJqh6EdErt+YAVhnQ05sgVQcJr4ldkx9MCcFKBCCkuiq88qabe+SxtmCVtWm4YMpXSrSa/zn+ZDoII2RIMA2fg+Uy26ZclOa+nWo/tGXNCmNNUlQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=j4euk1gcVE9ECbI1zFtyWPtER0ZZeTvaCA+w2iILEP0=;
+ b=OrLdMXISOzC6RI9SKc0QyKcnJWLP8GeL/D7lzxN4qDUBf2gp4YkiMntNeCXhL+oWPNi+rQrzpTOqAk9AQhDBOg1P0o5+mpLoGb7m4AJf6bL11nkXt0lmHAjzw9nzpDJScBuY/EA2U0MDu4cuQk6RJ0lvTrgYhTqyVrWoWbnnErsmyffQk0HtwVOLaN+YxjcfIefGBy15u3Ra6h+gzRulfbhXobYtO2oGI8NJpbOa+sySRc0TF6ZyLsUCZ87fzMVlYIsVFG+5116yKv1ypWw+PQgII0Bt9GOoknLtXvxzUzWC0CckuaZQ4niPLkF+WrgwmEVUQFDOPHeifSvVYo68Cg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=j4euk1gcVE9ECbI1zFtyWPtER0ZZeTvaCA+w2iILEP0=;
+ b=I0T5ZMbjfTfVoDmGaUXewMhfs5iFzs27bdmtfSh+UsCn64aZ2zAhkveY3tsG0s1KEzT7SzjFYNAsn94/PviHHPvRg0dtPQogIxabUmpYHXruFxvE/jFiZgVpgpoFaL43Vc/Mnfm09QZqaXurxPM2vhsI3xfNWONLWGgKyjm1sYg=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ SA2PR10MB4649.namprd10.prod.outlook.com (2603:10b6:806:119::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6064.17; Sun, 29 Jan
+ 2023 23:44:50 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::c888:aca:1eb9:ca4f]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::c888:aca:1eb9:ca4f%5]) with mapi id 15.20.6064.017; Sun, 29 Jan 2023
+ 23:44:50 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     mlombard@redhat.com, martin.petersen@oracle.com,
+        mgurtovoy@nvidia.com, sagi@grimberg.me, d.bogdanov@yadro.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     Mike Christie <michael.christie@oracle.com>
+Subject: [PATCH v3 04/14] scsi: target: iscsit/isert: Alloc per conn cmd counter
+Date:   Sun, 29 Jan 2023 17:44:31 -0600
+Message-Id: <20230129234441.116310-5-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230129234441.116310-1-michael.christie@oracle.com>
+References: <20230129234441.116310-1-michael.christie@oracle.com>
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: DS7PR05CA0069.namprd05.prod.outlook.com
+ (2603:10b6:8:57::21) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|SA2PR10MB4649:EE_
+X-MS-Office365-Filtering-Correlation-Id: e901d4cc-8afb-4768-f908-08db0252cfcc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: FTDLiXRvSdC12xCY8Q78b26r5/x+eMuNT+4DvqSiUZnbccrWG7if6xxlwPklGkJLm0ZGsXTE6f8YmcXd7R9H5LPU/JDhAGKlXK7lQMmEGltX4FyA8EgCnpoNuXapDwzrig3jvbMpZOMxO9VWGRnzixRjSju4Otwf/60q85NW0KST9KjbfGWcsRKwX7X1K7Ovxbe1XimK0/3mXnV6W86SpZGgbMtqEOuXGx1RRr4kblIlbvzl0uqdIpgFh8Ki0+vnmCuX1v409PWIrq0UAziwwd/6ljytFeOl1YQ13bXS8yKsgLRctWgVb1yMmmmCduRE5rS1nnO5qgAfy3C1BApa7BDtMxn3D3ik+YDn4KV+m2Gt3VcQsBMJq1hfMfaf2bMsoTxAPLXPypytwHqHKIt5QExARWY2pcExLHW+fBBsATEZvkkTcE7KB2jA/OaWZOPsrt7O/sNofnbgghYNG6W29OjGoKYTdjbv7q6I6aFN7wR3d56Pqfou4dE8QMpTzCAEylbkZb9xm6//atKcOr+lGdXPirW5C8MVqUjhM9CGCZp7q4WTpjqr7VbLO3paIMqtIHSY7SZuum0qgRuHS+hzCzc734EelcvBtPTxH7v/jVLgu/WTMI8m48nVUp7bn+9UUpujFOGSKvSOL9ntPj9h5A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(136003)(39860400002)(396003)(366004)(346002)(376002)(451199018)(316002)(5660300002)(8936002)(41300700001)(66476007)(8676002)(66946007)(66556008)(4326008)(2906002)(6486002)(478600001)(26005)(186003)(1076003)(6666004)(6506007)(107886003)(6512007)(2616005)(36756003)(83380400001)(38100700002)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xZaliS1ta3tCCkGU2MVEpAQS0tG/YSrLoe9BVOuzZ4OlI6LcJ4ekeDz7Stxj?=
+ =?us-ascii?Q?TFq0wsaGz6SA1Wvgj/rCrc2Jv7KGzZusu5vb7cuCLXCAqfLzAfCxjgW+PJ5P?=
+ =?us-ascii?Q?cXVrD/9e/+Gd17TBF+3gnY1oVwR8DJWPQY/MyKmamgZirNr0s0FIOpjksebh?=
+ =?us-ascii?Q?TrRNrdzkZMGgg7gjELyL1rP/ZNX96sMYVRXLsdAyywQ8mLL1aEbYZwfYkaEI?=
+ =?us-ascii?Q?t5uHcfN+jqXxTTaKC/D+MnHewI2/aOacxIsCpnWvkZSUvg90TNsMAUTcAIsE?=
+ =?us-ascii?Q?lTXpo+acZKWliWT4USaycAl3kAy5nfDpHQxMbIyDpq/1/OjrJHonmwiwtm4l?=
+ =?us-ascii?Q?gHxDsEMFswsJ7GCTp5psmgn7+ohZq6JL+v57eoYIEJxxJJbJ8SZ4007Enuv0?=
+ =?us-ascii?Q?3RGUPk/7c5RTRIO9TJtQ/nvSpMTATjY1xN6dsFUiY3oA+nPG3bzD5aNE1N9b?=
+ =?us-ascii?Q?Wn2VSrql9Ae2/gBP4OR16jOehYak0ZsY+rygLVmIqenHsY0W83IewLE2+XaB?=
+ =?us-ascii?Q?cTRCRW3en75B3Dyvw+QUwF7KRla1LS3ZcfTP8KyTtzwgzEzxbqdhpKQHrju2?=
+ =?us-ascii?Q?mue0UCMIEaEDweynZDQU5RERRTob4Rr4tYT7lDXMi1vAichOYwx7vMPlbF8m?=
+ =?us-ascii?Q?M7pGUiH9kDy+fkqoBdvw+S9+6rlx+tNQZ/v+y7w13gJcZPoDGjXJd9ex+0ll?=
+ =?us-ascii?Q?bRwRtAeIpCUccEAZI8oRZVZbA9FW4+4dsWH+pqEXmn5aci2ZzhaPwO/IDS6U?=
+ =?us-ascii?Q?g/wjtOGfUrOcU4aBDhl7MJy9n44+kczq5OKBKOVsJWP7+m1JMtyATDen7VHH?=
+ =?us-ascii?Q?SWVtx6bQ11RDRIaGY1bLn737/PHU5L2hePwz0gcPJBUKiO+C7KVJgqRjJdXe?=
+ =?us-ascii?Q?P/mrBrbpVrS7w3MzHKmq7FfCJ+KWuV6G+dTNRXx08JcL8P7GR6o9orXzhDhh?=
+ =?us-ascii?Q?S4nz1SvIgQcAMT0UzVj/ug+u9ro92S7bZ6hRa8XoHwGZC+Aa0Q0GRQpfM45e?=
+ =?us-ascii?Q?603AfUE0ZPwwtNL7lDjoWs0Hm1GlSCXkpj+H+jxJ4LxFoqa5/QnIXaU66KTR?=
+ =?us-ascii?Q?ySOid7w4csUQs60HSBgPQrcOzYTRpjn68V5jbHJ708BSoOkp/R2wqDaObCrC?=
+ =?us-ascii?Q?JgX83KSlspqX5dvDLyG+ms7b03AUpuJyWF2VH373Aot9uz5gpDuzvlFygttW?=
+ =?us-ascii?Q?0lXR7k2Pk0/832j0vOJd/MrQkGg3Uh65oKW6F+2y7+/xeoA4TkdbIu7G0l4M?=
+ =?us-ascii?Q?hkmqJLSAz3RDLdEEgAr5Z/r1a3qdhUpUdxBPae8ndgaxOkZocK6zMGmoAAFQ?=
+ =?us-ascii?Q?+XKXcBHURrvpXt6uoPJWPvQylxZeBIfkLWxDR9tDONmS18ue2UP/wjq66Kmf?=
+ =?us-ascii?Q?lxlSfugP/xdCmXwzvqkdRmqZGSzmgB6msy97qMwlAmfiVzYSHzZxcsAPedrM?=
+ =?us-ascii?Q?3ENW6KCBKucM6KzAd2UpvpYnFXrbEcSoGNkVbaPuhMMWuKAjpjByYH7W0exg?=
+ =?us-ascii?Q?H7Y869FxX4PBahPc9oeOedyYQK43JcfXdDqbQ1ZwATPgGCB1Z1tIa5ZjMRPe?=
+ =?us-ascii?Q?urkYYANOAzYg54aYV1n0FN7GMvu5USRDcChGqbP+BLGGcngImcUnfpmr/J9L?=
+ =?us-ascii?Q?CA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: LVoQFsOAA0daa7KyT9DAfsUVIaaEtoKOPXZl4VMsqb0eCapjDrycIaflHdQHg6yWEjUGDPFRaazEC1r/eGJPFVr6vUnqFjNQxrq4SsM1t5u3xndAleW67oWoPl5BURafYztVN4TK7EV+zXZgfsb4cDbWewSKmHYXe5imRHl7y/EByUrbQot83cVglqUb3rB9cw/JrImEvKTj1omdnXPpI0ZgEalcz7uNAa1ya8dk6GS6wg8mAfWLSCejHVUPDUoU3nEv82PRR/iTVMTaEezCCSNp9Nf7BrSCc1hXpJZzXXh/rJdjmOeDayYoO15WpH1ojmShxp3Q8xfG/CJndGH2tts7RKq5p6XAFM+BnN6OaEMBK6oiKsBtZv8PqzqwfDuvWrbanwe32DXaQunXvOx93Se2AgUz/SmxnAY6W3qeEWLDe8k2TZ6+yNjNiatr0AXSMKLUdFQGTJ/gBY021+EfSgnMbBFU13XpBtalRHXKUlyA2SS+4aZwbcfM4pKlupXzADJrrT/rba7HZhEPQVvkyKng+OnGmIBeX6weJOftXZSlDF5apWQIaly96rloWBGRDkDATLcmYAfO7NXiOZtzz6UepfnIRdsmbhXrq9tRmfdfYE0RG5NBAojOdidscMPil5ituc35l/DbRuoLO2ItW0w3SWbjwyW7QNw2hJA7OvPrv9lrIRdg70x6NoxanaxTi3U7qKIse7pGFdm+/QhLeCAsFpN4D5BAELOGJl5w1z3gzD47CluXvWEqT+SForGwbLoffCUD0YNFiEfbUHJQOZ71y+B/o5eX28K0xQlkMTmN1Ew2oi6Yzrq7xGewwtgmygFJbtn9v2u/O3CMyUa8wQyhkwIHGpfv7q5ZWEKp56pH83CXgCK28i2UPax99Z4L
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e901d4cc-8afb-4768-f908-08db0252cfcc
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jan 2023 23:44:50.1510
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: lP6992greWw1rCecEcVH0WxSHfiYX4ph7RWmPPT6Hw2Vjgs+ez83bwa9XPhFGBV5yDGIuA6zO3H5HHgGd8wiVsFgWel59SQz65kAq9uMKJQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4649
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-01-29_13,2023-01-27_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ suspectscore=0 mlxscore=0 spamscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2301290235
+X-Proofpoint-GUID: wt5NmwS3NRijG8UrhwgM7Gvrfiwwa9sS
+X-Proofpoint-ORIG-GUID: wt5NmwS3NRijG8UrhwgM7Gvrfiwwa9sS
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Correct spelling problems for Documentation/scsi/ ChangeLogs
-as reported by codespell.
+This has iscsit allocate a per conn cmd counter and converts iscsit/isert
+to use it instead of the per session one.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- Documentation/scsi/ChangeLog.lpfc         |   36 ++++++++++----------
- Documentation/scsi/ChangeLog.megaraid     |    8 ++--
- Documentation/scsi/ChangeLog.megaraid_sas |    4 +-
- Documentation/scsi/ChangeLog.ncr53c8xx    |   16 ++++----
- Documentation/scsi/ChangeLog.sym53c8xx    |   14 +++----
- Documentation/scsi/ChangeLog.sym53c8xx_2  |   10 ++---
- 6 files changed, 44 insertions(+), 44 deletions(-)
+ drivers/infiniband/ulp/isert/ib_isert.c   |  4 ++--
+ drivers/target/iscsi/iscsi_target.c       |  4 ++--
+ drivers/target/iscsi/iscsi_target_login.c | 17 +++++++----------
+ drivers/target/target_core_transport.c    |  9 ++++++---
+ include/target/target_core_fabric.h       |  3 +++
+ 5 files changed, 20 insertions(+), 17 deletions(-)
 
-diff -- a/Documentation/scsi/ChangeLog.lpfc b/Documentation/scsi/ChangeLog.lpfc
---- a/Documentation/scsi/ChangeLog.lpfc
-+++ b/Documentation/scsi/ChangeLog.lpfc
-@@ -174,7 +174,7 @@ Changes from 20050201 to 20050208
- 	  lpfc_sli_chipset_init static.
- 	* Cleaned up references to list_head->next field in the driver.
- 	* Replaced lpfc_discq_post_event with lpfc_workq_post_event.
--	* Implmented Christoph Hellwig's review from 2/5: Check for return
-+	* Implemented Christoph Hellwig's review from 2/5: Check for return
- 	  values of kmalloc.
- 	* Integrated Christoph Hellwig's patch from 1/30: Protecting
- 	  scan_tmo and friends in !FC_TRANSPORT_PATCHES_V2 &&
-@@ -182,7 +182,7 @@ Changes from 20050201 to 20050208
- 	* Integrated Christoph Hellwig's patch from 1/30: Some fixes in
- 	  the evt handling area.
- 	* Integrated Christoph Hellwig's patch from 1/30: Remove usage of
--	  intr_inited variable. The interrupt initilization from OS side
-+	  intr_inited variable. The interrupt initialization from OS side
- 	  now happens in lpfc_probe_one().
- 	* Integrated Christoph Hellwig's patch from 1/30: remove shim
- 	  lpfc_alloc_transport_attr - remove shim lpfc_alloc_shost_attrs -
-@@ -389,7 +389,7 @@ Changes from 20041220 to 20041229
- 	  moved to kthread. kthread_stop() is not able to wake up thread
- 	  waiting on a semaphore and "modprobe -r lpfc" is not always
- 	  (most of the times) able to complete. Fix is in not using
--	  semaphore for the interruptable sleep.
-+	  semaphore for the interruptible sleep.
- 	* Small Makefile cleanup - Remove remnants of 2.4 vs. 2.6
- 	  determination.
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index 75404885cf98..f290cd49698e 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -2506,8 +2506,8 @@ isert_wait4cmds(struct iscsit_conn *conn)
+ 	isert_info("iscsit_conn %p\n", conn);
  
-@@ -439,8 +439,8 @@ Changes from 20041207 to 20041213
- 	  hardware actually found).
- 	* Integrate Christoph Hellwig's patch for 8.0.14: Add missing
- 	  __iomem annotations, remove broken casts, mark functions static.
--	  Only major changes is chaning of some offsets from word-based to
--	  byte-based so we cans simply do void pointer arithmetics (gcc
-+	  Only major changes is changing of some offsets from word-based to
-+	  byte-based so we can simply do void pointer arithmetic (gcc
- 	  extension) instead of casting to uint32_t.
- 	* Integrate Christoph Hellwig's patch for 8.0.14: flag is always
- 	  LPFC_SLI_ABORT_IMED, aka 0 - remove dead code.
-@@ -515,7 +515,7 @@ Changes from 20041018 to 20041123
- 	  a result of removing from the txcmpl list item which was already
- 	  removed (100100 is a LIST_POISON1 value from the next pointer
- 	  and 8 is an offset of the "prev") Driver runs out of iotags and
--	  does not handle that case well. The root of the proble is in the
-+	  does not handle that case well. The root of the problem is in the
- 	  initialization code in lpfc_sli.c
- 	* Changes to work with proposed linux kernel patch to support
- 	  hotplug.
-@@ -570,8 +570,8 @@ Changes from 20041018 to 20041123
- 	  associated I/Os to complete before returning.
- 	* Fix memset byte count in lpfc_hba_init so that
- 	  LP1050 would initialize correctly.
--	* Backround nodev_timeout processing to DPC This enables us to
--	  unblock (stop dev_loss_tmo) when appopriate.
-+	* Background nodev_timeout processing to DPC. This enables us to
-+	  unblock (stop dev_loss_tmo) when appropriate.
- 	* Fix array discovery with multiple luns.  The max_luns was 0 at
- 	  the time the host structure was initialized.  lpfc_cfg_params
- 	  then set the max_luns to the correct value afterwards.
-@@ -1012,7 +1012,7 @@ Changes from 20040614 to 20040709
- 	  LINK_[UP|DOWN] and RSCN events.
- 	* Get rid of delay_iodone timer.
- 	* Remove qfull timers and qfull logic.
--	* Convert mbox_tmo, nlp_xri_tmo to 1 argment clock handler
-+	* Convert mbox_tmo, nlp_xri_tmo to 1 argument clock handler
- 	* Removed duplicate extern defs of the bind variables.
- 	* Streamline usage of the defines CLASS2 and CLASS3, removing
- 	  un-necessary checks on config[LPFC_CFG_FCP_CLASS].
-@@ -1369,7 +1369,7 @@ Changes from 20040416 to 20040426
- 	* Removed lpfc_max_target from lpfc_linux_attach
- 	* Replace references to lpfcDRVR.pHba[] with lpfc_get_phba_by_inst()
- 	* Change lpfc_param to lpfc-param
--	* Partially removed 32 HBA restriction within driver.  Incorported
-+	* Partially removed 32 HBA restriction within driver.  Incorporated
- 	  lpfc_instcnt, lpfc_instance[], and pHba[] into lpfcDRVR
- 	  structure Added routines lpfc_get_phba_by_inst()
- 	  lpfc_get_inst_by_phba() lpfc_check_valid_phba()
-@@ -1535,7 +1535,7 @@ Changes from 20040326 to 20040402
- 	* Use Linux list macros for DMABUF_t
- 	* Break up ioctls into 3 sections, dfc, util, hbaapi
- 	  rearranged code so this could be easily separated into a
--	  differnet module later All 3 are currently turned on by
-+	  different module later. All 3 are currently turned on by
- 	  defines in lpfc_ioctl.c LPFC_DFC_IOCTL, LPFC_UTIL_IOCTL,
- 	  LPFC_HBAAPI_IOCTL
- 	* Misc cleanup: some goto's; add comments; clarify function
-@@ -1562,7 +1562,7 @@ Changes from 20040326 to 20040402
- 	* Remove unused log message.
- 	* Collapse elx_crtn.h and prod_crtn.h into lpfc_crtn.h
- 	* Ifdef Scheduler specific routines
--	* Removed following ununsed ioclt's: ELX_READ_IOCB
-+	* Removed following unused ioctl's: ELX_READ_IOCB
- 	  ELX_READ_MEMSEG ELX_READ_BINFO ELX_READ_EINVAL ELX_READ_LHBA
- 	  ELX_READ_LXHBA ELX_SET ELX_DBG LPFC_TRACE 
- 	* Removed variable fc_dbg_flg
-@@ -1570,7 +1570,7 @@ Changes from 20040326 to 20040402
- 	  3-digit HBAs.  Also changed can_queue so midlayer will only
- 	  send (HBA_Q_DEPTH - 10) cmds.
- 	* Clean up code in the error path, check condition.  Remove
--	  ununsed sense-related fields in lun structure.
-+	  unused sense-related fields in lun structure.
- 	* Added code for safety pools for following objects: mbuf/bpl,
- 	  mbox, iocb, ndlp, bind
- 	* Wrapped '#include <elx_sched.h>' in '#ifdef USE_SCHEDULER'.
-@@ -1592,7 +1592,7 @@ Changes from 20040326 to 20040402
- 	  ELX_READ_HBA ELX_INSTANCE ELX_LIP.  Also introduced
- 	  attribute "set" to be used in conjunction with the above
- 	  attributes.
--	* Removed DLINK, enque and deque declarations now that clock
-+	* Removed DLINK, enqueue and dequeue declarations now that clock
- 	  doesn't use them anymore
- 	* Separated install rule so that BUILD_IPFC has to be set when
- 	  make is called in order for the install rule to attempt to
-@@ -1662,7 +1662,7 @@ Changes from 20040326 to 20040402
- 	* Create utility clock function elx_start_timer() and
- 	  elx_stop_timer().  All timeout routines now use these common
- 	  routines.
--	* Minor formating changes fix up comments
-+	* Minor formatting changes fix up comments
- 	* Minor formatting changes get rid of failover defines for
- 	  syntax checking
- 	* Minor formatting changes remove ISCSI defines.
-@@ -1676,7 +1676,7 @@ Changes from 20040326 to 20040402
- 	  will not exist otherwise.
- 	* Removed unused malloc counters from lpfcLINUXfcp.c.
- 	* Remove some unnecessary #includes in lpfcLINUXfcp.c
--	* Remove unncessary #includes in elxLINUXfcp.c
-+	* Remove unnecessary #includes in elxLINUXfcp.c
- 	* Minor formatting cleanups in Makefile to avoid some
-           linewrapping.
- 	* Removed unused elx_mem_pool data structure.
-@@ -1753,7 +1753,7 @@ Changes from 20040319 to 20040326
- 	  elx_str_atox).
- 	* Replaced DLINK_t and SLINK_t by standard Linux list_head
- 	* Removed deque macro
--	* Replaced ELX_DLINK_t ans ELX_SLINK_t by Linux struct list_head
-+	* Replaced ELX_DLINK_t and ELX_SLINK_t by Linux struct list_head
- 	  (except for clock)
- 	* Removed following functions from code: linux_kmalloc linux_kfree
- 	  elx_alloc_bigbuf elx_free_bigbuf
-@@ -1801,7 +1801,7 @@ Changes from 20040312 to 20040319
- 	* Correct Iocbq completion routine for 2.6 kernel case
- 	* Change void *pOSCmd to Scsi_Smnd *pCmd
- 	* Change void *pOScmd to struct sk_buff *pCmd
--	* Remove data directon code.
-+	* Remove data direction code.
- 	* Removed memory pool for buf/bpl buffers and use kmalloc/kfree
- 	  pci_pool_alloc/free directly.
- 	* Move PPC check for DMA address 0 in scatter-gather list, into
-diff -- a/Documentation/scsi/ChangeLog.megaraid b/Documentation/scsi/ChangeLog.megaraid
---- a/Documentation/scsi/ChangeLog.megaraid
-+++ b/Documentation/scsi/ChangeLog.megaraid
-@@ -22,7 +22,7 @@ Older Version	: 2.20.4.8 (scsi module),
- 	Customer reported "garbage in file on x86_64 platform".
- 	Root Cause: the driver registered controllers as 64-bit DMA capable
- 	for those which are not support it.
--	Fix: Made change in the function inserting identification machanism
-+	Fix: Made change in the function inserting identification mechanism
- 	identifying 64-bit DMA capable controllers.
+ 	if (conn->sess) {
+-		target_stop_session(conn->sess->se_sess);
+-		target_wait_for_sess_cmds(conn->sess->se_sess);
++		target_stop_cmd_counter(conn->cmd_cnt);
++		target_wait_for_cmds(conn->cmd_cnt);
+ 	}
+ }
  
- 	> -----Original Message-----
-@@ -82,9 +82,9 @@ Older Version	: 2.20.4.8 (scsi module),
- 	Fix: MegaRAID F/W has fixed the problem and being process of release,
- 	soon. Meanwhile, driver will filter out the request.
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 87927a36f90d..11115c207844 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1193,7 +1193,7 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 			  conn->sess->se_sess, be32_to_cpu(hdr->data_length),
+ 			  cmd->data_direction, sam_task_attr,
+ 			  cmd->sense_buffer + 2, scsilun_to_int(&hdr->lun),
+-			  conn->sess->se_sess->cmd_cnt);
++			  conn->cmd_cnt);
  
--3.	One of member in the data structure of the driver leads unaligne
-+3.	One member in the data structure of the driver leads to unaligned
- 	issue on 64-bit platform.
--	Customer reporeted "kernel unaligned access addrss" issue when
-+	Customer reported "kernel unaligned access address" issue when
- 	application communicates with MegaRAID HBA driver.
- 	Root Cause: in uioc_t structure, one of member had misaligned and it
- 	led system to display the error message.
-@@ -441,7 +441,7 @@ i.	When copying the mailbox packets, cop
- 	avoid getting the stale values for busy bit. We want to set the busy
- 	bit just before issuing command to the FW.
+ 	pr_debug("Got SCSI Command, ITT: 0x%08x, CmdSN: 0x%08x,"
+ 		" ExpXferLen: %u, Length: %u, CID: %hu\n", hdr->itt,
+@@ -2057,7 +2057,7 @@ iscsit_handle_task_mgt_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 			  conn->sess->se_sess, 0, DMA_NONE,
+ 			  TCM_SIMPLE_TAG, cmd->sense_buffer + 2,
+ 			  scsilun_to_int(&hdr->lun),
+-			  conn->sess->se_sess->cmd_cnt);
++			  conn->cmd_cnt);
  
--ii.	In the reset handling, if the reseted command is not owned by the
-+ii.	In the reset handling, if the reset command is not owned by the
- 	driver, do not (wrongly) print information for the "attached" driver
- 	packet.
+ 	target_get_sess_cmd(&cmd->se_cmd, true);
  
-diff -- a/Documentation/scsi/ChangeLog.megaraid_sas b/Documentation/scsi/ChangeLog.megaraid_sas
---- a/Documentation/scsi/ChangeLog.megaraid_sas
-+++ b/Documentation/scsi/ChangeLog.megaraid_sas
-@@ -517,7 +517,7 @@ i.	bios_param entry added in scsi_host_t
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 8ab6c0107d89..274bdd7845ca 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -324,18 +324,8 @@ static int iscsi_login_zero_tsih_s1(
+ 		goto free_ops;
+ 	}
  
- 1. Added new memory management module to support the IOCTL memory allocation. For IOCTL we try to allocate from the memory pool created during driver initialization. If mem pool is empty then we allocate at run time.
- 2. Added check in megasas_queue_command and dpc/isr routine to see if we have already declared adapter dead
--   (hw_crit_error=1). If hw_crit_error==1, now we donot accept any processing of pending cmds/accept any cmd from OS
-+   (hw_crit_error=1). If hw_crit_error==1, now we do not accept any processing of pending cmds/accept any cmd from OS
+-	/*
+-	 * This is temp for iser. It will be moved to per conn in later
+-	 * patches for iscsi.
+-	 */
+-	sess->se_sess->cmd_cnt = target_alloc_cmd_counter();
+-	if (!sess->se_sess->cmd_cnt)
+-		goto free_se_sess;
+-
+ 	return 0;
  
- 1 Release Date    : Mon Oct 02 11:21:32 PDT 2006 - Sumant Patro <Sumant.Patro@lsil.com>
- 2 Current Version : 00.00.03.05
-@@ -562,7 +562,7 @@ vii.	Added print : FW now in Ready State
- 2 Current Version : 00.00.03.02
- 3 Older Version   : 00.00.03.01
+-free_se_sess:
+-	transport_free_session(sess->se_sess);
+ free_ops:
+ 	kfree(sess->sess_ops);
+ free_id:
+@@ -1157,8 +1147,14 @@ static struct iscsit_conn *iscsit_alloc_conn(struct iscsi_np *np)
+ 		goto free_conn_cpumask;
+ 	}
  
--i.	Added FW tranistion state for Hotplug scenario
-+i.	Added FW transition state for Hotplug scenario
++	conn->cmd_cnt = target_alloc_cmd_counter();
++	if (!conn->cmd_cnt)
++		goto free_conn_allowed_cpumask;
++
+ 	return conn;
  
- 1 Release Date    : Sun May 14 22:49:52 PDT 2006 - Sumant Patro <Sumant.Patro@lsil.com>
- 2 Current Version : 00.00.03.01
-diff -- a/Documentation/scsi/ChangeLog.ncr53c8xx b/Documentation/scsi/ChangeLog.ncr53c8xx
---- a/Documentation/scsi/ChangeLog.ncr53c8xx
-+++ b/Documentation/scsi/ChangeLog.ncr53c8xx
-@@ -230,7 +230,7 @@ Sat Nov 21  18:00 1998 Gerard Roudier (g
- 	- Still a buglet in the tags initial settings that needed to be fixed.
- 	  It was not possible to disable TGQ at system startup for devices 
- 	  that claim TGQ support. The driver used at least 2 for the queue 
--	  depth but did'nt keep track of user settings for tags depth lower 
-+	  depth but didn't keep track of user settings for tags depth lower 
- 	  than 2.
++free_conn_allowed_cpumask:
++	free_cpumask_var(conn->allowed_cpumask);
+ free_conn_cpumask:
+ 	free_cpumask_var(conn->conn_cpumask);
+ free_conn_ops:
+@@ -1172,6 +1168,7 @@ static struct iscsit_conn *iscsit_alloc_conn(struct iscsi_np *np)
  
- Wed Nov 11  10:00 1998 Gerard Roudier (groudier@club-internet.fr)
-@@ -270,7 +270,7 @@ Sun Oct  4 14:00 1998 Gerard Roudier (gr
- 	  were due to a SCSI selection problem triggered by a clearly 
- 	  documented feature that in fact seems not to work: (53C8XX chips  
- 	  are claimed by the manuals to be able to execute SCSI scripts just 
--	  after abitration while the SCSI core is performing SCSI selection).
-+	  after arbitration while the SCSI core is performing SCSI selection).
- 	  This optimization is broken and has been removed.
- 	- Some broken scsi devices are confused when a negotiation is started 
- 	  on a LUN that does not correspond to a real device. According to 
-@@ -347,7 +347,7 @@ Tue Jun 4 23:00 1998 Gerard Roudier (gro
- 	- Code cleanup and simplification:
- 	  Remove kernel 1.2.X and 1.3.X support.
- 	  Remove the _old_ target capabilities table.
--	  Remove the error recovery code that have'nt been really useful.
-+	  Remove the error recovery code that hasn't been really useful.
- 	  Use a single alignment boundary (CACHE_LINE_SIZE) for data 
- 	  structures.
- 	- Several aggressive SCRIPTS optimizations and changes:
-@@ -367,8 +367,8 @@ Wed May 13 20:00 1998 Gerard Roudier (gr
- 	- Some simplification for 64 bit arch done ccb address testing.
- 	- Add a check of the MSG_OUT phase after Selection with ATN.
- 	- The new tagged queue stuff seems ok, so some informationnal 
--	  message have been conditionned by verbose >= 3.
--	- Donnot reset if a SBMC interrupt reports the same bus mode.
-+	  message have been conditioned by verbose >= 3.
-+	- Do not reset if a SBMC interrupt reports the same bus mode.
- 	- Print out the whole driver set-up. Some options were missing and 
- 	  the print statement was misplaced for modules.
- 	- Ignore a SCSI parity interrupt if the chip is not connected to 
-@@ -392,7 +392,7 @@ Sat Apr 25 21:00 1998 Gerard Roudier (gr
- 	  context on phase mismatch.
- 	- The above allows now to use the on-chip RAM without requiring 
- 	  to get access to the on-chip RAM from the C code. This makes 
--	  on-chip RAM useable for linux-1.2.13 and for Linux-Alpha for 
-+	  on-chip RAM usable for linux-1.2.13 and for Linux-Alpha for 
- 	  instance.
- 	- Some simplifications and cleanups in the SCRIPTS and C code.
- 	- Buglet fixed in parity error recovery SCRIPTS (never tested).
-@@ -433,7 +433,7 @@ Sun Mar 29 12:00 1998 Gerard Roudier (gr
+ void iscsit_free_conn(struct iscsit_conn *conn)
+ {
++	target_free_cmd_counter(conn->cmd_cnt);
+ 	free_cpumask_var(conn->allowed_cpumask);
+ 	free_cpumask_var(conn->conn_cpumask);
+ 	kfree(conn->conn_ops);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index c395606ab1a9..86adff2a86ed 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -254,7 +254,7 @@ struct target_cmd_counter *target_alloc_cmd_counter(void)
+ }
+ EXPORT_SYMBOL_GPL(target_alloc_cmd_counter);
  
- Tue Mar 26 23:00 1998 Gerard Roudier (groudier@club-internet.fr)
- 	* revision 2.6g
--	- New done queue. 8 entries by default (6 always useable).
-+	- New done queue. 8 entries by default (6 always usable).
- 	  Can be increased if needed.
- 	- Resources management using doubly linked queues.
- 	- New auto-sense and QUEUE FULL handling that does not need to 
-@@ -464,7 +464,7 @@ Sun Jan 11 22:00 1998 Gerard Roudier (gr
- 	- generalization of the restart of CCB on special condition as 
-           Abort, QUEUE FULL, CHECK CONDITION.
-           This has been called 'silly scheduler'.
--	- make all the profiling code conditionned by a config option.
-+	- make all the profiling code conditioned by a config option.
- 	  This spare some PCI traffic and C code when this feature is not 
-           needed.
- 	- handle more cleanly the situation where direction is unknown.
-diff -- a/Documentation/scsi/ChangeLog.sym53c8xx b/Documentation/scsi/ChangeLog.sym53c8xx
---- a/Documentation/scsi/ChangeLog.sym53c8xx
-+++ b/Documentation/scsi/ChangeLog.sym53c8xx
-@@ -255,7 +255,7 @@ Sat Sep 11  11:00 1999 Gerard Roudier (g
- 	- Work-around PCI chips being reported twice on some platforms.
- 	- Add some redundant PCI reads in order to deal with common 
- 	  bridge misbehaviour regarding posted write flushing.
--	- Add some other conditionnal code for people who have to deal 
-+	- Add some other conditional code for people who have to deal 
- 	  with really broken bridges (they will have to edit a source 
- 	  file to try these options).
- 	- Handle correctly (hopefully) jiffies wrap-around.
-@@ -300,7 +300,7 @@ Sat May 29  12:00 1999 Gerard Roudier (g
- Tue May 25  23:00 1999 Gerard Roudier (groudier@club-internet.fr)
- 	* version sym53c8xx-1.5a
- 	- Add support for task abort and bus device reset SCSI message 
--	  and implement proper synchonisation with SCRIPTS to handle 
-+	  and implement proper synchronisation with SCRIPTS to handle 
-           correctly task abortion without races.
- 	- Send an ABORT message (if untagged) or ABORT TAG message (if tagged)
- 	  when the driver is told to abort a command that is disconnected and 
-@@ -410,7 +410,7 @@ Fri Feb 12  23:00 1999 Gerard Roudier (g
- 	  the support of non compliant SCSI removal, insertion and all 
- 	  kinds of screw-up that may happen on the SCSI BUS.
- 	  Hopefully, the driver is now unbreakable or may-be, it is just 
--	  quite brocken. :-)
-+	  quite broken. :-)
- 	  Many thanks to Johnson Russel (Symbios) for having responded to 
- 	  my questions and for his interesting advices and comments about 
- 	  support of SCSI hot-plug.
-@@ -432,7 +432,7 @@ Sun Jan 31  18:00 1999 Gerard Roudier (g
- Sun Jan 24  18:00 1999 Gerard Roudier (groudier@club-internet.fr)
- 	* version sym53c8xx-1.1
- 	- Major rewrite of the SCSI parity error handling.
--	  The informations contained in the data manuals are incomplete about 
-+	  The information contained in the data manuals is incomplete about 
- 	  this feature.
- 	  I asked SYMBIOS about and got in reply the explanations that are 
- 	  _indeed_ missing in the data manuals.
-@@ -460,7 +460,7 @@ Sat Dec 19  21:00 1998 Gerard Roudier (g
- 	- Revamp slightly the Symbios NVRAM lay-out based on the excerpt of 
- 	  the header file I received from Symbios.
- 	- Check the PCI bus number for the boot order (Using a fast 
--	  PCI controller behing a PCI-PCI bridge seems sub-optimal).
-+	  PCI controller behind a PCI-PCI bridge seems sub-optimal).
- 	- Disable overlapped PCI arbitration for the 896 revision 1.
- 	- Reduce a bit the number of IO register reads for phase mismatch 
- 	  by reading DWORDS at a time instead of BYTES.
-@@ -488,7 +488,7 @@ Sun Nov 29  18:00 1998 Gerard Roudier (g
- Tue Nov 24  23:00 1998 Gerard Roudier (groudier@club-internet.fr)
- 	* version pre-sym53c8xx-0.16
- 	- Add SCSI_NCR_OPTIMIZE_896_1 compile option and 'optim' boot option.
--	  When set, the driver unconditionnaly assumes that the interrupt 
-+	  When set, the driver unconditionally assumes that the interrupt 
- 	  handler is called for command completion, then clears INTF, scans 
- 	  the done queue and returns if some completed CCB is found. If no 
- 	  completed CCB are found, interrupt handling will proceed normally.
-@@ -502,7 +502,7 @@ Tue Nov 24  23:00 1998 Gerard Roudier (g
- 	- Still a buglet in the tags initial settings that needed to be fixed.
- 	  It was not possible to disable TGQ at system startup for devices 
- 	  that claim TGQ support. The driver used at least 2 for the queue 
--	  depth but did'nt keep track of user settings for tags depth lower 
-+	  depth but didn't keep track of user settings for tags depth lower 
- 	  than 2.
+-static void target_free_cmd_counter(struct target_cmd_counter *cmd_cnt)
++void target_free_cmd_counter(struct target_cmd_counter *cmd_cnt)
+ {
+ 	/*
+ 	 * Drivers like loop do not call target_stop_session during session
+@@ -265,6 +265,7 @@ static void target_free_cmd_counter(struct target_cmd_counter *cmd_cnt)
  
- Thu Nov 19  23:00 1998 Gerard Roudier (groudier@club-internet.fr)
-diff -- a/Documentation/scsi/ChangeLog.sym53c8xx_2 b/Documentation/scsi/ChangeLog.sym53c8xx_2
---- a/Documentation/scsi/ChangeLog.sym53c8xx_2
-+++ b/Documentation/scsi/ChangeLog.sym53c8xx_2
-@@ -40,7 +40,7 @@ Wed Feb 7 21:00 2001 Gerard Roudier
- 	- Call pci_enable_device() as wished by kernel maintainers.
- 	- Change the sym_queue_scsiio() interface.
- 	  This is intended to simplify portability.
--	- Move the code intended to deal with the dowloading of SCRIPTS 
-+	- Move the code intended to deal with the downloading of SCRIPTS 
- 	  from SCRIPTS :) in the patch method (was wrongly placed in 
- 	  the SCRIPTS setup method).
- 	- Add a missing cpu_to_scr()  (np->abort_tbl.addr)
-@@ -53,9 +53,9 @@ Sat Mar 3 21:00 2001 Gerard Roudier
- 	  Also move the code that sniffes INQUIRY to sym_misc.c.
- 	  This allows to share the corresponding code with NetBSD 
- 	  without polluating the core driver source (sym_hipd.c).
--	- Add optionnal code that handles IO timeouts from the driver.
-+	- Add optional code that handles IO timeouts from the driver.
- 	  (not used under Linux, but required for NetBSD)
--	- Donnot assume any longer that PAGE_SHIFT and PAGE_SIZE are 
-+	- Do not assume any longer that PAGE_SHIFT and PAGE_SIZE are 
- 	  defined at compile time, as at least NetBSD uses variables 
- 	  in memory for that.
- 	- Refine a work-around for the C1010-33 that consists in 
-@@ -104,7 +104,7 @@ Sun Sep 9 18:00 2001 Gerard Roudier
- 	- Change my email address.
- 	- Add infrastructure for the forthcoming 64 bit DMA addressing support.
- 	  (Based on PCI 64 bit patch from David S. Miller)
--	- Donnot use anymore vm_offset_t type.
-+	- Do not use anymore vm_offset_t type.
+ 	percpu_ref_exit(&cmd_cnt->refcnt);
+ }
++EXPORT_SYMBOL_GPL(target_free_cmd_counter);
  
- Sat Sep 15 20:00 2001 Gerard Roudier 
- 	* version sym-2.1.13-20010916
-@@ -119,7 +119,7 @@ Sat Sep 22 12:00 2001 Gerard Roudier
+ /**
+  * transport_init_session - initialize a session object
+@@ -3170,13 +3171,14 @@ static void target_stop_cmd_counter_confirm(struct percpu_ref *ref)
+  * target_stop_cmd_counter - Stop new IO from being added to the counter.
+  * @cmd_cnt: counter to stop
+  */
+-static void target_stop_cmd_counter(struct target_cmd_counter *cmd_cnt)
++void target_stop_cmd_counter(struct target_cmd_counter *cmd_cnt)
+ {
+ 	pr_debug("Stopping command counter.\n");
+ 	if (!atomic_cmpxchg(&cmd_cnt->stopped, 0, 1))
+ 		percpu_ref_kill_and_confirm(&cmd_cnt->refcnt,
+ 					    target_stop_cmd_counter_confirm);
+ }
++EXPORT_SYMBOL_GPL(target_stop_cmd_counter);
  
- Sun Sep 30 17:00 2001 Gerard Roudier 
- 	* version sym-2.1.15-20010930
--	- Include <linux/module.h> unconditionnaly as expected by latest
-+	- Include <linux/module.h> unconditionally as expected by latest
- 	  kernels.
- 	- Use del_timer_sync() for recent kernels to kill the driver timer 
- 	  on module release.
+ /**
+  * target_stop_session - Stop new IO from being queued on the session.
+@@ -3192,7 +3194,7 @@ EXPORT_SYMBOL(target_stop_session);
+  * target_wait_for_cmds - Wait for outstanding cmds.
+  * @cmd_cnt: counter to wait for active I/O for.
+  */
+-static void target_wait_for_cmds(struct target_cmd_counter *cmd_cnt)
++void target_wait_for_cmds(struct target_cmd_counter *cmd_cnt)
+ {
+ 	int ret;
+ 
+@@ -3208,6 +3210,7 @@ static void target_wait_for_cmds(struct target_cmd_counter *cmd_cnt)
+ 	wait_for_completion(&cmd_cnt->stop_done);
+ 	pr_debug("Waiting for cmds done.\n");
+ }
++EXPORT_SYMBOL_GPL(target_wait_for_cmds);
+ 
+ /**
+  * target_wait_for_sess_cmds - Wait for outstanding commands
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index d507e7885f17..b188b1e90e1e 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -133,7 +133,10 @@ struct se_session *target_setup_session(struct se_portal_group *,
+ 				struct se_session *, void *));
+ void target_remove_session(struct se_session *);
+ 
++void target_stop_cmd_counter(struct target_cmd_counter *cmd_cnt);
++void target_wait_for_cmds(struct target_cmd_counter *cmd_cnt);
+ struct target_cmd_counter *target_alloc_cmd_counter(void);
++void target_free_cmd_counter(struct target_cmd_counter *cmd_cnt);
+ 
+ void transport_init_session(struct se_session *se_sess);
+ struct se_session *transport_alloc_session(enum target_prot_op);
+-- 
+2.25.1
+
