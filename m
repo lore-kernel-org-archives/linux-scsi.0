@@ -2,107 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 931EAC61D97
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 06:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 703A8C05027
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Jan 2023 17:31:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231417AbjA2Gz4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Jan 2023 01:55:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44488 "EHLO
+        id S235128AbjA2Rbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Jan 2023 12:31:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbjA2Gzz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 01:55:55 -0500
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC6DA2129F;
-        Sat, 28 Jan 2023 22:55:53 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4P4MXN1cFXz4f4NW7;
-        Sun, 29 Jan 2023 14:55:48 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R90GNZj2XGDCQ--.27055S3;
-        Sun, 29 Jan 2023 14:55:50 +0800 (CST)
-Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create block
- device
-To:     Greg KH <gregkh@linuxfoundation.org>,
-        Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Zhong Jinghua <zhongjinghua@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
-        emilne@redhat.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, yi.zhang@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
+        with ESMTP id S229617AbjA2Rba (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 12:31:30 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72E021715A;
+        Sun, 29 Jan 2023 09:31:29 -0800 (PST)
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30TDlkJd012236;
+        Sun, 29 Jan 2023 17:31:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=qdC0xyKLoaOTuMWEF/2CnwWlSq5XIkTv79tuQEfcKlM=;
+ b=VW8nLNYK+paIbt6urRpNm/3q/sqocgSiDCsaTd1+HCCComNS+Rx0CRUoLxm+ajUV0hf0
+ vXutvC0vvAd5GZv3SvwAcZK9E+BU/YlPbNmHhcKzYoB7TFX+VduXJ/hqY1SvBCZuexOY
+ 4wkWDCMIIR0HCXZtbfhbkEMEssL4bjh/IhSrLfR8RvtH2t+Jv9SASBI2m603ke5mlzuG
+ GsYaioAR+a03HINTT9NMvwDcp4quz214ULy13eTAcabQnpfgeWi0d/vUsGmiL0TUlxll
+ L6KcaZ3riJg/CnuLsyAYll6bpwjmsWImFIyHp+Ed+S/+TwTAZGL7hlEINEoCJ1d0/DFx Lw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3nddv1469e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 29 Jan 2023 17:31:06 +0000
+Received: from m0098416.ppops.net (m0098416.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30THV6S6030161;
+        Sun, 29 Jan 2023 17:31:06 GMT
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3nddv14699-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 29 Jan 2023 17:31:06 +0000
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 30TDR3Hh026758;
+        Sun, 29 Jan 2023 17:31:05 GMT
+Received: from smtprelay01.wdc07v.mail.ibm.com ([9.208.129.119])
+        by ppma01wdc.us.ibm.com (PPS) with ESMTPS id 3ncvtmpvar-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 29 Jan 2023 17:31:05 +0000
+Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
+        by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 30THV3Zw38994628
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 29 Jan 2023 17:31:04 GMT
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C6B6B6E050;
+        Sun, 29 Jan 2023 17:33:07 +0000 (GMT)
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 31A7E6E04E;
+        Sun, 29 Jan 2023 17:33:05 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.211.110.248])
+        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Sun, 29 Jan 2023 17:33:05 +0000 (GMT)
+Message-ID: <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
+Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create
+ block device
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Zhong Jinghua <zhongjinghua@huawei.com>,
+        gregkh@linuxfoundation.org, martin.petersen@oracle.com,
+        hare@suse.de, bvanassche@acm.org, emilne@redhat.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        yi.zhang@huawei.com, yukuai3@huawei.com
+Date:   Sun, 29 Jan 2023 12:30:30 -0500
+In-Reply-To: <20230128094146.205858-3-zhongjinghua@huawei.com>
 References: <20230128094146.205858-1-zhongjinghua@huawei.com>
- <20230128094146.205858-3-zhongjinghua@huawei.com>
- <Y9T8uQYEaGUZwpHO@kroah.com>
- <b4927ca9-7330-3f32-f68f-1a449473a0ce@huaweicloud.com>
- <Y9YWMQ4TuJfuXAzL@kroah.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <c09ec3d3-9f6f-6bf6-8bb9-583c0c7c909d@huaweicloud.com>
-Date:   Sun, 29 Jan 2023 14:55:48 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+         <20230128094146.205858-3-zhongjinghua@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-In-Reply-To: <Y9YWMQ4TuJfuXAzL@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R90GNZj2XGDCQ--.27055S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KrWUWr1rZryDCF4DJw4fKrg_yoW8Xr13pF
-        WrXa1FkFWUJrWkKwn2qa17WFySq347KrZ8GrW7G340ga45Jr97tw1rJa9xZFyFyFWv93Wx
-        Xr18XFs5ZrWvqFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: uaOUbDbeIJ7bzyBQmbqB9mkUuaqfIdK-
+X-Proofpoint-GUID: tLV0rDBztqfXhwftHdWv4OmWn1a9UCGN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-01-29_09,2023-01-27_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
+ lowpriorityscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
+ clxscore=1011 priorityscore=1501 impostorscore=0 mlxscore=0 spamscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2301290169
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
+> This error will cause a warning:
+> kobject_add_internal failed for block (error: -2 parent: 1:0:0:1).
+> In the lower version (such as 5.10), there is no corresponding error
+> handling, continuing
+> to go down will trigger a kernel panic, so cc stable.
 
-在 2023/01/29 14:46, Greg KH 写道:
-> On Sun, Jan 29, 2023 at 09:13:55AM +0800, Yu Kuai wrote:
->> Hi, Greg
->>
->> 在 2023/01/28 18:45, Greg KH 写道:
->>>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->>>> index cac7c902cf70..a22109cdb8ef 100644
->>>> --- a/drivers/scsi/scsi_sysfs.c
->>>> +++ b/drivers/scsi/scsi_sysfs.c
->>>> @@ -1535,9 +1535,7 @@ static void __scsi_remove_target(struct scsi_target *starget)
->>>>    		if (sdev->channel != starget->channel ||
->>>>    		    sdev->id != starget->id)
->>>>    			continue;
->>>> -		if (sdev->sdev_state == SDEV_DEL ||
->>>> -		    sdev->sdev_state == SDEV_CANCEL ||
->>>> -		    !get_device(&sdev->sdev_gendev))
->>>> +		if (!get_device_unless_zero(&sdev->sdev_gendev))
->>>
->>> If sdev_gendev is 0 here, the object is gone and you are working with
->>> memory that is already freed so something is _VERY_ wrong.
->>
->> In fact, this patch will work:
->>
->> In __scsi_remove_target(), 'host_lock' is held to protect iterating
->> siblings, and object will wait for this lock in
->> scsi_device_dev_release() to remove siblings. Hence sdev will not be
->> freed untill the lock is released.
-> 
-> Then you got lucky, as that is not how a reference counted object should
-> be working (i.e. the reference dropped to 0 and it still be kept alive.)
-> 
-> Please fix up the scsi logic here, don't abuse the reference count code.
-> 
+Is this is important point and what you're saying is that this only
+panics on kernels before 5.10 or so because after that it's correctly
+failed by block device error handling so there's nothing to fix in
+later kernels?
 
-Thanks for the reply, I agree that we should fix this in scsi layer.
+In that case, isn't the correct fix to look at backporting the block
+device error handling:
 
-Kuai
+commit 83cbce9574462c6b4eed6797bdaf18fae6859ab3
+Author: Luis Chamberlain <mcgrof@kernel.org>
+Date:   Wed Aug 18 16:45:40 2021 +0200
+
+    block: add error handling for device_add_disk / add_disk
+
+?
+
+James
 
