@@ -2,93 +2,74 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15658C54EED
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 10:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E63EC61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 10:33:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235333AbjA3K2f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 05:28:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56150 "EHLO
+        id S236128AbjA3KdK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 05:33:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231285AbjA3K2c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 05:28:32 -0500
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 937244687
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 02:28:31 -0800 (PST)
-Received: by mail-ed1-x52e.google.com with SMTP id v10so10439896edi.8
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 02:28:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xyT6ubtiTbtcys2GsgacZ/5hEM4auH4fnNxrq/JEFg0=;
-        b=XPEBaEmwF2s0uPcW5wglxrSvtLFphIU3jsc5682pDO3pt/DMxbwZvdXsm4HhflP/eS
-         /NWQaYkCh34L1NEmGSEQFgOvWvVZZWSimDRX9Jgr9VkJAZYuN/7TyaltUTsAlAYIvr1c
-         vHwjX5JFo3F+wgNek8QqKz1Vj+Cz0Td3s+6BlKpVPwAbGW/7V5rwY3gzX+mulRqRcv1s
-         +PclQJ9B4plafxnsv/WDn/AHj4NUYTwNZVXcNM62PufV+KH8CWAJfIhbdhDd/mJYVKtr
-         yU5GB9qiX9fxmK5aRL7AzDkIisGtxfBPnzmFswnPvDGs+uvLHy3CTKTY5r8N2KrVgBSy
-         KACA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=xyT6ubtiTbtcys2GsgacZ/5hEM4auH4fnNxrq/JEFg0=;
-        b=MwKvymles3x2jZIyg4OLBKhjXWk702kuCelo3cDiBNPUTDNM3VgJBD+oFISdg+C06K
-         7vrZ8WHJHLC0Wpl8ZnnRAMlDCByk1Y18w1PC/KQoYBKCSkAjtWZ0eneBwJadq45/p94U
-         vnOTAZlly8F4KLmNlAdUDPbwle+BlzMbXf8g1Nvtj9mQt71iuMeYRSkKJngKYqlgrT2t
-         t0Dk5ZpgM9ceeAWYhxrQR0501T1kcy0kyeIr3htnnToEE+H0N7ftQlDqtDYKNuyCyMMu
-         Cb5py1cEO1lOihL4OCYdnV0awVFGldDPW8Y+zRdfK1o4974jHRza5UjceTQHw3o0up6W
-         /srg==
-X-Gm-Message-State: AO0yUKWaMpxj1p3fOWCuCW5JDmrqWH0tzNLCKfwwsc1k2zBV1hwYhekx
-        /NTDttRofVNC5gtqjIBz7Ko=
-X-Google-Smtp-Source: AK7set9VB5CbZ/Hcg47QJGMF1pq3G9GMdTzseI4vEVa++N1aR+A1TuUqdvT/tqjKJ/xJiPMNZPz4Lg==
-X-Received: by 2002:a50:9e6a:0:b0:4a2:3d3d:a3f1 with SMTP id z97-20020a509e6a000000b004a23d3da3f1mr4936551ede.19.1675074510175;
-        Mon, 30 Jan 2023 02:28:30 -0800 (PST)
-Received: from touko.myxoz.lan (90-224-45-44-no2390.tbcn.telia.com. [90.224.45.44])
-        by smtp.gmail.com with ESMTPSA id w11-20020a50fa8b000000b0049e09105705sm6544233edr.62.2023.01.30.02.28.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Jan 2023 02:28:29 -0800 (PST)
-Message-ID: <1109bf338f2e7b4a61504110bbd5bc40b3c3a836.camel@gmail.com>
-Subject: Re: [PATCH 0/4] ses: prevent from out of bounds accesses
-From:   Miko Larsson <mikoxyzzz@gmail.com>
-To:     Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Date:   Mon, 30 Jan 2023 11:28:28 +0100
-In-Reply-To: <20230130101317.4862-1-thenzl@redhat.com>
-References: <20230130101317.4862-1-thenzl@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.module_f37+15877+cf3308f9) 
+        with ESMTP id S235593AbjA3KdI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 05:33:08 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6EA531E0B
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 02:31:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675074697;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=CICRFAbCzChYD1znyWS61qGZqh3HfSsIj8zLg6AqEXc=;
+        b=i6jk9H6CwtwQ9Hqp/ZkxEZT3s+Zm9Oj9hHSR8n6ZuuyxBIx2cYIsZ2lHUbhfK3XwGO5yjv
+        CtIKeF5mRQvPsjMtBVkU3nBBlXYZDaTQokBI9EdP4K1/Ki06DM/qB+dp2Glfmx2H7QE2oz
+        2NJTk+2KAI1a++L2YfligXvIY1XRQtM=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-107-m7rZ0bd0PKa4hu7tOJYsfA-1; Mon, 30 Jan 2023 05:31:27 -0500
+X-MC-Unique: m7rZ0bd0PKa4hu7tOJYsfA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 408462999B26;
+        Mon, 30 Jan 2023 10:31:26 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.33.36.97])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4AA28C15BAD;
+        Mon, 30 Jan 2023 10:31:24 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <20230130092157.1759539-21-hch@lst.de>
+References: <20230130092157.1759539-21-hch@lst.de> <20230130092157.1759539-1-hch@lst.de>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     dhowells@redhat.com
+Cc:     linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        devel@lists.orangefs.org, io-uring@vger.kernel.org,
+        linux-mm@kvack.org
+Subject: Re: [PATCH 20/23] rxrpc: use bvec_set_page to initialize a bvec
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3347458.1675074683.1@warthog.procyon.org.uk>
+Date:   Mon, 30 Jan 2023 10:31:23 +0000
+Message-ID: <3347459.1675074683@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2023-01-30 at 11:13 +0100, Tomas Henzl wrote:
-> First patch fixes a KASAN reported problem
-> Second patch fixes other possible places in
-> ses_enclosure_data_process
-> where the max_desc_len might access memory out of bounds.
-> 3/4 does the same for desc_ptr in ses_enclosure_data_process.
-> The last patch fixes another KASAN report in ses_intf_remove.
->=20
->=20
-> Tomas Henzl (4):
-> =C2=A0 ses: fix slab-out-of-bounds reported by KASAN in
-> ses_enclosure_data_process
-> =C2=A0 ses: fix possible addl_desc_ptr out-of-bounds accesses in
-> ses_enclosure_data_process
-> =C2=A0 ses: fix possible desc_ptr out-of-bounds accesses in
-> ses_enclosure_data_process
-> =C2=A0 ses: fix slab-out-of-bounds reported by KASAN in ses_intf_remove=
-=20
->=20
-> =C2=A0drivers/scsi/ses.c | 58 ++++++++++++++++++++++++++++++++-----------=
--
-> --
-> =C2=A01 file changed, 41 insertions(+), 17 deletions(-)
->=20
+Christoph Hellwig <hch@lst.de> wrote:
 
-This series should probably be Cc'ed to the stable mailing list.
---                                                                    =20
-~miko
+> +		bvec_set_page(&bv, ZERO_PAGE(0), len, 0);
+
+Maybe bvec_set_zero_page()?
+
+David
+
