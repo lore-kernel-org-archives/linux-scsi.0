@@ -2,102 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4330FC54EED
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 16:26:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73371C636D4
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 17:05:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236790AbjA3Q0r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 11:26:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58592 "EHLO
+        id S236332AbjA3RFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 12:05:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231538AbjA3Q0q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 11:26:46 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7FDD3A856;
-        Mon, 30 Jan 2023 08:26:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1675095991; bh=WOQ4vuk34rA8b08A56gxt9geZ1TucBGZIWvT4ETxZIg=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-         Content-Type;
-        b=IbGW6e4yoU4N8jnk+gb10lFBklYd+2W/It+3J/QhfgIMobtaPdJc6y9BO2othIbxg
-         JRDe8wYdbV3d7ohGr8KCQDZgriuZ4nx9P7TH0u/NVWaV/pYeK/bYfTmmaoaNHwojuw
-         aRRvFB7kAclMZWKjGGhdhU1H8heZfzG4MjsBJCAc=
-Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Mon, 30 Jan 2023 17:26:31 +0100 (CET)
-X-EA-Auth: Iop45wzrRbdCV8RWDLbj/0flWLCA+fQ84U0oUYoywr0m1w/jsYoUdCyRQTjntI8xuq8QxZvlDC+KbaNmp/Tv59KAlvf6dJXs
-Date:   Mon, 30 Jan 2023 21:56:25 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
-        Deepak R Varma <drv@mailo.com>
-Subject: [PATCH] scsi: snic: Use sysfs_emit in show function callback
-Message-ID: <Y9fvsSJrflcIHm7e@ubun2204.myguest.virtualbox.org>
+        with ESMTP id S237732AbjA3RFA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 12:05:00 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB27ADA
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 09:04:59 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 825D021D4E;
+        Mon, 30 Jan 2023 17:04:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1675098298; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0Kw+ZmRhiDG/y5mSaqDRkSBDGb2kueNM5SlvkD9HF8o=;
+        b=XfdXLPRJr6dfOREmI2brhfU+UVO+s1+t+lav1H3OXsuJxdGnrtU/Ndmue5BEO9l0cijxCy
+        bm20Yoflt8yhvO02jz/czYlqXPjrD4Ot3fb5zEwfcFGHjz9S2BnhvdwC9AQ/Fl9p/mCzm+
+        O81ysYPsBMUn+DwSyYrfCre84L/YOMs=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 389CD13444;
+        Mon, 30 Jan 2023 17:04:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id pHD2C7r412OQQgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 30 Jan 2023 17:04:58 +0000
+Message-ID: <263c26e91250e32cd6391533860f2fe8d39940fa.camel@suse.com>
+Subject: Re: [PATCH] scsi: core: Fix the scsi_device_put() might_sleep
+ annotation
+From:   Martin Wilck <mwilck@suse.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        Steffen Maier <maier@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Sachin Sant <sachinp@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>
+Date:   Mon, 30 Jan 2023 18:04:57 +0100
+In-Reply-To: <Y9d4sfc9hCydhHwb@infradead.org>
+References: <20230125194311.249553-1-bvanassche@acm.org>
+         <167478903314.4070509.17553562843256554477.b4-ty@oracle.com>
+         <Y9d4sfc9hCydhHwb@infradead.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.3 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-According to Documentation/filesystems/sysfs.rst, the show() callback
-function of kobject attributes should strictly use sysfs_emit() instead
-of sprintf() family functions.
-Issue identified using the device_attr_show.cocci Coccinelle script.
+On Sun, 2023-01-29 at 23:58 -0800, Christoph Hellwig wrote:
+> On Thu, Jan 26, 2023 at 10:22:12PM -0500, Martin K. Petersen wrote:
+> > On Wed, 25 Jan 2023 11:43:11 -0800, Bart Van Assche wrote:
+> >=20
+> > > Although most calls of scsi_device_put() happen from non-atomic
+> > > context,
+> > > alua_rtpg_queue() calls this function from atomic context if
+> > > alua_rtpg_queue() itself is called from atomic context.
+> > > alua_rtpg_queue()
+> > > is always called from contexts where the caller must hold at
+> > > least one
+> > > reference to the scsi device in question. This means that the
+> > > reference
+> > > taken by alua_rtpg_queue() itself can't be the last one, and thus
+> > > can be
+> > > dropped without entering the code path in which scsi_device_put()
+> > > might
+> > > actually sleep. Hence move the might_sleep() annotation from
+> > > scsi_device_put() into scsi_device_dev_release().
+> > >=20
+> > > [...]
+> >=20
+> > Applied to 6.2/scsi-fixes, thanks!
+>=20
+> This is a really bad idea.=A0 Instead of actually catching
+> scsi_device_put
+> put from a wrong context all the time, it now limits to the final put
+> and thus making the annotation a lot less useful.
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
----
- drivers/scsi/snic/snic_attrs.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+The other idea that we discussed was this:
 
-diff --git a/drivers/scsi/snic/snic_attrs.c b/drivers/scsi/snic/snic_attrs.c
-index 3ddbdbc3ded1..56c46ea06e60 100644
---- a/drivers/scsi/snic/snic_attrs.c
-+++ b/drivers/scsi/snic/snic_attrs.c
-@@ -13,7 +13,7 @@ snic_show_sym_name(struct device *dev,
- {
- 	struct snic *snic = shost_priv(class_to_shost(dev));
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n", snic->name);
-+	return sysfs_emit(buf, "%s\n", snic->name);
- }
- 
- static ssize_t
-@@ -23,8 +23,7 @@ snic_show_state(struct device *dev,
- {
- 	struct snic *snic = shost_priv(class_to_shost(dev));
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--			snic_state_str[snic_get_state(snic)]);
-+	return sysfs_emit(buf, "%s\n", snic_state_str[snic_get_state(snic)]);
- }
- 
- static ssize_t
-@@ -32,7 +31,7 @@ snic_show_drv_version(struct device *dev,
- 		      struct device_attribute *attr,
- 		      char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%s\n", SNIC_DRV_VERSION);
-+	return sysfs_emit(buf, "%s\n", SNIC_DRV_VERSION);
- }
- 
- static ssize_t
-@@ -45,8 +44,7 @@ snic_show_link_state(struct device *dev,
- 	if (snic->config.xpt_type == SNIC_DAS)
- 		snic->link_status = svnic_dev_link_status(snic->vdev);
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--			(snic->link_status) ? "Link Up" : "Link Down");
-+	return sysfs_emit(buf, "%s\n", (snic->link_status) ? "Link Up" : "Link Down");
- }
- 
- static DEVICE_ATTR(snic_sym_name, S_IRUGO, snic_show_sym_name, NULL);
--- 
-2.34.1
+https://lore.kernel.org/linux-scsi/53321793-fede-f84e-260a-9d6bc0bc2b6c@acm=
+.org/T/#t
 
+That approach would still catch other wrong call contexts (i.e. from
+outside the ALUA code). But it requires adding a new exported function
+in scsi.c. Would you prefer that, or do you have something completely
+different in mind?
 
+Idea #3 was to use a deferred call (e.g. a workqueue) for dropping the
+additional ref that had been takein in alua_rtpg_queue().
+
+Thanks,
+Martin
 
