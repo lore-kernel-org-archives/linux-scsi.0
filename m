@@ -2,118 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E24E7C636D3
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 19:35:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 485A7C54EAA
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 20:11:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238075AbjA3Tfw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 14:35:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34424 "EHLO
+        id S235749AbjA3ULx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 15:11:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238026AbjA3Tfv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 14:35:51 -0500
-Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DE7B402C1;
-        Mon, 30 Jan 2023 11:35:47 -0800 (PST)
+        with ESMTP id S229880AbjA3ULw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 15:11:52 -0500
+Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B47512FCF1;
+        Mon, 30 Jan 2023 12:11:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1675107336; bh=+x4U1ZGoO6PY6ygplAfz+5R9wtZLDJBNLZGOD1KKU/0=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
-         MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To;
-        b=dWRBRZNXXlZqHR/qLhNy8A5yK5atfj1KL8NH/E6OKXqKwnMi1Umz78BMc8n7uhaze
-         4Lm3KFVd49LuTJ8y/DLZgk8H2eh8H/VHCmmEfgaG12KSrZCSYZkZj4q26caunKNG3z
-         K4k/brYIPuWu2OGxvJsyha/aPVJwoQaqZBSOM77U=
-Received: by b-3.in.mailobj.net [192.168.90.13] with ESMTP
+        t=1675109502; bh=nC23UKSb0CmGocYhYebIyi10v6NzVHfWuPVuA9RD+5I=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=QuTK57b7o/69VDAZrW7lKs8+nJE7zG+fk6wAtsjgtMF6fUalsrWIgVOzYuoLFMfwv
+         adxJ9jUqf7Y/M8OXiNG3PGli/FN2BhrKTYQHYoQ2YUTBPmkCxDZeOODGCNCEmPn8eJ
+         zBrROeaQDSQD3tMrIsraAOV51Tx0APGRqjBITCFw=
+Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
         via ip-206.mailobj.net [213.182.55.206]
-        Mon, 30 Jan 2023 20:35:36 +0100 (CET)
-X-EA-Auth: /NVXSvT9TTEUYaQzpm9xBGzKBT5tQZmMocGHGydt1b0+IxF5L2UjMcJPR3VYisyy34/99q4B3gJQdsq8EfCMloh95of2TLeD
-Date:   Tue, 31 Jan 2023 01:05:33 +0530
+        Mon, 30 Jan 2023 21:11:42 +0100 (CET)
+X-EA-Auth: 9BdPFPNc5sSrJyZcSmB10vMudrlezrc6mxTOerZXdgYNx8zZQVr5xiB7fuksed7xAGNutcqN2W47ExxVo319+oQkO1t/HNNZ
+Date:   Tue, 31 Jan 2023 01:41:38 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     ALOK TIWARI <alok.a.tiwari@oracle.com>
-Cc:     Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
+To:     Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Saurabh Singh Sengar <ssengar@microsoft.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>,
         Deepak R Varma <drv@mailo.com>
-Subject: Re: [PATCH] scsi: snic: Use sysfs_emit in show function callback
-Message-ID: <Y9gcBe/Qmp6Vuz/3@ubun2204.myguest.virtualbox.org>
-References: <Y9fvsSJrflcIHm7e@ubun2204.myguest.virtualbox.org>
- <4bd7788a-bf6f-40c7-4439-2a300045c5e3@oracle.com>
+Subject: [PATCH] scsi: fcoe: Use sysfs_emit in show function callback
+Message-ID: <Y9gkeqfw/v6/UGxA@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4bd7788a-bf6f-40c7-4439-2a300045c5e3@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 31, 2023 at 12:51:40AM +0530, ALOK TIWARI wrote:
-> code changes look good.
-> 
-> commit message can be more simpler like  "show() should only use
-> sysfs_emit() or sysfs_emit_at() when formatting the
-> value to be returned to user space."
-> 
-> and in place of kobject attributes , device attribute is more relevant here.
+According to Documentation/filesystems/sysfs.rst, show() callback
+function should only use sysfs_emit() or sysfs_emit_at() instead
+of sprint() family functions when formatting the device attribute
+values to be returned to user space.
+Issue identified using the device_attr_show.cocci Coccinelle script.
 
-Hi Alok,
-Thank you for the feedback. Your commends make perfect sense. Shall I resend a
-v2 with the simplified language?
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+ drivers/scsi/fcoe/fcoe_sysfs.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Regards,
-Deepak.
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 6260aa5ea6af..9c50971c4bba 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -250,7 +250,7 @@ static ssize_t show_fcf_state(struct device *dev,
+ 	name = get_fcoe_fcf_state_name(fcf->state);
+ 	if (!name)
+ 		return -EINVAL;
+-	return snprintf(buf, FCOE_FCF_STATE_MAX_NAMELEN, "%s\n", name);
++	return sysfs_emit(buf, "%s\n", name);
+ }
+ static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
+ 
+@@ -265,8 +265,7 @@ static ssize_t show_ctlr_mode(struct device *dev,
+ 	name = get_fcoe_ctlr_mode_name(ctlr->mode);
+ 	if (!name)
+ 		return -EINVAL;
+-	return snprintf(buf, FCOE_MAX_MODENAME_LEN,
+-			"%s\n", name);
++	return sysfs_emit(buf, "%s\n", name);
+ }
+ 
+ static ssize_t store_ctlr_mode(struct device *dev,
+@@ -373,8 +372,7 @@ static ssize_t show_ctlr_enabled_state(struct device *dev,
+ 	name = get_fcoe_ctlr_enabled_state_name(ctlr->enabled);
+ 	if (!name)
+ 		return -EINVAL;
+-	return snprintf(buf, FCOE_CTLR_ENABLED_MAX_NAMELEN,
+-			"%s\n", name);
++	return sysfs_emit(buf, "%s\n", name);
+ }
+ 
+ static FCOE_DEVICE_ATTR(ctlr, enabled, S_IRUGO | S_IWUSR,
+@@ -412,7 +410,7 @@ static ssize_t show_ctlr_fip_resp(struct device *dev,
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
+ 	struct fcoe_ctlr *fip = fcoe_ctlr_device_priv(ctlr);
+ 
+-	return sprintf(buf, "%d\n", fip->fip_resp ? 1 : 0);
++	return sysfs_emit(buf, "%d\n", fip->fip_resp ? 1 : 0);
+ }
+ 
+ static FCOE_DEVICE_ATTR(ctlr, fip_vlan_responder, S_IRUGO | S_IWUSR,
+@@ -455,7 +453,7 @@ static ssize_t show_ctlr_r_a_tov(struct device *dev,
+ 	struct fcoe_ctlr_device *ctlr_dev = dev_to_ctlr(dev);
+ 	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
+ 
+-	return sprintf(buf, "%d\n", ctlr->lp->r_a_tov);
++	return sysfs_emit(buf, "%d\n", ctlr->lp->r_a_tov);
+ }
+ 
+ static FCOE_DEVICE_ATTR(ctlr, r_a_tov, S_IRUGO | S_IWUSR,
+@@ -482,7 +480,7 @@ static ssize_t show_ctlr_e_d_tov(struct device *dev,
+ 	struct fcoe_ctlr_device *ctlr_dev = dev_to_ctlr(dev);
+ 	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
+ 
+-	return sprintf(buf, "%d\n", ctlr->lp->e_d_tov);
++	return sysfs_emit(buf, "%d\n", ctlr->lp->e_d_tov);
+ }
+ 
+ static FCOE_DEVICE_ATTR(ctlr, e_d_tov, S_IRUGO | S_IWUSR,
+-- 
+2.34.1
 
-> 
-> Thanks,
-> Alok
-> 
-> On 1/30/2023 9:56 PM, Deepak R Varma wrote:
-> > According to Documentation/filesystems/sysfs.rst, the show() callback
-> > function of kobject attributes should strictly use sysfs_emit() instead
-> > of sprintf() family functions.
-> > Issue identified using the device_attr_show.cocci Coccinelle script.
-> > 
-> > Signed-off-by: Deepak R Varma <drv@mailo.com>
-> > ---
-> >   drivers/scsi/snic/snic_attrs.c | 10 ++++------
-> >   1 file changed, 4 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/snic/snic_attrs.c b/drivers/scsi/snic/snic_attrs.c
-> > index 3ddbdbc3ded1..56c46ea06e60 100644
-> > --- a/drivers/scsi/snic/snic_attrs.c
-> > +++ b/drivers/scsi/snic/snic_attrs.c
-> > @@ -13,7 +13,7 @@ snic_show_sym_name(struct device *dev,
-> >   {
-> >   	struct snic *snic = shost_priv(class_to_shost(dev));
-> > -	return snprintf(buf, PAGE_SIZE, "%s\n", snic->name);
-> > +	return sysfs_emit(buf, "%s\n", snic->name);
-> >   }
-> >   static ssize_t
-> > @@ -23,8 +23,7 @@ snic_show_state(struct device *dev,
-> >   {
-> >   	struct snic *snic = shost_priv(class_to_shost(dev));
-> > -	return snprintf(buf, PAGE_SIZE, "%s\n",
-> > -			snic_state_str[snic_get_state(snic)]);
-> > +	return sysfs_emit(buf, "%s\n", snic_state_str[snic_get_state(snic)]);
-> >   }
-> >   static ssize_t
-> > @@ -32,7 +31,7 @@ snic_show_drv_version(struct device *dev,
-> >   		      struct device_attribute *attr,
-> >   		      char *buf)
-> >   {
-> > -	return snprintf(buf, PAGE_SIZE, "%s\n", SNIC_DRV_VERSION);
-> > +	return sysfs_emit(buf, "%s\n", SNIC_DRV_VERSION);
-> >   }
-> >   static ssize_t
-> > @@ -45,8 +44,7 @@ snic_show_link_state(struct device *dev,
-> >   	if (snic->config.xpt_type == SNIC_DAS)
-> >   		snic->link_status = svnic_dev_link_status(snic->vdev);
-> > -	return snprintf(buf, PAGE_SIZE, "%s\n",
-> > -			(snic->link_status) ? "Link Up" : "Link Down");
-> > +	return sysfs_emit(buf, "%s\n", (snic->link_status) ? "Link Up" : "Link Down");
-> >   }
-> >   static DEVICE_ATTR(snic_sym_name, S_IRUGO, snic_show_sym_name, NULL);
 
 
