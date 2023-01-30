@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4963DC6379F
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 21:27:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D7CC636CD
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 21:27:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231130AbjA3V1Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 16:27:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47500 "EHLO
+        id S231134AbjA3V1R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 16:27:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230513AbjA3V1N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 16:27:13 -0500
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F88636FD8;
-        Mon, 30 Jan 2023 13:27:13 -0800 (PST)
-Received: by mail-pl1-f174.google.com with SMTP id m13so1146938plx.13;
-        Mon, 30 Jan 2023 13:27:13 -0800 (PST)
+        with ESMTP id S230510AbjA3V1Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 16:27:16 -0500
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 378DB47434;
+        Mon, 30 Jan 2023 13:27:15 -0800 (PST)
+Received: by mail-pl1-f172.google.com with SMTP id p24so13022748plw.11;
+        Mon, 30 Jan 2023 13:27:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rtucAFCDyuLZyrm6z27M/7hQlUm2l9x/qBJJhm+fNmU=;
-        b=nbLprZAxrbq+6CTEVxAAhbkwXujmC2CeZ62qcKuIgDaw7yQ6C5w9n4A55yVRXOYFFQ
-         Yz6z4F0/E3yQEtyU1tqdVTyPdNU6FStpjGUjTJovBBIxUwnGkSpyrM/ar97SumsBTj6H
-         n1i54/6ZDe6S/XDXZpncWXAOmlHLh1rrxGxIxEQ0b00L1+9/Hy+ZWc2+Oc8ivAoV37vc
-         j0IwoAbWE9y4+lmkQtgPLLuWkTuYD2JbtMssNclmxkwVXlU+v/RhECPa58pH48OgDcu+
-         ESmbiMWAIAGaGBTsl7E2SukJv0uzWccQx131j5R4Cx8MXe00W7e/b9B1Ri9A4DLZsN5t
-         pSHQ==
-X-Gm-Message-State: AFqh2kprDdFO1ClLM3A/yU8typMYTvKnyecDFrA6XOSJVfAgsENYQd2M
-        HEhOKcwhyfauVnmwSbPXIho=
-X-Google-Smtp-Source: AMrXdXtlZP1XxVoQCk5h0aRRePW2d8tgHgY7Xxu8XR1dpG1TYt/mXu08DHFujMUaY5mJx99pADsEag==
-X-Received: by 2002:a17:903:248f:b0:189:6ab3:9e64 with SMTP id p15-20020a170903248f00b001896ab39e64mr47521682plw.34.1675114032726;
-        Mon, 30 Jan 2023 13:27:12 -0800 (PST)
+        bh=SldGN1dTvTGuXHNWg2lfvw9/Jk1AJrvi4a6o1b8Gk+4=;
+        b=FaQKMH6v5RKuz/jr+Hq5OGGHmH2hzu//7knzMSejFc5YOhCQR+1nh7qws6CiQFQxPM
+         8zxxyvmqtqusg5+8VJJ4dmol1ioYYXgBqj/s5QMJ1WcUq5hD7n7VZ0o8ptvzzNTJQ8OA
+         a5DP6zRyn1x2uMkrEkLS2+T+ErPy5nRS3IBm0H9Arps5bkNggnbJgJYK+068u0vzyOp/
+         l0OiiW80KnWlNnMckQAYbFMv8LVXsetW0TUJQ9UxlF0P/ioq26lID7mQSbuXMzgNiTOk
+         ReIIGaYZ6YnswliXm7luQSZkKSYze4zSKHhwFiDZpeAUP7gDERw/aHezz44eJhe7IQc2
+         ZvEw==
+X-Gm-Message-State: AO0yUKV8Q/IfL4Ot29YdTMj9zdBJXdwatBU451P++Wdg7ad06QJc5ZI+
+        mNu2hrkcHrM7zRhCNduYxuY=
+X-Google-Smtp-Source: AK7set/xOe7eZz8L05C1PTkr4NN1MCrz5XuzkPY+weBmhgTZmsWgWvpzdZ0//FREt41xOwYf5wMjfQ==
+X-Received: by 2002:a17:902:c7cd:b0:196:5852:4092 with SMTP id r13-20020a170902c7cd00b0019658524092mr6758166pla.56.1675114034647;
+        Mon, 30 Jan 2023 13:27:14 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5016:3bcd:59fe:334b])
-        by smtp.gmail.com with ESMTPSA id u18-20020a170902e5d200b00196087a3d7csm7425613plf.77.2023.01.30.13.27.11
+        by smtp.gmail.com with ESMTPSA id u18-20020a170902e5d200b00196087a3d7csm7425613plf.77.2023.01.30.13.27.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Jan 2023 13:27:12 -0800 (PST)
+        Mon, 30 Jan 2023 13:27:13 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -45,10 +45,11 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Adrian Hunter <adrian.hunter@intel.com>,
         Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Keith Busch <kbusch@kernel.org>
-Subject: [PATCH v4 5/7] block: Add support for small segments in blk_rq_map_user_iov()
-Date:   Mon, 30 Jan 2023 13:26:54 -0800
-Message-Id: <20230130212656.876311-6-bvanassche@acm.org>
+        Doug Gilbert <dgilbert@interlog.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v4 6/7] scsi_debug: Support configuring the maximum segment size
+Date:   Mon, 30 Jan 2023 13:26:55 -0800
+Message-Id: <20230130212656.876311-7-bvanassche@acm.org>
 X-Mailer: git-send-email 2.39.1.456.gfc5497dd1b-goog
 In-Reply-To: <20230130212656.876311-1-bvanassche@acm.org>
 References: <20230130212656.876311-1-bvanassche@acm.org>
@@ -58,70 +59,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Before changing the return value of bio_add_hw_page() into a value in
-the range [0, len], make blk_rq_map_user_iov() fall back to copying data
-if mapping the data is not possible due to the segment limit.
+Add a kernel module parameter for configuring the maximum segment size.
+This patch enables testing SCSI support for segments smaller than the
+page size.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Keith Busch <kbusch@kernel.org>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-map.c | 27 ++++++++++++++++++++++-----
- 1 file changed, 22 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_debug.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index eb059d3a1be2..b1dad4690472 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -307,17 +307,26 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
- 		else {
- 			for (j = 0; j < npages; j++) {
- 				struct page *page = pages[j];
--				unsigned int n = PAGE_SIZE - offs;
-+				unsigned int n = PAGE_SIZE - offs, added;
- 				bool same_page = false;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 8553277effb3..603c9faac56f 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -752,6 +752,7 @@ static int sdebug_host_max_queue;	/* per host */
+ static int sdebug_lowest_aligned = DEF_LOWEST_ALIGNED;
+ static int sdebug_max_luns = DEF_MAX_LUNS;
+ static int sdebug_max_queue = SDEBUG_CANQUEUE;	/* per submit queue */
++static unsigned int sdebug_max_segment_size = BLK_MAX_SEGMENT_SIZE;
+ static unsigned int sdebug_medium_error_start = OPT_MEDIUM_ERR_ADDR;
+ static int sdebug_medium_error_count = OPT_MEDIUM_ERR_NUM;
+ static atomic_t retired_max_queue;	/* if > 0 then was prior max_queue */
+@@ -5841,6 +5842,7 @@ module_param_named(lowest_aligned, sdebug_lowest_aligned, int, S_IRUGO);
+ module_param_named(lun_format, sdebug_lun_am_i, int, S_IRUGO | S_IWUSR);
+ module_param_named(max_luns, sdebug_max_luns, int, S_IRUGO | S_IWUSR);
+ module_param_named(max_queue, sdebug_max_queue, int, S_IRUGO | S_IWUSR);
++module_param_named(max_segment_size, sdebug_max_segment_size, uint, S_IRUGO);
+ module_param_named(medium_error_count, sdebug_medium_error_count, int,
+ 		   S_IRUGO | S_IWUSR);
+ module_param_named(medium_error_start, sdebug_medium_error_start, int,
+@@ -5917,6 +5919,7 @@ MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
+ MODULE_PARM_DESC(lun_format, "LUN format: 0->peripheral (def); 1 --> flat address method");
+ MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=1)");
+ MODULE_PARM_DESC(max_queue, "max number of queued commands (1 to max(def))");
++MODULE_PARM_DESC(max_segment_size, "max bytes in a single segment");
+ MODULE_PARM_DESC(medium_error_count, "count of sectors to return follow on MEDIUM error");
+ MODULE_PARM_DESC(medium_error_start, "starting sector number to return MEDIUM error");
+ MODULE_PARM_DESC(ndelay, "response delay in nanoseconds (def=0 -> ignore)");
+@@ -7816,6 +7819,7 @@ static int sdebug_driver_probe(struct device *dev)
  
- 				if (n > bytes)
- 					n = bytes;
+ 	sdebug_driver_template.can_queue = sdebug_max_queue;
+ 	sdebug_driver_template.cmd_per_lun = sdebug_max_queue;
++	sdebug_driver_template.max_segment_size = sdebug_max_segment_size;
+ 	if (!sdebug_clustering)
+ 		sdebug_driver_template.dma_boundary = PAGE_SIZE - 1;
  
--				if (!bio_add_hw_page(rq->q, bio, page, n, offs,
--						     max_sectors, &same_page)) {
-+				added = bio_add_hw_page(rq->q, bio, page, n,
-+						offs, max_sectors, &same_page);
-+				if (added == 0) {
- 					if (same_page)
- 						put_page(page);
- 					break;
-+				} else if (added != n) {
-+					/*
-+					 * The segment size is smaller than the
-+					 * page size and an iov exceeds the
-+					 * segment size. Give up.
-+					 */
-+					ret = -EREMOTEIO;
-+					goto out_unmap;
- 				}
- 
- 				bytes -= n;
-@@ -657,10 +666,18 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
- 
- 	i = *iter;
- 	do {
--		if (copy)
-+		if (copy) {
- 			ret = bio_copy_user_iov(rq, map_data, &i, gfp_mask);
--		else
-+		} else {
- 			ret = bio_map_user_iov(rq, &i, gfp_mask);
-+			/*
-+			 * Fall back to copying the data if bio_map_user_iov()
-+			 * returns -EREMOTEIO.
-+			 */
-+			if (ret == -EREMOTEIO)
-+				ret = bio_copy_user_iov(rq, map_data, &i,
-+							gfp_mask);
-+		}
- 		if (ret)
- 			goto unmap_rq;
- 		if (!bio)
