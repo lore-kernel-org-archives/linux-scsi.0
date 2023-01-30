@@ -2,105 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68EE3C05027
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 03:07:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7255FC54EED
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 03:30:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235566AbjA3DHU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Jan 2023 22:07:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55270 "EHLO
+        id S232549AbjA3DaC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Jan 2023 22:30:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235239AbjA3DHT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 22:07:19 -0500
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A997F20D0A;
-        Sun, 29 Jan 2023 19:07:13 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4P4tQ35YVQz4f3lK6;
-        Mon, 30 Jan 2023 11:07:07 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgCnUyFcNNdjqrGyCQ--.298S3;
-        Mon, 30 Jan 2023 11:07:09 +0800 (CST)
-Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create block
- device
-To:     jejb@linux.ibm.com, Zhong Jinghua <zhongjinghua@huawei.com>,
+        with ESMTP id S229476AbjA3DaB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 22:30:01 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6EB13DC5;
+        Sun, 29 Jan 2023 19:30:00 -0800 (PST)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30U2kP6b028113;
+        Mon, 30 Jan 2023 03:29:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=TNzYEuPfJYyQMycQDqLpJOdz22M2dSjrgLy3Ps16vnY=;
+ b=iuBKxOGXWpoo5UgtmpqK5x8smqVyJvVUe2H50FjYtd1evzXSrHAce4A9O8PXJRH1HUDe
+ K1MwxdcURdLzjPM2shHrGanGZS9yd9AdJLP+OARQLbAgt5/Hxz/qAW3BAcVAZR5zvEjQ
+ HR80PVz55Enh4o8/fs763xassQjMB/u1Ez3Yz4t0/yoOg5tGKmmhW2p0RQ0+KtHu1eL5
+ zLNsAEjJ6NSFPGOHNaCMyy3VLAl7FmJ5iB64PtVk/lt39JUC4ThD5fLR/Fih+2VL6DG1
+ CvkECRx47nM+rYpwlTflU23H/bBdwTdt4JODmQWw+SjDqr+XCuxxJO3RtRak1FlS/ULt kQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ndds8bwxx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Jan 2023 03:29:38 +0000
+Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30U3RHTt023562;
+        Mon, 30 Jan 2023 03:29:38 GMT
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ndds8bwxg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Jan 2023 03:29:38 +0000
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 30TNKHFR028518;
+        Mon, 30 Jan 2023 03:29:36 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([9.208.130.102])
+        by ppma04wdc.us.ibm.com (PPS) with ESMTPS id 3ncvuy8pe7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Jan 2023 03:29:36 +0000
+Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
+        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 30U3TZah9962136
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 Jan 2023 03:29:36 GMT
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 81E926E050;
+        Mon, 30 Jan 2023 03:31:40 +0000 (GMT)
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 701F66E04E;
+        Mon, 30 Jan 2023 03:31:38 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.211.110.248])
+        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Mon, 30 Jan 2023 03:31:38 +0000 (GMT)
+Message-ID: <7c5c38f128910f89f20533b7fd51453a32ff4f5c.camel@linux.ibm.com>
+Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create
+ block device
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Yu Kuai <yukuai1@huaweicloud.com>,
+        Zhong Jinghua <zhongjinghua@huawei.com>,
         gregkh@linuxfoundation.org, martin.petersen@oracle.com,
         hare@suse.de, bvanassche@acm.org, emilne@redhat.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Date:   Sun, 29 Jan 2023 22:29:02 -0500
+In-Reply-To: <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
 References: <20230128094146.205858-1-zhongjinghua@huawei.com>
- <20230128094146.205858-3-zhongjinghua@huawei.com>
- <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
-Date:   Mon, 30 Jan 2023 11:07:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+         <20230128094146.205858-3-zhongjinghua@huawei.com>
+         <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
+         <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-In-Reply-To: <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCnUyFcNNdjqrGyCQ--.298S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zw47AFW5ur1fCr1UAF1kXwb_yoW8JFWDpF
-        WfK390kr48G3Z8A3Z5Z3yrA34Fv390yrW5Jr1rX34xGry5JF93trW5X3WY9Fyjgr9rK3WY
-        gF4UK3yDKw1DCaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvFb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
-        AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
-        j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
-        kEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI
-        1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-        8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
-        ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-        0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
-        xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
-        xUrR6zUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: qS03s2VgW1zkaU7owePzLXQBrOTW8Xkb
+X-Proofpoint-GUID: _cbRM7LKurVfOY4Js-r7ZJKGgMhA_PxR
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-01-30_01,2023-01-27_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
+ lowpriorityscore=0 impostorscore=0 bulkscore=0 mlxlogscore=943 spamscore=0
+ adultscore=0 malwarescore=0 clxscore=1011 priorityscore=1501 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2301300027
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, 2023-01-30 at 11:07 +0800, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2023/01/30 1:30, James Bottomley 写道:
+> > On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
+> > > This error will cause a warning:
+> > > kobject_add_internal failed for block (error: -2 parent:
+> > > 1:0:0:1). In the lower version (such as 5.10), there is no
+> > > corresponding error handling, continuing to go down will trigger
+> > > a kernel panic, so cc stable.
+> > 
+> > Is this is important point and what you're saying is that this only
+> > panics on kernels before 5.10 or so because after that it's
+> > correctly failed by block device error handling so there's nothing
+> > to fix in later kernels?
+> > 
+> > In that case, isn't the correct fix to look at backporting the
+> > block device error handling:
+> 
+> This is the last commit that support error handling, and there are
+> many relied patches, and there are lots of refactor in block layer.
+> It's not a good idea to backport error handling to lower version.
+> 
+> Althrough error handling can prevent kernel crash in this case, I
+> still think it make sense to make sure kobject is deleted in order,
+> parent should not be deleted before child.
 
-在 2023/01/30 1:30, James Bottomley 写道:
-> On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
->> This error will cause a warning:
->> kobject_add_internal failed for block (error: -2 parent: 1:0:0:1).
->> In the lower version (such as 5.10), there is no corresponding error
->> handling, continuing
->> to go down will trigger a kernel panic, so cc stable.
-> 
-> Is this is important point and what you're saying is that this only
-> panics on kernels before 5.10 or so because after that it's correctly
-> failed by block device error handling so there's nothing to fix in
-> later kernels?
-> 
-> In that case, isn't the correct fix to look at backporting the block
-> device error handling:
+Well, look, you've created a very artificial situation where a create
+closely followed by a delete of the underlying sdev races with the
+create of the block gendisk devices of sd that bind asynchronously to
+the created sdev.  The asynchronous nature of the bind gives the
+elongated race window so the only real fix is some sort of check that
+the sdev is still viable by the time the bind occurs ... probably in
+sd_probe(), say a scsi_device_get of sdp at the top which would ensure
+viability of the sdev for the entire bind or fail the probe if the sdev
+can't be got.
 
-This is the last commit that support error handling, and there are many
-relied patches, and there are lots of refactor in block layer. It's not
-a good idea to backport error handling to lower version.
+James
 
-Althrough error handling can prevent kernel crash in this case, I still
-think it make sense to make sure kobject is deleted in order, parent
-should not be deleted before child.
-
-Thanks,
-Kuai
-> 
-> commit 83cbce9574462c6b4eed6797bdaf18fae6859ab3
-> Author: Luis Chamberlain <mcgrof@kernel.org>
-> Date:   Wed Aug 18 16:45:40 2021 +0200
-> 
->      block: add error handling for device_add_disk / add_disk
-> 
-> ?
-> 
-> James
-> 
-> .
-> 
 
