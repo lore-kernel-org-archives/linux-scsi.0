@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA89CC61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 15:59:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE34C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 16:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237716AbjA3P7H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 10:59:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37846 "EHLO
+        id S236754AbjA3QA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 11:00:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236973AbjA3P7E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 10:59:04 -0500
+        with ESMTP id S236065AbjA3QAZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 11:00:25 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94E2013507
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 07:58:16 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D4B2166F2
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 07:59:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675094295;
+        s=mimecast20190719; t=1675094367;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=qLfIaYqKY5h8p0flnUU+ZUSKaufFe4Nci0Ya2wtNYRE=;
-        b=VGqNH0w0RUjLS64/TnlJlaO9qinsUQ3kvIH9SLSMUVGxS8dMCfu6I458cXVC8MI73s9Dfg
-        fayKKMzb87xhOf0jR18aYYJBIwULINrHBLWPvCphOtmrPrqN1lsJOzskWx7SUSeTfo6Jdo
-        O97806Tg8tm0g3Vcxq4twrR6gjGEEis=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=fl/jnHLwbhnLse2jT7+4Lzwh9labRex05wjKl7Xvb60=;
+        b=Knjpa0Aebvvg8qygqSB9aSvJ/3BE1U4dQC7An1ensE0mB2ydVXLL0yjvFndLjxa9tS/x8r
+        Z/C34hJs5OJtLx8gd+cDl5yXzeUEc9cJfhk+oS6MWCNRl0DS3PFjQAyDMQOmew/x2fYyDK
+        qiuGY1WoIYefVxPze8DgzmTc0hLJ8AE=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-329-LQbhBSgfPCWz-AZqI1IBMQ-1; Mon, 30 Jan 2023 10:58:12 -0500
-X-MC-Unique: LQbhBSgfPCWz-AZqI1IBMQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+ us-mta-441-0OMBsTb3NwqemUKDMrnO3w-1; Mon, 30 Jan 2023 10:59:24 -0500
+X-MC-Unique: 0OMBsTb3NwqemUKDMrnO3w-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 64B4B3848C21;
-        Mon, 30 Jan 2023 15:58:11 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 2E1F5858F09;
+        Mon, 30 Jan 2023 15:59:22 +0000 (UTC)
 Received: from warthog.procyon.org.uk (unknown [10.33.36.97])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 29BD5492B05;
-        Mon, 30 Jan 2023 15:58:09 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 310581121314;
+        Mon, 30 Jan 2023 15:59:20 +0000 (UTC)
 Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
         Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
         Kingdom.
         Registered in England and Wales under Company Registration No. 3798903
 From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <20230130092157.1759539-21-hch@lst.de>
-References: <20230130092157.1759539-21-hch@lst.de> <20230130092157.1759539-1-hch@lst.de>
+In-Reply-To: <20230130092157.1759539-12-hch@lst.de>
+References: <20230130092157.1759539-12-hch@lst.de> <20230130092157.1759539-1-hch@lst.de>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     dhowells@redhat.com
 Cc:     Marc Dionne <marc.dionne@auristor.com>,
@@ -55,20 +55,20 @@ Cc:     Marc Dionne <marc.dionne@auristor.com>,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         devel@lists.orangefs.org, io-uring@vger.kernel.org,
         linux-mm@kvack.org
-Subject: Re: [PATCH 20/23] rxrpc: use bvec_set_page to initialize a bvec
+Subject: Re: [PATCH 11/23] afs: use bvec_set_folio to initialize a bvec
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <3499862.1675094288.1@warthog.procyon.org.uk>
-Date:   Mon, 30 Jan 2023 15:58:08 +0000
-Message-ID: <3499863.1675094288@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-ID: <3499903.1675094359.1@warthog.procyon.org.uk>
+Date:   Mon, 30 Jan 2023 15:59:19 +0000
+Message-ID: <3499904.1675094359@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch@lst.de> wrote:
 
-> Use the bvec_set_page helper to initialize a bvec.
+> Use the bvec_set_folio helper to initialize a bvec.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
