@@ -2,91 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0816C636D3
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 16:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4330FC54EED
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 16:26:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236233AbjA3QET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 11:04:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42838 "EHLO
+        id S236790AbjA3Q0r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 11:26:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230365AbjA3QES (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 11:04:18 -0500
-X-Greylist: delayed 470 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 30 Jan 2023 08:04:16 PST
-Received: from mx.cjr.nz (mx.cjr.nz [51.158.111.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 716E311156;
-        Mon, 30 Jan 2023 08:04:16 -0800 (PST)
-Received: from authenticated-user (mx.cjr.nz [51.158.111.142])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pc)
-        by mx.cjr.nz (Postfix) with ESMTPSA id AF6077FC21;
-        Mon, 30 Jan 2023 15:56:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjr.nz; s=dkim;
-        t=1675094184;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9mWu6waa/eExAxYRUAnoTwItAGCpuazH4rLKqgG96C8=;
-        b=IUWRXB4ZfZFvP08TAcu46IaSIPcqcOXTl56O8WHSQOaAhhkIQ9u88zYSEpIN2pbiC4jpac
-        jwGLtOnkbS+BV6uGbYvUTH2ghLzufe3qfEFRbAHRz9p2wIlhENt9DpUj0oE60tlK+yywCT
-        paOb0uNIIGHUk9S0XG3mYKsUFRPaYkoUgAjTvyhLEVU5Z9Cvmu7NO+rjrH2opN+EgEjgFa
-        fnzP4VIRAyAwr2ru+CZp9aX3dvfrMSXIvEWmaEh/hC29vO//ntKkMtDT6T0I20V2zRFjSn
-        4AWbxuRM00n7wzPS9dmDdPu7fsBiZbJIvRcLAZa39v75gFyA93kfj3o+j2QjPg==
-From:   Paulo Alcantara <pc@cjr.nz>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Ilya Dryomov <idryomov@gmail.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
+        with ESMTP id S231538AbjA3Q0q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 11:26:46 -0500
+Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7FDD3A856;
+        Mon, 30 Jan 2023 08:26:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1675095991; bh=WOQ4vuk34rA8b08A56gxt9geZ1TucBGZIWvT4ETxZIg=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=IbGW6e4yoU4N8jnk+gb10lFBklYd+2W/It+3J/QhfgIMobtaPdJc6y9BO2othIbxg
+         JRDe8wYdbV3d7ohGr8KCQDZgriuZ4nx9P7TH0u/NVWaV/pYeK/bYfTmmaoaNHwojuw
+         aRRvFB7kAclMZWKjGGhdhU1H8heZfzG4MjsBJCAc=
+Received: by b-6.in.mailobj.net [192.168.90.16] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Mon, 30 Jan 2023 17:26:31 +0100 (CET)
+X-EA-Auth: Iop45wzrRbdCV8RWDLbj/0flWLCA+fQ84U0oUYoywr0m1w/jsYoUdCyRQTjntI8xuq8QxZvlDC+KbaNmp/Tv59KAlvf6dJXs
+Date:   Mon, 30 Jan 2023 21:56:25 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Xiubo Li <xiubli@redhat.com>, Steve French <sfrench@samba.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        devel@lists.orangefs.org, io-uring@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 13/23] cifs: use bvec_set_page to initialize bvecs
-In-Reply-To: <20230130092157.1759539-14-hch@lst.de>
-References: <20230130092157.1759539-1-hch@lst.de>
- <20230130092157.1759539-14-hch@lst.de>
-Date:   Mon, 30 Jan 2023 12:56:16 -0300
-Message-ID: <87357shv8f.fsf@cjr.nz>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
+        Deepak R Varma <drv@mailo.com>
+Subject: [PATCH] scsi: snic: Use sysfs_emit in show function callback
+Message-ID: <Y9fvsSJrflcIHm7e@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> writes:
+According to Documentation/filesystems/sysfs.rst, the show() callback
+function of kobject attributes should strictly use sysfs_emit() instead
+of sprintf() family functions.
+Issue identified using the device_attr_show.cocci Coccinelle script.
 
-> Use the bvec_set_page helper to initialize bvecs.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/cifs/connect.c |  5 +++--
->  fs/cifs/fscache.c | 16 ++++++----------
->  fs/cifs/misc.c    |  5 ++---
->  fs/cifs/smb2ops.c |  6 +++---
->  4 files changed, 14 insertions(+), 18 deletions(-)
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+ drivers/scsi/snic/snic_attrs.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Acked-by: Paulo Alcantara (SUSE) <pc@cjr.nz>
+diff --git a/drivers/scsi/snic/snic_attrs.c b/drivers/scsi/snic/snic_attrs.c
+index 3ddbdbc3ded1..56c46ea06e60 100644
+--- a/drivers/scsi/snic/snic_attrs.c
++++ b/drivers/scsi/snic/snic_attrs.c
+@@ -13,7 +13,7 @@ snic_show_sym_name(struct device *dev,
+ {
+ 	struct snic *snic = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", snic->name);
++	return sysfs_emit(buf, "%s\n", snic->name);
+ }
+ 
+ static ssize_t
+@@ -23,8 +23,7 @@ snic_show_state(struct device *dev,
+ {
+ 	struct snic *snic = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
+-			snic_state_str[snic_get_state(snic)]);
++	return sysfs_emit(buf, "%s\n", snic_state_str[snic_get_state(snic)]);
+ }
+ 
+ static ssize_t
+@@ -32,7 +31,7 @@ snic_show_drv_version(struct device *dev,
+ 		      struct device_attribute *attr,
+ 		      char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", SNIC_DRV_VERSION);
++	return sysfs_emit(buf, "%s\n", SNIC_DRV_VERSION);
+ }
+ 
+ static ssize_t
+@@ -45,8 +44,7 @@ snic_show_link_state(struct device *dev,
+ 	if (snic->config.xpt_type == SNIC_DAS)
+ 		snic->link_status = svnic_dev_link_status(snic->vdev);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
+-			(snic->link_status) ? "Link Up" : "Link Down");
++	return sysfs_emit(buf, "%s\n", (snic->link_status) ? "Link Up" : "Link Down");
+ }
+ 
+ static DEVICE_ATTR(snic_sym_name, S_IRUGO, snic_show_sym_name, NULL);
+-- 
+2.34.1
+
+
+
