@@ -2,97 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0BD3C54EAA
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 07:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49BFCC54EED
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 07:58:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229815AbjA3H44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 02:56:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55986 "EHLO
+        id S229815AbjA3H65 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 02:58:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229653AbjA3H4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 02:56:55 -0500
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17853279AA;
-        Sun, 29 Jan 2023 23:56:54 -0800 (PST)
-Received: by mail-lj1-x233.google.com with SMTP id o12so11710042ljp.11;
-        Sun, 29 Jan 2023 23:56:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Pxjejnf+qHKVQ1YQcmwOkN18hl/Nwiz0oq4H7oGqOVc=;
-        b=ifbLiIwx1QkjeNx4VZUd7c/9Ix9+6W76OsYE4tFo9MEGqrgzWgmdmxMyISn2y9Bq2z
-         Av6mgrwEczL5nbgHCmYTbSYzU65n8GHfV/RW83oC9pglKDw1ogpJWqeJwbtFDRwop+hn
-         Blvz6ae3YaON6Bx0/voPe/5uMDX3p/mgoPZWVSJ6LJI8m/Teen9tZuuhu+6ZGe8x3nmv
-         UAgUMuxxeFwld8omz4boagZ7UQbVYw7itSOYlbXs4qPzY/R59wenWoj29KCakXVwscM3
-         Bv03aRCw9CTpycfuRvNdYKmA73xN2mTiox1Pj7Fjb2fQzP2bHzIPogtfX/kCAeL1cd8R
-         htCg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Pxjejnf+qHKVQ1YQcmwOkN18hl/Nwiz0oq4H7oGqOVc=;
-        b=bNWBtPY6aaBwYT+6dwJvsLxKpKcaODAK0AaHR0eqNIAooKyI3F54tJpcSG9RC7ZvGv
-         0NEzhTQffORLK6y67d0VQ4aVA88eihJ1wSArGoVLLcmGh5M5v5lMroOSZVIkGs2vfIzv
-         8W/g8xIvZjhI1ul7sbuJJZNVxTtYFkWARRo7yI1kFaq5N5OlN7G4g0atJIPzCErEcaIU
-         pMpWtycZXsV1WIIS77V7K40sRv42J1P60XcbZjpgxWKc6kseZ3slwj0Jdyb7aHFNsgpw
-         H202yfVdLY3Zw0A4pQs72rPNGNqODNEsgSldfOoYt/dy8O3T3HjUzm3LX9ajIDmnYT8l
-         6DvQ==
-X-Gm-Message-State: AO0yUKVOzmR3fRZpOxENqEdU6h87fcd4fea2IxuBuksQVhTFiq2zeS0e
-        bKEtQ2fNW05Ay7SmiUXrECZlu2JE3xE=
-X-Google-Smtp-Source: AMrXdXt2UFDcrXI0Shm47v8sKGf2D+KdwABvPpv8QquopCYW43xOw2FHor6i1oOWHOyQocqVchI+tQ==
-X-Received: by 2002:a17:906:60d0:b0:877:612e:516e with SMTP id f16-20020a17090660d000b00877612e516emr145029435ejk.61.1675065401916;
-        Sun, 29 Jan 2023 23:56:41 -0800 (PST)
-Received: from felia.fritz.box ([2a02:810d:2a40:1104:893:4a0f:7898:3492])
-        by smtp.gmail.com with ESMTPSA id jo17-20020a170906f6d100b008785b914883sm6481176ejb.116.2023.01.29.23.56.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Jan 2023 23:56:41 -0800 (PST)
-From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Can Guo <quic_cang@quicinc.com>, linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH] scsi: ufs: qcom: include specific ops when GENERIC_MSI_IRQ is set
-Date:   Mon, 30 Jan 2023 08:56:15 +0100
-Message-Id: <20230130075615.17108-1-lukas.bulwahn@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S229653AbjA3H6y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 02:58:54 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D43D855A9
+        for <linux-scsi@vger.kernel.org>; Sun, 29 Jan 2023 23:58:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=RVuQpWnpOTxgRi4sC3VBZ65Raxq44SDP/V5avyhvi4Y=; b=3ulvi1lXb1ZP1wH3SyCGCtp2wD
+        OuSctVoVYVTRg6l0WNKINhnDXTVkbIAQOjbevDbmTna5Amua42/RHQ9KtPZn9o5UGfKBilzOhUqx5
+        EhKdtmVaWq0NdvS8JqYaCIMRIZO055fd4bpkToLiMjWcgw8alUViwb8kXEAjDUFn8HUNWV9k3HLEs
+        af8b3QFIKPcf/nDG3boDkISh7BswfAdtyboKZv4bNoD5FdSIaAA3VKMN20WEJd5H+kqB0LdeB5Luj
+        cCWlpXTdl8/C8kwN+4aA4ojfkRfKnKmnyquOAvT6v0XJITUIpA7V15vzRUht8s08jbOvXQ9gJ4jv8
+        kdaRS4fg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pMP3p-002bCE-Hh; Mon, 30 Jan 2023 07:58:41 +0000
+Date:   Sun, 29 Jan 2023 23:58:41 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        Martin Wilck <mwilck@suse.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Sachin Sant <sachinp@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>
+Subject: Re: [PATCH] scsi: core: Fix the scsi_device_put() might_sleep
+ annotation
+Message-ID: <Y9d4sfc9hCydhHwb@infradead.org>
+References: <20230125194311.249553-1-bvanassche@acm.org>
+ <167478903314.4070509.17553562843256554477.b4-ty@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <167478903314.4070509.17553562843256554477.b4-ty@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 13e7accb81d6 ("genirq: Get rid of GENERIC_MSI_IRQ_DOMAIN") removes
-the config GENERIC_MSI_IRQ_DOMAIN and replaces all references with
-GENERIC_MSI_IRQ.
+On Thu, Jan 26, 2023 at 10:22:12PM -0500, Martin K. Petersen wrote:
+> On Wed, 25 Jan 2023 11:43:11 -0800, Bart Van Assche wrote:
+> 
+> > Although most calls of scsi_device_put() happen from non-atomic context,
+> > alua_rtpg_queue() calls this function from atomic context if
+> > alua_rtpg_queue() itself is called from atomic context. alua_rtpg_queue()
+> > is always called from contexts where the caller must hold at least one
+> > reference to the scsi device in question. This means that the reference
+> > taken by alua_rtpg_queue() itself can't be the last one, and thus can be
+> > dropped without entering the code path in which scsi_device_put() might
+> > actually sleep. Hence move the might_sleep() annotation from
+> > scsi_device_put() into scsi_device_dev_release().
+> > 
+> > [...]
+> 
+> Applied to 6.2/scsi-fixes, thanks!
 
-Probably due to concurrent development, commit 519b6274a777 ("scsi: ufs:
-qcom: Add MCQ ESI config vendor specific ops") adds an ifdef block
-conditional under the config GENERIC_MSI_IRQ_DOMAIN.
-
-Make this code conditional under the existing config GENERIC_MSI_IRQ.
-
-Fixes: 519b6274a777 ("scsi: ufs: qcom: Add MCQ ESI config vendor specific ops")
-Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
----
- drivers/ufs/host/ufs-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 681da3ea7154..14283f6dc3f7 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1538,7 +1538,7 @@ static int ufs_qcom_get_outstanding_cqs(struct ufs_hba *hba,
- 	return 0;
- }
- 
--#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+#ifdef CONFIG_GENERIC_MSI_IRQ
- static void ufs_qcom_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
- {
- 	struct device *dev = msi_desc_to_dev(desc);
--- 
-2.17.1
-
+This is a really bad idea.  Instead of actually catching scsi_device_put
+put from a wrong context all the time, it now limits to the final put
+and thus making the annotation a lot less useful.
