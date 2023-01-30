@@ -2,173 +2,160 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B0AC61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 13:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95585C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 13:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236454AbjA3Nfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 08:35:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48572 "EHLO
+        id S236008AbjA3Nob (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 08:44:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236584AbjA3Nfh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 08:35:37 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23A0E2C645
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 05:35:36 -0800 (PST)
+        with ESMTP id S233899AbjA3Noa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 08:44:30 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3063F15552;
+        Mon, 30 Jan 2023 05:44:29 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D3C681FF2D;
-        Mon, 30 Jan 2023 13:35:34 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id E288621AE7;
+        Mon, 30 Jan 2023 13:44:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1675085734; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1675086267; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=/FRhollML0JGwrRPfmMQ7QrRb1EMsEJpwHunaTpzpcM=;
-        b=0q2DPiFj9szlmdLsJ2JO+ajUAFiVMXgwjS8n6iKo4FqszLwOKwUDwtERtGXnK8WPyGgUyk
-        KyuVzf+uVwyHREklm19GC56wosaBWtOmte0yDgk68xVJZ72gFItZQAUmZKCI6C7TBwHc9j
-        KlE2ykdlyxmqlKxcybqtUoKYUUdVurc=
+        bh=sqdDde2VpNl4ymLDR49F5nUaI943cA15fmxKV7GL+FY=;
+        b=edJZGTP1PNJGcNsq6gM5fip7RQwBVj9zU8C56WkbYNt5IFwTcPiPfBml4HubTVNk316kry
+        HIzr8nxQ5lZF2CZGF9SdKKJQOPecwkE2MibAiaIsVODvXgX/3c2PJngalyL0KO5YHiwi2Y
+        XY7dJpd6G3JYkFmFHJqF7pWunfOpJ2s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1675085734;
+        s=susede2_ed25519; t=1675086267;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=/FRhollML0JGwrRPfmMQ7QrRb1EMsEJpwHunaTpzpcM=;
-        b=QmwMwcauk1Jn4QM6kNl12dld/HUPU2V9pxPrQhrv5qnxkx7TzlnqP/4DOwPeXauaFexRCL
-        jxU4PD/tRI1XnSCw==
+        bh=sqdDde2VpNl4ymLDR49F5nUaI943cA15fmxKV7GL+FY=;
+        b=QYMr2+44g7gU9zknp2OsTUMIFB1k0HD4zS5gM5M0b2eL8R7CVHOBpJb3UnI1ikh2c/heMq
+        udNWPPBZCqWY4fCg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C2C5513A06;
-        Mon, 30 Jan 2023 13:35:34 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id CAB9713A06;
+        Mon, 30 Jan 2023 13:44:27 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id CHUyL6bH12PpYQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 30 Jan 2023 13:35:34 +0000
-Message-ID: <083141cd-3b79-7c54-9464-df36c06cc59a@suse.de>
-Date:   Mon, 30 Jan 2023 14:35:34 +0100
+        id EYYzMbvJ12MAZgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 30 Jan 2023 13:44:27 +0000
+Message-ID: <f58200e2-1652-c726-ceaf-be78feaab1bc@suse.de>
+Date:   Mon, 30 Jan 2023 14:44:27 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.1
-Subject: Re: The PQ=1 saga
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
 Content-Language: en-US
-To:     Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org
-Cc:     Martin Wilck <mwilck@suse.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com>
- <4f9794d2-00ed-22da-2b4b-e8afa424bf17@acm.org>
- <d0ac216445c33e9bf98e8c850f4d900acf0787bd.camel@suse.com>
- <9545766a-298d-1358-46f0-64ccfaf30ca0@suse.de>
- <6A8AA317-32B0-48F4-82DC-82B65A221A9F@purestorage.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+ <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+ <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
+ <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+ <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+ <e8324901-7c18-153f-b47f-112a394832bd@acm.org> <Y9Gd0eI1t8V61yzO@x1-carbon>
+ <86de1e78-0ff2-be70-f592-673bce76e5ac@opensource.wdc.com>
+ <Y9KF5z/v0Qp5E4sI@x1-carbon> <7f0a2464-673a-f64a-4ebb-e599c3123a24@acm.org>
+ <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
+ <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
+ <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
+ <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
+ <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
+ <4e803108-9526-6a75-f209-789a06ef52f9@opensource.wdc.com>
+ <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
+ <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <6A8AA317-32B0-48F4-82DC-82B65A221A9F@purestorage.com>
+In-Reply-To: <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/27/23 20:57, Brian Bunker wrote:
-> I was doing some more testing of this since it has been a while since I
-> ran these tests. It looks like reverting this will make the particular situation
-> that I am worried about even worse. I will put the detail in.
+On 1/29/23 04:52, Damien Le Moal wrote:
+> On 1/29/23 05:25, Martin K. Petersen wrote:
+[ .. ]
+>>
+>>     As such, I don't like the "just customize your settings with
+>>     cdltools" approach. I'd much rather see us try to define a few QoS
+>>     classes that make sense that would apply to every app and use those
+>>     to define the application interface. And then have the kernel program
+>>     those CDL classes into SCSI/ATA devices by default.
 > 
-> With this in place (before you revert it). When SCSI devices are discovered
-> and some have a PQ=1 because they are in an unavailable ALUA state:
+> Makes sense. Though I think it will be hard to define a set of QoS hints that
+> are useful for a wide range of applications, and even harder to convert the
+> defined hint classes to CDL descriptors. I fear that we may end up with the same
+> issues as IO hints/streams.
 > 
-> Jan 27 12:05:29 localhost kernel: scsi 7:0:0:1: scsi scan: peripheral device type of 31, no device added
+>>     Having the kernel provide an abstract interface for bio QoS and
+>>     configuring a new disk with a sane handful of classes does not
+>>     prevent $CLOUD_VENDOR from overriding what Linux configured. But at
+>>     least we'd have a generic approach to block QoS in Linux. Similar to
+>>     the existing I/O priority infrastructure which is also not tied to
+>>     any particular hardware feature.
 > 
-> I don’t know if this intentional with the patch or not but any devices with PQ=1
-> will not create SCSI devices. The logging is deceptive too since the device type
-> Is 0 and not 31. In my case I have two paths to LUN 1. One is ALUA AO and the
-> other in ALUA unavailable.
+> OK. See below about this.
 > 
-> With this patch in I only get an sd device and an sg device for the AO path.
-> The other path to LUN 1 gets no devices created because it is caught in the
-> If condition logged above.
+>>     A generic implementation also allows us to do fancy things in the
+>>     hypervisor where we would like to be able to do QoS across multiple
+>>     devices as well. Without having ATA or SCSI with CDL involved. Or
+>>     whatever things might look like in NVMe.
 > 
-> Because there are no SCSI devices created, when the ALUA state returns
-> to an active state, a SCSI rescan, which I can trigger from the target will result
-> in the devices getting created since the initial scan never created devices.
+> Fair point, especially given that virtio actually already forwards a guest
+> ioprio to the host through the virtio block command. Thinking of that particular
+> point together with what you said, I came up with the change show below as a
+> replacement for this patch 1/18.
 > 
-> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY pass 1 length 36
-> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY successful with code 0x0
-> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY pass 2 length 96
-> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY successful with code 0x0
-> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: Direct-Access     PURE     FlashArray       8888 PQ: 0 ANSI: 6
+> This changes the 13-bits ioprio data into a 3-bits QOS hint + 3-bits of IO prio
+> level. This is consistent with the IO prio interface since IO priority levels
+> have to be between 0 and 7 (otherwise, errors are returned). So in fact, the
+> upper 10-bits of the ioprio data are ignored and we can safely use 3 of these
+> bits for an IO hint.
 > 
-> Things are good with both paths to LUN 1 showing up. It is not optimal since the
-> target has to trigger a LUN scan on the initiator affecting all paths to those target
-> ports.
+> This hint applies to all priority classes and levels, that is, for the CDL case,
+> we can enrich any priority with a hint that specifies the CDL index to use for
+> an IO.
 > 
-> With the revert of this, things are a little different, but the way they had been in
-> the past.
+> This falls short of actually defining generic IO hints, but this has the
+> advantage to not break anything for current applications using IO priorities,
+> not require any change to existing IO schedulers, while still allowing to pass
+> CDL indexes for IOs down to the scsi & ATA layers (which for now would be the
+> only layers in the kernel acting on the ioprio qos hints).
 > 
-> Jan 27 13:41:19 localhost kernel: sd 7:0:1:1: Asymmetric access state changed
-> Jan 27 13:41:56 localhost kernel: scsi 7:0:1:1: alua: Detached
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY pass 1 length 36
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY successful with code 0x0
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY pass 2 length 96
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY successful with code 0x0
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: Direct-Access     PURE     FlashArray       8888 PQ: 1 ANSI: 6
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: alua: supports implicit TPGS
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: alua: device naa.624a9370acc31b042de141460001141c port group 0 rel port a
-> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: Attached scsi generic sg7 type 0
+> I think that this approach still allows us to enable CDL support, and on top of
+> it, go further and define generic QOS hints that IO scheduler can use and that
+> also potentially map to CDL for scsi & ata (similarly to the RT class IOs
+> mapping to the NCQ priority feature if the user enabled that feature).
 > 
-> Now an sg device is created but not an sd device. This means that there will be
-> no way for this device to get an sd device created once the ALUA state goes into
-> an active state.
+> As mentioned above, I think that defining generic IO hint classes will be
+> difficult. But the change below is I think a good a starting point that should
+> not prevent working on that.
 > 
-> The same thing done on the target that worked above no longer does:
+> Thoughts ?
 > 
-> Jan 27 13:47:48 localhost kernel: scsi 7:0:1:1: scsi scan: device exists on 7:0:1:1
-> 
-> To get around this, the existing disk must be deleted so it is not caught in the rescan
-> check. This cannot be controlled on the target, but it will require manual intervention
-> on the initiator.
-> 
-> So the question becomes how should initial scan work when a LUN has a PQ=1 set.
-> It is a valid, by spec with ALUA state unavailable but doesn’t seem to be
-> handled. Why allow an sg device but not an sd one on initial scan in this case? There
-> are probably many ways to fix this. I think the simplest is to allow sd device creation
-> on LUNs were PQ=1, and only restrict PQ=3. I am not sure the side effect of this on other
-> targets. The other approach which will no longer work after the revert is to trigger a
-> rescan from the target. This is sub-optimal since it is disruptive. Any approach involving
-> the ALUA device handler will not help since there is no device to transition if it is
-> discovered with PQ=1.
-> 
-Sheesh.
+I like the idea.
+QoS is one of the recurring topic always coming up sooner or later when 
+talking of storage networks, so having _some_ concept of QoS in the 
+linux kernel (for storage) would be beneficial.
 
-There _is_ an easy solution for this, and that is to not use PQ=1 in 
-conjunction with ALUA unavailable :-)
-
-Hiding PQ=1 devices did serve the purpose for linux as we still cannot 
-to a 'real' rescan of a SCSI device; the 'vendor' and 'model' string is 
-pretty much fixed for the lifetime of the device, alongside with the 
-entire standard inquiry data. So if anything changes here we have to 
-delete the device before we can properly read it.
-
-(which also means that I'll have to retract my earlier comment about 
-this being a good idea ...)
-
-And in the absence of that hiding PQ=1 devices is the best we can do.
-The alternative would be to implement a 'real' device rescan; but that 
-was too daunting a challenge to be undertaken until now.
-Things did change in the meantime, so maybe it's time to revisit that.
-
-But really, we should ask vendors to _not_ use PQ=1 when using ALUA. I 
-fail to see the benefit of this as both have roughly the same meaning; 
-if you have ALUA unavailable you can't access the device, hence it's 
-completely irrelevant what PQ says. And same for the other way round: if 
-PQ=1 is set really the only ALUA state which makes sense is 'unavailable'.
-
-Sadly it's not so easy to fix things up in the SCSI stack, as the PQ 
-setting is evaluated during scanning, and the ALUA state way back later.
+Maybe time for a topic at LSF?
 
 Cheers,
 
