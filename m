@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F216C64ED8
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 09:23:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E7AC636CC
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 09:24:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235991AbjA3JX5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 04:23:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54982 "EHLO
+        id S235689AbjA3JYC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 04:24:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234878AbjA3JXi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 04:23:38 -0500
+        with ESMTP id S236216AbjA3JXn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 04:23:43 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56D3B125B7;
-        Mon, 30 Jan 2023 01:23:28 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A74822BF3F;
+        Mon, 30 Jan 2023 01:23:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=qHieNPI7z3sFtodokWVnoougmLvZVnqE3Y/VparMyFY=; b=ODubD1C2BRMqrFChW7fD2/w9bG
-        Bek9dBQcKN5N+ru2staBvvFXiwAiWim7hYwhHUZGSLXX24jbnEbAqdmS5Ajj9+NlnFCavBXfsfhs3
-        XI6lzCu2GeqKtRgevITrArS3zGcwLMRZMxlr4utu1juNhvass81bDd906uTcf5xiZsb6cCOqyl8nK
-        m98KeGJ9SE/V3c3ZRyUJeGtRoQ5nsh6i4jGrfSPRpVbUu4hyqMBJxi9JGDZJNhoGK0a94aCuKbtu8
-        rmmcphUXaeiu9gmh/7++19/XF9wkSuRyP7q7ZgI/exYaX7pXYil/gd10qOnCgTC3hp+S0hEq97BKO
-        qjR+Sy/Q==;
+        bh=mraJ0dlvK0XwWYXGT0DcPLxhMI+ORe9CMkm05FoHT2s=; b=xOHsjob9PMRyKJ4ILlqtTtT2a1
+        BSDOhN5jc440njcpUba2nJJn4oWzHKlh5DYh9s2DBTQtSytoXVfg4egryfmJiUwA01qRqHZMyDpJp
+        k41/6F52tAyqKs8+FJOHLgI6idVUYxVWw63f6ikxbMTvsonHwp2rvU8xER17XbkQQKwuPuEorYONu
+        lBoFR+e+It6xCOx7b04q0jrJemUo+IGk3r0FJ+y3wfCceEClP5rP1JfvxWkw6DvlJRuxLS8JZSWNH
+        vd36DpSVg9AJW+qEayHR4sasRkMheP1AdnGvgFgKp2vugbGtPTxQCn4k0/VQoq9AZDuR9Q9Nfmonk
+        fGtYvRqg==;
 Received: from [2001:4bb8:19a:272a:732e:e417:47d7:2f4a] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pMQMh-002o1D-D3; Mon, 30 Jan 2023 09:22:15 +0000
+        id 1pMQMo-002o3h-6D; Mon, 30 Jan 2023 09:22:22 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Ilya Dryomov <idryomov@gmail.com>,
@@ -59,9 +59,9 @@ Cc:     Ilya Dryomov <idryomov@gmail.com>,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         devel@lists.orangefs.org, io-uring@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 03/23] block: add a bvec_set_virt helper
-Date:   Mon, 30 Jan 2023 10:21:37 +0100
-Message-Id: <20230130092157.1759539-4-hch@lst.de>
+Subject: [PATCH 05/23] target: use bvec_set_page to initialize bvecs
+Date:   Mon, 30 Jan 2023 10:21:39 +0100
+Message-Id: <20230130092157.1759539-6-hch@lst.de>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230130092157.1759539-1-hch@lst.de>
 References: <20230130092157.1759539-1-hch@lst.de>
@@ -72,37 +72,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A small wrapper around bvec_set_page for callers that have a virtual
-address.
+Use the bvec_set_page helper to initialize bvecs.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/bvec.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/target/target_core_file.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index f094512ce3bda9..7031d83af02267 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -63,6 +63,18 @@ static inline void bvec_set_folio(struct bio_vec *bv, struct folio *folio,
- 	bvec_set_page(bv, &folio->page, len, offset);
- }
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index fd584111da45c0..ce0e000b74fc39 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -281,10 +281,8 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
  
-+/**
-+ * bvec_set_virt - initialize a bvec based on a virtual address
-+ * @bv:		bvec to initialize
-+ * @vaddr:	virtual address to set the bvec to
-+ * @len:	length of the bvec
-+ */
-+static inline void bvec_set_virt(struct bio_vec *bv, void *vaddr,
-+		unsigned int len)
-+{
-+	bvec_set_page(bv, virt_to_page(vaddr), len, offset_in_page(vaddr));
-+}
-+
- struct bvec_iter {
- 	sector_t		bi_sector;	/* device address in 512 byte
- 						   sectors */
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+-		aio_cmd->bvecs[i].bv_page = sg_page(sg);
+-		aio_cmd->bvecs[i].bv_len = sg->length;
+-		aio_cmd->bvecs[i].bv_offset = sg->offset;
+-
++		bvec_set_page(&aio_cmd->bvecs[i], sg_page(sg), sg->length,
++			      sg->offset);
+ 		len += sg->length;
+ 	}
+ 
+@@ -329,10 +327,7 @@ static int fd_do_rw(struct se_cmd *cmd, struct file *fd,
+ 	}
+ 
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+-		bvec[i].bv_page = sg_page(sg);
+-		bvec[i].bv_len = sg->length;
+-		bvec[i].bv_offset = sg->offset;
+-
++		bvec_set_page(&bvec[i], sg_page(sg), sg->length, sg->offset);
+ 		len += sg->length;
+ 	}
+ 
+@@ -465,10 +460,9 @@ fd_execute_write_same(struct se_cmd *cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+ 	for (i = 0; i < nolb; i++) {
+-		bvec[i].bv_page = sg_page(&cmd->t_data_sg[0]);
+-		bvec[i].bv_len = cmd->t_data_sg[0].length;
+-		bvec[i].bv_offset = cmd->t_data_sg[0].offset;
+-
++		bvec_set_page(&bvec[i], sg_page(&cmd->t_data_sg[0]),
++			      cmd->t_data_sg[0].length,
++			      cmd->t_data_sg[0].offset);
+ 		len += se_dev->dev_attrib.block_size;
+ 	}
+ 
 -- 
 2.39.0
 
