@@ -2,69 +2,203 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB79CC54EAA
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 18:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F8A7C636D0
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 18:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237299AbjA3ST1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 13:19:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51190 "EHLO
+        id S238065AbjA3SVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 13:21:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237469AbjA3STY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 13:19:24 -0500
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C576B75E;
-        Mon, 30 Jan 2023 10:19:16 -0800 (PST)
-Received: by mail-pf1-f180.google.com with SMTP id g9so8454815pfo.5;
-        Mon, 30 Jan 2023 10:19:16 -0800 (PST)
+        with ESMTP id S237501AbjA3SVC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 13:21:02 -0500
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55689460A8;
+        Mon, 30 Jan 2023 10:20:33 -0800 (PST)
+Received: by mail-ej1-x62d.google.com with SMTP id gr7so9762584ejb.5;
+        Mon, 30 Jan 2023 10:20:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=ESqBBPYpgVN5uZcCivO5DaR4zZN15VVDdNsOZiTKtrU=;
+        b=nKCKI2eUxGRcaSZgTmFPehKr3qVxRp0sSTX6As0CJA6cEO7S5tDGHwTtxcWOBvjG+5
+         ClZltX4Y3POVohJyazbmQlAgJeqcXDECvGEvMfxGmFMz3/p/ZhQ+I4K6gGF2MU13LJ4z
+         19Axk50kaCOy1pUa9HjxYbHCoGtn4Ea+kFtIk141HMca3CQJQn9DvmK96fWyEakjLuFq
+         iS3N2a/s6O/Q2gCI7ySoWzJQ5GPGtaTalwh8TJ4L/KQFPakIBY+KAO+Np+5mMe0R40Ay
+         cBp8FloBIDKo0FIkdpo6fBsfxBdHgDQ9NaLb0nfuj9pZ+SEcS+GIfKSiynUsG/BBJ7OX
+         +CfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MCTnt4UHkjh+KturpG+BgNEdB7rIfLkxoGG9uQQNS2M=;
-        b=0zIXcIFwr0W4hOtTB4q1yX1RJRqm/CVALduKqZj03HJGN8rzzcKf8BO0o9Te4y/hPI
-         tk2oc5MW0h79B1ur+O/bjKyspGAHr2icdOFVgTbfW8KJ4ZWDEFzY56tvTF4i7t5hJa5j
-         XVtN+ok+Bsgb26y8GMj4q93FEm3G8Ympp9AxYELoM6sZGTObQ9RN4U0iprM2ZxReXVcf
-         GL6f4pQDYBkclPdeXFi9D3oxA2b+/Sn3drCOJO0NJMvrS+4Y9RYNwJ0eMUmfyfr6AwGm
-         XtUJRNDtmka1+pcY2XYhaEgq24SauLeH45/cEhTxhTF/5VeGQjkvOCRuj2PYaczT1ppM
-         ZGjA==
-X-Gm-Message-State: AO0yUKUSkBCwY7o/7eqBA8oiISyT1PWACVoHvdCPdwniovYeVmoeFZa/
-        sr5ZGuoPFTiOJw76qMS4q/U=
-X-Google-Smtp-Source: AK7set9F7OxYYf5cUUJPaSciocvf9756iNTgzNVxnnMshrlLCyF6v4L+p7tO0TYs0+bJjYol+1Ztwg==
-X-Received: by 2002:a05:6a00:450e:b0:593:b2b2:9544 with SMTP id cw14-20020a056a00450e00b00593b2b29544mr6190700pfb.0.1675102755589;
-        Mon, 30 Jan 2023 10:19:15 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:2514:4774:59fa:531b:5f22? ([2620:0:1000:2514:4774:59fa:531b:5f22])
-        by smtp.gmail.com with ESMTPSA id m14-20020a056a00164e00b0058bc1a13ffcsm7757697pfc.25.2023.01.30.10.19.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Jan 2023 10:19:14 -0800 (PST)
-Message-ID: <4504517a-25f0-5626-7dc3-50e96f392c84@acm.org>
-Date:   Mon, 30 Jan 2023 10:19:16 -0800
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ESqBBPYpgVN5uZcCivO5DaR4zZN15VVDdNsOZiTKtrU=;
+        b=FWDa/aINAz59v3oAKXa78d67noq6gIFj9igZ3ngf8wUdHDTlqSQC/pPHuhgKTRWnEl
+         gmJPtjLwIP1FU4QHDcJk1724QBUwQwNSpsLv2d+2aGz1d/NtGC13vBQCNcMhI2JcJ2CF
+         dgIitT1hCv+SvXwG6TWCRnibJdTVhjPoTlFoGvW0uCFvh/3GtmMpvyPwI+c2co72GdVs
+         4OPRLesjxPWlE18swXCbquIe0T5kfAGdColCL63nMCn2pX5glQ9eqHPM/bPzNJMpqJNz
+         +x3GvU1qUlPZrI+vEwQof5lws/eM/FovnbmRqHLEetPgCSXQwiikepcSIuEBoYZUavqs
+         oXgA==
+X-Gm-Message-State: AFqh2kqhkBqTu5nmwU64lJvLdqKWD8o+BaPaOHrfvig+aZExtB2GyQrr
+        BYJnXl4gMbkj1RJoJYHm1fU0LPgtUxcfcoV/fiQPWkWJ6gx/qA==
+X-Google-Smtp-Source: AMrXdXunXSZTlv6MlRv2Hm0y6kSEWFLV2akgLcFsz+yoVqsfzKFvu004fWkS1yRIAW4Rk97VhQXcJdOpL6Dcz/TIiuw=
+X-Received: by 2002:a17:906:7754:b0:86f:2cc2:7028 with SMTP id
+ o20-20020a170906775400b0086f2cc27028mr7705802ejn.133.1675102831692; Mon, 30
+ Jan 2023 10:20:31 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] scsi: aacraid: Allocate cmd_priv with scsicmd
-Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Hannes Reinecke <hare@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+References: <20230130092157.1759539-1-hch@lst.de> <20230130092157.1759539-24-hch@lst.de>
+In-Reply-To: <20230130092157.1759539-24-hch@lst.de>
+From:   Ilya Dryomov <idryomov@gmail.com>
+Date:   Mon, 30 Jan 2023 19:20:15 +0100
+Message-ID: <CAOi1vP9U6kTyLgiXDFPtg4nr2ut++cAoowZONsoAtzWV0VosUw@mail.gmail.com>
+Subject: Re: [PATCH 23/23] net-ceph: use bvec_set_page to initialize bvecs
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, stable@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20230128000409.never.976-kees@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230128000409.never.976-kees@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Xiubo Li <xiubli@redhat.com>, Steve French <sfrench@samba.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        devel@lists.orangefs.org, io-uring@vger.kernel.org,
+        linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/27/23 16:04, Kees Cook wrote:
-> The aac_priv() helper assumes that the private cmd area immediately
-> follows struct scsi_cmnd. Allocate this space as part of scsicmd,
-> else there is a risk of heap overflow. Seen with GCC 13: [ ... ]
+On Mon, Jan 30, 2023 at 10:23 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Use the bvec_set_page helper to initialize bvecs.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  net/ceph/messenger_v1.c |  7 ++-----
+>  net/ceph/messenger_v2.c | 28 +++++++++++-----------------
+>  2 files changed, 13 insertions(+), 22 deletions(-)
+>
+> diff --git a/net/ceph/messenger_v1.c b/net/ceph/messenger_v1.c
+> index d1787d7d33ef9a..d664cb1593a777 100644
+> --- a/net/ceph/messenger_v1.c
+> +++ b/net/ceph/messenger_v1.c
+> @@ -40,15 +40,12 @@ static int ceph_tcp_recvmsg(struct socket *sock, void *buf, size_t len)
+>  static int ceph_tcp_recvpage(struct socket *sock, struct page *page,
+>                      int page_offset, size_t length)
+>  {
+> -       struct bio_vec bvec = {
+> -               .bv_page = page,
+> -               .bv_offset = page_offset,
+> -               .bv_len = length
+> -       };
+> +       struct bio_vec bvec;
+>         struct msghdr msg = { .msg_flags = MSG_DONTWAIT | MSG_NOSIGNAL };
+>         int r;
+>
+>         BUG_ON(page_offset + length > PAGE_SIZE);
+> +       bvec_set_page(&bvec, page, length, page_offset);
+>         iov_iter_bvec(&msg.msg_iter, ITER_DEST, &bvec, 1, length);
+>         r = sock_recvmsg(sock, &msg, msg.msg_flags);
+>         if (r == -EAGAIN)
+> diff --git a/net/ceph/messenger_v2.c b/net/ceph/messenger_v2.c
+> index 3009028c4fa28f..301a991dc6a68e 100644
+> --- a/net/ceph/messenger_v2.c
+> +++ b/net/ceph/messenger_v2.c
+> @@ -149,10 +149,10 @@ static int do_try_sendpage(struct socket *sock, struct iov_iter *it)
+>
+>         while (iov_iter_count(it)) {
+>                 /* iov_iter_iovec() for ITER_BVEC */
+> -               bv.bv_page = it->bvec->bv_page;
+> -               bv.bv_offset = it->bvec->bv_offset + it->iov_offset;
+> -               bv.bv_len = min(iov_iter_count(it),
+> -                               it->bvec->bv_len - it->iov_offset);
+> +               bvec_set_page(&bv, it->bvec->bv_page,
+> +                             min(iov_iter_count(it),
+> +                                 it->bvec->bv_len - it->iov_offset),
+> +                             it->bvec->bv_offset + it->iov_offset);
+>
+>                 /*
+>                  * sendpage cannot properly handle pages with
+> @@ -286,9 +286,8 @@ static void set_out_bvec_zero(struct ceph_connection *con)
+>         WARN_ON(iov_iter_count(&con->v2.out_iter));
+>         WARN_ON(!con->v2.out_zero);
+>
+> -       con->v2.out_bvec.bv_page = ceph_zero_page;
+> -       con->v2.out_bvec.bv_offset = 0;
+> -       con->v2.out_bvec.bv_len = min(con->v2.out_zero, (int)PAGE_SIZE);
+> +       bvec_set_page(&con->v2.out_bvec, ceph_zero_page,
+> +                     min(con->v2.out_zero, (int)PAGE_SIZE), 0);
+>         con->v2.out_iter_sendpage = true;
+>         iov_iter_bvec(&con->v2.out_iter, ITER_SOURCE, &con->v2.out_bvec, 1,
+>                       con->v2.out_bvec.bv_len);
+> @@ -863,10 +862,7 @@ static void get_bvec_at(struct ceph_msg_data_cursor *cursor,
+>
+>         /* get a piece of data, cursor isn't advanced */
+>         page = ceph_msg_data_next(cursor, &off, &len);
+> -
+> -       bv->bv_page = page;
+> -       bv->bv_offset = off;
+> -       bv->bv_len = len;
+> +       bvec_set_page(bv, page, len, off);
+>  }
+>
+>  static int calc_sg_cnt(void *buf, int buf_len)
+> @@ -1855,9 +1851,8 @@ static void prepare_read_enc_page(struct ceph_connection *con)
+>              con->v2.in_enc_resid);
+>         WARN_ON(!con->v2.in_enc_resid);
+>
+> -       bv.bv_page = con->v2.in_enc_pages[con->v2.in_enc_i];
+> -       bv.bv_offset = 0;
+> -       bv.bv_len = min(con->v2.in_enc_resid, (int)PAGE_SIZE);
+> +       bvec_set_page(&bv, con->v2.in_enc_pages[con->v2.in_enc_i],
+> +                     min(con->v2.in_enc_resid, (int)PAGE_SIZE), 0);
+>
+>         set_in_bvec(con, &bv);
+>         con->v2.in_enc_i++;
+> @@ -2998,9 +2993,8 @@ static void queue_enc_page(struct ceph_connection *con)
+>              con->v2.out_enc_resid);
+>         WARN_ON(!con->v2.out_enc_resid);
+>
+> -       bv.bv_page = con->v2.out_enc_pages[con->v2.out_enc_i];
+> -       bv.bv_offset = 0;
+> -       bv.bv_len = min(con->v2.out_enc_resid, (int)PAGE_SIZE);
+> +       bvec_set_page(&bv, con->v2.out_enc_pages[con->v2.out_enc_i],
+> +                     min(con->v2.out_enc_resid, (int)PAGE_SIZE), 0);
+>
+>         set_out_bvec(con, &bv, false);
+>         con->v2.out_enc_i++;
+> --
+> 2.39.0
+>
 
-Bart Van Assche <bvanassche@acm.org>
+Hi Christoph,
 
+Nit on the patch title: this subsystem should be referred to as
+libceph instead of net-ceph or similar, see "git log -- net/ceph" or
+MAINTAINERS.
+
+Reviewed-by: Ilya Dryomov <idryomov@gmail.com>
+
+Thanks,
+
+                Ilya
