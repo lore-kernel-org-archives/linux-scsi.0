@@ -2,109 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73371C636D4
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 17:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10881C61D97
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 17:09:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236332AbjA3RFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 12:05:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59752 "EHLO
+        id S237441AbjA3RJb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 12:09:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237732AbjA3RFA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 12:05:00 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB27ADA
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2023 09:04:59 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 825D021D4E;
-        Mon, 30 Jan 2023 17:04:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1675098298; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0Kw+ZmRhiDG/y5mSaqDRkSBDGb2kueNM5SlvkD9HF8o=;
-        b=XfdXLPRJr6dfOREmI2brhfU+UVO+s1+t+lav1H3OXsuJxdGnrtU/Ndmue5BEO9l0cijxCy
-        bm20Yoflt8yhvO02jz/czYlqXPjrD4Ot3fb5zEwfcFGHjz9S2BnhvdwC9AQ/Fl9p/mCzm+
-        O81ysYPsBMUn+DwSyYrfCre84L/YOMs=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 389CD13444;
-        Mon, 30 Jan 2023 17:04:58 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id pHD2C7r412OQQgAAMHmgww
-        (envelope-from <mwilck@suse.com>); Mon, 30 Jan 2023 17:04:58 +0000
-Message-ID: <263c26e91250e32cd6391533860f2fe8d39940fa.camel@suse.com>
-Subject: Re: [PATCH] scsi: core: Fix the scsi_device_put() might_sleep
- annotation
-From:   Martin Wilck <mwilck@suse.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-        Steffen Maier <maier@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Sachin Sant <sachinp@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>
-Date:   Mon, 30 Jan 2023 18:04:57 +0100
-In-Reply-To: <Y9d4sfc9hCydhHwb@infradead.org>
-References: <20230125194311.249553-1-bvanassche@acm.org>
-         <167478903314.4070509.17553562843256554477.b4-ty@oracle.com>
-         <Y9d4sfc9hCydhHwb@infradead.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 
+        with ESMTP id S229578AbjA3RJa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 12:09:30 -0500
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9B03FF2B;
+        Mon, 30 Jan 2023 09:09:29 -0800 (PST)
+Received: by mail-pl1-f181.google.com with SMTP id be8so12290652plb.7;
+        Mon, 30 Jan 2023 09:09:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VcAkkG+7EQ87q1yuQfzrNQ/CVfL1BPFACyrSB5AzC9E=;
+        b=w+5Cau5Utuz+gsMlY/4IbiIdWNbKBkgQ4TrPVBcGE+SToUp0g/A05HkGbJ0FTYbWrP
+         7HMVfgUXpIW+u5zTse9SWNWDyRgonY9hrNypvej9fDylpcs9wAb9JVkG2HsklLrXdaj9
+         cl6J0eDzdmsWCJVz8RhP2TnkRWKmyRxEbZAOwrxGy/5HNpnGlLmc4IMKZg+C9KjWiF2r
+         mJ3HvAjE/Gp/1Ltkk0W7/TNlWDF36YVeMBsfa2cl6snKDRnPCJax248GlvbcFB6ygEOG
+         QZ98lgO/W1rfYmFeagoSmehxPYnKYZ2X+/DSnxrijZv46tR1n3VPe5fmZpnO6snY7Jng
+         fthg==
+X-Gm-Message-State: AFqh2kpwH6xITHx+G85I2f/DjV4Sj43aFIVFcyohQIef5YtYDf32z/pi
+        KoR4et2qMeAMRJlHNdQXWa4=
+X-Google-Smtp-Source: AMrXdXsoThEeXwb5X9zNdrMM/dBzAwAKgsQUh4DVjXEWAVyR5f6ZoR++CGV0u6k+ufH+Ks5WBdnq6g==
+X-Received: by 2002:a17:902:f646:b0:194:46e0:1b61 with SMTP id m6-20020a170902f64600b0019446e01b61mr52496709plg.63.1675098568615;
+        Mon, 30 Jan 2023 09:09:28 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:5016:3bcd:59fe:334b? ([2620:15c:211:201:5016:3bcd:59fe:334b])
+        by smtp.gmail.com with ESMTPSA id y16-20020a170902b49000b0019602263feesm8042186plr.90.2023.01.30.09.09.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Jan 2023 09:09:27 -0800 (PST)
+Message-ID: <2bab7050-dec7-3af8-b643-31b414b8c4b4@acm.org>
+Date:   Mon, 30 Jan 2023 09:09:23 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 01/23] block: factor out a bvec_set_page helper
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Ilya Dryomov <idryomov@gmail.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Xiubo Li <xiubli@redhat.com>, Steve French <sfrench@samba.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        devel@lists.orangefs.org, io-uring@vger.kernel.org,
+        linux-mm@kvack.org
+References: <20230130092157.1759539-1-hch@lst.de>
+ <20230130092157.1759539-2-hch@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230130092157.1759539-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2023-01-29 at 23:58 -0800, Christoph Hellwig wrote:
-> On Thu, Jan 26, 2023 at 10:22:12PM -0500, Martin K. Petersen wrote:
-> > On Wed, 25 Jan 2023 11:43:11 -0800, Bart Van Assche wrote:
-> >=20
-> > > Although most calls of scsi_device_put() happen from non-atomic
-> > > context,
-> > > alua_rtpg_queue() calls this function from atomic context if
-> > > alua_rtpg_queue() itself is called from atomic context.
-> > > alua_rtpg_queue()
-> > > is always called from contexts where the caller must hold at
-> > > least one
-> > > reference to the scsi device in question. This means that the
-> > > reference
-> > > taken by alua_rtpg_queue() itself can't be the last one, and thus
-> > > can be
-> > > dropped without entering the code path in which scsi_device_put()
-> > > might
-> > > actually sleep. Hence move the might_sleep() annotation from
-> > > scsi_device_put() into scsi_device_dev_release().
-> > >=20
-> > > [...]
-> >=20
-> > Applied to 6.2/scsi-fixes, thanks!
->=20
-> This is a really bad idea.=A0 Instead of actually catching
-> scsi_device_put
-> put from a wrong context all the time, it now limits to the final put
-> and thus making the annotation a lot less useful.
+On 1/30/23 01:21, Christoph Hellwig wrote:
+> Add a helper to initialize a bvec based of a page pointer.  This will help
+> removing various open code bvec initializations.
 
-The other idea that we discussed was this:
+Why do you want to remove the open-coded bvec initializations? What is 
+wrong with open-coding bvec initialization? This patch series modifies a 
+lot of code but does not improve code readability. Anyone who encounters 
+code that uses the new function bvec_set_page() has to look up the 
+definition of that function to figure out what it does.
 
-https://lore.kernel.org/linux-scsi/53321793-fede-f84e-260a-9d6bc0bc2b6c@acm=
-.org/T/#t
+> -	iv = bip->bip_vec + bip->bip_vcnt;
+> -
+>   	if (bip->bip_vcnt &&
+>   	    bvec_gap_to_prev(&bdev_get_queue(bio->bi_bdev)->limits,
+>   			     &bip->bip_vec[bip->bip_vcnt - 1], offset))
+>   		return 0;
+>   
+> -	iv->bv_page = page;
+> -	iv->bv_len = len;
+> -	iv->bv_offset = offset;
+> +	bvec_set_page(&bip->bip_vec[bip->bip_vcnt], page, len, offset);
+>   	bip->bip_vcnt++;
 
-That approach would still catch other wrong call contexts (i.e. from
-outside the ALUA code). But it requires adding a new exported function
-in scsi.c. Would you prefer that, or do you have something completely
-different in mind?
+Has it been considered to use structure assignment instead of 
+introducing bvec_set_page(), e.g. as follows?
 
-Idea #3 was to use a deferred call (e.g. a workqueue) for dropping the
-additional ref that had been takein in alua_rtpg_queue().
+bip->bip_vec[bip->bip_vcnt] = (struct bio_vec) {
+       .bv_page = page, .bv_len = len, .bv_offset = offset };
 
 Thanks,
-Martin
 
+Bart.
