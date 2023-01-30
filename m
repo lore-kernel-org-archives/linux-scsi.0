@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA536C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 09:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74795C64ED9
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 09:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236414AbjA3J0M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 04:26:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56510 "EHLO
+        id S236450AbjA3J0P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 04:26:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234964AbjA3JZr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 04:25:47 -0500
+        with ESMTP id S235967AbjA3JZv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 04:25:51 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED0632FCD3;
-        Mon, 30 Jan 2023 01:24:16 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAB112FCF0;
+        Mon, 30 Jan 2023 01:24:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=/tbj/Tg5whekQ1nWXF3p7MKn9zbAs7XJmrxsAI8qP60=; b=xV25GZjMyWU+4JGmYdpveIpUhP
-        MvUBg+0AGQ4cUbqnzgS5sBDTXnqtwa7wVQL/txup6BH72LNq11j+ASL+GP6Ibue6t7wZREu3rUD1l
-        AbM+a9D4pvYCaOdcGlHWcEAPnUjRJfD7qL+Ec4haykBrsXqebtLBTfOzYEnuNsXcjCaaIrOmD+ztq
-        2JXHp7gUfawgcgXQeeYMy7wfb7NKSz3L9UdWz8jhsCHlQU1PdTMj+77eXPkBEtZwJbklE0+6NhWXJ
-        sYARddyVpzWrCXb6bGEWE7jP7S97NALXNFekXFrTAc58YTwg3nKtsaWoeAg5DvHQiBSK7BtPBNU5S
-        UhaRvYWw==;
+        bh=iTork4lgSqwAnNzEK3lzK1UwHk37chVOVoUGPRhe1ko=; b=Qx6f/vAlt0702Bw2gaA0yw3fMn
+        DSbWXckp85GKL6x2K0wVZWlmBP/HHAMGhBrYB08/Vlm/YRJQCq3kI3xMG/WASmjfzQ5X57qRgvH1M
+        aDf2q/VfFfkAfOqqUqPetL8Nnll6XIjG7NgvoDUHbD0cnB+MO8UuF7ljYLg4f4YTGaLPU4yXfmMbt
+        xSZ2xC24sTznBHqPUwQ2KOdIbwsTxD5YqcKUievCZTrFdiYRp348Iffsdx6IiKzBdbwdD1fWYnp87
+        CKqOs2Hi1NMEf6sOsnEZOuE8nGXc6MpsuZ0+93w6fPSfAyQf9ElR2gHbrsn8rljB8JPoxhMSuKyqW
+        Ecg9ip0g==;
 Received: from [2001:4bb8:19a:272a:732e:e417:47d7:2f4a] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pMQN9-002oCh-OO; Mon, 30 Jan 2023 09:22:44 +0000
+        id 1pMQNF-002oFW-6t; Mon, 30 Jan 2023 09:22:49 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Ilya Dryomov <idryomov@gmail.com>,
@@ -59,9 +59,9 @@ Cc:     Ilya Dryomov <idryomov@gmail.com>,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         devel@lists.orangefs.org, io-uring@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 12/23] ceph: use bvec_set_page to initialize a bvec
-Date:   Mon, 30 Jan 2023 10:21:46 +0100
-Message-Id: <20230130092157.1759539-13-hch@lst.de>
+Subject: [PATCH 14/23] coredump: use bvec_set_page to initialize a bvec
+Date:   Mon, 30 Jan 2023 10:21:48 +0100
+Message-Id: <20230130092157.1759539-15-hch@lst.de>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230130092157.1759539-1-hch@lst.de>
 References: <20230130092157.1759539-1-hch@lst.de>
@@ -76,30 +76,34 @@ Use the bvec_set_page helper to initialize a bvec.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ceph/file.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ fs/coredump.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index 764598e1efd91f..6419dce7c57987 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -103,11 +103,11 @@ static ssize_t __iter_get_bvecs(struct iov_iter *iter, size_t maxsize,
- 		size += bytes;
+diff --git a/fs/coredump.c b/fs/coredump.c
+index de78bde2991beb..0a6873a9c4d0cd 100644
+--- a/fs/coredump.c
++++ b/fs/coredump.c
+@@ -840,11 +840,7 @@ static int __dump_skip(struct coredump_params *cprm, size_t nr)
  
- 		for ( ; bytes; idx++, bvec_idx++) {
--			struct bio_vec bv = {
--				.bv_page = pages[idx],
--				.bv_len = min_t(int, bytes, PAGE_SIZE - start),
--				.bv_offset = start,
--			};
-+			struct bio_vec bv;
-+
-+			bvec_set_page(&bv, pages[idx], 
-+				      min_t(int, bytes, PAGE_SIZE - start),
-+				      start);
- 
- 			bvecs[bvec_idx] = bv;
- 			bytes -= bv.bv_len;
+ static int dump_emit_page(struct coredump_params *cprm, struct page *page)
+ {
+-	struct bio_vec bvec = {
+-		.bv_page	= page,
+-		.bv_offset	= 0,
+-		.bv_len		= PAGE_SIZE,
+-	};
++	struct bio_vec bvec;
+ 	struct iov_iter iter;
+ 	struct file *file = cprm->file;
+ 	loff_t pos;
+@@ -860,6 +856,7 @@ static int dump_emit_page(struct coredump_params *cprm, struct page *page)
+ 	if (dump_interrupted())
+ 		return 0;
+ 	pos = file->f_pos;
++	bvec_set_page(&bvec, page, PAGE_SIZE, 0);
+ 	iov_iter_bvec(&iter, ITER_SOURCE, &bvec, 1, PAGE_SIZE);
+ 	n = __kernel_write_iter(cprm->file, &iter, &pos);
+ 	if (n != PAGE_SIZE)
 -- 
 2.39.0
 
