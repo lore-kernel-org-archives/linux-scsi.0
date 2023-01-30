@@ -2,134 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7255FC54EED
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 03:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3D4C54EAA
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 03:46:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232549AbjA3DaC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Jan 2023 22:30:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37864 "EHLO
+        id S234930AbjA3Dq3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Jan 2023 22:46:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjA3DaB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 22:30:01 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6EB13DC5;
-        Sun, 29 Jan 2023 19:30:00 -0800 (PST)
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30U2kP6b028113;
-        Mon, 30 Jan 2023 03:29:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=TNzYEuPfJYyQMycQDqLpJOdz22M2dSjrgLy3Ps16vnY=;
- b=iuBKxOGXWpoo5UgtmpqK5x8smqVyJvVUe2H50FjYtd1evzXSrHAce4A9O8PXJRH1HUDe
- K1MwxdcURdLzjPM2shHrGanGZS9yd9AdJLP+OARQLbAgt5/Hxz/qAW3BAcVAZR5zvEjQ
- HR80PVz55Enh4o8/fs763xassQjMB/u1Ez3Yz4t0/yoOg5tGKmmhW2p0RQ0+KtHu1eL5
- zLNsAEjJ6NSFPGOHNaCMyy3VLAl7FmJ5iB64PtVk/lt39JUC4ThD5fLR/Fih+2VL6DG1
- CvkECRx47nM+rYpwlTflU23H/bBdwTdt4JODmQWw+SjDqr+XCuxxJO3RtRak1FlS/ULt kQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ndds8bwxx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 30 Jan 2023 03:29:38 +0000
-Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30U3RHTt023562;
-        Mon, 30 Jan 2023 03:29:38 GMT
-Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ndds8bwxg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 30 Jan 2023 03:29:38 +0000
-Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
-        by ppma04wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 30TNKHFR028518;
-        Mon, 30 Jan 2023 03:29:36 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([9.208.130.102])
-        by ppma04wdc.us.ibm.com (PPS) with ESMTPS id 3ncvuy8pe7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 30 Jan 2023 03:29:36 +0000
-Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
-        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 30U3TZah9962136
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 30 Jan 2023 03:29:36 GMT
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 81E926E050;
-        Mon, 30 Jan 2023 03:31:40 +0000 (GMT)
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 701F66E04E;
-        Mon, 30 Jan 2023 03:31:38 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.211.110.248])
-        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 30 Jan 2023 03:31:38 +0000 (GMT)
-Message-ID: <7c5c38f128910f89f20533b7fd51453a32ff4f5c.camel@linux.ibm.com>
-Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create
- block device
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Yu Kuai <yukuai1@huaweicloud.com>,
+        with ESMTP id S230392AbjA3Dq2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 22:46:28 -0500
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED0151D900;
+        Sun, 29 Jan 2023 19:46:26 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4P4vHJ3gmRz4f3v4f;
+        Mon, 30 Jan 2023 11:46:20 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgDX0R+MPddjoCS0CQ--.41891S3;
+        Mon, 30 Jan 2023 11:46:22 +0800 (CST)
+Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create block
+ device
+To:     jejb@linux.ibm.com, Yu Kuai <yukuai1@huaweicloud.com>,
         Zhong Jinghua <zhongjinghua@huawei.com>,
         gregkh@linuxfoundation.org, martin.petersen@oracle.com,
         hare@suse.de, bvanassche@acm.org, emilne@redhat.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-Date:   Sun, 29 Jan 2023 22:29:02 -0500
-In-Reply-To: <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
 References: <20230128094146.205858-1-zhongjinghua@huawei.com>
-         <20230128094146.205858-3-zhongjinghua@huawei.com>
-         <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
-         <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+ <20230128094146.205858-3-zhongjinghua@huawei.com>
+ <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
+ <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
+ <7c5c38f128910f89f20533b7fd51453a32ff4f5c.camel@linux.ibm.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <19ad8dd7-482e-dad0-8465-f78f7f9c154d@huaweicloud.com>
+Date:   Mon, 30 Jan 2023 11:46:20 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <7c5c38f128910f89f20533b7fd51453a32ff4f5c.camel@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: qS03s2VgW1zkaU7owePzLXQBrOTW8Xkb
-X-Proofpoint-GUID: _cbRM7LKurVfOY4Js-r7ZJKGgMhA_PxR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-01-30_01,2023-01-27_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
- lowpriorityscore=0 impostorscore=0 bulkscore=0 mlxlogscore=943 spamscore=0
- adultscore=0 malwarescore=0 clxscore=1011 priorityscore=1501 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301300027
+X-CM-TRANSID: _Ch0CgDX0R+MPddjoCS0CQ--.41891S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zw4rAr15KF4xXr15CrykXwb_yoW8Kw4kpF
+        WfKFZIkrWkGwn3Jw1vyayrZw10yw4kAw45JF15Kr17Ja4UCF9aqrW5Ka9Y9FyUWryxX3WY
+        qF4rGa9Ik34qyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2023-01-30 at 11:07 +0800, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2023/01/30 1:30, James Bottomley 写道:
-> > On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
-> > > This error will cause a warning:
-> > > kobject_add_internal failed for block (error: -2 parent:
-> > > 1:0:0:1). In the lower version (such as 5.10), there is no
-> > > corresponding error handling, continuing to go down will trigger
-> > > a kernel panic, so cc stable.
-> > 
-> > Is this is important point and what you're saying is that this only
-> > panics on kernels before 5.10 or so because after that it's
-> > correctly failed by block device error handling so there's nothing
-> > to fix in later kernels?
-> > 
-> > In that case, isn't the correct fix to look at backporting the
-> > block device error handling:
-> 
-> This is the last commit that support error handling, and there are
-> many relied patches, and there are lots of refactor in block layer.
-> It's not a good idea to backport error handling to lower version.
-> 
-> Althrough error handling can prevent kernel crash in this case, I
-> still think it make sense to make sure kobject is deleted in order,
-> parent should not be deleted before child.
+Hi,
 
-Well, look, you've created a very artificial situation where a create
-closely followed by a delete of the underlying sdev races with the
-create of the block gendisk devices of sd that bind asynchronously to
-the created sdev.  The asynchronous nature of the bind gives the
-elongated race window so the only real fix is some sort of check that
-the sdev is still viable by the time the bind occurs ... probably in
-sd_probe(), say a scsi_device_get of sdp at the top which would ensure
-viability of the sdev for the entire bind or fail the probe if the sdev
-can't be got.
+在 2023/01/30 11:29, James Bottomley 写道:
+> On Mon, 2023-01-30 at 11:07 +0800, Yu Kuai wrote:
+>> Hi,
+>>
+>> 在 2023/01/30 1:30, James Bottomley 写道:
+>>> On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
+>>>> This error will cause a warning:
+>>>> kobject_add_internal failed for block (error: -2 parent:
+>>>> 1:0:0:1). In the lower version (such as 5.10), there is no
+>>>> corresponding error handling, continuing to go down will trigger
+>>>> a kernel panic, so cc stable.
+>>>
+>>> Is this is important point and what you're saying is that this only
+>>> panics on kernels before 5.10 or so because after that it's
+>>> correctly failed by block device error handling so there's nothing
+>>> to fix in later kernels?
+>>>
+>>> In that case, isn't the correct fix to look at backporting the
+>>> block device error handling:
+>>
+>> This is the last commit that support error handling, and there are
+>> many relied patches, and there are lots of refactor in block layer.
+>> It's not a good idea to backport error handling to lower version.
+>>
+>> Althrough error handling can prevent kernel crash in this case, I
+>> still think it make sense to make sure kobject is deleted in order,
+>> parent should not be deleted before child.
+> 
+> Well, look, you've created a very artificial situation where a create
+> closely followed by a delete of the underlying sdev races with the
+> create of the block gendisk devices of sd that bind asynchronously to
+> the created sdev.  The asynchronous nature of the bind gives the
+> elongated race window so the only real fix is some sort of check that
+> the sdev is still viable by the time the bind occurs ... probably in
+> sd_probe(), say a scsi_device_get of sdp at the top which would ensure
+> viability of the sdev for the entire bind or fail the probe if the sdev
+> can't be got.
 
-James
+Sorry, I don't follow here. 😟
 
+I agree this is a very artificial situation, however I can't tell our
+tester not to test this way...
+
+The problem is that kobject session is deleted and then sd_probe() tries
+to create a new kobject under hostx/sessionx/x:x:x:x/. I don't see how
+scsi_device_get() can prevent that, it only get a kobject reference and
+can prevent kobject to be released, however, kobject_del() can still be
+done.
+
+In this patch, we make sure remove session and sd_probe() won't
+concurrent, remove session will wait for all child kobject to be
+deleted, what do you think?
+
+Thanks,
+Kuai
+> 
+> James
+> 
+> 
+> .
+> 
 
