@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADAB9C636D4
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 09:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6AADC636CC
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 09:24:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236369AbjA3JY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Jan 2023 04:24:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55158 "EHLO
+        id S236431AbjA3JYf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Jan 2023 04:24:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236277AbjA3JXx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 04:23:53 -0500
+        with ESMTP id S235715AbjA3JYI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2023 04:24:08 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DFB62DE79;
-        Mon, 30 Jan 2023 01:23:43 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B80142ED4D;
+        Mon, 30 Jan 2023 01:23:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=PasJ3iDfX2TllVLQ6e7N8/T+ZQHWRBi9Mi0fIgNsQxA=; b=SyOpTX9CZKgu/mdg93Px99ohqU
-        lpY5+Plpyd7Zy3mO80AFoiDBWvs4Fx74nS7dp1CeTeZRYGYVgZlN3xShKOlsqOHMR8YDIfD97TAOl
-        i6DuUXOwtd+Qsu7XWKS9q2lROG9nFii2MJjf2cIawTQo8pmmmRvWWh3yI3j64SspCOd4hOaDYQT59
-        IxVhU3Tj/X05Ke06JXfdsywRjVOFjJJT2OqUrGdoAw1YlbWzSVrtgtw54YyS4zmtMPEU8NVcbK/29
-        hwDgey6wC2KTsvdLDoGO0KUy407IzJh0Nss1p0gnq5DmSbrdtNR41EirSVoNLrufaOEJ9Q1DMff9S
-        /WQX3d/Q==;
+        bh=waVJAjm2FM0jvuh0ozqoP97gMNRNVBgPKhaSSg5Yxhg=; b=QTYv8MI6OQAM8sT2MzrC8lgZb2
+        L7Ft8VBeI/rYi4wvdhNRIkk+89gbjy9aIv1X4usSq3UcRbM2VqLo2MpOUC+5qfxyguvoWKr5GHx64
+        tYSYgh1k523R3StIKwtgPkxLbHoU0OskEf2l+H4ySafLO43GnmfafqNMYzVkxE+/8/4poWzaTQ/lp
+        lqbYjeu9vuT/c1tSwraqQ+I68EOddD4ZaKS3cKZcGo/Z7QETCvghPhHpksAPizeLr7o5lXtEdKHIo
+        O5+0BsnFwGf+zWUiSaEhgD41XRRwmBfnaknYFcKCzkYl5E0zbVQ6v339RIqSGz2riXL0D2RB56RfS
+        qRVU0BNA==;
 Received: from [2001:4bb8:19a:272a:732e:e417:47d7:2f4a] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pMQMw-002o87-6w; Mon, 30 Jan 2023 09:22:30 +0000
+        id 1pMQN4-002oBB-0G; Mon, 30 Jan 2023 09:22:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Ilya Dryomov <idryomov@gmail.com>,
@@ -59,9 +59,9 @@ Cc:     Ilya Dryomov <idryomov@gmail.com>,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         devel@lists.orangefs.org, io-uring@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 08/23] rbd: use bvec_set_page to initialize the copy up bvec
-Date:   Mon, 30 Jan 2023 10:21:42 +0100
-Message-Id: <20230130092157.1759539-9-hch@lst.de>
+Subject: [PATCH 11/23] afs: use bvec_set_folio to initialize a bvec
+Date:   Mon, 30 Jan 2023 10:21:45 +0100
+Message-Id: <20230130092157.1759539-12-hch@lst.de>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230130092157.1759539-1-hch@lst.de>
 References: <20230130092157.1759539-1-hch@lst.de>
@@ -72,34 +72,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the bvec_set_page helper to initialize the copy up bvec.
+Use the bvec_set_folio helper to initialize a bvec.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/rbd.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ fs/afs/write.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index 04453f4a319cb4..1faca7e07a4d52 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -3068,13 +3068,12 @@ static int setup_copyup_bvecs(struct rbd_obj_request *obj_req, u64 obj_overlap)
+diff --git a/fs/afs/write.c b/fs/afs/write.c
+index 19df10d63323d8..2d17891b618e6e 100644
+--- a/fs/afs/write.c
++++ b/fs/afs/write.c
+@@ -992,7 +992,7 @@ int afs_launder_folio(struct folio *folio)
+ {
+ 	struct afs_vnode *vnode = AFS_FS_I(folio_inode(folio));
+ 	struct iov_iter iter;
+-	struct bio_vec bv[1];
++	struct bio_vec bv;
+ 	unsigned long priv;
+ 	unsigned int f, t;
+ 	int ret = 0;
+@@ -1008,10 +1008,8 @@ int afs_launder_folio(struct folio *folio)
+ 			t = afs_folio_dirty_to(folio, priv);
+ 		}
  
- 	for (i = 0; i < obj_req->copyup_bvec_count; i++) {
- 		unsigned int len = min(obj_overlap, (u64)PAGE_SIZE);
-+		struct page *page = alloc_page(GFP_NOIO);
+-		bv[0].bv_page = &folio->page;
+-		bv[0].bv_offset = f;
+-		bv[0].bv_len = t - f;
+-		iov_iter_bvec(&iter, ITER_SOURCE, bv, 1, bv[0].bv_len);
++		bvec_set_folio(&bv, folio, t - f, f);
++		iov_iter_bvec(&iter, ITER_SOURCE, &bv, 1, bv.bv_len);
  
--		obj_req->copyup_bvecs[i].bv_page = alloc_page(GFP_NOIO);
--		if (!obj_req->copyup_bvecs[i].bv_page)
-+		if (!page)
- 			return -ENOMEM;
- 
--		obj_req->copyup_bvecs[i].bv_offset = 0;
--		obj_req->copyup_bvecs[i].bv_len = len;
-+		bvec_set_page(&obj_req->copyup_bvecs[i], page, len, 0);
- 		obj_overlap -= len;
- 	}
- 
+ 		trace_afs_folio_dirty(vnode, tracepoint_string("launder"), folio);
+ 		ret = afs_store_data(vnode, &iter, folio_pos(folio) + f, true);
 -- 
 2.39.0
 
