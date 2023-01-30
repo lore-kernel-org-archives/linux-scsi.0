@@ -2,130 +2,200 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3D4C54EAA
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 03:46:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C0CC54EED
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Jan 2023 04:04:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234930AbjA3Dq3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Jan 2023 22:46:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44878 "EHLO
+        id S235415AbjA3EEd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Jan 2023 23:04:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230392AbjA3Dq2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 22:46:28 -0500
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED0151D900;
-        Sun, 29 Jan 2023 19:46:26 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4P4vHJ3gmRz4f3v4f;
-        Mon, 30 Jan 2023 11:46:20 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R+MPddjoCS0CQ--.41891S3;
-        Mon, 30 Jan 2023 11:46:22 +0800 (CST)
-Subject: Re: [PATCH-next v2 2/2] scsi: fix iscsi rescan fails to create block
- device
-To:     jejb@linux.ibm.com, Yu Kuai <yukuai1@huaweicloud.com>,
-        Zhong Jinghua <zhongjinghua@huawei.com>,
-        gregkh@linuxfoundation.org, martin.petersen@oracle.com,
-        hare@suse.de, bvanassche@acm.org, emilne@redhat.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230128094146.205858-1-zhongjinghua@huawei.com>
- <20230128094146.205858-3-zhongjinghua@huawei.com>
- <1b466057ed2e91b05388afbb5791639eb8abdd59.camel@linux.ibm.com>
- <c3e58056-942a-f829-ecf6-1342c65b6865@huaweicloud.com>
- <7c5c38f128910f89f20533b7fd51453a32ff4f5c.camel@linux.ibm.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <19ad8dd7-482e-dad0-8465-f78f7f9c154d@huaweicloud.com>
-Date:   Mon, 30 Jan 2023 11:46:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S235545AbjA3EEb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2023 23:04:31 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0503D61AC;
+        Sun, 29 Jan 2023 20:04:19 -0800 (PST)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30U3bXkN011396;
+        Mon, 30 Jan 2023 04:03:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=9FgHZcrNbI+TFD68z/CkIAHNY7NrXeGWNbWBywWg74g=;
+ b=LED5D8kTV6zggZL5o8UfV2ToRCJ06jM+9mH0Jg9KL1py1s2YzusRDhR7Okmrehy87JtE
+ jHzzzfB+Zo9ENk9S3vI16NFJGLyHkZbn6ElYYW1AryJhLb6+3za64d4Yi/Sx6/UlP6bm
+ cQGcstu1modzG8KzBUVGjEHeuN6lt08waQqtLspxGNTx1pqwlvef028jgh8Wk2xielNP
+ bFeeHnJ894C9s9VmLuGMVN81lqrmLA5Ka/6Kmz0+7cr1WPElz2mu4f/lahes4kAFCuOf
+ 026/U+PeO5QA7cZe1DGjH4SOglWKcfw/raI5KIw8AyfeSrgFsQPjOHg8qXOSFtEKzzna dQ== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ncvvu2ku9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Jan 2023 04:03:55 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 30U43p6V019084
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Jan 2023 04:03:51 GMT
+Received: from [10.253.12.64] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Sun, 29 Jan
+ 2023 20:03:47 -0800
+Message-ID: <9ff005f0-0cef-65d6-6f69-8394f1ba3e3c@quicinc.com>
+Date:   Mon, 30 Jan 2023 12:03:45 +0800
 MIME-Version: 1.0
-In-Reply-To: <7c5c38f128910f89f20533b7fd51453a32ff4f5c.camel@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R+MPddjoCS0CQ--.41891S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zw4rAr15KF4xXr15CrykXwb_yoW8Kw4kpF
-        WfKFZIkrWkGwn3Jw1vyayrZw10yw4kAw45JF15Kr17Ja4UCF9aqrW5Ka9Y9FyUWryxX3WY
-        qF4rGa9Ik34qyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [PATCH] scsi: ufs: qcom: fix platform_msi_domain_free_irqs()
+ reference
+To:     Manivannan Sadhasivam <mani@kernel.org>,
+        Arnd Bergmann <arnd@kernel.org>
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>
+References: <20230126211831.2274211-1-arnd@kernel.org>
+ <20230127060221.GB7809@thinkpad>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20230127060221.GB7809@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 1FI-Ygf5E3dCO992-sz0qX0IyV8VxVVz
+X-Proofpoint-ORIG-GUID: 1FI-Ygf5E3dCO992-sz0qX0IyV8VxVVz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-01-30_01,2023-01-27_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ mlxlogscore=999 suspectscore=0 spamscore=0 mlxscore=0 phishscore=0
+ clxscore=1011 lowpriorityscore=0 priorityscore=1501 bulkscore=0
+ adultscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2301300038
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Hi Mani and Arnd,
 
-在 2023/01/30 11:29, James Bottomley 写道:
-> On Mon, 2023-01-30 at 11:07 +0800, Yu Kuai wrote:
->> Hi,
+On 1/27/2023 2:02 PM, Manivannan Sadhasivam wrote:
+> On Thu, Jan 26, 2023 at 10:17:31PM +0100, Arnd Bergmann wrote:
+>> From: Arnd Bergmann <arnd@arndb.de>
 >>
->> 在 2023/01/30 1:30, James Bottomley 写道:
->>> On Sat, 2023-01-28 at 17:41 +0800, Zhong Jinghua wrote:
->>>> This error will cause a warning:
->>>> kobject_add_internal failed for block (error: -2 parent:
->>>> 1:0:0:1). In the lower version (such as 5.10), there is no
->>>> corresponding error handling, continuing to go down will trigger
->>>> a kernel panic, so cc stable.
->>>
->>> Is this is important point and what you're saying is that this only
->>> panics on kernels before 5.10 or so because after that it's
->>> correctly failed by block device error handling so there's nothing
->>> to fix in later kernels?
->>>
->>> In that case, isn't the correct fix to look at backporting the
->>> block device error handling:
+>> The newly added MSI support is mostly hidden inside of an #ifdef,
+>> except for one line that now causes a build failure when MSI
+>> is disabled:
 >>
->> This is the last commit that support error handling, and there are
->> many relied patches, and there are lots of refactor in block layer.
->> It's not a good idea to backport error handling to lower version.
+>> drivers/ufs/host/ufs-qcom.c: In function 'ufs_qcom_remove':
+>> drivers/ufs/host/ufs-qcom.c:1698:9: error: implicit declaration of function 'platform_msi_domain_free_irqs' [-Werror=i]
+>>   1698 |         platform_msi_domain_free_irqs(hba->dev);
+>>        |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 >>
->> Althrough error handling can prevent kernel crash in this case, I
->> still think it make sense to make sure kobject is deleted in order,
->> parent should not be deleted before child.
-> 
-> Well, look, you've created a very artificial situation where a create
-> closely followed by a delete of the underlying sdev races with the
-> create of the block gendisk devices of sd that bind asynchronously to
-> the created sdev.  The asynchronous nature of the bind gives the
-> elongated race window so the only real fix is some sort of check that
-> the sdev is still viable by the time the bind occurs ... probably in
-> sd_probe(), say a scsi_device_get of sdp at the top which would ensure
-> viability of the sdev for the entire bind or fail the probe if the sdev
-> can't be got.
+>> Above that, the symbol that guards the other call was recently
+>> removed, so that is all dead code at the moment.
+>>
+>> Remove the incorrect #ifdef and instead of a Kconfig dependency
+>> to only allow building the driver when CONFIG_GENERIC_MSI_IRQ
+>> is enabled. This symbol is always present when PCI_MSI
+>> or ARM_GIC_V3_ITS are enabled, both of which should be present
+>> on kernels that can run on Qualcomm SoCs.
+>>
+>> The 'select RESET_CONTROLLER' in combination with this dependency
+>> unfortunately causes a dependency loop and this is a user-visible
+>> symbol, so it's better to change both to 'depends on'.
+>>
+>> Fixes: 519b6274a777 ("scsi: ufs: qcom: Add MCQ ESI config vendor specific ops")
+>> Fixes: 13e7accb81d6 ("genirq: Get rid of GENERIC_MSI_IRQ_DOMAIN")
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+>
+>> ---
+>> Not sure if this is the best solution, both the GENERIC_MSI_IRQ
+>> dependencies and the RESET_CONTROLLER dependencies are a bit
+>> inconsistent already. Feel free to pick another approach that
+>> addresses both of the bugs I found.
+> I think your proposed solution works best at the moment.
+>
+> Thanks,
+> Mani
+>
+>> ---
+>>   drivers/ufs/host/Kconfig    | 3 ++-
+>>   drivers/ufs/host/ufs-qcom.c | 8 --------
+>>   2 files changed, 2 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+>> index 139064e70a34..663881437921 100644
+>> --- a/drivers/ufs/host/Kconfig
+>> +++ b/drivers/ufs/host/Kconfig
+>> @@ -57,8 +57,9 @@ config SCSI_UFS_DWC_TC_PLATFORM
+>>   config SCSI_UFS_QCOM
+>>   	tristate "QCOM specific hooks to UFS controller platform driver"
+>>   	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
+>> +	depends on GENERIC_MSI_IRQ
+>> +	depends on RESET_CONTROLLER
+>>   	select QCOM_SCM if SCSI_UFS_CRYPTO
+>> -	select RESET_CONTROLLER
+>>   	help
+>>   	  This selects the QCOM specific additions to UFSHCD platform driver.
+>>   	  UFS host on QCOM needs some vendor specific configuration before
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index 681da3ea7154..eb66b5f6cf19 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -1538,7 +1538,6 @@ static int ufs_qcom_get_outstanding_cqs(struct ufs_hba *hba,
+>>   	return 0;
+>>   }
+>>   
+>> -#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+>>   static void ufs_qcom_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
+>>   {
+>>   	struct device *dev = msi_desc_to_dev(desc);
+>> @@ -1626,13 +1625,6 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>>   	return ret;
+>>   }
+>>   
+>> -#else
+>> -static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>> -{
+>> -	return -EOPNOTSUPP;
+>> -}
+>> -#endif
+>> -
+>>   /*
+>>    * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+>>    *
+>> -- 
+>> 2.39.0
+>>
 
-Sorry, I don't follow here. 😟
+Thank you for pointing to 13e7accb81d6 ("genirq: Get rid of 
+GENERIC_MSI_IRQ_DOMAIN"),
 
-I agree this is a very artificial situation, however I can't tell our
-tester not to test this way...
+which I was not aware of. I am thinking about fixing it just like how
 
-The problem is that kobject session is deleted and then sd_probe() tries
-to create a new kobject under hostx/sessionx/x:x:x:x/. I don't see how
-scsi_device_get() can prevent that, it only get a kobject reference and
-can prevent kobject to be released, however, kobject_del() can still be
-done.
+13e7accb81d6 ("genirq: Get rid of GENERIC_MSI_IRQ_DOMAIN") is fixing 
+drivers/dma/qcom/hidma.c -
 
-In this patch, we make sure remove session and sd_probe() won't
-concurrent, remove session will wait for all child kobject to be
-deleted, what do you think?
+In ufs-qcom.c, use CONFIG_GENERIC_MSI_IRQ instead of 
+CONFIG_GENERIC_MSI_IRQ_DOMAIN,
 
-Thanks,
-Kuai
-> 
-> James
-> 
-> 
-> .
-> 
+and meanwhile add #ifdef check before calling 
+platform_msi_domain_free_irqs().
+
+Please let me know your idea.
+
+
+Thanks.
+Regards,
+Can Guo
+
 
