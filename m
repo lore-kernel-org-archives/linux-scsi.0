@@ -2,123 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E24C636CC
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Jan 2023 20:15:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6740C636CC
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Jan 2023 20:34:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbjAaUPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Jan 2023 15:15:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36008 "EHLO
+        id S231215AbjAaUe0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Jan 2023 15:34:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbjAaUPn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2023 15:15:43 -0500
-X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 Jan 2023 12:15:43 PST
-Received: from omta37.uswest2.a.cloudfilter.net (omta37.uswest2.a.cloudfilter.net [35.89.44.36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52DAC2B0B3
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2023 12:15:43 -0800 (PST)
-Received: from eig-obgw-5012a.ext.cloudfilter.net ([10.0.29.230])
-        by cmsmtp with ESMTP
-        id MS1TpqFfhYHR1Mx1Ap8ZYf; Tue, 31 Jan 2023 20:14:12 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTP
-        id Mx19pW1JWVwooMx19pa4k4; Tue, 31 Jan 2023 20:14:11 +0000
-X-Authority-Analysis: v=2.4 cv=DaIEF9hW c=1 sm=1 tr=0 ts=63d97693
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=RvmDmJFTN0MA:10
- a=wYkD_t78qR0A:10 a=8pif782wAAAA:8 a=VwQbUJbxAAAA:8 a=NEAV23lmAAAA:8
- a=mDV3o1hIAAAA:8 a=rQwXfPfrytjjklgZoK0A:9 a=QEXdDO2ut3YA:10 a=o-vr1ZrRZO8A:10
- a=3SQbtOYribkA:10 a=AjGcO6oz07-iQ99wixmX:22 a=_FVE-zBwftR9WsbkzFJk:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=w7c0OSkAfjTz5fKechJKG0JstQNvIvF9iDgA1jWVlfI=; b=ln7Guya0Fn0+7ib+RlmLCQW/7Z
-        /we4xbNByB0hqPXLQfXAzLihIxfJBvw8qJ9upNCtmJ5lIh7/DIPmuL5sUQ1PaARHft1MQSXGGZPhJ
-        jjkHNlBsNNAF6JaWOCQ0GWAZC4mzIa299NtFJq0QnCGZeQesogBFbwvFJcfsMneP3QgbUSjQTVRIv
-        grdQ2mDsS2tkcQI66bcGpXirfrBYSb31o6my8S/62O/osQ0WWCGxhEA9EkmMygqewcNlcna/dMXve
-        OBLjGMJkY3rNCauW/Q79JjGSAYoBzI+Kkz3VodV5eZ08TxQ3DLSsHe1aBdvxig9CiKGL8oDtlEqA+
-        uXMwrNJw==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:57042 helo=[192.168.15.7])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1pMx18-0033gy-FB;
-        Tue, 31 Jan 2023 14:14:10 -0600
-Message-ID: <ab1caeae-4bf2-ab03-36f7-40b04f34f007@embeddedor.com>
-Date:   Tue, 31 Jan 2023 14:14:15 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH 0/3][next] scsi: smartpqi: Replace one-element arrays with
- flexible-array members
-Content-Language: en-US
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Kevin Barnett <kevin.barnett@microsemi.com>,
-        Don Brace <don.brace@microchip.com>, storagedev@microchip.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <cover.1663816572.git.gustavoars@kernel.org>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <cover.1663816572.git.gustavoars@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1pMx18-0033gy-FB
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:57042
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfEvGEi/u4V7lzHE/TSpDhWaC3578kOfKNSTKONiXgA0ObSUa27leCtVJXEpsR7I2R2o5qS1wkRGkrUN4Ej6vYlyZGuiJqkSt2kj3GNnJT1LjYYU1sheh
- veekd4lMgds2yUNQ78YGQc2RdpYS1RyBZb4UKr/yNMFphQQlwgdsJmAffAlxLMTtajNrFJ0DKLsE0V20cCeZ5REEUJu6dOqu/Vhp2Y2IO4faCCqW7ALQlWYG
+        with ESMTP id S230094AbjAaUeZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2023 15:34:25 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38CA564B5;
+        Tue, 31 Jan 2023 12:34:24 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0ECA9B81EBB;
+        Tue, 31 Jan 2023 20:34:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B9F19C4339C;
+        Tue, 31 Jan 2023 20:34:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675197261;
+        bh=2dcHZUt4gA+sNzsb9Ul5/JGddOzsRpJfH6O3eBnU+ZI=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=Yp6RgDtTI496lwXglf67Yykf9GFobC5GZXP5lMNxQ9Awhl2XROmRb08WhQX8657sR
+         yoi2B5REeY80wSokOmjK2qDm+R1zbfIVoPGnyJCSv14Q5nd1FXthICJ7xC+zm89sdh
+         ZKmd0tPCTb0Gg+axm773VWWCS54fEtMPAZM5/QZ4l5nSwV4DyKEjAdkgu81fU/n8xu
+         R/36TQuUJWD+1nZs/mv1MqMVEvgBnjiQjVVVc+Eno06y4YLR2Qo5wV/y3uVxTyeVbZ
+         OD3jSxc5nsICTp0G2OHiGW/d8ASC4s80faIRteN9Pn6BdLM9YLHBTl84ugscCZgb8d
+         2LturZsC2uRzQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id A6B5EC072E7;
+        Tue, 31 Jan 2023 20:34:21 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.1-rc6
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <b7da90228a0f844928c9331eab0be64072d237f5.camel@HansenPartnership.com>
+References: <b7da90228a0f844928c9331eab0be64072d237f5.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <b7da90228a0f844928c9331eab0be64072d237f5.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 15600159bcc6abbeae6b33a849bef90dca28b78f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 58706f7fb045b7019bada81fa17f372189315fe5
+Message-Id: <167519726167.29102.10602723959680078727.pr-tracker-bot@kernel.org>
+Date:   Tue, 31 Jan 2023 20:34:21 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+The pull request you sent on Tue, 31 Jan 2023 14:21:25 -0500:
 
-Friendly ping: who can review/take this, please? :)
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks
---
-Gustavo
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/58706f7fb045b7019bada81fa17f372189315fe5
 
-On 9/21/22 23:26, Gustavo A. R. Silva wrote:
-> Hi!
-> 
-> This series aims to replace one-element arrays with flexible-array
-> members in drivers/scsi/smartpqi/smartpqi.h
-> 
-> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-> routines on memcpy() and help us make progress towards globally
-> enabling -fstrict-flex-arrays=3 [1].
-> 
-> Link: https://en.wikipedia.org/wiki/Flexible_array_member
-> Link: https://www.kernel.org/doc/html/v5.10/process/deprecated.html#zero-length-and-one-element-arrays
-> Link: https://github.com/KSPP/linux/issues/79
-> Link: https://github.com/KSPP/linux/issues/109
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101836 [1]
-> 
-> Gustavo A. R. Silva (3):
->    scsi: smartpqi: Replace one-element array with flexible-array member
->    scsi: smartpqi: Replace one-element arrays with flexible-array members
->    scsi: smartpqi: Use struct_size() helper in pqi_report_phys_luns()
-> 
->   drivers/scsi/smartpqi/smartpqi.h      |  6 +++---
->   drivers/scsi/smartpqi/smartpqi_init.c | 12 ++++--------
->   2 files changed, 7 insertions(+), 11 deletions(-)
-> 
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
