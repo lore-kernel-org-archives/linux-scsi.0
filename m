@@ -2,140 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5ADC636CC
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Jan 2023 19:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E24C636CC
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Jan 2023 20:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230207AbjAaTVd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Jan 2023 14:21:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38024 "EHLO
+        id S230104AbjAaUPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Jan 2023 15:15:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230364AbjAaTVb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2023 14:21:31 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECDECA06;
-        Tue, 31 Jan 2023 11:21:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1675192887;
-        bh=ylYwSQlzxv3UK8qHxCuat9EOrQw8l1G5MawGzF0fTMs=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=FAaljnmTB8PteQDcqpkoTu5UdHX9bkvWsjaIeJVaInLQ4QjguKJ9yzdWYlbKU9bJe
-         nb4K1gLo3tIsWwqy69SmhpW24+cFY5+VSd6adfeAwYuEZq3do5JU+MweYm9bOPzCFf
-         Cleb5lJfqAlTM+uBABQtiqry+IL2ucI3BCWMFvRU=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0FDB91280528;
-        Tue, 31 Jan 2023 14:21:27 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id eOqdkYJqxs9Q; Tue, 31 Jan 2023 14:21:26 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1675192886;
-        bh=ylYwSQlzxv3UK8qHxCuat9EOrQw8l1G5MawGzF0fTMs=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=RAClvfL4gLV50EmBa7rYzB5MhVY/62xlBW71ATK4x+TAqPZiFSLzdNaIcSSNvRXom
-         bGZfC384JuoaVRRI3EM756mi2jH28NSIBpV35h+jTKREuSiq22cTuMv1CkKoKtH3BJ
-         R4z49HaGMyZvfm1EsFycmXifMbj8jbMlnsyfv5I8=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 638DE1280486;
-        Tue, 31 Jan 2023 14:21:26 -0500 (EST)
-Message-ID: <b7da90228a0f844928c9331eab0be64072d237f5.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.1-rc6
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Tue, 31 Jan 2023 14:21:25 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229574AbjAaUPn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2023 15:15:43 -0500
+X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 Jan 2023 12:15:43 PST
+Received: from omta37.uswest2.a.cloudfilter.net (omta37.uswest2.a.cloudfilter.net [35.89.44.36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52DAC2B0B3
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2023 12:15:43 -0800 (PST)
+Received: from eig-obgw-5012a.ext.cloudfilter.net ([10.0.29.230])
+        by cmsmtp with ESMTP
+        id MS1TpqFfhYHR1Mx1Ap8ZYf; Tue, 31 Jan 2023 20:14:12 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id Mx19pW1JWVwooMx19pa4k4; Tue, 31 Jan 2023 20:14:11 +0000
+X-Authority-Analysis: v=2.4 cv=DaIEF9hW c=1 sm=1 tr=0 ts=63d97693
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=RvmDmJFTN0MA:10
+ a=wYkD_t78qR0A:10 a=8pif782wAAAA:8 a=VwQbUJbxAAAA:8 a=NEAV23lmAAAA:8
+ a=mDV3o1hIAAAA:8 a=rQwXfPfrytjjklgZoK0A:9 a=QEXdDO2ut3YA:10 a=o-vr1ZrRZO8A:10
+ a=3SQbtOYribkA:10 a=AjGcO6oz07-iQ99wixmX:22 a=_FVE-zBwftR9WsbkzFJk:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=w7c0OSkAfjTz5fKechJKG0JstQNvIvF9iDgA1jWVlfI=; b=ln7Guya0Fn0+7ib+RlmLCQW/7Z
+        /we4xbNByB0hqPXLQfXAzLihIxfJBvw8qJ9upNCtmJ5lIh7/DIPmuL5sUQ1PaARHft1MQSXGGZPhJ
+        jjkHNlBsNNAF6JaWOCQ0GWAZC4mzIa299NtFJq0QnCGZeQesogBFbwvFJcfsMneP3QgbUSjQTVRIv
+        grdQ2mDsS2tkcQI66bcGpXirfrBYSb31o6my8S/62O/osQ0WWCGxhEA9EkmMygqewcNlcna/dMXve
+        OBLjGMJkY3rNCauW/Q79JjGSAYoBzI+Kkz3VodV5eZ08TxQ3DLSsHe1aBdvxig9CiKGL8oDtlEqA+
+        uXMwrNJw==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:57042 helo=[192.168.15.7])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1pMx18-0033gy-FB;
+        Tue, 31 Jan 2023 14:14:10 -0600
+Message-ID: <ab1caeae-4bf2-ab03-36f7-40b04f34f007@embeddedor.com>
+Date:   Tue, 31 Jan 2023 14:14:15 -0600
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH 0/3][next] scsi: smartpqi: Replace one-element arrays with
+ flexible-array members
+Content-Language: en-US
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Kevin Barnett <kevin.barnett@microsemi.com>,
+        Don Brace <don.brace@microchip.com>, storagedev@microchip.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+References: <cover.1663816572.git.gustavoars@kernel.org>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <cover.1663816572.git.gustavoars@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1pMx18-0033gy-FB
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:57042
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 3
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfEvGEi/u4V7lzHE/TSpDhWaC3578kOfKNSTKONiXgA0ObSUa27leCtVJXEpsR7I2R2o5qS1wkRGkrUN4Ej6vYlyZGuiJqkSt2kj3GNnJT1LjYYU1sheh
+ veekd4lMgds2yUNQ78YGQc2RdpYS1RyBZb4UKr/yNMFphQQlwgdsJmAffAlxLMTtajNrFJ0DKLsE0V20cCeZ5REEUJu6dOqu/Vhp2Y2IO4faCCqW7ALQlWYG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two core fixes.  One simply moves an annotation from put to release to
-avoid the warning triggering needlessly in alua, but to keep it in case
-release is ever called from that path (which we don't think will
-happen).  The other reverts a change to the PQ=1 target scanning
-behaviour that's under intense discussion at the moment.
+Hi all,
 
-The patch is available here:
+Friendly ping: who can review/take this, please? :)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Thanks
+--
+Gustavo
 
-The short changelog is:
-
-Bart Van Assche (1):
-      scsi: core: Fix the scsi_device_put() might_sleep annotation
-
-Martin K. Petersen (1):
-      scsi: Revert "scsi: core: map PQ=1, PDT=other values to SCSI_SCAN_TARGET_PRESENT"
-
-And the diffstat:
-
- drivers/scsi/scsi.c       | 2 --
- drivers/scsi/scsi_scan.c  | 7 +++----
- drivers/scsi/scsi_sysfs.c | 2 ++
- 3 files changed, 5 insertions(+), 6 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1426b9b03612..9feb0323bc44 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -588,8 +588,6 @@ void scsi_device_put(struct scsi_device *sdev)
- {
- 	struct module *mod = sdev->host->hostt->module;
- 
--	might_sleep();
--
- 	put_device(&sdev->sdev_gendev);
- 	module_put(mod);
- }
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 7a6904a3928e..f9b18fdc7b3c 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1232,8 +1232,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	 * that no LUN is present, so don't add sdev in these cases.
- 	 * Two specific examples are:
- 	 * 1) NetApp targets: return PQ=1, PDT=0x1f
--	 * 2) IBM/2145 targets: return PQ=1, PDT=0
--	 * 3) USB UFI: returns PDT=0x1f, with the PQ bits being "reserved"
-+	 * 2) USB UFI: returns PDT=0x1f, with the PQ bits being "reserved"
- 	 *    in the UFI 1.0 spec (we cannot rely on reserved bits).
- 	 *
- 	 * References:
-@@ -1247,8 +1246,8 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	 * PDT=00h Direct-access device (floppy)
- 	 * PDT=1Fh none (no FDD connected to the requested logical unit)
- 	 */
--	if (((result[0] >> 5) == 1 ||
--	    (starget->pdt_1f_for_no_lun && (result[0] & 0x1f) == 0x1f)) &&
-+	if (((result[0] >> 5) == 1 || starget->pdt_1f_for_no_lun) &&
-+	    (result[0] & 0x1f) == 0x1f &&
- 	    !scsi_is_wlun(lun)) {
- 		SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
- 					"scsi scan: peripheral device type"
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 981d1bab2120..8ef9a5494340 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -451,6 +451,8 @@ static void scsi_device_dev_release(struct device *dev)
- 	struct scsi_vpd *vpd_pgb0 = NULL, *vpd_pgb1 = NULL, *vpd_pgb2 = NULL;
- 	unsigned long flags;
- 
-+	might_sleep();
-+
- 	scsi_dh_release_device(sdev);
- 
- 	parent = sdev->sdev_gendev.parent;
-
+On 9/21/22 23:26, Gustavo A. R. Silva wrote:
+> Hi!
+> 
+> This series aims to replace one-element arrays with flexible-array
+> members in drivers/scsi/smartpqi/smartpqi.h
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://en.wikipedia.org/wiki/Flexible_array_member
+> Link: https://www.kernel.org/doc/html/v5.10/process/deprecated.html#zero-length-and-one-element-arrays
+> Link: https://github.com/KSPP/linux/issues/79
+> Link: https://github.com/KSPP/linux/issues/109
+> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101836 [1]
+> 
+> Gustavo A. R. Silva (3):
+>    scsi: smartpqi: Replace one-element array with flexible-array member
+>    scsi: smartpqi: Replace one-element arrays with flexible-array members
+>    scsi: smartpqi: Use struct_size() helper in pqi_report_phys_luns()
+> 
+>   drivers/scsi/smartpqi/smartpqi.h      |  6 +++---
+>   drivers/scsi/smartpqi/smartpqi_init.c | 12 ++++--------
+>   2 files changed, 7 insertions(+), 11 deletions(-)
+> 
