@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51D81C636D4
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Jan 2023 15:06:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A36C636D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Jan 2023 15:06:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233027AbjAaPGC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Jan 2023 10:06:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36694 "EHLO
+        id S233029AbjAaPGH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Jan 2023 10:06:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232848AbjAaPFU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2023 10:05:20 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43A9E56EF6;
-        Tue, 31 Jan 2023 07:02:32 -0800 (PST)
+        with ESMTP id S232771AbjAaPFe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2023 10:05:34 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49ACC577CC;
+        Tue, 31 Jan 2023 07:02:41 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 647486157F;
-        Tue, 31 Jan 2023 15:01:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AACF6C433EF;
-        Tue, 31 Jan 2023 15:01:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C545B61567;
+        Tue, 31 Jan 2023 15:01:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13672C433D2;
+        Tue, 31 Jan 2023 15:01:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675177282;
-        bh=h+ttpvThRszBNslEP6kUUuedKX9+lyq6Fk19OiVy1mk=;
+        s=k20201202; t=1675177266;
+        bh=7YfFs3WB6ppclQlIDVFaLm+5ix7OyMw56irnbRIMRSo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ctteDJZrpnfG1tVou2q4iNswKEP8Q+TT7XtJizEaAhIIwoKVZZDxQIIOHqtfx59WA
-         Aq9PfZ2TwYoIkNKfrAEO9ctlJsdzQIyhp/x8s9n8dbj9PE6fCagjukURo4qT7I73CO
-         RjyyHiGA4oFdDVQddQTj7ppd3UZ5+iZ+44z8VSJ7WRZVxqA5FPNZSRpqGV3hSMgSBW
-         qZprdRN44yAIFQ2o+K1eFGT2e/s9Onmie8LJVMGuAdk1qjZyiuiC609WhBleaEA82j
-         JibtR+YQtFL7o864qikIgO2hVqk7E3532bzKE80vQzAU4g9o5JGFK5B4un4k5yfK0N
-         K5YFf/dUihIAg==
+        b=KGF0crNkrokp/ZlXTvuE9DIUoJN6Lrw78svSt235idBjkTtrIXRYyohHQzTmEVc3v
+         zZwtLuwdfjgzA6MhJcA380jvhwsJkNlTvtg1KudxG1jE86rY2uRQY+ZTaqVs9nIwDQ
+         oRbxBJ2bCCyI6Y+9hOzjswQ6CojPTlYNTAxUtT+OSyWQjJrVA+Li+iFdYblU8a6rii
+         sjM+IzzFDnFCU8V3CRwY88f48djf8TbR0I3eIu/WR28blkzdl/Cv+dziu9Hi208u61
+         FWQV8NS2En3TKl+5qc3ur/5sefxqkLSHn7vuG7WopJuxZBHwyBHIvQAWp+2FZzoULN
+         OGSOh0viZtxhQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
@@ -40,12 +40,12 @@ Cc:     Mike Christie <michael.christie@oracle.com>,
         Sasha Levin <sashal@kernel.org>, cleech@redhat.com,
         jejb@linux.ibm.com, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 2/4] scsi: iscsi_tcp: Fix UAF during login when accessing the shost ipaddress
-Date:   Tue, 31 Jan 2023 10:01:16 -0500
-Message-Id: <20230131150118.1250409-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 3/6] scsi: iscsi_tcp: Fix UAF during login when accessing the shost ipaddress
+Date:   Tue, 31 Jan 2023 10:00:55 -0500
+Message-Id: <20230131150100.1250267-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230131150118.1250409-1-sashal@kernel.org>
-References: <20230131150118.1250409-1-sashal@kernel.org>
+In-Reply-To: <20230131150100.1250267-1-sashal@kernel.org>
+References: <20230131150100.1250267-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 7212e3a13fe6..33fb111e2e19 100644
+index 6485c1aa9e74..252d7881f99c 100644
 --- a/drivers/scsi/iscsi_tcp.c
 +++ b/drivers/scsi/iscsi_tcp.c
-@@ -775,7 +775,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+@@ -802,7 +802,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
  				       enum iscsi_host_param param, char *buf)
  {
  	struct iscsi_sw_tcp_host *tcp_sw_host = iscsi_host_priv(shost);
@@ -89,7 +89,7 @@ index 7212e3a13fe6..33fb111e2e19 100644
  	struct iscsi_conn *conn;
  	struct iscsi_tcp_conn *tcp_conn;
  	struct iscsi_sw_tcp_conn *tcp_sw_conn;
-@@ -784,6 +784,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+@@ -812,6 +812,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
  
  	switch (param) {
  	case ISCSI_HOST_PARAM_IPADDRESS:
@@ -97,7 +97,7 @@ index 7212e3a13fe6..33fb111e2e19 100644
  		if (!session)
  			return -ENOTCONN;
  
-@@ -872,12 +873,14 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+@@ -906,12 +907,14 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
  	if (!cls_session)
  		goto remove_host;
  	session = cls_session->dd_data;
