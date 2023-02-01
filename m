@@ -2,126 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 483DDC05027
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Feb 2023 17:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 597A0C636D4
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Feb 2023 18:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231673AbjBAR7q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Feb 2023 12:59:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47246 "EHLO
+        id S231215AbjBASGw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Feb 2023 13:06:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230207AbjBAR7p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 12:59:45 -0500
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E777E4C0F1;
-        Wed,  1 Feb 2023 09:59:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1675274385; x=1706810385;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=fSSmRj8Su784FKIaxCReilXY880KYgI8cMhPH/Q3QoE=;
-  b=O5yPWuFGC7cXDNITjNSE2xCexmnExp3AN35olW1PyC5V43EmCXrPaVvY
-   aJKj6yrFtvLFTXoBR3gIbc6eNZP3rMu5UFeBs8AC7gVGuWN0MmFQwS07V
-   pQinMIHeckzOcqGiSTamhiI1qb9HIhANZNZzKS4RrpJDD94+fsuWUjhsN
-   c=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 01 Feb 2023 09:59:44 -0800
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2023 09:59:44 -0800
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 1 Feb 2023 09:59:43 -0800
-Date:   Wed, 1 Feb 2023 09:59:43 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     Bjorn Andersson <quic_bjorande@quicinc.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S229576AbjBASGu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 13:06:50 -0500
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E6807DBF3
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2023 10:06:49 -0800 (PST)
+Received: by mail-pf1-f174.google.com with SMTP id g9so13192466pfo.5
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Feb 2023 10:06:49 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=6gBZq0wYRHnGH4hjPubEjFbLxckfB/3To6qGi+QAYAg=;
+        b=vOaGsZ3u1k+/Eljkq41q/cGTAk2tlE9hdYJClTMqPUwq0TpBXjfPfcnwUxbRx7qsL/
+         whf0ywTlJqujVZzsQMwO8QqmVyX/0YUI4SFhguXFzpNj6Xgckg/vltw3qNow4QXIDiA5
+         /AQAp2PXx0IPEVPMJCGjU8zWd7yJr7HBzwiCcKUGnWJ8dAleinUHp3nGZNdlfxXzajN8
+         ABSG/VKElMQvtXGeCBjPBBpcTfRH99nrYDkbdBScTxIR05NFx+TeWABsLFLk2N2eBJ5D
+         vUsFMAyDdnbERfP0xWNi9QM6sR5GMA9G3otbTttys+lJ6JsnEo7lw3zFR6lE1H2GLgyh
+         845Q==
+X-Gm-Message-State: AO0yUKVsrsSgihFH0uyAEYqDLiSD5N3MLgWnYJkotBe/0eSHC2cTG4OH
+        sqoWdqVY/e9Ar4Fh4soJfkk=
+X-Google-Smtp-Source: AK7set8h+bfhTclZBDCYOgxcrzUJ95RFs9ci5Mb1iZcvCGrbrxJ0MTmeqbaPfMOq5nv8vV5Zl+DIKQ==
+X-Received: by 2002:a05:6a00:1ad2:b0:582:a212:d92c with SMTP id f18-20020a056a001ad200b00582a212d92cmr3772031pfv.10.1675274808523;
+        Wed, 01 Feb 2023 10:06:48 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f3cf:17ca:687:af15])
+        by smtp.gmail.com with ESMTPSA id x13-20020aa78f0d000000b005825b8e0540sm7021264pfr.204.2023.02.01.10.06.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Feb 2023 10:06:47 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Bean Huo" <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "Jinyoung Choi" <j-young.choi@samsung.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <mani@kernel.org>
-Subject: Re: [PATCH] scsi: ufs: core: Limit DMA alignment check
-Message-ID: <20230201175943.GB14334@asutoshd-linux1.qualcomm.com>
-References: <20230201034917.1902330-1-quic_bjorande@quicinc.com>
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 1/2] scsi: core: Introduce the BLIST_BROKEN_FUA flag
+Date:   Wed,  1 Feb 2023 10:06:36 -0800
+Message-Id: <20230201180637.2102556-2-bvanassche@acm.org>
+X-Mailer: git-send-email 2.39.1.456.gfc5497dd1b-goog
+In-Reply-To: <20230201180637.2102556-1-bvanassche@acm.org>
+References: <20230201180637.2102556-1-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20230201034917.1902330-1-quic_bjorande@quicinc.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 31 2023 at 19:49 -0800, Bjorn Andersson wrote:
->The three DMA memory regions allocated for the host memory space is
->documented to require alignment of 128, 1024 and 1024 respectively, but
->the returned address is checked for PAGE_SIZE alignment.
->
->In the case these allocations are serviced by e.g. the Arm SMMU, the
->size and alignment will be determined by its supported page sizes. In
->most cases SZ_4K and a few larger sizes are available.
->
->In the typical configuration this does not cause problems, but in the
->event that the system PAGE_SIZE is increased beyond 4k, it's no longer
->reasonable to expect that the allocation will be PAGE_SIZE aligned.
->
->Limit the DMA alignment check to the actual alignment requirements
->written in the comments in the code, to avoid the UFS core refusing to
->initialize with such configuration.
->
->Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+UFS devices perform better when using SYNCHRONIZE CACHE command instead of
+the FUA flag. Introduce the BLIST_BROKEN_FUA flag for using SYNCHRONIZE
+CACHE instead of FUA.
 
-Reviewed-by: Asutosh Das <quic_asutoshd@quicinc.com>
+The BLIST_BROKEN_FUA flag can be set by using one of the following
+approaches:
+* From user space, by writing into /proc/scsi/device_info.
+* From the kernel, by setting sdev_bflags from the slave_alloc callback.
 
->---
-> drivers/ufs/core/ufshcd.c | 9 +++------
-> 1 file changed, 3 insertions(+), 6 deletions(-)
->
->diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->index ec732e4bbbf4..d7f3f1ba9d12 100644
->--- a/drivers/ufs/core/ufshcd.c
->+++ b/drivers/ufs/core/ufshcd.c
->@@ -3724,12 +3724,9 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
->
-> 	/*
-> 	 * UFSHCI requires UTP command descriptor to be 128 byte aligned.
->-	 * make sure hba->ucdl_dma_addr is aligned to PAGE_SIZE
->-	 * if hba->ucdl_dma_addr is aligned to PAGE_SIZE, then it will
->-	 * be aligned to 128 bytes as well
-> 	 */
-> 	if (!hba->ucdl_base_addr ||
->-	    WARN_ON(hba->ucdl_dma_addr & (PAGE_SIZE - 1))) {
->+	    WARN_ON(hba->ucdl_dma_addr & (128 - 1))) {
-> 		dev_err(hba->dev,
-> 			"Command Descriptor Memory allocation failed\n");
-> 		goto out;
->@@ -3745,7 +3742,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
-> 						   &hba->utrdl_dma_addr,
-> 						   GFP_KERNEL);
-> 	if (!hba->utrdl_base_addr ||
->-	    WARN_ON(hba->utrdl_dma_addr & (PAGE_SIZE - 1))) {
->+	    WARN_ON(hba->utrdl_dma_addr & (1024 - 1))) {
-> 		dev_err(hba->dev,
-> 			"Transfer Descriptor Memory allocation failed\n");
-> 		goto out;
->@@ -3769,7 +3766,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
-> 						    &hba->utmrdl_dma_addr,
-> 						    GFP_KERNEL);
-> 	if (!hba->utmrdl_base_addr ||
->-	    WARN_ON(hba->utmrdl_dma_addr & (PAGE_SIZE - 1))) {
->+	    WARN_ON(hba->utmrdl_dma_addr & (1024 - 1))) {
-> 		dev_err(hba->dev,
-> 		"Task Management Descriptor Memory allocation failed\n");
-> 		goto out;
->-- 
->2.25.1
->
+For a prior version of this patch, see also
+https://lore.kernel.org/lkml/YpecaXfIxZBHIcfj@google.com/T/
+
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_scan.c    | 3 +++
+ include/scsi/scsi_devinfo.h | 2 ++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index a62925355c2c..c1eb6bfe7ed2 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1020,6 +1020,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_NO_RSOC)
+ 		sdev->no_report_opcodes = 1;
+ 
++	if (*bflags & BLIST_BROKEN_FUA)
++		sdev->broken_fua = 1;
++
+ 	/* set the device running here so that slave configure
+ 	 * may do I/O */
+ 	mutex_lock(&sdev->state_mutex);
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 5d14adae21c7..f89e8d1a9d64 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -68,6 +68,8 @@
+ #define BLIST_RETRY_ITF		((__force blist_flags_t)(1ULL << 32))
+ /* Always retry ABORTED_COMMAND with ASC 0xc1 */
+ #define BLIST_RETRY_ASC_C1	((__force blist_flags_t)(1ULL << 33))
++/* Use SYNCHRONIZE CACHE instead of FUA */
++#define BLIST_BROKEN_FUA	((__force blist_flags_t)(1ULL << 34))
+ 
+ #define __BLIST_LAST_USED BLIST_RETRY_ASC_C1
+ 
