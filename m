@@ -2,179 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2F4BC05027
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Feb 2023 15:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7352C05027
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Feb 2023 16:28:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231368AbjBAPOq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Feb 2023 10:14:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53092 "EHLO
+        id S231827AbjBAQ2z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Feb 2023 11:28:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231685AbjBAPOc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 10:14:32 -0500
-Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BD1340DB
-        for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2023 07:13:58 -0800 (PST)
-Received: by mail-qt1-x830.google.com with SMTP id z5so7613022qtn.8
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Feb 2023 07:13:58 -0800 (PST)
+        with ESMTP id S232005AbjBAQ2u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 11:28:50 -0500
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2686E5CD21;
+        Wed,  1 Feb 2023 08:28:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/lXpoIfaZTxbS2QRN9RfCIEN9vyUFx7ZzXfKlV5Axnk=;
-        b=iYXpIQVaHQlPkpAMqJXgYZfCJQ1gmnhE6jrB3IiSpNufx9W6xRkA2RdIJkLkonJRAQ
-         KkGfPqfkX8Xkbr7rT5XpDvMknFBlvGrC+uVtjxb/cBYYIaWcc7JvHSDC4WPTYmZdrjQY
-         +BGPmDJhn4jDzchWKzajw4d0gJogwxzlXUDYzNwOyw3Hmy17JyRb/ldGUBVMUhI2eV7O
-         YZXUQBKepuWpcKO2FY4Tg3FLcTsU3SS5uE6lb9GgOlKyC5gFjGEpv9YdYi6WQoKND+2Q
-         BzVaQqBzfel1P+J4hbHI0tF6IHzkHPUvCkTM0sM0yoigoDSDhIEx6HCc1vM2j28/QpUy
-         XoZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/lXpoIfaZTxbS2QRN9RfCIEN9vyUFx7ZzXfKlV5Axnk=;
-        b=eVXq++1JIB47vrI41ldp2044CU0rO/vea3CxdGvx1MiJV/+KNTkCU9MTddQeadoXDK
-         hgwk/1+O/RtMbIomIqfq0rUzmurD7FyIGOWo9ckNrzPgs7ed4klIkCH4qI9wzHzPs5kb
-         PpuDF3W7kKN4y9a5+BsgXVSvwyiGw2EQ4Chs/cMf0vkt3fHOb/q89tKaqpg423VFs4I4
-         GGa6uuxyJ3lYVmMt4Vdm1kFpzdbPVS5Bx3le7rbgCmpJp98fXeCuh0m+pyKExBmxYExq
-         2qkvdY3TGn3+ZfSquo2me8Njy2Ft2xEEF4gqqPjBEkYdUmOXs4TlyEs8V0AoqKhoVTf6
-         l6UQ==
-X-Gm-Message-State: AO0yUKWVLPDNufE//BjSk/EPf+ngV0TSXLsDcIeIV6rAeZ3kufKxAsNk
-        vD4iJD5QA6M6tbwpqpf0sFUcQA==
-X-Google-Smtp-Source: AK7set/zFya0Va33f0ElfIcm+RrAjMwtt46oPH8ks+Fmt8Iec5Zg25tyCtAQV/Y+pvzvO/62vQw/Ww==
-X-Received: by 2002:a05:622a:134c:b0:3b9:ba79:80d7 with SMTP id w12-20020a05622a134c00b003b9ba7980d7mr3284848qtk.12.1675264437407;
-        Wed, 01 Feb 2023 07:13:57 -0800 (PST)
-Received: from localhost (cpe-174-109-170-245.nc.res.rr.com. [174.109.170.245])
-        by smtp.gmail.com with ESMTPSA id c8-20020ac81e88000000b003b9bca1e093sm788065qtm.27.2023.02.01.07.13.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Feb 2023 07:13:56 -0800 (PST)
-Date:   Wed, 1 Feb 2023 10:13:55 -0500
-From:   Josef Bacik <josef@toxicpanda.com>
-To:     lsf-pc@lists.linuxfoundation.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [REMINDER] LSF/MM/BPF: 2023: Call for Proposals
-Message-ID: <Y9qBs82f94aV4/78@localhost.localdomain>
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1675268924; x=1706804924;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=cTWKNRgpzfZZ1xcjd6kf3kLvV7hexbb7CfgOchz/JkM=;
+  b=vLtY+TkPTS3PmbLRIHVz/mxi9hoBTFgynEj1CXNXNftuNoTZ/PvRrXB8
+   CS9UWfSFczlS4E390h4z1KNF6IUYladZdRvEoxNiXyqde4Hqr3+5qW+7W
+   +PneM3DFw3SAIGBPbMi7apm3zbUcNa7YQgeWW9XZmG/ZLZXFzKTGVZwwj
+   M=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 01 Feb 2023 08:28:43 -0800
+X-QCInternal: smtphost
+Received: from nalasex01c.na.qualcomm.com ([10.47.97.35])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2023 08:28:43 -0800
+Received: from hu-bjorande-lv.qualcomm.com (10.49.16.6) by
+ nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Wed, 1 Feb 2023 08:28:43 -0800
+Date:   Wed, 1 Feb 2023 08:28:41 -0800
+From:   Bjorn Andersson <quic_bjorande@quicinc.com>
+To:     Manivannan Sadhasivam <mani@kernel.org>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>
+Subject: Re: [PATCH] scsi: ufs: core: Limit DMA alignment check
+Message-ID: <20230201162841.GA2238350@hu-bjorande-lv.qualcomm.com>
+References: <20230201034917.1902330-1-quic_bjorande@quicinc.com>
+ <20230201102748.GA62808@thinkpad>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230201102748.GA62808@thinkpad>
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01c.na.qualcomm.com (10.47.97.35)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2023 will be held from May 8 to May 10 at the
-Vancouver Convention Center in Vancouver, British Columbia, Canada.
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline kernel
-within the coming years.
+On Wed, Feb 01, 2023 at 03:57:48PM +0530, Manivannan Sadhasivam wrote:
+> On Tue, Jan 31, 2023 at 07:49:17PM -0800, Bjorn Andersson wrote:
+> > The three DMA memory regions allocated for the host memory space is
+> > documented to require alignment of 128, 1024 and 1024 respectively, but
+> > the returned address is checked for PAGE_SIZE alignment.
+> > 
+> > In the case these allocations are serviced by e.g. the Arm SMMU, the
+> > size and alignment will be determined by its supported page sizes. In
+> > most cases SZ_4K and a few larger sizes are available.
+> > 
+> > In the typical configuration this does not cause problems, but in the
+> > event that the system PAGE_SIZE is increased beyond 4k, it's no longer
+> > reasonable to expect that the allocation will be PAGE_SIZE aligned.
+> > 
+> > Limit the DMA alignment check to the actual alignment requirements
+> > written in the comments in the code, to avoid the UFS core refusing to
+> > initialize with such configuration.
+> 
+> Isn't dma_alloc_coherent() supposed to return PAGE_SIZE aligned dma and cpu
+> addresses? I suppose that could be reason for checking against PAGE_SIZE.
+> 
 
-LSF/MM/BPF 2023 will be a three day, stand-alone conference with four
-subsystem-specific tracks, cross-track discussions, as well as BoF and
-hacking sessions.
+If the allocating device has associated dma_mem, the requested size will
+be rounded up to the next order and you will get an allocation which is
+sized and aligned to that.
+Given the three allocations on my device is 98304, 1024 and 640. The
+latter two would only be aligned to 1kb if this code path is taken...
 
-	https://events.linuxfoundation.org/lsfmm/
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
+But in our case, the comment for __iommu_dma_alloc_noncontiguous() seems
+to give us the reason for the issue.
 
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic as
-soon as possible.
+/*
+ * If size is less than PAGE_SIZE, then a full CPU page will be allocated,
+ * but an IOMMU which supports smaller pages might not map the whole thing.
+ */
 
-We're asking that you please let us know you want to be invited by March
-1, 2023.  We realize that travel is an ever changing target, but it
-helps us get an idea of possible attendance numbers.  Clearly things can
-and will change, so consider the request to attend deadline more about
-planning and less about concrete plans.
+Our iommu reports supporting mapping of 4kb pages.
 
-1) Fill out the following Google form to request attendance and
-suggest any topics
+> > 
+> > Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+> 
+> But it doesn't hurt to check for the actual alignment.
+> 
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> 
 
-	https://forms.gle/VKVXjWGBHZbnsz226
+Thanks,
+Bjorn
 
-In previous years we have accidentally missed people's attendance
-requests because they either didn't cc lsf-pc@ or we simply missed them
-in the flurry of emails we get.† Our community is large and our
-volunteers are busy, filling this out will help us make sure we don't
-miss anybody.
-
-2) Proposals for agenda topics should still be sent to the following
-lists to allow for discussion among your peers.† This will help us
-figure out which topics are important for the agenda.
-
-† † † ††lsf-pc@lists.linux-foundation.org
-
-and CC the mailing lists that are relevant for the topic in question:
-
-† † † † FS:† † †linux-fsdevel@vger.kernel.org
-† † † † MM:† † †linux-mm@kvack.org
-† † † † Block:††linux-block@vger.kernel.org
-† † † † ATA:† ††linux-ide@vger.kernel.org
-† † † † SCSI:† †linux-scsi@vger.kernel.org
-† † † † NVMe:† †linux-nvme@lists.infradead.org
-† † † † BPF:† ††bpf@vger.kernel.org
-
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one. Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
-
-3) This year we would like to try and make sure we are including new
-members in the community that the program committee may not be familiar
-with.  The Google form has an area for people to add required/optional
-attendees.  Please encourage new members of the community to submit a
-request for an invite as well, but additionally if maintainers or long
-term community members could add nominees to the form it would help us
-make sure that new members get the proper consideration.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks; the sessions are supposed to be
-interactive, inclusive discussions.
-
-The COVID related restrictions can be found here, however at this time
-there are no protocols defined.
-
-	https://events.linuxfoundation.org/lsfmm/attend/health-and-safety/
-
-We are still looking into the virtual component.  We will likely run
-something similar to what we did in 2022, but details on that will be
-forthcoming.
-
-2022: https://lwn.net/Articles/lsfmm2022/
-
-2019:†https://lwn.net/Articles/lsfmm2019/
-
-2018:†https://lwn.net/Articles/lsfmm2018/
-
-2017:†https://lwn.net/Articles/lsfmm2017/
-
-2016:†https://lwn.net/Articles/lsfmm2016/
-
-2015:†https://lwn.net/Articles/lsfmm2015/
-
-2014:†http://lwn.net/Articles/LSFMM2014/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-† † † ††lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-† † † † Josef Bacik (Filesystems)
-† † † † Amir Goldstein (Filesystems)
-† † † † Martin K. Petersen (Storage)
-† † † † Javier Gonz·lez (Storage)
-† † † † Michal Hocko (MM)
-† † † † Dan Williams (MM)
-† † † † Martin KaFai Lau (BPF)
-† † † † Daniel Borkmann (BPF)
+> Thanks,
+> Mani
+> 
+> > ---
+> >  drivers/ufs/core/ufshcd.c | 9 +++------
+> >  1 file changed, 3 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index ec732e4bbbf4..d7f3f1ba9d12 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > @@ -3724,12 +3724,9 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+> >  
+> >  	/*
+> >  	 * UFSHCI requires UTP command descriptor to be 128 byte aligned.
+> > -	 * make sure hba->ucdl_dma_addr is aligned to PAGE_SIZE
+> > -	 * if hba->ucdl_dma_addr is aligned to PAGE_SIZE, then it will
+> > -	 * be aligned to 128 bytes as well
+> >  	 */
+> >  	if (!hba->ucdl_base_addr ||
+> > -	    WARN_ON(hba->ucdl_dma_addr & (PAGE_SIZE - 1))) {
+> > +	    WARN_ON(hba->ucdl_dma_addr & (128 - 1))) {
+> >  		dev_err(hba->dev,
+> >  			"Command Descriptor Memory allocation failed\n");
+> >  		goto out;
+> > @@ -3745,7 +3742,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+> >  						   &hba->utrdl_dma_addr,
+> >  						   GFP_KERNEL);
+> >  	if (!hba->utrdl_base_addr ||
+> > -	    WARN_ON(hba->utrdl_dma_addr & (PAGE_SIZE - 1))) {
+> > +	    WARN_ON(hba->utrdl_dma_addr & (1024 - 1))) {
+> >  		dev_err(hba->dev,
+> >  			"Transfer Descriptor Memory allocation failed\n");
+> >  		goto out;
+> > @@ -3769,7 +3766,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+> >  						    &hba->utmrdl_dma_addr,
+> >  						    GFP_KERNEL);
+> >  	if (!hba->utmrdl_base_addr ||
+> > -	    WARN_ON(hba->utmrdl_dma_addr & (PAGE_SIZE - 1))) {
+> > +	    WARN_ON(hba->utmrdl_dma_addr & (1024 - 1))) {
+> >  		dev_err(hba->dev,
+> >  		"Task Management Descriptor Memory allocation failed\n");
+> >  		goto out;
+> > -- 
+> > 2.25.1
+> > 
+> 
+> -- 
+> ‡ÆÆ‡Æ£‡Æø‡Æµ‡Æ£‡Øç‡Æ£‡Æ©‡Øç ‡Æö‡Æ§‡Ææ‡Æö‡Æø‡Æµ‡ÆÆ‡Øç
