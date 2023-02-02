@@ -2,58 +2,81 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EE4C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 09:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FBE9C636D4
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 14:10:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232496AbjBBJ4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Feb 2023 04:56:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37628 "EHLO
+        id S232018AbjBBOKT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Feb 2023 09:10:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232195AbjBBJ4L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 04:56:11 -0500
-X-Greylist: delayed 86680 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 02 Feb 2023 01:56:02 PST
-Received: from mail.corrib.pl (mail.corrib.pl [185.58.226.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FE8987D14
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 01:56:02 -0800 (PST)
-Received: by mail.corrib.pl (Postfix, from userid 1001)
-        id 18AB3A43B5; Wed,  1 Feb 2023 09:06:59 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=corrib.pl; s=mail;
-        t=1675242458; bh=X6IEpSISwJiYlJ3uA866lskXve3r+4o2hf4z7VM6m5o=;
-        h=Date:From:To:Subject:From;
-        b=s6/bwNtWjWiG86Uq8TrAKo9+XP8uWlmjrNfmHlDLYZWNDVhyoMKAB9CXem6wZG1Uk
-         GojNPj1Tfb4JsQUSY2C7+cNpkI7ELiI+SkN9x0JqykR0oKpbyqfWu8r2P8tZG5xuZC
-         jM+hLGEXXCyfjXSl1o2oejptHHc/8ol1qQS/ziviZkP9iy79xV6qQ1PQUXIvE3nYwp
-         PmIKe6/Qggtfmfiwxan59VSzBs/QkXYgyNZkfdVlIqhB4fT6s1vAOY981V46XaF3d2
-         Qw4vGwtECFifiIUPctoWLVeaIV1tCwCTMOZ0ovi9ZchDY2J/FT6GRRfX0y/7BR3uGV
-         k9Yp7c12m5cew==
-Received: by mail.corrib.pl for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2023 09:06:19 GMT
-Message-ID: <20230201074500-0.1.58.fifq.0.g98dsi7bpj@corrib.pl>
-Date:   Wed,  1 Feb 2023 09:06:19 GMT
-From:   =?UTF-8?Q? "Szczepan_Kie=C5=82basa" ?= 
-        <szczepan.kielbasa@corrib.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Faktoring
-X-Mailer: mail.corrib.pl
+        with ESMTP id S229609AbjBBOKT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 09:10:19 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F25488F13;
+        Thu,  2 Feb 2023 06:10:18 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DF4DB61B5C;
+        Thu,  2 Feb 2023 14:10:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6339C433D2;
+        Thu,  2 Feb 2023 14:10:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1675347017;
+        bh=KnHBoINmS58SP6n7EMnX7mpN9fx1nvdp/zRrtfMztuw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=xHjIi4Ol/C52BR/7Yu6IPxGVAe6Nqf26XayN1nZ1i8+MV2sM9aYILtFR4FVOzjPHl
+         Evaope9f6rGz1FEmxodot7sM0TEik3IqaedJTUB86DAZsue1GpIcXOpRNULGLDD6aW
+         sZFwF18YEb1QgjKutftjc8EHRN/jEM38b3XIIsx0=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-scsi@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: snic: fix memory leak with using debugfs_lookup()
+Date:   Thu,  2 Feb 2023 15:10:09 +0100
+Message-Id: <20230202141009.2290380-1-gregkh@linuxfoundation.org>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1236; i=gregkh@linuxfoundation.org; h=from:subject; bh=KnHBoINmS58SP6n7EMnX7mpN9fx1nvdp/zRrtfMztuw=; b=owGbwMvMwCRo6H6F97bub03G02pJDMm3jzh8SExYLL/n4FGXmIAnWo0aC7fejHjzdb5o5cq9q2NT d1yb3RHLwiDIxCArpsjyZRvP0f0VhxS9DG1Pw8xhZQIZwsDFKQAT0c5gmO8Y0Sdx0+n/9e1vvkbnHS kNV5j85xPDgq5FQpFnpp7ZMi+4tt10z5LnXffm7wcA
+X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+When calling debugfs_lookup() the result must have dput() called on it,
+otherwise the memory will leak over time.  To make things simpler, just
+call debugfs_lookup_and_remove() instead which handles all of the logic at
+once.
 
-rozwa=C5=BCali Pa=C5=84stwo wyb=C3=B3r finansowania, kt=C3=B3re spe=C5=82=
-ni potrzeby firmy, zapewniaj=C4=85c natychmiastowy dost=C4=99p do got=C3=B3=
-wki, bez zb=C4=99dnych przestoj=C3=B3w?=20
+Cc: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: Sesidhar Baddela <sebaddel@cisco.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/snic/snic_debugfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Przygotowali=C5=9Bmy rozwi=C4=85zania faktoringowe dopasowane do Pa=C5=84=
-stwa bran=C5=BCy i wielko=C5=9Bci firmy, dzi=C4=99ki kt=C3=B3rym, nie mus=
-z=C4=85 Pa=C5=84stwo martwi=C4=87 si=C4=99 o niewyp=C5=82acalno=C5=9B=C4=87=
- kontrahent=C3=B3w, poniewa=C5=BC transakcje s=C4=85 zabezpieczone i posi=
-adaj=C4=85 gwarancj=C4=99 sp=C5=82aty.=20
-Chc=C4=85 Pa=C5=84stwo przeanalizowa=C4=87 dost=C4=99pne opcje?
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
+index 57bdc3ba49d9..9dd975b36b5b 100644
+--- a/drivers/scsi/snic/snic_debugfs.c
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -437,6 +437,6 @@ void snic_trc_debugfs_init(void)
+ void
+ snic_trc_debugfs_term(void)
+ {
+-	debugfs_remove(debugfs_lookup(TRC_FILE, snic_glob->trc_root));
+-	debugfs_remove(debugfs_lookup(TRC_ENABLE_FILE, snic_glob->trc_root));
++	debugfs_lookup_and_remove(TRC_FILE, snic_glob->trc_root);
++	debugfs_lookup_and_remove(TRC_ENABLE_FILE, snic_glob->trc_root);
+ }
+-- 
+2.39.1
 
-
-Pozdrawiam
-Szczepan Kie=C5=82basa
