@@ -2,84 +2,180 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DDA4C05027
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 01:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4CB5C636CD
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 01:46:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229848AbjBBBG2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Feb 2023 20:06:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53586 "EHLO
+        id S230404AbjBBBqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Feb 2023 20:46:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbjBBBG0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 20:06:26 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE81B6A69;
-        Wed,  1 Feb 2023 17:06:25 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id nm12-20020a17090b19cc00b0022c2155cc0bso322965pjb.4;
-        Wed, 01 Feb 2023 17:06:25 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7U/ZC/7mH3sydJX/MVCCCZAUEhdYO6ljg7mvo+RSKFs=;
-        b=ZrlrVEZ8NRyped347qBbu3c/ejYT83nqUe6fmqnbNA+gLDphPU6HP7Mx3eiuVDxake
-         L12fJxSLSUnnMgs1DUkrtwlEtyhXluG4kJleW7IGT8CeHqSf+qen5cRVoZBwFCdPR96X
-         EuocOW8s1bWpJR49M/Lzz2lpO9MzG1oYK+X4A5aFK8Z+5Z8BVy2fMzNz1Ej7AbRFVJcf
-         utOzQILsf7mqRhKELwpIbzTashWOWi7PVetlsqD9YzDW5kwUt7k6TEXYJ0oBD2cdiHoF
-         K4cLpOWN9VexRsppPOYcfwpJAaMDos8iLZRedZEHIKpfZc6FdTYHCxM8KDv3PCVGGntU
-         hDsg==
-X-Gm-Message-State: AO0yUKVDzgiZrD+nMEmFOArHn3Q+cF+KT3V0b1Jlslz8xlpqbKgVoZoI
-        bh0ep+J65Xbc0QIJaWxQP3U=
-X-Google-Smtp-Source: AK7set91PfOxWXp7jnbumlVGRvclUWAHYMaUebcWZSbJrB6WUkYdkaumobI/3Ix1684OntcP+cof9A==
-X-Received: by 2002:a17:90a:5:b0:230:2052:1c2 with SMTP id 5-20020a17090a000500b00230205201c2mr4582885pja.42.1675299985093;
-        Wed, 01 Feb 2023 17:06:25 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:f3cf:17ca:687:af15? ([2620:15c:211:201:f3cf:17ca:687:af15])
-        by smtp.gmail.com with ESMTPSA id bt21-20020a17090af01500b0021904307a53sm1964023pjb.19.2023.02.01.17.06.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Feb 2023 17:06:24 -0800 (PST)
-Message-ID: <ea0eff5f-5c05-ebca-58a4-1e772a6fa739@acm.org>
-Date:   Wed, 1 Feb 2023 17:06:22 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v4 1/7] block: Introduce blk_mq_debugfs_init()
+        with ESMTP id S229929AbjBBBqh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 20:46:37 -0500
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (mail-bn8nam04on2057.outbound.protection.outlook.com [40.107.100.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD377750D;
+        Wed,  1 Feb 2023 17:46:34 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Zg+ZROT/ay39hZeGwSDfg0+1JmQbTt3rOj5Qom6D+6RBGgdm1+eUFlXsE+X2ygp2ekJhGuNsT2W/1qRwYByX0Uq/mKKU/qQ1NVAtMc6XgDc975HEbtXXkIK1zfSvLDct/PGkA9LsWoy5LAQk1bUxvx2czti5GKv/dQoSg2I46hNA7xkynaop+5NnhmpNBxkQwsrs6IkYdrmAk9i+pMkG5ryBPgAnF3YLe9Di3LzvTGIcH3aPaxGuc078bZT62S73EN91oCsWmVulBfAgrrjFSN0erMN2Alu/EV4njLH3yiCycp+Q0leuyEGchjb12+fiHBvsys/wZtAX6kQ/wHA63A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tkc4CJxBlJX6ob91XWTjrffaqZhcAoMaEhmwOYpZd+c=;
+ b=AGtZbNKNRDedb3/EmZl5qvjF/ajcYXZ3ILi7SBLm+TlV0r+4GGcdtfZ1x02UBwsr2ksBAbGnphGxYw0odKp9oP8ow+vCGH2ByuBKwqMTqB3HFKzmxqoCC84Fc4goV9W8F+j6viPh3Z7WtVZ++zVDI0DOFgBGUq8J4LtiXuUoXB3NUu3qk1Ojxosb45VoO34LZtuu1lnxDzZtxJBk9mKueoqe/VXw02KpKKg8HKDrhNwM5/ROkAj6ri32VZNDF/6CkIkm2Ceon1VcFp0Xe5auMkImNGfusj1jWw4vhhewBXJl1i/y4JSni//GfXVjk0MFslXRV8gSj4x2neeWOuBcdQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tkc4CJxBlJX6ob91XWTjrffaqZhcAoMaEhmwOYpZd+c=;
+ b=QsJLxB2owxuZErDL3W2RKZJflWDy/7IwTtTq0ebLfF/2QxTxgzPSCDPTwwfgIU16Dr3ZmLtZc8jqyVlHrrt0nW4Qx4YW8V90AWksbIh9amKJT9lGGVDp34Et/BJEp1a0WXu2u9XqcIwq1rDj/aquiiwJmyttMXPKhwAQ0OzTysRXWubePvBUHhv1BVLQ2P/bAyRCd9FyuCuxhabOL0Bzv4mgy2rWwLvXXR0F4GTr8BumHT6jXWi5wACROHLZeCim/aBQL3Z6ebqIaQoJ1QU0Gs+HhJgfYKdbM1v7QbgdhS07rbl1/ZF4Z8gbSpyaIgv6tv7TRfL+686NAEcl3paw+A==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by DM4PR12MB5913.namprd12.prod.outlook.com (2603:10b6:8:66::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6064.23; Thu, 2 Feb
+ 2023 01:46:33 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::4aaa:495:78b4:1d7c]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::4aaa:495:78b4:1d7c%3]) with mapi id 15.20.6064.022; Thu, 2 Feb 2023
+ 01:46:33 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+CC:     Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
+        =?utf-8?B?SmF2aWVyIEdvbnrDoWxleg==?= <javier@javigon.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>, Hannes Reinecke <hare@suse.de>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        "willy@infradead.org" <willy@infradead.org>
+Subject: [LSF/MM/BFP ATTEND][LSF/MM/BFP TOPIC] Storage: REQ_OP_VERIFY support
+ for block layer and device drivers
+Thread-Topic: [LSF/MM/BFP ATTEND][LSF/MM/BFP TOPIC] Storage: REQ_OP_VERIFY
+ support for block layer and device drivers
+Thread-Index: AQHZNqgtz7FPK/8jYUq5TjxBPlwlsw==
+Date:   Thu, 2 Feb 2023 01:46:33 +0000
+Message-ID: <d77f48fe-5b33-8997-d7bc-0a3ceea2008c@nvidia.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Pankaj Raghav <p.raghav@samsung.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <kbusch@kernel.org>
-References: <20230130212656.876311-1-bvanassche@acm.org>
- <20230130212656.876311-2-bvanassche@acm.org>
- <20230201205800.t3gpx7w3aw2ozab7@garbanzo>
- <20230201212332.p3mdb5ab3qisuo2x@garbanzo>
- <4c9b87dc-aeeb-43b6-0c18-4d04495683da@acm.org>
- <20230201235919.q5rhglvgw7uduexy@garbanzo>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230201235919.q5rhglvgw7uduexy@garbanzo>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|DM4PR12MB5913:EE_
+x-ms-office365-filtering-correlation-id: 1f8923fc-c87f-4997-0e47-08db04bf5003
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: RykzA3UsMP6EcpqqRZJVvyPvOAQWg4GjpYDiyD0IfNuCMRNqqpQjG3lulpck1JkW1EymPj5kBtkIuVlxaGZf+c7y6BH8/fJ9srbH84UUV0u94MzYnBSwpwDs11hDKwBKGjL8EYC83zz9M2PgJGaGGzADfmybwj3c+Z74zO6Obf23XzMW+CsRf57zFblL71z7Ou0fNqGLEEJJDHx9hi0rDu/gbSG8q9dK+kCW03I2j5l2eO//qZt9FHl+YIl6hyRLfOe7zrQFgupL5dlF9xqSquPpzymrSZUJZGMkKElYNr8wpqjWok45BLkE2EA4zh5tPbrpAl26IY3lJzAOYAbln/K63/VL7N8FVxJpYK07Ww5S+ahKDgjIe+LGjHjruRU2UJUhgIZXRoVz4GX7swvJPfGZBIsWmFx2mVjQxwWmfVUe8CAIY0jfug8aorZkbqZT60o/nzV8f7r1xZuwNOPcDiamxnr+zHQYZDTAG4JEVWdK/fCrJnEs4xwSxes/HI5sBa3T880Fve+SwNQhAlwbjk3uBIO+zlHppbj14/XahOzgF5/aoGlnr0gj+lIMk0uTDwRMVHa0OGQSdIo+JqW5Z/2Z0q4oiXrLI3gu+BS5duqTOgDZAnkM0CtR3s8n6vbVeGyCt1Kgd0vdUwYxxysggzNA8wmXCB6ZBgD/g1M4KDI3BVA/LglWNfPS4CtDhmmvnYPkqLQdW5uonqIcwVpNquckClv9T9bSdPN2hOJloxjln8jzdCuQyWmVE9Q2/dKAirvhTj+CMRzXlLwXKhMzTA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(136003)(396003)(346002)(366004)(39860400002)(376002)(451199018)(2906002)(6506007)(31686004)(186003)(2616005)(6512007)(5660300002)(91956017)(7416002)(86362001)(66946007)(66556008)(36756003)(66476007)(6486002)(31696002)(8936002)(66446008)(4326008)(478600001)(8676002)(83380400001)(76116006)(71200400001)(110136005)(38070700005)(41300700001)(54906003)(122000001)(64756008)(316002)(38100700002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?eDdwdVhSeWVSS3RtaTMwWUd5VjBvdzVJTmVEaWdpYWl6cFc5eGt5REphOTIy?=
+ =?utf-8?B?K2xRdWtNVTk0dUo2WlVCdGVSdlRCVzcyd0JubFVKT3NGTTdWUlo4emhDK3Vw?=
+ =?utf-8?B?ajVjV2FOOUwzME85aGxHbDh6QlNKYmNicDZJaHVxN0szQ3k0YlZ6QUZzcHcr?=
+ =?utf-8?B?bmVqU0RxM05RQ1hnUjdLMm13OXYrNVZwV3VKMWlSdjJHaVU3Ny9iTDVaSDIz?=
+ =?utf-8?B?elgwRmpuWTRkT1FGWlVseFRYWStiVHVxQ2hJWmFubDhPYVhMSHFpWnRUOVVw?=
+ =?utf-8?B?TzJBSU1Xb1Jia2NFRmRTaHFCTGRpTlVLcVgrQmRMOUlOQ05WUldieENNRGQw?=
+ =?utf-8?B?dzJMdkhNUlV1bkdIYnFDQ1ZOWjlFcXhEcTFHSk1LOHB3OXpaZkhpVzdhckJM?=
+ =?utf-8?B?OW5HTUI5WEtRREpQYytLSDR1Um05eGRjN0JjdDFoYXFpQy8yM09RTndpV1pI?=
+ =?utf-8?B?TGkrVTR4aXd3dmtNTzdVNlNWNFFsRWUzS0pZWWdHaEhFYlpQZXMxZTBxNHVL?=
+ =?utf-8?B?TldZVTE0NnRUb3lVbkY3U2ErVUNEdnNoQ1k2MGZCbVBSYzN4eDdNRVc3OWlu?=
+ =?utf-8?B?UksreDk4Y0NwRUVCQmRkcXQ5Z3NZSDdTM3JwSWNKRGNpQkhxUVdwUGJrU1hI?=
+ =?utf-8?B?a1l5S0JsV2ZiV1Z6WFo2cmYzWEtmMEJObHMydkt0ZGZOdXJoNWVUZ3M0cnlX?=
+ =?utf-8?B?RVdUY21TZHRDWmRlL0VZdmJuR1pzRUx3NDBwM1RxWG9JZUs5cXF2djZyMm02?=
+ =?utf-8?B?Zm5pTzIyemN4dlZ3bG9MbjlkWndtdmptaDFUOEJsWjJNMW5sSHZLc3JoSHNW?=
+ =?utf-8?B?UmVRTkFOckVFcUdId2Y5YWtiaWQ3K2JOOFY4dCtqRVR1SnN2Z2V1TkhKNnpk?=
+ =?utf-8?B?bXV6dVdjZ3lWa2p1bFpoZFR2M21DTjJTait1eTNuRGRlbllEdjJHMzVFUktS?=
+ =?utf-8?B?R2gvMktzVXdJbkluRWFrV3I2b1ZGaG13UG5VanNGQlR6NnZXTG9aZE43WnRs?=
+ =?utf-8?B?SkQ3cnAzNS8rNndxck84Wi8zcXVZUnZRNXJlSHJxTjh5MjNRMGkxeUIzOXVl?=
+ =?utf-8?B?QTJUNFRoWEpnSzVBQ0JmQktUWjVJNnd4OUZQTVlESFM3MytoVHBmbjA2V3dv?=
+ =?utf-8?B?ZFR4U1ZYOFU4LzFQMVUxMzhNLzdIQW45Q2RVV0lZWkUycE84bHg1K1psVEM0?=
+ =?utf-8?B?dExpRzJGQnJLRFV5MWVoaFUvdXpTb3lISWRzZEN2bDhsV1dadDBsZ0M3bXA5?=
+ =?utf-8?B?MUc1cVhnNnNTSVljVjJBK2RmZjBKRU9oS1JZNENhanFkK3dkNG1xK1doWFhD?=
+ =?utf-8?B?ZWx6eDJVVW9sVDdtRUg4VmRRQkpLc01jSGU0a1hDVTd1TWdyQTRHTjhOOFp2?=
+ =?utf-8?B?K1YyU1dxbDVwL25XS2djQTFHQTFaSXFrNE5lMy9PVWNicnVpKy91WitYVDFJ?=
+ =?utf-8?B?WCtyQmZxVHhsMVRuQ0ZVZlJGNFVuN2NsNkZEZmE2K3MrT0E4L3pTVWRWdldw?=
+ =?utf-8?B?dEdONDJhSENKNGxZM2dqWHV3MEZPWXJuUXlob1lTVVpBU0ZSUlBBaEJualhv?=
+ =?utf-8?B?WWQ0d05GSEgybENrRm9GMVhIMUMvOS84c1lFSTBWcjRRZ29MWnlqS05OKzFR?=
+ =?utf-8?B?bEE2dFlqMjBsOUdtWWdrYUVXL0k2MVdFWDh5NE5xSXZlYlpLRGJPS1JUVnU2?=
+ =?utf-8?B?YU1wZ1UxeWV6MFY4NldmS1A5Mjl6K0pSRlNMVGtRRUNZODFMejdsQ2cwUVJI?=
+ =?utf-8?B?ellGM2RISFY0T3p1bGc4bXJhcGt5bVc5SDUvci9lMVNkd29ncmNqYkVrd25J?=
+ =?utf-8?B?YkkrcVJad2VLck1nQkZNL2tBNzJoNTdabzFyT3A3NGVLT2h5YlB0MFU3Y3Qr?=
+ =?utf-8?B?Ly9nN3FsZ3FEOFJ6aVJaQkkwYWNnS0FaTHJvQVNXZjM0T2hNS2g2cGY5QW9U?=
+ =?utf-8?B?RTV3SFVBL3JzRnpSL3UyWktWeE1YR2pwa3NGWU5UTXZIRytLenMyUjB5di81?=
+ =?utf-8?B?WVNHU1JYeGo0VmJ4M3MrbjhXcGFnTEprL0JtRjJjOFd4YmJXNTNYYzd2dDZU?=
+ =?utf-8?B?SFVyL1BkWStjbSs2MGp4L0RzU1ZVNUppQkorcjkyMHBvNi9IQWtCd2FtRERi?=
+ =?utf-8?B?Nkk3c3RPUFY1SUZFSURrTWZvRXVySFovb3RZZHdwUGppOEpyUXNKd1JHNUdk?=
+ =?utf-8?B?dlE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <BDCE1823C31E4C4BBAFAF3A81A2AB955@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1f8923fc-c87f-4997-0e47-08db04bf5003
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2023 01:46:33.0230
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: fd3K0z1j8aJov5NDNOfK6dM4BUFPHBk+6FEGQ1CkOb2mz5IqEVJnP0V0EcYrYCpIao+WeJr48057sOAU07qgBg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5913
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/1/23 15:59, Luis Chamberlain wrote:
-> My point was commit 85e0cbbb8a made blk_debugfs_root non-null always now
-> when debugfs is enabled for both request-based block drivers and for
-> make_request block drivers (multiqueue). My reading is that with your
-> patch blk_debugfs_root will not be created for request-based block
-> drivers.
-
-Hi Luis,
-
-The empty version of blk_mq_debugfs_init() in my patch is only selected 
-if  CONFIG_BLK_DEBUG_FS=n. I think that my patch preserves the behavior 
-that /sys/kernel/debug/block/ is created independent of the type of 
-request queues that is created. Am I perhaps misunderstanding your feedback?
-
-Thanks,
-
-Bart.
+SGksDQoNClJpZ2h0IG5vdyB0aGVyZSBpcyBubyBnZW5lcmljIGludGVyZmFjZSB0aGF0IGNhbiBi
+ZSB1c2VkIGJ5IHRoZQ0KaW4ta2VybmVsIGNvbXBvbmVudHMgc3VjaCBhcyBmaWxlLXN5c3RlbSBv
+ciB1c2Vyc3BhY2UgYXBwbGljYXRpb24NCihleGNlcHQgcGFzc3RocnUgY29tbWFuZHMgb3Igc29t
+ZSBjb21iaW5hdGlvbiBvZiB3cml0ZS9yZWFkL2NvbXBhcmUpIHRvDQppc3N1ZSB2ZXJpZnkgY29t
+bWFuZCB3aXRoIHRoZSBjZW50cmFsIGJsb2NrIGxheWVyIEFQSSBmb3IgZGV2aWNlIExCQSANCnZl
+cmlmaWNhdGlvbi4gVGhpcyBjYW4gbGVhZCB0byBlYWNoIHVzZXJzcGFjZSBhcHBsaWNhdGlvbnMg
+aGF2aW5nDQpwcm90b2NvbCBzcGVjaWZpYyBJT0NUTCBhbmQgdGhhdCBkZWZlYXRzIHRoZSBwdXJw
+b3NlIG9mIGhhdmluZyB0aGUgT1MNCnByb3ZpZGUgdG8gSC9XIGFic3RyYWN0aW9uLg0KDQpJJ3Zl
+IHdvcmtlZCBvbiBhIHBhdGNoIHNlcmllcyB0byBpbnRyb2R1Y2UgYSBuZXcgYmxvY2sgbGF5ZXIg
+cGF5bG9hZGxlc3MNCnJlcXVlc3Qgb3BlcmF0aW9uIFJFUV9PUF9WRVJJRlkgdGhhdCBhbGxvd3Mg
+aW4ta2VybmVsIGNvbXBvbmVudHMgJg0KdXNlcnNwYWNlIGFwcGxpY2F0aW9ucyB0byB2ZXJpZnkg
+dGhlIHJhbmdlIG9mIHRoZSBMQkFzIGJ5IG9mZmxvYWRpbmcNCmNoZWNrc3VtIHNjcnViYmluZy92
+ZXJpZmljYXRpb24gdG8gdGhlIGNvbnRyb2xsZXIgdGhhdCBpcyBkaXJlY3RseQ0KYXR0YWNoZWQg
+dG8gdGhlIGhvc3QuIEZvciBkaXJlY3QgYXR0YWNoZWQgZGV2aWNlcyB0aGlzIGxlYWRzIHRvIGRl
+Y3JlYXNlDQppbiB0aGUgaG9zdCBETUEgdHJhZmZpYyBhbmQgQ1BVIHVzYWdlIGFuZCBmb3IgdGhl
+IGZhYnJpY3MgYXR0YWNoZWQNCmRldmljZXMgb3ZlciB0aGUgbmV0d29yayB0aGF0IGxlYWRzIHRv
+IGEgZGVjcmVhc2UgaW4gdGhlIG5ldHdvcmsgdHJhZmZpYw0KYW5kIENQVSB1c2FnZSBmb3IgYm90
+aCBob3N0ICYgdGFyZ2V0Lg0KDQpUaGUgbWFpbiBhZHZhbnRhZ2UgaXMgdG8gZnJlZSB1cCB0aGUg
+Q1BVIGFuZCByZWR1Y2UgdGhlIGhvc3QgbGluaw0KdHJhZmZpYyBzaW5jZSBmb3Igc29tZSBkZXZp
+Y2VzLCB0aGVpciBpbnRlcm5hbCBiYW5kd2lkdGggaXMgaGlnaGVyIHRoYW4NCnRoZSBob3N0IGxp
+bmsgYW5kIG9mZmxvYWRpbmcgdGhpcyBvcGVyYXRpb24gY2FuIGltcHJvdmUgdGhlIHBlcmZvcm1h
+bmNlDQpvZiB0aGUgcHJvYWN0aXZlIGVycm9yIGRldGVjdGlvbiBhcHBsaWNhdGlvbnMgc3VjaCBh
+cyBmaWxlIHN5c3RlbSBsZXZlbA0Kc2NydWJiaW5nLg0KDQpUaGUgcHJvbWluZW50IGV4YW1wbGUg
+b2YgdGhpcyBpcyB4ZnNfc2NydWIgdGhhdCBpc3N1ZXMgU0NTSSBWZXJpZnkNCmNvbW1hbmQgYXQg
+dGhlIHRpbWUgb2Ygc2NydWJiaW5nIHRoYXQgZ3VhcmFudGVlcyB0aGUgTEJBIHZlcmlmaWNhdGlv
+bg0KaXMgYmVlbiBkb25lIG9uIHRoZSBkZXZpY2UgbGV2ZWwgYXQgdGhlIHRpbWUgb2YgZmlsZSBz
+eXN0ZW0gc2NydWJiaW5nLg0KDQpIZXJlIGFyZSB0aGUgcmVzdWx0cyA6LQ0KDQpXaGVuIHZlcmlm
+eWluZyA1MDBHQiBvZiBkYXRhIG9uIE5WTWVPRiB3aXRoIG52bWUtbG9vcCBhbmQgbnVsbF9ibGsN
+CmFzIGEgdGFyZ2V0IGJhY2stZW5kIGJsb2NrIGRldmljZSByZXN1bHRzIHNob3cgYWxtb3N0IGEg
+ODAlDQpwZXJmb3JtYW5jZSBpbmNyZWFzZSA6LQ0KDQpXaXRoIFZlcmlmeSByZXN1bHRpbmcgaW4g
+UkVRX09QX1ZFUklGWSB0byBudWxsX2JsayA6LQ0KDQpyZWFsCTJtMy43NzNzDQp1c2VyCTBtMC4w
+MDBzDQpzeXMJMG01OS41NTNzDQoNCldpdGggRW11bGF0aW9uIHJlc3VsdGluZyBpbiBSRVFfT1Bf
+UkVBRCBudWxsX2JsayA6LQ0KDQpyZWFsCTEybTE4Ljk2NHMNCnVzZXIJMG0wLjAwMnMNCnN5cwkx
+bTE1LjY2NnMNCg0KVGhlcmUgaXMgYW4gb2JqZWN0aW9uIGZyb20gb24gdGhpcyB3b3JrIHRvIGJl
+IG1lcmdlZCA6LQ0KDQoxLiBDdXJyZW50IFN0b3JhZ2UgcHJvdG9jb2xzIG1heSBsaWUuDQoyLiBX
+ZSBjYW5ub3QgdHJ1c3QgYW55IFNTRCB2ZW5kb3JzIHRoYXQgdGhleSB3aWxsIGltcGxlbWVudCBW
+ZXJpZnkNCiAgICBjb21tYW5kIGF1dGhlbnRpY2FsbHkuDQozLiBIZW5jZSB3ZSBzaG91bGQgbmV2
+ZXIgcmVseSBvbiB0aGlzIHN1cHBvcnQgYW5kIGtlcm5lbCBzaG91bGQNCiAgICBub3QgaGF2ZSB0
+aGlzIGZ1bmN0aW9uYWxpdHkuDQo0LiBJbnN0ZWFkIGEgbmV3IGNvbW1hbmQgSEFTSCBpcyBwcm9w
+b3NlZC4NCg0KSSdkIGxpa2UgdG8gZGlzY3VzcyB0aGUgdGhpcyB0b3BpYyBpbiBncmVhdCBkZXRh
+aWwgYW5kIHVuZGVyc3RhbmQNCndoYXQgQVBJIHdlIGNhbiBjcmVhdGUgb3IgcHJvdG9jb2wgY2hh
+bmdlcyBuZWVkZWQgc28gd2UgY2FuIHVwc3RyZWFtDQp0aGlzIHN1cHBvcnQuDQoNCi1jaw0KDQo=
