@@ -2,99 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE9A6C636D3
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 19:00:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24837C636D7
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 20:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233113AbjBBTA1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Feb 2023 14:00:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41238 "EHLO
+        id S229575AbjBBU0F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Feb 2023 15:26:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232217AbjBBTA0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 14:00:26 -0500
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D81596D054
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 11:00:21 -0800 (PST)
-Received: by mail-pl1-f173.google.com with SMTP id 5so2852727plo.3
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Feb 2023 11:00:21 -0800 (PST)
+        with ESMTP id S232766AbjBBUZl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 15:25:41 -0500
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C6C870D4C
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 12:25:33 -0800 (PST)
+Received: by mail-pj1-x1032.google.com with SMTP id m11so3028988pji.0
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Feb 2023 12:25:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:subject:cc
+         :to:from:date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=9J0utFsWgEaSXGaB/NZTOm15TJEdUPOpYGgYNlrsQN4=;
+        b=eDI5P5tugBKMrVegwsr2+7uvCpX4p9i3SavPHUAKx7lXKtETXaw17Kzuo33t7GMpGq
+         NhnT51qm255vuT3fdqx5JBuM60LOzgH/V+LEFakR4BbsmQn1kVWaDZgbthKV4NYKIIX3
+         yByan+osXsca5alhgjK9L6C7nhpx5V4z0fXIc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7ThW3OBGXPUWUlyjo6LvO6sLA9MlSlkab+M/PHASbFU=;
-        b=23IRhCd6BKKGtIoO9R8P3wJOzIAoHkgKl9VqdVOl5CaPREgrvHIIHeltcPJTIvPFCH
-         6JsequeKSE9MNPVK5FuihbKdhMz3zH9o8ckVlEtTFb2OLHeVGVJQyvAHCJrx4Yio9KOB
-         ih9eN7dMIxkBu3jFppHi3+HZ+zGYRGqbwnEgocgUC56HQlMfpz7/HRVU4VnfUCQFALc7
-         2eGG8CabrwSWHoBo+CryNHEknaMsith8vQrq3/TlcWwbAC0nDDl3pqEydynngxBJcqTZ
-         hSIuhvPNCAbLduUQ3b4iGXj7ajTGEjBsQLsZ9bQv+JGQgRYUhL9Thn+koAONjuA2roF9
-         dM/w==
-X-Gm-Message-State: AO0yUKVe1CagZnQIMpGWlBIJohvtfa+OaHr8w74QurVxKgP1uLNQgjhG
-        bOtOKiDZL4PhgRgdQHLHf3A=
-X-Google-Smtp-Source: AK7set8UG9ecDsdYshaYgwaoeKhHx77O+ujoxO+sgt5h49VppV3zXWyFeDgLDa2Vo7NZsgpY+hsJ6Q==
-X-Received: by 2002:a17:90b:1c01:b0:22c:6a2:99ae with SMTP id oc1-20020a17090b1c0100b0022c06a299aemr7974000pjb.15.1675364421296;
-        Thu, 02 Feb 2023 11:00:21 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:bf7f:37aa:6a01:bf09? ([2620:15c:211:201:bf7f:37aa:6a01:bf09])
-        by smtp.gmail.com with ESMTPSA id i24-20020a17090a7e1800b0021904307a53sm223496pjl.19.2023.02.02.11.00.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Feb 2023 11:00:20 -0800 (PST)
-Message-ID: <89a59589-a8b6-21cd-9f77-a595216974dc@acm.org>
-Date:   Thu, 2 Feb 2023 11:00:18 -0800
+        h=in-reply-to:content-disposition:mime-version:references:subject:cc
+         :to:from:date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9J0utFsWgEaSXGaB/NZTOm15TJEdUPOpYGgYNlrsQN4=;
+        b=i/hfR94ZK5AxEP3RXD2rl7pF8M+uMu6xxOqR3kXfvLrGlJcUwyBZ7pNFzm81mrTDBL
+         Eg2zvboDXUQZ8zDEckCdMmAcnfAjJe6qOStFkM+Jn97Nh2iyO4RGji8lrXzhdvkQ/FLM
+         KrBMe/LpqBmgKLpllIQwf2HQ9Z9hS+hRmpdH08UT4XcJckvcwNG7XvNLt6s+mhcSI/Px
+         6uvTp05nb0WEhcsDSqYDjxYSYP+nLlg/6cLtPqpQwHPkScNsiWV30AgY3KxbuZjsyAOP
+         EBW4TTnXWSh9Hg2C1p3ZdgpoKWSpBq/Ik2rUmFR/xYc4jJaVid/Dv2btjQn2bMz89ijn
+         kE7Q==
+X-Gm-Message-State: AO0yUKWaV0ZmmkBSdqzR4sO9GpTJ02HuYzEekNFjJAHhk8wiO27A6Ydn
+        KlS8/I+l68DcCh3OvGBHvVK7tA3PocnTxX8q
+X-Google-Smtp-Source: AK7set/Gj9diS4RbvFVs4BCq0lJ2WvfL0Ul+WLETpp9VqPI9Gp4edNqjocLLzOay2r1rGI0AADRnBg==
+X-Received: by 2002:a17:903:24f:b0:196:3db5:c08b with SMTP id j15-20020a170903024f00b001963db5c08bmr8867242plh.69.1675369532929;
+        Thu, 02 Feb 2023 12:25:32 -0800 (PST)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id ix19-20020a170902f81300b00186c5e8a8d7sm74599plb.171.2023.02.02.12.25.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Feb 2023 12:25:32 -0800 (PST)
+Message-ID: <63dc1c3c.170a0220.9d837.03a1@mx.google.com>
+X-Google-Original-Message-ID: <202302022024.@keescook>
+Date:   Thu, 2 Feb 2023 20:25:31 +0000
+From:   Kees Cook <keescook@chromium.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Kevin Barnett <kevin.barnett@microsemi.com>,
+        Don Brace <don.brace@microchip.com>, storagedev@microchip.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 1/3][next] scsi: smartpqi: Replace one-element array with
+ flexible-array member
+References: <cover.1663816572.git.gustavoars@kernel.org>
+ <c80c0979933e0c05e80d95792ef167a28640a14b.1663816572.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
-Content-Language: en-US
-To:     jejb@linux.ibm.com, Adrian Hunter <adrian.hunter@intel.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20230201180637.2102556-1-bvanassche@acm.org>
- <20230201180637.2102556-3-bvanassche@acm.org>
- <fdbaf66c-b04b-2477-e778-6f6f054f0db2@intel.com>
- <941ac8ba-8814-f3d5-ddc7-712058ea91ef@acm.org>
- <9d784606dfd75feefe653694d920b15e9dfcaff0.camel@linux.ibm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9d784606dfd75feefe653694d920b15e9dfcaff0.camel@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c80c0979933e0c05e80d95792ef167a28640a14b.1663816572.git.gustavoars@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/2/23 10:46, James Bottomley wrote:
-> Well, that may not be true in all situations.  Semantically FUA is a
-> barrier: it can be implemented such that it destages only the current
-> write plus the cache writes that occurred before the write with the
-> FUA.  It could also be implemented as you suggest above, which simply
-> destages the entire cache, but it doesn't have to be.  One of the
-> reasons for FUA to exist is the potential difference between the two.
+On Wed, Sep 21, 2022 at 11:28:35PM -0500, Gustavo A. R. Silva wrote:
+> One-element arrays are deprecated, and we are replacing them with flexible
+> array members instead. So, replace one-element array with flexible-array
+> member in struct MR_DRV_RAID_MAP and refactor the the rest of the code
+> accordingly.
+> 
+> It seems that the addition of sizeof(struct report_log_lun) in all the
+> places that are modified by this patch is due to the fact that
+> the one-element array struct report_log_lun lun_entries[1]; always
+> contributes to the size of the containing structure struct
+> report_log_lun_list.
+> 
+> Notice that at line 1267 while allocating memory for an instance of
+> struct report_log_lun_list, some _extra_ space seems to be allocated
+> for one element of type struct report_log_lun, which is the type of
+> the elements in array lun_entries:
+> 
+>  1267         internal_logdev_list = kmalloc(logdev_data_length +
+>  1268                 sizeof(struct report_log_lun), GFP_KERNEL);
+> 
+> However, at line 1275 just logdev_data_length bytes are copied into
+> internal_logdev_list (remember that we allocated space for logdev_data_length +
+> sizeof(struct report_log_lun) bytes at line 1267), and then exactly
+> sizeof(struct report_log_lun) bytes are being zeroing out at line 1276.
+> 
+>  1275         memcpy(internal_logdev_list, logdev_data, logdev_data_length);
+>  1276         memset((u8 *)internal_logdev_list + logdev_data_length, 0,
+>  1277                 sizeof(struct report_log_lun));
+> 
+> All the above makes think that it's just fine if we transform array
+> lun_entries into a flexible-array member and just don't allocate
+> that extra sizeof(struct report_log_lun) bytes of space. With this
+> we can remove that memset() call and we also need to modify the code
+> that updates the total length (internal_logdev_list->header.list_length)
+> of array lun_entries at line 1278:
+> 
+>  1278         put_unaligned_be32(logdev_list_length +
+>  1279                 sizeof(struct report_log_lun),
+>  1280                 &internal_logdev_list->header.list_length);
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE routines
+> on memcpy().
+> 
+> Link: https://github.com/KSPP/linux/issues/79
+> Link: https://github.com/KSPP/linux/issues/204
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+> And of course, it'd be great if maintainers can confirm what I described
+> in the changelog text. :)
+> 
+>  drivers/scsi/smartpqi/smartpqi.h      |  2 +-
+>  drivers/scsi/smartpqi/smartpqi_init.c | 10 +++-------
+>  2 files changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+> index e550b12e525a..d1756c9d1112 100644
+> --- a/drivers/scsi/smartpqi/smartpqi.h
+> +++ b/drivers/scsi/smartpqi/smartpqi.h
+> @@ -954,7 +954,7 @@ struct report_log_lun {
+>  
+>  struct report_log_lun_list {
+>  	struct report_lun_header header;
+> -	struct report_log_lun lun_entries[1];
+> +	struct report_log_lun lun_entries[];
+>  };
+>  
+>  struct report_phys_lun_8byte_wwid {
+> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+> index b971fbe3b3a1..544cd18a90d7 100644
+> --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> @@ -1264,8 +1264,7 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
+>  	logdev_data_length = sizeof(struct report_lun_header) +
+>  		logdev_list_length;
+>  
+> -	internal_logdev_list = kmalloc(logdev_data_length +
+> -		sizeof(struct report_log_lun), GFP_KERNEL);
+> +	internal_logdev_list = kmalloc(logdev_data_length, GFP_KERNEL);
+>  	if (!internal_logdev_list) {
+>  		kfree(*logdev_list);
+>  		*logdev_list = NULL;
+> @@ -1273,11 +1272,8 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
+>  	}
+>  
+>  	memcpy(internal_logdev_list, logdev_data, logdev_data_length);
+> -	memset((u8 *)internal_logdev_list + logdev_data_length, 0,
+> -		sizeof(struct report_log_lun));
+> -	put_unaligned_be32(logdev_list_length +
+> -		sizeof(struct report_log_lun),
+> -		&internal_logdev_list->header.list_length);
+> +	put_unaligned_be32(logdev_list_length,
+> +			   &internal_logdev_list->header.list_length);
 
-Hi James,
+This is a bit of a twisty maze to read through, but at the end, I agree
+with your assessment: it was needlessly added the extra member to the
+allocation. I don't see it used anywhere in later code -- it's always
+bounded by logdev_list_length.
 
-Although support for the barrier concept has been removed from the block 
-layer, would it be possible to tell me in which T10 document I can find 
-more information about the barrier semantics? All I found in the latest 
-SBC-5 draft (revision 4; 2023-01-24) about FUA is the following (section 
-5.40 WRITE (10)):
+Reviewed-by: Kees Cook <keescook@chromium.org>
 
-"A force unit access (FUA) bit set to one specifies that the device 
-server shall write the logical blocks to:
-a) the non-volatile cache, if any; or
-b) the medium.
-An FUA bit set to zero specifies that the device server shall write the 
-logical blocks to:
-a) volatile cache, if any;
-b) non-volatile cache, if any; or
-c) the medium."
+>  
+>  	kfree(*logdev_list);
+>  	*logdev_list = internal_logdev_list;
+> -- 
+> 2.34.1
+> 
 
-To me the description of FUA in the SBC-3 draft from 11 November 2013 
-seems identical to the above text.
-
-Thanks,
-
-Bart.
-
+-- 
+Kees Cook
