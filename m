@@ -2,135 +2,151 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B71B6C636CD
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 01:55:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D287FC61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 04:33:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230373AbjBBBzq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Feb 2023 20:55:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51150 "EHLO
+        id S229974AbjBBEdR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Feb 2023 23:33:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229957AbjBBBzp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 20:55:45 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 130F23C287
-        for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2023 17:55:42 -0800 (PST)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230202015538epoutp025ccce14ad0b03d658ae2751ebbec66f8~-3yWLP3fD2716027160epoutp02d
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 01:55:38 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230202015538epoutp025ccce14ad0b03d658ae2751ebbec66f8~-3yWLP3fD2716027160epoutp02d
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1675302938;
-        bh=plH77/SP5yPUz/7fA3Dr4hhXAwtkA8TAh9qpBkos/AA=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=dL81A7JqOQpGx7raZ89aFFSu/OYnltubtqYimiPPVreVfFJlZUZrZKfDV1w3AJ6hz
-         p6kvOM+/D++Gp7QpfYN9PYl9yrzAhprCLdjYTYbi2lIChhlRLP3Nexd02eNufAU5sz
-         ngXJOyLtnl4hAtMb0GWIXneJwhgQo0SvcCnIiwG0=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20230202015538epcas2p16089853c9c93d932a7c0f035ce354ef2~-3yViwqqa0297502975epcas2p1T;
-        Thu,  2 Feb 2023 01:55:38 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.68]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4P6hh93Zwvz4x9Q0; Thu,  2 Feb
-        2023 01:55:37 +0000 (GMT)
-X-AuditID: b6c32a48-45bfc70000021624-08-63db18185488
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FA.10.05668.8181BD36; Thu,  2 Feb 2023 10:55:36 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
+        with ESMTP id S229955AbjBBEdP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2023 23:33:15 -0500
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 458992884E
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2023 20:33:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1675312394; x=1706848394;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Bi9zCorLY17vdzPYr0SEZUj7gYa2k2U+qt/PS0q4CNc=;
+  b=f9xIhRpZw5Omn8UOr8UiRaE27xHyZTJw2cDgEdOFjlHiZZca5pWAfiql
+   8zthw+MU6Mx4VFrcUgNTV9CA0DHpBullMrBaf+iBs6sqNteUoN5opvWnl
+   d40Sk/caz6pk1eJwsj0qb2SWlwwgXSnmShLcuX/pUZPy9NNcx0KLDkKPh
+   kgt6vzIFm2z98x3e9Vwz7YZtYnwITI7cBScbwXL0iAubKzEk/1nv6hBIG
+   0IwYjPR2uorvPVhLWioX89tJgOm7fy6ZY43gi9aHNm+b7Ns7mbz3DTgrl
+   WBikzyz47RTA5PDh79Z1kOEUezsMIui2bcFf9VAq+O+BaIlXv+r9uOvlb
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10608"; a="316348280"
+X-IronPort-AV: E=Sophos;i="5.97,266,1669104000"; 
+   d="scan'208";a="316348280"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2023 20:33:13 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10608"; a="910580217"
+X-IronPort-AV: E=Sophos;i="5.97,266,1669104000"; 
+   d="scan'208";a="910580217"
+Received: from lkp-server01.sh.intel.com (HELO ffa7f14d1d0f) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 01 Feb 2023 20:33:10 -0800
+Received: from kbuild by ffa7f14d1d0f with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pNRHZ-00069E-17;
+        Thu, 02 Feb 2023 04:33:09 +0000
+Date:   Thu, 2 Feb 2023 12:32:49 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>,
+Cc:     oe-kbuild-all@lists.linux.dev, Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Asutosh Das <asutoshd@codeaurora.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Bean Huo <beanhuo@micron.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20230201180637.2102556-3-bvanassche@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20230202015436epcms2p7574c204a66b7cc24b5e1827e9e6d41f4@epcms2p7>
-Date:   Thu, 02 Feb 2023 10:54:36 +0900
-X-CMS-MailID: 20230202015436epcms2p7574c204a66b7cc24b5e1827e9e6d41f4
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrPJsWRmVeSWpSXmKPExsWy7bCmha6ExO1kg5YfehYnn6xhs9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLlIU2LVQ/CLXr7t7JZPFk/i9li0Y1tTBbd13ewWSw//o/JYunW
-        m4wOvB6Xr3h7XO7rZfJYvOclk8emVZ1sHhMWHWD0aDm5n8Xj+/oONo+PT2+xePRtWcXo8XmT
-        nEf7gW6mAO6obJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBd
-        t8wcoPuVFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQXmBXrFibnFpXnpenmpJVaG
-        BgZGpkCFCdkZN29eZyk4wl0xcd8X1gbGlVxdjJwcEgImErdPLWLpYuTiEBLYwSjx/P5h5i5G
-        Dg5eAUGJvzuEQWqEBTwkFn48xghiCwkoSay/OIsdIq4ncevhGrA4m4COxPQT98HiIgJxEq2z
-        XjGCzGQWWMQs0fX6HRPEMl6JGe1PWSBsaYnty7eCNXMKWEl8uPiDESKuIfFjWS8zhC0qcXP1
-        W3YY+/2x+VA1IhKt985C1QhKPPi5GyouKXF77iao+nyJ/1eWQ9k1EtsOzIOy9SWudWwEu4FX
-        wFdi5vVHYDaLgKrEwgs7WSFqXCTmtSwHizMLaEssW/gaHCbMApoS63fpg5gSAsoSR26xwHzV
-        sPE3OzqbWYBPouPwX7j4jnlPoKGgJrHu53qmCYzKsxABPQvJrlkIuxYwMq9iFEstKM5NTy02
-        KjCBx21yfu4mRnBK1vLYwTj77Qe9Q4xMHIyHGCU4mJVEeBW5biYL8aYkVlalFuXHF5XmpBYf
-        YjQF+nIis5Rocj4wK+SVxBuaWBqYmJkZmhuZGpgrifNK255MFhJITyxJzU5NLUgtgulj4uCU
-        amCac9xJ3DlKI1Op0cBSVOLBi2mWrw58faVR5/Hg5OwNZ1kPLAhxLdh47tOFHwbCdteNvA/q
-        vqud8vXvsiO/0r+4cDM+bckPubbp0YKZifJFr9/enRO4ZNF67ifiNvffp+lUsp5esPjLR/0e
-        phzuDYbdH3fmrLZxy5k/8fAJ/R+vKkI3PhU5fjLOZ4rVF9k9/y0X/GfVC7b64v8ogtuIi/dL
-        oWrbi58XVvUeWP5SrOr+lT0ZcQcv2d5Zr7/0xav42sjD4Yb3qs6K/lvw+uf7CUy3mA4Xvqqc
-        ObN93/rvNfPd1N5Vn1797+CHlEtFhYVblk/JXD890ODKHiW2zwuv5Fxi4F23Vz+xQ9zCQl/r
-        Tt1l4a1KLMUZiYZazEXFiQBYXl2RUgQAAA==
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230201180714epcas2p44eaa78a0a51443b4c66efdf7637aa82b
+        Jinyoung Choi <j-young.choi@samsung.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
+Message-ID: <202302021202.mM5iFxSO-lkp@intel.com>
 References: <20230201180637.2102556-3-bvanassche@acm.org>
-        <20230201180637.2102556-1-bvanassche@acm.org>
-        <CGME20230201180714epcas2p44eaa78a0a51443b4c66efdf7637aa82b@epcms2p7>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230201180637.2102556-3-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Bart,
-> From: Asutosh Das <asutoshd=40codeaurora.org>
->=20
-> UFS devices perform better when using SYNCHRONIZE CACHE command
-> instead of the FUA flag. Hence this patch.
 
-If you have, could you share the result when using SYNCHRONIZE CACHE comman=
-d?
+I love your patch! Yet something to improve:
 
-Thanks,
-Daejun
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next linus/master v6.2-rc6 next-20230202]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
->=20
-> Signed-off-by: Asutosh Das <asutoshd=40codeaurora.org>
-> Signed-off-by: Bart Van Assche <bvanassche=40acm.org>
-> =5B bvanassche: modified a source code comment =5D
-> ---
->  drivers/ufs/core/ufshcd.c =7C 3 +++
->  1 file changed, 3 insertions(+)
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index bf3cb12ef02f..461aa51cfccc 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> =40=40 -5056,6 +5056,9 =40=40 static int ufshcd_slave_alloc(struct scsi_d=
-evice *sdev)
->  =C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0/*=20WRITE_SAME=20command=20is=20=
-not=20supported=20*/=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0sde=
-v->no_write_same=20=3D=201;=0D=0A>=20=C2=A0=0D=0A>=20+=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0/*=20Use=20SYNCHRONIZE=20CACHE=20instead=20of=20FUA=20to=20i=
-mprove=20performance=20*/=0D=0A>=20+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0sde=
-v->sdev_bflags=20=3D=20BLIST_BROKEN_FUA;=0D=0A>=20+=0D=0A>=20=20=C2=A0=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0ufshcd_lu_init(hba,=20sdev);=0D=0A>=20=C2=A0=
-=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0ufshcd_setup_links(hba,=
-=20sdev);=0D=0A>=20=0D=0A=0D=0A
+url:    https://github.com/intel-lab-lkp/linux/commits/Bart-Van-Assche/scsi-core-Introduce-the-BLIST_BROKEN_FUA-flag/20230202-021019
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230201180637.2102556-3-bvanassche%40acm.org
+patch subject: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
+config: arm-randconfig-r046-20230130 (https://download.01.org/0day-ci/archive/20230202/202302021202.mM5iFxSO-lkp@intel.com/config)
+compiler: arm-linux-gnueabi-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/4edde0173805f04faa8e79aab4de3e929ea4b7c0
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Bart-Van-Assche/scsi-core-Introduce-the-BLIST_BROKEN_FUA-flag/20230202-021019
+        git checkout 4edde0173805f04faa8e79aab4de3e929ea4b7c0
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arm olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/ufs/core/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   drivers/ufs/core/ufshcd.c: In function 'ufshcd_slave_alloc':
+>> drivers/ufs/core/ufshcd.c:5060:29: error: 'BLIST_BROKEN_FUA' undeclared (first use in this function)
+    5060 |         sdev->sdev_bflags = BLIST_BROKEN_FUA;
+         |                             ^~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufshcd.c:5060:29: note: each undeclared identifier is reported only once for each function it appears in
+
+
+vim +/BLIST_BROKEN_FUA +5060 drivers/ufs/core/ufshcd.c
+
+  5031	
+  5032	/**
+  5033	 * ufshcd_slave_alloc - handle initial SCSI device configurations
+  5034	 * @sdev: pointer to SCSI device
+  5035	 *
+  5036	 * Returns success
+  5037	 */
+  5038	static int ufshcd_slave_alloc(struct scsi_device *sdev)
+  5039	{
+  5040		struct ufs_hba *hba;
+  5041	
+  5042		hba = shost_priv(sdev->host);
+  5043	
+  5044		/* Mode sense(6) is not supported by UFS, so use Mode sense(10) */
+  5045		sdev->use_10_for_ms = 1;
+  5046	
+  5047		/* DBD field should be set to 1 in mode sense(10) */
+  5048		sdev->set_dbd_for_ms = 1;
+  5049	
+  5050		/* allow SCSI layer to restart the device in case of errors */
+  5051		sdev->allow_restart = 1;
+  5052	
+  5053		/* REPORT SUPPORTED OPERATION CODES is not supported */
+  5054		sdev->no_report_opcodes = 1;
+  5055	
+  5056		/* WRITE_SAME command is not supported */
+  5057		sdev->no_write_same = 1;
+  5058	
+  5059		/* Use SYNCHRONIZE CACHE instead of FUA to improve performance */
+> 5060		sdev->sdev_bflags = BLIST_BROKEN_FUA;
+  5061	
+  5062		ufshcd_lu_init(hba, sdev);
+  5063	
+  5064		ufshcd_setup_links(hba, sdev);
+  5065	
+  5066		return 0;
+  5067	}
+  5068	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
