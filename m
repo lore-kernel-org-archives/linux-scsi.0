@@ -2,105 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D10BC64EC6
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 18:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E866C05027
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 18:09:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229916AbjBBSJM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Feb 2023 13:09:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50636 "EHLO
+        id S232448AbjBBSJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Feb 2023 13:09:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232116AbjBBSJJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 13:09:09 -0500
-Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9EA6DFD7;
-        Thu,  2 Feb 2023 10:09:08 -0800 (PST)
-Received: from localhost (unknown [IPv6:2601:281:8300:73::5f6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id 48D347DE;
-        Thu,  2 Feb 2023 18:09:05 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 48D347DE
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1675361345; bh=2+a4mZYwqT3vzf0UQzfkcA5CdDxOuo7YvzN9jr8nkig=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=gY7ULbf3et5D4Qc/CNx/w7sCxqXxX6fR0sNacSV7nefpdle702hp6si3iizN6qwiE
-         uEIY7Q78a9h2RN4xfonCmMXE/H1WHGv23zZbRY3a8TD9z3xCs5/ly7iH92i4XVhMfk
-         m1+3SrM+pmOm5qUcXvYL8szbXDpSICOPir4Ff+tNZ80bHoZS0uhfOu3aabBosNVFfP
-         7pgupe9C5u4Sz6v8uZtM64S9OiXXXwx07OTa5szwYHdV6XxaRnf+mq/MpKQwaSbzh0
-         jfCb5rfx6sWATpmne99lGmlwL/b8o+ggGmLTspO1j2VtBWLoL4M3uxU9erIgFeIYC3
-         b3TsgnsFP3UgQ==
-From:   Jonathan Corbet <corbet@lwn.net>
-To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>, linux-doc@vger.kernel.org,
-        Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        linux-media@vger.kernel.org, linux-mm@kvack.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>, nvdimm@lists.linux.dev,
-        Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        linux-hwmon@vger.kernel.org, Jiri Pirko <jiri@nvidia.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Neeraj Upadhyay <quic_neeraju@quicinc.com>,
-        Josh Triplett <josh@joshtriplett.org>, rcu@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: Re: [PATCH 0/9] Documentation: correct lots of spelling errors
- (series 2)
-In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
-References: <20230129231053.20863-1-rdunlap@infradead.org>
-Date:   Thu, 02 Feb 2023 11:09:04 -0700
-Message-ID: <875yckvt1b.fsf@meer.lwn.net>
+        with ESMTP id S232004AbjBBSJO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 13:09:14 -0500
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D52779218
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 10:09:13 -0800 (PST)
+Received: by mail-pl1-f174.google.com with SMTP id r8so2705544pls.2
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Feb 2023 10:09:13 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bgZyVB3QCYCJT/2vYugJQwJCmYRrTX0QsgJxtyJC7qA=;
+        b=Nr9MKb289egW+WEDPp5sFqzLcdrSQqIMG1Cqn4su6X1bIA/rHBKeE5f46kW/w04QkC
+         ry4iCvXRJvYqnLsbrhme1AktyKz+7Ft8MbyknSwlIOGefFbhbUJIxrEErVV/Qad6CR9S
+         AHpY71MrJhyrncKC/4mx4e2/uRiDRMe95cGTb4M2YmCPqec/4rJ0DsrDY1mYPqGCSkpI
+         B2IcYxIbfZ0lIH0D6jJozC2eJWAqujbsTvWgnmnOHuf1QJNEL4so3/b+8TrctmFAlf1b
+         QLd6+HvsKfVr0+OYUp2Vr+53GnJzE4FQ2WNMnGj04SczKjZLMy6gL7GJNoqS8mNH3ZHo
+         R54A==
+X-Gm-Message-State: AO0yUKUzyGS4nbQXrs+yVIY6tbjojVD69O5jj/2z/Mhid81zgOqhZ4Wy
+        W4sXLbfnR9fXxUWb1A7VTDneJQMit5Q=
+X-Google-Smtp-Source: AK7set/LLFu7dg+o9kReXZUy5ytu1VEnHerBhGNI8iM3cO95nJiiB35l0EceQ7ah00W//lN5meovCg==
+X-Received: by 2002:a17:902:f682:b0:196:3f75:1e9c with SMTP id l2-20020a170902f68200b001963f751e9cmr9707017plg.52.1675361352605;
+        Thu, 02 Feb 2023 10:09:12 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:bf7f:37aa:6a01:bf09? ([2620:15c:211:201:bf7f:37aa:6a01:bf09])
+        by smtp.gmail.com with ESMTPSA id x5-20020a1709027c0500b00198b0fd363bsm3610263pll.45.2023.02.02.10.09.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Feb 2023 10:09:11 -0800 (PST)
+Message-ID: <941ac8ba-8814-f3d5-ddc7-712058ea91ef@acm.org>
+Date:   Thu, 2 Feb 2023 10:09:09 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
+Content-Language: en-US
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230201180637.2102556-1-bvanassche@acm.org>
+ <20230201180637.2102556-3-bvanassche@acm.org>
+ <fdbaf66c-b04b-2477-e778-6f6f054f0db2@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <fdbaf66c-b04b-2477-e778-6f6f054f0db2@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Randy Dunlap <rdunlap@infradead.org> writes:
+On 2/1/23 23:52, Adrian Hunter wrote:
+> On 1/02/23 20:06, Bart Van Assche wrote:
+>> UFS devices perform better when using SYNCHRONIZE CACHE command
+>> instead of the FUA flag. Hence this patch.
+> 
+> It would be nice to get some clarification on what is
+> going on for this case.
+> 
+> This includes with Data Reliability enabled?
+> 
+> In theory, WRITE+FUA should be at least as fast as
+> WRITE+SYNCHRONIZE CACHE, right?
+> 
+> Do we have any explanation for why that would not
+> be true?
+> 
+> In particular, is SYNCHRONIZE CACHE faster because
+> it is not, in fact, providing Reliable Writes?
+  Hi Adrian,
 
-> Maintainers of specific kernel subsystems are only Cc-ed on their
-> respective patches, not the entire series. [if all goes well]
->
-> These patches are based on linux-next-20230127.
+Setting the FUA bit in a WRITE command is functionally equivalent to 
+submitting a WRITE command without FUA and submitting a SYNCHRONIZE 
+CACHE command afterwards. For both sequences the storage device has to 
+guarantee that the written data will survive a sudden power loss event.
 
-So I've applied a bunch of these
+It is not clear to me why WRITE + SYNCHRONIZE CACHE is faster than WRITE 
++ FUA. All I know is that this behavior has been observed for multiple 
+UFS devices from multiple vendors. I hope that one of the UFS vendors 
+can provide more information.
 
->  [PATCH 1/9] Documentation: admin-guide: correct spelling
->  [PATCH 2/9] Documentation: driver-api: correct spelling
-
-applied
-
->  [PATCH 3/9] Documentation: hwmon: correct spelling
->  [PATCH 4/9] Documentation: networking: correct spelling
->  [PATCH 5/9] Documentation: RCU: correct spelling
-
-These have been taken up elsewhere
-
->  [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
->  [PATCH 7/9] Documentation: scsi: correct spelling
-
-I've left these for the SCSI folks for now.  Do we *really* want to be
-fixing spelling in ChangeLog files from almost 20 years ago?
-
->  [PATCH 8/9] Documentation: sparc: correct spelling
->  [PATCH 9/9] Documentation: userspace-api: correct spelling
-
-Applied.
-
-Thanks,
-
-jon
+Bart.
