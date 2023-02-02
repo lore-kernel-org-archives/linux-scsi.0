@@ -2,168 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A21C636D7
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 18:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D10BC64EC6
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 18:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232619AbjBBSCR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Feb 2023 13:02:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43498 "EHLO
+        id S229916AbjBBSJM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Feb 2023 13:09:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232409AbjBBSBi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 13:01:38 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 096D66CCBD;
-        Thu,  2 Feb 2023 10:01:18 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S232116AbjBBSJJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 13:09:09 -0500
+Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9EA6DFD7;
+        Thu,  2 Feb 2023 10:09:08 -0800 (PST)
+Received: from localhost (unknown [IPv6:2601:281:8300:73::5f6])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8C19461B50;
-        Thu,  2 Feb 2023 18:01:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05723C433D2;
-        Thu,  2 Feb 2023 18:01:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675360877;
-        bh=NFYHR5UWsU7uUN2XV/Epd32P9hvqIXjTWTM+74ua634=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Jn8eCAWSiVdMb34f3gBBXHp8E1xKezUu4ex3rUtKsRFmwX7Ovjyo2SXhiUetovM9u
-         rwU28/BMszIi59fsYuhvodYIHoS4dg0kHkFXepMNrA91I+Y/KrIDcVKDwuzR1UJubN
-         E2N64VHMG4rLKJd6ylvkHeYrTa00rTKlvN05GtdtgYuC5nrqsY9pWyYr6PDMs963/z
-         omkPvSs6j/rDFtAxDY90dw2ChK7wPMECcglEtwu0SQMXQB6MFSrUdjVYeuSDQcTvVX
-         NhafMThU+UbaScbbR+HLe7vKV+iqR4W8kEpv7htVTbntehhjqEa8Ljgx9rZS8f7+37
-         /2BgVPi7MNaIg==
-Date:   Thu, 2 Feb 2023 23:31:08 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Bjorn Andersson <quic_bjorande@quicinc.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        by ms.lwn.net (Postfix) with ESMTPSA id 48D347DE;
+        Thu,  2 Feb 2023 18:09:05 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 48D347DE
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1675361345; bh=2+a4mZYwqT3vzf0UQzfkcA5CdDxOuo7YvzN9jr8nkig=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=gY7ULbf3et5D4Qc/CNx/w7sCxqXxX6fR0sNacSV7nefpdle702hp6si3iizN6qwiE
+         uEIY7Q78a9h2RN4xfonCmMXE/H1WHGv23zZbRY3a8TD9z3xCs5/ly7iH92i4XVhMfk
+         m1+3SrM+pmOm5qUcXvYL8szbXDpSICOPir4Ff+tNZ80bHoZS0uhfOu3aabBosNVFfP
+         7pgupe9C5u4Sz6v8uZtM64S9OiXXXwx07OTa5szwYHdV6XxaRnf+mq/MpKQwaSbzh0
+         jfCb5rfx6sWATpmne99lGmlwL/b8o+ggGmLTspO1j2VtBWLoL4M3uxU9erIgFeIYC3
+         b3TsgnsFP3UgQ==
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>, linux-doc@vger.kernel.org,
+        Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
+        Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-media@vger.kernel.org, linux-mm@kvack.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>, nvdimm@lists.linux.dev,
+        Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        linux-hwmon@vger.kernel.org, Jiri Pirko <jiri@nvidia.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Neeraj Upadhyay <quic_neeraju@quicinc.com>,
+        Josh Triplett <josh@joshtriplett.org>, rcu@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: core: Limit DMA alignment check
-Message-ID: <20230202180108.GD257939@thinkpad>
-References: <20230201034917.1902330-1-quic_bjorande@quicinc.com>
- <20230201102748.GA62808@thinkpad>
- <20230201162841.GA2238350@hu-bjorande-lv.qualcomm.com>
+        linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Subject: Re: [PATCH 0/9] Documentation: correct lots of spelling errors
+ (series 2)
+In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
+Date:   Thu, 02 Feb 2023 11:09:04 -0700
+Message-ID: <875yckvt1b.fsf@meer.lwn.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230201162841.GA2238350@hu-bjorande-lv.qualcomm.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 01, 2023 at 08:28:41AM -0800, Bjorn Andersson wrote:
-> On Wed, Feb 01, 2023 at 03:57:48PM +0530, Manivannan Sadhasivam wrote:
-> > On Tue, Jan 31, 2023 at 07:49:17PM -0800, Bjorn Andersson wrote:
-> > > The three DMA memory regions allocated for the host memory space is
-> > > documented to require alignment of 128, 1024 and 1024 respectively, but
-> > > the returned address is checked for PAGE_SIZE alignment.
-> > > 
-> > > In the case these allocations are serviced by e.g. the Arm SMMU, the
-> > > size and alignment will be determined by its supported page sizes. In
-> > > most cases SZ_4K and a few larger sizes are available.
-> > > 
-> > > In the typical configuration this does not cause problems, but in the
-> > > event that the system PAGE_SIZE is increased beyond 4k, it's no longer
-> > > reasonable to expect that the allocation will be PAGE_SIZE aligned.
-> > > 
-> > > Limit the DMA alignment check to the actual alignment requirements
-> > > written in the comments in the code, to avoid the UFS core refusing to
-> > > initialize with such configuration.
-> > 
-> > Isn't dma_alloc_coherent() supposed to return PAGE_SIZE aligned dma and cpu
-> > addresses? I suppose that could be reason for checking against PAGE_SIZE.
-> > 
-> 
-> If the allocating device has associated dma_mem, the requested size will
-> be rounded up to the next order and you will get an allocation which is
-> sized and aligned to that.
-> Given the three allocations on my device is 98304, 1024 and 640. The
-> latter two would only be aligned to 1kb if this code path is taken...
-> 
-> 
-> But in our case, the comment for __iommu_dma_alloc_noncontiguous() seems
-> to give us the reason for the issue.
-> 
-> /*
->  * If size is less than PAGE_SIZE, then a full CPU page will be allocated,
->  * but an IOMMU which supports smaller pages might not map the whole thing.
->  */
-> 
+Randy Dunlap <rdunlap@infradead.org> writes:
 
-Ah, missed this part. Thanks for enlightening me :)
+> Maintainers of specific kernel subsystems are only Cc-ed on their
+> respective patches, not the entire series. [if all goes well]
+>
+> These patches are based on linux-next-20230127.
 
-- Mani
+So I've applied a bunch of these
 
-> Our iommu reports supporting mapping of 4kb pages.
-> 
-> > > 
-> > > Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
-> > 
-> > But it doesn't hurt to check for the actual alignment.
-> > 
-> > Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> > 
-> 
-> Thanks,
-> Bjorn
-> 
-> > Thanks,
-> > Mani
-> > 
-> > > ---
-> > >  drivers/ufs/core/ufshcd.c | 9 +++------
-> > >  1 file changed, 3 insertions(+), 6 deletions(-)
-> > > 
-> > > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > > index ec732e4bbbf4..d7f3f1ba9d12 100644
-> > > --- a/drivers/ufs/core/ufshcd.c
-> > > +++ b/drivers/ufs/core/ufshcd.c
-> > > @@ -3724,12 +3724,9 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
-> > >  
-> > >  	/*
-> > >  	 * UFSHCI requires UTP command descriptor to be 128 byte aligned.
-> > > -	 * make sure hba->ucdl_dma_addr is aligned to PAGE_SIZE
-> > > -	 * if hba->ucdl_dma_addr is aligned to PAGE_SIZE, then it will
-> > > -	 * be aligned to 128 bytes as well
-> > >  	 */
-> > >  	if (!hba->ucdl_base_addr ||
-> > > -	    WARN_ON(hba->ucdl_dma_addr & (PAGE_SIZE - 1))) {
-> > > +	    WARN_ON(hba->ucdl_dma_addr & (128 - 1))) {
-> > >  		dev_err(hba->dev,
-> > >  			"Command Descriptor Memory allocation failed\n");
-> > >  		goto out;
-> > > @@ -3745,7 +3742,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
-> > >  						   &hba->utrdl_dma_addr,
-> > >  						   GFP_KERNEL);
-> > >  	if (!hba->utrdl_base_addr ||
-> > > -	    WARN_ON(hba->utrdl_dma_addr & (PAGE_SIZE - 1))) {
-> > > +	    WARN_ON(hba->utrdl_dma_addr & (1024 - 1))) {
-> > >  		dev_err(hba->dev,
-> > >  			"Transfer Descriptor Memory allocation failed\n");
-> > >  		goto out;
-> > > @@ -3769,7 +3766,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
-> > >  						    &hba->utmrdl_dma_addr,
-> > >  						    GFP_KERNEL);
-> > >  	if (!hba->utmrdl_base_addr ||
-> > > -	    WARN_ON(hba->utmrdl_dma_addr & (PAGE_SIZE - 1))) {
-> > > +	    WARN_ON(hba->utmrdl_dma_addr & (1024 - 1))) {
-> > >  		dev_err(hba->dev,
-> > >  		"Task Management Descriptor Memory allocation failed\n");
-> > >  		goto out;
-> > > -- 
-> > > 2.25.1
-> > > 
-> > 
-> > -- 
-> > மணிவண்ணன் சதாசிவம்
+>  [PATCH 1/9] Documentation: admin-guide: correct spelling
+>  [PATCH 2/9] Documentation: driver-api: correct spelling
 
--- 
-மணிவண்ணன் சதாசிவம்
+applied
+
+>  [PATCH 3/9] Documentation: hwmon: correct spelling
+>  [PATCH 4/9] Documentation: networking: correct spelling
+>  [PATCH 5/9] Documentation: RCU: correct spelling
+
+These have been taken up elsewhere
+
+>  [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
+>  [PATCH 7/9] Documentation: scsi: correct spelling
+
+I've left these for the SCSI folks for now.  Do we *really* want to be
+fixing spelling in ChangeLog files from almost 20 years ago?
+
+>  [PATCH 8/9] Documentation: sparc: correct spelling
+>  [PATCH 9/9] Documentation: userspace-api: correct spelling
+
+Applied.
+
+Thanks,
+
+jon
