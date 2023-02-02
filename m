@@ -2,118 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F48AC61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 22:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 283D6C05027
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 22:15:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231761AbjBBWEd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Feb 2023 17:04:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36598 "EHLO
+        id S231426AbjBBWPS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Feb 2023 17:15:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231679AbjBBWEc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 17:04:32 -0500
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 038AFB2
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 14:04:32 -0800 (PST)
-Received: by mail-pg1-f174.google.com with SMTP id q9so2370158pgq.5
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Feb 2023 14:04:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=f0DMeyMy5HWqMb16NZC6T3JB2JZZxY6/UJbJQf+vKGY=;
-        b=EhyuLUI60spw3xeKY44YROwVAAvucVJf6fd1KBavIOx3dQfjZo+UXyJ2ooJ24M7F6R
-         c4UJXG/eDUOUpo6f9P3huNLFOZa+GYx6/CurIpZ4aYC1usqQRQomKHwBZ26g981bstZo
-         NOTfInMhtSQEqXN+Fsj6hf4fbEwUspZR53pSRGbfGVnfaYI8XeuKGCg48yyzvFRRZVfH
-         dUP/r4cudJG6ldNli6NVg8QkTxJ/wr9VJdSWDNQgcA+CWCHy6BCJLm3a9kYa7NeJEyaZ
-         1aQsd7Q7rvvxj6qx5CIyF3Zd92lhvsndwMyWyqUj69TEOOI6Zs+jELsYc0RJcRHpDAhS
-         8sqQ==
-X-Gm-Message-State: AO0yUKWaXsblZDj3Evyls68xE03g82rC0JXeHjoGpJHHWnkqAk6rMcnJ
-        U3B1iGikaGzzi/KQDqVtARU=
-X-Google-Smtp-Source: AK7set/mpWtTqQZqOd4jAavMMUXlkkaK3t4dPhCIdCRziIl+lpCzwpTnT0BLcC5fVDe6pBXvb0qY0g==
-X-Received: by 2002:a05:6a00:1c96:b0:593:893f:81d7 with SMTP id y22-20020a056a001c9600b00593893f81d7mr6253091pfw.16.1675375471632;
-        Thu, 02 Feb 2023 14:04:31 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:bf7f:37aa:6a01:bf09])
-        by smtp.gmail.com with ESMTPSA id x28-20020aa78f1c000000b0057fec210d33sm160530pfr.152.2023.02.02.14.04.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Feb 2023 14:04:30 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
+        with ESMTP id S229645AbjBBWPR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 17:15:17 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 470DD13D68
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 14:15:16 -0800 (PST)
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 312Lfqp6024414;
+        Thu, 2 Feb 2023 22:14:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=lylymU1ZqEel6gX7pAGFr41ivoCYyFapY5cKP8mWTsg=;
+ b=FlVNuF806Kw8xQZrdQfgFrGnrA+bNKbcEIe0YRUeeuvqAwTOsIYx0ApJHVBfVfIzpzaT
+ XBKw8BqddNEZ5Y8rgzfX9YX6cDWr9M2tJ8McBwuaciQthK9YplBUrtwbdZHN3hXXKp1M
+ NH6fxiLZUcU4hUAC/rbS0IskmIF7dSWDsoonNp3D00/WvAOv8L7oIDATfwnusQHjRmOE
+ +q/NkICrHYs9qzBm9Kgh+aEYYOrm3WK2bQ/RBQCsSbepXsmwtTIhpqAYh1ifxH1DiHYh
+ 1oagXbtsogmBGKCwmi6l4fyWnFwsPRtCQM62ePEYBqJq9P+mNOQjUP9RGUBU+NAhxcvl Lw== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ngddycr6p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Feb 2023 22:14:37 +0000
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 312JL4xZ019281;
+        Thu, 2 Feb 2023 22:14:36 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([9.208.130.102])
+        by ppma02dal.us.ibm.com (PPS) with ESMTPS id 3ncvur5186-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Feb 2023 22:14:36 +0000
+Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
+        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 312MEZMN11862678
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 2 Feb 2023 22:14:35 GMT
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2396F6E052;
+        Thu,  2 Feb 2023 22:16:46 +0000 (GMT)
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 18FBA6E04E;
+        Thu,  2 Feb 2023 22:16:42 +0000 (GMT)
+Received: from [10.101.7.56] (unknown [9.211.110.248])
+        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Thu,  2 Feb 2023 22:16:42 +0000 (GMT)
+Message-ID: <3e72df08118eefd2fc738e71c87d65ebce4df330.camel@linux.ibm.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Bart Van Assche <bvanassche@acm.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Mike Christie <michael.christie@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
         Bean Huo <beanhuo@micron.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Subject: [PATCH 2/2] scsi: ufs: Simplify ufshcd_execute_start_stop()
-Date:   Thu,  2 Feb 2023 14:04:12 -0800
-Message-Id: <20230202220412.561487-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.39.1.519.gcb327c4b5f-goog
-In-Reply-To: <20230202220412.561487-1-bvanassche@acm.org>
-References: <20230202220412.561487-1-bvanassche@acm.org>
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Date:   Thu, 02 Feb 2023 17:13:59 -0500
+In-Reply-To: <89a59589-a8b6-21cd-9f77-a595216974dc@acm.org>
+References: <20230201180637.2102556-1-bvanassche@acm.org>
+         <20230201180637.2102556-3-bvanassche@acm.org>
+         <fdbaf66c-b04b-2477-e778-6f6f054f0db2@intel.com>
+         <941ac8ba-8814-f3d5-ddc7-712058ea91ef@acm.org>
+         <9d784606dfd75feefe653694d920b15e9dfcaff0.camel@linux.ibm.com>
+         <89a59589-a8b6-21cd-9f77-a595216974dc@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 79p7z2iwUa40q7DhdXaPwMVonH7NQvlX
+X-Proofpoint-GUID: 79p7z2iwUa40q7DhdXaPwMVonH7NQvlX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-02-02_14,2023-02-02_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ mlxlogscore=538 mlxscore=0 lowpriorityscore=0 malwarescore=0
+ suspectscore=0 spamscore=0 clxscore=1015 bulkscore=0 phishscore=0
+ impostorscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2302020196
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use scsi_execute_cmd() instead of open-coding it.
+On Thu, 2023-02-02 at 11:00 -0800, Bart Van Assche wrote:
+> On 2/2/23 10:46, James Bottomley wrote:
+> > Well, that may not be true in all situations.  Semantically FUA is
+> > a barrier: it can be implemented such that it destages only the
+> > current write plus the cache writes that occurred before the write
+> > with the FUA.  It could also be implemented as you suggest above,
+> > which simply destages the entire cache, but it doesn't have to be. 
+> > One of the reasons for FUA to exist is the potential difference
+> > between the two.
+> 
+> Hi James,
+> 
+> Although support for the barrier concept has been removed from the
+> block layer, would it be possible to tell me in which T10 document I
+> can find  more information about the barrier semantics? All I found
+> in the latest  SBC-5 draft (revision 4; 2023-01-24) about FUA is the
+> following (section 5.40 WRITE (10)):
 
-Cc: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 36 +++++++++---------------------------
- 1 file changed, 9 insertions(+), 27 deletions(-)
+I have only a vague recollection of manufacturers implementing this
+semantic but ...
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 89a78a0f794c..bf3cb12ef02f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9121,34 +9121,16 @@ static int ufshcd_execute_start_stop(struct scsi_device *sdev,
- 				     enum ufs_dev_pwr_mode pwr_mode,
- 				     struct scsi_sense_hdr *sshdr)
- {
--	unsigned char cdb[6] = { START_STOP, 0, 0, 0, pwr_mode << 4, 0 };
--	struct request *req;
--	struct scsi_cmnd *scmd;
--	int ret;
--
--	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
--				 BLK_MQ_REQ_PM);
--	if (IS_ERR(req))
--		return PTR_ERR(req);
--
--	scmd = blk_mq_rq_to_pdu(req);
--	scmd->cmd_len = COMMAND_SIZE(cdb[0]);
--	memcpy(scmd->cmnd, cdb, scmd->cmd_len);
--	scmd->allowed = 0/*retries*/;
--	scmd->flags |= SCMD_FAIL_IF_RECOVERING;
--	req->timeout = 1 * HZ;
--	req->rq_flags |= RQF_PM | RQF_QUIET;
--
--	blk_execute_rq(req, /*at_head=*/true);
--
--	if (sshdr)
--		scsi_normalize_sense(scmd->sense_buffer, scmd->sense_len,
--				     sshdr);
--	ret = scmd->result;
--
--	blk_mq_free_request(req);
-+	const unsigned char cdb[6] = { START_STOP, 0, 0, 0, pwr_mode << 4, 0 };
-+	const struct scsi_exec_args args = {
-+		.sshdr = sshdr,
-+		.req_flags = BLK_MQ_REQ_PM,
-+		.rq_flags = RQF_PM,
-+		.scmd_flags = SCMD_FAIL_IF_RECOVERING,
-+	};
- 
--	return ret;
-+	return scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, /*buffer=*/NULL, 0,
-+			 /*timeout=*/HZ, /*retries=*/0, &args);
- }
- 
- /**
+> "A force unit access (FUA) bit set to one specifies that the device 
+> server shall write the logical blocks to:
+> a) the non-volatile cache, if any; or
+> b) the medium.
+> An FUA bit set to zero specifies that the device server shall write
+> the logical blocks to:
+> a) volatile cache, if any;
+> b) non-volatile cache, if any; or
+> c) the medium."
+> 
+> To me the description of FUA in the SBC-3 draft from 11 November 2013
+> seems identical to the above text.
+
+So what that says is the FUA write writes to the medium and *doesn't*
+flush the volatile cache (so any writeback data stays there).  I assume
+this style is for metadata reservations, so we guarantee fs tree
+consistency but not necessarily file data consistency.  However, that
+makes flushing everything a way bigger hammer than this behaviour.
+
+James
+
