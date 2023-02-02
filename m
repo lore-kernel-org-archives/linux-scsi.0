@@ -2,125 +2,161 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27541C636D3
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 18:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9083CC63797
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Feb 2023 18:56:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233046AbjBBSrk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Feb 2023 13:47:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58346 "EHLO
+        id S233079AbjBBS4V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Feb 2023 13:56:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232750AbjBBSrh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 13:47:37 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41A7322A23
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Feb 2023 10:47:32 -0800 (PST)
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 312IBn0g028054;
-        Thu, 2 Feb 2023 18:46:50 GMT
+        with ESMTP id S231635AbjBBS4T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2023 13:56:19 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8494F10254;
+        Thu,  2 Feb 2023 10:56:15 -0800 (PST)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 312HIFVv002326;
+        Thu, 2 Feb 2023 18:55:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
  from : reply-to : to : cc : date : in-reply-to : references : content-type
  : mime-version : content-transfer-encoding; s=pp1;
- bh=+Yt+Uib83vP2vpROCpMzWMxVzwcgLbOlkziO4rwpI8o=;
- b=oTcs9Q0XvmJQIgsvK8MkghU+BqKSpY+fVy/YJ24+AEbz4zPYv+rxTdx8F73qE1knIgzb
- RRsF1x+2Os61bH+vQ39S874bm+WLfkw0nzT/QO3yVE3IH8thX1ujjNO0xouko83gSpLx
- IVDGscGHrvWWKst1PYZq1yctJSqHm6TIDZojCPCZfw/0zHxEtQzdsrFScOXQsT4MfzaL
- jEUbtn4oUJGJnSQE0NW2GWQXBgKBdOPQJMvnL/1jcEkXpXaqhZGlUXPyxEaiYvX+3uMt
- jPdVQmM9AoDb7yyfQRZp9y/HmSHSuC6+eSp3wv9YrSaPJgixkLXiYuCppcu83wr01sk5 7g== 
-Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3ngegwf05t-1
+ bh=YS8OxqX6Xa4ReQhYwflKc5aSv/9TMKB2gRMMZTEJZEM=;
+ b=CFDCGulP3P9Xe+2FAp6xgIgRdBQw74UWN3jgGISv3dFzGsARHrCHm0mKBX/ELGDgttez
+ O2meJewgXXM7+teNdX1OhLZrAIM2aVkDVTHAidhbq037PYHO8U582Sv4uDmN9nO7C+H0
+ Ct6DdO3veQD6OKh6pBbNXbO7fmZB2GLhEks2HUnbj9M40HZLiGUM/0/PZYRpNZFTZABc
+ KUw69DyK4MX540GbhWsmE2ikKCZ2qfXEtoCa6lzKc4HwYnA/+A4P1qpvOVXru7Rg7Eu5
+ s6n0B3YDRpfXh9P9tepOpIUV6KxgO+ZDzTxLDiaQq2Q5zExlYDSpXCevnb+PR2ZAq65+ Hg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ngeuff37e-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 02 Feb 2023 18:46:49 +0000
-Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 312Fg4uS004994;
-        Thu, 2 Feb 2023 18:46:49 GMT
+        Thu, 02 Feb 2023 18:55:15 +0000
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 312InxkL010732;
+        Thu, 2 Feb 2023 18:55:14 GMT
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ngeuff36u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Feb 2023 18:55:14 +0000
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 312IQsak007753;
+        Thu, 2 Feb 2023 18:55:12 GMT
 Received: from smtprelay04.dal12v.mail.ibm.com ([9.208.130.102])
-        by ppma02wdc.us.ibm.com (PPS) with ESMTPS id 3ncvv24x5s-1
+        by ppma03wdc.us.ibm.com (PPS) with ESMTPS id 3ncvtf51nu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 02 Feb 2023 18:46:49 +0000
+        Thu, 02 Feb 2023 18:55:12 +0000
 Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
-        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 312Ikmej9306876
+        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 312ItBP011600580
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 2 Feb 2023 18:46:48 GMT
+        Thu, 2 Feb 2023 18:55:12 GMT
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id DB3866E050;
-        Thu,  2 Feb 2023 18:48:58 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 90C1C6E050;
+        Thu,  2 Feb 2023 18:57:22 +0000 (GMT)
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 228A56E04E;
-        Thu,  2 Feb 2023 18:48:56 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id A3D826E04E;
+        Thu,  2 Feb 2023 18:57:16 +0000 (GMT)
 Received: from lingrow.int.hansenpartnership.com (unknown [9.211.110.248])
         by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu,  2 Feb 2023 18:48:56 +0000 (GMT)
-Message-ID: <9d784606dfd75feefe653694d920b15e9dfcaff0.camel@linux.ibm.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: Use SYNCHRONIZE CACHE instead of FUA
+        Thu,  2 Feb 2023 18:57:15 +0000 (GMT)
+Message-ID: <ac6270fe1dba1b3398dc2b830cf9bda5c89a7a3d.camel@linux.ibm.com>
+Subject: Re: [dm-devel] [PATCH 0/9] Documentation: correct lots of spelling
+ errors (series 2)
 From:   James Bottomley <jejb@linux.ibm.com>
 Reply-To: jejb@linux.ibm.com
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Date:   Thu, 02 Feb 2023 13:46:14 -0500
-In-Reply-To: <941ac8ba-8814-f3d5-ddc7-712058ea91ef@acm.org>
-References: <20230201180637.2102556-1-bvanassche@acm.org>
-         <20230201180637.2102556-3-bvanassche@acm.org>
-         <fdbaf66c-b04b-2477-e778-6f6f054f0db2@intel.com>
-         <941ac8ba-8814-f3d5-ddc7-712058ea91ef@acm.org>
+To:     Jonathan Corbet <corbet@lwn.net>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        linux-kernel@vger.kernel.org
+Cc:     nvdimm@lists.linux.dev, linux-doc@vger.kernel.org,
+        Song Liu <song@kernel.org>, dm-devel@redhat.com,
+        netdev@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>,
+        sparclinux@vger.kernel.org,
+        Neeraj Upadhyay <quic_neeraju@quicinc.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        linux-media@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Josh Triplett <josh@joshtriplett.org>,
+        linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+        Jiri Pirko <jiri@nvidia.com>, cgroups@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-hwmon@vger.kernel.org, rcu@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-mm@kvack.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Date:   Thu, 02 Feb 2023 13:54:33 -0500
+In-Reply-To: <87o7qbvra9.fsf@meer.lwn.net>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
+         <875yckvt1b.fsf@meer.lwn.net>
+         <a2c560bb-3b5c-ca56-c5c2-93081999281d@infradead.org>
+         <8540c721-6bb9-3542-d9bd-940b59d3a7a4@acm.org>
+         <87o7qbvra9.fsf@meer.lwn.net>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: zDEGMyAYgq982mpGKxyzwZPOqkabhvrg
-X-Proofpoint-GUID: zDEGMyAYgq982mpGKxyzwZPOqkabhvrg
+X-Proofpoint-GUID: rINHRxV1D64-5YqYmvXoiq9bBKTirX1e
+X-Proofpoint-ORIG-GUID: eZPeQqFlkdhx5p58topJeC6q8R4gRCuD
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-02-02_12,2023-02-02_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- clxscore=1011 suspectscore=0 adultscore=0 bulkscore=0 impostorscore=0
- mlxscore=0 mlxlogscore=716 phishscore=0 spamscore=0 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302020166
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 bulkscore=0 phishscore=0 spamscore=0 clxscore=1011
+ suspectscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2302020166
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2023-02-02 at 10:09 -0800, Bart Van Assche wrote:
-> On 2/1/23 23:52, Adrian Hunter wrote:
-> > On 1/02/23 20:06, Bart Van Assche wrote:
-> > > UFS devices perform better when using SYNCHRONIZE CACHE command
-> > > instead of the FUA flag. Hence this patch.
-> > 
-> > It would be nice to get some clarification on what is
-> > going on for this case.
-> > 
-> > This includes with Data Reliability enabled?
-> > 
-> > In theory, WRITE+FUA should be at least as fast as
-> > WRITE+SYNCHRONIZE CACHE, right?
-> > 
-> > Do we have any explanation for why that would not
-> > be true?
-> > 
-> > In particular, is SYNCHRONIZE CACHE faster because
-> > it is not, in fact, providing Reliable Writes?
->   Hi Adrian,
+On Thu, 2023-02-02 at 11:46 -0700, Jonathan Corbet wrote:
+> Bart Van Assche <bvanassche@acm.org> writes:
 > 
-> Setting the FUA bit in a WRITE command is functionally equivalent to 
-> submitting a WRITE command without FUA and submitting a SYNCHRONIZE 
-> CACHE command afterwards. For both sequences the storage device has
-> to guarantee that the written data will survive a sudden power loss
-> event.
+> > On 2/2/23 10:33, Randy Dunlap wrote:
+> > > On 2/2/23 10:09, Jonathan Corbet wrote:
+> > > > Randy Dunlap <rdunlap@infradead.org> writes:
+> > > > >   [PATCH 6/9] Documentation: scsi/ChangeLog*: correct
+> > > > > spelling
+> > > > >   [PATCH 7/9] Documentation: scsi: correct spelling
+> > > > 
+> > > > I've left these for the SCSI folks for now.  Do we *really*
+> > > > want to be
+> > > > fixing spelling in ChangeLog files from almost 20 years ago?
+> > > 
+> > > That's why I made it a separate patch -- so the SCSI folks can
+> > > decide that...
+> > 
+> > How about removing the Documentation/scsi/ChangeLog.* files? I'm
+> > not sure these changelogs are still useful since these duplicate
+> > information that is already available in the output of git log
+> > ${driver_directory}.
+> 
+> Actually, the information in those files mostly predates the git era,
+> so you won't find it that way.  I *still* question their value,
+> though...
 
-Well, that may not be true in all situations.  Semantically FUA is a
-barrier: it can be implemented such that it destages only the current
-write plus the cache writes that occurred before the write with the
-FUA.  It could also be implemented as you suggest above, which simply
-destages the entire cache, but it doesn't have to be.  One of the
-reasons for FUA to exist is the potential difference between the two.
+In the pre-source control days they were the answer to the GPLv2
+Section 2 requirement to " carry prominent notices stating that you
+changed the files and the date of any change." 
+
+If you remove the files you may run afoul of the GPLv2 Section 1
+requirement to "keep intact all the notices that refer to this
+License".  Of course, nowadays we assume the source control does this
+for us, so people rarely think of these requirements, but for files
+that predate source control I think you need to consider the licence
+implications.
 
 James
+
 
