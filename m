@@ -2,109 +2,85 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB3D1C636D7
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:12:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D7EC61DA4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:35:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234162AbjBCPMN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Feb 2023 10:12:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48140 "EHLO
+        id S232910AbjBCPfA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Feb 2023 10:35:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234158AbjBCPL7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:11:59 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48A2CA841A;
-        Fri,  3 Feb 2023 07:09:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=h+lHe/qj9+NLcJnalyqirfAInpcSjbUKRj83r5gu0OY=; b=opeqTYIsDd5ySHkM8/Z17yOBYI
-        EYj/TALLVbPcdK9L0xzB5abV1zpI5xqkO2L2YF6MxMZvyva0gUzw7pgM34AaCSLiLPIiDfg6ywwlE
-        p/uz0Hp+FcwrBScWBZ4n4X2ams8XcFdxqkklIPUnlIp6crcuB/NPS5dJIyr64dZwb44pwvjVg1Idr
-        gjtWxsXOoyGZV1XK5Kjfjy+OQZ/3a8RJDFtiI3W/17L8wvNj+WCY1iJfsOS/RvmqrXRrNn9ZnCGQY
-        VbPrXwoOPchaeJVVKF+sqRUov+yXi3gGw6ZN19Dh+G7on2Pg9/Hv3nMZoM1b+AA1D0a86INXiHkNn
-        kOEksMvg==;
-Received: from [2001:4bb8:19a:272a:910:bb67:7287:f956] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pNxfB-002bFh-IR; Fri, 03 Feb 2023 15:07:42 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Ilya Dryomov <idryomov@gmail.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Xiubo Li <xiubli@redhat.com>, Steve French <sfrench@samba.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        devel@lists.orangefs.org, io-uring@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: [PATCH 19/23] swap: use bvec_set_page to initialize bvecs
-Date:   Fri,  3 Feb 2023 16:06:30 +0100
-Message-Id: <20230203150634.3199647-20-hch@lst.de>
-X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230203150634.3199647-1-hch@lst.de>
-References: <20230203150634.3199647-1-hch@lst.de>
+        with ESMTP id S233356AbjBCPez (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:34:55 -0500
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D88DC6CC87
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Feb 2023 07:34:52 -0800 (PST)
+Received: by mail-wm1-x332.google.com with SMTP id k8-20020a05600c1c8800b003dc57ea0dfeso6299548wms.0
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Feb 2023 07:34:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=O+uNCL6ZUju9IqY/nPsC1hroJXk9iy9d8UOj3Tlrt3o=;
+        b=Le5YTKmNlOAiGW8xsrJPi3ImQA4MjM0towWwAODKVaI4Xo81to1Askk2dR2azYM75x
+         +91N1maI3gouD1k086QU+UUSsgD/buNd6yMbRqW8ji3EcPih8r7skr5dvnSP/NhK9JE5
+         meH6QL1wfVm56GrzZMvOsAJiDcneH7nz3zosZYmMCOF5+1kLobcjOTvxuDJe1vrmHnyK
+         2V6RmkF6rgAo648Xhb8FpvjUIOUoH22sOVfisZw7jZmj55AAu7b0i4sle7x0i1x56bzL
+         OWEJbW41nu0hpbsUApgg28L9O1I5lHRZVnFqSLIQBlGHbnwp3QUdC2JnPrd2tIuiXOR/
+         GR7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=O+uNCL6ZUju9IqY/nPsC1hroJXk9iy9d8UOj3Tlrt3o=;
+        b=y3wFu5mI3AbEnhz7KbNjPGYUscn6yOVxEH2ZmvDC6HGY8Pvw9F9woKcMvogr5oreN3
+         chTx69KXDBree2x5pZnnioMwKnA/ZkypijU0DR8WMi99BGKfd07H1f7HJia1wK1CiNbd
+         STh0TTaD9/Z0OkuTcdwoEDdfFMo46kvsejsDi2Ow9bYFi11YijSwaZMA261WSnszy5r0
+         8ecRnyx7N5l/bFr2jbNkS9fWqJUWziIMCcf19QbOqBB3ISoOzQvw2U7yZ1hPePgRaWfb
+         MfQW4cHPV1akwsEpkIREx8oy0qS0LVqdM0xZNnqga410Gc6SCdEjswjyasUpp82JYLCC
+         XATg==
+X-Gm-Message-State: AO0yUKXG6UE4uYPq9h9263Y9QMlRpht/TF1RMty2QVw/JhxJhAvtQckp
+        zZJmB7g0Y2BSiaJqJ2j5iTc=
+X-Google-Smtp-Source: AK7set/AYYbQGEcW0HnsaX2N9nOWwT6gIN27J9q7yo6nj9H/FxF/05P5Ty3WfGblqDzUe7RNX4lt9Q==
+X-Received: by 2002:a1c:f413:0:b0:3dd:b0b3:811b with SMTP id z19-20020a1cf413000000b003ddb0b3811bmr9891705wma.31.1675438491260;
+        Fri, 03 Feb 2023 07:34:51 -0800 (PST)
+Received: from ?IPV6:2003:c5:8709:6a68:dcfc:3ca1:303e:b509? (p200300c587096a68dcfc3ca1303eb509.dip0.t-ipconnect.de. [2003:c5:8709:6a68:dcfc:3ca1:303e:b509])
+        by smtp.gmail.com with ESMTPSA id bh1-20020a05600005c100b002bff7caa1c2sm2358072wrb.0.2023.02.03.07.34.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 03 Feb 2023 07:34:50 -0800 (PST)
+Message-ID: <6c8d1ba0-2f51-34e0-62bd-6c7b04734a6c@gmail.com>
+Date:   Fri, 3 Feb 2023 16:34:48 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v2 0/2] Use SYNCHRONIZE CACHE instead of FUA for UFS
+ devices
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org
+References: <20230202220041.560919-1-bvanassche@acm.org>
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <20230202220041.560919-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the bvec_set_page helper to initialize bvecs.
+Hi Bart,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- mm/page_io.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+To this series patch:
 
-diff --git a/mm/page_io.c b/mm/page_io.c
-index 3a5f921b932e82..233f6e6eb1c508 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -318,9 +318,7 @@ static int swap_writepage_fs(struct page *page, struct writeback_control *wbc)
- 		sio->pages = 0;
- 		sio->len = 0;
- 	}
--	sio->bvec[sio->pages].bv_page = page;
--	sio->bvec[sio->pages].bv_len = thp_size(page);
--	sio->bvec[sio->pages].bv_offset = 0;
-+	bvec_set_page(&sio->bvec[sio->pages], page, thp_size(page), 0);
- 	sio->len += thp_size(page);
- 	sio->pages += 1;
- 	if (sio->pages == ARRAY_SIZE(sio->bvec) || !wbc->swap_plug) {
-@@ -432,9 +430,7 @@ static void swap_readpage_fs(struct page *page,
- 		sio->pages = 0;
- 		sio->len = 0;
- 	}
--	sio->bvec[sio->pages].bv_page = page;
--	sio->bvec[sio->pages].bv_len = thp_size(page);
--	sio->bvec[sio->pages].bv_offset = 0;
-+	bvec_set_page(&sio->bvec[sio->pages], page, thp_size(page), 0);
- 	sio->len += thp_size(page);
- 	sio->pages += 1;
- 	if (sio->pages == ARRAY_SIZE(sio->bvec) || !plug) {
--- 
-2.39.0
+
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+
+
+Thanks,
+
+Bean
 
