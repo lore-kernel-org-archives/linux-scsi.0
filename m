@@ -2,74 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7FB6C636D6
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 08:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBDFAC636D7
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:07:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232442AbjBCIxZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Feb 2023 03:53:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50536 "EHLO
+        id S233780AbjBCPHc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Feb 2023 10:07:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232037AbjBCIxY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 03:53:24 -0500
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C608520D16
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Feb 2023 00:53:21 -0800 (PST)
-Received: by mail-il1-f197.google.com with SMTP id c11-20020a056e020bcb00b0030be9d07d63so2941052ilu.0
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Feb 2023 00:53:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HKmKJPDbIloaVF9wxjUKzLZJm032XxjfFf+EFpRM0Yk=;
-        b=NVxeZSDftOCB9Z8dD17VG6LshNHCkZ/UzeipGRkPAyLuhW1SBWf+ZnVLavE1xJyNmM
-         7pBya/bA3NCHnfA94QODsb2iW/c0ETgKMpc1f7DATWEP35jptNDlIQ8ikrDT+4uA4ZEr
-         7oaIc7PaZnxGLtpux01QvpYDTPhTzi7TiZAu/ZnF7lUBqfSt+1YDcxxFoy0QfWAXutWq
-         MjPk8OXpAXQ5lkkvsDaeZka+RPL2xOpyMgkhJ3VHFiSfAWqRqut7NIslBnsfAWjW8oYe
-         su6wQ/l02FmFDuLgKLIZ+3cq8oC6EmU44oHmeO1K3WH5vxIrR09qnXs2ZuaXgkQUWvoc
-         sziw==
-X-Gm-Message-State: AO0yUKUtYwwz51o3k+GHk+obsCzz+onJy3GNP0wlYT9Wi3MCZtTMKbQl
-        UCbjqGh6pUcpw9M4gL7e5hRf6gWeAEsVbPuKBuI215HctzCl
-X-Google-Smtp-Source: AK7set992YEjU59mc5KBs7LOS8DgjU2Yp0XuHbujD6DIew8NCUbNVWokx5RUonIbg1J0OqznsgdoGqUe6RiTEkrlZf+r1Sdtfvj2
+        with ESMTP id S232498AbjBCPHa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:07:30 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF714A2A5E;
+        Fri,  3 Feb 2023 07:07:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=CiyB48vb6mrmTaEOVbqLR4u5Ie+kSkIibxGdt/yEGrQ=; b=D+S3e79rKed63zGKQODZ2ajajk
+        tY9PTZKFAa2fY7TmJOLLnb65WB73dEl4Jgj/gOugeSqMbkmLbXohy1C6IwWfuiZo77jdisGjM3yt4
+        9xvdaWC7YH4+evg/huO/wnallnWJ+vAfbAy+KZ1lxMwOxypC9YvrMMgminhOcGcxNYLxnvCObX1OD
+        yOODt3y4LRWDt6sPzQe9gbo91x07bQX4zJYyv+FuFp5RkEeW42m5CZNG2NJ+PmXd8QRNdkVwaLx8u
+        Ed4Ftp13pBU7ExNTD2TCUOM24LHzJnSBzaVBjKWd5mYX39pRy/ZbN9BsCfck6fVftE+tsT0WOITG1
+        xZXpO+3Q==;
+Received: from [2001:4bb8:19a:272a:910:bb67:7287:f956] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pNxeE-002adJ-Pc; Fri, 03 Feb 2023 15:06:43 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Ilya Dryomov <idryomov@gmail.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Xiubo Li <xiubli@redhat.com>, Steve French <sfrench@samba.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        devel@lists.orangefs.org, io-uring@vger.kernel.org,
+        linux-mm@kvack.org, Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 02/23] block: add a bvec_set_folio helper
+Date:   Fri,  3 Feb 2023 16:06:13 +0100
+Message-Id: <20230203150634.3199647-3-hch@lst.de>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230203150634.3199647-1-hch@lst.de>
+References: <20230203150634.3199647-1-hch@lst.de>
 MIME-Version: 1.0
-X-Received: by 2002:a02:ac8e:0:b0:3b1:92c0:ac28 with SMTP id
- x14-20020a02ac8e000000b003b192c0ac28mr2337676jan.74.1675414401053; Fri, 03
- Feb 2023 00:53:21 -0800 (PST)
-Date:   Fri, 03 Feb 2023 00:53:21 -0800
-In-Reply-To: <000000000000cbd8aa05f1fd2516@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000039fb2d05f3c7d0ed@google.com>
-Subject: Re: [syzbot] [ext4?] INFO: task hung in ext4_evict_ea_inode
-From:   syzbot <syzbot+38e6635a03c83c76297a@syzkaller.appspotmail.com>
-To:     adilger.kernel@dilger.ca, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, beanhuo@micron.com, bvanassche@acm.org,
-        hdanton@sina.com, jejb@linux.ibm.com, linux-ext4@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, syzkaller-bugs@googlegroups.com,
-        tytso@mit.edu, wsa+renesas@sang-engineering.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-syzbot has bisected this issue to:
+A smaller wrapper around bvec_set_page that takes a folio instead.
+There are only two potential users for this in the tree, but the number
+will grow in the future.
 
-commit 82ede9c19839079e7953a47895729852a440080c
-Author: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Date:   Tue Jun 21 14:46:53 2022 +0000
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ include/linux/bvec.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-    scsi: ufs: core: Fix typos in error messages
+diff --git a/include/linux/bvec.h b/include/linux/bvec.h
+index 9e3dac51eb26b6..2bae1134499e7f 100644
+--- a/include/linux/bvec.h
++++ b/include/linux/bvec.h
+@@ -50,6 +50,19 @@ static inline void bvec_set_page(struct bio_vec *bv, struct page *page,
+ 	bv->bv_offset = offset;
+ }
+ 
++/**
++ * bvec_set_folio - initialize a bvec based off a struct folio
++ * @bv:		bvec to initialize
++ * @folio:	folio the bvec should point to
++ * @len:	length of the bvec
++ * @offset:	offset into the folio
++ */
++static inline void bvec_set_folio(struct bio_vec *bv, struct folio *folio,
++		unsigned int len, unsigned int offset)
++{
++	bvec_set_page(bv, &folio->page, len, offset);
++}
++
+ struct bvec_iter {
+ 	sector_t		bi_sector;	/* device address in 512 byte
+ 						   sectors */
+-- 
+2.39.0
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=132b298b480000
-start commit:   a689b938df39 Merge tag 'block-2023-01-06' of git://git.ker..
-git tree:       upstream
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=10ab298b480000
-console output: https://syzkaller.appspot.com/x/log.txt?x=172b298b480000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=33ad6720950f996d
-dashboard link: https://syzkaller.appspot.com/bug?extid=38e6635a03c83c76297a
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=114dd83a480000
-
-Reported-by: syzbot+38e6635a03c83c76297a@syzkaller.appspotmail.com
-Fixes: 82ede9c19839 ("scsi: ufs: core: Fix typos in error messages")
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
