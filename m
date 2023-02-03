@@ -2,95 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C798C61DA4
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 21:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D5CC64EC3
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 21:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233477AbjBCVNc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Feb 2023 16:13:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57090 "EHLO
+        id S233852AbjBCV4Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Feb 2023 16:56:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233379AbjBCVNa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 16:13:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7209EAE
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Feb 2023 13:12:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675458766;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PUi8tlfz1TdtfaLVvcZdwTO7hfcgODBjbNBiYOjkkYg=;
-        b=BfRqSH9cv22OC3AYmIKOL7CYiCfXFiz+P7wnptk5RJAc7ynpOzZTmG5HX0ITtd9vh3D7RC
-        aAR6gJYAhfhjiuEzEw9w+HttjdH7EIIYBLoZKGKyQP9+GfXTfa3Woig4oR1K0e6LIoNtG6
-        1UHDOaDTQTHIrUDlp6Ox6KE+mMiwUwU=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-144-KHXU3EwtMrSbR2YEx35vdg-1; Fri, 03 Feb 2023 16:12:45 -0500
-X-MC-Unique: KHXU3EwtMrSbR2YEx35vdg-1
-Received: by mail-qv1-f72.google.com with SMTP id j12-20020a056214032c00b0053782e42278so3381512qvu.5
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Feb 2023 13:12:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PUi8tlfz1TdtfaLVvcZdwTO7hfcgODBjbNBiYOjkkYg=;
-        b=7zOg6NW6RSbcMEzoa0M4IAmVEUYCWlTnRijq10oqzU0tKCO0lHoi3j5bQDEtHVu2K8
-         N0GYHI/nMcmAE3+7ubhhrAIWlitmKbfG9D22t3Ycv+PgKn8ZRWxt1plhS87ArG+N7EOL
-         YM3wRe5nJgLmJF0lhmEkxH64KVxUqYTiriwF616d/jZ7PRAvCGz/POupp0AQCGVmpnhn
-         0+v5pBAk41Lp99DO4gy6HZ7HTOUPEuJna4LO7Dyumd/jC5atUVcDT3AaXv4kw35eJEmO
-         /DOpp3bFTF1anJBe3A5T95j9owlm+4D3JpGWuqeys5P2HY+ennEH1+TKa8RD/rONSqm/
-         1XKg==
-X-Gm-Message-State: AO0yUKW4ZWzoVtvuJo2fFwzLeTVwAM7lpPT5OjDgpZ/e4ZG4rftvYN7s
-        vsTqydSyFW5Jdklwek1pHVZp7lL73JBNKkOPwG90ICeHBiEJYgQANTSk9vxH+JQlnHgBfMeDDBK
-        VXWNLgenrCd2yBTYNkqOXSQ==
-X-Received: by 2002:ac8:7f03:0:b0:3ab:a047:58ee with SMTP id f3-20020ac87f03000000b003aba04758eemr19910909qtk.25.1675458765232;
-        Fri, 03 Feb 2023 13:12:45 -0800 (PST)
-X-Google-Smtp-Source: AK7set8/ICbqNhBVhFaPLRObaw0hiG+xNWvVl8ygMGMvCgamDRk/n8ModWxzt2z/hIMNH26hrE11qA==
-X-Received: by 2002:ac8:7f03:0:b0:3ab:a047:58ee with SMTP id f3-20020ac87f03000000b003aba04758eemr19910893qtk.25.1675458764986;
-        Fri, 03 Feb 2023 13:12:44 -0800 (PST)
-Received: from fedora (modemcable181.5-202-24.mc.videotron.ca. [24.202.5.181])
-        by smtp.gmail.com with ESMTPSA id q1-20020ac84101000000b003b86d9a3700sm2223167qtl.78.2023.02.03.13.12.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Feb 2023 13:12:44 -0800 (PST)
-Date:   Fri, 3 Feb 2023 16:12:42 -0500
-From:   Adrien Thierry <athierry@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        with ESMTP id S233071AbjBCV4O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 16:56:14 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2D1779CAE;
+        Fri,  3 Feb 2023 13:56:12 -0800 (PST)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 313KTSjW025071;
+        Fri, 3 Feb 2023 21:55:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=zXDLHevRmbNSieNjjZ1itBUbVMHRS4dQ8ncRciz05CU=;
+ b=FnAt2NZyHNV925FRMJKX5HNFpbtGl80xJ5Simzd4dnspOfwMwmJY3Kq/mxJkJYucCcM5
+ ZrhNIHiMbmasCmA+UdX35t4SvXC3y//w9S0LXF8zViotoGYqj3OS4TMFPlxLKVWRm2Sb
+ S74EUPFZJEbnmYukTsRs75yWT0n1UEAzFeqdEtOGZ0CAjUAusSbb7RlU/C5+zYoWzf+3
+ UZBV7FdzQl84NnWUgpDVWIhzXwFgYB3XpHwpHwkrNj+5OcIFqU34wjW5EeP/Ev207PNW
+ vV42m8XCBn1squCKUoXdorylZE2Y3lNSWd2RsmFrF00WR+bdSkVYJNCrKSo/35wP8dFA QA== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ngw4p9thc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 03 Feb 2023 21:55:35 +0000
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 313LtYE4001279
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 3 Feb 2023 21:55:34 GMT
+Received: from quicinc.com (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Fri, 3 Feb 2023
+ 13:55:33 -0800
+Date:   Fri, 3 Feb 2023 13:55:32 -0800
+From:   Guru Das Srinagesh <quic_gurus@quicinc.com>
+To:     Elliot Berman <quic_eberman@quicinc.com>
+CC:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "Daniel Lezcano" <daniel.lezcano@linaro.org>,
+        Rob Clark <robdclark@gmail.com>,
+        "Abhinav Kumar" <quic_abhinavk@quicinc.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Sean Paul <sean@poorly.run>, David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, Will Deacon <will@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Stanimir Varbanov <stanimir.k.varbanov@gmail.com>,
+        "Vikash Garodia" <quic_vgarodia@quicinc.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Amol Maheshwari <amahesh@qti.qualcomm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Alex Elder <elder@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Thara Gopinath <thara.gopinath@gmail.com>,
+        Zhang Rui <rui.zhang@intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: probe hba and add lus synchronously
-Message-ID: <Y914yu4rSqvpSoRZ@fedora>
-References: <20230202182116.38334-1-athierry@redhat.com>
- <0e955a31-1d3a-beca-4581-dbcdefc47674@acm.org>
- <Y91xPMM+/BfaRLle@fedora>
- <90e4fb52-6b09-00d9-7591-7140b859ed15@acm.org>
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        <freedreno@lists.freedesktop.org>, <iommu@lists.linux.dev>,
+        <linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <ath10k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
+        <linux-remoteproc@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] firmware: qcom_scm: Move qcom_scm.h to
+ include/linux/firmware/qcom/
+Message-ID: <20230203215532.GA10258@quicinc.com>
+References: <20230203210956.3580811-1-quic_eberman@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-In-Reply-To: <90e4fb52-6b09-00d9-7591-7140b859ed15@acm.org>
+In-Reply-To: <20230203210956.3580811-1-quic_eberman@quicinc.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: IakSQGYsVJaEfb-gAExeEyYclWwLMuK5
+X-Proofpoint-ORIG-GUID: IakSQGYsVJaEfb-gAExeEyYclWwLMuK5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-02-03_19,2023-02-03_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 impostorscore=0 spamscore=0 suspectscore=0 adultscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 phishscore=0 bulkscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302030197
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Are all UFS users using the devfreq framework? Otherwise this sounds good to me.
+On Feb 03 2023 13:09, Elliot Berman wrote:
+> Move include/linux/qcom_scm.h to include/linux/firmware/qcom/qcom_scm.h.
+> This removes 1 of a few remaining Qualcomm-specific headers into a more
+> approciate subdirectory under include/.
+> 
+> Suggested-by: Bjorn Andersson <andersson@kernel.org>
+> Signed-off-by: Elliot Berman <quic_eberman@quicinc.com>
 
-The warning originates from the UFS core :
-
-ufshcd_init() -> ufshcd_async_scan() -> ufshcd_add_lus() ->
-ufshcd_devfreq_init()
-
-ufshcd_devfreq_init() is called as long as
-ufshcd_is_clkscaling_supported(hba) returns true, i.e.
-UFSHCD_CAP_CLK_SCALING is set. This is not the case for all UFS users, but
-it could potentially be if they start supporting clock scaling. Moreover,
-in the current Kconfigs, DEVFREQ_GOV_SIMPLE_ONDEMAND is already selected
-when SCSI_UFSHCD is enabled. We just need to force it to be builtin.
-
-Best,
-
-Adrien
-
+Reviewed-by: Guru Das Srinagesh <quic_gurus@quicinc.com>
