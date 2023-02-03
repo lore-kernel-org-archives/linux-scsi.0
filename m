@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8224BC678DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29973C636D4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:08:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234118AbjBCPIe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Feb 2023 10:08:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48778 "EHLO
+        id S233926AbjBCPIh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Feb 2023 10:08:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233870AbjBCPIM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:08:12 -0500
+        with ESMTP id S234008AbjBCPIL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:08:11 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B719FC156;
-        Fri,  3 Feb 2023 07:08:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E14471EFF9;
+        Fri,  3 Feb 2023 07:08:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=u+7OceYjciyVxpUOutUWaJMKfPv6hlEZIeFVlh2yS8g=; b=JNPxVdH2tcwGNrPV5YwUFFuLjq
-        QvzWtHd/iHdB7oZubhV2MCnK5KFckF9HQfUBdt8Jf9h/EhD9Bni/5TlQzZvz8lCklgNXUjJVrQxvD
-        kBdeE1aG+yBVilJGU4q3Yoq2W3s/Bd3ZXJALBugfoKkkCRUHcrJ7zG/3PlQn1jkW9Cbo+y4n2Pomk
-        K6wRY+IFtTxD67vsg2C4wIVX98uyYKtd1GgF2Xbw4gSjuNiEbQ3qT7I9J3Z9gCYb4iZmFSAiTYwww
-        Ep9cYftT502Iba00ZDwnQ39cfvaR1FGZ/KYoCMVNlvBPBBNW04loIyOl9T/K3tqePCEWK/E+tU54t
-        GWCszcTg==;
+        bh=dnA485lnPdqu9fRBS2qkCU3tICV+bOtSo2Jj04+TH0Y=; b=Fr2nVID34QDUltwq0bImkCeDcO
+        /+q6hVRTezRnWD5cp1Mt8wSzR/8lRaNN26QLIzpNwWbueekXAbFKEYoVgwcbDX2xmbETrpybVdFvq
+        qckHbNtD9VLXkwDO8SNcKq8lvYBhiXJr2ALEUy5RbTaChn5QTA/Z6DCFTv4Zkq6K9v7KJu1VCB6Re
+        CVRtkwXX337WesOCBDtZMPzjTxDB7Z/AObQg8qfemm5wGp90YF61h2quDouspw0vBMUrHG46AIt9u
+        jHsBTrclwFPo+jFVAuFu3TRmQnJP2IFco6pruc0D1NUcJz8lug0gER+d9PHihFfSuj858y9ENZCW3
+        YwwUYTxg==;
 Received: from [2001:4bb8:19a:272a:910:bb67:7287:f956] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pNxeq-002az4-8l; Fri, 03 Feb 2023 15:07:21 +0000
+        id 1pNxex-002b3m-Rl; Fri, 03 Feb 2023 15:07:28 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Ilya Dryomov <idryomov@gmail.com>,
@@ -58,10 +58,10 @@ Cc:     Ilya Dryomov <idryomov@gmail.com>,
         linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         devel@lists.orangefs.org, io-uring@vger.kernel.org,
-        linux-mm@kvack.org, Paulo Alcantara <pc@cjr.nz>
-Subject: [PATCH 13/23] cifs: use bvec_set_page to initialize bvecs
-Date:   Fri,  3 Feb 2023 16:06:24 +0100
-Message-Id: <20230203150634.3199647-14-hch@lst.de>
+        linux-mm@kvack.org
+Subject: [PATCH 15/23] nfs: use bvec_set_page to initialize bvecs
+Date:   Fri,  3 Feb 2023 16:06:26 +0100
+Message-Id: <20230203150634.3199647-16-hch@lst.de>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230203150634.3199647-1-hch@lst.de>
 References: <20230203150634.3199647-1-hch@lst.de>
@@ -75,37 +75,18 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Use the bvec_set_page helper to initialize bvecs.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Paulo Alcantara (SUSE) <pc@cjr.nz>
+Acked-by: Trond Myklebust <trond.myklebust@hammerspace.com>
 ---
- fs/cifs/connect.c |  5 +++--
- fs/cifs/fscache.c | 16 ++++++----------
- fs/cifs/misc.c    |  5 ++---
- fs/cifs/smb2ops.c |  6 +++---
- 4 files changed, 14 insertions(+), 18 deletions(-)
+ fs/nfs/fscache.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/fs/cifs/connect.c b/fs/cifs/connect.c
-index b2a04b4e89a5e7..e6088d96eb04d2 100644
---- a/fs/cifs/connect.c
-+++ b/fs/cifs/connect.c
-@@ -759,8 +759,9 @@ cifs_read_page_from_socket(struct TCP_Server_Info *server, struct page *page,
- 	unsigned int page_offset, unsigned int to_read)
- {
- 	struct msghdr smb_msg = {};
--	struct bio_vec bv = {
--		.bv_page = page, .bv_len = to_read, .bv_offset = page_offset};
-+	struct bio_vec bv;
-+
-+	bvec_set_page(&bv, page, to_read, page_offset);
- 	iov_iter_bvec(&smb_msg.msg_iter, ITER_DEST, &bv, 1, to_read);
- 	return cifs_readv_from_socket(server, &smb_msg);
- }
-diff --git a/fs/cifs/fscache.c b/fs/cifs/fscache.c
-index f6f3a6b75601be..0911327ebfdeb4 100644
---- a/fs/cifs/fscache.c
-+++ b/fs/cifs/fscache.c
-@@ -143,14 +143,12 @@ static int fscache_fallback_read_page(struct inode *inode, struct page *page)
+diff --git a/fs/nfs/fscache.c b/fs/nfs/fscache.c
+index e731c00a9fcbc3..ea5f2976dfaba4 100644
+--- a/fs/nfs/fscache.c
++++ b/fs/nfs/fscache.c
+@@ -245,14 +245,12 @@ static int fscache_fallback_read_page(struct inode *inode, struct page *page)
  	struct netfs_cache_resources cres;
- 	struct fscache_cookie *cookie = cifs_inode_cookie(inode);
+ 	struct fscache_cookie *cookie = nfs_i_fscache(inode);
  	struct iov_iter iter;
 -	struct bio_vec bvec[1];
 +	struct bio_vec bvec;
@@ -121,9 +102,9 @@ index f6f3a6b75601be..0911327ebfdeb4 100644
  
  	ret = fscache_begin_read_operation(&cres, cookie);
  	if (ret < 0)
-@@ -171,16 +169,14 @@ static int fscache_fallback_write_page(struct inode *inode, struct page *page,
+@@ -273,16 +271,14 @@ static int fscache_fallback_write_page(struct inode *inode, struct page *page,
  	struct netfs_cache_resources cres;
- 	struct fscache_cookie *cookie = cifs_inode_cookie(inode);
+ 	struct fscache_cookie *cookie = nfs_i_fscache(inode);
  	struct iov_iter iter;
 -	struct bio_vec bvec[1];
 +	struct bio_vec bvec;
@@ -141,39 +122,6 @@ index f6f3a6b75601be..0911327ebfdeb4 100644
  
  	ret = fscache_begin_write_operation(&cres, cookie);
  	if (ret < 0)
-diff --git a/fs/cifs/misc.c b/fs/cifs/misc.c
-index 2a19c7987c5bd8..95cc4d7dd806d7 100644
---- a/fs/cifs/misc.c
-+++ b/fs/cifs/misc.c
-@@ -1054,9 +1054,8 @@ setup_aio_ctx_iter(struct cifs_aio_ctx *ctx, struct iov_iter *iter, int rw)
- 
- 		for (i = 0; i < cur_npages; i++) {
- 			len = rc > PAGE_SIZE ? PAGE_SIZE : rc;
--			bv[npages + i].bv_page = pages[i];
--			bv[npages + i].bv_offset = start;
--			bv[npages + i].bv_len = len - start;
-+			bvec_set_page(&bv[npages + i], pages[i], len - start,
-+				      start);
- 			rc -= len;
- 			start = 0;
- 		}
-diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
-index e6bcd2baf446a9..cb2deac6b2d70e 100644
---- a/fs/cifs/smb2ops.c
-+++ b/fs/cifs/smb2ops.c
-@@ -4598,9 +4598,9 @@ init_read_bvec(struct page **pages, unsigned int npages, unsigned int data_size,
- 		return -ENOMEM;
- 
- 	for (i = 0; i < npages; i++) {
--		bvec[i].bv_page = pages[i];
--		bvec[i].bv_offset = (i == 0) ? cur_off : 0;
--		bvec[i].bv_len = min_t(unsigned int, PAGE_SIZE, data_size);
-+		bvec_set_page(&bvec[i], pages[i],
-+			      min_t(unsigned int, PAGE_SIZE, data_size),
-+			      i == 0 ? cur_off : 0);
- 		data_size -= bvec[i].bv_len;
- 	}
- 
 -- 
 2.39.0
 
