@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A71CC64EC6
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C55C64EC4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Feb 2023 15:08:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233608AbjBCPIF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Feb 2023 10:08:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48064 "EHLO
+        id S234048AbjBCPIR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Feb 2023 10:08:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233902AbjBCPHu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:07:50 -0500
+        with ESMTP id S233916AbjBCPHx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2023 10:07:53 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A24E8D403;
-        Fri,  3 Feb 2023 07:07:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9742AA56CC;
+        Fri,  3 Feb 2023 07:07:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=81B+gzWiKP3dSyMHoEpejaF7sEqhUPFohDfKzzK3URY=; b=SHYAKMQ+SwVUyLVeypwgrT8ITx
-        8OWSemfR3V1d5j1KVncg4YVuObwfg9Pbi32h+XryiQ6gJs4IZtST1Vv4iZ2hrbDVmjo3gmEVm7+ex
-        RoPBp7jp/JuF4fa7BxH5vi1oAhRP7/Aw3jj0MJzqlpyt6AFJ90fRZah2qP7iO5Fa4hS+QXNBJM5G2
-        2fhU4cv9RjOoRb6A67sOeOJMRUWrq9yBLqOOwdzXIP7dYjqfyd7J8G4jWqM9LgJLyWvy41xt0Qfgo
-        kGvvzQfyRIhnon9F7XkqbVma6W8zGAQfkAjRNuTkqVxLf+emMmW/6xjo5W4e00BEBjjlcCfn2iZAf
-        UBeI/ApA==;
+        bh=ozMZvF4F/akQ9A5h2X8GtqkaNdRpJcsfIZKKgUgmw0I=; b=NsY1QrICJKTA+CSUtrWle0mKa2
+        J8/RIQxPFQRt+FyzQ5NfhJil6+wd+Vb1D0lANR0aVtsgTqodWoWyn5bYXnbq9k7gnNvwyDWOjhkeR
+        vnNOu6CYMAtSzcM2d7xE/VJ+c/Lqtyh0gd6yJ7/d9sjsVhHj/kXrmNHvsVdBtyYWbb7W/dpLiT/IM
+        B0pXXzhjJtTPTahY8zyMrMcj80kL3+TPUMaY5LXlHXlNwy5kPByoRdWKg2ObicNbgL+lI6oGB5aiz
+        BDRVVq4nqS8SAUegJvU4rV6rHUE0xE+U5comPu5ldTD2+F2GUfxaZmug0p3m34pElQJqYWaNcG9FT
+        T62fXDrw==;
 Received: from [2001:4bb8:19a:272a:910:bb67:7287:f956] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pNxeb-002apl-U8; Fri, 03 Feb 2023 15:07:06 +0000
+        id 1pNxej-002at9-3V; Fri, 03 Feb 2023 15:07:13 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Ilya Dryomov <idryomov@gmail.com>,
@@ -59,9 +59,9 @@ Cc:     Ilya Dryomov <idryomov@gmail.com>,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         devel@lists.orangefs.org, io-uring@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 09/23] virtio_blk: use bvec_set_virt to initialize special_vec
-Date:   Fri,  3 Feb 2023 16:06:20 +0100
-Message-Id: <20230203150634.3199647-10-hch@lst.de>
+Subject: [PATCH 11/23] afs: use bvec_set_folio to initialize a bvec
+Date:   Fri,  3 Feb 2023 16:06:22 +0100
+Message-Id: <20230203150634.3199647-12-hch@lst.de>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230203150634.3199647-1-hch@lst.de>
 References: <20230203150634.3199647-1-hch@lst.de>
@@ -72,31 +72,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the bvec_set_virt helper to initialize the special_vec.
+Use the bvec_set_folio helper to initialize a bvec.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
-Acked-by: Jason Wang <jasowang@redhat.com>
+Acked-by: David Howells <dhowells@redhat.com>
 ---
- drivers/block/virtio_blk.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ fs/afs/write.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 6a77fa91742880..dc6e9b989910b0 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -170,9 +170,7 @@ static int virtblk_setup_discard_write_zeroes_erase(struct request *req, bool un
+diff --git a/fs/afs/write.c b/fs/afs/write.c
+index 19df10d63323d8..2d17891b618e6e 100644
+--- a/fs/afs/write.c
++++ b/fs/afs/write.c
+@@ -992,7 +992,7 @@ int afs_launder_folio(struct folio *folio)
+ {
+ 	struct afs_vnode *vnode = AFS_FS_I(folio_inode(folio));
+ 	struct iov_iter iter;
+-	struct bio_vec bv[1];
++	struct bio_vec bv;
+ 	unsigned long priv;
+ 	unsigned int f, t;
+ 	int ret = 0;
+@@ -1008,10 +1008,8 @@ int afs_launder_folio(struct folio *folio)
+ 			t = afs_folio_dirty_to(folio, priv);
+ 		}
  
- 	WARN_ON_ONCE(n != segments);
+-		bv[0].bv_page = &folio->page;
+-		bv[0].bv_offset = f;
+-		bv[0].bv_len = t - f;
+-		iov_iter_bvec(&iter, ITER_SOURCE, bv, 1, bv[0].bv_len);
++		bvec_set_folio(&bv, folio, t - f, f);
++		iov_iter_bvec(&iter, ITER_SOURCE, &bv, 1, bv.bv_len);
  
--	req->special_vec.bv_page = virt_to_page(range);
--	req->special_vec.bv_offset = offset_in_page(range);
--	req->special_vec.bv_len = sizeof(*range) * segments;
-+	bvec_set_virt(&req->special_vec, range, sizeof(*range) * segments);
- 	req->rq_flags |= RQF_SPECIAL_PAYLOAD;
- 
- 	return 0;
+ 		trace_afs_folio_dirty(vnode, tracepoint_string("launder"), folio);
+ 		ret = afs_store_data(vnode, &iter, folio_pos(folio) + f, true);
 -- 
 2.39.0
 
