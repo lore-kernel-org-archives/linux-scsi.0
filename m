@@ -2,492 +2,138 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56567C63797
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 05:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01229C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 07:15:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbjBFFj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Feb 2023 00:39:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46900 "EHLO
+        id S229703AbjBFHPf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Feb 2023 02:15:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbjBFFjz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 00:39:55 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D5E1116B;
-        Sun,  5 Feb 2023 21:39:53 -0800 (PST)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3165D24i026110;
-        Mon, 6 Feb 2023 05:38:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=3h7ePAkgWZ3EsOP638oh6MF0B6J03BQcUowiJ80y82Q=;
- b=V3bNSvZBw3qgZY/zQMMrjKeGOOe54Pv4Up6iWa+7kejxFOSqujSJ+5fPEpm+Z0+1gJY/
- e9/loECU83JW2TiXQ5sKvrl7WH3n48gs3+FN+yZfDTSWdsdetixPnVIcjaWowzBPFUX8
- fpxVeIIs+kBpq4Q/lUrGpMCNgffMRy37Nnf4fdluSgUBSmEw7T2tcM9c6POfkH0iAroN
- R1OmffG3XqiIHZ0cbEE/ZtovrLOKe90wfz5y9oPyH/NQ7zoi5EIEHplhArXdl5dtTItU
- HroP54cBC0mCoGvHrgetEh/HkLIY5eVF8Caf1G9Zu/VMoEn2ZQYBn63OawzrfMMyLKYV /g== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nhghv2p5y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 06 Feb 2023 05:38:53 +0000
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3165cq5N017105
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 6 Feb 2023 05:38:52 GMT
-Received: from [10.216.55.169] (10.80.80.8) by nasanex01c.na.qualcomm.com
- (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Sun, 5 Feb 2023
- 21:38:36 -0800
-Message-ID: <275708b9-67f5-6e83-313b-a869c53a0486@quicinc.com>
-Date:   Mon, 6 Feb 2023 11:08:32 +0530
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH] firmware: qcom_scm: Move qcom_scm.h to
- include/linux/firmware/qcom/
+        with ESMTP id S230042AbjBFHPZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 02:15:25 -0500
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2062.outbound.protection.outlook.com [40.107.220.62])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18FEB1CAC9;
+        Sun,  5 Feb 2023 23:14:56 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=I0zZsa/X7Vzgl/cCJ/tVd9rwU9Btwj9iFv6yXawo/V1OQkEo9VZHSZpCYTq1sta9fc/AnNwlkWBLmLfOTJG5dBoohTeXMwEo9owp3XhQOsvhEqxcTplX9Zxy2g5u/1Q72lpbtBjPLaA86u3RTWhdB6UPsctcumB5cT4H1zioRrrFYtGNv2F4IRz2atONlR5rN62Qs8Xco2rIJ1wpToPojSkS/Op45SDsLiLqhclGMfRqOoGxcPDbVyKr/03RpAFAxp7SElpQl0vqgTZqUlNV9wSX4uhIqVTY7qG+lhEWDTp7G/2ZKPpPo4WhLBroEcUGKtANULWOEfhbGkpg3+lrkw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YnMZCCNQzVdGtShBUePE3hCoqtuwW9nnlXhwN4RVHxc=;
+ b=X+4eqf0GC8+89QC7lqFyCl5z6W8qjlCIW/OyrOhEudkStDiclsMUQ1WOg+vMdAkna9PUrrIpanJhBFUrA7FaFlEBExZ7CJTqUfgxel5zZVIsoO0SVPddmggGP33QmfNEPsy8KinBNsShhBwoXq9KCvNtwKH+KO5EelHbXpketmXEbqtF/4SQ2upe2doOrF4GgLyHia7iUmgPil61B9ZdczPbpbhgU5Asvm6joBSNeEtN24Dvvkq2+7jBOAnrBmBD0wpGakXm/DM+T5t+yL6te8hsWzzrM+LSuRq8PxYu51ppS5Xvh/2GCx9ApeSURMz7N4WbVp4uFu+4Kjo1rBQq7Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YnMZCCNQzVdGtShBUePE3hCoqtuwW9nnlXhwN4RVHxc=;
+ b=aTW263WJQBfWS37Yqw3STnav4bi//NjYMxuLHIo67W5yzeYlHGDFq+Wprc49jBAOnSfoYhfSHSTXEWwnWHg1EcTDxo0KkoxzpFXGtQygkLbjR3QI14NWF4eevAyPqZs/kC4Gz+JZdEIUmUTI4AUDHrgRfl54al1nuIMtOWUQe1gzUFu4uZV7CQG4si5TmpL6mFbudOGnWekv0JmWBgJQ0A4T/+3ez2YHsv0YP+ik6Su8pv6Fa0Z8CauTL9+JrawdS4slj2RrTl3Ik2XXdRiMir9F3KgNLK09GLdbezS4CaeoK69BvyS3ozQUloC1vArxrVGvm2JGoFkdBUSobPnmfA==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by CH0PR12MB8578.namprd12.prod.outlook.com (2603:10b6:610:18e::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6064.34; Mon, 6 Feb
+ 2023 07:14:46 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::4aaa:495:78b4:1d7c]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::4aaa:495:78b4:1d7c%3]) with mapi id 15.20.6064.032; Mon, 6 Feb 2023
+ 07:14:46 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     Hannes Reinecke <hare@suse.com>
+CC:     Christoph Hellwig <hch@infradead.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: blktests failures with v6.1
+Thread-Topic: blktests failures with v6.1
+Thread-Index: AQHZFoocnkF/69AeD02U/IcKNzVbOK57EfiAgEa2VIA=
+Date:   Mon, 6 Feb 2023 07:14:46 +0000
+Message-ID: <aaf09ea1-9cf0-0620-2c52-7298bb3409fe@nvidia.com>
+References: <20221223045041.dl6ivxgo25eiwy33@shindev>
+ <Y6VXjztUUz7GFmAW@infradead.org>
+In-Reply-To: <Y6VXjztUUz7GFmAW@infradead.org>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Elliot Berman <quic_eberman@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Russell King <linux@armlinux.org.uk>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        "Rob Clark" <robdclark@gmail.com>,
-        Abhinav Kumar <quic_abhinavk@quicinc.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Sean Paul <sean@poorly.run>, David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        "Will Deacon" <will@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Stanimir Varbanov <stanimir.k.varbanov@gmail.com>,
-        "Vikash Garodia" <quic_vgarodia@quicinc.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Amol Maheshwari <amahesh@qti.qualcomm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Alex Elder <elder@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Amit Kucheria <amitk@kernel.org>,
-        Thara Gopinath <thara.gopinath@gmail.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-arm-kernel@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        <freedreno@lists.freedesktop.org>, <iommu@lists.linux.dev>,
-        <linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
-        <linux-remoteproc@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <20230203210956.3580811-1-quic_eberman@quicinc.com>
-From:   Mukesh Ojha <quic_mojha@quicinc.com>
-In-Reply-To: <20230203210956.3580811-1-quic_eberman@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: scyY1YhfsA1UALrURwW3hhifusma1oZG
-X-Proofpoint-ORIG-GUID: scyY1YhfsA1UALrURwW3hhifusma1oZG
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-02-06_02,2023-02-03_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1011
- bulkscore=0 impostorscore=0 spamscore=0 suspectscore=0 malwarescore=0
- mlxlogscore=999 lowpriorityscore=0 mlxscore=0 priorityscore=1501
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302060048
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|CH0PR12MB8578:EE_
+x-ms-office365-filtering-correlation-id: 078b24db-1382-494f-ba6b-08db0811d3ab
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: /w41OFk+tu73ysFnQyqyW0jGqQ95VHM4g0yEioNrOFIRbYaFGl1cznv3LZbb4lHjvBIE7zFkmyGZpPPUBsO3lptQXQ3g5ZYt7iOZ3u21ma9SX9APx28PE667mcpxC0oRwRma2HEjvcC05UMKArviq7Y0mb89r2Qm54xONlgl5tcrAqAcZD63BacetrqPLpFWVzJezDq4gAZCEovrlomPGZfbcsmkBwbzjVrUajqAwOBf2GMYDfLXJD1VIoPM5EXUK1m6gCWJfZYzkIOGEdYNCdX5MZGqGaloUwTUm1FNuhracLdnkQMG94dN04BbphHPueniEdTpR90kB8OOP6lfB6vvDmlBld2XmrqaDLsvGkcgmbkwIDOXhRB6QfaK+NB5FR9sjP5KDaJpnxCxPTeHMGzSYFAzQPNjb/BoAhR/W40kvvk/rbLSq8yqRsD8Q+5Itqum+T4nPpvwGqo+hUWxL33MQHKi5WkiG8nG96uv1/issKS2LMIkSQnan/4UbWOmCpd9HeM89or2AgYoJHYqHHfSKKnMLPUblwzQdHntxCx5j++PqrmCdZ01GmCUSRKRIuUYbhC+dDQGvipKByT6dTUfwOiPCNXx0nniGddJ9nphLvcrf43oHnCaXlYSB0kwhXta7hxiP6HkW6xiOKosLeBRRakqhD3eGkPGi/bH08g6Yfsu920MoEruLTG2q7hsKJUe9l19mUDtsKofAP42olidT88E788Xx4f/LO2Kc/YFp32L8h2mXngImZfO0MoC6Za7eY3po2+EQBHqI97NrA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(366004)(136003)(376002)(39860400002)(346002)(396003)(451199018)(6506007)(2906002)(36756003)(54906003)(83380400001)(2616005)(38100700002)(71200400001)(31696002)(316002)(86362001)(38070700005)(122000001)(6486002)(478600001)(26005)(8936002)(6916009)(8676002)(4326008)(6512007)(76116006)(5660300002)(186003)(91956017)(66556008)(66946007)(64756008)(66446008)(66476007)(31686004)(4744005)(41300700001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?TFQzSGhwZ3diU3dzUWFiUGVlVjJqMitTL3FmQzRvckw0TjN0S3I1T1lidDl6?=
+ =?utf-8?B?M3VzT3duaFlZQ1VaSkpReGVjQUN1M2Y1VHdnUlFnMExYLzdzWkNnNTByYzlx?=
+ =?utf-8?B?ZFQ2ZHpLSjQ5ajdVTnovS0FuMm9jSWdEclJFdFkrZjJUVHUzRnN2ZmFqbUVa?=
+ =?utf-8?B?NUNoZVlVTkZPRUtBQ1hIeG5VOHo5RkU1M21JV3p5QjVmcyt3SENCUDk1RURP?=
+ =?utf-8?B?dlBuYmNZMzkyQ3cvMU9TNnJHUDhGWERUWDhDT3FIWmd2UlR3VWYzRE5XRWJk?=
+ =?utf-8?B?TW1ST0k1enFJcFJsRWh5ZDJJWGxQejhFdkk5dnY1MnZzQVdsQ0VqWDE4WkhJ?=
+ =?utf-8?B?RWJRbFhYMWpZNzRuRllVYXd2cmRwQ2FLWmRRUlpxTHNublVCMzA3NldGODhl?=
+ =?utf-8?B?LzlMRTdUT2lKZ1pUV2JVMUo5ZXF6OURFTHl3UTR5V3lvOGJ2eXVacVYyemFk?=
+ =?utf-8?B?aE16eERJT1pwQUdvcEJhZU95ZmgzaG1GSk1YT3hqakI2UGpxOWxBeFhrWVBV?=
+ =?utf-8?B?aU80UG9CTFdRd2lHVXA0Z1A3WXVKSlE5SVpxT3ErenAwaVR2MEtDUnpGeGUy?=
+ =?utf-8?B?bGFCSE9oLzcyS2UvcDdKcW1HNEV5TlhYSnR2RkkvdFNsUkFEeFJaeUh6UG9M?=
+ =?utf-8?B?cmtrUG8xNzlWMzk3bFlvM3pHTDZhQmpkL1duWmhxN0FQNmV4MWEvMzFMc3Zv?=
+ =?utf-8?B?eGhGc3UvMXhRVHFwYmRCbkp4OTJnZGVoWWJCVzBQVVd2b1pqN1UvOUptaXZR?=
+ =?utf-8?B?SnRtMUN6MUxRaDB2VDRBSzlaRjJRa080K3dEM09hZWd5RmRNVjFGdEV4OGh5?=
+ =?utf-8?B?eXlQR3pXSTdKV1dXZXNBREZ0c3dqRWRIa2M3Q0JBOGxOS090TFlOMUo1Q3lJ?=
+ =?utf-8?B?LzNpNWFVVGc1VkFqQkNLK0paSEd2SkV6WEpKZ2xHTllkcXZnb0grT0l5M1Fh?=
+ =?utf-8?B?M1VUbG5pNTRRZnR3U0poYlVuS3hkOXZlblp2TnNFVjYxdFVaRDd5Nk80b2NR?=
+ =?utf-8?B?VDVvN2VtTzV0aDVkYlk3bXNxZXdkN0RDRXNJT2pnQ1h3clIxZVVvMThlTXc1?=
+ =?utf-8?B?MkV1VVBIeUlPTkw2bHd1anNhL09XNjNiWmVIS1pnWjF6WXdZbXdCY01KTFIw?=
+ =?utf-8?B?ZlRtZy9oNzZTakxCdEQ0SXgyTEl1U1hWUVRZZ24wdExZMWV3SC9vdkEzOFF3?=
+ =?utf-8?B?dkE2MWQ0cHRSMkltMlR5MEhyK05ucm1ZMzJxOFI4SURiQ3ZrSkpHU1BtQmxH?=
+ =?utf-8?B?SS9QWVRyblZVRWxjL2hZenVUdG8xRkJTWlU5WlFqc0xOeGFUM1d2bGlJcEVS?=
+ =?utf-8?B?YkZSb0FKWnlYck9GS3ordytQY0lBNzdQV2xwbUh0N0tVS3psdkhQYm5oZktv?=
+ =?utf-8?B?dGpBNUVDQVJaelB2bnFIWGRST1p5Nkg4RVJWbExQdUkvUDhzbDg2M0NBL1lR?=
+ =?utf-8?B?djFUTTRleW8vMmF1ZXVrMXdka2ZzbnJ5c1FrU2tma1R0MXUyb0pkZTdaejJt?=
+ =?utf-8?B?OWRQRHlDYlR0N0w1djMwVWo2UXlHbUlXVGpEdytFbGI4UXRjbzVlSUtMMEVw?=
+ =?utf-8?B?TzNpT1Y5OHpOOUtQVUs4V1FLSFFneW5lWXNVaDQ0b2FRM3NVSWFnV2E3bWFq?=
+ =?utf-8?B?am5WWWUzVmJSR2t3VjRSOTVHck9CeHFsNmFPdDJJaUQzTG8wUlZ5QUlKeHVK?=
+ =?utf-8?B?TDdKcUdYSkVrSjNVTi9vUThGMDVKbmJiOGJYSHNlZEdVODNrVUlPeWtuQ2tB?=
+ =?utf-8?B?SUJqTDBZU1hibU1Xa0poamNpTjQ0RE83aXh2VDhVcm84bXJxdEJuc3pxbVhE?=
+ =?utf-8?B?Y2JtUzJrblJkZTZuSzhRdkZpWW1uNk8wc2RkZWd0bEtpRldEbElUSDdKSGVp?=
+ =?utf-8?B?dE1FV2tYaW5oUnJ3QW9OL1VOalBoN2J4MW16QVF1Y3NHRmNSYmlJZjdxMlVW?=
+ =?utf-8?B?UmZRU3h4eHc5UDJDbmF6WEdmNGxna0RaTFlSVWlGbzFPalJJYlpQZFJnK2xT?=
+ =?utf-8?B?MUZ3MWdlanZZYzNzbXJ1NDh4anFjaUJWUUE5RVB1RURzeDdKSTVuby9XSTc3?=
+ =?utf-8?B?V3pFb3I4QWxZMFdDUlBtZ01uQXkwaFpBVzd6YXEwbysvc3hTYzlqdFh5cmxF?=
+ =?utf-8?Q?bBi+rZ67FdBrtWzMqKBQ1q9xs?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <97B117D83E505E42830997C57FFD457E@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 078b24db-1382-494f-ba6b-08db0811d3ab
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Feb 2023 07:14:46.1457
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: jE0KvHMqrYpnq2Ns3tgKuoV2wrMSlZHHzXDhjbKFZle8UM4a0AKQNqZ+MaFVChhLYc4y7/+ygETPzVNm+o1FjQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8578
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2/4/2023 2:39 AM, Elliot Berman wrote:
-> Move include/linux/qcom_scm.h to include/linux/firmware/qcom/qcom_scm.h.
-> This removes 1 of a few remaining Qualcomm-specific headers into a more
-> approciate subdirectory under include/.
-
-s/approciate/appropriate
-
-> 
-> Suggested-by: Bjorn Andersson <andersson@kernel.org>
-> Signed-off-by: Elliot Berman <quic_eberman@quicinc.com>
-
-Acked-by: Mukesh Ojha <quic_mojha@quicinc.com>
-
--Mukesh
-> ---
->   arch/arm/mach-qcom/platsmp.c                     | 2 +-
->   drivers/cpuidle/cpuidle-qcom-spm.c               | 2 +-
->   drivers/firmware/qcom_scm-legacy.c               | 2 +-
->   drivers/firmware/qcom_scm-smc.c                  | 2 +-
->   drivers/firmware/qcom_scm.c                      | 2 +-
->   drivers/gpu/drm/msm/adreno/a5xx_gpu.c            | 2 +-
->   drivers/gpu/drm/msm/adreno/adreno_gpu.c          | 2 +-
->   drivers/gpu/drm/msm/hdmi/hdmi_hdcp.c             | 2 +-
->   drivers/iommu/arm/arm-smmu/arm-smmu-qcom-debug.c | 2 +-
->   drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c       | 2 +-
->   drivers/iommu/arm/arm-smmu/qcom_iommu.c          | 2 +-
->   drivers/media/platform/qcom/venus/firmware.c     | 2 +-
->   drivers/misc/fastrpc.c                           | 2 +-
->   drivers/mmc/host/sdhci-msm.c                     | 2 +-
->   drivers/net/ipa/ipa_main.c                       | 2 +-
->   drivers/net/wireless/ath/ath10k/qmi.c            | 2 +-
->   drivers/pinctrl/qcom/pinctrl-msm.c               | 2 +-
->   drivers/remoteproc/qcom_q6v5_mss.c               | 2 +-
->   drivers/remoteproc/qcom_q6v5_pas.c               | 2 +-
->   drivers/remoteproc/qcom_wcnss.c                  | 2 +-
->   drivers/soc/qcom/mdt_loader.c                    | 2 +-
->   drivers/soc/qcom/ocmem.c                         | 2 +-
->   drivers/soc/qcom/rmtfs_mem.c                     | 2 +-
->   drivers/thermal/qcom/lmh.c                       | 2 +-
->   drivers/ufs/host/ufs-qcom-ice.c                  | 2 +-
->   include/linux/{ => firmware/qcom}/qcom_scm.h     | 0
->   26 files changed, 25 insertions(+), 25 deletions(-)
->   rename include/linux/{ => firmware/qcom}/qcom_scm.h (100%)
-> 
-> diff --git a/arch/arm/mach-qcom/platsmp.c b/arch/arm/mach-qcom/platsmp.c
-> index 5d2f386a46d8..eca2fe0f4314 100644
-> --- a/arch/arm/mach-qcom/platsmp.c
-> +++ b/arch/arm/mach-qcom/platsmp.c
-> @@ -14,7 +14,7 @@
->   #include <linux/of_address.h>
->   #include <linux/smp.h>
->   #include <linux/io.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #include <asm/smp_plat.h>
->   
-> diff --git a/drivers/cpuidle/cpuidle-qcom-spm.c b/drivers/cpuidle/cpuidle-qcom-spm.c
-> index beedf22cbe78..4ac83918edf2 100644
-> --- a/drivers/cpuidle/cpuidle-qcom-spm.c
-> +++ b/drivers/cpuidle/cpuidle-qcom-spm.c
-> @@ -17,7 +17,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/cpuidle.h>
->   #include <linux/cpu_pm.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <soc/qcom/spm.h>
->   
->   #include <asm/proc-fns.h>
-> diff --git a/drivers/firmware/qcom_scm-legacy.c b/drivers/firmware/qcom_scm-legacy.c
-> index 9f918b9e6f8f..029e6d117cb8 100644
-> --- a/drivers/firmware/qcom_scm-legacy.c
-> +++ b/drivers/firmware/qcom_scm-legacy.c
-> @@ -9,7 +9,7 @@
->   #include <linux/mutex.h>
->   #include <linux/errno.h>
->   #include <linux/err.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/arm-smccc.h>
->   #include <linux/dma-mapping.h>
->   
-> diff --git a/drivers/firmware/qcom_scm-smc.c b/drivers/firmware/qcom_scm-smc.c
-> index bb3235a64b8f..16cf88acfa8e 100644
-> --- a/drivers/firmware/qcom_scm-smc.c
-> +++ b/drivers/firmware/qcom_scm-smc.c
-> @@ -8,7 +8,7 @@
->   #include <linux/mutex.h>
->   #include <linux/slab.h>
->   #include <linux/types.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/arm-smccc.h>
->   #include <linux/dma-mapping.h>
->   
-> diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
-> index 2000323722bf..468d4d5ab550 100644
-> --- a/drivers/firmware/qcom_scm.c
-> +++ b/drivers/firmware/qcom_scm.c
-> @@ -12,7 +12,7 @@
->   #include <linux/interconnect.h>
->   #include <linux/module.h>
->   #include <linux/types.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/of.h>
->   #include <linux/of_address.h>
->   #include <linux/of_irq.h>
-> diff --git a/drivers/gpu/drm/msm/adreno/a5xx_gpu.c b/drivers/gpu/drm/msm/adreno/a5xx_gpu.c
-> index 660ba0db8900..d09221f97f71 100644
-> --- a/drivers/gpu/drm/msm/adreno/a5xx_gpu.c
-> +++ b/drivers/gpu/drm/msm/adreno/a5xx_gpu.c
-> @@ -5,7 +5,7 @@
->   #include <linux/kernel.h>
->   #include <linux/types.h>
->   #include <linux/cpumask.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/pm_opp.h>
->   #include <linux/nvmem-consumer.h>
->   #include <linux/slab.h>
-> diff --git a/drivers/gpu/drm/msm/adreno/adreno_gpu.c b/drivers/gpu/drm/msm/adreno/adreno_gpu.c
-> index 57586c794b84..89ff978b81bb 100644
-> --- a/drivers/gpu/drm/msm/adreno/adreno_gpu.c
-> +++ b/drivers/gpu/drm/msm/adreno/adreno_gpu.c
-> @@ -8,7 +8,7 @@
->   
->   #include <linux/ascii85.h>
->   #include <linux/interconnect.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/kernel.h>
->   #include <linux/of_address.h>
->   #include <linux/pm_opp.h>
-> diff --git a/drivers/gpu/drm/msm/hdmi/hdmi_hdcp.c b/drivers/gpu/drm/msm/hdmi/hdmi_hdcp.c
-> index e7748461cffc..0752fe373351 100644
-> --- a/drivers/gpu/drm/msm/hdmi/hdmi_hdcp.c
-> +++ b/drivers/gpu/drm/msm/hdmi/hdmi_hdcp.c
-> @@ -3,7 +3,7 @@
->    */
->   
->   #include "hdmi.h"
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #define HDCP_REG_ENABLE 0x01
->   #define HDCP_REG_DISABLE 0x00
-> diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom-debug.c b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom-debug.c
-> index 74e9ef2fd580..b5b14108e086 100644
-> --- a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom-debug.c
-> +++ b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom-debug.c
-> @@ -4,7 +4,7 @@
->    */
->   
->   #include <linux/of_device.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/ratelimit.h>
->   
->   #include "arm-smmu.h"
-> diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
-> index 91d404deb115..ef42329e82ce 100644
-> --- a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
-> +++ b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
-> @@ -7,7 +7,7 @@
->   #include <linux/adreno-smmu-priv.h>
->   #include <linux/delay.h>
->   #include <linux/of_device.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #include "arm-smmu.h"
->   #include "arm-smmu-qcom.h"
-> diff --git a/drivers/iommu/arm/arm-smmu/qcom_iommu.c b/drivers/iommu/arm/arm-smmu/qcom_iommu.c
-> index 270c3d9128ba..1e0b7b2e9fbd 100644
-> --- a/drivers/iommu/arm/arm-smmu/qcom_iommu.c
-> +++ b/drivers/iommu/arm/arm-smmu/qcom_iommu.c
-> @@ -27,7 +27,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/pm.h>
->   #include <linux/pm_runtime.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/slab.h>
->   #include <linux/spinlock.h>
->   
-> diff --git a/drivers/media/platform/qcom/venus/firmware.c b/drivers/media/platform/qcom/venus/firmware.c
-> index 142d4c74017c..e5759d7e9ede 100644
-> --- a/drivers/media/platform/qcom/venus/firmware.c
-> +++ b/drivers/media/platform/qcom/venus/firmware.c
-> @@ -12,7 +12,7 @@
->   #include <linux/of_address.h>
->   #include <linux/platform_device.h>
->   #include <linux/of_device.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/sizes.h>
->   #include <linux/soc/qcom/mdt_loader.h>
->   
-> diff --git a/drivers/misc/fastrpc.c b/drivers/misc/fastrpc.c
-> index c9902a1dcf5d..04f80e754477 100644
-> --- a/drivers/misc/fastrpc.c
-> +++ b/drivers/misc/fastrpc.c
-> @@ -18,7 +18,7 @@
->   #include <linux/rpmsg.h>
->   #include <linux/scatterlist.h>
->   #include <linux/slab.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <uapi/misc/fastrpc.h>
->   #include <linux/of_reserved_mem.h>
->   
-> diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
-> index 4ac8651d0b29..8ac81d57a3df 100644
-> --- a/drivers/mmc/host/sdhci-msm.c
-> +++ b/drivers/mmc/host/sdhci-msm.c
-> @@ -13,7 +13,7 @@
->   #include <linux/pm_opp.h>
->   #include <linux/slab.h>
->   #include <linux/iopoll.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/regulator/consumer.h>
->   #include <linux/interconnect.h>
->   #include <linux/pinctrl/consumer.h>
-> diff --git a/drivers/net/ipa/ipa_main.c b/drivers/net/ipa/ipa_main.c
-> index 4fb92f771974..90baf7a54d9a 100644
-> --- a/drivers/net/ipa/ipa_main.c
-> +++ b/drivers/net/ipa/ipa_main.c
-> @@ -16,7 +16,7 @@
->   #include <linux/of_device.h>
->   #include <linux/of_address.h>
->   #include <linux/pm_runtime.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/soc/qcom/mdt_loader.h>
->   
->   #include "ipa.h"
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-> index 3f94fbf83702..90f457b8e1fe 100644
-> --- a/drivers/net/wireless/ath/ath10k/qmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
-> @@ -13,7 +13,7 @@
->   #include <linux/module.h>
->   #include <linux/net.h>
->   #include <linux/platform_device.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/soc/qcom/smem.h>
->   #include <linux/string.h>
->   #include <net/sock.h>
-> diff --git a/drivers/pinctrl/qcom/pinctrl-msm.c b/drivers/pinctrl/qcom/pinctrl-msm.c
-> index 47e9a8b0d474..e0128c69bfbf 100644
-> --- a/drivers/pinctrl/qcom/pinctrl-msm.c
-> +++ b/drivers/pinctrl/qcom/pinctrl-msm.c
-> @@ -14,7 +14,7 @@
->   #include <linux/of.h>
->   #include <linux/platform_device.h>
->   #include <linux/pm.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/reboot.h>
->   #include <linux/seq_file.h>
->   #include <linux/slab.h>
-> diff --git a/drivers/remoteproc/qcom_q6v5_mss.c b/drivers/remoteproc/qcom_q6v5_mss.c
-> index fddb63cffee0..da2513bb6387 100644
-> --- a/drivers/remoteproc/qcom_q6v5_mss.c
-> +++ b/drivers/remoteproc/qcom_q6v5_mss.c
-> @@ -34,7 +34,7 @@
->   #include "qcom_pil_info.h"
->   #include "qcom_q6v5.h"
->   
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #define MPSS_CRASH_REASON_SMEM		421
->   
-> diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
-> index dc6f07ca8341..d5a049669616 100644
-> --- a/drivers/remoteproc/qcom_q6v5_pas.c
-> +++ b/drivers/remoteproc/qcom_q6v5_pas.c
-> @@ -18,7 +18,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/pm_domain.h>
->   #include <linux/pm_runtime.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/regulator/consumer.h>
->   #include <linux/remoteproc.h>
->   #include <linux/soc/qcom/mdt_loader.h>
-> diff --git a/drivers/remoteproc/qcom_wcnss.c b/drivers/remoteproc/qcom_wcnss.c
-> index 68f37296b151..9881443cb8df 100644
-> --- a/drivers/remoteproc/qcom_wcnss.c
-> +++ b/drivers/remoteproc/qcom_wcnss.c
-> @@ -19,7 +19,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/pm_domain.h>
->   #include <linux/pm_runtime.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/regulator/consumer.h>
->   #include <linux/remoteproc.h>
->   #include <linux/soc/qcom/mdt_loader.h>
-> diff --git a/drivers/soc/qcom/mdt_loader.c b/drivers/soc/qcom/mdt_loader.c
-> index 3f11554df2f3..33dd8c315eb7 100644
-> --- a/drivers/soc/qcom/mdt_loader.c
-> +++ b/drivers/soc/qcom/mdt_loader.c
-> @@ -12,7 +12,7 @@
->   #include <linux/firmware.h>
->   #include <linux/kernel.h>
->   #include <linux/module.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/sizes.h>
->   #include <linux/slab.h>
->   #include <linux/soc/qcom/mdt_loader.h>
-> diff --git a/drivers/soc/qcom/ocmem.c b/drivers/soc/qcom/ocmem.c
-> index c92d26b73e6f..199fe9872035 100644
-> --- a/drivers/soc/qcom/ocmem.c
-> +++ b/drivers/soc/qcom/ocmem.c
-> @@ -16,7 +16,7 @@
->   #include <linux/module.h>
->   #include <linux/of_device.h>
->   #include <linux/platform_device.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   #include <linux/sizes.h>
->   #include <linux/slab.h>
->   #include <linux/types.h>
-> diff --git a/drivers/soc/qcom/rmtfs_mem.c b/drivers/soc/qcom/rmtfs_mem.c
-> index 9d59ad509a5c..2d3ee22b9249 100644
-> --- a/drivers/soc/qcom/rmtfs_mem.c
-> +++ b/drivers/soc/qcom/rmtfs_mem.c
-> @@ -14,7 +14,7 @@
->   #include <linux/slab.h>
->   #include <linux/uaccess.h>
->   #include <linux/io.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #define QCOM_RMTFS_MEM_DEV_MAX	(MINORMASK + 1)
->   #define NUM_MAX_VMIDS		2
-> diff --git a/drivers/thermal/qcom/lmh.c b/drivers/thermal/qcom/lmh.c
-> index 4122a51e9874..f6edb12ec004 100644
-> --- a/drivers/thermal/qcom/lmh.c
-> +++ b/drivers/thermal/qcom/lmh.c
-> @@ -10,7 +10,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/of_platform.h>
->   #include <linux/slab.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #define LMH_NODE_DCVS			0x44435653
->   #define LMH_CLUSTER0_NODE_ID		0x6370302D
-> diff --git a/drivers/ufs/host/ufs-qcom-ice.c b/drivers/ufs/host/ufs-qcom-ice.c
-> index 62387ccd5b30..453978877ae9 100644
-> --- a/drivers/ufs/host/ufs-qcom-ice.c
-> +++ b/drivers/ufs/host/ufs-qcom-ice.c
-> @@ -8,7 +8,7 @@
->   
->   #include <linux/delay.h>
->   #include <linux/platform_device.h>
-> -#include <linux/qcom_scm.h>
-> +#include <linux/firmware/qcom/qcom_scm.h>
->   
->   #include "ufs-qcom.h"
->   
-> diff --git a/include/linux/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
-> similarity index 100%
-> rename from include/linux/qcom_scm.h
-> rename to include/linux/firmware/qcom/qcom_scm.h
-> 
-> base-commit: 3866989ec2c319341e2cf69ec6116269b634a271
+SGFubmVzLA0KDQo+PiAjMzogbnZtZS8wMDINCj4+ICM0OiBudm1lLzAxNg0KPj4gIzU6IG52bWUv
+MDE3DQo+Pg0KPj4gICAgIFRoZSB0ZXN0IGNhc2VzIGZhaWwgd2l0aCBzaW1pbGFyIG1lc3NhZ2Vz
+IGJlbG93LiBSZXBvcnRlZCBpbiBKdW5lIFszXS4NCj4+ICAgICBGaXhlcyBpbiB0aGUgdGVzdCBj
+YXNlcyBhcmUgZXhwZWN0ZWQuDQo+IA0KPiBJIHRoaW5rIHRoaXMgaXMgcmVsYXRlZCB0byB0aGUg
+Y3VycmVudCBOUU4gdGhhdCBIYW5uZXMgYWRkZWQuDQo+IEhhbm5lcywgY2FuIHlvdSBsb29rIGlu
+dG8gdGhpcz8NCj4gDQoNClRoZXNlIHRlc3RjYXNlcyBhcmUgc3RpbGwgZmFpbGluZyBvbiBsYXRl
+c3QgbnZtZS02LjMgSEVBRDotDQoNCmNvbW1pdCBiYWZmNjQ5MTQ0OGI0ODdlOTIwZmFhYTExN2U0
+MzI5ODljYmFmYTg5IChIRUFEIC0+IG52bWUtNi4zLCANCm9yaWdpbi9udm1lLTYuMykNCkF1dGhv
+cjogS2VpdGggQnVzY2ggPGtidXNjaEBrZXJuZWwub3JnPg0KRGF0ZTogICBGcmkgSmFuIDI3IDA4
+OjU2OjIwIDIwMjMgLTA4MDANCg0KICAgICBudm1lOiBtYXNrIENTRSBlZmZlY3RzIGZvciBzZWN1
+cml0eSByZWNlaXZlDQoNCmNhbiB5b3UgcGxlYXNlIGxvb2sgaW50byB0aGVzZSA/DQoNCi1jaw0K
+DQo=
