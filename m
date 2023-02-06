@@ -2,82 +2,251 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FDFC636D3
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 21:14:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 033A8C05027
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 22:30:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbjBFVOb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Feb 2023 16:14:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35780 "EHLO
+        id S229615AbjBFWaw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Feb 2023 17:30:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229654AbjBFVO3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 16:14:29 -0500
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC74161AC
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Feb 2023 13:14:28 -0800 (PST)
-Received: by mail-pj1-f42.google.com with SMTP id hv11-20020a17090ae40b00b002307b580d7eso9026763pjb.3
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2023 13:14:28 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=21gHeGVmIzRP1Ro1PLJnF7RaX2VoA4fZA0HL9Q8gCq8=;
-        b=EF2tpK/QUIi0++Vi1akYIxUil/8ClZTyMyTRdE1yqAsIgdpLtOXdR41fOBJLJy/h9u
-         1DfV5Qc29WcK483r7HqPXjnFtbgr6F+R5iv/ONLVWKpOfId/ld261AHJW36rRjreAWZf
-         FO8TpmxZiGvRAlIbwt41iyUd5o0U8R7JnhfOg4deFdg0U9SYeSxaIxeV7t97l5aXYFFg
-         CAqEW0GS0RmOUFSL8Hf2wNUdqOz7QJRuG4EZJSz6o1G8mq8tB3XaqSrKTBLUvWiOq8xa
-         zUFaqo4/KmXi/wL4wS3L8vrm2mz/1ciHm46PjHSvq9uCbQ9Pux4DDvqUCNqYxR2KGQdW
-         NYBw==
-X-Gm-Message-State: AO0yUKXZLMr4NmblGov/xNG7lWYs/UoWNj/SzZRzpaCkNSkRrMaRrpqN
-        mWXuD69WEZ+m686DUz4H2yg=
-X-Google-Smtp-Source: AK7set+biiAoSoOv52P0hs5ofJjLIiUfb9knqRkdfeSrRAU0Yc3avOCd/1UqZA9mMifgsW3FVBXaOw==
-X-Received: by 2002:a05:6a21:29c1:b0:bf:de0f:c4ac with SMTP id tv1-20020a056a2129c100b000bfde0fc4acmr437955pzb.57.1675718068195;
-        Mon, 06 Feb 2023 13:14:28 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:546b:df58:66df:fe23? ([2620:15c:211:201:546b:df58:66df:fe23])
-        by smtp.gmail.com with ESMTPSA id t8-20020aa78f88000000b0059260f01115sm7543860pfs.76.2023.02.06.13.14.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Feb 2023 13:14:27 -0800 (PST)
-Message-ID: <bc1183a8-e4fa-20c6-0508-ec36d395a20d@acm.org>
-Date:   Mon, 6 Feb 2023 13:14:24 -0800
+        with ESMTP id S229776AbjBFWar (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 17:30:47 -0500
+X-Greylist: delayed 126 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Feb 2023 14:30:19 PST
+Received: from omta033.useast.a.cloudfilter.net (omta033.useast.a.cloudfilter.net [44.202.169.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37152126F9
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Feb 2023 14:30:17 -0800 (PST)
+Received: from eig-obgw-6006a.ext.cloudfilter.net ([10.0.30.182])
+        by cmsmtp with ESMTP
+        id P16MptgKyY6q8P9y6pSNLs; Mon, 06 Feb 2023 22:28:10 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id P9y5pqsTRdC2CP9y5pnkzg; Mon, 06 Feb 2023 22:28:09 +0000
+X-Authority-Analysis: v=2.4 cv=VPrOIvDX c=1 sm=1 tr=0 ts=63e17ef9
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=m04uMKEZRckA:10
+ a=wYkD_t78qR0A:10 a=XYAwZIGsAAAA:8 a=VwQbUJbxAAAA:8 a=uBuKx8GwAAAA:8
+ a=VnNF1IyMAAAA:8 a=yPCof4ZbAAAA:8 a=_EeEMxcBAAAA:8 a=NEAV23lmAAAA:8
+ a=P2NOn8ILFETLmG1s00YA:9 a=QEXdDO2ut3YA:10 a=0gt-Z038NCQA:10
+ a=E8ToXWR_bxluHZ7gmE-Z:22 a=AjGcO6oz07-iQ99wixmX:22 a=wZgZ3yaTFkxMEWn-yT5t:22
+ a=syqr5EOPB93U0NEwqYpB:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=oBRdVV4OQ9+UkcuWmevW9ANGZ4beTCdlnFfFZ1evJM4=; b=MgGFqT0a1dhZ0a+L/MbZT1xpII
+        lBpBCElDN/5C18sVWItHWGQ3IQZQZd9q1nVtfUMOoW5C/BzYwjxQCSmUkw6ERkdGcWP8s8Gkf0Q+N
+        lxs1W9X/yBIDF/MQrNx5BHdXH5M/OjdN9GO9Lm6vuHDicK4IxiV5LHoHzFJZ1SyXquTWAmSvAG0ij
+        jRpA71i5ronROxe6mcF20N5qk5TvMyOxOof66iIKkDr9chk7IAkGoVwIYCjSx9rpHpAl5EidZOFkw
+        bkYYcZC+ZoOXWPVHAM3L1SvAOWYbECAGuBadiwkRpKqH6dF7R6PjC29FFzTkcdePAq9uTCRW2JKaQ
+        hwHNfe6A==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:41250 helo=[192.168.15.7])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1pP9y4-000JJQ-Ex;
+        Mon, 06 Feb 2023 16:28:08 -0600
+Message-ID: <16e6c434-44af-2efb-d4bc-a253e93e5590@embeddedor.com>
+Date:   Mon, 6 Feb 2023 16:28:27 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH 1/2] scsi: core: Extend struct scsi_exec_args
+ Thunderbird/102.4.2
+Subject: Re: [PATCH 1/3][next] scsi: smartpqi: Replace one-element array with
+ flexible-array member
 Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230202220412.561487-1-bvanassche@acm.org>
- <20230202220412.561487-2-bvanassche@acm.org>
- <a81cb9bc-246b-1b82-fcc6-37bfb5829bab@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <a81cb9bc-246b-1b82-fcc6-37bfb5829bab@oracle.com>
+To:     Don.Brace@microchip.com, gustavoars@kernel.org,
+        kevin.barnett@microsemi.com, storagedev@microchip.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
+References: <cover.1663816572.git.gustavoars@kernel.org>
+ <c80c0979933e0c05e80d95792ef167a28640a14b.1663816572.git.gustavoars@kernel.org>
+ <CY4PR11MB12387B9F495BC7B5D0F5FD84E1DA9@CY4PR11MB1238.namprd11.prod.outlook.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <CY4PR11MB12387B9F495BC7B5D0F5FD84E1DA9@CY4PR11MB1238.namprd11.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1pP9y4-000JJQ-Ex
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:41250
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 4
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfGy4JUKAtAqnsuA5o6zYmi6lwosQk/J+2CrThS13LoawTHoFcnK4lk65phWyUc0clNT8PipzAs09aO7uHXu/TMNVihVgdIW3CCwvLO/ly9ByRA/rExid
+ pVLzAabgMJ+4H+7RUOhQLxI2i8/xOqjyedkny+BHQfHSxjaaBt5utE2RRkJxdghwLGalDiDQ+iVN9TZNmcy4PFbQYy7SLvn2yQ5DJAtjjfNzqOyEIjatJ+G4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/6/23 01:50, John Garry wrote:
-> On 02/02/2023 22:04, Bart Van Assche wrote:
->> Allow SCSI LLDs to specify RQF_* and SCMD_* flags.
+
+
+On 2/6/23 15:58, Don.Brace@microchip.com wrote:
 > 
-> As I see, if BLK_MQ_REQ_PM is set for scsi_exec_args.req_flags, then 
-> RQF_PM gets set automatically in blk_mq_rq_ctx_init() for 
-> request.rq_flags. Christoph previously mentioned that we are required to 
-> set both (BLK_MQ_REQ_PM and RQF_PM). So where does it matter that we 
-> need to set RQF_PM (that setting BLK_MQ_REQ_PM doesn't cover)?
+> ________________________________
+> From: Gustavo A. R. Silva <gustavoars@kernel.org>
+> Sent: Wednesday, September 21, 2022 11:28 PM
+> To: Kevin Barnett <kevin.barnett@microsemi.com>; Don Brace - C33706 <Don.Brace@microchip.com>; storagedev <storagedev@microchip.com>; James E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org <linux-scsi@vger.kernel.org>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; Gustavo A. R. Silva <gustavoars@kernel.org>; linux-hardening@vger.kernel.org <linux-hardening@vger.kernel.org>
+> Subject: [PATCH 1/3][next] scsi: smartpqi: Replace one-element array with flexible-array member
+> 
+> [Some people who received this message don't often get email from gustavoars@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> 
+> EXTERNAL EMAIL: Do not click links or open attachments unless you know the content is safe
+> 
+> One-element arrays are deprecated, and we are replacing them with flexible
+> array members instead. So, replace one-element array with flexible-array
+> member in struct MR_DRV_RAID_MAP and refactor the the rest of the code
+> accordingly.
+> 
+> It seems that the addition of sizeof(struct report_log_lun) in all the
+> places that are modified by this patch is due to the fact that
+> the one-element array struct report_log_lun lun_entries[1]; always
+> contributes to the size of the containing structure struct
+> report_log_lun_list.
+> 
+> Notice that at line 1267 while allocating memory for an instance of
+> struct report_log_lun_list, some _extra_ space seems to be allocated
+> for one element of type struct report_log_lun, which is the type of
+> the elements in array lun_entries:
+> 
+>   1267         internal_logdev_list = kmalloc(logdev_data_length +
+>   1268                 sizeof(struct report_log_lun), GFP_KERNEL);
+> 
+> However, at line 1275 just logdev_data_length bytes are copied into
+> internal_logdev_list (remember that we allocated space for logdev_data_length +
+> sizeof(struct report_log_lun) bytes at line 1267), and then exactly
+> sizeof(struct report_log_lun) bytes are being zeroing out at line 1276.
+> 
+>   1275         memcpy(internal_logdev_list, logdev_data, logdev_data_length);
+>   1276         memset((u8 *)internal_logdev_list + logdev_data_length, 0,
+>   1277                 sizeof(struct report_log_lun));
+> 
+> All the above makes think that it's just fine if we transform array
+> lun_entries into a flexible-array member and just don't allocate
+> that extra sizeof(struct report_log_lun) bytes of space. With this
+> we can remove that memset() call and we also need to modify the code
+> that updates the total length (internal_logdev_list->header.list_length)
+> of array lun_entries at line 1278:
+> 
+>   1278         put_unaligned_be32(logdev_list_length +
+>   1279                 sizeof(struct report_log_lun),
+>   1280                 &internal_logdev_list->header.list_length);
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE routines
+> on memcpy().
+> 
+> Link: https://github.com/KSPP/linux/issues/79
+> Link: https://github.com/KSPP/linux/issues/204
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> 
+> NAK: What is actually happening is that we were taking on an extra list entry that is all zeros for the controller itself. This is intentional. These changes will break the driver.
 
-I will rework this patch such that both flags are set instead of only 
-one of the two.
+Oh, great to know. :)
 
-Thanks,
+So, in this case, what do you think about this, instead:
 
-Bart.
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index af27bb0f3133..228838eb3686 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -954,7 +954,7 @@ struct report_log_lun {
+
+  struct report_log_lun_list {
+         struct report_lun_header header;
+-       struct report_log_lun lun_entries[1];
++       struct report_log_lun lun_entries[];
+  };
+
+  struct report_phys_lun_8byte_wwid {
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index d0446d4d4465..af8f1a8e9f8f 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -1277,6 +1277,10 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
+         logdev_data_length = sizeof(struct report_lun_header) +
+                 logdev_list_length;
+
++       /*
++        * Notice that we take on an extra list entry (struct report_log_lun)
++        * that is all zeros for the controller itself.
++        */
+         internal_logdev_list = kmalloc(logdev_data_length +
+                 sizeof(struct report_log_lun), GFP_KERNEL);
+         if (!internal_logdev_list) {
 
 
+Thanks for the feedback!
+--
+Gustavo
+
+> 
+> Thanks,
+> Don Brace <don.brace@microchip.com>
+> 
+> 
+> ---
+> And of course, it'd be great if maintainers can confirm what I described
+> in the changelog text. :)
+> 
+>   drivers/scsi/smartpqi/smartpqi.h      |  2 +-
+>   drivers/scsi/smartpqi/smartpqi_init.c | 10 +++-------
+>   2 files changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+> index e550b12e525a..d1756c9d1112 100644
+> --- a/drivers/scsi/smartpqi/smartpqi.h
+> +++ b/drivers/scsi/smartpqi/smartpqi.h
+> @@ -954,7 +954,7 @@ struct report_log_lun {
+> 
+>   struct report_log_lun_list {
+>          struct report_lun_header header;
+> -       struct report_log_lun lun_entries[1];
+> +       struct report_log_lun lun_entries[];
+>   };
+> 
+>   struct report_phys_lun_8byte_wwid {
+> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+> index b971fbe3b3a1..544cd18a90d7 100644
+> --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> @@ -1264,8 +1264,7 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
+>          logdev_data_length = sizeof(struct report_lun_header) +
+>                  logdev_list_length;
+> 
+> -       internal_logdev_list = kmalloc(logdev_data_length +
+> -               sizeof(struct report_log_lun), GFP_KERNEL);
+> +       internal_logdev_list = kmalloc(logdev_data_length, GFP_KERNEL);
+>          if (!internal_logdev_list) {
+>                  kfree(*logdev_list);
+>                  *logdev_list = NULL;
+> @@ -1273,11 +1272,8 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
+>          }
+> 
+>          memcpy(internal_logdev_list, logdev_data, logdev_data_length);
+> -       memset((u8 *)internal_logdev_list + logdev_data_length, 0,
+> -               sizeof(struct report_log_lun));
+> -       put_unaligned_be32(logdev_list_length +
+> -               sizeof(struct report_log_lun),
+> -               &internal_logdev_list->header.list_length);
+> +       put_unaligned_be32(logdev_list_length,
+> +                          &internal_logdev_list->header.list_length);
+> 
+>          kfree(*logdev_list);
+>          *logdev_list = internal_logdev_list;
+> --
+> 2.34.1
+> 
+> 
