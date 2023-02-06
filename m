@@ -2,156 +2,210 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA51C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 07:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F3FFC61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 09:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229844AbjBFHcJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Feb 2023 02:32:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46438 "EHLO
+        id S229739AbjBFJvB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Feb 2023 04:51:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229748AbjBFHcI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 02:32:08 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01FB91CF5B
-        for <linux-scsi@vger.kernel.org>; Sun,  5 Feb 2023 23:30:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675668616;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type;
-        bh=3jXjjDL5J91hORH4TYi0QdQmGwZQaSssEMGf4ZeejqQ=;
-        b=Wu1UI7KlJdoUvIOUktThoMvwkhA7jrG8lt858xUoSsGh9Exwbjl4EG8vOvEwRg/7ctgjug
-        pMlvmaVm2fdSPj/5dICjryTScZizNEpiBAkkCRew2Og9WavO7c6OhHkOsUsG95gKvh1P+e
-        tAU24CMdz5X4PByS4KE3N2Vpnh8NkWQ=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-141-PMCrhPPaPsat159jdAd5iQ-1; Mon, 06 Feb 2023 02:30:15 -0500
-X-MC-Unique: PMCrhPPaPsat159jdAd5iQ-1
-Received: by mail-pl1-f200.google.com with SMTP id z8-20020a170902834800b001990ad8de5bso1756185pln.10
-        for <linux-scsi@vger.kernel.org>; Sun, 05 Feb 2023 23:30:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3jXjjDL5J91hORH4TYi0QdQmGwZQaSssEMGf4ZeejqQ=;
-        b=ANXPjbV7Qj07gorD6+2oVMaOgHGwwWWgLxrwrCYKbbHEGBPyZK5fYQhf59mHQYf6kr
-         2bYBY8ERHfQHaN8f4Aut6bK6Rmymis0Mn65nQSDOyV0Xcz7mjD7vcjfnwgtpUoa0Ru3s
-         oN1kmw5lRDB3piuciTZzXuZVbquAyElW7FQGpVLLHoLGWUBHWdWe49Xywszn7UFXzkaF
-         3QkwofZ8oz7h8iRM9t3nD/1pGEEgwM1REndo4rlb3YZPtALWKLUky8I8sbKR6Q7wQgiA
-         L+pwURUmU2aLRFK8G+VUiRSzub/1Dhd96LE8+tj2ejmrJZbvrVpqi8N46ZdIoW3N+/c6
-         jT5A==
-X-Gm-Message-State: AO0yUKXKEqv5bUaJWRwhqISESZxOrp0zHaMkOgY+UsrS0sg2ah8co/kD
-        Sj+M2WtNaAllqQQGwIv0F6gh61NOFb9PaAhp8PRk84XcTQ1LRNj9bnpBz7aaXZ9OYlnKasLcyx1
-        K1qy1qQxlCAb3Guqvy36XpBPSfAuYjb0mNEElZg==
-X-Received: by 2002:a05:6a00:1581:b0:590:72e0:8f60 with SMTP id u1-20020a056a00158100b0059072e08f60mr3950387pfk.16.1675668613299;
-        Sun, 05 Feb 2023 23:30:13 -0800 (PST)
-X-Google-Smtp-Source: AK7set+6LMsMKPsv8ZVGVMW8qv5F4LLRLb904RR+20NFbfkTDYU/VwtKwz+3oQkD0x1lWrm/gGVl2cgLOnxlOM2gLU8=
-X-Received: by 2002:a05:6a00:1581:b0:590:72e0:8f60 with SMTP id
- u1-20020a056a00158100b0059072e08f60mr3950385pfk.16.1675668612990; Sun, 05 Feb
- 2023 23:30:12 -0800 (PST)
+        with ESMTP id S229819AbjBFJu7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 04:50:59 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D1B21CF72
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Feb 2023 01:50:56 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3167ptgs015079;
+        Mon, 6 Feb 2023 09:50:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=e+od2eK3LdSJIpb1NSUaj1FovSXkMft/xgr7blui9co=;
+ b=AKdAFP34TnDp4H9pbZUEQUCCLZZBpeuN8U9BdXD5SAtc1aCZDlZFHp2WP86xOnOQGcaR
+ G91ICZBsjxoI/13iA9XUPRAuJpnugZreO2WEY4E2h8/EXRU9EPilphrVYpg+O5lXJi4l
+ Va4/miH0WKpxaqbqKcHdzWLv952OwmtoP8ZEKf450FZpaOytoalTirm1zMGQmh4yUDZm
+ PHtRBczIz3WDSQjRy0/3m5dY+9oIsHEJxVEOkd2CMoJr01qogyeiS/dX2YzqZmbsC9Cv
+ hyiUw5itY8wDXrKrR4KSeJgitDbQ6RXH85pi3GC8gE/F6P8JgMncOlZ2+EcA1A3TsevF /Q== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nhdy12g54-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 06 Feb 2023 09:50:41 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 3168549q011642;
+        Mon, 6 Feb 2023 09:50:41 GMT
+Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2169.outbound.protection.outlook.com [104.47.73.169])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3nhdt4avbq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 06 Feb 2023 09:50:41 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=YibPioCZcexkA2Gnq19PAf75HPA1ntWfVrdkaLIfGwzZbodGxE4cmSLzbGskiYJK5ApdNi6PIrEGeuCNs2f6k/6zl2/qzD7UvAbxsgaX+ApMacXF6FhFpEwBlG4AqtCS5peXuyT5+NEIblXuGhnyM4da4TCIVKdshYoEeQvkMwzZ3i+H9zywQZmrsibctCglRIEaez+jjUeL7GUaN8EHlGuIWx57+gFySS4woiudljNRtq3KhWlPwx+qB5PqaIYD3YlNwMj8QDJszGpbh9l2bD9ZPZqnrWYdH67gTMso+jncdLTZcrFoHP6YvBOMklVKIu+Lria8FAkTnkM0JuebxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=e+od2eK3LdSJIpb1NSUaj1FovSXkMft/xgr7blui9co=;
+ b=FUytKYQC9sY64SkQMOfv2xr3zkGRU1my9oui9X2T5BXA48zj1MUl8T48XjjdBUrj9Afi7iC5LhhnTkoKtsFhptEP3hod8h9k/LpP3y5V/IYT13ZaQ73yEdnf3yFL8JWuOzDoBOMzzN+brNrtHr3uTzQ2q3UQqJR4Qy/FiXQSfPOXdkwOiEEJ5bGBT5uu0CqXTLNKrXQzusdh7hVOnka7H8dwQtNmNTSJK4WBFw2nt8J+64n/TiXTmkbyTFnhPjkE2tbfJxe2UBz3n7Z8f1w1JKTGG1ao8gs1sDNn3oLL1l29hwP0J5/VZrtsXRNT47uma/4VyO15CsWKndxcA20tig==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=e+od2eK3LdSJIpb1NSUaj1FovSXkMft/xgr7blui9co=;
+ b=VOkUcxELah4uZPGaowXLLY/L/OPCbicDywyLUHOkL9chtq4TRpFHeE4fuR4/lR+flagvQeG/K3D/K58aRm88I+EUhWNUsl2aAQnhfoJZIS1rYJDGokVEluhWrdXRk58MQOAHp+R7URpif2AnDEjVJUuGousZDsU4hFvCKn/iD5M=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by PH7PR10MB6201.namprd10.prod.outlook.com (2603:10b6:510:1f3::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6086.10; Mon, 6 Feb
+ 2023 09:50:39 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::fff7:981:3ae6:92eb]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::fff7:981:3ae6:92eb%8]) with mapi id 15.20.6086.007; Mon, 6 Feb 2023
+ 09:50:39 +0000
+Message-ID: <a81cb9bc-246b-1b82-fcc6-37bfb5829bab@oracle.com>
+Date:   Mon, 6 Feb 2023 09:50:34 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH 1/2] scsi: core: Extend struct scsi_exec_args
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230202220412.561487-1-bvanassche@acm.org>
+ <20230202220412.561487-2-bvanassche@acm.org>
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20230202220412.561487-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0429.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:18b::20) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 MIME-Version: 1.0
-From:   Yi Zhang <yi.zhang@redhat.com>
-Date:   Mon, 6 Feb 2023 15:30:01 +0800
-Message-ID: <CAHj4cs-jef8f4zxJQxjKirAWyZkTREycFdNPvQaGbgS-1r_Lcg@mail.gmail.com>
-Subject: [bug report] WARNING at fs/proc/generic.c:376 proc_register+0x131/0x1c0
- observed with blktests scsi
-To:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH7PR10MB6201:EE_
+X-MS-Office365-Filtering-Correlation-Id: 27c276b1-1f8c-4ab4-9beb-08db08279a4c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: NcfSUfBvEDHvO7TDIQFP3igNs/t7/9EMSWlqbu2+VsDSkw+FRDL1GF06Tyd9b8oX9HL3fpIxtQsNxHnioeCFCIzYnvfSpcFeZRfHPClqxc6NeucRLv1bVnrr2xhya6S3MjGN61x4MJnCefnukc1nqLYmYugCjvNIIAkK6dqbHTbbd7g5BGNJypykfe8CoZnAJjJ9ql4EwZcfQREQMTteJL/3matDn/KkeMm+vDP5XAtLIuDK9HKyhXWr7Shgrjp7AmZeCPMCkvyfLyPwUo34vn/c0OitvsjqroS+o9uXUMcb7JI0ctYhwgQNnNtb11O3xGbNwv8R3VnMdN3bLul2TYzIUBqdCC7nU/ECBrWn637Ne8xy6E5QMc0gR+kn/ICMVAhnyUiV7ABqpXvpXGzk3YpXKvYT1HrckJuVMncPRBWcYj6hUn6mbCOgobP1zPXT7aDX0JQCv2kx1EB9R81X7uFo0+P+EPs0/G08+dP0d30zGAHRjucEHWDfbzmlXT5K+H+A5nl2neRe9TbXZ11ZBOpK9nE+QQ3SgrY7YiWsdJu8KZAt9BvGiht7SswKnXOX6VYeQbrkg/t4R1i2taOe0CrFr+k4GGvG6uHSvSAKMNjK9T+f7rancMjJlfxBEhvKh/Uw4UlHRvw6N1NtrB5UUU7L09ajufYm9Q9GOi9u/BekE9Hw0+UQJs9WY6FfAzxfTDx6DqBc9sxgghlC+93JTI3BHXIHgNOuEUhI1gy7NwI=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(376002)(396003)(346002)(39860400002)(136003)(366004)(451199018)(6636002)(38100700002)(36756003)(31696002)(86362001)(316002)(66476007)(8676002)(110136005)(2616005)(4326008)(66946007)(66556008)(6486002)(53546011)(478600001)(6506007)(6512007)(26005)(6666004)(31686004)(36916002)(186003)(2906002)(54906003)(8936002)(83380400001)(5660300002)(41300700001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VlJld1hDdWU4V1VmMm1tKzY3NWtIak05cmNYWUprMVV1T0tuMEt3dkZndERm?=
+ =?utf-8?B?dS9OZ01DNTNzZW5ienNUeXlPQ243T0diVUFlZFVmQUxCTXNkYWo3aTF0UmFZ?=
+ =?utf-8?B?UEFobEVYYmdTdWF4MkdBWXFJN296WFFaeEsvRUVHVHEzNkdHSk9mbjBvZDRQ?=
+ =?utf-8?B?ZHZnVjFGMjdkbUVLbG9ZVE9mY2JNMnY5OWplbDRhV0hvazNhSDdKL0tLVTVp?=
+ =?utf-8?B?eEtHU2FnZWorRDZuVFhHVkxRaE1sUmhEVTBOand3WldGd2dXaDVWMTRMZkR4?=
+ =?utf-8?B?M0xFcGcrL1hVelpUNGFyaDlHbHZzdHlFUk1MOUk2ZnVqUnEzTWRqRkwvRjRB?=
+ =?utf-8?B?aDZiM1BwQSsyYmpYcFdJQTVUWjNVWUREeFBoWEdPNWVrMGwraHVad3dERTUy?=
+ =?utf-8?B?Z0oreHNWUnVMSnY5VjNWeVIzUjQzbHdSSThMK0ZueEYvdkMwL3UrOVF3M3Zq?=
+ =?utf-8?B?eHlUejYvcVNzMTM5MlNmU2NsWitVTFltY1Fza3h4STA3TkFKeTI4U2E3VDR4?=
+ =?utf-8?B?K3lDSlJVSFM0THZCbGpqbzROWjF6ODRZdTNMVHRrNWRUUTFnSWxKMkh5WEdX?=
+ =?utf-8?B?NVFTR21oWVMveDRKS1FtVEMvWnc4cHdTekplK1FHUFZ4TVFEeXJydGsvaDJk?=
+ =?utf-8?B?dmg0aFE0ei9BUzQxYVFWbjEzbnpLcENEeDEveEUyWWtIWkoxczlNZDBqQXlX?=
+ =?utf-8?B?dFVVRlNFN1ZpRzM0SHdrQ2p3TnJQZEJZdnJtcnExYnNqaG0yYmJTR1k5RGM0?=
+ =?utf-8?B?dk41SDZES1dGc3VscFhNZmRLSFlTVTVXM2RzUkNNdE9EZkJFYW0xa0F5YXN2?=
+ =?utf-8?B?OGxtRk1MaFliUjJFUWFQcXl2cG5WTHQzTWZ4ZXlkZEYvbUtCdjVyUlZWdGJG?=
+ =?utf-8?B?S2ZMRmNTd1JNaXhqU2w0M1F3K0EwcFNXdTZ3RStxVDUySEdyZHFSUFlGa2lh?=
+ =?utf-8?B?L2FERWhQWWdJN0RnNDkyYWRJZFFlNVMxNlZPS0dCM1l0Tkk5Uk9vSUlCT3hU?=
+ =?utf-8?B?V1pjZjJwZXloRGF0S0krUEg4K01WMzkxRWVDSHJHZjRJQUxoV1FrYkV3NmV1?=
+ =?utf-8?B?SWNxSXA0ZERHY093NlNFdE1PTlRBSExWdDJ0M3BWbTR4ZVlYUzVBMzB2TW5S?=
+ =?utf-8?B?ZU52OE9WMW5jU0V2Nm5kNnNNb3JDbk9MNitGYThrakhqTS9CZE9WUENzY2VV?=
+ =?utf-8?B?MDhld1NTRHVENGhOU1R0cURVblVvdnk0enJ0bVJBVUMvYUdxa2hDM3E1Y0Rh?=
+ =?utf-8?B?bnk4cEM3SEJzeUhQY2NqMVJqQmhlRUFBNit0K29xYXl2RVNiU1VJblVTdlkw?=
+ =?utf-8?B?dHRVMWEzUEFyUmM1TElPVE8yOEJ0TmRmaW1QUklGeGt6THpXOFA5UWZRSlQz?=
+ =?utf-8?B?YkZYSHlyaFpIbmoxdWJzOFhUREdhSmR0TGpJYk1OWFU5UjQxU1R0YlRscGlC?=
+ =?utf-8?B?eGdrVG9FVmVSKzc4dnFvVElDTTU0S0hxdXFESk9ocWcyMlNlbzIydEROdEk5?=
+ =?utf-8?B?cFdIQUtmREZpanY3VEtmQXF1REI3NEJjbms0ZGJHRFpObERKNTl3YldLVk1s?=
+ =?utf-8?B?M0ZJQVg2RkRONXJTSkNiVVRPQm9acEhTdFZvb2twWi83K1RiNDVuMUlZV0w5?=
+ =?utf-8?B?NjNxSGdnYkJXb1lseVkyTEd1REVrOG9wNzk4ejIrSW5Ra3l1QlZibW1aNmVo?=
+ =?utf-8?B?VHlMQkpZcXRHcjVsbjUzVmV6c0NXbHh0aTFBMG13RVJjWEtpVUZuTHpQSHJG?=
+ =?utf-8?B?ZEpMbmtRK0NwNHpSVW9CTUVKcklJcTlyR0JlZ1pMSCtxZVUrdlZWck5iVEdT?=
+ =?utf-8?B?M3Fub0c2NDdDWjhRM094TkZJaWtJTkFWM0xVN0xLcElYaWFORFBHSW9vZFRN?=
+ =?utf-8?B?WEw5eEZFU3I1c0tDYWJpRVNxd2w5MHdNRUJoeFFYZllScVNURkhtSXo0WWds?=
+ =?utf-8?B?MStDMlQvaU8vUUE4dUMwMGUxcWV1aGl4NGd6am42ZUgxcnY1RFVkTUFJMTM3?=
+ =?utf-8?B?UmpTODdrU1ovZFEydGRlQjdsWGpOdWd6M29jTUE5ZkFod202TEZEa042djhJ?=
+ =?utf-8?B?UHN1NS95cFFPTWhGTXRVTHo5dmhkZDFwbTEwek13LzVvcXBWVHlEa3JiaXVk?=
+ =?utf-8?B?UW8zNW9rcndHZDBwL2tudXB1S1NvUjBDTytoK3hFSHZEMTVkU1RoZyt4TkNa?=
+ =?utf-8?B?REE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: KkFzGXrGV2u/LJFmrtgWSM/nIE6Bv1FB9BaJ54dwdKH5xF6UfPSdHZM4lVCizbDU1Zfu1a3Snoorvbrp6gFz77zuir8T3tYwMIT9YCWn4BAoexvSqO3J7fR/xc4/pb1+tjksjlQ2bvAwnfQkajIv78P5bonsfu9K/A0K0XlSm2jIT9B6It9WNVA77KXOCe/jIb89paVDIcJuIm3hLrplAUr+lA52D3FXQLpx6NCTUn7g14S74wQ0A59wjBFdwucvFEQ8GDc118CsG7cCKdt6FYncyOXOy6rLXlUSr4gnTIMMYV/ZVo1IXUSAnLOKmqC44kWleHXA5NkeqwOWXkU8BIZBeyRPv18UWEc4TOQ9MznBar5HFJ+73eceaxCeeBnw//vg9alMU58MuE3q2cG+NCRlZPS4wWTnPH+8xvjjC+gLWE2Bx/Lp6penhhsQTJsZA581OF2TaMkNuAe5xnlnMlIN0IrSNnK5DCmXh8yWX4GKiuyE3iBpAe/5jc3CkAQsx3NqtbsZIQKK5JGZVWikPYQAIfIHd0fuoLUrVaVDzRM69CLES5uM4YVUtalTJxUlxWzpWH4tnYZgImtOrQgVAf4vQbIXa8dXA7FaASKgxrwIzjyVKbAlcnVyr+VtS1vnlJkjEpkYj0jKXL1eU/NEELMmssK+v1vME95vAA55cqdAyZIZCOALND4QguiF1m974AG6iNhwncOzhlTzzMj3QAVsFwQzEohrk5S/pl7YmdescC4mPjni8TqY1G6I4CmKX7l7mxTO4j09I9JuGf2nXEQIh3bCByHqF692Y8H5g57p3O38MUmF5d1wgvZN8HrI1A2vpxmjW2Spg7bXXSC4DBek44CcisJg3BN37D+xnMblRoX5gRhxG4FuoHp9gXAzjRNwgk7xDTi3c+owQRx1UQ==
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 27c276b1-1f8c-4ab4-9beb-08db08279a4c
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Feb 2023 09:50:39.1015
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8HIISRrbh23KIJqhlF9DzAZhTr9kR2Q7qdPWnkAfrgYAPKjOyFE3qpxYl2iHSjNAdVGMKcJvI1UsK2jWAOba2w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6201
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-02-06_05,2023-02-03_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
+ mlxlogscore=999 adultscore=0 phishscore=0 mlxscore=0 malwarescore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302060085
+X-Proofpoint-GUID: 9DcPy1eUXmkEBNW0erkhWoPtr8g2eluE
+X-Proofpoint-ORIG-GUID: 9DcPy1eUXmkEBNW0erkhWoPtr8g2eluE
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello
-blktests scsi/ failed on the latest linux-block/for-next, pls help
-check it, thanks.
+On 02/02/2023 22:04, Bart Van Assche wrote:
+> Allow SCSI LLDs to specify RQF_* and SCMD_* flags.
 
-linux-block.git@for-next
-commit: 99bd489eac97
+As I see, if BLK_MQ_REQ_PM is set for scsi_exec_args.req_flags, then 
+RQF_PM gets set automatically in blk_mq_rq_ctx_init() for 
+request.rq_flags. Christoph previously mentioned that we are required to 
+set both (BLK_MQ_REQ_PM and RQF_PM). So where does it matter that we 
+need to set RQF_PM (that setting BLK_MQ_REQ_PM doesn't cover)?
 
-[  341.448821] run blktests scsi/004 at 2023-02-06 02:18:22
-[  341.479128] ------------[ cut here ]------------
-[  341.483794] proc_dir_entry 'scsi/scsi_debug' already registered
-[  341.489753] WARNING: CPU: 81 PID: 24655 at fs/proc/generic.c:376
-proc_register+0x131/0x1c0
-[  341.498058] Modules linked in: scsi_debug(+) nvme_core nvme_common
-rfkill intel_rapl_msr intel_rapl_common intel_uncore_frequency
-intel_uncore_frequency_common intel_ifs sunrpc i10nm_edac nfit
-libnvdimm x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm
-irqbypass rapl iTCO_wdt ipmi_ssif pmt_telemetry pmt_crashlog vfat
-intel_pmc_bxt intel_cstate dell_smbios iTCO_vendor_support fat
-pmt_class intel_sdsi mei_me intel_th_gth dcdbas intel_uncore pcspkr
-intel_th_pci idxd isst_if_mbox_pci isst_if_mmio acpi_ipmi i2c_i801
-dell_wmi_descriptor wmi_bmof isst_if_common intel_vsec idxd_bus
-intel_th i2c_smbus tg3 mei i2c_ismt ipmi_si ipmi_devintf
-ipmi_msghandler acpi_power_meter loop fuse zram xfs crct10dif_pclmul
-crc32_pclmul crc32c_intel polyval_clmulni polyval_generic qat_4xxx
-ghash_clmulni_intel sha512_ssse3 mpi3mr intel_qat scsi_transport_sas
-crc8 mgag200 wmi pinctrl_emmitsburg [last unloaded: nvmet]
-[  341.577657] CPU: 81 PID: 24655 Comm: modprobe Not tainted 6.2.0-rc6 #1
-[  341.584210] Hardware name: Dell Inc. PowerEdge R660/0M1CC5, BIOS
-0.2.28 09/23/2022
-[  341.591802] RIP: 0010:proc_register+0x131/0x1c0
-[  341.596359] Code: e8 48 83 c4 08 5b 5d 41 5c 41 5d 41 5e 41 5f c3
-cc cc cc cc 49 8b b5 a0 00 00 00 4c 89 fa 48 c7 c7 b0 04 8b af e8 4a
-d7 9c 00 <0f> 0b 48 c7 c7 a8 23 ee b0 e8 21 3d a5 00 8b 45 5c 48 c7 c7
-d0 d9
-[  341.615124] RSP: 0018:ff4c574d85c73b28 EFLAGS: 00010282
-[  341.620376] RAX: 0000000000000033 RBX: ff49ee2778524148 RCX: 0000000000000000
-[  341.627532] RDX: 0000000000000002 RSI: ffffffffaf8d93ce RDI: 00000000ffffffff
-[  341.634685] RBP: ff49ee2783a9e840 R08: 0000000000000000 R09: ff4c574d85c739d8
-[  341.641836] R10: 0000000000000003 R11: ff49ee2abfcc88a8 R12: 000000000000000a
-[  341.648991] R13: ff49ee2744080300 R14: 000000000000000a R15: ff49ee2783a9e8ec
-[  341.656140] FS:  00007fa98ee36740(0000) GS:ff49ee2aafc40000(0000)
-knlGS:0000000000000000
-[  341.664246] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  341.670010] CR2: 00007fa98e8e1c00 CR3: 00000001314b0002 CR4: 0000000000771ee0
-[  341.677167] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  341.684319] DR3: 0000000000000000 DR6: 00000000fffe07f0 DR7: 0000000000000400
-[  341.691468] PKRU: 55555554
-[  341.694200] Call Trace:
-[  341.696671]  <TASK>
-[  341.698807]  scsi_proc_hostdir_add+0x9e/0x120
-[  341.703194]  scsi_host_alloc+0x342/0x3a0
-[  341.707149]  sdebug_driver_probe+0x48/0x250 [scsi_debug]
-[  341.712503]  really_probe+0xdb/0x380
-[  341.716107]  ? pm_runtime_barrier+0x50/0x90
-[  341.720319]  __driver_probe_device+0x78/0x170
-[  341.724706]  driver_probe_device+0x1f/0x90
-[  341.728832]  __device_attach_driver+0x85/0x110
-[  341.733303]  ? __pfx___device_attach_driver+0x10/0x10
-[  341.738381]  bus_for_each_drv+0x74/0xb0
-[  341.742239]  __device_attach+0xae/0x1d0
-[  341.746105]  bus_probe_device+0x8e/0xb0
-[  341.749969]  device_add+0x41e/0x9a0
-[  341.753488]  ? complete_all+0x20/0x90
-[  341.757180]  sdebug_add_host_helper+0x138/0x2a0 [scsi_debug]
-[  341.762876]  scsi_debug_init+0x5e2/0xff0 [scsi_debug]
-[  341.767962]  ? __pfx_init_module+0x10/0x10 [scsi_debug]
-[  341.773223]  do_one_initcall+0x56/0x230
-[  341.777088]  do_init_module+0x4a/0x200
-[  341.780867]  __do_sys_finit_module+0x93/0xf0
-[  341.785167]  do_syscall_64+0x58/0x80
-[  341.788770]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-[  341.793860] RIP: 0033:0x7fa98e907d2d
-[  341.797488] Code: c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 f3 0f 1e
-fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24
-08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d ab a0 0c 00 f7 d8 64 89
-01 48
-[  341.816252] RSP: 002b:00007ffec05faeb8 EFLAGS: 00000246 ORIG_RAX:
-0000000000000139
-[  341.823842] RAX: ffffffffffffffda RBX: 0000561087d12ce0 RCX: 00007fa98e907d2d
-[  341.830992] RDX: 0000000000000000 RSI: 0000561087d12da0 RDI: 0000000000000003
-[  341.838146] RBP: 00007ffec05faf70 R08: 0000000000000000 R09: 0000000000000000
-[  341.845302] R10: 0000000000000003 R11: 0000000000000246 R12: 0000561087d12da0
-[  341.852451] R13: 0000000000040000 R14: 0000561087d12ea0 R15: 0000561087d12da0
-[  341.859606]  </TASK>
-[  341.861821] ---[ end trace 0000000000000000 ]---
-[  341.866459] scsi_proc_hostdir_add: proc_mkdir failed for scsi_debug
-[  341.883579] scsi_debug:sdebug_driver_probe: scsi_host_alloc failed
+It would be nice to mention the reason in the commit description.
 
+Thanks,
+John
 
--- 
-Best Regards,
-  Yi Zhang
+> 
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/scsi_lib.c    | 3 ++-
+>   include/scsi/scsi_device.h | 2 ++
+>   2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index abe93ec8b7d0..5feb8be6d956 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -229,8 +229,9 @@ int scsi_execute_cmd(struct scsi_device *sdev, const unsigned char *cmd,
+>   	scmd->cmd_len = COMMAND_SIZE(cmd[0]);
+>   	memcpy(scmd->cmnd, cmd, scmd->cmd_len);
+>   	scmd->allowed = retries;
+> +	scmd->flags |= args->scmd_flags;
+>   	req->timeout = timeout;
+> -	req->rq_flags |= RQF_QUIET;
+> +	req->rq_flags |= args->rq_flags | RQF_QUIET;
+>   
+>   	/*
+>   	 * head injection *required* here otherwise quiesce won't work
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 7e95ec45138f..79260e98774f 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -462,6 +462,8 @@ struct scsi_exec_args {
+>   	unsigned int sense_len;		/* sense buffer len */
+>   	struct scsi_sense_hdr *sshdr;	/* decoded sense header */
+>   	blk_mq_req_flags_t req_flags;	/* BLK_MQ_REQ flags */
+> +	req_flags_t rq_flags;		/* RQF flags */
+> +	unsigned int scmd_flags;	/* SCMD flags */
+>   	int *resid;			/* residual length */
+>   };
+>   
 
