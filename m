@@ -2,251 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 033A8C05027
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Feb 2023 22:30:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E361CC61DA4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 00:03:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229615AbjBFWaw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Feb 2023 17:30:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45362 "EHLO
+        id S229994AbjBGADA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Feb 2023 19:03:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229776AbjBFWar (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 17:30:47 -0500
-X-Greylist: delayed 126 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Feb 2023 14:30:19 PST
-Received: from omta033.useast.a.cloudfilter.net (omta033.useast.a.cloudfilter.net [44.202.169.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37152126F9
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Feb 2023 14:30:17 -0800 (PST)
-Received: from eig-obgw-6006a.ext.cloudfilter.net ([10.0.30.182])
-        by cmsmtp with ESMTP
-        id P16MptgKyY6q8P9y6pSNLs; Mon, 06 Feb 2023 22:28:10 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTP
-        id P9y5pqsTRdC2CP9y5pnkzg; Mon, 06 Feb 2023 22:28:09 +0000
-X-Authority-Analysis: v=2.4 cv=VPrOIvDX c=1 sm=1 tr=0 ts=63e17ef9
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=m04uMKEZRckA:10
- a=wYkD_t78qR0A:10 a=XYAwZIGsAAAA:8 a=VwQbUJbxAAAA:8 a=uBuKx8GwAAAA:8
- a=VnNF1IyMAAAA:8 a=yPCof4ZbAAAA:8 a=_EeEMxcBAAAA:8 a=NEAV23lmAAAA:8
- a=P2NOn8ILFETLmG1s00YA:9 a=QEXdDO2ut3YA:10 a=0gt-Z038NCQA:10
- a=E8ToXWR_bxluHZ7gmE-Z:22 a=AjGcO6oz07-iQ99wixmX:22 a=wZgZ3yaTFkxMEWn-yT5t:22
- a=syqr5EOPB93U0NEwqYpB:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=oBRdVV4OQ9+UkcuWmevW9ANGZ4beTCdlnFfFZ1evJM4=; b=MgGFqT0a1dhZ0a+L/MbZT1xpII
-        lBpBCElDN/5C18sVWItHWGQ3IQZQZd9q1nVtfUMOoW5C/BzYwjxQCSmUkw6ERkdGcWP8s8Gkf0Q+N
-        lxs1W9X/yBIDF/MQrNx5BHdXH5M/OjdN9GO9Lm6vuHDicK4IxiV5LHoHzFJZ1SyXquTWAmSvAG0ij
-        jRpA71i5ronROxe6mcF20N5qk5TvMyOxOof66iIKkDr9chk7IAkGoVwIYCjSx9rpHpAl5EidZOFkw
-        bkYYcZC+ZoOXWPVHAM3L1SvAOWYbECAGuBadiwkRpKqH6dF7R6PjC29FFzTkcdePAq9uTCRW2JKaQ
-        hwHNfe6A==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:41250 helo=[192.168.15.7])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1pP9y4-000JJQ-Ex;
-        Mon, 06 Feb 2023 16:28:08 -0600
-Message-ID: <16e6c434-44af-2efb-d4bc-a253e93e5590@embeddedor.com>
-Date:   Mon, 6 Feb 2023 16:28:27 -0600
+        with ESMTP id S230034AbjBGAC7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2023 19:02:59 -0500
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83D7D1BAC0;
+        Mon,  6 Feb 2023 16:02:50 -0800 (PST)
+Received: by mail-pj1-f51.google.com with SMTP id rm7-20020a17090b3ec700b0022c05558d22so13045543pjb.5;
+        Mon, 06 Feb 2023 16:02:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1gvO8TD4qNAS7wiX58CNMN+rFSKTU4cEInv6xaIFB7s=;
+        b=Q+ecqWEwY8e55UXqWvfwnCKVnLdoOok80Lo2fTY/R8dhsXDF69KXWpz1D7E8Qoy1tw
+         g5Flcol5Um1SrOSmx9wwPoC2yjRex/Tcto2b9SkWZ4TbnRa+K8YecOYQsersm4jyplpA
+         JcUPIn71sPQjqcU+N+Rc7clY93L6VLlRfV1TiCMcouo/cXm0ebTI1hWznSjBGV6Jmef1
+         mrHMUdkob3wiBNUxTV8uCGudpoEqc5OkUcNFteXVIgBAlCFqIVwjDkGJIuvWGRd9Me6x
+         Sdy1xJtQKooKKl74/pPmI7aK7f+PZPPeerSpC2jqFAOZGtUXg/drVYiEr80dC33FPiR9
+         PQPA==
+X-Gm-Message-State: AO0yUKV3Up9WC4LnaaTaf84YqVPjg6YGjXvvQq6QSNVqLWBlRp0yFoyQ
+        iwQ3MKSdt6knb+ZwxKS9JQo=
+X-Google-Smtp-Source: AK7set9aDFvOGb43vTfp6gRc47TLGYnoeCnwglSzIgsX06dGnTa0MTVwKc0XP1SFS0sLEpqfgbrSjw==
+X-Received: by 2002:a05:6a20:d04f:b0:bc:c663:41b6 with SMTP id hv15-20020a056a20d04f00b000bcc66341b6mr1046779pzb.28.1675728169820;
+        Mon, 06 Feb 2023 16:02:49 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:546b:df58:66df:fe23? ([2620:15c:211:201:546b:df58:66df:fe23])
+        by smtp.gmail.com with ESMTPSA id e29-20020a630f1d000000b0047899d0d62csm2080808pgl.52.2023.02.06.16.02.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Feb 2023 16:02:48 -0800 (PST)
+Message-ID: <24b34999-8f7c-7821-0b15-fdfc3f508b13@acm.org>
+Date:   Mon, 6 Feb 2023 16:02:46 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH 1/3][next] scsi: smartpqi: Replace one-element array with
- flexible-array member
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v4 2/7] block: Support configuring limits below the page
+ size
 Content-Language: en-US
-To:     Don.Brace@microchip.com, gustavoars@kernel.org,
-        kevin.barnett@microsemi.com, storagedev@microchip.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
-References: <cover.1663816572.git.gustavoars@kernel.org>
- <c80c0979933e0c05e80d95792ef167a28640a14b.1663816572.git.gustavoars@kernel.org>
- <CY4PR11MB12387B9F495BC7B5D0F5FD84E1DA9@CY4PR11MB1238.namprd11.prod.outlook.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <CY4PR11MB12387B9F495BC7B5D0F5FD84E1DA9@CY4PR11MB1238.namprd11.prod.outlook.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>,
+        Pankaj Raghav <p.raghav@samsung.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Keith Busch <kbusch@kernel.org>
+References: <20230130212656.876311-1-bvanassche@acm.org>
+ <20230130212656.876311-3-bvanassche@acm.org>
+ <20230201235038.nnayavxpadq5yj34@garbanzo>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230201235038.nnayavxpadq5yj34@garbanzo>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1pP9y4-000JJQ-Ex
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:41250
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 4
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfGy4JUKAtAqnsuA5o6zYmi6lwosQk/J+2CrThS13LoawTHoFcnK4lk65phWyUc0clNT8PipzAs09aO7uHXu/TMNVihVgdIW3CCwvLO/ly9ByRA/rExid
- pVLzAabgMJ+4H+7RUOhQLxI2i8/xOqjyedkny+BHQfHSxjaaBt5utE2RRkJxdghwLGalDiDQ+iVN9TZNmcy4PFbQYy7SLvn2yQ5DJAtjjfNzqOyEIjatJ+G4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2/1/23 15:50, Luis Chamberlain wrote:
+> On Mon, Jan 30, 2023 at 01:26:51PM -0800, Bart Van Assche wrote:
+>> @@ -122,12 +177,17 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
+>>   void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_hw_sectors)
+>>   {
+>>   	struct queue_limits *limits = &q->limits;
+>> +	unsigned int min_max_hw_sectors = PAGE_SIZE >> SECTOR_SHIFT;
+>>   	unsigned int max_sectors;
+>>   
+>> -	if ((max_hw_sectors << 9) < PAGE_SIZE) {
+>> -		max_hw_sectors = 1 << (PAGE_SHIFT - 9);
+>> -		printk(KERN_INFO "%s: set to minimum %d\n",
+>> -		       __func__, max_hw_sectors);
+>> +	if (max_hw_sectors < min_max_hw_sectors) {
+>> +		blk_enable_sub_page_limits(limits);
+>> +		min_max_hw_sectors = 1;
+>> +	}
+> 
+> Up to this part this a non-functional update, and so why not a
+> separate patch to clarify that.
 
+Will do.
 
-On 2/6/23 15:58, Don.Brace@microchip.com wrote:
+>> +
+>> +	if (max_hw_sectors < min_max_hw_sectors) {
+>> +		max_hw_sectors = min_max_hw_sectors;
+>> +		pr_info("%s: set to minimum %u\n", __func__, max_hw_sectors);
 > 
-> ________________________________
-> From: Gustavo A. R. Silva <gustavoars@kernel.org>
-> Sent: Wednesday, September 21, 2022 11:28 PM
-> To: Kevin Barnett <kevin.barnett@microsemi.com>; Don Brace - C33706 <Don.Brace@microchip.com>; storagedev <storagedev@microchip.com>; James E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org <linux-scsi@vger.kernel.org>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; Gustavo A. R. Silva <gustavoars@kernel.org>; linux-hardening@vger.kernel.org <linux-hardening@vger.kernel.org>
-> Subject: [PATCH 1/3][next] scsi: smartpqi: Replace one-element array with flexible-array member
+> But if I understand correctly here we're now changing
+> max_hw_sectors from 1 to whatever the driver set on
+> blk_queue_max_hw_sectors() if its smaller than PAGE_SIZE.
 > 
-> [Some people who received this message don't often get email from gustavoars@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
-> 
-> EXTERNAL EMAIL: Do not click links or open attachments unless you know the content is safe
-> 
-> One-element arrays are deprecated, and we are replacing them with flexible
-> array members instead. So, replace one-element array with flexible-array
-> member in struct MR_DRV_RAID_MAP and refactor the the rest of the code
-> accordingly.
-> 
-> It seems that the addition of sizeof(struct report_log_lun) in all the
-> places that are modified by this patch is due to the fact that
-> the one-element array struct report_log_lun lun_entries[1]; always
-> contributes to the size of the containing structure struct
-> report_log_lun_list.
-> 
-> Notice that at line 1267 while allocating memory for an instance of
-> struct report_log_lun_list, some _extra_ space seems to be allocated
-> for one element of type struct report_log_lun, which is the type of
-> the elements in array lun_entries:
-> 
->   1267         internal_logdev_list = kmalloc(logdev_data_length +
->   1268                 sizeof(struct report_log_lun), GFP_KERNEL);
-> 
-> However, at line 1275 just logdev_data_length bytes are copied into
-> internal_logdev_list (remember that we allocated space for logdev_data_length +
-> sizeof(struct report_log_lun) bytes at line 1267), and then exactly
-> sizeof(struct report_log_lun) bytes are being zeroing out at line 1276.
-> 
->   1275         memcpy(internal_logdev_list, logdev_data, logdev_data_length);
->   1276         memset((u8 *)internal_logdev_list + logdev_data_length, 0,
->   1277                 sizeof(struct report_log_lun));
-> 
-> All the above makes think that it's just fine if we transform array
-> lun_entries into a flexible-array member and just don't allocate
-> that extra sizeof(struct report_log_lun) bytes of space. With this
-> we can remove that memset() call and we also need to modify the code
-> that updates the total length (internal_logdev_list->header.list_length)
-> of array lun_entries at line 1278:
-> 
->   1278         put_unaligned_be32(logdev_list_length +
->   1279                 sizeof(struct report_log_lun),
->   1280                 &internal_logdev_list->header.list_length);
-> 
-> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE routines
-> on memcpy().
-> 
-> Link: https://github.com/KSPP/linux/issues/79
-> Link: https://github.com/KSPP/linux/issues/204
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> 
-> NAK: What is actually happening is that we were taking on an extra list entry that is all zeros for the controller itself. This is intentional. These changes will break the driver.
+> To determine if this is a functional change it begs the
+> question as to how many block drivers have a max hw sector
+> smaller than the equivalent PAGE_SIZE and wonder if that
+> could regress.
 
-Oh, great to know. :)
+If a block driver passes an argument to blk_queue_max_hw_sectors() or 
+blk_queue_max_segment_size() that is smaller than what is supported by 
+the block layer, data corruption will be triggered if the block driver 
+or the hardware supported by the block driver does not support the 
+larger values chosen by the block layer. Changing limits that will 
+trigger data corruption into limits that may work seems like an 
+improvement to me?
 
-So, in this case, what do you think about this, instead:
+Thanks,
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index af27bb0f3133..228838eb3686 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -954,7 +954,7 @@ struct report_log_lun {
+Bart.
 
-  struct report_log_lun_list {
-         struct report_lun_header header;
--       struct report_log_lun lun_entries[1];
-+       struct report_log_lun lun_entries[];
-  };
-
-  struct report_phys_lun_8byte_wwid {
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index d0446d4d4465..af8f1a8e9f8f 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1277,6 +1277,10 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
-         logdev_data_length = sizeof(struct report_lun_header) +
-                 logdev_list_length;
-
-+       /*
-+        * Notice that we take on an extra list entry (struct report_log_lun)
-+        * that is all zeros for the controller itself.
-+        */
-         internal_logdev_list = kmalloc(logdev_data_length +
-                 sizeof(struct report_log_lun), GFP_KERNEL);
-         if (!internal_logdev_list) {
-
-
-Thanks for the feedback!
---
-Gustavo
-
-> 
-> Thanks,
-> Don Brace <don.brace@microchip.com>
-> 
-> 
-> ---
-> And of course, it'd be great if maintainers can confirm what I described
-> in the changelog text. :)
-> 
->   drivers/scsi/smartpqi/smartpqi.h      |  2 +-
->   drivers/scsi/smartpqi/smartpqi_init.c | 10 +++-------
->   2 files changed, 4 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-> index e550b12e525a..d1756c9d1112 100644
-> --- a/drivers/scsi/smartpqi/smartpqi.h
-> +++ b/drivers/scsi/smartpqi/smartpqi.h
-> @@ -954,7 +954,7 @@ struct report_log_lun {
-> 
->   struct report_log_lun_list {
->          struct report_lun_header header;
-> -       struct report_log_lun lun_entries[1];
-> +       struct report_log_lun lun_entries[];
->   };
-> 
->   struct report_phys_lun_8byte_wwid {
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index b971fbe3b3a1..544cd18a90d7 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -1264,8 +1264,7 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
->          logdev_data_length = sizeof(struct report_lun_header) +
->                  logdev_list_length;
-> 
-> -       internal_logdev_list = kmalloc(logdev_data_length +
-> -               sizeof(struct report_log_lun), GFP_KERNEL);
-> +       internal_logdev_list = kmalloc(logdev_data_length, GFP_KERNEL);
->          if (!internal_logdev_list) {
->                  kfree(*logdev_list);
->                  *logdev_list = NULL;
-> @@ -1273,11 +1272,8 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
->          }
-> 
->          memcpy(internal_logdev_list, logdev_data, logdev_data_length);
-> -       memset((u8 *)internal_logdev_list + logdev_data_length, 0,
-> -               sizeof(struct report_log_lun));
-> -       put_unaligned_be32(logdev_list_length +
-> -               sizeof(struct report_log_lun),
-> -               &internal_logdev_list->header.list_length);
-> +       put_unaligned_be32(logdev_list_length,
-> +                          &internal_logdev_list->header.list_length);
-> 
->          kfree(*logdev_list);
->          *logdev_list = internal_logdev_list;
-> --
-> 2.34.1
-> 
-> 
