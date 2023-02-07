@@ -2,117 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 917BCC636D3
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 18:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A4B8C636D3
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 19:25:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231288AbjBGS1I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Feb 2023 13:27:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54118 "EHLO
+        id S229539AbjBGTZe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Feb 2023 14:25:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231131AbjBGS1H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 13:27:07 -0500
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DF4F6EB6;
-        Tue,  7 Feb 2023 10:26:42 -0800 (PST)
-Received: by mail-pl1-f171.google.com with SMTP id iy2so6423596plb.11;
-        Tue, 07 Feb 2023 10:26:41 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OYHp2ts2Cd4biba4exHlCAA6w0pxpQp8qxcKkWtwtMk=;
-        b=vYSc09h66X9lIEMN0+wx6ho8Fn/9eIkBO1eduYfZpFJb7oA/5ExKgpetPs0DWOOrKj
-         SPpNwOnjp8EhaOHUrvFp5dJBNywdgaND1U8JNxTmUs99XRqvi7cF2eEdeqWv5W/lZ7p3
-         c/kpDGpS9mjXiKQKRn05IEtxDgiSByVpm5apicFjQwweKGtVwEodN3sgmDZUulg1CtQh
-         7lrxe5rbAUIQVL0/rOHOCt9wFy9quZZXIspztTD1NutsnkdrY/m0NFCrP6cxqS0reiiA
-         krFj0fZ/XOZXRxLIzScbzgkDU7aBjLuY5KzIy8eNP0TJ4wv6GQDhR1mVYEeahGjxbflR
-         Uliw==
-X-Gm-Message-State: AO0yUKVhYiuGiJf37GyFCCmGp+/NzKKFbpVNCgRwYpOIdIXauRyWG02Q
-        WaXJExF61OvxpJkKkCyIDPg=
-X-Google-Smtp-Source: AK7set8fdT0ialgK/QEbPbgNHHzOpGfsJSXnt1cCW1M05ds5Pnwv+j8TZln9gIp8AzCApM34jdSy9w==
-X-Received: by 2002:a05:6a20:1e43:b0:bc:5a6:1b2a with SMTP id cy3-20020a056a201e4300b000bc05a61b2amr3830357pzb.49.1675794401208;
-        Tue, 07 Feb 2023 10:26:41 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:1000:8a4b:e165:69ed? ([2620:15c:211:201:1000:8a4b:e165:69ed])
-        by smtp.gmail.com with ESMTPSA id l9-20020a056a00140900b00593edee1af6sm9605590pfu.67.2023.02.07.10.26.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Feb 2023 10:26:40 -0800 (PST)
-Message-ID: <36a712ed-994f-319b-ff41-65fd4eb28d32@acm.org>
-Date:   Tue, 7 Feb 2023 10:26:38 -0800
+        with ESMTP id S229662AbjBGTZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 14:25:32 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4434239295;
+        Tue,  7 Feb 2023 11:25:22 -0800 (PST)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 317JGasM006605;
+        Tue, 7 Feb 2023 19:25:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=tqfqfPZ+3SXtUvlt271AVvVdM7OC1tOz3fAp9g1Zs7g=;
+ b=b5SOspP7fg7gJIqGmsLh7NJ0iZ2A1STE5ZoEDrMcu1vg+LiVWHd5yd49teydoJG0meF9
+ 2J+hT+W0YUoE8RwMc1rrkkjsQ7HPx10ajELXwj/t1OC8HCv0eGwI0Q+a1aycpDYAhIKn
+ C5XeBPIFwu6xe2mhLboQzb/25ailWHSMt3NfS/g3OFe5JW4oJfzawRYD0XEIjDr+8d3P
+ w8vN6qwuv6p4XlSP5R3xEV3KzSSFAQbLxuNEc45OzukaLCRlhpwh0To+5GRyBbzp+5F3
+ t1ko+KC453XSu5DAww8q7p0f4JnqSzQsd3N0oOKX7piLRsnenKFS3VPHzWdBruv8LAOQ Zg== 
+Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nkvnmr6p6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Feb 2023 19:25:16 +0000
+Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
+        by ppma05wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 317Ff9Qi003947;
+        Tue, 7 Feb 2023 19:25:15 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([9.208.129.118])
+        by ppma05wdc.us.ibm.com (PPS) with ESMTPS id 3nhf079h7r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Feb 2023 19:25:15 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 317JPE5558524064
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 7 Feb 2023 19:25:14 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1927858062;
+        Tue,  7 Feb 2023 19:25:14 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 011AE58057;
+        Tue,  7 Feb 2023 19:25:12 +0000 (GMT)
+Received: from [172.20.7.120] (unknown [9.211.110.248])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Tue,  7 Feb 2023 19:25:11 +0000 (GMT)
+Message-ID: <05eed3d8321d0f355bf3dc59ffea3d6ab08135fa.camel@linux.ibm.com>
+Subject: Re: [PATCH] scsi: FlashPoint: Replace arithmetic addition by
+ bitwise OR
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Deepak R Varma <drv@mailo.com>
+Cc:     Khalid Aziz <khalid@gonehiking.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>
+Date:   Tue, 07 Feb 2023 22:25:09 +0300
+In-Reply-To: <Y+KOeP0OOiem3lR5@ubun2204.myguest.virtualbox.org>
+References: <Y+I0HXsHezZRtFOM@ubun2204.myguest.virtualbox.org>
+         <9a78cdd254d5d962450242d2e01c3a0f702a63a0.camel@linux.ibm.com>
+         <Y+KOeP0OOiem3lR5@ubun2204.myguest.virtualbox.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v4 2/7] block: Support configuring limits below the page
- size
-Content-Language: en-US
-To:     Luis Chamberlain <mcgrof@kernel.org>,
-        =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <javier.gonz@samsung.com>
-Cc:     Pankaj Raghav <p.raghav@samsung.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <kbusch@kernel.org>
-References: <20230130212656.876311-1-bvanassche@acm.org>
- <20230130212656.876311-3-bvanassche@acm.org>
- <20230201235038.nnayavxpadq5yj34@garbanzo>
- <24b34999-8f7c-7821-0b15-fdfc3f508b13@acm.org>
- <Y+GZFoHiUOQeq25d@bombadil.infradead.org>
- <bee64ad1-a465-123e-4208-013e7dd69e04@acm.org>
- <Y+Gyj5pFkhIKY32K@bombadil.infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <Y+Gyj5pFkhIKY32K@bombadil.infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: Zop1i2iHus6d-QhWg2DPFN52aWKUgS1W
+X-Proofpoint-ORIG-GUID: Zop1i2iHus6d-QhWg2DPFN52aWKUgS1W
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-02-07_11,2023-02-06_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
+ adultscore=0 suspectscore=0 priorityscore=1501 clxscore=1015 bulkscore=0
+ impostorscore=0 mlxlogscore=817 lowpriorityscore=0 phishscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2302070170
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/6/23 18:08, Luis Chamberlain wrote:
-> On Mon, Feb 06, 2023 at 04:31:58PM -0800, Bart Van Assche wrote:
->> On 2/6/23 16:19, Luis Chamberlain wrote:
->>> But I'm trying to do a careful review here.
->>
->> That's appreciated :-)
->>
->>> The commit log did not describe what *does* happen in these situations today,
->>> and you seem to now be suggesting in the worst case corruption can happen.
->>> That changes the patch context quite a bit!
->>>
->>> My question above still stands though, how many block drivers have a max
->>> hw sector smaller than the equivalent PAGE_SIZE. If you make your
->>> change, even if it fixes some new use case where corruption is seen, can
->>> it regress some old use cases for some old controllers?
->>
->> The blk_queue_max_hw_sectors() change has been requested by a contributor to
->> the MMC driver (I'm not familiar with the MMC driver).
->>
->> I'm not aware of any storage controllers for which the maximum segment size
->> is below 4 KiB.
-> 
-> Then the commit log should mention that. Because do you admit that it
-> could possible change their behaviour?
+On Tue, 2023-02-07 at 23:16 +0530, Deepak R Varma wrote:
+[...]
+> James, there are a few other patch submissions for the scsi subsystem
+> that I submitted in last few weeks. I sent couple of reminder request
+> for comments on those submission, but still waiting. Could you please
+> also review those and share your feedback?
 
-I will make the commit message more detailed.
+The problem is basically that they don't fix a bug or introduce an
+enhancement.  Review bandwidth in SCSI is the main limiting factor for
+any new patch, so we tend to concentrate on these two types.  The main
+problem with code replacement patches is that they do tend to introduce
+inadvertent bugs in old drivers, which is why people are afraid to
+review them.  You can reduce the overhead of review by demonstrating
+that the binary produced is unchanged (obviously this works for some
+but not all of your patches), so a maintainer need only decide if they
+like the change rather than worrying about it introducing a regression.
 
->> For some storage controllers, e.g. the UFS Exynos controller, the maximum
->> supported segment size is 4 KiB. This patch series makes such storage
->> controllers compatible with larger page sizes, e.g. 16 KiB.
->>
->> Does this answer your question?
-> 
-> Does mine answer the reason to why I am asking it? If we are sure these
-> don't exist then please mention it in the commit log. And also more
-> importantly the possible corruption issue you describe which could
-> happen! Was a corruption actually observed in real life or reported!?
+Regards,
 
-Incorrect data transfers have been observed in our tests. We noticed in 
-our tests with the Exynos controller and PAGE_SIZE = 16 KiB that booting 
-fails without this patch series. I think booting failed because the DMA 
-engine in this controller was asked to perform transfers that fall 
-outside the supported limits. I expect similar behavior for all other 
-storage controllers with a DMA engine.
-
-Bart.
+James
 
