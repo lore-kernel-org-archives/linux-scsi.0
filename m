@@ -2,106 +2,81 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68300C636D6
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 16:57:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E69F7C636D3
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 17:47:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231992AbjBGQ5U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Feb 2023 11:57:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40664 "EHLO
+        id S230260AbjBGRrH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Feb 2023 12:47:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230344AbjBGQ5U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 11:57:20 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 034793A594;
-        Tue,  7 Feb 2023 08:57:19 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B44F7B81A01;
-        Tue,  7 Feb 2023 16:57:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03C78C433EF;
-        Tue,  7 Feb 2023 16:57:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675789036;
-        bh=MNtjrR3i9zJVMbXrA2OM0kVsyK6vBzmxrxtfk069rf4=;
-        h=Date:From:To:Cc:Subject:From;
-        b=Ffwz5mg+uOZwkbqk3CdPXkwZ9FrLo9uSsNsNsQw5kweSC29zByMBR7kj4y9ueasMc
-         jRK5le8mzpZz7Edq+RS1FjPxmELIf+LJrw6uQueXrTWqcChbuB3lwdBxirpX3xuPwt
-         8a6E8Ogxb1IIkG2nkAF3mLxbNg3cb0eM6HmSn32YmeUTnjyrY7OI4Xs77BXyfZYSGX
-         MX7uuhhUpgKNFStumGa+0gZQ95FRrhOGdj76UJxXEMw+XtLu+EjcWv4LJK2AcKXoJa
-         1X/eBUoosJnhIHkk5u7N4HRU4LRO618snZyFBz26qfYuBlTezr1rEoD07bspuuhlfJ
-         oXqEH0duQFRdw==
-Date:   Tue, 7 Feb 2023 10:57:29 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Don Brace <don.brace@microchip.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
-Subject: [PATCH v2][next] scsi: smartpqi: Replace one-element array with
- flexible-array member
-Message-ID: <Y+KC+VJ5xdmMaMUc@work>
+        with ESMTP id S232082AbjBGRq6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 12:46:58 -0500
+Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 114B035A3;
+        Tue,  7 Feb 2023 09:46:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
+        t=1675791996; bh=ii4yoI1YfOqgXUDUFrZF3AkgOsKIFlm4QdS+yQ2YnnI=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
+         MIME-Version:Content-Type:In-Reply-To;
+        b=d6nj7V9XUBHGTHXwAeCyU5EutnYlDdFfSj/SQkfdygrNTqNkCK5vJDADtyvk5TywI
+         0wJ+jWQxUXmLGnO2gXmENhyD168zaqphTGwI8Ow9ItMgPmQacwCsF3gEKJBS2+yhbf
+         NrgSfOO/YxXi+9y/mbHjamEoOeh5DSEVQVkksA9w=
+Received: by b-2.in.mailobj.net [192.168.90.12] with ESMTP
+        via ip-206.mailobj.net [213.182.55.206]
+        Tue,  7 Feb 2023 18:46:36 +0100 (CET)
+X-EA-Auth: 2Gy1ppoYqDnuraQ5LgQ/oD15lFOEcXlTXiILHsKqJbC9Jk5cYGFzLi8N/jfAJ62+Hc91BBhZIlWhxj344v6R9V/oFpDKJDTI
+Date:   Tue, 7 Feb 2023 23:16:32 +0530
+From:   Deepak R Varma <drv@mailo.com>
+To:     James Bottomley <jejb@linux.ibm.com>
+Cc:     Khalid Aziz <khalid@gonehiking.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>
+Subject: Re: [PATCH] scsi: FlashPoint: Replace arithmetic addition by bitwise
+ OR
+Message-ID: <Y+KOeP0OOiem3lR5@ubun2204.myguest.virtualbox.org>
+References: <Y+I0HXsHezZRtFOM@ubun2204.myguest.virtualbox.org>
+ <9a78cdd254d5d962450242d2e01c3a0f702a63a0.camel@linux.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <9a78cdd254d5d962450242d2e01c3a0f702a63a0.camel@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-One-element arrays are deprecated, and we are replacing them with flexible
-array members instead. So, replace one-element array with flexible-array
-member in struct report_log_lun_list.
+On Tue, Feb 07, 2023 at 03:26:48PM +0300, James Bottomley wrote:
+> On Tue, 2023-02-07 at 16:51 +0530, Deepak R Varma wrote:
+> > When adding two bit-field mask values, an OR operation offers higher
+> > performance over an arithmetic operation. So, convert such additions
+> > to an OR based expressions. Issue identified using orplus.cocci
+> > semantic patch script.
+> 
+> No it doesn't, at least not for constants, which is the entirety of
+> this patch: the compiler can find the value at compile time, so the
+> whole lot becomes a load immediate of a single value.  Whether the
+> compiler sees OR or + is immaterial to the compile time computation. 
 
-This helps with the ongoing efforts to tighten the FORTIFY_SOURCE routines
-on memcpy().
+Hello James,
+Thank you for the feedback. Your comments are useful. I was not aware of the
+compile time computation of constant expressions before. Thanks.
 
-Link: https://github.com/KSPP/linux/issues/79
-Link: https://github.com/KSPP/linux/issues/204
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
-Changes in v2:
- In v1 we thought that the original code was allocating one too-many
- entries for the list. However, Don Brance commented that the allocation
- was actually intentional[1]. So, I added a code comment with his feedback.
- Link: https://lore.kernel.org/linux-hardening/16e6c434-44af-2efb-d4bc-a253e93e5590@embeddedor.com/  [1]
+> Perhaps Coccinelle should be fixed not to complain about this case?
+Yes, sure. I will review the semantic patch and deterrmine if and how to fine
+tune the same to avoid false positives.
 
-v1:
- Link: https://lore.kernel.org/linux-hardening/c80c0979933e0c05e80d95792ef167a28640a14b.1663816572.git.gustavoars@kernel.org/
+> 
+> James
 
- drivers/scsi/smartpqi/smartpqi.h      | 2 +-
- drivers/scsi/smartpqi/smartpqi_init.c | 4 ++++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+James, there are a few other patch submissions for the scsi subsystem that I
+submitted in last few weeks. I sent couple of reminder request for comments on
+those submission, but still waiting. Could you please also review those and
+share your feedback?
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index af27bb0f3133..228838eb3686 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -954,7 +954,7 @@ struct report_log_lun {
- 
- struct report_log_lun_list {
- 	struct report_lun_header header;
--	struct report_log_lun lun_entries[1];
-+	struct report_log_lun lun_entries[];
- };
- 
- struct report_phys_lun_8byte_wwid {
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index d0446d4d4465..af8f1a8e9f8f 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1277,6 +1277,10 @@ static int pqi_get_device_lists(struct pqi_ctrl_info *ctrl_info,
- 	logdev_data_length = sizeof(struct report_lun_header) +
- 		logdev_list_length;
- 
-+	/*
-+	 * Notice that we take on an extra list entry (struct report_log_lun)
-+	 * that is all zeros for the controller itself.
-+	 */
- 	internal_logdev_list = kmalloc(logdev_data_length +
- 		sizeof(struct report_log_lun), GFP_KERNEL);
- 	if (!internal_logdev_list) {
--- 
-2.34.1
+Best Regards,
+deepak.
+
+> 
+
 
