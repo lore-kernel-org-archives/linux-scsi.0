@@ -2,72 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF9AC636CD
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 11:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DCDCC636CD
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Feb 2023 12:27:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbjBGLyz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Feb 2023 06:54:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38036 "EHLO
+        id S230521AbjBGM1O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Feb 2023 07:27:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjBGLyy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 06:54:54 -0500
-Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC7B8F752;
-        Tue,  7 Feb 2023 03:54:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1675770883; bh=SaUu9T4vaIZciJlVkGRy87wxHmCtXAbwvw+39ODNwlw=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-         Content-Type;
-        b=DvqUJEJOto8u3e9OTH/T0jX42fvj5sQj1LYOOrELo80jRoKrnau8n8yQBRHgwcw6S
-         lUkj/SEUiLjz/GQRy062Mg/do0J9S2nnV6lYhxT19+OamkRTtyRD8ACY3pGKpGpEHb
-         yX+XP5qJU9cJla3KGnY4jo/cr2ML/jCQfKg/0NoQ=
-Received: by b-4.in.mailobj.net [192.168.90.14] with ESMTP
-        via ip-206.mailobj.net [213.182.55.206]
-        Tue,  7 Feb 2023 12:54:43 +0100 (CET)
-X-EA-Auth: bTmKoI02WghlHFGMmY+O2C5h3+AW3/JQnLXwyq7DYGmBt211b5gzWTn9UghYDJ/q155Yr1KW3Tl6rlJMjCKqKxCBUjpXR6SS
-Date:   Tue, 7 Feb 2023 17:24:37 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Michael Reed <mdr@sgi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S229460AbjBGM1M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 07:27:12 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BE2A40E9;
+        Tue,  7 Feb 2023 04:27:11 -0800 (PST)
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 317CN8oo007026;
+        Tue, 7 Feb 2023 12:26:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=f6fEWe4OAE4fM+i//dFKCN7ccGyAzf3rmrGevLiN1u8=;
+ b=Ij41e0KlX4WWnZ4LxmzjhP/tlvBW44t6r4KUaqTDfXNt1RRq/MWZZtEK6Iu9qWaQFhqZ
+ xd50TzoLKJbtcpLfevfEGzanR6dvNhDXJSj77k4Ou7esl/rttFccWCHTnYIAyWmSkRNc
+ 3IFfZkDZ9/dB/6/8sE3HTliguT3aW+NXHN7vdJ46QDRimsu4NWaf1C+gY7hU+ICQrFST
+ KYbnfD6+N6jGCLQynRrFipyXaO1j/Pq5z6gAPwhnBpswNQxnAUA0TevlybGM4TIcBQiY
+ sMmsEwQf2XrCXnhDIM22hOQQEiU9qL+HpiXRolgtF/r8+t1/lU2FqoRG3/K7s2VO37FF Qg== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3nkpktg2mh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Feb 2023 12:26:55 +0000
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 317BCEAI001916;
+        Tue, 7 Feb 2023 12:26:54 GMT
+Received: from smtprelay02.dal12v.mail.ibm.com ([9.208.130.97])
+        by ppma02dal.us.ibm.com (PPS) with ESMTPS id 3nhf07bse0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Feb 2023 12:26:54 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 317CQrm138142514
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 7 Feb 2023 12:26:53 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 60EA758058;
+        Tue,  7 Feb 2023 12:26:53 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 40E1058057;
+        Tue,  7 Feb 2023 12:26:51 +0000 (GMT)
+Received: from [172.20.7.120] (unknown [9.211.110.248])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Tue,  7 Feb 2023 12:26:50 +0000 (GMT)
+Message-ID: <9a78cdd254d5d962450242d2e01c3a0f702a63a0.camel@linux.ibm.com>
+Subject: Re: [PATCH] scsi: FlashPoint: Replace arithmetic addition by
+ bitwise OR
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Deepak R Varma <drv@mailo.com>,
+        Khalid Aziz <khalid@gonehiking.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
-        Deepak R Varma <drv@mailo.com>
-Subject: [PATCH] scsi: qla1280: Replace arithmetic addition by bitwise OR
-Message-ID: <Y+I7/QpQYjBXutLf@ubun2204.myguest.virtualbox.org>
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>
+Date:   Tue, 07 Feb 2023 15:26:48 +0300
+In-Reply-To: <Y+I0HXsHezZRtFOM@ubun2204.myguest.virtualbox.org>
+References: <Y+I0HXsHezZRtFOM@ubun2204.myguest.virtualbox.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: IAHIiI2-jd_foMGK-OtMw21XjGlX_uEi
+X-Proofpoint-GUID: IAHIiI2-jd_foMGK-OtMw21XjGlX_uEi
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-02-07_03,2023-02-06_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=315
+ priorityscore=1501 suspectscore=0 adultscore=0 spamscore=0 impostorscore=0
+ mlxscore=0 lowpriorityscore=0 malwarescore=0 phishscore=0 bulkscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302070108
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When adding two bit-field mask values, an OR operation offers higher
-performance over an arithmetic operation. So, convert such addition to
-an OR based expression.
-Issue identified using orplus.cocci semantic patch script.
+On Tue, 2023-02-07 at 16:51 +0530, Deepak R Varma wrote:
+> When adding two bit-field mask values, an OR operation offers higher
+> performance over an arithmetic operation. So, convert such additions
+> to an OR based expressions. Issue identified using orplus.cocci
+> semantic patch script.
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
----
- drivers/scsi/qla1280.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No it doesn't, at least not for constants, which is the entirety of
+this patch: the compiler can find the value at compile time, so the
+whole lot becomes a load immediate of a single value.  Whether the
+compiler sees OR or + is immaterial to the compile time computation. 
+Perhaps Coccinelle should be fixed not to complain about this case?
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 1e7f4d138e06..d806beb4ad1c 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -3709,7 +3709,7 @@ qla1280_error_entry(struct scsi_qla_host *ha, struct response *pkt,
- 		ha->outstanding_cmds[handle] = NULL;
- 
- 		/* Bad payload or header */
--		if (pkt->entry_status & (BIT_3 + BIT_2)) {
-+		if (pkt->entry_status & (BIT_3 | BIT_2)) {
- 			/* Bad payload or header, set error status. */
- 			/* CMD_RESULT(sp->cmd) = CS_BAD_PAYLOAD; */
- 			CMD_RESULT(sp->cmd) = DID_ERROR << 16;
--- 
-2.34.1
-
-
+James
 
