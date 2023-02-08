@@ -2,263 +2,162 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17B01C636CC
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Feb 2023 02:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 678A4C636CD
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Feb 2023 02:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229735AbjBHCHD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Feb 2023 21:07:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37156 "EHLO
+        id S229984AbjBHClP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Feb 2023 21:41:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbjBHCHC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 21:07:02 -0500
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 522D2303D9;
-        Tue,  7 Feb 2023 18:06:58 -0800 (PST)
+        with ESMTP id S229930AbjBHClO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 21:41:14 -0500
+Received: from cstnet.cn (smtp80.cstnet.cn [159.226.251.80])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 13E562528B;
+        Tue,  7 Feb 2023 18:41:10 -0800 (PST)
 Received: from localhost.localdomain (unknown [124.16.138.125])
-        by APP-03 (Coremail) with SMTP id rQCowADnK4y3A+NjA37sAw--.15544S2;
-        Wed, 08 Feb 2023 10:06:49 +0800 (CST)
+        by APP-01 (Coremail) with SMTP id qwCowACXn0vAC+NjYa8MBA--.12914S2;
+        Wed, 08 Feb 2023 10:41:04 +0800 (CST)
 From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     skashyap@marvell.com, jhasan@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux@armlinux.org.uk
+To:     linuxdrivers@attotech.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] scsi: qedf: Add missing checks for create_workqueue
-Date:   Wed,  8 Feb 2023 10:06:46 +0800
-Message-Id: <20230208020646.36294-1-jiasheng@iscas.ac.cn>
+        Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Subject: [PATCH] scsi: esas2r: Add missing check and destroy for create_singlethread_workqueue
+Date:   Wed,  8 Feb 2023 10:41:03 +0800
+Message-Id: <20230208024103.38992-1-jiasheng@iscas.ac.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: rQCowADnK4y3A+NjA37sAw--.15544S2
-X-Coremail-Antispam: 1UD129KBjvJXoW3Xw13JF17Kr13Gry8ur4fuFg_yoWxJFWxpF
-        W3Xa9Yyrs5Ww4UWa4DJr4qgFnIgr4qvFW8CrWIkw43XFsYkrWvq3W0gryjvrWfKrZ5Gw1j
-        yF1UtrWUC3y2ywUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: qwCowACXn0vAC+NjYa8MBA--.12914S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxAw4fXrWfXF1UWryUJFWkWFg_yoWrJF4fpF
+        ZxAa4jkF40yF4xCw45K3W5Za4rK3y8GFyv9ayIq3s0kFsakws5tFy0vFW2vFyrGF4DW347
+        tF4vqwn8CF1UJFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkm14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr
-        0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-        6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-        8cxan2IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-        8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
-        ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-        0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoO
-        J5UUUUU
+        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr
+        1j6F4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+        7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r
+        1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY02Avz4vE14v_
+        Gr1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
+        WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI
+        7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
+        1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
+        42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU5vtCUUUUU
 X-Originating-IP: [124.16.138.125]
 X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add the checks for the return value of the create_workqueue in order to
-avoid NULL pointer dereference.
-Moreover, the allocated "qedf->link_update_wq" should be destroyed when
-__qedf_probe fails later in order to avoid memory leak.
+Add the check for the return value of the create_singlethread_workqueue
+in order to avoid NULL pointer dereference.
+Moreover, the allocated "a->fw_event_q" should be destroyed when
+esas2r_init_adapter fails later in order to avoid memory leak.
+It is better to use goto label to remove duplicate error handling code.
 
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
 Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
 ---
- drivers/scsi/qedf/qedf_main.c | 56 ++++++++++++++++++++++-------------
- 1 file changed, 35 insertions(+), 21 deletions(-)
+ drivers/scsi/esas2r/esas2r_init.c | 30 ++++++++++++++++++------------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 35e16600fc63..ff90291530a7 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3360,6 +3360,11 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	sprintf(host_buf, "qedf_%u_link",
- 	    qedf->lport->host->host_no);
- 	qedf->link_update_wq = create_workqueue(host_buf);
-+	if (!qedf->link_update_wq) {
-+		QEDF_ERR(&(qedf->dbg_ctx), "Failed to link workqueue.\n");
-+		rc = -ENOMEM;
-+		goto err1;
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index c1a5ab662dc8..820530639517 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -272,14 +272,14 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 		esas2r_log(ESAS2R_LOG_CRIT,
+ 			   "tried to init invalid adapter index %u!",
+ 			   index);
+-		return 0;
++		goto error_exit;
+ 	}
+ 
+ 	if (esas2r_adapters[index]) {
+ 		esas2r_log(ESAS2R_LOG_CRIT,
+ 			   "tried to init existing adapter index %u!",
+ 			   index);
+-		return 0;
++		goto error_exit;
+ 	}
+ 
+ 	a = (struct esas2r_adapter *)host->hostdata;
+@@ -294,8 +294,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 
+ 	if (!dma64 && dma_set_mask_and_coherent(&pcid->dev, DMA_BIT_MASK(32))) {
+ 		esas2r_log(ESAS2R_LOG_CRIT, "failed to set DMA mask");
+-		esas2r_kill_adapter(index);
+-		return 0;
++		goto error_kill_adapter;
+ 	}
+ 
+ 	esas2r_log_dev(ESAS2R_LOG_INFO, &pcid->dev,
+@@ -314,6 +313,10 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 	snprintf(a->fw_event_q_name, ESAS2R_KOBJ_NAME_LEN, "esas2r/%d",
+ 		 a->index);
+ 	a->fw_event_q = create_singlethread_workqueue(a->fw_event_q_name);
++	if (!a->fw_event_q) {
++		esas2r_log(ESAS2R_LOG_CRIT, "failed to allocate workqueue");
++		goto error_kill_adapter;
 +	}
- 	INIT_DELAYED_WORK(&qedf->link_update, qedf_handle_link_update);
- 	INIT_DELAYED_WORK(&qedf->link_recovery, qedf_link_recovery);
- 	INIT_DELAYED_WORK(&qedf->grcdump_work, qedf_wq_grcdump);
-@@ -3394,14 +3399,14 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		}
- 		QEDF_ERR(&qedf->dbg_ctx, "common probe failed.\n");
- 		rc = -ENODEV;
--		goto err1;
-+		goto err2;
- 	}
  
- 	/* Learn information crucial for qedf to progress */
- 	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
- 	if (rc) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Failed to dev info.\n");
--		goto err1;
-+		goto err2;
- 	}
- 
- 	QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC,
-@@ -3420,7 +3425,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	rc = qedf_set_fcoe_pf_param(qedf);
- 	if (rc) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Cannot set fcoe pf param.\n");
--		goto err2;
-+		goto err3;
- 	}
- 	qed_ops->common->update_pf_params(qedf->cdev, &qedf->pf_params);
- 
-@@ -3428,7 +3433,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
- 	if (rc) {
- 		QEDF_ERR(&qedf->dbg_ctx, "Failed to fill dev info.\n");
--		goto err2;
-+		goto err3;
- 	}
- 
- 	if (mode != QEDF_MODE_RECOVERY) {
-@@ -3437,7 +3442,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 			QEDF_ERR(&qedf->dbg_ctx, "Cannot register devlink\n");
- 			rc = PTR_ERR(qedf->devlink);
- 			qedf->devlink = NULL;
--			goto err2;
-+			goto err3;
+ 	init_waitqueue_head(&a->buffered_ioctl_waiter);
+ 	init_waitqueue_head(&a->nvram_waiter);
+@@ -338,8 +341,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 		if (!alloc_vda_req(a, last_request)) {
+ 			esas2r_log(ESAS2R_LOG_CRIT,
+ 				   "failed to allocate a VDA request!");
+-			esas2r_kill_adapter(index);
+-			return 0;
++			goto error_destroy_workqueue;
  		}
  	}
  
-@@ -3454,7 +3459,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	if (rc) {
+@@ -350,8 +352,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
  
- 		QEDF_ERR(&(qedf->dbg_ctx), "Cannot start slowpath.\n");
--		goto err2;
-+		goto err3;
+ 	if (esas2r_map_regions(a) != 0) {
+ 		esas2r_log(ESAS2R_LOG_CRIT, "could not map PCI regions!");
+-		esas2r_kill_adapter(index);
+-		return 0;
++		goto error_destroy_workqueue;
  	}
  
- 	/* Start the Slowpath-process */
-@@ -3467,7 +3472,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	rc = qed_ops->common->slowpath_start(qedf->cdev, &slowpath_params);
- 	if (rc) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Cannot start slowpath.\n");
--		goto err2;
-+		goto err3;
+ 	a->index = index;
+@@ -379,8 +380,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 		esas2r_log(ESAS2R_LOG_CRIT,
+ 			   "failed to allocate %d bytes of consistent memory!",
+ 			   a->uncached_size);
+-		esas2r_kill_adapter(index);
+-		return 0;
++		goto error_destroy_workqueue;
  	}
  
- 	/*
-@@ -3480,13 +3485,13 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	rc = qedf_setup_int(qedf);
- 	if (rc) {
- 		QEDF_ERR(&qedf->dbg_ctx, "Setup interrupts failed.\n");
--		goto err3;
-+		goto err4;
+ 	a->uncached_phys = bus_addr;
+@@ -397,8 +397,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 					&next_uncached)) {
+ 		esas2r_log(ESAS2R_LOG_CRIT,
+ 			   "failed to initialize adapter structure (2)!");
+-		esas2r_kill_adapter(index);
+-		return 0;
++		goto error_destroy_workqueue;
  	}
  
- 	rc = qed_ops->start(qedf->cdev, &qedf->tasks);
- 	if (rc) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Cannot start FCoE function.\n");
--		goto err4;
-+		goto err5;
- 	}
- 	task_start = qedf_get_task_mem(&qedf->tasks, 0);
- 	task_end = qedf_get_task_mem(&qedf->tasks, MAX_TID_BLOCKS_FCOE - 1);
-@@ -3546,7 +3551,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	if (!qedf->cmd_mgr) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Failed to allocate cmd mgr.\n");
- 		rc = -ENOMEM;
--		goto err5;
-+		goto err6;
- 	}
+ 	tasklet_init(&a->tasklet,
+@@ -430,6 +429,13 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
+ 		     a, a->disable_cnt);
  
- 	if (mode != QEDF_MODE_RECOVERY) {
-@@ -3559,7 +3564,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		if (rc) {
- 			QEDF_WARN(&qedf->dbg_ctx,
- 				  "Error adding Scsi_Host rc=0x%x.\n", rc);
--			goto err6;
-+			goto err7;
- 		}
- 	}
+ 	return 1;
++
++error_destroy_workqueue:
++	destroy_workqueue(a->fw_event_q);
++error_kill_adapter:
++	esas2r_kill_adapter(index);
++error_exit:
++	return 0;
+ }
  
-@@ -3574,7 +3579,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	if (!qedf->ll2_recv_wq) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Failed to LL2 workqueue.\n");
- 		rc = -ENOMEM;
--		goto err7;
-+		goto err8;
- 	}
- 
- #ifdef CONFIG_DEBUG_FS
-@@ -3587,7 +3592,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	rc = qed_ops->ll2->start(qedf->cdev, &params);
- 	if (rc) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Could not start Light L2.\n");
--		goto err7;
-+		goto err8;
- 	}
- 	set_bit(QEDF_LL2_STARTED, &qedf->flags);
- 
-@@ -3607,7 +3612,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		if (rc) {
- 			QEDF_ERR(&(qedf->dbg_ctx),
- 			    "qedf_lport_setup failed.\n");
--			goto err7;
-+			goto err8;
- 		}
- 	}
- 
-@@ -3618,7 +3623,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		QEDF_ERR(&(qedf->dbg_ctx), "Failed to start timer "
- 			  "workqueue.\n");
- 		rc = -ENOMEM;
--		goto err7;
-+		goto err8;
- 	}
- 
- 	/* DPC workqueue is not reaped during recovery unload */
-@@ -3626,6 +3631,11 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		sprintf(host_buf, "qedf_%u_dpc",
- 		    qedf->lport->host->host_no);
- 		qedf->dpc_wq = create_workqueue(host_buf);
-+		if (!qedf->dpc_wq) {
-+			QEDF_ERR(&(qedf->dbg_ctx), "Failed to dpc workqueue.\n");
-+			rc = -ENOMEM;
-+			goto err9;
-+		}
- 	}
- 	INIT_DELAYED_WORK(&qedf->recovery_work, qedf_recovery_handler);
- 
-@@ -3682,7 +3692,9 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	/* All good */
- 	return 0;
- 
--err7:
-+err9:
-+	destroy_workqueue(qedf->timer_work_queue);
-+err8:
- 	if (qedf->ll2_recv_wq)
- 		destroy_workqueue(qedf->ll2_recv_wq);
- 	fc_remove_host(qedf->lport->host);
-@@ -3690,17 +3702,19 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- #ifdef CONFIG_DEBUG_FS
- 	qedf_dbg_host_exit(&(qedf->dbg_ctx));
- #endif
--err6:
-+err7:
- 	qedf_cmd_mgr_free(qedf->cmd_mgr);
--err5:
-+err6:
- 	qed_ops->stop(qedf->cdev);
--err4:
-+err5:
- 	qedf_free_fcoe_pf_param(qedf);
- 	qedf_sync_free_irqs(qedf);
--err3:
-+err4:
- 	qed_ops->common->slowpath_stop(qedf->cdev);
--err2:
-+err3:
- 	qed_ops->common->remove(qedf->cdev);
-+err2:
-+	destroy_workqueue(qedf->link_update_wq);
- err1:
- 	scsi_host_put(lport->host);
- err0:
+ static void esas2r_adapter_power_down(struct esas2r_adapter *a,
 -- 
 2.25.1
 
