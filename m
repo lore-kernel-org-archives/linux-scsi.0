@@ -2,162 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 678A4C636CD
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Feb 2023 02:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7747CC636CC
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Feb 2023 06:33:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229984AbjBHClP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Feb 2023 21:41:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51232 "EHLO
+        id S229688AbjBHGdC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Feb 2023 01:33:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229930AbjBHClO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2023 21:41:14 -0500
-Received: from cstnet.cn (smtp80.cstnet.cn [159.226.251.80])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 13E562528B;
-        Tue,  7 Feb 2023 18:41:10 -0800 (PST)
-Received: from localhost.localdomain (unknown [124.16.138.125])
-        by APP-01 (Coremail) with SMTP id qwCowACXn0vAC+NjYa8MBA--.12914S2;
-        Wed, 08 Feb 2023 10:41:04 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     linuxdrivers@attotech.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] scsi: esas2r: Add missing check and destroy for create_singlethread_workqueue
-Date:   Wed,  8 Feb 2023 10:41:03 +0800
-Message-Id: <20230208024103.38992-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229509AbjBHGdB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2023 01:33:01 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30C8B38B67
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Feb 2023 22:32:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=MqWmOc+AThDgmZNAyYDq3MGtxsx7jZHqT7sgOg4RaKA=; b=craC6b7EJsYQqLm+dF9JD5aXV7
+        44+7CDCsZrZUkS7ZgViDuLYX3mZCrHWU7Wj1gBL/pun45ONHDwUM4ecaMssW3UXQlcwv+FoEcp0IV
+        OYcVPSA8z0Lp8FlpxmBxGjRNbn4U4F17RJTXGS6B4bugNF2ejzi+eVyjwYSORBRi4fuCIn4Bq4VQf
+        C8sNCrvyA4TV5it198acbfch/1SwxrD/LWWW6TzhlYfo28u5t5Za9z53MLZIs+/aHg82K5kg1xwvC
+        an/OCJMV7iGFUzMAHrw3N5DbD/3b1grJ93oGEq5ELuruv/sS8JSyhkT1XxKVGN+mk1TPx9MvtY9Lj
+        7qYFUaxQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pPe0d-00EJJQ-Kh; Wed, 08 Feb 2023 06:32:47 +0000
+Date:   Tue, 7 Feb 2023 22:32:47 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] Use SYNCHRONIZE CACHE instead of FUA for UFS
+ devices
+Message-ID: <Y+NCDzvuLJYGwyhC@infradead.org>
+References: <20230202220041.560919-1-bvanassche@acm.org>
+ <Y9yp+H1qkuAxrB8j@infradead.org>
+ <235d32fe-1d78-2eff-2e13-5ac82b337793@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: qwCowACXn0vAC+NjYa8MBA--.12914S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxAw4fXrWfXF1UWryUJFWkWFg_yoWrJF4fpF
-        ZxAa4jkF40yF4xCw45K3W5Za4rK3y8GFyv9ayIq3s0kFsakws5tFy0vFW2vFyrGF4DW347
-        tF4vqwn8CF1UJFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkm14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr
-        1j6F4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
-        7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r
-        1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY02Avz4vE14v_
-        Gr1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
-        WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI
-        7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
-        1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
-        42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU5vtCUUUUU
-X-Originating-IP: [124.16.138.125]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <235d32fe-1d78-2eff-2e13-5ac82b337793@acm.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add the check for the return value of the create_singlethread_workqueue
-in order to avoid NULL pointer dereference.
-Moreover, the allocated "a->fw_event_q" should be destroyed when
-esas2r_init_adapter fails later in order to avoid memory leak.
-It is better to use goto label to remove duplicate error handling code.
+On Fri, Feb 03, 2023 at 09:54:24AM -0800, Bart Van Assche wrote:
+> We can ask our suppliers politely to not claim FUA support in future
+> devices. However we still need patch 1/2 for existing UFS devices.
 
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
-Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
----
- drivers/scsi/esas2r/esas2r_init.c | 30 ++++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index c1a5ab662dc8..820530639517 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -272,14 +272,14 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 		esas2r_log(ESAS2R_LOG_CRIT,
- 			   "tried to init invalid adapter index %u!",
- 			   index);
--		return 0;
-+		goto error_exit;
- 	}
- 
- 	if (esas2r_adapters[index]) {
- 		esas2r_log(ESAS2R_LOG_CRIT,
- 			   "tried to init existing adapter index %u!",
- 			   index);
--		return 0;
-+		goto error_exit;
- 	}
- 
- 	a = (struct esas2r_adapter *)host->hostdata;
-@@ -294,8 +294,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 
- 	if (!dma64 && dma_set_mask_and_coherent(&pcid->dev, DMA_BIT_MASK(32))) {
- 		esas2r_log(ESAS2R_LOG_CRIT, "failed to set DMA mask");
--		esas2r_kill_adapter(index);
--		return 0;
-+		goto error_kill_adapter;
- 	}
- 
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &pcid->dev,
-@@ -314,6 +313,10 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 	snprintf(a->fw_event_q_name, ESAS2R_KOBJ_NAME_LEN, "esas2r/%d",
- 		 a->index);
- 	a->fw_event_q = create_singlethread_workqueue(a->fw_event_q_name);
-+	if (!a->fw_event_q) {
-+		esas2r_log(ESAS2R_LOG_CRIT, "failed to allocate workqueue");
-+		goto error_kill_adapter;
-+	}
- 
- 	init_waitqueue_head(&a->buffered_ioctl_waiter);
- 	init_waitqueue_head(&a->nvram_waiter);
-@@ -338,8 +341,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 		if (!alloc_vda_req(a, last_request)) {
- 			esas2r_log(ESAS2R_LOG_CRIT,
- 				   "failed to allocate a VDA request!");
--			esas2r_kill_adapter(index);
--			return 0;
-+			goto error_destroy_workqueue;
- 		}
- 	}
- 
-@@ -350,8 +352,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 
- 	if (esas2r_map_regions(a) != 0) {
- 		esas2r_log(ESAS2R_LOG_CRIT, "could not map PCI regions!");
--		esas2r_kill_adapter(index);
--		return 0;
-+		goto error_destroy_workqueue;
- 	}
- 
- 	a->index = index;
-@@ -379,8 +380,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 		esas2r_log(ESAS2R_LOG_CRIT,
- 			   "failed to allocate %d bytes of consistent memory!",
- 			   a->uncached_size);
--		esas2r_kill_adapter(index);
--		return 0;
-+		goto error_destroy_workqueue;
- 	}
- 
- 	a->uncached_phys = bus_addr;
-@@ -397,8 +397,7 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 					&next_uncached)) {
- 		esas2r_log(ESAS2R_LOG_CRIT,
- 			   "failed to initialize adapter structure (2)!");
--		esas2r_kill_adapter(index);
--		return 0;
-+		goto error_destroy_workqueue;
- 	}
- 
- 	tasklet_init(&a->tasklet,
-@@ -430,6 +429,13 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 		     a, a->disable_cnt);
- 
- 	return 1;
-+
-+error_destroy_workqueue:
-+	destroy_workqueue(a->fw_event_q);
-+error_kill_adapter:
-+	esas2r_kill_adapter(index);
-+error_exit:
-+	return 0;
- }
- 
- static void esas2r_adapter_power_down(struct esas2r_adapter *a,
--- 
-2.25.1
-
+Please add quirks for the actually affected devices, and do not
+block fua for an entire transport.
