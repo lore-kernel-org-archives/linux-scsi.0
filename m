@@ -2,57 +2,190 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7747CC636CC
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Feb 2023 06:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AE38C05027
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Feb 2023 06:53:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbjBHGdC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Feb 2023 01:33:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55812 "EHLO
+        id S230012AbjBHGxC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Feb 2023 01:53:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229509AbjBHGdB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2023 01:33:01 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30C8B38B67
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Feb 2023 22:32:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=MqWmOc+AThDgmZNAyYDq3MGtxsx7jZHqT7sgOg4RaKA=; b=craC6b7EJsYQqLm+dF9JD5aXV7
-        44+7CDCsZrZUkS7ZgViDuLYX3mZCrHWU7Wj1gBL/pun45ONHDwUM4ecaMssW3UXQlcwv+FoEcp0IV
-        OYcVPSA8z0Lp8FlpxmBxGjRNbn4U4F17RJTXGS6B4bugNF2ejzi+eVyjwYSORBRi4fuCIn4Bq4VQf
-        C8sNCrvyA4TV5it198acbfch/1SwxrD/LWWW6TzhlYfo28u5t5Za9z53MLZIs+/aHg82K5kg1xwvC
-        an/OCJMV7iGFUzMAHrw3N5DbD/3b1grJ93oGEq5ELuruv/sS8JSyhkT1XxKVGN+mk1TPx9MvtY9Lj
-        7qYFUaxQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pPe0d-00EJJQ-Kh; Wed, 08 Feb 2023 06:32:47 +0000
-Date:   Tue, 7 Feb 2023 22:32:47 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] Use SYNCHRONIZE CACHE instead of FUA for UFS
- devices
-Message-ID: <Y+NCDzvuLJYGwyhC@infradead.org>
-References: <20230202220041.560919-1-bvanassche@acm.org>
- <Y9yp+H1qkuAxrB8j@infradead.org>
- <235d32fe-1d78-2eff-2e13-5ac82b337793@acm.org>
+        with ESMTP id S229490AbjBHGxB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2023 01:53:01 -0500
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2BFA442E5;
+        Tue,  7 Feb 2023 22:52:58 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046049;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VbAZ-7y_1675839170;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VbAZ-7y_1675839170)
+          by smtp.aliyun-inc.com;
+          Wed, 08 Feb 2023 14:52:56 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     aacraid@microsemi.com
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] scsi: ips: clean up some inconsistent indenting
+Date:   Wed,  8 Feb 2023 14:52:44 +0800
+Message-Id: <20230208065244.62762-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <235d32fe-1d78-2eff-2e13-5ac82b337793@acm.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 03, 2023 at 09:54:24AM -0800, Bart Van Assche wrote:
-> We can ask our suppliers politely to not claim FUA support in future
-> devices. However we still need patch 1/2 for existing UFS devices.
+No functional modification involved.
 
-Please add quirks for the actually affected devices, and do not
-block fua for an entire transport.
+drivers/scsi/ips.c:2080 ips_host_info() warn: inconsistent indenting.
+
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3993
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ drivers/scsi/ips.c | 114 ++++++++++++++++++++++-----------------------
+ 1 file changed, 57 insertions(+), 57 deletions(-)
+
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index bb206509265e..7f958871388a 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -2054,79 +2054,79 @@ ips_host_info(ips_ha_t *ha, struct seq_file *m)
+ 
+ 	seq_printf(m, "\tIRQ number                        : %d\n", ha->pcidev->irq);
+ 
+-    /* For the Next 3 lines Check for Binary 0 at the end and don't include it if it's there. */
+-    /* That keeps everything happy for "text" operations on the proc file.                    */
++	/* For the Next 3 lines Check for Binary 0 at the end and don't include it if it's there. */
++	/* That keeps everything happy for "text" operations on the proc file.                    */
+ 
+ 	if (le32_to_cpu(ha->nvram->signature) == IPS_NVRAM_P5_SIG) {
+-	if (ha->nvram->bios_low[3] == 0) {
+-		seq_printf(m,
+-			  "\tBIOS Version                      : %c%c%c%c%c%c%c\n",
+-			  ha->nvram->bios_high[0], ha->nvram->bios_high[1],
+-			  ha->nvram->bios_high[2], ha->nvram->bios_high[3],
+-			  ha->nvram->bios_low[0], ha->nvram->bios_low[1],
+-			  ha->nvram->bios_low[2]);
++		if (ha->nvram->bios_low[3] == 0) {
++			seq_printf(m,
++				   "\tBIOS Version                      : %c%c%c%c%c%c%c\n",
++				   ha->nvram->bios_high[0], ha->nvram->bios_high[1],
++				   ha->nvram->bios_high[2], ha->nvram->bios_high[3],
++				   ha->nvram->bios_low[0], ha->nvram->bios_low[1],
++				   ha->nvram->bios_low[2]);
++
++		} else {
++			seq_printf(m,
++				   "\tBIOS Version                      : %c%c%c%c%c%c%c%c\n",
++				   ha->nvram->bios_high[0], ha->nvram->bios_high[1],
++				   ha->nvram->bios_high[2], ha->nvram->bios_high[3],
++				   ha->nvram->bios_low[0], ha->nvram->bios_low[1],
++				   ha->nvram->bios_low[2], ha->nvram->bios_low[3]);
++		}
+ 
+-        } else {
++	}
++
++	if (ha->enq->CodeBlkVersion[7] == 0) {
+ 		seq_printf(m,
+-			  "\tBIOS Version                      : %c%c%c%c%c%c%c%c\n",
+-			  ha->nvram->bios_high[0], ha->nvram->bios_high[1],
+-			  ha->nvram->bios_high[2], ha->nvram->bios_high[3],
+-			  ha->nvram->bios_low[0], ha->nvram->bios_low[1],
+-			  ha->nvram->bios_low[2], ha->nvram->bios_low[3]);
+-        }
++			   "\tFirmware Version                  : %c%c%c%c%c%c%c\n",
++			   ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
++			   ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
++			   ha->enq->CodeBlkVersion[4], ha->enq->CodeBlkVersion[5],
++			   ha->enq->CodeBlkVersion[6]);
++	} else {
++		seq_printf(m,
++			   "\tFirmware Version                  : %c%c%c%c%c%c%c%c\n",
++			   ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
++			   ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
++			   ha->enq->CodeBlkVersion[4], ha->enq->CodeBlkVersion[5],
++			   ha->enq->CodeBlkVersion[6], ha->enq->CodeBlkVersion[7]);
++	}
+ 
+-    }
+-
+-    if (ha->enq->CodeBlkVersion[7] == 0) {
+-        seq_printf(m,
+-		  "\tFirmware Version                  : %c%c%c%c%c%c%c\n",
+-		  ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
+-		  ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
+-		  ha->enq->CodeBlkVersion[4], ha->enq->CodeBlkVersion[5],
+-		  ha->enq->CodeBlkVersion[6]);
+-    } else {
+-	seq_printf(m,
+-		  "\tFirmware Version                  : %c%c%c%c%c%c%c%c\n",
+-		  ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
+-		  ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
+-		  ha->enq->CodeBlkVersion[4], ha->enq->CodeBlkVersion[5],
+-		  ha->enq->CodeBlkVersion[6], ha->enq->CodeBlkVersion[7]);
+-    }
+-
+-    if (ha->enq->BootBlkVersion[7] == 0) {
+-        seq_printf(m,
+-		  "\tBoot Block Version                : %c%c%c%c%c%c%c\n",
+-		  ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
+-		  ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
+-		  ha->enq->BootBlkVersion[4], ha->enq->BootBlkVersion[5],
+-		  ha->enq->BootBlkVersion[6]);
+-    } else {
+-        seq_printf(m,
+-		  "\tBoot Block Version                : %c%c%c%c%c%c%c%c\n",
+-		  ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
+-		  ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
+-		  ha->enq->BootBlkVersion[4], ha->enq->BootBlkVersion[5],
+-		  ha->enq->BootBlkVersion[6], ha->enq->BootBlkVersion[7]);
+-    }
++	if (ha->enq->BootBlkVersion[7] == 0) {
++		seq_printf(m,
++			   "\tBoot Block Version                : %c%c%c%c%c%c%c\n",
++			   ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
++			   ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
++			   ha->enq->BootBlkVersion[4], ha->enq->BootBlkVersion[5],
++			   ha->enq->BootBlkVersion[6]);
++	} else {
++		seq_printf(m,
++			   "\tBoot Block Version                : %c%c%c%c%c%c%c%c\n",
++			   ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
++			   ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
++			   ha->enq->BootBlkVersion[4], ha->enq->BootBlkVersion[5],
++			   ha->enq->BootBlkVersion[6], ha->enq->BootBlkVersion[7]);
++	}
+ 
+ 	seq_printf(m, "\tDriver Version                    : %s%s\n",
+-		  IPS_VERSION_HIGH, IPS_VERSION_LOW);
++		   IPS_VERSION_HIGH, IPS_VERSION_LOW);
+ 
+ 	seq_printf(m, "\tDriver Build                      : %d\n",
+-		  IPS_BUILD_IDENT);
++		   IPS_BUILD_IDENT);
+ 
+ 	seq_printf(m, "\tMax Physical Devices              : %d\n",
+-		  ha->enq->ucMaxPhysicalDevices);
++		   ha->enq->ucMaxPhysicalDevices);
+ 	seq_printf(m, "\tMax Active Commands               : %d\n",
+-		  ha->max_cmds);
++		   ha->max_cmds);
+ 	seq_printf(m, "\tCurrent Queued Commands           : %d\n",
+-		  ha->scb_waitlist.count);
++		   ha->scb_waitlist.count);
+ 	seq_printf(m, "\tCurrent Active Commands           : %d\n",
+-		  ha->scb_activelist.count - ha->num_ioctl);
++		   ha->scb_activelist.count - ha->num_ioctl);
+ 	seq_printf(m, "\tCurrent Queued PT Commands        : %d\n",
+-		  ha->copp_waitlist.count);
++		   ha->copp_waitlist.count);
+ 	seq_printf(m, "\tCurrent Active PT Commands        : %d\n",
+-		  ha->num_ioctl);
++		   ha->num_ioctl);
+ 
+ 	seq_putc(m, '\n');
+ 
+-- 
+2.20.1.7.g153144c
+
