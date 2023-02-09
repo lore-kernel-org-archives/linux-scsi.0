@@ -2,60 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DCAC05027
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Feb 2023 12:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C33D2C64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Feb 2023 14:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229755AbjBIM2L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Feb 2023 07:28:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38796 "EHLO
+        id S231146AbjBIOfA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Feb 2023 09:35:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbjBIM2C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2023 07:28:02 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 957A086AD;
-        Thu,  9 Feb 2023 04:28:01 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 27B0CB8211A;
-        Thu,  9 Feb 2023 12:28:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5875FC433EF;
-        Thu,  9 Feb 2023 12:27:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1675945678;
-        bh=ATL0djbkEUSi/KWp+SICltBse0RRA4vkL5CV9dcF9BI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=2Rc5VnU/AxCLBb7+MbeindkrlcMD05/DD0RJUxiTnR7Hktvk6bHxcMeEsMPExrxlX
-         3FzyqHwCX9l70lHGXRvaf/llA9pSx/j9/cZVaH0ozUIZT57o6y1iWSBwR13GOi9Wn2
-         L6lyNom1+5uFtLkALnQGGKbgfn+MCmLQFl4mDLKM=
-Date:   Thu, 9 Feb 2023 13:27:55 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: snic: fix memory leak with using debugfs_lookup()
-Message-ID: <Y+Tmy/2VY9O6w1gC@kroah.com>
-References: <20230202141009.2290380-1-gregkh@linuxfoundation.org>
- <yq15ycbzphb.fsf@ca-mkp.ca.oracle.com>
+        with ESMTP id S231139AbjBIOex (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2023 09:34:53 -0500
+Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A631E366AD
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2023 06:34:51 -0800 (PST)
+Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
+        by amity.mint.lgbt (Postfix) with ESMTP id 4PCKBy0mh7z1S5HN
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2023 09:34:50 -0500 (EST)
+Authentication-Results: amity.mint.lgbt (amavisd-new);
+        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
+        header.d=mint.lgbt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
+        content-transfer-encoding:content-type:in-reply-to:from
+        :references:to:content-language:subject:user-agent:mime-version
+        :date:message-id; s=dkim; t=1675953288; x=1676817289; bh=OtwHaQd
+        43ev0CTnwqIm/FUCsnnqbo5VRlxBW82fmyng=; b=H45rGLKnOkvzxImDk3fnZ7B
+        PaQmSau8WRULXMxDKa2GyRi0GarWzEdFJm6F234o6B1a1pSKi/NGa8vap4goDoQG
+        RoLr4F4qpmeWfor/YEdkU8RqEdgt/rh5I0FnuYt1af0u0bp4/WRXvdI3/qkF+bQT
+        RGIrEs/k5zE2wbVid1TkcQFJ0aPmuuWo+K0J03jhijsN5U0UC5AM79z3PC019cN0
+        FReRT4iwjQyZax9lEdnIZggVjpt42L1vum6bewMifqlXBdUgm9ByVRFuRIXiLVgd
+        QyI+LReM82T+ip68VXqcbtDFig+3Nk66rfLhHi3VSIcDOEwS3ZIQnjJ98UVyvAg=
+        =
+X-Virus-Scanned: amavisd-new at amity.mint.lgbt
+Received: from amity.mint.lgbt ([127.0.0.1])
+        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id CEQhFRuRnQVQ for <linux-scsi@vger.kernel.org>;
+        Thu,  9 Feb 2023 09:34:48 -0500 (EST)
+Received: from [192.168.4.25] (unknown [190.196.95.28])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4PCKBY4Xnbz1S5Gh;
+        Thu,  9 Feb 2023 09:34:21 -0500 (EST)
+Message-ID: <bb6f8a51-cec8-02cc-8ac1-3cd714a2e59a@mint.lgbt>
+Date:   Thu, 9 Feb 2023 11:34:17 -0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq15ycbzphb.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v6 3/6] phy: qcom-qmp: Add SM6125 UFS PHY support
+Content-Language: en-US
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org, keescook@chromium.org,
+        tony.luck@intel.com, gpiccoli@igalia.com,
+        ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
+        phone-devel@vger.kernel.org, martin.botka@somainline.org,
+        marijn.suijten@somainline.org
+References: <20230108195336.388349-1-they@mint.lgbt>
+ <20230108195336.388349-4-they@mint.lgbt>
+ <CAA8EJpp-RwPOv61MtoXYb3Tuy5LDWWBCvYSrGUOvg8vWhid_tw@mail.gmail.com>
+From:   Lux Aliaga <they@mint.lgbt>
+In-Reply-To: <CAA8EJpp-RwPOv61MtoXYb3Tuy5LDWWBCvYSrGUOvg8vWhid_tw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 08, 2023 at 06:50:53PM -0500, Martin K. Petersen wrote:
-> 
-> Greg,
-> 
-> > When calling debugfs_lookup() the result must have dput() called on
-> > it, otherwise the memory will leak over time.  To make things simpler,
-> > just call debugfs_lookup_and_remove() instead which handles all of the
-> > logic at once.
-> 
-> Applied to 6.3/scsi-staging, thanks!
+On 13/01/2023 16:31, Dmitry Baryshkov wrote:
 
-Wonderful, thank you!
+> On Sun, 8 Jan 2023 at 21:54, Lux Aliaga <they@mint.lgbt> wrote:
+>> The SM6125 UFS PHY is compatible with the one from SM6115. Add a
+>> compatible for it and modify the config from SM6115 to make them
+>> compatible with the SC8280XP binding
+>>
+>> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+>> Reviewed-by: Martin Botka <martin.botka@somainline.org>
+>> ---
+>>   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>> index 318eea35b972..f33c84578940 100644
+>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>> @@ -693,6 +693,8 @@ static const struct qmp_phy_cfg sdm845_ufsphy_cfg = {
+>>   static const struct qmp_phy_cfg sm6115_ufsphy_cfg = {
+>>          .lanes                  = 1,
+>>
+>> +       .offsets                = &qmp_ufs_offsets_v5,
+> Please don't randomly reuse generation-specific structures. This
+> structure is clearly related to v5, while the PHY is from the v2
+> generation.
+
+I'm a bit confused here. When referencing back to downstream the driver 
+used has the suffix "v3-660". Should I use that suffix to name these 
+offsets? Because I'm not too sure if this is from the v2 generation due 
+to how it's named there.
+
+>> +
+>>          .serdes_tbl             = sm6115_ufsphy_serdes_tbl,
+>>          .serdes_tbl_num         = ARRAY_SIZE(sm6115_ufsphy_serdes_tbl),
+>>          .tx_tbl                 = sm6115_ufsphy_tx_tbl,
+>> @@ -1172,6 +1174,9 @@ static const struct of_device_id qmp_ufs_of_match_table[] = {
+>>          }, {
+>>                  .compatible = "qcom,sm6115-qmp-ufs-phy",
+>>                  .data = &sm6115_ufsphy_cfg,
+>> +       }, {
+>> +               .compatible = "qcom,sm6125-qmp-ufs-phy",
+>> +               .data = &sm6115_ufsphy_cfg,
+>>          }, {
+>>                  .compatible = "qcom,sm6350-qmp-ufs-phy",
+>>                  .data = &sdm845_ufsphy_cfg,
+>> --
+>> 2.39.0
+>>
+>
+-- 
+Lux Aliaga
+https://nixgoat.me/
+
