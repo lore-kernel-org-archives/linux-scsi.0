@@ -2,101 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E33ACC636CC
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Feb 2023 02:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6034AC61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Feb 2023 03:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231439AbjBICsg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Feb 2023 21:48:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36516 "EHLO
+        id S232856AbjBIDwh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Feb 2023 22:52:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230374AbjBICrg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2023 21:47:36 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37761BB97;
-        Wed,  8 Feb 2023 18:44:20 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3192IoRM029710;
-        Thu, 9 Feb 2023 02:43:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=jonutzCUJeNDPH/zLzxf7GoxE/fiJHRRF9NYt77NKEY=;
- b=jp9ro+Kcu5YAECMZY7VpPaqaUUSAHLbjssKIK+30EIXqHCl++ITy6dkWnAkMYpP8ZmWw
- c7Rc071oCKjHMKKQTnKP9K+BhTHLpMLujfFDsIVp2irMu6n68AIvE2t8MquoBCUqRh+w
- FGrxmwCVp9oLW5WuTvM5pzBv9AZiHLPrBHTMdPKBrwh9FtyNk4dZ9XLwQAWFGq5mqmT6
- EIoud/8gD5vi2Vaemf8VmsOY/ZPg4gtRX/euX1CCKPy1vMOZF6KSUfgqVNUNlKgINUP1
- hYSR/PTdn9KYtvggRtwWm+nbUzGfvQprN1hWdg9l0zcN8TRlmyiXS92/swOH45w1tpZs JA== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nhdsdsr34-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Feb 2023 02:43:56 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 3191kimA006006;
-        Thu, 9 Feb 2023 02:43:55 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3nhdt8knd0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Feb 2023 02:43:55 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3192hs7J035240;
-        Thu, 9 Feb 2023 02:43:54 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3nhdt8knbs-1;
-        Thu, 09 Feb 2023 02:43:54 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Can Guo <quic_cang@quicinc.com>,
-        Arnd Bergmann <arnd@kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Thomas Gleixner <tglx@linutronix.de>,
+        with ESMTP id S232862AbjBIDwg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2023 22:52:36 -0500
+Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7120C2BED8;
+        Wed,  8 Feb 2023 19:52:35 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046059;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VbEPjtv_1675914746;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VbEPjtv_1675914746)
+          by smtp.aliyun-inc.com;
+          Thu, 09 Feb 2023 11:52:33 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     ketan.mukadam@broadcom.com
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: fix platform_msi_domain_free_irqs() reference
-Date:   Wed,  8 Feb 2023 21:43:49 -0500
-Message-Id: <167591059933.455022.10654647561650400323.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230126211831.2274211-1-arnd@kernel.org>
-References: <20230126211831.2274211-1-arnd@kernel.org>
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] scsi: be2iscsi: Remove the unused variable internal_page_offset
+Date:   Thu,  9 Feb 2023 11:52:24 +0800
+Message-Id: <20230209035224.90327-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-02-08_11,2023-02-08_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
- mlxlogscore=854 adultscore=0 phishscore=0 mlxscore=0 malwarescore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302090023
-X-Proofpoint-ORIG-GUID: Bf0boW36cf8liDu0N6Ki59xYekEQAVpg
-X-Proofpoint-GUID: Bf0boW36cf8liDu0N6Ki59xYekEQAVpg
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 26 Jan 2023 22:17:31 +0100, Arnd Bergmann wrote:
+Variable internal_page_offset is not effectively used, so delete it.
 
-> The newly added MSI support is mostly hidden inside of an #ifdef,
-> except for one line that now causes a build failure when MSI
-> is disabled:
-> 
-> drivers/ufs/host/ufs-qcom.c: In function 'ufs_qcom_remove':
-> drivers/ufs/host/ufs-qcom.c:1698:9: error: implicit declaration of function 'platform_msi_domain_free_irqs' [-Werror=i]
->  1698 |         platform_msi_domain_free_irqs(hba->dev);
->       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> [...]
+drivers/scsi/be2iscsi/be_cmds.c:1176:6: warning: variable 'internal_page_offset' set but not used.
 
-Applied to 6.3/scsi-queue, thanks!
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=4011
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-[1/1] scsi: ufs: qcom: fix platform_msi_domain_free_irqs() reference
-      https://git.kernel.org/mkp/scsi/c/49f262bc3c7a
-
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 69b1a80e3687..0b59b63bce79 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -1173,7 +1173,6 @@ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	int status;
+ 	unsigned int curr_pages;
+-	u32 internal_page_offset = 0;
+ 	u32 temp_num_pages = num_pages;
+ 
+ 	if (num_pages == 0xff)
+@@ -1192,7 +1191,6 @@ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 		req->page_offset = page_offset;
+ 		be_cmd_page_addrs_prepare(req->pages, req->num_pages, q_mem);
+ 		q_mem->dma = q_mem->dma + (req->num_pages * PAGE_SIZE);
+-		internal_page_offset += req->num_pages;
+ 		page_offset += req->num_pages;
+ 		num_pages -= req->num_pages;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.20.1.7.g153144c
+
