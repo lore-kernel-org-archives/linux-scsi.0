@@ -2,120 +2,180 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D47C636D3
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Feb 2023 18:54:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C513AC636D6
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Feb 2023 19:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229907AbjBISyD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Feb 2023 13:54:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56678 "EHLO
+        id S230079AbjBIT1j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Feb 2023 14:27:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229912AbjBISx5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2023 13:53:57 -0500
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C4039B8A
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2023 10:53:56 -0800 (PST)
-Received: by mail-pl1-f180.google.com with SMTP id k13so3963607plg.0
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2023 10:53:56 -0800 (PST)
+        with ESMTP id S229836AbjBIT1h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2023 14:27:37 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08FDA7A9A
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2023 11:26:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675970808;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=akijUhdsZtbO6GrY7g1LPHTtADkehACs6oFy8tM6Z4w=;
+        b=P6veRR3oeZXgPJHeBEFiUBjAOaOOQaihaKOOVwzg0d6xihQqFcj4KFwHSsK4yHGnmnLxxO
+        /yOZjCRuS0QDGXbI2SYtPnozBms45QcRuDTkO+1nstcFu4y85fmKldqHvmsY5sXpkDpS6U
+        AArjcAGxf/8UBk97Wd+8oLRckc+8Uck=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-508-8DY4T-71Oi2JxQx6vo5I1A-1; Thu, 09 Feb 2023 14:26:46 -0500
+X-MC-Unique: 8DY4T-71Oi2JxQx6vo5I1A-1
+Received: by mail-qt1-f199.google.com with SMTP id t5-20020a05622a180500b003b9c03cd525so1703265qtc.20
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2023 11:26:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BsXYfzx1zFtNXOxMbtvslkoXX8qL5ws0GYag8HKrQqQ=;
-        b=BD+3kWznQuJvvnRDu9Cysr7+RxZiB5sSHmNbVwPq8Iy0qnS3UWN7L1DKxx1moIkdPm
-         5a2x54fNxrV8HZHjj8NBrgZk6jXppgziopUBbIGSaHDrDiFk1z/S4/u39bVUZMK/fGdm
-         DPoxboCS8+ko3O7RfhkvMjItPXKfOIVaa0LgRRdAMvpJXSiag3W34SJmgMExsFDCWFXD
-         sYauTZf+6nW6RIO4QRegNzIFgz32Ij2Nnc3pfs4wa3g/HdmvoFhAIJPaZyZH9S0FJeZR
-         xMddEUp/Q+ebmJLLRGFTxXBaiBP8118DMVTsOwksAhCZG0ecUwIu3FsbzP9QWfbsmMYx
-         01/Q==
-X-Gm-Message-State: AO0yUKWLEpvVnOZpfyN6dlRBaGHjwRaoisbAGCZ8sYugcQnIwa9RKaSJ
-        T6Ztq5v4ovoDAWQikQ1+DpVzpWe8gY8=
-X-Google-Smtp-Source: AK7set/7CBRuw/GjzlZrC9FeLCpRnfEEe39vy/mTVrxkxA2E2mrycLA1RJ32RYRX0HTvEzG2NO36fg==
-X-Received: by 2002:a05:6a20:394f:b0:be:a177:af42 with SMTP id r15-20020a056a20394f00b000bea177af42mr15236629pzg.62.1675968835957;
-        Thu, 09 Feb 2023 10:53:55 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:15f5:48f5:6861:f3f6])
-        by smtp.gmail.com with ESMTPSA id x18-20020a63b212000000b00478162d9923sm1603988pge.13.2023.02.09.10.53.54
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=akijUhdsZtbO6GrY7g1LPHTtADkehACs6oFy8tM6Z4w=;
+        b=JzrY82vFUM7XEzWufWlXCBdNYXykg4iXy0mknJtLbUNWirvpsEI0hS+G6vlox4tqyz
+         foqLn/Rj1DFtUAoPFrZjndq8F+yMk7aurHxoRngYDeC3Jtoyg2xm0LTO4mNDn1O/xhrK
+         HMWVb/mc7sAMakCoYT/gmevCqbKx/qhk6CVmW9vCNtflPdPeeS/luFCKM8YaGKIiRmTe
+         CpPoNoF1y0IjRKRgrPOgy6V1CM9V2c7SV2xn9RuucXyhf3gWRuSZ4/lAMDUhAgpSViPz
+         iHL9mqxxuwyzSJRpmMjh08jivJUY6HkJ26TteDERvScmZGy8lIF2yU0sDMpZlgVLjaGC
+         gn8Q==
+X-Gm-Message-State: AO0yUKXOE/fe9glE8vkhUgV0jv4xeQYjjOG4B+j98Q4KGJDz0gJrEDzT
+        nPvWx1cVye2jRZl3in5zpJ9WotXJa2F+LIyh1B6LxhXwqPhkEkLGzYLYm/yWZt2gHl3Wo6mQ2Bh
+        SBaAQ+jppeAvXAm6yYBROgA==
+X-Received: by 2002:ac8:7fcd:0:b0:3ba:19e5:3e45 with SMTP id b13-20020ac87fcd000000b003ba19e53e45mr21079031qtk.13.1675970806128;
+        Thu, 09 Feb 2023 11:26:46 -0800 (PST)
+X-Google-Smtp-Source: AK7set9vrrF2w5Al3fvqHIUnNh/FqiDLAli3cZUHRYIwK1b1hSjOhIxwMzM7+hcFYu3tH0gOx6SFiA==
+X-Received: by 2002:ac8:7fcd:0:b0:3ba:19e5:3e45 with SMTP id b13-20020ac87fcd000000b003ba19e53e45mr21078996qtk.13.1675970805679;
+        Thu, 09 Feb 2023 11:26:45 -0800 (PST)
+Received: from lobep17 ([2600:6c64:4e7f:603b:6e24:8ff:feb9:533e])
+        by smtp.gmail.com with ESMTPSA id m28-20020aed27dc000000b003b635a5d56csm1869655qtg.30.2023.02.09.11.26.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Feb 2023 10:53:55 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Thu, 09 Feb 2023 11:26:45 -0800 (PST)
+Message-ID: <6fc6c8c2a94aa46b99f276bf32650ec43d79328d.camel@redhat.com>
+Subject: Re: [PATCH] scsi: target: iscsi: set memalloc_noio with loopback
+ network connections
+From:   Laurence Oberman <loberman@redhat.com>
+To:     David Jeffery <djeffery@redhat.com>, target-devel@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Subject: [PATCH v2 3/3] scsi: ufs: Simplify ufshcd_execute_start_stop()
-Date:   Thu,  9 Feb 2023 10:53:28 -0800
-Message-Id: <20230209185328.2762796-4-bvanassche@acm.org>
-X-Mailer: git-send-email 2.39.1.581.gbfd45094c4-goog
-In-Reply-To: <20230209185328.2762796-1-bvanassche@acm.org>
-References: <20230209185328.2762796-1-bvanassche@acm.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Maurizio Lombardi <mlombard@redhat.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Thu, 09 Feb 2023 14:26:44 -0500
+In-Reply-To: <caff1add88d1e46c962ee52aae441769450c4dd9.camel@redhat.com>
+References: <20230208200957.14073-1-djeffery@redhat.com>
+         <caff1add88d1e46c962ee52aae441769450c4dd9.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use scsi_execute_cmd() instead of open-coding it.
+On Wed, 2023-02-08 at 15:58 -0500, Laurence Oberman wrote:
+> On Wed, 2023-02-08 at 15:09 -0500, David Jeffery wrote:
+> > If an admin connects an iscsi initiator to an iscsi target on the
+> > same
+> > system, the iscsi connection is vulnerable to deadlocks during
+> > memory
+> > allocations. Memory allocations in the target task accepting the
+> > I/O
+> > from
+> > the initiator can wait on the initiator's I/O when the system is
+> > under
+> > memory pressure, causing a deadlock situation between the iscsi
+> > target and
+> > initiator.
+> > 
+> > When in this configuration, the deadlock scenario can be avoided by
+> > use of
+> > GFP_NOIO allocations. Rather than force all configurations to use
+> > NOIO,
+> > memalloc_noio_save/restore can be used to force GFP_NOIO
+> > allocations
+> > only
+> > when in this loopback configuration.
+> > 
+> > Signed-off-by: David Jeffery <djeffery@redhat.com>
+> > ---
+> >  drivers/target/iscsi/iscsi_target.c | 21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> > 
+> > diff --git a/drivers/target/iscsi/iscsi_target.c
+> > b/drivers/target/iscsi/iscsi_target.c
+> > index baf4da7bb3b4..a68e47e2cdf9 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
+> > @@ -16,6 +16,7 @@
+> >  #include <linux/vmalloc.h>
+> >  #include <linux/idr.h>
+> >  #include <linux/delay.h>
+> > +#include <linux/sched/mm.h>
+> >  #include <linux/sched/signal.h>
+> >  #include <asm/unaligned.h>
+> >  #include <linux/inet.h>
+> > @@ -4168,7 +4169,10 @@ int iscsi_target_rx_thread(void *arg)
+> >  {
+> >  	int rc;
+> >  	struct iscsit_conn *conn = arg;
+> > +	struct dst_entry *dst;
+> >  	bool conn_freed = false;
+> > +	bool loopback = false;
+> > +	unsigned int flags;
+> >  
+> >  	/*
+> >  	 * Allow ourselves to be interrupted by SIGINT so that a
+> > @@ -4186,8 +4190,25 @@ int iscsi_target_rx_thread(void *arg)
+> >  	if (!conn->conn_transport->iscsit_get_rx_pdu)
+> >  		return 0;
+> >  
+> > +	/*
+> > +	 * If the iscsi connection is over a loopback device from using
+> > +	 * iscsi and iscsit on the same system, we need to set
+> > memalloc_noio to
+> > +	 * prevent memory allocation deadlocks between target and
+> > initiator.
+> > +	 */
+> > +	rcu_read_lock();
+> > +	dst = rcu_dereference(conn->sock->sk->sk_dst_cache);
+> > +	if (dst && dst->dev && dst->dev->flags & IFF_LOOPBACK)
+> > +		loopback = true;
+> > +	rcu_read_unlock();
+> > +
+> > +	if (loopback)
+> > +		flags = memalloc_noio_save();
+> > +
+> >  	conn->conn_transport->iscsit_get_rx_pdu(conn);
+> >  
+> > +	if (loopback)
+> > +		memalloc_noio_restore(flags);
+> > +
+> >  	if (!signal_pending(current))
+> >  		atomic_set(&conn->transport_failed, 1);
+> >  	iscsit_take_action_for_connection_exit(conn, &conn_freed);
+> 
+> I had mentioned to Mike that this was already tested at a large
+> customer and in our labs and resolved the deadlocks .
+> 
+> Regards
+> Laurence Oberman
+> 
 
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 36 ++++++++----------------------------
- 1 file changed, 8 insertions(+), 28 deletions(-)
+Tested-by:   Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3512dcc152c8..cb59f6b55cfd 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9125,35 +9125,15 @@ static int ufshcd_execute_start_stop(struct scsi_device *sdev,
- 				     enum ufs_dev_pwr_mode pwr_mode,
- 				     struct scsi_sense_hdr *sshdr)
- {
--	unsigned char cdb[6] = { START_STOP, 0, 0, 0, pwr_mode << 4, 0 };
--	struct request *req;
--	struct scsi_cmnd *scmd;
--	int ret;
--
--	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
--				 BLK_MQ_REQ_PM);
--	if (IS_ERR(req))
--		return PTR_ERR(req);
--
--	scmd = blk_mq_rq_to_pdu(req);
--	scmd->cmd_len = COMMAND_SIZE(cdb[0]);
--	memcpy(scmd->cmnd, cdb, scmd->cmd_len);
--	scmd->allowed = 0/*retries*/;
--	scmd->flags |= SCMD_FAIL_IF_RECOVERING;
--	req->timeout = 1 * HZ;
--	req->rq_flags |= RQF_QUIET;
--	WARN_ON_ONCE(!(req->rq_flags & RQF_PM));
--
--	blk_execute_rq(req, /*at_head=*/true);
--
--	if (sshdr)
--		scsi_normalize_sense(scmd->sense_buffer, scmd->sense_len,
--				     sshdr);
--	ret = scmd->result;
--
--	blk_mq_free_request(req);
-+	const unsigned char cdb[6] = { START_STOP, 0, 0, 0, pwr_mode << 4, 0 };
-+	const struct scsi_exec_args args = {
-+		.sshdr = sshdr,
-+		.req_flags = BLK_MQ_REQ_PM,
-+		.scmd_flags = SCMD_FAIL_IF_RECOVERING,
-+	};
- 
--	return ret;
-+	return scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, /*buffer=*/NULL,
-+			/*bufflen=*/0, /*timeout=*/HZ, /*retries=*/0, &args);
- }
- 
- /**
+I hate  to nag here but we have a pressing customer issue and are keen
+to get others to weigh in here.
+
+Regards
+Laurence
+
+
+
+Thanks
+Laurence
+
