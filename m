@@ -2,141 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61250C636D4
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Feb 2023 20:10:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D09AC636D4
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Feb 2023 20:25:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233160AbjBJUKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Feb 2023 15:10:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46304 "EHLO
+        id S233693AbjBJUZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Feb 2023 15:25:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232919AbjBJUKA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2023 15:10:00 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4333079B3C
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2023 12:09:58 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31AJH31w013183;
-        Fri, 10 Feb 2023 20:09:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
- cc : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=qcppdkim1; bh=iV/jlAKCej1UUgxtdI1nDk7MKKWy7g7Wd7plO/dOsao=;
- b=m1hbJX3//Ya8OhDI2gB0codQeQuFZeCBhCGjwvYPHsAeUanL6y6sTv8clWgf2jNTq9fK
- yeE2ooJUuzumSx5CeZxJiX1qmMjDG3N6oV5RG3uRtDXPL/HDwWWEUlZeMkiKSt+X27Ky
- 08c+romcTmwskRhBNPRERWVJK6vm1aIPyliyg428mVIpm8wUAT4Tr5fTch+gBD/mk+1r
- rZVV78oWehGgpUxHEduJy1Y1FdDprvyj9BQHVCPyOCTeR2IzYUveDd6iTGuh3X9Ygpv1
- Shr6JJtet1C3/KeHyEhGUQ4UHZ6cM7hrgmCbNK/PWuK8nhfgXJbvNTdYPTlmXNKbrjF8 gg== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nndu5a3sh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Feb 2023 20:09:43 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31AK9ghu022542
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Feb 2023 20:09:42 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Fri, 10 Feb 2023 12:09:40 -0800
-Date:   Fri, 10 Feb 2023 12:09:40 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
+        with ESMTP id S233592AbjBJUZ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2023 15:25:28 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 456625A90E
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2023 12:24:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1676060593;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Gn5NJUJKWfOM81OHA0QE0esBFLsDNOwgiohaF5+873Y=;
+        b=QpGa6FNqEc96UWr1iZ1dCT7Un2hGvtKr8ajarYjURPigpMUk0/LG4uWBQp7Y47fZWAhuPG
+        Ogzm5w/aF6q00QhOnvLhNkjZz3pHIpdHtIEK9OpSZC1HWcMcCUbBD1vRXZ794VcpeAHJYl
+        U3Tdkkx7VudG5KfuzhMEEeJIKzMitrA=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-428-cUbQPBX3NpmTws9IiRgnbw-1; Fri, 10 Feb 2023 15:23:12 -0500
+X-MC-Unique: cUbQPBX3NpmTws9IiRgnbw-1
+Received: by mail-qv1-f71.google.com with SMTP id jh2-20020a0562141fc200b004c74bbb0affso3805934qvb.21
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2023 12:23:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Gn5NJUJKWfOM81OHA0QE0esBFLsDNOwgiohaF5+873Y=;
+        b=lNrSG00MYh6WHouCvYULX6hTD16KYsAipzz40PJkkAklQ+2TaB/5jXusKIySf8SxtF
+         gHHfewcNsYpD8JPpxczrzqhfi2KVB9QPem4Eg6+TmH8HGk8eWDm+S/vWs+2EE8AAn/WK
+         XEzVR0Rxl2xpzCbGpRBWXte8EMWUunjSTGtmp5VZdmLK0LCZQ2wOHjouIPdN3vvui9o6
+         p82Dyi4gMmqOCIagDyOctDSKTocAMsWex2tAaRnaXAR485U2TH6IhzTlHel4lMemdVlp
+         EFKLr+dcXUK/mQxogGu/LE0bQhEM7meS4UwhRsjDLmhBpQ3LaRCxuU/y1ezvdacwjQsR
+         +pSQ==
+X-Gm-Message-State: AO0yUKWfKaI6MVDv5Ui7jBp4w5abxpPR/4FepkMY0m+G93CjsSjkbGsS
+        qLtxYUlliPitNEF6sxc0x5qQzLu1g9lr6Ysy8EU6AcPWDflqiENDiVZ9hlaDqXevdGOex2AWpF8
+        qSnEfxHXmxLgXeN3ga+JLXuH8peI=
+X-Received: by 2002:a05:622a:196:b0:3b9:b422:4d5b with SMTP id s22-20020a05622a019600b003b9b4224d5bmr27211273qtw.26.1676060591366;
+        Fri, 10 Feb 2023 12:23:11 -0800 (PST)
+X-Google-Smtp-Source: AK7set+uNUb69J87PKWYKf9SoxwuzQ3szZ9a3mor4jFAD7iIxUeqOuX0188ZXYZ8gI5pxez+KdTa3Q==
+X-Received: by 2002:a05:622a:196:b0:3b9:b422:4d5b with SMTP id s22-20020a05622a019600b003b9b4224d5bmr27211235qtw.26.1676060591035;
+        Fri, 10 Feb 2023 12:23:11 -0800 (PST)
+Received: from fedora (modemcable181.5-202-24.mc.videotron.ca. [24.202.5.181])
+        by smtp.gmail.com with ESMTPSA id c26-20020ac84e1a000000b003a5c6ad428asm3903809qtw.92.2023.02.10.12.23.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Feb 2023 12:23:10 -0800 (PST)
+Date:   Fri, 10 Feb 2023 15:23:08 -0500
+From:   Adrien Thierry <athierry@redhat.com>
+To:     Bean Huo <huobean@gmail.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        <linux-scsi@vger.kernel.org>,
-        Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Subject: Re: [PATCH v3 3/3] scsi: ufs: Simplify ufshcd_execute_start_stop()
-Message-ID: <20230210200940.GB28076@asutoshd-linux1.qualcomm.com>
-References: <20230210193258.4004923-1-bvanassche@acm.org>
- <20230210193258.4004923-4-bvanassche@acm.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: initialize devfreq synchronously
+Message-ID: <Y+anrOnSoCuwg3Ab@fedora>
+References: <20230209211456.54250-1-athierry@redhat.com>
+ <3bd48609-c194-61a6-7a2e-90b9e0d76fc6@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230210193258.4004923-4-bvanassche@acm.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: wJneotuuZEwp6cva3YxA7srXRQxMArd-
-X-Proofpoint-GUID: wJneotuuZEwp6cva3YxA7srXRQxMArd-
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
- definitions=2023-02-10_15,2023-02-09_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 spamscore=0
- phishscore=0 mlxlogscore=999 clxscore=1011 malwarescore=0 suspectscore=0
- impostorscore=0 mlxscore=0 bulkscore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302100171
+In-Reply-To: <3bd48609-c194-61a6-7a2e-90b9e0d76fc6@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 10 2023 at 11:33 -0800, Bart Van Assche wrote:
->Use scsi_execute_cmd() instead of open-coding it.
->
->Cc: Mike Christie <michael.christie@oracle.com>
->Cc: John Garry <john.g.garry@oracle.com>
+Hi Bean,
 
-Reviewed-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> On 09.02.23 10:14 PM, Adrien Thierry wrote:
+> > -	/* Initialize devfreq after UFS device is detected */
+> > -	if (ufshcd_is_clkscaling_supported(hba)) {
+> > -		memcpy(&hba->clk_scaling.saved_pwr_info.info,
+> > -			&hba->pwr_info,
+> > -			sizeof(struct ufs_pa_layer_attr));
+> > -		hba->clk_scaling.saved_pwr_info.is_valid = true;
+> > -		hba->clk_scaling.is_allowed = true;
+> > -
+> > -		ret = ufshcd_devfreq_init(hba);
+> > -		if (ret)
+> > -			goto out;
+> > -
+> > -		hba->clk_scaling.is_enabled = true;
+> > -		ufshcd_init_clk_scaling_sysfs(hba);
+> > -	}
+> > -
+> >   	ufs_bsg_probe(hba);
+> >   	ufshpb_init(hba);
+> >   	scsi_scan_host(hba->host);
+> > @@ -8290,7 +8277,8 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+> >   	if (ret) {
+> >   		pm_runtime_put_sync(hba->dev);
+> >   		ufshcd_hba_exit(hba);
+> > -	}
+> > +	} else
+> > +		hba->is_initialized = true;
+> 
+> after moving devfreq initialization out of the async routine, still has deadlock issue?
+>
 
->Reviewed-by: John Garry <john.g.garry@oracle.com>
->Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->---
-> drivers/ufs/core/ufshcd.c | 35 ++++++++---------------------------
-> 1 file changed, 8 insertions(+), 27 deletions(-)
->
->diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->index 293933806ffa..cb59f6b55cfd 100644
->--- a/drivers/ufs/core/ufshcd.c
->+++ b/drivers/ufs/core/ufshcd.c
->@@ -9125,34 +9125,15 @@ static int ufshcd_execute_start_stop(struct scsi_device *sdev,
-> 				     enum ufs_dev_pwr_mode pwr_mode,
-> 				     struct scsi_sense_hdr *sshdr)
-> {
->-	unsigned char cdb[6] = { START_STOP, 0, 0, 0, pwr_mode << 4, 0 };
->-	struct request *req;
->-	struct scsi_cmnd *scmd;
->-	int ret;
->-
->-	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
->-				 BLK_MQ_REQ_PM);
->-	if (IS_ERR(req))
->-		return PTR_ERR(req);
->-
->-	scmd = blk_mq_rq_to_pdu(req);
->-	scmd->cmd_len = COMMAND_SIZE(cdb[0]);
->-	memcpy(scmd->cmnd, cdb, scmd->cmd_len);
->-	scmd->allowed = 0/*retries*/;
->-	scmd->flags |= SCMD_FAIL_IF_RECOVERING;
->-	req->timeout = 1 * HZ;
->-	req->rq_flags |= RQF_QUIET;
->-
->-	blk_execute_rq(req, /*at_head=*/true);
->-
->-	if (sshdr)
->-		scsi_normalize_sense(scmd->sense_buffer, scmd->sense_len,
->-				     sshdr);
->-	ret = scmd->result;
->-
->-	blk_mq_free_request(req);
->+	const unsigned char cdb[6] = { START_STOP, 0, 0, 0, pwr_mode << 4, 0 };
->+	const struct scsi_exec_args args = {
->+		.sshdr = sshdr,
->+		.req_flags = BLK_MQ_REQ_PM,
->+		.scmd_flags = SCMD_FAIL_IF_RECOVERING,
->+	};
->
->-	return ret;
->+	return scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, /*buffer=*/NULL,
->+			/*bufflen=*/0, /*timeout=*/HZ, /*retries=*/0, &args);
-> }
->
-> /**
+No more deadlock after moving devfreq initialization out of the async
+routine. The reason I added the hba->is_initialized variable is to prevent
+devfreq_monitor to update the ufs frequency until the async routine had a
+chance to run and the ufs is initialized. Otherwise I would sometimes get
+"dvfs failed with (-16) error" on boot.
+
+Best,
+
+Adrien
+
