@@ -2,129 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D2A6C636D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Feb 2023 17:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 378C8C636D4
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Feb 2023 17:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232545AbjBJRvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Feb 2023 12:51:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54220 "EHLO
+        id S232586AbjBJRzs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Feb 2023 12:55:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232505AbjBJRvG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2023 12:51:06 -0500
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA7D81CAE3
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2023 09:51:04 -0800 (PST)
-Received: by mail-ed1-x531.google.com with SMTP id r3so5277874edq.13
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2023 09:51:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ZZoGnf8hIKo84j4HT8NEM3V52KGtILFDG33e+pT8T+s=;
-        b=CH2qdtMco72if9jO/A2PrcywEXRtss0yiGQF3qoVoYDXS/r25dhT5vYP09HOiFnp4n
-         V0PIu37iMmoLaCo+l0hnTFtzYLhPOdCChXRFFem1HWQyqJDxBsczcNBA+V7mGaK7kvij
-         IbqR04Rwlp4569WUjerrqXUtP/WrcwnhvlzL2p+2b6Muh8acuBJTW8nAkbsMxmUdINLV
-         qind4yFZ0bqhHxTjauL+aC9QnsmFo1kr3wCrd/sSkh/oaPHyQU5jzA+1JONr60WaE/uw
-         Vw1A8rMNBNjFuBKWfNEqGZCdquYZ7awTSJo4hRmd1Qu/mNEl3uDN5CZJjQrN1AL9YYQC
-         5TGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZZoGnf8hIKo84j4HT8NEM3V52KGtILFDG33e+pT8T+s=;
-        b=De+h0WyB4brIDDyrp/LpW7CKUGZG0tTRrKNItAfQaoSgHTf/OjId4TjiFaNxTkXWOT
-         k/cEToj0GsGc1/jSNhvm06y6R6ywgVxDTup1qjRYu7Bakmm9aG4O47bq28kPes26b1qp
-         QmidysikQw6RoVNrnocrN2QPe+Qa2IqX9TeOTb4wonMb6nHu6cYGi06uxgwpkpVuIo7K
-         ZugNOD+iSfa61v2s2wdI06hBGqG8exKpy7ByeXaiQOODAVCL/SHXmCbL4k7SdqThv9VK
-         dAWCEOf1CqV/Tb2Uluy0bywUm/y0/sTWqqOkqCxA0/6d+4IAZ0MSF4d7Oz2T0DKMWOQ/
-         wjIg==
-X-Gm-Message-State: AO0yUKV943iy7MDUpvBFFCn4h1YD/BUz5WtVVrce4APkuVu+Wn4Nrof8
-        zVdsEus+hpzB+/jmnXuTLYVP1QQue4DW7A==
-X-Google-Smtp-Source: AK7set+4BZY1YYMt0ZVFE1JORnqy5Z3mJFPZHhAthgzbg1mDDUU7e4CMMGiBuE7jY/9uTA29RIEpTw==
-X-Received: by 2002:a50:8d5e:0:b0:4aa:a9d5:1651 with SMTP id t30-20020a508d5e000000b004aaa9d51651mr17230331edt.21.1676051463490;
-        Fri, 10 Feb 2023 09:51:03 -0800 (PST)
-Received: from [10.176.235.173] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id y4-20020a50ce04000000b004a27046b7a7sm2566761edi.73.2023.02.10.09.51.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Feb 2023 09:51:02 -0800 (PST)
-Message-ID: <3bd48609-c194-61a6-7a2e-90b9e0d76fc6@gmail.com>
-Date:   Fri, 10 Feb 2023 18:51:01 +0100
+        with ESMTP id S231792AbjBJRzr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2023 12:55:47 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10A8474041;
+        Fri, 10 Feb 2023 09:55:47 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31AHsATR013475;
+        Fri, 10 Feb 2023 17:55:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2022-7-12; bh=jdsxoJu/le3WzUyGsQ3i3KKDyAP1na77DcnDUC/E/QM=;
+ b=tf6enj/DlSrXiBrbOaAtyv2ekPjDgbAOma8Hb8HAXfpVm1RdyOn72RMBSxzMrKf+v+bF
+ AlbyVi/0J1HWchffonKQyVEY400Yvuvi2M+9dPyHkFSD29zy7qYmlZzBEBU+NKkggn7N
+ OI+gDqzmCLR4e8weE0hm6NEeFFbh2m5gSl1QRIR+nl1KQ7k/Pnq0X7e32cq71CyrdZ7n
+ mQWH2n95WNMUk1SEMnwHfUYb35nQTVTepM02+OwvaXrsAZUI1xS+fgzK+PQeSbYyPP9a
+ /dQa56Q+LDkqKfOnuyrD1/FG4PBm4Wq/e+tzxyCpmaTQUCY3Uu8bkJHxzvAlU3yKp839 WA== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nhdy1e06m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Feb 2023 17:55:46 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31AGUH2r013754;
+        Fri, 10 Feb 2023 17:55:45 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3nhdtajccv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Feb 2023 17:55:45 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31AHti0P015195;
+        Fri, 10 Feb 2023 17:55:45 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3nhdtajcc6-1;
+        Fri, 10 Feb 2023 17:55:44 +0000
+From:   Alok Tiwari <alok.a.tiwari@oracle.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     alok.a.tiwari@oracle.com, darren.kenny@oracle.com,
+        michael.christie@oracle.com, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org, martin.petersen@oracle.com,
+        d.bogdanov@yadro.com, r.bolshakov@yadro.com,
+        target-devel@vger.kernel.org
+Subject: [PATCH] scsi: target: core: Added a blank line after target_remove_from_tmr_list()
+Date:   Fri, 10 Feb 2023 09:55:22 -0800
+Message-Id: <20230210175521.1469826-1-alok.a.tiwari@oracle.com>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH] scsi: ufs: initialize devfreq synchronously
-Content-Language: en-US
-To:     Adrien Thierry <athierry@redhat.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-References: <20230209211456.54250-1-athierry@redhat.com>
-From:   Bean Huo <huobean@gmail.com>
-In-Reply-To: <20230209211456.54250-1-athierry@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-10_13,2023-02-09_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ malwarescore=0 mlxscore=0 mlxlogscore=999 adultscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302100149
+X-Proofpoint-GUID: 9fl-1ScwRFIasn_SnS6nUQg5ANWyj-8b
+X-Proofpoint-ORIG-GUID: 9fl-1ScwRFIasn_SnS6nUQg5ANWyj-8b
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adrien,
+There is no separate blank line between target_remove_from_tmr_list() and
+transport_cmd_check_stop_to_fabric
+As per coding-style, it is require to separate functions with one blank line.
 
-On 09.02.23 10:14 PM, Adrien Thierry wrote:
->   
-> -	/* Initialize devfreq after UFS device is detected */
-> -	if (ufshcd_is_clkscaling_supported(hba)) {
-> -		memcpy(&hba->clk_scaling.saved_pwr_info.info,
-> -			&hba->pwr_info,
-> -			sizeof(struct ufs_pa_layer_attr));
-> -		hba->clk_scaling.saved_pwr_info.is_valid = true;
-> -		hba->clk_scaling.is_allowed = true;
-> -
-> -		ret = ufshcd_devfreq_init(hba);
-> -		if (ret)
-> -			goto out;
-> -
-> -		hba->clk_scaling.is_enabled = true;
-> -		ufshcd_init_clk_scaling_sysfs(hba);
-> -	}
-> -
->   	ufs_bsg_probe(hba);
->   	ufshpb_init(hba);
->   	scsi_scan_host(hba->host);
-> @@ -8290,7 +8277,8 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
->   	if (ret) {
->   		pm_runtime_put_sync(hba->dev);
->   		ufshcd_hba_exit(hba);
-> -	}
-> +	} else
-> +		hba->is_initialized = true;
+Fixes: 12b6fcd0ea7f ("scsi: target: core: Remove from tmr_list during LUN unlink")
+Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
+---
+ drivers/target/target_core_transport.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-after moving devfreq initialization out of the async routine, still has deadlock issue?
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 5926316252eb..f1cdf78fc5ef 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -691,6 +691,7 @@ static void target_remove_from_tmr_list(struct se_cmd *cmd)
+ 		spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
+ 	}
+ }
++
+ /*
+  * This function is called by the target core after the target core has
+  * finished processing a SCSI command or SCSI TMF. Both the regular command
+-- 
+2.39.1
 
-
->   }
->   
->   static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
-> @@ -9896,12 +9884,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->   	 */
->   	ufshcd_set_ufs_dev_active(hba);
->   
-> +	/* Initialize devfreq */
-> +	if (ufshcd_is_clkscaling_supported(hba)) {
-> +		memcpy(&hba->clk_scaling.saved_pwr_info.info,
-> +			&hba->pwr_info,
-> +			sizeof(struct ufs_pa_layer_attr));
-> +		hba->clk_scaling.saved_pwr_info.is_valid = true;
-> +		hba->clk_scaling.is_allowed = true;
-> +
-> +		err = ufshcd_devfreq_init(hba);
-> +		if (err)
-> +			goto out_power_off;
-> +
-> +		hba->clk_scaling.is_enabled = true;
-> +		ufshcd_init_clk_scaling_sysfs(hba);
-> +	}
