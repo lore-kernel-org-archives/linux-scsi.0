@@ -2,122 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC94C636D4
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Feb 2023 20:52:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6597C64ED9
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Feb 2023 00:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233903AbjBJUwd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Feb 2023 15:52:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54688 "EHLO
+        id S229550AbjBKAaZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Feb 2023 19:30:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233901AbjBJUwb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2023 15:52:31 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 179485FE5;
-        Fri, 10 Feb 2023 12:52:30 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id pj3so6510051pjb.1;
-        Fri, 10 Feb 2023 12:52:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/A/j3sjHfT49Ed2WzZTVw+auEmLb+Wp+YpWzo2DKZ4M=;
-        b=PzjT7KwpKP89ad7bXellHPnDMP9hB0J2rACQ3IJFGpSnmrJ5MjFMAnms4edrKoU77U
-         mCuiEb0H7lOC1L4JPLOWvxbgPv6px0kQhrhTtv+0LKC7w6iNGuEYlecA3m0mMEyKdNuI
-         77FviT8tl86I5JhfnilgoFB3LtR9PZC5B1R7GRDjTlQTS9nD5o29Ui0sPmKLGFtqB53R
-         5Nz9mlwtiOOJ03qmgFnR2LInJU51xiJ6es2VgKLjsKaqFs/IvCaOCF+ZTiXUmxUPWX+Z
-         VWUK8cbyiugfaSPcP5rEXKYzZdoNmLO4nibukm2zXHQqmYmu0LQ0iafKa4jyp2jQNmBm
-         /cPA==
-X-Gm-Message-State: AO0yUKUynt7KrJnwLDQGZwT2+Uy0MBoOWEvEnvGdOf+BtNI2Fy7kSpKg
-        SpfDo9+EUPjEdew30W+aYhw=
-X-Google-Smtp-Source: AK7set/bUnEGLJr8I3LA464GRnFQyaf8QAnHqBPRXHovf1hjj3tPxON3Yud+X4Q8Axnvqmt1SIEu9g==
-X-Received: by 2002:a17:902:d4cc:b0:198:9bf8:298e with SMTP id o12-20020a170902d4cc00b001989bf8298emr17947174plg.60.1676062349284;
-        Fri, 10 Feb 2023 12:52:29 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a834:2664:42:db8b])
-        by smtp.gmail.com with ESMTPSA id jm13-20020a17090304cd00b001948ff5cc32sm3745752plb.215.2023.02.10.12.52.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Feb 2023 12:52:28 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Yi Zhang <yi.zhang@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>, stable@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 2/2] scsi: core: Remove the /proc/scsi/${proc_name} directory earlier
-Date:   Fri, 10 Feb 2023 12:52:00 -0800
-Message-Id: <20230210205200.36973-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.39.1.581.gbfd45094c4-goog
-In-Reply-To: <20230210205200.36973-1-bvanassche@acm.org>
-References: <20230210205200.36973-1-bvanassche@acm.org>
+        with ESMTP id S229473AbjBKAaY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2023 19:30:24 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30284FB;
+        Fri, 10 Feb 2023 16:30:23 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DA162B82654;
+        Sat, 11 Feb 2023 00:30:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A2D29C4339C;
+        Sat, 11 Feb 2023 00:30:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676075420;
+        bh=XEnPFOJ4CxMJH7vgfkFyQKY4s2/0EUC8Eknfpc5jk+s=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=ax5Fd5J1UIn8ED+GyB4f+E8hJ9LztVDn7UWC4mXnOgmf1KRe9qg37VcP6B98kKnsO
+         LZzZNA4MyyMSEIeG7mqIPLuzuz9GmmbPPuWcsDH0Kn9CG/IJyeHa00w9d6VJpmGmI4
+         NXRL4d9rj/vrxhHmcYkuvvsfAImKsX22nRKpEN6IZm/ArT43ezp69CpPKFWLzONl7c
+         8gCOQZrkyi8vqNwPvy5MhnCJYm+ujIZHdOmgGLEGxaUbIkSFrVEqOIZ1FTpVoog4RF
+         TTYadPmdXwwh9e6QDAyw5jGTuEaFaEB2cc1S76SGjrhSDxS3EsrNV3ZLEUNm5ahnDy
+         xyu+Hg0HqKq8Q==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 740A6E21EC7;
+        Sat, 11 Feb 2023 00:30:20 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 00/24 v2] Documentation: correct lots of spelling errors
+ (series 1)
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <167607542046.32477.11523239261636548840.git-patchwork-notify@kernel.org>
+Date:   Sat, 11 Feb 2023 00:30:20 +0000
+References: <20230209071400.31476-1-rdunlap@infradead.org>
+In-Reply-To: <20230209071400.31476-1-rdunlap@infradead.org>
+To:     Randy Dunlap <rdunlap@infradead.org>
+Cc:     linux-kernel@vger.kernel.org, corbet@lwn.net,
+        linux@armlinux.org.uk, axboe@kernel.dk, olteanv@gmail.com,
+        steffen.klassert@secunet.com, daniel.m.jordan@oracle.com,
+        akinobu.mita@gmail.com, deller@gmx.de, dmitry.torokhov@gmail.com,
+        rydberg@bitmath.org, isdn@linux-pingi.de, jikos@kernel.org,
+        mbenes@suse.cz, pmladek@suse.com, jpoimboe@kernel.org,
+        peterz@infradead.org, mingo@redhat.com, will@kernel.org,
+        jglisse@redhat.com, naoya.horiguchi@nec.com, linmiaohe@huawei.com,
+        jonas@southpole.se, stefan.kristiansson@saunalahti.fi,
+        shorne@gmail.com, bhelgaas@google.com, lpieralisi@kernel.org,
+        maz@kernel.org, mpe@ellerman.id.au, hca@linux.ibm.com,
+        gor@linux.ibm.com, agordeev@linux.ibm.com, juri.lelli@redhat.com,
+        vincent.guittot@linaro.org, dhowells@redhat.com, jarkko@kernel.org,
+        paul@paul-moore.com, jmorris@namei.org, serge@hallyn.com,
+        bristot@kernel.org, rostedt@goodmis.org, mhiramat@kernel.org,
+        mathieu.poirier@linaro.org, suzuki.poulose@arm.com,
+        zbr@ioremap.net, fenghua.yu@intel.com, reinette.chatre@intel.com,
+        tglx@linutronix.de, bp@alien8.de, chris@zankel.net,
+        jcmvbkbc@gmail.com, coresight@lists.linaro.org,
+        dri-devel@lists.freedesktop.org, keyrings@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sgx@vger.kernel.org, linux-trace-devel@vger.kernel.org,
+        linux-trace-kernel@vger.kernel.org, live-patching@vger.kernel.org,
+        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
+        netdev@vger.kernel.org, linux-mm@kvack.org,
+        openrisc@lists.librecores.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-xtensa@linux-xtensa.org, linuxppc-dev@lists.ozlabs.org,
+        x86@kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the /proc/scsi/${proc_name} directory earlier to fix a race
-condition between unloading and reloading kernel modules. This patch
-fixes a bug introduced in 2009 by patch "[SCSI] fix /proc memory leak
-in the SCSI core".
+Hello:
 
-This patch fixes the following kernel warning:
+This series was applied to netdev/net-next.git (master)
+by Jakub Kicinski <kuba@kernel.org>:
 
-proc_dir_entry 'scsi/scsi_debug' already registered
-WARNING: CPU: 19 PID: 27986 at fs/proc/generic.c:376 proc_register+0x27d/0x2e0
-Call Trace:
- proc_mkdir+0xb5/0xe0
- scsi_proc_hostdir_add+0xb5/0x170
- scsi_host_alloc+0x683/0x6c0
- sdebug_driver_probe+0x6b/0x2d0 [scsi_debug]
- really_probe+0x159/0x540
- __driver_probe_device+0xdc/0x230
- driver_probe_device+0x4f/0x120
- __device_attach_driver+0xef/0x180
- bus_for_each_drv+0xe5/0x130
- __device_attach+0x127/0x290
- device_initial_probe+0x17/0x20
- bus_probe_device+0x110/0x130
- device_add+0x673/0xc80
- device_register+0x1e/0x30
- sdebug_add_host_helper+0x1a7/0x3b0 [scsi_debug]
- scsi_debug_init+0x64f/0x1000 [scsi_debug]
- do_one_initcall+0xd7/0x470
- do_init_module+0xe7/0x330
- load_module+0x122a/0x12c0
- __do_sys_finit_module+0x124/0x1a0
- __x64_sys_finit_module+0x46/0x50
- do_syscall_64+0x38/0x80
- entry_SYSCALL_64_after_hwframe+0x46/0xb0
+On Wed,  8 Feb 2023 23:13:36 -0800 you wrote:
+> Correct many spelling errors in Documentation/ as reported by codespell.
+> 
+> Maintainers of specific kernel subsystems are only Cc-ed on their
+> respective patches, not the entire series.
+> 
+> These patches are based on linux-next-20230209.
+> 
+> [...]
 
-Reported-by: Yi Zhang <yi.zhang@redhat.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: Yi Zhang <yi.zhang@redhat.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/hosts.c | 2 ++
- 1 file changed, 2 insertions(+)
+Here is the summary with links:
+  - [03/24] Documentation: core-api: correct spelling
+    (no matching commit)
+  - [08/24] Documentation: isdn: correct spelling
+    https://git.kernel.org/netdev/net-next/c/d12f9ad02806
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index b28375f9e019..f7f62e56afca 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -181,6 +181,7 @@ void scsi_remove_host(struct Scsi_Host *shost)
- 	scsi_forget_host(shost);
- 	mutex_unlock(&shost->scan_mutex);
- 	scsi_proc_host_rm(shost);
-+	scsi_proc_hostdir_rm(shost->hostt);
- 
- 	/*
- 	 * New SCSI devices cannot be attached anymore because of the SCSI host
-@@ -340,6 +341,7 @@ static void scsi_host_dev_release(struct device *dev)
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct device *parent = dev->parent;
- 
-+	/* In case scsi_remove_host() has not been called. */
- 	scsi_proc_hostdir_rm(shost->hostt);
- 
- 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
