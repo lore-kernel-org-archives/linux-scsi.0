@@ -2,110 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A92B0C636CC
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Feb 2023 08:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C9C4C64EC4
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Feb 2023 09:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229764AbjBKItL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Feb 2023 03:49:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45994 "EHLO
+        id S229450AbjBKI72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Feb 2023 03:59:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229643AbjBKItJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Feb 2023 03:49:09 -0500
-X-Greylist: delayed 353 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 11 Feb 2023 00:48:41 PST
-Received: from pio-pvt-msa1.bahnhof.se (pio-pvt-msa1.bahnhof.se [79.136.2.40])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6E363AB4;
-        Sat, 11 Feb 2023 00:48:41 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-        by pio-pvt-msa1.bahnhof.se (Postfix) with ESMTP id C4E173FAD3;
-        Sat, 11 Feb 2023 09:42:45 +0100 (CET)
-X-Virus-Scanned: Debian amavisd-new at bahnhof.se
-Received: from pio-pvt-msa1.bahnhof.se ([127.0.0.1])
-        by localhost (pio-pvt-msa1.bahnhof.se [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id XDBT9IO96Ady; Sat, 11 Feb 2023 09:42:45 +0100 (CET)
-Received: by pio-pvt-msa1.bahnhof.se (Postfix) with ESMTPA id B88143F785;
-        Sat, 11 Feb 2023 09:42:44 +0100 (CET)
-Received: from 90-224-97-87-no521.tbcn.telia.com ([90.224.97.87]:36104 helo=[192.168.1.18])
-        by tnonline.net with esmtpsa  (TLS1.3) tls TLS_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <forza@tnonline.net>)
-        id 1pQlT1-0001kM-8T; Sat, 11 Feb 2023 09:42:44 +0100
-Message-ID: <b2e0cb60-c8d5-2bd2-2954-d3b32252572a@tnonline.net>
-Date:   Sat, 11 Feb 2023 09:42:43 +0100
+        with ESMTP id S229853AbjBKI71 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Feb 2023 03:59:27 -0500
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AE4837F2C;
+        Sat, 11 Feb 2023 00:59:24 -0800 (PST)
+Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
+        by mta-01.yadro.com (Proxmox) with ESMTP id 5426F3419C4;
+        Sat, 11 Feb 2023 11:59:22 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
+        :cc:content-type:content-type:date:from:from:in-reply-to
+        :message-id:mime-version:references:reply-to:subject:subject:to
+        :to; s=mta-01; bh=94KKcn/ZKGm3HZG93jV9vOnK6ZsJV9CdmmgF4tSOUSs=; b=
+        FQgCuYCZenH2AgrqEhSJOhlspKGZaep6QLWDZfIJmwTX0rJL8PxABIm/m2TN3mqS
+        TbRiHlXg2sptTYxWImsjSiNvMkcno1BxBixYYAqqGLtRr/SDuAeYHB+qqgX90IQ2
+        7OsW71yHIF9BNig59JkQEoC1XhyiyARscfhBvilXQWY=
+Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id 4AE9D34191F;
+        Sat, 11 Feb 2023 11:59:22 +0300 (MSK)
+Received: from yadro.com (10.199.20.11) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Sat, 11 Feb
+ 2023 11:59:21 +0300
+Date:   Sat, 11 Feb 2023 11:59:22 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     <mlombard@redhat.com>, <martin.petersen@oracle.com>,
+        <mgurtovoy@nvidia.com>, <sagi@grimberg.me>,
+        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
+Subject: Re: [PATCH v3 07/14] scsi: target: Fix multiple LUN_RESET handling
+Message-ID: <20230211085922.GA5419@yadro.com>
+References: <20230129234441.116310-1-michael.christie@oracle.com>
+ <20230129234441.116310-8-michael.christie@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH 2/2] target: iscsi: free cmds before session free
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, linux@yadro.com
-References: <20230125083309.24678-1-d.bogdanov@yadro.com>
- <20230125083309.24678-3-d.bogdanov@yadro.com>
-Content-Language: sv-SE
-From:   Forza <forza@tnonline.net>
-In-Reply-To: <20230125083309.24678-3-d.bogdanov@yadro.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20230129234441.116310-8-michael.christie@oracle.com>
+X-Originating-IP: [10.199.20.11]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2023-01-25 09:33, Dmitry Bogdanov wrote:
-> Commands from recovery entries are freed after its session has been
-> closed. That leads to use-after-free at command free or NPE with such
-> call trace:
+On Sun, Jan 29, 2023 at 05:44:34PM -0600, Mike Christie wrote:
 > 
-> Time2Retain timer expired for SID: 1, cleaning up iSCSI session.
-> BUG: kernel NULL pointer dereference, address: 0000000000000140
-> RIP: 0010:sbitmap_queue_clear+0x3a/0xa0
-> Call Trace:
->   target_release_cmd_kref+0xd1/0x1f0 [target_core_mod]
->   transport_generic_free_cmd+0xd1/0x180 [target_core_mod]
->   iscsit_free_cmd+0x53/0xd0 [iscsi_target_mod]
->   iscsit_free_connection_recovery_entries+0x29d/0x320 [iscsi_target_mod]
->   iscsit_close_session+0x13a/0x140 [iscsi_target_mod]
->   iscsit_check_post_dataout+0x440/0x440 [iscsi_target_mod]
->   call_timer_fn+0x24/0x140
+> This fixes a bug where an initiator thinks a LUN_RESET has cleaned
+> up running commands when it hasn't. The bug was added in:
 > 
-> Move cleanup of recovery enrties to before session freeing.
+> commit 51ec502a3266 ("target: Delete tmr from list before processing")
 > 
-> Reported-by: Forza <forza@tnonline.net>
-> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-> ---
->   drivers/target/iscsi/iscsi_target.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
+> The problem occurs when:
 > 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index f6008675dd3f..0748cbfb9631 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -4521,6 +4521,9 @@ int iscsit_close_session(struct iscsit_session *sess, bool can_sleep)
->   	iscsit_stop_time2retain_timer(sess);
->   	spin_unlock_bh(&se_tpg->session_lock);
->   
-> +	if (sess->sess_ops->ErrorRecoveryLevel == 2)
-> +		iscsit_free_connection_recovery_entries(sess);
-> +
->   	/*
->   	 * transport_deregister_session_configfs() will clear the
->   	 * struct se_node_acl->nacl_sess pointer now as a iscsi_np process context
-> @@ -4544,9 +4547,6 @@ int iscsit_close_session(struct iscsit_session *sess, bool can_sleep)
->   
->   	transport_deregister_session(sess->se_sess);
->   
-> -	if (sess->sess_ops->ErrorRecoveryLevel == 2)
-> -		iscsit_free_connection_recovery_entries(sess);
-> -
->   	iscsit_free_all_ooo_cmdsns(sess);
->   
->   	spin_lock_bh(&se_tpg->session_lock);
+> 1. We have N IO cmds running in the target layer spread over 2 sessions.
+> 2. The initiator sends a LUN_RESET for each session.
+> 3. session1's LUN_RESET loops over all the running commands from both
+> sessions and moves them to its local drain_task_list.
+> 4. session2's LUN_RESET does not see the LUN_RESET from session1 because
+> the commit above has it remove itself. session2 also does not see any
+> commands since the other reset moved them off the state lists.
+> 5. sessions2's LUN_RESET will then complete with a successful response.
+> 6. sessions2's inititor believes the running commands on its session are
+> now cleaned up due to the successful response and cleans up the running
+> commands from its side. It then restarts them.
+> 7. The commands do eventually complete on the backend and the target
+> starts to return aborted task statuses for them. The initiator will
+> either throw a invalid ITT error or might accidentally lookup a new task
+> if the ITT has been reallocated already.
+> 
+> This fixes the bug by reverting the patch.
+> 
+> Fixes: 51ec502a3266 ("target: Delete tmr from list before processing")
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
-I have not had any more issues since applying the patch, which is good 
-news :)
+Actually, this patch even fixes a crash that we've just faced.
+The second LUN_RESET moves the first LUN_RESET from tmr_list to its
+drain_tmr_list, then the first LUN_RESET removes itself from second`s
+drain_tmr_list, then the second LUN_RESET tries to remove the first from
+the list and crashes because it was deleted already.
+So,
 
-Will this be backported to earlier stable kernels like 5.15.x and 6.1.x
+Tested-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
-Regards,
-Forza
