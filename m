@@ -2,156 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C13BDC636CC
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Feb 2023 10:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E79EC636D4
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Feb 2023 12:00:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjBMKML (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Feb 2023 05:12:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46860 "EHLO
+        id S229637AbjBMMAH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Feb 2023 07:00:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230413AbjBMKLx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2023 05:11:53 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD3FCEB50;
-        Mon, 13 Feb 2023 02:11:50 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4AC2260F6F;
-        Mon, 13 Feb 2023 10:11:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C393C433EF;
-        Mon, 13 Feb 2023 10:11:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676283109;
-        bh=KmxhvE36dKCr6usX/7ZPMiQfVhwCpu/l1nVcDSJNzVg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=vFEH8VQx0gwz8O6w32Y7mPqoUOef5EXwTgpKcvPr/sSWKOkoItCNqUtz06UnpPy+h
-         tWRE20WNoxM0IdmZtgBwuulPFLcPrDfh2yljc9z2iuD8mCAwEFCPF5FJJISJK0RLvh
-         otZwqHIWi6KlQVw5hFBgAz/7lQ1nrAK2QJiZ5DGyXpJR0qsNOiJsM5WjKtJ1jdl3VV
-         Qx5koUPoVnWhOUEwmdf9okt2s0y3ql7DyijE+2bk03kZJ7lfAlAMrtX2ZC1SYDpZFi
-         boRgntwJwHIi39k2ilOj+00YIxJqwNOeJUyVoYVqRu6U4SXeTBJQLW+Minp2INbr95
-         hGnYdQ4p9i08A==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Brian King <brking@us.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Kees Cook <keescook@chromium.org>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev
-Subject: [PATCH] scsi: ipr: work around fortify-string warning
-Date:   Mon, 13 Feb 2023 11:10:46 +0100
-Message-Id: <20230213101143.3821483-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.1
+        with ESMTP id S229484AbjBMMAE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2023 07:00:04 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2596213D64
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 03:59:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1676289560;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=P69Z5ADefECQaVigK14re30Iy1qGGLvGB0eZAssHA6w=;
+        b=fbJAKZolKsm/i2ju9GUBLldxi34yiwhwb8PHyfFfcaIBzFuvdB3ufkvZtremiDahOP6n5l
+        f9TxXG7hfEVafHi+OfoAOkEZPfSM+zBRjGJmJ7mH1FHOrh7+otNiNLBG7Cx0E9wrr2+quj
+        CIHxm2XePUpvF/RV/Lz1HfoRaSLInNA=
+Received: from mail-vk1-f198.google.com (mail-vk1-f198.google.com
+ [209.85.221.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-516-EBOBmMrPOwecpzXZFR4Dkw-1; Mon, 13 Feb 2023 06:59:19 -0500
+X-MC-Unique: EBOBmMrPOwecpzXZFR4Dkw-1
+Received: by mail-vk1-f198.google.com with SMTP id az29-20020a0561220d1d00b0040119b043a4so4424892vkb.22
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 03:59:19 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=P69Z5ADefECQaVigK14re30Iy1qGGLvGB0eZAssHA6w=;
+        b=iguqIg4+ND3On5vYBWnXoyQXsGQsGU6h5z8X5+t6+xy/iP4zB68SJ2xxF5SUHErleK
+         V4ZS2+QivyOJSwsYgyp0fVIXth7Lyjj0NYK0q/1RzUywBkmLraZTo+EzoWv8pPpjPl8r
+         MJHXpALFadv2lYTMI3x/bneMnc5pZr9aZq86FkqWQUy5P9Lh0nnSaygl2fuSTrmZhtNJ
+         tgAhMzXrFfIC8stGSkjnkDjR662bxCs7dDctw3LvJ3/aJdNqzl/k0in0xUSySaKoLFlx
+         sLB1IO1ZgnKEhm3yAoGQ5kWNZNBgHX7m8lPmyUPb5I3YKXCzspzr469YTz3mN9ZYUxAs
+         z6mA==
+X-Gm-Message-State: AO0yUKWXuWSp8/yog7IDizVLsfbCXX0qNIqDkB7uRAx3w2oV+6Ye8wIv
+        6oPY8hjE4CMmw7VAOylX2SPoCnJwUBULAO88iX4bIkKQgT2eA2T40uQi6m10XB3/QBLvAuovLuK
+        XQPWJzHGqBioq067ceg6uYHdU/W+oVDIgU+CBLA==
+X-Received: by 2002:a1f:28d8:0:b0:401:5dc0:439f with SMTP id o207-20020a1f28d8000000b004015dc0439fmr697218vko.33.1676289558737;
+        Mon, 13 Feb 2023 03:59:18 -0800 (PST)
+X-Google-Smtp-Source: AK7set+4tZju16RoVCDo6v7tREO+1gsmeF9WlTEqa4Y+ytbbaPJ48q9hz3PS1XBNBosBmPEHLhdd7V1g3WqzGmaoly4=
+X-Received: by 2002:a1f:28d8:0:b0:401:5dc0:439f with SMTP id
+ o207-20020a1f28d8000000b004015dc0439fmr697208vko.33.1676289558502; Mon, 13
+ Feb 2023 03:59:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230208200957.14073-1-djeffery@redhat.com>
+In-Reply-To: <20230208200957.14073-1-djeffery@redhat.com>
+From:   Maurizio Lombardi <mlombard@redhat.com>
+Date:   Mon, 13 Feb 2023 12:59:07 +0100
+Message-ID: <CAFL455kEoLQF+vc2MGmtLdrQ-=U+HJzqgknZmM54iCPJD1p_mA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: target: iscsi: set memalloc_noio with loopback
+ network connections
+To:     David Jeffery <djeffery@redhat.com>
+Cc:     target-devel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+st 8. 2. 2023 v 21:10 odes=C3=ADlatel David Jeffery <djeffery@redhat.com> n=
+apsal:
+>
+>
+> +       /*
+> +        * If the iscsi connection is over a loopback device from using
+> +        * iscsi and iscsit on the same system, we need to set memalloc_n=
+oio to
+> +        * prevent memory allocation deadlocks between target and initiat=
+or.
+> +        */
+> +       rcu_read_lock();
+> +       dst =3D rcu_dereference(conn->sock->sk->sk_dst_cache);
+> +       if (dst && dst->dev && dst->dev->flags & IFF_LOOPBACK)
+> +               loopback =3D true;
+> +       rcu_read_unlock();
 
-The ipr_log_vpd_compact() function triggers a fortified memcpy() warning
-about a potential string overflow with all versions of clang:
+Hi Mike,
+I tested it, it works. The customer also confirmed that it fixes the
+deadlock on his setup.
 
-In file included from drivers/scsi/ipr.c:43:
-In file included from include/linux/string.h:254:
-include/linux/fortify-string.h:520:4: error: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror,-Wattribute-warning]
-                        __write_overflow_field(p_size_field, size);
-                        ^
-include/linux/fortify-string.h:520:4: error: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror,-Wattribute-warning]
-2 errors generated.
-
-I don't see anything actually wrong with the function, but this is the
-only instance I can reproduce of the fortification going wrong in the
-kernel at the moment, so the easiest solution may be to rewrite the
-function into something that does not trigger the warning.
-
-Instead of having a combined buffer for vendor/device/serial strings,
-use three separate local variables and just truncate the whitespace
-individually.
-
-Fixes: 8cf093e275d0 ("[SCSI] ipr: Improved dual adapter errors")
-Cc: Kees Cook <keescook@chromium.org>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-I did not try to bisect which commit introduced this behavior into
-the fortified memcpy(), the Fixes: commit is the one that introduced
-the ipr_log_vpd_compact() function but this predates the fortified
-string helpers.
----
- drivers/scsi/ipr.c | 38 ++++++++++++++++++--------------------
- 1 file changed, 18 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 198d3f20d682..490fd81e7cfd 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -1516,23 +1516,19 @@ static void ipr_process_ccn(struct ipr_cmnd *ipr_cmd)
- }
- 
- /**
-- * strip_and_pad_whitespace - Strip and pad trailing whitespace.
-- * @i:		index into buffer
-- * @buf:		string to modify
-+ * strip_whitespace - Strip and pad trailing whitespace.
-+ * @i:		size of buffer
-+ * @buf:	string to modify
-  *
-- * This function will strip all trailing whitespace, pad the end
-- * of the string with a single space, and NULL terminate the string.
-+ * This function will strip all trailing whitespace and
-+ * NUL terminate the string.
-  *
-- * Return value:
-- * 	new length of string
-  **/
--static int strip_and_pad_whitespace(int i, char *buf)
-+static void strip_whitespace(int i, char *buf)
- {
- 	while (i && buf[i] == ' ')
- 		i--;
--	buf[i+1] = ' ';
--	buf[i+2] = '\0';
--	return i + 2;
-+	buf[i+1] = '\0';
- }
- 
- /**
-@@ -1547,19 +1543,21 @@ static int strip_and_pad_whitespace(int i, char *buf)
- static void ipr_log_vpd_compact(char *prefix, struct ipr_hostrcb *hostrcb,
- 				struct ipr_vpd *vpd)
- {
--	char buffer[IPR_VENDOR_ID_LEN + IPR_PROD_ID_LEN + IPR_SERIAL_NUM_LEN + 3];
--	int i = 0;
-+	char vendor_id[IPR_VENDOR_ID_LEN + 1];
-+	char product_id[IPR_PROD_ID_LEN + 1];
-+	char sn[IPR_SERIAL_NUM_LEN + 1];
- 
--	memcpy(buffer, vpd->vpids.vendor_id, IPR_VENDOR_ID_LEN);
--	i = strip_and_pad_whitespace(IPR_VENDOR_ID_LEN - 1, buffer);
-+	memcpy(vendor_id, vpd->vpids.vendor_id, IPR_VENDOR_ID_LEN);
-+	strip_whitespace(IPR_VENDOR_ID_LEN, vendor_id);
- 
--	memcpy(&buffer[i], vpd->vpids.product_id, IPR_PROD_ID_LEN);
--	i = strip_and_pad_whitespace(i + IPR_PROD_ID_LEN - 1, buffer);
-+	memcpy(product_id, vpd->vpids.product_id, IPR_PROD_ID_LEN);
-+	strip_whitespace(IPR_PROD_ID_LEN, product_id);
- 
--	memcpy(&buffer[i], vpd->sn, IPR_SERIAL_NUM_LEN);
--	buffer[IPR_SERIAL_NUM_LEN + i] = '\0';
-+	memcpy(sn, vpd->sn, IPR_SERIAL_NUM_LEN);
-+	strip_whitespace(IPR_SERIAL_NUM_LEN, sn);
- 
--	ipr_hcam_err(hostrcb, "%s VPID/SN: %s\n", prefix, buffer);
-+	ipr_hcam_err(hostrcb, "%s VPID/SN: %s %s %s\n", prefix,
-+		     vendor_id, product_id, sn);
- }
- 
- /**
--- 
-2.39.1
+Maurizio
 
