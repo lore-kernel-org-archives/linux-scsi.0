@@ -2,392 +2,354 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C49C61DA4
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 06:11:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF7FAC61DA4
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 06:58:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229771AbjBNGL1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Feb 2023 01:11:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42618 "EHLO
+        id S231740AbjBNG64 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Feb 2023 01:58:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230302AbjBNGLZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 01:11:25 -0500
-Received: from mail-qt1-x833.google.com (mail-qt1-x833.google.com [IPv6:2607:f8b0:4864:20::833])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D24FDC658
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:11:23 -0800 (PST)
-Received: by mail-qt1-x833.google.com with SMTP id h24so16443944qta.12
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:11:23 -0800 (PST)
+        with ESMTP id S231739AbjBNG6z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 01:58:55 -0500
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AA3B1DBAE
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:58:53 -0800 (PST)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31E6Rl6c010313
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:58:52 -0800
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3nr516g2ha-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:58:52 -0800
+Received: from m0045851.ppops.net (m0045851.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31E6o8Ol000789
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:58:52 -0800
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2168.outbound.protection.outlook.com [104.47.57.168])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3nr516g2h7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 13 Feb 2023 22:58:52 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hvxD+M2xB3FRRUAjm0vXKB9F4XVpMQvjALg7R2UCBR+C2VC1rsy6lTckIiccDgiHe10SP/exAw0PKOjNhidQzSAG6dpVbOaZNqRtW8vZ0fwCUhvhKXoyhKVJaAKb58pLpRLOvCDRECjPovIUezLdPl6GmNr2SOse3KrkxyZ2lcrrK3XVJsQawqnXEFVcj+ayEA0ECkp0l72Szjs3S5oV5iyEL5jMtEP0ovC21cHgYAxDHVR1Ut3uWFbqHOcndIuL4qtgU6+IDeGXnF/4I8wEaFrhiCjsEtj9GujPttNuMJsw4UC0LlHYxunsOAZbFWASYLed6gJz6C06W/7dfY3Qsg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=O2W/L28g6UVTxm5Pm2tfp/Ymt1+SjRex61uEnvmhXNg=;
+ b=jvUISLXj3jAJR4j2w/cUs1VvoleOfXtVRyOWKGux2qGwsaUd8RkGV4GlnM9YsK8HsrkSuYZpCnAFMZWPFr+gbzVW2kLMYo8Y/dAgF0E/j9ilTk333499gmn/ZaIbCGDefciozhC9XvgrvIVGsIPB/gbkUr4SJBrsVX8A8KxXCvYdk6YpqXFPccUGGkq2yNOL4XJG/qlTyeP/kTtaA8yWWVx/XDWjhyFAN7wdRwwm3vw7Px3Mh3vi/W/yP6+dUm2BO8uoas40PZAS7YP3b7OGCnlUEscSXyb22IQ0YGeioh9MY6twQPRXcWumkNBtAiec4ioS96NtZ7l0pq3MdrOz5Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=S35yCVsovhhYD6+OFPndCjQIB1cB1qMGw1QOSg6yiBo=;
-        b=TR+AGGE2IePXst5VW9CQEuwqCcZD6iZ3ONWkUfVQs8AFqSA+Bce95+6B5yTLP88cdf
-         JJY7+TzkNDFg8T9PyqXS/87JkeFt/bJLokb8AeMW+Ll2meQsbrZNK3EerZRxyDf9NtLI
-         J5hbA01TbZ7QwtbS9xOqezKkBkGAswjBpzK2E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=S35yCVsovhhYD6+OFPndCjQIB1cB1qMGw1QOSg6yiBo=;
-        b=sl116ZrQUZhBonOf81jCFXkknCk0GE67eKcJikwnueRGh6z+n7Ig+r+xkMhxZAkjr1
-         cPumTmMgKitDg/qvvXzGktb7Z11/rfgixsZ14JGZ4/h+zYWjyZp+w4hcaDm+jndpI+FK
-         +yvvN5wH5BYLF61N8huI73aSDM80AGcCLeEKx8E7AisGOR7XSxAjsd8o2jrtRDMNJNqq
-         i0gHx7GwmuQzGhYhw30AsE3wVnh4Nltlqa2CSfrI3P10UEHb+uecXwFMe4aSeUdAR0Uy
-         KyaqTDreWsdtQPvfv9MrTDKgQ4pqXG1wuZ4A2OIVMNgC+40Sw1Ozp/Ql96JpOg4QLGN0
-         Xfqg==
-X-Gm-Message-State: AO0yUKWSLe6R/Kuwio1Jfy4AYNqjCc+frAbR0X1roe+FOzR/xedjpuWW
-        pxBjOp+20JZraTLSGbZQfrz2RzLy4s9AIjQR1jLjZbQ0UQw0aFjRznj5k+iC+Q7H3VS2M/R2d5t
-        tFBT9aWdkvDMF3PHmbzZ/9+XjEzb98mDnzHwnMw==
-X-Google-Smtp-Source: AK7set+wObI/bF2QLULKcdDRWUpMrZsckiF5op6p62oFEreOqoRvF7BscTFec543RuyOHifkvec/GDSWsTjBCZ6SoJQ=
-X-Received: by 2002:ac8:5f91:0:b0:3ba:1ea6:d99e with SMTP id
- j17-20020ac85f91000000b003ba1ea6d99emr131036qta.415.1676355082760; Mon, 13
- Feb 2023 22:11:22 -0800 (PST)
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=O2W/L28g6UVTxm5Pm2tfp/Ymt1+SjRex61uEnvmhXNg=;
+ b=OGJeKKOHK84ymmySmYxdpeBrJ121WHUhcIA8PFKF6bK/n+Bhl15uvAMKTBq5n6LNXFHyPjrxlYdDQcH5pRa2/ZDF6DNgu4q3pKasn/JdRbluVUxre9m4mbnOVAmZdr8Z2DR3wKLpqX43WwdEJRuIRGRRuWNVv+qH1MJhP4jK3M8=
+Received: from DM4PR18MB5220.namprd18.prod.outlook.com (2603:10b6:8:53::16) by
+ SN7PR18MB3840.namprd18.prod.outlook.com (2603:10b6:806:104::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6086.24; Tue, 14 Feb 2023 06:58:48 +0000
+Received: from DM4PR18MB5220.namprd18.prod.outlook.com
+ ([fe80::bbcc:7359:7a4d:3e3b]) by DM4PR18MB5220.namprd18.prod.outlook.com
+ ([fe80::bbcc:7359:7a4d:3e3b%8]) with mapi id 15.20.6086.024; Tue, 14 Feb 2023
+ 06:58:44 +0000
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     linux-scsi <linux-scsi@vger.kernel.org>,
+        Girish Basrur <gbasrur@marvell.com>
+Subject: RE: IO error on DIF/DIX supported array
+Thread-Topic: IO error on DIF/DIX supported array
+Thread-Index: Adk65h58aAJPomO/QEKOGTaF0/rqJAFW57Ng
+Date:   Tue, 14 Feb 2023 06:58:44 +0000
+Message-ID: <DM4PR18MB5220EFBF8D8036A9446DD796D2A29@DM4PR18MB5220.namprd18.prod.outlook.com>
+References: <DM4PR18MB5220E0AF6564DF1A1F126EF0D2DB9@DM4PR18MB5220.namprd18.prod.outlook.com>
+In-Reply-To: <DM4PR18MB5220E0AF6564DF1A1F126EF0D2DB9@DM4PR18MB5220.namprd18.prod.outlook.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-rorf: true
+x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcc2thc2h5YXBc?=
+ =?us-ascii?Q?YXBwZGF0YVxyb2FtaW5nXDA5ZDg0OWI2LTMyZDMtNGE0MC04NWVlLTZiODRi?=
+ =?us-ascii?Q?YTI5ZTM1Ylxtc2dzXG1zZy0wM2I5YTkyNC1hYzM1LTExZWQtOTUxNi00ODJh?=
+ =?us-ascii?Q?ZTM1NzAzZTVcYW1lLXRlc3RcMDNiOWE5MjYtYWMzNS0xMWVkLTk1MTYtNDgy?=
+ =?us-ascii?Q?YWUzNTcwM2U1Ym9keS50eHQiIHN6PSI2Mjg5IiB0PSIxMzMyMDgzMTUyMjQx?=
+ =?us-ascii?Q?ODgwMjgiIGg9IkY2cWJzMjJndGdaWCtZMG8xaEtrcUhRMEZwST0iIGlkPSIi?=
+ =?us-ascii?Q?IGJsPSIwIiBibz0iMSIgY2k9ImNBQUFBRVJIVTFSU1JVRk5DZ1VBQUhZSUFB?=
+ =?us-ascii?Q?Qjg1QkRHUVVEWkFiUWhIRWVYSlFJYXRDRWNSNWNsQWhvTkFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFIQUFBQUFHQ0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFFQUFRQUJBQUFBMUZIM2FBQUFBQUFBQUFBQUFBQUFBSjRBQUFCaEFHUUFa?=
+ =?us-ascii?Q?QUJ5QUdVQWN3QnpBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR01BZFFCekFIUUFid0J0QUY4QWNB?=
+ =?us-ascii?Q?QmxBSElBY3dCdkFHNEFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFBQ0FB?=
+ =?us-ascii?Q?QUFBQUNlQUFBQVl3QjFBSE1BZEFCdkFHMEFYd0J3QUdnQWJ3QnVBR1VBYmdC?=
+ =?us-ascii?Q?MUFHMEFZZ0JsQUhJQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJqQUhV?=
+ =?us-ascii?Q?QWN3QjBBRzhBYlFCZkFITUFjd0J1QUY4QVpBQmhBSE1BYUFCZkFIWUFNQUF5?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+x-dg-refone: =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFH?=
+ =?us-ascii?Q?TUFkUUJ6QUhRQWJ3QnRBRjhBY3dCekFHNEFYd0JyQUdVQWVRQjNBRzhBY2dC?=
+ =?us-ascii?Q?a0FITUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQVFBQUFBQUFBQUFDQUFBQUFBQ2VBQUFBWXdCMUFITUFkQUJ2QUcw?=
+ =?us-ascii?Q?QVh3QnpBSE1BYmdCZkFHNEFid0JrQUdVQWJBQnBBRzBBYVFCMEFHVUFjZ0Jm?=
+ =?us-ascii?Q?QUhZQU1BQXlBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFB?=
+ =?us-ascii?Q?QUFBSUFBQUFBQUo0QUFBQmpBSFVBY3dCMEFHOEFiUUJmQUhNQWN3QnVBRjhB?=
+ =?us-ascii?Q?Y3dCd0FHRUFZd0JsQUY4QWRnQXdBRElBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FB?=
+ =?us-ascii?Q?QUdRQWJBQndBRjhBY3dCckFIa0FjQUJsQUY4QVl3Qm9BR0VBZEFCZkFHMEFa?=
+ =?us-ascii?Q?UUJ6QUhNQVlRQm5BR1VBWHdCMkFEQUFNZ0FBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBUUFBQUFBQUFBQUNBQUFBQUFDZUFBQUFaQUJzQUhBQVh3QnpB?=
+ =?us-ascii?Q?R3dBWVFCakFHc0FYd0JqQUdnQVlRQjBBRjhBYlFCbEFITUFjd0JoQUdjQVpR?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+x-dg-reftwo: =?us-ascii?Q?QUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCa0FHd0FjQUJm?=
+ =?us-ascii?Q?QUhRQVpRQmhBRzBBY3dCZkFHOEFiZ0JsQUdRQWNnQnBBSFlBWlFCZkFHWUFh?=
+ =?us-ascii?Q?UUJzQUdVQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUVB?=
+ =?us-ascii?Q?QUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1VBYlFCaEFHa0FiQUJmQUdFQVpBQmtB?=
+ =?us-ascii?Q?SElBWlFCekFITUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQXdBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFBQ0FBQUFB?=
+ =?us-ascii?Q?QUNlQUFBQWJRQmhBSElBZGdCbEFHd0FiQUJmQUhBQWNnQnZBR29BWlFCakFI?=
+ =?us-ascii?Q?UUFYd0JqQUc4QVpBQmxBSE1BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ0QUdFQWNn?=
+ =?us-ascii?Q?QjJBR1VBYkFCc0FGOEFkQUJsQUhJQWJRQnBBRzRBZFFCekFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBIi8+PC9tZXRhPg=3D=3D?=
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM4PR18MB5220:EE_|SN7PR18MB3840:EE_
+x-ms-office365-filtering-correlation-id: 4c98888e-3550-4f13-57f4-08db0e58e9d7
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: FU72/gvqp1f+rtRJBRzCJcGLHS+Xi8/IwKqVMxrAESXqPdzOn1gV+TVeNu8glsDIKiZ53jfcWqRvT4jRslXzE6VQKYe2khB76zcn9MdCkF/Ke6/mg5fYrSpLD6q08+AIY6Yczen4dlkKwJXz7l2X46NP5fRXZO3wRVoCUwWWs7NosNc3mNsUN00X8p5t0b9Tb2V6vN5tiX5Cg8WBL/U8avOkOEZRwNLzyHsP5BwjadfZrz7GLcNtxYMFu9lMIgo30xCAs0hvakGVIzowaqoTw8yQjLcmshSFmViFv14xFGyc7UVxsbmjZ6Xqa2J0BbvWhunMsQI+jlsQPcnWdA+eHB2QABEuRjVCRwxBk0C0Qwwjdz6ZyX72pTi+GQv+NuoRu7SVYp5DJtW2uP9oqailm1Jj2maMinCCvV8GMn8Sap3pDP+N12W9imMZMxQ2i4u+2bwhlrgWmb+q39oYz5MQKUB6C9cO5PktmwQ9wasDNayvj1jOQ9H9MIbtgrHORsFsRU+7afAYPXBiTjZ92Z5EY0Xpc2vSM9AwUvEAVuXM0HDTFu/OtcxLxT98c3psotlXDSDGlm8FPmMRWFmCNrIVa1FLrtS81VckWDLzznyMnVMIfDroYlDhV9e51jBM5qrYvWRlYzqdVoz6un1Hv6xPhFZxMyGPboDm4gmQgKDj+jpUGXKc+DrF3MsjxU6Cx8pUXbeEzuMGd+YCcllwxiIleA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR18MB5220.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(376002)(136003)(396003)(39860400002)(366004)(346002)(451199018)(52536014)(2906002)(5660300002)(8936002)(41300700001)(66899018)(66946007)(4326008)(66556008)(66446008)(66476007)(64756008)(76116006)(6916009)(8676002)(55016003)(316002)(53546011)(6506007)(54906003)(478600001)(9686003)(107886003)(71200400001)(186003)(83380400001)(38100700002)(122000001)(86362001)(33656002)(7696005)(38070700005);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?1OQCj52rLIXCaGNLF7baHOOrbV8Xw1y1YICFgqq4WKDhse2zjU6ooEzW1RIB?=
+ =?us-ascii?Q?GfCj+QOsUaYkq8ZLTqVhUnc7ZRi8FkLiE+jNYQYeE7BZ5trx84vJP7D9/fYF?=
+ =?us-ascii?Q?RzNfkJdGATU1CplMdDAv/yfEgxDFRwkqQBKHSXQedGmVKc0xzKZMSM+qikct?=
+ =?us-ascii?Q?1WfRtUnU02J9FuglM8O0QaEQHWYsRjoyy/SPowtV+LjUp2I9upj1tNUTMpAe?=
+ =?us-ascii?Q?iQdut4kmoRMQDBnKaNiE8+QSrbh1q1ZvdYMyo5ydX983ZCxvFWtkP3EJzzTI?=
+ =?us-ascii?Q?aGBnPSadr7dgZ1DU/71wSkIWDdgdJRYA2bCNUJa3+CoZPfTuxwImrF6g/QbU?=
+ =?us-ascii?Q?hChqYsi1MOWHOMID8bb5fUNRuMiIVSXWFFHVxgfGCfkNyKwoz2JKmTJGZjpM?=
+ =?us-ascii?Q?SYYaa1mIcQidhD4WAxvIBln70cNc5sedQQH3xOmu6Q8/Bm2D3Xbv2S0YkMm3?=
+ =?us-ascii?Q?vZGIsZiu8QZZTMTe4qYPcWf1B3+XGqK5N7v8LUvvGdZ4twAhUql3HKQIkn7R?=
+ =?us-ascii?Q?uaC4XceWmZ5kjAPW5Vy+r/cBmI+raRE2ahxdZXyPOpODeV+I24x15/G2xKkj?=
+ =?us-ascii?Q?p1S6qzdXRZYnPyTjN6dpvVFv6XgemXB392kFMVfOVJd6oZxqiRN/jNCYp4fJ?=
+ =?us-ascii?Q?2eL/wg4zZR/cAEC4bXExo1Fqa0cK/3i2JnY+5ZZ/ktMW7eGzdc639jqRAoBf?=
+ =?us-ascii?Q?V8KTuqqsPkhMPwvztEXhgpkFXg0j69z2wjzH1T4xhnyD+1yHWzKQxYxiV0Rb?=
+ =?us-ascii?Q?K0mXYy0LmNUNkvnoflQbMvec8J+G6+6oppXiM0dY4E5BrhYV3Tdsku7n4LjQ?=
+ =?us-ascii?Q?pXsAOh4ADlKvdYvjGXHFbUGPl62RlszWYzMTyr0h92yQMwCQCdjUUReq6oOg?=
+ =?us-ascii?Q?W+UhEXpL6MdIVFqDdrC0Zsy837a/F4L+nVYMQCaqIdv+bwzqIIMi/OH1JidS?=
+ =?us-ascii?Q?ab6B7g4QfNooDIj5qUMsnCKCDqAemOukFbJ0FDXAUFPlbruiTNhjPHkOfjpC?=
+ =?us-ascii?Q?o64r3sLd2qkWcSJURSncTM1KJj8p8tDTIWZFNYNnLRN1+EygSbKzKWMbtj15?=
+ =?us-ascii?Q?tmamCg26Ez1btwXtlF25IRI+DvpEsafT7PbEkAxWgsXpS15LxBEs+R/0Wews?=
+ =?us-ascii?Q?zJbIrnlhGqWOk5vGaRAtuyooC3GTP/H5mG7ByMm0HX0HKqwHaVYy/1HytMKw?=
+ =?us-ascii?Q?V7sgJq1k5TX4ONUyQW6/wFTHqNjlmWRkWXFtYCUOzPkXYnVgK/vdQCDDLDLC?=
+ =?us-ascii?Q?BBIOKB3ONrTEwQE278NXSsctUsAyGm7J6kdBEBSp7XeGxLKkvhDJVJ4bKxO8?=
+ =?us-ascii?Q?m7udD7UOp2dMv+PJwY40L1zh2MBrOFidhoqgcwTTgkTtb7MVEY65GXyuxQYx?=
+ =?us-ascii?Q?gWiKD+ZDiItL4HR2R74j8RfZYBqrFgL3k4IbhiwTuq1fG3mPDiMm4bj0Xdow?=
+ =?us-ascii?Q?3kmOClkh9ddEe2Fn3KyQ77NA5fUR5G9kMBiZWdcLYb8f7ex3OrFszYO7O0c9?=
+ =?us-ascii?Q?nLrEpPE5P7+ShCMEiYi5XHFz8DXfQkNFAAcL+DVEVtNoE2UHZO+Mqv4bJUTM?=
+ =?us-ascii?Q?8RQLXOfKQLFXLIth/qQhiCEqmK3tO1MV31NUpxB3W/L5RciIrv6kb8SwDJxs?=
+ =?us-ascii?Q?Vt7DdTY1o1gmVWTeW3eZXCxk0pi93K1jjSXEGm1KvERQ?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20230214005019.1897251-1-shinichiro.kawasaki@wdc.com> <20230214005019.1897251-4-shinichiro.kawasaki@wdc.com>
-In-Reply-To: <20230214005019.1897251-4-shinichiro.kawasaki@wdc.com>
-From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Date:   Mon, 13 Feb 2023 23:11:06 -0700
-Message-ID: <CAFdVvOyTqx58UuYQAinnDehCq3xPzKCDQWK-1fyfssAQdkuXMQ@mail.gmail.com>
-Subject: Re: [PATCH v5 3/4] scsi: mpi3mr: use number of bits to manage bitmap sizes
-To:     "Shin'ichiro Kawasaki" <shinichiro.kawasaki@wdc.com>
-Cc:     linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000040539b05f4a2d577"
+X-OriginatorOrg: marvell.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR18MB5220.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4c98888e-3550-4f13-57f4-08db0e58e9d7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2023 06:58:44.5703
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: jjKdcVFB0zalsz6uc5FWD7HfYa5B1M2tVJ9BclMYCLV1WD+Plj2QYXx+s++pltF+WYW0RuWK5qKk5GkRhtjjoQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR18MB3840
+X-Proofpoint-ORIG-GUID: 7CUH0U4LijbeYFTfGOw3N2Uc6ErXHDyD
+X-Proofpoint-GUID: 6y4iojdZ1ZZhXOGIEOID6tRI9w860v_A
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-14_04,2023-02-13_01,2023-02-09_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000040539b05f4a2d577
-Content-Type: text/plain; charset="UTF-8"
+Hi Martin,
+Any inputs on this one?
 
-On Mon, Feb 13, 2023 at 5:50 PM Shin'ichiro Kawasaki
-<shinichiro.kawasaki@wdc.com> wrote:
->
-> To allocate bitmaps, the mpi3mr driver calculates sizes of bitmaps using
-> byte as unit. However, bitmap helper functions assume that bitmaps are
-> allocated using unsigned long as unit. This gap causes memory access
-> beyond the bitmap sizes and results in "BUG: KASAN: slab-out-of-bounds".
-> The BUG was observed at firmware download to eHBA-9600. Call trace
-> indicated that the out-of-bounds access happened in find_first_zero_bit
-> called from mpi3mr_send_event_ack for miroc->evtack_cmds_bitmap.
->
-> To fix the BUG, do not use bytes to manage bitmap sizes. Instead, use
-> number of bits, and call bitmap helper functions which take number of
-> bits as arguments. For memory allocation, call bitmap_zalloc instead of
-> kzalloc and krealloc. For memory free, call bitmap_free instead of
-> kfree. For zero clear, call bitmap_clear instead of memset.
->
-> Remove three fields for bitmap byte sizes in struct scmd_priv, which are
-> no longer required. Replace the field dev_handle_bitmap_sz with
-> dev_handle_bitmap_bits to keep number of bits of removepend_bitmap
-> across resize.
->
-> Fixes: c5758fc72b92 ("scsi: mpi3mr: Gracefully handle online FW update operation")
-> Fixes: e844adb1fbdc ("scsi: mpi3mr: Implement SCSI error handler hooks")
-> Fixes: c1af985d27da ("scsi: mpi3mr: Add Event acknowledgment logic")
-> Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
-> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Acked-by: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-> ---
->  drivers/scsi/mpi3mr/mpi3mr.h    | 10 +----
->  drivers/scsi/mpi3mr/mpi3mr_fw.c | 75 ++++++++++++++-------------------
->  2 files changed, 33 insertions(+), 52 deletions(-)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index def4c5e15cd8..8a438f248a82 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -955,19 +955,16 @@ struct scmd_priv {
->   * @chain_buf_count: Chain buffer count
->   * @chain_buf_pool: Chain buffer pool
->   * @chain_sgl_list: Chain SGL list
-> - * @chain_bitmap_sz: Chain buffer allocator bitmap size
->   * @chain_bitmap: Chain buffer allocator bitmap
->   * @chain_buf_lock: Chain buffer list lock
->   * @bsg_cmds: Command tracker for BSG command
->   * @host_tm_cmds: Command tracker for task management commands
->   * @dev_rmhs_cmds: Command tracker for device removal commands
->   * @evtack_cmds: Command tracker for event ack commands
-> - * @devrem_bitmap_sz: Device removal bitmap size
->   * @devrem_bitmap: Device removal bitmap
-> - * @dev_handle_bitmap_sz: Device handle bitmap size
-> + * @dev_handle_bitmap_bits: Number of bits in device handle bitmap
->   * @removepend_bitmap: Remove pending bitmap
->   * @delayed_rmhs_list: Delayed device removal list
-> - * @evtack_cmds_bitmap_sz: Event Ack bitmap size
->   * @evtack_cmds_bitmap: Event Ack bitmap
->   * @delayed_evtack_cmds_list: Delayed event acknowledgment list
->   * @ts_update_counter: Timestamp update counter
-> @@ -1128,7 +1125,6 @@ struct mpi3mr_ioc {
->         u32 chain_buf_count;
->         struct dma_pool *chain_buf_pool;
->         struct chain_element *chain_sgl_list;
-> -       u16  chain_bitmap_sz;
->         void *chain_bitmap;
->         spinlock_t chain_buf_lock;
->
-> @@ -1136,12 +1132,10 @@ struct mpi3mr_ioc {
->         struct mpi3mr_drv_cmd host_tm_cmds;
->         struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
->         struct mpi3mr_drv_cmd evtack_cmds[MPI3MR_NUM_EVTACKCMD];
-> -       u16 devrem_bitmap_sz;
->         void *devrem_bitmap;
-> -       u16 dev_handle_bitmap_sz;
-> +       u16 dev_handle_bitmap_bits;
->         void *removepend_bitmap;
->         struct list_head delayed_rmhs_list;
-> -       u16 evtack_cmds_bitmap_sz;
->         void *evtack_cmds_bitmap;
->         struct list_head delayed_evtack_cmds_list;
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> index 286a44506578..758f7ca9e0ee 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -1128,7 +1128,6 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
->  static int
->  mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
->  {
-> -       u16 dev_handle_bitmap_sz;
->         void *removepend_bitmap;
->
->         if (mrioc->facts.reply_sz > mrioc->reply_sz) {
-> @@ -1160,25 +1159,23 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
->                     "\tcontroller while sas transport support is enabled at the\n"
->                     "\tdriver, please reboot the system or reload the driver\n");
->
-> -       dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
-> -       if (mrioc->facts.max_devhandle % 8)
-> -               dev_handle_bitmap_sz++;
-> -       if (dev_handle_bitmap_sz > mrioc->dev_handle_bitmap_sz) {
-> -               removepend_bitmap = krealloc(mrioc->removepend_bitmap,
-> -                   dev_handle_bitmap_sz, GFP_KERNEL);
-> +       if (mrioc->facts.max_devhandle > mrioc->dev_handle_bitmap_bits) {
-> +               removepend_bitmap = bitmap_zalloc(mrioc->facts.max_devhandle,
-> +                                                 GFP_KERNEL);
->                 if (!removepend_bitmap) {
->                         ioc_err(mrioc,
-> -                           "failed to increase removepend_bitmap sz from: %d to %d\n",
-> -                           mrioc->dev_handle_bitmap_sz, dev_handle_bitmap_sz);
-> +                               "failed to increase removepend_bitmap bits from %d to %d\n",
-> +                               mrioc->dev_handle_bitmap_bits,
-> +                               mrioc->facts.max_devhandle);
->                         return -EPERM;
->                 }
-> -               memset(removepend_bitmap + mrioc->dev_handle_bitmap_sz, 0,
-> -                   dev_handle_bitmap_sz - mrioc->dev_handle_bitmap_sz);
-> +               bitmap_free(mrioc->removepend_bitmap);
->                 mrioc->removepend_bitmap = removepend_bitmap;
->                 ioc_info(mrioc,
-> -                   "increased dev_handle_bitmap_sz from %d to %d\n",
-> -                   mrioc->dev_handle_bitmap_sz, dev_handle_bitmap_sz);
-> -               mrioc->dev_handle_bitmap_sz = dev_handle_bitmap_sz;
-> +                        "increased bits of dev_handle_bitmap from %d to %d\n",
-> +                        mrioc->dev_handle_bitmap_bits,
-> +                        mrioc->facts.max_devhandle);
-> +               mrioc->dev_handle_bitmap_bits = mrioc->facts.max_devhandle;
->         }
->
+Thanks,
+~Saurav
+
+> -----Original Message-----
+> From: Saurav Kashyap
+> Sent: Tuesday, February 7, 2023 4:50 PM
+> To: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi <linux-scsi@vger.kernel.org>; Girish Basrur
+> <gbasrur@marvell.com>
+> Subject: IO error on DIF/DIX supported array
+>=20
+> Hi Martin,
+> We have observed IO failure on 3PAR array that supports DIF/DIX with
+> upstream code. An error is only seen when IOs are done on DM devices, no
+> error observed if IO is done on /dev/sdX.
+> I added some prints to understand the problem and figured out that
+> SCSI_PROT_IP_CHECKSUM flag is not set in scmnd->prot_flags. Ideally it
+> should be set as BIP_IP_CHECKSUM should be set.
+>=20
+> --------------------<START: IO to /dev/sdc>----------------
+> [Mon Feb 6 17:54:56 2023] SK: bio_integrity_prep setting IP_CHECKSUM
+> bio=3Dffff976f8d19c300 bip_flags=3D0x11
+> [Mon Feb 6 17:54:56 2023] SK: sd_setup_protect_cmnd setting
+> IP_CHECKSUM bio=3Dffff976f8d19c300 bip_flags=3D0x11
+> [Mon Feb 6 17:54:56 2023] SK: bio_integrity_prep setting IP_CHECKSUM
+> bio=3Dffff976f8d19c300 bip_flags=3D0x11
+> [Mon Feb 6 17:54:56 2023] SK: sd_setup_protect_cmnd setting
+> IP_CHECKSUM bio=3Dffff976f8d19c300 bip_flags=3D0x11
+> -------------------<END: IO to /dev/sdc>-----------------
+>=20
+> ----------------<START: IO to dm-10>---------------------
+> [Mon Feb 6 17:55:13 2023] SK: bio_integrity_prep setting IP_CHECKSUM
+> bio=3Dffff976f8d19c300 bip_flags=3D0x11
+> [Mon Feb 6 17:55:13 2023] SK: sd_setup_protect_cmnd else IP_CHECKSUM
+> bio=3Dffff976fa15fa490 bip_flags=3D0x0
+> [Mon Feb 6 17:55:13 2023] dm-10: guard tag error at sector 0 (rcvd 0000, =
+want
+> ffff)
+> [Mon Feb 6 17:55:13 2023] SK: bio_integrity_prep setting IP_CHECKSUM
+> bio=3Dffff978f0752c180 bip_flags=3D0x11
+> [Mon Feb 6 17:55:13 2023] SK: sd_setup_protect_cmnd else IP_CHECKSUM
+> bio=3Dffff976fc87fef10 bip_flags=3D0x0
+> [Mon Feb 6 17:55:13 2023] dm-10: guard tag error at sector 0 (rcvd 0000, =
+want
+> ffff)
+> [Mon Feb 6 17:55:13 2023] Buffer I/O error on dev dm-10, logical block 0,
+> async page read
+> -----------------<END: IO to dm-10>------------------------
+>=20
+> Its noticed that bio pointer get changed when IO is done through dm devic=
+e.
+> I added more debug prints in bio_clone and bio_integrity_clone and
+> concluded that bip_flags are not getting copied in bio_integrity_clone
+> routine.
+>=20
+> --------------------
+> [Tue Feb  7 14:15:47 2023] SK: bio_integrity_prep setting IP_CHECKSUM
+> bio=3Dffff891ecc5fa840 bip_flags=3D0x11
+> [Tue Feb  7 14:15:47 2023] SK: __bio_clone: bio=3Dffff891ed97b5990
+> bio_src=3Dffff891ecc5fa840
+> [Tue Feb  7 14:15:47 2023] SK: bio_integrity_clone: bip=3Dffff891ecc5fd50=
+0
+> bip_src=3Dffff891ecc5fcb40 bip_flags=3D0x0 src_bip_flags=3D0x11
+> [Tue Feb  7 14:15:47 2023] SK: sd_setup_protect_cmnd else IP_CHECKSUM
+> bio=3Dffff891ed97b5990 bip_flags=3D0x0
+> [Tue Feb  7 14:15:47 2023] dm-3: guard tag error at sector 0 (rcvd 0000, =
+want
+> ffff)
+> [Tue Feb  7 14:15:47 2023] Buffer I/O error on dev dm-3, logical block 0,=
+ async
+> page read
+> ----------------------------------
+>=20
+> If I add the change to copy the flags, following  BUG_ON in slub.c is rep=
+orted
+> ------------------<code>-------------
+> diff --git a/block/bio-integrity.c b/block/bio-integrity.c
+> index 3f5685c00e36..07e7443c7be3 100644
+> --- a/block/bio-integrity.c
+> +++ b/block/bio-integrity.c
+> @@ -418,6 +418,7 @@ int bio_integrity_clone(struct bio *bio, struct bio
+> *bio_src,
+>=20
+>         bip->bip_vcnt =3D bip_src->bip_vcnt;
+>         bip->bip_iter =3D bip_src->bip_iter;
+> +       bip->bip_flags =3D bip_src->bip_flags;
+>=20
 >         return 0;
-> @@ -2957,27 +2954,18 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
->         if (!mrioc->pel_abort_cmd.reply)
->                 goto out_failed;
->
-> -       mrioc->dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
-> -       if (mrioc->facts.max_devhandle % 8)
-> -               mrioc->dev_handle_bitmap_sz++;
-> -       mrioc->removepend_bitmap = kzalloc(mrioc->dev_handle_bitmap_sz,
-> -           GFP_KERNEL);
-> +       mrioc->dev_handle_bitmap_bits = mrioc->facts.max_devhandle;
-> +       mrioc->removepend_bitmap = bitmap_zalloc(mrioc->dev_handle_bitmap_bits,
-> +                                                GFP_KERNEL);
->         if (!mrioc->removepend_bitmap)
->                 goto out_failed;
->
-> -       mrioc->devrem_bitmap_sz = MPI3MR_NUM_DEVRMCMD / 8;
-> -       if (MPI3MR_NUM_DEVRMCMD % 8)
-> -               mrioc->devrem_bitmap_sz++;
-> -       mrioc->devrem_bitmap = kzalloc(mrioc->devrem_bitmap_sz,
-> -           GFP_KERNEL);
-> +       mrioc->devrem_bitmap = bitmap_zalloc(MPI3MR_NUM_DEVRMCMD, GFP_KERNEL);
->         if (!mrioc->devrem_bitmap)
->                 goto out_failed;
->
-> -       mrioc->evtack_cmds_bitmap_sz = MPI3MR_NUM_EVTACKCMD / 8;
-> -       if (MPI3MR_NUM_EVTACKCMD % 8)
-> -               mrioc->evtack_cmds_bitmap_sz++;
-> -       mrioc->evtack_cmds_bitmap = kzalloc(mrioc->evtack_cmds_bitmap_sz,
-> -           GFP_KERNEL);
-> +       mrioc->evtack_cmds_bitmap = bitmap_zalloc(MPI3MR_NUM_EVTACKCMD,
-> +                                                 GFP_KERNEL);
->         if (!mrioc->evtack_cmds_bitmap)
->                 goto out_failed;
->
-> @@ -3415,10 +3403,7 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
->                 if (!mrioc->chain_sgl_list[i].addr)
->                         goto out_failed;
->         }
-> -       mrioc->chain_bitmap_sz = num_chains / 8;
-> -       if (num_chains % 8)
-> -               mrioc->chain_bitmap_sz++;
-> -       mrioc->chain_bitmap = kzalloc(mrioc->chain_bitmap_sz, GFP_KERNEL);
-> +       mrioc->chain_bitmap = bitmap_zalloc(num_chains, GFP_KERNEL);
->         if (!mrioc->chain_bitmap)
->                 goto out_failed;
->         return retval;
-> @@ -4189,10 +4174,11 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
->                 for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++)
->                         memset(mrioc->evtack_cmds[i].reply, 0,
->                             sizeof(*mrioc->evtack_cmds[i].reply));
-> -               memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
-> -               memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
-> -               memset(mrioc->evtack_cmds_bitmap, 0,
-> -                   mrioc->evtack_cmds_bitmap_sz);
-> +               bitmap_clear(mrioc->removepend_bitmap, 0,
-> +                            mrioc->dev_handle_bitmap_bits);
-> +               bitmap_clear(mrioc->devrem_bitmap, 0, MPI3MR_NUM_DEVRMCMD);
-> +               bitmap_clear(mrioc->evtack_cmds_bitmap, 0,
-> +                            MPI3MR_NUM_EVTACKCMD);
->         }
->
->         for (i = 0; i < mrioc->num_queues; i++) {
-> @@ -4318,16 +4304,16 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
->                 mrioc->evtack_cmds[i].reply = NULL;
->         }
->
-> -       kfree(mrioc->removepend_bitmap);
-> +       bitmap_free(mrioc->removepend_bitmap);
->         mrioc->removepend_bitmap = NULL;
->
-> -       kfree(mrioc->devrem_bitmap);
-> +       bitmap_free(mrioc->devrem_bitmap);
->         mrioc->devrem_bitmap = NULL;
->
-> -       kfree(mrioc->evtack_cmds_bitmap);
-> +       bitmap_free(mrioc->evtack_cmds_bitmap);
->         mrioc->evtack_cmds_bitmap = NULL;
->
-> -       kfree(mrioc->chain_bitmap);
-> +       bitmap_free(mrioc->chain_bitmap);
->         mrioc->chain_bitmap = NULL;
->
->         kfree(mrioc->transport_cmds.reply);
-> @@ -4886,9 +4872,10 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
->
->         mpi3mr_flush_delayed_cmd_lists(mrioc);
->         mpi3mr_flush_drv_cmds(mrioc);
-> -       memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
-> -       memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
-> -       memset(mrioc->evtack_cmds_bitmap, 0, mrioc->evtack_cmds_bitmap_sz);
-> +       bitmap_clear(mrioc->devrem_bitmap, 0, MPI3MR_NUM_DEVRMCMD);
-> +       bitmap_clear(mrioc->removepend_bitmap, 0,
-> +                    mrioc->dev_handle_bitmap_bits);
-> +       bitmap_clear(mrioc->evtack_cmds_bitmap, 0, MPI3MR_NUM_EVTACKCMD);
->         mpi3mr_flush_host_io(mrioc);
->         mpi3mr_cleanup_fwevt_list(mrioc);
->         mpi3mr_invalidate_devhandles(mrioc);
-> --
-> 2.38.1
->
+>  }
+> ----------------<code>---------------
+>=20
+> ------------------<BUG_ON>--------------
+> [  751.838432] kernel BUG at mm/slub.c:435!
+> [  751.838440] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+> [  751.838443] CPU: 49 PID: 981 Comm: kworker/49:1H Kdump: loaded Not
+> tainted 6.2.0-rc1+ #14
+> [  751.838447] Hardware name: Dell Inc. PowerEdge R7525/0590KW, BIOS
+> 2.5.6 10/06/2021
+> [  751.838448] Workqueue: kintegrityd bio_integrity_verify_fn
+> [  751.838458] RIP: 0010:__slab_free+0x1ae/0x300
+> [  751.838467] Code: 4c 89 e6 48 89 ef 5d 41 5c 41 5d 41 5e 41 5f e9 d8 f=
+b ff ff
+> 48 83 c4 60 4c 89 f7 5b 5d 41 5c 41 5d 41 5e 41 5f e9 62 3b 00 00 <0f> 0b=
+ 80 4c 24
+> 4b 80 e9 ea fe ff ff 4c 89 fa 4d 89 d7 4c 8b 54 24
+> [  751.838469] RSP: 0018:ffffbb674fcf7dd0 EFLAGS: 00010246
+> [  751.838472] RAX: ffff9c320d3546e0 RBX: ffff9c325302e480 RCX:
+> 000000008040003f
+> [  751.838473] RDX: ffffffc10e1546c0 RSI: ffffdfb30434d500 RDI:
+> ffff9c3200042500
+> [  751.838475] RBP: ffff9c3200042500 R08: 0000000000000001 R09:
+> ffffffffb4fbf08a
+> [  751.838476] R10: ffffbb674fcf7ca0 R11: ffffffffb65e4ac8 R12:
+> ffffdfb30434d500
+> [  751.838477] R13: ffff9c320d3546c0 R14: ffff9c320d3546c0 R15:
+> ffff9c320d3546c0
+> [  751.838479] FS:  0000000000000000(0000) GS:ffff9c70ff840000(0000)
+> knlGS:0000000000000000
+> [  751.838481] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  751.838482] CR2: 00007fe84efedb00 CR3: 000000015472a000 CR4:
+> 0000000000350ee0
+> [  751.838484] Call Trace:
+> [  751.838485]  <TASK>
+> [  751.838487]  ? bio_integrity_process+0x14f/0x1c0
+> [  751.838494]  ? __pfx_t10_pi_type1_verify_ip+0x10/0x10 [t10_pi]
+> [  751.838501]  bio_integrity_free+0xaa/0xb0
+> [  751.838504]  bio_integrity_verify_fn+0x40/0x50
+> [  751.838507]  process_one_work+0x1e5/0x3b0
+> [  751.838513]  ? __pfx_worker_thread+0x10/0x10
+> [  751.838515]  worker_thread+0x50/0x3a0
+> [  751.838518]  ? __pfx_worker_thread+0x10/0x10
+> [  751.838520]  kthread+0xd9/0x100
+> [  751.838525]  ? __pfx_kthread+0x10/0x10
+> [  751.838528]  ret_from_fork+0x2c/0x50
+> [  751.838535]  </TASK>
+> ----------------------<BUG_ON>---------------
+>=20
+> Queries
+> 1) Is there a specific reason for not copying the bip_flags in
+> bio_integrity_clone function?
+> 2) If bip_flags needs to be copied then is there something else needs to =
+be
+> done that will take care of BUG_ON?
+> 3) if not, then what should be right solution for fix an IO error because=
+ of
+> SCSI_PROT_IP_CHECKSUM flag not set.
+>=20
+>=20
+> Thanks,
+> ~Saurav
 
--- 
-This electronic communication and the information and any files transmitted 
-with it, or attached to it, are confidential and are intended solely for 
-the use of the individual or entity to whom it is addressed and may contain 
-information that is confidential, legally privileged, protected by privacy 
-laws, or otherwise restricted from disclosure to anyone else. If you are 
-not the intended recipient or the person responsible for delivering the 
-e-mail to the intended recipient, you are hereby notified that any use, 
-copying, distributing, dissemination, forwarding, printing, or copying of 
-this e-mail is strictly prohibited. If you received this e-mail in error, 
-please return the e-mail to the sender, delete it from your computer, and 
-destroy any printed copy of it.
-
---00000000000040539b05f4a2d577
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-v82E+npLwqC8bSHh1m6BJewfpawx72uKM9aFs6SVpLPtN6a5369OCwVeEwkk2FeFU9tZXWBnI4Wu
-d1Q4a3vhOColD6PdTWv74Ez2I3ahCkmpeEQ1YMt61TUH3W8NUJJeYN2xkR6OGsA1AgMBAAGjggHc
-MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
-Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
-MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
-b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
-dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
-MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
-DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
-VyBc/F5XGkYNCP9Rb96mru8lU4AwDQYJKoZIhvcNAQELBQADggEBACiysbqj0ggjcc9uzOpBkt1Q
-nGtvHhd9pbNmshJRUoNL11pQEzupSsUkDoAa6hPrOaJVobIO+yC84D4GXQc13Jk0QZQhRJJRYLwk
-vdq704JPh4ULIwofTWqwsiZ1OvINzX9h9KEw/+h+Mc3YUCO7tvKBGLJTUaUhrjxyjLQdEK1Xp/8B
-kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
-jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
-8wQJuWG84jqd/9wxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
-aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBmzxEYG
-Z3nMoJtaJQVo9rF01T13usStiP1NRfiBTL+aMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMDIxNDA2MTEyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
-CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA+qXtU/PMhe7zjPt/Z4KVF7KeZ
-yMH0CmS1TfYyAZn5byVlklmv8GimBsvAheIzcPE35qD7jww4UptNmLxBX+OxzoXqVXFgUgWr0bZ8
-FwKpjwr3E6IRSD/w3aU48thmfCJ52JkkWOcum1IDmCgLOkJUe1SLwgKggTOTr7u19yThDoNb8qL1
-vFXVhDiByTxxq5C1PkF2SuacsJtl5bhtu8L5c7hjz4XmeZLLW2wrSHbHQuKJCBnG7VLIe3637QNG
-y6+glL0Z4jMm9vX8z6bU9WQNN9JZ8TPtNRXLXAfSZSb9nBPmPdb54osqkS17z70Dieqhs0CACACR
-7xVyoAv9Mde6
---00000000000040539b05f4a2d577--
