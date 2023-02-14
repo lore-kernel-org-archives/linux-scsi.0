@@ -2,55 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3726C61DA4
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 12:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACBE8C64EC7
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 12:46:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbjBNMGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Feb 2023 07:06:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34370 "EHLO
+        id S232128AbjBNMq2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Feb 2023 07:46:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229661AbjBNMGw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 07:06:52 -0500
-Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36BAD6188
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2023 04:06:51 -0800 (PST)
-Received: by mail-wr1-x42e.google.com with SMTP id co8so11649010wrb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2023 04:06:51 -0800 (PST)
+        with ESMTP id S231827AbjBNMqZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 07:46:25 -0500
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C94B227B1
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2023 04:46:22 -0800 (PST)
+Received: by mail-wr1-x42f.google.com with SMTP id y1so15525956wru.2
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2023 04:46:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8dTuoqSN3nUDDHUnixCG2GlQIWQEKens+Uo3RsvB8jE=;
-        b=q9h33ThpgiMyYvC2n+ERo8vzFNnzZfEGcIoRHB+lMy8eyajiSNpr5wAiHMT0OjuOnj
-         ATvlfkUN1Igmqv7DCdml7Gqb26JIBMmp7B4/zvGIslPLMc2vLWVE5rwuygpoLkVuB6dB
-         Rh97wAQbE2l6ZIJLcbBtJfeNpHl5pJkzuMeyTNJVDsymwwxJpGqHFeucOxiPwedWUX8c
-         rR1on4AC+rI1SY+dtjoHrO/XtwcfqlMH5lQ4ZjSleA1bYhZ127dA8K4k/y2Jtdn7SDpA
-         6AdWOPVqXQhsFO9c2xSS35nQmSjhim3BvD3ts39iwEhcmsOM0yl5Pi/GCSmkh8ZCpuDl
-         IHNQ==
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IxmK5g1abaNwwSCB60QD2b4u2X8cfC3SrJxt6nIz5VM=;
+        b=fyX7C6luQjo3Uvrx/Hg6E2vN53n7Qd3dRNOi67CoqqpE3BkCwMDs04ZHs3zvutJ7Ww
+         hnbAY7GDIzg+2bYuGlXPBPP2C8jF30pSbdhwr+JR1/Lmqka3s2TmSg59WgDScG8sXAgR
+         WHBGa3g0iiswVQ/n8eQnJcDEnQ3H3Cw6afjGN6ACVHuUo5rqWUNSipK7OPo3IfRRhhs4
+         7qxaFZo/oRvfq0Epg7ZzXRNOfH1oob+cwURWBFElv4Sslb18q+MMEeB5qn2ArTKzkW19
+         lSKFAIYm9IVyJWb5qpLfQmZ7Tgs26iMR0cNqIFrd26h7gbLV5ucsHC1g0MLhnA92PjR2
+         0Tkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8dTuoqSN3nUDDHUnixCG2GlQIWQEKens+Uo3RsvB8jE=;
-        b=ylkRmPJW7tBP3JWcSQ3bP9o0GDoW6Tgj9aCaKsv/6Si/V88ojA1AmLLytbxrqN8PSJ
-         1RbSrGwl9WJ1Eiu6y1a39FVL/FOh6v40v1hoWlPOlfNXkjF4c8AiIl5IlEGgHL4wLp5d
-         U6f9ViaBggxpUs5jsMBmkoeB9PV8UU3mPcqemUgNQNaZ54CJqMA6m2V83s/GcktE1nmT
-         eeI8B414RTf2u7pRZrLwscnvLBlGOGX2bG+5sJx7evCeZESCNY2BFbs28tFH2I+AIGG2
-         ulW2atI5JTBJry6jKFy864yIF/fYUHNM19pUVrZ9crUVCpaQCN3zDeY/3FawSdSOyqhs
-         +nRQ==
-X-Gm-Message-State: AO0yUKXw6Dl4L9qekgi8jZ5iL+harUQ+F/XhmlRuSzIRNw2KXSeiZEj7
-        SQsvo43BlbJmLRAajBf7/65TOA==
-X-Google-Smtp-Source: AK7set/yJWOH5/Bmi1HyNWbYN6j+KyNu4iEr6LIugfGebQGZt8mZBxo1n7ylPuqzgjj23iLLvZnBIA==
-X-Received: by 2002:a5d:4006:0:b0:2c5:4ccc:a770 with SMTP id n6-20020a5d4006000000b002c54ccca770mr2077419wrp.7.1676376409738;
-        Tue, 14 Feb 2023 04:06:49 -0800 (PST)
-Received: from linaro.org ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id q9-20020a5d6589000000b002c559405a1csm4632273wru.20.2023.02.14.04.06.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Feb 2023 04:06:49 -0800 (PST)
-Date:   Tue, 14 Feb 2023 14:06:47 +0200
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IxmK5g1abaNwwSCB60QD2b4u2X8cfC3SrJxt6nIz5VM=;
+        b=jYDTj4uPSoTMKho3+8K2Z0eqkBQkDxFliEPvRigyJZMQvLjlwROJoSbBx7gWVz9g0s
+         CZfFTB6BuMpV3TDZfELnjIB7z6dZWNozXH2BzNE+k43ZhMexySueBbojKE5Diu6loLur
+         pJ/OEt2Q3rzu8SWfcbPCSX6ik+uJWGsO9m5Ce1t/HEGg2kQgopWvAkdYU58WBVW9HGZU
+         p8ZKTcLEQ3u5hxaZaQ0reU5WazjERGpLhfO5gtxlKJAxaLqEyIji6aTqMMrJ8Sf6gcHx
+         uFWRRadEQIuJDi300mYho7fSp2atiN21Poq2ktus3iCfn3Yka+fBzMj7aXpevNcS+GVn
+         eb9Q==
+X-Gm-Message-State: AO0yUKWzONSwrgFua3IkM3u/C9V2/VOmQoezbpqkTQru0KL70T+U+XJd
+        EPooAIX41D9u6QJ96ez0Y0tPPA==
+X-Google-Smtp-Source: AK7set8uGuMmyPwBMv604nXIvOjsb38cjXsq1318Ci8WaLUfENk4gIVSrHsTU7/f/fFYoYKYyjRzzg==
+X-Received: by 2002:a5d:6949:0:b0:2c5:5fe2:bcf3 with SMTP id r9-20020a5d6949000000b002c55fe2bcf3mr2140103wrw.28.1676378780835;
+        Tue, 14 Feb 2023 04:46:20 -0800 (PST)
+Received: from [192.168.1.109] ([178.197.216.144])
+        by smtp.gmail.com with ESMTPSA id j16-20020adfff90000000b002c55efa9cbesm3488528wrr.39.2023.02.14.04.46.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Feb 2023 04:46:20 -0800 (PST)
+Message-ID: <0df35d66-d5c8-aa71-af14-d9550aa4f1e8@linaro.org>
+Date:   Tue, 14 Feb 2023 13:46:18 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [RFC PATCH 1/5] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
+ dedicated driver
+Content-Language: en-US
+To:     Abel Vesa <abel.vesa@linaro.org>, Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -64,65 +71,27 @@ To:     Andy Gross <agross@kernel.org>,
 Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH 0/5] Add dedicated Qcom ICE driver
-Message-ID: <Y+t5V1Uu702JplW1@linaro.org>
 References: <20230214120253.1098426-1-abel.vesa@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230214120253.1098426-1-abel.vesa@linaro.org>
+ <20230214120253.1098426-2-abel.vesa@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230214120253.1098426-2-abel.vesa@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23-02-14 14:02:48, Abel Vesa wrote:
-> As both SDCC and UFS drivers use the ICE with duplicated implementation,
-> while none of the currently supported platforms make use concomitantly
-> of the ICE IP block, the new SM8550 allows both UFS and SDCC to do so.
-> In order to support such scenario, there is a need for a unified
-> implementation and a devicetree node to be shared between both types
-> of storage devices. So lets drop the duplicate implementation of the ICE
-> from both SDCC and UFS and make it a dedicated (soc) driver.
-> 
-> This RFC should be treated as work-in-progress. Initially, its goal is
-> to figure out what is the most agreeable implementation for both types
-> of storage. Note that currently, only one ICE instance is supported
-> (like the existing HW suggests) and it is laking refcounting and locking
-> of any sort. Also missing bindings schema file for now.
-> 
-> Any suggestions are welcome at this point, including the location of
-> such a new driver.
+On 14/02/2023 13:02, Abel Vesa wrote:
+> This takes the already existing duplicated support in both ufs-qcom
+> and sdhci-msm drivers and makes it a dedicated driver that can be used
+> by both mentioned drivers. The reason for this is because, staring with
+> SM8550, the ICE IP block is shared between UFS and SDCC, which means we
+> need to probe a dedicated device and share it between those two
+> consumers. So let's add the ICE dedicated driver as a soc driver.
 
-Forgot to mention here that I only managed to test the UFS on SM8450
-HDK. Though functionally nothing should be impacted, I intend to test
-the SDCC on SDM630 soon.
+To clarify - missing binding, thus NAK for the patch going with out it.
+It's not a NAK of course for the code itself.
 
-The devicetree sdm630 patch is here for proof-of-concept, mainly.
+Best regards,
+Krzysztof
 
-> 
-> Abel Vesa (5):
->   soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
->   arm64: dts: qcom: sm8450: Add the Inline Crypto Engine node
->   arm64: dts: qcom: sdm630: Add the Inline Crypto Engine node
->   scsi: ufs: ufs-qcom: Switch to the new ICE API
->   mmc: sdhci-msm: Switch to the new ICE API
-> 
->  arch/arm64/boot/dts/qcom/sdm630.dtsi          |  18 +-
->  arch/arm64/boot/dts/qcom/sm8450-hdk.dts       |   4 +
->  arch/arm64/boot/dts/qcom/sm8450.dtsi          |  24 +-
->  drivers/mmc/host/sdhci-msm.c                  | 252 ++----------------
->  drivers/soc/qcom/Kconfig                      |  10 +
->  drivers/soc/qcom/Makefile                     |   1 +
->  .../ufs-qcom-ice.c => soc/qcom/qcom-ice.c}    | 247 +++++++++++------
->  drivers/ufs/host/Kconfig                      |   1 -
->  drivers/ufs/host/Makefile                     |   1 -
->  drivers/ufs/host/ufs-qcom.c                   |  42 ++-
->  drivers/ufs/host/ufs-qcom.h                   |  32 +--
->  include/soc/qcom/ice.h                        |  61 +++++
->  12 files changed, 326 insertions(+), 367 deletions(-)
->  rename drivers/{ufs/host/ufs-qcom-ice.c => soc/qcom/qcom-ice.c} (50%)
->  create mode 100644 include/soc/qcom/ice.h
-> 
-> -- 
-> 2.34.1
-> 
