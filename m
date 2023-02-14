@@ -2,116 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A491DC61DA4
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 17:52:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE065C05027
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 18:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233125AbjBNRwI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Feb 2023 12:52:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51132 "EHLO
+        id S232342AbjBNSoB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Feb 2023 13:44:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230327AbjBNRwH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 12:52:07 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A75828234;
-        Tue, 14 Feb 2023 09:52:03 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31E8tEua027654;
-        Tue, 14 Feb 2023 17:51:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=ZYHZ4ckjyGD5Yz0B1eMhHGI9Jd6vVkao9w1IpBrLy4E=;
- b=YNwuMBeMkdlqPajEujadxbWkrmDIzxsf27wV4bB0N6PlVY0x8pdgj/HDj+MWb1URoec9
- UlXTj3lDJAzq1Vh2mZyVLkecw3Uhe88k7q/2WpSJlA6Z9HzabBQ+/BzKOgxUL1XQqkzC
- DKh+f65GTvpAYBXWm+iGIcA/CXAm8EYY9JVL6IkSlxqqc9bXgppSj4bnZwnKkvwxjvXI
- gGuSBU74n4BR5l7Z6xhXrFM9GkBX65PQkYi9gA2GXfAnXYWb7aVFIdqdkEpHYzAdOrxi
- XCQiYcVnb4zQOlAcZlTqMMo41AlM8oKR7cSb/RuqBNpDoFmNDFUbdJ2ciVG8gRhjo3n2 Bg== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nr6qkhgaw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Feb 2023 17:51:46 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31EHpjSI010658
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Feb 2023 17:51:45 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 14 Feb 2023 09:51:44 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
-        <beanhuo@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 1/1] ufs: mcq: fix incorrectly set queue depth
-Date:   Tue, 14 Feb 2023 09:50:25 -0800
-Message-ID: <da085383bec5c08bf34220ec6cc577f7a1b49ba8.1676396928.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S232171AbjBNSoA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 13:44:00 -0500
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8CB725B98;
+        Tue, 14 Feb 2023 10:43:52 -0800 (PST)
+Received: by mail-pl1-f182.google.com with SMTP id e17so9089739plg.12;
+        Tue, 14 Feb 2023 10:43:52 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Vipa2lJ5FT7JsHiDDZpGRZNIifAiXJtbYAtHZhQihSw=;
+        b=6xxHqDqMX5DX7UPVxa/HqCCRQ+k7mr8R7yH9X1ybF44p04Km/5Ry6LEXSWY1qdWsbF
+         RsjpBkG1UtizLe01nOkeEWlDdbXzsW26VrwIbe+O+STD2HE/8tSQhMulkqf8DjW90mI5
+         e0ExSjM1wI78KNCX9QkX69fUIjTmzJB8HFEH4b+QWwuISSGz9b8xaV4Vqv6u98XLaiCV
+         tvNfFVwJ87DkDrndBquJSzvSlLgKNS6idU84ERKTy7a+vvZCAIHiLlgcDwFVz5dsdsbS
+         iewjdRBKlB2oTMniknFOYIA1HjnDmMFznLeurS32YY3l0Qx6n2u5uVdUBG8BuJRGvyds
+         rZug==
+X-Gm-Message-State: AO0yUKXNGTHeCfK/YqxPfB5776YnTnR7lTkjcR+Z+5Jz7ZisFW1nhJMT
+        Tscm7vzcelBxOm48LEMx5aYAJuG9KG8=
+X-Google-Smtp-Source: AK7set8I5Edv9zXPABxlpNhkDJUw47owri0Uzj636u60oH5e0qN99rPmX/VE5dj9mF41tt9dUYeV8w==
+X-Received: by 2002:a17:90b:1b09:b0:233:d3ac:5dc2 with SMTP id nu9-20020a17090b1b0900b00233d3ac5dc2mr3591827pjb.18.1676400232022;
+        Tue, 14 Feb 2023 10:43:52 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:bba:95f6:e675:40bc? ([2620:15c:211:201:bba:95f6:e675:40bc])
+        by smtp.gmail.com with ESMTPSA id gt1-20020a17090af2c100b00233c727510csm6036780pjb.40.2023.02.14.10.43.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Feb 2023 10:43:51 -0800 (PST)
+Message-ID: <f4079ecb-f483-34f9-0074-b77a9bd36cb6@acm.org>
+Date:   Tue, 14 Feb 2023 10:43:49 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 0p7jTAV8lW10qSLCX2xzxsOclg6UpE41
-X-Proofpoint-ORIG-GUID: 0p7jTAV8lW10qSLCX2xzxsOclg6UpE41
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
- definitions=2023-02-14_13,2023-02-14_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- clxscore=1011 bulkscore=0 impostorscore=0 suspectscore=0
- lowpriorityscore=0 spamscore=0 priorityscore=1501 mlxscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302140153
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [bug report] WARNING at fs/proc/generic.c:376
+ proc_register+0x131/0x1c0 observed with blktests scsi
+Content-Language: en-US
+To:     Yi Zhang <yi.zhang@redhat.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>
+References: <CAHj4cs-jef8f4zxJQxjKirAWyZkTREycFdNPvQaGbgS-1r_Lcg@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAHj4cs-jef8f4zxJQxjKirAWyZkTREycFdNPvQaGbgS-1r_Lcg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufshcd_config_mcq() may change the can_queue value.
-The current code invokes scsi_add_host() before ufshcd_config_mcq().
-So the tags are limited to the old can_queue value.
+On 2/5/23 23:30, Yi Zhang wrote:
+> blktests scsi/ failed on the latest linux-block/for-next, pls help
+> check it, thanks.
 
-Fix this by invoking scsi_add_host() after ufshcd_config_mcq().
+Please help with testing and/or reviewing the candidate fix that I 
+posted 
+(https://lore.kernel.org/linux-scsi/20230210205200.36973-1-bvanassche@acm.org/).
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Thanks,
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3b3cf78..04e42b2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8535,6 +8535,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
- 				use_mcq_mode = false;
- 				dev_err(hba->dev, "MCQ mode is disabled, err=%d\n",
- 					 ret);
-+			} else {
-+				ufshcd_config_mcq(hba);
- 			}
- 			ret = scsi_add_host(host, hba->dev);
- 			if (ret) {
-@@ -8542,10 +8544,10 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
- 				return ret;
- 			}
- 			hba->scsi_host_added = true;
--		}
--		/* MCQ may be disabled if ufshcd_alloc_mcq() fails */
--		if (is_mcq_supported(hba) && use_mcq_mode)
-+		} else if (is_mcq_supported(hba)) {
-+			/* UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH is set */
- 			ufshcd_config_mcq(hba);
-+		}
- 	}
- 
- 	ufshcd_tune_unipro_params(hba);
--- 
-2.7.4
+Bart.
 
