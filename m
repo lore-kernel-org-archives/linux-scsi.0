@@ -2,60 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAB1C64ED8
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 16:57:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EB46C64ED6
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 16:58:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231236AbjBNQ55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Feb 2023 11:57:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49248 "EHLO
+        id S232797AbjBNQ57 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Feb 2023 11:57:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231915AbjBNQ5w (ORCPT
+        with ESMTP id S232735AbjBNQ5w (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 11:57:52 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EBDA4C13;
-        Tue, 14 Feb 2023 08:57:50 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31EGXjMM027860;
-        Tue, 14 Feb 2023 16:57:43 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2B815BB3;
+        Tue, 14 Feb 2023 08:57:51 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31EGXnJi018990;
+        Tue, 14 Feb 2023 16:57:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=bHqikatdcLQwXjMkflGAbLzKKRERd6UuScGkCHBgt+o=;
- b=FhsxhAS9Zt75S+gm6VoNwJJR3GkvJSQJLZ/jcwHUMUJMbM6SMBZibeM9QDuCkZNDAfzf
- +NL1I1paMrJV/PNgQZEzDYjymxMUV99m4JplXgxDIuBhgwAZi9UqKHhaWAWKk7T15GLZ
- /k6H00FLaGR+iP+8vkx2pONOkxx8Lhh2/MwHMKQv9RA9ym/9AY9YVYmNJ0DBt8OMLydr
- gSTmI3zCa2AzQnMO+c/UDU33EX72kFXpE26bSweo2fWboZMsRwuZOLhWQWwr1EoqwPr3
- qmHyvw85hhwaqYgCxW/2hkkqblEC6rrNlLvMUIA6mmTL73kfunHXy9foDzSmFAVrq2Yr LA== 
+ bh=dz81OhsNO6aG2TXXZVXYeGU00TuEu+Wx+1CJuDXwkc0=;
+ b=lojJrtpfrq3UMSWB+ypaBVRgGsKQhZ+me8O/jwd6k8FAOGX+MD8K7PZPEJoOengEDC9N
+ Qn/UUTy2+IU52B35vbkUgrl08zcUSW5VLfqxefC2eSMGlPQSWJO/1JaxF3ZASIeO1cYX
+ V7j4zzcH0KA/Oc7+pM6Bwi5z65+ozCaJbYQMGDuESNLTp1hu5Z8LKwrbVIwxrKyDf4DD
+ JIFCtlYoLuhzB6r5Qj8KBT+0hxfoBsw8bMhz43Ql+Q4wyKQQDlL7fWzhIkNYjKzLzVJD
+ oIXQEdaKrxKrkL+eOW7RJHqXaU9AXK9YR2j2U9sdFkvAhOYht1EaqaIo5rQiZOB+pRuc 5g== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3np2mtdxta-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3np1t3dxmh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Feb 2023 16:57:43 +0000
+        Tue, 14 Feb 2023 16:57:42 +0000
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31EGsv7Z009635;
-        Tue, 14 Feb 2023 16:57:42 GMT
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31EGr8Bd009572;
+        Tue, 14 Feb 2023 16:57:41 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3np1f5uuh1-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3np1f5uuft-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Feb 2023 16:57:42 +0000
+        Tue, 14 Feb 2023 16:57:41 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31EGuHoj039739;
-        Tue, 14 Feb 2023 16:57:42 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31EGuHob039739;
+        Tue, 14 Feb 2023 16:57:40 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3np1f5uuff-5;
-        Tue, 14 Feb 2023 16:57:42 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3np1f5uuff-1;
+        Tue, 14 Feb 2023 16:57:40 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     njavali@marvell.com,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     Manivannan Sadhasivam <mani@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Abel Vesa <abel.vesa@linaro.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Remove the unused variable wwn
-Date:   Tue, 14 Feb 2023 11:57:31 -0500
-Message-Id: <167639371125.486235.13464202684241083189.b4-ty@oracle.com>
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 0/2] ufs: host: ufs-qcom: Add support for SM8550
+Date:   Tue, 14 Feb 2023 11:57:27 -0500
+Message-Id: <167639371072.486235.1047022414059999681.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230207052234.24535-1-jiapeng.chong@linux.alibaba.com>
-References: <20230207052234.24535-1-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <20230119151406.4168685-1-abel.vesa@linaro.org>
+References: <20230119151406.4168685-1-abel.vesa@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -63,27 +72,37 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
  definitions=2023-02-14_11,2023-02-14_01,2023-02-09_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- suspectscore=0 mlxscore=0 spamscore=0 mlxlogscore=845 adultscore=0
+ suspectscore=0 mlxscore=0 spamscore=0 mlxlogscore=854 adultscore=0
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2302140144
-X-Proofpoint-GUID: ZoULYWGZVdV3ncI_flRZYpchLjX6Os2B
-X-Proofpoint-ORIG-GUID: ZoULYWGZVdV3ncI_flRZYpchLjX6Os2B
+X-Proofpoint-GUID: r0qb58Ac7h194BwyVh0X3fL_401ZDmc5
+X-Proofpoint-ORIG-GUID: r0qb58Ac7h194BwyVh0X3fL_401ZDmc5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 07 Feb 2023 13:22:34 +0800, Jiapeng Chong wrote:
+On Thu, 19 Jan 2023 17:14:04 +0200, Abel Vesa wrote:
 
-> Variable wwn is not effectively used, so delete it.
+> This patchset adds UFS HC support for the new Qualcomm SM8550 SoC.
 > 
-> drivers/scsi/qla2xxx/qla_init.c:1657:6: warning: variable 'wwn' set but not used.
+> The v1 was here:
+> https://lore.kernel.org/all/20221116121732.2731448-1-abel.vesa@linaro.org/
 > 
+> Changes since v1:
+>  * replaced REG_UFS_PA_LINK_STARTUP_TIMER with REG_UFS_CFG0 and added a
+>    comment saying that the older version use the first name as reg name
+>  * moved QUNIPRO_G4_SEL in a separate section dedicated to CFG0 bits
+>  * forces the update_link_startup_timer condition to be skipped in case
+>    of HW version 5.x
 > 
+> [...]
 
 Applied to 6.3/scsi-queue, thanks!
 
-[1/1] scsi: qla2xxx: Remove the unused variable wwn
-      https://git.kernel.org/mkp/scsi/c/d48a62381a73
+[1/2] scsi: ufs: ufs-qcom: Clear qunipro_g4_sel for HW version major 5
+      https://git.kernel.org/mkp/scsi/c/9c02aa24bf40
+[2/2] dt-bindings: ufs: qcom: Add SM8550 compatible string
+      https://git.kernel.org/mkp/scsi/c/b8c203891121
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
