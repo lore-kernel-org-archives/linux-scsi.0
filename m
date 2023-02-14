@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D29C61DA4
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 06:09:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 289BBC61DA4
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Feb 2023 06:09:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229632AbjBNGJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Feb 2023 01:09:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40762 "EHLO
+        id S229648AbjBNGJx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Feb 2023 01:09:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231360AbjBNGJO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 01:09:14 -0500
-Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 323E51D901
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:08:59 -0800 (PST)
-Received: by mail-qt1-x835.google.com with SMTP id w3so16461669qts.7
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:08:59 -0800 (PST)
+        with ESMTP id S229632AbjBNGJv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2023 01:09:51 -0500
+Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 760636A5F
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:09:50 -0800 (PST)
+Received: by mail-qt1-x834.google.com with SMTP id z5so16451331qtn.8
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2023 22:09:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=xfZMVES2NNic9Jkjf3HEK2MlWoMjoBiu+bgEGDURcO0=;
-        b=Dq1eOe6A2qvbORsBM0fzDh9V7Sy4doNScZ2zhhqYjoYK5sxugpq29ongwCpA2q3KLf
-         H6Tqj3yU7HFb/Vq3rjRtbEo/ThiO93SKqFIYakKJ8cgT+oB5Op0Wtnp3LfczywxA4IE/
-         62qR9awqkWlKZVCyYqXQ2JKOAUZ4+HyBtxozg=
+        bh=P5r5n8sG5JaXTDE0o2d1fcImJEGd50RHxrwyTWI5B/c=;
+        b=YFoRIaOoTUUV++RpSIXqrk2/jZtzjwh4MARDyZYPEfT16B8yICz5b8PuSYorNPz9kZ
+         inkSG/SPqYUrDCkHUFmErQuYavQcA/ex0+EMUvj3OF1xd0GxagCnwyelbTUnOj6Ema05
+         gLIrBHigabydnn9wTm56SAUVGnvb1iPMn8Ewo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=xfZMVES2NNic9Jkjf3HEK2MlWoMjoBiu+bgEGDURcO0=;
-        b=jmH7AC0EecKUONHgmSzTLv/+9zrzHFth9KVgDrFC9y43z7DSmzxzGJHGEE6XjoYCRS
-         5/0AEC/NhaX5wiJyYfw81MhBqM9bEmTiCF97rIjTXipEPYkNcS4hK1SJB1zJ1Rc5KnRY
-         NQ2Ef7S4VDPqgGa5v+MU9335+YynfrJOZ/p4WbEzzyFHMCCyHvJQL/PlWJ0vtPlppNA6
-         SFsFgnrjXAwHdQHzDo+reMRUsj7hWFFjMYhtJ1u1sTQ8EqFe0CPGOoRXOqKDGNomK5r/
-         mT6sBfy1joccxDTM1a0KEtYJ695MKyfHVFjAvZpBh3uPhh3+IaxABh1ELBYwyYNBrIX2
-         O6dw==
-X-Gm-Message-State: AO0yUKXhtYveItl48SkXxoWySOKX6M2VzMhY5xWbgGHarDiXnOF/eyAq
-        gLfv3XsKkgH1Gr8lHu2N/Tr1Sc0fTCVDrp63k4yKV1Y5NPEJyDOmgCigwgTkaNCYPrA/fnPmNFM
-        QhIn/mW8PKFYiT4mIVOU4/xQK6IH2DscAFEQ=
-X-Google-Smtp-Source: AK7set95RylQxLub6PkHdmlMXLzudxdYSsqyJTiDh9TK17Gb2e6RYaxV8m6hbf7UzGsE1jFl0CdTxg6gFOw1lJ7vV/Y=
-X-Received: by 2002:ac8:5949:0:b0:3bc:f109:83be with SMTP id
- 9-20020ac85949000000b003bcf10983bemr87733qtz.43.1676354936812; Mon, 13 Feb
- 2023 22:08:56 -0800 (PST)
+        bh=P5r5n8sG5JaXTDE0o2d1fcImJEGd50RHxrwyTWI5B/c=;
+        b=kDt+2SADY/WQpOJAkCm8zO3X/TmnsOtDsFKvtT5O61DGwPScUbu+BHtZO7j+iir11q
+         8mNSeUSjWXokvoCZPbymUz2rYouDfGP6Ol1H1o0rTiDu5tGkvkAte2b984YZd2nqDCR9
+         YEbZVC44LnTjAHw/wL5JwoiXrjvkJZCI9N0t4glORweROjOYnFEal358xq1Q7YcCoo5A
+         1ExGqPkrBEbIXKfURNU+61T77ABQ2Ie37B3WNgn7nnB9Zt798FOwgXJvechx63Wo4hiR
+         zsRM+8ikYeF1YXSNRvzYbdBHyDmW+bVGhLVTkpHCAjuv1u2yHWe0bobWN9JE8YJb1RWL
+         fMEA==
+X-Gm-Message-State: AO0yUKWFWMaDjb4hT5i8DlIJ42lTqfaNT3aTn1TXP95kuIlAZhvs81eS
+        LzPZ56EzFRTycXaxicnD21DHXQ7IMRfeig8ZmtEPDh0YTHAKlVhP/aHoiQ1VmoAEH+6zILsBxgK
+        11SOLfZdAsEQwNfyGXLBA9rYCCCY=
+X-Google-Smtp-Source: AK7set8anL+S7j5Et4SpL5dJSvENwrdBWliL0qJXz857b2708GEcWYZfiTsTerMRBAuiRaxswoFuJjurUkEcz8wYzL4=
+X-Received: by 2002:ac8:5c86:0:b0:3b8:6ca8:77a6 with SMTP id
+ r6-20020ac85c86000000b003b86ca877a6mr155798qta.123.1676354989394; Mon, 13 Feb
+ 2023 22:09:49 -0800 (PST)
 MIME-Version: 1.0
-References: <20230214005019.1897251-1-shinichiro.kawasaki@wdc.com> <20230214005019.1897251-2-shinichiro.kawasaki@wdc.com>
-In-Reply-To: <20230214005019.1897251-2-shinichiro.kawasaki@wdc.com>
+References: <20230214005019.1897251-1-shinichiro.kawasaki@wdc.com> <20230214005019.1897251-3-shinichiro.kawasaki@wdc.com>
+In-Reply-To: <20230214005019.1897251-3-shinichiro.kawasaki@wdc.com>
 From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Date:   Mon, 13 Feb 2023 23:08:39 -0700
-Message-ID: <CAFdVvOw7-t=cXj4SzNMvwBbZKYR_HYRMBy4EGCD2Btej4D4mXA@mail.gmail.com>
-Subject: Re: [PATCH v5 1/4] scsi: mpi3mr: fix issues in mpi3mr_get_all_tgt_info
+Date:   Mon, 13 Feb 2023 23:09:33 -0700
+Message-ID: <CAFdVvOw5gjvsLtuCuw-JDxOXtw-hd152r3yB_sU9=G27_ALNUA@mail.gmail.com>
+Subject: Re: [PATCH v5 2/4] scsi: mpi3mr: remove unnecessary memcpy to alltgt_info->dmi
 To:     "Shin'ichiro Kawasaki" <shinichiro.kawasaki@wdc.com>
 Cc:     linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
@@ -58,96 +58,73 @@ Cc:     linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008e223005f4a2cc1c"
+        boundary="000000000000aedd5b05f4a2cffb"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008e223005f4a2cc1c
+--000000000000aedd5b05f4a2cffb
 Content-Type: text/plain; charset="UTF-8"
 
 On Mon, Feb 13, 2023 at 5:50 PM Shin'ichiro Kawasaki
 <shinichiro.kawasaki@wdc.com> wrote:
 >
-> The function mpi3mr_get_all_tgt_info has four issues as follow.
->
-> 1) It calculates valid entry length in alltgt_info assuming the header
->    part of the struct mpi3mr_device_map_info would equal to sizeof(u32).
->    The correct size is sizeof(u64).
-> 2) When it calculates the valid entry length kern_entrylen, it excludes
->    one entry by subtracting 1 from num_devices.
-> 3) It copies num_device by calling memcpy. Substitution is enough.
-> 4) It does not specify the calculated length to sg_copy_from_buffer().
->    Instead, it specifies the payload length which is larger than the
->    alltgt_info size. It causes "BUG: KASAN: slab-out-of-bounds".
->
-> Fix the issues by using the correct header size, removing the subtract
-> from num_devices, replacing the memcpy with substitution and specifying
-> the correct length to sg_copy_from_buffer.
+> In the function mpi3mr_get_all_tgt_info, devmap_info points to
+> alltgt_info->dmi then there is no need to memcpy data from devmap_info
+> to alltgt_info->dmi. Remove the unnecessary memcpy. This also allows to
+> remove the local variable 'rval' and the goto label 'out'.
 >
 > Fixes: f5e6d5a34376 ("scsi: mpi3mr: Add support for driver commands")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 Acked-by: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-
->
 > ---
->  drivers/scsi/mpi3mr/mpi3mr_app.c | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
+>  drivers/scsi/mpi3mr/mpi3mr_app.c | 13 ++-----------
+>  1 file changed, 2 insertions(+), 11 deletions(-)
 >
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> index 9baac224b213..72054e3a26cb 100644
+> index 72054e3a26cb..bff637702397 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -312,7 +312,7 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
->                 num_devices++;
->         spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
->
-> -       if ((job->request_payload.payload_len == sizeof(u32)) ||
-> +       if ((job->request_payload.payload_len <= sizeof(u64)) ||
->                 list_empty(&mrioc->tgtdev_list)) {
->                 sg_copy_from_buffer(job->request_payload.sg_list,
->                                     job->request_payload.sg_cnt,
-> @@ -320,14 +320,14 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
->                 return 0;
+> @@ -293,7 +293,6 @@ static long mpi3mr_bsg_pel_enable(struct mpi3mr_ioc *mrioc,
+>  static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+>         struct bsg_job *job)
+>  {
+> -       long rval = -EINVAL;
+>         u16 num_devices = 0, i = 0, size;
+>         unsigned long flags;
+>         struct mpi3mr_tgt_dev *tgtdev;
+> @@ -304,7 +303,7 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+>         if (job->request_payload.payload_len < sizeof(u32)) {
+>                 dprint_bsg_err(mrioc, "%s: invalid size argument\n",
+>                     __func__);
+> -               return rval;
+> +               return -EINVAL;
 >         }
 >
-> -       kern_entrylen = (num_devices - 1) * sizeof(*devmap_info);
-> -       size = sizeof(*alltgt_info) + kern_entrylen;
-> +       kern_entrylen = num_devices * sizeof(*devmap_info);
-> +       size = sizeof(u64) + kern_entrylen;
->         alltgt_info = kzalloc(size, GFP_KERNEL);
->         if (!alltgt_info)
->                 return -ENOMEM;
->
->         devmap_info = alltgt_info->dmi;
-> -       memset((u8 *)devmap_info, 0xFF, (kern_entrylen + sizeof(*devmap_info)));
-> +       memset((u8 *)devmap_info, 0xFF, kern_entrylen);
 >         spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
->         list_for_each_entry(tgtdev, &mrioc->tgtdev_list, list) {
->                 if (i < num_devices) {
-> @@ -344,9 +344,10 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
->         num_devices = i;
->         spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
->
-> -       memcpy(&alltgt_info->num_devices, &num_devices, sizeof(num_devices));
-> +       alltgt_info->num_devices = num_devices;
->
-> -       usr_entrylen = (job->request_payload.payload_len - sizeof(u32)) / sizeof(*devmap_info);
-> +       usr_entrylen = (job->request_payload.payload_len - sizeof(u64)) /
-> +               sizeof(*devmap_info);
+> @@ -350,20 +349,12 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+>                 sizeof(*devmap_info);
 >         usr_entrylen *= sizeof(*devmap_info);
 >         min_entrylen = min(usr_entrylen, kern_entrylen);
->         if (min_entrylen && (!memcpy(&alltgt_info->dmi, devmap_info, min_entrylen))) {
-> @@ -358,7 +359,7 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+> -       if (min_entrylen && (!memcpy(&alltgt_info->dmi, devmap_info, min_entrylen))) {
+> -               dprint_bsg_err(mrioc, "%s:%d: device map info copy failed\n",
+> -                   __func__, __LINE__);
+> -               rval = -EFAULT;
+> -               goto out;
+> -       }
 >
 >         sg_copy_from_buffer(job->request_payload.sg_list,
 >                             job->request_payload.sg_cnt,
-> -                           alltgt_info, job->request_payload.payload_len);
-> +                           alltgt_info, (min_entrylen + sizeof(u64)));
->         rval = 0;
->  out:
+>                             alltgt_info, (min_entrylen + sizeof(u64)));
+> -       rval = 0;
+> -out:
 >         kfree(alltgt_info);
+> -       return rval;
+> +       return 0;
+>  }
+>  /**
+>   * mpi3mr_get_change_count - Get topology change count
 > --
 > 2.38.1
 >
@@ -165,7 +142,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---0000000000008e223005f4a2cc1c
+--000000000000aedd5b05f4a2cffb
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -236,14 +213,14 @@ kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
 jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
 8wQJuWG84jqd/9wxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOKwf2UI
-kdRdYHQ/xZfkSTOP9oDgyeTV+LKqdxQjo5xWMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMDIxNDA2MDg1N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDOQxk43
+VNpCxbbNzDXadbWvt++yNy6hETw4eCS6fFs4MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMDIxNDA2MDk0OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBQ45a+D453PlpyPfUZ9zNyz9Pv
-dbUP35JIa2BFmaRLyfGRLdfmTJGdeldcdvhnKNxM+t88M65jJXc3mGR9L4tIz1odB62U2UE0i/TQ
-m+QN0GVHpboVSIn1FV9xLQfMLI+ltOYz/Qtn1mzZfTtj6W9W0Sv0rw54rkQCc/LsaPBu1LGktude
-zqU9NDu2VJw+m0rgoE1BEc4QRrkXd8DCC4YCWqtU8UOzmrvTC9HhDhveuzjoVAny/VtE7QEzLVPF
-8A7tIhvIhNNbzbW59lgz2Qb3fwHWWqa7meosX5R8TPbgQIu9KfgOCodsYsOc0nwoE60/XJzHFNoS
-W0giSp/czAUS
---0000000000008e223005f4a2cc1c--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCoQeGQV3ng2r6fvImRf4kCWbS0
+kUSqTnmZd4ffxdhb1JwVtACO69d0LSy6raC16IBzoIYINDKRkRDUU2uE0jPYpXP549/9Le4/6Yqg
+sh+U+99+YXCuUYALkDzfp8RmlFxJvn5TDbSXJ7iXrCyH0TUxaPPsx8MS6vG+UE38SId2xrs8KTYD
+vCEGyaqme/Am5WxKAy0ItZree4kSulFQIaqjvvW8zvRqPGYHH0pICTlxzOFfRTZmopT4m2UMdwMF
+7eyAZJQmtOrQsKr8PjZtEN7ZHuiuSSIvxWH9ODPWbPmh2ElqL4hfUWClEMzRhy0aX9P4fcNzPvoE
+rqxIcw6GynT7
+--000000000000aedd5b05f4a2cffb--
