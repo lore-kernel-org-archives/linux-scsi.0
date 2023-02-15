@@ -2,98 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D92FC636CC
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Feb 2023 13:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50AF5C636CC
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Feb 2023 17:34:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229666AbjBONxm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Feb 2023 08:53:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41544 "EHLO
+        id S230035AbjBOReP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Feb 2023 12:34:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbjBONxl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2023 08:53:41 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F86B5BBC
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2023 05:52:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676469170;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mV6In0kxefiNzNjwdGvvcAOJFXvOqB+P5nRMf7lRHCQ=;
-        b=bHpvB1Grsb3WGOj3ba/aDizSIAplw6u2clUC+TfAiT6BEl+itoET30nAF8optIfI6KF+o8
-        kpBsD2gnj1qwLrEoKLphNephnMp92/P9IOrOLgZ7xLVdL7gSx66Rhr91gP8xt5/onLHBtS
-        uJ8zYdyHZzRMpj87YK8ka7f3wJiBjPg=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-561-K2h8DKG1N-K5zX18ltTt7g-1; Wed, 15 Feb 2023 08:52:49 -0500
-X-MC-Unique: K2h8DKG1N-K5zX18ltTt7g-1
-Received: by mail-qv1-f72.google.com with SMTP id ob12-20020a0562142f8c00b004c6c72bf1d0so10481113qvb.9
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2023 05:52:49 -0800 (PST)
+        with ESMTP id S229981AbjBOReO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2023 12:34:14 -0500
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D68BB5FCD;
+        Wed, 15 Feb 2023 09:34:11 -0800 (PST)
+Received: by mail-pj1-f52.google.com with SMTP id r9-20020a17090a2e8900b00233ba727724so4005069pjd.1;
+        Wed, 15 Feb 2023 09:34:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mV6In0kxefiNzNjwdGvvcAOJFXvOqB+P5nRMf7lRHCQ=;
-        b=BIZ4FwZXCOdirzO9tfviUjui8tgFu3Pplw+ohR8JCkcURZvLqcv5ukIiGhaRn+vFar
-         diAYMil6cu21IFIPaxdDEDZxBMs9BIcrIni3iB5IVQ9u/tIxWInz75yuWz1l6EWxtwDK
-         mLDtnRjPYWL2PiPl91tsQ0Xm2DRR3YvZrORXHOexz3G/58SfMn0j0HjLsCaDtUo+3ycj
-         Pnoj+Gm41tnSjrrVONS9Sw+P+guPpny8/6kHAjNbUV+arVDqX6y2+YKPvLo0ZojLGULv
-         A+DpxaJkanJj661FEcOAYXO/APy1G9S1RhbNcw4RwSVxinXV44J+Bgfbc3Ky3ddJd936
-         avFg==
-X-Gm-Message-State: AO0yUKWwVnx8VSSPh1sZNIF191VKx93ltgjPU6YJOENGCjiLrND47ZWK
-        VTKKtwA7AJnff1BB++AEExrPFnykvqdbNuftvwi0KvFOWO1ze9SN2ZZOdV+LRmXAnymnC3ntC5O
-        HRNUoD5Lz4GApJ2x0fS6vgw==
-X-Received: by 2002:a05:6214:2aa3:b0:56e:982c:30 with SMTP id js3-20020a0562142aa300b0056e982c0030mr6665782qvb.16.1676469168648;
-        Wed, 15 Feb 2023 05:52:48 -0800 (PST)
-X-Google-Smtp-Source: AK7set9qfR0YnIl5aGuny4q5RL9ktwDac37Duh2egeWAsWHNNxuRanDH0mP3oUEah8/PxMdDzFQEnw==
-X-Received: by 2002:a05:6214:2aa3:b0:56e:982c:30 with SMTP id js3-20020a0562142aa300b0056e982c0030mr6665758qvb.16.1676469168424;
-        Wed, 15 Feb 2023 05:52:48 -0800 (PST)
-Received: from fedora (modemcable181.5-202-24.mc.videotron.ca. [24.202.5.181])
-        by smtp.gmail.com with ESMTPSA id s75-20020a37454e000000b006fa22f0494bsm14010779qka.117.2023.02.15.05.52.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Feb 2023 05:52:47 -0800 (PST)
-Date:   Wed, 15 Feb 2023 08:52:43 -0500
-From:   Adrien Thierry <athierry@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+7RJUFWr8yFaYxrhdiEcn2oKMmIGGDkUJslynTZp+P4=;
+        b=vMEDsLHo7W+ztjS91pENbMoEdm0Jt85PNDMvmZjJMYkaapEvKL9dME1Fj3YBlcr9xq
+         cvQBhjIZKcNydQP7uojf2CM089fvkGYLyhBRq0MG8pMv5FN8XonNY3pPObw9iQTPMjKA
+         4DOSs0tkPeD69oWceFxk8ve3HN0AyWpEa7jh/GyCaGvnPTo5vytkd5P6bf++Lluqikfr
+         pfhPX1qmFdZJ7MouvIFuh6RnHzjh2Shz/15uCUHvVeTF97JyGvr6y6USxnRP5A75Yv1K
+         HeC/n7gALfubpwBoHxRMuMfeovjQdHbcIt0GbCGxdKDprBUnz6ZGPH3KMko2Yn6NxpwV
+         pCzQ==
+X-Gm-Message-State: AO0yUKVpXfZFWaYkpTLM/B8461g2sU+4p1fKnNSOiSqoCPP6lURL3t1q
+        6v/Wz0XMLFirYDlUOH4YasI=
+X-Google-Smtp-Source: AK7set8KLjD29nGYSoiZcDjoRn7yIAWLQdb0khrbWiYyRjTHemXuKmGovegMmhMZOXZujT+FAiP9yg==
+X-Received: by 2002:a17:903:24f:b0:19a:b2ee:cf41 with SMTP id j15-20020a170903024f00b0019ab2eecf41mr3717131plh.59.1676482451156;
+        Wed, 15 Feb 2023 09:34:11 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:f2b7:9a62:c95d:fb83? ([2620:15c:211:201:f2b7:9a62:c95d:fb83])
+        by smtp.gmail.com with ESMTPSA id l5-20020a170902d34500b0019a6fe0f975sm5076016plk.267.2023.02.15.09.34.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Feb 2023 09:34:10 -0800 (PST)
+Message-ID: <fef343fb-42e3-501a-709e-f1c0b74a84c8@acm.org>
+Date:   Wed, 15 Feb 2023 09:34:07 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Fix mcq tag calcualtion
+Content-Language: en-US
+To:     Po-Wen Kao <powen.kao@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: probe hba and add lus synchronously
-Message-ID: <Y+zjq1yqU43TIjHU@fedora>
-References: <20230202182116.38334-1-athierry@redhat.com>
- <0e955a31-1d3a-beca-4581-dbcdefc47674@acm.org>
- <Y91xPMM+/BfaRLle@fedora>
- <90e4fb52-6b09-00d9-7591-7140b859ed15@acm.org>
- <Y914yu4rSqvpSoRZ@fedora>
- <Y+LWi3MrLQV/se/j@fedora>
- <5d293df3-6f94-d3a6-5bfb-35b191808582@acm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5d293df3-6f94-d3a6-5bfb-35b191808582@acm.org>
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
+        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+        mason.zhang@mediatek.com, quic_asutoshd@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+References: <20230215123750.15785-1-powen.kao@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230215123750.15785-1-powen.kao@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
-> Hi Adrien,
+On 2/15/23 04:37, Po-Wen Kao wrote:
+> Transfer command descriptor is allocated in ufshcd_memory_alloc()
+> and referenced by transfer request descriptor with stride size
+> sizeof_utp_transfer_cmd_desc()
+> instead of
+> sizeof(struct utp_transfer_cmd_desc).
 > 
-> That sounds good to me. Thank you for having suggested an alternative
-> solution.
+> Consequently, computing tag by address offset should also refer to the
+> same stride.
 > 
-> Bart.
+> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+> ---
+>   drivers/ufs/core/ufs-mcq.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 31df052fbc41..3a27fa4b0024 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
+>   	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
+>   		hba->ucdl_dma_addr;
+>   
+> -	return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
+> +	return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
+>   }
+>   
+>   static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
 
-I posted a new patch [1]. Can you please give your feedback when you have
-the chance to review?
-
-Thank you,
-
-Adrien
-
-[1] https://lore.kernel.org/all/20230209211456.54250-1-athierry@redhat.com/
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
