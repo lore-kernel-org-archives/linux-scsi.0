@@ -2,104 +2,67 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 722E8C636D4
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Feb 2023 19:04:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4E33C636D4
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Feb 2023 19:13:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbjBOTE5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Feb 2023 14:04:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49036 "EHLO
+        id S229819AbjBOTNa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Feb 2023 14:13:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbjBOTEy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2023 14:04:54 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79F6E39BB5;
-        Wed, 15 Feb 2023 11:04:53 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 298B0B8236D;
-        Wed, 15 Feb 2023 19:04:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5A5EC433EF;
-        Wed, 15 Feb 2023 19:04:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676487890;
-        bh=FaRNhtG1pjZ8L7eZVmPD5vLGCZlfxjcuMkgF3wWZ6e4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=pXCYJZ+b4a3P4bmJdT1ZZzw0DLBFCMTsfnN0V1uJMhdBT8zBZ/eMJfihC6nXXgNqa
-         RrhVaRueDseaJcz7khXZYClYpq30BXgNXAuuJ9VMIOyQCoXTe0ao2d00PxMAzenUv1
-         yLhSufoiL59X2Peh7kMzyf5Mf3rPgR79FlJU7Tnci/vCetZaRNYDRX+xnO2JMWzJoY
-         zpoOncr7PYnS3bHA6yUe45K3UoN2CjW3kMgc1oAEeQQ8ZfjPJwxaH1E67RrTh9t+nV
-         cNdWHAyyKHInOdXvnWVQCebmcOS7sbZJga6fUywLfQ9V+SdEX5wM6eGhNi99TyA/Xc
-         NSt/HfeQRAraw==
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        with ESMTP id S229584AbjBOTN3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2023 14:13:29 -0500
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60E73AB2;
+        Wed, 15 Feb 2023 11:13:28 -0800 (PST)
+Received: by mail-pl1-f174.google.com with SMTP id b5so21239707plz.5;
+        Wed, 15 Feb 2023 11:13:28 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UWTRjyxtvc0B3GvrSev36WvGpzJc/fNKHJWJ+vb4bhA=;
+        b=49ydPwBjz+WzsbRMnsSrTKtY7rUvpq6KqG/iIxkh1htk20la+6ooPGTsEzWiRt/u3X
+         m4fyJnWkhMrISuLQxf2IvgpYwq8oM1g2Dm2Pk5I1KyRhS4d1LmZ0HfufvRQHAJNfyPiZ
+         GZJl3YRTYvo979wAlNAnJNA2dqJ025hGWQqY2oLBx91hZoWuAbAW9QNqEqAF15J02TUE
+         21HAF3NiSD2Yi3xTmhGE7IDl4qy+TZYeaH+oLFP5cvlnOgjRtL0hSuwtIIJGUWUE/Z1G
+         mFX3EF9vKVWY8xkWREgMmLSlMdtC1qxq2HBfed4h0wJLqlme0gZyn/+i77eAKMinBgeY
+         1yoQ==
+X-Gm-Message-State: AO0yUKWTKJl3l+MNutu6GnVQOEh7NlDI7VpJI/J85mEv4UIVRM7pVqXF
+        15h+pgZrHAUZGYykPTxbN3s=
+X-Google-Smtp-Source: AK7set+RPel0IwOsNbPzqRd/rBjjcisz97M1b80sFVC+EpObXiag94SVGUKB9QQSQ9jnbThmLDE4ow==
+X-Received: by 2002:a17:90b:4a02:b0:233:f354:e7f6 with SMTP id kk2-20020a17090b4a0200b00233f354e7f6mr4027461pjb.46.1676488408130;
+        Wed, 15 Feb 2023 11:13:28 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:f2b7:9a62:c95d:fb83? ([2620:15c:211:201:f2b7:9a62:c95d:fb83])
+        by smtp.gmail.com with ESMTPSA id ob4-20020a17090b390400b00233790759cesm1808115pjb.47.2023.02.15.11.13.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Feb 2023 11:13:27 -0800 (PST)
+Message-ID: <20feb1ab-5515-66f4-25cc-297511e44556@acm.org>
+Date:   Wed, 15 Feb 2023 11:13:25 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH] scsi: ufs: support IO traces for zoned block device
+Content-Language: en-US
+To:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <beanhuo@micron.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <cang@codeaurora.org>
-Cc:     Jaegeuk Kim <jaegeuk@google.com>, Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: [PATCH] scsi: ufs: support IO traces for zoned block device
-Date:   Wed, 15 Feb 2023 11:04:48 -0800
-Message-Id: <20230215190448.1687786-1-jaegeuk@kernel.org>
-X-Mailer: git-send-email 2.39.1.581.gbfd45094c4-goog
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Cc:     Jaegeuk Kim <jaegeuk@google.com>
+References: <20230215190448.1687786-1-jaegeuk@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230215190448.1687786-1-jaegeuk@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jaegeuk Kim <jaegeuk@google.com>
+On 2/15/23 11:04, Jaegeuk Kim wrote:
+> Let's support WRITE_16, READ_16, ZBC_IN, ZBC_OUT.
 
-Let's support WRITE_16, READ_16, ZBC_IN, ZBC_OUT.
-
-Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
----
- drivers/ufs/core/ufshcd.c  | 8 ++++----
- include/trace/events/ufs.h | 4 +++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e18c9f4463ec..235d2e2d828a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -402,15 +402,15 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 
- 	opcode = cmd->cmnd[0];
- 
--	if (opcode == READ_10 || opcode == WRITE_10) {
--		/*
--		 * Currently we only fully trace read(10) and write(10) commands
--		 */
-+	if (opcode == READ_10 || opcode == WRITE_10 ||
-+				opcode == READ_16 || opcode == WRITE_16) {
- 		transfer_len =
- 		       be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
- 		lba = scsi_get_lba(cmd);
- 		if (opcode == WRITE_10)
- 			group_id = lrbp->cmd->cmnd[6];
-+		if (opcode == WRITE_16)
-+			group_id = lrbp->cmd->cmnd[14];
- 	} else if (opcode == UNMAP) {
- 		/*
- 		 * The number of Bytes to be unmapped beginning with the lba.
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 599739ee7b20..f82a9e15fd78 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -18,7 +18,9 @@
- 		{ READ_16,		"READ_16" },			\
- 		{ READ_10,		"READ_10" },			\
- 		{ SYNCHRONIZE_CACHE,	"SYNC" },			\
--		{ UNMAP,		"UNMAP" })
-+		{ UNMAP,		"UNMAP" },			\
-+		{ ZBC_IN,		"ZBC_IN" },			\
-+		{ ZBC_OUT,		"ZBC_OUT" })
- 
- #define UFS_LINK_STATES						\
- 	EM(UIC_LINK_OFF_STATE,		"UIC_LINK_OFF_STATE")		\
--- 
-2.39.1.581.gbfd45094c4-goog
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
