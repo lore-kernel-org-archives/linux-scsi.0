@@ -2,55 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50AF5C636CC
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Feb 2023 17:34:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9077EC636CC
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Feb 2023 17:53:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230035AbjBOReP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Feb 2023 12:34:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40356 "EHLO
+        id S229814AbjBORxK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Feb 2023 12:53:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229981AbjBOReO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2023 12:34:14 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D68BB5FCD;
-        Wed, 15 Feb 2023 09:34:11 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id r9-20020a17090a2e8900b00233ba727724so4005069pjd.1;
-        Wed, 15 Feb 2023 09:34:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+7RJUFWr8yFaYxrhdiEcn2oKMmIGGDkUJslynTZp+P4=;
-        b=vMEDsLHo7W+ztjS91pENbMoEdm0Jt85PNDMvmZjJMYkaapEvKL9dME1Fj3YBlcr9xq
-         cvQBhjIZKcNydQP7uojf2CM089fvkGYLyhBRq0MG8pMv5FN8XonNY3pPObw9iQTPMjKA
-         4DOSs0tkPeD69oWceFxk8ve3HN0AyWpEa7jh/GyCaGvnPTo5vytkd5P6bf++Lluqikfr
-         pfhPX1qmFdZJ7MouvIFuh6RnHzjh2Shz/15uCUHvVeTF97JyGvr6y6USxnRP5A75Yv1K
-         HeC/n7gALfubpwBoHxRMuMfeovjQdHbcIt0GbCGxdKDprBUnz6ZGPH3KMko2Yn6NxpwV
-         pCzQ==
-X-Gm-Message-State: AO0yUKVpXfZFWaYkpTLM/B8461g2sU+4p1fKnNSOiSqoCPP6lURL3t1q
-        6v/Wz0XMLFirYDlUOH4YasI=
-X-Google-Smtp-Source: AK7set8KLjD29nGYSoiZcDjoRn7yIAWLQdb0khrbWiYyRjTHemXuKmGovegMmhMZOXZujT+FAiP9yg==
-X-Received: by 2002:a17:903:24f:b0:19a:b2ee:cf41 with SMTP id j15-20020a170903024f00b0019ab2eecf41mr3717131plh.59.1676482451156;
-        Wed, 15 Feb 2023 09:34:11 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:f2b7:9a62:c95d:fb83? ([2620:15c:211:201:f2b7:9a62:c95d:fb83])
-        by smtp.gmail.com with ESMTPSA id l5-20020a170902d34500b0019a6fe0f975sm5076016plk.267.2023.02.15.09.34.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Feb 2023 09:34:10 -0800 (PST)
-Message-ID: <fef343fb-42e3-501a-709e-f1c0b74a84c8@acm.org>
-Date:   Wed, 15 Feb 2023 09:34:07 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH 1/2] scsi: ufs: core: Fix mcq tag calcualtion
-Content-Language: en-US
-To:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S229561AbjBORxJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2023 12:53:09 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C6141BAC6;
+        Wed, 15 Feb 2023 09:53:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=S+OnE5Otl4cKLCCRZAM92RTBgDsnX7rILCqnw0jQsUQ=; b=NnS+GjCmkIaYrFbh2ErZFUSENw
+        Lr+o5GAFEphnFRxibaerLyuH0d4qIn3fDl5bnQIMtYShqaAizjQTA2ovHFJ7sozbSvH2BwOLPv13C
+        L06VrKS6RTnfYnU0mTNUZYXGEzHDAhU1TZTxTHQ9BC21NZ4XaoMvo0fARMVC7O7Un9/MqZidBJ750
+        UJANkhTcKhAV1Jd1pJAESL+rjw8dPP79euJjcpyb3ZlVATd0ETfNnPG46ZNeL09EXznITPs3Y2GIv
+        xBxl/oxvgAOllvLffbtiLciZqDeJ6ImbR9oxc9eZqSSe9lSgdsTgKIGDnUwY1kez/P0b5L811wyY4
+        Q3QpEFzA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pSLxd-006lZh-P7; Wed, 15 Feb 2023 17:52:53 +0000
+Date:   Wed, 15 Feb 2023 09:52:53 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Po-Wen Kao <powen.kao@mediatek.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
         stanley.chu@mediatek.com, alice.chao@mediatek.com,
         chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
         chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
@@ -58,42 +43,20 @@ Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Export symbol ufshcd_mcq_read_cqis()
+Message-ID: <Y+0b9d+InjhKi7+H@infradead.org>
 References: <20230215123750.15785-1-powen.kao@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230215123750.15785-1-powen.kao@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <20230215123750.15785-2-powen.kao@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230215123750.15785-2-powen.kao@mediatek.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/15/23 04:37, Po-Wen Kao wrote:
-> Transfer command descriptor is allocated in ufshcd_memory_alloc()
-> and referenced by transfer request descriptor with stride size
-> sizeof_utp_transfer_cmd_desc()
-> instead of
-> sizeof(struct utp_transfer_cmd_desc).
-> 
-> Consequently, computing tag by address offset should also refer to the
-> same stride.
-> 
-> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-> ---
->   drivers/ufs/core/ufs-mcq.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 31df052fbc41..3a27fa4b0024 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
->   	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
->   		hba->ucdl_dma_addr;
->   
-> -	return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
-> +	return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
->   }
->   
->   static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
+On Wed, Feb 15, 2023 at 08:37:46PM +0800, Po-Wen Kao wrote:
+> Export symbol for driver module
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Which one?  We don't export symbols without an actual user.
