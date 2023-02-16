@@ -2,123 +2,186 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB988C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 17:14:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0D6C636CC
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 17:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229528AbjBPROb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Feb 2023 12:14:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35696 "EHLO
+        id S229675AbjBPRXK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Feb 2023 12:23:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjBPROb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 12:14:31 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 148393346A;
-        Thu, 16 Feb 2023 09:14:30 -0800 (PST)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31GEx63f003817;
-        Thu, 16 Feb 2023 17:14:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=PxPkRJZzc4JHU9m0FVL3OCsRRck3AX4/UIm6ZPgmGyI=;
- b=dqCh6u5AzRFZ5yRDu6FJIOHzCF7TBybioPbVc5Kw+6PDsrPSwIzltPkDDJLsyPxwUcLZ
- tOlLFcS/hribn3wu7c4Cb8nB9EBLGLkE8ycbuYx1wykN3BcCYdWV/plSxcXhJOsodJhc
- /n0X2S/Q9fLomuwBsrXNB9gXtLWLRskC5+4YtEwUJpA0nfNuWKg5x3/P3D2AaJXHn1Qc
- ukxj+23BWqem8IqyJ0At4+27knozZCPapGqQnHKuZdXdFIUFSpKz4HHdj0Uc1gt0Xp4X
- AU/zJitVmXxWVGgR2nLeV1UlijKT0DUdqnvg7QnAfaffiXmlDekaVOpkDMh+V6Y8F2MD iA== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nse3d1qa2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 16 Feb 2023 17:14:09 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31GHE9PT022019
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 16 Feb 2023 17:14:09 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Thu, 16 Feb 2023 09:14:08 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
-        <beanhuo@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S230044AbjBPRXG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 12:23:06 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49D9A564A7;
+        Thu, 16 Feb 2023 09:23:05 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AE693B82926;
+        Thu, 16 Feb 2023 17:23:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8EEFC4339C;
+        Thu, 16 Feb 2023 17:23:01 +0000 (UTC)
+Date:   Thu, 16 Feb 2023 12:22:59 -0500
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     Ziqi Chen <quic_ziqichen@quicinc.com>
+Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 1/1] ufs: mcq: fix incorrectly set queue depth
-Date:   Thu, 16 Feb 2023 09:13:46 -0800
-Message-ID: <8840cea4a57b46dabce18acc39afc50ab826330f.1676567593.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-trace-kernel@vger.kernel.org (open list:TRACING)
+Subject: Re: [PATCH v1] scsi: ufs: core: Add trace event for MCQ
+Message-ID: <20230216122259.7f44be57@rorschach.local.home>
+In-Reply-To: <1676515562-55805-1-git-send-email-quic_ziqichen@quicinc.com>
+References: <1676515562-55805-1-git-send-email-quic_ziqichen@quicinc.com>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 6ILm0250VvaxEv178_pMJUTq5WNSwrfR
-X-Proofpoint-ORIG-GUID: 6ILm0250VvaxEv178_pMJUTq5WNSwrfR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
- definitions=2023-02-16_13,2023-02-16_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxlogscore=999
- mlxscore=0 impostorscore=0 priorityscore=1501 adultscore=0 phishscore=0
- malwarescore=0 clxscore=1015 lowpriorityscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2302160150
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufshcd_config_mcq() may change the can_queue value.
-The current code invokes scsi_add_host() before ufshcd_config_mcq().
-So the tags are limited to the old can_queue value.
+On Thu, 16 Feb 2023 10:45:55 +0800
+Ziqi Chen <quic_ziqichen@quicinc.com> wrote:
 
-Fix this by invoking scsi_add_host() after ufshcd_config_mcq().
+> Added a new trace event to record MCQ relevant information
+> for each request in MCQ mode, include hardware queue ID,
+> SQ tail slot, CQ head slot and CQ tail slot.
+> 
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c  | 15 ++++++++++++---
+>  include/trace/events/ufs.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 60 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 3b3cf78..0037f4f 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -426,6 +426,8 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+>  	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+>  	struct scsi_cmnd *cmd = lrbp->cmd;
+>  	struct request *rq = scsi_cmd_to_rq(cmd);
+> +	struct ufs_hw_queue *hwq;
+> +
+>  	int transfer_len = -1;
+>  
+>  	if (!cmd)
+> @@ -456,9 +458,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+>  	}
+>  
+>  	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> -	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> -	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
+> -			doorbell, transfer_len, intr, lba, opcode, group_id);
+> +
+> +	if (is_mcq_enabled(hba)) {
+> +		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
+> +		trace_ufshcd_command_mcq(dev_name(hba->dev), str_t, tag,
 
-Fixes: 2468da61ea09 ("scsi: ufs: core: mcq: Configure operation and runtime interface")
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+It's better to move the processing of the "dev_name(hba->dev) into the
+trace event code. Maybe even just pass in hba.
 
-----
-v1 -> v2:
-  - Added Fixes tag
-  - Reworked to handle success case first
----
- drivers/ufs/core/ufshcd.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+> +				hwq, transfer_len, intr, lba, opcode, group_id);
+> +	} else {
+> +		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> +		trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3b3cf78d3b10..3891183897f0 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8530,7 +8530,9 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
- 			return ret;
- 		if (is_mcq_supported(hba) && !hba->scsi_host_added) {
- 			ret = ufshcd_alloc_mcq(hba);
--			if (ret) {
-+			if (!ret) {
-+				ufshcd_config_mcq(hba);
-+			} else {
- 				/* Continue with SDB mode */
- 				use_mcq_mode = false;
- 				dev_err(hba->dev, "MCQ mode is disabled, err=%d\n",
-@@ -8542,10 +8544,10 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
- 				return ret;
- 			}
- 			hba->scsi_host_added = true;
--		}
--		/* MCQ may be disabled if ufshcd_alloc_mcq() fails */
--		if (is_mcq_supported(hba) && use_mcq_mode)
-+		} else if (is_mcq_supported(hba)) {
-+			/* UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH is set */
- 			ufshcd_config_mcq(hba);
-+		}
- 	}
- 
- 	ufshcd_tune_unipro_params(hba);
--- 
-2.7.4
+Here too.
+
+> +				doorbell, transfer_len, intr, lba, opcode, group_id);
+> +	}
+>  }
+>  
+>  static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+> index 599739e..a406404e 100644
+> --- a/include/trace/events/ufs.h
+> +++ b/include/trace/events/ufs.h
+> @@ -10,6 +10,7 @@
+>  #define _TRACE_UFS_H
+>  
+>  #include <linux/tracepoint.h>
+> +#include <ufs/ufshcd.h>
+>  
+>  #define str_opcode(opcode)						\
+>  	__print_symbolic(opcode,					\
+> @@ -307,6 +308,53 @@ TRACE_EVENT(ufshcd_command,
+>  	)
+>  );
+>  
+> +TRACE_EVENT(ufshcd_command_mcq,
+> +	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
+
+So you would pass in the type of hba here.
+
+> +		unsigned int tag, struct ufs_hw_queue *hwq, int transfer_len,
+> +		u32 intr, u64 lba, u8 opcode, u8 group_id),
+> +
+> +	TP_ARGS(dev_name, str_t, tag, hwq, transfer_len, intr, lba, opcode, group_id),
+> +
+> +	TP_STRUCT__entry(
+> +		__string(dev_name, dev_name)
+
+		__string(dname, dev_name(hba->dev))
+
+> +		__field(enum ufs_trace_str_t, str_t)
+> +		__field(unsigned int, tag)
+> +		__field(u32, hwq_id)
+> +		__field(int, transfer_len)
+> +		__field(u32, intr)
+> +		__field(u64, lba)
+> +		__field(u8, opcode)
+> +		__field(u8, group_id)
+> +		__field(u32, sq_tail)
+> +		__field(u32, cq_head)
+> +		__field(u32, cq_tail)
+
+I bet the above has a lot of holes in it. The above is not packed, so
+make sure you count the size of each field and try to keep them aligned.
+
+
+
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__assign_str(dev_name, dev_name);
+
+		__assign_str(dname, dev_name(hba->dev));
+
+> +		__entry->str_t = str_t;
+> +		__entry->tag = tag;
+> +		__entry->hwq_id = hwq->id;
+> +		__entry->transfer_len = transfer_len;
+> +		__entry->intr = intr;
+> +		__entry->lba = lba;
+> +		__entry->opcode = opcode;
+> +		__entry->group_id = group_id;
+> +		__entry->sq_tail = hwq->sq_tail_slot;
+> +		__entry->cq_head = hwq->cq_head_slot;
+> +		__entry->cq_tail = hwq->cq_tail_slot;
+> +	),
+> +
+> +	TP_printk(
+> +		"%s: %s: tag: %u, hwq_id: %d, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, sq_tail_slot: %d, cq_head_slot: %d, cq_tail_slot: %d",
+> +		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+
+				__get_str(dname),
+
+-- Steve
+
+> +		__entry->tag, __entry->hwq_id, __entry->transfer_len,
+> +		__entry->intr, __entry->lba, (u32)__entry->opcode,
+> +		str_opcode(__entry->opcode), (u32)__entry->group_id,
+> +		__entry->sq_tail, __entry->cq_head,  __entry->cq_tail
+> +	)
+> +);
+> +
+>  TRACE_EVENT(ufshcd_uic_command,
+>  	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
+>  		 u32 arg1, u32 arg2, u32 arg3),
 
