@@ -2,81 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A832C636D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 17:44:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F21CDC636D7
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 17:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbjBPRoX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Feb 2023 12:44:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57424 "EHLO
+        id S229608AbjBPRqg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Feb 2023 12:46:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229650AbjBPRoW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 12:44:22 -0500
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 960644FAA1;
-        Thu, 16 Feb 2023 09:44:14 -0800 (PST)
-Received: by mail-pl1-f180.google.com with SMTP id e17so2784268plg.12;
-        Thu, 16 Feb 2023 09:44:14 -0800 (PST)
+        with ESMTP id S229547AbjBPRqf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 12:46:35 -0500
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08EFB4C3F8;
+        Thu, 16 Feb 2023 09:46:35 -0800 (PST)
+Received: by mail-pl1-f169.google.com with SMTP id b5so2819438plz.5;
+        Thu, 16 Feb 2023 09:46:35 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SNlyHVO03gSSlxY11fMP/YX0lFTvzCZ7sRSjwx4TdKQ=;
-        b=yqZv3NcUCwSiOcow8KL07wltxQaZBh+z7JFJV982GB1bQbJzW3FjQBfEdJMb1poQOq
-         kMva7RPTd6h8BcBTVwjzloOrjd55aV7T0ccjWjAbJXtmAgILGn1fZX4FzxQynIk2asU7
-         RD1633+GqTlZhjW8Rx0QqeDCMUQF6KkwCNRcs1dDIPLEM8K/4h/puFCWHqe/+IYb/bIF
-         dyKNDqdYcGc0m5PHKeGYF6KiiDEUET1oaGnWCaywBaQnGHwnic440+6tOr/iQnMZI63i
-         M5J1EARBoyXGh3SQh3h7IMjr3P/Wrpapfx98pOD+jYNA2NiNxfaPFNUAmflZDIltVBkx
-         jXeA==
-X-Gm-Message-State: AO0yUKUrWRc3/zFcAfIgupa7BDqulZ7xz0a9gOrAfzXZGF74bW2hvLpF
-        fDmMMlL3KOel7ShCRAIxWpY=
-X-Google-Smtp-Source: AK7set9dQjUa26lRSSatffjWGkjyIjtK9E0mv/mmiA047bV64RNBvX+Cf8+JcyzB6Rqbn4D+OGRlIw==
-X-Received: by 2002:a17:902:e2c2:b0:19a:8304:21f1 with SMTP id l2-20020a170902e2c200b0019a830421f1mr4896457plc.69.1676569454020;
-        Thu, 16 Feb 2023 09:44:14 -0800 (PST)
+        bh=inCt4UfQhzrVjZJORWD7A+ueESnX9lWn7iD06uQFXoM=;
+        b=IE+EoZMmzfDVugt0d4diovC0wMM0fMfSct9N5G8B+qNbw2vxxtUhmWRybd1I8mT08d
+         RvNg6CO2YfCzmqlPRu5QKHv0cQdp3D7fgtOwVv1TJX+QwsBXREQvYOJ99JHgPTXFRJh1
+         SCQm5nYFy8OvEE2Glfh8NM2bFsxejO/K9vurZ0DcE/QY5K3QG21ghkoUKMN96IlWg/j5
+         JnI83+CCQaqQtdUEunvisCovnanB5Vk4RT0QRLgT3tzvtLUP4iCtySmB4qYWlzwB7jMa
+         TCqKrHFr+eJlbKzuzX2ZhhRL7WWVYJw/7WR369y/GEklLJW+rnMGX6tsu58A8ciCY/J4
+         WKmg==
+X-Gm-Message-State: AO0yUKWCmzLyztsfisIoUSRQDYSVwoPK4V3EJHL5amdpr7GEko8cf0qg
+        SoecVJsbtbDvDhiI0ZWWOxc=
+X-Google-Smtp-Source: AK7set8o00RWThdYLu0u33RJUiEVqiKbQpyOVtOl5d15NkjxmqwolNpHng2o2sZrhqoSsuSnDehZGw==
+X-Received: by 2002:a05:6a21:6d88:b0:c7:20d8:dc1e with SMTP id wl8-20020a056a216d8800b000c720d8dc1emr3359795pzb.27.1676569594357;
+        Thu, 16 Feb 2023 09:46:34 -0800 (PST)
 Received: from ?IPV6:2620:15c:211:201:3a83:c047:6e5d:a776? ([2620:15c:211:201:3a83:c047:6e5d:a776])
-        by smtp.gmail.com with ESMTPSA id c4-20020a170902aa4400b0019a7ef5e9a8sm1595198plr.82.2023.02.16.09.44.12
+        by smtp.gmail.com with ESMTPSA id d7-20020a656207000000b004fadb547d0csm1434401pgv.61.2023.02.16.09.46.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Feb 2023 09:44:13 -0800 (PST)
-Message-ID: <e318febd-8731-3289-e168-d566db82a5b2@acm.org>
-Date:   Thu, 16 Feb 2023 09:44:10 -0800
+        Thu, 16 Feb 2023 09:46:33 -0800 (PST)
+Message-ID: <0799ff2a-4775-46f0-38b9-ef28146fd6e1@acm.org>
+Date:   Thu, 16 Feb 2023 09:46:31 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Subject: Re: [PATCH v1] scsi: ufs: core: Add trace event for MCQ
+Subject: Re: [PATCH v2 1/1] ufs: mcq: fix incorrectly set queue depth
 Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        avri.altman@wdc.com, mani@kernel.org, beanhuo@micron.com,
+        linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
-References: <1676515562-55805-1-git-send-email-quic_ziqichen@quicinc.com>
+        open list <linux-kernel@vger.kernel.org>
+References: <8840cea4a57b46dabce18acc39afc50ab826330f.1676567593.git.quic_asutoshd@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1676515562-55805-1-git-send-email-quic_ziqichen@quicinc.com>
+In-Reply-To: <8840cea4a57b46dabce18acc39afc50ab826330f.1676567593.git.quic_asutoshd@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/15/23 18:45, Ziqi Chen wrote:
-> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-> index 599739e..a406404e 100644
-> --- a/include/trace/events/ufs.h
-> +++ b/include/trace/events/ufs.h
-> @@ -10,6 +10,7 @@
->   #define _TRACE_UFS_H
->   
->   #include <linux/tracepoint.h>
-> +#include <ufs/ufshcd.h>
+On 2/16/23 09:13, Asutosh Das wrote:
+> ufshcd_config_mcq() may change the can_queue value.
+> The current code invokes scsi_add_host() before ufshcd_config_mcq().
+> So the tags are limited to the old can_queue value.
+> 
+> Fix this by invoking scsi_add_host() after ufshcd_config_mcq().
 
-Would including <ufs/ufs.h> here be sufficient?
-
-Thanks,
-
-Bart.
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
