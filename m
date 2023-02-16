@@ -2,62 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92641C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 10:41:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14760C61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 11:20:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230259AbjBPKlw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Feb 2023 05:41:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55190 "EHLO
+        id S230421AbjBPLUz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Feb 2023 06:20:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbjBPKlv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 05:41:51 -0500
-Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0F9B552B9;
-        Thu, 16 Feb 2023 02:41:22 -0800 (PST)
-Received: by mail-lj1-x22d.google.com with SMTP id a9so1441310ljr.13;
-        Thu, 16 Feb 2023 02:41:22 -0800 (PST)
+        with ESMTP id S230016AbjBPLUy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 06:20:54 -0500
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D737E3773C;
+        Thu, 16 Feb 2023 03:20:42 -0800 (PST)
+Received: by mail-lj1-x234.google.com with SMTP id d8so1553876ljq.9;
+        Thu, 16 Feb 2023 03:20:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=twA/dx8sDl/9zgFTq0t8Vwm8D0+RN/hMKLyQGOMyKi0=;
-        b=IKzmVteJil80YEuu0osMFEi1dNcxHcz52i0jc1fsmoXiDCvc9khvZoSCNaRN6zKG8I
-         tNYa0tQLx+6VHY4K9k4ulyy/CJPbzRl8S5I76ykHkrb53D0px04Mq4meblNlnWaqs2l5
-         1V3mxHg/E/+uoq6V4Bp1t/y4SGuUJJ8MzQXJbxTdxZhItgMgq94L2AbZQp/ogNbuccuA
-         KGdvQ3MZngdZmwJkeA29uLh9JmSCjwnx0unfi6PPnInwxyq2SJT7fts94bb0FYYWVQyt
-         iRBEFfefZdBSdkuJ105lo0+8s1NCjolv4QVv6RNWqiCHj+1WCLzXnZl9LCo2cSLs1gYj
-         7smQ==
+        bh=2jRg2Rlx26KH+CW0ykpKoKv+GUimANKcSEatd9J5pu0=;
+        b=LrBnvnhmrP8bgAnOcCzs6L69/n7yBzd/y1l+NCHNNJn6zQ1AerO9JZiS9cgDykg5Ji
+         GGgjEwPeLhmfSSRRVPw8Qql1F79z00J9raNLkmHyDIcHKVuwDi9sm1KnP7TOvJ/spUBn
+         68Es7i6VnEnldAqXRugn3/RcgUE4kuqSAtP5wAVYTGeooPhKeONePuAbKVnHV1Xezltk
+         i7PTItAyfeq1KwEKvujHclqa3OJRZuWJE7sNtBsyH80tGKVu34unr8tdnSDrxVO2n74M
+         zCpex1wgapQ3rkBoYp1h13EwKSVFJKzzUK84og5qNWxoCRp8Mf/Av5kDkqxO4Klq92Dr
+         c/Cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=twA/dx8sDl/9zgFTq0t8Vwm8D0+RN/hMKLyQGOMyKi0=;
-        b=slNU5u0XEyzE8/UPowRxHnEmPx/JUcB8XnNFcj3klgz1Nu8jK/XYagBhwdblAjn3fF
-         q+pYuQ2Ya/4yWgGQRRNLWgKJ325eWL6cmmQhe4K177RKDFU7nmMtfW0fCv0EQv+xIdSP
-         BEtLhbcabTlMrx0Eot/pvze9Dc2GqWusrffi/cKzauKY9N+XeiAs3zFgaz3MVPD/zxzd
-         Q2W36thErN4Huwy3g3wxLGBG7wlviOun7NJRbTjdy5wqrmvOyYF3kRpdtl0g0uED5TPA
-         gpUbYTPHzCqTm2/YJ2ZlZpgtlZ6IvEOsRrcEJHcAuPFJTt7Wm+N6c67xUFlKDGV4Dbky
-         EfCQ==
-X-Gm-Message-State: AO0yUKVGRdWfBEBvZ3nirrR2pX00qRgjHrTN/w6J3P0cumEbyaAcMXFB
-        PROiwqHlJAZMJHqemdfsbZo=
-X-Google-Smtp-Source: AK7set9M7yZnKlCL9WHhJa+Sne+fWHl5DFgm91yMAcYhyE0osi909sEDIkAOKNJnV0I5Id/wIfqxSQ==
-X-Received: by 2002:a2e:7204:0:b0:290:7054:e8b with SMTP id n4-20020a2e7204000000b0029070540e8bmr1671461ljc.49.1676544079563;
-        Thu, 16 Feb 2023 02:41:19 -0800 (PST)
+        bh=2jRg2Rlx26KH+CW0ykpKoKv+GUimANKcSEatd9J5pu0=;
+        b=F2+7NypdxJotOnir50lVyyKPt/wZBFXQUJ8SiNusmESk0ZE3Mrpn0PDBGNiubyaAfg
+         +hXkY2SeipzDpUuk3WbdfXCTG6pRLL3bUAFYEVSVSSa3I+5VBxn6tl9ahyykl53sUfXo
+         P+3eQSCN2GcR7QY/fVPLjuG51cvXNKsTVXtHSN5CebYLxZLMFqhbndkMT5aOdE1zsBb2
+         skWbT2vZlk1sEZjNbKfc5zhShHT2YzO+WRbSeWwKMgGVzCTzMOdqCSFm8SONi0Mj4yHi
+         aioYXl5wB0x/4sb4TcanhdL3NsLkNNo+V5r++BdbShgGKwRsCG4ebK7kd5S64gVwFgKy
+         oSbw==
+X-Gm-Message-State: AO0yUKUmLr3V1//65064blc1aa/qIF315OG4zXOpVAMh+/mOf49ZDNhZ
+        YKZvGyFql5UBtbd+UtzWb6E=
+X-Google-Smtp-Source: AK7set8aAmovod5C/WRa2N89gO++wHcgfsHBLhXtEZghUaQ9Q9KHMEOhOHqwt8uMGI1eIgyk2hwoxA==
+X-Received: by 2002:a2e:a543:0:b0:293:4ff3:7f85 with SMTP id e3-20020a2ea543000000b002934ff37f85mr2027898ljn.22.1676546441003;
+        Thu, 16 Feb 2023 03:20:41 -0800 (PST)
 Received: from alsp.securitycode.ru ([2a02:2168:8a04:5600:ecbf:de16:f87d:956])
-        by smtp.googlemail.com with ESMTPSA id l22-20020a2e7016000000b002934e972a6esm142181ljc.26.2023.02.16.02.41.18
+        by smtp.googlemail.com with ESMTPSA id h13-20020a05651c124d00b0028f7e86f522sm155488ljh.96.2023.02.16.03.20.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Feb 2023 02:41:19 -0800 (PST)
+        Thu, 16 Feb 2023 03:20:38 -0800 (PST)
 From:   Alexander Sapozhnikov <alsp705@gmail.com>
-To:     Adam Radford <aradford@gmail.com>
+To:     Hannes Reinecke <hare@suse.com>
 Cc:     Alexandr Sapozhnikov <alsp705@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         lvc-project@linuxtesting.org
-Subject: [PATCH] NULL check in twl_scsiop_execute_scsi()
-Date:   Thu, 16 Feb 2023 13:41:13 +0300
-Message-Id: <20230216104113.46-1-alsp705@gmail.com>
+Subject: [PATCH] [PATCH] NULL check in ahc_handle_scsiint()
+Date:   Thu, 16 Feb 2023 14:20:34 +0300
+Message-Id: <20230216112034.104-1-alsp705@gmail.com>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -67,30 +67,73 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Alexandr Sapozhnikov <alsp705@gmail.com>
 
-After having been compared to NULL value at 3w-sas.c:322, 
-pointer 'srb' is passed as 1st parameter in call to 
-function 'scsi_sg_count' at 3w-sas.c:336, where it is dereferenced.
+After having been compared to NULL value at aic7xxx_core.c:1569, 
+pointer 'scb' is passed as 2nd parameter in call to function 
+'ahc_qinfifo_requeue_tail' at aic7xxx_core.c:1864, :1876, :1890, 
+where it is dereferenced.
 
 Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
 Signed-off-by: Alexandr Sapozhnikov <alsp705@gmail.com>
 ---
- drivers/scsi/3w-sas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 3ebe661..674c130 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -333,7 +333,7 @@ static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- 
- 	if (!sglistarg) {
- 		/* Map sglist from scsi layer to cmd packet */
--		if (scsi_sg_count(srb)) {
-+		if (srb && scsi_sg_count(srb)) {
- 			sg_count = scsi_dma_map(srb);
- 			if (sg_count <= 0)
- 				goto out;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index a396f04..6840729 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -1819,13 +1819,15 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 			tag = SCB_LIST_NULL;
+ 			if (ahc_sent_msg(ahc, AHCMSG_1B, ABORT_TASK, TRUE)
+ 			 || ahc_sent_msg(ahc, AHCMSG_1B, ABORT_TASK_SET, TRUE)) {
+-				if (ahc->msgout_buf[ahc->msgout_index - 1]
+-				 == ABORT_TASK)
+-					tag = scb->hscb->tag;
+-				ahc_print_path(ahc, scb);
+-				printk("SCB %d - Abort%s Completed.\n",
++				if (scb) {
++					if (ahc->msgout_buf[ahc->msgout_index - 1]
++					== ABORT_TASK)
++						tag = scb->hscb->tag;
++					ahc_print_path(ahc, scb);
++					printk("SCB %d - Abort%s Completed.\n",
+ 				       scb->hscb->tag, tag == SCB_LIST_NULL ?
+ 				       "" : " Tag");
++				}
+ 				ahc_abort_scbs(ahc, target, channel,
+ 					       saved_lun, tag,
+ 					       ROLE_INITIATOR,
+@@ -1861,7 +1863,8 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 				tinfo->curr.transport_version = 2;
+ 				tinfo->goal.transport_version = 2;
+ 				tinfo->goal.ppr_options = 0;
+-				ahc_qinfifo_requeue_tail(ahc, scb);
++				if (scb)
++					ahc_qinfifo_requeue_tail(ahc, scb);
+ 				printerror = 0;
+ 			} else if (ahc_sent_msg(ahc, AHCMSG_EXT,
+ 						EXTENDED_WDTR, FALSE)) {
+@@ -1873,7 +1876,8 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 					      MSG_EXT_WDTR_BUS_8_BIT,
+ 					      AHC_TRANS_CUR|AHC_TRANS_GOAL,
+ 					      /*paused*/TRUE);
+-				ahc_qinfifo_requeue_tail(ahc, scb);
++				if (scb)
++					ahc_qinfifo_requeue_tail(ahc, scb);
+ 				printerror = 0;
+ 			} else if (ahc_sent_msg(ahc, AHCMSG_EXT,
+ 						EXTENDED_SDTR, FALSE)) {
+@@ -1887,7 +1891,8 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 						/*ppr_options*/0,
+ 						AHC_TRANS_CUR|AHC_TRANS_GOAL,
+ 						/*paused*/TRUE);
+-				ahc_qinfifo_requeue_tail(ahc, scb);
++				if (scb)
++					ahc_qinfifo_requeue_tail(ahc, scb);
+ 				printerror = 0;
+ 			}
+ 		}
 -- 
 2.5.3
 
