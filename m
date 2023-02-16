@@ -2,114 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AF5C636D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 18:09:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91F33C636CC
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 20:13:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229823AbjBPSJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Feb 2023 13:09:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47964 "EHLO
+        id S229850AbjBPUN1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:13:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjBPSJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 13:09:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F920505EF;
-        Thu, 16 Feb 2023 10:09:41 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229520AbjBPUN0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 15:13:26 -0500
+Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D4A24D60C;
+        Thu, 16 Feb 2023 12:13:24 -0800 (PST)
+X-Sender-Id: dreamhost|x-authsender|hussein@unixcat.org
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 1FD5E881AD4;
+        Thu, 16 Feb 2023 20:13:24 +0000 (UTC)
+Received: from pdx1-sub0-mail-a274.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id 9ED1E881011;
+        Thu, 16 Feb 2023 20:13:23 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1676578403; a=rsa-sha256;
+        cv=none;
+        b=p1dtj3p+OQYk0auonZJG6uG8OX5O2foRl56L27Z+SPTwpyCr5iYeeEslJOP07X+P/ERvfF
+        qyTI0CKp9taXJF2wlnCRia4i3EFV4mjFiqME5rbwKkBkyBtHHhT4F+WbYIgYaSpD3jd8n+
+        jVTST8fRUUmIU8Bgg+QGRMlL4eOMLe3jY7w4ARksL7UOAgGsghKsMelDg7sjbSVt9ixHAs
+        o7R1Or8NCLG7McKwP8qwu+hj0zgqK2c/Z3NpnN/2k05MdR4OpoqYZx3lU9rBJqck208vb4
+        s08q4VF+7gy1yiCgm2HhFZv5hXtfdTPlf9p53Sjyie+sbebZAm57eyyW6fbYEA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1676578403;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:dkim-signature;
+        bh=KbIa0sIStAMO0mMB6RiYRVtu/9/bZPgLeoihDTD5mi4=;
+        b=gOwVOuSBcwMp5iwSfUGXPZhtQ09fqB0UveQ0dPUoFZ5UJanSLxuCLxRROQyZ8dtkQ1Ks33
+        Ypz6Z4bV5qY69bCzkTYpK/OyurKI6h7mqgOXq//B8K2Zs2RDOkRPjddD+r0zCm15H+BeOr
+        XIcZz5xSADcS+fMfbafrIJ7VSjV8C0j6Z8kCz34DYQmKPrES6FPLup659+b+QIvVhz1/cF
+        hCwBHe40DsdIuzHzBeppTJaCQ4OYgXJZ5LLz0sbc5+dnkf0Qp74y1NV8viun14WYoZGDxK
+        UEq6XW9L6CEHPDrCrGU6NunSHbEaR+cueXHjkGwd1hmLIG7lBC2p4HltKGZp2g==
+ARC-Authentication-Results: i=1;
+        rspamd-b9c55767f-4hcbr;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=hussein@unixcat.org
+X-Sender-Id: dreamhost|x-authsender|hussein@unixcat.org
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|hussein@unixcat.org
+X-MailChannels-Auth-Id: dreamhost
+X-Tank-Lettuce: 4b0928a05bcc2948_1676578403899_2556423479
+X-MC-Loop-Signature: 1676578403899:1245416223
+X-MC-Ingress-Time: 1676578403898
+Received: from pdx1-sub0-mail-a274.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.109.138.42 (trex/6.7.1);
+        Thu, 16 Feb 2023 20:13:23 +0000
+Received: from localhost (unknown [175.144.191.112])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AFFD6B82951;
-        Thu, 16 Feb 2023 18:09:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B637DC433EF;
-        Thu, 16 Feb 2023 18:09:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676570978;
-        bh=+xuubCp2Rx1XoCEdNTTDzZVEfgaBakoROySMizGjRfw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dR1lDboKKrEpmWb2alNSAoRNzF5Afx++H8TxQfBA0bOrAz+TH9nUN8Hc4XlLFZ9/p
-         ctmZxunS4qSc86VNMFWgcVRbadJI0LKtS5aSE8bGHFxxdjhVm/71vqvacaLXmw294b
-         yQOa4U2n0IZrUSbu4gi0ehv8U1+SgP59VRIxyCOL0AKXujCtF5flK4H2mZXNccprtF
-         +iht4qWPlJCrJXqXzKtDQZdh3ARnhE6ow/xEanaL46INMM9mB1e862E9poFvTrAEjW
-         9bGHpx076xESxTE+wK1G9FVKLeVXm5oIa8M4vzoDT2agvq7M0xCMQ4vT537AnKylkO
-         VCx4geBi+dTsQ==
-Date:   Thu, 16 Feb 2023 23:39:22 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, bvanassche@acm.org, avri.altman@wdc.com,
-        mani@kernel.org, beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/1] ufs: mcq: fix incorrectly set queue depth
-Message-ID: <20230216180922.GA7015@thinkpad>
-References: <8840cea4a57b46dabce18acc39afc50ab826330f.1676567593.git.quic_asutoshd@quicinc.com>
+        (Authenticated sender: hussein@unixcat.org)
+        by pdx1-sub0-mail-a274.dreamhost.com (Postfix) with ESMTPSA id 4PHmNL6rRTzC5;
+        Thu, 16 Feb 2023 12:13:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=unixcat.org;
+        s=dreamhost; t=1676578403;
+        bh=KbIa0sIStAMO0mMB6RiYRVtu/9/bZPgLeoihDTD5mi4=;
+        h=From:To:Cc:Subject:Date:Content-Transfer-Encoding;
+        b=Xk4w1vUy9AUhEl4QSdG7Dn3z6mhKBLEjxyGqcWcfAs8p4igOJCvbOt5DtPj6ENPoy
+         JjGRBrZLgObuIB2wQ1XYgSsoigwZhuhYM98TBpvDjXjYEXivBhs9/DwI3mD53mWZjh
+         KpD94jpZLkQaCtOaJChpbI5FZOwlxSS/RmwtaxzY=
+From:   Nur Hussein <hussein@unixcat.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Nur Hussein <hussein@unixcat.org>
+Subject: [PATCH] Add error checking to sysfs_update_group in drivers/scsi/scsi_transport_spi.c
+Date:   Fri, 17 Feb 2023 04:12:59 +0800
+Message-Id: <20230216201259.405939-1-hussein@unixcat.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8840cea4a57b46dabce18acc39afc50ab826330f.1676567593.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 16, 2023 at 09:13:46AM -0800, Asutosh Das wrote:
-> ufshcd_config_mcq() may change the can_queue value.
-> The current code invokes scsi_add_host() before ufshcd_config_mcq().
-> So the tags are limited to the old can_queue value.
-> 
-> Fix this by invoking scsi_add_host() after ufshcd_config_mcq().
-> 
-> Fixes: 2468da61ea09 ("scsi: ufs: core: mcq: Configure operation and runtime interface")
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+An instance of sysfs_update_group now checks the result and on error,
+logs it via pr_err().
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Nur Hussein <hussein@unixcat.org>
+---
+ drivers/scsi/scsi_transport_spi.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
-Mani
-
-> 
-> ----
-> v1 -> v2:
->   - Added Fixes tag
->   - Reworked to handle success case first
-> ---
->  drivers/ufs/core/ufshcd.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 3b3cf78d3b10..3891183897f0 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8530,7 +8530,9 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
->  			return ret;
->  		if (is_mcq_supported(hba) && !hba->scsi_host_added) {
->  			ret = ufshcd_alloc_mcq(hba);
-> -			if (ret) {
-> +			if (!ret) {
-> +				ufshcd_config_mcq(hba);
-> +			} else {
->  				/* Continue with SDB mode */
->  				use_mcq_mode = false;
->  				dev_err(hba->dev, "MCQ mode is disabled, err=%d\n",
-> @@ -8542,10 +8544,10 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
->  				return ret;
->  			}
->  			hba->scsi_host_added = true;
-> -		}
-> -		/* MCQ may be disabled if ufshcd_alloc_mcq() fails */
-> -		if (is_mcq_supported(hba) && use_mcq_mode)
-> +		} else if (is_mcq_supported(hba)) {
-> +			/* UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH is set */
->  			ufshcd_config_mcq(hba);
-> +		}
->  	}
->  
->  	ufshcd_tune_unipro_params(hba);
-> -- 
-> 2.7.4
-> 
-
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 2442d4d2e3f3..f905b4787a42 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1559,8 +1559,9 @@ static int spi_target_configure(struct transport_container *tc,
+ {
+ 	struct kobject *kobj = &cdev->kobj;
+ 
+-	/* force an update based on parameters read from the device */
+-	sysfs_update_group(kobj, &target_attribute_group);
++	/* force an update based on parameters read from the device, log an error on failure */
++	if (sysfs_update_group(kobj, &target_attribute_group))
++		pr_err("Unable to update sysfs entries\n");
+ 
+ 	return 0;
+ }
 -- 
-மணிவண்ணன் சதாசிவம்
+2.34.1
+
