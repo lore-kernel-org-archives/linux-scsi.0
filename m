@@ -2,236 +2,232 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBAAFC61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Feb 2023 21:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1E1C636D6
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Feb 2023 06:09:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbjBPVB1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:01:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37806 "EHLO
+        id S229572AbjBQGJV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Feb 2023 01:09:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230037AbjBPVBX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2023 16:01:23 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF1674D606
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2023 13:00:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676581232;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=IpKh9WuKbfLM35c3hzbIFDGixIl455w7cD8wmsb5q/U=;
-        b=AYP9UEb/e+M5SgskMyN6fJc4OneBhFMs57y38WhjnSHZ9fXdLgsQmdiXVYH2muhxYlOZiA
-        T0ByBh51AseFfyiAoy4K2Xfznil7/7rNj8osGFS38R1LATo+amM80T9LIOmpuSr0kkM7Rl
-        2+paSk6hsh1C9r1tBY98Qqfhbzq+W1k=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-589-UkAc2mO_NQmcCx8dVJIpPw-1; Thu, 16 Feb 2023 16:00:31 -0500
-X-MC-Unique: UkAc2mO_NQmcCx8dVJIpPw-1
-Received: by mail-qk1-f197.google.com with SMTP id bp30-20020a05620a459e00b00738e1fe2470so1949782qkb.23
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2023 13:00:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=IpKh9WuKbfLM35c3hzbIFDGixIl455w7cD8wmsb5q/U=;
-        b=wGPcEMrcVNEVznQq/W+6rGqhDh23ezl8hznqrp74LwBav+X0BxkfSfu7xxgw5Ir7gX
-         mhT6n3VnoBUK6uo2XRNkNNyzqOb+PqThwQKd4veECmgCBCMNnVWQrkxDNS1Nz4IwItgO
-         qx/+GtKBzkT9uV6XCW/rMWhG9yFjD+X+LEzD029FuGPoP2eMWCpmpabQXa/kkEPL9RSy
-         Bq9lq3ykqfODoyBGHLszM4XS0U+VW2OzrJdPvkp8mWGL2tL9Yt1UzJ4bROLOaKG2Pylj
-         ApwAPXCzC1pNS85N4GvhaBJZQOss6yaTg5K/Tb9YBkd/sCr/YXx2cIovQUBkPjQGDKKP
-         IbXA==
-X-Gm-Message-State: AO0yUKUIA6a+1tMItt2Vme4Qo3Civj1sUeOG3oT9TnacWYrTmCh1+xr/
-        FooCm6Bifa6Z1CNGTkLEbYxtWnlEI9z2C+IVlfJLrs1yRI0B42yajpFjL50X/hf/5ivzXZpMF3/
-        SZFj5gr5UxLzDyB74tG9SdA==
-X-Received: by 2002:a05:622a:64b:b0:3b9:bc8c:c216 with SMTP id a11-20020a05622a064b00b003b9bc8cc216mr5878249qtb.33.1676581231203;
-        Thu, 16 Feb 2023 13:00:31 -0800 (PST)
-X-Google-Smtp-Source: AK7set8DNH3Oqv4sUkQEB6mhZVWhnJJh3PiKGCJ1RSXErvl0YipKn5yt7N3FE9jkUf74SfXtQ7Yljw==
-X-Received: by 2002:a05:622a:64b:b0:3b9:bc8c:c216 with SMTP id a11-20020a05622a064b00b003b9bc8cc216mr5878218qtb.33.1676581230917;
-        Thu, 16 Feb 2023 13:00:30 -0800 (PST)
-Received: from fedora.redhat.com (modemcable181.5-202-24.mc.videotron.ca. [24.202.5.181])
-        by smtp.gmail.com with ESMTPSA id b68-20020a37b247000000b0073980414888sm1909219qkf.42.2023.02.16.13.00.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Feb 2023 13:00:30 -0800 (PST)
-From:   Adrien Thierry <athierry@redhat.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Adrien Thierry <athierry@redhat.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: ufs: initialize devfreq synchronously
-Date:   Thu, 16 Feb 2023 16:00:20 -0500
-Message-Id: <20230216210021.59776-1-athierry@redhat.com>
-X-Mailer: git-send-email 2.39.1
+        with ESMTP id S229478AbjBQGJU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2023 01:09:20 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9912259712;
+        Thu, 16 Feb 2023 22:09:18 -0800 (PST)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31GNZNEJ002349;
+        Fri, 17 Feb 2023 06:09:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=JbkChnJ1PyNZz/5tAwUXEex3UKnTqTY8eohCSRwf1bM=;
+ b=PJ/Rh2JG8TYXXfv0qY+B6A4udFaLaifwwbt6aqmyseYOSOmovpuQb1+9pbVbUPV50WhG
+ Z9g57KaJ76vyldql1R1q9ICRwOr4y7PqQD/d/LWzR+WPs9CxaqBVT2zvXWgoRUo1jhRl
+ CfbadZJCr/mY12zrk/BGdX1Ifhwc0Brep5Tv68H416+/iF58gZknJ4CyFQOlNATMeAgA
+ N4UnGd4zZ6Og4WuahbkXJpywk3l3HXUHcnwRWcl8UDFQDRKyiievtI2xooG4l0QFrXnr
+ wlhTzyPRsTrHy++AgNa1MsjjaE7ET2Jc7HW9mswGaD5s9YWvc7Br30NHZrEDLvHh3eX4 lA== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ns85kc8mb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Feb 2023 06:09:00 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31H68x79031531
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Feb 2023 06:08:59 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Thu, 16 Feb
+ 2023 22:08:55 -0800
+Message-ID: <8b23c0e8-bcaa-6751-b09f-4865c1813dbb@quicinc.com>
+Date:   Fri, 17 Feb 2023 14:08:53 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v1] scsi: ufs: core: Add trace event for MCQ
+Content-Language: en-US
+To:     Steven Rostedt <rostedt@goodmis.org>
+CC:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
+        <bvanassche@acm.org>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
+References: <1676515562-55805-1-git-send-email-quic_ziqichen@quicinc.com>
+ <20230216122259.7f44be57@rorschach.local.home>
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <20230216122259.7f44be57@rorschach.local.home>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: YOQymxIh14aISoQmrBlpjlvDX2bPnVHn
+X-Proofpoint-ORIG-GUID: YOQymxIh14aISoQmrBlpjlvDX2bPnVHn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-17_02,2023-02-16_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ clxscore=1015 bulkscore=0 priorityscore=1501 phishscore=0 impostorscore=0
+ suspectscore=0 spamscore=0 lowpriorityscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2302170053
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During ufs initialization, devfreq initialization is asynchronous:
-ufshcd_async_scan() calls ufshcd_add_lus(), which in turn initializes
-devfreq for ufs. The simple ondemand governor is then loaded. If it is
-build as a module, request_module() is called and throws a warning:
 
-  WARNING: CPU: 7 PID: 167 at kernel/kmod.c:136 __request_module+0x1e0/0x460
-  Modules linked in: crct10dif_ce llcc_qcom phy_qcom_qmp_usb ufs_qcom phy_qcom_snps_femto_v2 ufshcd_pltfrm phy_qcom_qmp_combo ufshcd_core phy_qcom_qmp_ufs qcom_wdt socinfo fuse ipv6
-  CPU: 7 PID: 167 Comm: kworker/u16:3 Not tainted 6.2.0-rc6-00009-g58706f7fb045 #1
-  Hardware name: Qualcomm SA8540P Ride (DT)
-  Workqueue: events_unbound async_run_entry_fn
-  pstate: 00400005 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-  pc : __request_module+0x1e0/0x460
-  lr : __request_module+0x1d8/0x460
-  sp : ffff800009323b90
-  x29: ffff800009323b90 x28: 0000000000000000 x27: 0000000000000000
-  x26: ffff800009323d50 x25: ffff7b9045f57810 x24: ffff7b9045f57830
-  x23: ffffdc5a83e426e8 x22: ffffdc5ae80a9818 x21: 0000000000000001
-  x20: ffffdc5ae7502f98 x19: ffff7b9045f57800 x18: ffffffffffffffff
-  x17: 312f716572667665 x16: 642f7366752e3030 x15: 0000000000000000
-  x14: 000000000000021c x13: 0000000000005400 x12: ffff7b9042ed7614
-  x11: ffff7b9042ed7600 x10: 00000000636c0890 x9 : 0000000000000038
-  x8 : ffff7b9045f2c880 x7 : ffff7b9045f57c68 x6 : 0000000000000080
-  x5 : 0000000000000000 x4 : 8000000000000000 x3 : 0000000000000000
-  x2 : 0000000000000000 x1 : ffffdc5ae5d382f0 x0 : 0000000000000001
-  Call trace:
-   __request_module+0x1e0/0x460
-   try_then_request_governor+0x7c/0x100
-   devfreq_add_device+0x4b0/0x5fc
-   ufshcd_async_scan+0x1d4/0x310 [ufshcd_core]
-   async_run_entry_fn+0x34/0xe0
-   process_one_work+0x1d0/0x320
-   worker_thread+0x14c/0x444
-   kthread+0x10c/0x110
-   ret_from_fork+0x10/0x20
+On 2/17/2023 1:22 AM, Steven Rostedt wrote:
+> On Thu, 16 Feb 2023 10:45:55 +0800
+> Ziqi Chen <quic_ziqichen@quicinc.com> wrote:
+>
+>> Added a new trace event to record MCQ relevant information
+>> for each request in MCQ mode, include hardware queue ID,
+>> SQ tail slot, CQ head slot and CQ tail slot.
+>>
+>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+>> ---
+>>   drivers/ufs/core/ufshcd.c  | 15 ++++++++++++---
+>>   include/trace/events/ufs.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+>>   2 files changed, 60 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 3b3cf78..0037f4f 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -426,6 +426,8 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+>>   	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+>>   	struct scsi_cmnd *cmd = lrbp->cmd;
+>>   	struct request *rq = scsi_cmd_to_rq(cmd);
+>> +	struct ufs_hw_queue *hwq;
+>> +
+>>   	int transfer_len = -1;
+>>   
+>>   	if (!cmd)
+>> @@ -456,9 +458,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+>>   	}
+>>   
+>>   	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>> -	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> -	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
+>> -			doorbell, transfer_len, intr, lba, opcode, group_id);
+>> +
+>> +	if (is_mcq_enabled(hba)) {
+>> +		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
+>> +		trace_ufshcd_command_mcq(dev_name(hba->dev), str_t, tag,
+> It's better to move the processing of the "dev_name(hba->dev) into the
+> trace event code. Maybe even just pass in hba.
 
-This occurs because synchronous module loading from async is not
-allowed. According to __request_module():
+Hi Steven,
 
-  /*
-   * We don't allow synchronous module loading from async.  Module
-   * init may invoke async_synchronize_full() which will end up
-   * waiting for this task which already is waiting for the module
-   * loading to complete, leading to a deadlock.
-   */
+it is a good idea, but if so do .we need to make same change to all 
+other UFS trace events to stay the same style.
 
-I experienced such a deadlock on the Qualcomm QDrive3/sa8540p-ride. With
-DEVFREQ_GOV_SIMPLE_ONDEMAND=m, the boot hangs after the warning.
+that would be a big change.
 
-This patch fixes both the warning and the deadlock, by moving devfreq
-initialization out of the async routine.
+>
+>> +				hwq, transfer_len, intr, lba, opcode, group_id);
+>> +	} else {
+>> +		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> +		trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
+> Here too.
+>
+>> +				doorbell, transfer_len, intr, lba, opcode, group_id);
+>> +	}
+>>   }
+>>   
+>>   static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+>> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+>> index 599739e..a406404e 100644
+>> --- a/include/trace/events/ufs.h
+>> +++ b/include/trace/events/ufs.h
+>> @@ -10,6 +10,7 @@
+>>   #define _TRACE_UFS_H
+>>   
+>>   #include <linux/tracepoint.h>
+>> +#include <ufs/ufshcd.h>
+>>   
+>>   #define str_opcode(opcode)						\
+>>   	__print_symbolic(opcode,					\
+>> @@ -307,6 +308,53 @@ TRACE_EVENT(ufshcd_command,
+>>   	)
+>>   );
+>>   
+>> +TRACE_EVENT(ufshcd_command_mcq,
+>> +	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
+> So you would pass in the type of hba here.
+>
+>> +		unsigned int tag, struct ufs_hw_queue *hwq, int transfer_len,
+>> +		u32 intr, u64 lba, u8 opcode, u8 group_id),
+>> +
+>> +	TP_ARGS(dev_name, str_t, tag, hwq, transfer_len, intr, lba, opcode, group_id),
+>> +
+>> +	TP_STRUCT__entry(
+>> +		__string(dev_name, dev_name)
+> 		__string(dname, dev_name(hba->dev))
+>
+>> +		__field(enum ufs_trace_str_t, str_t)
+>> +		__field(unsigned int, tag)
+>> +		__field(u32, hwq_id)
+>> +		__field(int, transfer_len)
+>> +		__field(u32, intr)
+>> +		__field(u64, lba)
+>> +		__field(u8, opcode)
+>> +		__field(u8, group_id)
+>> +		__field(u32, sq_tail)
+>> +		__field(u32, cq_head)
+>> +		__field(u32, cq_tail)
+> I bet the above has a lot of holes in it. The above is not packed, so
+> make sure you count the size of each field and try to keep them aligned.
 
-I tested this on the sa8540p-ride by using fio to put the UFS under
-load, and printing the trace generated by
-/sys/kernel/tracing/events/ufs/ufshcd_clk_scaling events. The trace
-looks similar with and without the change.
+you are right, I will update in next version.
 
-Signed-off-by: Adrien Thierry <athierry@redhat.com>
----
-v2: Addressed Bart's comments
+Thanks，
 
- drivers/ufs/core/ufshcd.c | 47 ++++++++++++++++++++++++++-------------
- include/ufs/ufshcd.h      |  1 +
- 2 files changed, 32 insertions(+), 16 deletions(-)
+Ziqi
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3a1c4d31e010..ef9eb3022f85 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1357,6 +1357,13 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	struct ufs_clk_info *clki;
- 	unsigned long irq_flags;
- 
-+	/*
-+	 * Skip devfreq if ufs initialization is not finished.
-+	 * Otherwise ufs could be in a inconsistent state.
-+	 */
-+	if (!smp_load_acquire(&hba->logical_unit_scan_finished))
-+		return 0;
-+
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return -EINVAL;
- 
-@@ -8136,22 +8143,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 	if (ret)
- 		goto out;
- 
--	/* Initialize devfreq after UFS device is detected */
--	if (ufshcd_is_clkscaling_supported(hba)) {
--		memcpy(&hba->clk_scaling.saved_pwr_info.info,
--			&hba->pwr_info,
--			sizeof(struct ufs_pa_layer_attr));
--		hba->clk_scaling.saved_pwr_info.is_valid = true;
--		hba->clk_scaling.is_allowed = true;
--
--		ret = ufshcd_devfreq_init(hba);
--		if (ret)
--			goto out;
--
--		hba->clk_scaling.is_enabled = true;
--		ufshcd_init_clk_scaling_sysfs(hba);
--	}
--
- 	ufs_bsg_probe(hba);
- 	ufshpb_init(hba);
- 	scsi_scan_host(hba->host);
-@@ -8290,6 +8281,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	if (ret) {
- 		pm_runtime_put_sync(hba->dev);
- 		ufshcd_hba_exit(hba);
-+	} else {
-+		/*
-+		 * Make sure that when reader code sees ufs initialization has finished,
-+		 * all initialization steps have really been executed.
-+		 */
-+		smp_store_release(&hba->logical_unit_scan_finished, true);
- 	}
- }
- 
-@@ -9896,12 +9893,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	 */
- 	ufshcd_set_ufs_dev_active(hba);
- 
-+	/* Initialize devfreq */
-+	if (ufshcd_is_clkscaling_supported(hba)) {
-+		memcpy(&hba->clk_scaling.saved_pwr_info.info,
-+			&hba->pwr_info,
-+			sizeof(struct ufs_pa_layer_attr));
-+		hba->clk_scaling.saved_pwr_info.is_valid = true;
-+		hba->clk_scaling.is_allowed = true;
-+
-+		err = ufshcd_devfreq_init(hba);
-+		if (err)
-+			goto out_power_off;
-+
-+		hba->clk_scaling.is_enabled = true;
-+		ufshcd_init_clk_scaling_sysfs(hba);
-+	}
-+
- 	async_schedule(ufshcd_async_scan, hba);
- 	ufs_sysfs_add_nodes(hba->dev);
- 
- 	device_enable_async_suspend(dev);
- 	return 0;
- 
-+out_power_off:
-+	pm_runtime_put_sync(dev);
- free_tmf_queue:
- 	blk_mq_destroy_queue(hba->tmf_queue);
- 	blk_put_queue(hba->tmf_queue);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 727084cd79be..941ede501367 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -896,6 +896,7 @@ struct ufs_hba {
- 	struct completion *uic_async_done;
- 
- 	enum ufshcd_state ufshcd_state;
-+	bool logical_unit_scan_finished;
- 	u32 eh_flags;
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask;
--- 
-2.39.1
-
+>
+>
+>
+>> +	),
+>> +
+>> +	TP_fast_assign(
+>> +		__assign_str(dev_name, dev_name);
+> 		__assign_str(dname, dev_name(hba->dev));
+>
+>> +		__entry->str_t = str_t;
+>> +		__entry->tag = tag;
+>> +		__entry->hwq_id = hwq->id;
+>> +		__entry->transfer_len = transfer_len;
+>> +		__entry->intr = intr;
+>> +		__entry->lba = lba;
+>> +		__entry->opcode = opcode;
+>> +		__entry->group_id = group_id;
+>> +		__entry->sq_tail = hwq->sq_tail_slot;
+>> +		__entry->cq_head = hwq->cq_head_slot;
+>> +		__entry->cq_tail = hwq->cq_tail_slot;
+>> +	),
+>> +
+>> +	TP_printk(
+>> +		"%s: %s: tag: %u, hwq_id: %d, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, sq_tail_slot: %d, cq_head_slot: %d, cq_tail_slot: %d",
+>> +		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+> 				__get_str(dname),
+>
+> -- Steve
+>
+>> +		__entry->tag, __entry->hwq_id, __entry->transfer_len,
+>> +		__entry->intr, __entry->lba, (u32)__entry->opcode,
+>> +		str_opcode(__entry->opcode), (u32)__entry->group_id,
+>> +		__entry->sq_tail, __entry->cq_head,  __entry->cq_tail
+>> +	)
+>> +);
+>> +
+>>   TRACE_EVENT(ufshcd_uic_command,
+>>   	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
+>>   		 u32 arg1, u32 arg2, u32 arg3),
