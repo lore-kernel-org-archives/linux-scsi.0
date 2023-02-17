@@ -2,77 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47A51C636D6
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Feb 2023 16:32:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2D9C05027
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Feb 2023 17:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbjBQQcM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Feb 2023 11:32:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42540 "EHLO
+        id S229684AbjBQROF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Feb 2023 12:14:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230249AbjBQQcK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2023 11:32:10 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E092172936;
-        Fri, 17 Feb 2023 08:31:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-        bh=XHYGSp+R2NnQ++mczB+FUJo+gLmzgF5t6LdIKcLbrX8=; b=hHQbyIndp4HRRlRzbJcMSVU/lh
-        FDnVr+OF5SQMZrFINYjYHNcx8HQ8RFLUFmKkUrFZRLBytELib59qwQ660ZjOJV9ue80nEfowL8uK9
-        EfmZHaW5XhHWZxPbnZlBWcwS1tJoUJEcypXxiyBDQBym9ez2dq/7ZHEzei0aIeGezdGtNrQcCeFjA
-        WfpPA+SdDujDyjcV/ZSGLd/a5LBQOusqjmWyV/qB8Gi7H/yRmGXZmQHKDhVvCwl5cKtwHU4G4XmWN
-        UX+PAPyAO4vN7Ok2SfRNcWlqT24G5hzQavxQaT8Be4RN01zBD1zlGMoKP1rOgGEhO8UxDzP7kD47J
-        os9thz5A==;
-Received: from [2601:1c2:980:9ec0::df2f]
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pT3dr-00F4KU-1u; Fri, 17 Feb 2023 16:31:23 +0000
-Message-ID: <4cd6d9cf-abf8-bf2a-9942-472c8b43d344@infradead.org>
-Date:   Fri, 17 Feb 2023 08:31:21 -0800
+        with ESMTP id S229681AbjBQROE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2023 12:14:04 -0500
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 490E0692B7
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Feb 2023 09:14:02 -0800 (PST)
+Received: by mail-pl1-f181.google.com with SMTP id q15so2738039plx.13
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Feb 2023 09:14:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=NyH3nzYhSsBgE6H4irsBSj7NXRz1wUmmYBhCARwdkNQ=;
+        b=eZOokUEPF/Fvlw5cf0Gwv5uoVwhGLCemnSryYMgheWD/DcKTLdIT7GS/4wX35C+20G
+         f9BPZg7FVSKxdx4fiUEnEod7zYLsOueb26U+4AhoGNZnL2GRaSMtaCzm7ZrF9VDsoJTV
+         VTSEwpQbkFiEFrVEXmoOhCELHhcpdi8x4qKezA9TqIKAQrLCE983WYcXf7HpTHnbkpPo
+         b30GLf0R/ikfXUAdyQDAgduUoFPGvN/j9S0Rwu4Jl6o+uSkenqxLQhw1CJNvCzm3Mrm4
+         nOFFAb4SDG8t0juT6ry70wPYjtQC1dBaUhLtcDBhAQLTQvzb7uzn7D1d3Dq1/Y8xVdj8
+         ZJqw==
+X-Gm-Message-State: AO0yUKVSFcxrb3PNaI3hjPckt5SApZoWBaLuuBQGgpHfThfVzXN248AC
+        jf70JuK2e/TGMFIlfJqvDT8=
+X-Google-Smtp-Source: AK7set/QZ9R0zlcQhpOq/H4b7KNw9+/63eOt/GuH0SsXP4pa4KplKzQcMrrnl00PV4/e2FaxolzIwg==
+X-Received: by 2002:a17:902:f149:b0:19c:13b1:4d57 with SMTP id d9-20020a170902f14900b0019c13b14d57mr2159293plb.51.1676654041705;
+        Fri, 17 Feb 2023 09:14:01 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:5a14:bfb5:ba11:2dc4? ([2620:15c:211:201:5a14:bfb5:ba11:2dc4])
+        by smtp.gmail.com with ESMTPSA id f9-20020a170902ab8900b00196768692e0sm3428485plr.86.2023.02.17.09.14.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 17 Feb 2023 09:14:00 -0800 (PST)
+Message-ID: <8e6c545c-9ad6-1d97-9e6a-721d8770b40a@acm.org>
+Date:   Fri, 17 Feb 2023 09:13:59 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v2 1/1] scsi: lpfc: Fix double word in comments
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v2] scsi: ufs: initialize devfreq synchronously
 Content-Language: en-US
-To:     Bo Liu <liubo03@inspur.com>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230217083046.4090-1-liubo03@inspur.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20230217083046.4090-1-liubo03@inspur.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Adrien Thierry <athierry@redhat.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <20230216210021.59776-1-athierry@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230216210021.59776-1-athierry@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 2/16/23 13:00, Adrien Thierry wrote:
+> During ufs initialization, devfreq initialization is asynchronous:
+> ufshcd_async_scan() calls ufshcd_add_lus(), which in turn initializes
+> devfreq for ufs. The simple ondemand governor is then loaded. If it is
+> build as a module, request_module() is called and throws a warning:
 
-On 2/17/23 00:30, Bo Liu wrote:
-> Remove the repeated word "the" in comments.
-> 
-> Signed-off-by: Bo Liu <liubo03@inspur.com>
+build -> built?
 
-Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+> @@ -9896,12 +9893,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>   	 */
+>   	ufshcd_set_ufs_dev_active(hba);
+>   
+> +	/* Initialize devfreq */
+> +	if (ufshcd_is_clkscaling_supported(hba)) {
+> +		memcpy(&hba->clk_scaling.saved_pwr_info.info,
+> +			&hba->pwr_info,
+> +			sizeof(struct ufs_pa_layer_attr));
+> +		hba->clk_scaling.saved_pwr_info.is_valid = true;
+> +		hba->clk_scaling.is_allowed = true;
+> +
+> +		err = ufshcd_devfreq_init(hba);
+> +		if (err)
+> +			goto out_power_off;
+> +
+> +		hba->clk_scaling.is_enabled = true;
+> +		ufshcd_init_clk_scaling_sysfs(hba);
+> +	}
+> +
+>   	async_schedule(ufshcd_async_scan, hba);
+>   	ufs_sysfs_add_nodes(hba->dev);
+>   
+>   	device_enable_async_suspend(dev);
+>   	return 0;
+>   
+> +out_power_off:
+> +	pm_runtime_put_sync(dev);
+>   free_tmf_queue:
+>   	blk_mq_destroy_queue(hba->tmf_queue);
+>   	blk_put_queue(hba->tmf_queue);
 
-These changes all look good to me.
+Something I should have noticed while reviewing v1 of this patch: the 
+label name "out_power_off" is misleading. pm_runtime_put_sync() does not 
+power off a device but instead gives the power management core 
+permission to apply the power management policy configured via sysfs. 
+Runtime power management can be disabled via sysfs. How about renaming 
+this label into "rpm_put_sync" (RPM = Runtime Power Management)?
 
-There are quite a few typos/spellos of other words remaining,
-but they were not the target of this patch...
+Thanks,
 
-Thanks.
-
-> ---
->  drivers/scsi/lpfc/lpfc_attr.c    | 10 +++++-----
->  drivers/scsi/lpfc/lpfc_els.c     |  2 +-
->  drivers/scsi/lpfc/lpfc_hbadisc.c |  2 +-
->  drivers/scsi/lpfc/lpfc_init.c    |  4 ++--
->  drivers/scsi/lpfc/lpfc_mbox.c    |  4 ++--
->  drivers/scsi/lpfc/lpfc_nvmet.c   |  2 +-
->  drivers/scsi/lpfc/lpfc_sli.c     |  2 +-
->  7 files changed, 13 insertions(+), 13 deletions(-)
-
-
--- 
-~Randy
+Bart.
