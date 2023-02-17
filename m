@@ -2,146 +2,237 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA561C636D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Feb 2023 18:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B66D5C05027
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Feb 2023 19:45:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229663AbjBQSyy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Feb 2023 13:54:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55168 "EHLO
+        id S229669AbjBQTp0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Feb 2023 14:45:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbjBQSyw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2023 13:54:52 -0500
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2058.outbound.protection.outlook.com [40.107.237.58])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35A3B1423B;
-        Fri, 17 Feb 2023 10:54:11 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NT1a4a822bJ4ARDiWLva4y1R5S/Tel+00XKpGlZ76fr1kDVPDz6vKw/ofMB601Wp3/fSr9FO15a3xXwclKrrk0M+xLCWb8g/8ybfI0ytdiC4UXkgpsjX+uBneFgXREi0IorE06A6+nYqeEv9Su6Icff5UHb5dvvwS9AVgwWY4mx688xbd/AbyXfv1rCb69w2JrSqUZnH2b4kuT5jxmVJjl75oOYNYqeJE200CzdU5p86V6A11PwYIp9L4U4XLd4bclCHN4xuidgPr/vNFUZF0VuaEq1hW3qG/BvZWn1rqqr/Z0C0zQzc+57pZCsDoKKD46jLg2J6vf1yhKoSILRzyA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vcqElFx74R0zdCwNGwmd8tgK+H/QkX5K5QPgLWRqF7k=;
- b=c4FbHjksJt+l8bHfa1v3JKDqA3ZRrozn+81qbrbyYqGj+OUsM8yFuzjJLnY8VGFm33H/wtPNvcPvAZP2J3y6T2iT3vR3y3USZB74tiKgNGoRHQqC2GZ0JvrpuoGRdQmsStveYbGSDS6ab/YZtI4aVhH/JFLcvKyymGK1RPIK153R+E6AdZD5c/jbGTm40v9MajJ4VIggFw2Fd/q5cQRe51X8Xv2DKL86gqocBN3HU4av3cB33Cqk1XoKYQyO6rMCfWIT/DJV+BXhN8ZSGr/eSf9xqTX7jkwxfZI8YWtIGn7frsE0MnFN/tToX41VMVQn9U2n57oeD12S9zhiNR2/2w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vcqElFx74R0zdCwNGwmd8tgK+H/QkX5K5QPgLWRqF7k=;
- b=Xyk5bi00IRx0einzVZs/rML/c+e4p+a91r21FwKcdppkIwlRlgQEC0bpZ4NU7CvXuP5KC1FbzgiQbagqbL6MknLoUvP0Sua6eDyWOZhe+OEfuTwB7kEMkFINUKiFj1uxbBb67gtL9xJxtGa4aoskMl5Bea4KoS4YW+2scODpeaxtiA5nm+TzuNH/ncLZ4ZWonA0mrfT+Nean0nx+klHu4x9hw0YKYm8tUZFEaaJJckd7xW4pwvStTV9ZpDq3HaMlNFRzbKBfT6iybZqJlgphj9aOzQQxYflirjJKUDz478G1nA7mWUnccDnyeNO8PRwBRWtOQ8gSs8Owj09Wr6xLhg==
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
- by CH3PR12MB8659.namprd12.prod.outlook.com (2603:10b6:610:17c::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6086.26; Fri, 17 Feb
- 2023 18:53:54 +0000
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::4aaa:495:78b4:1d7c]) by MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::4aaa:495:78b4:1d7c%3]) with mapi id 15.20.6086.024; Fri, 17 Feb 2023
- 18:53:54 +0000
-From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To:     Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>
-CC:     "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
-Subject: Re: [LSF/MM/BPF BOF] Userspace command abouts
-Thread-Topic: [LSF/MM/BPF BOF] Userspace command abouts
-Thread-Index: AQHZQfzSsG6TxGrAL0SqQW/HeL2g2K7RxtkAgAG3iYA=
-Date:   Fri, 17 Feb 2023 18:53:53 +0000
-Message-ID: <e7b781d8-d5a7-cf7f-f681-c116fbadfd01@nvidia.com>
-References: <3d3369f1-7ebe-b3b8-804c-ff2b97ec679d@suse.de>
- <Y+5cjPBE6h/IW9VH@kbusch-mbp>
-In-Reply-To: <Y+5cjPBE6h/IW9VH@kbusch-mbp>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|CH3PR12MB8659:EE_
-x-ms-office365-filtering-correlation-id: 82911de6-652c-4675-ec89-08db1118510e
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 4FLX+PLyJ7rB6zUoIBhBpS6jSDPBYviW2C0+DZWHJH2kCMlkhdk8F1qerYhhp7wijJMRfztSWGCw8p2lw7yxztVyWi6bMl6WuniCoOqnxJ179hl3WdEb13Xv9uXI6XryCMEehxAqEnurYiQOxuKlHQOkN4Srfd/mlpbtUyHmRZVYRMl1C0pUqjwPk8oiqx0QK+a3rS5CUri2JReew7vRaf5lM5QABZSiahZmAmXKritOCYpFSArcjO+ZhZxpiA8pmP9oxdMamSll8F2kzqLSDxUZ9CZJsEfvY+7tmETbHptXlDbR/98ADU17H5aoiC3yCg109ghZV5GIp2WNt2gedjW344zsuxY31BI56L/s6vGjlNXzArvC4+1hyH0B62VSaPCx6AiYQy4g06BaCkbYkjvCKk/XbLWxt7FygEBw3T4QJqqik5M5LXnDnyfLUHVRbVL7SrD1pgVLVkgJB9y22fKT946/s+kZuvLGgwfi+gV/3TwKCooQixEal6nMq60KcJYR7TT/yJDx1RYF2LXWjFX8vbuEMmBIgKewU2XlYta8WyKWyJyLlMAgWLL5AZyqcth12iheEZclaCgbK2AjmN8vU4V8NG/LjuctsbfSSgFP+GaQI80e7pViGLSkUx8v54DMkKlUclEx97JmY0sRNfzh5/k/e49CJq2TeTIe0ZpWD/gNycwzjKhWwM1DR6FWjtGqNE3wzeTloDxMGcuJIjE0mx+jeQ5oGaLfPEIQFfUGF5vWmD5j0k9SzwNy9VJcX/k221CjnrcrWeFFoETALw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(396003)(39860400002)(136003)(346002)(376002)(366004)(451199018)(31686004)(71200400001)(38070700005)(86362001)(38100700002)(66476007)(122000001)(4326008)(6512007)(36756003)(53546011)(6486002)(2616005)(6506007)(478600001)(64756008)(31696002)(83380400001)(186003)(91956017)(54906003)(8676002)(66946007)(5660300002)(316002)(76116006)(66556008)(110136005)(2906002)(66446008)(41300700001)(8936002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WC82UkNmZWlZRmFzOXlzdWR0dnlmRGlxbENoRXRoelNpVWYvWHZpVlFBTzRV?=
- =?utf-8?B?ZVlqb1RFUmg3S092ZjdKaTY1Uk1kSlhuRTNkZzlMNUlBejl5a29xNHZ2dFlL?=
- =?utf-8?B?aVA4QzNLVFMyekhSQ0pDVTdsbGlFT1pKOHA2VE9SbU80Y1ZOWCswSHc0aFRk?=
- =?utf-8?B?RW8xZ2dNZlI2THVVa3puTFc2TFA5c1ROL0ZzaVdkTGMvS001NVdTNzIxMTVG?=
- =?utf-8?B?QkdkbDlNRnF5RlBpU1kxbWd6RlBrMFdEc0srZHpReE1DMERYM0JlVW5kb3Ew?=
- =?utf-8?B?K28yYkJ4blZaYWxwWGlIcVMzbkNsci94MlBrZS9WeEI5ZSs2cmNnRFBKdXE2?=
- =?utf-8?B?T1RtSm5UdlNmNm1DVjRob1p6bnQ1aGcrN1RGcHplUkxZTzk3WElvOHRPVEhw?=
- =?utf-8?B?VEpPczJBbGMyNE1SNGpZenVVZGNCbVJWblVYVThwREIwcXpwaXdUbkd6RUNk?=
- =?utf-8?B?UjZySXpoS2d5b0hSU1F3b0hweTdHbU12d2IxWXlMWXlUcEQrRTNOMzVoZm9a?=
- =?utf-8?B?Qm9WNFVmU29CRHVQSE1MNFJiL0RXaDlxU2ZMa01Cb3V5TkFWNWdvaXovQnhU?=
- =?utf-8?B?TGJOTXVtL0xyVlRtWTBxeGhxRmNHc082NU5PSlZjU3pvK3NyT21mMGRQeC9l?=
- =?utf-8?B?bnc2WDJFUTMyS1dwY2UzUGdodnBwMWdoUUNnWmovbUVscENaNyt5TkxGTFB2?=
- =?utf-8?B?bHVmUHRpMzM4eUtId2JCcC9HNXdnblRibm4xbElJRzZGYU5DZm1RWmZmaVBO?=
- =?utf-8?B?QlIxeTRibmhVZm9hdFpSSkNubjZySElhb3IzU3FIekdRWGx5dFhPYXhEMVVa?=
- =?utf-8?B?VWdSZ1NpQlJKcEVSY2hnZ0w1MFdjamh2U3Nyek5PaWJBVjQ1ZkROVCsyN2hm?=
- =?utf-8?B?NmZYWG9Sb1dRWFlPNmVxRnBKdHBYQVA4STFHWEIzZ2pZcGF4eDd4Z0Fkd3lx?=
- =?utf-8?B?K1JpWE1ES2JKLzF3TFBvU1lyRm1PU2UrN0x5eGJUc1Vhb3pLYkhRK1k2ZXNU?=
- =?utf-8?B?cGYvaGt6YzNBd1FVTVFITlovaWxBQmJ1RlBlOTVJQXJXZkNJVGk0dzM5Qi9l?=
- =?utf-8?B?TlpXSHJBT2pCTlZpYjdFcGdwZ1ljei9lbHhuTk9yem5CZ3BCWUhEZnIvNXlB?=
- =?utf-8?B?a01LSVVHazhlcWRjNnJFQ2ZXbW8yV09GNDRRbnBra0hhNGxROVBTMktIYUhX?=
- =?utf-8?B?akg1VWM1UXR1RTZqYmpYc1RLUXNOTmpkUDlrRlZPb0IyV0RTTmxSbFlSR2hz?=
- =?utf-8?B?WWxkSW4vcUk2ZWdRaER5RXR2bnlhNnlONk9NWWMwSFhXY1hlVXpZbC9DbVhq?=
- =?utf-8?B?RzRJc3AzMWk0aDFUTkhMQzNRWGpwMVFQb3YvWnFra2N5T29tcVE1RkNYTlQz?=
- =?utf-8?B?TmFwKytIZndHU0ZUNkViYmhNRE4ycHNsdFgwUmRndERnV3UyOHhtN2hjeWRy?=
- =?utf-8?B?d3lmZzh4aFZ1bkRwYkRWTC9BLzRLSUJhSUtTeDluaG9MVzVrUy9CUlR0bklt?=
- =?utf-8?B?TkdkUkZ0TVM3UFRUZzhKQkIyeSs2aE1NdlVyb2x0NE9HMXJJTXJXRzh0UWF1?=
- =?utf-8?B?S0FKSlBuc3V3NHZacWRyM0tmdDloZEk3Z240TlhJSC9OQ2d3YnVXeEwzKzBP?=
- =?utf-8?B?ME04YjNnZjBtTUtRYWJUY3BUTGJlN1lvamxmUitPS2tFa25mZWcrb1FzTlUv?=
- =?utf-8?B?S2RyZ243RUhzZm85SUdxdkVjcW5HdTllU3JBaVQ3VXdRZjJFZFRuTlgveDd6?=
- =?utf-8?B?TEthbmV0bm1IcXY3dURSK1FaWm5LQkdDUXdtSDdUODZKRTQwZ1loQStrcURq?=
- =?utf-8?B?Nng5TTNCZXZ2QjFPdkptV2hwMXozTW9FV2JVNVVaRWZ2R0oyZVJVeWpXU1Y3?=
- =?utf-8?B?eVFjVVZqRXZzWGlXNi9oRnh4OUxoYXlrWDYwMVk0VHN4MXA5RTR5WDQrTWxu?=
- =?utf-8?B?aFZHbGxiYW53MER3WGhkZDNBL1htdWJQbDlTMkZ3QjE5d2J6NXVxZk5qNmRn?=
- =?utf-8?B?L1Mra2M4V1JRVHJTYjNBYXl2QlhDVUFIc0dsdk42OGNOOXVtVUl4cis5SUdI?=
- =?utf-8?B?eU56bFFvdUVPeWJvWkk5OVh6RCtodWVORHEwY05wUStSalBxcTVjVTBoYW13?=
- =?utf-8?B?T0tHdi83MnpEeGdxSmJRczBmRVU1L21YUTBXSTR0Z0JxN0xzc0ZWYnplQXho?=
- =?utf-8?B?Ymc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <0002BFF67B19554FA608DE5912C92C04@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S229477AbjBQTpZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2023 14:45:25 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6844F5F269
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Feb 2023 11:44:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1676663081;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=lwsNbLH52LEtkuVzLaB5Gtg76WY2cYHqNtqeTv+TF9c=;
+        b=fK2YwICFfnte9BirU7FbmCYXrVmKFhvFc3RE7PRSZmudEawWtLrUqRrgbI04MAxhXm1lfT
+        GSn7PXp/QYAL6pu3zqLjdp4IHnqZZtu1fxSaF3Fw2OhfAP3hfdjw4tKhTrQG7mleGSVDcd
+        O7O2eMUxtwkSNtYPUoFz2WutofJgxf8=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-272-diCJ6cqiPpG_WZ3VKiwX1g-1; Fri, 17 Feb 2023 14:44:38 -0500
+X-MC-Unique: diCJ6cqiPpG_WZ3VKiwX1g-1
+Received: by mail-qk1-f200.google.com with SMTP id bk26-20020a05620a1a1a00b0073b88cae2f5so708879qkb.8
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Feb 2023 11:44:38 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lwsNbLH52LEtkuVzLaB5Gtg76WY2cYHqNtqeTv+TF9c=;
+        b=VjQ1P/4R/FhiOciO1IckhdRDUZ2GBs/UGhGIU3jLYVCHX7VKIbgXeitfKGvLcl4Cjd
+         4DszF9sKOJxpIiPs61/LAjeR8ddEsaH/GcA61wMFhxEPmQeybXdzndNdkCrtQfn5npXJ
+         pxp8LsakHLJrBy6lNemKdiE4S6pchL9EUIi+yyNddUPgGYB/qu8rWV+K5zP9VjveY4GY
+         fl7qPSZrZFUZ9FBDY+bPRYMUEd33Nrlc2Z6KHsT1U4u49EqiOM+lvqFr+gP4YueRI8Tg
+         EEL0YdCEcuz4kneYXdJtzhHJeM4LwVhno/OJoczi617wmiuc2aqN/jdmG6nxKOxCFLw+
+         FMvA==
+X-Gm-Message-State: AO0yUKU+evI1dRvntLvdE+iPRnzcV7tLGkKJevoWYP63Ks3YNXOnJXZP
+        5WDi7ni2ojWzbBMzptbwia+1pF4Ik25/4dBTQwSeiWorFoVYoB9Zyl0BREcVXFBSnQUQp7Z2g/N
+        28Psxotd+Lnhi7UcuW5q4Hw==
+X-Received: by 2002:ac8:7c52:0:b0:3b8:6bf8:9584 with SMTP id o18-20020ac87c52000000b003b86bf89584mr4324310qtv.35.1676663078108;
+        Fri, 17 Feb 2023 11:44:38 -0800 (PST)
+X-Google-Smtp-Source: AK7set8muo9wotLEsrDwf3K3Jmy2o7BJNrj2+vMc8ZG2snzwGQ7SZVRSgK9i9kzUUeOA77zIk+5L+Q==
+X-Received: by 2002:ac8:7c52:0:b0:3b8:6bf8:9584 with SMTP id o18-20020ac87c52000000b003b86bf89584mr4324289qtv.35.1676663077796;
+        Fri, 17 Feb 2023 11:44:37 -0800 (PST)
+Received: from fedora.redhat.com (modemcable181.5-202-24.mc.videotron.ca. [24.202.5.181])
+        by smtp.gmail.com with ESMTPSA id i129-20020a37b887000000b007068b49b8absm3761272qkf.62.2023.02.17.11.44.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Feb 2023 11:44:36 -0800 (PST)
+From:   Adrien Thierry <athierry@redhat.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Adrien Thierry <athierry@redhat.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH v3] scsi: ufs: initialize devfreq synchronously
+Date:   Fri, 17 Feb 2023 14:44:22 -0500
+Message-Id: <20230217194423.42553-1-athierry@redhat.com>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 82911de6-652c-4675-ec89-08db1118510e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Feb 2023 18:53:53.9408
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4F7sAn1C8dBKGHFYDyNtfjIhUKAaMUW0sHEqm9YMXG4GlBK/2dbwaqmhDaC/o61LBCHi3ZRcdN16VGuPfsUnjw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8659
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gMi8xNi8yMyAwODo0MCwgS2VpdGggQnVzY2ggd3JvdGU6DQo+IE9uIFRodSwgRmViIDE2LCAy
-MDIzIGF0IDEyOjUwOjAzUE0gKzAxMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToNCj4+IEhpIGFs
-bCwNCj4+DQo+PiBpdCBoYXMgY29tZSB1cCBpbiBvdGhlciB0aHJlYWRzLCBzbyBpdCBtaWdodCBi
-ZSB3b3J0aHdoaWxlIHRvIGhhdmUgaXRzIG93bg0KPj4gdG9waWM6DQo+Pg0KPj4gVXNlcnNwYWNl
-IGNvbW1hbmQgYWJvcnRzDQo+Pg0KPj4gQXMgaXQgc3RhbmRzIHdlIGNhbm5vdCBhYm9ydCBJL08g
-Y29tbWFuZHMgZnJvbSB1c2Vyc3BhY2UuDQo+PiBUaGlzIGlzIGhpdHRpbmcgdXMgd2hlbiBydW5u
-aW5nIGluIGEgdmlydHVhbCBtYWNoaW5lOg0KPj4gVGhlIFZNIHNldHMgYSB0aW1lb3V0IHdoZW4g
-c3VibWl0dGluZyBhIGNvbW1hbmQsIGJ1dCB0aGF0DQo+PiBpbmZvcm1hdGlvbiBjYW4ndCBiZSB0
-cmFuc21pdHRlZCB0byB0aGUgVk0gaG9zdC4gVGhlIFZNIGhvc3QNCj4+IHRoZW4gaXNzdWVzIGEg
-ZGlmZmVyZW50IGNvbW1hbmQgKHdpdGggYW5vdGhlciB0aW1lb3V0KSwgYW5kDQo+PiBhZ2FpbiB0
-aGF0IHRpbWVvdXQgY2FuJ3QgYmUgdHJhbnNtaXR0ZWQgdG8gdGhlIGF0dGFjaGVkIGRldmljZXMu
-DQo+PiBTbyB3aGVuIHRoZSBWTSBkZXRlY3RzIGEgdGltZW91dCwgaXQgd2lsbCB0cnkgdG8gaXNz
-dWUgYW4gYWJvcnQsDQo+PiBidXQgdGhhdCBnb2VzIG5vd2hlcmUgYXMgdGhlIFZNIGhvc3QgaGFz
-IG5vIHdheSB0byBhYm9ydCBjb21tYW5kcw0KPj4gZnJvbSB1c2Vyc3BhY2UuDQo+PiBTbyBpbiB0
-aGUgZW5kIHRoZSBWTSBoYXMgdG8gd2FpdCBmb3IgdGhlIGNvbW1hbmQgdG8gY29tcGxldGUsIGNh
-dXNpbmcNCj4+IHN0YWxscyBpbiB0aGUgVk0gaWYgdGhlIGhvc3QgaGFkIHRvIHVuZGVyZ28gZXJy
-b3IgcmVjb3Zlcnkgb3Igc29tZXRoaW5nLg0KPiANCj4gQWJvcnRzIGFyZSByYWN5LiBBIGxvdCBv
-ZiBoYXJkd2FyZSBpbXBsZW1lbnRzIHRoZXNlIGFzIGEgbm8tb3AsIHRvby4NCj4gICANCg0KSSdk
-IGF2b2lkIGltcGxlbWVudGluZyB1c2Vyc3BhY2UgYWJvcnRzIGFuZCBmaXggdGhpbmdzIGluIHNw
-ZWMgZmlyc3QuDQoNCi1jaw0KDQo=
+During ufs initialization, devfreq initialization is asynchronous:
+ufshcd_async_scan() calls ufshcd_add_lus(), which in turn initializes
+devfreq for ufs. The simple ondemand governor is then loaded. If it is
+built as a module, request_module() is called and throws a warning:
+
+  WARNING: CPU: 7 PID: 167 at kernel/kmod.c:136 __request_module+0x1e0/0x460
+  Modules linked in: crct10dif_ce llcc_qcom phy_qcom_qmp_usb ufs_qcom phy_qcom_snps_femto_v2 ufshcd_pltfrm phy_qcom_qmp_combo ufshcd_core phy_qcom_qmp_ufs qcom_wdt socinfo fuse ipv6
+  CPU: 7 PID: 167 Comm: kworker/u16:3 Not tainted 6.2.0-rc6-00009-g58706f7fb045 #1
+  Hardware name: Qualcomm SA8540P Ride (DT)
+  Workqueue: events_unbound async_run_entry_fn
+  pstate: 00400005 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+  pc : __request_module+0x1e0/0x460
+  lr : __request_module+0x1d8/0x460
+  sp : ffff800009323b90
+  x29: ffff800009323b90 x28: 0000000000000000 x27: 0000000000000000
+  x26: ffff800009323d50 x25: ffff7b9045f57810 x24: ffff7b9045f57830
+  x23: ffffdc5a83e426e8 x22: ffffdc5ae80a9818 x21: 0000000000000001
+  x20: ffffdc5ae7502f98 x19: ffff7b9045f57800 x18: ffffffffffffffff
+  x17: 312f716572667665 x16: 642f7366752e3030 x15: 0000000000000000
+  x14: 000000000000021c x13: 0000000000005400 x12: ffff7b9042ed7614
+  x11: ffff7b9042ed7600 x10: 00000000636c0890 x9 : 0000000000000038
+  x8 : ffff7b9045f2c880 x7 : ffff7b9045f57c68 x6 : 0000000000000080
+  x5 : 0000000000000000 x4 : 8000000000000000 x3 : 0000000000000000
+  x2 : 0000000000000000 x1 : ffffdc5ae5d382f0 x0 : 0000000000000001
+  Call trace:
+   __request_module+0x1e0/0x460
+   try_then_request_governor+0x7c/0x100
+   devfreq_add_device+0x4b0/0x5fc
+   ufshcd_async_scan+0x1d4/0x310 [ufshcd_core]
+   async_run_entry_fn+0x34/0xe0
+   process_one_work+0x1d0/0x320
+   worker_thread+0x14c/0x444
+   kthread+0x10c/0x110
+   ret_from_fork+0x10/0x20
+
+This occurs because synchronous module loading from async is not
+allowed. According to __request_module():
+
+  /*
+   * We don't allow synchronous module loading from async.  Module
+   * init may invoke async_synchronize_full() which will end up
+   * waiting for this task which already is waiting for the module
+   * loading to complete, leading to a deadlock.
+   */
+
+I experienced such a deadlock on the Qualcomm QDrive3/sa8540p-ride. With
+DEVFREQ_GOV_SIMPLE_ONDEMAND=m, the boot hangs after the warning.
+
+This patch fixes both the warning and the deadlock, by moving devfreq
+initialization out of the async routine.
+
+I tested this on the sa8540p-ride by using fio to put the UFS under
+load, and printing the trace generated by
+/sys/kernel/tracing/events/ufs/ufshcd_clk_scaling events. The trace
+looks similar with and without the change.
+
+Signed-off-by: Adrien Thierry <athierry@redhat.com>
+---
+v3: Addressed Bart's comments
+v2: Addressed Bart's comments
+
+ drivers/ufs/core/ufshcd.c | 47 ++++++++++++++++++++++++++-------------
+ include/ufs/ufshcd.h      |  1 +
+ 2 files changed, 32 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3a1c4d31e010..2c22a1367440 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1357,6 +1357,13 @@ static int ufshcd_devfreq_target(struct device *dev,
+ 	struct ufs_clk_info *clki;
+ 	unsigned long irq_flags;
+ 
++	/*
++	 * Skip devfreq if ufs initialization is not finished.
++	 * Otherwise ufs could be in a inconsistent state.
++	 */
++	if (!smp_load_acquire(&hba->logical_unit_scan_finished))
++		return 0;
++
+ 	if (!ufshcd_is_clkscaling_supported(hba))
+ 		return -EINVAL;
+ 
+@@ -8136,22 +8143,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
+ 
+-	/* Initialize devfreq after UFS device is detected */
+-	if (ufshcd_is_clkscaling_supported(hba)) {
+-		memcpy(&hba->clk_scaling.saved_pwr_info.info,
+-			&hba->pwr_info,
+-			sizeof(struct ufs_pa_layer_attr));
+-		hba->clk_scaling.saved_pwr_info.is_valid = true;
+-		hba->clk_scaling.is_allowed = true;
+-
+-		ret = ufshcd_devfreq_init(hba);
+-		if (ret)
+-			goto out;
+-
+-		hba->clk_scaling.is_enabled = true;
+-		ufshcd_init_clk_scaling_sysfs(hba);
+-	}
+-
+ 	ufs_bsg_probe(hba);
+ 	ufshpb_init(hba);
+ 	scsi_scan_host(hba->host);
+@@ -8290,6 +8281,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	if (ret) {
+ 		pm_runtime_put_sync(hba->dev);
+ 		ufshcd_hba_exit(hba);
++	} else {
++		/*
++		 * Make sure that when reader code sees ufs initialization has finished,
++		 * all initialization steps have really been executed.
++		 */
++		smp_store_release(&hba->logical_unit_scan_finished, true);
+ 	}
+ }
+ 
+@@ -9896,12 +9893,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	 */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 
++	/* Initialize devfreq */
++	if (ufshcd_is_clkscaling_supported(hba)) {
++		memcpy(&hba->clk_scaling.saved_pwr_info.info,
++			&hba->pwr_info,
++			sizeof(struct ufs_pa_layer_attr));
++		hba->clk_scaling.saved_pwr_info.is_valid = true;
++		hba->clk_scaling.is_allowed = true;
++
++		err = ufshcd_devfreq_init(hba);
++		if (err)
++			goto rpm_put_sync;
++
++		hba->clk_scaling.is_enabled = true;
++		ufshcd_init_clk_scaling_sysfs(hba);
++	}
++
+ 	async_schedule(ufshcd_async_scan, hba);
+ 	ufs_sysfs_add_nodes(hba->dev);
+ 
+ 	device_enable_async_suspend(dev);
+ 	return 0;
+ 
++rpm_put_sync:
++	pm_runtime_put_sync(dev);
+ free_tmf_queue:
+ 	blk_mq_destroy_queue(hba->tmf_queue);
+ 	blk_put_queue(hba->tmf_queue);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 727084cd79be..941ede501367 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -896,6 +896,7 @@ struct ufs_hba {
+ 	struct completion *uic_async_done;
+ 
+ 	enum ufshcd_state ufshcd_state;
++	bool logical_unit_scan_finished;
+ 	u32 eh_flags;
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+-- 
+2.39.1
+
