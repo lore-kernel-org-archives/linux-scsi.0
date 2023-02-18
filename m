@@ -2,141 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2CAC05027
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Feb 2023 21:50:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53231C61DA4
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Feb 2023 09:50:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229922AbjBQVue (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Feb 2023 16:50:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
+        id S229668AbjBRJuY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Feb 2023 04:50:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229669AbjBQVud (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2023 16:50:33 -0500
-Received: from mail-vk1-xa2c.google.com (mail-vk1-xa2c.google.com [IPv6:2607:f8b0:4864:20::a2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA70632CC9
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Feb 2023 13:50:31 -0800 (PST)
-Received: by mail-vk1-xa2c.google.com with SMTP id b10so1461967vkn.10
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Feb 2023 13:50:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Jc7+X1cqzOxQsAFytQZ25BlL34wPn1vkCpcwaRRD9oc=;
-        b=aG0ph1GtjLSjPnNsZT6Zujg2e+f0b8Rfl6R+FvDstE7ptRAuNh9BTny2PJscjWz/Kq
-         e8SYVASadRZ2q/DPe+33qofP2a+oI1iF6upND23LGE8QWBSMR0yXOkgRJPB87ViqMGap
-         xOj2TYMNbelNY0h5TrnyyvdlBe0JyCXTeil9fFm7VUZsh5CBcFIryCa+/hH9Njhm6KMl
-         y2gwk5OTqShm+f52wWM97o1gXi/luJRo08RIdZZhZFDZ9drAnGFru/F1RPKxY6zDZRNb
-         tBjyZ7aTUqAo2tRTenuJl4gUH9CAaOY/6BKxjFcUll7Z7D9RbJaY/Mf7oTS3DwjgXPes
-         SdjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Jc7+X1cqzOxQsAFytQZ25BlL34wPn1vkCpcwaRRD9oc=;
-        b=Lx9KOrFkdnIXIgD8XGEzT85tVgX3PrNIgmlaS9K2E0m30Yj3UcTV4GQ4J8vZ3Cx0XO
-         OS+5CyjCZz5asmXTzTZ1I1MQIF9GJY9VALjmm5pF/AD18H7HsX7Y9CT368Hvkrl38HQO
-         D4u/7NBLjuiLy5woTgEyXtWeMzr5PTOvgfRg2a2z26FzC+XQT704b18aLdD+kBVRSRbD
-         X4BdsGUL4/4WGgBl+ml9bXNZI2rHIGXfNTgrAMj8YsFixVYSNtV38G2JeOkcIYitgvDd
-         QWiKLob6hhr6TBlLzY1k7aLYvq/WggtZYmKtMI5OKNJTnHxicR88neMhUKTwvyKnQWKl
-         x21A==
-X-Gm-Message-State: AO0yUKXBiJlO/IMNagcHhYiVwiCujzDf1T47V4Rvsw0eyY71CDraQIei
-        g+AA7tYKPH4xVcM69TXBvbRZJ+OfK130PHeRmTz53Q==
-X-Google-Smtp-Source: AK7set9XHUeLlPkt1gJ12stZFbCMRTkQQ9HrB3LYSIhi3/ZaG+e0VMAG8RtOJDpNATWJTqwo2mfMUsx0Pw5ZKygJeZ8=
-X-Received: by 2002:a1f:2693:0:b0:401:6440:787e with SMTP id
- m141-20020a1f2693000000b004016440787emr122162vkm.32.1676670630833; Fri, 17
- Feb 2023 13:50:30 -0800 (PST)
+        with ESMTP id S229591AbjBRJuX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Feb 2023 04:50:23 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5A4027488;
+        Sat, 18 Feb 2023 01:50:22 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id E073F5C883;
+        Sat, 18 Feb 2023 09:50:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1676713820; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aZEClIkXDI6FT5bxY+yRL/UeGhAXhtIvpwAqZiGr1tw=;
+        b=kVWNbcbVUTtwb4ZpskvthPAOxW7mb1bpH82B0xXGeYLisuy9C6+mMeEPU7XT+1fDDC4Pgj
+        MvgABRD/Mu3V442jMcrtebKVCg407mCW+0bKgLi/EG/Gmp1UcQip8glkp7ul9pPkkTx6+h
+        wVle4fgEVWmsaJWYLrc+oS5De7wlrss=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1676713820;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aZEClIkXDI6FT5bxY+yRL/UeGhAXhtIvpwAqZiGr1tw=;
+        b=mG6sO7LzF0GNmhk8G0Q0HjkiCpQ/V4TrA97ycRT4faefn6bMts5GcchD+DRwYykLn19rIN
+        a1rzV1u69HxTjrBQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 45D3E13921;
+        Sat, 18 Feb 2023 09:50:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id G+i1DVyf8GMoDQAAMHmgww
+        (envelope-from <hare@suse.de>); Sat, 18 Feb 2023 09:50:20 +0000
+Message-ID: <e83ee317-9b4d-6b51-dc0f-25c54cc69c94@suse.de>
+Date:   Sat, 18 Feb 2023 10:50:20 +0100
 MIME-Version: 1.0
-References: <CAJs=3_C+K0iumqYyKhphYLp=Qd7i6-Y6aDUgmYyY_rdnN1NAag@mail.gmail.com>
- <CAPR809uYp6vGvCk4ugWOjbmd13WTm8fRg0f2Mdq3pxj6=d1McQ@mail.gmail.com> <a9cbed84-330f-472e-0cd7-90c6623bb5b5@nvidia.com>
-In-Reply-To: <a9cbed84-330f-472e-0cd7-90c6623bb5b5@nvidia.com>
-From:   Enrico Granata <egranata@google.com>
-Date:   Fri, 17 Feb 2023 14:50:19 -0700
-Message-ID: <CAPR809u0DLwHgV5w5QhWj_a53OcreZP1Qxxcom_Vbwzg0jgsog@mail.gmail.com>
-Subject: Re: Virtio-blk extended lifetime feature
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc:     Alvaro Karsz <alvaro.karsz@solid-run.com>,
-        Jahdiel Alvarez <jahdiel@google.com>,
-        virtualization <virtualization@lists.linux-foundation.org>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [LSF/MM/BPF BOF] Userspace command aborts
+Content-Language: en-US
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Keith Busch <kbusch@kernel.org>
+Cc:     "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
+References: <3d3369f1-7ebe-b3b8-804c-ff2b97ec679d@suse.de>
+ <Y+5cjPBE6h/IW9VH@kbusch-mbp>
+ <e7b781d8-d5a7-cf7f-f681-c116fbadfd01@nvidia.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <e7b781d8-d5a7-cf7f-f681-c116fbadfd01@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 18, 2023 at 12:46 PM Chaitanya Kulkarni
-<chaitanyak@nvidia.com> wrote:
->
-> On 1/17/23 14:30, Enrico Granata wrote:
-> > Hi,
-> > I am going to add +Jahdiel Alvarez who is also looking into a similar
-> > issue, and also I would like to hear thoughts of people who may have
-> > worked with (embedded or otherwise) storage more recently than I have
-> >
-> > One thought that Jahdiel and myself were pondering is whether we need
-> > "type_a" and "type_b" fields at all, or if there should simply be a
-> > "wear estimate" field, which for eMMC, it could be max(typ_a, typ_b)
-> > but it could generalize to any number of cell or other algorithm, as
-> > long as it produces one unique estimate of wear
-> >
-> > Thanks,
-> > - Enrico
-> >
-> > Thanks,
-> > - Enrico
-> >
-> >
-> > On Sun, Jan 15, 2023 at 12:56 AM Alvaro Karsz
-> > <alvaro.karsz@solid-run.com> wrote:
-> >>
-> >> Hi guys,
-> >>
-> >> While trying to upstream the implementation of VIRTIO_BLK_F_LIFETIME
-> >> feature, many developers suggested that this feature should be
-> >> extended to include more cell types, since its current implementation
-> >> in virtio spec is relevant for MMC and UFS devices only.
-> >>
-> >> The VIRTIO_BLK_F_LIFETIME defines the following fields:
-> >>
-> >> - pre_eol_info:  the percentage of reserved blocks that are consumed.
-> >> - device_lifetime_est_typ_a: wear of SLC cells.
-> >> - device_lifetime_est_typ_b: wear of MLC cells.
->
-> For immediate comments :-
->
-> It needs to cover all the flash cell types.
->
-> Using names like type_a/type_b in the spec and in the implementation
-> adds unnecessary confusion and requires extra documentation in the
-> code that needs to be changed.
+On 2/17/23 19:53, Chaitanya Kulkarni wrote:
+> On 2/16/23 08:40, Keith Busch wrote:
+>> On Thu, Feb 16, 2023 at 12:50:03PM +0100, Hannes Reinecke wrote:
+>>> Hi all,
+>>>
+>>> it has come up in other threads, so it might be worthwhile to have its own
+>>> topic:
+>>>
+>>> Userspace command aborts
+>>>
+>>> As it stands we cannot abort I/O commands from userspace.
+>>> This is hitting us when running in a virtual machine:
+>>> The VM sets a timeout when submitting a command, but that
+>>> information can't be transmitted to the VM host. The VM host
+>>> then issues a different command (with another timeout), and
+>>> again that timeout can't be transmitted to the attached devices.
+>>> So when the VM detects a timeout, it will try to issue an abort,
+>>> but that goes nowhere as the VM host has no way to abort commands
+>>> from userspace.
+>>> So in the end the VM has to wait for the command to complete, causing
+>>> stalls in the VM if the host had to undergo error recovery or something.
+>>
+>> Aborts are racy. A lot of hardware implements these as a no-op, too.
+>>    
+> 
+> I'd avoid implementing userspace aborts and fix things in spec first.
+> 
+What's there to fix in the spec for aborts? You can't avoid the fact 
+that aborts might be sent just at the time when the completion arrives ...
 
-What do you think about my proposal to have a single "wear estimate"
-field and allow each flash type to calculate it as required by its own
-internal logic?
-The migration for eMMC and existing drivers would be to expose the
-maximum of type_A, type_B wear, but other cell types would be able to
-provide whatever logic they need as long as it meaningfully exposes
-the "wear"
+Cheers,
 
->
-> >>
-> >> (https://docs.oasis-open.org/virtio/virtio/v1.2/virtio-v1.2.html)
-> >>
-> >> Following Michael's suggestion, I'd like to add to the virtio spec
-> >> with a new, extended lifetime command.
-> >> Since I'm more familiar with embedded type storage devices, I'd like
-> >> to ask you guys what fields you think should be included in the
-> >> extended command.
-> >>
-> >> Thanks,
-> >>
-> >> Alvaro
->
-> -ck
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
