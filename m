@@ -2,106 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20DDDC05027
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Feb 2023 09:32:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94358C636CC
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Feb 2023 11:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231207AbjBTJcZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Feb 2023 04:32:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38340 "EHLO
+        id S231514AbjBTLOU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Feb 2023 06:14:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230062AbjBTJcY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2023 04:32:24 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1589166DF;
-        Mon, 20 Feb 2023 01:32:19 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1934F60D38;
-        Mon, 20 Feb 2023 09:32:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59BB1C4339B;
-        Mon, 20 Feb 2023 09:32:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676885538;
-        bh=WP/C8hKVpvdrRvMRdROd3OdMlXuM01497fljMlMi13o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ne24zRzA9QCyMRSpjrif2y6f5rLPcC0ETThe1iYNjjAPHbITeX6qnCpTIr2gRpBkn
-         naztHHw2oEfx4t2zDq3yhKTbnS0Sg37tjoNdzIdlxq4jD39qyFFkH5z3alt1AO6paw
-         yTGE9rnUoKgvZ6swolAIHfOSiUV2kDoGxVkmESi4aqJt7EwX6xXguI1aAI1TdS66jK
-         seazaUZJ6ZHubyphkZ5IqmH3qhiinYEdlbPADku+RKCMy8yUjJAsPofF7dxPkfOJ5h
-         Px4s8Xh+WmsO3wo8T6F3qBcZ8BKpC4hJxE4K9EC9gxVZG9rBt5q1mC5veXVbW5+/Wh
-         VJjXz/e91+JSQ==
-Date:   Mon, 20 Feb 2023 15:02:10 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Stephen Zhang <starzhangzsd@gmail.com>
-Cc:     jejb@linux.ibm.com, artin.petersen@oracle.com,
-        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-        beanhuo@micron.com, bvanassche@acm.org, avri.altman@wdc.com,
-        yoshihiro.shimoda.uh@renesas.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, zhangshida@kylinos.cn,
-        k2ci <kernel-bot@kylinos.cn>
-Subject: Re: [PATCH] scsi: ufs: Add select to CONFIG_PM in Kconfig
-Message-ID: <20230220093210.GA27366@thinkpad>
-References: <20230220083256.997470-1-zhangshida@kylinos.cn>
+        with ESMTP id S231685AbjBTLOS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2023 06:14:18 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47C9D1ABE7;
+        Mon, 20 Feb 2023 03:14:09 -0800 (PST)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31K9xH5L015352;
+        Mon, 20 Feb 2023 11:14:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : reply-to : references : mime-version : content-type
+ : in-reply-to; s=pp1; bh=xR7MhnROeM1r0/Sm02pu8nKl+srHSuBfn9ADf82CgeY=;
+ b=g4ZF9puM0rx4fyEMPtasQlBLZS250ZRvUu58Xv7LHRm6IuuZNShKzsD9lHWwC62+FXJF
+ w6qOTWlqnHU/KL9/Dt8fl1CPuVhE3Q8wCQSpPtDvQOHwuFSFlYgpJVQ5ejaqC+UtAnXA
+ Phsp1wqMizo+vyUlfA552h7VdXbVxwLjqrIGPXfraSz+RgoE90VYKanOtDORZ1puY8Sr
+ ZQZMV0LLXkzGj+wWU0YJh2vb67yrd0YGgj1aT6Tpd4JVWRi2/GGjSZgFj53jzs26vRdn
+ 7yshGtPbJ8wZBUQN/WF+PqhDBG3uEQ4Xf85kG3Pkycb+mYdePCb9IyLj5SCFbLuMRxZt ag== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nv6qbhr5s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Feb 2023 11:14:02 +0000
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31KAkpaX032615;
+        Mon, 20 Feb 2023 11:14:02 GMT
+Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nv6qbhr4x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Feb 2023 11:14:02 +0000
+Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
+        by ppma01fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 31K7sJQe030599;
+        Mon, 20 Feb 2023 11:14:00 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+        by ppma01fra.de.ibm.com (PPS) with ESMTPS id 3ntpa69xug-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Feb 2023 11:14:00 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 31KBDwph30015762
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Feb 2023 11:13:58 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E8CB320043;
+        Mon, 20 Feb 2023 11:13:57 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5078320040;
+        Mon, 20 Feb 2023 11:13:56 +0000 (GMT)
+Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
+        by smtpav06.fra02v.mail.ibm.com (Postfix) with SMTP;
+        Mon, 20 Feb 2023 11:13:56 +0000 (GMT)
+Date:   Mon, 20 Feb 2023 16:43:55 +0530
+From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+To:     Lee Duncan <leeman.duncan@gmail.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>, Martin Wilck <mwilck@suse.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
+Message-ID: <20230220111355.GA805552@linux.vnet.ibm.com>
+Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230220083256.997470-1-zhangshida@kylinos.cn>
+In-Reply-To: <20220928181350.9948-1-leeman.duncan@gmail.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 0eSVwE3sxnfqcUe2PAOOmKubdcJCQFzD
+X-Proofpoint-ORIG-GUID: XL0Tm_2lZtxMKzosClRqRAQV5kX6u70r
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-20_08,2023-02-20_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ impostorscore=0 mlxscore=0 bulkscore=0 adultscore=0 phishscore=0
+ suspectscore=0 lowpriorityscore=0 spamscore=0 clxscore=1011
+ mlxlogscore=999 priorityscore=1501 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2302200100
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Feb 20, 2023 at 04:32:56PM +0800, Stephen Zhang wrote:
-> From: Shida Zhang <zhangshida@kylinos.cn>
-> 
-> From: Shida Zhang <zhangshida@kylinos.cn>
-> 
-> In a configuration with CONFIG_SCSI_UFS_MEDIATEK set to 'm' and
-> CONFIG_PM set to 'n', errors occur at compile time:
-> 
-> ====
-> ../drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_runtime_suspend’:
-> ../drivers/ufs/host/ufs-mediatek.c:1621:8: error: implicit declaration of function ‘ufshcd_runtime_suspend’; did you mean ‘ufs_mtk_runtime_suspend’? [-Werror=implicit-function-declaration]
-> ../drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_runtime_resume’:
-> ../drivers/ufs/host/ufs-mediatek.c:1636:9: error: implicit declaration of function ‘ufshcd_runtime_resume’; did you mean ‘ufs_mtk_runtime_resume’? [-Werror=implicit-function-declaration]
-> ====
-> 
-> This patch fixes these by selecting CONFIG_PM from CONFIG_SCSI_UFS_MEDIATEK.
-> 
-> Reported-by: k2ci <kernel-bot@kylinos.cn>
-> Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
-> ---
->  drivers/ufs/host/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
-> index 4cc2dbd79ed0..f9786f085b54 100644
-> --- a/drivers/ufs/host/Kconfig
-> +++ b/drivers/ufs/host/Kconfig
-> @@ -71,6 +71,7 @@ config SCSI_UFS_QCOM
->  config SCSI_UFS_MEDIATEK
->  	tristate "Mediatek specific hooks to UFS controller platform driver"
->  	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
-> +	select PM
+* Lee Duncan <leeman.duncan@gmail.com> [2022-09-28 11:13:50]:
 
-Forcing a dependency is only valid if the driver won't work without it. PM is
-an optional feature, so it shouldn't be forced. Moreover, in your case the
-drivers were not used but instead erroring out because their definitions exist.
-
-Here you should guard the ufs_mtk_runtime_suspend and ufs_mtk_runtime_resume
-functions with CONFIG_PM instead.
-
-Thanks,
-Mani
-
->  	select PHY_MTK_UFS
->  	select RESET_TI_SYSCON
->  	help
-> -- 
-> 2.27.0
+> From: Lee Duncan <lduncan@suse.com>
 > 
+> Some storage, such as AIX VDASD (virtual storage) and IBM 2076
+> (front end) do not like the recent commit:
+> 
+> commit c92a6b5d6335 ("scsi: core: Query VPD size before getting full page")
+> 
+> That commit changed getting SCSI VPD pages so that we now read
+> just enough of the page to get the actual page size, then read
+> the whole page in a second read. The problem is that the above
+> mentioned hardware returns zero for the page size, because of
+> a firmware error. In such cases, until the firmware is fixed,
+> this new black flag says to revert to the original method of
+> reading the VPD pages, i.e. try to read as a whole buffer's
+> worth on the first try.
+> 
+> Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full page")
+> Reported-by: Martin Wilck <mwilck@suse.com>
+> Suggested-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+
+Facing similar problem on latest upstream kernel and this fixes it in my
+testing.
+
+Incase this helps:
+
+$ lsslot
+# Slot                     Description       Linux Name    Device(s)
+U9080.HEX.134C1E8-V9-C0    Virtual I/O Slot  30000000      vty
+U9080.HEX.134C1E8-V9-C2    Virtual I/O Slot  30000002      l-lan
+U9080.HEX.134C1E8-V9-C109  Virtual I/O Slot  3000006d      v-scsi
+
+$ ls-vscsi
+host0 U9080.HEX.134C1E8-V9-C109-T0
+
+$ lsscsi
+[0:0:1:0]    disk    AIX      VDASD            0001  /dev/sda
+[0:0:2:0]    cd/dvd  AIX      VOPTA                  /dev/sr0
+
+
+Tested-by: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Thanks and Regards
+Srikar Dronamraju
