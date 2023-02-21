@@ -2,101 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 111ACC636D6
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 01:45:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6355EC61DA3
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 02:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232916AbjBUBpD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Feb 2023 20:45:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35450 "EHLO
+        id S233348AbjBUCwt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Feb 2023 21:52:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232546AbjBUBpC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2023 20:45:02 -0500
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C25BDA5DC;
-        Mon, 20 Feb 2023 17:45:00 -0800 (PST)
-Received: by mail-lf1-x135.google.com with SMTP id i9so3625761lfc.6;
-        Mon, 20 Feb 2023 17:45:00 -0800 (PST)
+        with ESMTP id S233288AbjBUCws (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2023 21:52:48 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0407124107;
+        Mon, 20 Feb 2023 18:52:14 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id g12so1599884pfi.0;
+        Mon, 20 Feb 2023 18:52:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=34lDDydAwAjd3gUwJRFbQoccKORNig7o9dp+cyLAa44=;
-        b=hhBJOZuMVo1ePfb3/3F68gF6BC3ON4xQ3y3JcnWFv09WbtqsPLa5Mb3U7Zh+cKDKCF
-         kvO9182b9JjrjENaevcIEelP/puJZI7VtplNpyOE8UrLFtbRdBDMwal8hE7xPL0PEt7k
-         ZzST/MOdeg29aK5EoPZ/TyX/hWQ2BHChevLsdy5Eo1smhAM/ZP0OoU8VYV154M60PXzR
-         0icNAm/PmkJQuQDMoZm+QfP340RnMnd+p4qZ96mVU81UR7LAHyMEUPvTu7ckzT2+krv/
-         K+GxG8mVqKyyAnQmuwOA5+8cO2/eUrt2Jj1bar1F4NjWhFPNYsec7Q0J4qkt+EPEFtQu
-         SAlQ==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=TtGcBjSMD0TPpnUy4pzgFNIJ5eKnUntLrojcStRDYvY=;
+        b=TISNllblHWF13weS2bgeSF1ImCiREcvaXpiF/CreaEjt0LoXeoVQI0oV+1LALsnTMv
+         4wduhGF2Jo4vqYZbUPq97QLzuL6OLTPET8UzQiCzqdkuI1TK3LhExuFufxKFLSFxiR+N
+         ThCXAgT68zYCVbKn1grxyUPK4rQBV5HvP+yhKP86Tj0Sjwb3hB0s/h+JaxOY2qyZ5MDc
+         5vRdcIDFJLN4lnqakNRvCz4oRteJ0lsbuojFn7n/xCixggNN48+ux9uEuzAZfJePKv9U
+         uHVhXZlGHvE/z8NhvJCad44OEvTsNRW6MDCYqHJazhZM9ZtbwCYMCW9zD+AbwG/QeKlq
+         3xCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=34lDDydAwAjd3gUwJRFbQoccKORNig7o9dp+cyLAa44=;
-        b=Zy78+99+YZxKcerPwnx3x6PPw6TxKE+nxjWMAjiMvXAlgHSeXtHTaeznlAZPD7T6vd
-         v6JlNxBD2Fm+UXFYke4yOHDKp+EAQMGQofPprUsM/lurEhH0FqhThXc8t/I3bjQ/qh/P
-         7QBv9KPDfqyhZn/UensIcD/vzsPDDRxfnk/qIRrTBNkSXSUsYxteLtj5woKsTAmpkkp9
-         Ud77Ka7rn3p9h0WYmOd9rbdhZ6GvhMIpoDfyhLMO8jkc5WNlzN2hbGOMKlim27yxD8XX
-         Tf4EYiuW1JWphpuhWAFPmKLLQi2ulmuj/lU+YtcGbx2v/zxFFmoiIMngXfqjQ9B1BEXV
-         sFtQ==
-X-Gm-Message-State: AO0yUKXeryqzVyXuFYB7AF9+wxH2gtPqz/mk8uAoiSxRuJHHV+zOvGkn
-        AVqhUjoQ0QHL/zsTBoH1h5QBRi5fCSdSThIQbWOolM/1yg==
-X-Google-Smtp-Source: AK7set9Iu6OicBYAy8yoZbvlxVUSUKcFs1DOnRErdCLJJTpX8gi0u3toSKpGGdcUc5c9tHFS+Lce1M8lfxi7dHbnRJc=
-X-Received: by 2002:ac2:5e8c:0:b0:4db:38a7:f32f with SMTP id
- b12-20020ac25e8c000000b004db38a7f32fmr1165437lfq.4.1676943898660; Mon, 20 Feb
- 2023 17:44:58 -0800 (PST)
+        bh=TtGcBjSMD0TPpnUy4pzgFNIJ5eKnUntLrojcStRDYvY=;
+        b=2lvPIb56s43W34eEd3Tr4cpB8OOMX84oDd/OkMIA6CFyZFf2SNpYMXLnThrtRPS1m8
+         OkDiog5sGpLDEnX9AeBtyd180eAQJ319tvSZreRftyyCgDX0yMI6LMZTsVF89XyFk+nj
+         7UD8m65ZfFyZjGzMrbPEZgtCKKpqG5e8QK2RTRLmLtTs23+1ukaCQOf6BFR5zB0QOd+K
+         sBX0rDJ7tnAnoMqh5dew7LV46V0S/7i3ObnEMsv3wx4MbrLWdfn0wkeoMeGCBbjVw/42
+         xofUVa8T8NqgraOqyo5/4BP3TTufkv06qI3vmWwjXt51HSgt7AtonQkETfJiI82JVMTa
+         JCsg==
+X-Gm-Message-State: AO0yUKWk6ztN1cz061frK3wLJkqePeU+sietLwkc3kgadHGQL2vfI49q
+        CXAo5jMWJpdvw5rDeC7orA8=
+X-Google-Smtp-Source: AK7set8+e5eaqDbJ9WaXabjF/wktK7ZqA2lJP1Q1QeyCNfHcTThHtXLt0gc8UdQC0C9xGffblwQhrg==
+X-Received: by 2002:a05:6a00:2ea8:b0:5a8:9858:750a with SMTP id fd40-20020a056a002ea800b005a89858750amr4423750pfb.13.1676947863789;
+        Mon, 20 Feb 2023 18:51:03 -0800 (PST)
+Received: from localhost.localdomain ([2407:cdc0:a091:5a10:3275:3446:a72b:eccd])
+        by smtp.gmail.com with ESMTPSA id s4-20020a62e704000000b0059442ec49a2sm8603427pfh.146.2023.02.20.18.51.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Feb 2023 18:51:03 -0800 (PST)
+From:   Stephen Zhang <starzhangzsd@gmail.com>
+X-Google-Original-From: Stephen Zhang <zhangshida@kylinos.cn>
+To:     jejb@linux.ibm.com, artin.petersen@oracle.com,
+        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+        beanhuo@micron.com, bvanassche@acm.org, avri.altman@wdc.com,
+        yoshihiro.shimoda.uh@renesas.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, zhangshida@kylinos.cn,
+        starzhangzsd@gmail.com, k2ci <kernel-bot@kylinos.cn>
+Subject: [PATCH v2] scsi: ufs: Guard the ufs_mtk_runtime_suspend and ufs_mtk_runtime_resume with CONFIG_PM
+Date:   Tue, 21 Feb 2023 10:50:55 +0800
+Message-Id: <20230221025055.1031342-1-zhangshida@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20230220142431.54589-1-frank.li@vivo.com>
-In-Reply-To: <20230220142431.54589-1-frank.li@vivo.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Tue, 21 Feb 2023 09:44:47 +0800
-Message-ID: <CAGaU9a-xmWFhXSZ0Zt7O2xvVz4xd-AY1giFAeKFnAxHAgUx5pw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: guard ufs_mtk_runtime_suspend()
- and ufs_mtk_runtime_resume() w/ CONFIG_PM
-To:     Yangtao Li <frank.li@vivo.com>
-Cc:     stanley.chu@mediatek.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, zhangshida@kylinos.cn,
-        k2ci <kernel-bot@kylinos.cn>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Yangtao,
+From: Shida Zhang <zhangshida@kylinos.cn>
 
-On Mon, Feb 20, 2023 at 10:44 PM Yangtao Li <frank.li@vivo.com> wrote:
->
-> To fix below compile error(CONFIG_PM set to 'n'):
->
-> drivers/ufs/host/ufs-mediatek.c: In function `ufs_mtk_runtime_suspend`:
-> drivers/ufs/host/ufs-mediatek.c:1623:8: error: implicit declaration of
->         function `ufshcd_runtime_suspend`; did you mean `ufs_mtk_runtime_suspend`?
->         [-Werror=implicit-function-declaration]
->  1623 |  ret = ufshcd_runtime_suspend(dev);
->       |        ^~~~~~~~~~~~~~~~~~~~~~
->       |        ufs_mtk_runtime_suspend
-> drivers/ufs/host/ufs-mediatek.c: In function `ufs_mtk_runtime_resume`:
-> drivers/ufs/host/ufs-mediatek.c:1638:9: error: implicit declaration of function
->         `ufshcd_runtime_resume`; did you mean `ufs_mtk_runtime_resume`?
->         [-Werror=implicit-function-declaration]
->  1638 |  return ufshcd_runtime_resume(dev);
->       |         ^~~~~~~~~~~~~~~~~~~~~
->       |         ufs_mtk_runtime_resume
-> At top level:
-> drivers/ufs/host/ufs-mediatek.c:1632:12: error: `ufs_mtk_runtime_resume`
->         defined but not used [-Werror=unused-function]
->  1632 | static int ufs_mtk_runtime_resume(struct device *dev)
->       |            ^~~~~~~~~~~~~~~~~~~~~~
-> drivers/ufs/host/ufs-mediatek.c:1618:12: error: `ufs_mtk_runtime_suspend`
->         defined but not used [-Werror=unused-function]
->  1618 | static int ufs_mtk_runtime_suspend(struct device *dev)
->
-> Reported-by: k2ci <kernel-bot@kylinos.cn>
-> Reported-by: Shida Zhang <zhangshida@kylinos.cn>
-> Signed-off-by: Yangtao Li <frank.li@vivo.com>
+In a configuration with CONFIG_SCSI_UFS_MEDIATEK set to 'm' and
+CONFIG_PM set to 'n', errors occur at compile time:
 
-Thanks for this fix.
+====
+../drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_runtime_suspend’:
+../drivers/ufs/host/ufs-mediatek.c:1621:8: error: implicit declaration of function ‘ufshcd_runtime_suspend’; did you mean ‘ufs_mtk_runtime_suspend’? [-Werror=implicit-function-declaration]
+../drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_runtime_resume’:
+../drivers/ufs/host/ufs-mediatek.c:1636:9: error: implicit declaration of function ‘ufshcd_runtime_resume’; did you mean ‘ufs_mtk_runtime_resume’? [-Werror=implicit-function-declaration]
+====
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+This patch fixes these by guarding these functions with CONFIG_PM.
+
+Reported-by: k2ci <kernel-bot@kylinos.cn>
+Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
+---
+Changes in v2:
+  Guarding these functions with CONFIG_PM instead of selecting the config.
+
+ drivers/ufs/host/ufs-mediatek.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 21d9b047539f..73e217260390 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1613,6 +1613,7 @@ static int ufs_mtk_system_resume(struct device *dev)
+ }
+ #endif
+ 
++#ifdef CONFIG_PM
+ static int ufs_mtk_runtime_suspend(struct device *dev)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+@@ -1635,6 +1636,7 @@ static int ufs_mtk_runtime_resume(struct device *dev)
+ 
+ 	return ufshcd_runtime_resume(dev);
+ }
++#endif
+ 
+ static const struct dev_pm_ops ufs_mtk_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
+-- 
+2.27.0
+
