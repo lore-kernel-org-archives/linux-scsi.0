@@ -2,92 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59CD1C636D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 18:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD063C6FD18
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 19:09:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbjBUS7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 13:59:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53794 "EHLO
+        id S229557AbjBUTJc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 14:09:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229651AbjBUS7Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 13:59:25 -0500
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 539562D15D;
-        Tue, 21 Feb 2023 10:59:24 -0800 (PST)
-Received: by mail-pl1-f170.google.com with SMTP id q11so6459018plx.5;
-        Tue, 21 Feb 2023 10:59:24 -0800 (PST)
+        with ESMTP id S229903AbjBUTJ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 14:09:28 -0500
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEAA729140;
+        Tue, 21 Feb 2023 11:09:25 -0800 (PST)
+Received: by mail-pj1-x1030.google.com with SMTP id d1-20020a17090a3b0100b00229ca6a4636so6251474pjc.0;
+        Tue, 21 Feb 2023 11:09:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=7toiITCf4zEDwukcWIEguEJe64NlPZx5g99K0VzyLdE=;
+        b=bdhJMgh91hdqT4luYd5ioY/yBXBRYAcZQsrKyzfveBzI6gQiYch96TORD+AxB6uQk5
+         oyAYXLrRF89zBrePntkph1MFBau8LlCFmliyyexlK0j+3mbX1GbnvNgBjezJVVByiuK6
+         MBiBBJ+EcGIQp5x7oabLl73LgLF+Cmlz8VfVPinHfxB11/IW9v7uriJCTkaG/CJizM6w
+         aDR2n57qZhkpUfLGBKS4SRojyDwEm0mrj+xKqE7p0TryLWAkHhYiKsM+en/HnklvLWF+
+         LXwxDNEtUbd1NpX/LR+4xebS+8N9Y4qW8vqOXqDFgwu6S98CGAngdWBGfGOBhpX9kHu5
+         FLcQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2cL3ZFx6aC3gkxJxvOMXx9WjSRbCkQiOWXyY6yTANeM=;
-        b=Gl7NgB436AAQcu2/oWYGc6x2Qpw+LXhPKv4jBjE7qDUMfyy0QVm2MP4pOkrnRx0k56
-         pNbpp2Axh6HPo+n6WGeK8oygrBDr729POepsgNUu9JEN+Yhr5GNY96eRgm3Kd/Z3GNd1
-         66UXnSIeCchoNlQVYTuEf9cDW7NGvxAd7jTFg5mIGbfKPfySRTvKOgk9MLLv9VrBRTM2
-         ODuv4qdrEBGlQOe3S4lzj/Byf7/Az3Vl+bpeZmtSs4ebDtkaR/IhbKAjDBWxhhlsSY1E
-         ZmOC9x1xzLf5kiTarCtYh5iswX8eXfEqmC+ZHAPqWhAX7VEOAik6TA9FDxb42sEfgYc5
-         GEmg==
-X-Gm-Message-State: AO0yUKXbQqcpQtGAp6t0nZuGhsueJXSvPeAh+ep0K4ipXy7eaaufGych
-        v1rRLgqG0Y87OIJJ+YNP/CU=
-X-Google-Smtp-Source: AK7set9lPF6cFg2TrDVnvULDaoSMrKvHt5cnFIbWmkWdEjEjRHpTKCF9iv2Q8wwA/KX5Nq0Lme09Rw==
-X-Received: by 2002:a17:902:ec8e:b0:196:89bc:7100 with SMTP id x14-20020a170902ec8e00b0019689bc7100mr10171339plg.16.1677005963782;
-        Tue, 21 Feb 2023 10:59:23 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:2514:6f67:63f5:599a:2f4c? ([2620:0:1000:2514:6f67:63f5:599a:2f4c])
-        by smtp.gmail.com with ESMTPSA id bf3-20020a170902b90300b0019aa4c00ff4sm10231070plb.206.2023.02.21.10.59.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Feb 2023 10:59:23 -0800 (PST)
-Message-ID: <8268452f-cc33-81cb-32be-a9e37f97894f@acm.org>
-Date:   Tue, 21 Feb 2023 10:59:20 -0800
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7toiITCf4zEDwukcWIEguEJe64NlPZx5g99K0VzyLdE=;
+        b=Ox1ca5/By2GgQWq2CF+QLdqmOa83ey1x6F+RT4GSUPx+qCp2vDBboOVxl3DcKhqP3o
+         hlCmUnJcMfH8V/ZrzyOIj0jBLn7s+Dgd24GbdQT4Zml4F3hfHaEPyB5xKc373vlEeR7z
+         n36pQvzihjcn4RRcbjVPH5MDIOiDSfGYYmwQ3mubXansTDw0Y9rYyOCjcXN+KJ6DgIkO
+         hWIQmkUE9Z8MFbmjAllD4e2SQFPKeOgkzSvVNYMxKu3SXzhiqyRkwTCGWJb+PCnzgDVq
+         7W9dlA+nNp1UWQ7tZgy1gYWGUBf11V567vUwt+I11GIBfi13+CTkdG0cK9/bjP3zE+DL
+         8weQ==
+X-Gm-Message-State: AO0yUKWuy+G3rvCmYr7nvdgI+0jO2Yfy5HjNnJ1NDWRJXMsTjjwo8ppx
+        7wxSjMlCWTP/2qBe99geqrzu4Fmyy48HcKqE03k=
+X-Google-Smtp-Source: AK7set8YEZqM92nnqZUTzt9FzDBxitixBpPf8665l200lnehWpcnu9yFX9pL1BBOzg3ERV6oA+03SYtDiAWrbbJF4no=
+X-Received: by 2002:a17:90b:3b92:b0:233:e796:7583 with SMTP id
+ pc18-20020a17090b3b9200b00233e7967583mr1597504pjb.1.1677006565041; Tue, 21
+ Feb 2023 11:09:25 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH 1/4] scsi: ufs: core: Fix mcq tag calcualtion
-Content-Language: en-US
-To:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com,
-        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-References: <20230221152919.25837-1-powen.kao@mediatek.com>
- <20230221152919.25837-2-powen.kao@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230221152919.25837-2-powen.kao@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <Y9KtCc+4n5uANB2f@casper.infradead.org> <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
+In-Reply-To: <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
+From:   Yang Shi <shy828301@gmail.com>
+Date:   Tue, 21 Feb 2023 11:09:13 -0800
+Message-ID: <CAHbLzkqsyv6rw-RRvNcB0PoEE75qS9ZtmywhJYZbVA05d5tj5A@mail.gmail.com>
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+To:     Gao Xiang <hsiangkao@linux.alibaba.com>,
+        Mel Gorman <mgorman@techsingularity.net>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/21/23 07:29, Po-Wen Kao wrote:
-> Transfer command descriptor is allocated in ufshcd_memory_alloc()
-> and referenced by transfer request descriptor with stride size
-> sizeof_utp_transfer_cmd_desc()
-> instead of
-> sizeof(struct utp_transfer_cmd_desc).
-> 
-> Consequently, computing tag by address offset should also refer to the
-> same stride.
-> 
-> As suggested, sizeof_utp_transfer_cmd_desc() is further renamed to
-> ufshcd_get_ucd_size().
+On Tue, Feb 21, 2023 at 10:08 AM Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
+>
+>
+>
+> On 2023/1/27 00:40, Matthew Wilcox wrote:
+> > I'd like to do another session on how the struct page dismemberment
+> > is going and what remains to be done.  Given how widely struct page is
+> > used, I think there will be interest from more than just MM, so I'd
+> > suggest a plenary session.
+> >
+> > If I were hosting this session today, topics would include:
+> >
+> > Splitting out users:
+> >
+> >   - slab (done!)
+> >   - netmem (in progress)
+> >   - hugetlb (in akpm)
+> >   - tail pages (in akpm)
+> >   - page tables
+> >   - ZONE_DEVICE
+> >
+> > Users that really should have their own types:
+> >
+> >   - zsmalloc
+> >   - bootmem
+> >   - percpu
+> >   - buddy
+> >   - vmalloc
+> >
+> > Converting filesystems to folios:
+> >
+> >   - XFS (done)
+> >   - AFS (done)
+> >   - NFS (in progress)
+> >   - ext4 (in progress)
+> >   - f2fs (in progress)
+> >   - ... others?
+> >
+> > Unresolved challenges:
+> >
+> >   - mapcount
+> >   - AnonExclusive
+> >   - Splitting anon & file folios apart
+> >   - Removing PG_error & PG_private
+>
+> I'm interested in this topic too, also I'd like to get some idea of the
+> future of the page dismemberment timeline so that I can have time to keep
+> the pace with it since some embedded use cases like Android are
+> memory-sensitive all the time.
+>
+> Minor, it seems some apis still use ->lru field to chain bulk pages,
+> perhaps it needs some changes as well:
+> https://lore.kernel.org/r/20221222124412.rpnl2vojnx7izoow@techsingularity.net
+> https://lore.kernel.org/r/20230214190221.1156876-2-shy828301@gmail.com
 
-This patch includes two changes:
-(1) a bug fix.
-(2) a name change for a function.
+The dm-crypt patches don't use list anymore. The bulk allocator still
+supports the list version, but so far there is no user, so it may be
+gone soon.
 
-A Linux kernel patch should include only one logical change. Please 
-split this patch.
-
-Thanks,
-
-Bart.
+>
+> Thanks,
+> Gao Xiang
+>
+> >
+> > This will probably all change before May.
+> >
+> > I'd like to nominate Vishal Moola & Sidhartha Kumar as invitees based on
+> > their work to convert various functions from pages to folios.
+>
