@@ -2,127 +2,144 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D45DEC636D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 19:38:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95AF0C636D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 19:41:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229866AbjBUTiC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 14:38:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57536 "EHLO
+        id S229920AbjBUTlH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 14:41:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbjBUTiA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 14:38:00 -0500
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A42D51D;
-        Tue, 21 Feb 2023 11:37:58 -0800 (PST)
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31LI2kmi017935;
-        Tue, 21 Feb 2023 19:37:34 GMT
+        with ESMTP id S229484AbjBUTlG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 14:41:06 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE0E02CFF6;
+        Tue, 21 Feb 2023 11:40:56 -0800 (PST)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31LJUxK0028060;
+        Tue, 21 Feb 2023 19:40:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=pp1;
- bh=XYU56Kw4GX6w5Ld+VM6f7XkbevWWfxD+rVrP4x9LPDg=;
- b=RLqnMtJyBQEsV/kea30ZOZniMYmLvdfJv2E7y0d3GmelTG7U3Bii/Jd7WDylXRDG/GJJ
- CxmxAZQd5xAtBlcnbXxNjmoxBhrJ3mEamTgW/UGXSvsuiSXBbWHqH2x5s2ChFjscGd/7
- o17wKcjDg3OIJ58uBQdNnG1a0Mr08ZurgCR36PuDXq8jwfJvsjnx4lhvxcpSieCbUayQ
- nhx10QbC9yWmB+QVYqX6u/jG8/IUMW2JGcNjfysnEbFbAxi+JmaG0phcUsNitIE99SbF
- Mw7I5A4s2XBqysQcjpwqPGbdMUq6oSbYeZWkGS/wvvRdOLoCs4/hR1HUMUU0+VQ04UCt Jw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nw2vxj1qj-1
+ bh=sJHkJ2+KfEf+APTWfzsOwEWtjLO+lDYbMW/GVXPVFrw=;
+ b=faqxAFuTJU+tmX1xoIK79LntjUZHHIe3/eyYMTgHwescjpt9geCprlwYS9kuVtLZbNhk
+ XY7vmWK+N5Vn6yusi2u0uV1RzPl+Ke7XNf0Fq4CmsWXRo18wXZUV++S4eFUXkumeU3Y8
+ 9cTFSvSENq517Ecx4d9OAsAK1CjsS6bw8f8/eM/NDmc8f/oed9t9E/jpprX6mgkydfCn
+ m02eyZucG+l3lVyx24InxG4Up7eDcOso/OhcenYULDQr3O8DJEh8Ej9Zfl6yFVnUAEJa
+ xLg3TYdO4sNw8L0eOIMx8kSKUxtav5la8VuD42eMXZHWwuxc2URgrnAIbfPR1BAUvtgp Ow== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nw46ar77y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Feb 2023 19:37:34 +0000
-Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31LJbXPk038202;
-        Tue, 21 Feb 2023 19:37:33 GMT
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nw2vxj1q3-1
+        Tue, 21 Feb 2023 19:40:50 +0000
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 31LHl8Yv014128;
+        Tue, 21 Feb 2023 19:40:49 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([9.208.129.117])
+        by ppma04wdc.us.ibm.com (PPS) with ESMTPS id 3ntpa74cwn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Feb 2023 19:37:33 +0000
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 31LIKxBB011404;
-        Tue, 21 Feb 2023 19:37:32 GMT
-Received: from smtprelay03.wdc07v.mail.ibm.com ([9.208.129.113])
-        by ppma01dal.us.ibm.com (PPS) with ESMTPS id 3ntpa7hehq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Feb 2023 19:37:32 +0000
+        Tue, 21 Feb 2023 19:40:49 +0000
 Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-        by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 31LJbUIS52035934
+        by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 31LJelJK54984982
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Feb 2023 19:37:31 GMT
+        Tue, 21 Feb 2023 19:40:47 GMT
 Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A67F958057;
-        Tue, 21 Feb 2023 19:37:30 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 6AA8958058;
+        Tue, 21 Feb 2023 19:40:47 +0000 (GMT)
 Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B844758058;
-        Tue, 21 Feb 2023 19:37:29 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id D124E58057;
+        Tue, 21 Feb 2023 19:40:46 +0000 (GMT)
 Received: from [9.163.50.38] (unknown [9.163.50.38])
         by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 21 Feb 2023 19:37:29 +0000 (GMT)
-Message-ID: <2ee5da4d-7dc5-6624-6c87-133958df6478@linux.vnet.ibm.com>
-Date:   Tue, 21 Feb 2023 13:37:29 -0600
+        Tue, 21 Feb 2023 19:40:46 +0000 (GMT)
+Message-ID: <6180bf1d-265e-8e77-c507-967ee103f80a@linux.vnet.ibm.com>
+Date:   Tue, 21 Feb 2023 13:40:46 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH] [v2] scsi: ipr: work around fortify-string warning
-To:     Arnd Bergmann <arnd@kernel.org>, Brian King <brking@us.ibm.com>,
+Subject: Re: [PATCH v2] scsi: ipr: Convert ipr_probe_ioa_part2 as void
+Content-Language: en-US
+To:     Deepak R Varma <drv@mailo.com>, Brian King <brking@us.ibm.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        James Bottomley <James.Bottomley@SteelEye.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Kees Cook <keescook@chromium.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        John Garry <john.g.garry@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev
-References: <20230214132831.2118392-1-arnd@kernel.org>
-Content-Language: en-US
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>
+References: <Y7rvQyMOGcPKPTv8@ubun2204.myguest.virtualbox.org>
 From:   Brian King <brking@linux.vnet.ibm.com>
-In-Reply-To: <20230214132831.2118392-1-arnd@kernel.org>
+In-Reply-To: <Y7rvQyMOGcPKPTv8@ubun2204.myguest.virtualbox.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: vFbwMNoIzTZ_19hKyyCgSMTlGvGP4j3-
-X-Proofpoint-GUID: ttYwtpLHOxPqj7zQjo5bbBn2I-Ns0p-K
+X-Proofpoint-GUID: Y_eWofi1reUCKiSBfNNxofTwgJ-2Q_-X
+X-Proofpoint-ORIG-GUID: Y_eWofi1reUCKiSBfNNxofTwgJ-2Q_-X
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
  definitions=2023-02-21_12,2023-02-20_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
- spamscore=0 suspectscore=0 mlxlogscore=999 priorityscore=1501
- impostorscore=0 mlxscore=0 adultscore=0 malwarescore=0 clxscore=1011
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302210168
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=999
+ phishscore=0 clxscore=1011 lowpriorityscore=0 bulkscore=0 impostorscore=0
+ priorityscore=1501 suspectscore=0 malwarescore=0 mlxscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2302210168
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/14/23 7:28 AM, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
+On 1/8/23 10:28 AM, Deepak R Varma wrote:
+> Convert function ipr_probe_ioa_part2() to return void instead
+> of int since the current implementation always returns 0 to the caller.
+> The transformation also eliminates the dead code when calling
+> ipr_probe_ioa_part2() function.
+> Issue identified using returnvar Coccinelle semantic patch.
 > 
-> The ipr_log_vpd_compact() function triggers a fortified memcpy() warning
-> about a potential string overflow with all versions of clang:
+> Signed-off-by: Deepak R Varma <drv@mailo.com>
+> ---
+> Changes in v2:
+>    - retain and update Return value comment in function documentation
 > 
-> In file included from drivers/scsi/ipr.c:43:
-> In file included from include/linux/string.h:254:
-> include/linux/fortify-string.h:520:4: error: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror,-Wattribute-warning]
->                         __write_overflow_field(p_size_field, size);
->                         ^
-> include/linux/fortify-string.h:520:4: error: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror,-Wattribute-warning]
-> 2 errors generated.
+>  drivers/scsi/ipr.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
 > 
-> I don't see anything actually wrong with the function, but this is the
-> only instance I can reproduce of the fortification going wrong in the
-> kernel at the moment, so the easiest solution may be to rewrite the
-> function into something that does not trigger the warning.
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index 2022ffb45041..dfb759fbbd87 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -9505,11 +9505,10 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
+>   * This function takes care of initilizing the adapter to the point
+>   * where it can accept new commands.
+>   * Return value:
+> - * 	0 on success / -EIO on failure
+> + *     none
+>   **/
+> -static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+> +static void ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+>  {
+> -	int rc = 0;
+>  	unsigned long host_lock_flags = 0;
 > 
-> Instead of having a combined buffer for vendor/device/serial strings,
-> use three separate local variables and just truncate the whitespace
-> individually.
+>  	ENTER;
+> @@ -9525,7 +9524,6 @@ static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
+>  	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
 > 
-> Fixes: 8cf093e275d0 ("[SCSI] ipr: Improved dual adapter errors")
-> Cc: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>  	LEAVE;
+> -	return rc;
+>  }
+> 
+>  /**
+> @@ -10568,12 +10566,7 @@ static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>  		return rc;
+> 
+>  	ioa_cfg = pci_get_drvdata(pdev);
+> -	rc = ipr_probe_ioa_part2(ioa_cfg);
+> -
+> -	if (rc) {
+> -		__ipr_remove(pdev);
+> -		return rc;
+> -	}
+> +	ipr_probe_ioa_part2(ioa_cfg);
+> 
+>  	rc = scsi_add_host(ioa_cfg->host, &pdev->dev);
+> 
+> --
+> 2.34.1
 
 Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
