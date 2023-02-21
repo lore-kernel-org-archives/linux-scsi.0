@@ -2,237 +2,131 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F4CC6379F
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 15:30:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4A5C636D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 16:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234441AbjBUPao (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 10:30:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50128 "EHLO
+        id S233300AbjBUQGj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 11:06:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234389AbjBUPac (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 10:30:32 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1950F2BF09;
-        Tue, 21 Feb 2023 07:30:29 -0800 (PST)
-X-UUID: a7740eb0b1fc11ed945fc101203acc17-20230221
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=nQ1FI+tZAutpfgYwGq8uJe/0tKi1xigqaET55cH0i18=;
-        b=B7kyxq75w8CPtTMVGcWdEahW+79PPVqQz70FpK53T8yrewDWiq1NC0GJFg2mZ/AADswtdnLG4UQ1OvJDHt0fncYyAbL7MZOAw2AvmP7U3Bwwq8+YlI+lx3Xa/4/Qk6zPdiOMNMx0dt2m4BrLcL5oMlxBYHFwQGxA09IG9Y+Wcog=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.20,REQID:2dd659c5-0757-4ace-a9b5-81e3af82c395,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-        ON:release,TS:70
-X-CID-INFO: VERSION:1.1.20,REQID:2dd659c5-0757-4ace-a9b5-81e3af82c395,IP:0,URL
-        :0,TC:0,Content:-25,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTI
-        ON:quarantine,TS:70
-X-CID-META: VersionHash:25b5999,CLOUDID:a611b0f3-ddba-41c3-91d9-10eeade8eac7,B
-        ulkID:2302212330248C4YVOZP,BulkQuantity:0,Recheck:0,SF:38|29|28|17|19|48,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-        ,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0,NGT
-X-UUID: a7740eb0b1fc11ed945fc101203acc17-20230221
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-        (envelope-from <powen.kao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 146477882; Tue, 21 Feb 2023 23:30:21 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 21 Feb 2023 23:30:20 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Tue, 21 Feb 2023 23:30:20 +0800
-From:   Po-Wen Kao <powen.kao@mediatek.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
-        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
-        <alice.chao@mediatek.com>, <naomi.chu@mediatek.com>,
-        <chun-hung.wu@mediatek.com>, <cc.chou@mediatek.com>,
-        <eddie.huang@mediatek.com>, <mason.zhang@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 3/4] scsi: ufs: core: Add hwq print for debug
-Date:   Tue, 21 Feb 2023 23:29:16 +0800
-Message-ID: <20230221152919.25837-4-powen.kao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230221152919.25837-1-powen.kao@mediatek.com>
-References: <20230221152919.25837-1-powen.kao@mediatek.com>
+        with ESMTP id S232793AbjBUQGi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 11:06:38 -0500
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF7CF2A9BA;
+        Tue, 21 Feb 2023 08:06:36 -0800 (PST)
+Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
+        by mta-01.yadro.com (Proxmox) with ESMTP id 60D8134202F;
+        Tue, 21 Feb 2023 19:06:34 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
+        :cc:content-transfer-encoding:content-type:content-type:date
+        :from:from:message-id:mime-version:reply-to:subject:subject:to
+        :to; s=mta-01; bh=gETuOkhfbsraKCtj4kbqFI5ognR3HP+lSM9kNnXI5CU=; b=
+        Knp/WYVllEkEV7acolCAiOx+jnzE2JHPmu3Djj6xdBSNZVMSxpRq/j4l/dt2Rqw+
+        Zunt86y4vO8ybSwt47Z2q1XEDVRNED4gnuWUxC+NBxolu+DoYnytwIXZUDU7l/0L
+        qjGqtYZktmOgshbxa0x16U7ZeK7BTlBAukl6+I3tgFQ=
+Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id 56C2E342024;
+        Tue, 21 Feb 2023 19:06:34 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.178.114.42) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Tue, 21 Feb 2023 19:06:33 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     Christoph Hellwig <hch@infradead.org>,
+        Mike Christie <michael.christie@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH v4 0/5] scsi: target: make RTPI an TPG identifier
+Date:   Tue, 21 Feb 2023 19:06:18 +0300
+Message-ID: <20230221160622.7283-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-MTK:  N
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce hwq printing function for debug purpose.
-- ufshcd_mcq_print_hwqs()
+The patchset based on 6.3/scsi-queue.
 
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
----
- drivers/ufs/core/ufs-mcq.c     | 32 +++++++++++++++++++++++++++++++-
- drivers/ufs/core/ufshcd-priv.h |  9 +++++++++
- drivers/ufs/core/ufshcd.c      | 18 +++++++++++-------
- include/ufs/ufshci.h           | 12 ++++++++++++
- 4 files changed, 63 insertions(+), 8 deletions(-)
+SAM-5 4.6.5.2 (Relative Port Identifier attribute) defines the attribute
+as unique across SCSI target ports:
+ The Relative Port Identifier attribute identifies a SCSI target port or
+ a SCSI initiator port relative to other SCSI ports in a SCSI target
+ device and any SCSI initiator devices contained within that SCSI target
+ device. A SCSI target device may assign relative port identifiers to
+ its SCSI target ports and any SCSI initiator ports. If relative port
+ identifiers are assigned, the SCSI target device shall assign each of
+ its SCSI target ports and any SCSI initiator ports a unique relative
+ port identifier from 1 to 65 535. SCSI target ports and SCSI initiator
+ ports share the same number space.
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 5d5bc0bc6e88..d1ff3ccd2085 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -23,7 +23,6 @@
- 
- #define MAX_DEV_CMD_ENTRIES	2
- #define MCQ_CFG_MAC_MASK	GENMASK(16, 8)
--#define MCQ_QCFG_SIZE		0x40
- #define MCQ_ENTRY_SIZE_IN_DWORD	8
- #define CQE_UCD_BA GENMASK_ULL(63, 7)
- 
-@@ -75,6 +74,13 @@ module_param_cb(poll_queues, &poll_queue_count_ops, &poll_queues, 0644);
- MODULE_PARM_DESC(poll_queues,
- 		 "Number of poll queues used for r/w. Default value is 1");
- 
-+static const int mcq_opr_size[] = {
-+	MCQ_SQD_SIZE,
-+	MCQ_SQIS_SIZE,
-+	MCQ_CQD_SIZE,
-+	MCQ_CQIS_SIZE,
-+};
-+
- /**
-  * ufshcd_mcq_config_mac - Set the #Max Activ Cmds.
-  * @hba: per adapter instance
-@@ -237,6 +243,30 @@ static void __iomem *mcq_opr_base(struct ufs_hba *hba,
- 	return opr->base + opr->stride * i;
- }
- 
-+void ufshcd_mcq_print_hwqs(struct ufs_hba *hba, unsigned long bitmap)
-+{
-+	int id, i;
-+	char prefix[15];
-+
-+	if (!is_mcq_enabled(hba))
-+		return;
-+
-+	for_each_set_bit(id, &bitmap, hba->nr_hw_queues) {
-+		snprintf(prefix, sizeof(prefix), "q%d SQCFG: ", id);
-+		ufshcd_hex_dump(prefix,
-+			hba->mcq_base + MCQ_QCFG_SIZE * id, MCQ_QCFG_SQ_SIZE);
-+
-+		snprintf(prefix, sizeof(prefix), "q%d CQCFG: ", id);
-+		ufshcd_hex_dump(prefix,
-+			hba->mcq_base + MCQ_QCFG_SIZE * id + MCQ_QCFG_SQ_SIZE, MCQ_QCFG_CQ_SIZE);
-+
-+		for (i = 0; i < OPR_MAX ; i++) {
-+			snprintf(prefix, sizeof(prefix), "q%d OPR%d: ", id, i);
-+			ufshcd_hex_dump(prefix, mcq_opr_base(hba, i, id), mcq_opr_size[i]);
-+		}
-+	}
-+}
-+
- u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i)
- {
- 	return readl(mcq_opr_base(hba, OPR_CQIS, i) + REG_CQIS);
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 529f8507a5e4..13534a9a6d0a 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -6,6 +6,14 @@
- #include <linux/pm_runtime.h>
- #include <ufs/ufshcd.h>
- 
-+#define ufshcd_hex_dump(prefix_str, buf, len) do {                       \
-+	size_t __len = (len);                                            \
-+	print_hex_dump(KERN_ERR, prefix_str,                             \
-+		       __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,\
-+		       16, 4, buf, __len, false);                        \
-+} while (0)
-+
-+
- static inline bool ufshcd_is_user_access_allowed(struct ufs_hba *hba)
- {
- 	return !hba->shutting_down;
-@@ -65,6 +73,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 			  struct cq_entry *cqe);
- int ufshcd_mcq_init(struct ufs_hba *hba);
- int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
-+void ufshcd_mcq_print_hwqs(struct ufs_hba *hba, unsigned long bitmap);
- int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
- void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 81c9f07ebfc8..a15a5a78160c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -135,13 +135,6 @@ MODULE_PARM_DESC(use_mcq_mode, "Control MCQ mode for controllers starting from U
- 		_ret;                                                   \
- 	})
- 
--#define ufshcd_hex_dump(prefix_str, buf, len) do {                       \
--	size_t __len = (len);                                            \
--	print_hex_dump(KERN_ERR, prefix_str,                             \
--		       __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,\
--		       16, 4, buf, __len, false);                        \
--} while (0)
--
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix)
- {
-@@ -536,6 +529,8 @@ static
- void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- {
- 	const struct ufshcd_lrb *lrbp;
-+	struct ufs_hw_queue *hwq;
-+	struct scsi_cmnd *cmd;
- 	int prdt_length;
- 	int tag;
- 
-@@ -574,7 +569,16 @@ void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- 		if (pr_prdt)
- 			ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
- 				ufshcd_sg_entry_size(hba) * prdt_length);
-+
-+		if (is_mcq_enabled(hba)) {
-+			cmd = lrbp->cmd;
-+			if (!cmd)
-+				return;
-+			hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+			ufshcd_mcq_print_hwqs(hba, 1 << hwq->id);
-+		}
- 	}
-+
- }
- 
- static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 11424bb03814..027a2e884f89 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -185,6 +185,18 @@ static inline u32 ufshci_version(u32 major, u32 minor)
- 				CRYPTO_ENGINE_FATAL_ERROR |\
- 				UIC_LINK_LOST)
- 
-+/* MCQ size */
-+#define MCQ_QCFG_SIZE			0x40
-+#define MCQ_QCFG_SQ_SIZE		0x20
-+#define MCQ_QCFG_CQ_SIZE		0x20
-+
-+enum {
-+	MCQ_SQD_SIZE		= 0x14,
-+	MCQ_SQIS_SIZE		= 0x08,
-+	MCQ_CQD_SIZE		= 0x08,
-+	MCQ_CQIS_SIZE		= 0x0C,
-+};
-+
- /* HCS - Host Controller Status 30h */
- #define DEVICE_PRESENT				0x1
- #define UTP_TRANSFER_REQ_LIST_READY		0x2
+In the current TCM implementation, auto-incremented lun_rtpi weakly
+follows the model outlined by SAM-5 and SPC-4. In case of multiple SCSI
+target ports (se_portal_group's), which is common to scenario with
+multiple HBAs or multiple iSCSI/FC targets, it's possible to have two
+backstores (se_device's) with different values of lun_rtpi on the same
+SCSI target port.
+
+Similar issue happens during re-export. If a LUN of a backstore is
+removed from a target port and added again to the same target port, RTPI
+is incremented again and will be different from the first time.
+
+The two issues happen because each se_device increments RTPI for its own
+LUNs independently.
+
+The behaviour means that a SCSI application client can't reliably make any
+sense of RTPI values reported by a LUN as it's not really related to SCSI
+target ports. A conforming target implementation must ensure that RTPI field is
+unique per port. The patchset resolves the issue.
+
+Make RTPI be part of se_tpg instead of se_lun. Make it configurable.
+
+Changelog:
+  v4:
+    move rtpi file from tpg_n/attrib to tpgt_n folder (drop 4th patch)
+    use unused variable
+    make se_tpg.tpg_rtpi variable u16 again
+    revert occasional rename
+
+  v3:
+    make variable static
+    change core_ prefix to target_
+    split to tpg_enable/tpg_disable functions
+
+  v2:
+    use XArray for tracking RTPI instead of linked list
+    do not allow to change RTPI on enabled target port
+    drop not needed patches
+
+
+Dmitry Bogdanov (2):
+  scsi: target: core: Add RTPI field to target port
+  scsi: target: core: Add RTPI attribute for target port
+
+Roman Bolshakov (2):
+  scsi: target: core: Use RTPI from target port
+  scsi: target: core: Drop device-based RTPI
+
+ drivers/target/target_core_alua.c            |  4 +-
+ drivers/target/target_core_device.c          | 43 +-----------
+ drivers/target/target_core_fabric_configfs.c | 44 ++++++++++--
+ drivers/target/target_core_internal.h        |  3 +-
+ drivers/target/target_core_pr.c              |  8 +--
+ drivers/target/target_core_spc.c             |  2 +-
+ drivers/target/target_core_stat.c            |  6 +-
+ drivers/target/target_core_tpg.c             | 71 ++++++++++++++++++--
+ include/target/target_core_base.h            |  7 +-
+ 9 files changed, 120 insertions(+), 68 deletions(-)
+
 -- 
-2.18.0
+2.25.1
+
 
