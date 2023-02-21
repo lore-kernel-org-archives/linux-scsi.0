@@ -2,124 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC38DC6379F
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 07:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFF2C6379F
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 08:16:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232613AbjBUH2f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 02:28:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59322 "EHLO
+        id S233654AbjBUIQn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 03:16:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbjBUH2e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 02:28:34 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C83B23678;
-        Mon, 20 Feb 2023 23:28:33 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DE42160F97;
-        Tue, 21 Feb 2023 07:28:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FC9AC433D2;
-        Tue, 21 Feb 2023 07:28:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676964512;
-        bh=yrEXHlD+OGvdKZR47aQcY+a66pmfUFJm1C18b22BmkQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pzq2UwLbV8oJcbduSvS38Q+3wATyxt1VIUgplYDzUNqQXXGRstOt80Khkd122WQPM
-         l4c985Od9zzW8xxGcWGhxG0SXqionhv68Ig5RYURlyo2c9IumK7ZeSBu0EjlXZjH8l
-         w3DXaIcGjFNcoNmE2z15twbFO7iYpjyAjheG7ZnY/0bEAevnDVw7oRD5H3NeLXY7WM
-         zPHyHkvTbf5F4aXB0V0TtGnkDZ438ZTOLaDIgkkS+fyz35J8knc1NVM+JRJ5aXhjxD
-         eA9boBX2iehs+wL7Oi7cuC6Exd0rKZK/fcTxXJZu9zxbcI1OgyF5KJAn3V+qTyMzCe
-         ySh7RPbMuc9Fw==
-Date:   Tue, 21 Feb 2023 12:58:22 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Stephen Zhang <starzhangzsd@gmail.com>
-Cc:     jejb@linux.ibm.com, artin.petersen@oracle.com,
-        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-        beanhuo@micron.com, bvanassche@acm.org, avri.altman@wdc.com,
-        yoshihiro.shimoda.uh@renesas.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, zhangshida@kylinos.cn,
-        k2ci <kernel-bot@kylinos.cn>
-Subject: Re: [PATCH v2] scsi: ufs: Guard the ufs_mtk_runtime_suspend and
- ufs_mtk_runtime_resume with CONFIG_PM
-Message-ID: <20230221072822.GA99958@thinkpad>
-References: <20230221025055.1031342-1-zhangshida@kylinos.cn>
+        with ESMTP id S232589AbjBUIQl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 03:16:41 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94A3920062;
+        Tue, 21 Feb 2023 00:16:39 -0800 (PST)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PLXBm2hMHzKq1X;
+        Tue, 21 Feb 2023 16:14:40 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Tue, 21 Feb 2023 16:16:32 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
+Subject: [PATCH RESEND] scsi: sd: Update dix config everytime sd_revalidate_disk is called
+Date:   Tue, 21 Feb 2023 08:10:26 +0000
+Message-ID: <20230221081026.24736-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230221025055.1031342-1-zhangshida@kylinos.cn>
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 21, 2023 at 10:50:55AM +0800, Stephen Zhang wrote:
-> From: Shida Zhang <zhangshida@kylinos.cn>
-> 
+When the host protection capabilities are 0x77 and a DIF disk is connected,
+the DIX and DIF of the disk are default enabled. Then if that DIF disk is
+reformatted as a non-DIF format, per the currently flow, the DIX is kept
+enabled which is not correct, which will cause the following errors when
+accessing the non-DIF disk:
+[root@localhost ~]# lsscsi -p
+[7:0:5:0]    disk    xxx    /dev/sdc   DIF/Type3  T10-DIF-TYPE3-CRC
+[root@localhost ~]# sg_format -F -s 512 /dev/sdc
+[root@localhost ~]# lsscsi -p
+[7:0:5:0]    disk    xxx    /dev/sdc   -          T10-DIF-TYPE3-CRC
 
-Subject could be fixed as:
+[142829.032340] hisi_sas_v3_hw 0000:b4:04.0: erroneous completion iptt=2375 task=00000000bea0970c dev id=5 direct-attached phy4 addr=51c20dbaf642a000 CQ hdr: 0x1023 0x50947 0x0 0x20000 Error info: 0x0 0x0 0x4 0x0
+[142829.073883] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[142829.079783] sas: sas_scsi_find_task: aborting task 0x00000000bea0970c
+[142829.102342] sas: Internal abort: task to dev 51c20dbaf642a000 response: 0x0 status 0x5
+[142829.110319] sas: sas_eh_handle_sas_errors: task 0x00000000bea0970c is done
+[142829.117275] sd 7:0:5:0: [sdc] tag#2375 UNKNOWN(0x2003) Result: hostbyte=0x05 driverbyte=DRIVER_OK cmd_age=0s
+[142829.127171] sd 7:0:5:0: [sdc] tag#2375 CDB: opcode=0x2a 2a 00 00 00 00 00 00 00 08 00
+[142829.135059] I/O error, dev sdc, sector 0 op 0x1:(WRITE) flags 0x18800 phys_seg 1 prio class 2
 
-"scsi: ufs: mediatek: Guard runtime PM functions"
+On the contrary, when a non-DIF disk is connected and formatted as a DIF
+disk, it is found that DIX is not enabled. Operation logs as follows:
 
-> In a configuration with CONFIG_SCSI_UFS_MEDIATEK set to 'm' and
-> CONFIG_PM set to 'n', errors occur at compile time:
-> 
-> ====
-> ../drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_runtime_suspend’:
-> ../drivers/ufs/host/ufs-mediatek.c:1621:8: error: implicit declaration of function ‘ufshcd_runtime_suspend’; did you mean ‘ufs_mtk_runtime_suspend’? [-Werror=implicit-function-declaration]
-> ../drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_runtime_resume’:
-> ../drivers/ufs/host/ufs-mediatek.c:1636:9: error: implicit declaration of function ‘ufshcd_runtime_resume’; did you mean ‘ufs_mtk_runtime_resume’? [-Werror=implicit-function-declaration]
-> ====
-> 
-> This patch fixes these by guarding these functions with CONFIG_PM.
-> 
+[root@localhost ~]# lsscsi -p
+[7:0:2:0]    disk    xxx    /dev/sdc   -          none
+[root@localhost ~]# sg_format --format --fmtpinfo=3 --pfu=1 /dev/sdc
+[root@localhost ~]# lsscsi -p
+[7:0:2:0]    disk    xxx    /dev/sdc   DIF/Type3  none
 
-Remove reference to "patch" in the commit message as it will be meaningless
-once merged. The line could be reworded as,
+This is because dix config is only updated when the first time a disk
+is connected. In this patch, we fix the issue by with changes:
+1. Remove check first_scan when call sd_config_protection().
+2. Unregister block integrity profile after DIX becomes to 0.
 
-"Fix these errors by guarding the runtime PM functions with CONFIG_PM"
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/sd.c     | 3 ---
+ drivers/scsi/sd_dif.c | 4 +++-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-> Reported-by: k2ci <kernel-bot@kylinos.cn>
-> Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
-
-With the changes,
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-Thanks,
-Mani
-
-> ---
-> Changes in v2:
->   Guarding these functions with CONFIG_PM instead of selecting the config.
-> 
->  drivers/ufs/host/ufs-mediatek.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-> index 21d9b047539f..73e217260390 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -1613,6 +1613,7 @@ static int ufs_mtk_system_resume(struct device *dev)
->  }
->  #endif
->  
-> +#ifdef CONFIG_PM
->  static int ufs_mtk_runtime_suspend(struct device *dev)
->  {
->  	struct ufs_hba *hba = dev_get_drvdata(dev);
-> @@ -1635,6 +1636,7 @@ static int ufs_mtk_runtime_resume(struct device *dev)
->  
->  	return ufshcd_runtime_resume(dev);
->  }
-> +#endif
->  
->  static const struct dev_pm_ops ufs_mtk_pm_ops = {
->  	SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
-> -- 
-> 2.27.0
-> 
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2aa3b0393b96..774414d129a4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2254,9 +2254,6 @@ static void sd_config_protection(struct scsi_disk *sdkp)
+ {
+ 	struct scsi_device *sdp = sdkp->device;
+ 
+-	if (!sdkp->first_scan)
+-		return;
+-
+ 	sd_dif_config_host(sdkp);
+ 
+ 	if (!sdkp->protection_type)
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 968993ee6d5d..78db8d85f97e 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -39,8 +39,10 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+ 		dif = 0; dix = 1;
+ 	}
+ 
+-	if (!dix)
++	if (!dix) {
++		blk_integrity_unregister(disk);
+ 		return;
++	}
+ 
+ 	memset(&bi, 0, sizeof(bi));
+ 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.17.1
+
