@@ -2,93 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47505C61DA3
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 15:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27A4AC636D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 15:30:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234683AbjBUPC7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 10:02:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54532 "EHLO
+        id S234321AbjBUPa2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 10:30:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234653AbjBUPCx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 10:02:53 -0500
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B24A6597;
-        Tue, 21 Feb 2023 07:02:52 -0800 (PST)
-Received: from fsav415.sakura.ne.jp (fsav415.sakura.ne.jp [133.242.250.114])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 31LF2mKS073435;
-        Wed, 22 Feb 2023 00:02:48 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav415.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav415.sakura.ne.jp);
- Wed, 22 Feb 2023 00:02:48 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav415.sakura.ne.jp)
-Received: from [192.168.1.6] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 31LF2mkP073432
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Wed, 22 Feb 2023 00:02:48 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <0b9ebcfb-b647-1381-0653-b54528a64a86@I-love.SAKURA.ne.jp>
-Date:   Wed, 22 Feb 2023 00:02:46 +0900
+        with ESMTP id S234009AbjBUPa1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 10:30:27 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 379242A9A3;
+        Tue, 21 Feb 2023 07:30:22 -0800 (PST)
+X-UUID: a52455cab1fc11eda06fc9ecc4dadd91-20230221
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=IG8aI0nGKdxJQh9EKmucgj/bqMabnyUzB4U4Conf2wY=;
+        b=kFgoh1dg/4UeMlTYAwqCXrhqAz3PxNK91H/tFD58YBFFXO5CTIE5VeGo4LegDJuXq6nckbBLBRiKbjetZKSax8FkeiKvt9TYWIdemGwO2JeWHzL+wey6QfESxbtIborizwXHwP5eaZB8snb5us/YO6q8bjQGoKgUvlJjylZiLJI=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.20,REQID:4306137d-ee88-4092-a5dd-317cc2d0d5c2,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:95
+X-CID-INFO: VERSION:1.1.20,REQID:4306137d-ee88-4092-a5dd-317cc2d0d5c2,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
+        :quarantine,TS:95
+X-CID-META: VersionHash:25b5999,CLOUDID:5e9d22b1-beed-4dfc-bd9c-e1b22fa6ccc4,B
+        ulkID:2302212330187LLPPMOZ,BulkQuantity:0,Recheck:0,SF:38|29|28|17|19|48,T
+        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+        ,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0,NGT
+X-UUID: a52455cab1fc11eda06fc9ecc4dadd91-20230221
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
+        (envelope-from <powen.kao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 951336646; Tue, 21 Feb 2023 23:30:17 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Tue, 21 Feb 2023 23:30:17 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 21 Feb 2023 23:30:17 +0800
+From:   Po-Wen Kao <powen.kao@mediatek.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
+        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
+        <alice.chao@mediatek.com>, <naomi.chu@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <cc.chou@mediatek.com>,
+        <eddie.huang@mediatek.com>, <mason.zhang@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 2/4] scsi: ufs: core: Fix mcq nr_hw_queues
+Date:   Tue, 21 Feb 2023 23:29:15 +0800
+Message-ID: <20230221152919.25837-3-powen.kao@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20230221152919.25837-1-powen.kao@mediatek.com>
+References: <20230221152919.25837-1-powen.kao@mediatek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Content-Language: en-US
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: [PATCH] scsi: message: fusion: avoid flush_scheduled_work() usage
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Like commit c4f135d643823a86 ("workqueue: Wrap flush_workqueue() using a
-macro") says, flush_scheduled_work() is dangerous and will be forbidden.
+Need to add one to QMAX to obtain number of hardware queue.
 
-Commit 4d4109d0eb69 ("[SCSI] mpt fusion: Power Management fixes for MPT
-SAS PCI-E controllers") added flush_scheduled_work() call into
-mptscsih_suspend(). As of commit 4d4109d0eb69, there were several
-schedule{,_delayed}_work() calls where flush_scheduled_work() from
-mptscsih_suspend() meant to wait for completion, but which work items
-is this flush_scheduled_work() call for was not explained.
-
-Then, schedule_work("struct mptsas_hotplug_event"->work) and
-schedule_work(MPT_ADAPTER->sas_persist_task) has been removed by
-commit 3eb0822c6740 ("[SCSI] mpt fusion: Firmware event implementation
-using seperate WorkQueue"), and
-schedule_work("struct mptsas_send_discovery_event"->work) has been
-removed by commit f9c34022eae9 ("[SCSI] mpt fusion: SAS topology scan
-changes, expander events").
-
-There still remains schedule_work("struct work_queue_wrapper"->work) call
-in mptspi.c and schedule_delayed_work("struct mpt_lan_priv"->work) call in
-mptlan.c , but I guess that these are not work items which
-commit 4d4109d0eb69 meant to wait for completion because these are not per
-MPT_ADAPTER work items. If my guess is correct, we no longer need to call
-flush_scheduled_work() from mptscsih_suspend().
-
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
 ---
- drivers/message/fusion/mptscsih.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/ufs/core/ufs-mcq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 276084ed04a6..2bc17087d17d 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1231,7 +1231,6 @@ mptscsih_suspend(struct pci_dev *pdev, pm_message_t state)
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index a39746b2a8be..5d5bc0bc6e88 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -150,7 +150,7 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+ 	u32 hba_maxq, rem, tot_queues;
+ 	struct Scsi_Host *host = hba->host;
  
- 	scsi_block_requests(ioc->sh);
--	flush_scheduled_work();
- 	mptscsih_shutdown(pdev);
- 	return mpt_suspend(pdev,state);
- }
+-	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
++	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1 ;
+ 
+ 	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
+ 			rw_queues;
 -- 
-2.18.4
+2.18.0
+
