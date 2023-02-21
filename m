@@ -2,114 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3127FC64ED6
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 16:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2ADEC61DA3
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 16:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234122AbjBUQm2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 11:42:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43332 "EHLO
+        id S234912AbjBUQ6o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 11:58:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234868AbjBUQmV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 11:42:21 -0500
-X-Greylist: delayed 642 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 21 Feb 2023 08:41:55 PST
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B591A2CC47;
-        Tue, 21 Feb 2023 08:41:55 -0800 (PST)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S234926AbjBUQ6l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 11:58:41 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25272AD17
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2023 08:57:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1676998670;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UBi/Vc+mRROdrEC455aN+NdpNW+dE+GmksUXJel4JK4=;
+        b=KpqOe78vPy4pyBBuo/a2gJSYXWe9TMc7WBe1fT6oGO390p15Uk619wfE1kVjElSF4T2KGn
+        G3iRGsFito/TXyPlRIHmU23rCGuOXdEjHi8ReerQyGzYp7pc1mL+pxASlkGlFAQeMJ1do6
+        862UxTge2TH3jrEzQMo/0AZEDIsqjqc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-561-OLf3luQ8M36JB5-LMaE-cg-1; Tue, 21 Feb 2023 11:57:46 -0500
+X-MC-Unique: OLf3luQ8M36JB5-LMaE-cg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id ED8F4E197D;
-        Tue, 21 Feb 2023 16:25:54 +0000 (UTC)
-Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id C392F60529;
-        Tue, 21 Feb 2023 16:25:54 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
-        with ESMTP id TOGJfD7ZUQb8; Tue, 21 Feb 2023 16:25:54 +0000 (UTC)
-Received: from [192.168.48.17] (host-45-78-197-119.dyn.295.ca [45.78.197.119])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 884E660375;
-        Tue, 21 Feb 2023 16:25:53 +0000 (UTC)
-Message-ID: <57d8dff9-2fdb-8198-6cdc-7265797a704a@interlog.com>
-Date:   Tue, 21 Feb 2023 11:25:53 -0500
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 29062100F90A;
+        Tue, 21 Feb 2023 16:57:45 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.33.36.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 13F98492B05;
+        Tue, 21 Feb 2023 16:57:43 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <Y9KtCc+4n5uANB2f@casper.infradead.org>
+References: <Y9KtCc+4n5uANB2f@casper.infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     dhowells@redhat.com, lsf-pc@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [LSF/MM/BPF BOF] Userspace command abouts
-Content-Language: en-CA
-To:     Sagi Grimberg <sagi@grimberg.me>, Keith Busch <kbusch@kernel.org>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        lsf-pc@lists.linuxfoundation.org
-References: <3d3369f1-7ebe-b3b8-804c-ff2b97ec679d@suse.de>
- <Y+5cjPBE6h/IW9VH@kbusch-mbp>
- <ad837a26-948a-c690-cd9e-4dfffb5f990d@grimberg.me>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <ad837a26-948a-c690-cd9e-4dfffb5f990d@grimberg.me>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <2897037.1676998663.1@warthog.procyon.org.uk>
+Date:   Tue, 21 Feb 2023 16:57:43 +0000
+Message-ID: <2897038.1676998663@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-02-20 06:24, Sagi Grimberg wrote:
-> 
->>> Hi all,
->>>
->>> it has come up in other threads, so it might be worthwhile to have its own
->>> topic:
->>>
->>> Userspace command aborts
->>>
->>> As it stands we cannot abort I/O commands from userspace.
->>> This is hitting us when running in a virtual machine:
->>> The VM sets a timeout when submitting a command, but that
->>> information can't be transmitted to the VM host. The VM host
->>> then issues a different command (with another timeout), and
->>> again that timeout can't be transmitted to the attached devices.
->>> So when the VM detects a timeout, it will try to issue an abort,
->>> but that goes nowhere as the VM host has no way to abort commands
->>> from userspace.
->>> So in the end the VM has to wait for the command to complete, causing
->>> stalls in the VM if the host had to undergo error recovery or something.
->>
->> Aborts are racy. A lot of hardware implements these as a no-op, too.
-> 
-> Indeed.
-> 
->>> With io_uring or CDL we now have some mechanism which look as if they
->>> would allow us to implement command aborts.
->>
->> CDL on the other hand sounds more promising.
->>
->>> So this BoF will be around discussions on how aborts from userspace could be
->>> implemented, whether any of the above methods are suitable, or whether there
->>> are other ideas on how that could be done.
-> 
-> I did not understand what is the relationship between aborts and CDL.
-> Sounds to me that this would tie in to something like Time Limited Error
-> Recovery (TLER) and LR bit set based on ioprio?
-> 
-> I am unclear where do aborts come into play here.
+Matthew Wilcox <willy@infradead.org> wrote:
 
-CDL: Command Duration Limits
+> I'd like to do another session on how the struct page dismemberment
+> is going and what remains to be done.  Given how widely struct page is
+> used, I think there will be interest from more than just MM, so I'd
+> suggest a plenary session.
 
-One use case is reading from storage for audio visual output.
-An application only wants to wait so long (e.g. one or two frames
-on the video output) before it wants to forget about the current
-read (i.e. "abort" it) and move onto the next read. An alert viewer
-might notice a momentary freeze frame.
+I'd certainly be interested in that.  I've recently been looking into
+improving folio support in various places, including now splice and pipes.
 
-The SCSI CDL mechanism uses the DL0, DL1 and DL2 bits in the READ(16,32)
-commands. CDL also depends on the CDLP and RWCDLP fields in the
-REPORT SUPPORTED OPERATION CODES command and one of the CDL
-mode pages. So there may be some additional "wiring" needed in the
-SCSI subsystem.
+David
+
