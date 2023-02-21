@@ -2,73 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2ADEC61DA3
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 16:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DE7DC64EC7
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 17:35:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234912AbjBUQ6o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 11:58:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59570 "EHLO
+        id S234414AbjBURf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 12:35:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234926AbjBUQ6l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 11:58:41 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25272AD17
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2023 08:57:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676998670;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UBi/Vc+mRROdrEC455aN+NdpNW+dE+GmksUXJel4JK4=;
-        b=KpqOe78vPy4pyBBuo/a2gJSYXWe9TMc7WBe1fT6oGO390p15Uk619wfE1kVjElSF4T2KGn
-        G3iRGsFito/TXyPlRIHmU23rCGuOXdEjHi8ReerQyGzYp7pc1mL+pxASlkGlFAQeMJ1do6
-        862UxTge2TH3jrEzQMo/0AZEDIsqjqc=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-561-OLf3luQ8M36JB5-LMaE-cg-1; Tue, 21 Feb 2023 11:57:46 -0500
-X-MC-Unique: OLf3luQ8M36JB5-LMaE-cg-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 29062100F90A;
-        Tue, 21 Feb 2023 16:57:45 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.33.36.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 13F98492B05;
-        Tue, 21 Feb 2023 16:57:43 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <Y9KtCc+4n5uANB2f@casper.infradead.org>
-References: <Y9KtCc+4n5uANB2f@casper.infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     dhowells@redhat.com, lsf-pc@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        bpf@vger.kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+        with ESMTP id S234672AbjBURf0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 12:35:26 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7B3E233FD
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2023 09:35:24 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 4EFCA68AFE; Tue, 21 Feb 2023 18:35:21 +0100 (CET)
+Date:   Tue, 21 Feb 2023 18:35:21 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Nilesh Javali <njavali@marvell.com>
+Cc:     linux-nvme@lists.infradead.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+        bhazarika@marvell.com, agurumurthy@marvell.com,
+        sdeodhar@marvell.com, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] nvme-fc: initialize nvme fc ctrl ops
+Message-ID: <20230221173521.GA13772@lst.de>
+References: <20230221095708.29094-1-njavali@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2897037.1676998663.1@warthog.procyon.org.uk>
-Date:   Tue, 21 Feb 2023 16:57:43 +0000
-Message-ID: <2897038.1676998663@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230221095708.29094-1-njavali@marvell.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Matthew Wilcox <willy@infradead.org> wrote:
+On Tue, Feb 21, 2023 at 01:57:08AM -0800, Nilesh Javali wrote:
+> CPU: 61 PID: 6064 Comm: nvme Kdump: loaded Not tainted 6.2.0-rc1 #3
 
-> I'd like to do another session on how the struct page dismemberment
-> is going and what remains to be done.  Given how widely struct page is
-> used, I think there will be interest from more than just MM, so I'd
-> suggest a plenary session.
+Well, that's a reall old -rc.
 
-I'd certainly be interested in that.  I've recently been looking into
-improving folio support in various places, including now splice and pipes.
+This should be fixed by: 
 
-David
+commit 98e3528012cd571c48bbae7c7c0f868823254b6c
+Author: Ross Lagerwall <ross.lagerwall@citrix.com>
+Date:   Fri Jan 20 17:43:54 2023 +0000
 
+    nvme-fc: fix initialization order
