@@ -2,134 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD063C6FD18
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 19:09:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D45DEC636D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Feb 2023 19:38:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229557AbjBUTJc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 14:09:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60706 "EHLO
+        id S229866AbjBUTiC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 14:38:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229903AbjBUTJ2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 14:09:28 -0500
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEAA729140;
-        Tue, 21 Feb 2023 11:09:25 -0800 (PST)
-Received: by mail-pj1-x1030.google.com with SMTP id d1-20020a17090a3b0100b00229ca6a4636so6251474pjc.0;
-        Tue, 21 Feb 2023 11:09:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=7toiITCf4zEDwukcWIEguEJe64NlPZx5g99K0VzyLdE=;
-        b=bdhJMgh91hdqT4luYd5ioY/yBXBRYAcZQsrKyzfveBzI6gQiYch96TORD+AxB6uQk5
-         oyAYXLrRF89zBrePntkph1MFBau8LlCFmliyyexlK0j+3mbX1GbnvNgBjezJVVByiuK6
-         MBiBBJ+EcGIQp5x7oabLl73LgLF+Cmlz8VfVPinHfxB11/IW9v7uriJCTkaG/CJizM6w
-         aDR2n57qZhkpUfLGBKS4SRojyDwEm0mrj+xKqE7p0TryLWAkHhYiKsM+en/HnklvLWF+
-         LXwxDNEtUbd1NpX/LR+4xebS+8N9Y4qW8vqOXqDFgwu6S98CGAngdWBGfGOBhpX9kHu5
-         FLcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7toiITCf4zEDwukcWIEguEJe64NlPZx5g99K0VzyLdE=;
-        b=Ox1ca5/By2GgQWq2CF+QLdqmOa83ey1x6F+RT4GSUPx+qCp2vDBboOVxl3DcKhqP3o
-         hlCmUnJcMfH8V/ZrzyOIj0jBLn7s+Dgd24GbdQT4Zml4F3hfHaEPyB5xKc373vlEeR7z
-         n36pQvzihjcn4RRcbjVPH5MDIOiDSfGYYmwQ3mubXansTDw0Y9rYyOCjcXN+KJ6DgIkO
-         hWIQmkUE9Z8MFbmjAllD4e2SQFPKeOgkzSvVNYMxKu3SXzhiqyRkwTCGWJb+PCnzgDVq
-         7W9dlA+nNp1UWQ7tZgy1gYWGUBf11V567vUwt+I11GIBfi13+CTkdG0cK9/bjP3zE+DL
-         8weQ==
-X-Gm-Message-State: AO0yUKWuy+G3rvCmYr7nvdgI+0jO2Yfy5HjNnJ1NDWRJXMsTjjwo8ppx
-        7wxSjMlCWTP/2qBe99geqrzu4Fmyy48HcKqE03k=
-X-Google-Smtp-Source: AK7set8YEZqM92nnqZUTzt9FzDBxitixBpPf8665l200lnehWpcnu9yFX9pL1BBOzg3ERV6oA+03SYtDiAWrbbJF4no=
-X-Received: by 2002:a17:90b:3b92:b0:233:e796:7583 with SMTP id
- pc18-20020a17090b3b9200b00233e7967583mr1597504pjb.1.1677006565041; Tue, 21
- Feb 2023 11:09:25 -0800 (PST)
+        with ESMTP id S229545AbjBUTiA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 14:38:00 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A42D51D;
+        Tue, 21 Feb 2023 11:37:58 -0800 (PST)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31LI2kmi017935;
+        Tue, 21 Feb 2023 19:37:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=XYU56Kw4GX6w5Ld+VM6f7XkbevWWfxD+rVrP4x9LPDg=;
+ b=RLqnMtJyBQEsV/kea30ZOZniMYmLvdfJv2E7y0d3GmelTG7U3Bii/Jd7WDylXRDG/GJJ
+ CxmxAZQd5xAtBlcnbXxNjmoxBhrJ3mEamTgW/UGXSvsuiSXBbWHqH2x5s2ChFjscGd/7
+ o17wKcjDg3OIJ58uBQdNnG1a0Mr08ZurgCR36PuDXq8jwfJvsjnx4lhvxcpSieCbUayQ
+ nhx10QbC9yWmB+QVYqX6u/jG8/IUMW2JGcNjfysnEbFbAxi+JmaG0phcUsNitIE99SbF
+ Mw7I5A4s2XBqysQcjpwqPGbdMUq6oSbYeZWkGS/wvvRdOLoCs4/hR1HUMUU0+VQ04UCt Jw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nw2vxj1qj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Feb 2023 19:37:34 +0000
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31LJbXPk038202;
+        Tue, 21 Feb 2023 19:37:33 GMT
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nw2vxj1q3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Feb 2023 19:37:33 +0000
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 31LIKxBB011404;
+        Tue, 21 Feb 2023 19:37:32 GMT
+Received: from smtprelay03.wdc07v.mail.ibm.com ([9.208.129.113])
+        by ppma01dal.us.ibm.com (PPS) with ESMTPS id 3ntpa7hehq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Feb 2023 19:37:32 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 31LJbUIS52035934
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 21 Feb 2023 19:37:31 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A67F958057;
+        Tue, 21 Feb 2023 19:37:30 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B844758058;
+        Tue, 21 Feb 2023 19:37:29 +0000 (GMT)
+Received: from [9.163.50.38] (unknown [9.163.50.38])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 21 Feb 2023 19:37:29 +0000 (GMT)
+Message-ID: <2ee5da4d-7dc5-6624-6c87-133958df6478@linux.vnet.ibm.com>
+Date:   Tue, 21 Feb 2023 13:37:29 -0600
 MIME-Version: 1.0
-References: <Y9KtCc+4n5uANB2f@casper.infradead.org> <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
-In-Reply-To: <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
-From:   Yang Shi <shy828301@gmail.com>
-Date:   Tue, 21 Feb 2023 11:09:13 -0800
-Message-ID: <CAHbLzkqsyv6rw-RRvNcB0PoEE75qS9ZtmywhJYZbVA05d5tj5A@mail.gmail.com>
-Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
-To:     Gao Xiang <hsiangkao@linux.alibaba.com>,
-        Mel Gorman <mgorman@techsingularity.net>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH] [v2] scsi: ipr: work around fortify-string warning
+To:     Arnd Bergmann <arnd@kernel.org>, Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        James Bottomley <James.Bottomley@SteelEye.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Kees Cook <keescook@chromium.org>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        John Garry <john.g.garry@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev
+References: <20230214132831.2118392-1-arnd@kernel.org>
+Content-Language: en-US
+From:   Brian King <brking@linux.vnet.ibm.com>
+In-Reply-To: <20230214132831.2118392-1-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: vFbwMNoIzTZ_19hKyyCgSMTlGvGP4j3-
+X-Proofpoint-GUID: ttYwtpLHOxPqj7zQjo5bbBn2I-Ns0p-K
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-21_12,2023-02-20_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ spamscore=0 suspectscore=0 mlxlogscore=999 priorityscore=1501
+ impostorscore=0 mlxscore=0 adultscore=0 malwarescore=0 clxscore=1011
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302210168
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 21, 2023 at 10:08 AM Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
->
->
->
-> On 2023/1/27 00:40, Matthew Wilcox wrote:
-> > I'd like to do another session on how the struct page dismemberment
-> > is going and what remains to be done.  Given how widely struct page is
-> > used, I think there will be interest from more than just MM, so I'd
-> > suggest a plenary session.
-> >
-> > If I were hosting this session today, topics would include:
-> >
-> > Splitting out users:
-> >
-> >   - slab (done!)
-> >   - netmem (in progress)
-> >   - hugetlb (in akpm)
-> >   - tail pages (in akpm)
-> >   - page tables
-> >   - ZONE_DEVICE
-> >
-> > Users that really should have their own types:
-> >
-> >   - zsmalloc
-> >   - bootmem
-> >   - percpu
-> >   - buddy
-> >   - vmalloc
-> >
-> > Converting filesystems to folios:
-> >
-> >   - XFS (done)
-> >   - AFS (done)
-> >   - NFS (in progress)
-> >   - ext4 (in progress)
-> >   - f2fs (in progress)
-> >   - ... others?
-> >
-> > Unresolved challenges:
-> >
-> >   - mapcount
-> >   - AnonExclusive
-> >   - Splitting anon & file folios apart
-> >   - Removing PG_error & PG_private
->
-> I'm interested in this topic too, also I'd like to get some idea of the
-> future of the page dismemberment timeline so that I can have time to keep
-> the pace with it since some embedded use cases like Android are
-> memory-sensitive all the time.
->
-> Minor, it seems some apis still use ->lru field to chain bulk pages,
-> perhaps it needs some changes as well:
-> https://lore.kernel.org/r/20221222124412.rpnl2vojnx7izoow@techsingularity.net
-> https://lore.kernel.org/r/20230214190221.1156876-2-shy828301@gmail.com
+On 2/14/23 7:28 AM, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> The ipr_log_vpd_compact() function triggers a fortified memcpy() warning
+> about a potential string overflow with all versions of clang:
+> 
+> In file included from drivers/scsi/ipr.c:43:
+> In file included from include/linux/string.h:254:
+> include/linux/fortify-string.h:520:4: error: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror,-Wattribute-warning]
+>                         __write_overflow_field(p_size_field, size);
+>                         ^
+> include/linux/fortify-string.h:520:4: error: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror,-Wattribute-warning]
+> 2 errors generated.
+> 
+> I don't see anything actually wrong with the function, but this is the
+> only instance I can reproduce of the fortification going wrong in the
+> kernel at the moment, so the easiest solution may be to rewrite the
+> function into something that does not trigger the warning.
+> 
+> Instead of having a combined buffer for vendor/device/serial strings,
+> use three separate local variables and just truncate the whitespace
+> individually.
+> 
+> Fixes: 8cf093e275d0 ("[SCSI] ipr: Improved dual adapter errors")
+> Cc: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-The dm-crypt patches don't use list anymore. The bulk allocator still
-supports the list version, but so far there is no user, so it may be
-gone soon.
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
->
-> Thanks,
-> Gao Xiang
->
-> >
-> > This will probably all change before May.
-> >
-> > I'd like to nominate Vishal Moola & Sidhartha Kumar as invitees based on
-> > their work to convert various functions from pages to folios.
->
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
