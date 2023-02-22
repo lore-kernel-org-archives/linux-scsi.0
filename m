@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4FBC636D6
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 03:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1661EC636D6
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 03:17:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231669AbjBVDM2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 22:12:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39654 "EHLO
+        id S229747AbjBVDRC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 22:17:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231344AbjBVDMW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 22:12:22 -0500
-Received: from mail-lj1-x22f.google.com (mail-lj1-x22f.google.com [IPv6:2a00:1450:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C2932E82D;
-        Tue, 21 Feb 2023 19:11:54 -0800 (PST)
-Received: by mail-lj1-x22f.google.com with SMTP id x41so6581240ljq.13;
-        Tue, 21 Feb 2023 19:11:53 -0800 (PST)
+        with ESMTP id S230251AbjBVDQ5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 22:16:57 -0500
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A00030B22;
+        Tue, 21 Feb 2023 19:16:56 -0800 (PST)
+Received: by mail-lf1-x134.google.com with SMTP id i9so8135072lfc.6;
+        Tue, 21 Feb 2023 19:16:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=zNaFMBMYjszLIMNwm9nfdvrGjZqm6B4tt+On23nJyTc=;
-        b=fmfGqAOsDB60738L285br04P8DANes2K/Tv98hhNfH3Xs5XYRBCUc2p+WQDyOS5tQo
-         Q+LWEA8OJ2xn3yfgz18qSC/ZAD5nDWnuOCxLcXfubd3Knyj3P/zbTYWN6EEaCETRQaAt
-         Oc2/tbx1ayiJYK+arqS9gtbTnEIkREJTY37nFJtMWc/h7ur+5VfPHd4aI7sVKBhhQ83o
-         napzGAEQZxOmhuEL7mFEiQv4vQpk1uE4P6gUDvzx/rShM1AlMplgP9FF0R+DBm7sqXqA
-         /fD42bR1jdlJp1ALlwfRva4IooQa+7i89t0crvWVXIcGJ6wQU2d7ALhE6kgDuIwFHuhb
-         KvbA==
+        bh=zjix5hHmRg1gnpTeSvqiWXkay4LiEwf0MpYeRg42JtU=;
+        b=jsfRdr+kWUxp+JSuWOhyMf2DgmTyC81KmIi94ElAmd4jVlFb1ItgeZ5toC4vejyhFM
+         KLDOefgUya0UG3F8aw64bx4lmoMYk1tD8mW2I0HCSputvZkRa4gJltI5ssLQK6Th3HN5
+         lphga6gcPXm6v6v4Go7HxAnpnWU+8dGfLt6A8vugqjpCpL570WtyMUfoaENpDyYtW8ya
+         tiwzVcEmqSp4CyKiMOVFpgNoGNwnA2BE1o94h3NyyuAg27KkAljAUiYToOILf/KLJAbi
+         u4sUXiKPcARYizm++3kiLaGyJA5vTv3Alsa/5bs+tEz/96o3hCiCA8Mz90x81Y8DvbBo
+         CnJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=zNaFMBMYjszLIMNwm9nfdvrGjZqm6B4tt+On23nJyTc=;
-        b=G0gY7ZEgtEHJCWFMYH6eTu3zitDYvHxIvEVwzh+998qu3P1ycINHYMLXEKSQQh1jFd
-         KcoPSY2NkynTFqhHobdoOypkXIBwF4eGD4aOeZW7T6tqyTkXhGTgWBLNTiWG/Ac/hOj9
-         YXujsKySqI7TzpimSSBSTfDJpHWFEQX5e8lEgK+34rDyvaHIMC0UV7J0OAhZxm5noeYE
-         WHhQCCijeIS0MtjGUoQCAoCZF/gE9nyCFqb1leVq3ibRv+eXbpPNrQQih2R/LUzSsinL
-         KuD8zxO7edGt7gnSyuAGOZxBx79KpC6Ka8lRuWNYJGFZ9tm6pvFJsvfpjqZ6bdxJEZ1I
-         hW8A==
-X-Gm-Message-State: AO0yUKV0tdjh8yzkJAPBGfYK5jKJP1zdULydi43wHuIAFyhFc9ckob3E
-        TftipOkEFSzPBKNFk8X/BqA+qCvYIAIMae7JSQ==
-X-Google-Smtp-Source: AK7set98faJfc/hSpvMVcieQV5UmQYC3dAwOgPi+RRqhZzy/3dex8rxO+fMeXVTDfPdZNOSWUNfwACMIBCXfugtSlOc=
-X-Received: by 2002:a05:651c:488:b0:293:4b99:f883 with SMTP id
- s8-20020a05651c048800b002934b99f883mr2205922ljc.8.1677035511982; Tue, 21 Feb
- 2023 19:11:51 -0800 (PST)
+        bh=zjix5hHmRg1gnpTeSvqiWXkay4LiEwf0MpYeRg42JtU=;
+        b=1lr17SCh99mQrx+3XmpoIbx7Zc6a3XELo85iTKXsMj8Mz9Tr+r8OxXnKitBFSK0lq2
+         Qtz2XEnR5XrBW1sw8DPSwYHJ+IOP05nk4PUQjV5+m0Sf2yK+coqZDxnNiFkOEEmlpanw
+         rH0IpcegNfr6zkZjV3Ceu3kU22exCVkPiWA7z4QJJYezZMWNFzIr2yZFcpMBO/9mJHnH
+         qyZt3mUL0clXCBXE8W34wbNxCzblz+pplbDziirL1bSupCAya/cdZGMPc021NswSnyhS
+         dAz92tWZpmG4/FRUr9WQPdWDJhGa7ra5aAJIKZV8HIpA/G38RbzsYLLvfjCmgzDKQ5+X
+         e3yQ==
+X-Gm-Message-State: AO0yUKXicod4pNfJXFebjFidTFSEyqhRJFa5Y/sqaM6rxDRosjp1tWgA
+        Lhf4BnqWWHyYAXGj+22xw1KQi3IE41QVh4Rdzw==
+X-Google-Smtp-Source: AK7set/3OD7E1WKxGGmZLHWOzKUAYuvDvrVESkKv/Ae9by3eSpTZN/UJX08073sf6Ku8mTNdE+Qroaj2UXoEaJwqcSM=
+X-Received: by 2002:ac2:53a7:0:b0:4d5:ca32:689b with SMTP id
+ j7-20020ac253a7000000b004d5ca32689bmr2302409lfh.0.1677035814323; Tue, 21 Feb
+ 2023 19:16:54 -0800 (PST)
 MIME-Version: 1.0
-References: <20230222030427.957-1-powen.kao@mediatek.com> <20230222030427.957-3-powen.kao@mediatek.com>
-In-Reply-To: <20230222030427.957-3-powen.kao@mediatek.com>
+References: <20230222030427.957-1-powen.kao@mediatek.com> <20230222030427.957-4-powen.kao@mediatek.com>
+In-Reply-To: <20230222030427.957-4-powen.kao@mediatek.com>
 From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 22 Feb 2023 11:11:40 +0800
-Message-ID: <CAGaU9a9Yx6DAGpoULJ7j19i+KKAw9iUjeXucH8o3XdHAqDNamw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/7] scsi: ufs: core: Rename symbols
+Date:   Wed, 22 Feb 2023 11:16:30 +0800
+Message-ID: <CAGaU9a-X5JYKGp-jjKV8MRxoBnD=ffHa3iBshemRikpOHynitQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/7] scsi: ufs: core: Fix mcq nr_hw_queues
 To:     Po-Wen Kao <powen.kao@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
@@ -75,8 +75,7 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Wed, Feb 22, 2023 at 11:05 AM Po-Wen Kao <powen.kao@mediatek.com> wrote:
 >
-> To avoid confusion, sizeof_utp_transfer_cmd_desc() is renamed to
-> ufshcd_get_ucd_size().
+> Need to add one to MAXQ to obtain number of hardware queue.
 >
 > Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
 
