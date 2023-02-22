@@ -2,119 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB91C64ED6
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 02:40:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03B4DC61DA3
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 03:04:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230433AbjBVCkR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 21:40:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32806 "EHLO
+        id S231432AbjBVDEw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 22:04:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbjBVCkQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 21:40:16 -0500
-Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 047012CC48;
-        Tue, 21 Feb 2023 18:40:13 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R951e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0VcEfCHA_1677033609;
-Received: from 30.97.49.34(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VcEfCHA_1677033609)
-          by smtp.aliyun-inc.com;
-          Wed, 22 Feb 2023 10:40:10 +0800
-Message-ID: <a328da48-a5aa-c31b-074c-d52132997afd@linux.alibaba.com>
-Date:   Wed, 22 Feb 2023 10:40:09 +0800
+        with ESMTP id S229884AbjBVDEu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 22:04:50 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6AA22024;
+        Tue, 21 Feb 2023 19:04:45 -0800 (PST)
+X-UUID: a4a0e0a8b25d11eda06fc9ecc4dadd91-20230222
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=iZDnSTAwSwS5YygcvAX7evJZgTWzUfa5p+Ju9s2xDIg=;
+        b=XhUhG/V5axryGi6dJv0l9iR+eIfrEMEb1v0rE4gbUEJ5JfJblhbjtrI88hSrS5RfFoWVGqv7MpsIjTKEBxAKuyMpBkFhpG/lT08ZsQJZ4pSUU1K4tL9sLNAsfGSOONQTBuzaoGm363AoxRz6z3vzXy4shb067mqgBsz36ITIOyg=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.20,REQID:121af5ef-856f-43b4-8a14-14f329613213,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:-5
+X-CID-META: VersionHash:25b5999,CLOUDID:c8bfbcf3-ddba-41c3-91d9-10eeade8eac7,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0,NGT
+X-UUID: a4a0e0a8b25d11eda06fc9ecc4dadd91-20230222
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+        (envelope-from <powen.kao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 627344900; Wed, 22 Feb 2023 11:04:38 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Wed, 22 Feb 2023 11:04:36 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Wed, 22 Feb 2023 11:04:36 +0800
+From:   Po-Wen Kao <powen.kao@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
+        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
+        <alice.chao@mediatek.com>, <naomi.chu@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <cc.chou@mediatek.com>,
+        <eddie.huang@mediatek.com>, <mason.zhang@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>
+Subject: [PATCH v2 0/7] Several UFS MCQ Code Changes
+Date:   Wed, 22 Feb 2023 11:04:17 +0800
+Message-ID: <20230222030427.957-1-powen.kao@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.6.1
-Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
-To:     Yang Shi <shy828301@gmail.com>,
-        Mel Gorman <mgorman@techsingularity.net>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-References: <Y9KtCc+4n5uANB2f@casper.infradead.org>
- <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
- <CAHbLzkqsyv6rw-RRvNcB0PoEE75qS9ZtmywhJYZbVA05d5tj5A@mail.gmail.com>
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <CAHbLzkqsyv6rw-RRvNcB0PoEE75qS9ZtmywhJYZbVA05d5tj5A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+v1 -> v2:
+- Add 2 new patches
+	- Update MTK driver for mcq
+	- Export symbols for MTK driver
+- Fix commit message in "scsi: ufs: core: Fix mcq nr_hw_queues"
+- Split name change and fix into two patches
 
+Po-Wen Kao (7):
+  scsi: ufs: core: Fix mcq tag calcualtion
+  scsi: ufs: core: Rename symbols
+  scsi: ufs: core: Fix mcq nr_hw_queues
+  scsi: ufs: core: Add hwq print for debug
+  scsi: ufs: core: Remove redundant check
+  scsi: ufs: core: Export symbols for MTK driver module
+  scsi: ufs: mtk-host: Add MCQ support for MTK platform
 
-On 2023/2/22 03:09, Yang Shi wrote:
-> On Tue, Feb 21, 2023 at 10:08 AM Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
->>
->>
->>
->> On 2023/1/27 00:40, Matthew Wilcox wrote:
->>> I'd like to do another session on how the struct page dismemberment
->>> is going and what remains to be done.  Given how widely struct page is
->>> used, I think there will be interest from more than just MM, so I'd
->>> suggest a plenary session.
->>>
->>> If I were hosting this session today, topics would include:
->>>
->>> Splitting out users:
->>>
->>>    - slab (done!)
->>>    - netmem (in progress)
->>>    - hugetlb (in akpm)
->>>    - tail pages (in akpm)
->>>    - page tables
->>>    - ZONE_DEVICE
->>>
->>> Users that really should have their own types:
->>>
->>>    - zsmalloc
->>>    - bootmem
->>>    - percpu
->>>    - buddy
->>>    - vmalloc
->>>
->>> Converting filesystems to folios:
->>>
->>>    - XFS (done)
->>>    - AFS (done)
->>>    - NFS (in progress)
->>>    - ext4 (in progress)
->>>    - f2fs (in progress)
->>>    - ... others?
->>>
->>> Unresolved challenges:
->>>
->>>    - mapcount
->>>    - AnonExclusive
->>>    - Splitting anon & file folios apart
->>>    - Removing PG_error & PG_private
->>
->> I'm interested in this topic too, also I'd like to get some idea of the
->> future of the page dismemberment timeline so that I can have time to keep
->> the pace with it since some embedded use cases like Android are
->> memory-sensitive all the time.
->>
->> Minor, it seems some apis still use ->lru field to chain bulk pages,
->> perhaps it needs some changes as well:
->> https://lore.kernel.org/r/20221222124412.rpnl2vojnx7izoow@techsingularity.net
->> https://lore.kernel.org/r/20230214190221.1156876-2-shy828301@gmail.com
-> 
-> The dm-crypt patches don't use list anymore. The bulk allocator still
-> supports the list version, but so far there is no user, so it may be
-> gone soon.
+ drivers/ufs/core/ufs-mcq.c      |  39 ++++++-
+ drivers/ufs/core/ufshcd-priv.h  |  11 +-
+ drivers/ufs/core/ufshcd.c       |  31 ++---
+ drivers/ufs/host/ufs-mediatek.c | 193 +++++++++++++++++++++++++++++++-
+ drivers/ufs/host/ufs-mediatek.h |  33 ++++++
+ include/ufs/ufshcd.h            |   8 +-
+ include/ufs/ufshci.h            |  12 ++
+ 7 files changed, 306 insertions(+), 21 deletions(-)
 
-Thanks, it's just a detailed minor stuff relating to page->lru.  Currently
-I'm no rush to evaluate/use it.
+-- 
+2.18.0
 
-> 
->>
->> Thanks,
->> Gao Xiang
->>
->>>
->>> This will probably all change before May.
->>>
->>> I'd like to nominate Vishal Moola & Sidhartha Kumar as invitees based on
->>> their work to convert various functions from pages to folios.
->>
