@@ -2,196 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45038C64EC4
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 07:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E78DC6379F
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 09:53:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231200AbjBVHkW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Feb 2023 02:40:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33128 "EHLO
+        id S232323AbjBVJxU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Feb 2023 04:53:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229739AbjBVHkV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 02:40:21 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CB9434C04;
-        Tue, 21 Feb 2023 23:40:17 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31M5s8Lr023358;
-        Wed, 22 Feb 2023 07:39:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=SzGnpg9Y+Id4sz/UtfaDET+YIBJZYCIU1O+N+2RZ5KI=;
- b=cRxr7WAp093V1r7OeMMIHGUP+cFIhLrdtmiJT3oFk1b2eIqav6RUJ70OM8O45Frg3FFc
- BWW1hAur63UnfeD/wi3Qhrb2e+cmhmtb0vUNGAg39kGsKWjDMyl4wTXERzodQB8pnE53
- 0VTjnPSHzMYblK9YBcq7iuepRGMDuSrZet88+7XqzA7fd3Hkp8UlzsAn9On80n3DUfii
- XZyB2vbPF1gJ1vnr1ykgZUBeMQPp+Zqz3M9QXDJMytqf5En6oRB/IP7VX0Ph/TzWRNaG
- p0P/xvcR2BXQZbvZV6MLLB/YIzSXNwQST7HntBANBkt0sT46RWIgS7NGXDe44TWNorxJ YQ== 
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nvprguh6s-1
+        with ESMTP id S232321AbjBVJxC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 04:53:02 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 990053B22E;
+        Wed, 22 Feb 2023 01:51:29 -0800 (PST)
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31M9fXIr030155;
+        Wed, 22 Feb 2023 09:51:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=L6IGEN+fF4/ym4wJaEPRvWeE9P48usuwSm/tmBx8Vao=;
+ b=B1GCGgM9802GYFl1tRkz0dC/NP/oy+Z/0UsgRcgg05QPXD4we6MTtXHMrsDX/8otMB6X
+ ulTMK5bKkLCsi+Rh9E5+wrkbra7vc8vxVVSXCfYIrcOvWdR666QKhG9crpO82XdL7h7e
+ xp4vR8AWLw1prDcSDmMdy1E7jQ7lQGiIbWzQgTmKP1loyeSR+CQi5ZkxgA8Z3kEn/KRC
+ c42213wTC9tsZAuwQ1jR+ymL7UnooByC3RvTLTQVMVvaIN+TpF++fbtbD3CJfXudaALw
+ QbDNunUmXgCEk7c9Bmo4j6hYjCDfPg3P44WjV3vxa7JjXUktJUrz6wfYgawR0KL1p3MI Aw== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3nwgmtg8ck-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 22 Feb 2023 07:39:50 +0000
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 31M7dlPP015490;
-        Wed, 22 Feb 2023 07:39:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3ntqrm9ypw-1;
-        Wed, 22 Feb 2023 07:39:47 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31M7dk39015485;
-        Wed, 22 Feb 2023 07:39:46 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 31M7dkFC015484;
-        Wed, 22 Feb 2023 07:39:46 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id 236244366; Wed, 22 Feb 2023 15:39:45 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com,
-        quic_ziqichen@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-trace-kernel@vger.kernel.org (open list:TRACING)
-Subject: [PATCH v3] scsi: ufs: core: Add trace event for MCQ
-Date:   Wed, 22 Feb 2023 15:39:21 +0800
-Message-Id: <1677051569-81113-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: qVojmLHZh-r1K3XIybVncH3z1or4TpKn
-X-Proofpoint-ORIG-GUID: qVojmLHZh-r1K3XIybVncH3z1or4TpKn
+        Wed, 22 Feb 2023 09:51:04 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 31LNuqhr016606;
+        Wed, 22 Feb 2023 09:51:02 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3ntpa6d54t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 22 Feb 2023 09:51:02 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+        by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 31M9oxMQ16188128
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 22 Feb 2023 09:50:59 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 346C920040;
+        Wed, 22 Feb 2023 09:50:59 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1E4532004D;
+        Wed, 22 Feb 2023 09:50:59 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.171.14.57])
+        by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Wed, 22 Feb 2023 09:50:59 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1pUlm6-004fzS-20;
+        Wed, 22 Feb 2023 10:50:58 +0100
+Date:   Wed, 22 Feb 2023 09:50:58 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Fedor Loshakov <loshakov@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+Subject: Re: zfcp changes for v6.3
+Message-ID: <Y/XlgrZvvxDlPvRZ@t480-pf1aa2c2>
+References: <cover.1677000450.git.bblock@linux.ibm.com>
+ <yq1cz62pj7t.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <yq1cz62pj7t.fsf@ca-mkp.ca.oracle.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 2SWz8Ighz7xVvbZ7HHYqbqc9oC1Ai0Q5
+X-Proofpoint-ORIG-GUID: 2SWz8Ighz7xVvbZ7HHYqbqc9oC1Ai0Q5
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
- definitions=2023-02-22_02,2023-02-20_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 bulkscore=0
- mlxlogscore=999 lowpriorityscore=0 spamscore=0 priorityscore=1501
- impostorscore=0 adultscore=0 phishscore=0 mlxscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302220064
+ definitions=2023-02-22_04,2023-02-20_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ priorityscore=1501 mlxscore=0 clxscore=1015 malwarescore=0 spamscore=0
+ phishscore=0 adultscore=0 impostorscore=0 bulkscore=0 suspectscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302220083
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Added a new trace event to record MCQ relevant information
-for each request in MCQ mode, include hardware queue ID,
-SQ tail slot, CQ head slot and CQ tail slot.
+On Tue, Feb 21, 2023 at 08:46:17PM -0500, Martin K. Petersen wrote:
+> > here is a small set of changes for the zFCP device driver. These are
+> > basically follow-up changes I made after the fix I send in
+> > <979f6e6019d15f91ba56182f1aaf68d61bf37fc6.1668595505.git.bblock@linux.ibm.com>
+> > that refactor some related areas in the driver, and add some
+> > additional tracing if we ever should run into a similar situation
+> > somehow.
+> >
+> > It would be nice, if you could still include them for v6.3. Not sure if
+> > I'm too late already.
+> 
+> It's a bit late. I merged them to 6.3/scsi-staging for now but may defer
+> to 6.4 depending on how busy the various code checking robots are.
+> 
 
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+Alright, sounds good. Thanks.
 
----
-Changes to v2:
-- Shorten printing strings.
-
-Changes to v1:
-- Adjust the order of fileds to keep them aligned.
----
- drivers/ufs/core/ufshcd.c  | 14 +++++++++++---
- include/trace/events/ufs.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 59 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3b3cf78..67cb90d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -426,6 +426,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct ufs_hw_queue *hwq;
- 	int transfer_len = -1;
- 
- 	if (!cmd)
-@@ -456,9 +457,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	}
- 
- 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
--	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
--			doorbell, transfer_len, intr, lba, opcode, group_id);
-+
-+	if (is_mcq_enabled(hba)) {
-+		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
-+		trace_ufshcd_command_mcq(dev_name(hba->dev), str_t, tag,
-+				hwq, transfer_len, intr, lba, opcode, group_id);
-+	} else {
-+		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+		trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
-+				doorbell, transfer_len, intr, lba, opcode, group_id);
-+	}
- }
- 
- static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 599739e..604b2cd 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -10,6 +10,7 @@
- #define _TRACE_UFS_H
- 
- #include <linux/tracepoint.h>
-+#include <ufs/ufshcd.h>
- 
- #define str_opcode(opcode)						\
- 	__print_symbolic(opcode,					\
-@@ -307,6 +308,53 @@ TRACE_EVENT(ufshcd_command,
- 	)
- );
- 
-+TRACE_EVENT(ufshcd_command_mcq,
-+	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
-+		unsigned int tag, struct ufs_hw_queue *hwq, int transfer_len,
-+		u32 intr, u64 lba, u8 opcode, u8 group_id),
-+
-+	TP_ARGS(dev_name, str_t, tag, hwq, transfer_len, intr, lba, opcode, group_id),
-+
-+	TP_STRUCT__entry(
-+		__string(dev_name, dev_name)
-+		__field(enum ufs_trace_str_t, str_t)
-+		__field(unsigned int, tag)
-+		__field(u32, hwq_id)
-+		__field(u32, sq_tail)
-+		__field(u32, cq_head)
-+		__field(u32, cq_tail)
-+		__field(int, transfer_len)
-+		__field(u32, intr)
-+		__field(u64, lba)
-+		__field(u8, opcode)
-+		__field(u8, group_id)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->str_t = str_t;
-+		__entry->tag = tag;
-+		__entry->hwq_id = hwq->id;
-+		__entry->sq_tail = hwq->sq_tail_slot;
-+		__entry->cq_head = hwq->cq_head_slot;
-+		__entry->cq_tail = hwq->cq_tail_slot;
-+		__entry->transfer_len = transfer_len;
-+		__entry->intr = intr;
-+		__entry->lba = lba;
-+		__entry->opcode = opcode;
-+		__entry->group_id = group_id;
-+	),
-+
-+	TP_printk(
-+		"%s: %s: tag: %u, hqid: %d, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, sqt: %d, cqh: %d, cqt: %d",
-+		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-+		__entry->tag, __entry->hwq_id, __entry->transfer_len,
-+		__entry->intr, __entry->lba, (u32)__entry->opcode,
-+		str_opcode(__entry->opcode), (u32)__entry->group_id,
-+		__entry->sq_tail, __entry->cq_head,  __entry->cq_tail
-+	)
-+);
-+
- TRACE_EVENT(ufshcd_uic_command,
- 	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
- 		 u32 arg1, u32 arg2, u32 arg3),
 -- 
-2.7.4
-
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
