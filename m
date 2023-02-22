@@ -2,94 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75EC8C61DA4
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 15:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEDDEC61DA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 15:25:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232025AbjBVPZn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Feb 2023 10:25:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43238 "EHLO
+        id S232438AbjBVPZt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Feb 2023 10:25:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbjBVPZm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 10:25:42 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AC4736FDA
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2023 07:25:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677079503;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tvleqFLJq4MrlHDq8WNjaZEAYcrFfPJIDD31BvpSrmY=;
-        b=MPA82h6tEqRqcpYVh3Vji/zKErsQTcWUthCIp3Oh/L0M+zgVKmN4UCjfopMyfpABcEWaE8
-        WLR2NZSr0UdXgQqmKEo60LBmSeqhKehWiWUn9BzLpLMSLfsrQb6jpCyjBQTlqQFOb5zIwa
-        73QNkCwmQsGCJPhU97KgHQ7FJYfZsvA=
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
- [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-661-3AJY0AhYNfulCs7oe5TOHA-1; Wed, 22 Feb 2023 10:25:02 -0500
-X-MC-Unique: 3AJY0AhYNfulCs7oe5TOHA-1
-Received: by mail-ed1-f69.google.com with SMTP id b1-20020aa7dc01000000b004ad062fee5eso11121406edu.17
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2023 07:25:01 -0800 (PST)
+        with ESMTP id S229513AbjBVPZs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 10:25:48 -0500
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8298BBDE2;
+        Wed, 22 Feb 2023 07:25:47 -0800 (PST)
+Received: by mail-pg1-f175.google.com with SMTP id s18so4273686pgq.1;
+        Wed, 22 Feb 2023 07:25:47 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tvleqFLJq4MrlHDq8WNjaZEAYcrFfPJIDD31BvpSrmY=;
-        b=fM96+UL6QwlKewiU6DT3P6gVE1ThaDezabVcfk31FzdTkrKas2bjgTV0NAFTQVs5Zz
-         7ogQbVrsMMxrRaeNfHklzDWy0QOzOLpsSnyvBbi9jHeIuZTxH6bUSz7sJa3oAnyZpjXC
-         ZA/MFR+mjiIDjY56umcH3LPgH7A/1fwFAKDj14sLMFg59Slj+rmCXrfs5/4u6FRARY25
-         nGT+hNHqF6hSGvgJCjJmityojhFgqXWr4NxEjEcP6VfTk16714j+OQ6KT1MuePVZ3afh
-         Uw2aIXtn/PrN2UzGyB0xLsYWs/YhHmvdopqrm3v4+4tXNY3bNMJih+MBaT0IFiB0WLwR
-         2PtQ==
-X-Gm-Message-State: AO0yUKUOGmsdoYmCwmkI3Dw2t+OU6HBot5a3ScuuiVaeAbHzt5Y5adL8
-        4wm3g2FRgpdmsUZev1mNs3SPrm1JX9naN1ja5lz1ztgRNpViWrp0GBS9YM2Ik9e0AF/mF3wAmJL
-        d03/4yXx4goUGIsnm8krjyYzRu7s=
-X-Received: by 2002:a05:6402:1b05:b0:4ab:4ad1:a381 with SMTP id by5-20020a0564021b0500b004ab4ad1a381mr9178270edb.10.1677079498923;
-        Wed, 22 Feb 2023 07:24:58 -0800 (PST)
-X-Google-Smtp-Source: AK7set9Ku7xcpMDhRuWGHB2QoCTkvxAuh1sOc3+1HBqVtxi3CEiIe9NAhLUvzrDi+xlW7qJJD8AAzQ==
-X-Received: by 2002:a05:6402:1b05:b0:4ab:4ad1:a381 with SMTP id by5-20020a0564021b0500b004ab4ad1a381mr9178256edb.10.1677079498653;
-        Wed, 22 Feb 2023 07:24:58 -0800 (PST)
-Received: from [192.168.0.101] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
-        by smtp.gmail.com with ESMTPSA id c9-20020a50d649000000b004af64086a0esm651095edj.35.2023.02.22.07.24.56
+        bh=Bb07wK5FsL14HyzturGKlywOeZi+MsC8SWgfjTaL0t8=;
+        b=bsZ3dnT6gxHmrcTNXPYq8wSbQE4SbWbBeP+xdalRPYJIXu5AncXcgZ9pjLJWCS596b
+         HY5i8wKwDJbj3HV4Je7JDRurGayXLGzzOCbgx186GK+0hplgDwJO11+b/iHXK16B1WSE
+         r+iidIB3vxP00UtAg7fdQjnUHZ4xLUW0WKQds+oSQ53BlvWlf50kBjB/0ZZCdf27KVNm
+         Mfg8t6MrQIJFDOuVKgdqhubGA377H2TAwxG6fJPf8+4/7Ks3cf67Qq2r3C5iabUUL/wP
+         L6jEkscn4Bt4xccMmB24rAg+V0Sxi0EflE8uno54M8ldRft2gJvr88Zxrj1SljIqLeKP
+         bH7g==
+X-Gm-Message-State: AO0yUKVBxRARxzawE2oXKBgpHtLOvM539qBeccNCH6CLsd4riDw5URiW
+        5xzvPFTLJ6gjIUJ4YvvEiUeIVvKYIqQ=
+X-Google-Smtp-Source: AK7set9OFH8kbmGgofK8w57SUzgduc7OUgNTQhobNzWqK2de26EP+MkMl2qb406C48QkJDiKM23DIQ==
+X-Received: by 2002:a62:384e:0:b0:5a8:ea06:662 with SMTP id f75-20020a62384e000000b005a8ea060662mr8378979pfa.20.1677079546839;
+        Wed, 22 Feb 2023 07:25:46 -0800 (PST)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id j18-20020aa78dd2000000b0058b927b9653sm177382pfr.92.2023.02.22.07.25.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Feb 2023 07:24:57 -0800 (PST)
-Message-ID: <8920826f-256c-680e-aed4-bf75c29429de@redhat.com>
-Date:   Wed, 22 Feb 2023 16:24:56 +0100
+        Wed, 22 Feb 2023 07:25:45 -0800 (PST)
+Message-ID: <b1f0ed44-d707-5593-7449-8a6bd23c9902@acm.org>
+Date:   Wed, 22 Feb 2023 07:25:42 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v2 0/4] ses: prevent from out of bounds accesses
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, mikoxyzzz@gmail.com
-References: <20230202162451.15346-1-thenzl@redhat.com>
- <yq1mt56skb6.fsf@ca-mkp.ca.oracle.com>
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 1/2] include: uapi: scsi: Change utp_upiu_query struct
 Content-Language: en-US
-From:   Tomas Henzl <thenzl@redhat.com>
-In-Reply-To: <yq1mt56skb6.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1677078770-30994-1-git-send-email-Arthur.Simchaev@wdc.com>
+ <1677078770-30994-2-git-send-email-Arthur.Simchaev@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1677078770-30994-2-git-send-email-Arthur.Simchaev@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/21/23 23:59, Martin K. Petersen wrote:
-> 
-> Tomas,
-> 
->> First patch fixes a KASAN reported problem Second patch fixes other
->> possible places in ses_enclosure_data_process where the max_desc_len
->> might access memory out of bounds.  3/4 does the same for desc_ptr in
->> ses_enclosure_data_process.  The last patch fixes another KASAN report
->> in ses_intf_remove.
-> 
-> Thanks for working on this! With your series applied, in combination
-> with a straggling patch from James, I can finally boot my SAS test setup
-> without any KASAN warnings.
-I'm glad it worked for you and it could have been added since I've
-noticed some previous approaches rejected.
-> 
-> Applied to 6.3/scsi-staging, thanks!
-> 
+On 2/22/23 07:12, Arthur Simchaev wrote:
+> diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
+> index 2801b65..cccc07d 100644
+> --- a/include/uapi/scsi/scsi_bsg_ufs.h
+> +++ b/include/uapi/scsi/scsi_bsg_ufs.h
+> @@ -54,20 +54,21 @@ struct utp_upiu_header {
+>    * @idn: a value that indicates the particular type of data B-1
+>    * @index: Index to further identify data B-2
+>    * @selector: Index to further identify data B-3
+> - * @reserved_osf: spec reserved field B-4,5
+> - * @length: number of descriptor bytes to read/write B-6,7
+> - * @value: Attribute value to be written DW-5
+> - * @reserved: spec reserved DW-6,7
+> + * @osf4: spec field B-5
+> + * @osf5: spec field B 6,7
+> + * @osf6: spec field DW 8,9
+> + * @osf7: spec field DW 10,11
+>    */
+>   struct utp_upiu_query {
+>   	__u8 opcode;
+>   	__u8 idn;
+>   	__u8 index;
+>   	__u8 selector;
+> -	__be16 reserved_osf;
+> -	__be16 length;
+> -	__be32 value;
+> -	__be32 reserved[2];
+> +	__u8 osf3;
+> +	__u8 osf4;
+> +	__be16 osf5;
+> +	__be32 osf6;
+> +	__be32 osf7;
+>   };
+
+All changes in UAPI headers must be backwards compatible. The above 
+doesn't look like a backwards compatible change to me.
+
+Bart.
 
