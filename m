@@ -2,149 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA03C61DA4
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 15:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75EC8C61DA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 15:25:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232358AbjBVPNI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Feb 2023 10:13:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59042 "EHLO
+        id S232025AbjBVPZn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Feb 2023 10:25:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232360AbjBVPND (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 10:13:03 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CE3F11EAC;
-        Wed, 22 Feb 2023 07:13:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1677078782; x=1708614782;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=Bp81ag4q73LTr7MlDdAbki1WewX0AM3VZjoOGTeLMD4=;
-  b=DDGXqbbEGVOJbNxDoRz+L/XgtyDu14WyM+FGxIUF3rtQrpJTzHlDUYKe
-   56hC7WsXCVzyBpnogZZzE/CNLeJpjWSxjiTPdUSLMV3Lf181PzYVsC7eV
-   NWdBfI+ZWcXQuC9zX9pesDywtKtNp9Gy31Nd98STCys8MxrpDBXCRyinE
-   bbVfeAHIcZlSSteuazNBRUlJHDkSEN7wOVt4Q+6p2VU45S0hgbDMFcaJb
-   RZbaELVnhAPi08F1QrdrwACpzzvolxHMdk0PsN2fZW0Y7jsgw7au+woBW
-   pBWres8UI8BJuV7Wv/Rf9ViEprTBUTexKSydtz5OUSB8wp+b9YdzJKRzt
-   A==;
-X-IronPort-AV: E=Sophos;i="5.97,319,1669046400"; 
-   d="scan'208";a="223701435"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Feb 2023 23:13:01 +0800
-IronPort-SDR: 8ym6kQlvEV8LM0bsL01EWy0LZrkBaGTgeytwLyO0ERd2yhWOaFMsyDu1qYItaM7Qqp99ZqGBhe
- 4fdf/p1bos/brb1lJGvcuOc90TVY8w7VcNAaXjueVStTnG65EGxBcv0kRDVYneyiBuTltX9V3e
- IEfsffJeawyi1K0k6byZLIH/86z5rjYn5gWHuZRD6+sIAD3Sr0YqtdNTFFRBMiLRVunmDUQT5b
- SF15NDFS7JqTgmt0J2d+ygsatoFBhLwSMG8lbjTx7ZCpPSW4n10e9OmUj649V+b5fZoAjmLMQ3
- lpc=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Feb 2023 06:24:16 -0800
-IronPort-SDR: UNNccfbyhMkuY6JLtDQ3lRWstgI0jO8B5SqeV8A0pncJBqn+6f6Z2mJDW1JPvTxbJNzf2R7e5x
- SbNEE8tN3XiOsdBKhCX6CA1366N41PnOkvajSc7maNCuZGc6UtFdPEDETP4238fwIs0QoJN+Ft
- qxCv0GD8Wb+5xqy1Vznku4aHlJQyc/mdJyZH2lhpRtUYsnf+5yAHOK17FWl1QrkPsJ3n1XoPDV
- fnIKjpNcvCzj5IIIRqEE9459lQvH0EPM2jgKNBCIKT7XrblY2ssZRpjEregxANHKLVyBO9/xoI
- Ybs=
-WDCIronportException: Internal
-Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
-  by uls-op-cesaip01.wdc.com with ESMTP; 22 Feb 2023 07:13:00 -0800
-From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
-To:     martin.petersen@oracle.com
-Cc:     beanhuo@micron.com, bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH 2/2] ufs: core: Providing Timestamp information to the device
-Date:   Wed, 22 Feb 2023 17:12:50 +0200
-Message-Id: <1677078770-30994-3-git-send-email-Arthur.Simchaev@wdc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1677078770-30994-1-git-send-email-Arthur.Simchaev@wdc.com>
-References: <1677078770-30994-1-git-send-email-Arthur.Simchaev@wdc.com>
+        with ESMTP id S229513AbjBVPZm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 10:25:42 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AC4736FDA
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2023 07:25:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677079503;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tvleqFLJq4MrlHDq8WNjaZEAYcrFfPJIDD31BvpSrmY=;
+        b=MPA82h6tEqRqcpYVh3Vji/zKErsQTcWUthCIp3Oh/L0M+zgVKmN4UCjfopMyfpABcEWaE8
+        WLR2NZSr0UdXgQqmKEo60LBmSeqhKehWiWUn9BzLpLMSLfsrQb6jpCyjBQTlqQFOb5zIwa
+        73QNkCwmQsGCJPhU97KgHQ7FJYfZsvA=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-661-3AJY0AhYNfulCs7oe5TOHA-1; Wed, 22 Feb 2023 10:25:02 -0500
+X-MC-Unique: 3AJY0AhYNfulCs7oe5TOHA-1
+Received: by mail-ed1-f69.google.com with SMTP id b1-20020aa7dc01000000b004ad062fee5eso11121406edu.17
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2023 07:25:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tvleqFLJq4MrlHDq8WNjaZEAYcrFfPJIDD31BvpSrmY=;
+        b=fM96+UL6QwlKewiU6DT3P6gVE1ThaDezabVcfk31FzdTkrKas2bjgTV0NAFTQVs5Zz
+         7ogQbVrsMMxrRaeNfHklzDWy0QOzOLpsSnyvBbi9jHeIuZTxH6bUSz7sJa3oAnyZpjXC
+         ZA/MFR+mjiIDjY56umcH3LPgH7A/1fwFAKDj14sLMFg59Slj+rmCXrfs5/4u6FRARY25
+         nGT+hNHqF6hSGvgJCjJmityojhFgqXWr4NxEjEcP6VfTk16714j+OQ6KT1MuePVZ3afh
+         Uw2aIXtn/PrN2UzGyB0xLsYWs/YhHmvdopqrm3v4+4tXNY3bNMJih+MBaT0IFiB0WLwR
+         2PtQ==
+X-Gm-Message-State: AO0yUKUOGmsdoYmCwmkI3Dw2t+OU6HBot5a3ScuuiVaeAbHzt5Y5adL8
+        4wm3g2FRgpdmsUZev1mNs3SPrm1JX9naN1ja5lz1ztgRNpViWrp0GBS9YM2Ik9e0AF/mF3wAmJL
+        d03/4yXx4goUGIsnm8krjyYzRu7s=
+X-Received: by 2002:a05:6402:1b05:b0:4ab:4ad1:a381 with SMTP id by5-20020a0564021b0500b004ab4ad1a381mr9178270edb.10.1677079498923;
+        Wed, 22 Feb 2023 07:24:58 -0800 (PST)
+X-Google-Smtp-Source: AK7set9Ku7xcpMDhRuWGHB2QoCTkvxAuh1sOc3+1HBqVtxi3CEiIe9NAhLUvzrDi+xlW7qJJD8AAzQ==
+X-Received: by 2002:a05:6402:1b05:b0:4ab:4ad1:a381 with SMTP id by5-20020a0564021b0500b004ab4ad1a381mr9178256edb.10.1677079498653;
+        Wed, 22 Feb 2023 07:24:58 -0800 (PST)
+Received: from [192.168.0.101] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
+        by smtp.gmail.com with ESMTPSA id c9-20020a50d649000000b004af64086a0esm651095edj.35.2023.02.22.07.24.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Feb 2023 07:24:57 -0800 (PST)
+Message-ID: <8920826f-256c-680e-aed4-bf75c29429de@redhat.com>
+Date:   Wed, 22 Feb 2023 16:24:56 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v2 0/4] ses: prevent from out of bounds accesses
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, mikoxyzzz@gmail.com
+References: <20230202162451.15346-1-thenzl@redhat.com>
+ <yq1mt56skb6.fsf@ca-mkp.ca.oracle.com>
+Content-Language: en-US
+From:   Tomas Henzl <thenzl@redhat.com>
+In-Reply-To: <yq1mt56skb6.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The new qTimestamp attribute was added to UFS 4.0 spec, in order to
-synchronize the timestamp between the host and the ufs device.
-The spec recommend to send this attribute upon device power-on Reset/HW
-reset or when switching to Active state (using SSU command)
-
-Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
----
- drivers/ufs/core/ufshcd.c | 36 ++++++++++++++++++++++++++++++++++++
- include/ufs/ufs.h         |  1 +
- 2 files changed, 37 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b08760d..22c29ff 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8378,6 +8378,39 @@ static int ufshcd_device_params_init(struct ufs_hba *hba)
- 	return ret;
- }
- 
-+static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
-+{
-+	int err;
-+	struct ufs_query_req *request = NULL;
-+	struct ufs_query_res *response = NULL;
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+
-+	if (dev_info->wspecversion < 0x400)
-+		return;
-+
-+	ufshcd_hold(hba, false);
-+
-+	mutex_lock(&hba->dev_cmd.lock);
-+
-+	ufshcd_init_query(hba, &request, &response,
-+			  UPIU_QUERY_OPCODE_WRITE_ATTR,
-+			  QUERY_ATTR_IDN_TIMESTAMP, 0, 0);
-+
-+	request->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
-+
-+	put_unaligned_be64(ktime_get_real_ns(), &request->upiu_req.osf3);
-+
-+	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
-+
-+	if (err)
-+		dev_err(hba->dev, "%s: failed to set timestamp %d\n",
-+			__func__, err);
-+
-+	mutex_unlock(&hba->dev_cmd.lock);
-+
-+	ufshcd_release(hba);
-+}
-+
- /**
-  * ufshcd_add_lus - probe and add UFS logical units
-  * @hba: per-adapter instance
-@@ -8547,6 +8580,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
- 
-+	ufshcd_set_timestamp_attr(hba);
-+
- 	/* Gear up to HS gear if supported */
- 	if (hba->max_pwr_info.is_valid) {
- 		/*
-@@ -9566,6 +9601,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ret = ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);
- 		if (ret)
- 			goto set_old_link_state;
-+		ufshcd_set_timestamp_attr(hba);
- 	}
- 
- 	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 4e8d624..198cb39 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -170,6 +170,7 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
- 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
- 	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
-+	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
- };
- 
- /* Descriptor idn for Query requests */
--- 
-2.7.4
+On 2/21/23 23:59, Martin K. Petersen wrote:
+> 
+> Tomas,
+> 
+>> First patch fixes a KASAN reported problem Second patch fixes other
+>> possible places in ses_enclosure_data_process where the max_desc_len
+>> might access memory out of bounds.  3/4 does the same for desc_ptr in
+>> ses_enclosure_data_process.  The last patch fixes another KASAN report
+>> in ses_intf_remove.
+> 
+> Thanks for working on this! With your series applied, in combination
+> with a straggling patch from James, I can finally boot my SAS test setup
+> without any KASAN warnings.
+I'm glad it worked for you and it could have been added since I've
+noticed some previous approaches rejected.
+> 
+> Applied to 6.3/scsi-staging, thanks!
+> 
 
