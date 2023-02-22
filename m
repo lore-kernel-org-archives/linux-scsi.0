@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1661EC636D6
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 03:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D852AC636D6
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 03:34:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbjBVDRC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 22:17:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44216 "EHLO
+        id S230479AbjBVDeK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Feb 2023 22:34:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230251AbjBVDQ5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 22:16:57 -0500
-Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A00030B22;
-        Tue, 21 Feb 2023 19:16:56 -0800 (PST)
-Received: by mail-lf1-x134.google.com with SMTP id i9so8135072lfc.6;
-        Tue, 21 Feb 2023 19:16:56 -0800 (PST)
+        with ESMTP id S230517AbjBVDeH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 22:34:07 -0500
+Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B5C34F45;
+        Tue, 21 Feb 2023 19:33:24 -0800 (PST)
+Received: by mail-lj1-x229.google.com with SMTP id by8so1531261ljb.7;
+        Tue, 21 Feb 2023 19:33:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=zjix5hHmRg1gnpTeSvqiWXkay4LiEwf0MpYeRg42JtU=;
-        b=jsfRdr+kWUxp+JSuWOhyMf2DgmTyC81KmIi94ElAmd4jVlFb1ItgeZ5toC4vejyhFM
-         KLDOefgUya0UG3F8aw64bx4lmoMYk1tD8mW2I0HCSputvZkRa4gJltI5ssLQK6Th3HN5
-         lphga6gcPXm6v6v4Go7HxAnpnWU+8dGfLt6A8vugqjpCpL570WtyMUfoaENpDyYtW8ya
-         tiwzVcEmqSp4CyKiMOVFpgNoGNwnA2BE1o94h3NyyuAg27KkAljAUiYToOILf/KLJAbi
-         u4sUXiKPcARYizm++3kiLaGyJA5vTv3Alsa/5bs+tEz/96o3hCiCA8Mz90x81Y8DvbBo
-         CnJA==
+        bh=BHFZkmuOI6BBxjehOO7TZF+023IFD6iXS2Qeu1DPdGo=;
+        b=BBEgUeGnp+x8jZiqSGBLkg4okUweEOQ507KEEynqmRKEhs+L3RGzD/urFDM6IoduKr
+         aYRCnsmCygJhS9iRm762tmUYefxtktzDhpMhAxmf3ufDUyiJoKD5sO4YFzI6xqzu2Fp1
+         7zu1LCt1zZ+cLiBnyTXrRi1SutJ2QIsNFr0YyWuejEDTwrfFeyIzA5KAPgeGnThv9ILS
+         ubMVlMC6SGdT6GlidnNo/O2syYoqp7cZz/DBQ65Mb1GYWylldnyeTN9RNFDXsrLNia5f
+         sk09TuKTfX8q07yx3RDtYTnV6c3bbSDOqxtT6ajB+owjNJ2HbDvgKpFBjmfnDjp8tY6F
+         SGAg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=zjix5hHmRg1gnpTeSvqiWXkay4LiEwf0MpYeRg42JtU=;
-        b=1lr17SCh99mQrx+3XmpoIbx7Zc6a3XELo85iTKXsMj8Mz9Tr+r8OxXnKitBFSK0lq2
-         Qtz2XEnR5XrBW1sw8DPSwYHJ+IOP05nk4PUQjV5+m0Sf2yK+coqZDxnNiFkOEEmlpanw
-         rH0IpcegNfr6zkZjV3Ceu3kU22exCVkPiWA7z4QJJYezZMWNFzIr2yZFcpMBO/9mJHnH
-         qyZt3mUL0clXCBXE8W34wbNxCzblz+pplbDziirL1bSupCAya/cdZGMPc021NswSnyhS
-         dAz92tWZpmG4/FRUr9WQPdWDJhGa7ra5aAJIKZV8HIpA/G38RbzsYLLvfjCmgzDKQ5+X
-         e3yQ==
-X-Gm-Message-State: AO0yUKXicod4pNfJXFebjFidTFSEyqhRJFa5Y/sqaM6rxDRosjp1tWgA
-        Lhf4BnqWWHyYAXGj+22xw1KQi3IE41QVh4Rdzw==
-X-Google-Smtp-Source: AK7set/3OD7E1WKxGGmZLHWOzKUAYuvDvrVESkKv/Ae9by3eSpTZN/UJX08073sf6Ku8mTNdE+Qroaj2UXoEaJwqcSM=
-X-Received: by 2002:ac2:53a7:0:b0:4d5:ca32:689b with SMTP id
- j7-20020ac253a7000000b004d5ca32689bmr2302409lfh.0.1677035814323; Tue, 21 Feb
- 2023 19:16:54 -0800 (PST)
+        bh=BHFZkmuOI6BBxjehOO7TZF+023IFD6iXS2Qeu1DPdGo=;
+        b=KK9+4ka8VL0BE5IJ1F0q6s11etU0JO3LPA+3XjpcXFJAlJC8EaxZbwU98cCGZX103l
+         WeRJ4tQu8c9Y7jJXxrmCsmfvPWn90XH/hmCM7dsp9zBqtRsTOznL0E/r6NOOrFO+g4EV
+         wXxLvlo+PT2/xUoG/jfL4KfkKephYAKduQR2IvOlM+DEa03aj3tU3fudFiG80rHWKA3e
+         WoA7O1HTQ1qthaV8Kxpx4P2Qlr4vK7YD40tyDS0Q6Qc4Hs8RJM5FgafkgYkfxhDjls0D
+         roaxTjCml6Nepa/jOznpAf35o2LpUzSFp2d7ACW3ksLdyB5pCtxplGnHRFESf5Zh4Gi+
+         yT/Q==
+X-Gm-Message-State: AO0yUKXa/gpDyxZ5eLCeKj++FdUfe2E17ukv/TzscwKt29F1eZxc/L6e
+        tE/qs7olMmC3qiBt8Jx63SRymN7vrQZr9u1blg==
+X-Google-Smtp-Source: AK7set+0L9PPz40Fyy1a4rZ5p7rDYSNtyek52Q67gGpslyDHlhVrpRatkbfM+OW3ZiSQGf6iOf5S+OvWZQt6VdQoNHo=
+X-Received: by 2002:a2e:b4a3:0:b0:290:6f84:541 with SMTP id
+ q3-20020a2eb4a3000000b002906f840541mr2247736ljm.8.1677036802009; Tue, 21 Feb
+ 2023 19:33:22 -0800 (PST)
 MIME-Version: 1.0
-References: <20230222030427.957-1-powen.kao@mediatek.com> <20230222030427.957-4-powen.kao@mediatek.com>
-In-Reply-To: <20230222030427.957-4-powen.kao@mediatek.com>
+References: <20230222030427.957-1-powen.kao@mediatek.com> <20230222030427.957-6-powen.kao@mediatek.com>
+In-Reply-To: <20230222030427.957-6-powen.kao@mediatek.com>
 From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 22 Feb 2023 11:16:30 +0800
-Message-ID: <CAGaU9a-X5JYKGp-jjKV8MRxoBnD=ffHa3iBshemRikpOHynitQ@mail.gmail.com>
-Subject: Re: [PATCH v2 3/7] scsi: ufs: core: Fix mcq nr_hw_queues
+Date:   Wed, 22 Feb 2023 11:33:10 +0800
+Message-ID: <CAGaU9a-8f6FcnOAnJMJhawR_ijGtc_r71eYzyqyq-PrYuvi86A@mail.gmail.com>
+Subject: Re: [PATCH v2 5/7] scsi: ufs: core: Remove redundant check
 To:     Po-Wen Kao <powen.kao@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
@@ -75,7 +75,7 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Wed, Feb 22, 2023 at 11:05 AM Po-Wen Kao <powen.kao@mediatek.com> wrote:
 >
-> Need to add one to MAXQ to obtain number of hardware queue.
+> is_mcq_supported() already check on use_mcq_mode.
 >
 > Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
 
