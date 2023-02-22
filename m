@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D852AC636D6
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 03:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EA24C61DA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Feb 2023 05:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230479AbjBVDeK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Feb 2023 22:34:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57666 "EHLO
+        id S230285AbjBVFTf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Feb 2023 00:19:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230517AbjBVDeH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2023 22:34:07 -0500
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B5C34F45;
-        Tue, 21 Feb 2023 19:33:24 -0800 (PST)
-Received: by mail-lj1-x229.google.com with SMTP id by8so1531261ljb.7;
-        Tue, 21 Feb 2023 19:33:24 -0800 (PST)
+        with ESMTP id S230150AbjBVFTd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 00:19:33 -0500
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F9F93432C;
+        Tue, 21 Feb 2023 21:19:32 -0800 (PST)
+Received: by mail-lf1-x12e.google.com with SMTP id s22so8442625lfi.9;
+        Tue, 21 Feb 2023 21:19:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=BHFZkmuOI6BBxjehOO7TZF+023IFD6iXS2Qeu1DPdGo=;
-        b=BBEgUeGnp+x8jZiqSGBLkg4okUweEOQ507KEEynqmRKEhs+L3RGzD/urFDM6IoduKr
-         aYRCnsmCygJhS9iRm762tmUYefxtktzDhpMhAxmf3ufDUyiJoKD5sO4YFzI6xqzu2Fp1
-         7zu1LCt1zZ+cLiBnyTXrRi1SutJ2QIsNFr0YyWuejEDTwrfFeyIzA5KAPgeGnThv9ILS
-         ubMVlMC6SGdT6GlidnNo/O2syYoqp7cZz/DBQ65Mb1GYWylldnyeTN9RNFDXsrLNia5f
-         sk09TuKTfX8q07yx3RDtYTnV6c3bbSDOqxtT6ajB+owjNJ2HbDvgKpFBjmfnDjp8tY6F
-         SGAg==
+        bh=vFxknHf70WyN5xkLwsDT8RicelViEW38jmkvWXuqBJA=;
+        b=iEznKgBx4zmxsixB3cukUeKcLMmzha2ioHvXLPjXhdVAluc3blsAN+phD+2zx4KBjP
+         yivA0RZDHtAQGaIMSUbWN7U6feuo5u41gKnuWI0QXa4XHwcz1lP0ziC/5nGZRbx/o+fC
+         BGUdnFA50Scid2W/BSKUWaBtbsQK4f+nIXMgMYYPpCwtC8HrpulkfnlKV/s0cYlcc1N8
+         Ts0Nmyaz3peH1PAp+HSP8qhOr8IEoX/v8l52A+51VZ3XahDmWQN2aDVc4IMWY1++7fb/
+         yiYbsDX9JmLYypv0kW8oPuBP4ptRbzQCpHyBnhnKTY55pFFplgk33tgYsQqoF6AjmMxY
+         yqSA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=BHFZkmuOI6BBxjehOO7TZF+023IFD6iXS2Qeu1DPdGo=;
-        b=KK9+4ka8VL0BE5IJ1F0q6s11etU0JO3LPA+3XjpcXFJAlJC8EaxZbwU98cCGZX103l
-         WeRJ4tQu8c9Y7jJXxrmCsmfvPWn90XH/hmCM7dsp9zBqtRsTOznL0E/r6NOOrFO+g4EV
-         wXxLvlo+PT2/xUoG/jfL4KfkKephYAKduQR2IvOlM+DEa03aj3tU3fudFiG80rHWKA3e
-         WoA7O1HTQ1qthaV8Kxpx4P2Qlr4vK7YD40tyDS0Q6Qc4Hs8RJM5FgafkgYkfxhDjls0D
-         roaxTjCml6Nepa/jOznpAf35o2LpUzSFp2d7ACW3ksLdyB5pCtxplGnHRFESf5Zh4Gi+
-         yT/Q==
-X-Gm-Message-State: AO0yUKXa/gpDyxZ5eLCeKj++FdUfe2E17ukv/TzscwKt29F1eZxc/L6e
-        tE/qs7olMmC3qiBt8Jx63SRymN7vrQZr9u1blg==
-X-Google-Smtp-Source: AK7set+0L9PPz40Fyy1a4rZ5p7rDYSNtyek52Q67gGpslyDHlhVrpRatkbfM+OW3ZiSQGf6iOf5S+OvWZQt6VdQoNHo=
-X-Received: by 2002:a2e:b4a3:0:b0:290:6f84:541 with SMTP id
- q3-20020a2eb4a3000000b002906f840541mr2247736ljm.8.1677036802009; Tue, 21 Feb
- 2023 19:33:22 -0800 (PST)
+        bh=vFxknHf70WyN5xkLwsDT8RicelViEW38jmkvWXuqBJA=;
+        b=gSPx9+bt7ml1JgUIfbhAEX1spcAWRLZxN8wtOmWFkoGcChRxgpmIBgbNwuplfiUMOZ
+         9Q0AWxrY7XPHC3LRrfQ2jBBhqQjpqgEwXOLXiu5tENPjgWePXzPsHdM/5qBc495lgqoQ
+         EcL6/3eM/RBP9KZ4lkC9DrdYDMax48vJW5BwI9JbdRTIbYXkKKqQAqJm8f25VYzlj6L1
+         I8wDjHIiE0wth+nC54ey2aMNa8hYNh/A38CeWzhYAElO2jzbT/b1bRwBikQqgIImSOuF
+         UCmhzVo/r5enMDtkOXT9GqZtNOD6Tz2Lde2NIvAR0VS0Dx+nisQ2hJ3wC2qRuFutFakv
+         ajJg==
+X-Gm-Message-State: AO0yUKXIVncO94CX8NojBX061NoIDzlrqqH5QEf3vlNjf8cMp4l7Dgv0
+        mOxBEhguNNBmzi4vmqSQmsFR9VhFrbbwKp6KcA==
+X-Google-Smtp-Source: AK7set8jBro1k9Sk+DR5U/YO1Vnv7b3fghO75BG6pfX4GC3RTuomOlkgyicjF2eLx51xwgEJMAwpGRSKsRy1wVEEyGw=
+X-Received: by 2002:ac2:568a:0:b0:4db:3901:3fdf with SMTP id
+ 10-20020ac2568a000000b004db39013fdfmr2503653lfr.0.1677043170253; Tue, 21 Feb
+ 2023 21:19:30 -0800 (PST)
 MIME-Version: 1.0
-References: <20230222030427.957-1-powen.kao@mediatek.com> <20230222030427.957-6-powen.kao@mediatek.com>
-In-Reply-To: <20230222030427.957-6-powen.kao@mediatek.com>
+References: <20230222030427.957-1-powen.kao@mediatek.com> <20230222030427.957-7-powen.kao@mediatek.com>
+In-Reply-To: <20230222030427.957-7-powen.kao@mediatek.com>
 From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 22 Feb 2023 11:33:10 +0800
-Message-ID: <CAGaU9a-8f6FcnOAnJMJhawR_ijGtc_r71eYzyqyq-PrYuvi86A@mail.gmail.com>
-Subject: Re: [PATCH v2 5/7] scsi: ufs: core: Remove redundant check
+Date:   Wed, 22 Feb 2023 13:19:18 +0800
+Message-ID: <CAGaU9a9gcVA8Sz1F8TqZt2q2_P3XxuJ4E437CFGP6kA95ApRqg@mail.gmail.com>
+Subject: Re: [PATCH v2 6/7] scsi: ufs: core: Export symbols for MTK driver module
 To:     Po-Wen Kao <powen.kao@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
@@ -75,8 +75,116 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Wed, Feb 22, 2023 at 11:05 AM Po-Wen Kao <powen.kao@mediatek.com> wrote:
 >
-> is_mcq_supported() already check on use_mcq_mode.
+> Export
+> - ufshcd_mcq_config_mac
+> - ufshcd_mcq_make_queues_operational
+> - ufshcd_mcq_read_cqis
+> - ufshcd_disable_intr
 >
 > Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+> ---
+>  drivers/ufs/core/ufs-mcq.c     | 3 +++
+>  drivers/ufs/core/ufshcd-priv.h | 2 --
+>  drivers/ufs/core/ufshcd.c      | 3 ++-
+>  include/ufs/ufshcd.h           | 6 ++++++
+>  4 files changed, 11 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index d1ff3ccd2085..ae67ab90bd29 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -98,6 +98,7 @@ void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds)
+>         val |= FIELD_PREP(MCQ_CFG_MAC_MASK, max_active_cmds);
+>         ufshcd_writel(hba, val, REG_UFS_MCQ_CFG);
+>  }
+> +EXPORT_SYMBOL_GPL(ufshcd_mcq_config_mac);
+>
+>  /**
+>   * ufshcd_mcq_req_to_hwq - find the hardware queue on which the
+> @@ -271,6 +272,7 @@ u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i)
+>  {
+>         return readl(mcq_opr_base(hba, OPR_CQIS, i) + REG_CQIS);
+>  }
+> +EXPORT_SYMBOL_GPL(ufshcd_mcq_read_cqis);
+>
+>  void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i)
+>  {
+> @@ -401,6 +403,7 @@ void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
+>                               MCQ_CFG_n(REG_SQATTR, i));
+>         }
+>  }
+> +EXPORT_SYMBOL_GPL(ufshcd_mcq_make_queues_operational);
+>
+>  void ufshcd_mcq_enable_esi(struct ufs_hba *hba)
+>  {
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+> index 13534a9a6d0a..1c83a6bc88b7 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -75,8 +75,6 @@ int ufshcd_mcq_init(struct ufs_hba *hba);
+>  int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
+>  void ufshcd_mcq_print_hwqs(struct ufs_hba *hba, unsigned long bitmap);
+>  int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
+> -void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
+> -void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
+>  void ufshcd_mcq_select_mcq_mode(struct ufs_hba *hba);
+>  u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
+>  void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 21e3bf5d8f08..a0848a8e2e6f 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2567,7 +2567,7 @@ static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
+>   * @hba: per adapter instance
+>   * @intrs: interrupt bits
+>   */
+> -static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
+> +void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
+>  {
+>         u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>
+> @@ -2583,6 +2583,7 @@ static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
+>
+>         ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
+>  }
+> +EXPORT_SYMBOL_GPL(ufshcd_disable_intr);
+>
+>  /**
+>   * ufshcd_prepare_req_desc_hdr - Fill UTP Transfer request descriptor header according to request
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 8f79cca449e1..d4dc7bcec127 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1230,6 +1230,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+>
+>  int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+>  void ufshcd_dealloc_host(struct ufs_hba *);
+> +void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs);
+>  int ufshcd_hba_enable(struct ufs_hba *hba);
+>  int ufshcd_init(struct ufs_hba *, void __iomem *, unsigned int);
+>  int ufshcd_link_recovery(struct ufs_hba *hba);
+> @@ -1242,9 +1243,14 @@ void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba, struct clk *refclk);
+>  void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val);
+>  void ufshcd_hba_stop(struct ufs_hba *hba);
+>  void ufshcd_schedule_eh_work(struct ufs_hba *hba);
+> +
+> +void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
+> +u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
+>  void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
+> +
+
+Dummy empty line?
+
+>  unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+>                                          struct ufs_hw_queue *hwq);
+> +void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
+>  void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
+>  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg);
+>
+> --
+> 2.18.0
+>
+
+Except for the above nickpicking, others look good to me.
 
 Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
