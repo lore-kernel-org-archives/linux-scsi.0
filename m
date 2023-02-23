@@ -2,241 +2,200 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 083DAC636D6
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Feb 2023 02:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60497C636D6
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Feb 2023 09:45:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233016AbjBWCXr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Feb 2023 21:23:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46680 "EHLO
+        id S234055AbjBWJpS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Feb 2023 04:45:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjBWCXq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2023 21:23:46 -0500
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C9921167F;
-        Wed, 22 Feb 2023 18:23:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677119025; x=1708655025;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=D8RMmDz9O4xg0Z75j4obRMTa+YqIeL7+eIp5XbHH3ps=;
-  b=iDYv8o5EVaM1Lnxc92Aglm0rgr2lVvIF73sksm8ekm2z4H45er0B3Lvz
-   BqRSvz8+YZudA/hDhEVLaGgTut70R1Z07EPCOm7jjBI+srqhStDRKs1p7
-   hJ+F3A5j+R8yYHNStc36L/fyPAvIxKcp6gmcCjaM5QkNttkzgjAVg4LS8
-   cHmeMXVDZobtC3qNfn11ReSMU8a9WOCruIxT3x+Bc15M1zy6Y2XYsyR61
-   Oi1w9dTcBb6y9fQnrccWA7XpmDAiR8Yhl/yV8dBqavSOZgmPYoiEIXwmd
-   fgtvOXCnIpgDwHzVhZYA6EeKbfPXUJLYTE3I+B1M9yw587tY2HvzoTLXj
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10629"; a="397789113"
-X-IronPort-AV: E=Sophos;i="5.97,320,1669104000"; 
-   d="scan'208";a="397789113"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2023 18:23:44 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10629"; a="761183053"
-X-IronPort-AV: E=Sophos;i="5.97,320,1669104000"; 
-   d="scan'208";a="761183053"
-Received: from lkp-server01.sh.intel.com (HELO 3895f5c55ead) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 22 Feb 2023 18:23:42 -0800
-Received: from kbuild by 3895f5c55ead with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pV1Gn-0000vB-1F;
-        Thu, 23 Feb 2023 02:23:41 +0000
-Date:   Thu, 23 Feb 2023 10:23:21 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        martin.petersen@oracle.com
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        beanhuo@micron.com, bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: Re: [PATCH 1/2] include: uapi: scsi: Change utp_upiu_query struct
-Message-ID: <202302231040.fsntCrq0-lkp@intel.com>
-References: <1677078770-30994-2-git-send-email-Arthur.Simchaev@wdc.com>
+        with ESMTP id S233594AbjBWJpR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2023 04:45:17 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E6854DBE5;
+        Thu, 23 Feb 2023 01:45:16 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31N9Uwcj012832;
+        Thu, 23 Feb 2023 09:44:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=Gx3+mGmc7DFKhERodDYBVbeI5ialDo5msuhCKNGkjew=;
+ b=EmD8ryUNkf7lncbZnsBvUQ3wjuzkdYv7ooxf2ft2cTQg4PIprEZL/CyHMH+LhFXYnWXm
+ UWBcZCyIW66neSD5H/yaJ9ZZyHl0JrybuMGqvIwFXaGXwfW9y8UfGW4th/0S58j/zwKy
+ +YWbLTPeQhuSfPRxMWja1Ji17egF/eFFXr3JCEtBxRCrT8fKMK8SbeZ4eRz+hmraH+fF
+ +XTz1KoomCPzFUIBims52YveQzZcTXFU2LHB1Tc/AubDfFIZpR3le6r1kDsHp4uIO9ZV
+ Jkp4s8KVMbNiAgkyBBq/sqYlKMxg5kfQH5BG/KZuGZKJU5Ges4lP5j37i+qExFKZqA/m mg== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nwywd0tnd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 23 Feb 2023 09:44:49 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31N9ilmo014950
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 23 Feb 2023 09:44:47 GMT
+Received: from [10.253.32.65] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Thu, 23 Feb
+ 2023 01:44:43 -0800
+Message-ID: <d2b2f3c2-3e65-d98a-991d-40ae6fcddef9@quicinc.com>
+Date:   Thu, 23 Feb 2023 17:44:40 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1677078770-30994-2-git-send-email-Arthur.Simchaev@wdc.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [PATCH v3] scsi: ufs: core: Add trace event for MCQ
+To:     Ziqi Chen <quic_ziqichen@quicinc.com>, <quic_asutoshd@quicinc.com>,
+        <bvanassche@acm.org>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
+References: <1677051569-81113-1-git-send-email-quic_ziqichen@quicinc.com>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <1677051569-81113-1-git-send-email-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: r3TlIyExX0722icxmLCJ93TqM887RsHb
+X-Proofpoint-ORIG-GUID: r3TlIyExX0722icxmLCJ93TqM887RsHb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-23_05,2023-02-22_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 malwarescore=0
+ clxscore=1011 impostorscore=0 mlxscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 lowpriorityscore=0 priorityscore=1501 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302230084
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arthur,
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master next-20230222]
-[cannot apply to v6.2]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Arthur-Simchaev/include-uapi-scsi-Change-utp_upiu_query-struct/20230222-233738
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/1677078770-30994-2-git-send-email-Arthur.Simchaev%40wdc.com
-patch subject: [PATCH 1/2] include: uapi: scsi: Change utp_upiu_query struct
-config: riscv-randconfig-r025-20230222 (https://download.01.org/0day-ci/archive/20230223/202302231040.fsntCrq0-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project db89896bbbd2251fff457699635acbbedeead27f)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install riscv cross compiling tool for clang build
-        # apt-get install binutils-riscv64-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/b821692fde9b136903941365fae75b13d85c23c7
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Arthur-Simchaev/include-uapi-scsi-Change-utp_upiu_query-struct/20230222-233738
-        git checkout b821692fde9b136903941365fae75b13d85c23c7
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/ufs/core/
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202302231040.fsntCrq0-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/ufs/core/ufshcd.c:12:
-   In file included from include/linux/async.h:14:
-   In file included from include/linux/device.h:15:
-   In file included from include/linux/dev_printk.h:16:
-   In file included from include/linux/ratelimit.h:6:
-   In file included from include/linux/sched.h:14:
-   In file included from include/linux/pid.h:5:
-   In file included from include/linux/rculist.h:11:
-   In file included from include/linux/rcupdate.h:29:
-   In file included from include/linux/lockdep.h:14:
-   In file included from include/linux/smp.h:13:
-   In file included from include/linux/cpumask.h:12:
-   In file included from include/linux/bitmap.h:11:
-   In file included from include/linux/string.h:253:
->> include/linux/fortify-string.h:513:4: warning: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Wattribute-warning]
-                           __write_overflow_field(p_size_field, size);
-                           ^
-   include/linux/fortify-string.h:522:4: warning: call to '__read_overflow2_field' declared with 'warning' attribute: detected read beyond size of field (2nd parameter); maybe use struct_group()? [-Wattribute-warning]
-                           __read_overflow2_field(q_size_field, size);
-                           ^
->> include/linux/fortify-string.h:513:4: warning: call to '__write_overflow_field' declared with 'warning' attribute: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Wattribute-warning]
-                           __write_overflow_field(p_size_field, size);
-                           ^
-   include/linux/fortify-string.h:522:4: warning: call to '__read_overflow2_field' declared with 'warning' attribute: detected read beyond size of field (2nd parameter); maybe use struct_group()? [-Wattribute-warning]
-                           __read_overflow2_field(q_size_field, size);
-                           ^
-   4 warnings generated.
-
-
-vim +513 include/linux/fortify-string.h
-
-a28a6e860c6cf2 Francis Laniel 2021-02-25  457  
-f68f2ff91512c1 Kees Cook      2021-04-20  458  /*
-f68f2ff91512c1 Kees Cook      2021-04-20  459   * To make sure the compiler can enforce protection against buffer overflows,
-f68f2ff91512c1 Kees Cook      2021-04-20  460   * memcpy(), memmove(), and memset() must not be used beyond individual
-f68f2ff91512c1 Kees Cook      2021-04-20  461   * struct members. If you need to copy across multiple members, please use
-f68f2ff91512c1 Kees Cook      2021-04-20  462   * struct_group() to create a named mirror of an anonymous struct union.
-f68f2ff91512c1 Kees Cook      2021-04-20  463   * (e.g. see struct sk_buff.) Read overflow checking is currently only
-f68f2ff91512c1 Kees Cook      2021-04-20  464   * done when a write overflow is also present, or when building with W=1.
-f68f2ff91512c1 Kees Cook      2021-04-20  465   *
-f68f2ff91512c1 Kees Cook      2021-04-20  466   * Mitigation coverage matrix
-f68f2ff91512c1 Kees Cook      2021-04-20  467   *					Bounds checking at:
-f68f2ff91512c1 Kees Cook      2021-04-20  468   *					+-------+-------+-------+-------+
-f68f2ff91512c1 Kees Cook      2021-04-20  469   *					| Compile time  |   Run time    |
-f68f2ff91512c1 Kees Cook      2021-04-20  470   * memcpy() argument sizes:		| write | read  | write | read  |
-f68f2ff91512c1 Kees Cook      2021-04-20  471   *        dest     source   length      +-------+-------+-------+-------+
-f68f2ff91512c1 Kees Cook      2021-04-20  472   * memcpy(known,   known,   constant)	|   y   |   y   |  n/a  |  n/a  |
-f68f2ff91512c1 Kees Cook      2021-04-20  473   * memcpy(known,   unknown, constant)	|   y   |   n   |  n/a  |   V   |
-f68f2ff91512c1 Kees Cook      2021-04-20  474   * memcpy(known,   known,   dynamic)	|   n   |   n   |   B   |   B   |
-f68f2ff91512c1 Kees Cook      2021-04-20  475   * memcpy(known,   unknown, dynamic)	|   n   |   n   |   B   |   V   |
-f68f2ff91512c1 Kees Cook      2021-04-20  476   * memcpy(unknown, known,   constant)	|   n   |   y   |   V   |  n/a  |
-f68f2ff91512c1 Kees Cook      2021-04-20  477   * memcpy(unknown, unknown, constant)	|   n   |   n   |   V   |   V   |
-f68f2ff91512c1 Kees Cook      2021-04-20  478   * memcpy(unknown, known,   dynamic)	|   n   |   n   |   V   |   B   |
-f68f2ff91512c1 Kees Cook      2021-04-20  479   * memcpy(unknown, unknown, dynamic)	|   n   |   n   |   V   |   V   |
-f68f2ff91512c1 Kees Cook      2021-04-20  480   *					+-------+-------+-------+-------+
-f68f2ff91512c1 Kees Cook      2021-04-20  481   *
-f68f2ff91512c1 Kees Cook      2021-04-20  482   * y = perform deterministic compile-time bounds checking
-f68f2ff91512c1 Kees Cook      2021-04-20  483   * n = cannot perform deterministic compile-time bounds checking
-f68f2ff91512c1 Kees Cook      2021-04-20  484   * n/a = no run-time bounds checking needed since compile-time deterministic
-f68f2ff91512c1 Kees Cook      2021-04-20  485   * B = can perform run-time bounds checking (currently unimplemented)
-f68f2ff91512c1 Kees Cook      2021-04-20  486   * V = vulnerable to run-time overflow (will need refactoring to solve)
-f68f2ff91512c1 Kees Cook      2021-04-20  487   *
-f68f2ff91512c1 Kees Cook      2021-04-20  488   */
-54d9469bc515dc Kees Cook      2021-06-24  489  __FORTIFY_INLINE bool fortify_memcpy_chk(__kernel_size_t size,
-f68f2ff91512c1 Kees Cook      2021-04-20  490  					 const size_t p_size,
-f68f2ff91512c1 Kees Cook      2021-04-20  491  					 const size_t q_size,
-f68f2ff91512c1 Kees Cook      2021-04-20  492  					 const size_t p_size_field,
-f68f2ff91512c1 Kees Cook      2021-04-20  493  					 const size_t q_size_field,
-f68f2ff91512c1 Kees Cook      2021-04-20  494  					 const char *func)
-a28a6e860c6cf2 Francis Laniel 2021-02-25  495  {
-a28a6e860c6cf2 Francis Laniel 2021-02-25  496  	if (__builtin_constant_p(size)) {
-f68f2ff91512c1 Kees Cook      2021-04-20  497  		/*
-f68f2ff91512c1 Kees Cook      2021-04-20  498  		 * Length argument is a constant expression, so we
-f68f2ff91512c1 Kees Cook      2021-04-20  499  		 * can perform compile-time bounds checking where
-fa35198f39571b Kees Cook      2022-09-19  500  		 * buffer sizes are also known at compile time.
-f68f2ff91512c1 Kees Cook      2021-04-20  501  		 */
-f68f2ff91512c1 Kees Cook      2021-04-20  502  
-f68f2ff91512c1 Kees Cook      2021-04-20  503  		/* Error when size is larger than enclosing struct. */
-fa35198f39571b Kees Cook      2022-09-19  504  		if (__compiletime_lessthan(p_size_field, p_size) &&
-fa35198f39571b Kees Cook      2022-09-19  505  		    __compiletime_lessthan(p_size, size))
-a28a6e860c6cf2 Francis Laniel 2021-02-25  506  			__write_overflow();
-fa35198f39571b Kees Cook      2022-09-19  507  		if (__compiletime_lessthan(q_size_field, q_size) &&
-fa35198f39571b Kees Cook      2022-09-19  508  		    __compiletime_lessthan(q_size, size))
-a28a6e860c6cf2 Francis Laniel 2021-02-25  509  			__read_overflow2();
-f68f2ff91512c1 Kees Cook      2021-04-20  510  
-f68f2ff91512c1 Kees Cook      2021-04-20  511  		/* Warn when write size argument larger than dest field. */
-fa35198f39571b Kees Cook      2022-09-19  512  		if (__compiletime_lessthan(p_size_field, size))
-f68f2ff91512c1 Kees Cook      2021-04-20 @513  			__write_overflow_field(p_size_field, size);
-f68f2ff91512c1 Kees Cook      2021-04-20  514  		/*
-f68f2ff91512c1 Kees Cook      2021-04-20  515  		 * Warn for source field over-read when building with W=1
-f68f2ff91512c1 Kees Cook      2021-04-20  516  		 * or when an over-write happened, so both can be fixed at
-f68f2ff91512c1 Kees Cook      2021-04-20  517  		 * the same time.
-f68f2ff91512c1 Kees Cook      2021-04-20  518  		 */
-fa35198f39571b Kees Cook      2022-09-19  519  		if ((IS_ENABLED(KBUILD_EXTRA_WARN1) ||
-fa35198f39571b Kees Cook      2022-09-19  520  		     __compiletime_lessthan(p_size_field, size)) &&
-fa35198f39571b Kees Cook      2022-09-19  521  		    __compiletime_lessthan(q_size_field, size))
-f68f2ff91512c1 Kees Cook      2021-04-20  522  			__read_overflow2_field(q_size_field, size);
-a28a6e860c6cf2 Francis Laniel 2021-02-25  523  	}
-f68f2ff91512c1 Kees Cook      2021-04-20  524  	/*
-f68f2ff91512c1 Kees Cook      2021-04-20  525  	 * At this point, length argument may not be a constant expression,
-f68f2ff91512c1 Kees Cook      2021-04-20  526  	 * so run-time bounds checking can be done where buffer sizes are
-f68f2ff91512c1 Kees Cook      2021-04-20  527  	 * known. (This is not an "else" because the above checks may only
-f68f2ff91512c1 Kees Cook      2021-04-20  528  	 * be compile-time warnings, and we want to still warn for run-time
-f68f2ff91512c1 Kees Cook      2021-04-20  529  	 * overflows.)
-f68f2ff91512c1 Kees Cook      2021-04-20  530  	 */
-f68f2ff91512c1 Kees Cook      2021-04-20  531  
-f68f2ff91512c1 Kees Cook      2021-04-20  532  	/*
-f68f2ff91512c1 Kees Cook      2021-04-20  533  	 * Always stop accesses beyond the struct that contains the
-f68f2ff91512c1 Kees Cook      2021-04-20  534  	 * field, when the buffer's remaining size is known.
-311fb40aa0569a Kees Cook      2022-09-02  535  	 * (The SIZE_MAX test is to optimize away checks where the buffer
-f68f2ff91512c1 Kees Cook      2021-04-20  536  	 * lengths are unknown.)
-f68f2ff91512c1 Kees Cook      2021-04-20  537  	 */
-311fb40aa0569a Kees Cook      2022-09-02  538  	if ((p_size != SIZE_MAX && p_size < size) ||
-311fb40aa0569a Kees Cook      2022-09-02  539  	    (q_size != SIZE_MAX && q_size < size))
-f68f2ff91512c1 Kees Cook      2021-04-20  540  		fortify_panic(func);
-54d9469bc515dc Kees Cook      2021-06-24  541  
-54d9469bc515dc Kees Cook      2021-06-24  542  	/*
-54d9469bc515dc Kees Cook      2021-06-24  543  	 * Warn when writing beyond destination field size.
-54d9469bc515dc Kees Cook      2021-06-24  544  	 *
-54d9469bc515dc Kees Cook      2021-06-24  545  	 * We must ignore p_size_field == 0 for existing 0-element
-54d9469bc515dc Kees Cook      2021-06-24  546  	 * fake flexible arrays, until they are all converted to
-54d9469bc515dc Kees Cook      2021-06-24  547  	 * proper flexible arrays.
-54d9469bc515dc Kees Cook      2021-06-24  548  	 *
-9f7d69c5cd2390 Kees Cook      2022-09-19  549  	 * The implementation of __builtin_*object_size() behaves
-54d9469bc515dc Kees Cook      2021-06-24  550  	 * like sizeof() when not directly referencing a flexible
-54d9469bc515dc Kees Cook      2021-06-24  551  	 * array member, which means there will be many bounds checks
-54d9469bc515dc Kees Cook      2021-06-24  552  	 * that will appear at run-time, without a way for them to be
-54d9469bc515dc Kees Cook      2021-06-24  553  	 * detected at compile-time (as can be done when the destination
-54d9469bc515dc Kees Cook      2021-06-24  554  	 * is specifically the flexible array member).
-54d9469bc515dc Kees Cook      2021-06-24  555  	 * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101832
-54d9469bc515dc Kees Cook      2021-06-24  556  	 */
-54d9469bc515dc Kees Cook      2021-06-24  557  	if (p_size_field != 0 && p_size_field != SIZE_MAX &&
-54d9469bc515dc Kees Cook      2021-06-24  558  	    p_size != p_size_field && p_size_field < size)
-54d9469bc515dc Kees Cook      2021-06-24  559  		return true;
-54d9469bc515dc Kees Cook      2021-06-24  560  
-54d9469bc515dc Kees Cook      2021-06-24  561  	return false;
-a28a6e860c6cf2 Francis Laniel 2021-02-25  562  }
-a28a6e860c6cf2 Francis Laniel 2021-02-25  563  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+On 2/22/2023 3:39 PM, Ziqi Chen wrote:
+> Added a new trace event to record MCQ relevant information
+> for each request in MCQ mode, include hardware queue ID,
+> SQ tail slot, CQ head slot and CQ tail slot.
+>
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+reviewed-by:  Can Guo <quic_cang@quicinc.com>
+>
+> ---
+> Changes to v2:
+> - Shorten printing strings.
+>
+> Changes to v1:
+> - Adjust the order of fileds to keep them aligned.
+> ---
+>   drivers/ufs/core/ufshcd.c  | 14 +++++++++++---
+>   include/trace/events/ufs.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 59 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 3b3cf78..67cb90d 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -426,6 +426,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+>   	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+>   	struct scsi_cmnd *cmd = lrbp->cmd;
+>   	struct request *rq = scsi_cmd_to_rq(cmd);
+> +	struct ufs_hw_queue *hwq;
+>   	int transfer_len = -1;
+>   
+>   	if (!cmd)
+> @@ -456,9 +457,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+>   	}
+>   
+>   	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> -	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> -	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
+> -			doorbell, transfer_len, intr, lba, opcode, group_id);
+> +
+> +	if (is_mcq_enabled(hba)) {
+> +		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
+> +		trace_ufshcd_command_mcq(dev_name(hba->dev), str_t, tag,
+> +				hwq, transfer_len, intr, lba, opcode, group_id);
+> +	} else {
+> +		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> +		trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
+> +				doorbell, transfer_len, intr, lba, opcode, group_id);
+> +	}
+>   }
+>   
+>   static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+> index 599739e..604b2cd 100644
+> --- a/include/trace/events/ufs.h
+> +++ b/include/trace/events/ufs.h
+> @@ -10,6 +10,7 @@
+>   #define _TRACE_UFS_H
+>   
+>   #include <linux/tracepoint.h>
+> +#include <ufs/ufshcd.h>
+>   
+>   #define str_opcode(opcode)						\
+>   	__print_symbolic(opcode,					\
+> @@ -307,6 +308,53 @@ TRACE_EVENT(ufshcd_command,
+>   	)
+>   );
+>   
+> +TRACE_EVENT(ufshcd_command_mcq,
+> +	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
+> +		unsigned int tag, struct ufs_hw_queue *hwq, int transfer_len,
+> +		u32 intr, u64 lba, u8 opcode, u8 group_id),
+> +
+> +	TP_ARGS(dev_name, str_t, tag, hwq, transfer_len, intr, lba, opcode, group_id),
+> +
+> +	TP_STRUCT__entry(
+> +		__string(dev_name, dev_name)
+> +		__field(enum ufs_trace_str_t, str_t)
+> +		__field(unsigned int, tag)
+> +		__field(u32, hwq_id)
+> +		__field(u32, sq_tail)
+> +		__field(u32, cq_head)
+> +		__field(u32, cq_tail)
+> +		__field(int, transfer_len)
+> +		__field(u32, intr)
+> +		__field(u64, lba)
+> +		__field(u8, opcode)
+> +		__field(u8, group_id)
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__assign_str(dev_name, dev_name);
+> +		__entry->str_t = str_t;
+> +		__entry->tag = tag;
+> +		__entry->hwq_id = hwq->id;
+> +		__entry->sq_tail = hwq->sq_tail_slot;
+> +		__entry->cq_head = hwq->cq_head_slot;
+> +		__entry->cq_tail = hwq->cq_tail_slot;
+> +		__entry->transfer_len = transfer_len;
+> +		__entry->intr = intr;
+> +		__entry->lba = lba;
+> +		__entry->opcode = opcode;
+> +		__entry->group_id = group_id;
+> +	),
+> +
+> +	TP_printk(
+> +		"%s: %s: tag: %u, hqid: %d, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, sqt: %d, cqh: %d, cqt: %d",
+> +		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+> +		__entry->tag, __entry->hwq_id, __entry->transfer_len,
+> +		__entry->intr, __entry->lba, (u32)__entry->opcode,
+> +		str_opcode(__entry->opcode), (u32)__entry->group_id,
+> +		__entry->sq_tail, __entry->cq_head,  __entry->cq_tail
+> +	)
+> +);
+> +
+>   TRACE_EVENT(ufshcd_uic_command,
+>   	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
+>   		 u32 arg1, u32 arg2, u32 arg3),
