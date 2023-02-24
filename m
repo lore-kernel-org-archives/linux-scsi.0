@@ -2,133 +2,138 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79CA2C61DA3
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09CFFC61DA4
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:45:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230022AbjBXOpB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Feb 2023 09:45:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33844 "EHLO
+        id S230028AbjBXOpD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Feb 2023 09:45:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230001AbjBXOot (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:49 -0500
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5022C168A4
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:47 -0800 (PST)
-Received: by mail-pj1-x1035.google.com with SMTP id l1so6323864pjt.2
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:47 -0800 (PST)
+        with ESMTP id S230037AbjBXOoj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:39 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2897618ABC
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:34 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id q31-20020a17090a17a200b0023750b69614so2912103pja.5
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=AdJvs0X0Ecurr7XdE1/0PujzHlSzO3RkAnYd+7/e83E=;
-        b=IqddZRsiNBRLt8qxedQPlgLaME/j1oNRA3hmvIi4OU/6E6iV9zPA5yhDIdes19nOqi
-         Lqk05IsmJw58xel2UXwqSszGlaG9tOLhwu3/R9ZQsuGKeJLTy1DrAkIm8Sx4JnfBZNda
-         vT7iw03cwDXcVNfg8nfx+IICYjiPhgW2467nY=
+        bh=wu/5vBDtIt/2CwvWKiSOVVIBdqUUtck6xP0LuooJPZs=;
+        b=SqmGg7rJvPskSLdDzftfu5PSykYmQLgQy4jU8T3W6xdhSvGlwAvGS8jAhdRIV5JYsM
+         T2LTw7aeukH2Wva9t1YIe91eBz8C7kcMbQcANgBhlLoQS2kOA4BTdNxo5dVmvMqV0BjG
+         BOHIosKWnd7brMbAHAhjLeRwY12kOWiL2ARpk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AdJvs0X0Ecurr7XdE1/0PujzHlSzO3RkAnYd+7/e83E=;
-        b=dRehvg6CaRySlkxyXiIBjDdw2WIpzp0XoE1d5tt8QjH3gfRLOMXo/4TnyEJsQ3xi+5
-         Cp2PA9Uua2X4gGop5nO/PQF5hGzMSOgQE2xp+8cdvxKO5sNdJGqGjqJfgbKRHUa8qh9c
-         Nqbz2B/K6recNLc3fDG4DR0HjE7xPjwlllgRxXHPN+MxOHSSG2jpBnD8KRjTOlFHe1k8
-         csFk1nObjnUD4YaDmpKvs3SQaK19PDAcINEMw/nl3rk7R7EV/yVntkk0QBB8/VBkrBzm
-         1LT2pHCrALGj2TpD1cLtr91iDi7t/0GS+fchvs2OZ8yDKWmCgrgrDCJszwJv3f5vB7VX
-         MdPg==
-X-Gm-Message-State: AO0yUKXzP2DUogUtm1sacLvgmWiIIu3c2tHJYoCn05qLsHd/mt8AJHvz
-        S4F1c6YIWgKmCo0O2+5w7XixGlA0wJP0XhuhQzHs1SAqUzL1D3jITytnyIRPZy5oHibuDc6xpGB
-        BoAFIFCCCDFafqsLRF+JgBYvY/4dg0GGk4PWTQ1nO9EJ3Nbb91Gmk+V3pi/Qrl2Qj0f7pjG/KVV
-        rOBzSqQ5w=
-X-Google-Smtp-Source: AK7set8DSz+yRvHtTjAgpOh6DkGFPS6dJ3euquvNjOBpcus8VL2xeUOgHlhtIBs3YnVmaqnXOTiUMg==
-X-Received: by 2002:a17:903:2344:b0:19b:fa9:678b with SMTP id c4-20020a170903234400b0019b0fa9678bmr17347049plh.40.1677249886442;
-        Fri, 24 Feb 2023 06:44:46 -0800 (PST)
+        bh=wu/5vBDtIt/2CwvWKiSOVVIBdqUUtck6xP0LuooJPZs=;
+        b=y6Az/2kyKh6Sq8gQMPrzNp9sc+vwS017hG1q9o2n8TSGo0Rb20GBXaxi9EyL7V1umx
+         nNi/rzT9giWdk7EIYdHbaUdGiRqpkYHJaWDcwlXf6eBSwlj4VRVfCnoHGoWt9XWEEFxa
+         sHDStO7JqXsst5agJZSoj/OSBw/KuaJxviaqp/Ky6ePeaKM9NWrYM7pqDHshLzuGnQM5
+         ggOBACE1zd+5HUQPVxCvp63bpYFpv21l9/XjZC1YicJX2DMqBhkixDPh3xfgPrHaE6X+
+         +KCrAIh2dMqEoTAxc7UXUyLc1sNEb1XNm6dkZnq8IYUvjniYhn1yoiqg4+Q34RnA6QHr
+         9OaA==
+X-Gm-Message-State: AO0yUKWHz0f2gd5tDtZr8czwjW5ZaWvPFXGnTp133ige30/ZNGLHghDH
+        6kQLCnuB4kmHVMVR6TQyb3dxNanYZP7OxW3uyiEmKoyxOQBDSfSUhsR7/uitj01HSVViF6s1gnj
+        Nci9pzVDp8doKheK4knm3nY1VR0qvnR2aCIDxECdux9JMrxKGp8q4MBAU4ottSl80+nC26vOcaE
+        /PKhRrB2w=
+X-Google-Smtp-Source: AK7set+ma/FAcCU2xVAE6tdIoSDbng7t4r8nnsU9YfhLIrLzcrEEA3UlzmfNx7y61VEgETX+1/XxSg==
+X-Received: by 2002:a17:902:ea07:b0:19a:9831:c8d6 with SMTP id s7-20020a170902ea0700b0019a9831c8d6mr17145182plg.50.1677249873301;
+        Fri, 24 Feb 2023 06:44:33 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.44.44
+        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.44.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Feb 2023 06:44:46 -0800 (PST)
+        Fri, 24 Feb 2023 06:44:33 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 13/15] mpi3mr: Bad drive in topology results kernel crash
-Date:   Fri, 24 Feb 2023 06:43:18 -0800
-Message-Id: <20230224144320.10601-14-ranjan.kumar@broadcom.com>
+Subject: [PATCH 10/15] mpi3mr: appropriate return values for failures in firmware init path
+Date:   Fri, 24 Feb 2023 06:43:15 -0800
+Message-Id: <20230224144320.10601-11-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 References: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b582bc05f5732bf6"
+        boundary="000000000000ecdc5605f5732abf"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000b582bc05f5732bf6
+--000000000000ecdc5605f5732abf
 Content-Transfer-Encoding: 8bit
 
-When the SAS Transport Layer support is enabled and when a device
-exposed to the OS by the driver failed Inquiry commands then the
-driver frees up the memory allocated for an internal HBA port
-data structure. However, in some places, the reference to the
-freed memory is not cleared.When the firmware sends the Device Info
-change event for the same device again,then the freed memory is
-accessed and that leads to memory corruption and OS crash.
+The driver is modified to return a proper non-zero return value for all
+the cases when the controller initialization and re-initialization fails.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index d99f2094297a..e9d8420b1350 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -2358,15 +2358,16 @@ int mpi3mr_report_tgtdev_to_sas_transport(struct mpi3mr_ioc *mrioc,
- 	tgtdev->host_exposed = 1;
- 	if (!mpi3mr_sas_port_add(mrioc, tgtdev->dev_handle,
- 	    sas_address_parent, hba_port)) {
--		tgtdev->host_exposed = 0;
- 		retval = -1;
--	} else if ((!tgtdev->starget)) {
--		if (!mrioc->is_driver_loading)
-+		} else if ((!tgtdev->starget) && (!mrioc->is_driver_loading)) {
- 			mpi3mr_sas_port_remove(mrioc, sas_address,
- 			    sas_address_parent, hba_port);
--		tgtdev->host_exposed = 0;
- 		retval = -1;
- 	}
-+	if (retval) {
-+		tgtdev->dev_spec.sas_sata_inf.hba_port = NULL;
-+		tgtdev->host_exposed = 0;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 936a6edb00f4..a2998893835b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3856,8 +3856,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	dprint_init(mrioc, "allocating config page buffers\n");
+ 	mrioc->cfg_page = dma_alloc_coherent(&mrioc->pdev->dev,
+ 	    MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL);
+-	if (!mrioc->cfg_page)
++	if (!mrioc->cfg_page) {
++		retval = -1;
+ 		goto out_failed_noretry;
 +	}
- 	return retval;
- }
  
-@@ -2395,6 +2396,7 @@ void mpi3mr_remove_tgtdev_from_sas_transport(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_sas_port_remove(mrioc, sas_address, sas_address_parent,
- 	    hba_port);
- 	tgtdev->host_exposed = 0;
-+	tgtdev->dev_spec.sas_sata_inf.hba_port = NULL;
- }
+ 	mrioc->cfg_page_sz = MPI3MR_DEFAULT_CFG_PAGE_SZ;
  
- /**
-@@ -2451,7 +2453,7 @@ static u8 mpi3mr_get_port_id_by_rphy(struct mpi3mr_ioc *mrioc, struct sas_rphy *
+@@ -3919,8 +3921,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		dprint_init(mrioc, "allocating memory for throttle groups\n");
+ 		sz = sizeof(struct mpi3mr_throttle_group_info);
+ 		mrioc->throttle_groups = kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
+-		if (!mrioc->throttle_groups)
++		if (!mrioc->throttle_groups) {
++			retval = -1;
+ 			goto out_failed_noretry;
++		}
+ 	}
  
- 		tgtdev = __mpi3mr_get_tgtdev_by_addr_and_rphy(mrioc,
- 			    rphy->identify.sas_address, rphy);
--		if (tgtdev) {
-+		if (tgtdev && tgtdev->dev_spec.sas_sata_inf.hba_port) {
- 			port_id =
- 				tgtdev->dev_spec.sas_sata_inf.hba_port->port_id;
- 			mpi3mr_tgtdev_put(tgtdev);
+ 	retval = mpi3mr_enable_events(mrioc);
+@@ -3940,6 +3944,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		mpi3mr_memset_buffers(mrioc);
+ 		goto retry_init;
+ 	}
++	retval = -1;
+ out_failed_noretry:
+ 	ioc_err(mrioc, "controller initialization failed\n");
+ 	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
+@@ -4052,6 +4057,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		ioc_err(mrioc,
+ 		    "cannot create minimum number of operational queues expected:%d created:%d\n",
+ 		    mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
++		retval = -1;
+ 		goto out_failed_noretry;
+ 	}
+ 
+@@ -4118,6 +4124,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		mpi3mr_memset_buffers(mrioc);
+ 		goto retry_init;
+ 	}
++	retval = -1;
+ out_failed_noretry:
+ 	ioc_err(mrioc, "controller %s is failed\n",
+ 	    (is_resume)?"resume":"re-initialization");
 -- 
 2.31.1
 
 
---000000000000b582bc05f5732bf6
+--000000000000ecdc5605f5732abf
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -199,13 +204,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICOPPeSM5BeKlMyMJ006ikSg6YPLTHy/
-VzGUbzbCgVTPMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-NDE0NDQ0NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKznVHM3+agv3M4JFEqRu+JHEyixWR8v
+Lt13+FzUcBGCMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+NDE0NDQzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQA2n/pWDDFRQDDq1Z4eeZDz5SGa1TuvXH4HpIKRtvOtCImghcXa
-J9lC3Psury6ydIiIEwcQZwtuhGpGoS1eeAd6Oq7jfbflnxfffrGGki7IYb65rHeCdjsxX7VDVejq
-TU9T1sljioNU6fznBB9+0s98zF1GK0THwVg8E1NY21+0sLdakvxum6DOmcCJvnAIMgB/ZnhR9C01
-jzYIILvWnOKRV8s+dUVAiV0qcmRwGo+7EaKrQZvVl16HAFN6bS495IaKs+7WkjS42HEX+L+yCWvA
-k2/vVh0zoheowcrxIuWOwmrZ3SjhBP0XjVbkZpvSQ/gJCsP9qmLIKyRIt3/vwGXB
---000000000000b582bc05f5732bf6--
+ATANBgkqhkiG9w0BAQEFAASCAQCMwJRPst7KMeEP5XhRvLD1PB5ibXjhGpkZ8pjwX06+wrSExc+2
+s1ZHbkw4AhZvhDliGeWbvwslG4E8gS+FqR3eKbav2tI95ODgjheHUURz+3qjhdqW7Xw0S7itrhxS
+ClvhllHcmTBr6K4twP3HRjme9syA2PUDFVqT879VEqGWAO3LvrSq9NsKCCW27fgMZvDjpbLL75TN
+Tzc23u1cEF0+aUKmMA3rWcfkoIzfmLIx/7GQCPyIjEHb8peaNSXzn1W7mzHCJYzX+qHwjfLnRyOi
+bd74Ws2xHeNMC6K1pu8O7y/+4c6KdDdOClRyb72IMMrd43HfJ2dedcmY2lFygbdr
+--000000000000ecdc5605f5732abf--
