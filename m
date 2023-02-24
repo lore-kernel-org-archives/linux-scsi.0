@@ -2,138 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09CFFC61DA4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF023C678D5
 	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:45:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230028AbjBXOpD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Feb 2023 09:45:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33632 "EHLO
+        id S230040AbjBXOpF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Feb 2023 09:45:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230037AbjBXOoj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:39 -0500
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2897618ABC
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:34 -0800 (PST)
-Received: by mail-pj1-x102e.google.com with SMTP id q31-20020a17090a17a200b0023750b69614so2912103pja.5
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:34 -0800 (PST)
+        with ESMTP id S230034AbjBXOow (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:52 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38F8A26586
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:51 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id h17-20020a17090aea9100b0023739b10792so2943233pjz.1
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wu/5vBDtIt/2CwvWKiSOVVIBdqUUtck6xP0LuooJPZs=;
-        b=SqmGg7rJvPskSLdDzftfu5PSykYmQLgQy4jU8T3W6xdhSvGlwAvGS8jAhdRIV5JYsM
-         T2LTw7aeukH2Wva9t1YIe91eBz8C7kcMbQcANgBhlLoQS2kOA4BTdNxo5dVmvMqV0BjG
-         BOHIosKWnd7brMbAHAhjLeRwY12kOWiL2ARpk=
+        bh=PufpVu5hUml4du78szGYeulS3qNwbQ3Ik3VnnjXGg6A=;
+        b=PqkW6BUp0WejiDHLS75h+XyBAD0BUoLNtMY7wV2gU3IGUc6MHiR1m7dhp+x2OPmDYu
+         7PVTjntX/H+JZlfQ0W8Nglp8cGbGcMFRJv2hGrTwE7X1o1SioIzilXsZvOBlVU+AEeWu
+         Kq0RU7Qpaj608siOWqFGDuy8kHOkjOTyv9ZRA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wu/5vBDtIt/2CwvWKiSOVVIBdqUUtck6xP0LuooJPZs=;
-        b=y6Az/2kyKh6Sq8gQMPrzNp9sc+vwS017hG1q9o2n8TSGo0Rb20GBXaxi9EyL7V1umx
-         nNi/rzT9giWdk7EIYdHbaUdGiRqpkYHJaWDcwlXf6eBSwlj4VRVfCnoHGoWt9XWEEFxa
-         sHDStO7JqXsst5agJZSoj/OSBw/KuaJxviaqp/Ky6ePeaKM9NWrYM7pqDHshLzuGnQM5
-         ggOBACE1zd+5HUQPVxCvp63bpYFpv21l9/XjZC1YicJX2DMqBhkixDPh3xfgPrHaE6X+
-         +KCrAIh2dMqEoTAxc7UXUyLc1sNEb1XNm6dkZnq8IYUvjniYhn1yoiqg4+Q34RnA6QHr
-         9OaA==
-X-Gm-Message-State: AO0yUKWHz0f2gd5tDtZr8czwjW5ZaWvPFXGnTp133ige30/ZNGLHghDH
-        6kQLCnuB4kmHVMVR6TQyb3dxNanYZP7OxW3uyiEmKoyxOQBDSfSUhsR7/uitj01HSVViF6s1gnj
-        Nci9pzVDp8doKheK4knm3nY1VR0qvnR2aCIDxECdux9JMrxKGp8q4MBAU4ottSl80+nC26vOcaE
-        /PKhRrB2w=
-X-Google-Smtp-Source: AK7set+ma/FAcCU2xVAE6tdIoSDbng7t4r8nnsU9YfhLIrLzcrEEA3UlzmfNx7y61VEgETX+1/XxSg==
-X-Received: by 2002:a17:902:ea07:b0:19a:9831:c8d6 with SMTP id s7-20020a170902ea0700b0019a9831c8d6mr17145182plg.50.1677249873301;
-        Fri, 24 Feb 2023 06:44:33 -0800 (PST)
+        bh=PufpVu5hUml4du78szGYeulS3qNwbQ3Ik3VnnjXGg6A=;
+        b=Ae+qw+HWxg6sFDslOF2QJU6z7jMFUGg3L1OOJwamDIUaw8t2ub2kZU5ngNq59mITTi
+         2BFc72VWdXirPC3WCAK172WjuJKQsvpFJLhmws62LMSpha3JoGJZAzJy2ktVGUhpReAw
+         XNks5demOr2Qzb9XcoFroxR7xZ87Ct3HdzIGC+6dP0pnxWNf1g1JNl2gnpeWOMNVmxSR
+         3HwzixSYCDw/UEs+KE7n17mXzyNI0G2vYpVmgYZjEBqomOlPHjQondTUb+H+9jzPlYc/
+         Nr/Ll4xnPYjV05OLiFxiXBUJBUFghKE6FIpaCWO16YIz+7Pa5ks/GbFySB9l2VT9Zuwv
+         rpMw==
+X-Gm-Message-State: AO0yUKX10lZwn9k+5ApnHUipW0Us4KUzonEDbdCeSF7uxxyWnH2qkUiA
+        dgH3Vjjuj84BAmPcoZd4o5GROkitxpDLKfzap77yGrer/bs+QGHePJ6OvNKYgegKnFqwFNUTwnM
+        nA2upm0XKZ/uc0aKcoT+b8umORWjg7sAOi7cBCWGJ3yctlbHgGEFY/UuOsoCs7kbg++U0lGfFSe
+        nPfrqOrFM=
+X-Google-Smtp-Source: AK7set8ZgufrarZBhxt9d2dTsPDgJeTvigPK4ksCD9Qbqg4tpV/jqYtDU39IJxlLdwL5cpy7N5qtwg==
+X-Received: by 2002:a17:903:27c5:b0:196:191b:6b22 with SMTP id km5-20020a17090327c500b00196191b6b22mr13356250plb.59.1677249890355;
+        Fri, 24 Feb 2023 06:44:50 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.44.31
+        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.44.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Feb 2023 06:44:33 -0800 (PST)
+        Fri, 24 Feb 2023 06:44:50 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 10/15] mpi3mr: appropriate return values for failures in firmware init path
-Date:   Fri, 24 Feb 2023 06:43:15 -0800
-Message-Id: <20230224144320.10601-11-ranjan.kumar@broadcom.com>
+Subject: [PATCH 14/15] mpi3mr: fix admin queues memory leak upon soft reset
+Date:   Fri, 24 Feb 2023 06:43:19 -0800
+Message-Id: <20230224144320.10601-15-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 References: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ecdc5605f5732abf"
+        boundary="000000000000eff6e005f5732b87"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ecdc5605f5732abf
+--000000000000eff6e005f5732b87
 Content-Transfer-Encoding: 8bit
 
-The driver is modified to return a proper non-zero return value for all
-the cases when the controller initialization and re-initialization fails.
+After soft reset, while setting up admin queue pairs driver initially sets
+admin request base and admin reply base addresses to NULL. It leads to DMA
+memory pointed by these pointers getting leaked.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 936a6edb00f4..a2998893835b 100644
+index a2998893835b..ab8326b532e7 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3856,8 +3856,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 	dprint_init(mrioc, "allocating config page buffers\n");
- 	mrioc->cfg_page = dma_alloc_coherent(&mrioc->pdev->dev,
- 	    MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL);
--	if (!mrioc->cfg_page)
-+	if (!mrioc->cfg_page) {
-+		retval = -1;
- 		goto out_failed_noretry;
-+	}
+@@ -2623,14 +2623,13 @@ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc)
+ 	mrioc->num_admin_req = mrioc->admin_req_q_sz /
+ 	    MPI3MR_ADMIN_REQ_FRAME_SZ;
+ 	mrioc->admin_req_ci = mrioc->admin_req_pi = 0;
+-	mrioc->admin_req_base = NULL;
  
- 	mrioc->cfg_page_sz = MPI3MR_DEFAULT_CFG_PAGE_SZ;
+ 	mrioc->admin_reply_q_sz = MPI3MR_ADMIN_REPLY_Q_SIZE;
+ 	mrioc->num_admin_replies = mrioc->admin_reply_q_sz /
+ 	    MPI3MR_ADMIN_REPLY_FRAME_SZ;
+ 	mrioc->admin_reply_ci = 0;
+ 	mrioc->admin_reply_ephase = 1;
+-	mrioc->admin_reply_base = NULL;
++
+ 	atomic_set(&mrioc->admin_reply_q_in_use, 0);
  
-@@ -3919,8 +3921,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		dprint_init(mrioc, "allocating memory for throttle groups\n");
- 		sz = sizeof(struct mpi3mr_throttle_group_info);
- 		mrioc->throttle_groups = kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
--		if (!mrioc->throttle_groups)
-+		if (!mrioc->throttle_groups) {
-+			retval = -1;
- 			goto out_failed_noretry;
-+		}
- 	}
- 
- 	retval = mpi3mr_enable_events(mrioc);
-@@ -3940,6 +3944,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		mpi3mr_memset_buffers(mrioc);
- 		goto retry_init;
- 	}
-+	retval = -1;
- out_failed_noretry:
- 	ioc_err(mrioc, "controller initialization failed\n");
- 	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
-@@ -4052,6 +4057,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
- 		ioc_err(mrioc,
- 		    "cannot create minimum number of operational queues expected:%d created:%d\n",
- 		    mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
-+		retval = -1;
- 		goto out_failed_noretry;
- 	}
- 
-@@ -4118,6 +4124,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
- 		mpi3mr_memset_buffers(mrioc);
- 		goto retry_init;
- 	}
-+	retval = -1;
- out_failed_noretry:
- 	ioc_err(mrioc, "controller %s is failed\n",
- 	    (is_resume)?"resume":"re-initialization");
+ 	if (!mrioc->admin_req_base) {
 -- 
 2.31.1
 
 
---000000000000ecdc5605f5732abf
+--000000000000eff6e005f5732b87
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -204,13 +173,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKznVHM3+agv3M4JFEqRu+JHEyixWR8v
-Lt13+FzUcBGCMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-NDE0NDQzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDLFnKPuwBg24328AidyHs18JKFV+GUR
+fkZmGAgmlX1cMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+NDE0NDQ1MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCMwJRPst7KMeEP5XhRvLD1PB5ibXjhGpkZ8pjwX06+wrSExc+2
-s1ZHbkw4AhZvhDliGeWbvwslG4E8gS+FqR3eKbav2tI95ODgjheHUURz+3qjhdqW7Xw0S7itrhxS
-ClvhllHcmTBr6K4twP3HRjme9syA2PUDFVqT879VEqGWAO3LvrSq9NsKCCW27fgMZvDjpbLL75TN
-Tzc23u1cEF0+aUKmMA3rWcfkoIzfmLIx/7GQCPyIjEHb8peaNSXzn1W7mzHCJYzX+qHwjfLnRyOi
-bd74Ws2xHeNMC6K1pu8O7y/+4c6KdDdOClRyb72IMMrd43HfJ2dedcmY2lFygbdr
---000000000000ecdc5605f5732abf--
+ATANBgkqhkiG9w0BAQEFAASCAQCS9o45xPYcZZbp1S/7nGAJ+qB13guOUucRhGUdJmrJk/La4bXZ
+XQP8ss3Ws8dzRQzBfz+uJ18fdnjRbG9bD8Qc5enGBUZDyFuNIwsbxL6gWhsZtux5QFY0k81FZGDR
+KlxIskTTtaRESamQoESTu6uGCC9dvrG5Wsv+TbC9eSQOZvG0KRlHNpsCnyl9I3zGMgrBhI8rfJiU
+zNg/Y0o7jRTw7NE/T7S+TUbFMq9w9FkL5S7Vp/6UI/QrHoy/1U1B9PF8TnG47E/n/aebzxGvrpQU
+7ykqeXJX8wkTI7iuKkXEvdmVB2ZQH8qVrlYpJgVoJTr3tsJTEmA9+ZAw7oAPKy+X
+--000000000000eff6e005f5732b87--
