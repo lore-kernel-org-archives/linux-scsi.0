@@ -2,157 +2,184 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E2FC64ED6
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Feb 2023 22:28:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D40C61DA3
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:44:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229578AbjBWW2z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Feb 2023 17:28:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60452 "EHLO
+        id S229982AbjBXOoA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Feb 2023 09:44:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229515AbjBWW2y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2023 17:28:54 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F0E017164
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Feb 2023 14:28:51 -0800 (PST)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230223222847epoutp02a0b859564d11491320a0202b9e588032~GlKBhzk3h2601226012epoutp02u
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Feb 2023 22:28:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230223222847epoutp02a0b859564d11491320a0202b9e588032~GlKBhzk3h2601226012epoutp02u
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1677191327;
-        bh=o9KYta4ctbL2UStjOW/LIGMt7jOHPPBKftbnoGU4ZZ0=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=qJnjWkMELnQc0NLoy23WntwXsIEP2P6PdDEUYyWYE1ATbvPhbJ4yBM9ynH1N1DDfa
-         XC/YkDsIP2UXiIkO3PdqjU5AQSnlTrtRyb0wFXGxQT5ltc9BCKKZ1mZKZSBSJvfSGT
-         YY8gSRr68+jDH54cB/FQnGarJs6DasqPptYQSZTU=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20230223222846epcas2p2292a4cfaf6bc6db9830c3e18c4fa3edc~GlKArIbP51775317753epcas2p2S;
-        Thu, 23 Feb 2023 22:28:46 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.97]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4PN73L3MPtz4x9Ps; Thu, 23 Feb
-        2023 22:28:46 +0000 (GMT)
-X-AuditID: b6c32a46-743fa70000007a4b-fb-63f7e89e4442
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        17.84.31307.E98E7F36; Fri, 24 Feb 2023 07:28:46 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [PATCH v3] scsi: ufs: core: Add trace event for MCQ
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        JunWoo Lee <junwoo80.lee@samsung.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Daejun Park <daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <1677051569-81113-1-git-send-email-quic_ziqichen@quicinc.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20230223222745epcms2p2a85ca78bc48f366869fa224afa18799d@epcms2p2>
-Date:   Fri, 24 Feb 2023 07:27:45 +0900
-X-CMS-MailID: 20230223222745epcms2p2a85ca78bc48f366869fa224afa18799d
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPJsWRmVeSWpSXmKPExsWy7bCmqe68F9+TDS7tl7A4+WQNm8WDedvY
-        LF7+vMpmcfBhJ4vFtA8/mS1eHtK0WPUg3GLRjW1MFrv+NjNZXN41h82i+/oONosDH1YxWiw/
-        /o/JYvFyNYuFHXNZLCZd28Bm8fv7JDaLfR0PmCyWbr3J6CDscfmKt0fLvlvsHov3vGTy2LSq
-        k81jwqIDjB4tJ/ezeHxf38Hm8fHpLRaPiXvqPPq2rGL0+LxJzqP9QDdTAE9Utk1GamJKapFC
-        al5yfkpmXrqtkndwvHO8qZmBoa6hpYW5kkJeYm6qrZKLT4CuW2YO0INKCmWJOaVAoYDE4mIl
-        fTubovzSklSFjPziElul1IKUnALzAr3ixNzi0rx0vbzUEitDAwMjU6DChOyMP8cSCq5LV9yb
-        NZW9gfGaVBcjB4eEgInEgzfWXYxcHEICOxgl9vT3MoHEeQUEJf7uEO5i5OQQFnCQ+HnnNyuI
-        LSSgJLH+4ix2iLiexK2HaxhBbDYBHYnpJ+6zg8wREZjJIjHz1m8wh1lgJ5NE8+0uJpAqCQFe
-        iRntT1kgbGmJ7cu3gnVzCnhJHN2wkRkiriHxY1kvlC0qcXP1W3YY+/2x+YwQtohE672zUDWC
-        Eg9+7oaKS0rcnrsJqj5f4v+V5VB2jcS2A/OgbH2Jax0bwW7gFfCV+PjxNFicRUBVYtayfVC3
-        uUise74EzGYW0JZYtvA1MyhQmAU0Jdbv0oeEm7LEkVssMF81bPzNjs5mFuCT6Dj8Fy6+Y94T
-        aCioSaz7uZ5pAqPyLERIz0KyaxbCrgWMzKsYxVILinPTU4uNCozgUZucn7uJEZzStdx2ME55
-        +0HvECMTB+MhRgkOZiUR3qlM35OFeFMSK6tSi/Lji0pzUosPMZoCfTmRWUo0OR+YVfJK4g1N
-        LA1MzMwMzY1MDcyVxHmlbU8mCwmkJ5akZqemFqQWwfQxcXBKNTAZJRXqx308UZAv5ZvZ75d2
-        r+ZJ3gPplqvLxbb+qQtdFq4jrKm896DG1ZT1wgEyhxyrY/+4rT1dIxej8uckG+uT7iWHX9Sa
-        dPjdPaE2u7TOVEZe5vkP7W89Zl94b/yuaRDa3FgZGrH+UW6JLguPb8jPFL+Yls2Mmct7T1/4
-        vSdX+5A14/XHTCGBfC87dgaIv1y+5OZZk2yX+wc3qCwV4BaWtp7e03rIfbpc+tU/E7Yd9lrt
-        3XB7wgFx/95u6ftageodpjeFKx+/eTnf/e7Cn/M8BNl1Q8128hofvl3Op/ThXnbgBkmOqvwt
-        GXzftHQW6DSseDfXJjfcpLb18eEslT5rlfWdwe7P5p1Js3sYpcRSnJFoqMVcVJwIAK6ABtZy
-        BAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230222074027epcas2p4138c95d79ac3cd7dca4745080c747fa1
-References: <1677051569-81113-1-git-send-email-quic_ziqichen@quicinc.com>
-        <CGME20230222074027epcas2p4138c95d79ac3cd7dca4745080c747fa1@epcms2p2>
+        with ESMTP id S229985AbjBXOn5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:43:57 -0500
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 846D6168A0
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:43:51 -0800 (PST)
+Received: by mail-pj1-x1032.google.com with SMTP id oe18-20020a17090b395200b00236a0d55d3aso2925406pjb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:43:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=EBfCV3N4cxaP2EY+iAGA4R7mNsxrOc/qVawXppIRS/8=;
+        b=hej9eYlvFmDPO8RwHXnwBsuIjkofpw9A+GmhQV131NjLCQg2iAWA84GjG5skDEbB1O
+         uJWJ7T5Kj0uSo1RvseEZ91AluoNgEVlmJyNOjJcnoD5lhR9oIR/rRVtm73GYA6xitia/
+         4Z3Um5dUFQ+7Y0PBT7SDQ6803ZgWWnP5nVaPM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=EBfCV3N4cxaP2EY+iAGA4R7mNsxrOc/qVawXppIRS/8=;
+        b=XqiLRSCCc5D5q6DI0MfMoYemV5a7+eIPm0rLryFSx6XTbssuARNfaDeaQ4+yN3KCbK
+         nnoVSd+s2dMSvxoyV1219B1TXzLzMaGErVjtcbzaDgYuvnPMF9IzJvdMhfKKrpZ+Aq7+
+         cpYLZPKwwuKbPN4wSa9ycN7a8srNQTOZ1hIvC0lvhRFZkxmIv8lhZlenhWeyxXEJ9QZ0
+         SzSULir7zOn3q5sNWNqLaMYswNOA6Hfdsk2nZnNkGYhHsjgHuesOcmEmplRPgAO0prfP
+         +Q4tNih1LsvYXalEKBF3Wedg0NFX/G8oyuwHImJ14fXo0EN31QDECMz6Dv/vxBXGMkq7
+         E9lw==
+X-Gm-Message-State: AO0yUKXD3mu/Ldsg3IcCQ1EZkX6D4KVr9k58hF/YInmam84FoHZixz58
+        1RqYluekOGnyB95WHVF6cxf65SYMHg4ps9qtBIxInQh6i8pb8fn9KYDFJNuktQYJ1HQNdFArQTQ
+        kvh86QRT3rr6QdE0FXpv6zt1N27q2CYt9Lvp3DT5HYrary4W7+XpMjGIhjGMRjSRV5p74cWmVnq
+        r32rdL5tU=
+X-Google-Smtp-Source: AK7set+2Ectv2jziuwo0rgByhwIglLrTNfBD+YqGY0QZWOyt9mtvwWtr04FpTTLZqLUZcdvYxzQCcQ==
+X-Received: by 2002:a17:902:fb4f:b0:19c:d49f:4296 with SMTP id lf15-20020a170902fb4f00b0019cd49f4296mr2017990plb.67.1677249830659;
+        Fri, 24 Feb 2023 06:43:50 -0800 (PST)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.43.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Feb 2023 06:43:50 -0800 (PST)
+From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
+To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
+        sumit.saxena@broadcom.com, Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH 00/15] mpi3mr: Few Enhancements and minor fixes
+Date:   Fri, 24 Feb 2023 06:43:05 -0800
+Message-Id: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000006248eb05f57328d6"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Ziqi Chen,
+--0000000000006248eb05f57328d6
+Content-Transfer-Encoding: 8bit
 
-...
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 3b3cf78..67cb90d 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> =40=40 -426,6 +426,7 =40=40 static void ufshcd_add_command_trace(struct u=
-fs_hba *hba, unsigned int tag,
->  =C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0struct=20ufshcd_lrb=20*lrbp=20=3D=
-=20&hba->lrb=5Btag=5D;=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0s=
-truct=20scsi_cmnd=20*cmd=20=3D=20lrbp->cmd;=0D=0A>=20=20=C2=A0=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0struct=20request=20*rq=20=3D=20scsi_cmd_to_rq(cmd);=0D=
-=0A>=20+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0struct=20ufs_hw_queue=20*hwq;=
-=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0int=20transfer_len=20=
-=3D=20-1;=0D=0A>=20=C2=A0=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0if=20(=21cmd)=0D=0A>=20=40=40=20-456,9=20+457,16=20=40=40=20static=20voi=
-d=20ufshcd_add_command_trace(struct=20ufs_hba=20*hba,=20unsigned=20int=20ta=
-g,=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7D=0D=0A>=20=C2=A0=
-=0D=0A>=20=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0intr=20=3D=20ufshcd_rea=
-dl(hba,=20REG_INTERRUPT_STATUS);=0D=0A>=20-=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0doorbell=20=3D=20ufshcd_readl(hba,=20REG_UTP_TRANSFER_REQ_DOOR_BELL);=
-=0D=0A>=20-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0trace_ufshcd_command(dev_nam=
-e(hba->dev),=20str_t,=20tag,=0D=0A>=20-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0doo=
-rbell,=20transfer_len,=20intr,=20lba,=20opcode,=20group_id);=0D=0A>=20+=0D=
-=0A>=20+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0if=20(is_mcq_enabled(hba))=20=
-=7B=0D=0A>=20+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0hwq=20=3D=20ufshcd_mcq_req_to_hwq(hba,=20rq);=0D=0A>=20+=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0trace_ufs=
-hcd_command_mcq(dev_name(hba->dev),=20str_t,=20tag,=0D=0A>=20+=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0hwq,=20transfer_le=
-n,=20intr,=20lba,=20opcode,=20group_id);=0D=0AHow=20about=20passing=20membe=
-r=20variables=20of=20hwq=20instead=20of=20passing=20hwq?=0D=0A=0D=0A>=20+=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7D=20else=20=7B=0D=0A>=20+=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0doorbell=20=3D=
-=20ufshcd_readl(hba,=20REG_UTP_TRANSFER_REQ_DOOR_BELL);=0D=0A>=20+=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0trace_ufshcd=
-_command(dev_name(hba->dev),=20str_t,=20tag,=0D=0A>=20+=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0doorbell,=20transfer_len=
-,=20intr,=20lba,=20opcode,=20group_id);=0D=0A>=20+=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=7D=0D=0A>=20=20=7D=0D=0A>=20=C2=A0=0D=0A>=20=20static=20void=
-=20ufshcd_print_clk_freqs(struct=20ufs_hba=20*hba)=0D=0A>=20diff=20--git=20=
-a/include/trace/events/ufs.h=20b/include/trace/events/ufs.h=0D=0A>=20index=
-=20599739e..604b2cd=20100644=0D=0A>=20---=20a/include/trace/events/ufs.h=0D=
-=0A>=20+++=20b/include/trace/events/ufs.h=0D=0A>=20=40=40=20-10,6=20+10,7=
-=20=40=40=0D=0A>=20=20=23define=20_TRACE_UFS_H=0D=0A>=20=C2=A0=0D=0A>=20=20=
-=23include=20<linux/tracepoint.h>=0D=0A>=20+=23include=20<ufs/ufshcd.h>=0D=
-=0AThen,=20it=20can=20be=20removed.=0D=0A=0D=0AThanks,=0D=0ADaejun
+Few Enhancements and minor fixes of mpi3mr driver.
+
+Ranjan Kumar (15):
+  mpi3mr: Support for Clean device removal of drives
+  mpi3mr: Modified MUR timeout value to 120 seconds
+  mpi3mr: Avoid escalating to higher level reset when target is removed
+  mpi3mr: Updated MPI Headers to revision 27
+  mpi3mr: Fixed the W=1 compilation warnings
+  mpi3mr: updated copyright year
+  mpi3mr: IOCTL timeout when disable/enable Interpt
+  mpi3mr: Driver unload crash host when enhanced logging is enabled
+  mpi3mr: Wait for diagnostic save during controller init
+  mpi3mr: appropriate return values for failures in firmware init path
+  mpi3mr: Successive VD delete and add causes FW Fault
+  mpi3mr: NVMe commands size greater than 8K fails
+  mpi3mr: Bad drive in topology results kernel crash
+  mpi3mr: fix admin queues memory leak upon soft reset
+  mpi3mr: Update driver version to 8.4.1.0.0
+
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 112 +++++++++++++++++++---
+ drivers/scsi/mpi3mr/mpi/mpi30_image.h     |   2 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_init.h      |  23 ++++-
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |   2 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |   6 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   2 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   4 +-
+ drivers/scsi/mpi3mr/mpi3mr.h              |  18 +++-
+ drivers/scsi/mpi3mr/mpi3mr_app.c          |   9 +-
+ drivers/scsi/mpi3mr/mpi3mr_debug.h        |   2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           |  49 ++++++++--
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  79 +++++++++++----
+ drivers/scsi/mpi3mr/mpi3mr_transport.c    |  17 ++--
+ 13 files changed, 260 insertions(+), 65 deletions(-)
+
+-- 
+2.31.1
+
+
+--0000000000006248eb05f57328d6
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
+Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
+8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
+lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
+CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
+nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
+0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINBGK56l88f63lBMU/PuEq09WSDDoHdE
+yIu8gfx+OvcmMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+NDE0NDM1MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQAI8cogCuyjNIdkq1lclt/SFDUtFXPz3IvIo4daBqFUEtxLHy4r
+0N3o8g4qZ1bhLOwAi2BWgzqDyUrExj/AyRmh85jyrsq5tdYAu3bcrrEOzC7oCg3n9fW6cwgOxMht
++qD3qVLWm+Bp7xKRxopGvHWYuTv+fV8ggEsFDNm5XEb8tvFiqTsw2KoI1nDCHVCp0Hwu0Ysx6o6c
+/PUCkzO8veEhGBEhf7QZVc5TeKcMRAxwIFV9xWhppTXLOOkzSGMrGgmtLtkCGA62V39ZHPuplxRw
+6jcL6S91nTlKmXbydmdYaZWc2a4HdYTCOy+kvYyo2qZ2hffqi0PFLDm3oBl2Jswf
+--0000000000006248eb05f57328d6--
