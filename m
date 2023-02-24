@@ -2,107 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D40C61DA3
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D56C9C61DA3
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:44:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229982AbjBXOoA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Feb 2023 09:44:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32950 "EHLO
+        id S229991AbjBXOoH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Feb 2023 09:44:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229985AbjBXOn5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:43:57 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 846D6168A0
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:43:51 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id oe18-20020a17090b395200b00236a0d55d3aso2925406pjb.3
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:43:51 -0800 (PST)
+        with ESMTP id S229988AbjBXOoB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:01 -0500
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83AE918A80
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:43:55 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id h17-20020a17090aea9100b0023739b10792so2939647pjz.1
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:43:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=EBfCV3N4cxaP2EY+iAGA4R7mNsxrOc/qVawXppIRS/8=;
-        b=hej9eYlvFmDPO8RwHXnwBsuIjkofpw9A+GmhQV131NjLCQg2iAWA84GjG5skDEbB1O
-         uJWJ7T5Kj0uSo1RvseEZ91AluoNgEVlmJyNOjJcnoD5lhR9oIR/rRVtm73GYA6xitia/
-         4Z3Um5dUFQ+7Y0PBT7SDQ6803ZgWWnP5nVaPM=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=slaWFwj4cB/UGM60JVm/FD1e2tIlLMvz16eScB7rFTk=;
+        b=bqr/hHyq9qugeTh7Ttg/nkew9ME7Nw5ZazKML2M24McTamdroMb2gVxpkOlyi9i7TR
+         JDTXZd9azSsqQrMMk0FBX4+A61EMLSrje6Z0IJfXHNt5QDPUvOu+mLcMVQzJhEi/wu62
+         499zQ8YGXvPjK7N33rozHz1xIsh9C1LVnb9Mw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EBfCV3N4cxaP2EY+iAGA4R7mNsxrOc/qVawXppIRS/8=;
-        b=XqiLRSCCc5D5q6DI0MfMoYemV5a7+eIPm0rLryFSx6XTbssuARNfaDeaQ4+yN3KCbK
-         nnoVSd+s2dMSvxoyV1219B1TXzLzMaGErVjtcbzaDgYuvnPMF9IzJvdMhfKKrpZ+Aq7+
-         cpYLZPKwwuKbPN4wSa9ycN7a8srNQTOZ1hIvC0lvhRFZkxmIv8lhZlenhWeyxXEJ9QZ0
-         SzSULir7zOn3q5sNWNqLaMYswNOA6Hfdsk2nZnNkGYhHsjgHuesOcmEmplRPgAO0prfP
-         +Q4tNih1LsvYXalEKBF3Wedg0NFX/G8oyuwHImJ14fXo0EN31QDECMz6Dv/vxBXGMkq7
-         E9lw==
-X-Gm-Message-State: AO0yUKXD3mu/Ldsg3IcCQ1EZkX6D4KVr9k58hF/YInmam84FoHZixz58
-        1RqYluekOGnyB95WHVF6cxf65SYMHg4ps9qtBIxInQh6i8pb8fn9KYDFJNuktQYJ1HQNdFArQTQ
-        kvh86QRT3rr6QdE0FXpv6zt1N27q2CYt9Lvp3DT5HYrary4W7+XpMjGIhjGMRjSRV5p74cWmVnq
-        r32rdL5tU=
-X-Google-Smtp-Source: AK7set+2Ectv2jziuwo0rgByhwIglLrTNfBD+YqGY0QZWOyt9mtvwWtr04FpTTLZqLUZcdvYxzQCcQ==
-X-Received: by 2002:a17:902:fb4f:b0:19c:d49f:4296 with SMTP id lf15-20020a170902fb4f00b0019cd49f4296mr2017990plb.67.1677249830659;
-        Fri, 24 Feb 2023 06:43:50 -0800 (PST)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=slaWFwj4cB/UGM60JVm/FD1e2tIlLMvz16eScB7rFTk=;
+        b=lR221sDXgYe66+nK5ZC3PIQLpdchDHIxwkP4eZ+erLsIWxxKjzHzJHgjjDSRe85wuk
+         FASoNSIhJxkoUCcWfQBmu12u1LjfvLp+ZJ6JCyh6BZEdGTK+2u/FybHE3bxg8zQ+e7kL
+         qRufaeP7o3NajtJaUqcxs1eix64huwxj6rY14iHdvmcSqztx8H3jIXgu0SmDFSl5mH5k
+         MBIMWOcDhHqrYTMGiP2hOClNVUPcFtSoyD6mwO/SwOksjcjDdCSfDV/OZI3FO3cZrB8W
+         1vlFPXsXfOwPEbaxBea38hDTp4FcQ2KimHyGQpKrGSRvPDvOl3uSO9zX+xXQmY64PaXQ
+         YOuQ==
+X-Gm-Message-State: AO0yUKWwCVCXMUTFPoDbVqoGsjjNmsL/+Qcs+uuBghum+bgwZ6/zAdAo
+        brgVge45ziWgeRS97LJDkBa3YP1umIY2e207nfIYi9Tws8yRw+jpCc1fNejpU+gvKTAKVVmI+t+
+        4GQUy66TmZPnMwcBEGqm3RBm1xY13btZdF3cU1nD5RSiLVFe0xTzLDPAjy2qSjwn+3TUTVDkRsn
+        eXv3aUPxA=
+X-Google-Smtp-Source: AK7set9l5DUmYjD0zC0ok0VIC72mhxFzZyR31sWi5PtVUC5sea4dk6MQCYYF03IixRlZrHeomRM+Ew==
+X-Received: by 2002:a17:902:7405:b0:19c:d23e:52a0 with SMTP id g5-20020a170902740500b0019cd23e52a0mr2933494pll.14.1677249834663;
+        Fri, 24 Feb 2023 06:43:54 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.43.48
+        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.43.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Feb 2023 06:43:50 -0800 (PST)
+        Fri, 24 Feb 2023 06:43:54 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
-        sumit.saxena@broadcom.com, Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH 00/15] mpi3mr: Few Enhancements and minor fixes
-Date:   Fri, 24 Feb 2023 06:43:05 -0800
-Message-Id: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
+        sumit.saxena@broadcom.com,
+        Ranjan Kumar <ranjan.kumar@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH 01/15] mpi3mr: Support for Clean device removal of drives
+Date:   Fri, 24 Feb 2023 06:43:06 -0800
+Message-Id: <20230224144320.10601-2-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
+References: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000006248eb05f57328d6"
+        boundary="0000000000009ef73a05f57328e7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000006248eb05f57328d6
+--0000000000009ef73a05f57328e7
 Content-Transfer-Encoding: 8bit
 
-Few Enhancements and minor fixes of mpi3mr driver.
+As part of clean device removal procedure, user will first
+delete the device from Block layer before removing it physically.
+When user deletes the device from Block layer then driver set the
+corresponding device's starget object as NULL.when user physically
+removes the device then driver is not unregistering device with
+SCSI Transport Layer (STL) as it unregisters the device only if
+the corresponding device's starget is non-NULL and this leads
+to unexpected behaviors.
 
-Ranjan Kumar (15):
-  mpi3mr: Support for Clean device removal of drives
-  mpi3mr: Modified MUR timeout value to 120 seconds
-  mpi3mr: Avoid escalating to higher level reset when target is removed
-  mpi3mr: Updated MPI Headers to revision 27
-  mpi3mr: Fixed the W=1 compilation warnings
-  mpi3mr: updated copyright year
-  mpi3mr: IOCTL timeout when disable/enable Interpt
-  mpi3mr: Driver unload crash host when enhanced logging is enabled
-  mpi3mr: Wait for diagnostic save during controller init
-  mpi3mr: appropriate return values for failures in firmware init path
-  mpi3mr: Successive VD delete and add causes FW Fault
-  mpi3mr: NVMe commands size greater than 8K fails
-  mpi3mr: Bad drive in topology results kernel crash
-  mpi3mr: fix admin queues memory leak upon soft reset
-  mpi3mr: Update driver version to 8.4.1.0.0
+Update the driver to unregister the device with STL even if starget object
+is NULL.So that driver can support clean device removal procedure.
 
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 112 +++++++++++++++++++---
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_init.h      |  23 ++++-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |   6 +-
- drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   4 +-
- drivers/scsi/mpi3mr/mpi3mr.h              |  18 +++-
- drivers/scsi/mpi3mr/mpi3mr_app.c          |   9 +-
- drivers/scsi/mpi3mr/mpi3mr_debug.h        |   2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c           |  49 ++++++++--
- drivers/scsi/mpi3mr/mpi3mr_os.c           |  79 +++++++++++----
- drivers/scsi/mpi3mr/mpi3mr_transport.c    |  17 ++--
- 13 files changed, 260 insertions(+), 65 deletions(-)
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 3306de7170f6..dd3a84f73e1b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -1281,10 +1281,9 @@ static void mpi3mr_devstatuschg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 		if (!tgtdev->host_exposed)
+ 			mpi3mr_report_tgtdev_to_host(mrioc, tgtdev->perst_id);
+ 	}
+-	if (tgtdev->starget && tgtdev->starget->hostdata) {
+-		if (delete)
+-			mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
+-	}
++	if (delete)
++		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
++
+ 	if (cleanup) {
+ 		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
+ 		mpi3mr_tgtdev_put(tgtdev);
 -- 
 2.31.1
 
 
---0000000000006248eb05f57328d6
+--0000000000009ef73a05f57328e7
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -173,13 +179,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINBGK56l88f63lBMU/PuEq09WSDDoHdE
-yIu8gfx+OvcmMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-NDE0NDM1MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFiHEOv41ULNQbR/annaxq5LmaahMuct
+o7SnRM3VYLp/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+NDE0NDM1NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAI8cogCuyjNIdkq1lclt/SFDUtFXPz3IvIo4daBqFUEtxLHy4r
-0N3o8g4qZ1bhLOwAi2BWgzqDyUrExj/AyRmh85jyrsq5tdYAu3bcrrEOzC7oCg3n9fW6cwgOxMht
-+qD3qVLWm+Bp7xKRxopGvHWYuTv+fV8ggEsFDNm5XEb8tvFiqTsw2KoI1nDCHVCp0Hwu0Ysx6o6c
-/PUCkzO8veEhGBEhf7QZVc5TeKcMRAxwIFV9xWhppTXLOOkzSGMrGgmtLtkCGA62V39ZHPuplxRw
-6jcL6S91nTlKmXbydmdYaZWc2a4HdYTCOy+kvYyo2qZ2hffqi0PFLDm3oBl2Jswf
---0000000000006248eb05f57328d6--
+ATANBgkqhkiG9w0BAQEFAASCAQA2bkdk1nFCdjq1LEnHfvfJ96wpTfp+bVStiIW5W55AfmtPOzyn
+oHlJEhmJy47S33n37sxWNYWdq76CjKa+pzFLBIwbJI6qaNIUIYwvO3uuy8KZEQpc71P0ExkGNyKd
+/VJyD2Z+XKNZBSr2zvTPYhP79qHTIzCn672uRuCjIVcEWmkPSAd6hJ16+qrlT4rcB2tab9h9mXgV
+qia6D8zPvUWBn1u63HK4iOtuLeKUOJpMtHdNufOQRlux4Ywj/6K/WFVu0ehGBa5RRlbg/PGsrzLv
+iJbCDcFOvQxz7QCaLBP3kXJRZ/9DkvutN2bUT+Yoc5OJCE4Le7HZgwlfMB1PNUrm
+--0000000000009ef73a05f57328e7--
