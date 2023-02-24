@@ -2,259 +2,185 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C70BDC678DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:44:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B96C61DA3
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Feb 2023 14:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230032AbjBXOoc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Feb 2023 09:44:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33400 "EHLO
+        id S230040AbjBXOoj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Feb 2023 09:44:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230028AbjBXOoR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:17 -0500
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FDCF18B0D
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:15 -0800 (PST)
-Received: by mail-pl1-x636.google.com with SMTP id q11so17278939plx.5
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:15 -0800 (PST)
+        with ESMTP id S230047AbjBXOoa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2023 09:44:30 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FBBB3B66D
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:20 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id pt11so17321534pjb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2023 06:44:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=uzm+FhP/Z2VI5jxHIYGPSXZA+PlrO22izUAr1vAh4k4=;
-        b=ZScSEm27X/MSvPbCpGFCNyMWggtGdH95DFRn4o6WI4r5My7+4fqH7TCGJRQ2GhY76v
-         GturbWjvgPpwz6patyfxjWD/hSmLFJjFB3FZwShMPEzpt4y+odL769P/xxqkRnO+eMQT
-         oNUCgSG+hb33Ukzn/B1M30Wh9pA2VSkLT7Bw0=
+        bh=3WeSU6gZasLUpJzkk9fvjfeVVHV2/KW6jsS+WwJRaRQ=;
+        b=hP5C3YLCocPlC3nfUqCwe7fbqsKLFCUy2oKB9S4GiZ4Mp4RJkezQJmbPcVbKLS0sl4
+         O9Zq7qNw/qfBRtsUFauWf/4kiHSAitnvAvB7GptdeBjRW59Rux3WtsFe6QMPC0DoRJFM
+         lVGB+hZQGQ5nHKEVFpMZIobxr+cmN8jMkJ5Ik=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=uzm+FhP/Z2VI5jxHIYGPSXZA+PlrO22izUAr1vAh4k4=;
-        b=QwGmt3J8VrBp3SSF+E/NYYmb3JfkLDdupJDe+T0j9Fk25zyaBl9E1m+6aXSua3nLPV
-         BDN7CClwF5I2idELvzm/jTpozVFnvYVenhar3c5OIN0bGcuNVCWP8521FNAdImKgy0xs
-         AdC7B3Cm7JLJK7EUPLu79LK/MpX5CTIrLXtjTsGc8Ng/XClIq/dxHFjjQqSQ1S+Fbuo6
-         oZtfjkNWFuIlF58mOXiXT+UXchku+Tjy2Dq3ebw7xGGWZQKXleijSX8HGr0YhvigS5ip
-         bebRfpbNAUOKwgPu4CzxR5rkdPLum0L0s6tYOZcxt9PvDbjtoQ1s/VJzotUT5BcjxumW
-         pxgg==
-X-Gm-Message-State: AO0yUKU5BOwT+82Cb36w0imYR7OJrVj3M2QHSuaC/NBDbuFq0L0CUGhl
-        trXtHvlTGXRDINnt9Rb5vz3F5vurbJ414IL94uWG2kp2rBgbf3z7R21ElI9SQHSLpSm7Pfidamd
-        +/jzIbunAPVkn06+CouYYX6frm7D265YOvllfqYzs7m6x6AQQtw+nFuNmkURE8cu23+RtWGofzF
-        LH0X1N8a8=
-X-Google-Smtp-Source: AK7set8A7h2CEzYH7mpJChbR13YWD/o+mtf08XEQ6tc2e95M3W4b2z+5LPm9UlcWfJA5COIekK0q+Q==
-X-Received: by 2002:a17:902:f549:b0:19c:90d2:c909 with SMTP id h9-20020a170902f54900b0019c90d2c909mr15820023plf.42.1677249854936;
-        Fri, 24 Feb 2023 06:44:14 -0800 (PST)
+        bh=3WeSU6gZasLUpJzkk9fvjfeVVHV2/KW6jsS+WwJRaRQ=;
+        b=r/3xSjJaMjWWL5alZs5dxsNkMdavAlw7HxZnt0zkWz3KHUqkzmiqBfVmMY1RPdGr39
+         y/FF8AdI93n545Brxs2XWm5HmO7llH0gcocPQ9wpnlsjtwiwL1wgSK4XjjWh99fD8lm3
+         vvqOhcguRVEKSjzTgY2rLoQAxRtIehAh6MvampOjIKATCzDVG07rqQvHvtEuGTyAnABk
+         Pgt8FUDFcq0u3YO1TmYmbQq1qG/3Rh0CVMolKeqC984zHGLcUW1plS4GZRk/pC3Sf3bG
+         IE6rRn2ny81mj6M+z2zkNkUBsWdTA+ExcRxQqFDbhKf15LFe5hIEU6WeUC8pqoQaf/nM
+         ST+A==
+X-Gm-Message-State: AO0yUKX2j234V4U1fqu6YxbEgYqf7ewabaTuWAwldenZVNYvf4KWSaTf
+        35/IgJTJMmBnbeRXPuerL1CIBhRoDbg4m82YvS41Yyop+csRnnKyqwlOj0DfiNYdiht5oZN0EhM
+        U+8WBXgF2vgvzMnt9u9nK1ucRRhYrQcHZhECl4ns2YiO6cTsjY6IpdqlMZNgNoxfsacRB6zjsct
+        8xVO6Kpcg=
+X-Google-Smtp-Source: AK7set972032X4+ajFJFMGrlZYSmFrH+dggZzkB655c4Lw3toFm98CWzwGULGEQe/hNlqocQ/Ds9oQ==
+X-Received: by 2002:a17:903:2845:b0:19c:c9da:a62e with SMTP id kq5-20020a170903284500b0019cc9daa62emr3451097plb.54.1677249859065;
+        Fri, 24 Feb 2023 06:44:19 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.44.12
+        by smtp.gmail.com with ESMTPSA id b5-20020a170902a9c500b00186748fe6ccsm8911549plr.214.2023.02.24.06.44.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Feb 2023 06:44:14 -0800 (PST)
+        Fri, 24 Feb 2023 06:44:18 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 06/15] mpi3mr: updated copyright year
-Date:   Fri, 24 Feb 2023 06:43:11 -0800
-Message-Id: <20230224144320.10601-7-ranjan.kumar@broadcom.com>
+Subject: [PATCH 07/15] mpi3mr: IOCTL timeout when disable/enable Interpt
+Date:   Fri, 24 Feb 2023 06:43:12 -0800
+Message-Id: <20230224144320.10601-8-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 References: <20230224144320.10601-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d4ff2c05f57329c1"
+        boundary="00000000000013926105f5732af8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000d4ff2c05f57329c1
+--00000000000013926105f5732af8
 Content-Transfer-Encoding: 8bit
 
-updated copyright year from 2022 to 2023
+As part of Task Management handling, the driver will disable and
+enable the MSIx index zero which belongs to the Admin reply queue. And
+while enabling the interrupts driver loses some interrupts and it
+leads to Admin requests such as IOCTL timeout. So, after enabling the
+interrupts, poll the Admin reply queue to avoid timeouts.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_init.h      | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h       | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_sas.h       | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h | 2 +-
- drivers/scsi/mpi3mr/mpi3mr.h              | 2 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c          | 2 +-
- drivers/scsi/mpi3mr/mpi3mr_debug.h        | 2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c           | 2 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c           | 2 +-
- drivers/scsi/mpi3mr/mpi3mr_transport.c    | 2 +-
- 13 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  3 +++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 12 ++++++++++--
+ drivers/scsi/mpi3mr/mpi3mr_os.c |  1 +
+ 3 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-index 1adccd2d5c77..2fc196499c89 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2017-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2017-2023 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_CNFG_H
- #define MPI30_CNFG_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_image.h b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-index 64c58815988a..47035b811902 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2018-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2018-2023 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_IMAGE_H
- #define MPI30_IMAGE_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_init.h b/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-index 9efd4c6de813..af86d12c8e49 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_INIT_H
- #define MPI30_INIT_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index 1c6c6730df5c..f5e9c2309ce6 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_IOC_H
- #define MPI30_IOC_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-index 1b2a96325d21..7c15e5851ce4 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-  *
-  */
- #ifndef MPI30_PCI_H
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-index e587f77ccd68..4a93c67d335f 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_SAS_H
- #define MPI30_SAS_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-index f0cd203d78fb..441cfc2c7f09 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_TRANSPORT_H
- #define MPI30_TRANSPORT_H     1
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index e8079b380fc8..1cfbf39365d2 100644
+index 1cfbf39365d2..258ad9d5ac90 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -2,7 +2,7 @@
- /*
-  * Driver for Broadcom MPI3 Storage Controllers
-  *
-- * Copyright (C) 2017-2022 Broadcom Inc.
-+ * Copyright (C) 2017-2023 Broadcom Inc.
-  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-  *
-  */
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 86d9e200f408..935e26afc291 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2,7 +2,7 @@
- /*
-  * Driver for Broadcom MPI3 Storage Controllers
-  *
-- * Copyright (C) 2017-2022 Broadcom Inc.
-+ * Copyright (C) 2017-2023 Broadcom Inc.
-  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-  *
-  */
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_debug.h b/drivers/scsi/mpi3mr/mpi3mr_debug.h
-index ee6edd8322e6..e94f7520d153 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_debug.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr_debug.h
-@@ -2,7 +2,7 @@
- /*
-  * Driver for Broadcom MPI3 Storage Controllers
-  *
-- * Copyright (C) 2017-2022 Broadcom Inc.
-+ * Copyright (C) 2017-2023 Broadcom Inc.
-  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-  *
-  */
+@@ -904,6 +904,7 @@ struct scmd_priv {
+  * @admin_reply_ephase:Admin reply queue expected phase
+  * @admin_reply_base: Admin reply queue base virtual address
+  * @admin_reply_dma: Admin reply queue base dma address
++ * @admin_reply_q_in_use: Queue is handled by poll/ISR
+  * @ready_timeout: Controller ready timeout
+  * @intr_info: Interrupt cookie pointer
+  * @intr_info_count: Number of interrupt cookies
+@@ -1060,6 +1061,7 @@ struct mpi3mr_ioc {
+ 	u8 admin_reply_ephase;
+ 	void *admin_reply_base;
+ 	dma_addr_t admin_reply_dma;
++	atomic_t admin_reply_q_in_use;
+ 
+ 	u32 ready_timeout;
+ 
+@@ -1398,4 +1400,5 @@ void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc);
++int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc);
+ #endif /*MPI3MR_H_INCLUDED*/
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 5f6c9a8a9e35..83e145494067 100644
+index 83e145494067..e9b3552ccafb 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2,7 +2,7 @@
- /*
-  * Driver for Broadcom MPI3 Storage Controllers
-  *
-- * Copyright (C) 2017-2022 Broadcom Inc.
-+ * Copyright (C) 2017-2023 Broadcom Inc.
-  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-  *
-  */
+@@ -415,7 +415,7 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		    le64_to_cpu(scsi_reply->sense_data_buffer_address));
+ }
+ 
+-static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
++int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
+ {
+ 	u32 exp_phase = mrioc->admin_reply_ephase;
+ 	u32 admin_reply_ci = mrioc->admin_reply_ci;
+@@ -423,12 +423,17 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
+ 	u64 reply_dma = 0;
+ 	struct mpi3_default_reply_descriptor *reply_desc;
+ 
++	if (!atomic_add_unless(&mrioc->admin_reply_q_in_use, 1, 1))
++		return 0;
++
+ 	reply_desc = (struct mpi3_default_reply_descriptor *)mrioc->admin_reply_base +
+ 	    admin_reply_ci;
+ 
+ 	if ((le16_to_cpu(reply_desc->reply_flags) &
+-	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
++	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
++		atomic_dec(&mrioc->admin_reply_q_in_use);
+ 		return 0;
++	}
+ 
+ 	do {
+ 		if (mrioc->unrecoverable)
+@@ -454,6 +459,7 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
+ 	writel(admin_reply_ci, &mrioc->sysif_regs->admin_reply_queue_ci);
+ 	mrioc->admin_reply_ci = admin_reply_ci;
+ 	mrioc->admin_reply_ephase = exp_phase;
++	atomic_dec(&mrioc->admin_reply_q_in_use);
+ 
+ 	return num_admin_replies;
+ }
+@@ -2608,6 +2614,7 @@ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc)
+ 	mrioc->admin_reply_ci = 0;
+ 	mrioc->admin_reply_ephase = 1;
+ 	mrioc->admin_reply_base = NULL;
++	atomic_set(&mrioc->admin_reply_q_in_use, 0);
+ 
+ 	if (!mrioc->admin_req_base) {
+ 		mrioc->admin_req_base = dma_alloc_coherent(&mrioc->pdev->dev,
+@@ -4171,6 +4178,7 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ 		memset(mrioc->admin_req_base, 0, mrioc->admin_req_q_sz);
+ 	if (mrioc->admin_reply_base)
+ 		memset(mrioc->admin_reply_base, 0, mrioc->admin_reply_q_sz);
++	atomic_set(&mrioc->admin_reply_q_in_use, 0);
+ 
+ 	if (mrioc->init_cmds.reply) {
+ 		memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 3677473a0211..e4ae246f4bd2 100644
+index e4ae246f4bd2..4fe2102ef331 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2,7 +2,7 @@
- /*
-  * Driver for Broadcom MPI3 Storage Controllers
-  *
-- * Copyright (C) 2017-2022 Broadcom Inc.
-+ * Copyright (C) 2017-2023 Broadcom Inc.
-  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-  *
-  */
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index 3fc897336b5e..6f84760ca85d 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -2,7 +2,7 @@
- /*
-  * Driver for Broadcom MPI3 Storage Controllers
-  *
-- * Copyright (C) 2017-2022 Broadcom Inc.
-+ * Copyright (C) 2017-2023 Broadcom Inc.
-  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-  *
-  */
+@@ -3719,6 +3719,7 @@ int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
+ 		mpi3mr_poll_pend_io_completions(mrioc);
+ 		mpi3mr_ioc_enable_intr(mrioc);
+ 		mpi3mr_poll_pend_io_completions(mrioc);
++		mpi3mr_process_admin_reply_q(mrioc);
+ 	}
+ 	switch (tm_type) {
+ 	case MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
 -- 
 2.31.1
 
 
---000000000000d4ff2c05f57329c1
+--00000000000013926105f5732af8
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -325,13 +251,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIkjgvCprr8ho3QOW0FM1ZFUKBLzvCBu
-uZ+6RxtiKfJzMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-NDE0NDQxNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIWYGeUtR/KAMSp/umDFqIY0QunykMC9
+3WJkqjIP0lfcMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+NDE0NDQxOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCKnBWASa+iXku4ZPJZELXL1QorT9olkJLok8f2ZLKkY/9CHrLD
-K89vfdzWApfQQvtfu2kkLFeJOnWWJ8qgLkmvXVn2ofrNJXJMraVo4tH+uG/C/o8YJ98STyUYWKXz
-R4rkeWZU9L6PEY104aT/Qp6a4lruRfr+N3pLtCx3l9NiRmD2ApjARvmphC5WvaGAni9Z/qnMuqMi
-Xltd8RKA/mefTigWI64H/sn8QBbHr7v1YVesLvwdb9spz8LyFMD0kQVwYOBVezJEp8aCVr5H+yAo
-GvJIbjyFSu6SKzL6bHODnqGYe0/F4U4Y0N09DvDQdeyndVbC1yce+uuwgphQ13Il
---000000000000d4ff2c05f57329c1--
+ATANBgkqhkiG9w0BAQEFAASCAQADleTlRwpJ80HZ0Z5xTs6BXZ3UD+gKS4XLNwC538/B09SD2ElB
+NlOIfUjG8z8PlFc4OhlN47EVANuxX/bpmokTYRH2TRlcqJvWUMCPdRZn1D765e90yA/HZxCUNPPt
+0mkNv+XZBYwGvYPEBWb8dOA7gkemOs7H3WyTHddA6M++aJ4lXbC6eDyD+oRo4lNc51NYPjfy55zR
+kacN+Mok4dLgw83bdYYIWbCYmEEKhIgDsjfayiOi1eiT8PNFVVzxTkhxBLmm9XjCr4vZ9fcc64Qw
+gYmeWC+mfFEEItaxvLWa5GzqdQZD8UyJqLoc8xQLm1cprTPnht1QsVBwp834yfih
+--00000000000013926105f5732af8--
