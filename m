@@ -2,88 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B31EBC64ED6
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Feb 2023 10:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9635C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Feb 2023 16:10:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229585AbjBZKXt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Feb 2023 05:23:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45432 "EHLO
+        id S229749AbjBZQKn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Feb 2023 11:10:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjBZKXs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 05:23:48 -0500
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C1AC656;
-        Sun, 26 Feb 2023 02:23:48 -0800 (PST)
-Received: by mail-pl1-x62c.google.com with SMTP id bh1so3849855plb.11;
-        Sun, 26 Feb 2023 02:23:48 -0800 (PST)
+        with ESMTP id S229478AbjBZQKm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 11:10:42 -0500
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 412E915560;
+        Sun, 26 Feb 2023 08:10:41 -0800 (PST)
+Received: by mail-wr1-x432.google.com with SMTP id t15so3837175wrz.7;
+        Sun, 26 Feb 2023 08:10:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wi2xVqzSevhJpXDSWkdsF+oMBiFQhK5PRJ0HvFg4vlU=;
-        b=XVsyQL5PSgI1Bs57Jf0fpotc041iuxQGTzEalwWqck+/0/DLnF/HYIjP3S413PkD46
-         4YS5FAR9dyNcebTBt0pUxja4xIQPbhcpHEpS2P445I1SzBjmawPEndyKyoF/NxzcLW/N
-         ziQSzVGCMkzOOIlYXu0BgSA1S5oWPG4S1Qi6igpQnAHUjJ95DKb8ajnCN1RY5znOofDZ
-         s+6bCOlVJ6NOGqNrt951Jhpz1LeJltQ9oRVgw4AJF6obIm2Enzl+0zSb99ZAf1M7Gh9S
-         VoOmkbJ3F4jhihG0fc6nwgzf623JnLQzkoAV7EQH3AuWioew9q6lOImZ1e+O502tTNPj
-         DRig==
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=djzqrtOMQJZwFBUw6nLjGzlqHj5X2tklbzG5twEnCXY=;
+        b=V8aTa5JRGEAaGQYU28XDRgLbIOzrbpfgnAUQvBsgxlcrgn2nyl/7rX7utupOM+ChEU
+         +kt+lxiRF8bSptGggqdXDjozmaUYzX8BwPMS7cDRv9RZ6aND/l/DpX89HHuepK0871EZ
+         9a4d+HsvmZ1YWlVSSxcGf8u1rFgJ7jIK6s5zfywv45rRXTnzCELuPG5w1Iq2HubxNbbl
+         gYRBAPOexY6W3/w6OYbkW/Hg9ghw5lLfs0e9of4USw6OmlagQ+fhC3K9qEAnjOYDvPWI
+         2o6xnOwRYiqt9/442cNwlQSi/igTNBG2uTIYlmqZB9beeBkIEDwEJo8d+NvKzruvy6PG
+         OvRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wi2xVqzSevhJpXDSWkdsF+oMBiFQhK5PRJ0HvFg4vlU=;
-        b=z5D8hh6giwI610mRLBsarvfPi2+lqIfM2OoAp4/A9fxR2RbdyqXyBdL/I1qFVzYmyB
-         1qRaPuvfFawfZjEdWDxOFFk6hdi1TYBMXi/2HqqyE6/97hmWFF/CKiqHb5FbrZjlaI5s
-         k7Rob+UZw51gMGptFFYLPSKDPcCOSjv5FBVY/tYIL/eA4zJwMMyrPVGT7mx1KL0OvSbo
-         uPk7wHwFmhSJyPHD8KT8l6EVwiSV2WAnwKSiiR2wJquCCk92Gl+f35HMZ4k7pCa/gKQ4
-         B6X7dzE95S2a+lpg6zVqYLQ3tWJpLxz9Z/EC7+/J7f3R5D823CA5tgkcOkg/rvR6olBj
-         SKMQ==
-X-Gm-Message-State: AO0yUKVRTJAkwsG6WpSJT29aXoIstonG+T5ak2cD/iU8I82GxYbf3TA5
-        NCRAGYgtJZEIiYdrEzqixCzkwypIzhpQlKhk
-X-Google-Smtp-Source: AK7set8fOwUHoXXIC2sCunIL7TGItqvkkxWcvg76HdDyFcZROi5Xwn0/6ZQnpJu8Q9DV1M4Oqh9jRQ==
-X-Received: by 2002:a05:6a20:4298:b0:c7:6c6f:7722 with SMTP id o24-20020a056a20429800b000c76c6f7722mr29478842pzj.7.1677407027552;
-        Sun, 26 Feb 2023 02:23:47 -0800 (PST)
-Received: from passwd123-ThinkStation-P920.. ([222.20.94.23])
-        by smtp.gmail.com with ESMTPSA id n18-20020aa79052000000b005d6999eec90sm2263051pfo.120.2023.02.26.02.23.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Feb 2023 02:23:47 -0800 (PST)
-From:   Kang Chen <void0red@gmail.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kang Chen <void0red@gmail.com>
-Subject: [PATCH] scsi: lpfc: add null check of kzalloc in lpfc_sli4_cgn_params_read
-Date:   Sun, 26 Feb 2023 18:23:38 +0800
-Message-Id: <20230226102338.3362585-1-void0red@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=djzqrtOMQJZwFBUw6nLjGzlqHj5X2tklbzG5twEnCXY=;
+        b=LXMX4KqfpwO7LiiJywshmAHO0g5ag1NyddflDfZJyYAg6kMUJ/6v3+Olb+CZDmVu1e
+         3aO8e8xg+jx5STrgqOPJQ92tVrWwkbnpFAx7JvzZVUITYeVLyeEd9cNFM5JYtonAoY1L
+         wW10uPjnZyCxYzsxsaSnCHpQVjP9koZt0mr7H1VrDwfWvuOV/QSst5W/sb2bxoCtt8dq
+         /CijfW2f/f2705c0aLVxjmX02+5O+tpy8LQaW9NALUDkPOr8FksG/rhHJgiYoXEqkKwt
+         N24/cuyOicJj/cbVdkUf7duJvP1qLS6+VBWcX9RHfrP8CLul3jUbwTMq1TgbxhRgRTeE
+         ev2g==
+X-Gm-Message-State: AO0yUKUhqWrdP/Qy3b2RdcORZJBRMY8Wh1bS8nFPZMDPXp+MiPTyBsRd
+        Im0gf5IIm++5yywe78iINKI=
+X-Google-Smtp-Source: AK7set+O6bbAbxN1Ua/kXrH9BrNj+8QqW48HQ41VeWnrZz80AzUBwi3iXQAPXrouWaLivdhHnhmNcA==
+X-Received: by 2002:adf:f6c1:0:b0:2c9:5dd8:2978 with SMTP id y1-20020adff6c1000000b002c95dd82978mr3003862wrp.59.1677427839646;
+        Sun, 26 Feb 2023 08:10:39 -0800 (PST)
+Received: from ?IPV6:2003:c5:8708:4321:dcf1:ac0e:cc8d:62ca? (p200300c587084321dcf1ac0ecc8d62ca.dip0.t-ipconnect.de. [2003:c5:8708:4321:dcf1:ac0e:cc8d:62ca])
+        by smtp.gmail.com with ESMTPSA id n7-20020adfe787000000b002c573778432sm4674775wrm.102.2023.02.26.08.10.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 26 Feb 2023 08:10:36 -0800 (PST)
+Message-ID: <d7dbf7e2-5cfe-d728-4ca6-51ab8a6ac60c@gmail.com>
+Date:   Sun, 26 Feb 2023 17:10:32 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v3 3/6] scsi: ufs: core: Fix mcq nr_hw_queues
+Content-Language: en-US
+To:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com,
+        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com
+References: <20230223152757.13606-1-powen.kao@mediatek.com>
+ <20230223152757.13606-4-powen.kao@mediatek.com>
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <20230223152757.13606-4-powen.kao@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-kzalloc may fails, pdata might be null and it may cause
-null pointer dereference later.
+On 23.02.23 4:27 PM, Po-Wen Kao wrote:
+> Since MAXQ is 0 based value, add one to obtain number of hardware queue.
 
-Signed-off-by: Kang Chen <void0red@gmail.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 2 ++
- 1 file changed, 2 insertions(+)
+MAXQ in Multi-Circular Queue Capability Register is 0 based, hence ..
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 6eb4085a3..54134d782 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7291,6 +7291,8 @@ lpfc_sli4_cgn_params_read(struct lpfc_hba *phba)
- 	/* Find out if the FW has a new set of congestion parameters. */
- 	len = sizeof(struct lpfc_cgn_param);
- 	pdata = kzalloc(len, GFP_KERNEL);
-+	if (!pdata)
-+		return -ENOMEM;
- 	ret = lpfc_read_object(phba, (char *)LPFC_PORT_CFG_NAME,
- 			       pdata, len);
- 
--- 
-2.34.1
+>
+> Signed-off-by: Po-Wen Kao<powen.kao@mediatek.com>
+> ---
+>   drivers/ufs/core/ufs-mcq.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index a39746b2a8be..f9af658b4ba2 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -150,7 +150,8 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+>   	u32 hba_maxq, rem, tot_queues;
+>   	struct Scsi_Host *host = hba->host;
+>   
+> -	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
+> +	/* maxq is 0 based value */
+> +	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1 ;
+
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
