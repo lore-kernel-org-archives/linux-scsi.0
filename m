@@ -2,113 +2,144 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0582AC64ED6
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Feb 2023 16:23:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6A3EC64ED6
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 02:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbjBZQXH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Feb 2023 11:23:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42030 "EHLO
+        id S229759AbjB0CCQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Feb 2023 21:02:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbjBZQXG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 11:23:06 -0500
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 128A3CC10;
-        Sun, 26 Feb 2023 08:23:05 -0800 (PST)
-Received: by mail-wm1-x332.google.com with SMTP id t25-20020a1c7719000000b003eb052cc5ccso5124638wmi.4;
-        Sun, 26 Feb 2023 08:23:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=w2PLHhwdaQbS2cYnTTtwyaA7Q4BGApIwwoUz5TUfv2I=;
-        b=kp2I+Ep8bT/N1ioJjCGtSrL/YKVRLtf4sTHYL4Gg2e8QTtXo3zu3EbR0zqipC5VoKV
-         fSOeeYFlaAAyGYn4nsXjopQ4K61zr4BV5+CC/ucON7swIA1ZJbAb87rBt5vFg7SPBTKe
-         V3m4mh6vLQW6VEjAMM6iowjk72+bV1hCNznaej7byur+UXpiouL8iobzvzc6h3vbTHCl
-         5grb2L/ZNIKjn7YpNJVxd7fA11fy/B2yM3rUMVpZ5h3x1Xr7gAJC8wyNOx/XkuVesBn2
-         pIwZ573N8a14qQeCJLypL/ADg9S5gBZ1d8qQhFQu5mAptQSgVTZm0soCum6eYrfdf87k
-         mVlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=w2PLHhwdaQbS2cYnTTtwyaA7Q4BGApIwwoUz5TUfv2I=;
-        b=Rb2hP7EwczHbrp8WgbyZ1aDiv/xELOz0ews+/pRQHYvDpRxdHmKw5mGDSCRc4F7RWa
-         RrxCwfjDvCEPXYfEGRdoyEaHVafILuKNQywDlAOuQFonJzsfncTtL8dWiHk38InJOW9M
-         VlUiSaMc5K0QeSNuM2UrvMXcgse2kF5hSAUOc+W0iabE74pSFwj9w6WwVGTJNtlg+iEZ
-         xkxDsQWvnMbpEE2HZuZOmND8DqkEIelBO0VB7mn3+8JrVhmthSUuAZm0H+cKQzy1tlPD
-         Xg4y7Xz96HssdXuLo1SdJHstkbsIiOL7rxQYYVEbP1LhakY81Hc8SPRZYM54p6QQM6mF
-         EOeQ==
-X-Gm-Message-State: AO0yUKU9aojKs+XdJpwe4ZurZqfq6ZDv9zRgkYvkqda/V4l5jlMiPyfV
-        OaxDOj/bw4G2+BGdNSeCHzw=
-X-Google-Smtp-Source: AK7set+XH2HKW8gykxK8QLLfvaADjEB2az3jjR9ernI2o1HPKmxYMjHjNFATDIJv0x+BvhfHrefErQ==
-X-Received: by 2002:a05:600c:810:b0:3db:2e06:4091 with SMTP id k16-20020a05600c081000b003db2e064091mr17369419wmp.37.1677428583449;
-        Sun, 26 Feb 2023 08:23:03 -0800 (PST)
-Received: from ?IPV6:2003:c5:8708:4321:dcf1:ac0e:cc8d:62ca? (p200300c587084321dcf1ac0ecc8d62ca.dip0.t-ipconnect.de. [2003:c5:8708:4321:dcf1:ac0e:cc8d:62ca])
-        by smtp.gmail.com with ESMTPSA id a5-20020a5d4565000000b002c3f81c51b6sm4710874wrc.90.2023.02.26.08.23.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 26 Feb 2023 08:23:02 -0800 (PST)
-Message-ID: <eda65f0b-bbd1-5e3d-5d85-a5686a06ba5a@gmail.com>
-Date:   Sun, 26 Feb 2023 17:23:01 +0100
+        with ESMTP id S229751AbjB0CB7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 21:01:59 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EDD014492;
+        Sun, 26 Feb 2023 18:01:44 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CE259B80C9C;
+        Mon, 27 Feb 2023 02:01:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84753C433EF;
+        Mon, 27 Feb 2023 02:01:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677463301;
+        bh=OQJ7AJSxECK6ccjebSLXV2PlwqE/uLDpjXf486SgwC0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Myleq34wJqGJxR8+bu7UscM1xV1NvoqdKYE1L68x8Njr0TWEqxqrnzmwKS8Yn6//W
+         MHAXb32+t/VsNg0AwVallRMdljxXPz7HkjTFPiylhSi+ASb5udRJLrbg8GA0dKdMQV
+         FH/7RdJEAOkJ1s7m4VpiF6kWL36i74X6fxgzd20GIcx5yx3eUY7zoBKPTyN4HGATD3
+         FoIFQzVIaN6Ou3h0fySEwFZvW97AFUNjr4UHmW3IImfJG9ySiBg5cWADO6pxKtoouw
+         SujI/52PDzay8g3QLv85f4eVKH3e8fA2ZSV8kTK14HbeGtRKAwzwZA7bfBg95ZgNXP
+         qHj/rjdLpofxQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Justin Tee <justin.tee@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 13/60] scsi: lpfc: Fix use-after-free KFENCE violation during sysfs firmware write
+Date:   Sun, 26 Feb 2023 20:59:58 -0500
+Message-Id: <20230227020045.1045105-13-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230227020045.1045105-1-sashal@kernel.org>
+References: <20230227020045.1045105-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v3 4/6] scsi: ufs: core: Remove redundant check
-Content-Language: en-US
-To:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com,
-        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com
-References: <20230223152757.13606-1-powen.kao@mediatek.com>
- <20230223152757.13606-5-powen.kao@mediatek.com>
-From:   Bean Huo <huobean@gmail.com>
-In-Reply-To: <20230223152757.13606-5-powen.kao@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23.02.23 4:27 PM, Po-Wen Kao wrote:
-> is_mcq_supported() already check on use_mcq_mode.
->
-> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-> Reviewed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 81c9f07ebfc8..3357cfa23616 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8544,7 +8544,7 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
->   			hba->scsi_host_added = true;
->   		}
->   		/* MCQ may be disabled if ufshcd_alloc_mcq() fails */
-> -		if (is_mcq_supported(hba) && use_mcq_mode)
+From: Justin Tee <justin.tee@broadcom.com>
 
-This has been removed/optimized  by commit:
+[ Upstream commit 21681b81b9ae548c5dae7ae00d931197a27f480c ]
 
-https://patches.linaro.org/project/linux-scsi/patch/8840cea4a57b46dabce18acc39afc50ab826330f.1676567593.git.quic_asutoshd@quicinc.com/
+During the sysfs firmware write process, a use-after-free read warning is
+logged from the lpfc_wr_object() routine:
 
-so this patch is not necessary anymore???
+  BUG: KFENCE: use-after-free read in lpfc_wr_object+0x235/0x310 [lpfc]
+  Use-after-free read at 0x0000000000cf164d (in kfence-#111):
+  lpfc_wr_object+0x235/0x310 [lpfc]
+  lpfc_write_firmware.cold+0x206/0x30d [lpfc]
+  lpfc_sli4_request_firmware_update+0xa6/0x100 [lpfc]
+  lpfc_request_firmware_upgrade_store+0x66/0xb0 [lpfc]
+  kernfs_fop_write_iter+0x121/0x1b0
+  new_sync_write+0x11c/0x1b0
+  vfs_write+0x1ef/0x280
+  ksys_write+0x5f/0xe0
+  do_syscall_64+0x59/0x90
+  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
+The driver accessed wr_object pointer data, which was initialized into
+mailbox payload memory, after the mailbox object was released back to the
+mailbox pool.
 
-> +		if (is_mcq_supported(hba))
->   			ufshcd_config_mcq(hba);
->   	}
->   
+Fix by moving the mailbox free calls to the end of the routine ensuring
+that we don't reference internal mailbox memory after release.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 182aaae603868..55a0d4013439f 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -20819,6 +20819,7 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
+ 	struct lpfc_mbx_wr_object *wr_object;
+ 	LPFC_MBOXQ_t *mbox;
+ 	int rc = 0, i = 0;
++	int mbox_status = 0;
+ 	uint32_t shdr_status, shdr_add_status, shdr_add_status_2;
+ 	uint32_t shdr_change_status = 0, shdr_csf = 0;
+ 	uint32_t mbox_tmo;
+@@ -20864,11 +20865,15 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
+ 	wr_object->u.request.bde_count = i;
+ 	bf_set(lpfc_wr_object_write_length, &wr_object->u.request, written);
+ 	if (!phba->sli4_hba.intr_enable)
+-		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
++		mbox_status = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
+ 	else {
+ 		mbox_tmo = lpfc_mbox_tmo_val(phba, mbox);
+-		rc = lpfc_sli_issue_mbox_wait(phba, mbox, mbox_tmo);
++		mbox_status = lpfc_sli_issue_mbox_wait(phba, mbox, mbox_tmo);
+ 	}
++
++	/* The mbox status needs to be maintained to detect MBOX_TIMEOUT. */
++	rc = mbox_status;
++
+ 	/* The IOCTL status is embedded in the mailbox subheader. */
+ 	shdr_status = bf_get(lpfc_mbox_hdr_status,
+ 			     &wr_object->header.cfg_shdr.response);
+@@ -20883,10 +20888,6 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
+ 				  &wr_object->u.response);
+ 	}
+ 
+-	if (!phba->sli4_hba.intr_enable)
+-		mempool_free(mbox, phba->mbox_mem_pool);
+-	else if (rc != MBX_TIMEOUT)
+-		mempool_free(mbox, phba->mbox_mem_pool);
+ 	if (shdr_status || shdr_add_status || shdr_add_status_2 || rc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+ 				"3025 Write Object mailbox failed with "
+@@ -20904,6 +20905,12 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
+ 		lpfc_log_fw_write_cmpl(phba, shdr_status, shdr_add_status,
+ 				       shdr_add_status_2, shdr_change_status,
+ 				       shdr_csf);
++
++	if (!phba->sli4_hba.intr_enable)
++		mempool_free(mbox, phba->mbox_mem_pool);
++	else if (mbox_status != MBX_TIMEOUT)
++		mempool_free(mbox, phba->mbox_mem_pool);
++
+ 	return rc;
+ }
+ 
+-- 
+2.39.0
+
