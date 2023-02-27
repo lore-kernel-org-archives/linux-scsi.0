@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 953F3C7EE30
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 02:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6E7C64ED6
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 02:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230426AbjB0CLD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Feb 2023 21:11:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40098 "EHLO
+        id S230382AbjB0CNV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Feb 2023 21:13:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231142AbjB0CKO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 21:10:14 -0500
+        with ESMTP id S230383AbjB0CMz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 21:12:55 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB2CF1B303;
-        Sun, 26 Feb 2023 18:09:18 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642671CF5A;
+        Sun, 26 Feb 2023 18:11:13 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 219A560D27;
-        Mon, 27 Feb 2023 02:07:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAF0CC433AC;
-        Mon, 27 Feb 2023 02:07:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0312660DB6;
+        Mon, 27 Feb 2023 02:09:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94FA5C4339C;
+        Mon, 27 Feb 2023 02:09:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677463672;
-        bh=I/WwNU/jHPjjVXnadrzO4AnRUxM5Sj8CtJbZEKq9K/Y=;
+        s=k20201202; t=1677463787;
+        bh=7JX+Ew2lffhgnrNOgA2EopHIXnMXFa0FSQA/AH6E0gM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GaiDrafcchcB/ISeiPTTjActe7JB8ld1jNoE/0tl9Y6qiOjPuZFP6a6pcYHuPFmRy
-         x8mPbNwN29H5r9XO0GcNXyxTZkiYUNqB5byLwjo7wdPjOwegFzLgCjxB8s59VTC5Ub
-         sIgjO6aTugSluzSGrXIjNR1waMEGaeXM4bkxiu9215Zb/yKGV0ZVCHfuo3gYzPyyAJ
-         /lf1u4sQCby224+TRq40cisCNcfzyKYlWSVqFlpKnNRDSiJ/WBfWwWRDjQ57+0eqI3
-         edgu77QYkhx3Lowga5M3wwKHljMx+W6XbDwOqF9F9d2+8cDos3hvcAsOTys3hJ9PpL
-         dOIaf81vlvl3w==
+        b=BXB9myKLlR6MLeJ9vO+PaArvRUwlysUTNv1bMCmRJGm+RMtF9zmrFK/moUstZgFWx
+         lDLROdTaEs/Nz+blnZ8T/T+Ka0MnlPehVtnkR1nd/Cj7J2ZhUlpwpMEcF8/Gd+59VM
+         BClO709wvsfM0Kxd6zuWCUy5azJHxojGd19dpPHl9N2RsyKFugKOmaVVQpU84GAUHg
+         QJHac2/qP8qZq+afyYcckovDsCoYGgjV8RzFC1yK8kNXmZSDHS1frSsF+Rq9+INfSi
+         eGWmAOB0tTs7oYx3KExXhdR03c24rN+zHuZHKVFEmlmKVecSX1biRDXp3fcV8fNNBt
+         UpsY34Yx0rXhQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -39,12 +39,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 6.1 46/58] scsi: snic: Fix memory leak with using debugfs_lookup()
-Date:   Sun, 26 Feb 2023 21:04:44 -0500
-Message-Id: <20230227020457.1048737-46-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 20/25] scsi: snic: Fix memory leak with using debugfs_lookup()
+Date:   Sun, 26 Feb 2023 21:08:43 -0500
+Message-Id: <20230227020855.1051605-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230227020457.1048737-1-sashal@kernel.org>
-References: <20230227020457.1048737-1-sashal@kernel.org>
+In-Reply-To: <20230227020855.1051605-1-sashal@kernel.org>
+References: <20230227020855.1051605-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
-index 57bdc3ba49d9c..9dd975b36b5bd 100644
+index 5e0faeba516e5..76baa4f9a06e3 100644
 --- a/drivers/scsi/snic/snic_debugfs.c
 +++ b/drivers/scsi/snic/snic_debugfs.c
-@@ -437,6 +437,6 @@ void snic_trc_debugfs_init(void)
+@@ -451,6 +451,6 @@ void snic_trc_debugfs_init(void)
  void
  snic_trc_debugfs_term(void)
  {
