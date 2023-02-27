@@ -2,91 +2,208 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4415C7EE23
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 03:10:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80331C64ED6
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 03:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229846AbjB0DKh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Feb 2023 22:10:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48484 "EHLO
+        id S229949AbjB0DPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Feb 2023 22:15:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229524AbjB0DKg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 22:10:36 -0500
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 573CCEC4A;
-        Sun, 26 Feb 2023 19:10:35 -0800 (PST)
-Received: by mail-pl1-x631.google.com with SMTP id ky4so5333849plb.3;
-        Sun, 26 Feb 2023 19:10:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=B+L49kKjVGMIflTo4gi5GnHRy5nclrp50XkY2Jw83y4=;
-        b=hgSt6v6G9VDAbJqgK7g9QfroWxBrNOV2r1Ld5MVmnUKzQ0OcPsLieSZr9/2emBH7Pa
-         MdBQ5IJkP8tshfHVGnXQgNfyu0dZNxv+3vcSGZPlsQQ8Km3vm718XBfaMuoLDASYlvli
-         hqPPIEPDnlcyi8zzhgIv0VF+zG/9nZGlIyeFPvS5iQ3LTbVP5RtZHkc/qRWhZ3W+lDsw
-         8bILxN223uH4eaaVGZYN+gWvdFY9SKlJRyfpi9ynbwaOG8koC7ESj8968WEtB/cTjFGx
-         DIpjkmYmcslEyXMtjx9pRgwXrSjVxpXwuKIqucdkD2iEMCjThalWm7y16sMCc8JKmC7q
-         V9qA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=B+L49kKjVGMIflTo4gi5GnHRy5nclrp50XkY2Jw83y4=;
-        b=1mqJ59VzvbLsiJr7E76AZwFWeGGXAOiV3gbeCZiRkidP12UBeBo2yAuBmS9mzQwB1y
-         XpAmielKiSvvnv6YZu38zNfwdyM7rxy+9Xf/uam0eqIyw3pxoDEiEP8lcK4zfIQmktji
-         ZBjLctC3hsn0ePTLiXnhwhWPBKSerPrzkp0GEytTHPbApwQ77yhsjRvyY1vB1bA+Fcta
-         KwfAq26oHJ6zlkH39OdR1Qk3xv5/MybRi6QH0WUBvffpON7URbgBW0z5Dm733rTNK1WW
-         0IWNP3TruGR6/g/3JUlM7/9RvSGAB7ceNcnkRq++B38umpolQeEQ/PuJ29NVDM3LYgww
-         qyBA==
-X-Gm-Message-State: AO0yUKWxCOEzSkpAbEABY7D9JNBFdjAlPqeTSy4P1b59YFjH7VPY/W6d
-        2jeLwx9faROmVxqXrWMTrhA=
-X-Google-Smtp-Source: AK7set+vghs+qHTn5OT71t1bQa0u4ftTPxr7Mtq40zyzDydbd1l4PYbPaGoxH7qXRt/kAdkMvm3QwA==
-X-Received: by 2002:a17:903:1205:b0:19c:36c9:2449 with SMTP id l5-20020a170903120500b0019c36c92449mr29523026plh.17.1677467434876;
-        Sun, 26 Feb 2023 19:10:34 -0800 (PST)
-Received: from localhost.localdomain ([103.116.245.58])
-        by smtp.gmail.com with ESMTPSA id ix17-20020a170902f81100b0019cbb055a95sm3336562plb.94.2023.02.26.19.10.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Feb 2023 19:10:34 -0800 (PST)
-From:   void0red <void0red@gmail.com>
-To:     chenxiang66@hisilicon.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kang Chen <void0red@gmail.com>
-Subject: [PATCH] scsi: hisi_sas: add a check of devm_add_action
-Date:   Mon, 27 Feb 2023 11:10:30 +0800
-Message-Id: <20230227031030.893324-1-void0red@gmail.com>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S229723AbjB0DPN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 22:15:13 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 706ACC65B;
+        Sun, 26 Feb 2023 19:15:11 -0800 (PST)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31R2QlD3002025;
+        Mon, 27 Feb 2023 03:14:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=KpqWmeVWmsOLm8pVxOCJXGWeNurXRtlo3K3msDyonpI=;
+ b=eP0bjr4xk9A4Hlw/BQq30VELfrCEB0uc4rOXdVtUMHAHKkpFoD+XG+UUCgdkGsbVGkjy
+ qMBAXkdWMfoNYQG5PTTpt4bvRz1pNzIaY1J4XAYIpcn6tSWkJIacc0I2NKQEdoHBXwvO
+ xj9XThTMa4859kzb4CpsS8JtfSRAP0cNx0WV104EGTyT6YwIRVwlsUa+KhtlZ20URqrn
+ Q7FQxG36uFZ7mMZYctu4mo8pSNIFOgkHEp+g9ZqNWRF/VoSMLzLseEP7gLJq0Dnh4VUG
+ H/nx9afBJR7nC+dCa3it3drqFzFZaQLOfrGel6EXeo5jKveHa0X2tW/GYSRRLyz5EKYV TA== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ny9bfbh84-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 27 Feb 2023 03:14:42 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31R3Ef1Z013824
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 27 Feb 2023 03:14:41 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Sun, 26 Feb
+ 2023 19:14:35 -0800
+Message-ID: <0c17dd26-b1aa-54b0-6dc4-561cd996cead@quicinc.com>
+Date:   Mon, 27 Feb 2023 11:14:33 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v2 4/7] scsi: ufs: core: Add hwq print for debug
+Content-Language: en-US
+To:     =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        <quic_nguyenb@quicinc.com>
+CC:     =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
+        <peter.wang@mediatek.com>,
+        =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
+        <eddie.huang@mediatek.com>,
+        =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= 
+        <jiajie.hao@mediatek.com>,
+        =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+        =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
+        <Alice.Chao@mediatek.com>,
+        wsd_upstream <wsd_upstream@mediatek.com>,
+        =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
+        <Chun-hung.Wu@mediatek.com>,
+        =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?= 
+        <Chaotian.Jing@mediatek.com>,
+        =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
+        =?UTF-8?B?U3RhbmxleSBDaHUgKOacseWOn+mZnik=?= 
+        <stanley.chu@mediatek.com>,
+        =?UTF-8?B?TWFzb24gWmhhbmcgKOeroOi+iSk=?= <Mason.Zhang@mediatek.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>
+References: <20230222030427.957-1-powen.kao@mediatek.com>
+ <20230222030427.957-5-powen.kao@mediatek.com>
+ <1b9c2bc9-a349-062a-597c-336804c05394@quicinc.com>
+ <74bedcff32df0c93c14b004814017f3344247528.camel@mediatek.com>
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <74bedcff32df0c93c14b004814017f3344247528.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Bwjn2tfh64sBDZPbFxPnTOZQXEU6PQIF
+X-Proofpoint-ORIG-GUID: Bwjn2tfh64sBDZPbFxPnTOZQXEU6PQIF
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-26_22,2023-02-24_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ priorityscore=1501 mlxscore=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 spamscore=0 suspectscore=0 lowpriorityscore=0 impostorscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302270023
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kang Chen <void0red@gmail.com>
+Hi  Powen,
 
-devm_add_action may fails, check it in the caller of
-interrupt_preinit_v3_hw
+The Bao. D . Nguyen (quic_nguyenb@quicinc.com) from QCOM already made 
+patch to support MCQ abort.
 
-Signed-off-by: Kang Chen <void0red@gmail.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+++ Bao here to be aware of it in case your error handing patch conflict 
+with his abort handling patch.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 0c3fcb807..a63279f55 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2495,8 +2495,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
- 	shost->nr_hw_queues = hisi_hba->cq_nvecs;
- 
--	devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
--	return 0;
-+	return devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
- }
- 
- static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
--- 
-2.34.1
 
+Best Regards,
+
+Ziqi
+
+
+On 2/23/2023 10:13 PM, Powen Kao (高伯文) wrote:
+> Hi Ziqi,
+>
+> Thanks for ur comments.
+>
+> This piece of code successfully dump relevent registers on our
+> platform. As you know, mcq error handling flow is not ready yet so the
+> insertion point might not seems to be reasonable.
+>
+> Maybe drop this patch for now, I will send it later with error handling
+> patches.
+>
+>
+> On Thu, 2023-02-23 at 18:14 +0800, Ziqi Chen wrote:
+>> Hi Po-Wen,
+>>
+>> On 2/22/2023 11:04 AM, Po-Wen Kao wrote:
+>>> +void ufshcd_mcq_print_hwqs(struct ufs_hba *hba, unsigned long
+>>> bitmap)
+>>> +{
+>>> +	int id, i;
+>>> +	char prefix[15];
+>>> +
+>>> +	if (!is_mcq_enabled(hba))
+>>> +		return;
+>>> +
+>>> +	for_each_set_bit(id, &bitmap, hba->nr_hw_queues) {
+>>> +		snprintf(prefix, sizeof(prefix), "q%d SQCFG: ", id);
+>>> +		ufshcd_hex_dump(prefix,
+>>> +			hba->mcq_base + MCQ_QCFG_SIZE * id,
+>>> MCQ_QCFG_SQ_SIZE);
+>> Is your purpose dump per hardware queue registers here?  If yes, why
+>> don't use ufsmcq_readl() to save to a buffer and then use
+>> ufshcd_hex_dump()
+>>
+>> to dump ? Are you sure ufshcd_hex_dump() can dump register directly?
+>>
+>>> +
+>>> +		snprintf(prefix, sizeof(prefix), "q%d CQCFG: ", id);
+>>> +		ufshcd_hex_dump(prefix,
+>>> +			hba->mcq_base + MCQ_QCFG_SIZE * id +
+>>> MCQ_QCFG_SQ_SIZE, MCQ_QCFG_CQ_SIZE);
+>> Same to above comment.
+>>> +
+>>> +		for (i = 0; i < OPR_MAX ; i++) {
+>>> +			snprintf(prefix, sizeof(prefix), "q%d OPR%d: ",
+>>> id, i);
+>>> +			ufshcd_hex_dump(prefix, mcq_opr_base(hba, i,
+>>> id), mcq_opr_size[i]);
+>> Same.
+>>> +		}
+>>> +	}
+>>> +}
+>>> +
+>>>
+>>>    
+>>> @@ -574,7 +569,16 @@ void ufshcd_print_trs(struct ufs_hba *hba,
+>>> unsigned long bitmap, bool pr_prdt)
+>>>    		if (pr_prdt)
+>>>    			ufshcd_hex_dump("UPIU PRDT: ", lrbp-
+>>>> ucd_prdt_ptr,
+>>>    				ufshcd_sg_entry_size(hba) *
+>>> prdt_length);
+>>> +
+>>> +		if (is_mcq_enabled(hba)) {
+>>> +			cmd = lrbp->cmd;
+>>> +			if (!cmd)
+>>> +				return;
+>>> +			hwq = ufshcd_mcq_req_to_hwq(hba,
+>>> scsi_cmd_to_rq(cmd));
+>>> +			ufshcd_mcq_print_hwqs(hba, 1 << hwq->id);
+>> Calling registers dump function in ufshcd_print_trs() is not
+>> reasonable,
+>> eg.. for each aborted request, it would print out all hwq registers,
+>> it's not make sense.
+>>
+>> I think we should move it out of ufshcd_print_trs().
+>>
+>>> +		}
+>>>    	}
+>>> +
+>>>    }
+>>
+>> Best Regards,
+>>
+>> Ziqi
+>>
