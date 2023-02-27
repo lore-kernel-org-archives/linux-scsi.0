@@ -2,145 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDFA1C7EE2E
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 13:17:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C61FBC64ED8
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 14:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229791AbjB0NR4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Feb 2023 08:17:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56672 "EHLO
+        id S230029AbjB0OHx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Feb 2023 09:07:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229644AbjB0NRz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 08:17:55 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EECB1449A;
-        Mon, 27 Feb 2023 05:17:52 -0800 (PST)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PQLd44BMjzdbC3;
-        Mon, 27 Feb 2023 21:17:12 +0800 (CST)
-Received: from [10.67.101.126] (10.67.101.126) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Mon, 27 Feb 2023 21:17:49 +0800
-Message-ID: <bd22a19a-dd51-aa34-0794-780368660683@huawei.com>
-Date:   Mon, 27 Feb 2023 21:17:49 +0800
+        with ESMTP id S229969AbjB0OHw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 09:07:52 -0500
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A14310E9
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2023 06:07:50 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1pWeAM-0005FW-1S; Mon, 27 Feb 2023 15:07:46 +0100
+Message-ID: <9aa5e89f-6579-15e5-cc51-d226b5d4bea3@leemhuis.info>
+Date:   Mon, 27 Feb 2023 15:07:45 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: [bug report] scsi: libsas: Fix hung when disable phys
-Content-Language: en-CA
-References: <cf7ba927-c872-79c8-6e84-2196c350216e@huawei.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>,
-        "Zengtao (B)" <prime.zeng@hisilicon.com>,
-        Kangfenglong <kangfenglong@huawei.com>,
-        John Garry <john.g.garry@oracle.com>
-From:   yangxingui <yangxingui@huawei.com>
-In-Reply-To: <cf7ba927-c872-79c8-6e84-2196c350216e@huawei.com>
-X-Forwarded-Message-Id: <cf7ba927-c872-79c8-6e84-2196c350216e@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.101.126]
-X-ClientProxiedBy: dggpemm100019.china.huawei.com (7.185.36.251) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Content-Language: en-US, de-DE
+To:     Salvatore Bonaccorso <carnil@debian.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, regressions@lists.linux.dev
+References: <20221028091655.17741-1-sreekanth.reddy@broadcom.com>
+ <20221028091655.17741-2-sreekanth.reddy@broadcom.com>
+ <Y15lk+CPsjJ801iY@infradead.org>
+ <181536c494aa39ca78b190396a97072448739411.camel@suse.com>
+ <yq1tu192iur.fsf@ca-mkp.ca.oracle.com> <Y8+m0w4Og2CLFImY@lorien.valinor.li>
+ <Y/ZGe8c1XyqSuCSk@eldamar.lan>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+Subject: Re: [PATCH 1/1] mpt3sas: Remove usage of dma_get_required_mask api
+In-Reply-To: <Y/ZGe8c1XyqSuCSk@eldamar.lan>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1677506870;281a432b;
+X-HE-SMSGID: 1pWeAM-0005FW-1S
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi, this is your Linux kernel regression tracker.
 
-Hi, All
+On 22.02.23 17:44, Salvatore Bonaccorso wrote:
+> On Tue, Jan 24, 2023 at 10:37:23AM +0100, Salvatore Bonaccorso wrote:
+>> On Mon, Jan 02, 2023 at 08:06:41AM -0500, Martin K. Petersen wrote:
+>>>> is anything blocking mainline inclusion of this patch?
+>>>
+>>> I appCiao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that
+page.lied these to 6.2/scsi-fixes last week. The patches have been
+>>> sitting in a topic branch for a bit due to the three-way conflict
+>>> between fixes, queue, and upstream.
+>>
+>> It landed in 6.2-rc4 recently in fact. Thank you!
+>>
+>> Would it be posssible to backport the fix as well back to the stable
+>> series affected? 
+>>
+>> In Debian we have the reports as per https://bugs.debian.org/1022126
+>> where the issue was introduced back in 5.10.y. Context in
+>> https://lore.kernel.org/linux-scsi/CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com/
+>> .
+> 
+> Friendly ping on this, can this change be backported as well to the
+> relevant stable series? It would apply already cleanly to 6.1.y, but
+> due to 9df650963bf6 ("scsi: mpt3sas: Don't change DMA mask while
+> reallocating pools") it might need some additional review for the
+> older stable series (in particular of interest due to the above for
+> 5.10.y).
 
-If disabling remote PHY just after disabling all local PHYs in expander
-envirnment,as follows:
-echo 0 > /sys/class/sas_phy/phy-4\:0/enable
-echo 0 > /sys/class/sas_phy/phy-4\:1/enable
-echo 0 > /sys/class/sas_phy/phy-4\:2/enable
-echo 0 > /sys/class/sas_phy/phy-4\:3/enable
-echo 0 > /sys/class/sas_phy/phy-4\:4/enable
-echo 0 > /sys/class/sas_phy/phy-4\:5/enable
-echo 0 > /sys/class/sas_phy/phy-4\:6/enable
-echo 0 > /sys/class/sas_phy/phy-4\:7/enable
-echo 0 > /sys/class/sas_phy/phy-4:0:7/enable
+This afaics is a reasonable request for 6.1, as this seems to be
+(Salvatore, please correct me if I'm wrong) a regression caused by
+0e0747de0ea3 ("scsi: mpt3sas: Fix return value check of
+dma_get_required_mask()"), which was merged for 6.0-rc7. Hence allow me
+to ask:
 
-a hung as follows occurs.
+Sreekanth and Martin, is there a reason why this request (and the
+earlier one a month ago) was apparently met with silence? Or was
+progress made in between and I just missed it?
 
-[  245.564088] INFO: task kworker/u256:1:883 blocked for more than 120 
-seconds.
-[  245.571115]       Tainted: G           O      5.16.0-rc4+ #1
-[  245.576759] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[  245.584557] task:kworker/u256:1  state:D stack:    0 pid:  883 ppid: 
-    2 flags:0x00000008
-[  245.592878] Workqueue: 0000:74:02.0_event_q sas_phy_event_worker [libsas]
-[  245.599652] Call trace:
-[  245.602092]  __switch_to+0xd8/0x114
-[  245.605574]  __schedule+0x2f0/0x85c
-[  245.609054]  schedule+0x60/0x100
-[  245.612273]  __kernfs_remove.part.0+0x288/0x2e0
-[  245.616791]  kernfs_remove_by_name_ns+0x70/0xc0
-[  245.621307]  sysfs_remove_file_ns+0x24/0x30
-[  245.625477]  device_remove_file+0x24/0x34
-[  245.629475]  attribute_container_remove_attrs+0x50/0x8c
-[  245.634684]  attribute_container_class_device_del+0x24/0x3c
-[  245.640237]  transport_remove_classdev+0x64/0x80
-[  245.644839]  attribute_container_device_trigger+0x11c/0x124
-[  245.650393]  transport_remove_device+0x24/0x30
-[  245.654823]  sas_phy_delete+0x34/0x60
-[  245.658475]  do_sas_phy_delete+0x60/0x70
-[  245.662385]  device_for_each_child+0x68/0xb0
-[  245.666640]  sas_remove_children+0x44/0x54
-[  245.670723]  sas_destruct_devices+0x5c/0xa0 [libsas]
-[  245.675676]  sas_deform_port+0x178/0x1bc [libsas]
-[  245.680371]  sas_phye_loss_of_signal+0x28/0x34 [libsas]
-[  245.685583]  sas_phy_event_worker+0x3c/0x60 [libsas]
-[  245.690536]  process_one_work+0x1e0/0x46c
-[  245.694534]  worker_thread+0x15c/0x464
-[  245.698272]  kthread+0x188/0x194
-[  245.701491]  ret_from_fork+0x10/0x20
-[  245.705120] INFO: task bash:25579 blocked for more than 120 seconds.
-[  245.711450]       Tainted: G           O      5.16.0-rc4+ #1
-[  245.717087] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[  245.724883] task:bash            state:D stack:    0 pid:25579 ppid: 
-25113 flags:0x00000200
-[  245.733202] Call trace:
-[  245.735639]  __switch_to+0xd8/0x114
-[  245.739117]  __schedule+0x2f0/0x85c
-[  245.742595]  schedule+0x60/0x100
-[  245.745814]  schedule_timeout+0x180/0x1bc
-[  245.749811]  wait_for_completion+0x8c/0x100
-[  245.753984]  flush_workqueue+0x108/0x3d4
-[  245.757896]  drain_workqueue+0xc8/0x16c
-[  245.761722]  __sas_drain_work+0x54/0x90 [libsas]
-[  245.766328]  sas_drain_work+0x68/0x70 [libsas]
-[  245.770760]  queue_phy_enable+0x9c/0xec [libsas]
-[  245.775368]  store_sas_phy_enable+0xf0/0x10c
-[  245.779624]  dev_attr_store+0x24/0x40
-[  245.783275]  sysfs_kf_write+0x50/0x60
-[  245.786930]  kernfs_fop_write_iter+0x124/0x1b4
-[  245.791361]  new_sync_write+0xf0/0x190
-[  245.795098]  vfs_write+0x23c/0x2a0
-[  245.798490]  ksys_write+0x78/0x104
-[  245.801882]  __arm64_sys_write+0x28/0x3c
-[  245.805794]  invoke_syscall.constprop.0+0x58/0xf0
-[  245.810483]  do_el0_svc+0x19c/0x1b0
-[  245.813962]  el0_svc+0x28/0xec
-[  245.817009]  el0t_64_sync_handler+0x1a8/0x1ac
-[  245.821351]  el0t_64_sync+0x1a0/0x1a4
+Salvatore, for 5.10 things are a bit more complicated, as someone would
+need to do the work. Sometimes that work is done by the driver
+developers and maintainers as well, but strictly speaking it's the duty
+of those that backported the change to 5.10.y. Didn't check who did that
+this case (the stable team?); but well, maybe let's sort this out for
+6.1.y first.
 
-We find that when all local PHYs are disabled, all the devices will be
-removed in work PHY_LOSS_OF_SIGNAL which will try to wait the kn->active
-of the device to be deactivated (in function kernfs_drain)，but
-kn->active may be still activated as we use sysfs interface to disable
-remote PHYs at the same time, meanwhile it will drain libsas work
-including work PHY_LOSS_OF_SIGNAL in the sysfs interface, so hung
-occurs.
+> Thanks already! If the change for older series needs some additional
+> testing we might ask the affected users from the Debian bug 1022126 to
+> test on 5.10.y as well.
 
-How to fix the problem in this scenario?
-
-regards,
-
-Xingui
-
-.
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
