@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6A3EC64ED6
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 02:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E9AC7EE23
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 02:06:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229759AbjB0CCQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Feb 2023 21:02:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52788 "EHLO
+        id S230139AbjB0CGX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Feb 2023 21:06:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229751AbjB0CB7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 21:01:59 -0500
+        with ESMTP id S229976AbjB0CGA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 21:06:00 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EDD014492;
-        Sun, 26 Feb 2023 18:01:44 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6F65199F1;
+        Sun, 26 Feb 2023 18:05:31 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CE259B80C9C;
-        Mon, 27 Feb 2023 02:01:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84753C433EF;
-        Mon, 27 Feb 2023 02:01:40 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7C5E2B80CAB;
+        Mon, 27 Feb 2023 02:03:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C981C433EF;
+        Mon, 27 Feb 2023 02:03:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677463301;
-        bh=OQJ7AJSxECK6ccjebSLXV2PlwqE/uLDpjXf486SgwC0=;
+        s=k20201202; t=1677463424;
+        bh=I/WwNU/jHPjjVXnadrzO4AnRUxM5Sj8CtJbZEKq9K/Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Myleq34wJqGJxR8+bu7UscM1xV1NvoqdKYE1L68x8Njr0TWEqxqrnzmwKS8Yn6//W
-         MHAXb32+t/VsNg0AwVallRMdljxXPz7HkjTFPiylhSi+ASb5udRJLrbg8GA0dKdMQV
-         FH/7RdJEAOkJ1s7m4VpiF6kWL36i74X6fxgzd20GIcx5yx3eUY7zoBKPTyN4HGATD3
-         FoIFQzVIaN6Ou3h0fySEwFZvW97AFUNjr4UHmW3IImfJG9ySiBg5cWADO6pxKtoouw
-         SujI/52PDzay8g3QLv85f4eVKH3e8fA2ZSV8kTK14HbeGtRKAwzwZA7bfBg95ZgNXP
-         qHj/rjdLpofxQ==
+        b=s363iwJIYQMVR3ZMj1npPneU6nVZCewlBqAXM17+B7mkvA4tZtTK8rfFYjeG1NuDz
+         wi7jByR0UQrb7YWFirM6OqTKd66cz5DnO/mVj/nIvfb8HGDZgVoMgS8bVoG8ivlbn6
+         jlnJIQwubShfZ1stViiuoIeMUzLX23Pg6IqKEKfe8hP9rsQSiS+HhH80bTW8x2/j58
+         CvEZgXd1cQX1Kun4O4DeGmno9XLZqFMExP/rTnaXBLVaWBYs7rdubo3nBwU7CBaPAg
+         M8wldJRlICNNrtUtZvQ3oV4RGb/d2ECs2wikbmILf8uAq4whNE8c9I+PpUK+EPxQ+U
+         KoFXL3glDmc0w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justin.tee@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 13/60] scsi: lpfc: Fix use-after-free KFENCE violation during sysfs firmware write
-Date:   Sun, 26 Feb 2023 20:59:58 -0500
-Message-Id: <20230227020045.1045105-13-sashal@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 47/60] scsi: snic: Fix memory leak with using debugfs_lookup()
+Date:   Sun, 26 Feb 2023 21:00:32 -0500
+Message-Id: <20230227020045.1045105-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230227020045.1045105-1-sashal@kernel.org>
 References: <20230227020045.1045105-1-sashal@kernel.org>
@@ -52,94 +53,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-[ Upstream commit 21681b81b9ae548c5dae7ae00d931197a27f480c ]
+[ Upstream commit ad0e4e2fab928477f74d742e6e77d79245d3d3e7 ]
 
-During the sysfs firmware write process, a use-after-free read warning is
-logged from the lpfc_wr_object() routine:
+When calling debugfs_lookup() the result must have dput() called on it,
+otherwise the memory will leak over time.  To make things simpler, just
+call debugfs_lookup_and_remove() instead which handles all of the logic at
+once.
 
-  BUG: KFENCE: use-after-free read in lpfc_wr_object+0x235/0x310 [lpfc]
-  Use-after-free read at 0x0000000000cf164d (in kfence-#111):
-  lpfc_wr_object+0x235/0x310 [lpfc]
-  lpfc_write_firmware.cold+0x206/0x30d [lpfc]
-  lpfc_sli4_request_firmware_update+0xa6/0x100 [lpfc]
-  lpfc_request_firmware_upgrade_store+0x66/0xb0 [lpfc]
-  kernfs_fop_write_iter+0x121/0x1b0
-  new_sync_write+0x11c/0x1b0
-  vfs_write+0x1ef/0x280
-  ksys_write+0x5f/0xe0
-  do_syscall_64+0x59/0x90
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-The driver accessed wr_object pointer data, which was initialized into
-mailbox payload memory, after the mailbox object was released back to the
-mailbox pool.
-
-Fix by moving the mailbox free calls to the end of the routine ensuring
-that we don't reference internal mailbox memory after release.
-
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20230202141009.2290380-1-gregkh@linuxfoundation.org
+Cc: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: Sesidhar Baddela <sebaddel@cisco.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/scsi/snic/snic_debugfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 182aaae603868..55a0d4013439f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20819,6 +20819,7 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
- 	struct lpfc_mbx_wr_object *wr_object;
- 	LPFC_MBOXQ_t *mbox;
- 	int rc = 0, i = 0;
-+	int mbox_status = 0;
- 	uint32_t shdr_status, shdr_add_status, shdr_add_status_2;
- 	uint32_t shdr_change_status = 0, shdr_csf = 0;
- 	uint32_t mbox_tmo;
-@@ -20864,11 +20865,15 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
- 	wr_object->u.request.bde_count = i;
- 	bf_set(lpfc_wr_object_write_length, &wr_object->u.request, written);
- 	if (!phba->sli4_hba.intr_enable)
--		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
-+		mbox_status = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
- 	else {
- 		mbox_tmo = lpfc_mbox_tmo_val(phba, mbox);
--		rc = lpfc_sli_issue_mbox_wait(phba, mbox, mbox_tmo);
-+		mbox_status = lpfc_sli_issue_mbox_wait(phba, mbox, mbox_tmo);
- 	}
-+
-+	/* The mbox status needs to be maintained to detect MBOX_TIMEOUT. */
-+	rc = mbox_status;
-+
- 	/* The IOCTL status is embedded in the mailbox subheader. */
- 	shdr_status = bf_get(lpfc_mbox_hdr_status,
- 			     &wr_object->header.cfg_shdr.response);
-@@ -20883,10 +20888,6 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
- 				  &wr_object->u.response);
- 	}
- 
--	if (!phba->sli4_hba.intr_enable)
--		mempool_free(mbox, phba->mbox_mem_pool);
--	else if (rc != MBX_TIMEOUT)
--		mempool_free(mbox, phba->mbox_mem_pool);
- 	if (shdr_status || shdr_add_status || shdr_add_status_2 || rc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 				"3025 Write Object mailbox failed with "
-@@ -20904,6 +20905,12 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
- 		lpfc_log_fw_write_cmpl(phba, shdr_status, shdr_add_status,
- 				       shdr_add_status_2, shdr_change_status,
- 				       shdr_csf);
-+
-+	if (!phba->sli4_hba.intr_enable)
-+		mempool_free(mbox, phba->mbox_mem_pool);
-+	else if (mbox_status != MBX_TIMEOUT)
-+		mempool_free(mbox, phba->mbox_mem_pool);
-+
- 	return rc;
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
+index 57bdc3ba49d9c..9dd975b36b5bd 100644
+--- a/drivers/scsi/snic/snic_debugfs.c
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -437,6 +437,6 @@ void snic_trc_debugfs_init(void)
+ void
+ snic_trc_debugfs_term(void)
+ {
+-	debugfs_remove(debugfs_lookup(TRC_FILE, snic_glob->trc_root));
+-	debugfs_remove(debugfs_lookup(TRC_ENABLE_FILE, snic_glob->trc_root));
++	debugfs_lookup_and_remove(TRC_FILE, snic_glob->trc_root);
++	debugfs_lookup_and_remove(TRC_ENABLE_FILE, snic_glob->trc_root);
  }
- 
 -- 
 2.39.0
 
