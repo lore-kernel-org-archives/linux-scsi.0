@@ -2,208 +2,207 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80331C64ED6
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 03:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 084FDC64ED8
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 06:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229949AbjB0DPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Feb 2023 22:15:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54088 "EHLO
+        id S229556AbjB0GRR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Feb 2023 01:17:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229723AbjB0DPN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Feb 2023 22:15:13 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 706ACC65B;
-        Sun, 26 Feb 2023 19:15:11 -0800 (PST)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31R2QlD3002025;
-        Mon, 27 Feb 2023 03:14:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=KpqWmeVWmsOLm8pVxOCJXGWeNurXRtlo3K3msDyonpI=;
- b=eP0bjr4xk9A4Hlw/BQq30VELfrCEB0uc4rOXdVtUMHAHKkpFoD+XG+UUCgdkGsbVGkjy
- qMBAXkdWMfoNYQG5PTTpt4bvRz1pNzIaY1J4XAYIpcn6tSWkJIacc0I2NKQEdoHBXwvO
- xj9XThTMa4859kzb4CpsS8JtfSRAP0cNx0WV104EGTyT6YwIRVwlsUa+KhtlZ20URqrn
- Q7FQxG36uFZ7mMZYctu4mo8pSNIFOgkHEp+g9ZqNWRF/VoSMLzLseEP7gLJq0Dnh4VUG
- H/nx9afBJR7nC+dCa3it3drqFzFZaQLOfrGel6EXeo5jKveHa0X2tW/GYSRRLyz5EKYV TA== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ny9bfbh84-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Feb 2023 03:14:42 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 31R3Ef1Z013824
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Feb 2023 03:14:41 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Sun, 26 Feb
- 2023 19:14:35 -0800
-Message-ID: <0c17dd26-b1aa-54b0-6dc4-561cd996cead@quicinc.com>
-Date:   Mon, 27 Feb 2023 11:14:33 +0800
+        with ESMTP id S229535AbjB0GRQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 01:17:16 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFC431ACC1
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Feb 2023 22:16:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677478588;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type;
+        bh=kXft4ktL2TjV4oN52cC2tle35EiHT36ffVcOndFcJfs=;
+        b=AVypY1DyuXnLhiKfqN5gs2ob8RVkuvvf59hQfrrw7GJERpvmyzBUguXb4xZc4XHWlqfUMO
+        SZwYcYejKMv2JncUVjXR3LEK9NG31l75jHCt64NKH+KP7HcKVzQgaF286QTxZH6BQc3V/G
+        U6Ser4DWW3f+IcQX9XVLctqu8Thg/Yo=
+Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
+ [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-528-5aj5ZsqxMOmcwXSLoFZ94w-1; Mon, 27 Feb 2023 01:16:26 -0500
+X-MC-Unique: 5aj5ZsqxMOmcwXSLoFZ94w-1
+Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-536bbaeceeaso118913587b3.11
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Feb 2023 22:16:26 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kXft4ktL2TjV4oN52cC2tle35EiHT36ffVcOndFcJfs=;
+        b=n999Pc43qlq8fCrYuwNz10IvksCWForfbN5060RW8y9S2esQZDNm2NusC4j/dCv6ZV
+         8OBBLekVdKohla93KLz4pHdG/OCsEHUziUNHCzh6TQTOI6HNw5OzH8bJQtsF9UCd4Kje
+         b9yo6eIKFH1l4r975748Ar50EYIhUe13jVCs4lWeuOjRTEqz+oRJjuIT/MngHkS1ShC2
+         IWH41XiqcY4LW49JPJxwVSsZolVl0QNFyGIpc3+CZaixoJo+wRj+TuHWZbfsUakhu/Zz
+         a+OzRurU/468J3tjmtp2XbBxOQzVwjUxPJfPMSoYkI//1So6HI99EpfT2COdjgeZxZgw
+         Lj4Q==
+X-Gm-Message-State: AO0yUKXxvraXsfzZMuuuo3VSpojKd9akSScXukJztObJm/RaYoCryQQF
+        UDV+P4ooF3nY6P1oq7jQvUqh8zT6UrxExmpDjzG0lJXWUN0PW0cQcJ0/gLe1wng2r9q7runiC2U
+        Khf7k9NlFXw+YiTvctPtUyGT1bQqBSDj64jMinxFYYjupwHZS1Z0=
+X-Received: by 2002:a05:6902:38c:b0:a60:c167:c053 with SMTP id f12-20020a056902038c00b00a60c167c053mr3881164ybs.11.1677478585797;
+        Sun, 26 Feb 2023 22:16:25 -0800 (PST)
+X-Google-Smtp-Source: AK7set/ENojCVX3EJqKiS1B3ZyAsqoyhQvqbIX2B9v27o6IdUfuKCjsY5Es852N2iKWk++YE/9wwnqxwJMeVi0BSoCA=
+X-Received: by 2002:a05:6902:38c:b0:a60:c167:c053 with SMTP id
+ f12-20020a056902038c00b00a60c167c053mr3881152ybs.11.1677478585424; Sun, 26
+ Feb 2023 22:16:25 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v2 4/7] scsi: ufs: core: Add hwq print for debug
-Content-Language: en-US
-To:     =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        <quic_nguyenb@quicinc.com>
-CC:     =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
-        <peter.wang@mediatek.com>,
-        =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
-        <eddie.huang@mediatek.com>,
-        =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= 
-        <jiajie.hao@mediatek.com>,
-        =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
-        =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
-        <Alice.Chao@mediatek.com>,
-        wsd_upstream <wsd_upstream@mediatek.com>,
-        =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
-        <Chun-hung.Wu@mediatek.com>,
-        =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?= 
-        <Chaotian.Jing@mediatek.com>,
-        =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
-        =?UTF-8?B?U3RhbmxleSBDaHUgKOacseWOn+mZnik=?= 
-        <stanley.chu@mediatek.com>,
-        =?UTF-8?B?TWFzb24gWmhhbmcgKOeroOi+iSk=?= <Mason.Zhang@mediatek.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>
-References: <20230222030427.957-1-powen.kao@mediatek.com>
- <20230222030427.957-5-powen.kao@mediatek.com>
- <1b9c2bc9-a349-062a-597c-336804c05394@quicinc.com>
- <74bedcff32df0c93c14b004814017f3344247528.camel@mediatek.com>
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <74bedcff32df0c93c14b004814017f3344247528.camel@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Bwjn2tfh64sBDZPbFxPnTOZQXEU6PQIF
-X-Proofpoint-ORIG-GUID: Bwjn2tfh64sBDZPbFxPnTOZQXEU6PQIF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
- definitions=2023-02-26_22,2023-02-24_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 bulkscore=0 malwarescore=0 phishscore=0
- adultscore=0 spamscore=0 suspectscore=0 lowpriorityscore=0 impostorscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302270023
+From:   Guangwu Zhang <guazhang@redhat.com>
+Date:   Mon, 27 Feb 2023 14:17:11 +0800
+Message-ID: <CAGS2=YoBAjhGCi=007s2NsPvHb5v4=r=5cFm3BbogD6+6g8ZcQ@mail.gmail.com>
+Subject: [bug report] BUG: KASAN: use-after-free in fcoe_ctlr_encaps+0xb2c/0xd60
+ [libfcoe]
+To:     linux-scsi@vger.kernel.org, John Meneghini <jmeneghi@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi  Powen,
+Hi,
 
-The Bao. D . Nguyen (quic_nguyenb@quicinc.com) from QCOM already made 
-patch to support MCQ abort.
+Found kernel issue when create/remove npiv port with qedf driver,
 
-++ Bao here to be aware of it in case your error handing patch conflict 
-with his abort handling patch.
-
-
-Best Regards,
-
-Ziqi
+kernel repo : https://github.com/torvalds/linux.git
+kernel : 6.2.0.kasan
 
 
-On 2/23/2023 10:13 PM, Powen Kao (高伯文) wrote:
-> Hi Ziqi,
->
-> Thanks for ur comments.
->
-> This piece of code successfully dump relevent registers on our
-> platform. As you know, mcq error handling flow is not ready yet so the
-> insertion point might not seems to be reasonable.
->
-> Maybe drop this patch for now, I will send it later with error handling
-> patches.
->
->
-> On Thu, 2023-02-23 at 18:14 +0800, Ziqi Chen wrote:
->> Hi Po-Wen,
->>
->> On 2/22/2023 11:04 AM, Po-Wen Kao wrote:
->>> +void ufshcd_mcq_print_hwqs(struct ufs_hba *hba, unsigned long
->>> bitmap)
->>> +{
->>> +	int id, i;
->>> +	char prefix[15];
->>> +
->>> +	if (!is_mcq_enabled(hba))
->>> +		return;
->>> +
->>> +	for_each_set_bit(id, &bitmap, hba->nr_hw_queues) {
->>> +		snprintf(prefix, sizeof(prefix), "q%d SQCFG: ", id);
->>> +		ufshcd_hex_dump(prefix,
->>> +			hba->mcq_base + MCQ_QCFG_SIZE * id,
->>> MCQ_QCFG_SQ_SIZE);
->> Is your purpose dump per hardware queue registers here?  If yes, why
->> don't use ufsmcq_readl() to save to a buffer and then use
->> ufshcd_hex_dump()
->>
->> to dump ? Are you sure ufshcd_hex_dump() can dump register directly?
->>
->>> +
->>> +		snprintf(prefix, sizeof(prefix), "q%d CQCFG: ", id);
->>> +		ufshcd_hex_dump(prefix,
->>> +			hba->mcq_base + MCQ_QCFG_SIZE * id +
->>> MCQ_QCFG_SQ_SIZE, MCQ_QCFG_CQ_SIZE);
->> Same to above comment.
->>> +
->>> +		for (i = 0; i < OPR_MAX ; i++) {
->>> +			snprintf(prefix, sizeof(prefix), "q%d OPR%d: ",
->>> id, i);
->>> +			ufshcd_hex_dump(prefix, mcq_opr_base(hba, i,
->>> id), mcq_opr_size[i]);
->> Same.
->>> +		}
->>> +	}
->>> +}
->>> +
->>>
->>>    
->>> @@ -574,7 +569,16 @@ void ufshcd_print_trs(struct ufs_hba *hba,
->>> unsigned long bitmap, bool pr_prdt)
->>>    		if (pr_prdt)
->>>    			ufshcd_hex_dump("UPIU PRDT: ", lrbp-
->>>> ucd_prdt_ptr,
->>>    				ufshcd_sg_entry_size(hba) *
->>> prdt_length);
->>> +
->>> +		if (is_mcq_enabled(hba)) {
->>> +			cmd = lrbp->cmd;
->>> +			if (!cmd)
->>> +				return;
->>> +			hwq = ufshcd_mcq_req_to_hwq(hba,
->>> scsi_cmd_to_rq(cmd));
->>> +			ufshcd_mcq_print_hwqs(hba, 1 << hwq->id);
->> Calling registers dump function in ufshcd_print_trs() is not
->> reasonable,
->> eg.. for each aborted request, it would print out all hwq registers,
->> it's not make sense.
->>
->> I think we should move it out of ufshcd_print_trs().
->>
->>> +		}
->>>    	}
->>> +
->>>    }
->>
->> Best Regards,
->>
->> Ziqi
->>
+
+[  190.028419] [0000:41:00.2]:[qedf_vport_create:1850]:8: Creating
+NPIV port, WWPN=2000000000000001.
+[  200.222789] [0000:41:00.3]:[qedf_vport_create:1850]:9: Creating
+NPIV port, WWPN=2000000000000002.
+[  235.060919] ==================================================================
+[  235.068985] BUG: KASAN: use-after-free in
+fcoe_ctlr_encaps+0xb2c/0xd60 [libfcoe]
+[  235.077297] Read of size 2 at addr ffff888142bc456c by task kworker/0:3/125
+[  235.085075]
+[  235.086743] CPU: 0 PID: 125 Comm: kworker/0:3 Kdump: loaded Not
+tainted 6.2.0.kasan+ #1
+[  235.095686] Hardware name: Dell Inc. PowerEdge R420/072XWF, BIOS
+2.9.0 01/09/2020
+[  235.104049] Workqueue: fc_wq_9 fc_vport_sched_delete [scsi_transport_fc]
+[  235.111585] Call Trace:
+[  235.114319]  <TASK>
+[  235.116663]  dump_stack_lvl+0x33/0x50
+[  235.120772]  print_address_description.constprop.0+0x28/0x380
+[  235.127203]  print_report+0xb5/0x270
+[  235.131193]  ? kasan_addr_to_slab+0x9/0xa0
+[  235.135773]  ? fcoe_ctlr_encaps+0xb2c/0xd60 [libfcoe]
+[  235.141459]  kasan_report+0xcf/0x100
+[  235.145464]  ? fcoe_ctlr_encaps+0xb2c/0xd60 [libfcoe]
+[  235.151144]  fcoe_ctlr_encaps+0xb2c/0xd60 [libfcoe]
+[  235.156634]  fcoe_ctlr_els_send+0x24b/0x1240 [libfcoe]
+[  235.162417]  ? ___slab_alloc+0x703/0x7a0
+[  235.166817]  qedf_xmit+0x16e9/0x21c0 [qedf]
+[  235.171531]  fc_exch_seq_send+0x5ba/0xe70 [libfc]
+[  235.176854]  ? __pfx_fc_lport_logo_resp+0x10/0x10 [libfc]
+[  235.182956]  fc_elsct_send+0xd4e/0x2b40 [libfc]
+[  235.188081]  ? __alloc_skb+0x1ee/0x270
+[  235.192276]  ? __pfx_fc_elsct_send+0x10/0x10 [libfc]
+[  235.197885]  ? __pfx_qedf_elsct_send+0x10/0x10 [qedf]
+[  235.203549]  fc_lport_enter_logo+0x153/0x320 [libfc]
+[  235.209158]  fc_fabric_logoff+0x90/0xc0 [libfc]
+[  235.214280]  qedf_vport_destroy+0x19f/0x360 [qedf]
+[  235.219663]  fc_vport_terminate+0xf6/0x5a0 [scsi_transport_fc]
+[  235.226217]  ? _raw_spin_lock_irq+0x82/0xe0
+[  235.230905]  fc_vport_sched_delete+0x1e/0x1d0 [scsi_transport_fc]
+[  235.237743]  process_one_work+0x680/0x10f0
+[  235.242318]  worker_thread+0x571/0xe70
+[  235.246513]  ? __kthread_parkme+0x83/0x140
+[  235.251095]  ? __pfx_worker_thread+0x10/0x10
+[  235.255870]  kthread+0x25d/0x2f0
+[  235.259483]  ? __pfx_kthread+0x10/0x10
+[  235.263677]  ret_from_fork+0x2c/0x50
+[  235.267683]  </TASK>
+[  235.270125]
+[  235.271789] Allocated by task 290:
+[  235.275590]  kasan_save_stack+0x1e/0x40
+[  235.279884]  kasan_set_track+0x21/0x30
+[  235.284075]  __kasan_kmalloc+0xa9/0xb0
+[  235.288265]  fcoe_ctlr_recv_adv+0x70a/0xf20 [libfcoe]
+[  235.293947]  fcoe_ctlr_recv_handler.isra.0+0x4fd/0x8e0 [libfcoe]
+[  235.300689]  fcoe_ctlr_recv_work+0x1c/0x40 [libfcoe]
+[  235.306264]  process_one_work+0x680/0x10f0
+[  235.310850]  worker_thread+0x571/0xe70
+[  235.315038]  kthread+0x25d/0x2f0
+[  235.318653]  ret_from_fork+0x2c/0x50
+[  235.322656]
+[  235.324326] Freed by task 2641:
+[  235.327839]  kasan_save_stack+0x1e/0x40
+[  235.332123]  kasan_set_track+0x21/0x30
+[  235.336310]  kasan_save_free_info+0x2a/0x50
+[  235.340987]  ____kasan_slab_free+0x169/0x1d0
+[  235.345756]  slab_free_freelist_hook+0xcb/0x190
+[  235.350819]  __kmem_cache_free+0x187/0x2c0
+[  235.355395]  fcoe_ctlr_destroy+0xc6/0x1a0 [libfcoe]
+[  235.360867]  __qedf_remove+0x41b/0x1520 [qedf]
+[  235.365864]  pci_device_remove+0xa2/0x1d0
+[  235.370349]  device_release_driver_internal+0x3bd/0x600
+[  235.376199]  driver_detach+0xbb/0x170
+[  235.380299]  bus_remove_driver+0xe4/0x2d0
+[  235.384781]  pci_unregister_driver+0x26/0x250
+[  235.389649]  qedf_cleanup+0xc/0x210 [qedf]
+[  235.394254]  __do_sys_delete_module.constprop.0+0x2f1/0x530
+[  235.400490]  do_syscall_64+0x5c/0x90
+[  235.404490]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
+[  235.410137]
+[  235.411808] Last potentially related work creation:
+[  235.417261]  kasan_save_stack+0x1e/0x40
+[  235.421547]  __kasan_record_aux_stack+0xb6/0xd0
+[  235.426609]  __call_rcu_common.constprop.0+0xc3/0x920
+[  235.432263]  blk_put_queue+0xc7/0x200
+[  235.436359]  scsi_device_dev_release+0x561/0xda0
+[  235.441523]  device_release+0x9b/0x210
+[  235.445720]  kobject_cleanup+0x104/0x360
+[  235.450109]  scsi_alloc_sdev+0xa0a/0xc20
+[  235.454501]  scsi_probe_and_add_lun+0x42d/0xb60
+[  235.459563]  __scsi_scan_target+0x18e/0x3d0
+[  235.464237]  scsi_scan_channel+0xf6/0x180
+[  235.468723]  scsi_scan_host_selected+0x1fa/0x2e0
+[  235.473885]  do_scan_async+0x3f/0x490
+[  235.477979]  async_run_entry_fn+0x96/0x4f0
+[  235.482563]  process_one_work+0x680/0x10f0
+[  235.487145]  worker_thread+0x571/0xe70
+[  235.491332]  kthread+0x25d/0x2f0
+[  235.494939]  ret_from_fork+0x2c/0x50
+[  235.498941]
+[  235.500604] The buggy address belongs to the object at ffff888142bc4500
+[  235.500604]  which belongs to the cache kmalloc-128 of size 128
+[  235.514591] The buggy address is located 108 bytes inside of
+[  235.514591]  128-byte region [ffff888142bc4500, ffff888142bc4580)
+[  235.527699]
+[  235.529362] The buggy address belongs to the physical page:
+[  235.535596] page:ffffea00050af100 refcount:1 mapcount:0
+mapping:0000000000000000 index:0x0 pfn:0x142bc4
+[  235.546090] head:ffffea00050af100 order:1 compound_mapcount:0
+subpages_mapcount:0 compound_pincount:0
+[  235.556387] flags:
+0x57ffffc0010200(slab|head|node=1|zone=2|lastcpupid=0x1fffff)
+[  235.564658] raw: 0057ffffc0010200 ffff88800104cc80 ffffea0005041a90
+ffffea0005368990
+[  235.573308] raw: 0000000000000000 0000000000150015 00000001ffffffff
+0000000000000000
+[  235.581957] page dumped because: kasan: bad access detected
+[  235.588186]
+[  235.589856] Memory state around the buggy address:
+[  235.595214]  ffff888142bc4400: fc fc fc fc fc fc fc fc fc fc fc fc
+fc fc fc fc
+[  235.603280]  ffff888142bc4480: fc fc fc fc fc fc fc fc fc fc fc fc
+fc fc fc fc
+[  235.611347] >ffff888142bc4500: fa fb fb fb fb fb fb fb fb fb fb fb
+fb fb fb fb
+[  235.619411]                                                           ^
+[  235.626794]  ffff888142bc4580: fc fc fc fc fc fc fc fc fc fc fc fc
+fc fc fc fc
+[  235.634861]  ffff888142bc4600: fc fc fc fc fc fc fc fc fc fc fc fc
+fc fc fc fc
+[  235.642928] ==================================================================
+[  235.651020] Disabling lock debugging due to kernel taint
+[  235.656965] [0000:41:00.3]:[qedf_fip_send:159]:11: start_xmit
+failed rc = -22.
+
+--
+
