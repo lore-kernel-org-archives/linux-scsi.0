@@ -2,94 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8AACC64ED8
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 09:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD7BC64ED8
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 10:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229911AbjB0JIX convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Feb 2023 04:08:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40674 "EHLO
+        id S229850AbjB0KHi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Feb 2023 05:07:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229896AbjB0JIL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 04:08:11 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B01C12D158;
-        Mon, 27 Feb 2023 00:59:26 -0800 (PST)
-Received: from kwepemi500018.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PQDKV3RsSzKmSf;
-        Mon, 27 Feb 2023 16:33:18 +0800 (CST)
-Received: from kwepemm600010.china.huawei.com (7.193.23.86) by
- kwepemi500018.china.huawei.com (7.221.188.213) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Mon, 27 Feb 2023 16:38:07 +0800
-Received: from kwepemm600010.china.huawei.com ([7.193.23.86]) by
- kwepemm600010.china.huawei.com ([7.193.23.86]) with mapi id 15.01.2507.021;
- Mon, 27 Feb 2023 16:38:07 +0800
-From:   "liuchao (CR)" <liuchao173@huawei.com>
-To:     "tglx@linutronix.de" <tglx@linutronix.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     linfeilong <linfeilong@huawei.com>,
-        "hewenliang (C)" <hewenliang4@huawei.com>
-Subject: IRQ affinity problem from hisi_sas_v3_hw
-Thread-Topic: IRQ affinity problem from hisi_sas_v3_hw
-Thread-Index: AdlKhWsv5YKVA/r2RGe1x9v7mwA/dA==
-Date:   Mon, 27 Feb 2023 08:38:07 +0000
-Message-ID: <573010d632034c248b88e00e69fe1694@huawei.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.174.178.63]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        with ESMTP id S229629AbjB0KHg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 05:07:36 -0500
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90C5B1E2AD;
+        Mon, 27 Feb 2023 02:07:32 -0800 (PST)
+Received: by mail-wr1-x429.google.com with SMTP id v16so2765326wrn.0;
+        Mon, 27 Feb 2023 02:07:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=aryQAhvsSY+Hbo1a8NQr5WK5lRwd5wGrYicSNyjnIAs=;
+        b=iKyIgI0NKzm5EQCAj1+9yEE3snoyPKq98PTKr1c9vbfXL3+vXDcuxtUjeFfGLoKa+b
+         rzgATe26luIji9Ats+QU55vG5UJnykksvJz7mRzjwWMkuxkzq6RXn5U2txWG3yp48Xxc
+         FpmU91VvXuZTcPTf0ec7XNpmuzy3pFr6Q7XHLPIpkNOvWsSaY1Bb8cdtp+VSGk+Dkyg1
+         l855ifRTCp93+TNtcOrZd7NYhJ29c9KXEgYFywMHtdNBbjBArnnS/H6lr3v2kKuiplF3
+         L2hP3cmjn7LuMcaQQaUi6BFDURmUFgiK9EVXoZr/F3j5hDQiE6wRUybbMhBqZQ/m+nUQ
+         ukjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=aryQAhvsSY+Hbo1a8NQr5WK5lRwd5wGrYicSNyjnIAs=;
+        b=NuNB/1iRsytay4Nsu1T4Qy/ZISfDPDPNxwnREy4v5kqOVXLrB7dhu3uyRhhyFVqX5D
+         VVGtXpUAe2w9HqhkKX0gZ79MMaLz0wYGJj7xchg3w8ht3m6Fp1Y34J0AwEkyF2utwRCu
+         8UpiA4yTeqO8W8oMYCOGn4MkX/sZHc2t8mOqJQGzkWlb29WmFuSfLkmGfAfXNUFqRQIW
+         CfTI1w7ZAqv/0QMzcnxT7h4jUuGdrzveM7qUH2K8OkxLtuynZLrIh/MD2Z+Xn6qAnMiD
+         VC6ri7wAnJIDC5cvR4LrT4QcvX3YQFb2HC6SPXK+VNHo1KwJNQV9MdMl0uZGhhIlIXvF
+         F7rw==
+X-Gm-Message-State: AO0yUKUDQtoyB+8NoLajSI8e4Zn3qrQspvl3en8LoeNc2FCEaBI5RiYT
+        NQTJkdwDdYa4VHT4kikaUA4=
+X-Google-Smtp-Source: AK7set9kXruz4qDyKvNS2xYLlHU7YARTec/KWK0vo9XtOAsb1NEGpb1pEuS11t9zlpM9BlB9n/VMUw==
+X-Received: by 2002:adf:ec03:0:b0:2c9:850c:6b15 with SMTP id x3-20020adfec03000000b002c9850c6b15mr5454138wrn.41.1677492451049;
+        Mon, 27 Feb 2023 02:07:31 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id a4-20020a5d5704000000b002c559843748sm6681955wrv.10.2023.02.27.02.07.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Feb 2023 02:07:30 -0800 (PST)
+Date:   Mon, 27 Feb 2023 13:07:26 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     Yaniv Gardi <ygardi@codeaurora.org>
+Cc:     Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Gilad Broner <gbroner@codeaurora.org>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: ufs: ufs-qcom: remove impossible check
+Message-ID: <Y/yA3niWUcGYgBU8@kili>
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi All,
-I test the linux 5.10 and found the hisi_sas_v3_hw use irq_affinitt with IRQD_AFFINITY_MANAGED.
-The mechine has 96 cpus with four numa nodes.
+The "dev_req_params" pointer points to inside the middle of a struct
+so it can't be NULL.  Removing this impossible condition is nice because
+now we don't need to consider the correct error code for that situation.
 
-hisi_sas_v3_hw has 16 queues and affinity mask of each queue contains 6 CPUs:
+Fixes: f06fcc7155dc ("scsi: ufs-qcom: add QUniPro hardware support and power optimizations")
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-q0:      0 - 5
-q1:      6 - 11
-...
-q15:    90 - 95
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 34fc453f3eb1..797230ad3939 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1177,7 +1177,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 			err = ufs_qcom_clk_scale_down_post_change(hba);
+ 
+ 
+-		if (err || !dev_req_params) {
++		if (err) {
+ 			ufshcd_uic_hibern8_exit(hba);
+ 			return err;
+ 		}
+-- 
+2.39.1
 
-When I make all CPU of a queue mask go offline, cpu 6-11 for example:
-
-echo 0 > /sys/devices/system/cpu/cpu6/online
-echo 0 > /sys/devices/system/cpu/cpu7/online
-...
-echo 0 > /sys/devices/system/cpu/cpu11/online
-
-the IO will hang and errors are reported in dmesg:
-
-[344908.820022] sas: ata5: end_device-6:0: cmd error handler
-[344908.820049] sas: ata5: end_device-6:0: dev error handler
-[344908.820058] sas: ata6: end_device-6:1: dev error handler
-[344908.820071] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-[344908.820080] sas: ata7: end_device-6:2: dev error handler
-[344908.820085] sas: ata8: end_device-6:3: dev error handler
-[344908.820091] sas: ata9: end_device-6:4: dev error handler
-[344908.820095] sas: ata10: end_device-6:5: dev error handler
-[344908.820097] ata5.00: failed command: WRITE DMA EXT
-[344908.820111] ata5.00: cmd 35/00:08:18:20:ae/00:00:6a:00:00/e0 tag 19 dma 4096 out
-                         res 40/00:00:47:40:9a/00:00:6c:00:00/e0 Emask 0x4 (timeout)
-[344908.820117] ata5.00: status: { DRDY }
-[344908.820126] ata5: hard resetting link
-[344908.821819] hisi_sas_v3_hw 0000:b4:02.0: phydown: phy0 phy_state=0x3e
-[344908.821824] hisi_sas_v3_hw 0000:b4:02.0: ignore flutter phy0 down
-[344908.983853] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy0 link_rate=10(sata)
-[344908.983887] sas: sas_form_port: phy0 belongs to port0 already(1)!
-[344909.145280] ata5.00: configured for UDMA/33
-[344909.145308] sd 6:0:0:0: [sda] tag#814 kworker/u193:7: flush retry cmd
-[344909.145324] sd 6:0:0:0: [sda] tag#814 Inserting command 000000005d29b45d into mlqueue
-[344909.145341] ata5: EH complete
-[344909.145358] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries: 1
-
-Is this situation normal, or should the driver fix this problem?
