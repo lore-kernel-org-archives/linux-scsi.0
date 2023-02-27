@@ -2,82 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0927C64ED6
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 22:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9174FC64ED8
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Feb 2023 23:15:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229653AbjB0Ws2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Feb 2023 17:48:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33578 "EHLO
+        id S230081AbjB0XP6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Feb 2023 18:15:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229886AbjB0WsZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 17:48:25 -0500
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0B159EDF;
-        Mon, 27 Feb 2023 14:47:58 -0800 (PST)
-Received: by mail-pl1-f182.google.com with SMTP id z2so8430728plf.12;
-        Mon, 27 Feb 2023 14:47:58 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lG6vB3dP9H3e//Mg7ICB0IjrePifa0YDIvFrmLOhqlQ=;
-        b=yB6u+k7H/fps2LM42gtr0Rpne8TG6JTKSX9Vi/v/Yo7yNjZKEHeIKCCzRhY6NSSaew
-         tGs9ccX9NsnjPCIfmaJVe7DTdNk2kWcc2kIyCR1AbEuRiDQ6kF9VqP5x8NtUeC6ZYjyI
-         5QGjQnNP0j9bQNcwVDiDw4P7Zee5NRre9DTw9OlbBcIoiM9dZjNP+EdXTmhIBenJaJwo
-         44C8boVKjD3OJ5ah/x7X16cJy7KCVfcOU5YbUuwvZHv/3TbW9e6QdSb2hLpUX7pRBVqc
-         FL8ZJYvnLfxYRMNQP1YT5eCy72Mh26plXQZEzq/hG1inY+jKgJ6W6AdlBX50DEeOztsG
-         TpBw==
-X-Gm-Message-State: AO0yUKWrcw3S6u+sbwbmbAo2hbPltWo/HL5lZH+MCatsOnIVwZZqyfDy
-        m048VMoVr3+6iMXR5xloe4inLnAGNRI=
-X-Google-Smtp-Source: AK7set9vcQ/F8WhIG+6XsqcHSIU5HVBhAJ1lVW44QSnhAm+ORXEIjQ6fFA1tdKOn1Sl1SStdekryLg==
-X-Received: by 2002:a17:902:db04:b0:19d:90f:6c50 with SMTP id m4-20020a170902db0400b0019d090f6c50mr583309plx.58.1677538070772;
-        Mon, 27 Feb 2023 14:47:50 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:6cf3:f584:1162:e48a? ([2620:15c:211:201:6cf3:f584:1162:e48a])
-        by smtp.gmail.com with ESMTPSA id 3-20020a170902c10300b00186b69157ecsm5088744pli.202.2023.02.27.14.47.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Feb 2023 14:47:49 -0800 (PST)
-Message-ID: <99993a45-acc6-176f-d846-e278f173171c@acm.org>
-Date:   Mon, 27 Feb 2023 14:47:46 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v2 4/7] scsi: ufs: core: Add hwq print for debug
-Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S229540AbjB0XP5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2023 18:15:57 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E8F1F919;
+        Mon, 27 Feb 2023 15:15:56 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 014FACE1068;
+        Mon, 27 Feb 2023 23:15:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBAA9C433D2;
+        Mon, 27 Feb 2023 23:15:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677539753;
+        bh=xx0PUItNVoebyUpWOIyd9J1C23pNG+cenzOSnMIcA9w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OQsHqhnPPf2q8vg7dfBs8dHZDj0dWSoQW9gSFUtmOo671XyjWQdUMmeMYlfMa82D8
+         sPVPv2k8wgxnJxn31e0t1HCnE0l1iqj7I1IEy5NIS+4jw1ftDfMP/oGU6k8G2glHcf
+         xgLrgGTkLERKVcNPl15j+4ZhOKTRXr4AK/keaaff7u3z7o5w+n/aB7p5qrFIOO7NLF
+         r433x5kQqyeuW+VjtfLMe1aTHixU4haeQN2b0u0KKTnO77VrFY/ECMDElMfxyv29fG
+         pN6GRCWLhGs+1r5KjarMDD86oRKmIfd7FtOIGvZ74Zj+/erp9+/3C8D+0rdqvrnzu8
+         Iw9+9Kyve2b1Q==
+Date:   Mon, 27 Feb 2023 15:15:51 -0800
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
         Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com,
-        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com
-References: <20230222030427.957-1-powen.kao@mediatek.com>
- <20230222030427.957-5-powen.kao@mediatek.com>
- <1b9c2bc9-a349-062a-597c-336804c05394@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1b9c2bc9-a349-062a-597c-336804c05394@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: support IO traces for zoned block device
+Message-ID: <Y/05p0jYrg2wfXw6@google.com>
+References: <20230215190448.1687786-1-jaegeuk@kernel.org>
+ <Y+3GzX6yMOKUFTh3@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y+3GzX6yMOKUFTh3@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/23/23 02:14, Ziqi Chen wrote:
-> Calling registers dump function in ufshcd_print_trs() is not reasonable, 
-> eg.. for each aborted request, it would print out all hwq registers, 
-> it's not make sense.
-> 
-> I think we should move it out of ufshcd_print_trs().
+On 02/15, Christoph Hellwig wrote:
+> Why does UFS even have it's own common tracing instad of just relying
+> on the core SCSI one, and even worse pokes into command set specifics
+> which is a no-go for LLDDs.  This code simply needs to go away instead
+> of beeing "enhanced".
 
-+1
-
-
+I'm not sure how all the other vendors use the trace tho, at least to me,
+it's quite useful when debugging any UFS-specific information such as
+group_id and doorbell status along with the attached scsi command, in
+addition to the accurate latency measurements.
