@@ -2,138 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BBCFC64ED6
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6F5C64ED6
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229830AbjB1OJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Feb 2023 09:09:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39496 "EHLO
+        id S229816AbjB1OJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Feb 2023 09:09:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229822AbjB1OJG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:06 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DEB840C5
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:05 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id cp7-20020a17090afb8700b0023756229427so13831699pjb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:05 -0800 (PST)
+        with ESMTP id S229826AbjB1OJI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:08 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAE1CEB48
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:07 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id l1so9959674pjt.2
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=grBjESVZbPi8N4EXwWQUFkUyNL7XllQP0w9XKOIgcww=;
-        b=bvTrIBUYvfJCMo5OHMtfoDh83s4cFfioRzxGqTiIL9H66KgANrDS7rBxeG6U/7IdhA
-         12xX3sGdKbfu0qCeUS5VjwZl6fhLSkn4BHjblerH7nypguJCvsvtSE1HxOLEwzSgk30L
-         nKPrl8GJwLhez46h4y5jGq9khIiwaVZ4h+AMU=
+        bh=ayYvdeRbVGYYaSZ524Y0Mf1rh4wEW+6hdtCnqkadsKA=;
+        b=Ca6SYFrp1DOpEJrPCCimSQKHz4g2i+coi3JOcVpAFqS1YQXkcGUE9HY63y+NppUX6m
+         fzj3I0obaue9kzP1UZ7Yh9462oGup5UMOOMVr88o2lUh9nlu2JEVVokG52gr8LfBX3qh
+         DODT7144vRQ6UaQjB2Xs9Q7pMu6XHGX5ZIzkY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=grBjESVZbPi8N4EXwWQUFkUyNL7XllQP0w9XKOIgcww=;
-        b=vPd5eRD7Ob7f3Mb7bpt6u8nDXanGn/hsAIYBsng8QnklDUcfySEZ5XTY0g/ewV5BpX
-         IrHhWiTRmvkaLJEW49PUistVm65E8Dg9pc+fm/kVn+qrI25QcN3SXdKfkzXeUEF6pKnV
-         H+pw3uuHxOdaMJXcfjD4xfGrVs4lpdgQTBNnGciK+wJNQoXFBbxwC+WspMqUzs8MfJC0
-         9fyzcyJTqskXOi3cw4vR43myIrwOyuSUSWSEhWryPUhjjAo5Whrdd67Twkvy7CjZ1Ec4
-         tMXaVq0oJqFcpUJsdgZCapa98o6px8eX0TB1FTfkH4sgN2j8Dl44YNBMVzwhfY5KMStA
-         Dh3g==
-X-Gm-Message-State: AO0yUKWxDIGuFbpoZTzMAE3BkeRREzaVyRrMHplWBvpE7yeLu/YareUD
-        st/67zpZPrJhwGvE+8+w11QxhLsSbDnoSWt9JBYqh1VhnYsuC1XxsoI1NwCeVvJg28SiO9hpygd
-        DQtHKQHzqbhv5eOgCPRL/ui0Kf7lVBcVRh0a3ve/Ocdn7+6eKCGJCAGPBFmsD6tVcoVgKLBre8y
-        b6SFR5/Aw=
-X-Google-Smtp-Source: AK7set8hKbtjVTUbgH1GZJmtR6KlNn1tV/jhzULwLGrEZ0oPBPaX5mZuTzV+8H33Y9JDFJF5jcQLQw==
-X-Received: by 2002:a17:902:cec5:b0:19a:6acc:1de2 with SMTP id d5-20020a170902cec500b0019a6acc1de2mr3186707plg.35.1677593344289;
-        Tue, 28 Feb 2023 06:09:04 -0800 (PST)
+        bh=ayYvdeRbVGYYaSZ524Y0Mf1rh4wEW+6hdtCnqkadsKA=;
+        b=ukKFNX2+aW/wHFbVXQNS+N+BBJVle0d5VxEvH27WzK+t/ms0nZ1yxthZHFREYu/bxf
+         zEU8ouOgx1V3X7GPbq2Lib/N41YszYyiiBUc+j7/HV/tYTf7vPSK3SxwWlAAUTJoCPTa
+         b/Z6+t7mROGnLPJTqCD81n+4+R25U12nJgtMnMXac8ttfOaIgkpVocPFu771JCRqNugi
+         mx+ccj7jIzymeu2t0iR2JPC8bUU1feY5SSY+f37zeggMpbr6KZIK96ULTibDcT4GRGD0
+         qBWMPoADvz28fH4TnDZuIQPTESNO7l61YzAs6cl8hJAhXaFEHPTCo+0s+nZI5e25rAeN
+         aHOw==
+X-Gm-Message-State: AO0yUKUJJXWtXMmpUOQ0KHNjb0zxmRjv/ksnI/cQFgA9jZJYO+V4MFx/
+        0ggJ++3FKoG5xGAZ0f4nkw6Hv+O1Fh9OyQbRBF8yEYdXrGkdZh63Dqn4UC80l9B7Ddy1sqytg3e
+        zg+M5rKmKeY34cDk2tFstdn0tWJ+rT722cHPDndqHSjVM/PE24XGIDuliN5UOFN7Z6fai/qKM2r
+        VVR7rVTPE=
+X-Google-Smtp-Source: AK7set9GBUe7eBZddKr546vRvzobZ9EYITSv8cdSfQp+0F6GKFQfTYeCVF9fUFnhODXQQCJFYk7T0w==
+X-Received: by 2002:a17:902:daca:b0:19a:945d:e31 with SMTP id q10-20020a170902daca00b0019a945d0e31mr3830332plx.13.1677593346905;
+        Tue, 28 Feb 2023 06:09:06 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.09.01
+        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.09.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Feb 2023 06:09:03 -0800 (PST)
+        Tue, 28 Feb 2023 06:09:06 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 4/6] mpi3mr: appropriate return values for failures in firmware init path
-Date:   Tue, 28 Feb 2023 06:08:33 -0800
-Message-Id: <20230228140835.4075-5-ranjan.kumar@broadcom.com>
+Subject: [PATCH 5/6] mpi3mr: NVMe commands size greater than 8K fails
+Date:   Tue, 28 Feb 2023 06:08:34 -0800
+Message-Id: <20230228140835.4075-6-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 References: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000006473b205f5c323e0"
+        boundary="0000000000008c42f105f5c3234e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000006473b205f5c323e0
+--0000000000008c42f105f5c3234e
 Content-Transfer-Encoding: 8bit
 
-The driver is modified to return a proper non-zero return value for all
-the cases when the controller initialization and re-initialization fails.
+A wrong variable is checked while populating PRP entries in the PRP
+page and that results in failure .Hence no PRP entries in the PRP
+page were successfully created and any NVMe Encapsulated commands
+with PRP of size greater than 8K failed
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index e5c0bc6d47d5..8f20dc87bebf 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3856,8 +3856,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 	dprint_init(mrioc, "allocating config page buffers\n");
- 	mrioc->cfg_page = dma_alloc_coherent(&mrioc->pdev->dev,
- 	    MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL);
--	if (!mrioc->cfg_page)
-+	if (!mrioc->cfg_page) {
-+		retval = -1;
- 		goto out_failed_noretry;
-+	}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 9baac224b213..49318ba893c8 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -894,7 +894,7 @@ static int mpi3mr_build_nvme_prp(struct mpi3mr_ioc *mrioc,
+ 			 * each time through the loop.
+ 			 */
+ 			*prp_entry = cpu_to_le64(dma_addr);
+-			if (*prp1_entry & sgemod_mask) {
++			if (*prp_entry & sgemod_mask) {
+ 				dprint_bsg_err(mrioc,
+ 				    "%s: PRP address collides with SGE modifier\n",
+ 				    __func__);
+@@ -903,7 +903,7 @@ static int mpi3mr_build_nvme_prp(struct mpi3mr_ioc *mrioc,
+ 			*prp_entry &= ~sgemod_mask;
+ 			*prp_entry |= sgemod_val;
+ 			prp_entry++;
+-			prp_entry_dma++;
++			prp_entry_dma += prp_size;
+ 		}
  
- 	mrioc->cfg_page_sz = MPI3MR_DEFAULT_CFG_PAGE_SZ;
- 
-@@ -3919,8 +3921,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		dprint_init(mrioc, "allocating memory for throttle groups\n");
- 		sz = sizeof(struct mpi3mr_throttle_group_info);
- 		mrioc->throttle_groups = kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
--		if (!mrioc->throttle_groups)
-+		if (!mrioc->throttle_groups) {
-+			retval = -1;
- 			goto out_failed_noretry;
-+		}
- 	}
- 
- 	retval = mpi3mr_enable_events(mrioc);
-@@ -3940,6 +3944,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		mpi3mr_memset_buffers(mrioc);
- 		goto retry_init;
- 	}
-+	retval = -1;
- out_failed_noretry:
- 	ioc_err(mrioc, "controller initialization failed\n");
- 	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
-@@ -4052,6 +4057,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
- 		ioc_err(mrioc,
- 		    "cannot create minimum number of operational queues expected:%d created:%d\n",
- 		    mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
-+		retval = -1;
- 		goto out_failed_noretry;
- 	}
- 
-@@ -4118,6 +4124,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
- 		mpi3mr_memset_buffers(mrioc);
- 		goto retry_init;
- 	}
-+	retval = -1;
- out_failed_noretry:
- 	ioc_err(mrioc, "controller %s is failed\n",
- 	    (is_resume)?"resume":"re-initialization");
+ 		/*
 -- 
 2.31.1
 
 
---0000000000006473b205f5c323e0
+--0000000000008c42f105f5c3234e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -204,13 +176,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJb7itCbrNdBycT/yaWRFo3T6f4hpDZB
-P29yFnUKi2rWMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-ODE0MDkwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIbK1gqvcLZf/NJ4WfaoxGZMqnkcCyBv
+zKNTlvheAf7YMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+ODE0MDkwN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCD4hn9rksOISWaLqoYSU1TEuW1lVDmvAUo8mMTHNMYE2RoM30p
-ePtNBqbt6Clj6BvDSmKZnCql4V114P31qWbSH3F1lJCOEwx21q04b+6XA7Q/HxfhVl6SNJ1tIKuC
-FHuipZr/xyDk4rAfj+T6jJMPokj5aiP+dIqqQaV/eMtALyZMl9jsy0S9j8ri8LPfmD+5BJVaNM0n
-NDEcs6EvhxjcbJkZcyvOKws0t4PaIJy2jLT/Nnoixpc/1hR93il68s9Y+/RAxHg0FQBarfSFmu6N
-GUpVN6TlhPFDrC5bY0p+tbrZMnmT60kialkJfi8sNuEWPbPDyIvOnOoXeQ7k9+Yv
---0000000000006473b205f5c323e0--
+ATANBgkqhkiG9w0BAQEFAASCAQCFLglrpPuL54xdCHy65lowYF/c448BVowgbH9e7wgwBbZxaP3J
+4kLN9rltosFc9gJ8+Z6s/bCXWOjmSfAMGuzyk6JbJUvnT1xOs2sGMYs/GovUD/VSPbGvzyLY2jX/
+TzYR5+g+T0Ilaj9ZYI2WCPPj9GsBNFg2ss4PJ2kitbaJ8kP9eU1+5JSpm0qZE8suJq9+/vGjmS6+
+hfFnO93yogNye4Qv5PR8hi+gPZjZCjwFae550bP9/JiHE0yD4miAOihW+5Tt80WTf06hvPolFfD/
+mNOdQ0yPqY2CuLalvRxBjJO/EVdv8ZjrV9zMrlPfbWfXOkTrBB5J9MT3ZOWO4H2t
+--0000000000008c42f105f5c3234e--
