@@ -2,185 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BBFC64ED6
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE886C64EC7
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229818AbjB1OJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Feb 2023 09:09:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39416 "EHLO
+        id S229821AbjB1OJG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Feb 2023 09:09:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229821AbjB1OJC (ORCPT
+        with ESMTP id S229812AbjB1OJC (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:02 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E78F540C5
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:08:56 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id u5so7152834plq.7
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:08:56 -0800 (PST)
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6862A5D8
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:08:59 -0800 (PST)
+Received: by mail-pl1-x62d.google.com with SMTP id p6so9709976plf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:08:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=DPAZ+DyQMPqAhaZ6QueG0f3uMjOUkdP2TgQuzmJmNCg=;
-        b=Iovp/w0gmqRFvY08uYbNzcsoi75wBM6zPzYPLElzMPIWV4qzaDpwAyNly8m/bbGzZ1
-         b2XynANeu16wNKDzJPJu92FkxUP4AXhQxURMw1zquO36ZTjrBJjL95TY6A45KPKIaWrE
-         5S+EPQhGS+ND/0Y42+UUqP9JXdPSVTWFQ4DXA=
+        bh=Ytn0DtbefU3swaCSf2rHim4DT8rE+pH1jf2M+JdD3KI=;
+        b=P6LMcG07eguW74mPnaLjRkFBCGHQoFEd7DoP4zDtXDwdQoiLc5XCH6zdb/mv9tYrpU
+         W+D3tyhL/dz5GyZnFtUkvIZuHKu7ks7+5beEES5TOKnK0cv5R4eETxC6fmM8/Q0EvmEM
+         95te9Xl65FEdsWdGuTUMcwNznvKj4q+dWc2EY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DPAZ+DyQMPqAhaZ6QueG0f3uMjOUkdP2TgQuzmJmNCg=;
-        b=DuKCi/+haGIA7XWkbiqp/Y0Mj1ZKhfuW2kddeexgy/aHmJNeZ/nN/4Rg7MeQ2SkE5E
-         BsTVC1/FH5n/9v80Shbc8Bc46vr2YkO/vYqXj3f8yICvEG6u3i0py4Ew+uTF5Ocb1Rbl
-         dSmieh5CrID0xnLW+N/eAIW/qfM2Bh3b5igDzfE9bBhGklyOOj8mHoh4EUtt9Aox+PEh
-         yvN2I8QAnZsSVUaN96YAAK5a+zbinXQma2tRoRa96F98KuzfFY7Ho53fBxusOKcFXJnU
-         uUWTPs7OJh8W9tWHmRZ1M4FaOKc5eYAQunl2ty7DZ2KwwzsKyMA37y6KfJ512XeB1ZI4
-         3XNw==
-X-Gm-Message-State: AO0yUKV378uj3GZUq/G+hX/LQG19jx3kQEYkSc4Q16syvyUEUu6fbU52
-        wMc6eGLvi8RfIir0c05O1uCc5QXkAMo8aQnsCy/h7+N8pgbcO8jE62dc5yUOhbREmsKmCMufH3T
-        UhCjlCPS1Ll1svziGOl5ZFxUKJ3QPke7l3E5W8vmb7yMMJHN5nmrjxFHhiGucreYHLSxw6Nq6xh
-        a0l/pUwpE=
-X-Google-Smtp-Source: AK7set+6rsJI/w2ufJ2EkfcqOzMLXwFZ2c/2tdFzGHgbhMPZqcDzl40llVjFwG2kQEHcsc8vc0Qyhg==
-X-Received: by 2002:a17:902:dac8:b0:19c:fc41:2dfd with SMTP id q8-20020a170902dac800b0019cfc412dfdmr3376207plx.29.1677593336108;
-        Tue, 28 Feb 2023 06:08:56 -0800 (PST)
+        bh=Ytn0DtbefU3swaCSf2rHim4DT8rE+pH1jf2M+JdD3KI=;
+        b=b+wUux3NQ0kj14qsLe4Bul8ZXsBOLglZfYxWIWcHGEXWBovQrFoNGehsmKvpraJrnL
+         gq39yTWNyY3dFTce9Rv0aOZS5nPPHflT7APKpu4HMFd3jhncA1EcBPe06DE/ojrTM2M0
+         ObsZiwOwuuSFM+5D1XN04TNOEJEq7nBwpOnTWlCUIVrqILB/vz4yrKnDdzk7DIdmsdYN
+         KbttHkeOg4wn8/oOw5QFUpWHTUkrnXTuvIeSw3gqw5qpSXOVaAh3BGD0+awjWqNvRNOh
+         5EnkKjSS7xV+eGygdGrPomOn568B4M1laCc1NnapMVKuBZVmEoqCT2xsvxkkrjPGpXuQ
+         ZGAQ==
+X-Gm-Message-State: AO0yUKX+Zoh/C286grQ3Z0PYHOaF1n9+8VX+1RNKgdFwzY7n7CbbTpVU
+        oqwNWuxU1onH1filraBs0fSVPe+REBNuwkK0SXv6lGnBdbeYID4OBNx7TU7I84pD2UQwyjK3d2G
+        z7IgQrB2jTpsg2Q9dDNaZUlqbQjPq32H3IWE6QlHIjAMW9PeBuk7gTR7eDQ6vNPVMs0zi5quHK9
+        MWi4HZdrE=
+X-Google-Smtp-Source: AK7set+P20j/cs7R4q6fJxRo3I/qDMqwmvnAFeSgBx0iH4HWjxd0vxMgkNiVK4O7aR3bqK0WPT9Dzw==
+X-Received: by 2002:a17:902:ec91:b0:19a:a80e:a6d5 with SMTP id x17-20020a170902ec9100b0019aa80ea6d5mr3269267plg.23.1677593338711;
+        Tue, 28 Feb 2023 06:08:58 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.08.53
+        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.08.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Feb 2023 06:08:55 -0800 (PST)
+        Tue, 28 Feb 2023 06:08:58 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 1/6] mpi3mr: IOCTL timeout when disable/enable Interpt
-Date:   Tue, 28 Feb 2023 06:08:30 -0800
-Message-Id: <20230228140835.4075-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH 2/6] mpi3mr: Driver unload crash host when enhanced logging is enabled
+Date:   Tue, 28 Feb 2023 06:08:31 -0800
+Message-Id: <20230228140835.4075-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 References: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000e6b8b405f5c32290"
+        boundary="00000000000012a15105f5c323c5"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000e6b8b405f5c32290
+--00000000000012a15105f5c323c5
 Content-Transfer-Encoding: 8bit
 
-As part of Task Management handling, the driver will disable and
-enable the MSIx index zero which belongs to the Admin reply queue. And
-while enabling the interrupts driver loses some interrupts and it
-leads to Admin requests such as IOCTL timeout. So, after enabling the
-interrupts, poll the Admin reply queue to avoid timeouts.
+Driver was trying to access null pointer in a debug print
+while removing a device during driver unload
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  3 +++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 12 ++++++++++--
- drivers/scsi/mpi3mr/mpi3mr_os.c |  1 +
- 3 files changed, 14 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index def4c5e15cd8..24e6b1f71107 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -903,6 +903,7 @@ struct scmd_priv {
-  * @admin_reply_ephase:Admin reply queue expected phase
-  * @admin_reply_base: Admin reply queue base virtual address
-  * @admin_reply_dma: Admin reply queue base dma address
-+ * @admin_reply_q_in_use: Queue is handled by poll/ISR
-  * @ready_timeout: Controller ready timeout
-  * @intr_info: Interrupt cookie pointer
-  * @intr_info_count: Number of interrupt cookies
-@@ -1059,6 +1060,7 @@ struct mpi3mr_ioc {
- 	u8 admin_reply_ephase;
- 	void *admin_reply_base;
- 	dma_addr_t admin_reply_dma;
-+	atomic_t admin_reply_q_in_use;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index 3fc897336b5e..584daf8a3ac9 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -1552,7 +1552,8 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
  
- 	u32 ready_timeout;
- 
-@@ -1397,4 +1399,5 @@ void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc);
- void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc);
-+int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc);
- #endif /*MPI3MR_H_INCLUDED*/
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 0c4aabaefdcc..e7ea3f7b9205 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -415,7 +415,7 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 		    le64_to_cpu(scsi_reply->sense_data_buffer_address));
- }
- 
--static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
-+int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- {
- 	u32 exp_phase = mrioc->admin_reply_ephase;
- 	u32 admin_reply_ci = mrioc->admin_reply_ci;
-@@ -423,12 +423,17 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 	u64 reply_dma = 0;
- 	struct mpi3_default_reply_descriptor *reply_desc;
- 
-+	if (!atomic_add_unless(&mrioc->admin_reply_q_in_use, 1, 1))
-+		return 0;
-+
- 	reply_desc = (struct mpi3_default_reply_descriptor *)mrioc->admin_reply_base +
- 	    admin_reply_ci;
- 
- 	if ((le16_to_cpu(reply_desc->reply_flags) &
--	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
-+	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
-+		atomic_dec(&mrioc->admin_reply_q_in_use);
- 		return 0;
-+	}
- 
- 	do {
- 		if (mrioc->unrecoverable)
-@@ -454,6 +459,7 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 	writel(admin_reply_ci, &mrioc->sysif_regs->admin_reply_queue_ci);
- 	mrioc->admin_reply_ci = admin_reply_ci;
- 	mrioc->admin_reply_ephase = exp_phase;
-+	atomic_dec(&mrioc->admin_reply_q_in_use);
- 
- 	return num_admin_replies;
- }
-@@ -2608,6 +2614,7 @@ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc)
- 	mrioc->admin_reply_ci = 0;
- 	mrioc->admin_reply_ephase = 1;
- 	mrioc->admin_reply_base = NULL;
-+	atomic_set(&mrioc->admin_reply_q_in_use, 0);
- 
- 	if (!mrioc->admin_req_base) {
- 		mrioc->admin_req_base = dma_alloc_coherent(&mrioc->pdev->dev,
-@@ -4171,6 +4178,7 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 		memset(mrioc->admin_req_base, 0, mrioc->admin_req_q_sz);
- 	if (mrioc->admin_reply_base)
- 		memset(mrioc->admin_reply_base, 0, mrioc->admin_reply_q_sz);
-+	atomic_set(&mrioc->admin_reply_q_in_use, 0);
- 
- 	if (mrioc->init_cmds.reply) {
- 		memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 3306de7170f6..2ba1b7641bc2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3720,6 +3720,7 @@ int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
- 		mpi3mr_poll_pend_io_completions(mrioc);
- 		mpi3mr_ioc_enable_intr(mrioc);
- 		mpi3mr_poll_pend_io_completions(mrioc);
-+		mpi3mr_process_admin_reply_q(mrioc);
- 	}
- 	switch (tm_type) {
- 	case MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
+ 	list_for_each_entry_safe(mr_sas_phy, next_phy,
+ 	    &mr_sas_port->phy_list, port_siblings) {
+-		if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
++		if ((!mrioc->stop_drv_processing) &&
++		    (mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
+ 			dev_info(&mr_sas_port->port->dev,
+ 			    "remove: sas_address(0x%016llx), phy(%d)\n",
+ 			    (unsigned long long)
 -- 
 2.31.1
 
 
---000000000000e6b8b405f5c32290
+--00000000000012a15105f5c323c5
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -251,13 +166,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHrnOpIBI287TWHN1GcikmjkGlA7OMUk
-YrXiDdQ2RjGTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-ODE0MDg1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINQrFNgXZJEkiRhOyLzQGuq5hRBZjpzX
+FwgDdtvLMM7sMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+ODE0MDg1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCc4hBfI4Lza1crKCvMahUDFU8w7vx7TWc+LpIVOdqxxusqyepP
-o8wIf09gY8OCrRL8y86jwbDW3OB0irl0QBnwbfs87KBcEoAn/Bj1ldRsFe3sWrqUpxKPFPZU0D/k
-cnTYeG8bvgSlOVaf41U6n9HcT1iiALFykv8E3BzmwqQdp7H1saBaLelA/9zbclb2p+5b3N3u3rdO
-5+0RLDDg0UM6p64XORi2jQgEg8XTuheSL2xZx4qoGugVtMqlPA3cgT5h07lsHQzczKzUiwb1zFcH
-8SwhSAnRv794wX4iYZsPEnEZM/YPfD47Bya3xhhw4KL2110EOIMyY19tgHBtSR62
---000000000000e6b8b405f5c32290--
+ATANBgkqhkiG9w0BAQEFAASCAQB03e8CMFv1cMKi+QLiASP6Ew3lB+EoqOPStGC/QSoo2g02UhS/
+89xt1aZM1MfYd9Bkgyrvib8Lff2BFPOq5JBFJb05tYuopW1hptyjwLHw2qDG2s94v1go3H/zqcrr
+GZQNEiVTpS4BCT4rplrbEbwO5BiWIP2LXZG+taavzpNm+n3r1q2zmP5H4hBrUC4ZgqHV1fg/VUcg
+/flDIkRg4+xRlH/Q2Pf1T+RYymmU7F11pz0uJ3E8XMbIdL7Gtp6RPA9waXAf2AzhfPezUBxHhVMA
+jyKWG38/lORy5t7xw3pzwnl0F7HX+EsdZjLDkmVlioiunYVWDGvK89bLVaaLCqg+
+--00000000000012a15105f5c323c5--
