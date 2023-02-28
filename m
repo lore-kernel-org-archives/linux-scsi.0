@@ -2,125 +2,138 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09010C64EC7
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BBCFC64ED6
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229825AbjB1OJH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Feb 2023 09:09:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39456 "EHLO
+        id S229830AbjB1OJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Feb 2023 09:09:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229816AbjB1OJE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:04 -0500
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38B4E3A8E
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:02 -0800 (PST)
-Received: by mail-pl1-x631.google.com with SMTP id ky4so10576497plb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:02 -0800 (PST)
+        with ESMTP id S229822AbjB1OJG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:06 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DEB840C5
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:05 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id cp7-20020a17090afb8700b0023756229427so13831699pjb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=BkvNywLQA1LEffvNBLuzG6qT4Ha0dSCflwL/WKv/nlc=;
-        b=YUHPIoS4XSmhIx3idMjeq/toBzsWHxp4CFQ0Ohd3Bf5KcjQo0T4PuNNA8HrNrz80eB
-         pprMJxgKBdJhLD3WhKPLYfXApaXwMUR+J+GGMkig/E8q8vLbvOEkdPlpSbab4H5RlxZ6
-         Wayk7OnUErCdoHwr/s85uWakBgxefilTLV/XE=
+        bh=grBjESVZbPi8N4EXwWQUFkUyNL7XllQP0w9XKOIgcww=;
+        b=bvTrIBUYvfJCMo5OHMtfoDh83s4cFfioRzxGqTiIL9H66KgANrDS7rBxeG6U/7IdhA
+         12xX3sGdKbfu0qCeUS5VjwZl6fhLSkn4BHjblerH7nypguJCvsvtSE1HxOLEwzSgk30L
+         nKPrl8GJwLhez46h4y5jGq9khIiwaVZ4h+AMU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BkvNywLQA1LEffvNBLuzG6qT4Ha0dSCflwL/WKv/nlc=;
-        b=av3AUUGizgcuFK/m94AfxGVq5YJBqUiD7AZwh3mDqNMxiOo1egcqBdG9+hUmhnBKDd
-         h35q++t7wHSqz9zxGTXzNymxl2q3kR00aZFd4a3TYnYOD9WdN10K4QYWd0oK9bC6Kgp7
-         oGDiRhHrYgdZX1FnS8HwbQldVQOy/xQxe//cEOFLy0OUlnKvGc+Z68fX78/QVdsInrMa
-         dyv2k2WBHqwn4JvvpZAiU1OFdehZALn2S/oIS7BjEZU778+Q/KSCyh+aSlTlXTXzFWIa
-         BXTZYusgxtXhKnpN4o65TacRLCSfo/SuzB5rrqptdE5m9GhpUMETY6lC8DvlzY904ITE
-         A+IQ==
-X-Gm-Message-State: AO0yUKU/uCBQQsOpKyr23az1FJS137gDC63AS+NsNo5ExhwraE11ki2z
-        89pXp6SztnQESsGFXcNR9GlYKqwjpOll7bbuerEUam1I4RMGRdohV3dLG2WEqybxKTx6Mj/zJe3
-        p6qzpX0f123lPk9D7pG7NQKNeXUeBT4UcQ+mMfl7PoSxptHIaKFFVns0B0/TnVox1VgKbGUGgUB
-        35PSD3ffs=
-X-Google-Smtp-Source: AK7set9OIc1exP/rL+T7lAH+rsTM4x6J5MAxr3KZ/TpedOpecyv9wm3TjP8TfHqH4tRIK7ZpHfjFkg==
-X-Received: by 2002:a17:902:7c97:b0:19d:244:a3a8 with SMTP id y23-20020a1709027c9700b0019d0244a3a8mr2274268pll.10.1677593341339;
-        Tue, 28 Feb 2023 06:09:01 -0800 (PST)
+        bh=grBjESVZbPi8N4EXwWQUFkUyNL7XllQP0w9XKOIgcww=;
+        b=vPd5eRD7Ob7f3Mb7bpt6u8nDXanGn/hsAIYBsng8QnklDUcfySEZ5XTY0g/ewV5BpX
+         IrHhWiTRmvkaLJEW49PUistVm65E8Dg9pc+fm/kVn+qrI25QcN3SXdKfkzXeUEF6pKnV
+         H+pw3uuHxOdaMJXcfjD4xfGrVs4lpdgQTBNnGciK+wJNQoXFBbxwC+WspMqUzs8MfJC0
+         9fyzcyJTqskXOi3cw4vR43myIrwOyuSUSWSEhWryPUhjjAo5Whrdd67Twkvy7CjZ1Ec4
+         tMXaVq0oJqFcpUJsdgZCapa98o6px8eX0TB1FTfkH4sgN2j8Dl44YNBMVzwhfY5KMStA
+         Dh3g==
+X-Gm-Message-State: AO0yUKWxDIGuFbpoZTzMAE3BkeRREzaVyRrMHplWBvpE7yeLu/YareUD
+        st/67zpZPrJhwGvE+8+w11QxhLsSbDnoSWt9JBYqh1VhnYsuC1XxsoI1NwCeVvJg28SiO9hpygd
+        DQtHKQHzqbhv5eOgCPRL/ui0Kf7lVBcVRh0a3ve/Ocdn7+6eKCGJCAGPBFmsD6tVcoVgKLBre8y
+        b6SFR5/Aw=
+X-Google-Smtp-Source: AK7set8hKbtjVTUbgH1GZJmtR6KlNn1tV/jhzULwLGrEZ0oPBPaX5mZuTzV+8H33Y9JDFJF5jcQLQw==
+X-Received: by 2002:a17:902:cec5:b0:19a:6acc:1de2 with SMTP id d5-20020a170902cec500b0019a6acc1de2mr3186707plg.35.1677593344289;
+        Tue, 28 Feb 2023 06:09:04 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.08.59
+        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.09.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Feb 2023 06:09:00 -0800 (PST)
+        Tue, 28 Feb 2023 06:09:03 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 3/6] mpi3mr: Wait for diagnostic save during controller init
-Date:   Tue, 28 Feb 2023 06:08:32 -0800
-Message-Id: <20230228140835.4075-4-ranjan.kumar@broadcom.com>
+Subject: [PATCH 4/6] mpi3mr: appropriate return values for failures in firmware init path
+Date:   Tue, 28 Feb 2023 06:08:33 -0800
+Message-Id: <20230228140835.4075-5-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 References: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000037626e05f5c3231a"
+        boundary="0000000000006473b205f5c323e0"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000037626e05f5c3231a
+--0000000000006473b205f5c323e0
 Content-Transfer-Encoding: 8bit
 
-If the controller reset operation is triggered to recover the
-controller from the fault state then wait for the snapdump to
-be saved in the firmware region before proceeding for
-resetting the controller.
+The driver is modified to return a proper non-zero return value for all
+the cases when the controller initialization and re-initialization fails.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index e7ea3f7b9205..e5c0bc6d47d5 100644
+index e5c0bc6d47d5..8f20dc87bebf 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1201,7 +1201,7 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
-  */
- static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
- {
--	u32 ioc_config, ioc_status, timeout;
-+	u32 ioc_config, ioc_status, timeout, host_diagnostic;
- 	int retval = 0;
- 	enum mpi3mr_iocstate ioc_state;
- 	u64 base_info;
-@@ -1255,6 +1255,23 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
- 			    retval, mpi3mr_iocstate_name(ioc_state));
- 	}
- 	if (ioc_state != MRIOC_STATE_RESET) {
-+		if (ioc_state == MRIOC_STATE_FAULT) {
-+			timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
-+			mpi3mr_print_fault_info(mrioc);
-+			do {
-+				host_diagnostic =
-+					readl(&mrioc->sysif_regs->host_diagnostic);
-+				if (!(host_diagnostic &
-+				      MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS))
-+					break;
-+				if (!pci_device_is_present(mrioc->pdev)) {
-+					mrioc->unrecoverable = 1;
-+					ioc_err(mrioc, "controller is not present at the bringup\n");
-+					goto out_device_not_present;
-+				}
-+				msleep(100);
-+			} while (--timeout);
+@@ -3856,8 +3856,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	dprint_init(mrioc, "allocating config page buffers\n");
+ 	mrioc->cfg_page = dma_alloc_coherent(&mrioc->pdev->dev,
+ 	    MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL);
+-	if (!mrioc->cfg_page)
++	if (!mrioc->cfg_page) {
++		retval = -1;
+ 		goto out_failed_noretry;
++	}
+ 
+ 	mrioc->cfg_page_sz = MPI3MR_DEFAULT_CFG_PAGE_SZ;
+ 
+@@ -3919,8 +3921,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		dprint_init(mrioc, "allocating memory for throttle groups\n");
+ 		sz = sizeof(struct mpi3mr_throttle_group_info);
+ 		mrioc->throttle_groups = kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
+-		if (!mrioc->throttle_groups)
++		if (!mrioc->throttle_groups) {
++			retval = -1;
+ 			goto out_failed_noretry;
 +		}
- 		mpi3mr_print_fault_info(mrioc);
- 		ioc_info(mrioc, "issuing soft reset to bring to reset state\n");
- 		retval = mpi3mr_issue_reset(mrioc,
+ 	}
+ 
+ 	retval = mpi3mr_enable_events(mrioc);
+@@ -3940,6 +3944,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		mpi3mr_memset_buffers(mrioc);
+ 		goto retry_init;
+ 	}
++	retval = -1;
+ out_failed_noretry:
+ 	ioc_err(mrioc, "controller initialization failed\n");
+ 	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
+@@ -4052,6 +4057,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		ioc_err(mrioc,
+ 		    "cannot create minimum number of operational queues expected:%d created:%d\n",
+ 		    mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
++		retval = -1;
+ 		goto out_failed_noretry;
+ 	}
+ 
+@@ -4118,6 +4124,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		mpi3mr_memset_buffers(mrioc);
+ 		goto retry_init;
+ 	}
++	retval = -1;
+ out_failed_noretry:
+ 	ioc_err(mrioc, "controller %s is failed\n",
+ 	    (is_resume)?"resume":"re-initialization");
 -- 
 2.31.1
 
 
---00000000000037626e05f5c3231a
+--0000000000006473b205f5c323e0
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -191,13 +204,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINl2RmjnhyZDGl6aaho4+S3yZaJRWUkY
-jXj8wnL6chF7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-ODE0MDkwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJb7itCbrNdBycT/yaWRFo3T6f4hpDZB
+P29yFnUKi2rWMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+ODE0MDkwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQADX+baQee814RzKLZ7zpOUKoCw1Qy4eC/iI/2mIAr1k/gbLQqm
-g9gnT10eeryxWQjDOgFiRIeN/WAk3Pt51vKUbfsNFuTOry5ZSSu3o0gENnah9fhikWZdTE1p0hNm
-fMbr1iSdrlJzqTVjqYsHIF+RZlhftgHJbzDlsJ/0FsMkZ6v9FnkPaA2WXr8gNeC8K0noOMgzq47c
-3Pp7dgaB90Ab3feT0Z6eVw5+iZIS6HZEJeADLfXuvcU14gBL3JrcJmqEikT+/Gs17djuYO6zF2RL
-LZ5Z/jeBHD66M8Ns9XCu0R2d8nzP745bSEpgUduySxH6LWRZR6oINfYRxxVtFsVf
---00000000000037626e05f5c3231a--
+ATANBgkqhkiG9w0BAQEFAASCAQCD4hn9rksOISWaLqoYSU1TEuW1lVDmvAUo8mMTHNMYE2RoM30p
+ePtNBqbt6Clj6BvDSmKZnCql4V114P31qWbSH3F1lJCOEwx21q04b+6XA7Q/HxfhVl6SNJ1tIKuC
+FHuipZr/xyDk4rAfj+T6jJMPokj5aiP+dIqqQaV/eMtALyZMl9jsy0S9j8ri8LPfmD+5BJVaNM0n
+NDEcs6EvhxjcbJkZcyvOKws0t4PaIJy2jLT/Nnoixpc/1hR93il68s9Y+/RAxHg0FQBarfSFmu6N
+GUpVN6TlhPFDrC5bY0p+tbrZMnmT60kialkJfi8sNuEWPbPDyIvOnOoXeQ7k9+Yv
+--0000000000006473b205f5c323e0--
