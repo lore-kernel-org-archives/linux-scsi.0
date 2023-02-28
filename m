@@ -2,100 +2,125 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE886C64EC7
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09010C64EC7
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Feb 2023 14:09:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229821AbjB1OJG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Feb 2023 09:09:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39424 "EHLO
+        id S229825AbjB1OJH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Feb 2023 09:09:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229812AbjB1OJC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:02 -0500
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6862A5D8
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:08:59 -0800 (PST)
-Received: by mail-pl1-x62d.google.com with SMTP id p6so9709976plf.0
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:08:59 -0800 (PST)
+        with ESMTP id S229816AbjB1OJE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 09:09:04 -0500
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38B4E3A8E
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:02 -0800 (PST)
+Received: by mail-pl1-x631.google.com with SMTP id ky4so10576497plb.3
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2023 06:09:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ytn0DtbefU3swaCSf2rHim4DT8rE+pH1jf2M+JdD3KI=;
-        b=P6LMcG07eguW74mPnaLjRkFBCGHQoFEd7DoP4zDtXDwdQoiLc5XCH6zdb/mv9tYrpU
-         W+D3tyhL/dz5GyZnFtUkvIZuHKu7ks7+5beEES5TOKnK0cv5R4eETxC6fmM8/Q0EvmEM
-         95te9Xl65FEdsWdGuTUMcwNznvKj4q+dWc2EY=
+        bh=BkvNywLQA1LEffvNBLuzG6qT4Ha0dSCflwL/WKv/nlc=;
+        b=YUHPIoS4XSmhIx3idMjeq/toBzsWHxp4CFQ0Ohd3Bf5KcjQo0T4PuNNA8HrNrz80eB
+         pprMJxgKBdJhLD3WhKPLYfXApaXwMUR+J+GGMkig/E8q8vLbvOEkdPlpSbab4H5RlxZ6
+         Wayk7OnUErCdoHwr/s85uWakBgxefilTLV/XE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ytn0DtbefU3swaCSf2rHim4DT8rE+pH1jf2M+JdD3KI=;
-        b=b+wUux3NQ0kj14qsLe4Bul8ZXsBOLglZfYxWIWcHGEXWBovQrFoNGehsmKvpraJrnL
-         gq39yTWNyY3dFTce9Rv0aOZS5nPPHflT7APKpu4HMFd3jhncA1EcBPe06DE/ojrTM2M0
-         ObsZiwOwuuSFM+5D1XN04TNOEJEq7nBwpOnTWlCUIVrqILB/vz4yrKnDdzk7DIdmsdYN
-         KbttHkeOg4wn8/oOw5QFUpWHTUkrnXTuvIeSw3gqw5qpSXOVaAh3BGD0+awjWqNvRNOh
-         5EnkKjSS7xV+eGygdGrPomOn568B4M1laCc1NnapMVKuBZVmEoqCT2xsvxkkrjPGpXuQ
-         ZGAQ==
-X-Gm-Message-State: AO0yUKX+Zoh/C286grQ3Z0PYHOaF1n9+8VX+1RNKgdFwzY7n7CbbTpVU
-        oqwNWuxU1onH1filraBs0fSVPe+REBNuwkK0SXv6lGnBdbeYID4OBNx7TU7I84pD2UQwyjK3d2G
-        z7IgQrB2jTpsg2Q9dDNaZUlqbQjPq32H3IWE6QlHIjAMW9PeBuk7gTR7eDQ6vNPVMs0zi5quHK9
-        MWi4HZdrE=
-X-Google-Smtp-Source: AK7set+P20j/cs7R4q6fJxRo3I/qDMqwmvnAFeSgBx0iH4HWjxd0vxMgkNiVK4O7aR3bqK0WPT9Dzw==
-X-Received: by 2002:a17:902:ec91:b0:19a:a80e:a6d5 with SMTP id x17-20020a170902ec9100b0019aa80ea6d5mr3269267plg.23.1677593338711;
-        Tue, 28 Feb 2023 06:08:58 -0800 (PST)
+        bh=BkvNywLQA1LEffvNBLuzG6qT4Ha0dSCflwL/WKv/nlc=;
+        b=av3AUUGizgcuFK/m94AfxGVq5YJBqUiD7AZwh3mDqNMxiOo1egcqBdG9+hUmhnBKDd
+         h35q++t7wHSqz9zxGTXzNymxl2q3kR00aZFd4a3TYnYOD9WdN10K4QYWd0oK9bC6Kgp7
+         oGDiRhHrYgdZX1FnS8HwbQldVQOy/xQxe//cEOFLy0OUlnKvGc+Z68fX78/QVdsInrMa
+         dyv2k2WBHqwn4JvvpZAiU1OFdehZALn2S/oIS7BjEZU778+Q/KSCyh+aSlTlXTXzFWIa
+         BXTZYusgxtXhKnpN4o65TacRLCSfo/SuzB5rrqptdE5m9GhpUMETY6lC8DvlzY904ITE
+         A+IQ==
+X-Gm-Message-State: AO0yUKU/uCBQQsOpKyr23az1FJS137gDC63AS+NsNo5ExhwraE11ki2z
+        89pXp6SztnQESsGFXcNR9GlYKqwjpOll7bbuerEUam1I4RMGRdohV3dLG2WEqybxKTx6Mj/zJe3
+        p6qzpX0f123lPk9D7pG7NQKNeXUeBT4UcQ+mMfl7PoSxptHIaKFFVns0B0/TnVox1VgKbGUGgUB
+        35PSD3ffs=
+X-Google-Smtp-Source: AK7set9OIc1exP/rL+T7lAH+rsTM4x6J5MAxr3KZ/TpedOpecyv9wm3TjP8TfHqH4tRIK7ZpHfjFkg==
+X-Received: by 2002:a17:902:7c97:b0:19d:244:a3a8 with SMTP id y23-20020a1709027c9700b0019d0244a3a8mr2274268pll.10.1677593341339;
+        Tue, 28 Feb 2023 06:09:01 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.08.56
+        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b00198e03c3ad4sm6625465plb.278.2023.02.28.06.08.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Feb 2023 06:08:58 -0800 (PST)
+        Tue, 28 Feb 2023 06:09:00 -0800 (PST)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 2/6] mpi3mr: Driver unload crash host when enhanced logging is enabled
-Date:   Tue, 28 Feb 2023 06:08:31 -0800
-Message-Id: <20230228140835.4075-3-ranjan.kumar@broadcom.com>
+Subject: [PATCH 3/6] mpi3mr: Wait for diagnostic save during controller init
+Date:   Tue, 28 Feb 2023 06:08:32 -0800
+Message-Id: <20230228140835.4075-4-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 References: <20230228140835.4075-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000012a15105f5c323c5"
+        boundary="00000000000037626e05f5c3231a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000012a15105f5c323c5
+--00000000000037626e05f5c3231a
 Content-Transfer-Encoding: 8bit
 
-Driver was trying to access null pointer in a debug print
-while removing a device during driver unload
+If the controller reset operation is triggered to recover the
+controller from the fault state then wait for the snapdump to
+be saved in the firmware region before proceeding for
+resetting the controller.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index 3fc897336b5e..584daf8a3ac9 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -1552,7 +1552,8 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
- 
- 	list_for_each_entry_safe(mr_sas_phy, next_phy,
- 	    &mr_sas_port->phy_list, port_siblings) {
--		if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
-+		if ((!mrioc->stop_drv_processing) &&
-+		    (mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
- 			dev_info(&mr_sas_port->port->dev,
- 			    "remove: sas_address(0x%016llx), phy(%d)\n",
- 			    (unsigned long long)
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index e7ea3f7b9205..e5c0bc6d47d5 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1201,7 +1201,7 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
+  */
+ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ {
+-	u32 ioc_config, ioc_status, timeout;
++	u32 ioc_config, ioc_status, timeout, host_diagnostic;
+ 	int retval = 0;
+ 	enum mpi3mr_iocstate ioc_state;
+ 	u64 base_info;
+@@ -1255,6 +1255,23 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 			    retval, mpi3mr_iocstate_name(ioc_state));
+ 	}
+ 	if (ioc_state != MRIOC_STATE_RESET) {
++		if (ioc_state == MRIOC_STATE_FAULT) {
++			timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
++			mpi3mr_print_fault_info(mrioc);
++			do {
++				host_diagnostic =
++					readl(&mrioc->sysif_regs->host_diagnostic);
++				if (!(host_diagnostic &
++				      MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS))
++					break;
++				if (!pci_device_is_present(mrioc->pdev)) {
++					mrioc->unrecoverable = 1;
++					ioc_err(mrioc, "controller is not present at the bringup\n");
++					goto out_device_not_present;
++				}
++				msleep(100);
++			} while (--timeout);
++		}
+ 		mpi3mr_print_fault_info(mrioc);
+ 		ioc_info(mrioc, "issuing soft reset to bring to reset state\n");
+ 		retval = mpi3mr_issue_reset(mrioc,
 -- 
 2.31.1
 
 
---00000000000012a15105f5c323c5
+--00000000000037626e05f5c3231a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -166,13 +191,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINQrFNgXZJEkiRhOyLzQGuq5hRBZjpzX
-FwgDdtvLMM7sMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
-ODE0MDg1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINl2RmjnhyZDGl6aaho4+S3yZaJRWUkY
+jXj8wnL6chF7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDIy
+ODE0MDkwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQB03e8CMFv1cMKi+QLiASP6Ew3lB+EoqOPStGC/QSoo2g02UhS/
-89xt1aZM1MfYd9Bkgyrvib8Lff2BFPOq5JBFJb05tYuopW1hptyjwLHw2qDG2s94v1go3H/zqcrr
-GZQNEiVTpS4BCT4rplrbEbwO5BiWIP2LXZG+taavzpNm+n3r1q2zmP5H4hBrUC4ZgqHV1fg/VUcg
-/flDIkRg4+xRlH/Q2Pf1T+RYymmU7F11pz0uJ3E8XMbIdL7Gtp6RPA9waXAf2AzhfPezUBxHhVMA
-jyKWG38/lORy5t7xw3pzwnl0F7HX+EsdZjLDkmVlioiunYVWDGvK89bLVaaLCqg+
---00000000000012a15105f5c323c5--
+ATANBgkqhkiG9w0BAQEFAASCAQADX+baQee814RzKLZ7zpOUKoCw1Qy4eC/iI/2mIAr1k/gbLQqm
+g9gnT10eeryxWQjDOgFiRIeN/WAk3Pt51vKUbfsNFuTOry5ZSSu3o0gENnah9fhikWZdTE1p0hNm
+fMbr1iSdrlJzqTVjqYsHIF+RZlhftgHJbzDlsJ/0FsMkZ6v9FnkPaA2WXr8gNeC8K0noOMgzq47c
+3Pp7dgaB90Ab3feT0Z6eVw5+iZIS6HZEJeADLfXuvcU14gBL3JrcJmqEikT+/Gs17djuYO6zF2RL
+LZ5Z/jeBHD66M8Ns9XCu0R2d8nzP745bSEpgUduySxH6LWRZR6oINfYRxxVtFsVf
+--00000000000037626e05f5c3231a--
