@@ -2,134 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C90C7EE2D
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 19:03:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 313DDC7EE23
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 19:29:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229775AbjCATDL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 14:03:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42612 "EHLO
+        id S229789AbjCAT3F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 14:29:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229897AbjCATDJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 14:03:09 -0500
-Received: from msg-1.mailo.com (msg-1.mailo.com [213.182.54.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 996E3198F;
-        Wed,  1 Mar 2023 11:03:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1677697377; bh=cTE8O833aYzAtBzmtxia0kjyJ2tDBqNX7A/BHU+wHwQ=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-         Content-Type;
-        b=BIQIMvga/8fS4XjGDpbz4I4R2+p+wh1CXF5dzOTcm97N6LPluhA+h1tuUW3BI4vvt
-         iu0dcW2Dka+XhRJnmKoCN84HWW/ySOa1W0MOh0Fw8AYwTrArLjsyXiUvXpvxibdelW
-         7ChoapauReauPRGwBY59+6HzRhkU3LfCayEm2oJg=
-Received: by b221-1.in.mailobj.net [192.168.90.21] with ESMTP
-        via ip-20.mailobj.net [213.182.54.20]
-        Wed,  1 Mar 2023 20:02:57 +0100 (CET)
-X-EA-Auth: mg8m6pH8EMjB4QW7phrieOJq9PfSRl+dJ/cux7gVD/qyIimpW6+4I5isYtHXYDV/QYVNB1fMXbU5Qh57s8jR9A==
-Date:   Thu, 2 Mar 2023 00:32:45 +0530
-From:   Deepak R Varma <drv@mailo.com>
-To:     Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S229494AbjCAT3E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 14:29:04 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C02D05FCC;
+        Wed,  1 Mar 2023 11:29:03 -0800 (PST)
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 321INt8u001220;
+        Wed, 1 Mar 2023 19:28:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : content-transfer-encoding : mime-version; s=pp1;
+ bh=mwoCZgmqEiqahH9LW1Tt7FC1N1PzUxjkbM41SSBaqCk=;
+ b=re8/2evvPJnTwIwzBaeHt5LtN7XW26D/vaACSeCT+0h80f4vWc4Dt1PDP4VNHBTP97M6
+ Jz5chrtwxNcfXyb53kSriruBOpWG0osrQAlEbvd9IP+w/+etv2bPqnbVEt1a4UUZ+Mog
+ tsEwtI/ZcsHl889NoP3vQVQGOKruYSn2rM5STK66MOPmkA6WD8L6KNwjBPjTNlwQvPwf
+ Y6z/rU35fzqUr+EPCp1eDAO/j1neEzVP17199iyiX6M/8anHiROrSPMyEntcblDdYjDL
+ Dx/EdbGLnWyJfoM1gb8ODzfEYh3MfrMi/ddnsWSSiS7/IfIMlNU9i1jX0+BsPb6+uvRT kw== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3p2bxthnhb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 01 Mar 2023 19:28:54 +0000
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 321H0bJY016417;
+        Wed, 1 Mar 2023 19:28:53 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([9.208.129.116])
+        by ppma02dal.us.ibm.com (PPS) with ESMTPS id 3nybdkxqbg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 01 Mar 2023 19:28:53 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 321JSpNL64356814
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 1 Mar 2023 19:28:51 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8731058062;
+        Wed,  1 Mar 2023 19:28:51 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9E8B058061;
+        Wed,  1 Mar 2023 19:28:50 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.163.79.233])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Wed,  1 Mar 2023 19:28:50 +0000 (GMT)
+Message-ID: <cfe11fadc3d3e61ce6c7d6f00e1e427edea8a4e3.camel@linux.ibm.com>
+Subject: Re: [PATCH RESEND] scsi: libfc: Use refcount_* APIs for reference
+ count management
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Deepak R Varma <drv@mailo.com>, Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
-        Deepak R Varma <drv@mailo.com>
-Subject: [PATCH RESEND] scsi: libfc: Use refcount_* APIs for reference count
- management
-Message-ID: <Y/+hVSSFgeV+yPhY@ubun2204.myguest.virtualbox.org>
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>
+Date:   Wed, 01 Mar 2023 14:28:49 -0500
+In-Reply-To: <Y/+hVSSFgeV+yPhY@ubun2204.myguest.virtualbox.org>
+References: <Y/+hVSSFgeV+yPhY@ubun2204.myguest.virtualbox.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: qwF9oPbUN-OGDwGoLA_Qb4js0v65vxmp
+X-Proofpoint-GUID: qwF9oPbUN-OGDwGoLA_Qb4js0v65vxmp
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-01_14,2023-03-01_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ malwarescore=0 mlxlogscore=915 suspectscore=0 phishscore=0
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 clxscore=1011
+ adultscore=0 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2303010154
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The atomic_t API based object reference counter management is prone to
-counter value overflows, object use-after-free issues and to return
-puzzling values. The improved refcount_t APIs are designed to address
-these known issues with atomic_t reference counter management. This
-white paper [1] has detailed reasons for moving from atomic_t to
-refcount_t APIs. Hence replace the atomic_* based implementation by its
-refcount_* based equivalent.
-The issue is identified using atomic_as_refcounter.cocci Coccinelle
-semantic patch script.
+On Thu, 2023-03-02 at 00:32 +0530, Deepak R Varma wrote:
+> The atomic_t API based object reference counter management is prone
+> to counter value overflows, object use-after-free issues and to
+> return puzzling values. The improved refcount_t APIs are designed to
+> address these known issues with atomic_t reference counter
+> management. This white paper [1] has detailed reasons for moving from
+> atomic_t to refcount_t APIs. Hence replace the atomic_* based
+> implementation by its refcount_* based equivalent.
+> The issue is identified using atomic_as_refcounter.cocci Coccinelle
+> semantic patch script.
+> 
+>         [1] https://arxiv.org/pdf/1710.06175.pdf
 
-	[1] https://arxiv.org/pdf/1710.06175.pdf
+Citing long whitepapers in support of a patch isn't helpful to time
+pressed reviewers, particularly when it's evident you didn't understand
+the paper you cite. The argument in the paper for replacing atomics
+with refcounts can be summarized as: if a user can cause a counter
+overflow in an atomic_t simply by performing some action from userspace
+then that represents a source of potential overflow attacks on the
+kernel which should be mitigated by replacing the atomic_t in question
+with a refcount_t which is overflow resistant.
 
-Signed-off-by: Deepak R Varma <drv@mailo.com>
----
-Note: The proposal is compile tested only.
-      Resending the patch for review and feedback.
+What's missing from the quoted changelog is a justification of how a
+user could cause an overflow in the ex_refcnt atomic_t.
 
-
- drivers/scsi/libfc/fc_exch.c | 10 +++++-----
- include/scsi/libfc.h         |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 1d91c457527f..1c49fddb65e3 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -246,7 +246,7 @@ static const char *fc_exch_rctl_name(unsigned int op)
-  */
- static inline void fc_exch_hold(struct fc_exch *ep)
- {
--	atomic_inc(&ep->ex_refcnt);
-+	refcount_inc(&ep->ex_refcnt);
- }
- 
- /**
-@@ -312,7 +312,7 @@ static void fc_exch_release(struct fc_exch *ep)
- {
- 	struct fc_exch_mgr *mp;
- 
--	if (atomic_dec_and_test(&ep->ex_refcnt)) {
-+	if (refcount_dec_and_test(&ep->ex_refcnt)) {
- 		mp = ep->em;
- 		if (ep->destructor)
- 			ep->destructor(&ep->seq, ep->arg);
-@@ -329,7 +329,7 @@ static inline void fc_exch_timer_cancel(struct fc_exch *ep)
- {
- 	if (cancel_delayed_work(&ep->timeout_work)) {
- 		FC_EXCH_DBG(ep, "Exchange timer canceled\n");
--		atomic_dec(&ep->ex_refcnt); /* drop hold for timer */
-+		refcount_dec(&ep->ex_refcnt); /* drop hold for timer */
- 	}
- }
- 
-@@ -1897,7 +1897,7 @@ static void fc_exch_reset(struct fc_exch *ep)
- 	ep->state |= FC_EX_RST_CLEANUP;
- 	fc_exch_timer_cancel(ep);
- 	if (ep->esb_stat & ESB_ST_REC_QUAL)
--		atomic_dec(&ep->ex_refcnt);	/* drop hold for rec_qual */
-+		refcount_dec(&ep->ex_refcnt);	/* drop hold for rec_qual */
- 	ep->esb_stat &= ~ESB_ST_REC_QUAL;
- 	sp = &ep->seq;
- 	rc = fc_exch_done_locked(ep);
-@@ -2332,7 +2332,7 @@ static void fc_exch_els_rrq(struct fc_frame *fp)
- 	 */
- 	if (ep->esb_stat & ESB_ST_REC_QUAL) {
- 		ep->esb_stat &= ~ESB_ST_REC_QUAL;
--		atomic_dec(&ep->ex_refcnt);	/* drop hold for rec qual */
-+		refcount_dec(&ep->ex_refcnt);	/* drop hold for rec qual */
- 	}
- 	if (ep->esb_stat & ESB_ST_COMPLETE)
- 		fc_exch_timer_cancel(ep);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 6e29e1719db1..ce65149b300c 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -432,7 +432,7 @@ struct fc_seq {
-  */
- struct fc_exch {
- 	spinlock_t	    ex_lock;
--	atomic_t	    ex_refcnt;
-+	refcount_t	    ex_refcnt;
- 	enum fc_class	    class;
- 	struct fc_exch_mgr  *em;
- 	struct fc_exch_pool *pool;
--- 
-2.34.1
-
-
+James
 
