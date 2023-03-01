@@ -2,134 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38256C64ED6
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 17:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 594DEC7EE3A
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 18:07:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229775AbjCARTj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 12:19:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47710 "EHLO
+        id S229997AbjCASHr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 13:07:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229737AbjCARTi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 12:19:38 -0500
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E47B36442;
-        Wed,  1 Mar 2023 09:19:33 -0800 (PST)
-Received: by mail-ed1-x543.google.com with SMTP id i34so56777462eda.7;
-        Wed, 01 Mar 2023 09:19:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=tRe05a9G8Y51+PSp1T278R9G34SaE71lnwKhgVyqRVM=;
-        b=auk8vpkMOuh5ilZZaALuGEMCApUX0ABSxSJMZ2aue89jBbUX7xDmIDB2mDWgLPJNpa
-         oYOt9QY7WXMt8CFPbk2XIAJ4qUQ4tMTKEC08rOwCtkaFegD5NxzlxMNXFVTsRlfCunue
-         jnjXH0/dDBK/fmErHXTjplnXQYktwyTFqTXlH2mLzpHozizqcRf91qmr12wYJ4hqJc+T
-         P+LHFnxB20ZpGIXPvn9x319k+KxVxDA38d8izKP65TWUv9k3EBxUyxGY8y1A5X3zY4iM
-         tEr9SC/TkVm5/tTPJjX4a11j24ragZB5pNo8KAELJm8LC2LTwHIqK4ujuvsbs0YcPmo4
-         5jKQ==
+        with ESMTP id S230007AbjCASHp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 13:07:45 -0500
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 889F0B464;
+        Wed,  1 Mar 2023 10:07:44 -0800 (PST)
+Received: by mail-pj1-f43.google.com with SMTP id qa18-20020a17090b4fd200b0023750b675f5so72674pjb.3;
+        Wed, 01 Mar 2023 10:07:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tRe05a9G8Y51+PSp1T278R9G34SaE71lnwKhgVyqRVM=;
-        b=JKe15pvCXfyg3pIpvxgkqfavpsJpkgVs748BCByu4UU7Gu0Y4lUWObfXZz+DxvdzPa
-         QQlCO/KP1b38KFnd0wy9I191xlOMbtcGAAkt1ACRS4GHLNuVsLNgjTZhy9gh7FBiGPoU
-         ivLIU9IhTSNLJaolCw12XBTD0MTCOFI9QhcMSltahVmpIP0zH62VNzbW3kWXUbAaqfFL
-         Xh+x2bWUc9OO6RsgYnMyIFpcuPV5E+Twsznbf7D/uINaHYRn98i9K8SQ0sPMQDxjg2bf
-         SGQ3Cu/JjuuM2GJLdCEXNpP5u7NHOkXpNptAOEjMMsFVHw6uHu2ymjh0mqLmNDmWa9Kf
-         s8MA==
-X-Gm-Message-State: AO0yUKVYlENye+wRGNR4BOPcUTbzJy7d8umQ3BwFlRYzuLweKS+NRCZ8
-        3kC3ykrV2jk1Fpo8y88f3Wjfzq7SG4IkCuR6
-X-Google-Smtp-Source: AK7set8I5zFIHu9/b8cAqaSqZg2Om7uarsCPaGoQTaNxsGGZ5pGbKuIL41wOPrSZU29w1QkQT1WfiQ==
-X-Received: by 2002:a17:907:c68a:b0:87f:546d:7cb5 with SMTP id ue10-20020a170907c68a00b0087f546d7cb5mr7836689ejc.37.1677691171579;
-        Wed, 01 Mar 2023 09:19:31 -0800 (PST)
-Received: from [127.0.1.1] (i130160.upc-i.chello.nl. [62.195.130.160])
-        by smtp.googlemail.com with ESMTPSA id lc8-20020a170906f90800b008d57e796dcbsm5986567ejb.25.2023.03.01.09.19.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Mar 2023 09:19:31 -0800 (PST)
-From:   Jakob Koschel <jkl820.git@gmail.com>
-Date:   Wed, 01 Mar 2023 18:19:14 +0100
-Subject: [PATCH] scsi: lpfc: avoid usage of list iterator variable after
- loop
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fz6WOZ/z5lwtTAg8FqEkEPXRRvxotq7sY4hiW57q0Vo=;
+        b=z5p+0eGYgWq0Uq61esGr6ir+1SX+VjyviJ5xjkQe5gV6BAASHRcRBuZKRZnYRiBGi6
+         i695Xkm5HW/Ru/77Kd5qWTgMhVpLbdG9xAh+IIStGIG9AT1PIHB1DO0XzOYguPdBxpNs
+         56sk+swjNUVme4LWo+YbLXLisuizB2JT6kfLSxi/Uv3si/vnhd+WrrqTt8ifrNle3mTE
+         yQsJAM4DHAC52KIkmx/SWp2bLjroxNIUTXWQe34z/6Jv7K0lVGdEUqKf96QzcfvA+tmA
+         EcnSnA8pWvYX15TIxbkcuT4lP1TaBnwEFs9uJacrCy403NBFNOXqsB/v9NvxHFzNbths
+         JItA==
+X-Gm-Message-State: AO0yUKVZG/uXPXc8ADYZklpEqWlItoowC6BKhWQrOjOiHQfqUX5lNoVJ
+        w5St6BwisHARyvJcNWWn9PCf0sxxzIQ=
+X-Google-Smtp-Source: AK7set9JhYtmNMV7lCXdQ9mo54Y2U1aBntVSGSDCFpGeGYqdnoGmlTk21DhG8GfJwnoV5I2xt7Rfug==
+X-Received: by 2002:a05:6a20:65b0:b0:cc:dd86:ca27 with SMTP id p48-20020a056a2065b000b000ccdd86ca27mr6552688pzh.17.1677694063831;
+        Wed, 01 Mar 2023 10:07:43 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:e8e:76a3:8425:6d37? ([2620:15c:211:201:e8e:76a3:8425:6d37])
+        by smtp.gmail.com with ESMTPSA id a6-20020a631a46000000b004fc1d91e695sm7682911pgm.79.2023.03.01.10.07.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Mar 2023 10:07:43 -0800 (PST)
+Message-ID: <a3c08b5f-b8cb-fdd9-eb60-b1adc2879fff@acm.org>
+Date:   Wed, 1 Mar 2023 10:07:41 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH] ufs: host: ufs-qcom: Return directly if MCQ resource is
+ provided in DT
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_asutoshd@quicinc.com
+References: <20230301073110.9083-1-manivannan.sadhasivam@linaro.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230301073110.9083-1-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230301-scsi-lpfc-avoid-list-iterator-after-loop-v1-1-325578ae7561@gmail.com>
-X-B4-Tracking: v=1; b=H4sIABGJ/2MC/x2OwQrDIBBEfyV47oKJlJT+SulhXddmwaq4IQRC/
- r2mt3nM8JjDKDdhNc/hMI03USm5w3gbDC2YPwwSOpvJTs46O4KSCqQaCXArEiCJriArN1xLA4w
- 9QSqlwuzncCeHD45kus6jMviGmZZL+EXt06uojaPs/w+v93n+APnED1STAAAA
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pietro Borrello <borrello@diag.uniroma1.it>,
-        Cristiano Giuffrida <c.giuffrida@vu.nl>,
-        "Bos, H.J." <h.j.bos@vu.nl>, Jakob Koschel <jkl820.git@gmail.com>
-X-Mailer: b4 0.12.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1677691171; l=1910;
- i=jkl820.git@gmail.com; s=20230112; h=from:subject:message-id;
- bh=8hGXtX/Zsq0Mz986GnpBIGioOKRulASx+6dKpyss844=;
- b=J9yLwyS7zTkZV9LOu0KRbQK7L77rrhfHLSepm1zL3eHWxIbnQGk0Js3AfQjI8L/K4V3vA1WE9Nfd
- 2htjx2PpDhi9OPD0o68L9N80mqOhn6R4qajYE6UExwXXPtGEx9or
-X-Developer-Key: i=jkl820.git@gmail.com; a=ed25519;
- pk=rcRpP90oZXet9udPj+2yOibfz31aYv8tpf0+ZYOQhyA=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If the &epd_pool->list is empty when executing
-lpfc_get_io_buf_from_expedite_pool() the function would return an
-invalid pointer. Even in the case if the list is guaranteed to be
-populated, the iterator variable should not be used after the loop to be
-more robust for future changes.
+On 2/28/23 23:31, Manivannan Sadhasivam wrote:
+> Instead of using a goto label to return, let's return directly in the
+> "if" condition after setting mcq_base.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>   drivers/ufs/host/ufs-qcom.c | 9 ++++-----
+>   1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 34fc453f3eb1..d90f963eed02 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1460,8 +1460,10 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>   	/* MCQ resource provided in DT */
+>   	res = &hba->res[RES_MCQ];
+>   	/* Bail if MCQ resource is provided */
+> -	if (res->base)
+> -		goto out;
+> +	if (res->base) {
+> +		hba->mcq_base = res->base;
+> +		return 0;
+> +	}
+>   
+>   	/* Explicitly allocate MCQ resource from ufs_mem */
+>   	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+> @@ -1489,9 +1491,6 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>   		goto ioremap_err;
+>   	}
+>   
+> -out:
+> -	hba->mcq_base = res->base;
+> -	return 0;
+>   ioremap_err:
+>   	res->base = NULL;
+>   	remove_resource(res_mcq);
 
-Linus proposed to avoid any use of the list iterator variable after the
-loop, in the attempt to move the list iterator variable declaration into
-the marcro to avoid any potential misuse after the loop [1].
+This patch changes the behavior for the success case without mentioning 
+this in the patch description. So I assume that the behavior change is 
+unintentional and hence that this patch should be dropped?
 
-Link: https://lore.kernel.org/all/CAHk-=wgRr_D8CB-D9Kg-c=EHreAsk5SqXPwr9Y7k9sA6cWXJ6w@mail.gmail.com/ [1]
-Signed-off-by: Jakob Koschel <jkl820.git@gmail.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index edbd81c3b643..5d06bf6d4f39 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -21899,20 +21899,20 @@ lpfc_get_io_buf_from_private_pool(struct lpfc_hba *phba,
- static struct lpfc_io_buf *
- lpfc_get_io_buf_from_expedite_pool(struct lpfc_hba *phba)
- {
--	struct lpfc_io_buf *lpfc_ncmd;
-+	struct lpfc_io_buf *lpfc_ncmd = NULL, *iter;
- 	struct lpfc_io_buf *lpfc_ncmd_next;
- 	unsigned long iflag;
- 	struct lpfc_epd_pool *epd_pool;
- 
- 	epd_pool = &phba->epd_pool;
--	lpfc_ncmd = NULL;
- 
- 	spin_lock_irqsave(&epd_pool->lock, iflag);
- 	if (epd_pool->count > 0) {
--		list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
-+		list_for_each_entry_safe(iter, lpfc_ncmd_next,
- 					 &epd_pool->list, list) {
--			list_del(&lpfc_ncmd->list);
-+			list_del(&iter->list);
- 			epd_pool->count--;
-+			lpfc_ncmd = iter;
- 			break;
- 		}
- 	}
-
----
-base-commit: c0927a7a5391f7d8e593e5e50ead7505a23cadf9
-change-id: 20230301-scsi-lpfc-avoid-list-iterator-after-loop-7b7d5c3a8efc
-
-Best regards,
--- 
-Jakob Koschel <jkl820.git@gmail.com>
-
+Bart.
