@@ -2,43 +2,44 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C56ADC7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 20:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26138C678D4
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 20:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229792AbjCAUFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 15:05:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41362 "EHLO
+        id S229783AbjCAULl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 15:11:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229953AbjCAUEy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 15:04:54 -0500
-Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B6214ECE8;
-        Wed,  1 Mar 2023 12:04:52 -0800 (PST)
+        with ESMTP id S229766AbjCAULk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 15:11:40 -0500
+Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F7B64ECC3;
+        Wed,  1 Mar 2023 12:11:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1677701077; bh=SkxO6ocDDrslWnzemAIXgnlRsRGtgWAqK1nWvppSEB8=;
+        t=1677701480; bh=sd7TUoLeCUd92ZXggFD4kGKXSAM8Ac3AHPaGaF1Smwo=;
         h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
          Content-Type;
-        b=QHsEMb/KrTcnyTB6UNjavqfGLt1j2d1fL0ym1Suwoa53CBCVnZBY7kmt9j2zCznL2
-         MdC56njcZuDWLnsStfHtIq+p+T7WUQ/oQZdeKXTtmPAwOuEvBlVzLLN6+TJ9I8/8rP
-         uIgt49qQJagPTxKgdGptMigRKmTN+arINl4m4Oew=
-Received: by b221-2.in.mailobj.net [192.168.90.22] with ESMTP
+        b=DkEBJek0lPEuKOP2Gq9vdUbAQ0oyKyItDphgH9R9bdCNs+z7FxlOMSzNMev44/hqU
+         VWxO6hlJjjWy5yrF+2s4BfkZyA2IFBKCbxqrIgLBRCBP1lqS1v05gs3ArUKL6XLjYw
+         lh/p6oCuLInQcto8mNswaSD9i6ts94NDVuEOGbls=
+Received: by b221-1.in.mailobj.net [192.168.90.21] with ESMTP
         via ip-20.mailobj.net [213.182.54.20]
-        Wed,  1 Mar 2023 21:04:37 +0100 (CET)
-X-EA-Auth: DU2ysQMmY52E4ROFbJqtsDKo9YDpEmEu2WCkbqP9Vr5J2zznwaEaDw2Lq5mgK05twi4f9pSDcMAkBxxx3hn6q8WLeFXa0tjo
-Date:   Thu, 2 Mar 2023 01:34:33 +0530
+        Wed,  1 Mar 2023 21:11:20 +0100 (CET)
+X-EA-Auth: u6rUujtstJ90tXkD2OLmeUq9fTvMJ8+h2tHz5MJlmbx9rMm91pGggkvzVOGmHJSkEVTlcn5nOjiGVOMhLeHGFOQlreIt0KAs
+Date:   Thu, 2 Mar 2023 01:41:14 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
         Praveen Kumar <kumarpraveen@linux.microsoft.com>,
         Deepak R Varma <drv@mailo.com>
-Subject: [PATCH RESEND] scsi: fnic: Use a variable for repeated mem_size
- computation
-Message-ID: <Y/+v0QNRgsr18rwg@ubun2204.myguest.virtualbox.org>
+Subject: [PATCH RESEND] scsi: megaraid_sas: Use a variable for repeated
+ mem_size computation
+Message-ID: <Y/+xYv2fXhwfAFPj@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -55,60 +56,63 @@ patch.
 Signed-off-by: Deepak R Varma <drv@mailo.com>
 ---
 Note:
-   Proposed change compile tested only.
-   Resending patch for review and feedback. No functional changes.
+   Proposed change is compile tested only.
+   Resending the patch for review and feedback. Initially submitted on Jan 12
+   2023.
 
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
- drivers/scsi/fnic/fnic_trace.c | 19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index e03967463561..7b8ef74fc060 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -544,12 +544,10 @@ int fnic_fc_trace_init(void)
- 	unsigned long fc_trace_buf_head;
- 	int err = 0;
- 	int i;
-+	size_t mem_sz = array_size(PAGE_SIZE, fnic_fc_trace_max_pages);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 6597e118c805..39c0595682c1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -5287,6 +5287,7 @@ int
+ megasas_alloc_fusion_context(struct megasas_instance *instance)
+ {
+ 	struct fusion_context *fusion;
++	size_t sz;
  
--	fc_trace_max_entries = (fnic_fc_trace_max_pages * PAGE_SIZE)/
--				FC_TRC_SIZE_BYTES;
--	fnic_fc_ctlr_trace_buf_p =
--		(unsigned long)vmalloc(array_size(PAGE_SIZE,
--						  fnic_fc_trace_max_pages));
-+	fc_trace_max_entries = mem_sz / FC_TRC_SIZE_BYTES;
-+	fnic_fc_ctlr_trace_buf_p = (unsigned long)vmalloc(mem_sz);
- 	if (!fnic_fc_ctlr_trace_buf_p) {
- 		pr_err("fnic: Failed to allocate memory for "
- 		       "FC Control Trace Buf\n");
-@@ -557,13 +555,11 @@ int fnic_fc_trace_init(void)
- 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	instance->ctrl_context = kzalloc(sizeof(struct fusion_context),
+ 					 GFP_KERNEL);
+@@ -5298,15 +5299,13 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
+ 
+ 	fusion = instance->ctrl_context;
+ 
+-	fusion->log_to_span_pages = get_order(MAX_LOGICAL_DRIVES_EXT *
+-					      sizeof(LD_SPAN_INFO));
++	sz = array_size(MAX_LOGICAL_DRIVES_EXT, sizeof(LD_SPAN_INFO));
++	fusion->log_to_span_pages = get_order(sz);
+ 	fusion->log_to_span =
+ 		(PLD_SPAN_INFO)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
+ 						fusion->log_to_span_pages);
+ 	if (!fusion->log_to_span) {
+-		fusion->log_to_span =
+-			vzalloc(array_size(MAX_LOGICAL_DRIVES_EXT,
+-					   sizeof(LD_SPAN_INFO)));
++		fusion->log_to_span = vzalloc(sz);
+ 		if (!fusion->log_to_span) {
+ 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+ 				__func__, __LINE__);
+@@ -5314,15 +5313,13 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
+ 		}
  	}
  
--	memset((void *)fnic_fc_ctlr_trace_buf_p, 0,
--			fnic_fc_trace_max_pages * PAGE_SIZE);
-+	memset((void *)fnic_fc_ctlr_trace_buf_p, 0, mem_sz);
- 
- 	/* Allocate memory for page offset */
--	fc_trace_entries.page_offset =
--		vmalloc(array_size(fc_trace_max_entries,
--				   sizeof(unsigned long)));
-+	mem_sz = array_size(fc_trace_max_entries, sizeof(unsigned long));
-+	fc_trace_entries.page_offset = vmalloc(mem_sz);
- 	if (!fc_trace_entries.page_offset) {
- 		pr_err("fnic:Failed to allocate memory for page_offset\n");
- 		if (fnic_fc_ctlr_trace_buf_p) {
-@@ -574,8 +570,7 @@ int fnic_fc_trace_init(void)
- 		err = -ENOMEM;
- 		goto err_fnic_fc_ctlr_trace_buf_init;
- 	}
--	memset((void *)fc_trace_entries.page_offset, 0,
--	       (fc_trace_max_entries * sizeof(unsigned long)));
-+	memset((void *)fc_trace_entries.page_offset, 0, mem_sz);
- 
- 	fc_trace_entries.rd_idx = fc_trace_entries.wr_idx = 0;
- 	fc_trace_buf_head = fnic_fc_ctlr_trace_buf_p;
+-	fusion->load_balance_info_pages = get_order(MAX_LOGICAL_DRIVES_EXT *
+-		sizeof(struct LD_LOAD_BALANCE_INFO));
++	sz = array_size(MAX_LOGICAL_DRIVES_EXT, sizeof(struct LD_LOAD_BALANCE_INFO));
++	fusion->load_balance_info_pages = get_order(sz);
+ 	fusion->load_balance_info =
+ 		(struct LD_LOAD_BALANCE_INFO *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
+ 		fusion->load_balance_info_pages);
+ 	if (!fusion->load_balance_info) {
+-		fusion->load_balance_info =
+-			vzalloc(array_size(MAX_LOGICAL_DRIVES_EXT,
+-					   sizeof(struct LD_LOAD_BALANCE_INFO)));
++		fusion->load_balance_info = vzalloc(sz);
+ 		if (!fusion->load_balance_info)
+ 			dev_err(&instance->pdev->dev, "Failed to allocate load_balance_info, "
+ 				"continuing without Load Balance support\n");
 -- 
 2.34.1
 
