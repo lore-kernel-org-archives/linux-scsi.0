@@ -2,135 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D984C678D4
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 23:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3820DC678D4
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 23:07:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229761AbjCAXBc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 18:01:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38472 "EHLO
+        id S229546AbjCAXHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 18:07:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjCAXBb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 18:01:31 -0500
-Received: from mail-yb1-xb34.google.com (mail-yb1-xb34.google.com [IPv6:2607:f8b0:4864:20::b34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5773A51F9A;
-        Wed,  1 Mar 2023 15:01:30 -0800 (PST)
-Received: by mail-yb1-xb34.google.com with SMTP id v101so1967197ybi.2;
-        Wed, 01 Mar 2023 15:01:30 -0800 (PST)
+        with ESMTP id S229511AbjCAXHI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 18:07:08 -0500
+Received: from mail-qt1-x82a.google.com (mail-qt1-x82a.google.com [IPv6:2607:f8b0:4864:20::82a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1EFCC679
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Mar 2023 15:07:07 -0800 (PST)
+Received: by mail-qt1-x82a.google.com with SMTP id s12so16205596qtq.11
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Mar 2023 15:07:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1677711689;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LE+oDtpGbT+gAQYEDgK6kIQbWVaBpPAhxc78Hy6giGs=;
-        b=YN3Xwwm6qjB0IPrk36jtIOHeHiJOXJAG5Ntq1ZQ27BSpqPzaV1aBKDIp4ded1fT6jT
-         x2JFMZQgfsy1VcXp/rpN44zJ9bQD8kpE3l5/XJz4U/5gPehsAtBJX+DjTMWAfQxQQlbN
-         LsRAfRwPKa/jK6dOxq8SuCfaqUjzbOhM0Ef2VEaKdQ1akV3gt2NnZ3F/u0gIAT2xpli3
-         Fr9UgnjlrG2n17rKTfjBF02K/iGUIEke+Um94U/rELnZLrEDYxZUBF+2dLZ7QH+DRBJ0
-         rxeEuGiGgv/xrq8ttT/I/PBboTMPQL9t7ytYSQKfxM3mAwm1z1Wl96nq5aogteWwH+Qy
-         f5mw==
+        d=gmail.com; s=20210112; t=1677712026;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=37gDeXfZBIRzr5hQYUOLChkVs/I2DI/dpxch2sylZGo=;
+        b=nJXOAKd/ffQU0UkPRq2Oqiza8KRYXITUbW5+d2tvrNnLKqviI/kf6tSOaLVA6oDBsD
+         y0//9eAFI0sxcaowssNnTUEx1vmFDmAF/uFUuHJXvRan0voJrqFN2fLLYMzUCxQylBeS
+         jmyaYq0l0v6KjwKErrZOWzO+R+lbOIjIXmgF8BOxaT9kHPY0Qxz6KXrlvJryYhQwHru8
+         7u8LnX/x1xfPrvgfBlsDpnD2+MIktOzNeK61YqD17AjGOkaG3MF2+YEahaCPmS2dd3Dg
+         SkT2r5FVQnIF+tby1hImvi5g9xZhXsLxfzKV9cpd8HYcWcWUV3PlnRVGDVCN/jTjEnE9
+         QXvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677711689;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=LE+oDtpGbT+gAQYEDgK6kIQbWVaBpPAhxc78Hy6giGs=;
-        b=rFwU1brYYrAxYdL+35fNrYjG8/dDH9GtghMYX6906II0AVDC+atNSMSmjcpAmtrqxi
-         DYkgsz7DZR1pOXLE6wCbAO0/TSUc5I/VuY+m03VqHXyvC2CJrJipc2iEpFIbauzUKyp9
-         rrMA+YjNL2gfTlHIpRWmaKCJ74QKlwe39MzGKtI597733AxxsJjqPw7bnFCUyLhQyzm8
-         Yd14EUPigDWZH+WoOnHKu8OY/ZzMkL7x9w9Co3L3UmTXXVhDitsA1ncYzoH/udSGqRBd
-         6MlbwIIYge+IHtYYORjXPmXXx6YLsdNB58xS5PZhwMJhNEGz1v52BrOu6t2wphYa2WGi
-         ewAQ==
-X-Gm-Message-State: AO0yUKVW3xgtKWD3WnMafhTf/RBjxXQTE7ERZIioBDSNEA0nnOT4N6tH
-        6yucTvDyfwVVEoPlt1LG5pEIwRn5AdkmiUM2dEU=
-X-Google-Smtp-Source: AK7set8ZYQR4OKKo4Fi/bkDgdO8v7guksvEtRubnGTad9wxIIjYX/6yzveg0PFMZoi/GQdAo0qa3CmciT+MNz+2jEs0=
-X-Received: by 2002:a5b:792:0:b0:a03:da3f:3e68 with SMTP id
- b18-20020a5b0792000000b00a03da3f3e68mr4380243ybq.12.1677711689421; Wed, 01
- Mar 2023 15:01:29 -0800 (PST)
-MIME-Version: 1.0
-References: <20230301-scsi-lpfc-avoid-list-iterator-after-loop-v1-1-325578ae7561@gmail.com>
-In-Reply-To: <20230301-scsi-lpfc-avoid-list-iterator-after-loop-v1-1-325578ae7561@gmail.com>
+        d=1e100.net; s=20210112; t=1677712026;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=37gDeXfZBIRzr5hQYUOLChkVs/I2DI/dpxch2sylZGo=;
+        b=nbYBF8tIe+pzZWcxwwLFlKYpGRKgYlyNk1qViLSln/95xa2zy/9+slR5k6y1Y5muIZ
+         uZ5qhExsqF/s1JsgnBcwAfB6X6WT/ORRZkvVxrsa8wZoz5gcyh4sEeWsduSgkhtw8hcY
+         Daf3lYp1gqOYHDPutQCAthSWTqkXDfNQYSjOOOHxy11UHqx9zpXcYZf/wMpp0BCGYDLf
+         NTtQSKdFo6YGfLJ4TEF3q3AKQ//XFUoMuG6EdQ9NDnLn3M+5Rm3H3DeW8RoC9oglFgYg
+         kz2xBkhr0QT/3Ima3/eIFOc3URme5SsY3j+6GT5mkRed4J8oi473RpdEFzKkANYbIM2h
+         nTEA==
+X-Gm-Message-State: AO0yUKU/kUt+8DWENruw1jGHn7Tw5DBpYUIGe1WpPPQANjOsFhihA9HD
+        0tl0m1QezTNV7QAFjQlt3DiqxeN4W9k=
+X-Google-Smtp-Source: AK7set/PywktF0ccEW39oH19m3JiDjqBJEA6qunNNYjq2RG9qPh61bf0ELc/Ov3TPUSDbuuPhQwN1g==
+X-Received: by 2002:a05:622a:1448:b0:3bf:a564:573b with SMTP id v8-20020a05622a144800b003bfa564573bmr15904834qtx.0.1677712026524;
+        Wed, 01 Mar 2023 15:07:06 -0800 (PST)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id j9-20020ac85509000000b003b86b99690fsm9047572qtq.62.2023.03.01.15.07.05
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 01 Mar 2023 15:07:06 -0800 (PST)
 From:   Justin Tee <justintee8345@gmail.com>
-Date:   Wed, 1 Mar 2023 15:01:18 -0800
-Message-ID: <CABPRKS_NjBM_fW++PD5Az=9vEuhn=0-mtBg+a37P4i8HyVXcOg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: avoid usage of list iterator variable after loop
-To:     Jakob Koschel <jkl820.git@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org,
-        Pietro Borrello <borrello@diag.uniroma1.it>,
-        Cristiano Giuffrida <c.giuffrida@vu.nl>,
-        "Bos, H.J." <h.j.bos@vu.nl>, Justin Tee <justin.tee@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To:     linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
+        Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 00/10] lpfc: Update lpfc to revision 14.2.0.11
+Date:   Wed,  1 Mar 2023 15:16:16 -0800
+Message-Id: <20230301231626.9621-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 1, 2023 at 9:30=E2=80=AFAM Jakob Koschel <jkl820.git@gmail.com>=
- wrote:
->
-> If the &epd_pool->list is empty when executing
-> lpfc_get_io_buf_from_expedite_pool() the function would return an
-> invalid pointer. Even in the case if the list is guaranteed to be
-> populated, the iterator variable should not be used after the loop to be
-> more robust for future changes.
->
-> Linus proposed to avoid any use of the list iterator variable after the
-> loop, in the attempt to move the list iterator variable declaration into
-> the marcro to avoid any potential misuse after the loop [1].
->
-> Link: https://lore.kernel.org/all/CAHk-=3DwgRr_D8CB-D9Kg-c=3DEHreAsk5SqXP=
-wr9Y7k9sA6cWXJ6w@mail.gmail.com/ [1]
-> Signed-off-by: Jakob Koschel <jkl820.git@gmail.com>
-> ---
->  drivers/scsi/lpfc/lpfc_sli.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index edbd81c3b643..5d06bf6d4f39 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -21899,20 +21899,20 @@ lpfc_get_io_buf_from_private_pool(struct lpfc_h=
-ba *phba,
->  static struct lpfc_io_buf *
->  lpfc_get_io_buf_from_expedite_pool(struct lpfc_hba *phba)
->  {
-> -       struct lpfc_io_buf *lpfc_ncmd;
-> +       struct lpfc_io_buf *lpfc_ncmd =3D NULL, *iter;
->         struct lpfc_io_buf *lpfc_ncmd_next;
->         unsigned long iflag;
->         struct lpfc_epd_pool *epd_pool;
->
->         epd_pool =3D &phba->epd_pool;
-> -       lpfc_ncmd =3D NULL;
->
->         spin_lock_irqsave(&epd_pool->lock, iflag);
->         if (epd_pool->count > 0) {
-> -               list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
-> +               list_for_each_entry_safe(iter, lpfc_ncmd_next,
->                                          &epd_pool->list, list) {
-> -                       list_del(&lpfc_ncmd->list);
-> +                       list_del(&iter->list);
->                         epd_pool->count--;
-> +                       lpfc_ncmd =3D iter;
->                         break;
->                 }
->         }
->
-> ---
-> base-commit: c0927a7a5391f7d8e593e5e50ead7505a23cadf9
-> change-id: 20230301-scsi-lpfc-avoid-list-iterator-after-loop-7b7d5c3a8efc
->
-> Best regards,
-> --
-> Jakob Koschel <jkl820.git@gmail.com>
->
+Update lpfc to revision 14.2.0.11
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+This patch set contains bug fixes for buffer overflow, resource management,
+discovery, and HBA error status handling.
 
-Thanks looks fine.
+The patches were cut against Martin's 6.3/scsi-queue tree.
 
-Regards,
-Justin
+Justin Tee (10):
+  lpfc: Protect against potential lpfc_debugfs_lockstat_write buffer
+    overflow
+  lpfc: Reorder freeing of various dma buffers and their list removal
+  lpfc: Fix lockdep warning for rx_monitor lock when unloading driver
+  lpfc: Record LOGO state with discovery engine even if aborted
+  lpfc: Defer issuing new PLOGI if received RSCN before completing
+    REG_LOGIN
+  lpfc: Correct used_rpi count when devloss tmo fires with no recovery
+  lpfc: Skip waiting for register ready bits when in unrecoverable state
+  lpfc: Revise lpfc_error_lost_link reason code evaluation logic
+  lpfc: Update lpfc version to 14.2.0.11
+  lpfc: Copyright updates for 14.2.0.11 patches
+
+ drivers/scsi/lpfc/lpfc_attr.c    |  6 ++++
+ drivers/scsi/lpfc/lpfc_bsg.c     |  4 +--
+ drivers/scsi/lpfc/lpfc_crtn.h    |  2 ++
+ drivers/scsi/lpfc/lpfc_ct.c      |  8 ++---
+ drivers/scsi/lpfc/lpfc_debugfs.c |  9 ++++--
+ drivers/scsi/lpfc/lpfc_els.c     | 50 +++++++++++++++++---------------
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 39 +++++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_hw.h      | 14 +--------
+ drivers/scsi/lpfc/lpfc_init.c    |  5 ++--
+ drivers/scsi/lpfc/lpfc_nvme.c    |  6 ++--
+ drivers/scsi/lpfc/lpfc_sli.c     | 28 ++++++++++++++----
+ drivers/scsi/lpfc/lpfc_sli4.h    | 19 ++++++++++++
+ drivers/scsi/lpfc/lpfc_version.h |  2 +-
+ 13 files changed, 134 insertions(+), 58 deletions(-)
+
+-- 
+2.38.0
+
