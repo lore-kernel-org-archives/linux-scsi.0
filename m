@@ -2,158 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4CDC7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 03:40:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F22C64ED6
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 07:05:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229751AbjCADkL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Feb 2023 22:40:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42234 "EHLO
+        id S229738AbjCAHFW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 02:05:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbjCADkK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2023 22:40:10 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D802637F1A;
-        Tue, 28 Feb 2023 19:40:07 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PRKkB3xwYz4f3p0Z;
-        Wed,  1 Mar 2023 11:40:02 +0800 (CST)
-Received: from [10.174.178.159] (unknown [10.174.178.159])
-        by APP4 (Coremail) with SMTP id gCh0CgBXwLMSyf5jqAsSEg--.49286S3;
-        Wed, 01 Mar 2023 11:40:04 +0800 (CST)
-Message-ID: <a71be678-7f40-811b-4612-81a4eeb910dd@huaweicloud.com>
-Date:   Wed, 1 Mar 2023 11:40:02 +0800
+        with ESMTP id S229694AbjCAHFV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 02:05:21 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4288938E8C;
+        Tue, 28 Feb 2023 23:05:19 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EFB0DB80F62;
+        Wed,  1 Mar 2023 07:05:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3283C433D2;
+        Wed,  1 Mar 2023 07:05:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677654316;
+        bh=Al/hzYxPcRCS7bADT/4upQd1+LQPsshgrv4FzlQuAqE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=o119JuOiXUBGz/aR+cbhSd1P84LqBk+owW5pTlnOzVA7hKAOHIb9rtlf9KXaJT8TX
+         dNKkXOelNgAzI+4ZTFWNYKpQzajrrDjgKJpYypUjatUAtIRQEiwO8k4p3MWiCU1Oxn
+         vmnwV1MkUI6eVP6xA/UBJBzNNe2TLRMtj4EKAB8OWwSHo3A0BEzKj9+Lw4VfFSreW6
+         68oF45JXqecWuAY48DDSqzHeHiBkn7kPF5nZ6gErjXrH/IhHSbRsE6rRh/PF0AoNt3
+         WQHmisCezMbHl9wRlxEb1X9BVv+jQZ2ijKqFr+74ha4x75LJuoccJzA36c14xyPjIp
+         typfch/4qtWMw==
+Date:   Wed, 1 Mar 2023 12:35:08 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
+        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, bvanassche@acm.org, avri.altman@wdc.com,
+        beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] ufs: mcq: qcom: Fix Smatch static checker warning
+Message-ID: <20230301070508.GA5409@thinkpad>
+References: <80523aada69f5cab90cac76c84aa153b1ea648ad.1677608784.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH-next] scsi: fix use-after-free problem in
- scsi_remove_target
-To:     zhongjinghua <zhongjinghua@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yukuai3@huawei.com
-References: <20230213034321.3261114-1-zhongjinghua@huaweicloud.com>
- <4585779e-f919-0439-2062-b1f30b04f176@huawei.com>
-From:   zhongjinghua <zhongjinghua@huaweicloud.com>
-In-Reply-To: <4585779e-f919-0439-2062-b1f30b04f176@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBXwLMSyf5jqAsSEg--.49286S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxGryUKrWrXr1furyxCFWxZwb_yoWrWry8pr
-        18Jry5GrWUGrWkJr1UXr1UJryUJr1UGw1DJr1xJ3W7Jw15Aryjqr1UXryqgF1UAF48Jr1U
-        Jr1UJr1UZr4UJr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6r1S6rWUM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-        wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-        80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0
-        I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-        k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-        1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUrR6zUUUUU
-X-CM-SenderInfo: x2kr0wpmlqwxtxd6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+In-Reply-To: <80523aada69f5cab90cac76c84aa153b1ea648ad.1677608784.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ping...
+On Tue, Feb 28, 2023 at 10:27:06AM -0800, Asutosh Das wrote:
+> The patch (c263b4ef737e: "scsi: ufs: core: mcq: Configure resource
+> regions") from Jan 13, 2023, leads to the following Smatch static
+> checker warning:
+> 
+> drivers/ufs/host/ufs-qcom.c:1455 ufs_qcom_mcq_config_resource() warn:
+> passing zero to 'PTR_ERR'
+> drivers/ufs/host/ufs-qcom.c:1469 ufs_qcom_mcq_config_resource() info:
+> returning a literal zero is cleaner
+> 
+> Fix the above warnings.
+> 
 
-Hello，
+You should not name the subject after the tool that used to find the issues.
+Instead, subject should mention the actual issue like fixing return values,
+removing the devm_kfree in error path etc...
 
-Anyone looking this？
+Provided that, you should also split this patch into two as you are fixing
+two independent issues.
 
-在 2023/3/1 11:37, zhongjinghua 写道:
-> ping...
->
-> Hello，
->
-> Anyone looking this？
->
-> 在 2023/2/13 11:43, Zhong Jinghua 写道:
->> From: Zhong Jinghua <zhongjinghua@huawei.com>
->>
->> A use-after-free problem like below:
->>
->> BUG: KASAN: use-after-free in scsi_target_reap+0x6c/0x70
->>
->> Workqueue: scsi_wq_1 __iscsi_unbind_session [scsi_transport_iscsi]
->> Call trace:
->>   dump_backtrace+0x0/0x320
->>   show_stack+0x24/0x30
->>   dump_stack+0xdc/0x128
->>   print_address_description+0x68/0x278
->>   kasan_report+0x1e4/0x308
->>   __asan_report_load4_noabort+0x30/0x40
->>   scsi_target_reap+0x6c/0x70
->>   scsi_remove_target+0x430/0x640
->>   __iscsi_unbind_session+0x164/0x268 [scsi_transport_iscsi]
->>   process_one_work+0x67c/0x1350
->>   worker_thread+0x370/0xf90
->>   kthread+0x2a4/0x320
->>   ret_from_fork+0x10/0x18
->>
->> The problem is caused by a concurrency scenario:
->>
->> T0: delete target
->> // echo 1 > 
->> /sys/devices/platform/host1/session1/target1:0:0/1:0:0:1/delete
->> T1: logout
->> // iscsiadm -m node --logout
->>
->> T0                            T1
->>   sdev_store_delete
->>    scsi_remove_device
->>     device_remove_file
->>      __scsi_remove_device
->>                              __iscsi_unbind_session
->>                               scsi_remove_target
->>                           spin_lock_irqsave
->>                                list_for_each_entry
->>       scsi_target_reap // starget->reaf 1 -> 0
->> kref_get(&starget->reap_ref);
->>                           // warn use-after-free.
->>                           spin_unlock_irqrestore
->>        scsi_target_reap_ref_release
->>     scsi_target_destroy
->>     ... // delete starget
->>                           scsi_target_reap
->>                           // UAF
->>
->> When T0 reduces the reference count to 0, but has not been released,
->> T1 can still enter list_for_each_entry, and then kref_get reports UAF.
->>
->> Fix it by using kref_get_unless_zero() to check for a reference count of
->> 0.
->>
->> Signed-off-by: Zhong Jinghua <zhongjinghua@huawei.com>
->> ---
->>   drivers/scsi/scsi_sysfs.c | 12 +++++++++++-
->>   1 file changed, 11 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->> index e7893835b99a..0ad357ff4c59 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -1561,7 +1561,17 @@ void scsi_remove_target(struct device *dev)
->>               starget->state == STARGET_CREATED_REMOVE)
->>               continue;
->>           if (starget->dev.parent == dev || &starget->dev == dev) {
->> -            kref_get(&starget->reap_ref);
->> +
->> +            /*
->> +             * If starget->reap_ref is reduced to 0, it means
->> +             * that other processes are releasing it and
->> +             * there is no need to delete it again
->> +             */
->> +            if (!kref_get_unless_zero(&starget->reap_ref)) {
->> +                spin_unlock_irqrestore(shost->host_lock, flags);
->> +                goto restart;
->> +            }
->> +
->>               if (starget->state == STARGET_CREATED)
->>                   starget->state = STARGET_CREATED_REMOVE;
->>               else
+Thanks,
+Mani
 
+> Fixes: c263b4ef737e ("scsi: ufs: core: mcq: Configure resource regions")
+> Reported-by: Dan Carpenter <error27@gmail.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 34fc453f3eb1..cb20c7136c2c 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1451,8 +1451,8 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>  		if (IS_ERR(res->base)) {
+>  			dev_err(hba->dev, "Failed to map res %s, err=%d\n",
+>  					 res->name, (int)PTR_ERR(res->base));
+> -			res->base = NULL;
+>  			ret = PTR_ERR(res->base);
+> +			res->base = NULL;
+>  			return ret;
+>  		}
+>  	}
+> @@ -1466,7 +1466,7 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>  	/* Explicitly allocate MCQ resource from ufs_mem */
+>  	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+>  	if (!res_mcq)
+> -		return ret;
+> +		return -ENOMEM;
+>  
+>  	res_mcq->start = res_mem->start +
+>  			 MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
+> @@ -1478,7 +1478,7 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>  	if (ret) {
+>  		dev_err(hba->dev, "Failed to insert MCQ resource, err=%d\n",
+>  			ret);
+> -		goto insert_res_err;
+> +		return ret;
+>  	}
+>  
+>  	res->base = devm_ioremap_resource(hba->dev, res_mcq);
+> @@ -1495,8 +1495,6 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>  ioremap_err:
+>  	res->base = NULL;
+>  	remove_resource(res_mcq);
+> -insert_res_err:
+> -	devm_kfree(hba->dev, res_mcq);
+>  	return ret;
+>  }
+>  
+> -- 
+> 2.7.4
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
