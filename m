@@ -2,86 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38382C678D4
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 19:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C56ADC7EE23
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 20:05:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbjCATyR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 14:54:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56460 "EHLO
+        id S229792AbjCAUFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 15:05:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229515AbjCATyI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 14:54:08 -0500
-Received: from msg-2.mailo.com (msg-2.mailo.com [213.182.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79864498BD;
-        Wed,  1 Mar 2023 11:53:58 -0800 (PST)
+        with ESMTP id S229953AbjCAUEy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 15:04:54 -0500
+Received: from msg-4.mailo.com (msg-4.mailo.com [213.182.54.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B6214ECE8;
+        Wed,  1 Mar 2023 12:04:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=mailo.com; s=mailo;
-        t=1677700430; bh=KfS7hS0J7xuE68udlOubvFGTC2KonI1Drjpg6rRNbgg=;
-        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:References:
-         MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To;
-        b=QPgJGe9o7ub+EDYb1FGYxEbS63yEcFy1TsM64ffG9R+WMckTlYeIuoDpahFA0iYCu
-         x9UADYoCVJFEIhnvxLSjT4h10Jdfu9kICR3LWRQjtvsBXKSqKvKS1zWwOgBBMwf2JP
-         N5vgPE5dmhC2YvOtMjwO2Vt5s33mbzjNaFDMFH4g=
-Received: by b221-3.in.mailobj.net [192.168.90.23] with ESMTP
+        t=1677701077; bh=SkxO6ocDDrslWnzemAIXgnlRsRGtgWAqK1nWvppSEB8=;
+        h=X-EA-Auth:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
+         Content-Type;
+        b=QHsEMb/KrTcnyTB6UNjavqfGLt1j2d1fL0ym1Suwoa53CBCVnZBY7kmt9j2zCznL2
+         MdC56njcZuDWLnsStfHtIq+p+T7WUQ/oQZdeKXTtmPAwOuEvBlVzLLN6+TJ9I8/8rP
+         uIgt49qQJagPTxKgdGptMigRKmTN+arINl4m4Oew=
+Received: by b221-2.in.mailobj.net [192.168.90.22] with ESMTP
         via ip-20.mailobj.net [213.182.54.20]
-        Wed,  1 Mar 2023 20:53:50 +0100 (CET)
-X-EA-Auth: JGVVnp4Oj+hgsy//vZv/bmZxhDUe6GuLmgCnGlz9GaFR2TEcHfAHDQMYp/J1pq4IH2fMvvex8btEdmox2uqE1g==
-Date:   Thu, 2 Mar 2023 01:23:44 +0530
+        Wed,  1 Mar 2023 21:04:37 +0100 (CET)
+X-EA-Auth: DU2ysQMmY52E4ROFbJqtsDKo9YDpEmEu2WCkbqP9Vr5J2zznwaEaDw2Lq5mgK05twi4f9pSDcMAkBxxx3hn6q8WLeFXa0tjo
+Date:   Thu, 2 Mar 2023 01:34:33 +0530
 From:   Deepak R Varma <drv@mailo.com>
-To:     James Bottomley <jejb@linux.ibm.com>
-Cc:     Hannes Reinecke <hare@suse.de>,
+To:     Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Saurabh Singh Sengar <ssengar@microsoft.com>,
-        Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Subject: Re: [PATCH RESEND] scsi: libfc: Use refcount_* APIs for reference
- count management
-Message-ID: <Y/+tSLVxw0xuS9k1@ubun2204.myguest.virtualbox.org>
-References: <Y/+hVSSFgeV+yPhY@ubun2204.myguest.virtualbox.org>
- <cfe11fadc3d3e61ce6c7d6f00e1e427edea8a4e3.camel@linux.ibm.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Saurabh Singh Sengar <ssengar@microsoft.com>,
+        Praveen Kumar <kumarpraveen@linux.microsoft.com>,
+        Deepak R Varma <drv@mailo.com>
+Subject: [PATCH RESEND] scsi: fnic: Use a variable for repeated mem_size
+ computation
+Message-ID: <Y/+v0QNRgsr18rwg@ubun2204.myguest.virtualbox.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cfe11fadc3d3e61ce6c7d6f00e1e427edea8a4e3.camel@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 01, 2023 at 02:28:49PM -0500, James Bottomley wrote:
-> On Thu, 2023-03-02 at 00:32 +0530, Deepak R Varma wrote:
-> > The atomic_t API based object reference counter management is prone
-> > to counter value overflows, object use-after-free issues and to
-> > return puzzling values. The improved refcount_t APIs are designed to
-> > address these known issues with atomic_t reference counter
-> > management. This white paper [1] has detailed reasons for moving from
-> > atomic_t to refcount_t APIs. Hence replace the atomic_* based
-> > implementation by its refcount_* based equivalent.
-> > The issue is identified using atomic_as_refcounter.cocci Coccinelle
-> > semantic patch script.
-> > 
-> >         [1] https://arxiv.org/pdf/1710.06175.pdf
-> 
-> Citing long whitepapers in support of a patch isn't helpful to time
-> pressed reviewers, particularly when it's evident you didn't understand
-> the paper you cite. The argument in the paper for replacing atomics
-> with refcounts can be summarized as: if a user can cause a counter
-> overflow in an atomic_t simply by performing some action from userspace
-> then that represents a source of potential overflow attacks on the
-> kernel which should be mitigated by replacing the atomic_t in question
-> with a refcount_t which is overflow resistant.
-> 
-> What's missing from the quoted changelog is a justification of how a
-> user could cause an overflow in the ex_refcnt atomic_t.
+Use a variable to upfront compute memory size to be allocated,
+instead of repeatedly computing it at different instructions.
+The reduced instruction length also allows to tidy up the code.
+Issue identified using the array_size_dup Coccinelle semantic
+patch.
 
-Thank you very much James for the review comments. I truly appreciate your time
-and guidance. I will study your feedback and send in a revision with necessary
-update to patch log.
+Signed-off-by: Deepak R Varma <drv@mailo.com>
+---
+Note:
+   Proposed change compile tested only.
+   Resending patch for review and feedback. No functional changes.
 
-Regards,
-./drv
 
-> 
-> James
-> 
+ drivers/scsi/fnic/fnic_trace.c | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index e03967463561..7b8ef74fc060 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -544,12 +544,10 @@ int fnic_fc_trace_init(void)
+ 	unsigned long fc_trace_buf_head;
+ 	int err = 0;
+ 	int i;
++	size_t mem_sz = array_size(PAGE_SIZE, fnic_fc_trace_max_pages);
+ 
+-	fc_trace_max_entries = (fnic_fc_trace_max_pages * PAGE_SIZE)/
+-				FC_TRC_SIZE_BYTES;
+-	fnic_fc_ctlr_trace_buf_p =
+-		(unsigned long)vmalloc(array_size(PAGE_SIZE,
+-						  fnic_fc_trace_max_pages));
++	fc_trace_max_entries = mem_sz / FC_TRC_SIZE_BYTES;
++	fnic_fc_ctlr_trace_buf_p = (unsigned long)vmalloc(mem_sz);
+ 	if (!fnic_fc_ctlr_trace_buf_p) {
+ 		pr_err("fnic: Failed to allocate memory for "
+ 		       "FC Control Trace Buf\n");
+@@ -557,13 +555,11 @@ int fnic_fc_trace_init(void)
+ 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	}
+ 
+-	memset((void *)fnic_fc_ctlr_trace_buf_p, 0,
+-			fnic_fc_trace_max_pages * PAGE_SIZE);
++	memset((void *)fnic_fc_ctlr_trace_buf_p, 0, mem_sz);
+ 
+ 	/* Allocate memory for page offset */
+-	fc_trace_entries.page_offset =
+-		vmalloc(array_size(fc_trace_max_entries,
+-				   sizeof(unsigned long)));
++	mem_sz = array_size(fc_trace_max_entries, sizeof(unsigned long));
++	fc_trace_entries.page_offset = vmalloc(mem_sz);
+ 	if (!fc_trace_entries.page_offset) {
+ 		pr_err("fnic:Failed to allocate memory for page_offset\n");
+ 		if (fnic_fc_ctlr_trace_buf_p) {
+@@ -574,8 +570,7 @@ int fnic_fc_trace_init(void)
+ 		err = -ENOMEM;
+ 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	}
+-	memset((void *)fc_trace_entries.page_offset, 0,
+-	       (fc_trace_max_entries * sizeof(unsigned long)));
++	memset((void *)fc_trace_entries.page_offset, 0, mem_sz);
+ 
+ 	fc_trace_entries.rd_idx = fc_trace_entries.wr_idx = 0;
+ 	fc_trace_buf_head = fnic_fc_ctlr_trace_buf_p;
+-- 
+2.34.1
+
 
 
