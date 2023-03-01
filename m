@@ -2,112 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CE3C6FA9D
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 18:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A68DC7EE2F
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Mar 2023 18:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229918AbjCASoL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 13:44:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52542 "EHLO
+        id S230102AbjCASvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 13:51:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229908AbjCASoK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 13:44:10 -0500
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5866848E25;
-        Wed,  1 Mar 2023 10:44:09 -0800 (PST)
-Received: by mail-pl1-f181.google.com with SMTP id n6so13621275plf.5;
-        Wed, 01 Mar 2023 10:44:09 -0800 (PST)
+        with ESMTP id S230152AbjCASuz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 13:50:55 -0500
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF8644DE0A;
+        Wed,  1 Mar 2023 10:50:46 -0800 (PST)
+Received: by mail-pj1-f52.google.com with SMTP id oj5so10352704pjb.5;
+        Wed, 01 Mar 2023 10:50:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vq/pM2gYGR0/e4AUYRe9jBJWUagf30u77VubcFJBb2U=;
-        b=vhUJYgCT5FG5nnq9Ii8SVcH/2/UuGMJpE/eiEQvGiYu9kS/WTe7t6bqrKKUYnBkw9O
-         MUEO/3nhrV/LpJz49kqOIXBknOyHmFZ9DuODOHypQyFIPozkZpMtUvDtAgCaRT8Z3+2v
-         q6Y1zc/1Fj7Lt23fjFfuuokAY+zvQL6uIzWgCISDGbjlHK3jKLuW1PLImA3C+nm0U76u
-         01BO+rEIMf7XB8xO5nw68NRopo8YY9YxZJH5z+Ao1l/gXoa0adJkqdUsvNhnt6jQTg0U
-         cjPlzyRXVx8jxlPBRBj5YbRMsxYni9FATJ5NKRiPDjVBT9evyE8dR00Bafp0G3fH6emy
-         +20w==
-X-Gm-Message-State: AO0yUKXTyHSp+6jXAyeY6Pi12buCzCYJPs2cuo/kN4sn0qIpSdI4Va/q
-        SlvW+Fp5NcfWJDFYYJBslZoUfTdL+KY=
-X-Google-Smtp-Source: AK7set+cvuyvXSoXcRzkQoCiSSZb21c6kZmuhb2/4pwg7iccb6QahZwOrVeAFlRxWKcl2wADAQP2KA==
-X-Received: by 2002:a17:902:7293:b0:19c:d23e:52a0 with SMTP id d19-20020a170902729300b0019cd23e52a0mr6312324pll.14.1677696248642;
-        Wed, 01 Mar 2023 10:44:08 -0800 (PST)
+        bh=zg98MgWwNc6aZh94xCdr9oJM0+ApGLWaqsOAQluX6tU=;
+        b=S8jHp2fBWD83v51sWBrHZBdrc4qlWFO4tN2oTKW8rO8p7dflF060VHLPHn1f4Vzp/M
+         yGVm/ErBK6YCJ3lVK/t0Zk1Xbnjdwdv9X2oCoJhica2ZaLQI4UWjLrOcX/P4a5TrHmkA
+         6gyFb6olW4LCcQhiZ3p9cxvcbJ8x0buMWcYk4JzueCAxwuelW1GmdD2hC8wej377k6+2
+         AHfiLNV0RyUN9+NBSo50/K5s7ViIu2pMtlbH2o/UNhkn9aJYBDJ9PvDiBhaCdFUpbSag
+         xihktIodQOmxCoqw1hN5wF6I+5jKAckKJ0t+kPKlOhvGYXlxg1G/7OCw/9BcGCtS1YF2
+         uq0w==
+X-Gm-Message-State: AO0yUKX2EnIjL1g5zM4ISWqT5AGo6MuSYUGaGsts1xfd4Dj24TpQL/0Z
+        EtTd5nX/64GrxQdHj9gdh5I=
+X-Google-Smtp-Source: AK7set9u+NzbfYeo686zDMAFl04xD8Pph/E1g7L9BlqRFstkRybhM7M2i5bRLPKRUnTneqBFFO5e4Q==
+X-Received: by 2002:a17:902:e886:b0:19d:b02:cca5 with SMTP id w6-20020a170902e88600b0019d0b02cca5mr7772883plg.12.1677696646037;
+        Wed, 01 Mar 2023 10:50:46 -0800 (PST)
 Received: from ?IPV6:2620:15c:211:201:e8e:76a3:8425:6d37? ([2620:15c:211:201:e8e:76a3:8425:6d37])
-        by smtp.gmail.com with ESMTPSA id l10-20020a170902eb0a00b0019ce470b9fesm8887242plb.140.2023.03.01.10.44.07
+        by smtp.gmail.com with ESMTPSA id ik19-20020a170902ab1300b00194c1281ca9sm8778424plb.166.2023.03.01.10.50.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Mar 2023 10:44:07 -0800 (PST)
-Message-ID: <e6518637-4e78-3935-133d-79afea67cf80@acm.org>
-Date:   Wed, 1 Mar 2023 10:44:06 -0800
+        Wed, 01 Mar 2023 10:50:45 -0800 (PST)
+Message-ID: <db9031f6-f0cd-fc79-a00d-c1f52abc286f@acm.org>
+Date:   Wed, 1 Mar 2023 10:50:42 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH 1/2] include: uapi: scsi: Change utp_upiu_query struct
+Subject: Re: [PATCH v2 4/7] scsi: ufs: core: Add hwq print for debug
 Content-Language: en-US
-To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "beanhuo@micron.com" <beanhuo@micron.com>,
+To:     =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <1677078770-30994-1-git-send-email-Arthur.Simchaev@wdc.com>
- <1677078770-30994-2-git-send-email-Arthur.Simchaev@wdc.com>
- <b1f0ed44-d707-5593-7449-8a6bd23c9902@acm.org>
- <BY5PR04MB632717453EB0D403388B4F1EEDAF9@BY5PR04MB6327.namprd04.prod.outlook.com>
- <21f73bfd-1d91-106f-d3a8-eb4674c517e6@acm.org>
- <BY5PR04MB632701F87296BEE554D3F055EDAD9@BY5PR04MB6327.namprd04.prod.outlook.com>
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>
+Cc:     =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
+        <peter.wang@mediatek.com>,
+        =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
+        <eddie.huang@mediatek.com>,
+        =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= 
+        <jiajie.hao@mediatek.com>,
+        =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+        =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
+        <Alice.Chao@mediatek.com>,
+        wsd_upstream <wsd_upstream@mediatek.com>,
+        =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
+        <Chun-hung.Wu@mediatek.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?= 
+        <Chaotian.Jing@mediatek.com>,
+        =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
+        =?UTF-8?B?U3RhbmxleSBDaHUgKOacseWOn+mZnik=?= 
+        <stanley.chu@mediatek.com>,
+        =?UTF-8?B?TWFzb24gWmhhbmcgKOeroOi+iSk=?= <Mason.Zhang@mediatek.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>
+References: <20230222030427.957-1-powen.kao@mediatek.com>
+ <20230222030427.957-5-powen.kao@mediatek.com>
+ <1b9c2bc9-a349-062a-597c-336804c05394@quicinc.com>
+ <74bedcff32df0c93c14b004814017f3344247528.camel@mediatek.com>
+ <0c17dd26-b1aa-54b0-6dc4-561cd996cead@quicinc.com>
+ <76f74b86-8ff1-2346-4f5e-0048543bd8b0@quicinc.com>
+ <f629f1b72e4859d79aac279ef3327715000e3210.camel@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <BY5PR04MB632701F87296BEE554D3F055EDAD9@BY5PR04MB6327.namprd04.prod.outlook.com>
+In-Reply-To: <f629f1b72e4859d79aac279ef3327715000e3210.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/1/23 01:46, Arthur Simchaev wrote:
->>>>>    struct utp_upiu_query {
->>>>>      __u8 opcode;
->>>>>      __u8 idn;
->>>>>      __u8 index;
->>>>>      __u8 selector;
->>>>> -   __be16 reserved_osf;
->>>>> -   __be16 length;
->>>>> -   __be32 value;
->>>>> -   __be32 reserved[2];
->>>>> +   __u8 osf3;
->>>>> +   __u8 osf4;
->>>>> +   __be16 osf5;
->>>>> +   __be32 osf6;
->>>>> +   __be32 osf7;
->>>>>    };
->>>> All changes in UAPI headers must be backwards compatible. The above
->> doesn't look like a backwards compatible change to me.
->>>
->>> This API was originally invented to support ufs-bsg.
->>> AFAIK, ufs-utils is the only app that makes use of this API,
->>> and it doesn't dig into struct utp_upiu_query inner fields.
->>
->> That does not match what I see. I see that code in ufs-utils accesses
->> the 'length' and 'value' members of the above data structure.
->>
->> Please follow the rules for UAPI header files.
->>
->> Thanks,
->>
->> Bart.
-> 
-> You are right , my fault.
-> Anyway, It just return reserved field to the struct.
-> Also I can update the tool accordingly. Instead length and value fields,
-> using osf5 and osf6.
-> In this case we will keep it backward compatible.
-> Is it OK?
+On 2/28/23 18:17, Powen Kao (高伯文) wrote:
+> Sure, we can first integrate ur patch and see if anything is missing
+> that need further upstream. Due to comapct schedule, I would kindly ask
+> if it will be ready by the end of this week? :) Thanks
 
-Hi Arthur,
+Please trim e-mails before replying and please reply below the original 
+text instead of above. From https://en.wikipedia.org/wiki/Posting_style:
 
-I doubt that renaming structure members is acceptable for UAPI headers. 
-How about introducing a second struct next to the utp_upiu_query struct?
+Because it messes up the order in which people normally read text.
+Why is top-posting such a bad thing?
+Top-posting.
+What is the most annoying thing in e-mail?
 
 Thanks,
 
 Bart.
-
