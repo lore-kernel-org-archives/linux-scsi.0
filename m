@@ -2,129 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B84B1C6FA8E
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 10:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97193C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 10:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229639AbjCBKyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Mar 2023 05:54:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41720 "EHLO
+        id S229530AbjCBKzD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 05:55:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229673AbjCBKyf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 05:54:35 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B9C14EC5
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 02:54:34 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id p20so15899743plw.13
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2023 02:54:34 -0800 (PST)
+        with ESMTP id S229673AbjCBKyu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 05:54:50 -0500
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6674F3B3DA
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 02:54:49 -0800 (PST)
+Received: by mail-pj1-x1032.google.com with SMTP id m20-20020a17090ab79400b00239d8e182efso2403771pjr.5
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2023 02:54:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1677754474;
+        d=broadcom.com; s=google; t=1677754488;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=2q9jrcy1DNS8CTC6w1q2MZ59aRtYLDMjt9hejdQuq7A=;
-        b=KfIuk8AHmAYXYsKo4ZEgwGXbY9YkmHrILgneq/mkrEZSOjR2ax9+65Frx+x+hAfS0t
-         erU/EEfeJYR+BZzux328LcmaQX6txCyIasNeywiT0HLw8KHGZpK3SpdXpDkfIwoBSQrF
-         4JlFB0OIMOz+kQgVAAynd9WKBBFkrylFBlmwY=
+        bh=SL5gQGn2sfXGPisazrGVQJ/sHaCdjJfxuMh1hE5tcGM=;
+        b=UWlSsI++wvgJwdnqEgc0EeVqQgjEhs7TLddAS7BflNbObzJLI5IHa6s99Ts9gFwX13
+         s/K8fqmgcjuPq4b9RtywSTw4PEsYE28qwjEOfGNNJ4Uqhl7hEYaEvpFPqADqi1cFNfxW
+         moTm9xTcd5q+NN01qF5eWGrqSGD4i3qEfCmd4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677754474;
+        d=1e100.net; s=20210112; t=1677754488;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2q9jrcy1DNS8CTC6w1q2MZ59aRtYLDMjt9hejdQuq7A=;
-        b=ziPttXGCf8131jiW96Wvth/whteFCk5BOc2ELXIM+Nxls5aZW50ILCRtzRwDZo8jwx
-         5JgqJ+8Y1y+UEH1ReXq1JMRDfRBpACqyE3h03rVxHVBk3l7zFiwNdsVFDB1wKna62jFl
-         WsJWBYgqb/P+dlXGlgADhyNepDxbcnAgpOnCrb9sigsz64Su7aoPn/9NHp8AMP3TC7j0
-         0KBj2G+kf+myLGmDI/A3UhmWzkIYxwxixM58khSJetIV/5NwWAe4snfeoHS+eMoWkkoF
-         w9YlALgEPOKDPIvySMoezrQTsD6ZP22RKK/bVjjiIiVgMTiILjAN+rI70JKb2hktc1uR
-         5VMA==
-X-Gm-Message-State: AO0yUKWxjuwew7tLk7sCj/CnxUpZbETj3/YxpMcBYT7wFy5GYUmVjYVa
-        GitaSAMzBAJ7MqNa2qO1L+Qy49X5ZjT03N/e5q1zkgVoES9xI+enDA8UGOaUerCi3Dg8gKaBlQ/
-        Lx1d+YqowPmuvVSLfhZPmNWnf5iGHPwtouRkYvymOrN7XEhMVZLx0wiPNDTr0AMDLB6nXVM7XP+
-        6iKDSRNyt2KdjejeI=
-X-Google-Smtp-Source: AK7set+5NcDBoqHKfLcE+lbWaC52iM2hkUYcp1+mghrWhNebsP9s8YJ6PhWji2SZFj3UC/Q3YPGwnQ==
-X-Received: by 2002:a05:6a20:9144:b0:bb:b903:d836 with SMTP id x4-20020a056a20914400b000bbb903d836mr11117053pzc.54.1677754473578;
-        Thu, 02 Mar 2023 02:54:33 -0800 (PST)
+        bh=SL5gQGn2sfXGPisazrGVQJ/sHaCdjJfxuMh1hE5tcGM=;
+        b=d5notUWeMDaTvz1TAXO8MWLHCbFNBAgixaTRaYPBlY8FmnMilpnqhNFYVn0odHFj07
+         aS8QIe5QSmrj+NqaJSZC4NJ4u4ktME5ztZBQpoy6fe2BwfqI8QNlq+01ZUfdL7h+fDEa
+         GPIm7evNWMnLqMyACBtpNA69KM5D75MThHX9/gkyec8vZ4fe71VqWXMNOWpbRsp5wuGM
+         YaeCnCHCF+Aq8oerzSneHFqbfCybA4jB6O+eQVuwlxXExEZWf82fr1AS5Gs6M6VBWMDd
+         AHOKz2xOhp2I/zd29um8aIPyEj27AjA7E+7pNu+OvNJ7mqUe7DuaRGs4RQajV6cQ7rRc
+         6Syg==
+X-Gm-Message-State: AO0yUKUF9duzdA+ZRZarFw+Hay75m74bKmoMNa6SBrHIUYWfoh5r/jAg
+        K0kOvMy5AzjLSThlYx3TbqEjj3kiGDES53B4ixb8B5JpsKE5KR0jdomRWXOTi4EveY6kODEuXOI
+        5Rq3P/sk6UufSbc2tG0Ji+0V3MO17f2yFzv24POtpWEwdXViRBhm1DvAKjtjBj+SbPyHSxzQzBI
+        MPaqvlzQXucZwsT9Y=
+X-Google-Smtp-Source: AK7set8gpH2umOsXIBmX8gwWKJ+Yl3ihk1N6qbIBikQNOuS60G9gGuPuH5pdv/0HtFi9YZb8d75uGw==
+X-Received: by 2002:a05:6a20:3d88:b0:cd:1808:87c7 with SMTP id s8-20020a056a203d8800b000cd180887c7mr12539075pzi.15.1677754488367;
+        Thu, 02 Mar 2023 02:54:48 -0800 (PST)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x14-20020a63170e000000b00502e1c50af3sm8865873pgl.45.2023.03.02.02.54.31
+        by smtp.gmail.com with ESMTPSA id x14-20020a63170e000000b00502e1c50af3sm8865873pgl.45.2023.03.02.02.54.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Mar 2023 02:54:32 -0800 (PST)
+        Thu, 02 Mar 2023 02:54:45 -0800 (PST)
 From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     sumit.saxena@broadcom.com,
         Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 2/3] megaraid_sas: Add crash dump mode capability bit in MFI capabilities
-Date:   Thu,  2 Mar 2023 16:23:41 +0530
-Message-Id: <20230302105342.34933-3-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 3/3] Driver version update to 07.725.01.00-rc1
+Date:   Thu,  2 Mar 2023 16:23:42 +0530
+Message-Id: <20230302105342.34933-4-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230302105342.34933-1-chandrakanth.patil@broadcom.com>
 References: <20230302105342.34933-1-chandrakanth.patil@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000072641a05f5e8a789"
+        boundary="00000000000053149905f5e8a8e6"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000072641a05f5e8a789
+--00000000000053149905f5e8a8e6
 Content-Transfer-Encoding: 8bit
 
-In kdump kernel mode, the driver works in reduced functionality mode with
-some features disabled such as reduced MSIX count and RDPQ disabled etc.
-However, the firmware is not aware of this mode, in some cases, which
-results in undefined behavior.
-
-To address this, the driver informs the firmware about the kdump mode
-driver through MPI capabilities bit during driver initialization.
-So firmware can adjust its behavior accordingly.
-
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        | 6 ++++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 +++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 2ef9d41fc6f4..c2bace65105b 100644
+index c2bace65105b..63bac3684c19 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1760,7 +1760,8 @@ union megasas_sgl_frame {
- typedef union _MFI_CAPABILITIES {
- 	struct {
- #if   defined(__BIG_ENDIAN_BITFIELD)
--	u32     reserved:16;
-+	u32     reserved:15;
-+	u32	support_memdump:1;
- 	u32	support_fw_exposed_dev_list:1;
- 	u32	support_nvme_passthru:1;
- 	u32     support_64bit_mode:1;
-@@ -1794,7 +1795,8 @@ typedef union _MFI_CAPABILITIES {
- 	u32     support_64bit_mode:1;
- 	u32	support_nvme_passthru:1;
- 	u32	support_fw_exposed_dev_list:1;
--	u32     reserved:16;
-+	u32	support_memdump:1;
-+	u32     reserved:15;
- #endif
- 	} mfi_capabilities;
- 	__le32		reg;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index fe70f8f11435..7ebfbe0c2ba7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1201,6 +1201,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	drv_ops->mfi_capabilities.support_nvme_passthru = 1;
- 	drv_ops->mfi_capabilities.support_fw_exposed_dev_list = 1;
+@@ -23,8 +23,8 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"07.719.03.00-rc1"
+-#define MEGASAS_RELDATE				"Sep 29, 2021"
++#define MEGASAS_VERSION				"07.725.01.00-rc1"
++#define MEGASAS_RELDATE				"Mar 2, 2023"
  
-+	if (reset_devices)
-+		drv_ops->mfi_capabilities.support_memdump = 1;
-+
- 	if (instance->consistent_mask_64bit)
- 		drv_ops->mfi_capabilities.support_64bit_mode = 1;
+ #define MEGASAS_MSIX_NAME_LEN			32
  
 -- 
 2.31.1
 
 
---00000000000072641a05f5e8a789
+--00000000000053149905f5e8a8e6
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -195,14 +161,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICTRzcTS
-apmu1n+SoLiMHOMxai2i3ZEHDiH2zGhAXRaDMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMDMwMjEwNTQzNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEOoVd4e
+rYXgvXcwUc8pYcADoM9wMqV+1FwDsbP6Z1ieMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMDMwMjEwNTQ0OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDOT0RCXvuZnwl7f9pbCESlmwuZ
-fLe0tXKxCPevMrpsiirQLg1DV7vmI8lr4cyPXbefRydt1k4UWNrTdw/jK1gMFL53wjQgp5ihGBKe
-UJ4ykgIYjfuomVRCMBz+I6COjbLDi1mybAmcuLSJLfhKTDs+6dhJPH7TFbMAkjHtLcvK1eUzPzi/
-9AB1wbaR95ZAYfMTrUDv5tt3vcNdWQfyeBRKskS7WcTYfJJuA5xaju1e9ZOZ0qYp2kt1znKsWEoI
-cI0P61Lz8wj5d/sIONa2WNQhq2gLyepWBZ/Fa1ox7LJcAcrM/3MoI2uPRiQp0TSgceYcOYjPdTaj
-wHXv3fnm+Tb7
---00000000000072641a05f5e8a789--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB3K6pJCCXD7usBtrDBTHJEk6q8
+/BTBy7n5SNMN2kcZ27EAf5x/YOPWEv6jX0XNphAHJWhPW5k7cqAHADYLZidjF2mtbkv5u/7g161I
+yAYxnnWDlaQH18IM35/HTBFRqon3MFpiUZ8aXvJiUs+ZRNo1YrDe7+Jay7Q8QBx6y4fA81OMCzT0
+F0vldvakvmXXSOEg878VmFWbVAiWN7A754seaWQF6WO/Pcw0jPx5GAaKidHwUaI6AGf5Mea+KoCM
+7zh190yXigwbyyqyBMphryEzNEUF7eoq8yfFAZmZ3HGcvZHWRAfWaKmsDIFKKiIQzDpNG4scUEZn
+H3sSW9jPKQui
+--00000000000053149905f5e8a8e6--
