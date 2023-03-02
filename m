@@ -2,117 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7622DC6FA8E
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 10:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84B1C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 10:54:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229639AbjCBKyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Mar 2023 05:54:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41532 "EHLO
+        id S229639AbjCBKyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 05:54:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229509AbjCBKyT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 05:54:19 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D55335BB
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 02:54:18 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id me6-20020a17090b17c600b0023816b0c7ceso2442993pjb.2
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2023 02:54:18 -0800 (PST)
+        with ESMTP id S229673AbjCBKyf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 05:54:35 -0500
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B9C14EC5
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 02:54:34 -0800 (PST)
+Received: by mail-pl1-x634.google.com with SMTP id p20so15899743plw.13
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2023 02:54:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1677754457;
+        d=broadcom.com; s=google; t=1677754474;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=LOwkywF6h6SWFidmVz2iOYUs6bH9fQEmT+sKTO9HyHc=;
-        b=GUGYIcYMjwoUIn9FUaMyVfshKctAu0iNpMMJGQ7q0V5yTWXcmm0uJuhPYZEnSooswJ
-         IadpmpDr5FoYIj2mJUu3qJ2d8mHXy1KQ77tc7CodtAYhUOwEuf3jteFC5LgWMopm12+2
-         6Lq5vYc/Ylod7kZHngaLdrsG7zEyza7XEkGnI=
+        bh=2q9jrcy1DNS8CTC6w1q2MZ59aRtYLDMjt9hejdQuq7A=;
+        b=KfIuk8AHmAYXYsKo4ZEgwGXbY9YkmHrILgneq/mkrEZSOjR2ax9+65Frx+x+hAfS0t
+         erU/EEfeJYR+BZzux328LcmaQX6txCyIasNeywiT0HLw8KHGZpK3SpdXpDkfIwoBSQrF
+         4JlFB0OIMOz+kQgVAAynd9WKBBFkrylFBlmwY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677754457;
+        d=1e100.net; s=20210112; t=1677754474;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LOwkywF6h6SWFidmVz2iOYUs6bH9fQEmT+sKTO9HyHc=;
-        b=2VBTt6NJcfFViwXM3FAccBz35u4xhmmeLR0L8B0r1vuDmdbo6Vs/U+8Ik+W8gQjkz8
-         uxX3MxACzBKxZpwKJOAi537yta5oYyXp3a1fVyl6EdjztoxdV5xdQZxDO35CFncZa5ru
-         7gI27aVKx7CAAoq6n0mb7Nn5CYI7OrzJS3Y4UmYGaeUeyjiABxEx875GycwIkvH7fflL
-         C27A6x6iF7qZ+Tf1Fcg+0DAWicXmom6DIDwKNWWj5oTx/a+iSUc0fuUx2MJ6iBr/d50P
-         +hDRrVIuMo6bHMANP43/jFWNVbwkWAxQZ+ALyxOPdlCIrQLPmCTLarigjBFBvQ7uAnJf
-         dXwQ==
-X-Gm-Message-State: AO0yUKVbERMyp4PdavtPoMWSGLeGPDNNqQRGiBBnvIZmrGXoO3f/tDqy
-        kK6YRtXh/LvRGdOWCVI9cXhgm3FU0jNopOeM1Zyt/gIWgMGSMTgLA1FDAsvylx0FQ8HCK1M0zyO
-        UTt48nxJeu1occrGrLt84UgfypxnAtCDl9fFX7n7FL8XTJ/D/Rul1J40gKKx6aVCn3vLl4LfJIv
-        jdHTxTvSHKt8SAGck=
-X-Google-Smtp-Source: AK7set+NnsOY7FxYLwSMgn2Ay33bswzj55nqcykfrzLmEKQCaB5ncxLE9D0R1h3Y6EP4wqTM4MbrZQ==
-X-Received: by 2002:a17:902:d4c5:b0:19c:d4c0:ce78 with SMTP id o5-20020a170902d4c500b0019cd4c0ce78mr1918509plg.29.1677754457364;
-        Thu, 02 Mar 2023 02:54:17 -0800 (PST)
+        bh=2q9jrcy1DNS8CTC6w1q2MZ59aRtYLDMjt9hejdQuq7A=;
+        b=ziPttXGCf8131jiW96Wvth/whteFCk5BOc2ELXIM+Nxls5aZW50ILCRtzRwDZo8jwx
+         5JgqJ+8Y1y+UEH1ReXq1JMRDfRBpACqyE3h03rVxHVBk3l7zFiwNdsVFDB1wKna62jFl
+         WsJWBYgqb/P+dlXGlgADhyNepDxbcnAgpOnCrb9sigsz64Su7aoPn/9NHp8AMP3TC7j0
+         0KBj2G+kf+myLGmDI/A3UhmWzkIYxwxixM58khSJetIV/5NwWAe4snfeoHS+eMoWkkoF
+         w9YlALgEPOKDPIvySMoezrQTsD6ZP22RKK/bVjjiIiVgMTiILjAN+rI70JKb2hktc1uR
+         5VMA==
+X-Gm-Message-State: AO0yUKWxjuwew7tLk7sCj/CnxUpZbETj3/YxpMcBYT7wFy5GYUmVjYVa
+        GitaSAMzBAJ7MqNa2qO1L+Qy49X5ZjT03N/e5q1zkgVoES9xI+enDA8UGOaUerCi3Dg8gKaBlQ/
+        Lx1d+YqowPmuvVSLfhZPmNWnf5iGHPwtouRkYvymOrN7XEhMVZLx0wiPNDTr0AMDLB6nXVM7XP+
+        6iKDSRNyt2KdjejeI=
+X-Google-Smtp-Source: AK7set+5NcDBoqHKfLcE+lbWaC52iM2hkUYcp1+mghrWhNebsP9s8YJ6PhWji2SZFj3UC/Q3YPGwnQ==
+X-Received: by 2002:a05:6a20:9144:b0:bb:b903:d836 with SMTP id x4-20020a056a20914400b000bbb903d836mr11117053pzc.54.1677754473578;
+        Thu, 02 Mar 2023 02:54:33 -0800 (PST)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x14-20020a63170e000000b00502e1c50af3sm8865873pgl.45.2023.03.02.02.54.15
+        by smtp.gmail.com with ESMTPSA id x14-20020a63170e000000b00502e1c50af3sm8865873pgl.45.2023.03.02.02.54.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Mar 2023 02:54:16 -0800 (PST)
+        Thu, 02 Mar 2023 02:54:32 -0800 (PST)
 From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     sumit.saxena@broadcom.com,
         Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 1/3] megaraid_sas: Update max supported LD IDs to 240
-Date:   Thu,  2 Mar 2023 16:23:40 +0530
-Message-Id: <20230302105342.34933-2-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 2/3] megaraid_sas: Add crash dump mode capability bit in MFI capabilities
+Date:   Thu,  2 Mar 2023 16:23:41 +0530
+Message-Id: <20230302105342.34933-3-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230302105342.34933-1-chandrakanth.patil@broadcom.com>
 References: <20230302105342.34933-1-chandrakanth.patil@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000007bb57c05f5e8a6bc"
+        boundary="00000000000072641a05f5e8a789"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000007bb57c05f5e8a6bc
+--00000000000072641a05f5e8a789
 Content-Transfer-Encoding: 8bit
 
-As of now, The firmware only supports LD IDs up to 240, and LD ID 255
-(0xFF) being reserved for deleted LDs. However, in some cases, firmware
-was assigning LD ID 254 (0xFE) to deleted LDs which was causing the
-driver to delete the wrong LD.
+In kdump kernel mode, the driver works in reduced functionality mode with
+some features disabled such as reduced MSIX count and RDPQ disabled etc.
+However, the firmware is not aware of this mode, in some cases, which
+results in undefined behavior.
 
-To address this issue, the driver updated the LD ID check from 255 to
-240, This ensures the deleted LD ID properly identifies and removed by
-the driver without accidently deleting the valid LDs.
+To address this, the driver informs the firmware about the kdump mode
+driver through MPI capabilities bit during driver initialization.
+So firmware can adjust its behavior accordingly.
 
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h    | 2 ++
- drivers/scsi/megaraid/megaraid_sas_fp.c | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_sas.h        | 6 ++++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 +++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 4919ea54b827..2ef9d41fc6f4 100644
+index 2ef9d41fc6f4..c2bace65105b 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1519,6 +1519,8 @@ struct megasas_ctrl_info {
- #define MEGASAS_MAX_LD_IDS			(MEGASAS_MAX_LD_CHANNELS * \
- 						MEGASAS_MAX_DEV_PER_CHANNEL)
+@@ -1760,7 +1760,8 @@ union megasas_sgl_frame {
+ typedef union _MFI_CAPABILITIES {
+ 	struct {
+ #if   defined(__BIG_ENDIAN_BITFIELD)
+-	u32     reserved:16;
++	u32     reserved:15;
++	u32	support_memdump:1;
+ 	u32	support_fw_exposed_dev_list:1;
+ 	u32	support_nvme_passthru:1;
+ 	u32     support_64bit_mode:1;
+@@ -1794,7 +1795,8 @@ typedef union _MFI_CAPABILITIES {
+ 	u32     support_64bit_mode:1;
+ 	u32	support_nvme_passthru:1;
+ 	u32	support_fw_exposed_dev_list:1;
+-	u32     reserved:16;
++	u32	support_memdump:1;
++	u32     reserved:15;
+ #endif
+ 	} mfi_capabilities;
+ 	__le32		reg;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index fe70f8f11435..7ebfbe0c2ba7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1201,6 +1201,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 	drv_ops->mfi_capabilities.support_nvme_passthru = 1;
+ 	drv_ops->mfi_capabilities.support_fw_exposed_dev_list = 1;
  
-+#define MEGASAS_MAX_SUPPORTED_LD_IDS		240
++	if (reset_devices)
++		drv_ops->mfi_capabilities.support_memdump = 1;
 +
- #define MEGASAS_MAX_SECTORS                    (2*1024)
- #define MEGASAS_MAX_SECTORS_IEEE		(2*128)
- #define MEGASAS_DBG_LVL				1
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index da1cad1ee123..4463a538102a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -358,7 +358,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
- 		ld = MR_TargetIdToLdGet(i, drv_map);
+ 	if (instance->consistent_mask_64bit)
+ 		drv_ops->mfi_capabilities.support_64bit_mode = 1;
  
- 		/* For non existing VDs, iterate to next VD*/
--		if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
-+		if (ld >= MEGASAS_MAX_SUPPORTED_LD_IDS)
- 			continue;
- 
- 		raid = MR_LdRaidGet(ld, drv_map);
 -- 
 2.31.1
 
 
---0000000000007bb57c05f5e8a6bc
+--00000000000072641a05f5e8a789
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -183,14 +195,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEII/Y45bO
-UElmAMvYkrtZ9EOgYr3AEHKTobxXff4w07QxMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMDMwMjEwNTQxN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICTRzcTS
+apmu1n+SoLiMHOMxai2i3ZEHDiH2zGhAXRaDMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMDMwMjEwNTQzNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAJS+BedlPPXVeJ3h1i48rFzdIL
-ptE3bgkG14LKqdWvQO3OMWlZgN9oN/hPftWVlh1C+OR/Kc9kjsGcV90NK9iJyO7EfQf6VUZvvWdZ
-zN1HUzpSZIztzSoIFMPrcvAiKgrc4l25PNDHvUj250KxoyOsq6+kD0390x84kd9zb+GNRn967ffE
-nDYuhDxlTjSXWnAoyBGs+C0lXFb5pakRKIfXAuojJPmrEg/ZYbWxmZUY83RFT+6eHsPEA1DXmC3i
-YcH5VhzcZewObfayFOvzGukFaMChzBy/0AoCb1vdbEyhgRWWkn5X1gM8biDCQMyv2LInFmsFMVdr
-km9uBhWsRWuC
---0000000000007bb57c05f5e8a6bc--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDOT0RCXvuZnwl7f9pbCESlmwuZ
+fLe0tXKxCPevMrpsiirQLg1DV7vmI8lr4cyPXbefRydt1k4UWNrTdw/jK1gMFL53wjQgp5ihGBKe
+UJ4ykgIYjfuomVRCMBz+I6COjbLDi1mybAmcuLSJLfhKTDs+6dhJPH7TFbMAkjHtLcvK1eUzPzi/
+9AB1wbaR95ZAYfMTrUDv5tt3vcNdWQfyeBRKskS7WcTYfJJuA5xaju1e9ZOZ0qYp2kt1znKsWEoI
+cI0P61Lz8wj5d/sIONa2WNQhq2gLyepWBZ/Fa1ox7LJcAcrM/3MoI2uPRiQp0TSgceYcOYjPdTaj
+wHXv3fnm+Tb7
+--00000000000072641a05f5e8a789--
