@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11B40C7EE30
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 23:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB52C7EE33
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 23:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230048AbjCBXod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Mar 2023 18:44:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58954 "EHLO
+        id S229919AbjCBXoe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 18:44:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230019AbjCBXoa (ORCPT
+        with ESMTP id S230006AbjCBXoa (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 18:44:30 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC253193CB
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 15:43:44 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67CB4F94D
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 15:43:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677800624;
+        s=mimecast20190719; t=1677800622;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=44Bqd6yotCCK5/7jBJ/mmuc4gWLU35hi5f1+zPBfLeo=;
-        b=FCoNErtrHI/rMLoC+eD/c8pkjWPj4i90aZRfB9JB+OydsrGTuFm/zpTiKc6C44VUYCJ8En
-        vQzIC+XYUswRaSvjZqMSmgmuI1gJ9yAyt/atmfiFfNK9lW5mvF5lDnKVcTwYXEg3Wi/Lu+
-        ZTzrXpggp/2/h/yfmfSYTMWJjznNGkE=
+        bh=2k+GP5w/mW8CW/5OpAFEff9AAlcLynxkVrT/Xx5WWIw=;
+        b=bRL/qQTlFjetHO+/5suyezqtaNG7LXlje7RjavretnjaT3gB6hYmxsJR60t8AeCQBHue38
+        gRTnr9z9V94NAn6YDmaxpWqmhEpSfst6tkuAiO34WA4VIh1YkHTAxSdoYG6kRmbFXkzkId
+        2+VbrKKtwbIJUu+YAMbJOLiHssWFnHk=
 Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
  [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-479-Yu_j-P8FNbOuQxCCNl8Ubg-1; Thu, 02 Mar 2023 18:43:41 -0500
-X-MC-Unique: Yu_j-P8FNbOuQxCCNl8Ubg-1
+ us-mta-135-VyW2eRu7NkWjkppiMPYgXg-1; Thu, 02 Mar 2023 18:43:39 -0500
+X-MC-Unique: VyW2eRu7NkWjkppiMPYgXg-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D5E7C3C0CD46;
-        Thu,  2 Mar 2023 23:43:40 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 15D773C0CD43;
+        Thu,  2 Mar 2023 23:43:39 +0000 (UTC)
 Received: from localhost.localdomain.com (unknown [10.45.225.52])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 30692140EBF6;
-        Thu,  2 Mar 2023 23:43:40 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 63D2B140EBF6;
+        Thu,  2 Mar 2023 23:43:38 +0000 (UTC)
 From:   Tomas Henzl <thenzl@redhat.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com,
         ranjan.kumar@broadcom.com
-Subject: [PATCH v2 3/6] scsi: mpi3mr: fix a memory leak
-Date:   Fri,  3 Mar 2023 00:43:33 +0100
-Message-Id: <20230302234336.25456-4-thenzl@redhat.com>
+Subject: [PATCH v2 1/6] scsi: mpi3mr: fix a memory leak
+Date:   Fri,  3 Mar 2023 00:43:31 +0100
+Message-Id: <20230302234336.25456-2-thenzl@redhat.com>
 In-Reply-To: <20230302234336.25456-1-thenzl@redhat.com>
 References: <20230302234336.25456-1-thenzl@redhat.com>
 MIME-Version: 1.0
@@ -53,43 +53,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Free mpi3mr_hba_port at .remove.
+Add a missing kfree.
 
-Fixes: 42fc9fee116f ("scsi: mpi3mr: Add helper functions to manage device's port")
+Fixes: f10af057325c ("scsi: mpi3mr: Resource Based Metering")
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 6f9230a079c3..85bd45563686 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -5112,6 +5112,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 	struct workqueue_struct	*wq;
- 	unsigned long flags;
- 	struct mpi3mr_tgt_dev *tgtdev, *tgtdev_next;
-+	struct mpi3mr_hba_port *port, *hba_port_next;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index ab8326b532e7..b632e1bb1007 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -4403,6 +4403,9 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 		mrioc->pel_seqnum_virt = NULL;
+ 	}
  
- 	if (!shost)
- 		return;
-@@ -5151,6 +5152,16 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 	mpi3mr_free_mem(mrioc);
- 	mpi3mr_cleanup_resources(mrioc);
- 
-+	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
-+	list_for_each_entry_safe(port, hba_port_next, &mrioc->hba_port_table_list, list) {
-+		ioc_info(mrioc,
-+		    "removing hba_port entry: %p port: %d from hba_port list\n",
-+		    port, port->port_id);
-+		list_del(&port->list);
-+		kfree(port);
-+	}
-+	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++	kfree(mrioc->throttle_groups);
++	mrioc->throttle_groups = NULL;
 +
- 	spin_lock(&mrioc_list_lock);
- 	list_del(&mrioc->list);
- 	spin_unlock(&mrioc_list_lock);
+ 	kfree(mrioc->logdata_buf);
+ 	mrioc->logdata_buf = NULL;
+ 
 -- 
 2.39.1
 
