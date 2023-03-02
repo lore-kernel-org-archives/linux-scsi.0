@@ -2,91 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F1D9C7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 00:52:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E1A4C7EE2F
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 01:42:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229523AbjCBAwA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 19:52:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35800 "EHLO
+        id S229744AbjCBBm1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 20:42:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjCBAv7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 19:51:59 -0500
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F6FE5653F;
-        Wed,  1 Mar 2023 16:51:58 -0800 (PST)
-Received: by mail-pj1-f50.google.com with SMTP id kb15so15231270pjb.1;
-        Wed, 01 Mar 2023 16:51:58 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=y+yLQf2HtdYkOd2g1kdvKMafe5s+xMLejYeBI5YFR7Q=;
-        b=m94i8vMtDE+gIKx6k2bnecM3ITyX5iAT9fmglPe/H8ffP+v2qqagdD9z3jTMxAKn77
-         v3Ajx1j1K5MsHqLXQ4nsBJFcxpUjZwencUqXo+YuH9SEqBb2jpQYAahWMYmNYX2weMIT
-         dCWoC62v1zEWpuB81hC53aotTCJWVaPgoxOtqSlDMWY2cHzXhW4U6G3iFnCnwn5EPGte
-         +oEFaebh5/zRAU6nC0l+OvvBhxIJoicWDRXMB3pLjKkD+lRJPTkfee6xsTPerKtHvWcu
-         PTvBWLeSfe6ZBG8lQv46hQ+OV593vQ87RBVcDs6LOzgTWcXvS6wj0HNYi6Yt/R6h8NZq
-         c7Cw==
-X-Gm-Message-State: AO0yUKVLVcKUF7RAiH5ZCTkwTucPZF1xrRTzBCbjlS0k21x6cq8Ip1SR
-        A1mhrhGm7Mv0FZ8A9yz+Zg/XeG5Z2Bw=
-X-Google-Smtp-Source: AK7set+H6K9vJywU4qfeJq7kp1LfRcE9Leuk9g/3JeI149BkHyhcjqaRDArzPjaUfTPo+Wb5iK+pGQ==
-X-Received: by 2002:a17:903:2292:b0:19a:5f59:f100 with SMTP id b18-20020a170903229200b0019a5f59f100mr431890plh.9.1677718317299;
-        Wed, 01 Mar 2023 16:51:57 -0800 (PST)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id x65-20020a17090a6c4700b0022bf4d0f912sm353737pjj.22.2023.03.01.16.51.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Mar 2023 16:51:56 -0800 (PST)
-Message-ID: <569dc9d2-3e6c-0efc-560c-bfcacfbfbda7@acm.org>
-Date:   Wed, 1 Mar 2023 16:51:54 -0800
+        with ESMTP id S229686AbjCBBm0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 20:42:26 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6D45580D4;
+        Wed,  1 Mar 2023 17:41:59 -0800 (PST)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 321NUdGF019557;
+        Thu, 2 Mar 2023 01:41:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=W5Fsj0D2PjEqi7yD+R6eoQDUqd0GGArIuCqk2z+tAGI=;
+ b=f9YM4Yg9/eZQPYRd3j1t2EZqV8enTvuE7uaPsGgyTn78rxeVmMe9tIsbcsBOaYiv/7oB
+ coLZpQzCxsBNeSuIukYmK9g2dlvQjGJVxrWn4lSEEojilIgfgo7tDszi3A2wnwRresEL
+ Mcnd4divDnXL2dEaRUMb6afjxXT8V2IL8kGTYe4b8NNMGD6BxqfwZEVk//pVdQwdXymv
+ VuEU5KR+YQbg/mp+VO94Za2o6ccR2sE7vk8VJZK50Tg+eFr3c0eO3C5+Ve8gNn8HblBz
+ L+1XQAbihgjRW3rCi+5UfXWv89ZfGMkc1BO9LoUt5TmB1rUUNeccwJdTw602LEG9tOeQ dQ== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p2asps50w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Mar 2023 01:41:26 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3221fPPq010144
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 2 Mar 2023 01:41:25 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.41; Wed, 1 Mar 2023 17:41:20 -0800
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
+        <beanhuo@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 1/1] ufs: mcq: qcom: Fix passing zero to PTR_ERR
+Date:   Wed, 1 Mar 2023 17:41:06 -0800
+Message-ID: <94ca99b327af634799ce5f25d0112c28cd00970d.1677721072.git.quic_asutoshd@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [LSF/MM/BPF TOPIC] Hybrid SMR HDDs / Zone Domains & Realms
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Khazhy Kumykov <khazhy@chromium.org>,
-        lsf-pc@lists.linux-foundation.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <CACGdZYKXqNe08VqcUrrAU8pJ=f88W08V==K6uZxRgynxi0Hyhg@mail.gmail.com>
- <ad8b054a-26a5-ea60-9c66-4a6b63ca27ef@acm.org>
- <54fb85ac-7c45-f77f-11d7-9cb072f702fb@opensource.wdc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <54fb85ac-7c45-f77f-11d7-9cb072f702fb@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 72ft9D9LAwQDz6VfaaxDTcyu-YShsEqr
+X-Proofpoint-ORIG-GUID: 72ft9D9LAwQDz6VfaaxDTcyu-YShsEqr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-01_17,2023-03-01_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ impostorscore=0 mlxscore=0 bulkscore=0 phishscore=0 mlxlogscore=999
+ malwarescore=0 spamscore=0 clxscore=1015 lowpriorityscore=0
+ priorityscore=1501 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2303020010
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/1/23 16:06, Damien Le Moal wrote:
-> On 3/2/23 08:50, Bart Van Assche wrote:
->> On 3/1/23 15:34, Khazhy Kumykov wrote:
->>>    - There’s already support in the kernel for marking zones
->>> online/offline and cmr/smr, but this is fixed, not dynamic. Would
->>> there be hiccups with allowing zones to come online/offline while
->>> running?
->>
->> It may be easier to convince HDD vendors to modify their firmware such
->> that the conventional and SMR zones are reported to the Linux kernel as
->> different logical units rather than adding domains & realms support in
->> the Linux kernel. If anyone else has another opinion, feel free to share
->> that opinion.
-> 
-> That would not resolve the fact that each unit would still potentially have a
-> mix of active and inactive areas. Total nightmare to deal with unless a zone API
-> is also exposed for any user to figure out which zone is active.
-> That means that we would need to always expose these drives as zoned, using a
-> very weird zone model as zone domains/zone realms do not fit at all with the
-> current host-managed model. Lots of places need changes to handle these drives.
-> This will make things very messy all over.
+Fix an error case in ufs_qcom_mcq_config_resource(), where the
+return value is set to 0 before passing it to PTR_ERR.
 
-Do users need all the features that are supported by the domains & 
-realms model? If not: what I had in mind is to let the HDD expose two 
-logical units to the operating system that each have a contiguous range 
-of active zones and hence not to support inactive zones.
+This led to Smatch warning:
+drivers/ufs/host/ufs-qcom.c:1455 ufs_qcom_mcq_config_resource() warn:
+passing zero to 'PTR_ERR'
 
-Thanks,
+Fixes: c263b4ef737e ("scsi: ufs: core: mcq: Configure resource regions")
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 
-Bart.
+--
+v1 -> v2
+- Split to 2 patches
+- Addressed Mani's comments
+--
+---
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 34fc453f3eb1..43b1fc1ad33e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1451,8 +1451,8 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+ 		if (IS_ERR(res->base)) {
+ 			dev_err(hba->dev, "Failed to map res %s, err=%d\n",
+ 					 res->name, (int)PTR_ERR(res->base));
+-			res->base = NULL;
+ 			ret = PTR_ERR(res->base);
++			res->base = NULL;
+ 			return ret;
+ 		}
+ 	}
+-- 
+2.7.4
 
