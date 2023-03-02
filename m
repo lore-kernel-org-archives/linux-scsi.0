@@ -2,115 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3378C7EE32
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 04:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B26A2C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 07:26:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbjCBESa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 23:18:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42496 "EHLO
+        id S229963AbjCBH0q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 02:26:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229893AbjCBESB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 23:18:01 -0500
-Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67A315679E
-        for <linux-scsi@vger.kernel.org>; Wed,  1 Mar 2023 20:16:47 -0800 (PST)
-Received: by mail-qt1-x82b.google.com with SMTP id c3so12561645qtc.8
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Mar 2023 20:16:47 -0800 (PST)
+        with ESMTP id S229958AbjCBH0p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 02:26:45 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE1D1298E2
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Mar 2023 23:26:36 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id m8-20020a17090a4d8800b002377bced051so2002750pjh.0
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Mar 2023 23:26:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OiLX93qNxOIggMQE39gtCyYpTO910rpc2HqmiyP4Wqs=;
-        b=A1EaYf8tKwM+OSZSx4sx0qUaPdLBesg9gHN2HlrQvObNa2lqTRK6IIiYpalGERQjcF
-         pn+3xJBA/2791KiNqkOv//qXihovDpzswgjkqop1IXsV/L8NKh0Reo/ds5+FfnISkwnR
-         I4WYiYH26wHIo2lOKIbarUgozHVzZhjq93i0zsrTBDllz8HnRhjt1fP7c+82n2uMukdc
-         FrBA3ORoe7jdcFdPw9qrbyGt3C0CW2OrZV5E0sHojytvWDuV8PlYeOB/d3LJNDdjuJSG
-         uvSrX/ZjBU8NVnQtHqnVeKjdMBgeElsggH2A6HgKfI3fDqki+55VcLxx2U4VMZJDfP6k
-         wNBw==
+        d=linaro.org; s=google;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=F3u3LErDLxQpcTw9IoCPajtVtH7Wl04gCGhYoZubMP8=;
+        b=zkjvhExvYB0B4Qs2sggCbs2HJYow4AZ9zqt/ddPcN68B/NhRqd/fHYIc05vyHqguXZ
+         rdItaGWqa2IRY4+HxOiaNJoPqQr+6IqEhaMmPndYTDYXW9VMkwjn0kmI5LdH77EKpMR7
+         bls32mHRPKTxAe5TWE5VR6SGKlVuHGgWzzexA6cIudfbgNAeNe1Sfc2WAyeeW6dZqqtN
+         C/TLFHEjXVGMOfeXm/HDP20KbV6bCY6ZxPfGCznWckEW5ywTk0vro+Yf8qYRdT0M+Nlw
+         L2xESFFyZ0BLBoYIhuLNiooS9uUP1M62M6ciAntjR+44Nmigwk5ZuiGwJKWA5LzhYYXh
+         T6iQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OiLX93qNxOIggMQE39gtCyYpTO910rpc2HqmiyP4Wqs=;
-        b=dbis8wJp2oq77FL+2p+Rk+EV//SryeQyZUvU+aDlADLgcGZ/JaynZizAk2XHkBHupl
-         X6moeFEyX2YgyW9DwjnD0zHLTJsf2T+r5NI83mZA6G0U18SX7nmC4lo8Dn2elNns/+z2
-         v/lWkmS5eFG093x4Q+YWlcN24qTp9LjIdqfuAM2FXDTXCWEzNElgEWZ9HKnU4xAxG/Yt
-         3xyeRbKEi1VJBEpao5x+zWHX2XaKTDlHuGOrNgqejxMQ7y9O5eBPClCiVyvlgEPs6i56
-         +EpVjQrHDVMWEI2HWiUENwv8CtqlOggRclENB83Y17r2zcYIGom0QPIPkgDgVrEefkcY
-         ciBg==
-X-Gm-Message-State: AO0yUKWWHsc8FRu5BTiMb6HTVCxFGhIqbd7yAUsxR5RnertsRhcXb1Mp
-        V7iLcPY+b3wJdaoKm4mIms9AxPlOdEMQNViD7t0klg==
-X-Google-Smtp-Source: AK7set/1Qo/2N3JCxnEKF/vVdWvMT8KXKuR0NcpsojQRCVOxjmuWm2l5Wboe2MANA6zXLOiyu1AmcY+R5Hl0TYWvINA=
-X-Received: by 2002:ac8:444a:0:b0:3bf:b844:ffc7 with SMTP id
- m10-20020ac8444a000000b003bfb844ffc7mr2387535qtn.12.1677730602197; Wed, 01
- Mar 2023 20:16:42 -0800 (PST)
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=F3u3LErDLxQpcTw9IoCPajtVtH7Wl04gCGhYoZubMP8=;
+        b=YyKPgar1FJIrITldw9PGM/RWDakXIvswILecTsvxhRDaHbeVGmPMNkTlCZszelwgu+
+         U1XcT9COpV4xpOOg9hr3sNks6KIL42UF52PkdGzPRqN2R3pigQz1Rk6P6gh91PUN87Lq
+         Gd56JLsSaGv/aiigpMfQb2XRyt+5l8oV4IbHQZVY+7DU+gno75A4SX4ZTKpz4KCoZchy
+         fhbuLyIBdEkehJsC+Fbl3OGpH/evqd8mWCoyqilSbqWE9RJhbP/Iq/KNZPBOrgxLfuHI
+         5ytnnnPAgDYop7F7u4Mt77fSRBwyu8yDomO0Pa/8NwmDcVdllIYQydiCB42bkE23AsSz
+         tnNQ==
+X-Gm-Message-State: AO0yUKW0knO0Qgj0RpwsB2caX2oSbL1CWXapwePVXTQBHgZmjrarzPnZ
+        PxKHwvMnMqYGdIo0CKkYMUJt
+X-Google-Smtp-Source: AK7set+b5+DA7dn3dFlxWvnkmJ1pb3iQAsilUo7zXfjPyk+R+gXDelIQToIayCVkVSQPhcP2Tu7/Kg==
+X-Received: by 2002:a05:6a20:4c16:b0:cc:d44a:beaf with SMTP id fm22-20020a056a204c1600b000ccd44abeafmr8583578pzb.13.1677741995997;
+        Wed, 01 Mar 2023 23:26:35 -0800 (PST)
+Received: from thinkpad ([59.97.53.52])
+        by smtp.gmail.com with ESMTPSA id e18-20020a62aa12000000b00593cd0f37dcsm9077738pff.169.2023.03.01.23.26.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Mar 2023 23:26:35 -0800 (PST)
+Date:   Thu, 2 Mar 2023 12:56:31 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_asutoshd@quicinc.com
+Subject: Re: [PATCH] ufs: host: ufs-qcom: Return directly if MCQ resource is
+ provided in DT
+Message-ID: <20230302072631.GA2890@thinkpad>
+References: <20230301073110.9083-1-manivannan.sadhasivam@linaro.org>
+ <a3c08b5f-b8cb-fdd9-eb60-b1adc2879fff@acm.org>
 MIME-Version: 1.0
-References: <Y9KtCc+4n5uANB2f@casper.infradead.org> <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
- <Y/UiY/08MuA/tBku@casper.infradead.org> <CA+CK2bBYX-N8T_ZdzsHC7oJnHsmqHufdTUJj5OrdFk17uQ=fzw@mail.gmail.com>
- <ZAAgKTWpwCE1fruV@casper.infradead.org>
-In-Reply-To: <ZAAgKTWpwCE1fruV@casper.infradead.org>
-From:   Pasha Tatashin <pasha.tatashin@soleen.com>
-Date:   Wed, 1 Mar 2023 23:16:06 -0500
-Message-ID: <CA+CK2bCxBqjh4b_-ZU8czDR-naaHJVKWo38uhB2_a9x18NWYbQ@mail.gmail.com>
-Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Gao Xiang <hsiangkao@linux.alibaba.com>,
-        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <a3c08b5f-b8cb-fdd9-eb60-b1adc2879fff@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 1, 2023 at 11:03=E2=80=AFPM Matthew Wilcox <willy@infradead.org=
-> wrote:
->
-> On Wed, Mar 01, 2023 at 10:50:24PM -0500, Pasha Tatashin wrote:
-> > On Tue, Feb 21, 2023 at 2:58=E2=80=AFPM Matthew Wilcox <willy@infradead=
-.org> wrote:
-> > > My goal for 2023 is to get to a point where we (a) have struct page
-> > > reduced to:
-> > >
-> > > struct page {
-> > >         unsigned long flags;
-> > >         struct list_head lru;
-> > >         struct address_space *mapping;
-> > >         pgoff_t index;
-> > >         unsigned long private;
-> > >         atomic_t _mapcount;
-> > >         atomic_t _refcount;
-> > >         unsigned long memcg_data;
-> > > #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
-> > >         int _last_cpupid;
-> > > #endif
-> > > };
-> >
-> > This looks clean, but it is still 64-bytes. I wonder if we could
-> > potentially reduce it down to 56 bytes by removing memcg_data.
->
-> We need struct page to be 16-byte aligned to make slab work.  We also nee=
-d
-> it to divide PAGE_SIZE evenly to make CONFIG_HUGETLB_PAGE_OPTIMIZE_VMEMMA=
-P
+On Wed, Mar 01, 2023 at 10:07:41AM -0800, Bart Van Assche wrote:
+> On 2/28/23 23:31, Manivannan Sadhasivam wrote:
+> > Instead of using a goto label to return, let's return directly in the
+> > "if" condition after setting mcq_base.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >   drivers/ufs/host/ufs-qcom.c | 9 ++++-----
+> >   1 file changed, 4 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > index 34fc453f3eb1..d90f963eed02 100644
+> > --- a/drivers/ufs/host/ufs-qcom.c
+> > +++ b/drivers/ufs/host/ufs-qcom.c
+> > @@ -1460,8 +1460,10 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+> >   	/* MCQ resource provided in DT */
+> >   	res = &hba->res[RES_MCQ];
+> >   	/* Bail if MCQ resource is provided */
+> > -	if (res->base)
+> > -		goto out;
+> > +	if (res->base) {
+> > +		hba->mcq_base = res->base;
+> > +		return 0;
+> > +	}
+> >   	/* Explicitly allocate MCQ resource from ufs_mem */
+> >   	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+> > @@ -1489,9 +1491,6 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+> >   		goto ioremap_err;
+> >   	}
+> > -out:
+> > -	hba->mcq_base = res->base;
+> > -	return 0;
+> >   ioremap_err:
+> >   	res->base = NULL;
+> >   	remove_resource(res_mcq);
+> 
+> This patch changes the behavior for the success case without mentioning this
+> in the patch description. So I assume that the behavior change is
+> unintentional and hence that this patch should be dropped?
+> 
 
-Hm, can you please elaborate on both of these cases, how do both of
-these cases work today with _last_cpuid configs or some other configs
-that increase "struct page" above 64-bytes?
+Sorry, my bad here :( Please ignore this patch.
 
-> work.  I don't think it's worth nibbling around the edges like this
-> anyway; convert everything from page to folio and then we can do the
-> big bang conversion where struct page shrinks from 64 bytes to 8.
+Thanks,
+Mani
 
-I agree with general idea that converting to folio and shrinking
-"struct page" to 8 bytes can be a big memory consumption win, but even
-then we do not want to encourage the memdesc users to use larger than
-needed types. If "flags" and "memcgs" are going to be part of almost
-every single memdesc type it would be nice to reduce them from
-16-bytes to 8-bytes.
+> Bart.
 
-Pasha
+-- 
+மணிவண்ணன் சதாசிவம்
