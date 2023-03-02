@@ -2,137 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B8CEC6FA8E
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 22:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F78C678D4
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 23:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229922AbjCBWSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Mar 2023 17:18:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60546 "EHLO
+        id S230037AbjCBXob (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 18:44:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229726AbjCBWR7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 17:17:59 -0500
-Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA3035594;
-        Thu,  2 Mar 2023 14:17:57 -0800 (PST)
-Received: by mail-qt1-x82b.google.com with SMTP id ay9so940752qtb.9;
-        Thu, 02 Mar 2023 14:17:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1677795477;
-        h=in-reply-to:content-disposition:mime-version:references:reply-to
-         :message-id:subject:cc:to:from:date:sender:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V0eFa8ILkm7saCjWoXNnQHqm1RHUvtu7xtFURhRmKWU=;
-        b=GWIdVRbSbgGAneugFpQgdh5lGR+K1O2RColDxiylPsGvgbxgTi3suTXXA6wFi8OCK0
-         VNr55Ah0Gc82W4FpWSTsMpjDZ1Erp/WmIRnZDS0YpniCm5SeKBzDA3FCJ8OcngRfT3am
-         LJR4Wv1lndNYH/Q/fwVcsuZerou4gr/yo1YSLP0kQcvMrmf2NmdjcDnwIAjLduXqmPNe
-         VlNJuhUG6Jamo98Ukf3GRQnXMF/KhWX9aS1xIH9/YtXknnp6o/3S59Xtp1bxusSnAubi
-         fOjhj1lJxSPeHuAjqExElFjdtMpPl+2YjDqfLqGQB/n6i2Ayg1FV3OBABQqVd1q1TZM5
-         StNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677795477;
-        h=in-reply-to:content-disposition:mime-version:references:reply-to
-         :message-id:subject:cc:to:from:date:sender:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=V0eFa8ILkm7saCjWoXNnQHqm1RHUvtu7xtFURhRmKWU=;
-        b=PfhIStD3sUWqPNqZ0b+WsqVzebSNeBsl5ZtGviX5kRLMbz2llsfjGYW/RuG2V2AdKr
-         ZvgBsPDsX7exDyv6fdIj1LhrDhNpYoI7ueg7KOUV5hYW+zTLLR2GabvRkkbehOMF7uG0
-         Tvc8TX79ZAIG9V8746HhTiqZ7Edj0lp2F7WjimQ0OZtcHtnvG3Uf5J6hTebQp5ksOD0w
-         2whAJNYqZUQ3gWu8bdnvXaGG70NKWA9COomtoeyXj4QdUFoPQidjsjKq1sZpgYALTX0n
-         JWS281PbwEa+iS0uGMUrhL1Z8mbADGAmb+sGal2+ooW58MbQc4vBjSmrDX1AVL3Wnna1
-         1soQ==
-X-Gm-Message-State: AO0yUKW/Egffzrgt67ZVhb+dbZUSUBybR6QL1HT4TvVoWdCf6UeI31xV
-        YGwbgZv4jXjyHYr5myGCNg==
-X-Google-Smtp-Source: AK7set/y+bOjExP+nvbPQ/5QcDoAS99DJhG2vCN39iU8gau82df1z2MZqb9gk8YkNPi+sskmliPrlQ==
-X-Received: by 2002:ac8:5f47:0:b0:3bf:dd45:ed68 with SMTP id y7-20020ac85f47000000b003bfdd45ed68mr19008132qta.47.1677795476934;
-        Thu, 02 Mar 2023 14:17:56 -0800 (PST)
-Received: from serve.minyard.net ([47.184.176.248])
-        by smtp.gmail.com with ESMTPSA id w19-20020ac843d3000000b003bfbf3afe51sm468742qtn.93.2023.03.02.14.17.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Mar 2023 14:17:56 -0800 (PST)
-Sender: Corey Minyard <tcminyard@gmail.com>
-Received: from minyard.net (unknown [IPv6:2001:470:b8f6:1b:9812:99fe:c8aa:e89a])
-        by serve.minyard.net (Postfix) with ESMTPSA id 2843A18000C;
-        Thu,  2 Mar 2023 22:17:55 +0000 (UTC)
-Date:   Thu, 2 Mar 2023 16:17:53 -0600
-From:   Corey Minyard <minyard@acm.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, kys@microsoft.com,
-        haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        song@kernel.org, robinmholt@gmail.com, steve.wahl@hpe.com,
-        mike.travis@hpe.com, arnd@arndb.de, gregkh@linuxfoundation.org,
-        jirislaby@kernel.org, jgross@suse.com, sstabellini@kernel.org,
-        oleksandr_tyshchenko@epam.com, xen-devel@lists.xenproject.org,
-        j.granados@samsung.com, zhangpeng362@huawei.com,
-        tangmeng@uniontech.com, willy@infradead.org, nixiaoming@huawei.com,
-        sujiaxun@uniontech.com, patches@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, apparmor@lists.ubuntu.com,
-        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-hyperv@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/7] ipmi: simplify sysctl registration
-Message-ID: <ZAEgkeb6E+k8PFZc@minyard.net>
-Reply-To: minyard@acm.org
-References: <20230302204612.782387-1-mcgrof@kernel.org>
- <20230302204612.782387-3-mcgrof@kernel.org>
+        with ESMTP id S229986AbjCBXoa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 18:44:30 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 542A816AEE
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 15:43:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677800623;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=JhUYLyZwZuUhpnWFnebVE++9cb4qmQcum/DaC5jAenI=;
+        b=ToTMzC6eC8kzLw4p04z1GpJtcPwA2SMH7lRRLLoHSFhslDzYPCBLD98WTDdCNdtEEH7kbj
+        SbzgjXwvcseDz06ezFpwg23v8dXqk/izUMIdAMqJTbSqdjR4JioQA/VpioSvS68ZWSV7G/
+        MjFAhE2c+2Zv0M0ynLzcwh531jselzM=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-190-jwcqX96nOXWEcUoKROWUug-1; Thu, 02 Mar 2023 18:43:42 -0500
+X-MC-Unique: jwcqX96nOXWEcUoKROWUug-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BBCAB100F908;
+        Thu,  2 Mar 2023 23:43:41 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.45.225.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 15D37140EBF6;
+        Thu,  2 Mar 2023 23:43:40 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com,
+        ranjan.kumar@broadcom.com
+Subject: [PATCH v2 4/6] scsi: mpi3mr: fix a memory leak
+Date:   Fri,  3 Mar 2023 00:43:34 +0100
+Message-Id: <20230302234336.25456-5-thenzl@redhat.com>
+In-Reply-To: <20230302234336.25456-1-thenzl@redhat.com>
+References: <20230302234336.25456-1-thenzl@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230302204612.782387-3-mcgrof@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 02, 2023 at 12:46:07PM -0800, Luis Chamberlain wrote:
-> register_sysctl_table() is a deprecated compatibility wrapper.
-> register_sysctl() can do the directory creation for you so just use
-> that.
+Free mrioc->sas_hba.phy at .remove.
 
-Thanks, I have included this in my tree for the next merge window.
+Fixes: 42fc9fee116f ("scsi: mpi3mr: Add helper functions to manage device's port")
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
--corey
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 85bd45563686..8f17a7953eb4 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5162,6 +5162,12 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 	}
+ 	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
+ 
++	if (mrioc->sas_hba.num_phys) {
++		kfree(mrioc->sas_hba.phy);
++		mrioc->sas_hba.phy = NULL;
++		mrioc->sas_hba.num_phys = 0;
++	}
++
+ 	spin_lock(&mrioc_list_lock);
+ 	list_del(&mrioc->list);
+ 	spin_unlock(&mrioc_list_lock);
+-- 
+2.39.1
 
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->  drivers/char/ipmi/ipmi_poweroff.c | 16 +---------------
->  1 file changed, 1 insertion(+), 15 deletions(-)
-> 
-> diff --git a/drivers/char/ipmi/ipmi_poweroff.c b/drivers/char/ipmi/ipmi_poweroff.c
-> index 163ec9749e55..870659d91db2 100644
-> --- a/drivers/char/ipmi/ipmi_poweroff.c
-> +++ b/drivers/char/ipmi/ipmi_poweroff.c
-> @@ -659,20 +659,6 @@ static struct ctl_table ipmi_table[] = {
->  	{ }
->  };
->  
-> -static struct ctl_table ipmi_dir_table[] = {
-> -	{ .procname	= "ipmi",
-> -	  .mode		= 0555,
-> -	  .child	= ipmi_table },
-> -	{ }
-> -};
-> -
-> -static struct ctl_table ipmi_root_table[] = {
-> -	{ .procname	= "dev",
-> -	  .mode		= 0555,
-> -	  .child	= ipmi_dir_table },
-> -	{ }
-> -};
-> -
->  static struct ctl_table_header *ipmi_table_header;
->  #endif /* CONFIG_PROC_FS */
->  
-> @@ -689,7 +675,7 @@ static int __init ipmi_poweroff_init(void)
->  		pr_info("Power cycle is enabled\n");
->  
->  #ifdef CONFIG_PROC_FS
-> -	ipmi_table_header = register_sysctl_table(ipmi_root_table);
-> +	ipmi_table_header = register_sysctl("dev/ipmi", ipmi_table);
->  	if (!ipmi_table_header) {
->  		pr_err("Unable to register powercycle sysctl\n");
->  		rv = -ENOMEM;
-> -- 
-> 2.39.1
-> 
