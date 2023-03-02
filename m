@@ -2,126 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42F49C7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 01:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54D0CC7EE23
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 02:03:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229802AbjCBBn5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 20:43:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48990 "EHLO
+        id S229561AbjCBCDm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 21:03:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229696AbjCBBnz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 20:43:55 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3869BBB90;
-        Wed,  1 Mar 2023 17:43:25 -0800 (PST)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 321H24d1022065;
-        Thu, 2 Mar 2023 01:43:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=WEt31C4rymQvGAxgTYp0HLRd/rePdGjn7Im2OeBw7/c=;
- b=cAOIPUm1srXoxZXh0SIX3iZPMKn6PyjMMXrC1msyGY+UKEYFugYbwX0Q+qlme3QUxK0l
- 6Dw7wPciEUL0EtFlZeC7d0sjChW9omQhFNL9VpC5XqYTemZCb994akaQ0U5DLmkOA/st
- NpONBZf9kRGWcUBG1g+IfdquYTpcN9Sh7GyaVdyTX9MALD9/uknyT9TdNGJ9QQtkX6lv
- xvEKoRq1YmMX/bDUBxWLxFrWGZe8xN5ZB0UcifkIo8OSdFQIX/WRlDZPY9nvcKrhPy0i
- +MOt0dXalobLvzsN/6Bl1xNhsIufazQ6KJon1DoMapk/OjWC7zc3r9sUn9DU0sdxGkGB tA== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p2ar115w4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 02 Mar 2023 01:43:05 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3221h4xs026549
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 2 Mar 2023 01:43:04 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Wed, 1 Mar 2023 17:43:04 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
-        <beanhuo@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 1/1] ufs: mcq: qcom: Clean the return path of ufs_qcom_mcq_config_resource
-Date:   Wed, 1 Mar 2023 17:42:56 -0800
-Message-ID: <3ebd2582af74b81ef7b57149f57c6a3bf0963953.1677721229.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S229437AbjCBCDm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 21:03:42 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0855734038
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Mar 2023 18:03:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1677722620; x=1709258620;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=UYh+pac9ZELd8V45bei7YPHT8yAa/BIlDutDcfVNRe4=;
+  b=B1KXy4AZSYy+tFCfm9fgnWIJ6WW58cHx3lB/YayADPXnvtRoWMSDu5iy
+   QzzANnF6Py7NkNxJ1J6+KtWqcaaTaBWiRa22LlIRbV853yOm2kOpTyjr+
+   Dq8+oYUD9PS8VFEES34AHIuDBvsnlmgibgTaawEOSkteByuh5iGp6wwtU
+   mT8ndVzp4zJeQwZJKYIOCnZQnwZCHERhsmC2naT26PaUEqZuLYqItfQUv
+   Eeitutreh2Vqsecnxaq1sMlCJqdkuRNAvkNIRjQlbuGHZVhB9mGO5v/cm
+   kWtRO0xqs+bcAr2K0l57Y/8MQCYJfS7S+meN2Wiyj+sX9GFyrmWy6hpqT
+   A==;
+X-IronPort-AV: E=Sophos;i="5.98,226,1673884800"; 
+   d="scan'208";a="328905896"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Mar 2023 10:03:40 +0800
+IronPort-SDR: 0NGTeTdDL8qdG8vuMUPXCy7FN92Uthrl82Ca+PdbNkeAU+y1lvObGDEvcKufmliUp90Fjyf0pv
+ vtBlnXfHSDfct67CzPcX1ZjRAtKrH1cjn0evq4wmJO+6RWLlb7hGXONv2Mwdy1ZZMcavmhmBhp
+ +DTGf4u3ZEJnzKknmFfYO4m5fVsyYbyriN6BoMEFFVLhaW7imv41QOxHHKFlAyFJsaN66ejjZK
+ IGSymyI6gDODFPPMDsgcy0a2Q5tbcS3DVf5sWQI6rhpqaiUnFnL2R3MK4TkhJ4noxfk1gT49o5
+ +8w=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Mar 2023 17:20:30 -0800
+IronPort-SDR: vnE1YHxH3BQVcY7r+Mjsdcxyf1iVHhtdsNAAvTzMJhQZtMyBnTkwIcbvyqF7NJJM5Mvbs/6HT/
+ n8PLd4h33lTftLA0YbqYCd+yhQhq6YnY7qgbIyzpSeNLVfjs2XMm0HVDOGUZZ6973oQ5+n+kV7
+ 2XJO9THOH/CV0oCwk7E1vm0zOJply0PM9gsvBj4JhSxhqPm6g1adFd28XU200XKhvAUgoV7tnI
+ pEJDtWVB1dxmHhMSw8/Y+JIyFkK7rrlCwG7IMmi8u4jCqoVCGD/jIeKGf0gZeWvTlboHjG2IiC
+ PlU=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Mar 2023 18:03:40 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PRvXX2d7mz1Rwrq
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Mar 2023 18:03:40 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1677722619; x=1680314620; bh=UYh+pac9ZELd8V45bei7YPHT8yAa/BIlDut
+        DcfVNRe4=; b=Wwu4q7HLITb/tDl/8K6xmWEyWWJ6M5eGrDobErndtm1zz35sV4T
+        qRebF+MQ68/Sy4Bw7g2BgKojTzGHMiufJ0WHE7SFezYnq5PdOvObvR/G4VgBSuYL
+        owX8UzA0eiUZ2bFngyoczARfprDDdJtNM5Lmwhrklvpspawp7sa+YqpKxs2paImr
+        bs1lHOCmtFuAU7uv9MaLJu8E0r5/ngGMGrqlKHvAHjjtjuK/n+Jg+Sg3+V/XoYAx
+        g4R+hf+hzul6jzkbAHj+IfenGIE6vE/r6PBf2pi3Z0AN5/rQl1W33bqnpdmWRzho
+        Y4yTy6ZfW5tyrt/YzfI8rXAkMXwx7nEI9Og==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id gVun4l6C5Qxd for <linux-scsi@vger.kernel.org>;
+        Wed,  1 Mar 2023 18:03:39 -0800 (PST)
+Received: from [10.225.163.47] (unknown [10.225.163.47])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PRvXV6yZCz1RvLy;
+        Wed,  1 Mar 2023 18:03:38 -0800 (PST)
+Message-ID: <8e3643a5-80bd-8c02-8e83-a2c1341babcc@opensource.wdc.com>
+Date:   Thu, 2 Mar 2023 11:03:37 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: BcByXsSkGPPWTm1gUwOvYFj50264dzvy
-X-Proofpoint-ORIG-GUID: BcByXsSkGPPWTm1gUwOvYFj50264dzvy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-01_17,2023-03-01_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
- bulkscore=0 impostorscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
- priorityscore=1501 spamscore=0 mlxlogscore=999 adultscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2303020011
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [LSF/MM/BPF TOPIC] Hybrid SMR HDDs / Zone Domains & Realms
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Khazhy Kumykov <khazhy@chromium.org>,
+        lsf-pc@lists.linux-foundation.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <CACGdZYKXqNe08VqcUrrAU8pJ=f88W08V==K6uZxRgynxi0Hyhg@mail.gmail.com>
+ <ad8b054a-26a5-ea60-9c66-4a6b63ca27ef@acm.org>
+ <54fb85ac-7c45-f77f-11d7-9cb072f702fb@opensource.wdc.com>
+ <569dc9d2-3e6c-0efc-560c-bfcacfbfbda7@acm.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <569dc9d2-3e6c-0efc-560c-bfcacfbfbda7@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Smatch static checker reported:
-drivers/ufs/host/ufs-qcom.c:1469
-ufs_qcom_mcq_config_resource() info: returning a literal zero is
-cleaner
+On 3/2/23 09:51, Bart Van Assche wrote:
+> On 3/1/23 16:06, Damien Le Moal wrote:
+>> On 3/2/23 08:50, Bart Van Assche wrote:
+>>> On 3/1/23 15:34, Khazhy Kumykov wrote:
+>>>>    - There=E2=80=99s already support in the kernel for marking zones
+>>>> online/offline and cmr/smr, but this is fixed, not dynamic. Would
+>>>> there be hiccups with allowing zones to come online/offline while
+>>>> running?
+>>>
+>>> It may be easier to convince HDD vendors to modify their firmware suc=
+h
+>>> that the conventional and SMR zones are reported to the Linux kernel =
+as
+>>> different logical units rather than adding domains & realms support i=
+n
+>>> the Linux kernel. If anyone else has another opinion, feel free to sh=
+are
+>>> that opinion.
+>>
+>> That would not resolve the fact that each unit would still potentially=
+ have a
+>> mix of active and inactive areas. Total nightmare to deal with unless =
+a zone API
+>> is also exposed for any user to figure out which zone is active.
+>> That means that we would need to always expose these drives as zoned, =
+using a
+>> very weird zone model as zone domains/zone realms do not fit at all wi=
+th the
+>> current host-managed model. Lots of places need changes to handle thes=
+e drives.
+>> This will make things very messy all over.
+>=20
+> Do users need all the features that are supported by the domains &=20
+> realms model? If not: what I had in mind is to let the HDD expose two=20
+> logical units to the operating system that each have a contiguous range=
+=20
+> of active zones and hence not to support inactive zones.
 
-Fix the above warning by returning in place instead of a jump to a
-label.
-Also remove the usage of devm_kfree() as it's unnecessary in this
-function.
+But that is the issue: zones in the middle of each domain can be
+activated/deactivated dynamically using zone activate command. So there i=
+s
+always the possibility of ending up with a swiss cheese lun, full of hole=
+ of
+unusable LBAs because the other domains (other LUN) activated some zones =
+which
+deactivate the equivalent zone(s) in the other domain.
 
-Fixes: c263b4ef737e ("scsi: ufs: core: mcq: Configure resource regions")
-Reported-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+With your idea, the 2 luns would not be independent as they both would be=
+ using
+LBAs are mapped against a single set of physical blocks. Zone activate co=
+mmand
+allows controlling which domains has the mapping active. So activating a =
+zone in
+one domains results in the zone[s] using the same mapping in the other do=
+main to
+be deactivated.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 43b1fc1ad33e..cb20c7136c2c 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1466,7 +1466,7 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
- 	/* Explicitly allocate MCQ resource from ufs_mem */
- 	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
- 	if (!res_mcq)
--		return ret;
-+		return -ENOMEM;
- 
- 	res_mcq->start = res_mem->start +
- 			 MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
-@@ -1478,7 +1478,7 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
- 	if (ret) {
- 		dev_err(hba->dev, "Failed to insert MCQ resource, err=%d\n",
- 			ret);
--		goto insert_res_err;
-+		return ret;
- 	}
- 
- 	res->base = devm_ioremap_resource(hba->dev, res_mcq);
-@@ -1495,8 +1495,6 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
- ioremap_err:
- 	res->base = NULL;
- 	remove_resource(res_mcq);
--insert_res_err:
--	devm_kfree(hba->dev, res_mcq);
- 	return ret;
- }
- 
--- 
-2.7.4
+>=20
+> Thanks,
+>=20
+> Bart.
+>=20
+
+--=20
+Damien Le Moal
+Western Digital Research
 
