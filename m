@@ -2,112 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DB6C678D4
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 18:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A23B5C678D4
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 20:46:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229518AbjCBSh6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Mar 2023 13:37:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34014 "EHLO
+        id S230130AbjCBUqu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 15:46:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjCBSh4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 13:37:56 -0500
-Received: from bird.elm.relay.mailchannels.net (bird.elm.relay.mailchannels.net [23.83.212.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E975E272D;
-        Thu,  2 Mar 2023 10:37:54 -0800 (PST)
-X-Sender-Id: dreamhost|x-authsender|hussein@unixcat.org
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 8DAF514168F;
-        Thu,  2 Mar 2023 18:37:52 +0000 (UTC)
-Received: from pdx1-sub0-mail-a274.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id BABA4141DAC;
-        Thu,  2 Mar 2023 18:37:50 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1677782272; a=rsa-sha256;
-        cv=none;
-        b=OKy4sgheNwKlxNve2m6H5HROKa+v2fBtaRDEx1x2viH7ZcdTBGmS4Tn0ZxZQW5lBPrDAHf
-        55x8WtTNNAT8cHXTKLVYPztaoz+OM+UscjDuFdBMf6pxKdVGo2HAGxSJxUbSAfrJN8KlIr
-        NDVgOLfnr/BAP8ByQGjRFMHdEE1G4Gc7pbF/trtKj1wd4GKzGQ3TfyrOcBRCjdu4+NI83v
-        FL1T2aKvfuUWWhI4KAwNrhZPUhVonjJFfPLFQSCav0Lrsq0d2aiE4ryl+uL4cUZ/yKWARm
-        9lMYphu0YJ8kpgEes1yG0V67gbceMhBsAHNNbqElDPuYNFbOMKffTjAiK553IA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1677782272;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:dkim-signature;
-        bh=KbIa0sIStAMO0mMB6RiYRVtu/9/bZPgLeoihDTD5mi4=;
-        b=9sjKMRafB9B4eEaYMWycd1R0zVh6xziYy4i+NY4af5A9KzSKKO2cfVLD4U7tGAQbz3xIgB
-        cxJGoGTD6nthq/9CDmdOOzGKNj9lDUoyMSQJcNnJ+F6F1AgjpzlAAvdbB/fH5fA9gfHXtr
-        lq1svAquWr+3KqlxYIf2wcySDVBYwbANDT2Z2PQ65kojGNuYNs2VmmBUMIQVJyEPDZj7Fz
-        BswyMuR3rIcOMqrspQN/H7JT4Bymm9C2+VD8+9CojexCqwESdPPZmLwtOA5zWW4/AELm7K
-        sYSfupO8mqJGlNI1dfrUmeGlMBybAqvakjeHkJe4lSHfkDQN1jPzGnpRpBIIsA==
-ARC-Authentication-Results: i=1;
-        rspamd-69778c65cd-pq5gk;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=hussein@unixcat.org
-X-Sender-Id: dreamhost|x-authsender|hussein@unixcat.org
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|hussein@unixcat.org
-X-MailChannels-Auth-Id: dreamhost
-X-Abortive-Ruddy: 3435e4f700994e25_1677782272310_2097792675
-X-MC-Loop-Signature: 1677782272310:2704307466
-X-MC-Ingress-Time: 1677782272310
-Received: from pdx1-sub0-mail-a274.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.110.64.199 (trex/6.7.2);
-        Thu, 02 Mar 2023 18:37:52 +0000
-Received: from localhost (unknown [175.144.191.112])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: hussein@unixcat.org)
-        by pdx1-sub0-mail-a274.dreamhost.com (Postfix) with ESMTPSA id 4PSKbR6pG8z186;
-        Thu,  2 Mar 2023 10:37:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=unixcat.org;
-        s=dreamhost; t=1677782260;
-        bh=KbIa0sIStAMO0mMB6RiYRVtu/9/bZPgLeoihDTD5mi4=;
-        h=From:To:Cc:Subject:Date:Content-Transfer-Encoding;
-        b=jSnnFZrojsRpN1LhK3lJnGHbvrV6IY1p+fuRiPXuDXZX3Z04j0Tbo+B6OAvNmbQol
-         YfjYA9WuOipfphFkKhjFqdrJgyH4BskoxRRL3xOxvQQqlaa2m+uRTP+PAgwPCBa18P
-         jgEfj9ie64/dZsu8Ho8WUtHnhU5o29B6TwOVXwpo=
-From:   Nur Hussein <hussein@unixcat.org>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Nur Hussein <hussein@unixcat.org>
-Subject: [PATCH RESEND] scsi: Add error checking to sysfs_update_group in drivers/scsi/scsi_transport_spi.c
-Date:   Fri,  3 Mar 2023 02:37:35 +0800
-Message-Id: <20230302183735.1281237-1-hussein@unixcat.org>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229455AbjCBUqu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 15:46:50 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EC8A43937;
+        Thu,  2 Mar 2023 12:46:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=dtfyNVshuDQIj+dlbLKUh3FrBpHjPuB+OiDl4kHMg0w=; b=y+/KNE5d+TW3hH8L9Iql5pMuDY
+        mtQ2q1980lq3pkwG/xQP1LmilCyPNzezGqF7q0DG5V7xsGEwDTYwL1JvJCDFTe/zRXH57HGHD5QW/
+        O8UeGtO2rrvC7q1JiYXTkhaSl2XwOkiMf9u7Bw475hl1I50DYfKypH7bafzPo/5auQO5nAWWpyMzo
+        gGUrJvFV6cuTyc3hE4lyn5hDmXOrOPtNk1IXXmXNQPVhLjpjwJ7GPmbWttNzvSv3PP/4O3nghH0oh
+        Q9RypKa5XuLJaNXMpBIQPO6xY6fjA5jHIzzVMBlTxnFZ6w8BOSv37SOKMsJSXJC05q7iNhPjFZil9
+        SHo+B+Mg==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pXpoc-003HXY-T5; Thu, 02 Mar 2023 20:46:14 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
+        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, song@kernel.org, robinmholt@gmail.com,
+        steve.wahl@hpe.com, mike.travis@hpe.com, arnd@arndb.de,
+        gregkh@linuxfoundation.org, jirislaby@kernel.org, jgross@suse.com,
+        sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
+        xen-devel@lists.xenproject.org
+Cc:     j.granados@samsung.com, zhangpeng362@huawei.com,
+        tangmeng@uniontech.com, willy@infradead.org, nixiaoming@huawei.com,
+        sujiaxun@uniontech.com, patches@lists.linux.dev,
+        linux-fsdevel@vger.kernel.org, apparmor@lists.ubuntu.com,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hyperv@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH 7/7] xen: simplify sysctl registration for balloon
+Date:   Thu,  2 Mar 2023 12:46:12 -0800
+Message-Id: <20230302204612.782387-8-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20230302204612.782387-1-mcgrof@kernel.org>
+References: <20230302204612.782387-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-An instance of sysfs_update_group now checks the result and on error,
-logs it via pr_err().
+register_sysctl_table() is a deprecated compatibility wrapper.
+register_sysctl_init() can do the directory creation for you so just
+use that.
 
-Signed-off-by: Nur Hussein <hussein@unixcat.org>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/scsi/scsi_transport_spi.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/xen/balloon.c | 20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 2442d4d2e3f3..f905b4787a42 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -1559,8 +1559,9 @@ static int spi_target_configure(struct transport_container *tc,
- {
- 	struct kobject *kobj = &cdev->kobj;
+diff --git a/drivers/xen/balloon.c b/drivers/xen/balloon.c
+index 617a7f4f07a8..586a1673459e 100644
+--- a/drivers/xen/balloon.c
++++ b/drivers/xen/balloon.c
+@@ -97,24 +97,6 @@ static struct ctl_table balloon_table[] = {
+ 	{ }
+ };
  
--	/* force an update based on parameters read from the device */
--	sysfs_update_group(kobj, &target_attribute_group);
-+	/* force an update based on parameters read from the device, log an error on failure */
-+	if (sysfs_update_group(kobj, &target_attribute_group))
-+		pr_err("Unable to update sysfs entries\n");
+-static struct ctl_table balloon_root[] = {
+-	{
+-		.procname	= "balloon",
+-		.mode		= 0555,
+-		.child		= balloon_table,
+-	},
+-	{ }
+-};
+-
+-static struct ctl_table xen_root[] = {
+-	{
+-		.procname	= "xen",
+-		.mode		= 0555,
+-		.child		= balloon_root,
+-	},
+-	{ }
+-};
+-
+ #else
+ #define xen_hotplug_unpopulated 0
+ #endif
+@@ -747,7 +729,7 @@ static int __init balloon_init(void)
+ #ifdef CONFIG_XEN_BALLOON_MEMORY_HOTPLUG
+ 	set_online_page_callback(&xen_online_page);
+ 	register_memory_notifier(&xen_memory_nb);
+-	register_sysctl_table(xen_root);
++	register_sysctl_init("xen/balloon", balloon_table);
+ #endif
  
- 	return 0;
- }
+ 	balloon_add_regions();
 -- 
-2.34.1
+2.39.1
 
