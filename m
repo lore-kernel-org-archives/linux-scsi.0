@@ -2,123 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AED93C7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 02:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1E6C7EE32
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 03:17:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbjCBCqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Mar 2023 21:46:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39520 "EHLO
+        id S229657AbjCBDRS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Mar 2023 22:17:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229633AbjCBCqi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 21:46:38 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB1B311EB;
-        Wed,  1 Mar 2023 18:46:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E85ADB811EA;
-        Thu,  2 Mar 2023 02:46:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BDDCC433EF;
-        Thu,  2 Mar 2023 02:46:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677725193;
-        bh=Th9GPEJwbxkkHQNfDEXRhB2oqull8FRq78QD5fRh7xM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hKRGowW6BljXEJhaQ844rGIituUTlJ31XzpefOG+zN7ptTqIgI3DO/jpHMYr7Utib
-         dzq74rxMEVLLIaY6f78Ep9XRNX4aMAhE2fG7xxZ4jz6bH5EDaOoNQK1Z/WYHBTzkhB
-         kUcSDj/jfTwDNqhpXLcA8r5tUKsiXUJ/MrCOHBJFLKadKaxjTVbCG/SK+PH6jzM0Ew
-         Q9arjoKoh73PNcAEAkK4Epy51hnBz0QqbrskC7kFoe8reHmlvI8BnwTEdTJfy1StCN
-         6mABuIO9qxeF6COXJLAmJnD1G/V2Adu1p9BlyvDMh8mfzuD6j+ibDBSHRyAZV3ViMx
-         CcKEXXiNE7y2g==
-Date:   Wed, 1 Mar 2023 20:46:30 -0600
-From:   Bjorn Andersson <andersson@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, bvanassche@acm.org, avri.altman@wdc.com,
-        mani@kernel.org, beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] ufs: mcq: qcom: Clean the return path of
- ufs_qcom_mcq_config_resource
-Message-ID: <20230302024630.urqhzzvdl3ekrxzt@baldur>
-References: <3ebd2582af74b81ef7b57149f57c6a3bf0963953.1677721229.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S229553AbjCBDRR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2023 22:17:17 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BD974FA91
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Mar 2023 19:17:15 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id l1so15496021pjt.2
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Mar 2023 19:17:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2UuwNiIULVdlTjH/QXIKxAjBwjiTn6gs7reREGjC+uY=;
+        b=gYWIOdvWKDLkaxODmaIE7dIr1QixXJmeMC7rNoGekgeKf9iS4u1Q7Xx4YfhGTrkbZw
+         NOVMfgd1VA0FAaH2xEZDAZVJpZJVlYu2KRh7wSP0KUSQJnnznFPdFFMHdMBl2ulskuuh
+         02+csEGd5VyrKuqSvMKsEHdM08xNw74SOYGclj2edU/lyumUyrPCImen7zuK9phRU/aL
+         sMObElyT6YQRgQGCLQcQ9jyCiQBwxlp4yX2GTsGamaCUjHFEzDuk4FPMEZuUBsa8ORKQ
+         Xl1Czo++gA1lrGq8td2Xgu0tfNs9IsKQI09xGNL1qiKeGID0pnSCZvvpXnkWccCxY2Nj
+         8b3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2UuwNiIULVdlTjH/QXIKxAjBwjiTn6gs7reREGjC+uY=;
+        b=gWRHQfaYGm6msrCpS8EskSTGqMLpnTAH/k9IoiWTLfsIESE2ssJsYepmiFuscBp58H
+         NH8CuzEsHmz1yEFrpFNRsG/aF/rSVjJHoFJMVkkKYQxSHVVBTJtc2b0PF6GOj+yVbzUx
+         +xw8D9TaoMcEZtCBCe3JuhX2DddqwQjS0oR0H4PYxVa1hbLl7LeIY6tSZN8yZz3pA1bJ
+         kxK3xIAT6ve0PwRj77eD6luqER1M1a0qStkYIchiXPgtJclR0pAmKaq3tlKt8JfKZyUB
+         B8uk5mT/uU/CbJU6ShEj5/83Z1Vf+w8/kkv79J/cf1CmtN6floYUCgSmnaCwX2hyWyvD
+         RT2A==
+X-Gm-Message-State: AO0yUKUbp964y3QXdODV/6fTGjj42URhBzCnD9rmQCjB0UcrRDh7WQGe
+        1C/n3aj6VS5Y9mf4KTofD2HUGw==
+X-Google-Smtp-Source: AK7set9D7ipY/0SmxAsTtsROL+QxBusuFZ0I9xJ1TBi2lMvOgTicOaOQ94eDPBK/WLMENx8ZozpeGg==
+X-Received: by 2002:a17:903:42c6:b0:19a:6cd2:a658 with SMTP id jy6-20020a17090342c600b0019a6cd2a658mr16658plb.7.1677727034772;
+        Wed, 01 Mar 2023 19:17:14 -0800 (PST)
+Received: from [2620:15c:29:203:5530:853:8d92:ba58] ([2620:15c:29:203:5530:853:8d92:ba58])
+        by smtp.gmail.com with ESMTPSA id v10-20020a62ac0a000000b005810a54fdefsm8584795pfe.114.2023.03.01.19.17.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Mar 2023 19:17:13 -0800 (PST)
+Date:   Wed, 1 Mar 2023 19:17:13 -0800 (PST)
+From:   David Rientjes <rientjes@google.com>
+To:     Matthew Wilcox <willy@infradead.org>,
+        Pasha Tatashin <tatashin@google.com>
+cc:     Gao Xiang <hsiangkao@linux.alibaba.com>,
+        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+In-Reply-To: <Y/UiY/08MuA/tBku@casper.infradead.org>
+Message-ID: <a94384e5-cad2-fbdb-9187-7b626557e93a@google.com>
+References: <Y9KtCc+4n5uANB2f@casper.infradead.org> <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com> <Y/UiY/08MuA/tBku@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3ebd2582af74b81ef7b57149f57c6a3bf0963953.1677721229.git.quic_asutoshd@quicinc.com>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 01, 2023 at 05:42:56PM -0800, Asutosh Das wrote:
-> Smatch static checker reported:
-> drivers/ufs/host/ufs-qcom.c:1469
-> ufs_qcom_mcq_config_resource() info: returning a literal zero is
-> cleaner
+On Tue, 21 Feb 2023, Matthew Wilcox wrote:
+
+> On Wed, Feb 22, 2023 at 02:08:28AM +0800, Gao Xiang wrote:
+> > On 2023/1/27 00:40, Matthew Wilcox wrote:
+> > > I'd like to do another session on how the struct page dismemberment
+> > > is going and what remains to be done.  Given how widely struct page is
+> > > used, I think there will be interest from more than just MM, so I'd
+> > > suggest a plenary session.
+> > 
+> > I'm interested in this topic too, also I'd like to get some idea of the
+> > future of the page dismemberment timeline so that I can have time to keep
+> > the pace with it since some embedded use cases like Android are
+> > memory-sensitive all the time.
 > 
-> Fix the above warning by returning in place instead of a jump to a
-> label.
-> Also remove the usage of devm_kfree() as it's unnecessary in this
-> function.
+> As you all know, I'm absolutely amazing at project management & planning
+> and can tell you to the day when a feature will be ready ;-)
 > 
-> Fixes: c263b4ef737e ("scsi: ufs: core: mcq: Configure resource regions")
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+> My goal for 2023 is to get to a point where we (a) have struct page
+> reduced to:
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 43b1fc1ad33e..cb20c7136c2c 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1466,7 +1466,7 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
->  	/* Explicitly allocate MCQ resource from ufs_mem */
->  	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
->  	if (!res_mcq)
-> -		return ret;
-> +		return -ENOMEM;
-
-This is a bug fix, so this needs to go in v6.3-rc
-
->  
->  	res_mcq->start = res_mem->start +
->  			 MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
-> @@ -1478,7 +1478,7 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
->  	if (ret) {
->  		dev_err(hba->dev, "Failed to insert MCQ resource, err=%d\n",
->  			ret);
-> -		goto insert_res_err;
-> +		return ret;
->  	}
->  
->  	res->base = devm_ioremap_resource(hba->dev, res_mcq);
-> @@ -1495,8 +1495,6 @@ static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
->  ioremap_err:
->  	res->base = NULL;
->  	remove_resource(res_mcq);
-> -insert_res_err:
-> -	devm_kfree(hba->dev, res_mcq);
-
-This is just a cleanup, so there's no rush here.
-
-So I would have preferred that these where split. But unless Martin
-insist, I don't think it's worth the churn of spinning this one more
-time...
-
-Reviewed-by: Bjorn Andersson <andersson@kernel.org>
-
-Regards,
-Bjorn
-
->  	return ret;
->  }
->  
-> -- 
-> 2.7.4
+> struct page {
+> 	unsigned long flags;
+> 	struct list_head lru;
+> 	struct address_space *mapping;
+> 	pgoff_t index;
+> 	unsigned long private;
+> 	atomic_t _mapcount;
+> 	atomic_t _refcount;
+> 	unsigned long memcg_data;
+> #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
+> 	int _last_cpupid;
+> #endif
+> };
 > 
+> and (b) can build an allnoconfig kernel with:
+> 
+> struct page {
+> 	unsigned long flags;
+> 	unsigned long padding[5];
+> 	atomic_t _mapcount;
+> 	atomic_t _refcount;
+> 	unsigned long padding2;
+> #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
+> 	int _last_cpupid;
+> #endif
+> };
+> 
+
+This is exciting to see and I'd definitely like to participate in the 
+discussion.  Reducing struct page overhead is an important investment area 
+for large hyperscalers from an efficiency standpoint, we strand a massive 
+amount of memory due to struct page today.  I'd be particularly interested 
+in a division-of-work discussion so that we can help to bridge any gaps 
+that exist in realizing Matthew's vision, both short term and long term.
