@@ -2,95 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB429C678D4
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 18:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DB6C678D4
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Mar 2023 18:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229848AbjCBS02 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Mar 2023 13:26:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54144 "EHLO
+        id S229518AbjCBSh6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Mar 2023 13:37:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbjCBS01 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 13:26:27 -0500
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0E434E5CA;
-        Thu,  2 Mar 2023 10:26:26 -0800 (PST)
-Received: by mail-pl1-f170.google.com with SMTP id i3so187673plg.6;
-        Thu, 02 Mar 2023 10:26:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+txZTEiibZ+nqdSC1qRUdvlCmIk4PHdIvIM4/ficDNI=;
-        b=0Ol6/8gB1we9n9pwslc4vykYxw3hk1V4WI5CbNlhwDQ2iQ8NnBZtMcIjt58UCQIm3/
-         QiaOCrfjnTn2GDXk8yVtK1/iy+AbYEfcuOwIQdC/YwxbtdLBVCJ3of0zH0DxnNiqwr8b
-         TwtnF9ZVso+Iaas5LWhBxkfxf4NofHHqPp5S0mT38s4iWk99Ij8MQkfpS9QRcELC7WaJ
-         wvXzTpb+oteytqPEv7o4dTRfL1a+f/KX3ltssZLpNLO/fqK1SoPe9nLxNk+WnCakMu57
-         guipK3jLCJ+IyrCQ1v35OrTVCaNgOgMkl/uxFNF+wUN0N+9toZG49fdoMlxET9sJvDdx
-         DXSQ==
-X-Gm-Message-State: AO0yUKWt34ck5caQTNJJxBlBX+wPQpkDOxgbdUZX0KatuU83/QftXEqe
-        0nTZIFLwMl826xtor3bfXM0=
-X-Google-Smtp-Source: AK7set88FRm0x2uOaOlcVOx+geu8dwUp27SFZ97PN1xu1vKTOvUOVw22OH1pjNS506n6T9L2Mx/IZg==
-X-Received: by 2002:a17:90b:1d0e:b0:237:9858:ebbf with SMTP id on14-20020a17090b1d0e00b002379858ebbfmr12532938pjb.30.1677781585800;
-        Thu, 02 Mar 2023 10:26:25 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:ee04:e3cd:c905:c9ed? ([2620:15c:211:201:ee04:e3cd:c905:c9ed])
-        by smtp.gmail.com with ESMTPSA id w20-20020a17090aea1400b00233e7f0e7dfsm2009558pjy.4.2023.03.02.10.26.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Mar 2023 10:26:25 -0800 (PST)
-Message-ID: <c719261e-203e-18f2-b72a-de0c64011efe@acm.org>
-Date:   Thu, 2 Mar 2023 10:26:23 -0800
+        with ESMTP id S229453AbjCBSh4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2023 13:37:56 -0500
+Received: from bird.elm.relay.mailchannels.net (bird.elm.relay.mailchannels.net [23.83.212.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E975E272D;
+        Thu,  2 Mar 2023 10:37:54 -0800 (PST)
+X-Sender-Id: dreamhost|x-authsender|hussein@unixcat.org
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 8DAF514168F;
+        Thu,  2 Mar 2023 18:37:52 +0000 (UTC)
+Received: from pdx1-sub0-mail-a274.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id BABA4141DAC;
+        Thu,  2 Mar 2023 18:37:50 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1677782272; a=rsa-sha256;
+        cv=none;
+        b=OKy4sgheNwKlxNve2m6H5HROKa+v2fBtaRDEx1x2viH7ZcdTBGmS4Tn0ZxZQW5lBPrDAHf
+        55x8WtTNNAT8cHXTKLVYPztaoz+OM+UscjDuFdBMf6pxKdVGo2HAGxSJxUbSAfrJN8KlIr
+        NDVgOLfnr/BAP8ByQGjRFMHdEE1G4Gc7pbF/trtKj1wd4GKzGQ3TfyrOcBRCjdu4+NI83v
+        FL1T2aKvfuUWWhI4KAwNrhZPUhVonjJFfPLFQSCav0Lrsq0d2aiE4ryl+uL4cUZ/yKWARm
+        9lMYphu0YJ8kpgEes1yG0V67gbceMhBsAHNNbqElDPuYNFbOMKffTjAiK553IA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1677782272;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:dkim-signature;
+        bh=KbIa0sIStAMO0mMB6RiYRVtu/9/bZPgLeoihDTD5mi4=;
+        b=9sjKMRafB9B4eEaYMWycd1R0zVh6xziYy4i+NY4af5A9KzSKKO2cfVLD4U7tGAQbz3xIgB
+        cxJGoGTD6nthq/9CDmdOOzGKNj9lDUoyMSQJcNnJ+F6F1AgjpzlAAvdbB/fH5fA9gfHXtr
+        lq1svAquWr+3KqlxYIf2wcySDVBYwbANDT2Z2PQ65kojGNuYNs2VmmBUMIQVJyEPDZj7Fz
+        BswyMuR3rIcOMqrspQN/H7JT4Bymm9C2+VD8+9CojexCqwESdPPZmLwtOA5zWW4/AELm7K
+        sYSfupO8mqJGlNI1dfrUmeGlMBybAqvakjeHkJe4lSHfkDQN1jPzGnpRpBIIsA==
+ARC-Authentication-Results: i=1;
+        rspamd-69778c65cd-pq5gk;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=hussein@unixcat.org
+X-Sender-Id: dreamhost|x-authsender|hussein@unixcat.org
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|hussein@unixcat.org
+X-MailChannels-Auth-Id: dreamhost
+X-Abortive-Ruddy: 3435e4f700994e25_1677782272310_2097792675
+X-MC-Loop-Signature: 1677782272310:2704307466
+X-MC-Ingress-Time: 1677782272310
+Received: from pdx1-sub0-mail-a274.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.110.64.199 (trex/6.7.2);
+        Thu, 02 Mar 2023 18:37:52 +0000
+Received: from localhost (unknown [175.144.191.112])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: hussein@unixcat.org)
+        by pdx1-sub0-mail-a274.dreamhost.com (Postfix) with ESMTPSA id 4PSKbR6pG8z186;
+        Thu,  2 Mar 2023 10:37:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=unixcat.org;
+        s=dreamhost; t=1677782260;
+        bh=KbIa0sIStAMO0mMB6RiYRVtu/9/bZPgLeoihDTD5mi4=;
+        h=From:To:Cc:Subject:Date:Content-Transfer-Encoding;
+        b=jSnnFZrojsRpN1LhK3lJnGHbvrV6IY1p+fuRiPXuDXZX3Z04j0Tbo+B6OAvNmbQol
+         YfjYA9WuOipfphFkKhjFqdrJgyH4BskoxRRL3xOxvQQqlaa2m+uRTP+PAgwPCBa18P
+         jgEfj9ie64/dZsu8Ho8WUtHnhU5o29B6TwOVXwpo=
+From:   Nur Hussein <hussein@unixcat.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Nur Hussein <hussein@unixcat.org>
+Subject: [PATCH RESEND] scsi: Add error checking to sysfs_update_group in drivers/scsi/scsi_transport_spi.c
+Date:   Fri,  3 Mar 2023 02:37:35 +0800
+Message-Id: <20230302183735.1281237-1-hussein@unixcat.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [LSF/MM/BPF TOPIC] Hybrid SMR HDDs / Zone Domains & Realms
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Khazhy Kumykov <khazhy@chromium.org>,
-        lsf-pc@lists.linux-foundation.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <CACGdZYKXqNe08VqcUrrAU8pJ=f88W08V==K6uZxRgynxi0Hyhg@mail.gmail.com>
- <ad8b054a-26a5-ea60-9c66-4a6b63ca27ef@acm.org>
- <54fb85ac-7c45-f77f-11d7-9cb072f702fb@opensource.wdc.com>
- <569dc9d2-3e6c-0efc-560c-bfcacfbfbda7@acm.org>
- <8e3643a5-80bd-8c02-8e83-a2c1341babcc@opensource.wdc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <8e3643a5-80bd-8c02-8e83-a2c1341babcc@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/1/23 18:03, Damien Le Moal wrote:
-> But that is the issue: zones in the middle of each domain can be
-> activated/deactivated dynamically using zone activate command. So there is
-> always the possibility of ending up with a swiss cheese lun, full of hole of
-> unusable LBAs because the other domains (other LUN) activated some zones which
-> deactivate the equivalent zone(s) in the other domain.
-> 
-> With your idea, the 2 luns would not be independent as they both would be using
-> LBAs are mapped against a single set of physical blocks. Zone activate command
-> allows controlling which domains has the mapping active. So activating a zone in
-> one domains results in the zone[s] using the same mapping in the other domain to
-> be deactivated.
+An instance of sysfs_update_group now checks the result and on error,
+logs it via pr_err().
 
-Hi Damien,
+Signed-off-by: Nur Hussein <hussein@unixcat.org>
+---
+ drivers/scsi/scsi_transport_spi.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Your reply made me realize that I should have provided more information. 
-What I'm proposing is the following:
-* Do not use any of the domains & realms features from ZBC-2.
-* Do not make any zones visible to the host before configuration of the 
-logical units has finished. Only make the logical units visible to the 
-host after configuration of the logical units has finished. Do not 
-support reconfiguration of the logical units while these are in use by 
-the host.
-* Only support active zones. Do not support inactive zones.
-* Introduce a new mechanism for configuring the logical units.
-
-This is not a new idea. The approach described above is already 
-supported since considerable time by UFS devices. The provisioning 
-mechanism supported by UFS devices is defined in the UFS standard and is 
-not based on SCSI commands.
-
-Bart.
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 2442d4d2e3f3..f905b4787a42 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1559,8 +1559,9 @@ static int spi_target_configure(struct transport_container *tc,
+ {
+ 	struct kobject *kobj = &cdev->kobj;
+ 
+-	/* force an update based on parameters read from the device */
+-	sysfs_update_group(kobj, &target_attribute_group);
++	/* force an update based on parameters read from the device, log an error on failure */
++	if (sysfs_update_group(kobj, &target_attribute_group))
++		pr_err("Unable to update sysfs entries\n");
+ 
+ 	return 0;
+ }
+-- 
+2.34.1
 
