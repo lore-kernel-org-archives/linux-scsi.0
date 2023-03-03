@@ -2,78 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E506C64EC4
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 18:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E60C7EE32
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 18:17:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231404AbjCCSED (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Mar 2023 13:04:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49790 "EHLO
+        id S231618AbjCCSRI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Mar 2023 13:17:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231460AbjCCSEC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 13:04:02 -0500
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A8FD2ED69
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2023 10:04:01 -0800 (PST)
-Received: by mail-pg1-f182.google.com with SMTP id s18so2007633pgq.1
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2023 10:04:01 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677866641;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/oEne/zvpf4WHYM2FXSwcw5eZ2L0uqJK5+ORhLTj+ig=;
-        b=insWmuOMibqLT4ou2C5jFxdVYQO6vd2HdgKrho4OOchtbl34EnkfUzGigsqLtZ2Fxf
-         fhCzvbU5O95B79TY3IVyKUBsC7V5Ll1+RTE2GEBMu4Ki7sAGDMJMAdIUQN/Zxd3GqRmu
-         aYCR0YujHx9nOw3Or2Txh2TStsuwx/PNxHsE2GR0hTF+YsTQZSfXlzoxenX0r69UK5e7
-         VjNQmKz2mAGXFjf/yhvDGVOvj/q348dGGJv8sfHHlwm5TPRBGnbadyOrg38KGY1evh8C
-         5f24qee52dr4HPXjGGHa9EicWlCDnajyNisMIVydBhZYqwC3YfffPSNxuVg2CqGx0L0X
-         IbAg==
-X-Gm-Message-State: AO0yUKWUWBSl8bX0h9Nayy/gNxsaUNYRProv6WVnMShwLlSaifzNPdn0
-        MSON0atP9J4pWOi7OdDxuDg=
-X-Google-Smtp-Source: AK7set+bIlw8jBYHkamP85k48DKfhJorMCdB9nODq0mo3+7vwpozrWPiYIwm7wOC2uM6QVrM5EXz/w==
-X-Received: by 2002:aa7:96d8:0:b0:5ef:b4e1:db0e with SMTP id h24-20020aa796d8000000b005efb4e1db0emr2658669pfq.16.1677866640726;
-        Fri, 03 Mar 2023 10:04:00 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:30f3:595a:48e5:cb41? ([2620:15c:211:201:30f3:595a:48e5:cb41])
-        by smtp.gmail.com with ESMTPSA id w18-20020a63af12000000b004fbdfdffa40sm1848008pge.87.2023.03.03.10.03.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 03 Mar 2023 10:04:00 -0800 (PST)
-Message-ID: <8be7cebf-a5dc-4742-1ef2-207d1797f2f3@acm.org>
-Date:   Fri, 3 Mar 2023 10:03:58 -0800
+        with ESMTP id S231607AbjCCSRG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 13:17:06 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCF6E126D5;
+        Fri,  3 Mar 2023 10:17:04 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 442A4618C8;
+        Fri,  3 Mar 2023 18:17:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A1E8C433EF;
+        Fri,  3 Mar 2023 18:17:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677867423;
+        bh=z9o+Fj7F9hEekeJkNgNCjr/Inru7KzeAHF1ZoYV9Iio=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=fGnupNl/GToRAtlMLq9m8ln/B5DL44++CWBlS1wMXnhq2cHhCoiWQpag4X05/OiJd
+         s+p3PX7NvYBFBoFJnwt68FNzmZwUfxHGHvpKaW0etLYAT+E3VksbmVZbwNcj00kbix
+         l9BEGRabR2FaOcP0r2SQvznMAviaOVz3EkGqaoxUXFpvaR+EFpp8VmrAxLFnHW9Omg
+         85lhunN9jTFzSqc3gNCLlaviCh526S0Bpfr2Oeao6Ud/QzQdGsgd6tAin5Hqrsi2iI
+         ifBaA922aUhZicKDUUrEHd2NsgXm9V4xJZsDgBDrc/9TY/OrtG/vUQOaJ6lm7ZmCgz
+         H8fe0MXisTGyg==
+Received: by mail-ed1-f49.google.com with SMTP id o15so13624050edr.13;
+        Fri, 03 Mar 2023 10:17:03 -0800 (PST)
+X-Gm-Message-State: AO0yUKX6oDaimFGkd/7+u+2WA7Pa4jU2XZPWHxiajjjauSVMEoJMLBGv
+        XKTmZeEcKwXwxhqbYL8a9ttEhuU2FPDXWEmfA6g=
+X-Google-Smtp-Source: AK7set8+TKohTy6ON4qynrd6qM7FwtWsRtV8zfmEmFF5syO7UhwA/Y8VS4hyO7ZdSGW9G+CTTREWUsKalOtJ4y3BnUw=
+X-Received: by 2002:a05:6512:3c83:b0:4d8:86c2:75ea with SMTP id
+ h3-20020a0565123c8300b004d886c275eamr3273736lfv.3.1677867401669; Fri, 03 Mar
+ 2023 10:16:41 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH 1/2] scsi: sd: Check physical sector alignment of
- sequential zone writes
-Content-Language: en-US
-To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-References: <20230303014422.2466103-1-shinichiro.kawasaki@wdc.com>
- <20230303014422.2466103-2-shinichiro.kawasaki@wdc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230303014422.2466103-2-shinichiro.kawasaki@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20230302204612.782387-1-mcgrof@kernel.org> <20230302204612.782387-5-mcgrof@kernel.org>
+In-Reply-To: <20230302204612.782387-5-mcgrof@kernel.org>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 3 Mar 2023 10:16:29 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4k1hpLDWcQGCtEeR6LEgSboTY+tqbiPp+30_2T+rFezw@mail.gmail.com>
+Message-ID: <CAPhsuW4k1hpLDWcQGCtEeR6LEgSboTY+tqbiPp+30_2T+rFezw@mail.gmail.com>
+Subject: Re: [PATCH 4/7] md: simplify sysctl registration
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
+        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, robinmholt@gmail.com, steve.wahl@hpe.com,
+        mike.travis@hpe.com, arnd@arndb.de, gregkh@linuxfoundation.org,
+        jirislaby@kernel.org, jgross@suse.com, sstabellini@kernel.org,
+        oleksandr_tyshchenko@epam.com, xen-devel@lists.xenproject.org,
+        j.granados@samsung.com, zhangpeng362@huawei.com,
+        tangmeng@uniontech.com, willy@infradead.org, nixiaoming@huawei.com,
+        sujiaxun@uniontech.com, patches@lists.linux.dev,
+        linux-fsdevel@vger.kernel.org, apparmor@lists.ubuntu.com,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hyperv@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/2/23 17:44, Shin'ichiro Kawasaki wrote:
-> +	if (sdkp->device->type == TYPE_ZBC && blk_rq_zone_is_seq(rq) &&
-> +	    (req_op(rq) == REQ_OP_WRITE || req_op(rq) == REQ_OP_ZONE_APPEND) &&
-> +	    (!IS_ALIGNED(blk_rq_pos(rq), pb_sectors) ||
-> +	     !IS_ALIGNED(blk_rq_sectors(rq), pb_sectors))) {
-> +		scmd_printk(KERN_ERR, cmd,
-> +			    "Sequential write request not aligned to the physical block size\n");
-> +		goto fail;
-> +	}
+On Thu, Mar 2, 2023 at 12:46 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
+>
+> register_sysctl_table() is a deprecated compatibility wrapper.
+> register_sysctl() can do the directory creation for you so just use
+> that.
+>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 
-I vote -1 for this patch because my opinion is that we should not 
-duplicate checks that must be performed by the storage controller anyway 
-inside the sd driver.
+Acked-by: Song Liu <song@kernel.org>
 
-Thanks,
-
-Bart.
+Thanks!
