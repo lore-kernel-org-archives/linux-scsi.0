@@ -2,175 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B9A8C64EC4
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 21:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D2E8C61DA3
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 23:05:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231766AbjCCVEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Mar 2023 16:04:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47120 "EHLO
+        id S232641AbjCCXFH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Mar 2023 18:05:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231270AbjCCVEE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 16:04:04 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC64455518;
-        Fri,  3 Mar 2023 13:04:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1677877442;
-        bh=WoO0Bqf5MBHWnFkl0pYBsJoWNPnKj0x7VmHjL+JUdm0=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=sF/WBtxBmi+FIMdyaf48+YIrrCDK2AM8KGjGtZt+7kXGTyCKBLKI+CF2biX5fIQCN
-         JfpCMr72zE5H3BkPOaSOpvTq66Bn9cyEjxc5IUPBVC1M6Gl2hnvnjO/u1XCSwFu2tP
-         89RMnE/4Z9P6AZ5KwZox/Z8kzPwHj+b6cmxaLDos=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 7613B1286104;
-        Fri,  3 Mar 2023 16:04:02 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 5DQEw4PN9eoz; Fri,  3 Mar 2023 16:04:02 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1677877442;
-        bh=WoO0Bqf5MBHWnFkl0pYBsJoWNPnKj0x7VmHjL+JUdm0=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=sF/WBtxBmi+FIMdyaf48+YIrrCDK2AM8KGjGtZt+7kXGTyCKBLKI+CF2biX5fIQCN
-         JfpCMr72zE5H3BkPOaSOpvTq66Bn9cyEjxc5IUPBVC1M6Gl2hnvnjO/u1XCSwFu2tP
-         89RMnE/4Z9P6AZ5KwZox/Z8kzPwHj+b6cmxaLDos=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C027912860A2;
-        Fri,  3 Mar 2023 16:04:01 -0500 (EST)
-Message-ID: <24e8a84979c4ac65ddc2d41ecb0d1d53412a7d39.camel@HansenPartnership.com>
-Subject: [GIT PULL] final round of SCSI updates for the 6.2+ merge window
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        with ESMTP id S232545AbjCCXE7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 18:04:59 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A8BAA5CF;
+        Fri,  3 Mar 2023 15:04:38 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 777B9B81A0C;
+        Fri,  3 Mar 2023 23:04:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3968DC433D2;
+        Fri,  3 Mar 2023 23:04:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677884664;
+        bh=QC7IkASzfgr8S/jSIfmbViPcDXgTwRHh2Y1CaxMl73U=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=OA+Vm5m8lH5icW2rG9WSLYQ0bAYyJy1CS4EHhqkJKNWxxqfRuqDNNsAtWhf9WCSP9
+         H5craiC1TiVEb/p2qCbsF+epsKlUEryt3CR2/6ZIEuKbtIgSFOhuyz0EzYu5xIPbKb
+         1gk2GrHjGaUyqnmL+YUd12f6kQBsn6OmKJiUOccpQRPBxfcFPwCy9kJJtjXggKdKw2
+         HF8zv2JsL05sxou8YKz+O0gscjaievdOg2CvlpYngiaO+27pZAJgZldVM0DyJWgjtP
+         nPpHARrvM1gQPhat6fLZP1guXrkeeBIHXL+PESBelrL39UvYlIAyuXRNyNd2oPsay0
+         ecE/ApREOOuVg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 253A4E68D5F;
+        Fri,  3 Mar 2023 23:04:24 +0000 (UTC)
+Subject: Re: [GIT PULL] final round of SCSI updates for the 6.2+ merge window
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <24e8a84979c4ac65ddc2d41ecb0d1d53412a7d39.camel@HansenPartnership.com>
+References: <24e8a84979c4ac65ddc2d41ecb0d1d53412a7d39.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <24e8a84979c4ac65ddc2d41ecb0d1d53412a7d39.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+X-PR-Tracked-Commit-Id: 901b894af5b933cf6576eec05746f34b46e2ac83
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 06caa751545512fae98c21f282006a7fff852daf
+Message-Id: <167788466414.32457.4279094887450841903.pr-tracker-bot@kernel.org>
+Date:   Fri, 03 Mar 2023 23:04:24 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 03 Mar 2023 16:03:59 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Updates that missed the first pull, mostly because of needing more soak
-time.  Driver updates (zfcp, ufs, mpi3mr, plus two ipr bug fixes), an
-enclosure services (ses) update (mostly bug fixes) and other minor bug
-fixes and changes.
+The pull request you sent on Fri, 03 Mar 2023 16:03:59 -0500:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/06caa751545512fae98c21f282006a7fff852daf
 
-The short changelog is:
+Thank you!
 
-Adrien Thierry (1):
-      scsi: ufs: core: Initialize devfreq synchronously
-
-Arnd Bergmann (1):
-      scsi: ipr: Work around fortify-string warning
-
-Asutosh Das (1):
-      scsi: ufs: mcq: Fix incorrectly set queue depth
-
-Bart Van Assche (6):
-      scsi: ufs: core: Simplify ufshcd_execute_start_stop()
-      scsi: ufs: core: Rely on the block layer for setting RQF_PM
-      scsi: core: Extend struct scsi_exec_args
-      scsi: core: Remove the /proc/scsi/${proc_name} directory earlier
-      scsi: core: Fix a source code comment
-      scsi: ufs: Make the TC G210 driver dependent on CONFIG_OF
-
-Benjamin Block (3):
-      scsi: zfcp: Trace when request remove fails after qdio send fails
-      scsi: zfcp: Change the type of all fsf request id fields and variables to u64
-      scsi: zfcp: Make the type for accessing request hashtable buckets size_t
-
-Bo Liu (1):
-      scsi: lpfc: Fix double word in comments
-
-Deepak R Varma (1):
-      scsi: ipr: Make ipr_probe_ioa_part2() return void
-
-Fengnan Chang (1):
-      scsi: sd: Remove unused sd_cdb_cache
-
-James Bottomley (1):
-      scsi: ses: Don't attach if enclosure has no components
-
-Jesper Juhl (3):
-      scsi: cxgbi: Remove unneeded version.h include
-      scsi: qedi: Remove unneeded version.h include
-      scsi: mpi3mr: Remove unneeded version.h include
-
-Kees Cook (1):
-      scsi: mpi3mr: Replace 1-element array with flex-array
-
-Muneendra (1):
-      scsi: scsi_transport_fc: Add an additional flag to fc_host_fpin_rcv()
-
-Shin'ichiro Kawasaki (4):
-      scsi: mpi3mr: Fix missing mrioc->evtack_cmds initialization
-      scsi: mpi3mr: Use number of bits to manage bitmap sizes
-      scsi: mpi3mr: Remove unnecessary memcpy() to alltgt_info->dmi
-      scsi: mpi3mr: Fix issues in mpi3mr_get_all_tgt_info()
-
-Tomas Henzl (5):
-      scsi: mpi3mr: Fix an issue found by KASAN
-      scsi: ses: Fix slab-out-of-bounds in ses_intf_remove()
-      scsi: ses: Fix possible desc_ptr out-of-bounds accesses
-      scsi: ses: Fix possible addl_desc_ptr out-of-bounds accesses
-      scsi: ses: Fix slab-out-of-bounds in ses_enclosure_data_process()
-
-Xingui Yang (1):
-      scsi: sd: Update DIX config every time sd_revalidate_disk() is called
-
-Yangtao Li (1):
-      scsi: ufs: ufs-mediatek: Guard power management functions with CONFIG_PM
-
-And the diffstat:
-
- drivers/s390/scsi/zfcp_dbf.c           | 46 ++++++++++++++++-
- drivers/s390/scsi/zfcp_def.h           |  6 +--
- drivers/s390/scsi/zfcp_ext.h           |  5 +-
- drivers/s390/scsi/zfcp_fsf.c           | 22 ++++----
- drivers/s390/scsi/zfcp_qdio.h          |  2 +-
- drivers/s390/scsi/zfcp_reqlist.h       | 26 +++++-----
- drivers/s390/scsi/zfcp_scsi.c          |  2 +-
- drivers/scsi/cxgbi/libcxgbi.h          |  1 -
- drivers/scsi/hosts.c                   |  4 +-
- drivers/scsi/ipr.c                     | 54 +++++++++-----------
- drivers/scsi/lpfc/lpfc_attr.c          | 10 ++--
- drivers/scsi/lpfc/lpfc_els.c           |  4 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c       |  2 +-
- drivers/scsi/lpfc/lpfc_init.c          |  4 +-
- drivers/scsi/lpfc/lpfc_mbox.c          |  4 +-
- drivers/scsi/lpfc/lpfc_nvmet.c         |  2 +-
- drivers/scsi/lpfc/lpfc_sli.c           |  2 +-
- drivers/scsi/mpi3mr/mpi3mr.h           | 11 +---
- drivers/scsi/mpi3mr/mpi3mr_app.c       | 28 ++++-------
- drivers/scsi/mpi3mr/mpi3mr_fw.c        | 75 ++++++++++++---------------
- drivers/scsi/mpi3mr/mpi3mr_os.c        |  4 ++
- drivers/scsi/mpi3mr/mpi3mr_transport.c |  2 +-
- drivers/scsi/qedi/qedi_dbg.h           |  1 -
- drivers/scsi/qla2xxx/qla_isr.c         |  2 +-
- drivers/scsi/scsi_lib.c                |  1 +
- drivers/scsi/scsi_transport_fc.c       | 10 ++--
- drivers/scsi/sd.c                      | 29 +++--------
- drivers/scsi/sd_dif.c                  | 10 ++--
- drivers/scsi/ses.c                     | 64 ++++++++++++++++-------
- drivers/ufs/core/ufshcd.c              | 92 +++++++++++++++++-----------------
- drivers/ufs/host/Kconfig               |  2 +-
- drivers/ufs/host/ufs-mediatek.c        |  2 +
- include/scsi/scsi_device.h             |  1 +
- include/scsi/scsi_transport_fc.h       |  4 +-
- include/uapi/scsi/scsi_bsg_mpi3mr.h    |  8 +--
- include/ufs/ufshcd.h                   |  1 +
- 36 files changed, 291 insertions(+), 252 deletions(-)
-
-James
-
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
