@@ -2,210 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3998DC7EE2F
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 09:36:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BB8C678D4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 09:39:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229916AbjCCJgc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Mar 2023 04:36:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46902 "EHLO
+        id S229877AbjCCJjk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Mar 2023 04:39:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229909AbjCCJgb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 04:36:31 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5232298F3;
-        Fri,  3 Mar 2023 01:36:29 -0800 (PST)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3238mH8R007788;
-        Fri, 3 Mar 2023 09:36:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=2gfBagHlN6y2kv5zAc1v1JPCBcPDYueOGdtNMXXB0ug=;
- b=CtjFhs9utJpwI+nn1i8J+zbPtVeTg/WNYGWETZCiQLWJl+R/zC9akKxzbEHWlt/qoofS
- Y/3Cd8+oPy4xcJBdqoDslsXYyhPi8G6uzKSp3nQQdOxcOEbxT1A91+nLE2Y2XkYC4LZv
- c4vgktp8eU7VuYC/IpZPnK/zgmnaFUDp6sSMjkzPIYI+WutmKa4WZISpFop2hpmeoFhy
- q0enqQJZYRay6ktOGB1YWDTeuuhXMQdOW8jgCXL2XMzKGj0j+MCrOkjVAgeVCeaijQUg
- 3V6Qe9mVdi1IFzwS7jD+IJnWIbs01Co1pxG77CH/D7Qk9JQvDznYsjqjjiZVF6N9f+Ng aQ== 
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p3dpxg477-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 03 Mar 2023 09:36:13 +0000
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3239aA7X032015;
-        Fri, 3 Mar 2023 09:36:10 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 3nybdkt0k3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 03 Mar 2023 09:36:10 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3239a9uV032010;
-        Fri, 3 Mar 2023 09:36:09 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3239a8qg032007;
-        Fri, 03 Mar 2023 09:36:09 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id D2EF54197; Fri,  3 Mar 2023 17:36:06 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com,
-        quic_ziqichen@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-trace-kernel@vger.kernel.org (open list:TRACING)
-Subject: [PATCH v4] scsi: ufs: core: Add trace event for MCQ
-Date:   Fri,  3 Mar 2023 17:35:37 +0800
-Message-Id: <1677836154-29192-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 1CXZXXP8FDtrVwtSbbzsna0jMAnQjrEv
-X-Proofpoint-GUID: 1CXZXXP8FDtrVwtSbbzsna0jMAnQjrEv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-03_01,2023-03-02_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
- spamscore=0 bulkscore=0 lowpriorityscore=0 impostorscore=0 phishscore=0
- mlxlogscore=988 clxscore=1015 priorityscore=1501 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2303030084
+        with ESMTP id S229510AbjCCJjk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 04:39:40 -0500
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAA8315CB4
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2023 01:39:38 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1pY1t0-0006Uw-VZ; Fri, 03 Mar 2023 10:39:35 +0100
+Message-ID: <754b030c-ba14-167c-e2d0-2f4f5bf55e99@leemhuis.info>
+Date:   Fri, 3 Mar 2023 10:39:32 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 1/1] mpt3sas: Remove usage of dma_get_required_mask api
+Content-Language: en-US, de-DE
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+To:     Salvatore Bonaccorso <carnil@debian.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, regressions@lists.linux.dev
+References: <20221028091655.17741-1-sreekanth.reddy@broadcom.com>
+ <20221028091655.17741-2-sreekanth.reddy@broadcom.com>
+ <Y15lk+CPsjJ801iY@infradead.org>
+ <181536c494aa39ca78b190396a97072448739411.camel@suse.com>
+ <yq1tu192iur.fsf@ca-mkp.ca.oracle.com> <Y8+m0w4Og2CLFImY@lorien.valinor.li>
+ <Y/ZGe8c1XyqSuCSk@eldamar.lan>
+ <9aa5e89f-6579-15e5-cc51-d226b5d4bea3@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <9aa5e89f-6579-15e5-cc51-d226b5d4bea3@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1677836378;4540a0d1;
+X-HE-SMSGID: 1pY1t0-0006Uw-VZ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Added a new trace event to record MCQ relevant information
-for each request in MCQ mode, include hardware queue ID,
-SQ tail slot, CQ head slot and CQ tail slot.
+On 27.02.23 15:07, Thorsten Leemhuis wrote:
+> On 22.02.23 17:44, Salvatore Bonaccorso wrote:
+>> On Tue, Jan 24, 2023 at 10:37:23AM +0100, Salvatore Bonaccorso wrote:
+>>> On Mon, Jan 02, 2023 at 08:06:41AM -0500, Martin K. Petersen wrote:
+>>>>> is anything blocking mainline inclusion of this patch?
+>>>> I app
 
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+[removing a footer from the quoting here, that accidentally was added
+here in my previous mail; sorry!]
 
----
-Changes to v3:
-- Free trace_ufshcd_command_mcq() from dependency on trace_ufshcd_command().
+>>>> lied these to 6.2/scsi-fixes last week. The patches have been
+>>>> sitting in a topic branch for a bit due to the three-way conflict
+>>>> between fixes, queue, and upstream.
+>>>
+>>> It landed in 6.2-rc4 recently in fact. Thank you!
+>>>
+>>> Would it be posssible to backport the fix as well back to the stable
+>>> series affected? 
+>>>
+>>> In Debian we have the reports as per https://bugs.debian.org/1022126
+>>> where the issue was introduced back in 5.10.y. Context in
+>>> https://lore.kernel.org/linux-scsi/CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com/
+>>
+>> Friendly ping on this, can this change be backported as well to the
+>> relevant stable series? It would apply already cleanly to 6.1.y, but
+>> due to 9df650963bf6 ("scsi: mpt3sas: Don't change DMA mask while
+>> reallocating pools") it might need some additional review for the
+>> older stable series (in particular of interest due to the above for
+>> 5.10.y).
+> 
+> This afaics is a reasonable request for 6.1, as this seems to be
+> (Salvatore, please correct me if I'm wrong) a regression caused by
+> 0e0747de0ea3 ("scsi: mpt3sas: Fix return value check of
+> dma_get_required_mask()"), which was merged for 6.0-rc7. Hence allow me
+> to ask:
+> 
+> Sreekanth and Martin, is there a reason why this request (and the
+> earlier one a month ago) was apparently met with silence? Or was
+> progress made in between and I just missed it?
 
-Changes to v2:
-- Shorten printing strings.
+Salvatore, seems my inquiry didn't help. I'd suggest you ask the stable
+maintainers yourself to pick this up for 6.1.y. See "Option 2" in
 
-Changes to v1:
-- Adjust the order of fileds to keep them aligned.
----
- drivers/ufs/core/ufshcd.c  | 17 ++++++++++++----
- include/trace/events/ufs.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 61 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3b3cf78..e43aee1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -426,6 +426,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct ufs_hw_queue *hwq;
- 	int transfer_len = -1;
- 
- 	if (!cmd)
-@@ -433,7 +434,8 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 
- 	/* trace UPIU also */
- 	ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
--	if (!trace_ufshcd_command_enabled())
-+	if (!trace_ufshcd_command_enabled() &&
-+		!trace_ufshcd_command_mcq_enabled())
- 		return;
- 
- 	opcode = cmd->cmnd[0];
-@@ -456,9 +458,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	}
- 
- 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
--	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
--			doorbell, transfer_len, intr, lba, opcode, group_id);
-+
-+	if (is_mcq_enabled(hba)) {
-+		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
-+		trace_ufshcd_command_mcq(dev_name(hba->dev), str_t, tag,
-+				hwq, transfer_len, intr, lba, opcode, group_id);
-+	} else {
-+		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+		trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
-+				doorbell, transfer_len, intr, lba, opcode, group_id);
-+	}
- }
- 
- static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 599739e..604b2cd 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -10,6 +10,7 @@
- #define _TRACE_UFS_H
- 
- #include <linux/tracepoint.h>
-+#include <ufs/ufshcd.h>
- 
- #define str_opcode(opcode)						\
- 	__print_symbolic(opcode,					\
-@@ -307,6 +308,53 @@ TRACE_EVENT(ufshcd_command,
- 	)
- );
- 
-+TRACE_EVENT(ufshcd_command_mcq,
-+	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
-+		unsigned int tag, struct ufs_hw_queue *hwq, int transfer_len,
-+		u32 intr, u64 lba, u8 opcode, u8 group_id),
-+
-+	TP_ARGS(dev_name, str_t, tag, hwq, transfer_len, intr, lba, opcode, group_id),
-+
-+	TP_STRUCT__entry(
-+		__string(dev_name, dev_name)
-+		__field(enum ufs_trace_str_t, str_t)
-+		__field(unsigned int, tag)
-+		__field(u32, hwq_id)
-+		__field(u32, sq_tail)
-+		__field(u32, cq_head)
-+		__field(u32, cq_tail)
-+		__field(int, transfer_len)
-+		__field(u32, intr)
-+		__field(u64, lba)
-+		__field(u8, opcode)
-+		__field(u8, group_id)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->str_t = str_t;
-+		__entry->tag = tag;
-+		__entry->hwq_id = hwq->id;
-+		__entry->sq_tail = hwq->sq_tail_slot;
-+		__entry->cq_head = hwq->cq_head_slot;
-+		__entry->cq_tail = hwq->cq_tail_slot;
-+		__entry->transfer_len = transfer_len;
-+		__entry->intr = intr;
-+		__entry->lba = lba;
-+		__entry->opcode = opcode;
-+		__entry->group_id = group_id;
-+	),
-+
-+	TP_printk(
-+		"%s: %s: tag: %u, hqid: %d, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, sqt: %d, cqh: %d, cqt: %d",
-+		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-+		__entry->tag, __entry->hwq_id, __entry->transfer_len,
-+		__entry->intr, __entry->lba, (u32)__entry->opcode,
-+		str_opcode(__entry->opcode), (u32)__entry->group_id,
-+		__entry->sq_tail, __entry->cq_head,  __entry->cq_tail
-+	)
-+);
-+
- TRACE_EVENT(ufshcd_uic_command,
- 	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
- 		 u32 arg1, u32 arg2, u32 arg3),
--- 
-2.7.4
+https://docs.kernel.org/process/stable-kernel-rules.html
 
+> Salvatore, for 5.10 things are a bit more complicated, as someone would
+> need to do the work. Sometimes that work is done by the driver
+> developers and maintainers as well, but strictly speaking it's the duty
+> of those that backported the change to 5.10.y. Didn't check who did that
+> this case (the stable team?); but well, maybe let's sort this out for
+> 6.1.y first.
+
+Option 3 mentioned on above page might work for you here.
+
+>> Thanks already! If the change for older series needs some additional
+>> testing we might ask the affected users from the Debian bug 1022126 to
+>> test on 5.10.y as well.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
