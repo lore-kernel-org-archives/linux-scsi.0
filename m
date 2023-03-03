@@ -2,237 +2,240 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B8CC678D4
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 05:34:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF2FC64EC4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Mar 2023 06:44:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbjCCFe4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Mar 2023 00:34:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57236 "EHLO
+        id S229523AbjCCGoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Mar 2023 01:44:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbjCCFey (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 00:34:54 -0500
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C44C2976B
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 21:34:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677821692; x=1709357692;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=CEL6x9+KerWrUgJYZaOQG6l602KQIaJy3RTvHGd8Xmc=;
-  b=mI4GknKFBTzpecZnIlX8UzjzNw89Olj1YAROpWYmGL78d7r48D8o/rX8
-   5ViZXKMvTj3srIne461/BHjqdOiEf0vwhXCqVZvAPmTEjgc9+owyIRWuh
-   KYhsWwT+6wL5KzAvWVNCHI1p5Ltm/AxTK/oq6RtYDMKpq6o5cffcH4yQ0
-   QDo8pixptM6hbEwLhdKpmD+K3k43YDUwkj+Ma+QMJfplpp0aOsE3I6oQm
-   qVXeXOhaUidyG1MH21kJuZkxum6CfpABTolvBdZ6dM1tqYMLYy3SMnc56
-   k4PaUjxj1IB29tZWa/eTyNvGopvTlUneeL6pAXdc6qAE5Mq6jAbvuVgLU
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="362553294"
-X-IronPort-AV: E=Sophos;i="5.98,229,1673942400"; 
-   d="scan'208";a="362553294"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2023 21:34:52 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="818351616"
-X-IronPort-AV: E=Sophos;i="5.98,229,1673942400"; 
-   d="scan'208";a="818351616"
-Received: from lkp-server01.sh.intel.com (HELO 776573491cc5) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 02 Mar 2023 21:34:50 -0800
-Received: from kbuild by 776573491cc5 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pXy4A-0001E6-0q;
-        Fri, 03 Mar 2023 05:34:50 +0000
-Date:   Fri, 3 Mar 2023 13:34:27 +0800
-From:   kernel test robot <lkp@intel.com>
+        with ESMTP id S229509AbjCCGop (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 01:44:45 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B222D59CA
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 22:44:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1677825882; x=1709361882;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=F1uHd5tKUb9JRP98rqBvKZtR7nBpmSuMxdiTXPUg4uk=;
+  b=cZzf6/5nq7touzW509b3w0BmiGzbo0NKuT9VN45yxdTvkQO+pcF0wndW
+   kG8CF9IRE1etMA5FIHCBzsiS3sZxgTlDH4HMa5ddBPzOoDYUZYjmgTVj4
+   Pq/vqNkqLRIIIX4fs37risqsGEk28+IGY9CazSv1m7iz2R55FVwWK/P7l
+   6lqnlz1yu44JBlQB1MmzfweQ96LD5kPMIOZ6trc/xgseA4KkceeZLCgLt
+   f8ois+3G4BKC2qlGYTinMtOuD7PHsMIAzVSmptgiuI8t0MRa8kw9cfNie
+   X6pZOJ+wZ3WlHhcbiCFVr7OSG8i5WPbsra/3NhCQGOkZA0QRmu5qfEp6p
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.98,229,1673884800"; 
+   d="scan'208";a="224487236"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Mar 2023 14:44:41 +0800
+IronPort-SDR: yrltUjUPvbaP+NZqGqjs4dUUJ8amunHH6TrVFlqEaofwzy7Ha7Y6y4VwD6EzSaQPqHqn6aGmEd
+ MZqzFGCTuczsSkAHFn/Sg/te69LzOlvzTlg3yV3wFCnqV632g0xC7/Rp7NcZu56cbOo4kL2WOp
+ xUhdvIvBJWqjlZzXCCn0x0OoSP/t1ClsrKKRJsc7brcFt81J2kZD/yXu/c18jbfNzsHX0fvrz5
+ NW9daWbCpBM9h2M8AQKPbIIcw4kP/DWoAzXMpjhMrESIgq4qua8C63SmoT1ZTm9NnImIPKkXb+
+ ul4=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Mar 2023 22:01:29 -0800
+IronPort-SDR: 7+ObnUQsGxOvxtMNFUHTn49jMyge1tcdQ8chZ9YNHjGhM4iRpkK3RK9wuiA/aLKQssnxLyuLZx
+ gqf5Vdrkyyd1Q6Wofo5CE/PtyussxmF/GuW1SFGNprx/CKxp1G/cIA8P6RQNgMJyHTFm+0b35Q
+ Kv/TruetoSXH1huB856haVHpKeVrMcv2EvK9VHi71o02i1enr4mZqAfqmmwhFuAzr5k46I5RA7
+ FdVZioEpnWl6B6TATksr8XpjiYaWp9tBJcstgUEhJk170cgXG+Xu3eHbLhlnOKjzB5bXhG9QKf
+ 68E=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Mar 2023 22:44:42 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PSdkK3l4yz1RvTp
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2023 22:44:41 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:content-language:references:to
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1677825880; x=1680417881; bh=F1uHd5tKUb9JRP98rqBvKZtR7nBpmSuMxdi
+        TXPUg4uk=; b=g8c3T+UtWJS2pDMXaIHTsLBecJpGrFZ2NsYsKBsjZCIklNMHGlZ
+        rZjyDP/PbdZqJq2GJACPB3FgvxAm1rPW43EtTQBXpF9J14ib4NfidKaOxbTFcyee
+        1WqEJpoNXKKp89PretTGvWfY1tUest49rohsB9jRlrlCaegwFX9sM0JCdNPL8B0v
+        9S3TFYGlzJ0l3krOb77nNEBv7dQsl3FtAtLLSHAAtLrf6D1uYekxihaae+ohOGoh
+        7sH6foV4yWFGM5fX0P1eSGLqt9y+NaKksbwkiB5YI4ZwUqFozc+LsqTsEg0UFPFq
+        2Ls7gbvXHGfG/gDxzI2Hv80ICZpFKKj3W6A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id mu9W67LoEF3P for <linux-scsi@vger.kernel.org>;
+        Thu,  2 Mar 2023 22:44:40 -0800 (PST)
+Received: from [10.225.163.47] (unknown [10.225.163.47])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PSdkH2vxrz1RvLy;
+        Thu,  2 Mar 2023 22:44:39 -0800 (PST)
+Message-ID: <1120bc4a-0c3a-47ab-8f33-cc3e048c10c2@opensource.wdc.com>
+Date:   Fri, 3 Mar 2023 15:44:38 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 1/2] scsi: sd: Check physical sector alignment of
+ sequential zone writes
 To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
         linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     oe-kbuild-all@lists.linux.dev,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: Re: [PATCH 1/2] scsi: sd: Check physical sector alignment of
- sequential zone writes
-Message-ID: <202303031358.dwPeGHeZ-lkp@intel.com>
-References: <20230303014422.2466103-2-shinichiro.kawasaki@wdc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+References: <20230303014422.2466103-1-shinichiro.kawasaki@wdc.com>
+ <20230303014422.2466103-2-shinichiro.kawasaki@wdc.com>
+Content-Language: en-US
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
 In-Reply-To: <20230303014422.2466103-2-shinichiro.kawasaki@wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Shin'ichiro,
+On 3/3/23 10:44, Shin'ichiro Kawasaki wrote:
+> When host-managed SMR disks have different physical sector size and
+> logical sector size, writes to conventional zones should be aligned to
+> the logical sector size. On the other hand, ZBC/ZAC requires that writes
+> to sequential write required zones shall be aligned to the physical
+> sector size. Otherwise, the disks return the unaligned write command
+> error. However, this error is common with other failure reasons. The
+> error is also reported when the write start sector is not at the write
+> pointer, or the write end sector is not in the same zone.
+> 
+> To clarify the write failure cause is the physical sector alignment,
+> confirm before issuing write commands that the writes to sequential
+> write required zones are aligned to the physical sector size. If not,
+> print a relevant error message. This makes failure analysis easier, and
+> also avoids error handling in low level drivers.
+> 
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> ---
+>  drivers/scsi/sd.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 47dafe6b8a66..6d115b2fa99a 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1123,6 +1123,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>  	sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+>  	sector_t threshold;
+>  	unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+> +	unsigned int pb_sectors = sdkp->physical_block_size >> SECTOR_SHIFT;
+>  	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+>  	bool write = rq_data_dir(rq) == WRITE;
+>  	unsigned char protect, fua;
+> @@ -1145,6 +1146,15 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>  		goto fail;
+>  	}
+>  
+> +	if (sdkp->device->type == TYPE_ZBC && blk_rq_zone_is_seq(rq) &&
+> +	    (req_op(rq) == REQ_OP_WRITE || req_op(rq) == REQ_OP_ZONE_APPEND) &&
+> +	    (!IS_ALIGNED(blk_rq_pos(rq), pb_sectors) ||
+> +	     !IS_ALIGNED(blk_rq_sectors(rq), pb_sectors))) {
+> +		scmd_printk(KERN_ERR, cmd,
+> +			    "Sequential write request not aligned to the physical block size\n");
+> +		goto fail;
+> +	}
 
-Thank you for the patch! Yet something to improve:
+A little helper for this complicated check would be better, and that will avoid
+the built bot warning you got when CONFIG_BLK_DEV_ZONED is not set.
+Something like this:
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.2 next-20230303]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a38c71511bc9..71e4e51898d8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1146,6 +1146,9 @@ static blk_status_t sd_setup_read_write_cmnd(struct
+scsi_cmnd *cmd)
+ 		goto fail;
+ 	}
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Shin-ichiro-Kawasaki/scsi-sd-Check-physical-sector-alignment-of-sequential-zone-writes/20230303-094618
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230303014422.2466103-2-shinichiro.kawasaki%40wdc.com
-patch subject: [PATCH 1/2] scsi: sd: Check physical sector alignment of sequential zone writes
-config: arc-randconfig-r031-20230302 (https://download.01.org/0day-ci/archive/20230303/202303031358.dwPeGHeZ-lkp@intel.com/config)
-compiler: arc-elf-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/60573809bdc58708e29f2f9ecbddb06aeb9e8716
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Shin-ichiro-Kawasaki/scsi-sd-Check-physical-sector-alignment-of-sequential-zone-writes/20230303-094618
-        git checkout 60573809bdc58708e29f2f9ecbddb06aeb9e8716
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arc olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arc SHELL=/bin/bash drivers/scsi/
++	if (sdkp->device->type == TYPE_ZBC && !sd_zbc_check_write(cmd))
++		goto fail;
++
+ 	if ((blk_rq_pos(rq) & mask) || (blk_rq_sectors(rq) & mask)) {
+ 		scmd_printk(KERN_ERR, cmd, "request not aligned to the logical block size\n");
+ 		goto fail;
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..f19711b92f25 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -254,6 +254,8 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
+ blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
+ 				        unsigned int nr_blocks);
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303031358.dwPeGHeZ-lkp@intel.com/
++bool sd_zbc_check_write(struct scsi_cmnd *cmd);
++
+ #else /* CONFIG_BLK_DEV_ZONED */
 
-All errors (new ones prefixed by >>):
+ static inline void sd_zbc_free_zone_info(struct scsi_disk *sdkp) {}
+@@ -290,6 +292,11 @@ static inline blk_status_t
+sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd,
 
-   drivers/scsi/sd.c: In function 'sd_setup_read_write_cmnd':
->> drivers/scsi/sd.c:1151:47: error: implicit declaration of function 'blk_rq_zone_is_seq'; did you mean 'bio_zone_is_seq'? [-Werror=implicit-function-declaration]
-    1151 |         if (sdkp->device->type == TYPE_ZBC && blk_rq_zone_is_seq(rq) &&
-         |                                               ^~~~~~~~~~~~~~~~~~
-         |                                               bio_zone_is_seq
-   cc1: some warnings being treated as errors
+ #define sd_zbc_report_zones NULL
+
++static inline bool sd_zbc_check_write(struct scsi_cmnd *cmd)
++{
++	return true;
++}
++
+ #endif /* CONFIG_BLK_DEV_ZONED */
+
+ void sd_print_sense_hdr(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 6b3a02d4406c..3025cb35f30c 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -983,3 +983,33 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, u8
+buf[SD_BUF_SIZE])
+
+ 	return ret;
+ }
++
++/**
++ * sd_zbc_check_write - Check if a write to a sequential zone is aligned to
++ *			the physical block size of the disk.
++ * @cmd: The command to check.
++ *
++ * Return false for write and zone append commands that are not aligned to
++ * the disk physical block size and true otherwise.
++ */
++bool sd_zbc_check_write(struct scsi_cmnd *cmd)
++{
++	struct request *rq = scsi_cmd_to_rq(cmd);
++	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
++	unsigned int pb_sectors = sdkp->physical_block_size >> SECTOR_SHIFT;
++
++	if (!blk_rq_zone_is_seq(rq))
++		return true;
++
++	if (req_op(rq) != REQ_OP_WRITE && req_op(rq) != REQ_OP_ZONE_APPEND)
++		return true;
++
++	if (!IS_ALIGNED(blk_rq_pos(rq), pb_sectors) ||
++	     !IS_ALIGNED(blk_rq_sectors(rq), pb_sectors)) {
++		scmd_printk(KERN_ERR, cmd,
++			"Write request not aligned to the physical block size\n");
++		return false;
++	}
++
++	return true;
++}
+-- 
+2.39.2
 
 
-vim +1151 drivers/scsi/sd.c
 
-  1119	
-  1120	static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
-  1121	{
-  1122		struct request *rq = scsi_cmd_to_rq(cmd);
-  1123		struct scsi_device *sdp = cmd->device;
-  1124		struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-  1125		sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
-  1126		sector_t threshold;
-  1127		unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-  1128		unsigned int pb_sectors = sdkp->physical_block_size >> SECTOR_SHIFT;
-  1129		unsigned int mask = logical_to_sectors(sdp, 1) - 1;
-  1130		bool write = rq_data_dir(rq) == WRITE;
-  1131		unsigned char protect, fua;
-  1132		blk_status_t ret;
-  1133		unsigned int dif;
-  1134		bool dix;
-  1135	
-  1136		ret = scsi_alloc_sgtables(cmd);
-  1137		if (ret != BLK_STS_OK)
-  1138			return ret;
-  1139	
-  1140		ret = BLK_STS_IOERR;
-  1141		if (!scsi_device_online(sdp) || sdp->changed) {
-  1142			scmd_printk(KERN_ERR, cmd, "device offline or changed\n");
-  1143			goto fail;
-  1144		}
-  1145	
-  1146		if (blk_rq_pos(rq) + blk_rq_sectors(rq) > get_capacity(rq->q->disk)) {
-  1147			scmd_printk(KERN_ERR, cmd, "access beyond end of device\n");
-  1148			goto fail;
-  1149		}
-  1150	
-> 1151		if (sdkp->device->type == TYPE_ZBC && blk_rq_zone_is_seq(rq) &&
-  1152		    (req_op(rq) == REQ_OP_WRITE || req_op(rq) == REQ_OP_ZONE_APPEND) &&
-  1153		    (!IS_ALIGNED(blk_rq_pos(rq), pb_sectors) ||
-  1154		     !IS_ALIGNED(blk_rq_sectors(rq), pb_sectors))) {
-  1155			scmd_printk(KERN_ERR, cmd,
-  1156				    "Sequential write request not aligned to the physical block size\n");
-  1157			goto fail;
-  1158		}
-  1159	
-  1160		if ((blk_rq_pos(rq) & mask) || (blk_rq_sectors(rq) & mask)) {
-  1161			scmd_printk(KERN_ERR, cmd, "request not aligned to the logical block size\n");
-  1162			goto fail;
-  1163		}
-  1164	
-  1165		/*
-  1166		 * Some SD card readers can't handle accesses which touch the
-  1167		 * last one or two logical blocks. Split accesses as needed.
-  1168		 */
-  1169		threshold = sdkp->capacity - SD_LAST_BUGGY_SECTORS;
-  1170	
-  1171		if (unlikely(sdp->last_sector_bug && lba + nr_blocks > threshold)) {
-  1172			if (lba < threshold) {
-  1173				/* Access up to the threshold but not beyond */
-  1174				nr_blocks = threshold - lba;
-  1175			} else {
-  1176				/* Access only a single logical block */
-  1177				nr_blocks = 1;
-  1178			}
-  1179		}
-  1180	
-  1181		if (req_op(rq) == REQ_OP_ZONE_APPEND) {
-  1182			ret = sd_zbc_prepare_zone_append(cmd, &lba, nr_blocks);
-  1183			if (ret)
-  1184				goto fail;
-  1185		}
-  1186	
-  1187		fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
-  1188		dix = scsi_prot_sg_count(cmd);
-  1189		dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
-  1190	
-  1191		if (dif || dix)
-  1192			protect = sd_setup_protect_cmnd(cmd, dix, dif);
-  1193		else
-  1194			protect = 0;
-  1195	
-  1196		if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
-  1197			ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
-  1198						 protect | fua);
-  1199		} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
-  1200			ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
-  1201						 protect | fua);
-  1202		} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
-  1203			   sdp->use_10_for_rw || protect) {
-  1204			ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
-  1205						 protect | fua);
-  1206		} else {
-  1207			ret = sd_setup_rw6_cmnd(cmd, write, lba, nr_blocks,
-  1208						protect | fua);
-  1209		}
-  1210	
-  1211		if (unlikely(ret != BLK_STS_OK))
-  1212			goto fail;
-  1213	
-  1214		/*
-  1215		 * We shouldn't disconnect in the middle of a sector, so with a dumb
-  1216		 * host adapter, it's safe to assume that we can at least transfer
-  1217		 * this many bytes between each connect / disconnect.
-  1218		 */
-  1219		cmd->transfersize = sdp->sector_size;
-  1220		cmd->underflow = nr_blocks << 9;
-  1221		cmd->allowed = sdkp->max_retries;
-  1222		cmd->sdb.length = nr_blocks * sdp->sector_size;
-  1223	
-  1224		SCSI_LOG_HLQUEUE(1,
-  1225				 scmd_printk(KERN_INFO, cmd,
-  1226					     "%s: block=%llu, count=%d\n", __func__,
-  1227					     (unsigned long long)blk_rq_pos(rq),
-  1228					     blk_rq_sectors(rq)));
-  1229		SCSI_LOG_HLQUEUE(2,
-  1230				 scmd_printk(KERN_INFO, cmd,
-  1231					     "%s %d/%u 512 byte blocks.\n",
-  1232					     write ? "writing" : "reading", nr_blocks,
-  1233					     blk_rq_sectors(rq)));
-  1234	
-  1235		/*
-  1236		 * This indicates that the command is ready from our end to be queued.
-  1237		 */
-  1238		return BLK_STS_OK;
-  1239	fail:
-  1240		scsi_free_sgtables(cmd);
-  1241		return ret;
-  1242	}
-  1243	
+
+> +
+>  	if ((blk_rq_pos(rq) & mask) || (blk_rq_sectors(rq) & mask)) {
+>  		scmd_printk(KERN_ERR, cmd, "request not aligned to the logical block size\n");
+>  		goto fail;
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Damien Le Moal
+Western Digital Research
+
