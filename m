@@ -2,92 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9F1C678DB
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 15:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D671C64EC4
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 15:51:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229455AbjCDPVg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Mar 2023 10:21:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46388 "EHLO
+        id S229723AbjCDPvr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Mar 2023 10:51:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjCDPVf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2023 10:21:35 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917891C7C7
-        for <linux-scsi@vger.kernel.org>; Sat,  4 Mar 2023 07:21:34 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id kb15so5581039pjb.1
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2023 07:21:34 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677943294;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Wlis/7bPjTjQKMrFwzBhS02AmIjbsLWpFaZsrqUv2Jo=;
-        b=GuHZ1ZYv5bz6GUlu8vTVWVeGkRyFNY53dNAZC/2XIGDvBfsKBAeElCksGQJ+8R/svB
-         0zOXsspTjDVe3O2SJK5bZzPoAxyVOuhYHMbSkEJ7WpINXTLMGBZ1zP0I109nYDC4pNkI
-         3XesU/m8TDSTgul8vVK7swwlTaRsXvJqVWDLSIZdsMNgA7RNXbZrfYCyiZb6dZGxmNZM
-         l8iSWSxuPLWk8MRxvpXcykr7NmEjjw2ONmAAaYOdAknZVfkNLdQrCGW6ImP8OUDbbsUv
-         5KVWWYroxUSKR18XVfV+K1vv9x/XLDIqPUN+HtANE6Uf0MmP6rtGbEOFY6pH2ST7ATG0
-         4tBw==
-X-Gm-Message-State: AO0yUKV8ibUO/lhgKd7DiDXXO5ywh+85641hxPB2zL/B5ZQ1ixo6dKg8
-        DejVWlOYW9j7l8VOIF6+sHCyxnsqHueDSA==
-X-Google-Smtp-Source: AK7set84NyPmODEB0rsCx8+mmm3B0yqjfvaDCXLUMPX8vmAF574aW/ZmO06hcXLApRDMTEoYObjRyQ==
-X-Received: by 2002:a17:90b:3912:b0:237:d2b0:dac9 with SMTP id ob18-20020a17090b391200b00237d2b0dac9mr5526626pjb.42.1677943293944;
-        Sat, 04 Mar 2023 07:21:33 -0800 (PST)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id z10-20020a17090acb0a00b00230b8402760sm5134939pjt.38.2023.03.04.07.21.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 04 Mar 2023 07:21:33 -0800 (PST)
-Message-ID: <5b81a4b6-82b9-55a2-a75c-486886c96e9e@acm.org>
-Date:   Sat, 4 Mar 2023 07:21:31 -0800
+        with ESMTP id S229694AbjCDPvq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2023 10:51:46 -0500
+Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 645E81B57D
+        for <linux-scsi@vger.kernel.org>; Sat,  4 Mar 2023 07:51:45 -0800 (PST)
+Received: (qmail 334178 invoked by uid 1000); 4 Mar 2023 10:51:44 -0500
+Date:   Sat, 4 Mar 2023 10:51:44 -0500
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Oliver Neukum <oneukum@suse.com>,
+        linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 80/81] usb: uas: Declare two host templates and host
+ template pointers const
+Message-ID: <4f80df61-98d4-4f27-a095-feea7f657d8f@rowland.harvard.edu>
+References: <20230304003103.2572793-1-bvanassche@acm.org>
+ <20230304003103.2572793-81-bvanassche@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 1/2] scsi: sd: Check physical sector alignment of
- sequential zone writes
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
-References: <20230303014422.2466103-1-shinichiro.kawasaki@wdc.com>
- <20230303014422.2466103-2-shinichiro.kawasaki@wdc.com>
- <8be7cebf-a5dc-4742-1ef2-207d1797f2f3@acm.org>
- <23ac3205-d92a-b32f-d0e3-29604cf859cd@opensource.wdc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <23ac3205-d92a-b32f-d0e3-29604cf859cd@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230304003103.2572793-81-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/3/23 19:03, Damien Le Moal wrote:
-> On 3/4/23 03:03, Bart Van Assche wrote:
->> On 3/2/23 17:44, Shin'ichiro Kawasaki wrote:
->>> +	if (sdkp->device->type == TYPE_ZBC && blk_rq_zone_is_seq(rq) &&
->>> +	    (req_op(rq) == REQ_OP_WRITE || req_op(rq) == REQ_OP_ZONE_APPEND) &&
->>> +	    (!IS_ALIGNED(blk_rq_pos(rq), pb_sectors) ||
->>> +	     !IS_ALIGNED(blk_rq_sectors(rq), pb_sectors))) {
->>> +		scmd_printk(KERN_ERR, cmd,
->>> +			    "Sequential write request not aligned to the physical block size\n");
->>> +		goto fail;
->>> +	}
->>
->> I vote -1 for this patch because my opinion is that we should not
->> duplicate checks that must be performed by the storage controller anyway
->> inside the sd driver.
+On Fri, Mar 03, 2023 at 04:31:02PM -0800, Bart Van Assche wrote:
+> Improve source code documentation by constifying host templates that are
+> not modified.
 > 
-> Sure, the drive will fail this request, so the end result is the same. But what
-> is the point of issuing such unaligned request that we know will fail ? The
-> error message also make it easier to debug as it clarifies that this is not a
-> write pointer violation. So while this change is not critical, it does have
-> merits in my opinion.
+> Cc: Oliver Neukum <oneukum@suse.com>
+> Cc: linux-usb@vger.kernel.org
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
 
-I think that there are other ways to debug software that triggers an 
-unaligned write, e.g. ftrace.
+For the usb-storage parts:
 
-Thanks,
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
-Bart.
-
+>  drivers/usb/image/microtek.c | 2 +-
+>  drivers/usb/storage/uas.c    | 2 +-
+>  drivers/usb/storage/usb.c    | 2 +-
+>  drivers/usb/storage/usb.h    | 2 +-
+>  4 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
+> index 874ea4b54ced..8c8fa71c69c4 100644
+> --- a/drivers/usb/image/microtek.c
+> +++ b/drivers/usb/image/microtek.c
+> @@ -620,7 +620,7 @@ static int mts_scsi_queuecommand_lck(struct scsi_cmnd *srb)
+>  
+>  static DEF_SCSI_QCMD(mts_scsi_queuecommand)
+>  
+> -static struct scsi_host_template mts_scsi_host_template = {
+> +static const struct scsi_host_template mts_scsi_host_template = {
+>  	.module			= THIS_MODULE,
+>  	.name			= "microtekX6",
+>  	.proc_name		= "microtekX6",
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index de3836412bf3..2583ee9815c5 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -894,7 +894,7 @@ static int uas_slave_configure(struct scsi_device *sdev)
+>  	return 0;
+>  }
+>  
+> -static struct scsi_host_template uas_host_template = {
+> +static const struct scsi_host_template uas_host_template = {
+>  	.module = THIS_MODULE,
+>  	.name = "uas",
+>  	.queuecommand = uas_queuecommand,
+> diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+> index ed7c6ad96a74..7b36a3334fb3 100644
+> --- a/drivers/usb/storage/usb.c
+> +++ b/drivers/usb/storage/usb.c
+> @@ -937,7 +937,7 @@ int usb_stor_probe1(struct us_data **pus,
+>  		struct usb_interface *intf,
+>  		const struct usb_device_id *id,
+>  		const struct us_unusual_dev *unusual_dev,
+> -		struct scsi_host_template *sht)
+> +		const struct scsi_host_template *sht)
+>  {
+>  	struct Scsi_Host *host;
+>  	struct us_data *us;
+> diff --git a/drivers/usb/storage/usb.h b/drivers/usb/storage/usb.h
+> index 0451fac1adce..fd3f32670873 100644
+> --- a/drivers/usb/storage/usb.h
+> +++ b/drivers/usb/storage/usb.h
+> @@ -187,7 +187,7 @@ extern int usb_stor_probe1(struct us_data **pus,
+>  		struct usb_interface *intf,
+>  		const struct usb_device_id *id,
+>  		const struct us_unusual_dev *unusual_dev,
+> -		struct scsi_host_template *sht);
+> +		const struct scsi_host_template *sht);
+>  extern int usb_stor_probe2(struct us_data *us);
+>  extern void usb_stor_disconnect(struct usb_interface *intf);
+>  
