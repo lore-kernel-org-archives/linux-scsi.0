@@ -2,68 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFDBEC678D5
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 19:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E65A2C678D5
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 22:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229540AbjCDTpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Mar 2023 14:45:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57000 "EHLO
+        id S229534AbjCDWop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Mar 2023 17:44:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjCDTpG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2023 14:45:06 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A41BEC67F
-        for <linux-scsi@vger.kernel.org>; Sat,  4 Mar 2023 11:45:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=UdYkt2Js6Bp2OFGPw5jM465PX5HmLSzClCA+FVI5Mrc=; b=u7sPdlKU9Gs3R9qIYylSwisHBI
-        3jnOANnQu02qZkDcXjATxCVWGIPrAMh3j5kvzhfeqYt7YY8ri0ZV9YT375cKWNEx7h+ubz127VLCz
-        V+kk3WDJoh5nm/KuFI4EcTADnn1GUptSwBqmfw6lHIHNAFVoQyLmBPd/ys9Ah31OxirmbtxUTgdhn
-        r95h4fR87UOFVlc7Oe7X0gVfnI8PARjsCYhHbwh2Hs2H8MBIxiZkfrtHCodh1cRxB1nD57inGYx1k
-        RadQa1ByKUtxOP7BnJqau54SODisCYQLdYCuPGFKFtEe374nU8vSu3eYLKnScwCm1nbtZAE70T5dF
-        VY+QOqZQ==;
-Received: from 108-90-42-56.lightspeed.sntcca.sbcglobal.net ([108.90.42.56] helo=[192.168.1.80])
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pYXoK-0040Tk-Bb; Sat, 04 Mar 2023 19:44:53 +0000
-Message-ID: <8a70e31f-8f3d-90cb-ebfc-e0f9d5a3cf34@infradead.org>
-Date:   Sat, 4 Mar 2023 11:44:43 -0800
+        with ESMTP id S229495AbjCDWoo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2023 17:44:44 -0500
+Received: from mail-yb1-xb2b.google.com (mail-yb1-xb2b.google.com [IPv6:2607:f8b0:4864:20::b2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAB8F1117A
+        for <linux-scsi@vger.kernel.org>; Sat,  4 Mar 2023 14:44:42 -0800 (PST)
+Received: by mail-yb1-xb2b.google.com with SMTP id e82so4968934ybh.9
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2023 14:44:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Wi4QifgERwa5AVgTKR7nOPXsxBrSHQ8fL11+CaqhDD4=;
+        b=Jiw/oxqIhxzUAN/Yy08zIctHAtzScMxgeodOlzgqled1K9yy2VDj3f5N073lyCxGfK
+         EU6owtM0cN6hfgm7oXaMX5tEZzLaBqlZzHSsCJKBsXqbVsyeFu0mbiLrqwphnqlGcK0j
+         LKvWKX+uFhdVMmLxORqMI+RHv8e0Si22PU7Sb+40qk+pNPr2djsNXZcxAPyLq8WQjF28
+         VAtato4GN/ypwqCo7EHqT41yW1OaQ9BBul83DzcjtgnJJGVW0aYEVvfYFP+eVTrAI4G3
+         uEvwng6KDOUUKyV9zUXUX+pHEOwJU0hjIFKr+ZF8B6jC3JiZTIfxfP3G1TGShJzGXLXJ
+         ZLDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Wi4QifgERwa5AVgTKR7nOPXsxBrSHQ8fL11+CaqhDD4=;
+        b=ufJIia0nj1ymODdnirdL1xUaGbSE3P3ZUkQdjSIaqbFqNlENWwTodEGPyH1pj6hZB0
+         +YCB3Na0rMRQXJR1Yj+xpDaaD5pW2LF704gt7RcJy5Da0Lb/jfNwMDofIKpYLARwrHEW
+         HsZ8oEoHfJsq1sZ1GhrVayjcdS3QSvONw9xzs1S+myQtGUd3yX8hsymqQ7JLJoyp29Gt
+         M2WsCVV29Szpumx0dCpM9nvBFXjXV2mJJVC8O4fpMftQafK8K2qP5zEQ6xfbREh16BPd
+         SyYwx7qDYVbrg+XXwOV7mzfWq4M4ECkYkr/v/0p4J9NQb57MXMZt6MCJPQTz7jQYJIsZ
+         S/Og==
+X-Gm-Message-State: AO0yUKWSoECx7OvRBK16T8pKiRAEeT1xicwYF8dMoVL4VBUAMtVP9jqb
+        wNODCe/g9fhcHBuPBSVv0JuzVgTMnVTxYFC2QEyfuA==
+X-Google-Smtp-Source: AK7set+fnJaosHn/7Vc/KOmstknBYTPW/nd3cW7Y9+GdTOLCEsm1zXL3If9DYLDKagAb+ChpzA7bfml1O2m4hwGAzyg=
+X-Received: by 2002:a5b:b84:0:b0:ab8:1ed9:cfd2 with SMTP id
+ l4-20020a5b0b84000000b00ab81ed9cfd2mr3619308ybq.5.1677969881909; Sat, 04 Mar
+ 2023 14:44:41 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH 65/81] scsi: ps3rom: Declare SCSI host template const
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-References: <20230304003103.2572793-1-bvanassche@acm.org>
- <20230304003103.2572793-66-bvanassche@acm.org>
-From:   Geoff Levand <geoff@infradead.org>
-In-Reply-To: <20230304003103.2572793-66-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20230304003103.2572793-1-bvanassche@acm.org> <20230304003103.2572793-5-bvanassche@acm.org>
+In-Reply-To: <20230304003103.2572793-5-bvanassche@acm.org>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Sat, 4 Mar 2023 23:44:30 +0100
+Message-ID: <CACRpkdYJigG3GFygT1B6SDsSeM6muO+m19OZU0yvkc=J2=tR=w@mail.gmail.com>
+Subject: Re: [PATCH 04/81] ata: Declare SCSI host templates const
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Samuel Holland <samuel@sholland.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On Sat, Mar 4, 2023 at 1:31=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
+ wrote:
 
-On 3/3/23 16:30, Bart Van Assche wrote:
-> Make it explicit that the SCSI host template is not modified.
-> 
+> Make it explicit that ATA host templates are not modified.
+>
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ps3rom.c | 2 +-
 
-I rebased the current ps3-queue branch of my kernel.org ps3-linux.git repo
-on top of your scsi-const-host-template branch and tested on PS3.  I could
-mount and read a disk in the CD-ROM drive (the ps3rom device).
+Looks reasonable.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-Thanks for your efforts.
-
-Tested-by: Geoff Levand <geoff@infradead.org>
-
-
+Yours,
+Linus Walleij
