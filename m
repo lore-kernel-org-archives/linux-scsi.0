@@ -2,49 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FC5C61DA3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD43BC64EC4
 	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 00:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230032AbjCDAfY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Mar 2023 19:35:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34242 "EHLO
+        id S229987AbjCDAfZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Mar 2023 19:35:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229998AbjCDAeu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 19:34:50 -0500
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFF1D4C2B
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2023 16:34:16 -0800 (PST)
-Received: by mail-pj1-f44.google.com with SMTP id me6-20020a17090b17c600b0023816b0c7ceso7884369pjb.2
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2023 16:34:16 -0800 (PST)
+        with ESMTP id S229836AbjCDAev (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 19:34:51 -0500
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65F60AD32
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2023 16:34:17 -0800 (PST)
+Received: by mail-pj1-f46.google.com with SMTP id kb15so4379633pjb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2023 16:34:17 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677890052;
+        d=1e100.net; s=20210112; t=1677890053;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=uNBZEXnuNLSbR6kjSK5gewVoRiq0PJ3JQYeI9QvkyZY=;
-        b=B7BDoZp5hCVaLqGeFz4e7WH9D7etvtIOgRLRez0QpC8iCkLZEQr0+N9RtAhm+dJ3Zm
-         h9OWYmS9xTtYAAPGxnTsv7wgcW9wj2+0CjM1zKmDWN13RZcx32oMimUsT2YqQRKJnNkf
-         bUHo6iUhtA2hBzMGBm86DBnI3tYR42SBVaZNBatssUaQ1h9phQ647AuNpLBYY3GQcGdv
-         2Hgap7upGjHupHxUA5Aj5D1WTswkyH4KhQK7Ci1FtXsWFMDrO52V/NZRDZ/uLF327ZvM
-         IkCqp4EM9T6gawukU/AUSn/RwFLJHljmydNSuW+5NgcJmq4A3Y7BasPKX1jt0SFzOe7J
-         PWpw==
-X-Gm-Message-State: AO0yUKVNyyJS45wr8JfcY5GLY5+JRAk1VqwcwJaQkbCwclu1g3WckWBD
-        uXKJs+iCWf0LE4ZUvQ1a+zk=
-X-Google-Smtp-Source: AK7set/QIHPu3oz15lb9g0ecbtlkmKdXGa7evnB2PT/jwhnsFPlzfV8iHU5RDVL4pQnK//1neGJ8DQ==
-X-Received: by 2002:a17:902:a512:b0:19d:1674:c04d with SMTP id s18-20020a170902a51200b0019d1674c04dmr3184914plq.61.1677890051919;
-        Fri, 03 Mar 2023 16:34:11 -0800 (PST)
+        bh=T6GsPg2I0LZ32kZN7a19j6uU3awmr2LjY8FTtu+c/bA=;
+        b=XqRIEqDjKH2OGuB+6IyPyHHLy1kv26EW14c1rkWQSauZOU4zhb86+RoOy01Dh46Evl
+         0wfwzFq7b3ChBq4HgzlKg9bSJYXQSGMM5Yo+hM/KikrkOmM2jWbrXvLxBsY40zKHcFiH
+         gDz4pT8N+3llF8OQ01+xpjdrYxNWj/1QZpasB9F7g9WPANGKc6Awk0p3TcCV0lPNkOss
+         C3TTWpKBg5ET+MFPIKTBx40LSWJQoYI8/klbiLF44ztljr9I/Wu+TcgY2dewy7ONoxOb
+         3kY+X5QKCGOjG4I25+L1BmkJqqYG4anERXw1K7QiByvOERDIy6y2hmTNr1dZZjhMUpaP
+         V6Dg==
+X-Gm-Message-State: AO0yUKW93oxHEx61LMk/EqM+tQGPOMr/lgUS/vdI0vWNU7pV+WsxjeK2
+        gXlfKnf2cLbGm00bG8FnO/vqNRUnRUTXwA==
+X-Google-Smtp-Source: AK7set96nZHXBR3gO03DplByYMf2T5LI8QJHTqRKBAQ5ymE52e0cO5xLdTJyLewQRj7ffhcx9aWJug==
+X-Received: by 2002:a17:902:8307:b0:19c:fa22:e98e with SMTP id bd7-20020a170902830700b0019cfa22e98emr3183717plb.33.1677890053463;
+        Fri, 03 Mar 2023 16:34:13 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:efb8:1cdc:a06f:1b53])
-        by smtp.gmail.com with ESMTPSA id kk15-20020a170903070f00b00189743ed3b6sm2071078plb.64.2023.03.03.16.34.10
+        by smtp.gmail.com with ESMTPSA id kk15-20020a170903070f00b00189743ed3b6sm2071078plb.64.2023.03.03.16.34.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Mar 2023 16:34:11 -0800 (PST)
+        Fri, 03 Mar 2023 16:34:12 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH 61/81] scsi: pcmcia-sym53c500: Declare SCSI host template const
-Date:   Fri,  3 Mar 2023 16:30:43 -0800
-Message-Id: <20230304003103.2572793-62-bvanassche@acm.org>
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 62/81] scsi: pcmcia-pm8001: Declare SCSI host template const
+Date:   Fri,  3 Mar 2023 16:30:44 -0800
+Message-Id: <20230304003103.2572793-63-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.rc0.216.gc4246ad0f0-goog
 In-Reply-To: <20230304003103.2572793-1-bvanassche@acm.org>
 References: <20230304003103.2572793-1-bvanassche@acm.org>
@@ -58,28 +58,19 @@ Make it explicit that the SCSI host template is not modified.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/pcmcia/sym53c500_cs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index 5d7dfefd6f6c..278c78d066c4 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -668,7 +668,7 @@ ATTRIBUTE_GROUPS(SYM53C500_shost);
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 7e589fe3e010..8b9490011e36 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -96,7 +96,7 @@ static void pm8001_map_queues(struct Scsi_Host *shost)
  /*
- *  scsi_host_template initializer
- */
--static struct scsi_host_template sym53c500_driver_template = {
-+static const struct scsi_host_template sym53c500_driver_template = {
-      .module			= THIS_MODULE,
-      .name			= "SYM53C500",
-      .info			= SYM53C500_info,
-@@ -702,7 +702,7 @@ SYM53C500_config(struct pcmcia_device *link)
- 	int ret;
- 	int irq_level, port_base;
- 	struct Scsi_Host *host;
--	struct scsi_host_template *tpnt = &sym53c500_driver_template;
-+	const struct scsi_host_template *tpnt = &sym53c500_driver_template;
- 	struct sym53c500_data *data;
- 
- 	dev_dbg(&link->dev, "SYM53C500_config\n");
+  * The main structure which LLDD must register for scsi core.
+  */
+-static struct scsi_host_template pm8001_sht = {
++static const struct scsi_host_template pm8001_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.proc_name		= DRV_NAME,
