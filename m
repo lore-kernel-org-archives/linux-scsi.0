@@ -2,107 +2,68 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D671C64EC4
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 15:51:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFDBEC678D5
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 19:45:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229723AbjCDPvr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Mar 2023 10:51:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36938 "EHLO
+        id S229540AbjCDTpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Mar 2023 14:45:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229694AbjCDPvq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2023 10:51:46 -0500
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 645E81B57D
-        for <linux-scsi@vger.kernel.org>; Sat,  4 Mar 2023 07:51:45 -0800 (PST)
-Received: (qmail 334178 invoked by uid 1000); 4 Mar 2023 10:51:44 -0500
-Date:   Sat, 4 Mar 2023 10:51:44 -0500
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Oliver Neukum <oneukum@suse.com>,
-        linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 80/81] usb: uas: Declare two host templates and host
- template pointers const
-Message-ID: <4f80df61-98d4-4f27-a095-feea7f657d8f@rowland.harvard.edu>
-References: <20230304003103.2572793-1-bvanassche@acm.org>
- <20230304003103.2572793-81-bvanassche@acm.org>
+        with ESMTP id S229445AbjCDTpG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2023 14:45:06 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A41BEC67F
+        for <linux-scsi@vger.kernel.org>; Sat,  4 Mar 2023 11:45:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=UdYkt2Js6Bp2OFGPw5jM465PX5HmLSzClCA+FVI5Mrc=; b=u7sPdlKU9Gs3R9qIYylSwisHBI
+        3jnOANnQu02qZkDcXjATxCVWGIPrAMh3j5kvzhfeqYt7YY8ri0ZV9YT375cKWNEx7h+ubz127VLCz
+        V+kk3WDJoh5nm/KuFI4EcTADnn1GUptSwBqmfw6lHIHNAFVoQyLmBPd/ys9Ah31OxirmbtxUTgdhn
+        r95h4fR87UOFVlc7Oe7X0gVfnI8PARjsCYhHbwh2Hs2H8MBIxiZkfrtHCodh1cRxB1nD57inGYx1k
+        RadQa1ByKUtxOP7BnJqau54SODisCYQLdYCuPGFKFtEe374nU8vSu3eYLKnScwCm1nbtZAE70T5dF
+        VY+QOqZQ==;
+Received: from 108-90-42-56.lightspeed.sntcca.sbcglobal.net ([108.90.42.56] helo=[192.168.1.80])
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pYXoK-0040Tk-Bb; Sat, 04 Mar 2023 19:44:53 +0000
+Message-ID: <8a70e31f-8f3d-90cb-ebfc-e0f9d5a3cf34@infradead.org>
+Date:   Sat, 4 Mar 2023 11:44:43 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230304003103.2572793-81-bvanassche@acm.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH 65/81] scsi: ps3rom: Declare SCSI host template const
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>
+References: <20230304003103.2572793-1-bvanassche@acm.org>
+ <20230304003103.2572793-66-bvanassche@acm.org>
+From:   Geoff Levand <geoff@infradead.org>
+In-Reply-To: <20230304003103.2572793-66-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 03, 2023 at 04:31:02PM -0800, Bart Van Assche wrote:
-> Improve source code documentation by constifying host templates that are
-> not modified.
+Hi,
+
+On 3/3/23 16:30, Bart Van Assche wrote:
+> Make it explicit that the SCSI host template is not modified.
 > 
-> Cc: Oliver Neukum <oneukum@suse.com>
-> Cc: linux-usb@vger.kernel.org
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
+>  drivers/scsi/ps3rom.c | 2 +-
 
-For the usb-storage parts:
+I rebased the current ps3-queue branch of my kernel.org ps3-linux.git repo
+on top of your scsi-const-host-template branch and tested on PS3.  I could
+mount and read a disk in the CD-ROM drive (the ps3rom device).
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Thanks for your efforts.
 
->  drivers/usb/image/microtek.c | 2 +-
->  drivers/usb/storage/uas.c    | 2 +-
->  drivers/usb/storage/usb.c    | 2 +-
->  drivers/usb/storage/usb.h    | 2 +-
->  4 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
-> index 874ea4b54ced..8c8fa71c69c4 100644
-> --- a/drivers/usb/image/microtek.c
-> +++ b/drivers/usb/image/microtek.c
-> @@ -620,7 +620,7 @@ static int mts_scsi_queuecommand_lck(struct scsi_cmnd *srb)
->  
->  static DEF_SCSI_QCMD(mts_scsi_queuecommand)
->  
-> -static struct scsi_host_template mts_scsi_host_template = {
-> +static const struct scsi_host_template mts_scsi_host_template = {
->  	.module			= THIS_MODULE,
->  	.name			= "microtekX6",
->  	.proc_name		= "microtekX6",
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index de3836412bf3..2583ee9815c5 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -894,7 +894,7 @@ static int uas_slave_configure(struct scsi_device *sdev)
->  	return 0;
->  }
->  
-> -static struct scsi_host_template uas_host_template = {
-> +static const struct scsi_host_template uas_host_template = {
->  	.module = THIS_MODULE,
->  	.name = "uas",
->  	.queuecommand = uas_queuecommand,
-> diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-> index ed7c6ad96a74..7b36a3334fb3 100644
-> --- a/drivers/usb/storage/usb.c
-> +++ b/drivers/usb/storage/usb.c
-> @@ -937,7 +937,7 @@ int usb_stor_probe1(struct us_data **pus,
->  		struct usb_interface *intf,
->  		const struct usb_device_id *id,
->  		const struct us_unusual_dev *unusual_dev,
-> -		struct scsi_host_template *sht)
-> +		const struct scsi_host_template *sht)
->  {
->  	struct Scsi_Host *host;
->  	struct us_data *us;
-> diff --git a/drivers/usb/storage/usb.h b/drivers/usb/storage/usb.h
-> index 0451fac1adce..fd3f32670873 100644
-> --- a/drivers/usb/storage/usb.h
-> +++ b/drivers/usb/storage/usb.h
-> @@ -187,7 +187,7 @@ extern int usb_stor_probe1(struct us_data **pus,
->  		struct usb_interface *intf,
->  		const struct usb_device_id *id,
->  		const struct us_unusual_dev *unusual_dev,
-> -		struct scsi_host_template *sht);
-> +		const struct scsi_host_template *sht);
->  extern int usb_stor_probe2(struct us_data *us);
->  extern void usb_stor_disconnect(struct usb_interface *intf);
->  
+Tested-by: Geoff Levand <geoff@infradead.org>
+
+
