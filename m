@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DA8C61DA4
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 00:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A356FC61DA4
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Mar 2023 00:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229895AbjCDAfh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Mar 2023 19:35:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34288 "EHLO
+        id S230061AbjCDAfm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Mar 2023 19:35:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229509AbjCDAfC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 19:35:02 -0500
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E19DE6A9E0
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2023 16:34:22 -0800 (PST)
-Received: by mail-pl1-f173.google.com with SMTP id i10so4517131plr.9
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2023 16:34:22 -0800 (PST)
+        with ESMTP id S230015AbjCDAfF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2023 19:35:05 -0500
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9B986A9E8
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2023 16:34:24 -0800 (PST)
+Received: by mail-pl1-f180.google.com with SMTP id y11so4571736plg.1
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2023 16:34:24 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677890062;
+        d=1e100.net; s=20210112; t=1677890064;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=/WqFD86zUzJs6zLt9AM/l5JR+jpNAEFoAzakplIzR8E=;
-        b=fLkDGC7zf459ElrE09rIRZ5fqaQ/MOKp+Di76NPX4+DacjsbKrwFiHNvSYXywjiapS
-         oFnc3CJlzKz0YG6t0T9lEG6OPzC8Ud23er56azhUJaT6xEv9TcGnIncnGYJ/CtoQvwUU
-         W4BOi8RrSsM7RfuON//cTS4tSGA7KpzMDwL+t+ziVTImHWpTAWTiJ/HPNLrCLFei16pg
-         LTlIItKCNZGoL6qNPe2ULhHiGYfDDwQdyTkgecMbVWCA6FikuD+ZkKQSbioWfe0lstL4
-         BpBVvPYbsDxF3JLxSxXk1m+J0iYxFoE5xoSxLbWuLCN6LzXYW3/sstbSTTu+WC25VF6t
-         7pVw==
-X-Gm-Message-State: AO0yUKV9jB/AULJBhec9rEgyKEvpdAFR8XKq/ljF89MQqm0WKAC0ze3k
-        1H8TaHDrSsq4y1LvbEW1t7w=
-X-Google-Smtp-Source: AK7set9aWufv2+hjDzzMmqaFVkBKgxC2o25U1MysF2KXcny9bfKTM4bd4SC7CjH01FrJC/H1di0w2Q==
-X-Received: by 2002:a17:903:120b:b0:19a:b092:b31a with SMTP id l11-20020a170903120b00b0019ab092b31amr4085203plh.8.1677890062565;
-        Fri, 03 Mar 2023 16:34:22 -0800 (PST)
+        bh=2E38+Z4Kj94CPrSnz/WfZRtH1QTTtivsr8lXuwNctz8=;
+        b=u3vZ/WO1yHgF9m7znEkbgeM2PRsnvXjQ10FhKozGsVa64ZSL0wrafcTi9lqRFJ1jr2
+         LHQcgg+JDYETLcLXliNiMUXcGS8q1KsiKGDJuwNJ4/jVPQOLNIJxafds8DdrSgKsyM9i
+         AktC+ZLH7jZlxdH2ZyxinP7M2CUpNJV2dleAtxu6V32MDwSmoNlBOJt2DwFOBe9TfqEv
+         PONyzKBIo6BRwXkNIyRGPKX6N2QUN1HN2du03Md1SbnkAlxiEu2ki3cGMzFYWmu+8FPH
+         e2EclRgO2cYAAMILwpc6lgTxzV2tI6Bd+R3gECxgVlGm2pWujuobjvnl/HLyxfsuCJ4V
+         rgww==
+X-Gm-Message-State: AO0yUKUmYoIpxlDu2txNHtJd2pDNfJq8WkYASnPS4LOpyelNdNPLFM/U
+        58H+ezz9Q7MjWmHCIgapLdw=
+X-Google-Smtp-Source: AK7set8qmBOnBZ1DKhqbeot/JFudT+O0OSrAKM1fs+8TF/QdfSOjpyZzx3pwjs39Z85amh+sT0mWsg==
+X-Received: by 2002:a17:902:ec8d:b0:19e:7a2a:2ea9 with SMTP id x13-20020a170902ec8d00b0019e7a2a2ea9mr4351219plg.14.1677890064304;
+        Fri, 03 Mar 2023 16:34:24 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:efb8:1cdc:a06f:1b53])
-        by smtp.gmail.com with ESMTPSA id kk15-20020a170903070f00b00189743ed3b6sm2071078plb.64.2023.03.03.16.34.21
+        by smtp.gmail.com with ESMTPSA id kk15-20020a170903070f00b00189743ed3b6sm2071078plb.64.2023.03.03.16.34.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Mar 2023 16:34:21 -0800 (PST)
+        Fri, 03 Mar 2023 16:34:23 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 67/81] scsi: qla2xxx: Declare SCSI host template const
-Date:   Fri,  3 Mar 2023 16:30:49 -0800
-Message-Id: <20230304003103.2572793-68-bvanassche@acm.org>
+Subject: [PATCH 68/81] scsi: qlogicpti: Declare SCSI host template const
+Date:   Fri,  3 Mar 2023 16:30:50 -0800
+Message-Id: <20230304003103.2572793-69-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.rc0.216.gc4246ad0f0-goog
 In-Reply-To: <20230304003103.2572793-1-bvanassche@acm.org>
 References: <20230304003103.2572793-1-bvanassche@acm.org>
@@ -59,49 +57,19 @@ Make it explicit that the SCSI host template is not modified.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h | 2 +-
- drivers/scsi/qla2xxx/qla_mid.c | 2 +-
- drivers/scsi/qla2xxx/qla_os.c  | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qlogicpti.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 9142df876c73..7bc2f634bab9 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -213,7 +213,7 @@ extern void qla2x00_free_exchoffld_buffer(struct qla_hw_data *);
- 
- extern int qla81xx_restart_mpi_firmware(scsi_qla_host_t *);
- 
--extern struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *,
-+extern struct scsi_qla_host *qla2x00_create_host(const struct scsi_host_template *,
- 	struct qla_hw_data *);
- extern void qla2x00_free_host(struct scsi_qla_host *);
- extern void qla2x00_relogin(struct scsi_qla_host *);
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 78661b658dcd..b67416951a5f 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -496,7 +496,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
- 	scsi_qla_host_t *base_vha = shost_priv(fc_vport->shost);
- 	struct qla_hw_data *ha = base_vha->hw;
- 	scsi_qla_host_t *vha;
--	struct scsi_host_template *sht = &qla2xxx_driver_template;
-+	const struct scsi_host_template *sht = &qla2xxx_driver_template;
- 	struct Scsi_Host *host;
- 
- 	vha = qla2x00_create_host(sht, ha);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 545167627e48..08e7873abb3d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5004,8 +5004,8 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->vp_map = NULL;
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 8c961ff03fcd..6fa8c78c3116 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1287,7 +1287,7 @@ static int qlogicpti_reset(struct scsi_cmnd *Cmnd)
+ 	return return_status;
  }
  
--struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
--						struct qla_hw_data *ha)
-+struct scsi_qla_host *qla2x00_create_host(const struct scsi_host_template *sht,
-+					  struct qla_hw_data *ha)
- {
- 	struct Scsi_Host *host;
- 	struct scsi_qla_host *vha = NULL;
+-static struct scsi_host_template qpti_template = {
++static const struct scsi_host_template qpti_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "qlogicpti",
+ 	.info			= qlogicpti_info,
