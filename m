@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8E74C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:19:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEA3C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:20:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230189AbjCFQT2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 11:19:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44716 "EHLO
+        id S229817AbjCFQUg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 11:20:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229812AbjCFQTJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:19:09 -0500
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E8792CFD0;
-        Mon,  6 Mar 2023 08:16:30 -0800 (PST)
-Received: by mail-oi1-x232.google.com with SMTP id e21so7464901oie.1;
-        Mon, 06 Mar 2023 08:16:30 -0800 (PST)
+        with ESMTP id S231636AbjCFQT5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:19:57 -0500
+Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92DBF3928F;
+        Mon,  6 Mar 2023 08:17:42 -0800 (PST)
+Received: by mail-qt1-x834.google.com with SMTP id c3so11092033qtc.8;
+        Mon, 06 Mar 2023 08:17:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678119321;
+        d=gmail.com; s=20210112; t=1678119375;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0XbTdGx8oMSPf4HhkoZWFz5gkpw9U1/T7K2pkx4Uby0=;
-        b=fxiIFrRAiYwXMWVwLl0J/TnSrG/3gWirNRX//9xrxQirrRzkifylGupfFSquPy2NX/
-         cjsso/QxXb15E/BA/+oXrKU0cXo0+QwGBsczSi4mxQy/RiVQFwIMTkr8i+ouxB1Gl0vw
-         J6tzlBo8rTml7rGXfhsI79Fxvyzw7DDG5ZTX1Wb2G+6X2AzTy6687ai8AMhSmVmuleiL
-         r1hHDkGpKqRJprzblWRpdCU3OpEO7H1hVcsldtpkH4JNfo5w1SvK2kyFPl3QXFVST7Oz
-         kjTbHaIGaJXWufEtD3f5WvUpBN7hPIGRZ7Q2ehVbGHrfPrmN2q91JJELNReZbv3l4XUN
-         bO6w==
+        bh=IYGyvuAOKnVSJLZ+PGJAH4uPpRYGFdgKO1BedlDVykI=;
+        b=kgi1+iWFbxRLTFxekjD2pI2NKmQgD+RR4bdx2BeL+4I/+FSqc5MHFSucYLuIohUpfa
+         0345mB2OordJ4yoq9g5ZqU5h5S6HXkLlCJTBmm5KS1MY2jgy5zaC4Kw7q9JK3dAqjt5Y
+         Y9mnpyZ/39xns9YJxuiTnFz5lCiwRFa6gkdGYyKIx21hcLaLytX3yhaFob4UvWdnLyvV
+         HQRc5NdeHtka0/Fw7mDs+/regvI+w/sWpWbOitUTXj18CkacGgUUL8guO/5WYpDVvzFh
+         n0FDNV5EAN51UuNBhea3wLhq3oYrnQHiHevrMTRk9GXoS6JFBtlu21u3GXFxYov7OinU
+         sdtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678119321;
+        d=1e100.net; s=20210112; t=1678119375;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0XbTdGx8oMSPf4HhkoZWFz5gkpw9U1/T7K2pkx4Uby0=;
-        b=fERl1uf/nh/gqj0xSf5muVxUQ5n+8ki5gEBYxZ9HOu2NADrQwT2fMmRQxUMZwHInRo
-         8RUMHEWFFT1QYuUHfC/Cfr7AguR12pfLG2PA4eCa6qPiN8KTMwA2Vj1MUWXRqQaC67I5
-         ugCRdmvA+N6qY287BXnj+5FTy8zmoekUAj85R4pMemPtH/hyfmsFTeDb44/yVNR2Zu0H
-         UewVvDh9KmkJ5GaX3CZIhyR1qPssPb3vcPS1Y4FC+D9ydI7amhNu+4xcnnzRlEME2PlA
-         u4kWiNb2t4M39nXjRNEcUkMU7VgkWycQzTtc2yCpSqUsvS08qdLqcuoCP2+6+RhXKEz1
-         OL4w==
-X-Gm-Message-State: AO0yUKWT+DcxARGV28vLRb9XN/FJ5QcT6d99wlI1K8+DO8sd384wwRbp
-        FbbWZkj0+YCZkmzUZXcW6UtIHTEqF+ryFyjO
-X-Google-Smtp-Source: AK7set+tQVdHJh4e+PqliYudDb3ddl76u0In93Ak366TBVp36ZG0/TpUrXOnnQYXS7peWeuLObbsvQ==
-X-Received: by 2002:a05:6a00:2d28:b0:5a8:4ae7:25d5 with SMTP id fa40-20020a056a002d2800b005a84ae725d5mr17256165pfb.8.1678118837403;
-        Mon, 06 Mar 2023 08:07:17 -0800 (PST)
+        bh=IYGyvuAOKnVSJLZ+PGJAH4uPpRYGFdgKO1BedlDVykI=;
+        b=R1HTbg/r7jGD/VOvLvnmokJ41mWdEitSgVv2m97OPoB8Yt2mbG3QwTjAkNYeUnasvh
+         O0NNY5WUkJ6PavXP4ngGiOMYFGmA6zfVuhh0oZhSsCnJraOha0l2WwaDJjY3hLotR84S
+         g9AsPyD2yoEXoW4pnUJLpPVY3PAIpfjWGoBkCYtPmSICg9RCuYDgv9EyO0z3MmxbLMPP
+         /OihA2MdmOu+bBAHe/uK6pt0p/DVBd2EG/Rw9Q/PpfQ29ss9VqdNsJ+eaUulf8WRNhhE
+         ia2/j1AiGKCAt+pFSxEwKLhPYzwFQu2W3lUsUW+TsWOWuieeAsE8gw2P7/vGgzF15YVS
+         yU/A==
+X-Gm-Message-State: AO0yUKVYuxUueYcKfZaWp3YUD1W+kA5Du7vzEh6KhJWU7keow2lvrBKK
+        s9CFwDO5yPTz0C7zLpxEMsOFUGLwdHo6V6dC
+X-Google-Smtp-Source: AK7set9FRJJ4bXIzCpqYTe8FRO5hxEPWPyG4KeJpbdnQ94eOSJ9cEuAei2kEStRQ6ROkgIXiyTXqbg==
+X-Received: by 2002:a62:7b45:0:b0:5a9:b4eb:d262 with SMTP id w66-20020a627b45000000b005a9b4ebd262mr10996934pfc.1.1678118827070;
+        Mon, 06 Mar 2023 08:07:07 -0800 (PST)
 Received: from vernon-pc.. ([49.67.2.142])
-        by smtp.gmail.com with ESMTPSA id u6-20020aa78386000000b005d35695a66csm6465318pfm.137.2023.03.06.08.07.12
+        by smtp.gmail.com with ESMTPSA id u6-20020aa78386000000b005d35695a66csm6465318pfm.137.2023.03.06.08.07.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 08:07:17 -0800 (PST)
+        Mon, 06 Mar 2023 08:07:06 -0800 (PST)
 From:   Vernon Yang <vernon2gm@gmail.com>
 To:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
@@ -59,9 +59,9 @@ To:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
 Cc:     linux-kernel@vger.kernel.org, wireguard@lists.zx2c4.com,
         netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
         Vernon Yang <vernon2gm@gmail.com>
-Subject: [PATCH 3/5] scsi: lpfc: fix lpfc_cpu_affinity_check() if no further cpus set
-Date:   Tue,  7 Mar 2023 00:06:49 +0800
-Message-Id: <20230306160651.2016767-4-vernon2gm@gmail.com>
+Subject: [PATCH 1/5] random: fix try_to_generate_entropy() if no further cpus set
+Date:   Tue,  7 Mar 2023 00:06:47 +0800
+Message-Id: <20230306160651.2016767-2-vernon2gm@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230306160651.2016767-1-vernon2gm@gmail.com>
 References: <20230306160651.2016767-1-vernon2gm@gmail.com>
@@ -80,76 +80,22 @@ it must greater than or equal to nr_cpumask_bits, so fix it to correctly.
 
 Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/char/random.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 61958a24a43d..01c0e2f47cf7 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12563,7 +12563,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
- 					goto found_same;
- 				new_cpu = cpumask_next(
- 					new_cpu, cpu_present_mask);
--				if (new_cpu == nr_cpumask_bits)
-+				if (new_cpu >= nr_cpumask_bits)
- 					new_cpu = first_cpu;
- 			}
- 			/* At this point, we leave the CPU as unassigned */
-@@ -12577,7 +12577,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
- 			 * selecting the same IRQ.
- 			 */
- 			start_cpu = cpumask_next(new_cpu, cpu_present_mask);
--			if (start_cpu == nr_cpumask_bits)
-+			if (start_cpu >= nr_cpumask_bits)
- 				start_cpu = first_cpu;
+diff --git a/drivers/char/random.c b/drivers/char/random.c
+index ce3ccd172cc8..d76f12a5f74f 100644
+--- a/drivers/char/random.c
++++ b/drivers/char/random.c
+@@ -1311,7 +1311,7 @@ static void __cold try_to_generate_entropy(void)
+ 			/* Basic CPU round-robin, which avoids the current CPU. */
+ 			do {
+ 				cpu = cpumask_next(cpu, &timer_cpus);
+-				if (cpu == nr_cpumask_bits)
++				if (cpu >= nr_cpumask_bits)
+ 					cpu = cpumask_first(&timer_cpus);
+ 			} while (cpu == smp_processor_id() && num_cpus > 1);
  
- 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -12613,7 +12613,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
- 					goto found_any;
- 				new_cpu = cpumask_next(
- 					new_cpu, cpu_present_mask);
--				if (new_cpu == nr_cpumask_bits)
-+				if (new_cpu >= nr_cpumask_bits)
- 					new_cpu = first_cpu;
- 			}
- 			/* We should never leave an entry unassigned */
-@@ -12631,7 +12631,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
- 			 * selecting the same IRQ.
- 			 */
- 			start_cpu = cpumask_next(new_cpu, cpu_present_mask);
--			if (start_cpu == nr_cpumask_bits)
-+			if (start_cpu >= nr_cpumask_bits)
- 				start_cpu = first_cpu;
- 
- 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -12704,7 +12704,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
- 				goto found_hdwq;
- 			}
- 			new_cpu = cpumask_next(new_cpu, cpu_present_mask);
--			if (new_cpu == nr_cpumask_bits)
-+			if (new_cpu >= nr_cpumask_bits)
- 				new_cpu = first_cpu;
- 		}
- 
-@@ -12719,7 +12719,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
- 				goto found_hdwq;
- 
- 			new_cpu = cpumask_next(new_cpu, cpu_present_mask);
--			if (new_cpu == nr_cpumask_bits)
-+			if (new_cpu >= nr_cpumask_bits)
- 				new_cpu = first_cpu;
- 		}
- 
-@@ -12730,7 +12730,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
-  found_hdwq:
- 		/* We found an available entry, copy the IRQ info */
- 		start_cpu = cpumask_next(new_cpu, cpu_present_mask);
--		if (start_cpu == nr_cpumask_bits)
-+		if (start_cpu >= nr_cpumask_bits)
- 			start_cpu = first_cpu;
- 		cpup->hdwq = new_cpup->hdwq;
-  logit:
 -- 
 2.34.1
 
