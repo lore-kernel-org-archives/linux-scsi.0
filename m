@@ -2,127 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE936C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 17:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56475C64EC4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 17:11:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229947AbjCFRFq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 12:05:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47156 "EHLO
+        id S229826AbjCFRLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 12:11:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229687AbjCFRFl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 12:05:41 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF91137B41;
-        Mon,  6 Mar 2023 09:05:14 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E6945B80EC2;
-        Mon,  6 Mar 2023 17:05:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FA52C433A1;
-        Mon,  6 Mar 2023 17:05:02 +0000 (UTC)
-Authentication-Results: smtp.kernel.org;
-        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="hUWq6aZA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
-        t=1678122298;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rebf2oGX/Y7xKpUOJU11DVlUHCYfqwTY7506K3ZpIEY=;
-        b=hUWq6aZA5z5fsKfpzYLpqIbjvz4Rw/BLq+F0+MXJaNwPYdzPZ1ZL8p1c0eAgEnFrt8X4PV
-        gDc5dltPdHjg9qtuDQexpj1bjXMwCgar7wjD1yMNP8swgStikSZ3DI2SIxMykNuLlYvJhe
-        9OeabsWU96CHanKsX/rOUBdjmnC6qy4=
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 8dfe2717 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-        Mon, 6 Mar 2023 17:04:58 +0000 (UTC)
-Received: by mail-yb1-f169.google.com with SMTP id t4so8824458ybg.11;
-        Mon, 06 Mar 2023 09:04:56 -0800 (PST)
-X-Gm-Message-State: AO0yUKXib2x7+PiscTli37c55i0o0njhGKBOHCEXsvxaT+6GbN1+XhDg
-        9OwPTIfbE8doqfl/ewSIzQ+2O7OOLPMV3VXiUKE=
-X-Google-Smtp-Source: AK7set/C+4H5t/AjhOaoRmPlKirlZGinsSeOk1osYZEYcZ7sUkw4WisDsCHHRxbmhkQleYYACwSNmtn05qG4XIfMC+0=
-X-Received: by 2002:a25:9b48:0:b0:a8a:a652:2a69 with SMTP id
- u8-20020a259b48000000b00a8aa6522a69mr5258478ybo.10.1678122295337; Mon, 06 Mar
- 2023 09:04:55 -0800 (PST)
+        with ESMTP id S229509AbjCFRL3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 12:11:29 -0500
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9456033463
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 09:10:45 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id s20so13670629lfb.11
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2023 09:10:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1678122576;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9qYKcnlpWdMlBpcagLtIlBclO/koVb4A2hugmwuDjQQ=;
+        b=K/ALNyiVmwk2B7FaiVr9+CnGKCB/lcBSgTRyxUeKfghmfQ3LfkadXwYITQfgwcIYec
+         yjLbnMfJ3Y5IcIHbvOSl0YxygbcPkImfyfF3A+daz2LzVPW5u/4J5vPm/5tQEFILCaUh
+         WIg/nIbiQWKn450exLKg18eyoDQDd+A+VKIimnJd80kN1/NU6uuVcML52mI8fWP08JAw
+         xlycx5pHeYzmF5FEiOmVmHyUN40f0U2Dw1GfbIStj1/0Pzf0DsZ0V0osDVJMRw53sgEf
+         uafbaitDMcI/Gj7p0Emovr44UvrTN4G03BCks7HKCrIOLCewObrOT6IiwpTYtCTE00XI
+         F53Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678122576;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9qYKcnlpWdMlBpcagLtIlBclO/koVb4A2hugmwuDjQQ=;
+        b=QSCf9k91Sdyq0vta/wOjBdBPrNzHljC++mlha6FmybZX8lRNjWSDdcQa8yZaYigVi5
+         Bgsg1zv6jUi/jxMzVMHfA0M0VdiemCZhqP+DJcEMuEPX/HvFyFEXQT3w3jID+ZGLlhRt
+         rQQb5ny5rQFsYls5/C079LmUKDnUBv8tEy1t+DHLWzZBTy4Bh6Cjpsei4o3cYBIrjPRC
+         W5Bufm9c887E7rXbhnJjoJ0ggHNg9+FgQaKluCl/GsLICbbDx0PbB6712bs3mXIkgTZK
+         3Ft/UCNZGIvreMj6hzrajC9LIWleFCfkJAMi6Syt5VOuBnx8Pa2dkHoOWMWZea2griyV
+         YjJg==
+X-Gm-Message-State: AO0yUKXbl+d8PW23wUgi1EEgjfboWHTZ42nKIw9YuNVLKBYj2txsf6JG
+        +Dz5uE2pTsYEoY3Qd/uXSAkrvQ==
+X-Google-Smtp-Source: AK7set/Go5uO6Ko/jxC1RRWHo5FHKFy68YfXEpfah8KL+MgdxvhaMrkjjPKYCkUBXnHCDbX3tV62AA==
+X-Received: by 2002:ac2:558d:0:b0:4db:3882:8f42 with SMTP id v13-20020ac2558d000000b004db38828f42mr3558231lfg.45.1678122576059;
+        Mon, 06 Mar 2023 09:09:36 -0800 (PST)
+Received: from [192.168.1.101] (abym99.neoplus.adsl.tpnet.pl. [83.9.32.99])
+        by smtp.gmail.com with ESMTPSA id x19-20020a19f613000000b004db1cd5efcesm1692927lfe.241.2023.03.06.09.09.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Mar 2023 09:09:35 -0800 (PST)
+Message-ID: <dfd1d81e-76a0-f8eb-e529-9f8ea1e927b6@linaro.org>
+Date:   Mon, 6 Mar 2023 18:09:33 +0100
 MIME-Version: 1.0
-References: <20230306160651.2016767-1-vernon2gm@gmail.com> <20230306160651.2016767-6-vernon2gm@gmail.com>
- <ZAYXJ2E+JHcp2kD/@yury-laptop> <CAHmME9r_JXNCVVCNxZRQkafA=eOOu5k0+AweRDor3tNu283bdg@mail.gmail.com>
- <ZAYartD+NsF1JxlH@yury-laptop>
-In-Reply-To: <ZAYartD+NsF1JxlH@yury-laptop>
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-Date:   Mon, 6 Mar 2023 18:04:44 +0100
-X-Gmail-Original-Message-ID: <CAHmME9qRicEe7zCFWSfV+aQ4j6sZ3FAJu3fgMUMJJkfBV4AMMw@mail.gmail.com>
-Message-ID: <CAHmME9qRicEe7zCFWSfV+aQ4j6sZ3FAJu3fgMUMJJkfBV4AMMw@mail.gmail.com>
-Subject: Re: [PATCH 5/5] cpumask: fix comment of cpumask_xxx
-To:     Yury Norov <yury.norov@gmail.com>
-Cc:     Vernon Yang <vernon2gm@gmail.com>, torvalds@linux-foundation.org,
-        tytso@mit.edu, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, andriy.shevchenko@linux.intel.com,
-        linux@rasmusvillemoes.dk, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, linux-kernel@vger.kernel.org,
-        wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v7 1/6] dt-bindings: ufs: qcom: Add SM6125 compatible
+ string
+Content-Language: en-US
+To:     Lux Aliaga <they@mint.lgbt>, agross@kernel.org,
+        andersson@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
+        kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, keescook@chromium.org, tony.luck@intel.com,
+        gpiccoli@igalia.com
+Cc:     ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
+        phone-devel@vger.kernel.org, martin.botka@somainline.org,
+        marijn.suijten@somainline.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+References: <20230306165246.14782-1-they@mint.lgbt>
+ <20230306165246.14782-2-they@mint.lgbt>
+ <4670ddae-6b01-1e5c-b0ed-1f2f498a4f66@mint.lgbt>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+In-Reply-To: <4670ddae-6b01-1e5c-b0ed-1f2f498a4f66@mint.lgbt>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 6, 2023 at 5:54=E2=80=AFPM Yury Norov <yury.norov@gmail.com> wr=
-ote:
->
-> On Mon, Mar 06, 2023 at 05:44:41PM +0100, Jason A. Donenfeld wrote:
-> > On Mon, Mar 6, 2023 at 5:39=E2=80=AFPM Yury Norov <yury.norov@gmail.com=
-> wrote:
-> > >
-> > > On Tue, Mar 07, 2023 at 12:06:51AM +0800, Vernon Yang wrote:
-> > > > After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cp=
-umask
-> > > > optimizations"), the cpumask size is divided into three different c=
-ase,
-> > > > so fix comment of cpumask_xxx correctly.
-> > > >
-> > > > Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
-> > > > ---
-> > > >  include/linux/cpumask.h | 46 ++++++++++++++++++++-----------------=
-----
-> > > >  1 file changed, 23 insertions(+), 23 deletions(-)
-> > > >
-> > > > diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-> > > > index 8fbe76607965..248bdb1c50dc 100644
-> > > > --- a/include/linux/cpumask.h
-> > > > +++ b/include/linux/cpumask.h
-> > > > @@ -155,7 +155,7 @@ static __always_inline unsigned int cpumask_che=
-ck(unsigned int cpu)
-> > > >   * cpumask_first - get the first cpu in a cpumask
-> > > >   * @srcp: the cpumask pointer
-> > > >   *
-> > > > - * Returns >=3D nr_cpu_ids if no cpus set.
-> > > > + * Returns >=3D small_cpumask_bits if no cpus set.
-> > >
-> > > There's no such thing like small_cpumask_bits. Here and everywhere,
-> > > nr_cpu_ids must be used.
-> > >
-> > > Actually, before 596ff4a09b89 nr_cpumask_bits was deprecated, and it
-> > > must be like that for all users even now.
-> > >
-> > > nr_cpumask_bits must be considered as internal cpumask parameter and
-> > > never referenced outside of cpumask code.
-> >
-> > What's the right thing I should do, then, for wireguard's usage and
-> > for random.c's usage? It sounds like you object to this patchset, but
-> > if the problem is real, it sounds like I should at least fix the two
-> > cases I maintain. What's the right check?
->
-> Everywhere outside of cpumasks internals use (cpu < nr_cpu_ids) to
-> check if the cpu is in a valid range, like:
->
-> cpu =3D cpumask_first(cpus);
-> if (cpu >=3D nr_cpu_ids)
->         pr_err("There's no cpus");
 
-Oh, okay, so the ones for wireguard and random.c in this series are
-correct then? If so, could you give a Reviewed-by:, and then I'll
-queue those up in my respective trees.
 
-Jason
+On 6.03.2023 18:01, Lux Aliaga wrote:
+> 
+> On 06/03/2023 13:52, Lux Aliaga wrote:
+>> Document the compatible for UFS found on the SM6125.
+>>
+>> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+>> Reviewed-by: Martin Botka <martin.botka@somainline.org>
+>> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>> ---
+>>   Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> index b517d76215e3..42422f3471b3 100644
+>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> @@ -29,6 +29,7 @@ properties:
+>>             - qcom,sc8280xp-ufshc
+>>             - qcom,sdm845-ufshc
+>>             - qcom,sm6115-ufshc
+>> +          - qcom,sm6125-ufshc
+>>             - qcom,sm6350-ufshc
+>>             - qcom,sm8150-ufshc
+>>             - qcom,sm8250-ufshc
+>> @@ -185,6 +186,7 @@ allOf:
+>>             contains:
+>>               enum:
+>>                 - qcom,sm6115-ufshc
+>> +              - qcom,sm6125-ufshc
+>>       then:
+>>         properties:
+>>           clocks:
+> I have to apologize. I worked on a changelog for this patchset but I skipped the subject header, therefore it didn't send, and as I realized this I interrupted the process, leaving the patchset incomplete. I'll retry sending it, this time correctly.
+Happens, next time resend it with a RESEND prefix, e.g. [RESEND PATCH 1/2]
+
+Konrad
+> 
