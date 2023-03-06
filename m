@@ -2,57 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D99A4C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 702C6C64EC4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230098AbjCFQwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 11:52:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49906 "EHLO
+        id S229898AbjCFQzn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 11:55:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229798AbjCFQwD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:52:03 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3DD71FEA;
-        Mon,  6 Mar 2023 08:51:28 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B98AD61001;
-        Mon,  6 Mar 2023 16:49:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB615C433EF;
-        Mon,  6 Mar 2023 16:49:57 +0000 (UTC)
-Authentication-Results: smtp.kernel.org;
-        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="p7OvzPz1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
-        t=1678121396;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=l0IN1VirqLiMA24UJjnZzI6umrNwjSsL7ENm7zhRfEY=;
-        b=p7OvzPz1NmfKhe6kfIuqjE+THJUupW4DBOjmYlYF+caw15CTip4wmluH9W1Flbbziaghta
-        9it828fCf9UjeM+GVJF6yiGH5IwDVBBToxv13m1Gr6Sn6dMmMxa0OIpkUeipfG8xYK/h8c
-        VRnTEB0oxbtXms6RWFdtVuaEt9rvUN8=
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 23ff5f42 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-        Mon, 6 Mar 2023 16:49:55 +0000 (UTC)
-Received: by mail-yb1-xb35.google.com with SMTP id v13so8823855ybu.0;
-        Mon, 06 Mar 2023 08:49:55 -0800 (PST)
-X-Gm-Message-State: AO0yUKWyrk7X+Mwn/2jQjt7u//l5Ze38dvVnboiuEKSYACkwU4OJwD7L
-        V0XiCNjvJzx/chpWGkluvioLXrhbarXtiA5d8V4=
-X-Google-Smtp-Source: AK7set9CK46/v8qFmWbdZ/4F4SRDr5QbKoIrAv/Wae6SuQP8a65V94c1vPHoCPtLR3gHjN4UILUiQdF7vxmAXeMOPdQ=
-X-Received: by 2002:a25:7808:0:b0:a4a:a708:2411 with SMTP id
- t8-20020a257808000000b00a4aa7082411mr6622201ybc.10.1678121092709; Mon, 06 Mar
- 2023 08:44:52 -0800 (PST)
-MIME-Version: 1.0
-References: <20230306160651.2016767-1-vernon2gm@gmail.com> <20230306160651.2016767-6-vernon2gm@gmail.com>
- <ZAYXJ2E+JHcp2kD/@yury-laptop>
-In-Reply-To: <ZAYXJ2E+JHcp2kD/@yury-laptop>
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-Date:   Mon, 6 Mar 2023 17:44:41 +0100
-X-Gmail-Original-Message-ID: <CAHmME9r_JXNCVVCNxZRQkafA=eOOu5k0+AweRDor3tNu283bdg@mail.gmail.com>
-Message-ID: <CAHmME9r_JXNCVVCNxZRQkafA=eOOu5k0+AweRDor3tNu283bdg@mail.gmail.com>
-Subject: Re: [PATCH 5/5] cpumask: fix comment of cpumask_xxx
-To:     Yury Norov <yury.norov@gmail.com>
+        with ESMTP id S229871AbjCFQzm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:55:42 -0500
+Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD16497DA;
+        Mon,  6 Mar 2023 08:55:14 -0800 (PST)
+Received: by mail-ot1-x32d.google.com with SMTP id r23-20020a05683001d700b00690eb18529fso5692734ota.1;
+        Mon, 06 Mar 2023 08:55:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678121648;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=OOfn1AerasUS9ICTw0rEuQ9lCFS4+7nv1OQbmZdEVCo=;
+        b=EOaVCRsHqgl2uqGltPzu8aonWC2uhbJ0E6jehzJi9EN22aq8u+BWmjtcLhHr5QK58f
+         KJOPqayFFAolBQLLc6ZBv8qsupHxbnID78JLn8/0zCPAEEUzqKb6l7Cq5cNPxnFWMUgs
+         R9t1boZhO+J9BBbc7eM+GTk7Zl5WnyZUvwwwHR2QKp7KylnOuV1cb7I8ECP+oiDj4Gk0
+         mIYsoE589sCGTvRupXowE/MKnA+llI7Pdj8I8BFbKzsP9x/khxBNjVjgN8/y7AhyZjwQ
+         oaC+Th4DHAUw2fnOjP3OuWB0b1Sgjk+fgI5DBRJwZVLsVvF4glFH8rvwiy/SDxL5/oGA
+         jeTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678121648;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OOfn1AerasUS9ICTw0rEuQ9lCFS4+7nv1OQbmZdEVCo=;
+        b=5GKHe7wS79NDjGJOVJnm68dLwu7AUnCwWg5NaaapGLChU1INL5hmmX8p4CMdghxuAv
+         QOvIFhlSb5Tj9Sgi90WiAMspuCrgE8h3ZWfnUPhCa10WnXjD07ZPBiZDumB4g1f4weDR
+         Y3FLv9p6qMSZaT5PK8vkzxpuy949tsKVWyf10QgtjBA0mOLSFl1DYKXcIS0vpiO7m0Nl
+         uNgiGmw5mnnaPkemmvLprmpAg7H9pU419tELKNZzebNQIjCHsl2Qlc4pnGCHvZI+Yrum
+         YPnbNc0OJoJW4BBbayWI5+4JdyyI1zjrTN5t3RzihXK9oLNTI0qelCu9BHMxjeFvUHVm
+         PMVQ==
+X-Gm-Message-State: AO0yUKWpIXjvhQrfPK5x3ek0ThUC4wROOYjnivfAF6giCOMgsYi5nz+1
+        g0O0OED01Z/4MfX0CvVka/k=
+X-Google-Smtp-Source: AK7set9lCHqv4JZ0R5pBNzoiQy05SJNmnktQ6CARvZPrtVMzchG+owZd5TdIHMVxjPQP6P5u4j7SxQ==
+X-Received: by 2002:a05:6830:3142:b0:68d:bd4d:f4b7 with SMTP id c2-20020a056830314200b0068dbd4df4b7mr6193198ots.21.1678121648416;
+        Mon, 06 Mar 2023 08:54:08 -0800 (PST)
+Received: from localhost ([12.97.180.36])
+        by smtp.gmail.com with ESMTPSA id z10-20020a9d468a000000b0069452b2aa2dsm3633661ote.50.2023.03.06.08.54.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Mar 2023 08:54:07 -0800 (PST)
+Date:   Mon, 6 Mar 2023 08:54:06 -0800
+From:   Yury Norov <yury.norov@gmail.com>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
 Cc:     Vernon Yang <vernon2gm@gmail.com>, torvalds@linux-foundation.org,
         tytso@mit.edu, davem@davemloft.net, edumazet@google.com,
         kuba@kernel.org, pabeni@redhat.com, jejb@linux.ibm.com,
@@ -61,50 +60,64 @@ Cc:     Vernon Yang <vernon2gm@gmail.com>, torvalds@linux-foundation.org,
         dick.kennedy@broadcom.com, linux-kernel@vger.kernel.org,
         wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 5/5] cpumask: fix comment of cpumask_xxx
+Message-ID: <ZAYartD+NsF1JxlH@yury-laptop>
+References: <20230306160651.2016767-1-vernon2gm@gmail.com>
+ <20230306160651.2016767-6-vernon2gm@gmail.com>
+ <ZAYXJ2E+JHcp2kD/@yury-laptop>
+ <CAHmME9r_JXNCVVCNxZRQkafA=eOOu5k0+AweRDor3tNu283bdg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHmME9r_JXNCVVCNxZRQkafA=eOOu5k0+AweRDor3tNu283bdg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 6, 2023 at 5:39=E2=80=AFPM Yury Norov <yury.norov@gmail.com> wr=
-ote:
->
-> On Tue, Mar 07, 2023 at 12:06:51AM +0800, Vernon Yang wrote:
-> > After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumas=
-k
-> > optimizations"), the cpumask size is divided into three different case,
-> > so fix comment of cpumask_xxx correctly.
+On Mon, Mar 06, 2023 at 05:44:41PM +0100, Jason A. Donenfeld wrote:
+> On Mon, Mar 6, 2023 at 5:39 PM Yury Norov <yury.norov@gmail.com> wrote:
 > >
-> > Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
-> > ---
-> >  include/linux/cpumask.h | 46 ++++++++++++++++++++---------------------
-> >  1 file changed, 23 insertions(+), 23 deletions(-)
+> > On Tue, Mar 07, 2023 at 12:06:51AM +0800, Vernon Yang wrote:
+> > > After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask
+> > > optimizations"), the cpumask size is divided into three different case,
+> > > so fix comment of cpumask_xxx correctly.
+> > >
+> > > Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
+> > > ---
+> > >  include/linux/cpumask.h | 46 ++++++++++++++++++++---------------------
+> > >  1 file changed, 23 insertions(+), 23 deletions(-)
+> > >
+> > > diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+> > > index 8fbe76607965..248bdb1c50dc 100644
+> > > --- a/include/linux/cpumask.h
+> > > +++ b/include/linux/cpumask.h
+> > > @@ -155,7 +155,7 @@ static __always_inline unsigned int cpumask_check(unsigned int cpu)
+> > >   * cpumask_first - get the first cpu in a cpumask
+> > >   * @srcp: the cpumask pointer
+> > >   *
+> > > - * Returns >= nr_cpu_ids if no cpus set.
+> > > + * Returns >= small_cpumask_bits if no cpus set.
 > >
-> > diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-> > index 8fbe76607965..248bdb1c50dc 100644
-> > --- a/include/linux/cpumask.h
-> > +++ b/include/linux/cpumask.h
-> > @@ -155,7 +155,7 @@ static __always_inline unsigned int cpumask_check(u=
-nsigned int cpu)
-> >   * cpumask_first - get the first cpu in a cpumask
-> >   * @srcp: the cpumask pointer
-> >   *
-> > - * Returns >=3D nr_cpu_ids if no cpus set.
-> > + * Returns >=3D small_cpumask_bits if no cpus set.
->
-> There's no such thing like small_cpumask_bits. Here and everywhere,
-> nr_cpu_ids must be used.
->
-> Actually, before 596ff4a09b89 nr_cpumask_bits was deprecated, and it
-> must be like that for all users even now.
->
-> nr_cpumask_bits must be considered as internal cpumask parameter and
-> never referenced outside of cpumask code.
+> > There's no such thing like small_cpumask_bits. Here and everywhere,
+> > nr_cpu_ids must be used.
+> >
+> > Actually, before 596ff4a09b89 nr_cpumask_bits was deprecated, and it
+> > must be like that for all users even now.
+> >
+> > nr_cpumask_bits must be considered as internal cpumask parameter and
+> > never referenced outside of cpumask code.
+> 
+> What's the right thing I should do, then, for wireguard's usage and
+> for random.c's usage? It sounds like you object to this patchset, but
+> if the problem is real, it sounds like I should at least fix the two
+> cases I maintain. What's the right check?
 
-What's the right thing I should do, then, for wireguard's usage and
-for random.c's usage? It sounds like you object to this patchset, but
-if the problem is real, it sounds like I should at least fix the two
-cases I maintain. What's the right check?
+Everywhere outside of cpumasks internals use (cpu < nr_cpu_ids) to
+check if the cpu is in a valid range, like:
 
-Jason
+cpu = cpumask_first(cpus);
+if (cpu >= nr_cpu_ids)
+        pr_err("There's no cpus");
+ 
+
