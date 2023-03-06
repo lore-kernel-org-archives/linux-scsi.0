@@ -2,178 +2,81 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F05C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:12:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0474EC64EC4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:17:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231481AbjCFQMv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 11:12:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54480 "EHLO
+        id S229862AbjCFQR1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 11:17:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229874AbjCFQMJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:12:09 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D337252B1;
-        Mon,  6 Mar 2023 08:08:55 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id i3so10911059plg.6;
-        Mon, 06 Mar 2023 08:08:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678118821;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=bGjJeP+v7EwPoYJLnQF7j3pQ+Q0I3C16zMfTP7kU+5M=;
-        b=aL5SNB72UDHwQv4qnw//unrBnNllZbNrRzanaYxUy9W/JDkLcplqqM4aKE+ujoOOIf
-         fCY0pUo4O+SAIPvsI7vvghKZooDezOQjbEmJ41PSZKr8Kfg7UN/FRkMDeiX7mKJfW491
-         vosst0R8Q0TqDuSVHw633qpocZ151nfLDA5zhkXJCZq/6d3K5ANsQs2+/Vfwh8bAwBWi
-         X+mMdUcUJ5v55broppBqyrsJ9Exa60kJdAxzcP/Q2/3G+0RtYQS9D9GGH8F3+YqJfpHV
-         cZMMAzqhY8hy2BhSdOvH/CSDuodP6pGaa/SxItwCN+SvENwLK7tZK9OdpSyVUo0uRvmH
-         aang==
+        with ESMTP id S229861AbjCFQRN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:17:13 -0500
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C54C4B83B
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 08:13:33 -0800 (PST)
+Received: by mail-pf1-x42c.google.com with SMTP id bd34so6137073pfb.3
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2023 08:13:33 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678118821;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bGjJeP+v7EwPoYJLnQF7j3pQ+Q0I3C16zMfTP7kU+5M=;
-        b=RJPvYBGNGa4t5/tcOIrzKHIYb7x5EVdoQNy+td9hfquE+RsrjJmB+QpdhSWmTVcHks
-         kQWHG3rgUoA3Mfm29qnNtTuXNtIyJz1JC8sTS5xKf+3GwKP3ZXjVZm54qZZNJftox9Et
-         BpeZYMWp2hYiG4Vs00Aq3Ae13w3RvqfvsZQMPiyHpb5MvK6o3RgBMiG2izOK6pLjDUU9
-         UXQ38P7YYFjqWpIMtUrJ8HiB3l3do/KPv8yLlMo+MdtnbbpOuUtqDkoVllWzSYR5ACV/
-         /NPFrkedq82p6Zl3CcXpk/zQUiMmE6bdgrnhTuli2PJmyU5VNcxgV2Lrt5tfGz+/k0gM
-         bhaA==
-X-Gm-Message-State: AO0yUKWdE8VmTRFI2sKwPaCMUqPnvhgwqjEWVAAlKiubm0JUkXlptkan
-        zZM4Dv9nAyynQFd+m2kIbbo=
-X-Google-Smtp-Source: AK7set+c3m5DDFKg/kkMDhXjx6ZzAhMuAS2jyN4DU0O1mVKmvqcaXJPmOUVoNzoxKTsUwdrUm7FwEw==
-X-Received: by 2002:a05:6a20:1443:b0:d0:15c9:4e68 with SMTP id a3-20020a056a20144300b000d015c94e68mr760681pzi.62.1678118821142;
-        Mon, 06 Mar 2023 08:07:01 -0800 (PST)
-Received: from vernon-pc.. ([49.67.2.142])
-        by smtp.gmail.com with ESMTPSA id u6-20020aa78386000000b005d35695a66csm6465318pfm.137.2023.03.06.08.06.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 08:07:00 -0800 (PST)
-From:   Vernon Yang <vernon2gm@gmail.com>
-To:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        yury.norov@gmail.com, andriy.shevchenko@linux.intel.com,
-        linux@rasmusvillemoes.dk, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com
-Cc:     linux-kernel@vger.kernel.org, wireguard@lists.zx2c4.com,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Vernon Yang <vernon2gm@gmail.com>
-Subject: [PATCH 0/5] fix call cpumask_next() if no further cpus set
-Date:   Tue,  7 Mar 2023 00:06:46 +0800
-Message-Id: <20230306160651.2016767-1-vernon2gm@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        d=1e100.net; s=20210112; t=1678118838;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=vpMpMCf2gWVQmktuqXgkJZxIBCWJt8bS3mp/UmYgH4o=;
+        b=AxzPGitE5uHQZDJ6nTg2CyKxKe0PNMa/CPfgL+kgGR9cKfQjScl4I+jWo+ufPocAZ0
+         aFo2vcV+w4NPIY/BNwT3ldaRZ6LECCdNguhfw1PdPITlbe8FzsLWtWzOKxyGbSzHoUVX
+         FNh5AgApaCjb+9qs3336uSMPKMjytDzGrrOQuHEIgzJy6moKUuabJcLnPXQ+dCBh9z2K
+         BNKpbBYKHwFdZUVMiC1+u2QGYVBBW9u46d3h9jDRJBWm0Ce5+LXpDCCq3dWIIAQRnmB1
+         zfSQPEPNc6rGwA2awXYHwI5Iewu6T82VQyut05VWAsQqiCObqkeKIYLqhWqIiQHo1x0M
+         3qKg==
+X-Gm-Message-State: AO0yUKVBC6GvyNLcTKTH/goiYVnVbvT0b01SjKwEBI4ThYJG0oSY73rl
+        CYFnZLSI3o6p46wdDPuDpu8=
+X-Google-Smtp-Source: AK7set9f06N5k6576+smeDB2MYZomRDqJ17vcEc3lj9AIaXhqsYb36CKYzDDRWQirg/aUmwh1j3Tyw==
+X-Received: by 2002:aa7:98c3:0:b0:5a8:e3dc:4337 with SMTP id e3-20020aa798c3000000b005a8e3dc4337mr11682066pfm.16.1678118838243;
+        Mon, 06 Mar 2023 08:07:18 -0800 (PST)
+Received: from [192.168.132.235] ([63.145.95.70])
+        by smtp.gmail.com with ESMTPSA id w19-20020aa78593000000b0058e1b55391esm6674062pfn.178.2023.03.06.08.07.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Mar 2023 08:07:17 -0800 (PST)
+Message-ID: <d8503629-3151-b408-a298-9583ec71a099@acm.org>
+Date:   Mon, 6 Mar 2023 08:07:16 -0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 02/81] scsi: core: Declare most SCSI host template
+ pointers const
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230304003103.2572793-1-bvanassche@acm.org>
+ <20230304003103.2572793-3-bvanassche@acm.org>
+ <495d7eeb-bf5c-8333-1945-2ab1614f011f@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <495d7eeb-bf5c-8333-1945-2ab1614f011f@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+On 3/6/23 06:29, John Garry wrote:
+> You wrote that most pointers were now cast as const - which ones where 
+> not? From a quick scan they all seem to be const
 
-I updated the Linux kernel to commit fe15c26ee26e ("Linux 6.3-rc1")
-and found that when the system boots to systemd ranom initialization,
-panic, as follows:
+Hi Garry,
 
-[    3.607299] BUG: unable to handle page fault for address: 000000000001cc43
-[    3.607558] #PF: supervisor read access in kernel mode
-[    3.607704] #PF: error_code(0x0000) - not-present page
-[    3.607704] PGD 0 P4D 0
-[    3.607704] Oops: 0000 [#1] PREEMPT SMP NOPTI
-[    3.607704] CPU: 1 PID: 1 Comm: systemd Not tainted 6.3.0-rc1 #50
-[    3.607704] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
-[    3.607704] RIP: 0010:_raw_spin_lock+0x12/0x30
-[    3.607704] Code: 84 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa 65 ff 05 dd de 1e 7e 31 c0 ba 01 00 00 00 <f0> 0f b1 17 75 05 c3 cc cc cc cc 89 c6 e9 9c 00 00 00 6
-[    3.607704] RSP: 0018:ffffc90000013d50 EFLAGS: 00000002
-[    3.607704] RAX: 0000000000000000 RBX: 0000000000000040 RCX: 0000000000000002
-[    3.607704] RDX: 0000000000000001 RSI: 0000000000000246 RDI: 000000000001cc43
-[    3.607704] RBP: ffffc90000013dc8 R08: 00000000d6fbd601 R09: 0000000065abc912
-[    3.607704] R10: 00000000ba93b167 R11: 000000007bb5d0bf R12: 000000000001cc43
-[    3.607704] R13: 000000000001cc43 R14: 0000000000000003 R15: 0000000000000003
-[    3.607704] FS:  00007fbd4911b400(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
-[    3.607704] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    3.607704] CR2: 000000000001cc43 CR3: 0000000003b42000 CR4: 00000000000006e0
-[    3.607704] Call Trace:
-[    3.607704]  <TASK>
-[    3.607704]  add_timer_on+0x80/0x130
-[    3.607704]  try_to_generate_entropy+0x246/0x270
-[    3.607704]  ? do_filp_open+0xb1/0x160
-[    3.607704]  ? __pfx_entropy_timer+0x10/0x10
-[    3.607704]  ? inode_security+0x1d/0x60
-[    3.607704]  urandom_read_iter+0x23/0x90
-[    3.607704]  vfs_read+0x203/0x2d0
-[    3.607704]  ksys_read+0x5e/0xe0
-[    3.607704]  do_syscall_64+0x3f/0x90
-[    3.607704]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-[    3.607704] RIP: 0033:0x7fbd49a25992
-[    3.607704] Code: c0 e9 b2 fe ff ff 50 48 8d 3d fa b2 0c 00 e8 c5 1d 02 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 4
-[    3.607704] RSP: 002b:00007ffea3fe8318 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
-[    3.607704] RAX: ffffffffffffffda RBX: 0000000000000010 RCX: 00007fbd49a25992
-[    3.607704] RDX: 0000000000000010 RSI: 00007ffea3fe83a0 RDI: 000000000000000c
-[    3.607704] RBP: 000000000000000c R08: 3983c6a57a866072 R09: c736ebfbeb917d7e
-[    3.607704] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-[    3.607704] R13: 0000000000000001 R14: 00007ffea3fe83a0 R15: 00005609e5454ea8
-[    3.607704]  </TASK>
-[    3.607704] Modules linked in:
-[    3.607704] CR2: 000000000001cc43
-[    3.607704] ---[ end trace 0000000000000000 ]---
-[    3.607704] RIP: 0010:_raw_spin_lock+0x12/0x30
-[    3.607704] Code: 84 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa 65 ff 05 dd de 1e 7e 31 c0 ba 01 00 00 00 <f0> 0f b1 17 75 05 c3 cc cc cc cc 89 c6 e9 9c 00 00 00 6
-[    3.607704] RSP: 0018:ffffc90000013d50 EFLAGS: 00000002
-[    3.607704] RAX: 0000000000000000 RBX: 0000000000000040 RCX: 0000000000000002
-[    3.607704] RDX: 0000000000000001 RSI: 0000000000000246 RDI: 000000000001cc43
-[    3.607704] RBP: ffffc90000013dc8 R08: 00000000d6fbd601 R09: 0000000065abc912
-[    3.607704] R10: 00000000ba93b167 R11: 000000007bb5d0bf R12: 000000000001cc43
-[    3.607704] R13: 000000000001cc43 R14: 0000000000000003 R15: 0000000000000003
-[    3.607704] FS:  00007fbd4911b400(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
-[    3.607704] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    3.607704] CR2: 000000000001cc43 CR3: 0000000003b42000 CR4: 00000000000006e0
-[    3.607704] note: systemd[1] exited with irqs disabled
-[    3.618556] note: systemd[1] exited with preempt_count 2
-[    3.618991] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
-[    3.619797] Kernel Offset: disabled
-[    3.619798] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009 ]---
+Some SCSI drivers modify one of more members of the SCSI host template. 
+An example can be found in drivers/scsi/pcmcia/nsp_cs.c:
 
+	sht->name	  = data->nspinfo;
 
-Analysis add_timer_on() found that the parameter cpu is equal to 64, which
-feels strange, because qemu only specifies two CPUs, continues to look up,
-and finds that the parameter cpu is obtained by
-try_to_generate_entropy() -> cpumask_next().
+Another example from drivers/scsi/bnx2fc/bnx2fc_fcoe.c:
 
-Then use git bisect to find the bug, and find that it was introduced by
-commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask optimizations"),
-carefully analyzing the cpumask_next() modification record, I found that
-nr_cpumask_bits modified to small_cpumask_bits, and when NR_CPUS <= BITS_PER_LONG,
-small_cpumask_bits is a macro and before nr_cpumask_bits is a variable-sized.
+	bnx2fc_shost_template.can_queue = hba->max_outstanding_cmds;
 
-look for find_next_bit() If no bits are set, returns @size, I seem to
-understand the cause of the problem.
+Thanks,
 
-I fixed this bug by make `if (cpu == nr_cpumask_bits)` to `if (cpu >= nr_cpumask_bits)`
-
-At the same time I think about this situation, maybe there are the same errors
-elsewhere, check it, sure enough, there are, quite a few.
-
-The patch "random:xxx" has been verified, it is valid, the other three fixes
-have not been verified, because I do not have an environment, but they
-principle are same, so also submitted at the same time, if someone helps to
-verify, thanks you very much.
-
-If there is anything error, please tell me, thanks.
-
-Vernon Yang (5):
-  random: fix try_to_generate_entropy() if no further cpus set
-  wireguard: fix wg_cpumask_choose_online() if no further cpus set
-  scsi: lpfc: fix lpfc_cpu_affinity_check() if no further cpus set
-  scsi: lpfc: fix lpfc_nvmet_setup_io_context() if no further cpus set
-  cpumask: fix comment of cpumask_xxx
-
- drivers/char/random.c            |  2 +-
- drivers/net/wireguard/queueing.h |  2 +-
- drivers/scsi/lpfc/lpfc_init.c    | 14 +++++-----
- drivers/scsi/lpfc/lpfc_nvmet.c   |  2 +-
- include/linux/cpumask.h          | 46 ++++++++++++++++----------------
- 5 files changed, 33 insertions(+), 33 deletions(-)
-
---
-2.34.1
-
+Bart.
