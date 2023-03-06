@@ -2,43 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B07C6FD1B
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 17:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E007C678D4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 17:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230346AbjCFRBl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 12:01:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38700 "EHLO
+        id S229749AbjCFRCf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 12:02:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230265AbjCFRB0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 12:01:26 -0500
+        with ESMTP id S230090AbjCFRCI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 12:02:08 -0500
 Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4240A5A6E3
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 09:01:08 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6091460D63
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 09:01:38 -0800 (PST)
 Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
-        by amity.mint.lgbt (Postfix) with ESMTP id 4PVl5W1TrCz1S5Jt
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 11:53:35 -0500 (EST)
+        by amity.mint.lgbt (Postfix) with ESMTP id 4PVlGS5rBTz1S5K0
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 12:01:20 -0500 (EST)
 Authentication-Results: amity.mint.lgbt (amavisd-new);
         dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
         header.d=mint.lgbt
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
-        content-transfer-encoding:mime-version:references:in-reply-to
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1678121614;
-         x=1678985615; bh=aZvyOxr+cceertzklNMJveGEzeMKKnPjb24BJXnn514=; b=
-        ne30ztt31+w+FcPs9qBE9sT+v8lbKjYl8TjIeaqUOzyNFP8DV1OcV06OOms+NsR6
-        5BQbDiBxDzaBJomirNNM4ejbjM2WS60qQrXdY1Hluqw/fn3dffkVps1jM80/8SfZ
-        VqesAEHug0hNeAhuEQVtm/uX7E6ZEjRWuG6NXk/M+S8a2iTuX36P2jtx+Na+7WfO
-        Xo6pm/VBOKoJ2S1L2J44/vtzubT87ZBBwbO3/Ke/UffXQ5pXTskovxYa46sRXncZ
-        wdjDYQFvdRy+XiPJOmm/+p+9D3UV0MGGboQZ5+2bjCMPFcahiXSkEUnEJT1sJSaN
-        d+zFZAI4NCQHVd2tTGwV1g==
+        content-transfer-encoding:content-type:in-reply-to:subject:from
+        :references:to:content-language:user-agent:mime-version:date
+        :message-id; s=dkim; t=1678122079; x=1678986080; bh=bI8Q9ZobF/m/
+        5zL0TsX0t3zOLtFDXF74jdm5TmV+sTA=; b=lpxCcPVNSQsn8dJBRjkyDQ1UdPaf
+        VaX/X+bTeGV7/cqy814VOAUxrhgnRQETMJzMA/TFoGeaEyZoEsadDeO1vQepfriP
+        1aYShJZZtxowD72iVqkjCNYSGG08KsvkVb0Ci4uWXRrlc75dtwNSOzGUNXBRuPJM
+        u/gtxHoOlLIaGOWoebhoNLbFboZZRdvRAHlK1vgQS/EbemYjvp6dkJJ+Rajhli51
+        zZz2c9XuEhcVYpJ7GAbQhQG2EBAHsid1iQ6IndRf1KaQK7keEIHd5P1UxOZcMdWl
+        24hzwbv09h9kkCTEnd1MfpAG6fMvgqoXJ2/ud9Ak1Pq5TzygC6J2NRUaiw==
 X-Virus-Scanned: amavisd-new at amity.mint.lgbt
 Received: from amity.mint.lgbt ([127.0.0.1])
         by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id AydzNRLuM5BM for <linux-scsi@vger.kernel.org>;
-        Mon,  6 Mar 2023 11:53:34 -0500 (EST)
-Received: from dorothy.. (unknown [186.105.8.42])
-        by amity.mint.lgbt (Postfix) with ESMTPSA id 4PVl5D2jH2z1S5Jp;
-        Mon,  6 Mar 2023 11:53:19 -0500 (EST)
-From:   Lux Aliaga <they@mint.lgbt>
+        with ESMTP id txwJM625OJMY for <linux-scsi@vger.kernel.org>;
+        Mon,  6 Mar 2023 12:01:19 -0500 (EST)
+Received: from [192.168.1.90] (unknown [186.105.8.42])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4PVlGC5d4jz1S5Fp;
+        Mon,  6 Mar 2023 12:01:07 -0500 (EST)
+Message-ID: <4670ddae-6b01-1e5c-b0ed-1f2f498a4f66@mint.lgbt>
+Date:   Mon, 6 Mar 2023 14:01:04 -0300
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Content-Language: en-US
 To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
         vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
@@ -49,49 +54,57 @@ Cc:     ~postmarketos/upstreaming@lists.sr.ht,
         linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
         phone-devel@vger.kernel.org, martin.botka@somainline.org,
-        marijn.suijten@somainline.org, Lux Aliaga <they@mint.lgbt>,
-        Dhruva Gole <d-gole@ti.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v7 2/6] dt-bindings: phy: Add QMP UFS PHY compatible for SM6125
-Date:   Mon,  6 Mar 2023 13:52:41 -0300
-Message-Id: <20230306165246.14782-3-they@mint.lgbt>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230306165246.14782-1-they@mint.lgbt>
+        marijn.suijten@somainline.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 References: <20230306165246.14782-1-they@mint.lgbt>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+ <20230306165246.14782-2-they@mint.lgbt>
+From:   Lux Aliaga <they@mint.lgbt>
+Subject: Re: [PATCH v7 1/6] dt-bindings: ufs: qcom: Add SM6125 compatible
+ string
+In-Reply-To: <20230306165246.14782-2-they@mint.lgbt>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Document the QMP UFS PHY compatible for SM6125.
 
-Signed-off-by: Lux Aliaga <they@mint.lgbt>
-Reviewed-by: Martin Botka <martin.botka@somainline.org>
-Acked-by: Dhruva Gole <d-gole@ti.com>
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Acked-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml       | 1 +
- 1 file changed, 1 insertion(+)
+On 06/03/2023 13:52, Lux Aliaga wrote:
+> Document the compatible for UFS found on the SM6125.
+>
+> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+> Reviewed-by: Martin Botka <martin.botka@somainline.org>
+> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> ---
+>   Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index b517d76215e3..42422f3471b3 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -29,6 +29,7 @@ properties:
+>             - qcom,sc8280xp-ufshc
+>             - qcom,sdm845-ufshc
+>             - qcom,sm6115-ufshc
+> +          - qcom,sm6125-ufshc
+>             - qcom,sm6350-ufshc
+>             - qcom,sm8150-ufshc
+>             - qcom,sm8250-ufshc
+> @@ -185,6 +186,7 @@ allOf:
+>             contains:
+>               enum:
+>                 - qcom,sm6115-ufshc
+> +              - qcom,sm6125-ufshc
+>       then:
+>         properties:
+>           clocks:
+I have to apologize. I worked on a changelog for this patchset but I 
+skipped the subject header, therefore it didn't send, and as I realized 
+this I interrupted the process, leaving the patchset incomplete. I'll 
+retry sending it, this time correctly.
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-=
-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-ph=
-y.yaml
-index dde86a19f792..a7af57931f32 100644
---- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yam=
-l
-+++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yam=
-l
-@@ -17,6 +17,7 @@ properties:
-   compatible:
-     enum:
-       - qcom,sc8280xp-qmp-ufs-phy
-+      - qcom,sm6125-qmp-ufs-phy
-=20
-   reg:
-     maxItems: 1
---=20
-2.39.2
+-- 
+Lux Aliaga
+https://nixgoat.me/
 
