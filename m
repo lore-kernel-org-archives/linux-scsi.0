@@ -2,76 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 777CAC64EC4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 15:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E0C5C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:12:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230301AbjCFP1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 10:27:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47232 "EHLO
+        id S230445AbjCFQMO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 11:12:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229869AbjCFP1L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 10:27:11 -0500
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F090340CB;
-        Mon,  6 Mar 2023 07:27:10 -0800 (PST)
-Received: by mail-wr1-f52.google.com with SMTP id j2so9210391wrh.9;
-        Mon, 06 Mar 2023 07:27:10 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678116429;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        with ESMTP id S232802AbjCFQMA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:12:00 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B20951F88;
+        Mon,  6 Mar 2023 08:08:40 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id p3-20020a17090ad30300b0023a1cd5065fso9279474pju.0;
+        Mon, 06 Mar 2023 08:08:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678118843;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WjzbTdN7CLD76LwUYgSQFGlrkv+uCLMJlqFIMmRORpA=;
-        b=2EUxB7rhuYb6ii74TXs9YxpCJfySTXuBhpC00xi2g2Tl/LKcr0u9Gh6OjOA8oldIWm
-         Lw703w6B1qzrGyPBhPf8iBBgv1HVPnMh9jfcg3j0t3OUzrKpwzLv1dqjaisbRwHAYGSW
-         wYNLJ4gQQcUb4/vmh7WEEIcloNRTZsKn+wBCQOnSApgMEs2UHBk0eWUKqtz8OXuZGKuA
-         BzvEFRHctI0x1VBvTC81BQkLNFM+tdLdQiJ6zp2kSI/3aGe8368MDS740BPhLgQ12qXj
-         0FpHtsTrpwiDjoTE3C6nL7fusulh7SN/6ulOjc7FvCvckC1B9086DLwqq7hFqptf6eOQ
-         WrcA==
-X-Gm-Message-State: AO0yUKWGBHuyX1P1LV1bgoz7eY99SoIykUcj0mjyVRYY4DrF42RVupL4
-        0loLf8b2rTaDprlKZq3BqsQ=
-X-Google-Smtp-Source: AK7set8sLVDUwT8GQGScn0gVSp+FOGcmG6WKTOjmYMNL/6orgxuEwPFL/9jsyQwuVKKF6cXajJRglg==
-X-Received: by 2002:adf:eb4b:0:b0:2c6:e744:cf71 with SMTP id u11-20020adfeb4b000000b002c6e744cf71mr6185222wrn.52.1678116429360;
-        Mon, 06 Mar 2023 07:27:09 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id r1-20020a056000014100b002c5534db60bsm10414947wrx.71.2023.03.06.07.27.08
+        bh=5DGQdrsotz8W8EizOYEyX2DBff0cLsAl7IvbnLHf+bg=;
+        b=nXoibcR7ByMCQICFh5RhNYtLXdctMhTA+mzKcFRnYoLe927/eL+h0tzDLTd0dnKoT0
+         Z3z05jUPKUt4emgJ2q/iGj/eZsyitdS6TXa8ihVDkWpV5/onJknq0FNf2pphCFSu+Hui
+         bfptA7x0gTIXK959Q7/8biA0Vay9WSDh5KGaN/pBGNJ4AwT+lqKhbtwJOumDaShaudGH
+         eK3XnWbpdhfZ94ConuZv+3ifSNIUkwJtJW+K4hV2030YfNY2qXypG3VI4bApQIEQmMeI
+         +blufCszN17pGg/ZQbNZPcgOJn42gOhr8krF48cXhsPkmWGitk3GARXgsrXa8ghyVQzo
+         cI4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678118843;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5DGQdrsotz8W8EizOYEyX2DBff0cLsAl7IvbnLHf+bg=;
+        b=KvaCHzqGpFrm+i+msy9s54lfypKKNNDFtdTXb+rc9ijlrGQpyP8yONbZIV8OT8gmMD
+         13SMoBHCtharMQoiEFQOqrM2ja/n9YE58HVi4GEtTcrYhlPLV/nH9qrAK9TycczSVgmk
+         QP4FG7Rl5XOK/8C/PaKXh7qCLmBJN0CSJVhss+n1ncDInOCArcm9owHcObu31uXOiqRO
+         /0ILE934odIlKJxo7lbxN3XGij4CvwCMBpMj+E+OfNmE08hm9szs4VEfh9SVb23b4juI
+         cUPAnDGYxZtV+aftrE5TcO8cG9MGEU9y+aQY1MEteaitcBHfh9z71Knugi67D/3OlzUD
+         w8Vw==
+X-Gm-Message-State: AO0yUKVck0KpqH8AOnDeCs5/fGc08skr+FWSIF3LPhARx2DtGiqQLm2S
+        tt9gj0klaDroMRBbmYoLKHA=
+X-Google-Smtp-Source: AK7set/tMWsOQQEdPjLWbhhz2SNcZHDm9AMA47AGQ9t0MP6KYTtdnCDlPd0/4DIKsgVEc6b4smPKLA==
+X-Received: by 2002:a05:6a20:a10b:b0:c7:1da3:e3a with SMTP id q11-20020a056a20a10b00b000c71da30e3amr13357543pzk.16.1678118842755;
+        Mon, 06 Mar 2023 08:07:22 -0800 (PST)
+Received: from vernon-pc.. ([49.67.2.142])
+        by smtp.gmail.com with ESMTPSA id u6-20020aa78386000000b005d35695a66csm6465318pfm.137.2023.03.06.08.07.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 07:27:08 -0800 (PST)
-Date:   Mon, 6 Mar 2023 15:27:03 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
-        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, song@kernel.org, robinmholt@gmail.com,
-        steve.wahl@hpe.com, mike.travis@hpe.com, arnd@arndb.de,
-        gregkh@linuxfoundation.org, jirislaby@kernel.org, jgross@suse.com,
-        sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
-        xen-devel@lists.xenproject.org, j.granados@samsung.com,
-        zhangpeng362@huawei.com, tangmeng@uniontech.com,
-        willy@infradead.org, nixiaoming@huawei.com, sujiaxun@uniontech.com,
-        patches@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        apparmor@lists.ubuntu.com, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] hv: simplify sysctl registration
-Message-ID: <ZAYGR4DFQrjZVpC5@liuwe-devbox-debian-v2>
-References: <20230302204612.782387-1-mcgrof@kernel.org>
- <20230302204612.782387-4-mcgrof@kernel.org>
+        Mon, 06 Mar 2023 08:07:22 -0800 (PST)
+From:   Vernon Yang <vernon2gm@gmail.com>
+To:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        yury.norov@gmail.com, andriy.shevchenko@linux.intel.com,
+        linux@rasmusvillemoes.dk, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com
+Cc:     linux-kernel@vger.kernel.org, wireguard@lists.zx2c4.com,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Vernon Yang <vernon2gm@gmail.com>
+Subject: [PATCH 4/5] scsi: lpfc: fix lpfc_nvmet_setup_io_context() if no further cpus set
+Date:   Tue,  7 Mar 2023 00:06:50 +0800
+Message-Id: <20230306160651.2016767-5-vernon2gm@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230306160651.2016767-1-vernon2gm@gmail.com>
+References: <20230306160651.2016767-1-vernon2gm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230302204612.782387-4-mcgrof@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 02, 2023 at 12:46:08PM -0800, Luis Chamberlain wrote:
-> register_sysctl_table() is a deprecated compatibility wrapper.
-> register_sysctl() can do the directory creation for you so just use
-> that.
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask
+optimizations"), when NR_CPUS <= BITS_PER_LONG, small_cpumask_bits used
+a macro instead of variable-sized for efficient.
 
-Reviewed-by: Wei Liu <wei.liu@kernel.org>
+If no further cpus set, the cpumask_next() returns small_cpumask_bits,
+it must greater than or equal to nr_cpumask_bits, so fix it to correctly.
+
+Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 7517dd55fe91..3ae7f330f827 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1621,7 +1621,7 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
+ 			continue;
+ 		}
+ 		cpu = cpumask_next(cpu, cpu_present_mask);
+-		if (cpu == nr_cpu_ids)
++		if (cpu >= nr_cpu_ids)
+ 			cpu = cpumask_first(cpu_present_mask);
+ 
+ 	}
+-- 
+2.34.1
+
