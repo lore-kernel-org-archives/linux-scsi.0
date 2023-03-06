@@ -2,81 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D76C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5166FC64EC4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 18:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229815AbjCFQzX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 11:55:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56588 "EHLO
+        id S230108AbjCFSs1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 13:48:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbjCFQzW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:55:22 -0500
-Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F15B5273E
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 08:54:49 -0800 (PST)
-Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
-        by amity.mint.lgbt (Postfix) with ESMTP id 4PVl5B3WDxz1S5Jl
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 11:53:18 -0500 (EST)
-Authentication-Results: amity.mint.lgbt (amavisd-new);
-        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
-        header.d=mint.lgbt
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
-        content-transfer-encoding:mime-version:x-mailer:message-id:date
-        :subject:to:from; s=dkim; t=1678121597; x=1678985598; bh=uK+glyg
-        nD/QeqUlfo72/hfCeJTh8hcZKk6WDctNDr6Q=; b=b+J/bASLsMbh6bwPjrsJ3td
-        I5rkUH3avv4orgcdkrQoc5o55AfTI4IiPNGBxeE57PeBwQ8zjQROhXIB/Ky+BLq9
-        PT3+iGUheM2PldP/+TPyIF48pTCJKpB7eYMOuri5w0qu7bPOjHZqC+uCG1cfjk1t
-        0uOyZzFrEv3SY9hhERB2RCuALzdzMofO/5RAJ3r/JoN/5/26zmZfoJS+oaJ8OXTH
-        HVD7rJTV+Es7KPAq827GqZDu8xmm5IufdxoAa0mq5GE5HSP287gzxb4Pgh+ps35U
-        D3iXmMWqQxH/56Fe9LFOajWkJeZdGjtHnBC3U7RWow36fCZ0FNfGOFhjeCnmXxw=
-        =
-X-Virus-Scanned: amavisd-new at amity.mint.lgbt
-Received: from amity.mint.lgbt ([127.0.0.1])
-        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id U-CEcER3NOKx for <linux-scsi@vger.kernel.org>;
-        Mon,  6 Mar 2023 11:53:17 -0500 (EST)
-Received: from dorothy.. (unknown [186.105.8.42])
-        by amity.mint.lgbt (Postfix) with ESMTPSA id 4PVl4p1NzFz1S4vb;
-        Mon,  6 Mar 2023 11:52:57 -0500 (EST)
-From:   Lux Aliaga <they@mint.lgbt>
-To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, keescook@chromium.org,
-        tony.luck@intel.com, gpiccoli@igalia.com
-Cc:     ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
-        phone-devel@vger.kernel.org, martin.botka@somainline.org,
-        marijn.suijten@somainline.org
-Subject: 
-Date:   Mon,  6 Mar 2023 13:52:39 -0300
-Message-Id: <20230306165246.14782-1-they@mint.lgbt>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S229988AbjCFSsZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 13:48:25 -0500
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7DFE2BEEF
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 10:48:23 -0800 (PST)
+Received: by mail-ed1-x529.google.com with SMTP id cw28so42799728edb.5
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2023 10:48:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1678128502;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=m+AuRXdo16JeR9PnbP32vE+RmxUJH9KHyOeCFYJO9N8=;
+        b=cfLBMhsxEmyjxzpNdu5x3WI0oXcOEnEr8VoAG5m38Cw4/kQTo9PWxpACKwcyjytSKD
+         ydU9ygHtlfqv6Q6/ugWeApD883giDkCXBpD8NOvECUqwxj4akokkyUxVfHre/EMVa2oa
+         4SHO37wicSka3vGgpwhCmiBzDQRvxlNbPRHeQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678128502;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=m+AuRXdo16JeR9PnbP32vE+RmxUJH9KHyOeCFYJO9N8=;
+        b=Xr8YBMackcyWwc/3ehb8WQ9bojIdZSMe/+N05JfblDamI/FSLCBZfjhyJLALLyz/bF
+         m/1EW0Ob2JrQ75lS6Ru3r2aQ+gzBIXww1X1NbnCn7urBQLJBsBMBHreQrzHnCultH0PC
+         1ZYfGpCOMnXdrMFTNXvf+Zf2xdA2YqySgpmfp9i0tzgoUiUgIpOeijj5ExYctCbNPKa0
+         oiLF89GjMUBVPkBS9F1ZO609xHgqr9zBxTdaKnM/JID/Lmww+niiB2Q7WI1Vu+ciEq+t
+         0YQlsbNL0O90sopFrSAuWJXE+KidNRXMh/jRoYc/2ScjxqtF77o6LyyGkSZur/cAWHki
+         wdxA==
+X-Gm-Message-State: AO0yUKXOyDgblafQBLU++vALog327TAaoqvHOZvxa9v1SWjkG68Qf4x5
+        llSoP7gjFEDe6/bQa0m37J5utaCQnIAfANHsdrkALg==
+X-Google-Smtp-Source: AK7set9rshReCYVvFem4q9Qywe1Zzr7HuOIxc0kpYkUTQjGO3YeaYTbfUrxwBF+/cjBg64foKg4blw==
+X-Received: by 2002:aa7:cd55:0:b0:4c0:e156:7954 with SMTP id v21-20020aa7cd55000000b004c0e1567954mr9151498edw.34.1678128502091;
+        Mon, 06 Mar 2023 10:48:22 -0800 (PST)
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com. [209.85.208.53])
+        by smtp.gmail.com with ESMTPSA id u7-20020a50d507000000b004acc6cbc451sm5537222edi.36.2023.03.06.10.48.21
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Mar 2023 10:48:21 -0800 (PST)
+Received: by mail-ed1-f53.google.com with SMTP id x3so42681585edb.10
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2023 10:48:21 -0800 (PST)
+X-Received: by 2002:a50:cd15:0:b0:4c1:1555:152f with SMTP id
+ z21-20020a50cd15000000b004c11555152fmr6419391edi.5.1678128500729; Mon, 06 Mar
+ 2023 10:48:20 -0800 (PST)
 MIME-Version: 1.0
+References: <20230306160651.2016767-1-vernon2gm@gmail.com> <20230306160651.2016767-4-vernon2gm@gmail.com>
+In-Reply-To: <20230306160651.2016767-4-vernon2gm@gmail.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 6 Mar 2023 10:48:04 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wj73=Os1p=W7D2va=Rd81ZKvjb35yWgXQNgn1hXNRpAbw@mail.gmail.com>
+Message-ID: <CAHk-=wj73=Os1p=W7D2va=Rd81ZKvjb35yWgXQNgn1hXNRpAbw@mail.gmail.com>
+Subject: Re: [PATCH 3/5] scsi: lpfc: fix lpfc_cpu_affinity_check() if no
+ further cpus set
+To:     Vernon Yang <vernon2gm@gmail.com>
+Cc:     tytso@mit.edu, Jason@zx2c4.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        yury.norov@gmail.com, andriy.shevchenko@linux.intel.com,
+        linux@rasmusvillemoes.dk, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, linux-kernel@vger.kernel.org,
+        wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce Universal Flash Storage support on SM6125 and add support for t=
-he Xiaomi Mi A3 based on the former platform.
+On Mon, Mar 6, 2023 at 8:07=E2=80=AFAM Vernon Yang <vernon2gm@gmail.com> wr=
+ote:
+>
+> -                               if (new_cpu =3D=3D nr_cpumask_bits)
+> +                               if (new_cpu >=3D nr_cpumask_bits)
 
-Changes since v6:
-- Add struct for v3-660 UFS PHY offsets and modify sm6115 UFS PHY to use =
-it
-- Set ufs_mem_phy reg size to 0xdb8 in sm6125.dtsi
-- Drop "#address-cells" and "#size-cells" properties on reserved-memory n=
-ode in xiaomi-laurel-sprout dts
-- Move "status" last on &pon_resin node in xiaomi-laurel-sprout dts
-- Modify "&pm6125_gpio" pointer to "&pm6125_gpios" in xiaomi-laurel-sprou=
-t dts
+This all should use "nr_cpu_ids", not "nr_cpumask_bits".
 
-v6: https://lore.kernel.org/linux-devicetree/20230108195336.388349-1-they=
-@mint.lgbt/
-v5: https://lore.kernel.org/linux-devicetree/20221231222420.75233-2-they@=
-mint.lgbt/
+But I really suspect that it should all be rewritten to not do that
+thing over and over, but just use a helper function for it.
 
+  int lpfc_next_present_cpu(int n, int alternate)
+  {
+        n =3D cpumask_next(n, cpu_present_mask);
+        if (n >=3D nr_cpu_ids)
+                n =3D alternate;
+        return n;
+  }
 
+and then you could just use
 
+        start_cpu =3D lpfc_next_present_cpu(new_cpu, first_cpu);
+
+or similar.
+
+              Linus
+
+PS. We "kind of" already have a helper function for this:
+cpumask_next_wrap(). But it's really meant for a different pattern
+entirely, so let's not confuse things.
