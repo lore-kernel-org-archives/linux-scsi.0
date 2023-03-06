@@ -2,66 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC01C6FA99
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 18:03:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38CC0C64EC4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 18:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbjCFSDX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 13:03:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36558 "EHLO
+        id S229784AbjCFSOX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 13:14:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229542AbjCFSDV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 13:03:21 -0500
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E8C97AA2
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 10:02:51 -0800 (PST)
-Received: by mail-ed1-x52f.google.com with SMTP id cw28so42289398edb.5
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2023 10:02:51 -0800 (PST)
+        with ESMTP id S231206AbjCFSOO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 13:14:14 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B83634F60;
+        Mon,  6 Mar 2023 10:13:33 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id m8-20020a17090a4d8800b002377bced051so14058274pjh.0;
+        Mon, 06 Mar 2023 10:13:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1678125766;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nHiIbvE8ZF8yskiSHfLDDBQes7IipQHv7U2Dux2wiEU=;
-        b=aS+ztAEvl5rXUV+bl4aUHKg/JjsEs5Q5O8O5esPopXwbfxpYA6cmA8oaxYHNUlU/xv
-         pUDQ2Ag73sCMAC9SLcPIQilnahRnTUpOOhtVRnm6z8j74E8n2sdDsydvWCPi/1J2K4/F
-         Y77RZfSte/kHcjeeE//5gW1NADu31WanG7wgE=
+        d=gmail.com; s=20210112; t=1678126412;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=nVDRLydRone1J93o9oyayT1ixn2USWzwJPhyrHw1GAs=;
+        b=K0ohwVvtpaqIM1ff7KNQ9iqtOS8LvwFVSwAlfsHNWS+XjLRUXy+7LqEMHc6UcjJooC
+         FXfafhU/B3oMyaN3xDuDn75iDeDIkapf8UmM5Ftc2Nlx2D+6wSo/5OKDbsQyvGp3xaaj
+         /lFsvPnIJSQu3+SzJMD6Svu5gzZvneVauDck+s0/+HezZ6a3r8VUUtZoxrz4bey7u6Jq
+         KjC5m8XXbsrDJD7zTOh0IXffYxdKDgw+0gSOuHO5Hpl0PK/XIUSd6iVQ8JHdD9Q2O+e6
+         cYJs0DaF4TwIsYLLVBx5k16xkzyxKmRl3WziS2Q+dqrKfFNMB8zdfO8XP5/SByNcBQ+S
+         Jtfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678125766;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=nHiIbvE8ZF8yskiSHfLDDBQes7IipQHv7U2Dux2wiEU=;
-        b=6hggPf4+TYHorAwKBc/3KnBvtqIGBl3QTgyeNAxNy/YPVljp9sm0oixZB5l29LIcgM
-         nKclsWVQiCNbPKd3J5gvu0AYhubK4fRunZoPnwkko5yUEi5pPr71L0dzRADr78aINa82
-         m6P6UWDONXHSJleLE0xommMgntwnU+n/WarzkBegxFxSBWR96AbkythLCqwyrz7Rtuc8
-         YTqZ9FsPu4KMMF1I9b6F6czDHA8nR2Z74FniZcF8lCJynkzvasA5AhFsbIN6CMsb0VWx
-         mnVA1sx3XhiaeNJi435m5jj50VDSSHDTWvqgfs5k9qVYp3HiwoodmWx14PlrppRH5Ijs
-         /GSQ==
-X-Gm-Message-State: AO0yUKULf4OSCrJjEmgpA0NaZ0KqMDItDPNeHOWOwhq3HsIFpA3hoRzB
-        K2iqr8O7otyNMk48o3dpGQtridC4jDJo00mw1ixW2w==
-X-Google-Smtp-Source: AK7set9NS+Pizo6BarcHyhzXqyrGF6AU2/bUGMSfitxeskrbOkUxw2LJ8YvCGicCeLISvGM/dPsGNw==
-X-Received: by 2002:a17:907:3f18:b0:8f6:5a70:cccc with SMTP id hq24-20020a1709073f1800b008f65a70ccccmr15603102ejc.66.1678125765870;
-        Mon, 06 Mar 2023 10:02:45 -0800 (PST)
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com. [209.85.208.45])
-        by smtp.gmail.com with ESMTPSA id ot19-20020a170906ccd300b008b9d2da5343sm4873140ejb.210.2023.03.06.10.02.44
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Mar 2023 10:02:45 -0800 (PST)
-Received: by mail-ed1-f45.google.com with SMTP id g3so42385667eda.1
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2023 10:02:44 -0800 (PST)
-X-Received: by 2002:a50:9fa8:0:b0:4ae:e5f1:7c50 with SMTP id
- c37-20020a509fa8000000b004aee5f17c50mr6466912edf.5.1678125764592; Mon, 06 Mar
- 2023 10:02:44 -0800 (PST)
-MIME-Version: 1.0
-References: <20230306160651.2016767-1-vernon2gm@gmail.com> <20230306160651.2016767-6-vernon2gm@gmail.com>
- <CAHk-=whVnaTBt2Xm-A+8SMc5-q5CuZBDU6rUZ8yC8GoAnbTBvw@mail.gmail.com> <CAHk-=witXXeQuP9fgs4dDL2Ex0meXQiHJs+3JEfNdaPwngMVEg@mail.gmail.com>
-In-Reply-To: <CAHk-=witXXeQuP9fgs4dDL2Ex0meXQiHJs+3JEfNdaPwngMVEg@mail.gmail.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 6 Mar 2023 10:02:27 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wj5hFp39ZM7fEtmctwkWdHHnx0X7c2j5Z8L+b18jUgcMQ@mail.gmail.com>
-Message-ID: <CAHk-=wj5hFp39ZM7fEtmctwkWdHHnx0X7c2j5Z8L+b18jUgcMQ@mail.gmail.com>
-Subject: Re: [PATCH 5/5] cpumask: fix comment of cpumask_xxx
-To:     Vernon Yang <vernon2gm@gmail.com>
+        d=1e100.net; s=20210112; t=1678126412;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nVDRLydRone1J93o9oyayT1ixn2USWzwJPhyrHw1GAs=;
+        b=vQ0IhA6r6DC7PvoUxNSgrUpBAGxZ0B7opExWoxufviE6iJCC+UqVsrwmx8QI4Z8ag8
+         DQBbZyvNtipFLe2jGfLCWJMWNPUyShFpMbdnENYHz+IveHQQ88jHzbARnDmOJ8GwczGE
+         QzkOGjEyZejJMXRavsVVf0Z03ZS9LyxKLTCouUhA8Ick9RWAd9/owqkle24UjCasGWqQ
+         pbZBaBIK/livyVMexZhbi3+M/c9/U1TTw2/4sbv3m5hN3YnUSlHyZ0M0q3yGOfIgF6VK
+         +jOzTU/oXqxrJjTA+gJj6mTP6/DNGOcZTYq4FJ7lTJ8ncfqQwC6vG/fJo0evsplMb0v4
+         bY1g==
+X-Gm-Message-State: AO0yUKX5wj82POwt1wogaLk4S0ZTpUsYzmEYlPgqCSylgMmeh0W0gFjH
+        Nbivex2Wekp95pA9pyfgHH4=
+X-Google-Smtp-Source: AK7set8JSu5HH2SYYBQFO2nNfsP5nq/yMAXfZHaMuGcyFct+Bv6s3IpIB0hslTUQT9wBsrFGbwUhWg==
+X-Received: by 2002:a17:90b:3812:b0:237:b702:49ac with SMTP id mq18-20020a17090b381200b00237b70249acmr12565429pjb.17.1678126412292;
+        Mon, 06 Mar 2023 10:13:32 -0800 (PST)
+Received: from vernon-pc ([49.67.2.142])
+        by smtp.gmail.com with ESMTPSA id p26-20020a634f5a000000b00502e6c22c42sm6628207pgl.59.2023.03.06.10.13.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Mar 2023 10:13:32 -0800 (PST)
+Date:   Tue, 7 Mar 2023 02:13:25 +0800
+From:   Vernon Yang <vernon2gm@gmail.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
 Cc:     tytso@mit.edu, Jason@zx2c4.com, davem@davemloft.net,
         edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -70,54 +60,72 @@ Cc:     tytso@mit.edu, Jason@zx2c4.com, davem@davemloft.net,
         dick.kennedy@broadcom.com, linux-kernel@vger.kernel.org,
         wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 5/5] cpumask: fix comment of cpumask_xxx
+Message-ID: <ZAYtRcbMeRUQFUw/@vernon-pc>
+References: <20230306160651.2016767-1-vernon2gm@gmail.com>
+ <20230306160651.2016767-6-vernon2gm@gmail.com>
+ <CAHk-=whVnaTBt2Xm-A+8SMc5-q5CuZBDU6rUZ8yC8GoAnbTBvw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHk-=whVnaTBt2Xm-A+8SMc5-q5CuZBDU6rUZ8yC8GoAnbTBvw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 6, 2023 at 9:47=E2=80=AFAM Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
+On Mon, Mar 06, 2023 at 09:29:10AM -0800, Linus Torvalds wrote:
+> On Mon, Mar 6, 2023 at 8:07 AM Vernon Yang <vernon2gm@gmail.com> wrote:
+> >
+> > After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask
+> > optimizations"), the cpumask size is divided into three different case,
+> > so fix comment of cpumask_xxx correctly.
 >
-> The drivers/char/random.c code is very wrong, and does
+> No no.
 >
->              if (cpu =3D=3D nr_cpumask_bits)
->                              cpu =3D cpumask_first(&timer_cpus);
+> Those three cases are meant to be entirely internal optimizations.
+> They are literally just "preferred sizes".
 >
-> which fails miserably exactly because it doesn't use ">=3D".
+> The correct thing to do is always that
+>
+>    * Returns >= nr_cpu_ids if no cpus set.
+>
+> because nr_cpu_ids is always the *smallest* of the access sizes.
+>
+> That's exactly why it's a ">=". The CPU mask stuff has always
+> historically potentially used a different size than the actual
+> nr_cpu_ids, in that it could do word-sized scans even when the machine
+> might only have a smaller set of CPUs.
+>
+> So the whole "small" vs "large" should be seen entirely internal to
+> cpumask.h. We should not expose it outside (sadly, that already
+> happened with "nr_cpumask_size", which also was that kind of thing.
 
-Turns out this "cpu =3D=3D nr_cpumask_bits" pattern exists in a couple of
-other places too.
+I also just see nr_cpumask_size exposed to outside, so... Sorry.
 
-It was always wrong, but it always just happened to work. The lpfc
-SCSI driver in particular seems to *love* this pattern:
+>
+> So no, this patch is wrong. If anything, the comments should be strengthened.
+>
+> Of course, right now Guenter seems to be reporting a problem with that
+> optimization, so unless I figure out what is going on I'll just need
+> to revert it anyway.
 
-        start_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
-        if (start_cpu =3D=3D nr_cpumask_bits)
-                start_cpu =3D first_cpu;
+Yes, cause is the cpumask_next() calls find_next_bit(..., size, ...), and
+find_next_bit(..., size, ...) if no bits are set, returns @size.
 
-and has repeated it multiple times, all incorrect.
+@size was a nr_cpumask_bits variable before, now it is small_cpumask_bits, and
+when NR_CPUS < = BITS_PER_LONG, small_cpumask_bits is a macro, which is
+replaced with NR_CPUS at compile, so only the NR_CPUS is returned when it no
+further cpus set.
 
-We do have "cpumask_next_wrap()", and that *seems* to be what the lpcf
-driver actually wants to do.
+But before nr_cpumask_bits variable, it was read while running, and it was
+mutable.
 
-.. and then we have kernel/sched/fair.c, which is actually not buggy,
-just odd. It uses nr_cpumask_bits too, but it uses it purely for its
-own internal nefarious reasons - it's not actually related to the
-cpumask functions at all, its just used as a "not valid CPU number".
+The random.c try_to_generate_entropy() to get first cpu by
+`if (cpu == nr_cpumask_bits)`, but cpumask_next() alway return NR_CPUS,
+nr_cpumask_bits is nr_cpu_ids, so pass NR_CPUS to add_timer_on(),
 
-I think that scheduler use is still very *wrong*, but it doesn't look
-actively buggy.
-
-The other cases all look very buggy indeed, but yes, they happened to
-work, and now they don't. So commit 596ff4a09b89 ("cpumask:
-re-introduce constant-sized cpumask optimizations") did break them.
-
-I'd rather fix these bad users than revert, but there does seem to be
-an alarming number of these things, which worries me:
-
-     git grep '=3D=3D nr_cpumask_bits'
-
-and that's just checking for this *exact* thing.
-
-                Linus
+>
+>                 Linus
+>
+>                 Linus
