@@ -2,44 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A7EC678D4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 11:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB82C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 11:53:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230272AbjCFLic (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 06:38:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57474 "EHLO
+        id S230313AbjCFLxr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 06:53:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230256AbjCFLib (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 06:38:31 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE8D61993;
-        Mon,  6 Mar 2023 03:38:17 -0800 (PST)
-Received: from kwepemm600002.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PVc5Z4NNTz1gwqh;
-        Mon,  6 Mar 2023 19:38:10 +0800 (CST)
-Received: from localhost.localdomain (10.175.127.227) by
- kwepemm600002.china.huawei.com (7.193.23.29) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Mon, 6 Mar 2023 19:38:15 +0800
-From:   Zhong Jinghua <zhongjinghua@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <zhongjinghua@huawei.com>, <yi.zhang@huawei.com>,
-        <yukuai3@huawei.com>
-Subject: [PATCH-next v2] scsi: fix use-after-free problem in scsi_remove_target
-Date:   Mon, 6 Mar 2023 20:01:28 +0800
-Message-ID: <20230306120128.3158269-1-zhongjinghua@huawei.com>
+        with ESMTP id S230230AbjCFLxe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 06:53:34 -0500
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79A52193D8;
+        Mon,  6 Mar 2023 03:53:26 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PVcR451pVz4f3m6t;
+        Mon,  6 Mar 2023 19:53:20 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgA35CEx1AVkJf_CEQ--.64549S4;
+        Mon, 06 Mar 2023 19:53:22 +0800 (CST)
+From:   Zhong Jinghua <zhongjinghua@huaweicloud.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        zhongjinghua@huaweicloude.com, yi.zhang@huawei.com,
+        yukuai3@huawei.com
+Subject: [PATCH-next v2 Resend] scsi: fix use-after-free problem in scsi_remove_target
+Date:   Mon,  6 Mar 2023 20:16:36 +0800
+Message-Id: <20230306121636.3183761-1-zhongjinghua@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemm600002.china.huawei.com (7.193.23.29)
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgA35CEx1AVkJf_CEQ--.64549S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxAryDZrW5ZF13CF4xtr47Arb_yoW5WFyfpF
+        WrGw4a9r45JrZY9ws8XF45XFy5Aa1YgryYkFyxG3WfX3W5JryYyw1SkF9ruFyqyFWqga45
+        GFs5C3W8tr4DGrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUgGb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
+        c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
+        CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
+        MIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Gr0_Zr
+        1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnI
+        WIevJa73UjIFyTuYvjxUOyCJDUUUU
+X-CM-SenderInfo: x2kr0wpmlqwxtxd6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
+
+From: Zhong Jinghua <zhongjinghua@huawei.com>
 
 A use-after-free problem like below:
 
@@ -101,6 +115,8 @@ Signed-off-by: Zhong Jinghua <zhongjinghua@huawei.com>
  ->
  "If the reference count is already zero, skip this target is safe  because scsi_target_destroy() will wait until the 
  host lock has been released before freeing starget."
+
+ Resend: use .huaweicloud mailbox to send 
 
  drivers/scsi/scsi_sysfs.c | 11 ++++++++++-
  1 file changed, 10 insertions(+), 1 deletion(-)
