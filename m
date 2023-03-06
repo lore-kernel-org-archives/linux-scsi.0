@@ -2,128 +2,131 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 618CFC678D4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 10:58:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A7EC678D4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 11:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230168AbjCFK6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 05:58:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41148 "EHLO
+        id S230272AbjCFLic (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 06:38:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230200AbjCFK6t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 05:58:49 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C83532659A
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 02:58:46 -0800 (PST)
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3268epuf008595;
-        Mon, 6 Mar 2023 10:58:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=gEW65SAnOFtZcaDsbZ9ALFrNV2sT5xF1jjGPVf66I4o=;
- b=DOUW1W+mGprwdAnXtEF2zE/0WG7PB3hyNvNQ5or1TPoK341TTOdcbIb8vSPTT5fnH1Fy
- 0fZ0ONHWHUKppJLJ876wrel21AuKI9Er8FGC17X+X5HtdHVxfa/gWq6Imu9Z5CWUGLvy
- /0m88EhiP3SwqV/+0qB6sD3CM463Zpz46aQpRA7ggYXaPTH6n7wEHJmCQpNfi4HsIIMX
- SHYkUHpPU8IhUeDPMkgQveg9t4bK9yB+riOZAeYhHwY87TZydsry70qepw3Te5lKOYzq
- rB/x34iw8Qyn5BNu+lYFsSo8f7NEJbbstY8b90MM3u9ZuoqcAMsKwcHlUrnE+8l7nUrW 1g== 
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3p4wsw32n2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 06 Mar 2023 10:58:43 +0000
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 325GqRDb004261;
-        Mon, 6 Mar 2023 10:58:41 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3p41b0t2mj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 06 Mar 2023 10:58:41 +0000
-Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 326AwcxW2687618
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 6 Mar 2023 10:58:38 GMT
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 458DB2004B;
-        Mon,  6 Mar 2023 10:58:38 +0000 (GMT)
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2CF5920043;
-        Mon,  6 Mar 2023 10:58:38 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.171.78.75])
-        by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Mon,  6 Mar 2023 10:58:38 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1pZ8Y9-000A94-1z;
-        Mon, 06 Mar 2023 11:58:37 +0100
-Date:   Mon, 6 Mar 2023 10:58:37 +0000
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>
-Subject: Re: [PATCH 08/81] scsi: zfcp: Declare SCSI host template const
-Message-ID: <20230306105837.GD8597@t480-pf1aa2c2.fritz.box>
-References: <20230304003103.2572793-1-bvanassche@acm.org>
- <20230304003103.2572793-9-bvanassche@acm.org>
- <20230306105152.GC8597@t480-pf1aa2c2.fritz.box>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20230306105152.GC8597@t480-pf1aa2c2.fritz.box>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: siq56ELHqM-kAFH5ivuRwdMIKezhkg6p
-X-Proofpoint-GUID: siq56ELHqM-kAFH5ivuRwdMIKezhkg6p
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S230256AbjCFLib (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 06:38:31 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE8D61993;
+        Mon,  6 Mar 2023 03:38:17 -0800 (PST)
+Received: from kwepemm600002.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PVc5Z4NNTz1gwqh;
+        Mon,  6 Mar 2023 19:38:10 +0800 (CST)
+Received: from localhost.localdomain (10.175.127.227) by
+ kwepemm600002.china.huawei.com (7.193.23.29) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Mon, 6 Mar 2023 19:38:15 +0800
+From:   Zhong Jinghua <zhongjinghua@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <zhongjinghua@huawei.com>, <yi.zhang@huawei.com>,
+        <yukuai3@huawei.com>
+Subject: [PATCH-next v2] scsi: fix use-after-free problem in scsi_remove_target
+Date:   Mon, 6 Mar 2023 20:01:28 +0800
+Message-ID: <20230306120128.3158269-1-zhongjinghua@huawei.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-06_03,2023-03-06_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- priorityscore=1501 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
- mlxlogscore=999 spamscore=0 mlxscore=0 lowpriorityscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303060091
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemm600002.china.huawei.com (7.193.23.29)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 06, 2023 at 10:51:52AM +0000, Benjamin Block wrote:
-> On Fri, Mar 03, 2023 at 04:29:50PM -0800, Bart Van Assche wrote:
-> > Make it explicit that the SCSI host template is not modified.
-> > 
-> > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> > ---
-> >  drivers/s390/scsi/zfcp_scsi.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> > index 3dbf4b21d127..b2a8cd792266 100644
-> > --- a/drivers/s390/scsi/zfcp_scsi.c
-> > +++ b/drivers/s390/scsi/zfcp_scsi.c
-> > @@ -418,7 +418,7 @@ static int zfcp_scsi_sysfs_host_reset(struct Scsi_Host *shost, int reset_type)
-> >  
-> >  struct scsi_transport_template *zfcp_scsi_transport_template;
-> >  
-> > -static struct scsi_host_template zfcp_scsi_host_template = {
-> > +static const struct scsi_host_template zfcp_scsi_host_template = {
-> >  	.module			 = THIS_MODULE,
-> >  	.name			 = "zfcp",
-> >  	.queuecommand		 = zfcp_scsi_queuecommand,
-> 
-> Yup, good change IMO.
-> 
-> 
-> Acked-by: Benjamin Block <bblock@de.ibm.com>
-> 
+A use-after-free problem like below:
 
-Oups. Sorry. That's the wrong email address.
+BUG: KASAN: use-after-free in scsi_target_reap+0x6c/0x70
 
-Acked-by: Benjamin Block <bblock@linux.ibm.com>
+Workqueue: scsi_wq_1 __iscsi_unbind_session [scsi_transport_iscsi]
+Call trace:
+ dump_backtrace+0x0/0x320
+ show_stack+0x24/0x30
+ dump_stack+0xdc/0x128
+ print_address_description+0x68/0x278
+ kasan_report+0x1e4/0x308
+ __asan_report_load4_noabort+0x30/0x40
+ scsi_target_reap+0x6c/0x70
+ scsi_remove_target+0x430/0x640
+ __iscsi_unbind_session+0x164/0x268 [scsi_transport_iscsi]
+ process_one_work+0x67c/0x1350
+ worker_thread+0x370/0xf90
+ kthread+0x2a4/0x320
+ ret_from_fork+0x10/0x18
 
+The problem is caused by a concurrency scenario:
+
+T0: delete target
+// echo 1 > /sys/devices/platform/host1/session1/target1:0:0/1:0:0:1/delete
+T1: logout
+// iscsiadm -m node --logout
+
+T0							T1
+ sdev_store_delete
+  scsi_remove_device
+   device_remove_file
+    __scsi_remove_device
+        					__iscsi_unbind_session
+        					 scsi_remove_target
+						  spin_lock_irqsave
+        					  list_for_each_entry
+     scsi_target_reap
+     // starget->reap_ref 1 -> 0
+     						  kref_get(&starget->reap_ref);
+						  // warn use-after-free.
+						  spin_unlock_irqrestore
+      scsi_target_reap_ref_release
+	scsi_target_destroy
+	... // delete starget
+						  scsi_target_reap
+						  // UAF
+
+When T0 reduces the reference count to 0, but has not been released,
+T1 can still enter list_for_each_entry, and then kref_get reports UAF.
+
+Fix it by using kref_get_unless_zero() to check for a reference count of
+0.
+
+Signed-off-by: Zhong Jinghua <zhongjinghua@huawei.com>
+---
+ v2: commit message: "starget->reaf" -> "starget->reap_ref"
+ comment: "If it is reduced to 0, it means that other processes are releasing it and there is no need to delete it again"
+ ->
+ "If the reference count is already zero, skip this target is safe  because scsi_target_destroy() will wait until the 
+ host lock has been released before freeing starget."
+
+ drivers/scsi/scsi_sysfs.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index e7893835b99a..12e8ed6d55cb 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1561,7 +1561,16 @@ void scsi_remove_target(struct device *dev)
+ 		    starget->state == STARGET_CREATED_REMOVE)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+-			kref_get(&starget->reap_ref);
++
++			/*
++			 * If the reference count is already zero, skip this
++			 * target is safe  because scsi_target_destroy()
++			 * will wait until the host lock has been released
++			 * before freeing starget.
++			 */
++			if (!kref_get_unless_zero(&starget->reap_ref))
++				continue;
++
+ 			if (starget->state == STARGET_CREATED)
+ 				starget->state = STARGET_CREATED_REMOVE;
+ 			else
 -- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.31.1
+
