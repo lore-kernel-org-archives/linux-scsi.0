@@ -2,53 +2,52 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B586CC64EC4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:12:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F05C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Mar 2023 16:12:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231245AbjCFQMc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 11:12:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56394 "EHLO
+        id S231481AbjCFQMv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Mar 2023 11:12:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232834AbjCFQMD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:12:03 -0500
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F0B838B79;
-        Mon,  6 Mar 2023 08:08:48 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id x11so6381112pln.12;
-        Mon, 06 Mar 2023 08:08:48 -0800 (PST)
+        with ESMTP id S229874AbjCFQMJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 11:12:09 -0500
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D337252B1;
+        Mon,  6 Mar 2023 08:08:55 -0800 (PST)
+Received: by mail-pl1-x62e.google.com with SMTP id i3so10911059plg.6;
+        Mon, 06 Mar 2023 08:08:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678118849;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FM1lIxzBxTQV7ok7VPz6lBRdsK456pDusIxuwYzkcv4=;
-        b=E9qG/kRFTkvrs9snccj1cvb86saeOam5VaFR6MawtDhga1BKhqKQ9EYqTiLWp7M9GG
-         BJUTmmhg9V3ahDIsVF7a3ZXfmkSmavFjiU0VPmbbKuBumFvxyed63ApWypWQj9b/wvhw
-         ylamvdLwRR9+2n67Uz07H+iOa4ekqfebY430MWCOkNM5jkwPeqXadrIfvCfc57nt7sUN
-         xPMoTVL3mw2tPz39tJug0hGe0PSP1gxQ+TUcb9mRAs1QDoqbbKj5bo9YlZKGkTYW/31C
-         BQcxwYWIIK/HfUofAnPgNdbPdR8s71DBeezW+a84EZdVqBP6XUBp4nBga7JZefZLJF0T
-         EWGw==
+        d=gmail.com; s=20210112; t=1678118821;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bGjJeP+v7EwPoYJLnQF7j3pQ+Q0I3C16zMfTP7kU+5M=;
+        b=aL5SNB72UDHwQv4qnw//unrBnNllZbNrRzanaYxUy9W/JDkLcplqqM4aKE+ujoOOIf
+         fCY0pUo4O+SAIPvsI7vvghKZooDezOQjbEmJ41PSZKr8Kfg7UN/FRkMDeiX7mKJfW491
+         vosst0R8Q0TqDuSVHw633qpocZ151nfLDA5zhkXJCZq/6d3K5ANsQs2+/Vfwh8bAwBWi
+         X+mMdUcUJ5v55broppBqyrsJ9Exa60kJdAxzcP/Q2/3G+0RtYQS9D9GGH8F3+YqJfpHV
+         cZMMAzqhY8hy2BhSdOvH/CSDuodP6pGaa/SxItwCN+SvENwLK7tZK9OdpSyVUo0uRvmH
+         aang==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678118849;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FM1lIxzBxTQV7ok7VPz6lBRdsK456pDusIxuwYzkcv4=;
-        b=s/KONnNCljW+9UwP0NLkiTlqd3H0eAyFUtGR8njBoJjKxYm1lmuXmnNVmyRP4kwDvC
-         LtReeGSMZiLTl9CGEs5RhFA4zaJeAJBhq1FY5H2QELtE9x3zA2LzwBgpF6k0zl5KyNkO
-         vSP23UACKbHHEsaYfk9LX1b8+WNpSOrNvl8sontCYkScMFiThQ+Yk7+vtN4lTxURzdQZ
-         3mLJfqwDSYf7DCbWDnlXKCUYXecgUJHshdNuOYuQVQG+XMp4uaO+JOATx/fEwIudQPbQ
-         RsGhWOb1s5ZUsUJkM94hQTxKL9upW46HHfEtksN+rkVxlv/YgIfER/7mgONcP5bB7oHW
-         F0Dw==
-X-Gm-Message-State: AO0yUKX5KVHVzp9a7NFMm0L/mJ/gIvM/7cQ/Oy6aIQ13RzSZZrLnk32w
-        o8HZpxedvnhnhEJHWxLUlSc=
-X-Google-Smtp-Source: AK7set+PZV6WMzfRWk4Gf3xHJ7wl7d9AHTIm8PuQMxtywxGOBbDomTl5Vex4hvxj2mK8Qmx4Faud8w==
-X-Received: by 2002:a05:6a20:6a1c:b0:c7:61cc:11d4 with SMTP id p28-20020a056a206a1c00b000c761cc11d4mr13799160pzk.44.1678118847959;
-        Mon, 06 Mar 2023 08:07:27 -0800 (PST)
+        d=1e100.net; s=20210112; t=1678118821;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bGjJeP+v7EwPoYJLnQF7j3pQ+Q0I3C16zMfTP7kU+5M=;
+        b=RJPvYBGNGa4t5/tcOIrzKHIYb7x5EVdoQNy+td9hfquE+RsrjJmB+QpdhSWmTVcHks
+         kQWHG3rgUoA3Mfm29qnNtTuXNtIyJz1JC8sTS5xKf+3GwKP3ZXjVZm54qZZNJftox9Et
+         BpeZYMWp2hYiG4Vs00Aq3Ae13w3RvqfvsZQMPiyHpb5MvK6o3RgBMiG2izOK6pLjDUU9
+         UXQ38P7YYFjqWpIMtUrJ8HiB3l3do/KPv8yLlMo+MdtnbbpOuUtqDkoVllWzSYR5ACV/
+         /NPFrkedq82p6Zl3CcXpk/zQUiMmE6bdgrnhTuli2PJmyU5VNcxgV2Lrt5tfGz+/k0gM
+         bhaA==
+X-Gm-Message-State: AO0yUKWdE8VmTRFI2sKwPaCMUqPnvhgwqjEWVAAlKiubm0JUkXlptkan
+        zZM4Dv9nAyynQFd+m2kIbbo=
+X-Google-Smtp-Source: AK7set+c3m5DDFKg/kkMDhXjx6ZzAhMuAS2jyN4DU0O1mVKmvqcaXJPmOUVoNzoxKTsUwdrUm7FwEw==
+X-Received: by 2002:a05:6a20:1443:b0:d0:15c9:4e68 with SMTP id a3-20020a056a20144300b000d015c94e68mr760681pzi.62.1678118821142;
+        Mon, 06 Mar 2023 08:07:01 -0800 (PST)
 Received: from vernon-pc.. ([49.67.2.142])
-        by smtp.gmail.com with ESMTPSA id u6-20020aa78386000000b005d35695a66csm6465318pfm.137.2023.03.06.08.07.23
+        by smtp.gmail.com with ESMTPSA id u6-20020aa78386000000b005d35695a66csm6465318pfm.137.2023.03.06.08.06.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 08:07:27 -0800 (PST)
+        Mon, 06 Mar 2023 08:07:00 -0800 (PST)
 From:   Vernon Yang <vernon2gm@gmail.com>
 To:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
@@ -59,231 +58,122 @@ To:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
 Cc:     linux-kernel@vger.kernel.org, wireguard@lists.zx2c4.com,
         netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
         Vernon Yang <vernon2gm@gmail.com>
-Subject: [PATCH 5/5] cpumask: fix comment of cpumask_xxx
-Date:   Tue,  7 Mar 2023 00:06:51 +0800
-Message-Id: <20230306160651.2016767-6-vernon2gm@gmail.com>
+Subject: [PATCH 0/5] fix call cpumask_next() if no further cpus set
+Date:   Tue,  7 Mar 2023 00:06:46 +0800
+Message-Id: <20230306160651.2016767-1-vernon2gm@gmail.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230306160651.2016767-1-vernon2gm@gmail.com>
-References: <20230306160651.2016767-1-vernon2gm@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask
-optimizations"), the cpumask size is divided into three different case,
-so fix comment of cpumask_xxx correctly.
+Hello,
 
-Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
----
- include/linux/cpumask.h | 46 ++++++++++++++++++++---------------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
+I updated the Linux kernel to commit fe15c26ee26e ("Linux 6.3-rc1")
+and found that when the system boots to systemd ranom initialization,
+panic, as follows:
 
-diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-index 8fbe76607965..248bdb1c50dc 100644
---- a/include/linux/cpumask.h
-+++ b/include/linux/cpumask.h
-@@ -155,7 +155,7 @@ static __always_inline unsigned int cpumask_check(unsigned int cpu)
-  * cpumask_first - get the first cpu in a cpumask
-  * @srcp: the cpumask pointer
-  *
-- * Returns >= nr_cpu_ids if no cpus set.
-+ * Returns >= small_cpumask_bits if no cpus set.
-  */
- static inline unsigned int cpumask_first(const struct cpumask *srcp)
- {
-@@ -166,7 +166,7 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
-  * cpumask_first_zero - get the first unset cpu in a cpumask
-  * @srcp: the cpumask pointer
-  *
-- * Returns >= nr_cpu_ids if all cpus are set.
-+ * Returns >= small_cpumask_bits if all cpus are set.
-  */
- static inline unsigned int cpumask_first_zero(const struct cpumask *srcp)
- {
-@@ -178,7 +178,7 @@ static inline unsigned int cpumask_first_zero(const struct cpumask *srcp)
-  * @src1p: the first input
-  * @src2p: the second input
-  *
-- * Returns >= nr_cpu_ids if no cpus set in both.  See also cpumask_next_and().
-+ * Returns >= small_cpumask_bits if no cpus set in both.  See also cpumask_next_and().
-  */
- static inline
- unsigned int cpumask_first_and(const struct cpumask *srcp1, const struct cpumask *srcp2)
-@@ -190,7 +190,7 @@ unsigned int cpumask_first_and(const struct cpumask *srcp1, const struct cpumask
-  * cpumask_last - get the last CPU in a cpumask
-  * @srcp:	- the cpumask pointer
-  *
-- * Returns	>= nr_cpumask_bits if no CPUs set.
-+ * Returns	>= small_cpumask_bits if no CPUs set.
-  */
- static inline unsigned int cpumask_last(const struct cpumask *srcp)
- {
-@@ -202,7 +202,7 @@ static inline unsigned int cpumask_last(const struct cpumask *srcp)
-  * @n: the cpu prior to the place to search (ie. return will be > @n)
-  * @srcp: the cpumask pointer
-  *
-- * Returns >= nr_cpu_ids if no further cpus set.
-+ * Returns >= small_cpumask_bits if no further cpus set.
-  */
- static inline
- unsigned int cpumask_next(int n, const struct cpumask *srcp)
-@@ -218,7 +218,7 @@ unsigned int cpumask_next(int n, const struct cpumask *srcp)
-  * @n: the cpu prior to the place to search (ie. return will be > @n)
-  * @srcp: the cpumask pointer
-  *
-- * Returns >= nr_cpu_ids if no further cpus unset.
-+ * Returns >= small_cpumask_bits if no further cpus unset.
-  */
- static inline unsigned int cpumask_next_zero(int n, const struct cpumask *srcp)
- {
-@@ -258,7 +258,7 @@ unsigned int cpumask_any_distribute(const struct cpumask *srcp);
-  * @src1p: the first cpumask pointer
-  * @src2p: the second cpumask pointer
-  *
-- * Returns >= nr_cpu_ids if no further cpus set in both.
-+ * Returns >= small_cpumask_bits if no further cpus set in both.
-  */
- static inline
- unsigned int cpumask_next_and(int n, const struct cpumask *src1p,
-@@ -276,7 +276,7 @@ unsigned int cpumask_next_and(int n, const struct cpumask *src1p,
-  * @cpu: the (optionally unsigned) integer iterator
-  * @mask: the cpumask pointer
-  *
-- * After the loop, cpu is >= nr_cpu_ids.
-+ * After the loop, cpu is >= small_cpumask_bits.
-  */
- #define for_each_cpu(cpu, mask)				\
- 	for_each_set_bit(cpu, cpumask_bits(mask), small_cpumask_bits)
-@@ -310,7 +310,7 @@ unsigned int __pure cpumask_next_wrap(int n, const struct cpumask *mask, int sta
-  *
-  * The implementation does not assume any bit in @mask is set (including @start).
-  *
-- * After the loop, cpu is >= nr_cpu_ids.
-+ * After the loop, cpu is >= small_cpumask_bits.
-  */
- #define for_each_cpu_wrap(cpu, mask, start)				\
- 	for_each_set_bit_wrap(cpu, cpumask_bits(mask), small_cpumask_bits, start)
-@@ -327,7 +327,7 @@ unsigned int __pure cpumask_next_wrap(int n, const struct cpumask *mask, int sta
-  *	for_each_cpu(cpu, &tmp)
-  *		...
-  *
-- * After the loop, cpu is >= nr_cpu_ids.
-+ * After the loop, cpu is >= small_cpumask_bits.
-  */
- #define for_each_cpu_and(cpu, mask1, mask2)				\
- 	for_each_and_bit(cpu, cpumask_bits(mask1), cpumask_bits(mask2), small_cpumask_bits)
-@@ -345,7 +345,7 @@ unsigned int __pure cpumask_next_wrap(int n, const struct cpumask *mask, int sta
-  *	for_each_cpu(cpu, &tmp)
-  *		...
-  *
-- * After the loop, cpu is >= nr_cpu_ids.
-+ * After the loop, cpu is >= small_cpumask_bits.
-  */
- #define for_each_cpu_andnot(cpu, mask1, mask2)				\
- 	for_each_andnot_bit(cpu, cpumask_bits(mask1), cpumask_bits(mask2), small_cpumask_bits)
-@@ -375,7 +375,7 @@ unsigned int cpumask_any_but(const struct cpumask *mask, unsigned int cpu)
-  * @srcp: the cpumask pointer
-  * @cpu: the N'th cpu to find, starting from 0
-  *
-- * Returns >= nr_cpu_ids if such cpu doesn't exist.
-+ * Returns >= small_cpumask_bits if such cpu doesn't exist.
-  */
- static inline unsigned int cpumask_nth(unsigned int cpu, const struct cpumask *srcp)
- {
-@@ -388,7 +388,7 @@ static inline unsigned int cpumask_nth(unsigned int cpu, const struct cpumask *s
-  * @srcp2: the cpumask pointer
-  * @cpu: the N'th cpu to find, starting from 0
-  *
-- * Returns >= nr_cpu_ids if such cpu doesn't exist.
-+ * Returns >= small_cpumask_bits if such cpu doesn't exist.
-  */
- static inline
- unsigned int cpumask_nth_and(unsigned int cpu, const struct cpumask *srcp1,
-@@ -404,7 +404,7 @@ unsigned int cpumask_nth_and(unsigned int cpu, const struct cpumask *srcp1,
-  * @srcp2: the cpumask pointer
-  * @cpu: the N'th cpu to find, starting from 0
-  *
-- * Returns >= nr_cpu_ids if such cpu doesn't exist.
-+ * Returns >= small_cpumask_bits if such cpu doesn't exist.
-  */
- static inline
- unsigned int cpumask_nth_andnot(unsigned int cpu, const struct cpumask *srcp1,
-@@ -421,7 +421,7 @@ unsigned int cpumask_nth_andnot(unsigned int cpu, const struct cpumask *srcp1,
-  * @srcp3: the cpumask pointer
-  * @cpu: the N'th cpu to find, starting from 0
-  *
-- * Returns >= nr_cpu_ids if such cpu doesn't exist.
-+ * Returns >= small_cpumask_bits if such cpu doesn't exist.
-  */
- static __always_inline
- unsigned int cpumask_nth_and_andnot(unsigned int cpu, const struct cpumask *srcp1,
-@@ -529,7 +529,7 @@ static inline void cpumask_setall(struct cpumask *dstp)
- }
- 
- /**
-- * cpumask_clear - clear all cpus (< nr_cpu_ids) in a cpumask
-+ * cpumask_clear - clear all cpus (< large_cpumask_bits) in a cpumask
-  * @dstp: the cpumask pointer
-  */
- static inline void cpumask_clear(struct cpumask *dstp)
-@@ -650,7 +650,7 @@ static inline bool cpumask_subset(const struct cpumask *src1p,
- 
- /**
-  * cpumask_empty - *srcp == 0
-- * @srcp: the cpumask to that all cpus < nr_cpu_ids are clear.
-+ * @srcp: the cpumask to that all cpus < small_cpumask_bits are clear.
-  */
- static inline bool cpumask_empty(const struct cpumask *srcp)
- {
-@@ -659,7 +659,7 @@ static inline bool cpumask_empty(const struct cpumask *srcp)
- 
- /**
-  * cpumask_full - *srcp == 0xFFFFFFFF...
-- * @srcp: the cpumask to that all cpus < nr_cpu_ids are set.
-+ * @srcp: the cpumask to that all cpus < nr_cpumask_bits are set.
-  */
- static inline bool cpumask_full(const struct cpumask *srcp)
- {
-@@ -668,7 +668,7 @@ static inline bool cpumask_full(const struct cpumask *srcp)
- 
- /**
-  * cpumask_weight - Count of bits in *srcp
-- * @srcp: the cpumask to count bits (< nr_cpu_ids) in.
-+ * @srcp: the cpumask to count bits (< small_cpumask_bits) in.
-  */
- static inline unsigned int cpumask_weight(const struct cpumask *srcp)
- {
-@@ -677,8 +677,8 @@ static inline unsigned int cpumask_weight(const struct cpumask *srcp)
- 
- /**
-  * cpumask_weight_and - Count of bits in (*srcp1 & *srcp2)
-- * @srcp1: the cpumask to count bits (< nr_cpu_ids) in.
-- * @srcp2: the cpumask to count bits (< nr_cpu_ids) in.
-+ * @srcp1: the cpumask to count bits (< small_cpumask_bits) in.
-+ * @srcp2: the cpumask to count bits (< small_cpumask_bits) in.
-  */
- static inline unsigned int cpumask_weight_and(const struct cpumask *srcp1,
- 						const struct cpumask *srcp2)
-@@ -727,7 +727,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
-  * cpumask_any - pick a "random" cpu from *srcp
-  * @srcp: the input cpumask
-  *
-- * Returns >= nr_cpu_ids if no cpus set.
-+ * Returns >= small_cpumask_bits if no cpus set.
-  */
- #define cpumask_any(srcp) cpumask_first(srcp)
- 
-@@ -736,7 +736,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
-  * @mask1: the first input cpumask
-  * @mask2: the second input cpumask
-  *
-- * Returns >= nr_cpu_ids if no cpus set.
-+ * Returns >= small_cpumask_bits if no cpus set.
-  */
- #define cpumask_any_and(mask1, mask2) cpumask_first_and((mask1), (mask2))
- 
--- 
+[    3.607299] BUG: unable to handle page fault for address: 000000000001cc43
+[    3.607558] #PF: supervisor read access in kernel mode
+[    3.607704] #PF: error_code(0x0000) - not-present page
+[    3.607704] PGD 0 P4D 0
+[    3.607704] Oops: 0000 [#1] PREEMPT SMP NOPTI
+[    3.607704] CPU: 1 PID: 1 Comm: systemd Not tainted 6.3.0-rc1 #50
+[    3.607704] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+[    3.607704] RIP: 0010:_raw_spin_lock+0x12/0x30
+[    3.607704] Code: 84 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa 65 ff 05 dd de 1e 7e 31 c0 ba 01 00 00 00 <f0> 0f b1 17 75 05 c3 cc cc cc cc 89 c6 e9 9c 00 00 00 6
+[    3.607704] RSP: 0018:ffffc90000013d50 EFLAGS: 00000002
+[    3.607704] RAX: 0000000000000000 RBX: 0000000000000040 RCX: 0000000000000002
+[    3.607704] RDX: 0000000000000001 RSI: 0000000000000246 RDI: 000000000001cc43
+[    3.607704] RBP: ffffc90000013dc8 R08: 00000000d6fbd601 R09: 0000000065abc912
+[    3.607704] R10: 00000000ba93b167 R11: 000000007bb5d0bf R12: 000000000001cc43
+[    3.607704] R13: 000000000001cc43 R14: 0000000000000003 R15: 0000000000000003
+[    3.607704] FS:  00007fbd4911b400(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
+[    3.607704] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    3.607704] CR2: 000000000001cc43 CR3: 0000000003b42000 CR4: 00000000000006e0
+[    3.607704] Call Trace:
+[    3.607704]  <TASK>
+[    3.607704]  add_timer_on+0x80/0x130
+[    3.607704]  try_to_generate_entropy+0x246/0x270
+[    3.607704]  ? do_filp_open+0xb1/0x160
+[    3.607704]  ? __pfx_entropy_timer+0x10/0x10
+[    3.607704]  ? inode_security+0x1d/0x60
+[    3.607704]  urandom_read_iter+0x23/0x90
+[    3.607704]  vfs_read+0x203/0x2d0
+[    3.607704]  ksys_read+0x5e/0xe0
+[    3.607704]  do_syscall_64+0x3f/0x90
+[    3.607704]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
+[    3.607704] RIP: 0033:0x7fbd49a25992
+[    3.607704] Code: c0 e9 b2 fe ff ff 50 48 8d 3d fa b2 0c 00 e8 c5 1d 02 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 4
+[    3.607704] RSP: 002b:00007ffea3fe8318 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[    3.607704] RAX: ffffffffffffffda RBX: 0000000000000010 RCX: 00007fbd49a25992
+[    3.607704] RDX: 0000000000000010 RSI: 00007ffea3fe83a0 RDI: 000000000000000c
+[    3.607704] RBP: 000000000000000c R08: 3983c6a57a866072 R09: c736ebfbeb917d7e
+[    3.607704] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+[    3.607704] R13: 0000000000000001 R14: 00007ffea3fe83a0 R15: 00005609e5454ea8
+[    3.607704]  </TASK>
+[    3.607704] Modules linked in:
+[    3.607704] CR2: 000000000001cc43
+[    3.607704] ---[ end trace 0000000000000000 ]---
+[    3.607704] RIP: 0010:_raw_spin_lock+0x12/0x30
+[    3.607704] Code: 84 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa 65 ff 05 dd de 1e 7e 31 c0 ba 01 00 00 00 <f0> 0f b1 17 75 05 c3 cc cc cc cc 89 c6 e9 9c 00 00 00 6
+[    3.607704] RSP: 0018:ffffc90000013d50 EFLAGS: 00000002
+[    3.607704] RAX: 0000000000000000 RBX: 0000000000000040 RCX: 0000000000000002
+[    3.607704] RDX: 0000000000000001 RSI: 0000000000000246 RDI: 000000000001cc43
+[    3.607704] RBP: ffffc90000013dc8 R08: 00000000d6fbd601 R09: 0000000065abc912
+[    3.607704] R10: 00000000ba93b167 R11: 000000007bb5d0bf R12: 000000000001cc43
+[    3.607704] R13: 000000000001cc43 R14: 0000000000000003 R15: 0000000000000003
+[    3.607704] FS:  00007fbd4911b400(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
+[    3.607704] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    3.607704] CR2: 000000000001cc43 CR3: 0000000003b42000 CR4: 00000000000006e0
+[    3.607704] note: systemd[1] exited with irqs disabled
+[    3.618556] note: systemd[1] exited with preempt_count 2
+[    3.618991] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
+[    3.619797] Kernel Offset: disabled
+[    3.619798] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009 ]---
+
+
+Analysis add_timer_on() found that the parameter cpu is equal to 64, which
+feels strange, because qemu only specifies two CPUs, continues to look up,
+and finds that the parameter cpu is obtained by
+try_to_generate_entropy() -> cpumask_next().
+
+Then use git bisect to find the bug, and find that it was introduced by
+commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask optimizations"),
+carefully analyzing the cpumask_next() modification record, I found that
+nr_cpumask_bits modified to small_cpumask_bits, and when NR_CPUS <= BITS_PER_LONG,
+small_cpumask_bits is a macro and before nr_cpumask_bits is a variable-sized.
+
+look for find_next_bit() If no bits are set, returns @size, I seem to
+understand the cause of the problem.
+
+I fixed this bug by make `if (cpu == nr_cpumask_bits)` to `if (cpu >= nr_cpumask_bits)`
+
+At the same time I think about this situation, maybe there are the same errors
+elsewhere, check it, sure enough, there are, quite a few.
+
+The patch "random:xxx" has been verified, it is valid, the other three fixes
+have not been verified, because I do not have an environment, but they
+principle are same, so also submitted at the same time, if someone helps to
+verify, thanks you very much.
+
+If there is anything error, please tell me, thanks.
+
+Vernon Yang (5):
+  random: fix try_to_generate_entropy() if no further cpus set
+  wireguard: fix wg_cpumask_choose_online() if no further cpus set
+  scsi: lpfc: fix lpfc_cpu_affinity_check() if no further cpus set
+  scsi: lpfc: fix lpfc_nvmet_setup_io_context() if no further cpus set
+  cpumask: fix comment of cpumask_xxx
+
+ drivers/char/random.c            |  2 +-
+ drivers/net/wireguard/queueing.h |  2 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 14 +++++-----
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  2 +-
+ include/linux/cpumask.h          | 46 ++++++++++++++++----------------
+ 5 files changed, 33 insertions(+), 33 deletions(-)
+
+--
 2.34.1
 
