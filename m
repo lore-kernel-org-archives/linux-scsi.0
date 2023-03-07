@@ -2,128 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FE9C678D5
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D13BC678DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:55:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232255AbjCGSyV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 13:54:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49758 "EHLO
+        id S231359AbjCGSzH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 13:55:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233444AbjCGSyB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:54:01 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97373C223A;
-        Tue,  7 Mar 2023 10:41:54 -0800 (PST)
+        with ESMTP id S233478AbjCGSyd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:54:33 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D01A5F6;
+        Tue,  7 Mar 2023 10:42:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E728661522;
-        Tue,  7 Mar 2023 18:41:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D588CC433EF;
-        Tue,  7 Mar 2023 18:41:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1678214498;
-        bh=SSTfoSVqUu/8IxWgP9kZoKE212j3zuX6BvOE1s6sczc=;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9371561538;
+        Tue,  7 Mar 2023 18:29:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC636C4339E;
+        Tue,  7 Mar 2023 18:29:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678213746;
+        bh=3BwaxeqR5K9UM6t70G9A7Zg8LXyh/lE1LnqW0l4i6Jk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MzwtyBxGPgNr/gJ25y0rNzY/XpBESBjACk3nFx4j8wswW9rVnFvEGeIyC8/wXW1PE
-         N+nCiuAo/BQxZ6PKNN6cY2BP57BFve7nQEq4LdaYGVApQi5biisVpt/NeXxXPwXdp5
-         C4H3lj6GjcIf1ex+mzwIUf8qc4kViVAfB10hg5KU=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     stable@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        patches@lists.linux.dev, Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        Vegard Nossum <vegard.nossum@oracle.com>
-Subject: [PATCH 6.1 843/885] scsi: aacraid: Allocate cmd_priv with scsicmd
-Date:   Tue,  7 Mar 2023 18:02:57 +0100
-Message-Id: <20230307170038.454065418@linuxfoundation.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230307170001.594919529@linuxfoundation.org>
-References: <20230307170001.594919529@linuxfoundation.org>
-User-Agent: quilt/0.67
+        b=pBDFXwGmb4NbFsnOLQNVjKfCxYBZQe6gNNlsx3x0rX+hVweeeTXZ9n6hO3ziosB6x
+         WU0LRWK1gsud8ozmdXQVhaBQkzv5y6PwpV6rYIqxIU67i7XF2MAtI1v8CxbYHhOmh5
+         C2umXRpwPBPBw1hSxq2Q/Z/SB64Hkq4HpHnVsEmHpPPxn0pBRlCEI9GQ+qke617Epq
+         Y+IpQ4mEHCEcdVsUjeLIGyYTAmmQalsQyGpejG5L22UcUdGDUJokGMhTC/s48i8ckt
+         nRccsUU1YJ8NJn+8Y51wKPN23u+xDU4mdtFb6FEUoepcrTHyx0BWAkKd+Bk5wbROKT
+         3p+pYSz9Q3OLA==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com
+Subject: [PATCH 08/10] scsi: mpt3sas: Drop redundant pci_enable_pcie_error_reporting()
+Date:   Tue,  7 Mar 2023 12:28:40 -0600
+Message-Id: <20230307182842.870378-9-helgaas@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230307182842.870378-1-helgaas@kernel.org>
+References: <20230307182842.870378-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-commit 7ab734fc759828707dae22fe48b1eb4dcf70beea upstream.
+pci_enable_pcie_error_reporting() enables the device to send ERR_*
+Messages.  Since f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is
+native"), the PCI core does this for all devices during enumeration, so the
+driver doesn't need to do it itself.
 
-The aac_priv() helper assumes that the private cmd area immediately follows
-struct scsi_cmnd. Allocate this space as part of scsicmd, else there is a
-risk of heap overflow. Seen with GCC 13:
+Remove the redundant pci_enable_pcie_error_reporting() call from the
+driver.  Also remove the corresponding pci_disable_pcie_error_reporting()
+from the driver .remove() path.
 
-../drivers/scsi/aacraid/aachba.c: In function 'aac_probe_container':
-../drivers/scsi/aacraid/aachba.c:841:26: warning: array subscript 16 is outside array bounds of 'void[392]' [-Warray-bounds=]
-  841 |         status = cmd_priv->status;
-      |                          ^~
-In file included from ../include/linux/resource_ext.h:11,
-                 from ../include/linux/pci.h:40,
-                 from ../drivers/scsi/aacraid/aachba.c:22:
-In function 'kmalloc',
-    inlined from 'kzalloc' at ../include/linux/slab.h:720:9,
-    inlined from 'aac_probe_container' at ../drivers/scsi/aacraid/aachba.c:821:30:
-../include/linux/slab.h:580:24: note: at offset 392 into object of size 392 allocated by 'kmalloc_trace'
-  580 |                 return kmalloc_trace(
-      |                        ^~~~~~~~~~~~~~
-  581 |                                 kmalloc_caches[kmalloc_type(flags)][index],
-      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  582 |                                 flags, size);
-      |                                 ~~~~~~~~~~~~
+Note that this only controls ERR_* Messages from the device.  An ERR_*
+Message may cause the Root Port to generate an interrupt, depending on the
+AER Root Error Command register managed by the AER service driver.
 
-Fixes: 76a3451b64c6 ("scsi: aacraid: Move the SCSI pointer to private command data")
-Link: https://lore.kernel.org/r/20230128000409.never.976-kees@kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: Vegard Nossum <vegard.nossum@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com
 ---
- drivers/scsi/aacraid/aachba.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 5 -----
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 -
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 4d4cb47b3846..24c049eff157 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -818,8 +818,8 @@ static void aac_probe_container_scsi_done(struct scsi_cmnd *scsi_cmnd)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 2ee9ea57554d..a8b260f46796 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -60,7 +60,6 @@
+ #include <linux/ktime.h>
+ #include <linux/kthread.h>
+ #include <asm/page.h>        /* To get host page size per arch */
+-#include <linux/aer.h>
  
- int aac_probe_container(struct aac_dev *dev, int cid)
- {
--	struct scsi_cmnd *scsicmd = kzalloc(sizeof(*scsicmd), GFP_KERNEL);
--	struct aac_cmd_priv *cmd_priv = aac_priv(scsicmd);
-+	struct aac_cmd_priv *cmd_priv;
-+	struct scsi_cmnd *scsicmd = kzalloc(sizeof(*scsicmd) + sizeof(*cmd_priv), GFP_KERNEL);
- 	struct scsi_device *scsidev = kzalloc(sizeof(*scsidev), GFP_KERNEL);
- 	int status;
  
-@@ -838,6 +838,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
- 		while (scsicmd->device == scsidev)
- 			schedule();
- 	kfree(scsidev);
-+	cmd_priv = aac_priv(scsicmd);
- 	status = cmd_priv->status;
- 	kfree(scsicmd);
- 	return status;
+ #include "mpt3sas_base.h"
+@@ -3535,7 +3534,6 @@ mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 	if (pci_is_enabled(pdev)) {
+ 		pci_release_selected_regions(ioc->pdev, ioc->bars);
+-		pci_disable_pcie_error_reporting(pdev);
+ 		pci_disable_device(pdev);
+ 	}
+ }
+@@ -3615,9 +3613,6 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 		goto out_fail;
+ 	}
+ 
+-/* AER (Advanced Error Reporting) hooks */
+-	pci_enable_pcie_error_reporting(pdev);
+-
+ 	pci_set_master(pdev);
+ 
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 8e24ebcebfe5..e2f09833659f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -52,7 +52,6 @@
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
+-#include <linux/aer.h>
+ #include <linux/raid_class.h>
+ #include <linux/blk-mq-pci.h>
+ #include <asm/unaligned.h>
 -- 
-2.39.2
-
-
+2.25.1
 
