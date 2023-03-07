@@ -2,133 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91922C64EC4
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 03:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EA4CC678DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 05:39:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229645AbjCGD3u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Mar 2023 22:29:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52306 "EHLO
+        id S230219AbjCGFjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 00:39:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbjCGD3t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2023 22:29:49 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2F7E301B2
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 19:29:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678159788; x=1709695788;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=b7SaN5IdN/OzmSd3eqcZSh9llVNmyd/tU2X3V+3Bu8Q=;
-  b=HYlTRAyNQUvoLsI/32YzZdhF6tPQy3H8aQI5C5/TokjoIokDQfnldQkb
-   BupI7htEZLhsXw3foean5U1wc7BI2yyrM/d+Z8BzIKI2pVf5NUMqZ9mK2
-   VxjVFzq4XkpZt5zujz4CqEB2WcmoP2euEC5xGIujegH/ddhbKpn9/kq7J
-   mExGBEBgfbsCeKMgByl5QgvOVX3l47v4K9qEh3n8yZXhnOvfjkrmaA88G
-   Oljh9+wLqnu/5KJxarQ4wScfRDzNkwYE60Wk9d1FdRXqdX9Fxm9ndjrW8
-   PJteYj++tI0vLzOnV44LN9YPeZyG20yc3bQE7tcL1a8Jk1T47JFsNuPtv
-   A==;
-X-IronPort-AV: E=Sophos;i="5.98,238,1673884800"; 
-   d="scan'208";a="223246643"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2023 11:29:48 +0800
-IronPort-SDR: 1YqeC9JNF04kFyZXPbnzvpRwby7+RVsYZw/XNUhx4WzbzK60mnRrkFhdhRfyl2jrN8Vg6L/bNk
- pQYKJh0cKHTxMe49XI1HMsGLzT6K3Pia0wvb9qlxqMrumOCUaH3IBNRfloEeyvLKS+e5QCMPBU
- VMR/TvPFbUpx2wHWHI8zK20RoD/FMQzGA3B85rBEiHs3zrNoJRImiyr2xfe8tX+rrO9Fzm/M5v
- jKiaci7IQy42bcQaZoAsm/L1xOyUc/ULV7FMrI+eSIB1WuoM5RgFkAqrCp2WAXRXi//YvG9F58
- UoE=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Mar 2023 18:40:47 -0800
-IronPort-SDR: FW/YeMiIPl8qvmJByy8aSEzaiqBfIaVIhApgJpurT9mkeEpm1iQlDEW922qtN0lBfep0TZ67Et
- vCDP8pIxb3WWz93lbxav5L8ZyuQmUmHID7vHsH+liAN8cl2FwsZP4bTOVQYY+CrTA6XYSenQCz
- ErwF3H+x2Bf9gEJpsZduhsoVwQcWXo0Yr9JTbE0BZvV/dPTjCaaUWwLiu73zodsGbgHQ5IU8an
- rooX/xD34O423R/hFdNlkhGYEcCXNpN8GexBC2s/du1S0Jp4Oti5MnrBozjQauudxjn93AVYKM
- PXE=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Mar 2023 19:29:48 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PW1Cb2BGRz1RwvL
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 19:29:47 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1678159786; x=1680751787; bh=b7SaN5IdN/OzmSd3eqcZSh9llVNmyd/tU2X
-        3V+3Bu8Q=; b=lF9KQrzkAEPMLdhTpHGfoCkgBqmdEt6Tnjiz5M4s5fJHs35AsCa
-        coSfyBHKcK5/g/ZFxGF/jB0zfCpaVUz0V7UPzOcvjVVMhzIf+/DntaOgvfbPGCB0
-        0kKzvPPlnKlbmYCXMl77PWevHHdDdt0ylyWDfifaKxTWfida/avOfNCqBE39d08K
-        oDbaVF3juNMPjltwWllPLFVhhR1k+GHGeJZMPgBJegs1jOq7+l9lW0KAiW85Y0fw
-        nIPsWmrIWwqrcRyWJue8RelAoN5p4ENqXaQvUDpb3iyDpVCaal3DBmxGOdVbAdmw
-        22fl45S7zTXBq8esMMjV2x8YhpMCjrNm8Gw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id TV1p05_wEaUD for <linux-scsi@vger.kernel.org>;
-        Mon,  6 Mar 2023 19:29:46 -0800 (PST)
-Received: from [10.225.163.60] (unknown [10.225.163.60])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PW1CW1Dzqz1RvLy;
-        Mon,  6 Mar 2023 19:29:42 -0800 (PST)
-Message-ID: <468e7c96-5911-91aa-dfbd-8fabc0db7575@opensource.wdc.com>
-Date:   Tue, 7 Mar 2023 12:29:41 +0900
+        with ESMTP id S230211AbjCGFjL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 00:39:11 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 223DF3B864
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 21:39:10 -0800 (PST)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PW42R3tlnzKqJh;
+        Tue,  7 Mar 2023 13:37:03 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Tue, 7 Mar 2023 13:38:34 +0800
+From:   chenxiang <chenxiang66@hisilicon.com>
+To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 1/4] scsi: hisi_sas: Add function complete_v3_hw()
+Date:   Tue, 7 Mar 2023 14:09:12 +0800
+Message-ID: <1678169355-76215-2-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1678169355-76215-1-git-send-email-chenxiang66@hisilicon.com>
+References: <1678169355-76215-1-git-send-email-chenxiang66@hisilicon.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 04/81] ata: Declare SCSI host templates const
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Patrice Chotard <patrice.chotard@foss.st.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Samuel Holland <samuel@sholland.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>
-References: <20230304003103.2572793-1-bvanassche@acm.org>
- <20230304003103.2572793-5-bvanassche@acm.org>
- <yq1bkl5migf.fsf@ca-mkp.ca.oracle.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <yq1bkl5migf.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/7/23 11:00, Martin K. Petersen wrote:
-> 
-> Hi Bart!
-> 
->> Make it explicit that ATA host templates are not modified.
-> 
->>  drivers/ata/pata_atiixp.c       |   2 +-
->>  drivers/ata/pata_atp867x.c      |   2 +-
->>  drivers/ata/pata_bk3710.c       | 380 ++++++++++++++++++++++++++++++++
->    ^^^^^^^^^^^^^^^^^^^^^^^^^
-> Don't believe you meant to add this...
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Oops. Yes, indeed, good catch !
+Put the work of processing cq slots in separate function complete_v3_hw(),
+then it can be used by cq_thread_v3_hw() and other function when adding
+poll support.
 
->>  drivers/ata/pata_buddha.c       |   2 +-
->>  drivers/ata/pata_cmd640.c       |   2 +-
-> 
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 0c3fcb8..835cb87 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2391,15 +2391,14 @@ static void slot_complete_v3_hw(struct hisi_hba *hisi_hba,
+ 		task->task_done(task);
+ }
+ 
+-static irqreturn_t  cq_thread_v3_hw(int irq_no, void *p)
++static void complete_v3_hw(struct hisi_sas_cq *cq)
+ {
+-	struct hisi_sas_cq *cq = p;
+-	struct hisi_hba *hisi_hba = cq->hisi_hba;
+-	struct hisi_sas_slot *slot;
+ 	struct hisi_sas_complete_v3_hdr *complete_queue;
+-	u32 rd_point = cq->rd_point, wr_point;
++	struct hisi_hba *hisi_hba = cq->hisi_hba;
++	u32 rd_point, wr_point;
+ 	int queue = cq->id;
+ 
++	rd_point = cq->rd_point;
+ 	complete_queue = hisi_hba->complete_hdr[queue];
+ 
+ 	wr_point = hisi_sas_read32(hisi_hba, COMPL_Q_0_WR_PTR +
+@@ -2408,6 +2407,7 @@ static irqreturn_t  cq_thread_v3_hw(int irq_no, void *p)
+ 	while (rd_point != wr_point) {
+ 		struct hisi_sas_complete_v3_hdr *complete_hdr;
+ 		struct device *dev = hisi_hba->dev;
++		struct hisi_sas_slot *slot;
+ 		u32 dw0, dw1, dw3;
+ 		int iptt;
+ 
+@@ -2450,6 +2450,13 @@ static irqreturn_t  cq_thread_v3_hw(int irq_no, void *p)
+ 	/* update rd_point */
+ 	cq->rd_point = rd_point;
+ 	hisi_sas_write32(hisi_hba, COMPL_Q_0_RD_PTR + (0x14 * queue), rd_point);
++}
++
++static irqreturn_t cq_thread_v3_hw(int irq_no, void *p)
++{
++	struct hisi_sas_cq *cq = p;
++
++	complete_v3_hw(cq);
+ 
+ 	return IRQ_HANDLED;
+ }
 -- 
-Damien Le Moal
-Western Digital Research
+2.8.1
 
