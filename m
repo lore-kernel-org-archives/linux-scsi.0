@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA2BC678D4
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:43:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 630DFC678D5
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:45:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233171AbjCGSnu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 13:43:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57296 "EHLO
+        id S229603AbjCGSpg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 13:45:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233172AbjCGSnL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:43:11 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3363B9EF41;
-        Tue,  7 Mar 2023 10:33:34 -0800 (PST)
+        with ESMTP id S233304AbjCGSpJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:45:09 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371ACB7892;
+        Tue,  7 Mar 2023 10:34:57 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 0AD26CE1C86;
-        Tue,  7 Mar 2023 18:29:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67791C4339C;
-        Tue,  7 Mar 2023 18:29:00 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 33930B819C8;
+        Tue,  7 Mar 2023 18:28:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4B7EC433D2;
+        Tue,  7 Mar 2023 18:28:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678213740;
-        bh=86KQLMriTm2rEbApaorsRI4bA6ciwDz7r8N+iPI0q2s=;
+        s=k20201202; t=1678213735;
+        bh=OIhHmt2mnVsj3tF12NCkxNkZk2sHr3gGQeR6T7IdeXw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qID2ndgLHMBKTJVy/U/jXfv4TjPd/cIaAVgijlVrj1laJ87yNDO0eGQ0/hwasTYoc
-         del+NqvbHWY5MvRVSX3m2CDfe4iADyLHbMAVnb81wcPsPgOenD5YCHFzlcbrZC8/yl
-         nQukjG0jQiNEVh9ukSkKd21aUzfTHQv/uXomatL/8zFcLFvR+LFnb3Tx7+6UevX4nQ
-         mJ8LxPPLBNmkg17nE//GYNYKXPaTAmi/kz7zGyZokTfrxW2IZCnaiQ+woUy0uH05g1
-         mWnscDXkBf2OAFhlvDcGzRtnewFThEQ6cdf+05Z7UvjwwHf/Cl3KyLD1W7kWt51Fi/
-         QrBG0sqxwN5gQ==
+        b=pKAir1xm950sFtlcYl80bwtjz9HkP1qTD3IAxsc2XVk1pbEzDWfub0f2moNJXbndc
+         INf5FRhN+ARZEKaFr9yQw8MV23msDm6/wwu1gdEfzkpHZ/1zY+ETDfrklfKXpNGFiO
+         kydB+qWt0GMjfu7JNuIb+TBNnm26+i3idJCIUir8CqQ+wc6ONRFyUFm+oxyItXSj+4
+         m06It2oCrrxW4owGhcWvGW5ctvOzgZKDlPOMWoHOdaKiKe2hUJKvjLwGLZv2WrV9Yt
+         0qKPHVyVH1RaefFkLQqtCcQxqtL2/HWMadJzJuHggFK6AuBohnnsGyNOMNxKj1ea8a
+         8EcmjP/nzoBvg==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 05/10] scsi: csiostor: Remove unnecessary aer.h include
-Date:   Tue,  7 Mar 2023 12:28:37 -0600
-Message-Id: <20230307182842.870378-6-helgaas@kernel.org>
+Subject: [PATCH 02/10] scsi: arcmsr: Remove unnecessary aer.h include
+Date:   Tue,  7 Mar 2023 12:28:34 -0600
+Message-Id: <20230307182842.870378-3-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230307182842.870378-1-helgaas@kernel.org>
 References: <20230307182842.870378-1-helgaas@kernel.org>
@@ -54,21 +54,21 @@ From: Bjorn Helgaas <bhelgaas@google.com>
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/scsi/csiostor/csio_init.c | 1 -
+ drivers/scsi/arcmsr/arcmsr_hba.c | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index ccbded3353bd..0c32faefad7c 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -38,7 +38,6 @@
- #include <linux/module.h>
- #include <linux/init.h>
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index d3fb8a9c1c39..9d04cb6e62fa 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -57,7 +57,6 @@
+ #include <linux/timer.h>
+ #include <linux/slab.h>
  #include <linux/pci.h>
 -#include <linux/aer.h>
- #include <linux/mm.h>
- #include <linux/notifier.h>
- #include <linux/kdebug.h>
+ #include <linux/circ_buf.h>
+ #include <asm/dma.h>
+ #include <asm/io.h>
 -- 
 2.25.1
 
