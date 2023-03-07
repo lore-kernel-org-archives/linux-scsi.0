@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 579EEC678DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 08:08:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A27C678DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 08:08:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230028AbjCGIIx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 03:08:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39600 "EHLO
+        id S230039AbjCGII4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 03:08:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229972AbjCGIIc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 03:08:32 -0500
+        with ESMTP id S229990AbjCGIIg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 03:08:36 -0500
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C1BB2CFEA;
-        Tue,  7 Mar 2023 00:08:07 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A91C125970;
+        Tue,  7 Mar 2023 00:08:10 -0800 (PST)
 Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
-        by mta-01.yadro.com (Proxmox) with ESMTP id CAF30341EB6;
-        Tue,  7 Mar 2023 11:07:51 +0300 (MSK)
+        by mta-01.yadro.com (Proxmox) with ESMTP id 75D54341EB8;
+        Tue,  7 Mar 2023 11:07:52 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
         :cc:content-transfer-encoding:content-type:content-type:date
         :from:from:in-reply-to:message-id:mime-version:references
-        :reply-to:subject:subject:to:to; s=mta-01; bh=y3vb4pAUffWzuoh9I2
-        ChX6phjhxw2mBq3/VY5m3Oavw=; b=ivBVESAvgR7ShEtkPM/7xZePJHq8qZNh8s
-        6zUEUHkBSPYAq0lQDSD3r0pVCDS9C5wydcB3ue4YEuk3eiIYnkaSfhZmdJRAZn97
-        KrPI0PBAjBP730jLJ/snMll7TPgXY65OGyCoeNbxX3e1PtVED+HifHBTwHPLQjSw
-        InxnaOqSg=
+        :reply-to:subject:subject:to:to; s=mta-01; bh=3eAU+aIyF6YkjbljD8
+        h+LIF0eqC0rHsc6DFVHsIfcxk=; b=gPe10e8w7MK0LAPkhutsuZ+hZDsqGc4pw8
+        wecCfgyNCpwUcCSnozBynwYvRFg9fLHgbArhjMYC6ehpkCeARwh27YBhmBHJnRZj
+        c+XW4cADtFNBDHPlNZwPE7mGr/5uSc9R7SaEY/dzyIQf5B2iL1EDukQM45nFjlh8
+        JmC+gTJ6Q=
 Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Proxmox) with ESMTPS id C20C0341E00;
-        Tue,  7 Mar 2023 11:07:51 +0300 (MSK)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id 6BB58341E00;
+        Tue,  7 Mar 2023 11:07:52 +0300 (MSK)
 Received: from NB-591.corp.yadro.com (10.199.20.11) by
  T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
@@ -51,9 +51,9 @@ CC:     Bart Van Assche <bvanassche@acm.org>,
         Jason Wang <jasowang@redhat.com>,
         Juergen Gross <jgross@suse.com>, <linux-scsi@vger.kernel.org>,
         <linux@yadro.com>, Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH v2 03/12] scsi: ibmvscsit: remove default fabric ops callouts
-Date:   Tue, 7 Mar 2023 11:07:33 +0300
-Message-ID: <20230307080742.24631-4-d.bogdanov@yadro.com>
+Subject: [PATCH v2 04/12] scsi: target: loop: remove default fabric ops callouts
+Date:   Tue, 7 Mar 2023 11:07:34 +0300
+Message-ID: <20230307080742.24631-5-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230307080742.24631-1-d.bogdanov@yadro.com>
 References: <20230307080742.24631-1-d.bogdanov@yadro.com>
@@ -72,74 +72,85 @@ default implementation in TCM Core.
 
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 30 ------------------------
- 1 file changed, 30 deletions(-)
+ drivers/target/loopback/tcm_loop.c | 41 ------------------------------
+ 1 file changed, 41 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index e8770310a64b..385f812b8793 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3698,16 +3698,6 @@ static int ibmvscsis_check_true(struct se_portal_group *se_tpg)
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 139031ccb700..5c8646c2d4e9 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -480,30 +480,6 @@ static int tcm_loop_check_demo_mode(struct se_portal_group *se_tpg)
  	return 1;
  }
  
--static int ibmvscsis_check_false(struct se_portal_group *se_tpg)
+-static int tcm_loop_check_demo_mode_cache(struct se_portal_group *se_tpg)
 -{
 -	return 0;
 -}
 -
--static u32 ibmvscsis_tpg_get_inst_index(struct se_portal_group *se_tpg)
+-/*
+- * Allow I_T Nexus full READ-WRITE access without explict Initiator Node ACLs for
+- * local virtual Linux/SCSI LLD passthrough into VM hypervisor guest
+- */
+-static int tcm_loop_check_demo_mode_write_protect(struct se_portal_group *se_tpg)
+-{
+-	return 0;
+-}
+-
+-/*
+- * Because TCM_Loop does not use explict ACLs and MappedLUNs, this will
+- * never be called for TCM_Loop by target_core_fabric_configfs.c code.
+- * It has been added here as a nop for target_fabric_tf_ops_check()
+- */
+-static int tcm_loop_check_prod_mode_write_protect(struct se_portal_group *se_tpg)
+-{
+-	return 0;
+-}
+-
+ static int tcm_loop_check_prot_fabric_only(struct se_portal_group *se_tpg)
+ {
+ 	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg, struct tcm_loop_tpg,
+@@ -511,21 +487,11 @@ static int tcm_loop_check_prot_fabric_only(struct se_portal_group *se_tpg)
+ 	return tl_tpg->tl_fabric_prot_type;
+ }
+ 
+-static u32 tcm_loop_get_inst_index(struct se_portal_group *se_tpg)
 -{
 -	return 1;
 -}
 -
- static int ibmvscsis_check_stop_free(struct se_cmd *se_cmd)
+ static u32 tcm_loop_sess_get_index(struct se_session *se_sess)
  {
- 	return target_put_sess_cmd(se_cmd);
-@@ -3726,11 +3716,6 @@ static void ibmvscsis_release_cmd(struct se_cmd *se_cmd)
- 	spin_unlock_bh(&vscsi->intr_lock);
+ 	return 1;
  }
  
--static u32 ibmvscsis_sess_get_index(struct se_session *se_sess)
+-static void tcm_loop_set_default_node_attributes(struct se_node_acl *se_acl)
 -{
--	return 0;
+-	return;
 -}
 -
- static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
+ static int tcm_loop_get_cmd_state(struct se_cmd *se_cmd)
  {
- 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
-@@ -3765,15 +3750,6 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
- 	return 0;
- }
- 
--static void ibmvscsis_set_default_node_attrs(struct se_node_acl *nacl)
--{
--}
--
--static int ibmvscsis_get_cmd_state(struct se_cmd *se_cmd)
--{
--	return 0;
--}
--
- static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
- {
- 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
-@@ -3982,15 +3958,9 @@ static const struct target_core_fabric_ops ibmvscsis_ops = {
- 	.tpg_get_default_depth		= ibmvscsis_get_default_depth,
- 	.tpg_check_demo_mode		= ibmvscsis_check_true,
- 	.tpg_check_demo_mode_cache	= ibmvscsis_check_true,
--	.tpg_check_demo_mode_write_protect = ibmvscsis_check_false,
--	.tpg_check_prod_mode_write_protect = ibmvscsis_check_false,
--	.tpg_get_inst_index		= ibmvscsis_tpg_get_inst_index,
- 	.check_stop_free		= ibmvscsis_check_stop_free,
- 	.release_cmd			= ibmvscsis_release_cmd,
--	.sess_get_index			= ibmvscsis_sess_get_index,
- 	.write_pending			= ibmvscsis_write_pending,
--	.set_default_node_attributes	= ibmvscsis_set_default_node_attrs,
--	.get_cmd_state			= ibmvscsis_get_cmd_state,
- 	.queue_data_in			= ibmvscsis_queue_data_in,
- 	.queue_status			= ibmvscsis_queue_status,
- 	.queue_tm_rsp			= ibmvscsis_queue_tm_rsp,
+ 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
+@@ -1124,18 +1090,11 @@ static const struct target_core_fabric_ops loop_ops = {
+ 	.tpg_get_wwn			= tcm_loop_get_endpoint_wwn,
+ 	.tpg_get_tag			= tcm_loop_get_tag,
+ 	.tpg_check_demo_mode		= tcm_loop_check_demo_mode,
+-	.tpg_check_demo_mode_cache	= tcm_loop_check_demo_mode_cache,
+-	.tpg_check_demo_mode_write_protect =
+-				tcm_loop_check_demo_mode_write_protect,
+-	.tpg_check_prod_mode_write_protect =
+-				tcm_loop_check_prod_mode_write_protect,
+ 	.tpg_check_prot_fabric_only	= tcm_loop_check_prot_fabric_only,
+-	.tpg_get_inst_index		= tcm_loop_get_inst_index,
+ 	.check_stop_free		= tcm_loop_check_stop_free,
+ 	.release_cmd			= tcm_loop_release_cmd,
+ 	.sess_get_index			= tcm_loop_sess_get_index,
+ 	.write_pending			= tcm_loop_write_pending,
+-	.set_default_node_attributes	= tcm_loop_set_default_node_attributes,
+ 	.get_cmd_state			= tcm_loop_get_cmd_state,
+ 	.queue_data_in			= tcm_loop_queue_data_in,
+ 	.queue_status			= tcm_loop_queue_status,
 -- 
 2.25.1
 
