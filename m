@@ -2,123 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD689C678DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0B4C678D4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:11:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231539AbjCGSC4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 13:02:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38088 "EHLO
+        id S232478AbjCGSLH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 13:11:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230336AbjCGSCW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:02:22 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAE839E674;
-        Tue,  7 Mar 2023 09:55:34 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 80B03B819BB;
-        Tue,  7 Mar 2023 17:55:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2E18C4339C;
-        Tue,  7 Mar 2023 17:55:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1678211731;
-        bh=/xNUOV8MXagFoEZDWelMGgjc9KitwzbVM0aTRRWUHOI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JeEZCUSfbb3glFIkFssjZxDq0R7pLpMqtBvuvEVKolaVhwYMCHygT6zDHPMpIRHHD
-         r+Yxu79kZcd+iLsWF3g6Ck3tOlBEpDvKcUgCNQE6yUnlIFWyMaJS1cOLRcd1SDgiXV
-         r0e8m015E7sDHckXMLmCsfwkBWKwh+y6pjmYcN00=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     stable@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        patches@lists.linux.dev, Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        Vegard Nossum <vegard.nossum@oracle.com>
-Subject: [PATCH 6.2 0956/1001] scsi: aacraid: Allocate cmd_priv with scsicmd
-Date:   Tue,  7 Mar 2023 18:02:08 +0100
-Message-Id: <20230307170103.651083148@linuxfoundation.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230307170022.094103862@linuxfoundation.org>
-References: <20230307170022.094103862@linuxfoundation.org>
-User-Agent: quilt/0.67
+        with ESMTP id S232421AbjCGSKw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:10:52 -0500
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 569EB9227E
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 10:05:43 -0800 (PST)
+Received: by mail-il1-f198.google.com with SMTP id i14-20020a056e0212ce00b0031d17f33e9aso5161612ilm.7
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 10:05:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678212342;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xMmGBPDCyE1o0KJbX11oQKUWmAnPR1ykDR3aht2SgWI=;
+        b=HMCiph6Kctqyf/Xn++29a0WoyDOt7zkFZAxiskS52/dmRzwZK/W178rBbC6fFszE7v
+         FI6s4vjPbTGxpOkcLA8uqmY9mzhl9R2RA75Xv1IV6sGa7suVaQJh6ivkOV75IiHB5sWX
+         WGTpkFPXGSCXPtyJxe32KckUTpvDHn4ne45qMfQJR+hPc0eWTOltX12Xl8PeI93TO/xq
+         z/9/pzaPYsCSz+pGk7G4nW4vvllPvQHhlO1AsDbPgNHafJLnJ+PaKaFQ1S+gUltLdmcx
+         5vwgzSBbrm1eRxkYEF1g2w00QBRRZQ0gVaTFII5/DDlvF0I62XaV/R0GR8LVPLgR17Gp
+         OGpQ==
+X-Gm-Message-State: AO0yUKUit9SXU2Vs+1/49p187EjoEb5xmOrLekIP4MbcOixgySatsnlz
+        act9y2JoyLdAPbls9SI7kvrk4ok5Q53lGWJHPweSY44Y3Yyz
+X-Google-Smtp-Source: AK7set8LdW7Z5z903MhX750iHI+wLlKjA8IaDjBcJO9bYMe5iSsz69Kbuu35dLmnF/adaamHiU82LHqVZL8BP6K74ahoUX08nDSj
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6e02:f43:b0:317:98ef:7060 with SMTP id
+ y3-20020a056e020f4300b0031798ef7060mr7447962ilj.1.1678212342548; Tue, 07 Mar
+ 2023 10:05:42 -0800 (PST)
+Date:   Tue, 07 Mar 2023 10:05:42 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000890fab05f65342b6@google.com>
+Subject: [syzbot] [scsi?] memory leak in __proc_create
+From:   syzbot <syzbot+645a4616b87a2f10e398@syzkaller.appspotmail.com>
+To:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
+Hello,
 
-commit 7ab734fc759828707dae22fe48b1eb4dcf70beea upstream.
+syzbot found the following issue on:
 
-The aac_priv() helper assumes that the private cmd area immediately follows
-struct scsi_cmnd. Allocate this space as part of scsicmd, else there is a
-risk of heap overflow. Seen with GCC 13:
+HEAD commit:    8ca09d5fa354 cpumask: fix incorrect cpumask scanning resul..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=17c39338c80000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=337fc5840f41dbbe
+dashboard link: https://syzkaller.appspot.com/bug?extid=645a4616b87a2f10e398
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17500b98c80000
 
-../drivers/scsi/aacraid/aachba.c: In function 'aac_probe_container':
-../drivers/scsi/aacraid/aachba.c:841:26: warning: array subscript 16 is outside array bounds of 'void[392]' [-Warray-bounds=]
-  841 |         status = cmd_priv->status;
-      |                          ^~
-In file included from ../include/linux/resource_ext.h:11,
-                 from ../include/linux/pci.h:40,
-                 from ../drivers/scsi/aacraid/aachba.c:22:
-In function 'kmalloc',
-    inlined from 'kzalloc' at ../include/linux/slab.h:720:9,
-    inlined from 'aac_probe_container' at ../drivers/scsi/aacraid/aachba.c:821:30:
-../include/linux/slab.h:580:24: note: at offset 392 into object of size 392 allocated by 'kmalloc_trace'
-  580 |                 return kmalloc_trace(
-      |                        ^~~~~~~~~~~~~~
-  581 |                                 kmalloc_caches[kmalloc_type(flags)][index],
-      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  582 |                                 flags, size);
-      |                                 ~~~~~~~~~~~~
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/7b252fbf60d5/disk-8ca09d5f.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/4bd32a89510e/vmlinux-8ca09d5f.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/3d1b299dadec/bzImage-8ca09d5f.xz
 
-Fixes: 76a3451b64c6 ("scsi: aacraid: Move the SCSI pointer to private command data")
-Link: https://lore.kernel.org/r/20230128000409.never.976-kees@kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: Vegard Nossum <vegard.nossum@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+645a4616b87a2f10e398@syzkaller.appspotmail.com
+
+BUG: memory leak
+unreferenced object 0xffff88810af45b40 (size 192):
+  comm "kworker/1:5", pid 5185, jiffies 4294972950 (age 13.730s)
+  hex dump (first 32 bytes):
+    00 00 00 00 01 00 00 00 48 5b f4 0a 81 88 ff ff  ........H[......
+    48 5b f4 0a 81 88 ff ff 00 00 00 00 00 00 00 00  H[..............
+  backtrace:
+    [<ffffffff81749860>] kmem_cache_zalloc include/linux/slab.h:710 [inline]
+    [<ffffffff81749860>] __proc_create+0x1a0/0x3b0 fs/proc/generic.c:426
+    [<ffffffff8174a42e>] proc_create_reg+0xae/0x120 fs/proc/generic.c:553
+    [<ffffffff8174a4d5>] proc_create_data+0x35/0x90 fs/proc/generic.c:573
+    [<ffffffff82c2559c>] scsi_proc_host_add+0xdc/0x160 drivers/scsi/scsi_proc.c:233
+    [<ffffffff82c0c26b>] scsi_add_host_with_dma+0x48b/0x500 drivers/scsi/hosts.c:311
+    [<ffffffff832b7f52>] scsi_add_host include/scsi/scsi_host.h:774 [inline]
+    [<ffffffff832b7f52>] usb_stor_probe2+0x2f2/0x410 drivers/usb/storage/usb.c:1056
+    [<ffffffff832c5ff7>] sddr09_probe+0xb7/0x110 drivers/usb/storage/sddr09.c:1772
+    [<ffffffff831c2549>] usb_probe_interface+0x179/0x3c0 drivers/usb/core/driver.c:396
+    [<ffffffff82b40b0d>] call_driver_probe drivers/base/dd.c:552 [inline]
+    [<ffffffff82b40b0d>] really_probe+0x12d/0x430 drivers/base/dd.c:631
+    [<ffffffff82b40ecf>] __driver_probe_device+0xbf/0x140 drivers/base/dd.c:768
+    [<ffffffff82b40f7a>] driver_probe_device+0x2a/0x120 drivers/base/dd.c:798
+    [<ffffffff82b4116b>] __device_attach_driver+0xfb/0x150 drivers/base/dd.c:926
+    [<ffffffff82b3e0f1>] bus_for_each_drv+0xc1/0x110 drivers/base/bus.c:457
+    [<ffffffff82b41692>] __device_attach+0x102/0x2a0 drivers/base/dd.c:998
+    [<ffffffff82b3f79a>] bus_probe_device+0xca/0xd0 drivers/base/bus.c:532
+    [<ffffffff82b3bdf1>] device_add+0x991/0xc80 drivers/base/core.c:3589
+
+
+
 ---
- drivers/scsi/aacraid/aachba.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -818,8 +818,8 @@ static void aac_probe_container_scsi_don
- 
- int aac_probe_container(struct aac_dev *dev, int cid)
- {
--	struct scsi_cmnd *scsicmd = kzalloc(sizeof(*scsicmd), GFP_KERNEL);
--	struct aac_cmd_priv *cmd_priv = aac_priv(scsicmd);
-+	struct aac_cmd_priv *cmd_priv;
-+	struct scsi_cmnd *scsicmd = kzalloc(sizeof(*scsicmd) + sizeof(*cmd_priv), GFP_KERNEL);
- 	struct scsi_device *scsidev = kzalloc(sizeof(*scsidev), GFP_KERNEL);
- 	int status;
- 
-@@ -838,6 +838,7 @@ int aac_probe_container(struct aac_dev *
- 		while (scsicmd->device == scsidev)
- 			schedule();
- 	kfree(scsidev);
-+	cmd_priv = aac_priv(scsicmd);
- 	status = cmd_priv->status;
- 	kfree(scsicmd);
- 	return status;
-
-
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
