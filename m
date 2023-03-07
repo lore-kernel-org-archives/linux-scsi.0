@@ -2,57 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC1AEC678DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 11:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF6FC678D4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 15:05:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229667AbjCGLG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 06:06:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55996 "EHLO
+        id S229772AbjCGPFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 10:05:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229549AbjCGLGC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 06:06:02 -0500
-Received: from mail.ettrick.pl (mail.ettrick.pl [141.94.21.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32734580D2
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 03:03:31 -0800 (PST)
-Received: by mail.ettrick.pl (Postfix, from userid 1002)
-        id 19D1AA4AEC; Mon,  6 Mar 2023 09:01:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ettrick.pl; s=mail;
-        t=1678093397; bh=KHux3km3Civcx5ChslOYQZwQRBjoJa4kWJfGcMIuN6w=;
-        h=Date:From:To:Subject:From;
-        b=MkT7p/Kzbdj4w0XDiUxG5fIJzdACQT4gL2Fe+aR3787+3dKIzdVEND5FsXenKhOS/
-         gqAtpRRGbTZ21YRpPDlnU0RxSfLAwcFfDINA1ScKnL9hEhE2z4/+3bC2/xbgEPQId1
-         XWMK2GF+1rehjJ71ViIZRmh8T0wdut6JGJy6aBe48Aiezx79FgKuGiKEyxdXgWnDLq
-         FHIEX4h3YSQr1+kbqTVJV606O7y904JMu/6coG8tvY4cVzporiXdv5Hs/GzZe+0ox6
-         ca+1KtrWy83LbVnjyyOcP/xiMJiUks2TYeG3iYTrCaCSpEdMx9myb+7ChBUF3QcwSu
-         x2EliyLu/g14Q==
-Received: by mail.ettrick.pl for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2023 09:00:53 GMT
-Message-ID: <20230306074500-0.1.97.36z4w.0.a8crdgg3ii@ettrick.pl>
-Date:   Mon,  6 Mar 2023 09:00:53 GMT
-From:   "Norbert Karecki" <norbert.karecki@ettrick.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Fotowoltaika - nowe warunki
-X-Mailer: mail.ettrick.pl
+        with ESMTP id S229787AbjCGPFg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 10:05:36 -0500
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D01E17E897;
+        Tue,  7 Mar 2023 06:58:35 -0800 (PST)
+Received: by mail-pl1-f173.google.com with SMTP id x11so9817649pln.12;
+        Tue, 07 Mar 2023 06:58:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678201115;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uWJwHQNCTLgErc1vg/iPxUDh+PSydV45wrKzi3IF5RU=;
+        b=AhJb3Rm6knG7IiAM2Cwoa+cJB8FZgNApHiX5ZWurdV6tptowpuRIrKEcLOkhAL6vxb
+         j106k1ZRdc6XfoDbD33Wp57tkp+wT9fUg8k3VginzkSBhkdPAiHBQhqfJky9M82pvukU
+         RNE2IPE6jYVmnuVM3r20fawulbXsgm2fdbGrLXYJ8MVcPYg5JopUwtkNDtvHOVUdJvJQ
+         3KPYeptBV2yYrmE0qaCjyS0sh9TadP9UzF6zJjFVd4nPLM+4H6amMf03FoXvQQltZcCq
+         lmazndrszF3zxjdzjp6C1DuYNBUgE4lSSrVsgvEQWHn+TOy/W2OAtBT7fl8TSqJqHcTz
+         uLDQ==
+X-Gm-Message-State: AO0yUKUqrsnDnwNiBjaQBhdBEirGAyeaBV4NtYTMHB0GClxsJyAJoQ3B
+        PjEBCzFri6e7nEgHV0bzEIg=
+X-Google-Smtp-Source: AK7set9+BdLMAhJYQN3qA6/DzIyARcN0o5SXgbby9Opjq1V1/73l3+OB4slzvGzRQW5d95ylmpt56A==
+X-Received: by 2002:a05:6a20:4b0f:b0:cf:71ee:6329 with SMTP id fp15-20020a056a204b0f00b000cf71ee6329mr8094633pzb.7.1678201115050;
+        Tue, 07 Mar 2023 06:58:35 -0800 (PST)
+Received: from [192.168.132.235] ([63.145.95.70])
+        by smtp.gmail.com with ESMTPSA id v15-20020a62a50f000000b005b02ddd852dsm8206361pfm.142.2023.03.07.06.58.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 07 Mar 2023 06:58:34 -0800 (PST)
+Message-ID: <7c66fd8e-78bf-9f3e-0baf-36a8fef27f45@acm.org>
+Date:   Tue, 7 Mar 2023 06:58:33 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH 01/11] scsi: scsi_debug: Don't hold driver host struct
+ pointer in host->hostdata[]
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dgilbert@interlog.com
+References: <20230307105555.3745277-1-john.g.garry@oracle.com>
+ <20230307105555.3745277-2-john.g.garry@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230307105555.3745277-2-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 3/7/23 02:55, John Garry wrote:
+> +#define to_sdebug_host_from_shost(shost)	\
+> +	to_sdebug_host(shost->dma_dev)
 
-chcia=C5=82bym poinformowa=C4=87, i=C5=BC mog=C4=85 Pa=C5=84stwo uzyska=C4=
-=87 dofinansowanie na systemy fotowoltaiczne w ramach nowej edycji progra=
-mu M=C3=B3j Pr=C4=85d.
+Please make the name of this macro shorter and following naming 
+conventions used elsewhere in the SCSI core. How about the following 
+name: shost_to_sdebug_host()?
 
-Program zapewnia 6000 z=C5=82 dofinansowania na instalacj=C4=99 paneli i =
-16 000 z=C5=82 na magazyn energii, ni=C5=BCsze cen pr=C4=85du i mo=C5=BCl=
-iwo=C5=9B=C4=87 odliczenia koszt=C3=B3w zwi=C4=85zanych z instalacj=C4=85=
- fotowoltaiki w ramach rozliczenia PIT (tzw. ulga termomodernizacyjna).
+Thanks,
 
-Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
-temacie?
-
-
-Pozdrawiam,
-Norbert Karecki
+Bart.
