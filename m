@@ -2,48 +2,44 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D13BC678DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:55:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF78BC678D4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:56:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231359AbjCGSzH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 13:55:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59468 "EHLO
+        id S233512AbjCGS4b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 13:56:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233478AbjCGSyd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:54:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D01A5F6;
-        Tue,  7 Mar 2023 10:42:21 -0800 (PST)
+        with ESMTP id S233513AbjCGS4O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:56:14 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88EA69749E;
+        Tue,  7 Mar 2023 10:43:42 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9371561538;
-        Tue,  7 Mar 2023 18:29:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC636C4339E;
-        Tue,  7 Mar 2023 18:29:05 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id A6799CE1C79;
+        Tue,  7 Mar 2023 18:28:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0F30C433D2;
+        Tue,  7 Mar 2023 18:28:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678213746;
-        bh=3BwaxeqR5K9UM6t70G9A7Zg8LXyh/lE1LnqW0l4i6Jk=;
+        s=k20201202; t=1678213736;
+        bh=3JdjywG6DsWfWzdvnLIaNQak/6ZVrelHGxK1Jb+bRtg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pBDFXwGmb4NbFsnOLQNVjKfCxYBZQe6gNNlsx3x0rX+hVweeeTXZ9n6hO3ziosB6x
-         WU0LRWK1gsud8ozmdXQVhaBQkzv5y6PwpV6rYIqxIU67i7XF2MAtI1v8CxbYHhOmh5
-         C2umXRpwPBPBw1hSxq2Q/Z/SB64Hkq4HpHnVsEmHpPPxn0pBRlCEI9GQ+qke617Epq
-         Y+IpQ4mEHCEcdVsUjeLIGyYTAmmQalsQyGpejG5L22UcUdGDUJokGMhTC/s48i8ckt
-         nRccsUU1YJ8NJn+8Y51wKPN23u+xDU4mdtFb6FEUoepcrTHyx0BWAkKd+Bk5wbROKT
-         3p+pYSz9Q3OLA==
+        b=tvRTfYfCSLh/IziCDBzjHgXEvc0lyIja1XSjGQKUO6wnvdwH8JANNu7u651awRvem
+         hX5/li75IpG+veKKl+988VGOcqNgjqGj2szYqfWShD4a60S0cOc5bMXjQXXB2AmBGA
+         l83ZS7yFYNEUhHdcG3ElFzNtSZ6Brkz2aypJJlzaEliKmpXpNL3468i81xyqPf/YzM
+         Frtn4G9z1RuT4gS95ggjuZd7qysoazZFtCzU0onGYJDUASzG0LV9OjaJ0e6wp7Bwgb
+         +C/VVR/nFuAKNdQt1u/4ycjYeu2cL2OZTqGBKuAHNqluODtPXf6hVfQXMdjXt6+oMv
+         7CUHbBrFoQL7Q==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH 08/10] scsi: mpt3sas: Drop redundant pci_enable_pcie_error_reporting()
-Date:   Tue,  7 Mar 2023 12:28:40 -0600
-Message-Id: <20230307182842.870378-9-helgaas@kernel.org>
+        Ketan Mukadam <ketan.mukadam@broadcom.com>
+Subject: [PATCH 03/10] scsi: be2iscsi: Drop redundant pci_enable_pcie_error_reporting()
+Date:   Tue,  7 Mar 2023 12:28:35 -0600
+Message-Id: <20230307182842.870378-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230307182842.870378-1-helgaas@kernel.org>
 References: <20230307182842.870378-1-helgaas@kernel.org>
@@ -69,57 +65,58 @@ Message may cause the Root Port to generate an interrupt, depending on the
 AER Root Error Command register managed by the AER service driver.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com
+Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 5 -----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 -
- 2 files changed, 6 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 9 ---------
+ drivers/scsi/be2iscsi/be_main.h | 1 -
+ 2 files changed, 10 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 2ee9ea57554d..a8b260f46796 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -60,7 +60,6 @@
- #include <linux/ktime.h>
- #include <linux/kthread.h>
- #include <asm/page.h>        /* To get host page size per arch */
--#include <linux/aer.h>
- 
- 
- #include "mpt3sas_base.h"
-@@ -3535,7 +3534,6 @@ mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
- 
- 	if (pci_is_enabled(pdev)) {
- 		pci_release_selected_regions(ioc->pdev, ioc->bars);
--		pci_disable_pcie_error_reporting(pdev);
- 		pci_disable_device(pdev);
- 	}
- }
-@@ -3615,9 +3613,6 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 		goto out_fail;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 50a577ac3bb4..0aaf6fc47683 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5545,13 +5545,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		goto disable_pci;
  	}
  
--/* AER (Advanced Error Reporting) hooks */
--	pci_enable_pcie_error_reporting(pdev);
+-	/* Enable EEH reporting */
+-	ret = pci_enable_pcie_error_reporting(pcidev);
+-	if (ret)
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
+-			    "BM_%d : PCIe Error Reporting "
+-			    "Enabling Failed\n");
 -
- 	pci_set_master(pdev);
+ 	pci_save_state(pcidev);
  
+ 	/* Initialize Driver configuration Paramters */
+@@ -5736,7 +5729,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	pci_disable_msix(phba->pcidev);
+ 	pci_dev_put(phba->pcidev);
+ 	iscsi_host_free(phba->shost);
+-	pci_disable_pcie_error_reporting(pcidev);
+ 	pci_set_drvdata(pcidev, NULL);
+ disable_pci:
+ 	pci_release_regions(pcidev);
+@@ -5779,7 +5771,6 @@ static void beiscsi_remove(struct pci_dev *pcidev)
  
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 8e24ebcebfe5..e2f09833659f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -52,7 +52,6 @@
- #include <linux/delay.h>
- #include <linux/pci.h>
- #include <linux/interrupt.h>
+ 	pci_dev_put(phba->pcidev);
+ 	iscsi_host_free(phba->shost);
+-	pci_disable_pcie_error_reporting(pcidev);
+ 	pci_set_drvdata(pcidev, NULL);
+ 	pci_release_regions(pcidev);
+ 	pci_disable_device(pcidev);
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 98977c0700f1..71c95d144560 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -16,7 +16,6 @@
+ #include <linux/in.h>
+ #include <linux/ctype.h>
+ #include <linux/module.h>
 -#include <linux/aer.h>
- #include <linux/raid_class.h>
- #include <linux/blk-mq-pci.h>
- #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
 -- 
 2.25.1
 
