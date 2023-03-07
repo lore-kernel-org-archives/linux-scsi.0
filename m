@@ -2,207 +2,179 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0322DC678D5
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 21:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A567CC6FA99
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 22:28:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbjCGVwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 16:52:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35528 "EHLO
+        id S231565AbjCGW2s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 17:28:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231493AbjCGVwD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 16:52:03 -0500
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2058DAD020
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 13:52:02 -0800 (PST)
-Received: by mail-pl1-f171.google.com with SMTP id x11so11121190pln.12
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 13:52:02 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678225921;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=XiT8LCYHQIcCqp4F7sLHjjPGLxZXs9lgLIkbJlrnuTI=;
-        b=BwaHp/vlpWXEB15aCHVcCfNDslFZoQBCIDp+8Ru2ViZ6UWeGisABAnbF6u8aV1AiMo
-         jM3JrP/HnL9bZI3zerE0M94v6pKQ5UAxxzW1GGDY9DYz2ZKqO8PDhbXM5txbW2JjrnKg
-         rvXYleaUnHDvM23lrFpJkyKhaGOsKq5y07V7ygZVk6XQ29m0yRLA4GENJO374PF2b0c4
-         NLvTdWcK0+Sewx1Y4Vs8k453/e9+tXbU3pX8DRDiUM2kz47Pqpm5FofbiZflSMOsPqki
-         Q/GqlwrwHVPSrhV+zwKDrQ8OziR3a+bkjzPCwl8KnkQF3DMdK1njqKT4DvNOR22o/Zzl
-         HAJQ==
-X-Gm-Message-State: AO0yUKUd0wjP22IlvmloMQXIBoT5BuA4+WS9ZsabfPuU9CQFxsRMvpCG
-        IhmWRdyBd5unwcrRImtb2ZQ=
-X-Google-Smtp-Source: AK7set/JyBN1JtommrmkiHtidICH53PtS9T0bnh/vzJsx6vjriXw3oTPHjFOSlV8Z04lWgNDLao62w==
-X-Received: by 2002:a17:902:e801:b0:19e:839e:49d8 with SMTP id u1-20020a170902e80100b0019e839e49d8mr19112711plg.59.1678225921341;
-        Tue, 07 Mar 2023 13:52:01 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8361:6b6b:1140:bcbb])
-        by smtp.gmail.com with ESMTPSA id u4-20020a170902e80400b0019d397b0f18sm8783280plg.214.2023.03.07.13.51.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Mar 2023 13:51:59 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH] scsi: core: Simplify the code for waking up the error handler
-Date:   Tue,  7 Mar 2023 13:51:51 -0800
-Message-Id: <20230307215151.3705164-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.40.0.rc0.216.gc4246ad0f0-goog
+        with ESMTP id S231339AbjCGW21 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 17:28:27 -0500
+Received: from mx0a-002e3701.pphosted.com (mx0a-002e3701.pphosted.com [148.163.147.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAEFDAF778;
+        Tue,  7 Mar 2023 14:27:43 -0800 (PST)
+Received: from pps.filterd (m0148663.ppops.net [127.0.0.1])
+        by mx0a-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 327L5gJ4028321;
+        Tue, 7 Mar 2023 22:24:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pps0720; bh=LaaPqV7Flc0GLDHQpIpi/BIcyjij0wSdtMhbcCHYsgA=;
+ b=KucE5UTqJQpxT11mxXz+EBR8v0tavcjUv9Ui2FHab40WoQiuV3yFIDgqKk3q5kcdvuwo
+ drWjaXC7Yx+uiwl1OenpwWu47udmJqwKjE9dILefQUZGqLmGaEP1NLYCkNLYgQXE55IH
+ pJ+yRhi5GSJ5jKQ8RWB3Nr3EtesnmJ05hdKeHlS8cBLT36zWyHn3FQ9/R6GqQyfwyefx
+ YeGHnWIch0H3I5hz2qQ78crYlcNTY741RdGLewUR/aekyotj3MBUgHiSeyPnIKvgWPEK
+ jg+AIfQknv6WWMr+5LSHk3ZVcc7cEeQsQPCw1ideabEOY7fb99n90BFJHjYRpVRpYa7A Vw== 
+Received: from p1lg14878.it.hpe.com (p1lg14878.it.hpe.com [16.230.97.204])
+        by mx0a-002e3701.pphosted.com (PPS) with ESMTPS id 3p6bu8114b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Mar 2023 22:24:17 +0000
+Received: from p1lg14886.dc01.its.hpecorp.net (unknown [10.119.18.237])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by p1lg14878.it.hpe.com (Postfix) with ESMTPS id CBB17130A9;
+        Tue,  7 Mar 2023 22:24:16 +0000 (UTC)
+Received: from swahl-home.5wahls.com (unknown [16.231.227.36])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by p1lg14886.dc01.its.hpecorp.net (Postfix) with ESMTPS id 9C74F80AD9E;
+        Tue,  7 Mar 2023 22:24:12 +0000 (UTC)
+Date:   Tue, 7 Mar 2023 16:24:10 -0600
+From:   Steve Wahl <steve.wahl@hpe.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
+        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, song@kernel.org, robinmholt@gmail.com,
+        steve.wahl@hpe.com, arnd@arndb.de, gregkh@linuxfoundation.org,
+        jirislaby@kernel.org, jgross@suse.com, sstabellini@kernel.org,
+        oleksandr_tyshchenko@epam.com, xen-devel@lists.xenproject.org,
+        j.granados@samsung.com, zhangpeng362@huawei.com,
+        tangmeng@uniontech.com, willy@infradead.org, nixiaoming@huawei.com,
+        sujiaxun@uniontech.com, patches@lists.linux.dev,
+        linux-fsdevel@vger.kernel.org, apparmor@lists.ubuntu.com,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hyperv@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/7] sgi-xp: simplify sysctl registration
+Message-ID: <ZAe5batlkUwlKoxx@swahl-home.5wahls.com>
+References: <20230302204612.782387-1-mcgrof@kernel.org>
+ <20230302204612.782387-6-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230302204612.782387-6-mcgrof@kernel.org>
+X-Proofpoint-GUID: -gScpSVwE5aPWwo4gsaN-rEbeWVyAJK_
+X-Proofpoint-ORIG-GUID: -gScpSVwE5aPWwo4gsaN-rEbeWVyAJK_
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-07_16,2023-03-07_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
+ mlxscore=0 malwarescore=0 impostorscore=0 adultscore=0 priorityscore=1501
+ suspectscore=0 phishscore=0 mlxlogscore=999 lowpriorityscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303070197
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_dec_host_busy() is called from the hot path and hence must not
-obtain the host lock if no commands have failed. scsi_dec_host_busy()
-tests three different variables of which at least two are set if a
-command failed. Commit 3bd6f43f5cb3 ("scsi: core: Ensure that the
-SCSI error handler gets woken up") introduced a call_rcu() call to
-ensure that all tasks observe the host state change before the
-host_failed change. Simplify the approach for guaranteeing that the host
-state and host_failed/host_eh_scheduled changes are observed in order by using
-smp_store_release() to update host_failed or host_eh_scheduled after
-having update the host state and smp_load_acquire() before reading the
-host state.
+On Thu, Mar 02, 2023 at 12:46:10PM -0800, Luis Chamberlain wrote:
+> Although this driver is a good use case for having a directory
+> that is not other directories and then subdirectories with more
+> entries, the usage of register_sysctl_table() can recurse and
+> increases complexity so to avoid that just split out the
+> registration to each directory with its own entries.
+> 
+> register_sysctl_table() is a deprecated compatibility wrapper.
+> register_sysctl() can do the directory creation for you so just use
+> that.
+> 
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_error.c | 22 ++++------------------
- drivers/scsi/scsi_lib.c   | 31 +++++++++----------------------
- include/scsi/scsi_cmnd.h  |  2 --
- 3 files changed, 13 insertions(+), 42 deletions(-)
+Reviewed-by: Steve Wahl <steve.wahl@hpe.com>
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 2aa2c2aee6e7..2a809145da06 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -87,7 +87,8 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
- 
- 	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
- 	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
--		shost->host_eh_scheduled++;
-+		smp_store_release(&shost->host_eh_scheduled,
-+				  shost->host_eh_scheduled + 1);
- 		scsi_eh_wakeup(shost);
- 	}
- 
-@@ -278,18 +279,6 @@ static void scsi_eh_reset(struct scsi_cmnd *scmd)
- 	}
- }
- 
--static void scsi_eh_inc_host_failed(struct rcu_head *head)
--{
--	struct scsi_cmnd *scmd = container_of(head, typeof(*scmd), rcu);
--	struct Scsi_Host *shost = scmd->device->host;
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	shost->host_failed++;
--	scsi_eh_wakeup(shost);
--	spin_unlock_irqrestore(shost->host_lock, flags);
--}
--
- /**
-  * scsi_eh_scmd_add - add scsi cmd to error handling.
-  * @scmd:	scmd to run eh on.
-@@ -312,12 +301,9 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
- 
- 	scsi_eh_reset(scmd);
- 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
-+	smp_store_release(&shost->host_failed, shost->host_failed + 1);
-+	scsi_eh_wakeup(shost);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	/*
--	 * Ensure that all tasks observe the host state change before the
--	 * host_failed change.
--	 */
--	call_rcu_hurry(&scmd->rcu, scsi_eh_inc_host_failed);
- }
- 
- /**
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b7c569a42aa4..e59eb0cbfc83 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -263,28 +263,24 @@ int scsi_execute_cmd(struct scsi_device *sdev, const unsigned char *cmd,
- }
- EXPORT_SYMBOL(scsi_execute_cmd);
- 
--/*
-- * Wake up the error handler if necessary. Avoid as follows that the error
-- * handler is not woken up if host in-flight requests number ==
-- * shost->host_failed: use call_rcu() in scsi_eh_scmd_add() in combination
-- * with an RCU read lock in this function to ensure that this function in
-- * its entirety either finishes before scsi_eh_scmd_add() increases the
-- * host_failed counter or that it notices the shost state change made by
-- * scsi_eh_scmd_add().
-- */
-+/* Wake up the error handler if necessary. */
- static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
- {
- 	unsigned long flags;
- 
--	rcu_read_lock();
- 	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
--	if (unlikely(scsi_host_in_recovery(shost))) {
-+	/*
-+	 * Test host_failed and host_eh_scheduled before the host state to
-+	 * ensure that the host state update is observed if the host_failed
-+	 * and/or host_eh_scheduled updates are observed.
-+	 */
-+	if (unlikely((smp_load_acquire(&shost->host_failed) ||
-+		      smp_load_acquire(&shost->host_eh_scheduled)))) {
- 		spin_lock_irqsave(shost->host_lock, flags);
--		if (shost->host_failed || shost->host_eh_scheduled)
-+		if (scsi_host_in_recovery(shost))
- 			scsi_eh_wakeup(shost);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 	}
--	rcu_read_unlock();
- }
- 
- void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
-@@ -547,14 +543,6 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
- 		cmd->flags &= ~SCMD_INITIALIZED;
- 	}
- 
--	/*
--	 * Calling rcu_barrier() is not necessary here because the
--	 * SCSI error handler guarantees that the function called by
--	 * call_rcu() has been called before scsi_end_request() is
--	 * called.
--	 */
--	destroy_rcu_head(&cmd->rcu);
--
- 	/*
- 	 * In the MQ case the command gets freed by __blk_mq_end_request,
- 	 * so we have to do all cleanup that depends on it earlier.
-@@ -1124,7 +1112,6 @@ static void scsi_initialize_rq(struct request *rq)
- 	memset(cmd->cmnd, 0, sizeof(cmd->cmnd));
- 	cmd->cmd_len = MAX_COMMAND_SIZE;
- 	cmd->sense_len = 0;
--	init_rcu_head(&cmd->rcu);
- 	cmd->jiffies_at_alloc = jiffies;
- 	cmd->retries = 0;
- }
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index c2cb5f69635c..7965f5114144 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -71,8 +71,6 @@ struct scsi_cmnd {
- 	struct list_head eh_entry; /* entry for the host eh_abort_list/eh_cmd_q */
- 	struct delayed_work abort_work;
- 
--	struct rcu_head rcu;
--
- 	int eh_eflags;		/* Used by error handlr */
- 
- 	int budget_token;
+> ---
+>  drivers/misc/sgi-xp/xpc_main.c | 24 ++++++++++--------------
+>  1 file changed, 10 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/misc/sgi-xp/xpc_main.c b/drivers/misc/sgi-xp/xpc_main.c
+> index b2c3c22fc13c..6da509d692bb 100644
+> --- a/drivers/misc/sgi-xp/xpc_main.c
+> +++ b/drivers/misc/sgi-xp/xpc_main.c
+> @@ -93,7 +93,7 @@ int xpc_disengage_timelimit = XPC_DISENGAGE_DEFAULT_TIMELIMIT;
+>  static int xpc_disengage_min_timelimit;	/* = 0 */
+>  static int xpc_disengage_max_timelimit = 120;
+>  
+> -static struct ctl_table xpc_sys_xpc_hb_dir[] = {
+> +static struct ctl_table xpc_sys_xpc_hb[] = {
+>  	{
+>  	 .procname = "hb_interval",
+>  	 .data = &xpc_hb_interval,
+> @@ -112,11 +112,7 @@ static struct ctl_table xpc_sys_xpc_hb_dir[] = {
+>  	 .extra2 = &xpc_hb_check_max_interval},
+>  	{}
+>  };
+> -static struct ctl_table xpc_sys_xpc_dir[] = {
+> -	{
+> -	 .procname = "hb",
+> -	 .mode = 0555,
+> -	 .child = xpc_sys_xpc_hb_dir},
+> +static struct ctl_table xpc_sys_xpc[] = {
+>  	{
+>  	 .procname = "disengage_timelimit",
+>  	 .data = &xpc_disengage_timelimit,
+> @@ -127,14 +123,9 @@ static struct ctl_table xpc_sys_xpc_dir[] = {
+>  	 .extra2 = &xpc_disengage_max_timelimit},
+>  	{}
+>  };
+> -static struct ctl_table xpc_sys_dir[] = {
+> -	{
+> -	 .procname = "xpc",
+> -	 .mode = 0555,
+> -	 .child = xpc_sys_xpc_dir},
+> -	{}
+> -};
+> +
+>  static struct ctl_table_header *xpc_sysctl;
+> +static struct ctl_table_header *xpc_sysctl_hb;
+>  
+>  /* non-zero if any remote partition disengage was timed out */
+>  int xpc_disengage_timedout;
+> @@ -1041,6 +1032,8 @@ xpc_do_exit(enum xp_retval reason)
+>  
+>  	if (xpc_sysctl)
+>  		unregister_sysctl_table(xpc_sysctl);
+> +	if (xpc_sysctl_hb)
+> +		unregister_sysctl_table(xpc_sysctl_hb);
+>  
+>  	xpc_teardown_partitions();
+>  
+> @@ -1243,7 +1236,8 @@ xpc_init(void)
+>  		goto out_1;
+>  	}
+>  
+> -	xpc_sysctl = register_sysctl_table(xpc_sys_dir);
+> +	xpc_sysctl = register_sysctl("xpc", xpc_sys_xpc);
+> +	xpc_sysctl_hb = register_sysctl("xpc/hb", xpc_sys_xpc_hb);
+>  
+>  	/*
+>  	 * Fill the partition reserved page with the information needed by
+> @@ -1308,6 +1302,8 @@ xpc_init(void)
+>  	(void)unregister_die_notifier(&xpc_die_notifier);
+>  	(void)unregister_reboot_notifier(&xpc_reboot_notifier);
+>  out_2:
+> +	if (xpc_sysctl_hb)
+> +		unregister_sysctl_table(xpc_sysctl_hb);
+>  	if (xpc_sysctl)
+>  		unregister_sysctl_table(xpc_sysctl);
+>  
+> -- 
+> 2.39.1
+> 
+
+-- 
+Steve Wahl, Hewlett Packard Enterprise
