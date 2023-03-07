@@ -2,107 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0B4C678D4
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:11:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F01A4C678D4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:38:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232478AbjCGSLH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 13:11:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47822 "EHLO
+        id S233029AbjCGSiz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 13:38:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232421AbjCGSKw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:10:52 -0500
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 569EB9227E
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 10:05:43 -0800 (PST)
-Received: by mail-il1-f198.google.com with SMTP id i14-20020a056e0212ce00b0031d17f33e9aso5161612ilm.7
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 10:05:43 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678212342;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=xMmGBPDCyE1o0KJbX11oQKUWmAnPR1ykDR3aht2SgWI=;
-        b=HMCiph6Kctqyf/Xn++29a0WoyDOt7zkFZAxiskS52/dmRzwZK/W178rBbC6fFszE7v
-         FI6s4vjPbTGxpOkcLA8uqmY9mzhl9R2RA75Xv1IV6sGa7suVaQJh6ivkOV75IiHB5sWX
-         WGTpkFPXGSCXPtyJxe32KckUTpvDHn4ne45qMfQJR+hPc0eWTOltX12Xl8PeI93TO/xq
-         z/9/pzaPYsCSz+pGk7G4nW4vvllPvQHhlO1AsDbPgNHafJLnJ+PaKaFQ1S+gUltLdmcx
-         5vwgzSBbrm1eRxkYEF1g2w00QBRRZQ0gVaTFII5/DDlvF0I62XaV/R0GR8LVPLgR17Gp
-         OGpQ==
-X-Gm-Message-State: AO0yUKUit9SXU2Vs+1/49p187EjoEb5xmOrLekIP4MbcOixgySatsnlz
-        act9y2JoyLdAPbls9SI7kvrk4ok5Q53lGWJHPweSY44Y3Yyz
-X-Google-Smtp-Source: AK7set8LdW7Z5z903MhX750iHI+wLlKjA8IaDjBcJO9bYMe5iSsz69Kbuu35dLmnF/adaamHiU82LHqVZL8BP6K74ahoUX08nDSj
+        with ESMTP id S232821AbjCGSig (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:38:36 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 355EDA226B;
+        Tue,  7 Mar 2023 10:30:07 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E4138B819C2;
+        Tue,  7 Mar 2023 18:29:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AE31C4339C;
+        Tue,  7 Mar 2023 18:29:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678213749;
+        bh=5BE9wZCtaDseXu0/Lv+W7WCLDoimdI41Hg2fMs8HhDA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=A+QWpy5vzZ9/X3juu/fwf9cVoeaZqgxgUo3SAVMRWvYy2BXQA8ukuCt/CITD93mzl
+         rGRACDKas4jH63jQpx2P3iqRMboehcUDh3Dp1QeWzku9yTa1e4b76VexBRJbSdAbpY
+         z4cNtBYASorZ35SwDq3RcXProMs8qZ7s+7IaspemytoPzgI7nns8XNTadaAqLKIfpI
+         vPYYUsTOL+GU5aafA3VhoMLb2HZu5lFUYUIjJtyF3Wy3WlBkLrCgjHnhvRQIEMicyy
+         A1SFf2YukrqvJKeyoGfCOY35fhyAZtTe28Ww2t0Mf44DTtQXOy5J769iniV3zK8CPP
+         qc0J5lpcBPI5g==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com
+Subject: [PATCH 10/10] scsi: qla4xxx: Drop redundant pci_enable_pcie_error_reporting()
+Date:   Tue,  7 Mar 2023 12:28:42 -0600
+Message-Id: <20230307182842.870378-11-helgaas@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230307182842.870378-1-helgaas@kernel.org>
+References: <20230307182842.870378-1-helgaas@kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:f43:b0:317:98ef:7060 with SMTP id
- y3-20020a056e020f4300b0031798ef7060mr7447962ilj.1.1678212342548; Tue, 07 Mar
- 2023 10:05:42 -0800 (PST)
-Date:   Tue, 07 Mar 2023 10:05:42 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000890fab05f65342b6@google.com>
-Subject: [syzbot] [scsi?] memory leak in __proc_create
-From:   syzbot <syzbot+645a4616b87a2f10e398@syzkaller.appspotmail.com>
-To:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-syzbot found the following issue on:
+pci_enable_pcie_error_reporting() enables the device to send ERR_*
+Messages.  Since f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is
+native"), the PCI core does this for all devices during enumeration, so the
+driver doesn't need to do it itself.
 
-HEAD commit:    8ca09d5fa354 cpumask: fix incorrect cpumask scanning resul..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=17c39338c80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=337fc5840f41dbbe
-dashboard link: https://syzkaller.appspot.com/bug?extid=645a4616b87a2f10e398
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17500b98c80000
+Remove the redundant pci_enable_pcie_error_reporting() call from the
+driver.  Also remove the corresponding pci_disable_pcie_error_reporting()
+from the driver .remove() path.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/7b252fbf60d5/disk-8ca09d5f.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/4bd32a89510e/vmlinux-8ca09d5f.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/3d1b299dadec/bzImage-8ca09d5f.xz
+Note that this only controls ERR_* Messages from the device.  An ERR_*
+Message may cause the Root Port to generate an interrupt, depending on the
+AER Root Error Command register managed by the AER service driver.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+645a4616b87a2f10e398@syzkaller.appspotmail.com
-
-BUG: memory leak
-unreferenced object 0xffff88810af45b40 (size 192):
-  comm "kworker/1:5", pid 5185, jiffies 4294972950 (age 13.730s)
-  hex dump (first 32 bytes):
-    00 00 00 00 01 00 00 00 48 5b f4 0a 81 88 ff ff  ........H[......
-    48 5b f4 0a 81 88 ff ff 00 00 00 00 00 00 00 00  H[..............
-  backtrace:
-    [<ffffffff81749860>] kmem_cache_zalloc include/linux/slab.h:710 [inline]
-    [<ffffffff81749860>] __proc_create+0x1a0/0x3b0 fs/proc/generic.c:426
-    [<ffffffff8174a42e>] proc_create_reg+0xae/0x120 fs/proc/generic.c:553
-    [<ffffffff8174a4d5>] proc_create_data+0x35/0x90 fs/proc/generic.c:573
-    [<ffffffff82c2559c>] scsi_proc_host_add+0xdc/0x160 drivers/scsi/scsi_proc.c:233
-    [<ffffffff82c0c26b>] scsi_add_host_with_dma+0x48b/0x500 drivers/scsi/hosts.c:311
-    [<ffffffff832b7f52>] scsi_add_host include/scsi/scsi_host.h:774 [inline]
-    [<ffffffff832b7f52>] usb_stor_probe2+0x2f2/0x410 drivers/usb/storage/usb.c:1056
-    [<ffffffff832c5ff7>] sddr09_probe+0xb7/0x110 drivers/usb/storage/sddr09.c:1772
-    [<ffffffff831c2549>] usb_probe_interface+0x179/0x3c0 drivers/usb/core/driver.c:396
-    [<ffffffff82b40b0d>] call_driver_probe drivers/base/dd.c:552 [inline]
-    [<ffffffff82b40b0d>] really_probe+0x12d/0x430 drivers/base/dd.c:631
-    [<ffffffff82b40ecf>] __driver_probe_device+0xbf/0x140 drivers/base/dd.c:768
-    [<ffffffff82b40f7a>] driver_probe_device+0x2a/0x120 drivers/base/dd.c:798
-    [<ffffffff82b4116b>] __device_attach_driver+0xfb/0x150 drivers/base/dd.c:926
-    [<ffffffff82b3e0f1>] bus_for_each_drv+0xc1/0x110 drivers/base/bus.c:457
-    [<ffffffff82b41692>] __device_attach+0x102/0x2a0 drivers/base/dd.c:998
-    [<ffffffff82b3f79a>] bus_probe_device+0xca/0xd0 drivers/base/bus.c:532
-    [<ffffffff82b3bdf1>] device_add+0x991/0xc80 drivers/base/core.c:3589
-
-
-
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Manish Rangankar <mrangankar@marvell.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ drivers/scsi/qla4xxx/ql4_def.h | 1 -
+ drivers/scsi/qla4xxx/ql4_os.c  | 4 ----
+ 2 files changed, 5 deletions(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 5f82c8afd5e0..5e683ba49fa5 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -23,7 +23,6 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/mutex.h>
+-#include <linux/aer.h>
+ #include <linux/bsg-lib.h>
+ #include <linux/vmalloc.h>
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 005502125b27..ee6d784c095c 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -8639,8 +8639,6 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 	ha->host_no = host->host_no;
+ 	ha->func_num = PCI_FUNC(ha->pdev->devfn);
+ 
+-	pci_enable_pcie_error_reporting(pdev);
+-
+ 	/* Setup Runtime configurable options */
+ 	if (is_qla8022(ha)) {
+ 		ha->isp_ops = &qla4_82xx_isp_ops;
+@@ -8867,7 +8865,6 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 	qla4xxx_free_adapter(ha);
+ 
+ probe_failed_ioconfig:
+-	pci_disable_pcie_error_reporting(pdev);
+ 	scsi_host_put(ha->host);
+ 
+ probe_disable_device:
+@@ -9022,7 +9019,6 @@ static void qla4xxx_remove_adapter(struct pci_dev *pdev)
+ 
+ 	scsi_host_put(ha->host);
+ 
+-	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
+ }
+ 
+-- 
+2.25.1
+
