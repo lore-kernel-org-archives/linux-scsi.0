@@ -2,93 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC50BC678D4
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:41:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D767C678D4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 18:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233150AbjCGSl4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 13:41:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51304 "EHLO
+        id S233145AbjCGSmr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 13:42:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233088AbjCGSle (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:41:34 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADB7FB329E;
-        Tue,  7 Mar 2023 10:32:13 -0800 (PST)
+        with ESMTP id S231300AbjCGSlu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 13:41:50 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC4EC9E30E;
+        Tue,  7 Mar 2023 10:32:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A5B41B8199A;
-        Tue,  7 Mar 2023 18:31:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB51BC433EF;
-        Tue,  7 Mar 2023 18:31:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1678213887;
-        bh=eZhh6BSFQ1k6BW1csQ0X36HHVeHgWxg0M5U+VtotJqY=;
+        by sin.source.kernel.org (Postfix) with ESMTPS id 726B1CE1C85;
+        Tue,  7 Mar 2023 18:29:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95C80C433AE;
+        Tue,  7 Mar 2023 18:28:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678213738;
+        bh=sxhOUKyK/NsC1MzrNzYBeE7kuwoED0rqhP9R9JiXQ3o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xPQ09NJwiGTfbVouSOI96LYXp5y1gNSVE+/2JjcJVk6gfdLpA0SnDlXk3qehBljwQ
-         D4bZBbAAsrDF7myMOy+1WUCzEoYMf8LmSJ0GFjGUpH6AgUVRRtVkyXFIywPOdq5Md3
-         /SSd5SbexvYhjbiFghLDUwWpxYrooAutcyJAbr2s=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     stable@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        patches@lists.linux.dev, Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.1 634/885] scsi: snic: Fix memory leak with using debugfs_lookup()
-Date:   Tue,  7 Mar 2023 17:59:28 +0100
-Message-Id: <20230307170029.727556491@linuxfoundation.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230307170001.594919529@linuxfoundation.org>
-References: <20230307170001.594919529@linuxfoundation.org>
-User-Agent: quilt/0.67
+        b=t8HGFNMk4sJ7JvkVF9YJaqueJncGoydFlLJnNwSGxSxKXyYHv0fBeoPg3MUFQDLBa
+         tPTfvdqfiyqOpnhWUEO2+AkaAbb5Chn8COeK6LZJrB++fwGRv+uI2HsOEQ9zquY19J
+         KR1BYAzcUGIGArw5s6U7u6UIhUMnOwrq865wfsvERv1wiHGDaIDW5W77rPLxmlU1Nn
+         +KlC8gboOR8gPABhqyHOsH/zh5K/duy25zCpG+cwCZCfU4DSZx68sYszBiZtf0VbpB
+         RWVr5X2Y6IK7Y03amLzW6gewbFAq78Fe9ZhraC2i9gNkKAkg3wy4w4VnWE7UnDD+1g
+         eAkS3AEfSP80A==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Subject: [PATCH 04/10] scsi: bfa: Drop redundant pci_enable_pcie_error_reporting()
+Date:   Tue,  7 Mar 2023 12:28:36 -0600
+Message-Id: <20230307182842.870378-5-helgaas@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230307182842.870378-1-helgaas@kernel.org>
+References: <20230307182842.870378-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-[ Upstream commit ad0e4e2fab928477f74d742e6e77d79245d3d3e7 ]
+pci_enable_pcie_error_reporting() enables the device to send ERR_*
+Messages.  Since f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is
+native"), the PCI core does this for all devices during enumeration, so the
+driver doesn't need to do it itself.
 
-When calling debugfs_lookup() the result must have dput() called on it,
-otherwise the memory will leak over time.  To make things simpler, just
-call debugfs_lookup_and_remove() instead which handles all of the logic at
-once.
+Remove the redundant pci_enable_pcie_error_reporting() call from the
+driver.  Also remove the corresponding pci_disable_pcie_error_reporting()
+from the driver .remove() path.
 
-Link: https://lore.kernel.org/r/20230202141009.2290380-1-gregkh@linuxfoundation.org
-Cc: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Note that this only controls ERR_* Messages from the device.  An ERR_*
+Message may cause the Root Port to generate an interrupt, depending on the
+AER Root Error Command register managed by the AER service driver.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 ---
- drivers/scsi/snic/snic_debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/bfad.c     | 6 ------
+ drivers/scsi/bfa/bfad_drv.h | 1 -
+ 2 files changed, 7 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
-index 57bdc3ba49d9c..9dd975b36b5bd 100644
---- a/drivers/scsi/snic/snic_debugfs.c
-+++ b/drivers/scsi/snic/snic_debugfs.c
-@@ -437,6 +437,6 @@ void snic_trc_debugfs_init(void)
- void
- snic_trc_debugfs_term(void)
- {
--	debugfs_remove(debugfs_lookup(TRC_FILE, snic_glob->trc_root));
--	debugfs_remove(debugfs_lookup(TRC_ENABLE_FILE, snic_glob->trc_root));
-+	debugfs_lookup_and_remove(TRC_FILE, snic_glob->trc_root);
-+	debugfs_lookup_and_remove(TRC_ENABLE_FILE, snic_glob->trc_root);
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e5aa982ffedc..529b73a83d69 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -738,9 +738,6 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 		goto out_release_region;
+ 	}
+ 
+-	/* Enable PCIE Advanced Error Recovery (AER) if kernel supports */
+-	pci_enable_pcie_error_reporting(pdev);
+-
+ 	bfad->pci_bar0_kva = pci_iomap(pdev, 0, pci_resource_len(pdev, 0));
+ 	bfad->pci_bar2_kva = pci_iomap(pdev, 2, pci_resource_len(pdev, 2));
+ 
+@@ -801,8 +798,6 @@ bfad_pci_uninit(struct pci_dev *pdev, struct bfad_s *bfad)
+ 	pci_iounmap(pdev, bfad->pci_bar0_kva);
+ 	pci_iounmap(pdev, bfad->pci_bar2_kva);
+ 	pci_release_regions(pdev);
+-	/* Disable PCIE Advanced Error Recovery (AER) */
+-	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
  }
+ 
+@@ -1562,7 +1557,6 @@ bfad_pci_slot_reset(struct pci_dev *pdev)
+ 	if (restart_bfa(bfad) == -1)
+ 		goto out_disable_device;
+ 
+-	pci_enable_pcie_error_reporting(pdev);
+ 	dev_printk(KERN_WARNING, &pdev->dev,
+ 		   "slot_reset completed  flags: 0x%x!\n", bfad->bfad_flags);
+ 
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index eaee7c8bc2d2..7682cfa34265 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -30,7 +30,6 @@
+ #include <linux/vmalloc.h>
+ #include <linux/workqueue.h>
+ #include <linux/bitops.h>
+-#include <linux/aer.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
 -- 
-2.39.2
-
-
+2.25.1
 
