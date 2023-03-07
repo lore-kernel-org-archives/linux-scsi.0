@@ -2,96 +2,148 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35BB1C6FD1B
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 16:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6189FC6FD1A
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 16:58:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230144AbjCGQ4E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 11:56:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50882 "EHLO
+        id S230422AbjCGQ6J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 11:58:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230142AbjCGQzk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 11:55:40 -0500
-Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55C0B96087
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 08:51:24 -0800 (PST)
-Received: by mail-qk1-x72b.google.com with SMTP id q2so4681494qki.3
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 08:51:24 -0800 (PST)
+        with ESMTP id S230336AbjCGQ5o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 11:57:44 -0500
+Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1DE096C26
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 08:53:52 -0800 (PST)
+Received: by mail-qk1-x733.google.com with SMTP id q2so4684489qki.3
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 08:53:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1678207883;
+        d=broadcom.com; s=google; t=1678208032;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=SeMMPw6i/ZKIAmixUnPB1wGEHdSH7LSTcjNWFL87exg=;
-        b=LjURWv+dZAk2IGQ8F4MM8P1zRWbezqKMLQv1Pc29LJBQNamMQr4zLAy+U7/B2awuHB
-         2CdV/NRjWQl79Ta4sMqJ+6p9rSRUdakvDvyEpatLMFl/0QEt78F8VGDerUtZbzaNlt7h
-         6hqFWsLssOU+NmlljMGbGkBH7XT+gd4um9Muk=
+        bh=F0lY26mSfUVolL697GGzc5iw95JEegecJvXTclJXHZ0=;
+        b=P4KmjltrTBJIExq/fn19rXRjZNDHL5R2WrBfAmPWRgZftot5Sn8ZVzf5Gv678je7mN
+         Hwt5PNaskXjanXKrMXtCtPNiAp30dMvMpL6xjFjgm027OuxX5ZV3KxKgWmhSpuOFakVl
+         fl5L2R7mEkEeLMOMeLyLtfxaB7FAHtdvI8C/I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678207883;
+        d=1e100.net; s=20210112; t=1678208032;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=SeMMPw6i/ZKIAmixUnPB1wGEHdSH7LSTcjNWFL87exg=;
-        b=c9nthHKi2u9zAfgZGPknwlMITxtoKNzGAM6K02/c1CQoP1Z2OJqgAWumhUpGqnPf/B
-         7+c1zbPj4vcqEDq4SCjf9Y+sM08YVWfel6ROfjn2zWnWrdlI8e7CPuwo2kt6LPpRTRi3
-         X54BbeaeZyvPyeelnZjLo3iBzxYSzi/3a8RWvulYagmLbGyza2cFPUGWYH9Sid8W7xSG
-         l+9kZtl9CNqAFQ3X1oNbWIkTuejKA6tWiw0kxCWQ9XUmMKiF8W6JBg0yj2jqvui02Tg5
-         cVCXe0GpttHW3+A0W7+yL1bSwg5A0IT0mPeLJIIt9KBLyliRUK6DoHMAdCpl9NL3vexn
-         ZFcg==
-X-Gm-Message-State: AO0yUKUiZ1vY28GQzh67hQLERMVX9WniaFCI1CiDCBJFUxis828NVbdl
-        Iw6CReYQdD17YL4a3AoJgu5oz1GsY+AZ5wOkdrlq/vrHqzG7JY7tQ0AXF+JBCe8budI0Spc1O44
-        NCNTp4vA4cx8ZCHeX9z8I6nH4M4I=
-X-Google-Smtp-Source: AK7set8ftbR1/dkwgKKBcUW/8aYb9HlBlfhKFqg5/11ekGZhD60vjKL8tCunilmUOP0x+thPWdfhKogRAYGTfrrVQZw=
+        bh=F0lY26mSfUVolL697GGzc5iw95JEegecJvXTclJXHZ0=;
+        b=pLnQkjnB1rik3tl6Y1c839C2jKYizAinBjTeUg1baSa3xoe5lzfAEZO8V7T1Yk1og7
+         0hf7Q45nUGZQ4LHnrTeLrLUBbCXoHf+kJlh5SiF9ArBeW9gcWiI7CoEX7xWJbJfhyJza
+         CkqeC2c7Mi6HcVfjHnkaEQ0Zd4M6DVcm4FwawsmPatDrka+Khya4g7G/Ft1DJbLo0QC4
+         S+zsby2N8BwSmJwWR/XbSrTQS1Ke0/5tmSHkINMlAA6hzbcMZtYUgyEv5kHaoXIawEdA
+         LBxYsO3OnlzdL5KwnAXay3SsPymR+JmAphT1bl0Gp0eMfkjg/iAQd18EF+yhZDp0rZnz
+         nCLA==
+X-Gm-Message-State: AO0yUKVh4G/2q41na8Q7OtUzIrkD2ykTIoGR35sIjf0P/fFwp5ju4Kk4
+        mz2eXduGydESB6SoOCFnp0T/4ai4gnhPby6w3ho+1pXMF8Yqh0moWICI7/uI4SIQIhj9zCGnKaS
+        X2TSfnkdKT+oiHhlCUadZT/76Y64=
+X-Google-Smtp-Source: AK7set+TFuAgbBwvn7lhclTzjFDWa+c6N6vB9e/bBA8YxPohfMd/oXTyxiKUntM12zqJ6O/HUt60F0QytzXVFrpx69A=
 X-Received: by 2002:a37:6514:0:b0:742:9d0f:775f with SMTP id
- z20-20020a376514000000b007429d0f775fmr3229468qkb.15.1678207882883; Tue, 07
- Mar 2023 08:51:22 -0800 (PST)
+ z20-20020a376514000000b007429d0f775fmr3231324qkb.15.1678208031823; Tue, 07
+ Mar 2023 08:53:51 -0800 (PST)
 MIME-Version: 1.0
-References: <20230225100135.2109330-1-haowenchao2@huawei.com> <yq1mt4pmj8g.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1mt4pmj8g.fsf@ca-mkp.ca.oracle.com>
+References: <20230225100135.2109330-1-haowenchao2@huawei.com>
+In-Reply-To: <20230225100135.2109330-1-haowenchao2@huawei.com>
 From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Date:   Tue, 7 Mar 2023 09:51:05 -0700
-Message-ID: <CAFdVvOzRhRggKLtEj5cooi5RUfrAdpRa7ANecPst-CC5k4wj9Q@mail.gmail.com>
+Date:   Tue, 7 Mar 2023 09:53:35 -0700
+Message-ID: <CAFdVvOwxxvMGNTS9KQ-N-Q_Xo3+qKA64ok=2sv-FYmnerzwfGQ@mail.gmail.com>
 Subject: Re: [PATCH] scsi: mpt3sas: fix NULL pointer access in mpt3sas_transport_port_add()
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Wenchao Hao <haowenchao2@huawei.com>,
+To:     Wenchao Hao <haowenchao2@huawei.com>
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, linfeilong@huawei.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000bd85e805f6523842"
+        boundary="0000000000009e66ff05f6524182"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000bd85e805f6523842
+--0000000000009e66ff05f6524182
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 6, 2023 at 6:42=E2=80=AFPM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
+On Sat, Feb 25, 2023 at 3:02=E2=80=AFAM Wenchao Hao <haowenchao2@huawei.com=
+> wrote:
 >
+> port is allocated by sas_port_alloc_num() and rphy is allocated by
+> sas_end_device_alloc() or sas_expander_alloc() which may return NULL,
+> so we need to check the rphy to avoid possible NULL pointer access.
 >
-> Ranjan/Sreekanth,
+> If sas_rphy_add() called with failure rphy is set to NULL, we would
+> access the rphy in next lines which would also result NULL pointer
+> access.
 >
-> > port is allocated by sas_port_alloc_num() and rphy is allocated by
-> > sas_end_device_alloc() or sas_expander_alloc() which may return NULL,
-> > so we need to check the rphy to avoid possible NULL pointer access.
-> >
-> > If sas_rphy_add() called with failure rphy is set to NULL, we would
-> > access the rphy in next lines which would also result NULL pointer
-> > access.
-> >
-> > Fix commit 78316e9dfc24 ("scsi: mpt3sas: Fix possible resource leaks
-> > in mpt3sas_transport_port_add()")
+> Fix commit 78316e9dfc24 ("scsi: mpt3sas: Fix possible resource leaks
+> in mpt3sas_transport_port_add()")
 >
-> Please review!
-Looks good to me, please commit it for the 6.3 scsi_fixes
-
+> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+Acked-by: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_transport.c | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
 >
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3=
+sas/mpt3sas_transport.c
+> index e5ecd6ada6cd..e8a4750f6ec4 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> @@ -785,7 +785,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *io=
+c, u16 handle,
+>                 goto out_fail;
+>         }
+>         port =3D sas_port_alloc_num(sas_node->parent_dev);
+> -       if ((sas_port_add(port))) {
+> +       if (!port || (sas_port_add(port))) {
+>                 ioc_err(ioc, "failure at %s:%d/%s()!\n",
+>                         __FILE__, __LINE__, __func__);
+>                 goto out_fail;
+> @@ -824,6 +824,12 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *i=
+oc, u16 handle,
+>                             mpt3sas_port->remote_identify.sas_address;
+>         }
+>
+> +       if (!rphy) {
+> +               ioc_err(ioc, "failure at %s:%d/%s()!\n",
+> +                       __FILE__, __LINE__, __func__);
+> +               goto out_delete_port;
+> +       }
+> +
+>         rphy->identify =3D mpt3sas_port->remote_identify;
+>
+>         if ((sas_rphy_add(rphy))) {
+> @@ -831,6 +837,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *io=
+c, u16 handle,
+>                         __FILE__, __LINE__, __func__);
+>                 sas_rphy_free(rphy);
+>                 rphy =3D NULL;
+> +               goto out_delete_port;
+>         }
+>
+>         if (mpt3sas_port->remote_identify.device_type =3D=3D SAS_END_DEVI=
+CE) {
+> @@ -857,7 +864,10 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *i=
+oc, u16 handle,
+>                     rphy_to_expander_device(rphy), hba_port->port_id);
+>         return mpt3sas_port;
+>
+> - out_fail:
+> +out_delete_port:
+> +       sas_port_delete(port);
+> +
+> +out_fail:
+>         list_for_each_entry_safe(mpt3sas_phy, next, &mpt3sas_port->phy_li=
+st,
+>             port_siblings)
+>                 list_del(&mpt3sas_phy->port_siblings);
 > --
-> Martin K. Petersen      Oracle Linux Engineering
+> 2.32.0
+>
 
 --=20
 This electronic communication and the information and any files transmitted=
@@ -112,7 +164,7 @@ please return the e-mail to the sender, delete it from your computer, and=
 =20
 destroy any printed copy of it.
 
---000000000000bd85e805f6523842
+--0000000000009e66ff05f6524182
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -183,14 +235,14 @@ kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
 jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
 8wQJuWG84jqd/9wxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHPbPrNl
-AI/8vV+sdufmX7bgc0J3EwYJDBDYF0ur0JDFMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMDMwNzE2NTEyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICsJaJwu
+hlRGgy1FCrG3ScvNveT29J6XtA1uwTQ4oqe1MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMDMwNzE2NTM1MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBUPdc7LK+7OXDuTyxO4kN/5OUl
-fRQgtg5mrY/rwTulOB4M1wCLdIINsCSR5YCj+1IbltzvGX6QJAWi+5CuN5ENa+phBGYL0bxWrTki
-hJC/8n9Tc8KhDgxz2iu4uaBp2FYy47Sp0+LYAxMroWi0bcADvPAMotC7zlVB/SP2migr1RMNv5Er
-FMVVY5CzheXQ350q3/iKLnVCoK35lrcx47xgmV9C+t/XoJqxW4BLKp6AOHZrd4jjm0vMnzOXRD14
-kbbI52Lo4ArM2b1qri3qVU7OKvAp5wouWbUPd218+dUm8mN+p2lwEoZJp7ivINAfR+nq4WSL9zb0
-ilrGKEPycYLh
---000000000000bd85e805f6523842--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC1+aqsFM8MBfmaIbHo4Uj10MNB
+6aEadZzjWPWgKImMM3szKWfGimtfYSyWa+qoYShyVT0/encTS5fM9jSre9eOQzx64ZZWPIyZubTT
+vU9g21vTlROiOSLupaiJVmzLCtHu4O2wQFQ2AE/mZPZExzI7/q+toAQYGeNeGn/axt0FrpE6r5Jh
+FGAE4iKzHLJ0VPcKG2m1jFp2PrtAOm/Y5m2JGoL3BaSMcME3m0TBNzZ44jd7Xqg3r5q4EqaCRU6u
+a9k/veAIIzup5Ju8nRbKHrGreE0pg95unmM5QunP0cstFUR856dPJl4DPb0ptLiqwxTzwwRIcpYG
+jayN2myoTeyW
+--0000000000009e66ff05f6524182--
