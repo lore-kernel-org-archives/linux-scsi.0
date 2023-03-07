@@ -2,231 +2,401 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F7C1C678D4
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 10:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D803C678D5
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 10:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229983AbjCGKdd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 05:33:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43198 "EHLO
+        id S230284AbjCGKyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 05:54:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230432AbjCGKdA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 05:33:00 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EA046195;
-        Tue,  7 Mar 2023 02:32:32 -0800 (PST)
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3278kgIu028652;
-        Tue, 7 Mar 2023 10:32:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : reply-to : references : content-type : in-reply-to
- : mime-version; s=pp1; bh=+pkEcBhDX7653P4CgydRWh+nO8hBvA2oBpE7vIGSOY8=;
- b=jKrHW8txiPnT4lgmdT/ergByxJ+ttompPYwaSualxsvkt/Hl/PDUfSwtdObvPluh5nA2
- bBeAohQ9B2sWlia3RViKmTGHFvfn8UhqmCPlL/Pi8qeB8oRenfw3tmiyqMVl/CEAxD7Q
- QhrgDzLX59fO3U+AllTuMasUeE/uA3Is5rMgSwiF1g/yCQ9Nill85HhX2DacVt/pQKG0
- dF8SYwqg+MYjPByBdfS9WaYv9C6ShNIUo7UBZ52ctbqe6CJ3CZdkcp7WxWMnXRAFrikm
- lw71hhhBAaRufOCASa+h7xtnqvIbtMJxXNvvNLPpEpAB7xb+KzD4M1Iw0My6QcMhYafG lg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3p4ysekr19-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Mar 2023 10:32:21 +0000
-Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3279uCiQ028541;
-        Tue, 7 Mar 2023 10:32:21 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3p4ysekr07-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Mar 2023 10:32:21 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3271Ojd2005745;
-        Tue, 7 Mar 2023 10:32:18 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3p41brc3j0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Mar 2023 10:32:18 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 327AWGCD39059878
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 7 Mar 2023 10:32:16 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3EA4320043;
-        Tue,  7 Mar 2023 10:32:16 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7F4C920040;
-        Tue,  7 Mar 2023 10:32:14 +0000 (GMT)
-Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
-        by smtpav04.fra02v.mail.ibm.com (Postfix) with SMTP;
-        Tue,  7 Mar 2023 10:32:14 +0000 (GMT)
-Date:   Tue, 7 Mar 2023 16:02:13 +0530
-From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Lee Duncan <leeman.duncan@gmail.com>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lee Duncan <lduncan@suse.com>, Martin Wilck <mwilck@suse.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
-Message-ID: <20230307103213.GA1005120@linux.vnet.ibm.com>
-Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-References: <20220928181350.9948-1-leeman.duncan@gmail.com>
- <88927435-ae58-c24b-e7b7-b675985de433@leemhuis.info>
- <86D685F2-D411-460B-A09B-6BE942372F0A@gmail.com>
- <yq1zg8pl1nq.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <yq1zg8pl1nq.fsf@ca-mkp.ca.oracle.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: oaQB3v3l3wz0LKU3agbe5k4sXfoFBVSn
-X-Proofpoint-GUID: eRvwFxqcGhOo7TEa-KxFXtMofFzJRTyl
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S230453AbjCGKyJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 05:54:09 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2C747EE3
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 02:53:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1678186403;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5TdUrxeEf6Uel5vyr/iSFTtgn6V0/F2rF4kmMh4g2jo=;
+        b=gz2MNzJSAwKDj92wADZ8m1zW+6V7SmHc6IzewjnXb1dtSvOa3B4jwsfkPRBZDxT96cnbzY
+        4qQ2lIQnrsEI1Fq8FrMcMJNYAKr0ibVY8CyDLaaFzUMUPkfXGmxob+krFLS0N6bcBj79eV
+        d2tvgi3a7M/zJBA7JWkFraMOSx7p1Jc=
+Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com
+ [209.85.222.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-527-9O0hTfqrNWGuUMBOmAArEw-1; Tue, 07 Mar 2023 05:53:22 -0500
+X-MC-Unique: 9O0hTfqrNWGuUMBOmAArEw-1
+Received: by mail-ua1-f70.google.com with SMTP id r17-20020ab06dd1000000b0069001d8950fso6323082uaf.10
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 02:53:22 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678186399;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5TdUrxeEf6Uel5vyr/iSFTtgn6V0/F2rF4kmMh4g2jo=;
+        b=vK+GzHxI3W4X1ruojdyR+Jj/1FHBKnqvUNfjomlu2ny7GceL+dxjn5q9N3vETXL9z5
+         Zt1SXmhPaKUcgQFIITQNrqC33v6b8/+WwWpy/Y5r9+6zBvgWB8Cvqd8z0CCAHE+fcklJ
+         jw5HSGDbwmUUs3pZTZJ+xHYaCA4nRcdxkle7D/pKb/cKGVe34+Clg3pjwyU4uedIqjft
+         ZEHPI+k7sDEFe1wLg4NQguHCsmzYqLjS9xtBbMgRCJ2Ttj/dbDY2AA85SXpbu95wswZQ
+         w1a6nICAgGuNBwlpYZhuZUjlfAqrZma3Lztod3kMiayp2ma8OMuontuPtQ4MgWY3kEVQ
+         zIsA==
+X-Gm-Message-State: AO0yUKWa/purzeDAOK+DVk5elyn/f8j8mSs3cZ4Or/jSDqyvkBn5ocw8
+        bXw4LIcVk7vBvqEaXMULOEOzCbo/XuG9cDLIb099dfMpEaP0jmE6EVrys47eRGgkszsveF5eIfw
+        vqmr2nG4UE0xA2xLb+gPwUX7TzvI3G0Vgl/sJvA==
+X-Received: by 2002:a1f:4b01:0:b0:401:8898:ea44 with SMTP id y1-20020a1f4b01000000b004018898ea44mr8183340vka.3.1678186399387;
+        Tue, 07 Mar 2023 02:53:19 -0800 (PST)
+X-Google-Smtp-Source: AK7set8mue/AMf20USnH0awRjij8rWXkUCSmASgju7ls+ODa1QiPh94JZ2t4JIaikzbo/OWasRwuLUP8ADtsPcZrP6A=
+X-Received: by 2002:a1f:4b01:0:b0:401:8898:ea44 with SMTP id
+ y1-20020a1f4b01000000b004018898ea44mr8183329vka.3.1678186399009; Tue, 07 Mar
+ 2023 02:53:19 -0800 (PST)
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-07_04,2023-03-07_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1011
- malwarescore=0 adultscore=0 spamscore=0 impostorscore=0 lowpriorityscore=0
- mlxlogscore=999 suspectscore=0 bulkscore=0 priorityscore=1501 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2303070095
+References: <20230129234441.116310-1-michael.christie@oracle.com> <20230129234441.116310-2-michael.christie@oracle.com>
+In-Reply-To: <20230129234441.116310-2-michael.christie@oracle.com>
+From:   Maurizio Lombardi <mlombard@redhat.com>
+Date:   Tue, 7 Mar 2023 11:53:07 +0100
+Message-ID: <CAFL455mhWGo2TCRjkcSGM=_X=jOKCcc1a=q7kSg0bvhJuiC1ng@mail.gmail.com>
+Subject: Re: [PATCH v3 01/14] scsi: target: Move sess cmd counter to new struct
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     martin.petersen@oracle.com, mgurtovoy@nvidia.com, sagi@grimberg.me,
+        d.bogdanov@yadro.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Martin K. Petersen <martin.petersen@oracle.com> [2023-03-06 21:54:42]:
-
-Hi Martin,
-> 
-> Lee,
-> 
-> > I really prefer specifically listing ???offending??? hardware, rather than
-> > automatically covering for it.
-> 
-> Would the following patch work?
-> 
-
-Yes, this patch also works atleast for me.
-
-> Martin
-> 
-> ---8<---
-> 
-> Subject: [PATCH] scsi: core: Add BLIST_NO_VPD_SIZE for some VDASD
-> 
-> Some storage, such as AIX VDASD (virtual storage) and IBM 2076 (front
-> end) do not like commit c92a6b5d6335 ("scsi: core: Query VPD size
-> before getting full page").
-> 
-> That commit changed getting SCSI VPD pages so that we now read just
-> enough of the page to get the actual page size, then read the whole
-> page in a second read. The problem is that the above mentioned
-> hardware returns zero for the page size, because of a firmware
-> error. In such cases, until the firmware is fixed, this new blacklist
-> flag says to revert to the original method of reading the VPD pages,
-> i.e. try to read as a whole buffer's worth on the first try.
-> 
-> [mkp: reworked somewhat]
-> 
-> Link: https://lore.kernel.org/r/20220928181350.9948-1-leeman.duncan@gmail.com
-> Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full page")
-> Reported-by: Martin Wilck <mwilck@suse.com>
-> Suggested-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 9feb0323bc44..dff1d692e756 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -326,6 +326,9 @@ static int scsi_get_vpd_size(struct scsi_device *sdev, u8 page)
->  	unsigned char vpd_header[SCSI_VPD_HEADER_SIZE] __aligned(4);
->  	int result;
->  
-> +	if (sdev->no_vpd_size)
-> +		return SCSI_DEFAULT_VPD_LEN;
+po 30. 1. 2023 v 0:45 odes=C3=ADlatel Mike Christie
+<michael.christie@oracle.com> napsal:
+>
+> iSCSI needs to wait on outstanding commands like how srp and the FC/fcoe
+> drivers do. It can't use target_stop_session because for MCS support we
+> can't stop the entire session during recovery because if other connection=
+s
+> are ok then we want to be able to continue to execute IO on them.
+>
+> This patch moves the per session cmd counters to a new struct, so iSCSI
+> can allocate it per connection. The xcopy code can also just not allocate
+> it in the future since it doesn't need to track commands.
+>
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/target/target_core_tpg.c         |   2 +-
+>  drivers/target/target_core_transport.c   | 135 ++++++++++++++++-------
+>  include/target/iscsi/iscsi_target_core.h |   1 +
+>  include/target/target_core_base.h        |  13 ++-
+>  4 files changed, 107 insertions(+), 44 deletions(-)
+>
+> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_cor=
+e_tpg.c
+> index 736847c933e5..8ebccdbd94f0 100644
+> --- a/drivers/target/target_core_tpg.c
+> +++ b/drivers/target/target_core_tpg.c
+> @@ -328,7 +328,7 @@ static void target_shutdown_sessions(struct se_node_a=
+cl *acl)
+>  restart:
+>         spin_lock_irqsave(&acl->nacl_sess_lock, flags);
+>         list_for_each_entry(sess, &acl->acl_sess_list, sess_acl_list) {
+> -               if (atomic_read(&sess->stopped))
+> +               if (sess->cmd_cnt && atomic_read(&sess->cmd_cnt->stopped)=
+)
+>                         continue;
+>
+>                 list_del_init(&sess->sess_acl_list);
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/targ=
+et_core_transport.c
+> index 5926316252eb..3d6034f00dcd 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -220,11 +220,49 @@ void transport_subsystem_check_init(void)
+>         sub_api_initialized =3D 1;
+>  }
+>
+> -static void target_release_sess_cmd_refcnt(struct percpu_ref *ref)
+> +static void target_release_cmd_refcnt(struct percpu_ref *ref)
+>  {
+> -       struct se_session *sess =3D container_of(ref, typeof(*sess), cmd_=
+count);
+> +       struct target_cmd_counter *cmd_cnt  =3D container_of(ref,
+> +                                                          typeof(*cmd_cn=
+t),
+> +                                                          refcnt);
+> +       wake_up(&cmd_cnt->refcnt_wq);
+> +}
 > +
->  	/*
->  	 * Fetch the VPD page header to find out how big the page
->  	 * is. This is done to prevent problems on legacy devices
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> index c7080454aea9..bc9d280417f6 100644
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -134,7 +134,7 @@ static struct {
->  	{"3PARdata", "VV", NULL, BLIST_REPORTLUN2},
->  	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
->  	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
-> -	{"AIX", "VDASD", NULL, BLIST_TRY_VPD_PAGES},
-> +	{"AIX", "VDASD", NULL, BLIST_TRY_VPD_PAGES | BLIST_NO_VPD_SIZE},
->  	{"AFT PRO", "-IX CF", "0.0>", BLIST_FORCELUN},
->  	{"BELKIN", "USB 2 HS-CF", "1.95",  BLIST_FORCELUN | BLIST_INQUIRY_36},
->  	{"BROWNIE", "1200U3P", NULL, BLIST_NOREPORTLUN},
-> @@ -188,6 +188,7 @@ static struct {
->  	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
->  	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
->  	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-> +	{"IBM", "2076", NULL, BLIST_NO_VPD_SIZE},
->  	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
->  	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
->  	{"IOMEGA", "ZIP", NULL, BLIST_NOTQ | BLIST_NOLUN},
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index f9b18fdc7b3c..6042a5587bc3 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1055,6 +1055,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->  	else if (*bflags & BLIST_SKIP_VPD_PAGES)
->  		sdev->skip_vpd_pages = 1;
->  
-> +	if (*bflags & BLIST_NO_VPD_SIZE)
-> +		sdev->no_vpd_size = 1;
+> +static struct target_cmd_counter *target_alloc_cmd_counter(void)
+> +{
+> +       struct target_cmd_counter *cmd_cnt;
+> +       int rc;
 > +
->  	transport_configure_device(&sdev->sdev_gendev);
->  
->  	if (sdev->host->hostt->slave_configure) {
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 3642b8e3928b..15169d75c251 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -145,6 +145,7 @@ struct scsi_device {
->  	const char * model;		/* ... after scan; point to static string */
->  	const char * rev;		/* ... "nullnullnullnull" before scan */
->  
-> +#define SCSI_DEFAULT_VPD_LEN	255	/* default SCSI VPD page size (max) */
->  	struct scsi_vpd __rcu *vpd_pg0;
->  	struct scsi_vpd __rcu *vpd_pg83;
->  	struct scsi_vpd __rcu *vpd_pg80;
-> @@ -215,6 +216,7 @@ struct scsi_device {
->  					 * creation time */
->  	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
->  	unsigned silence_suspend:1;	/* Do not print runtime PM related messages */
-> +	unsigned no_vpd_size:1;		/* No VPD size reported in header */
->  
->  	unsigned int queue_stopped;	/* request queue is quiesced */
->  	bool offline_already;		/* Device offline message logged */
-> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-> index 5d14adae21c7..6b548dc2c496 100644
-> --- a/include/scsi/scsi_devinfo.h
-> +++ b/include/scsi/scsi_devinfo.h
-> @@ -32,7 +32,8 @@
->  #define BLIST_IGN_MEDIA_CHANGE	((__force blist_flags_t)(1ULL << 11))
->  /* do not do automatic start on add */
->  #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1ULL << 12))
-> -#define __BLIST_UNUSED_13	((__force blist_flags_t)(1ULL << 13))
-> +/* do not ask for VPD page size first on some broken targets */
-> +#define BLIST_NO_VPD_SIZE	((__force blist_flags_t)(1ULL << 13))
->  #define __BLIST_UNUSED_14	((__force blist_flags_t)(1ULL << 14))
->  #define __BLIST_UNUSED_15	((__force blist_flags_t)(1ULL << 15))
->  #define __BLIST_UNUSED_16	((__force blist_flags_t)(1ULL << 16))
-> @@ -74,8 +75,7 @@
->  #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
->  			       (__force blist_flags_t) \
->  			       ((__force __u64)__BLIST_LAST_USED - 1ULL)))
-> -#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_13 | \
-> -			     __BLIST_UNUSED_14 | \
-> +#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_14 | \
->  			     __BLIST_UNUSED_15 | \
->  			     __BLIST_UNUSED_16 | \
->  			     __BLIST_UNUSED_24 | \
+> +       cmd_cnt =3D kzalloc(sizeof(*cmd_cnt), GFP_KERNEL);
+> +       if (!cmd_cnt)
+> +               return NULL;
+>
+> -       wake_up(&sess->cmd_count_wq);
+> +       init_completion(&cmd_cnt->stop_done);
+> +       init_waitqueue_head(&cmd_cnt->refcnt_wq);
+> +       atomic_set(&cmd_cnt->stopped, 0);
+> +
+> +       rc =3D percpu_ref_init(&cmd_cnt->refcnt, target_release_cmd_refcn=
+t, 0,
+> +                            GFP_KERNEL);
+> +       if (rc)
+> +               goto free_cmd_cnt;
+> +
+> +       return cmd_cnt;
+> +
+> +free_cmd_cnt:
+> +       kfree(cmd_cnt);
+> +       return NULL;
+> +}
+> +
+> +static void target_free_cmd_counter(struct target_cmd_counter *cmd_cnt)
+> +{
+> +       /*
+> +        * Drivers like loop do not call target_stop_session during sessi=
+on
+> +        * shutdown so we have to drop the ref taken at init time here.
+> +        */
+> +       if (!atomic_read(&cmd_cnt->stopped))
+> +               percpu_ref_put(&cmd_cnt->refcnt);
+> +
+> +       percpu_ref_exit(&cmd_cnt->refcnt);
+>  }
+>
+>  /**
+> @@ -238,25 +276,17 @@ int transport_init_session(struct se_session *se_se=
+ss)
+>         INIT_LIST_HEAD(&se_sess->sess_list);
+>         INIT_LIST_HEAD(&se_sess->sess_acl_list);
+>         spin_lock_init(&se_sess->sess_cmd_lock);
+> -       init_waitqueue_head(&se_sess->cmd_count_wq);
+> -       init_completion(&se_sess->stop_done);
+> -       atomic_set(&se_sess->stopped, 0);
+> -       return percpu_ref_init(&se_sess->cmd_count,
+> -                              target_release_sess_cmd_refcnt, 0, GFP_KER=
+NEL);
+> +       se_sess->cmd_cnt =3D target_alloc_cmd_counter();
+> +       if (!se_sess->cmd_cnt)
+> +               return -ENOMEM;
+> +
+> +       return  0;
+>  }
+>  EXPORT_SYMBOL(transport_init_session);
+>
+>  void transport_uninit_session(struct se_session *se_sess)
+>  {
+> -       /*
+> -        * Drivers like iscsi and loop do not call target_stop_session
+> -        * during session shutdown so we have to drop the ref taken at in=
+it
+> -        * time here.
+> -        */
+> -       if (!atomic_read(&se_sess->stopped))
+> -               percpu_ref_put(&se_sess->cmd_count);
+> -
+> -       percpu_ref_exit(&se_sess->cmd_count);
+> +       target_free_cmd_counter(se_sess->cmd_cnt);
+>  }
+>
+>  /**
+> @@ -2970,9 +3000,16 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, boo=
+l ack_kref)
+>                 se_cmd->se_cmd_flags |=3D SCF_ACK_KREF;
+>         }
+>
+> -       if (!percpu_ref_tryget_live(&se_sess->cmd_count))
+> -               ret =3D -ESHUTDOWN;
+> -
+> +       /*
+> +        * Users like xcopy do not use counters since they never do a sto=
+p
+> +        * and wait.
+> +        */
+> +       if (se_sess->cmd_cnt) {
+> +               if (!percpu_ref_tryget_live(&se_sess->cmd_cnt->refcnt))
+> +                       ret =3D -ESHUTDOWN;
+> +               else
+> +                       se_cmd->cmd_cnt =3D se_sess->cmd_cnt;
+> +       }
+>         if (ret && ack_kref)
+>                 target_put_sess_cmd(se_cmd);
+>
+> @@ -2993,7 +3030,7 @@ static void target_free_cmd_mem(struct se_cmd *cmd)
+>  static void target_release_cmd_kref(struct kref *kref)
+>  {
+>         struct se_cmd *se_cmd =3D container_of(kref, struct se_cmd, cmd_k=
+ref);
+> -       struct se_session *se_sess =3D se_cmd->se_sess;
+> +       struct target_cmd_counter *cmd_cnt =3D se_cmd->cmd_cnt;
+>         struct completion *free_compl =3D se_cmd->free_compl;
+>         struct completion *abrt_compl =3D se_cmd->abrt_compl;
+>
+> @@ -3004,7 +3041,8 @@ static void target_release_cmd_kref(struct kref *kr=
+ef)
+>         if (abrt_compl)
+>                 complete(abrt_compl);
+>
+> -       percpu_ref_put(&se_sess->cmd_count);
+> +       if (cmd_cnt)
+> +               percpu_ref_put(&cmd_cnt->refcnt);
+>  }
+>
+>  /**
+> @@ -3123,46 +3161,65 @@ void target_show_cmd(const char *pfx, struct se_c=
+md *cmd)
+>  }
+>  EXPORT_SYMBOL(target_show_cmd);
+>
+> -static void target_stop_session_confirm(struct percpu_ref *ref)
+> +static void target_stop_cmd_counter_confirm(struct percpu_ref *ref)
+> +{
+> +       struct target_cmd_counter *cmd_cnt =3D container_of(ref,
+> +                                               struct target_cmd_counter=
+,
+> +                                               refcnt);
+> +       complete_all(&cmd_cnt->stop_done);
+> +}
+> +
+> +/**
+> + * target_stop_cmd_counter - Stop new IO from being added to the counter=
+.
+> + * @cmd_cnt: counter to stop
+> + */
+> +static void target_stop_cmd_counter(struct target_cmd_counter *cmd_cnt)
+>  {
+> -       struct se_session *se_sess =3D container_of(ref, struct se_sessio=
+n,
+> -                                                 cmd_count);
+> -       complete_all(&se_sess->stop_done);
+> +       pr_debug("Stopping command counter.\n");
+> +       if (!atomic_cmpxchg(&cmd_cnt->stopped, 0, 1))
+> +               percpu_ref_kill_and_confirm(&cmd_cnt->refcnt,
+> +                                           target_stop_cmd_counter_confi=
+rm);
+>  }
+>
+>  /**
+>   * target_stop_session - Stop new IO from being queued on the session.
+> - * @se_sess:    session to stop
+> + * @se_sess: session to stop
+>   */
+>  void target_stop_session(struct se_session *se_sess)
+>  {
+> -       pr_debug("Stopping session queue.\n");
+> -       if (atomic_cmpxchg(&se_sess->stopped, 0, 1) =3D=3D 0)
+> -               percpu_ref_kill_and_confirm(&se_sess->cmd_count,
+> -                                           target_stop_session_confirm);
+> +       target_stop_cmd_counter(se_sess->cmd_cnt);
+>  }
+>  EXPORT_SYMBOL(target_stop_session);
+>
+>  /**
+> - * target_wait_for_sess_cmds - Wait for outstanding commands
+> - * @se_sess:    session to wait for active I/O
+> + * target_wait_for_cmds - Wait for outstanding cmds.
+> + * @cmd_cnt: counter to wait for active I/O for.
+>   */
+> -void target_wait_for_sess_cmds(struct se_session *se_sess)
+> +static void target_wait_for_cmds(struct target_cmd_counter *cmd_cnt)
+>  {
+>         int ret;
+>
+> -       WARN_ON_ONCE(!atomic_read(&se_sess->stopped));
+> +       WARN_ON_ONCE(!atomic_read(&cmd_cnt->stopped));
+>
+>         do {
+>                 pr_debug("Waiting for running cmds to complete.\n");
+> -               ret =3D wait_event_timeout(se_sess->cmd_count_wq,
+> -                               percpu_ref_is_zero(&se_sess->cmd_count),
+> -                               180 * HZ);
+> +               ret =3D wait_event_timeout(cmd_cnt->refcnt_wq,
+> +                                        percpu_ref_is_zero(&cmd_cnt->ref=
+cnt),
+> +                                        180 * HZ);
+>         } while (ret <=3D 0);
+>
+> -       wait_for_completion(&se_sess->stop_done);
+> +       wait_for_completion(&cmd_cnt->stop_done);
+>         pr_debug("Waiting for cmds done.\n");
+>  }
+> +
+> +/**
+> + * target_wait_for_sess_cmds - Wait for outstanding commands
+> + * @se_sess: session to wait for active I/O
+> + */
+> +void target_wait_for_sess_cmds(struct se_session *se_sess)
+> +{
+> +       target_wait_for_cmds(se_sess->cmd_cnt);
+> +}
+>  EXPORT_SYMBOL(target_wait_for_sess_cmds);
+>
+>  /*
+> diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/is=
+csi/iscsi_target_core.h
+> index 94d06ddfd80a..229118156a1f 100644
+> --- a/include/target/iscsi/iscsi_target_core.h
+> +++ b/include/target/iscsi/iscsi_target_core.h
+> @@ -600,6 +600,7 @@ struct iscsit_conn {
+>         struct iscsi_tpg_np     *tpg_np;
+>         /* Pointer to parent session */
+>         struct iscsit_session   *sess;
+> +       struct target_cmd_counter *cmd_cnt;
+>         int                     bitmap_id;
+>         int                     rx_thread_active;
+>         struct task_struct      *rx_thread;
+> diff --git a/include/target/target_core_base.h b/include/target/target_co=
+re_base.h
+> index 12c9ba16217e..bd299790e99c 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -494,6 +494,7 @@ struct se_cmd {
+>         struct se_lun           *se_lun;
+>         /* Only used for internal passthrough and legacy TCM fabric modul=
+es */
+>         struct se_session       *se_sess;
+> +       struct target_cmd_counter *cmd_cnt;
+>         struct se_tmr_req       *se_tmr_req;
+>         struct llist_node       se_cmd_list;
+>         struct completion       *free_compl;
+> @@ -619,22 +620,26 @@ static inline struct se_node_acl *fabric_stat_to_na=
+cl(struct config_item *item)
+>                         acl_fabric_stat_group);
+>  }
+>
+> -struct se_session {
+> +struct target_cmd_counter {
+> +       struct percpu_ref       refcnt;
+> +       wait_queue_head_t       refcnt_wq;
+> +       struct completion       stop_done;
+>         atomic_t                stopped;
+> +};
+> +
+> +struct se_session {
+>         u64                     sess_bin_isid;
+>         enum target_prot_op     sup_prot_ops;
+>         enum target_prot_type   sess_prot_type;
+>         struct se_node_acl      *se_node_acl;
+>         struct se_portal_group *se_tpg;
+>         void                    *fabric_sess_ptr;
+> -       struct percpu_ref       cmd_count;
+>         struct list_head        sess_list;
+>         struct list_head        sess_acl_list;
+>         spinlock_t              sess_cmd_lock;
+> -       wait_queue_head_t       cmd_count_wq;
+> -       struct completion       stop_done;
+>         void                    *sess_cmd_map;
+>         struct sbitmap_queue    sess_tag_pool;
+> +       struct target_cmd_counter *cmd_cnt;
+>  };
+>
+>  struct se_device;
+> --
+> 2.25.1
+>
 
--- 
-Thanks and Regards
-Srikar Dronamraju
+Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+
