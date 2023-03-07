@@ -2,82 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB8FAC6FA99
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 21:44:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8073BC74A44
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 21:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231374AbjCGVox (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 16:44:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54028 "EHLO
+        id S231565AbjCGVtP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 16:49:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231410AbjCGVov (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 16:44:51 -0500
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 949D9A1FC7
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 13:44:35 -0800 (PST)
-Received: by mail-pj1-f44.google.com with SMTP id h17-20020a17090aea9100b0023739b10792so61425pjz.1
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2023 13:44:35 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678225475;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=WertYbNyQZoAwK2dhL/DP3fy6e4ElWcn4JIFlCrz/cY=;
-        b=jIN9rLkbb1YqRq4b7dky/iR9KjNTL7OA2iIyPnCN9dEUbCUdAr6t+CAuXfjKB2sQS7
-         Z9pAUaY/OAKvkQzBata38P0IdemlYh0M/o0W3W97XDEoSgPT0xb5SWaFAzCv0V3SjdcN
-         zeMKKSnbD5vFAMBAZOAQ/4y0nbEiNwzGBmDhf8bFeoczNofEn+cJGXHhw6nDDrub8hhk
-         iXw2qbtiQhajpQ/U35+hKpu1dwBEjFjmr1VUm98ehSWM77TWS6w60aTNMlfgpESGw5Fs
-         bIMaSBbdKPrNRvIZUmg4xDHQlZFgkjjUdXwGOsKDIROh7jleu5W/g3r3Vg3IVmFVJ4ja
-         CfMw==
-X-Gm-Message-State: AO0yUKUuSyojaQkvPpsY3qpLdFpWGYhd8Dq/ue/nNFf8lLdeR/Elka0m
-        jEHxItiM9Ze5vB7HOmq2brk=
-X-Google-Smtp-Source: AK7set8slf6Q94IbyGc1v/WzVWvNyAp+NgY2WU047iG0k5mKoHhEHI4OkHVpH8Nf+ytTbCEGxQpCSA==
-X-Received: by 2002:a05:6a20:a01d:b0:be:c5de:7157 with SMTP id p29-20020a056a20a01d00b000bec5de7157mr14656547pzj.53.1678225474645;
-        Tue, 07 Mar 2023 13:44:34 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8361:6b6b:1140:bcbb])
-        by smtp.gmail.com with ESMTPSA id y22-20020aa78556000000b005a817ff3903sm8313151pfn.3.2023.03.07.13.44.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Mar 2023 13:44:33 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        John Garry <john.g.garry@oracle.com>,
-        syzbot+645a4616b87a2f10e398@syzkaller.appspotmail.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH] scsi: core: Fix a procfs host directory removal regression
-Date:   Tue,  7 Mar 2023 13:44:28 -0800
-Message-Id: <20230307214428.3703498-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.40.0.rc0.216.gc4246ad0f0-goog
+        with ESMTP id S231576AbjCGVtF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 16:49:05 -0500
+Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 135F88EA33
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 13:48:59 -0800 (PST)
+Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
+        by amity.mint.lgbt (Postfix) with ESMTP id 4PWTbs4Ysyz1S5Jv
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2023 16:48:57 -0500 (EST)
+Authentication-Results: amity.mint.lgbt (amavisd-new);
+        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
+        header.d=mint.lgbt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
+        content-transfer-encoding:content-type:in-reply-to:from
+        :references:to:content-language:subject:user-agent:mime-version
+        :date:message-id; s=dkim; t=1678225736; x=1679089737; bh=LBDNRan
+        2Cd8nNBtnj8IHxtHFO6mc9pcFTMtM8qGwz6s=; b=jE534R06Hd7fQjg/r3yymW4
+        2G/z4O85FngEOuWTYP/K3kQoG/HSExQQ6yrrmRtIc4WSKl/VgHyyJpti+jQ1JeQ9
+        eR0Q2JfiIX6Tle48e+vcnKhyHzZmtD4y94qWPnO0w27uLcy9BJKFymUp/X4hPcrK
+        ELE/eQD6+E99op2O7rZhK81Q/4YzFsnOuEKb/OIHaXKxtKtAXiWUu6rVi7TSGjbB
+        wVUmyZ47+q+GoxRDbLaHWYosKIhK6qDVWhFLbkJl6NbwjXHBMCwCoH8TSXS5bVej
+        LDWwpQI/KJOLm7j/B2kicTKYKFsQC1MQJ/L81Uur46ClAzpiq1xyYJzojlIla2g=
+        =
+X-Virus-Scanned: amavisd-new at amity.mint.lgbt
+Received: from amity.mint.lgbt ([127.0.0.1])
+        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id s5aVeQZCghMY for <linux-scsi@vger.kernel.org>;
+        Tue,  7 Mar 2023 16:48:56 -0500 (EST)
+Received: from [192.168.1.90] (unknown [186.105.8.42])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4PWTbS4Kjkz1S4yx;
+        Tue,  7 Mar 2023 16:48:35 -0500 (EST)
+Message-ID: <18156dee-4fd2-80e5-b04d-c96c267fb615@mint.lgbt>
+Date:   Tue, 7 Mar 2023 18:48:30 -0300
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v7 1/6] dt-bindings: ufs: qcom: Add SM6125 compatible
+ string
+Content-Language: en-US, es-CL
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>, agross@kernel.org,
+        andersson@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
+        kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, keescook@chromium.org, tony.luck@intel.com,
+        gpiccoli@igalia.com
+Cc:     ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
+        phone-devel@vger.kernel.org, martin.botka@somainline.org,
+        marijn.suijten@somainline.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+References: <20230306165246.14782-1-they@mint.lgbt>
+ <20230306165246.14782-2-they@mint.lgbt>
+ <4670ddae-6b01-1e5c-b0ed-1f2f498a4f66@mint.lgbt>
+ <dfd1d81e-76a0-f8eb-e529-9f8ea1e927b6@linaro.org>
+From:   Lux Aliaga <they@mint.lgbt>
+In-Reply-To: <dfd1d81e-76a0-f8eb-e529-9f8ea1e927b6@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_proc_hostdir_rm() decreases a reference counter and hence must
-only be called once per host that is removed. This change does not
-require a scsi_add_host_with_dma() change since scsi_add_host_with_dma()
-will return 0 (success) if scsi_proc_host_add() is called.
+On 3/6/2023 14:09, Konrad Dybcio wrote:
 
-Cc: John Garry <john.g.garry@oracle.com>
-Reported-by: John Garry <john.g.garry@oracle.com>
-Reported-by: syzbot+645a4616b87a2f10e398@syzkaller.appspotmail.com
-Fixes: fc663711b944 ("scsi: core: Remove the /proc/scsi/${proc_name} directory earlier")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/hosts.c | 3 ---
- 1 file changed, 3 deletions(-)
+>
+> On 6.03.2023 18:01, Lux Aliaga wrote:
+>> On 06/03/2023 13:52, Lux Aliaga wrote:
+>>> Document the compatible for UFS found on the SM6125.
+>>>
+>>> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+>>> Reviewed-by: Martin Botka <martin.botka@somainline.org>
+>>> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>>> ---
+>>>  =C2=A0 Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>>>  =C2=A0 1 file changed, 2 insertions(+)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Do=
+cumentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>>> index b517d76215e3..42422f3471b3 100644
+>>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>>> @@ -29,6 +29,7 @@ properties:
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -=
+ qcom,sc8280xp-ufshc
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -=
+ qcom,sdm845-ufshc
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -=
+ qcom,sm6115-ufshc
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 - qcom,sm6125=
+-ufshc
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -=
+ qcom,sm6350-ufshc
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -=
+ qcom,sm8150-ufshc
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -=
+ qcom,sm8250-ufshc
+>>> @@ -185,6 +186,7 @@ allOf:
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 c=
+ontains:
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 enum:
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 - qcom,sm6115-ufshc
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 - qcom,sm6125-ufshc
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 then:
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 properties:
+>>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 clocks:
+>> I have to apologize. I worked on a changelog for this patchset but I s=
+kipped the subject header, therefore it didn't send, and as I realized th=
+is I interrupted the process, leaving the patchset incomplete. I'll retry=
+ sending it, this time correctly.
+> Happens, next time resend it with a RESEND prefix, e.g. [RESEND PATCH 1=
+/2]
+>
+> Konrad
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index f7f62e56afca..9b6fbbe15d92 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -341,9 +341,6 @@ static void scsi_host_dev_release(struct device *dev)
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct device *parent = dev->parent;
- 
--	/* In case scsi_remove_host() has not been called. */
--	scsi_proc_hostdir_rm(shost->hostt);
--
- 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
- 	rcu_barrier();
- 
+Thank you! Will take this into consideration for the future. I received=20
+this email after I resent the patchset, so that's why I didn't add the=20
+prefix.
+
+--=20
+Lux Aliaga
+https://nixgoat.me/
+
