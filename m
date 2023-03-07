@@ -2,184 +2,231 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD75C678DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 08:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F7C1C678D4
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 10:33:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229937AbjCGIoa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 03:44:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53842 "EHLO
+        id S229983AbjCGKdd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 05:33:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229889AbjCGIo2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 03:44:28 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C527621A30;
-        Tue,  7 Mar 2023 00:44:27 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7D4F31FE15;
-        Tue,  7 Mar 2023 08:44:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1678178666; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fpp5fJ0mtPUEcLO5to7TtnY2YnQzTrn2DF4WCeU+az4=;
-        b=mqRCzhl/Cm7TQs09oRbc552uzTjY5IvRfi7PeN478XCHN/bIMP0OYGdkq31LHAp+CXmKuS
-        fal0aIBYQ6OJ+igydlQ/3A/n/ORqvSnW3TFXHfT7KUdnXXSk6q9VtV5A3ZNZ2JHv8IBdNo
-        /SqQNYC+YgMiQ4fsehaKdlhyMTfjG2g=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C9AF913440;
-        Tue,  7 Mar 2023 08:44:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Vvx0Lmn5BmSxIQAAMHmgww
-        (envelope-from <jgross@suse.com>); Tue, 07 Mar 2023 08:44:25 +0000
-Message-ID: <e4bc16e7-7079-b0fc-45a5-6487b5f5dbd7@suse.com>
-Date:   Tue, 7 Mar 2023 09:44:25 +0100
+        with ESMTP id S230432AbjCGKdA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 05:33:00 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EA046195;
+        Tue,  7 Mar 2023 02:32:32 -0800 (PST)
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3278kgIu028652;
+        Tue, 7 Mar 2023 10:32:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : reply-to : references : content-type : in-reply-to
+ : mime-version; s=pp1; bh=+pkEcBhDX7653P4CgydRWh+nO8hBvA2oBpE7vIGSOY8=;
+ b=jKrHW8txiPnT4lgmdT/ergByxJ+ttompPYwaSualxsvkt/Hl/PDUfSwtdObvPluh5nA2
+ bBeAohQ9B2sWlia3RViKmTGHFvfn8UhqmCPlL/Pi8qeB8oRenfw3tmiyqMVl/CEAxD7Q
+ QhrgDzLX59fO3U+AllTuMasUeE/uA3Is5rMgSwiF1g/yCQ9Nill85HhX2DacVt/pQKG0
+ dF8SYwqg+MYjPByBdfS9WaYv9C6ShNIUo7UBZ52ctbqe6CJ3CZdkcp7WxWMnXRAFrikm
+ lw71hhhBAaRufOCASa+h7xtnqvIbtMJxXNvvNLPpEpAB7xb+KzD4M1Iw0My6QcMhYafG lg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3p4ysekr19-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Mar 2023 10:32:21 +0000
+Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3279uCiQ028541;
+        Tue, 7 Mar 2023 10:32:21 GMT
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3p4ysekr07-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Mar 2023 10:32:21 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3271Ojd2005745;
+        Tue, 7 Mar 2023 10:32:18 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3p41brc3j0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 07 Mar 2023 10:32:18 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 327AWGCD39059878
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 7 Mar 2023 10:32:16 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3EA4320043;
+        Tue,  7 Mar 2023 10:32:16 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7F4C920040;
+        Tue,  7 Mar 2023 10:32:14 +0000 (GMT)
+Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
+        by smtpav04.fra02v.mail.ibm.com (Postfix) with SMTP;
+        Tue,  7 Mar 2023 10:32:14 +0000 (GMT)
+Date:   Tue, 7 Mar 2023 16:02:13 +0530
+From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Lee Duncan <leeman.duncan@gmail.com>,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>, Martin Wilck <mwilck@suse.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
+Message-ID: <20230307103213.GA1005120@linux.vnet.ibm.com>
+Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
+ <88927435-ae58-c24b-e7b7-b675985de433@leemhuis.info>
+ <86D685F2-D411-460B-A09B-6BE942372F0A@gmail.com>
+ <yq1zg8pl1nq.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <yq1zg8pl1nq.fsf@ca-mkp.ca.oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: oaQB3v3l3wz0LKU3agbe5k4sXfoFBVSn
+X-Proofpoint-GUID: eRvwFxqcGhOo7TEa-KxFXtMofFzJRTyl
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v2 09/12] xen-scsiback: remove default fabric ops callouts
-Content-Language: en-US
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        Michael Cyr <mikecyr@linux.ibm.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Chris Boot <bootc@bootc.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Michael S . Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>, linux-scsi@vger.kernel.org,
-        linux@yadro.com
-References: <20230307080742.24631-1-d.bogdanov@yadro.com>
- <20230307080742.24631-10-d.bogdanov@yadro.com>
-From:   Juergen Gross <jgross@suse.com>
-In-Reply-To: <20230307080742.24631-10-d.bogdanov@yadro.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------nAtLO0YWE60c3PPvHyM7iD7y"
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-07_04,2023-03-07_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1011
+ malwarescore=0 adultscore=0 spamscore=0 impostorscore=0 lowpriorityscore=0
+ mlxlogscore=999 suspectscore=0 bulkscore=0 priorityscore=1501 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2303070095
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------nAtLO0YWE60c3PPvHyM7iD7y
-Content-Type: multipart/mixed; boundary="------------79f0NVxjGFQSVW8ECCW9fDcG";
- protected-headers="v1"
-From: Juergen Gross <jgross@suse.com>
-To: Dmitry Bogdanov <d.bogdanov@yadro.com>,
- Martin Petersen <martin.petersen@oracle.com>, target-devel@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Leon Romanovsky <leon@kernel.org>, James Smart <james.smart@broadcom.com>,
- Ram Vegesna <ram.vegesna@broadcom.com>, Michael Cyr <mikecyr@linux.ibm.com>,
- Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- Chris Boot <bootc@bootc.net>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Michael S . Tsirkin" <mst@redhat.com>,
- Jason Wang <jasowang@redhat.com>, linux-scsi@vger.kernel.org, linux@yadro.com
-Message-ID: <e4bc16e7-7079-b0fc-45a5-6487b5f5dbd7@suse.com>
-Subject: Re: [PATCH v2 09/12] xen-scsiback: remove default fabric ops callouts
-References: <20230307080742.24631-1-d.bogdanov@yadro.com>
- <20230307080742.24631-10-d.bogdanov@yadro.com>
-In-Reply-To: <20230307080742.24631-10-d.bogdanov@yadro.com>
+* Martin K. Petersen <martin.petersen@oracle.com> [2023-03-06 21:54:42]:
 
---------------79f0NVxjGFQSVW8ECCW9fDcG
-Content-Type: multipart/mixed; boundary="------------5uGalXVVWNV0gNgVDvHb9NLJ"
+Hi Martin,
+> 
+> Lee,
+> 
+> > I really prefer specifically listing ???offending??? hardware, rather than
+> > automatically covering for it.
+> 
+> Would the following patch work?
+> 
 
---------------5uGalXVVWNV0gNgVDvHb9NLJ
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Yes, this patch also works atleast for me.
 
-T24gMDcuMDMuMjMgMDk6MDcsIERtaXRyeSBCb2dkYW5vdiB3cm90ZToNCj4gUmVtb3ZlIGNh
-bGxvdXRzIHRoYXQgaGF2ZSB0aGUgaW1wbGVtZW50YXRpb24gbGlrZSBhDQo+IGRlZmF1bHQg
-aW1wbGVtZW50YXRpb24gaW4gVENNIENvcmUuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBEbWl0
-cnkgQm9nZGFub3YgPGQuYm9nZGFub3ZAeWFkcm8uY29tPg0KDQpBY2tlZC1ieTogSnVlcmdl
-biBHcm9zcyA8amdyb3NzQHN1c2UuY29tPg0KDQoNCkp1ZXJnZW4NCg0K
---------------5uGalXVVWNV0gNgVDvHb9NLJ
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
+> Martin
+> 
+> ---8<---
+> 
+> Subject: [PATCH] scsi: core: Add BLIST_NO_VPD_SIZE for some VDASD
+> 
+> Some storage, such as AIX VDASD (virtual storage) and IBM 2076 (front
+> end) do not like commit c92a6b5d6335 ("scsi: core: Query VPD size
+> before getting full page").
+> 
+> That commit changed getting SCSI VPD pages so that we now read just
+> enough of the page to get the actual page size, then read the whole
+> page in a second read. The problem is that the above mentioned
+> hardware returns zero for the page size, because of a firmware
+> error. In such cases, until the firmware is fixed, this new blacklist
+> flag says to revert to the original method of reading the VPD pages,
+> i.e. try to read as a whole buffer's worth on the first try.
+> 
+> [mkp: reworked somewhat]
+> 
+> Link: https://lore.kernel.org/r/20220928181350.9948-1-leeman.duncan@gmail.com
+> Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full page")
+> Reported-by: Martin Wilck <mwilck@suse.com>
+> Suggested-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 9feb0323bc44..dff1d692e756 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -326,6 +326,9 @@ static int scsi_get_vpd_size(struct scsi_device *sdev, u8 page)
+>  	unsigned char vpd_header[SCSI_VPD_HEADER_SIZE] __aligned(4);
+>  	int result;
+>  
+> +	if (sdev->no_vpd_size)
+> +		return SCSI_DEFAULT_VPD_LEN;
+> +
+>  	/*
+>  	 * Fetch the VPD page header to find out how big the page
+>  	 * is. This is done to prevent problems on legacy devices
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index c7080454aea9..bc9d280417f6 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -134,7 +134,7 @@ static struct {
+>  	{"3PARdata", "VV", NULL, BLIST_REPORTLUN2},
+>  	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
+>  	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
+> -	{"AIX", "VDASD", NULL, BLIST_TRY_VPD_PAGES},
+> +	{"AIX", "VDASD", NULL, BLIST_TRY_VPD_PAGES | BLIST_NO_VPD_SIZE},
+>  	{"AFT PRO", "-IX CF", "0.0>", BLIST_FORCELUN},
+>  	{"BELKIN", "USB 2 HS-CF", "1.95",  BLIST_FORCELUN | BLIST_INQUIRY_36},
+>  	{"BROWNIE", "1200U3P", NULL, BLIST_NOREPORTLUN},
+> @@ -188,6 +188,7 @@ static struct {
+>  	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
+>  	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+>  	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+> +	{"IBM", "2076", NULL, BLIST_NO_VPD_SIZE},
+>  	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
+>  	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
+>  	{"IOMEGA", "ZIP", NULL, BLIST_NOTQ | BLIST_NOLUN},
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index f9b18fdc7b3c..6042a5587bc3 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1055,6 +1055,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>  	else if (*bflags & BLIST_SKIP_VPD_PAGES)
+>  		sdev->skip_vpd_pages = 1;
+>  
+> +	if (*bflags & BLIST_NO_VPD_SIZE)
+> +		sdev->no_vpd_size = 1;
+> +
+>  	transport_configure_device(&sdev->sdev_gendev);
+>  
+>  	if (sdev->host->hostt->slave_configure) {
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 3642b8e3928b..15169d75c251 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -145,6 +145,7 @@ struct scsi_device {
+>  	const char * model;		/* ... after scan; point to static string */
+>  	const char * rev;		/* ... "nullnullnullnull" before scan */
+>  
+> +#define SCSI_DEFAULT_VPD_LEN	255	/* default SCSI VPD page size (max) */
+>  	struct scsi_vpd __rcu *vpd_pg0;
+>  	struct scsi_vpd __rcu *vpd_pg83;
+>  	struct scsi_vpd __rcu *vpd_pg80;
+> @@ -215,6 +216,7 @@ struct scsi_device {
+>  					 * creation time */
+>  	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
+>  	unsigned silence_suspend:1;	/* Do not print runtime PM related messages */
+> +	unsigned no_vpd_size:1;		/* No VPD size reported in header */
+>  
+>  	unsigned int queue_stopped;	/* request queue is quiesced */
+>  	bool offline_already;		/* Device offline message logged */
+> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+> index 5d14adae21c7..6b548dc2c496 100644
+> --- a/include/scsi/scsi_devinfo.h
+> +++ b/include/scsi/scsi_devinfo.h
+> @@ -32,7 +32,8 @@
+>  #define BLIST_IGN_MEDIA_CHANGE	((__force blist_flags_t)(1ULL << 11))
+>  /* do not do automatic start on add */
+>  #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1ULL << 12))
+> -#define __BLIST_UNUSED_13	((__force blist_flags_t)(1ULL << 13))
+> +/* do not ask for VPD page size first on some broken targets */
+> +#define BLIST_NO_VPD_SIZE	((__force blist_flags_t)(1ULL << 13))
+>  #define __BLIST_UNUSED_14	((__force blist_flags_t)(1ULL << 14))
+>  #define __BLIST_UNUSED_15	((__force blist_flags_t)(1ULL << 15))
+>  #define __BLIST_UNUSED_16	((__force blist_flags_t)(1ULL << 16))
+> @@ -74,8 +75,7 @@
+>  #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
+>  			       (__force blist_flags_t) \
+>  			       ((__force __u64)__BLIST_LAST_USED - 1ULL)))
+> -#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_13 | \
+> -			     __BLIST_UNUSED_14 | \
+> +#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_14 | \
+>  			     __BLIST_UNUSED_15 | \
+>  			     __BLIST_UNUSED_16 | \
+>  			     __BLIST_UNUSED_24 | \
 
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-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
-jR/i1DG86lem3iBDXzXsZDn8R38=3D
-=3D2wuH
------END PGP PUBLIC KEY BLOCK-----
-
---------------5uGalXVVWNV0gNgVDvHb9NLJ--
-
---------------79f0NVxjGFQSVW8ECCW9fDcG--
-
---------------nAtLO0YWE60c3PPvHyM7iD7y
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmQG+WkFAwAAAAAACgkQsN6d1ii/Ey9X
-5wf/QK3lq6alFc2nr45n7UsoS/zy0bRFsjlOMwwEePibTS4DF6j3oEa5QE4WNiAT67KKD/wTCdZh
-IvKuMMuIqk5x/D1/N9Vj+tiOrZe5zYpLC9ZiXgyI30PqcoCb7wJ4RCIQFhroHdlYV6b3PhnvI4AB
-+Twi4MePIyfH2yuLtX86nQiml5g7Cpt+ljW93nqTG1oZAV6hp8dxEQgiXvmRWqR39weQC1Zl5On3
-qfQV76uc1jG6ZdBjMHoLeO4DBXTjTM1rx4O47mlyLFbUKGCi6dOJVQeST8wYTigjjMYapoPTH3Xo
-y5YGPmUUBHHHpbvu6bTXvBl1yBE+wUFvMgPEClog9g==
-=mWXI
------END PGP SIGNATURE-----
-
---------------nAtLO0YWE60c3PPvHyM7iD7y--
+-- 
+Thanks and Regards
+Srikar Dronamraju
