@@ -2,134 +2,191 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E16BDC6FD1A
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 15:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42EBFC6FD1A
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 16:08:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbjCGPsL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 10:48:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57524 "EHLO
+        id S230124AbjCGQII (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 11:08:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230509AbjCGPsG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 10:48:06 -0500
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7572885A6F;
-        Tue,  7 Mar 2023 07:47:38 -0800 (PST)
-Received: by mail-pl1-f170.google.com with SMTP id u5so14521575plq.7;
-        Tue, 07 Mar 2023 07:47:38 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678204039;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xwziTOWSx5gQIjIikRUH/cZZiINMVMawOuX2ejCg0M8=;
-        b=CRd5KlmPRtJ+3YrdKonwKCa3NsIsek+DDzpfeY4GtPJgZpQWZWS5HOEq01paDyE4Qg
-         6pC++5q0r2qKzOaXM3z04uZBNbyBBn/xjkP/sGnhXuEVwskG56VAw7MLhZf0Yfzx3VeX
-         LoS1WH/JCZMcLjit6KJoc3YXsZd3JNoY6Ro0fFS9EO0ve7E55NpdN0x3qD/GFDjXK9xT
-         TFDnIk7HEsp0I+Mt/N1HugK9qXhL6XyRlfbmMz5/T/u9hdQcBWXrmReodvhFIg362trt
-         nrqSr0kd5gKNBFTXCvPbvCjC1nISa35MyNm+5fKkMXwO2MirAHCczZNd5zZEtEGYcupa
-         P4EA==
-X-Gm-Message-State: AO0yUKWa4ttKxGRCci05X4F2qo79sWZ9dXhqiFLRxo1ckUIBG7YthoM6
-        MNamj/SE6bOeW+/TfpRg3ak=
-X-Google-Smtp-Source: AK7set9bOFD86hVEitetXq7V1awDY1Hh1VJBlAr53BoHItabMvkpg4xM4u+NWEpADacOF/57k82xdQ==
-X-Received: by 2002:a05:6a20:a88f:b0:c3:cc65:165c with SMTP id ca15-20020a056a20a88f00b000c3cc65165cmr12350717pzb.61.1678204038588;
-        Tue, 07 Mar 2023 07:47:18 -0800 (PST)
-Received: from [192.168.132.235] ([63.145.95.70])
-        by smtp.gmail.com with ESMTPSA id v9-20020aa78089000000b005e4d8c6168csm7985460pff.210.2023.03.07.07.47.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Mar 2023 07:47:17 -0800 (PST)
-Message-ID: <8a83ec79-be04-ec5c-f3ef-67f64dc55f12@acm.org>
-Date:   Tue, 7 Mar 2023 07:47:16 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v4] scsi: ufs: core: Add trace event for MCQ
-Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
-References: <1677836154-29192-1-git-send-email-quic_ziqichen@quicinc.com>
- <67db2c6b-c3b0-c525-e6a9-2b2fe6c6adbb@acm.org>
- <f80fd91b-3a03-5c38-72c0-cd5c3edb33b8@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <f80fd91b-3a03-5c38-72c0-cd5c3edb33b8@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S230019AbjCGQHr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 11:07:47 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A761094F72;
+        Tue,  7 Mar 2023 08:06:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1678205188; x=1709741188;
+  h=from:to:cc:subject:date:message-id;
+  bh=d5GAJhIsi3DI0tkGTO78oNl30k1j8FBMs55HQWPy1d4=;
+  b=AZJkiTBRUHFE8J5quYt/4q5Zo7EjSdm0/oEbvWwVcNEZe24CqDxcI2PX
+   uGNKfhAlJMz2e6XItq7xMzWRPe2FBVSdh2fX6pZsRPxIjBLsdxXhJ30XQ
+   /HQjsDHr3+AiI41mhrCfqn/vBwdk1zN1Muf2MnGlbHBXXn4P4VgFNWVhT
+   kuQ1eoq9I1b/Dn9H+EMRq8c7vPiGHDQiH7dk8Oy4xcCgtdE0v5BHMtIVT
+   3xh4Biow/LDl26888Fg9K+K3OX61rve437QCVPOPlqiIqvXgVZ3jvNKqL
+   i3uethYxLCAJ7shWPtJVP0kpH7kUJXL1HBqKIVzcKe7HVHYmscjj2V6UR
+   g==;
+X-IronPort-AV: E=Sophos;i="5.98,241,1673884800"; 
+   d="scan'208";a="223307386"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Mar 2023 00:06:27 +0800
+IronPort-SDR: ZypTryLPrxJVs9u7A5yNXY7ea+aLwtW5Gijc6QgdUWNkczze+JcRalZCbj2bpCYCBrZedET53U
+ JmVwzITWMtF1rkqV6opRkiLy7Gy4rY4ISkubTSIoM9enFBrh2BN3/a96U6dR8FV4709Tk7uK79
+ B5N1KF8/YkMmJ35iCtgJnd+WwJuIzYPztA123rZWORQqEj6tN8jaHbEpLQNsbEsufFTvpjm/ua
+ NKAgzGKntsRbsVP2Sq8iSZUt0dCvGDeFfasjZ0r/nNEUFEEhC2f6a1ZmVAWoA1wj/5UXvpPmsY
+ CcA=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Mar 2023 07:23:07 -0800
+IronPort-SDR: Yf+ZyGK4UmlJoIelPxc38vMDhF/EuR/c3yLmswPnh5DD7lxon1FltAbOuGy8honcZ3ouhuMYPX
+ VwVNrU1GGIR+iT++5DkfU5QIqePemln3OpZWCHqYJCR4/CcLLPqkDOUTSIkqoUh21BnrB+kj/k
+ U2lNrFXgVw7qRJKkj1TSxkUpBSpvd0hfZpPYmxWNZF3HW/COiOhdFexAgofA8emp4mqmfOg+Tp
+ tOFx98Rv+Dl3FZ/s7UbvrNKsEarNHXVJENUxpU5UUb9vNcQPG1gvFoq+rgTP1c9/tfxt3H5WWx
+ 9aM=
+WDCIronportException: Internal
+Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
+  by uls-op-cesaip01.wdc.com with ESMTP; 07 Mar 2023 08:06:25 -0800
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     martin.petersen@oracle.com, bvanassche@acm.org
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH v1] ufs: core: Add support for qTimestamp attribute
+Date:   Tue,  7 Mar 2023 18:06:22 +0200
+Message-Id: <1678205182-13943-1-git-send-email-Arthur.Simchaev@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/6/23 21:53, Ziqi Chen wrote:
-> You are right,  users may hate it if the trace events for legacy mode 
-> and MCQ mode are different. But if I merge them into one event, it will 
-> print much invalid information as we can not add if-else into TP_printk().
-> 
-> (For example:  in SDB legacy mode, you can see such invalid prints " 
-> hqid = 0 , sqt= 0, cqh=0, cqt = 0")
-> 
-> Users may hate these invalid information.
-> 
-> Anyway, I have made new version that merge 2 mode into one event, but 
-> are you sure we really need to use this way? if yes , I can push new 
-> version here.
-> 
-> Or, could you give some suggestions if you have better way.
-> 
-> Below is a piece of new version code , you can preview.
-> 
->      TP_fast_assign(
->          __assign_str(dev_name, dev_name);
->          __entry->str_t = str_t;
->          __entry->tag = tag;
->          __entry->doorbell = doorbell;
->          __entry->hwq_id = hwq? hwq->id: 0;
->          __entry->sq_tail = hwq? hwq->sq_tail_slot: 0;
->          __entry->cq_head = hwq? hwq->cq_head_slot: 0;
->          __entry->cq_tail = hwq? hwq->cq_tail_slot: 0;
->          __entry->transfer_len = transfer_len;
->          __entry->lba = lba;
->          __entry->intr = intr;
->          __entry->opcode = opcode;
->          __entry->group_id = group_id;
->      ),
-> 
->      TP_printk(
->          "%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, 
-> opcode: 0x%x (%s),"
->          "group_id: 0x%x, hqid: %d, sqt: %d, cqh: %d, cqt: %d",
->          show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name), 
-> __entry->tag,
->          __entry->doorbell, __entry->transfer_len, __entry->intr, 
-> __entry->lba,
->          (u32)__entry->opcode, str_opcode(__entry->opcode), 
-> (u32)__entry->group_id,
->          __entry->hwq_id,__entry->sq_tail, __entry->cq_head,  
-> __entry->cq_tail
->      )
+The new qTimestamp attribute was added to UFS 4.0 spec, in order to
+synchronize timestamp between device logs and the host.The spec recommend
+to send this attribute upon device power-on Reset/HW reset or when
+switching to Active state (using SSU command). Due to this attribute,
+the attribute's max value was extended to 8 bytes. As a result,
+the new definition of struct utp_upiu_query_v4_0 was added.
 
-Hi Ziqi,
+Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
 
-Please reply below the original e-mail instead of above. This is 
-expected on Linux kernel mailing lists.
+--
+Changes to v1:
+- Add missed response variable to ufshcd_set_timestamp_attr
+---
+ drivers/ufs/core/ufshcd.c        | 38 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/scsi/scsi_bsg_ufs.h | 25 +++++++++++++++++++++++++
+ include/ufs/ufs.h                |  1 +
+ 3 files changed, 64 insertions(+)
 
-Regarding your question: I propose to leave out the sq_tail, cq_head and 
-cq_tail information. That information may be useful for hardware 
-developers but is not useful for other users of the Linux kernel. So the 
-only piece of information that is left that is MCQ-specific is the 
-hardware queue index. I expect that users will be fine to see that 
-information in trace events.
-
-How about reporting hardware queue index -1 for legacy mode instead of 
-0? That will allow users to tell the difference between legacy mode and 
-MCQ mode from the trace events.
-
-Thanks,
-
-Bart.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 172d25f..cba9ef1 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8386,6 +8386,41 @@ static int ufshcd_device_params_init(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
++static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
++{
++	int err;
++	struct ufs_query_req *request = NULL;
++	struct ufs_query_res *response = NULL;
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	struct utp_upiu_query_v4_0 *upiu_data;
++
++	if (dev_info->wspecversion < 0x400)
++		return;
++
++	ufshcd_hold(hba, false);
++
++	mutex_lock(&hba->dev_cmd.lock);
++
++	ufshcd_init_query(hba, &request, &response,
++			  UPIU_QUERY_OPCODE_WRITE_ATTR,
++			  QUERY_ATTR_IDN_TIMESTAMP, 0, 0);
++
++	request->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
++
++	upiu_data = (struct utp_upiu_query_v4_0 *)&request->upiu_req;
++
++	put_unaligned_be64(ktime_get_real_ns(), &upiu_data->osf3);
++
++	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
++
++	if (err)
++		dev_err(hba->dev, "%s: failed to set timestamp %d\n",
++			__func__, err);
++
++	mutex_unlock(&hba->dev_cmd.lock);
++	ufshcd_release(hba);
++}
++
+ /**
+  * ufshcd_add_lus - probe and add UFS logical units
+  * @hba: per-adapter instance
+@@ -8555,6 +8590,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+ 
++	ufshcd_set_timestamp_attr(hba);
++
+ 	/* Gear up to HS gear if supported */
+ 	if (hba->max_pwr_info.is_valid) {
+ 		/*
+@@ -9592,6 +9629,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		ret = ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);
+ 		if (ret)
+ 			goto set_old_link_state;
++		ufshcd_set_timestamp_attr(hba);
+ 	}
+ 
+ 	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
+index 2801b65..fd3f9e5e 100644
+--- a/include/uapi/scsi/scsi_bsg_ufs.h
++++ b/include/uapi/scsi/scsi_bsg_ufs.h
+@@ -71,6 +71,31 @@ struct utp_upiu_query {
+ };
+ 
+ /**
++ * struct utp_upiu_query_v4_0 - upiu request buffer structure for
++ * query request >= UFS 4.0 spec.
++ * @opcode: command to perform B-0
++ * @idn: a value that indicates the particular type of data B-1
++ * @index: Index to further identify data B-2
++ * @selector: Index to further identify data B-3
++ * @osf4: spec field B-5
++ * @osf5: spec field B 6,7
++ * @osf6: spec field DW 8,9
++ * @osf7: spec field DW 10,11
++ */
++struct utp_upiu_query_v4_0 {
++	__u8 opcode;
++	__u8 idn;
++	__u8 index;
++	__u8 selector;
++	__u8 osf3;
++	__u8 osf4;
++	__be16 osf5;
++	__be32 osf6;
++	__be32 osf7;
++	__be32 reserved;
++};
++
++/**
+  * struct utp_upiu_cmd - Command UPIU structure
+  * @data_transfer_len: Data Transfer Length DW-3
+  * @cdb: Command Descriptor Block CDB DW-4 to DW-7
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 4e8d624..198cb39 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -170,6 +170,7 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+ 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+ 	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
++	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
+ };
+ 
+ /* Descriptor idn for Query requests */
+-- 
+2.7.4
 
