@@ -2,105 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2911C678D5
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 05:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A73C74A4B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 10:10:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbjCHFnJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 00:43:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54890 "EHLO
+        id S229889AbjCHKKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 05:10:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229654AbjCHFnI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 00:43:08 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90EC2E05C;
-        Tue,  7 Mar 2023 21:43:05 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 48084B81BC2;
-        Wed,  8 Mar 2023 05:43:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6B6AC433D2;
-        Wed,  8 Mar 2023 05:42:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678254183;
-        bh=qAHauBFZuHWDue6Ue3uyDXFjtoPdxblGDLd6QAcnlrw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mAAgnxiSveYE/+/NiFEtR+ElfJ3D5C0deEUOHYfYgtDhtpkbUYPoXRYL3N4ZmkcGY
-         PY1w6bRUG2MtM65dBavpJNkLJ7VEDk8pVWUAUOkKbTlrFP9AMYnB32eRHRRi7obFUC
-         V4DJxmGHz7Uf+JT0jy+u02aXLXrURmt3usU5Uqg8cr+HeRx6J65SdBdWNnqThuY+h7
-         n9pIL8VyzERXmNDv//21ZyuQO0w2+0MWIcJTCtrfTe5IApQZ6cK3BxjUMkGBv8FvFs
-         lhV5fJxpuZ7kO91gTnzzoO1FFhnZ+T9j9lVNVtw5Bzf1DagCKtz4VmkyYU73J/aYUw
-         avyrqVczO8nTg==
-Date:   Wed, 8 Mar 2023 11:12:53 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, bvanassche@acm.org, avri.altman@wdc.com,
-        beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] scsi: ufs: mcq: Use active_reqs to check busy in
- clock scaling
-Message-ID: <20230308054253.GD5124@thinkpad>
-References: <e8d303eff0713a3e5f3c3725cdf6e5c5d3de2b01.1678244386.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S230384AbjCHKJ6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 05:09:58 -0500
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 772647B111
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 02:09:52 -0800 (PST)
+Received: by mail-lf1-x133.google.com with SMTP id k14so20623599lfj.7
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Mar 2023 02:09:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1678270191;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=48aNbwgEHUhRck6RQPE3THIY0DWr0lbu5a/+Lgdggd4=;
+        b=ZpIS/ppyxfpXVtWdulOE8xfF9Trl8FC1LTCOGkEGgcYDHAzfMZ0atkilaKPxpJvAWN
+         8/r5IBkuBVTlKiuk/0IvmuJAe/0NNMQYwsfpqBSj/aON3fvWkOMzOyYK+HPszgxKdE8O
+         WLY8W94YzAgaMh+USZUe+iWyNB5gTgdpKEs5GIqQoPXHWoze4mRx0MVGcnXcu2/LVKv0
+         vJaRoJcdxIvGFklGv398ovf9T0BKN+aEFVYbpLH1xzZV3oUIFlzD9m0AAWBOP5G09DxY
+         sMmb9q7McAkQUVwwtQ/fJfjkAFsllWEGOgB+ey8DZ6yJB62xIjqCpKEBBQ7FNgx1+nRn
+         ldTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678270191;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=48aNbwgEHUhRck6RQPE3THIY0DWr0lbu5a/+Lgdggd4=;
+        b=vF4OXeCw8fnDT8yVjrE2G+T7/YMWyikt5/yJvcHH+J7glflnYGIslhDpW439wbLtwY
+         K4DEHBro/EDvwS2D4ZOzMFoYIK1+NJhqgKD2UFJZtUmSLLP6JukTVHAe160pkkims05p
+         PscH5Hs5SeTxsAnEd2Bttx5cV01POuL0ZUMHYbLiWat4834OC3YQL6MknaShoLDVrbGn
+         niefU19BMrQHbSED/3KkNwlyfOHiDxT6QJK+HDOKV/yiwCd5cKQ7YHpBPyF5YoUzfiCs
+         qCVrUN/xB2vYUvW9BZ+pNCmofR4PhGPamW3FW98XwrBrDZFLi181bHc/S9utOo1DpRpP
+         /+VQ==
+X-Gm-Message-State: AO0yUKUcbwujviezeeDiOQz9WPgS4Iw8lw5/I3OBNk886Ilj2q3Wv3y3
+        vKHCnZD3DCgUJdLvYuAAZTflKyuCkf1+cuw5UwA=
+X-Google-Smtp-Source: AK7set/s4WTptWdpKAuGcr/1Ufve3MJkvhM6ta3Z9PV0H8GqEWXsPUHjTWDVZBqRuABACPYawiXzmA==
+X-Received: by 2002:ac2:558e:0:b0:4dc:852d:9b88 with SMTP id v14-20020ac2558e000000b004dc852d9b88mr4906462lfg.45.1678270190690;
+        Wed, 08 Mar 2023 02:09:50 -0800 (PST)
+Received: from [192.168.1.101] (abyj16.neoplus.adsl.tpnet.pl. [83.9.29.16])
+        by smtp.gmail.com with ESMTPSA id d21-20020ac25455000000b004dc7fe3a2d3sm2283801lfn.135.2023.03.08.02.09.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Mar 2023 02:09:50 -0800 (PST)
+Message-ID: <25c17af5-8f6b-a2c3-dab3-f9bc69711db7@linaro.org>
+Date:   Wed, 8 Mar 2023 11:09:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e8d303eff0713a3e5f3c3725cdf6e5c5d3de2b01.1678244386.git.quic_asutoshd@quicinc.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v7 3/6] phy: qcom-qmp: Add SM6125 UFS PHY support
+Content-Language: en-US
+To:     Lux Aliaga <they@mint.lgbt>, agross@kernel.org,
+        andersson@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
+        kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, keescook@chromium.org, tony.luck@intel.com,
+        gpiccoli@igalia.com
+Cc:     ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
+        phone-devel@vger.kernel.org, martin.botka@somainline.org,
+        marijn.suijten@somainline.org
+References: <20230306170817.3806-1-they@mint.lgbt>
+ <20230306170817.3806-4-they@mint.lgbt>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+In-Reply-To: <20230306170817.3806-4-they@mint.lgbt>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 07, 2023 at 07:00:09PM -0800, Asutosh Das wrote:
-> Multi Circular Queue doesn't use outstanding_reqs.
-> But the ufs clock scaling functions use outstanding_reqs to
-> determine if there're requests pending. When MCQ is enabled
-> this check always returns false.
+
+
+On 6.03.2023 18:08, Lux Aliaga wrote:
+> The SM6125 UFS PHY is compatible with the one from SM6115. Add a
+> compatible for it and modify the config from SM6115 to make them
+> compatible with the SC8280XP binding
 > 
-> Hence use active_reqs to check if there're pending requests.
-> 
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-
-This looks like a fix to me. Hence there should be a fixes tag. With that,
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-Thanks,
-Mani
-
+> Signed-off-by: Lux Aliaga <they@mint.lgbt>
+> Reviewed-by: Martin Botka <martin.botka@somainline.org>
 > ---
->  drivers/ufs/core/ufshcd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 172d25fef740..c6b35123c83b 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1500,7 +1500,7 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
->  	scaling->window_start_t = curr_t;
->  	scaling->tot_busy_t = 0;
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> index 318eea35b972..44c29fdfc551 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> @@ -620,6 +620,13 @@ static const char * const qmp_phy_vreg_l[] = {
+>  	"vdda-phy", "vdda-pll",
+>  };
 >  
-> -	if (hba->outstanding_reqs) {
-> +	if (scaling->active_reqs) {
->  		scaling->busy_start_t = curr_t;
->  		scaling->is_busy_started = true;
->  	} else {
-> @@ -2118,7 +2118,7 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
+> +static const struct qmp_ufs_offsets qmp_ufs_offsets_v3_660 = {
+> +	.serdes		= 0,
+> +	.pcs		= 0xc00,
+> +	.tx		= 0x400,
+> +	.rx		= 0x600,
+> +};
+> +
+>  static const struct qmp_ufs_offsets qmp_ufs_offsets_v5 = {
+>  	.serdes		= 0,
+>  	.pcs		= 0xc00,
+> @@ -693,6 +700,8 @@ static const struct qmp_phy_cfg sdm845_ufsphy_cfg = {
+>  static const struct qmp_phy_cfg sm6115_ufsphy_cfg = {
+>  	.lanes			= 1,
 >  
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	hba->clk_scaling.active_reqs--;
-> -	if (!hba->outstanding_reqs && scaling->is_busy_started) {
-> +	if (!scaling->active_reqs && scaling->is_busy_started) {
->  		scaling->tot_busy_t += ktime_to_us(ktime_sub(ktime_get(),
->  					scaling->busy_start_t));
->  		scaling->busy_start_t = 0;
-> -- 
-> 2.7.4
-> 
+> +	.offsets		= &qmp_ufs_offsets_v3_660,
+Will this not trigger OOB r/w for the users of qcom,sm6115-smp-ufs-phy
+which specify the regions separately (old binding style)?
 
--- 
-மணிவண்ணன் சதாசிவம்
+Konrad
+> +
+>  	.serdes_tbl		= sm6115_ufsphy_serdes_tbl,
+>  	.serdes_tbl_num		= ARRAY_SIZE(sm6115_ufsphy_serdes_tbl),
+>  	.tx_tbl			= sm6115_ufsphy_tx_tbl,
+> @@ -1172,6 +1181,9 @@ static const struct of_device_id qmp_ufs_of_match_table[] = {
+>  	}, {
+>  		.compatible = "qcom,sm6115-qmp-ufs-phy",
+>  		.data = &sm6115_ufsphy_cfg,
+> +	}, {
+> +		.compatible = "qcom,sm6125-qmp-ufs-phy",
+> +		.data = &sm6115_ufsphy_cfg,
+>  	}, {
+>  		.compatible = "qcom,sm6350-qmp-ufs-phy",
+>  		.data = &sdm845_ufsphy_cfg,
