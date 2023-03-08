@@ -2,182 +2,385 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D29CC6FA99
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Mar 2023 23:41:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D429C6FA99
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 00:41:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229989AbjCGXlR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 18:41:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56702 "EHLO
+        id S230098AbjCHAlX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 19:41:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229944AbjCGXlO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 18:41:14 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0BC08F719;
-        Tue,  7 Mar 2023 15:41:11 -0800 (PST)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 327JwnLC018505;
-        Tue, 7 Mar 2023 23:40:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2022-7-12;
- bh=Y5NtI8+MP8YaTJhzubCmCktYEZZssFEEARrQdFvWMOs=;
- b=cRO3L+RF0Ch5FqO7uSco5bilQrmVkz7kIu9mvzoPGb88ucGTr9ho04k3V7Wamqb/Th8V
- ACp2Rls/tSu0mapKKlTwj0iJFMxAkFyQNbhYLauFA8h/H42ye3wTfEF+8QUtc1tiIt5B
- DaMQZ+L784aZEaIjaLCSREBC1KJ4UR4M0MOyeFLxawoJP1rgPE24d1EW8zSWTzKzOjAv
- HBs8CVoUhq+b+b+sRgbJ8OxjitC9cJ/T6XRzqnDXxIa1SILZw+o/Lvnebd88MoFU63+X
- X6dtRPOZ129EfSpHa4EQiwNqpsHJ9PAgROHrLio3I508F6/jM34JAprIzaHgy4ufxOSo eg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3p415hxyma-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Mar 2023 23:40:53 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 327Mj4DB016365;
-        Tue, 7 Mar 2023 23:40:53 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3p4tus12p7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Mar 2023 23:40:53 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WgG2LRvCEj0syycvlNbY3A0zv9H6GmHQAzS3lK4BfM+aYVI5KBQ2NVhfZz0lwA//wn4KUcnVLD6RXU+aWfXurvrjVprM+BLaSOLnq+cAeHhsPMdv0Iq/05SWJCr6lsvZ6iKuDhfZb7oK3GECeTOG9JZCA6Yrh26pJzdhLxpRf9QKjvXA84i6sNv4UjNz0rSbEPJPKSjclobbcF+EXRGdKwpu4UoN3nZmH2RiY7x/B61iPou9bbfiDcP93zCEmkW/ZIBiKjZ6WcTVN6xz5OC/hq3Abyy9JdExVAAm1F+4jqceVD2QOwoUCTHDbsM+3qWdXAMOwXfxRHk5CvQosbjnhA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Y5NtI8+MP8YaTJhzubCmCktYEZZssFEEARrQdFvWMOs=;
- b=hPhMCr5QKeJ2+l6ngilqn9LsmeIdIv+IaDRF+rY40dO7GZXLvJ+k+Bag9F0LluBoFq5tatQd9xcJHpTnmib9GG4SkiuCJVFh9bESCP2ttZqvndBAqpHiMKghrobQC5dSvhkLjlNb/JuUrYC5IogcPkqWQ1ZTM9K/jQFWwJXn8nzlLZZZe7mpNb+ZPhzDXJvR59cCEp1fr/XYBA0aAV7och59rPQA3pkbAX1CLvBIziZqZDPsfzYKWzFsiu07qt7QqDujd7HmBbulM1wWh8Ge6Km1BkoPhtBKFN36J6QyKIaBWKYcCK9t61Od0Bz1yj/PirSiGJblw6cYSHOZ+7+oOw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S230205AbjCHAlH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 19:41:07 -0500
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E532B06EA;
+        Tue,  7 Mar 2023 16:40:40 -0800 (PST)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-53852143afcso277492397b3.3;
+        Tue, 07 Mar 2023 16:40:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y5NtI8+MP8YaTJhzubCmCktYEZZssFEEARrQdFvWMOs=;
- b=ld/EV9yyG81BysxCZ1XceWRLfhN8YPLnUEulvRAc8Bk+MP4LDABFmJu8EZL9VJ1/krepTasxbfJPM6W25DX/hAkuUGBIB/NbQWg6zHIOauamFnUzwfvy8bkJ0DyU/n5/KWi7mSZ18K1GKCNmK2dIK3UtLChpaljlzwyY/NFP2FM=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by CYYPR10MB7566.namprd10.prod.outlook.com (2603:10b6:930:c0::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.29; Tue, 7 Mar
- 2023 23:40:50 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::8ef9:5939:13aa:d6a2]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::8ef9:5939:13aa:d6a2%8]) with mapi id 15.20.6156.029; Tue, 7 Mar 2023
- 23:40:50 +0000
-To:     Lee Duncan <lduncan@suse.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Lee Duncan <leeman.duncan@gmail.com>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1edq0jg2h.fsf@ca-mkp.ca.oracle.com>
-References: <20220928181350.9948-1-leeman.duncan@gmail.com>
-        <88927435-ae58-c24b-e7b7-b675985de433@leemhuis.info>
-        <86D685F2-D411-460B-A09B-6BE942372F0A@gmail.com>
-        <yq1zg8pl1nq.fsf@ca-mkp.ca.oracle.com>
-        <f8c5619f-1e1a-f759-6ab6-ea84bba3d635@suse.com>
-Date:   Tue, 07 Mar 2023 18:40:48 -0500
-In-Reply-To: <f8c5619f-1e1a-f759-6ab6-ea84bba3d635@suse.com> (Lee Duncan's
-        message of "Tue, 7 Mar 2023 08:33:26 -0800")
-Content-Type: text/plain
-X-ClientProxiedBy: DM6PR08CA0040.namprd08.prod.outlook.com
- (2603:10b6:5:1e0::14) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=gmail.com; s=20210112; t=1678236039;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8rfo1qZ3pkzFGNnScMkA66cAh3z1bEGK9olcROqT2/A=;
+        b=ktfUs99lrSAqqVak3YmhW/91qA4RlBEMnEV2iKPsLYE1jU7OYUWmnXpYA6f/o2ZYeN
+         RtThRTR7lT8xyDwbnxvYFtK8aXt2WnNNozNAvJUmH9JLB8HbeaqWi4zCk19zcOCvHY/m
+         SawVw64lgVqaxvnzZ7rf2QU2bYwf6CvAs4zTZrSPeuhh+pJZ+vhasGwU8OROdrQ+mu5O
+         KAQO2CkWBpN4+vp8BqHIJJj5Yt5BIU+bgkyKPeLEgQY9L8oV5s4eqzA35uak4nMkN1/x
+         720eaJK4yWnLZSNHwGePXALaQYNq+w2P8O/CBp8Q5x0i9tiePqj5nczA5d1j9lKQL+e+
+         x+NA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678236039;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8rfo1qZ3pkzFGNnScMkA66cAh3z1bEGK9olcROqT2/A=;
+        b=O+qTyKL7nrCuVRolDhPXEZdOVo75Xebh+UiynNH4kHle/4wNPVuC4WQDDAMdMJJcUU
+         jsMyvwno/8lvqtFnxYQ/frc+EvnP4X6tysAAcbpXBvLUd3caGJch1H1+ZHvgCEzM1sxh
+         pxuc0AqSBU0Gv0QNHORFBnlN0Q2NMlhDXY616UOi/MhZ/cM3wen+dYAkKIjYfc1NNzEn
+         W6dJXHdMhdHGnZn6CvumU5+t+us3+pBoU3z8YXJtaspEmU/gzRO4uuZoYzT+1wObZ6Jx
+         bkV4/+Kq22tBXJ51Dt7+tu2RnNzuBmbxFASi7B4N1RHR/OJIgspwcJunNbYvOmLPrCmL
+         zBgg==
+X-Gm-Message-State: AO0yUKU6u1ce9atSH00vLyITotbmBSeZrVU3QCtSr7QW8QwpHGZA7YSE
+        QtObcBgcDcpbvj2vvn9Z6foKRkNHu74PNaHu430=
+X-Google-Smtp-Source: AK7set/pbhAAL2gbOk96qiA+YpPodgvSWVQJAhLYmlep2/8RkK+ONxpcpjxAuG19chxMIEJ0eEZaTiScvJOojxU3uMg=
+X-Received: by 2002:a81:4428:0:b0:533:8b3a:d732 with SMTP id
+ r40-20020a814428000000b005338b3ad732mr9877504ywa.4.1678236039461; Tue, 07 Mar
+ 2023 16:40:39 -0800 (PST)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|CYYPR10MB7566:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0c13fb1f-5775-40ce-7587-08db1f656253
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5rvt0dKOJs8Imo79zQb4ecTqCZE+9UKZchv27bPUhq4GzivljKVvkPU5znivjIwyNOejFTCEL4EPmDhHGqa4s9sonrcmk/3t6sHf0wa6p18J7HjxUUl3rvtjtAsO8L3+pVvL55rbDk1jAC3oAuCugzkyOFwmq+yVE+hM7DUsQaA9lILHvvXSwZo+oDtpmim4Rb2nPUU38XgVhQrvp4epvwWsdPhnPsIyS5MR9Jmtlt3BX8wxBpIUP063qdUGiFpeFYLbZVgyJ+8yfbu+G/lN7rsGT2bZmiREmeq1vXeDjmTfPM7XRH9h11NK7rYRGBpTwG299mfbM60LIclDiwdoMs0azi2UjnIe00MirNk6B3fSaRoa0ynIUE4mzjuE3qTRc4yivOZ3g+UIMcnq+XBgQ23F8ohgfr3sevM0f4DziecLlqOFkDdxVIpJncr7fNCw4jBQEYmLXk/ENzdwusoNyDsIVb2aU3KOsepBAFrCrMsELhyNwGvp1P6dNhVeAbiwAoR8Tpq4+VoFVshApOMl59NmdP0j197T7AO8GZGK7a4+Nac3DSgvmn/sLiyeDaKfR+NF8DxG60F/cO6/pdIoUSHmFgpx/YTdNk0QNI2Z2rwp/kK666nPPmjpNFQo9GZu/X5wTMKRtrgvnXwRXIL2Mg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(366004)(39860400002)(346002)(376002)(136003)(396003)(451199018)(41300700001)(5660300002)(36916002)(8936002)(54906003)(478600001)(4326008)(66556008)(66476007)(8676002)(66946007)(6916009)(316002)(6506007)(86362001)(26005)(6512007)(186003)(2906002)(6486002)(4744005)(38100700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?P0H+k0iLlzNQ+WaFUz+V9FiuSCTIFeYcdp/C4gCDf+8LSGNBn2jecZ4GEDKo?=
- =?us-ascii?Q?7i47sXWTuDa1cBriGlHx2btB6jwWHbF2IzWwYZUBN526HTxGHahm8MaXN7TQ?=
- =?us-ascii?Q?z83FWTEHH/lluAI63acV1ge4IRG/hOrKYFhr72bMeZ8uk5IUq6yq87I0Gkql?=
- =?us-ascii?Q?Fyl83yxUaEpt+FzVGWPtV9ornsIjSi/v+1iKTGc/VCp+bQfgvJLKU/qTAIJW?=
- =?us-ascii?Q?HY6ONCOpfEterZ6v7/PJF6Vvuj6AehHxMMyc70uYXbC3VMTTP9LKK61u9Bhk?=
- =?us-ascii?Q?2d1eU4BiV4m+VrYo9cwgs4r3pUYKNj5hiqRgmkNwQ3NT3+Pha/lhZsE1eK33?=
- =?us-ascii?Q?LWFF+HbN0N016vkSOjtdGOWLfCsLIwPsO5+PxAZPRwjDnftIeYv+2lioSRCi?=
- =?us-ascii?Q?w8AQpPlYCNNngLAt7ZRULtWnJZBkJuRuQ1YfbQXRJ3ItxcpG8HpBsxPn5ALS?=
- =?us-ascii?Q?1x6brnBi9U4KytRwgVcd7bgkouYisy90sayttq49BxQqWuQAzHRIETLZosSI?=
- =?us-ascii?Q?fzOnOTXVEYGyDVNSu6ABWXr8RIUB3oM4yS4LpbmxA4AfEHE+KWqYEzH4T/d3?=
- =?us-ascii?Q?4liToqBDSMqP//eB91S67EVoK8BpkQt/Jk1g871mkXuZ52n7A6/LCnQXAfeI?=
- =?us-ascii?Q?R+Dy1BkJiItZuouDrG8qvaxJZ2XSrKrimqaUa9PhaLo0m/S5ho0ekzqxPjnv?=
- =?us-ascii?Q?oK+Frdd8adKE5IxvSRoQkFe0uDy21v/FYvV1JAtBl0QQog674RXy3cCfNV6v?=
- =?us-ascii?Q?DjyxtgUy6FF4cREpRDotSgXtlUV67C40KKOnvNvojrxozJSzHdPMpBuKxQOZ?=
- =?us-ascii?Q?L/6uaVJ23DYzru3jXibLVgq+cruj+JzpUGwIc7jNVvmgsP4hb+4b40F06bM7?=
- =?us-ascii?Q?egSqE8eTSQthD+Nrg1DP2WkH+XlpV8sCsuwAEvSXbEpqLi8sSp6C9mtUq2aP?=
- =?us-ascii?Q?IN+lIKe6ctayljs5eAgZQ8AXjYy5SnPtdnUmQ6UEFGLQsg7d/52ZLyTEpuMU?=
- =?us-ascii?Q?T9Tfa/Qc6z6EjJfctGoPkVRu3Ag3iW/vbfA1nFggQzQgaP4YW+RtwklnmRj6?=
- =?us-ascii?Q?ROBoY8A62X4PviFMl2PVFeFwvsNG8jxU6qFZIf/Q5ADEyj/93EXaZvW2BteL?=
- =?us-ascii?Q?NVSRczRKrg0e3ZmHD0B2xBFKFM2tgr0GUHy9HzNoM178D5EV1nlwWZA2HjCr?=
- =?us-ascii?Q?0qU+DWvfwWLMVYRUKBsM8T52NXZhqsgw0WA51iS0YvUs9Gi98bNVUbfTGXTW?=
- =?us-ascii?Q?VjxQty/polwQdXpmKm0WS3OA+PiEOdH79PtCEA30hm+4ws5MisKW7XLj7rZD?=
- =?us-ascii?Q?x8H0+ZNUy7CTWt4onc8+h0tBZ3sxIKRnxjfP8TsA3JNCIhj67c2YB443XcXm?=
- =?us-ascii?Q?SYW9OgB2oy1xENBOyckCWf9uuD2ChCYiom2dFWxYu9lFjS5+BdXQ0kIPdeWX?=
- =?us-ascii?Q?H1xghXnR6BklLDdct321yRJn9X1urcAHgCDGCsNWf5t38XMqH9Y8rkXrg8B7?=
- =?us-ascii?Q?YIgIxjQrom8N6lTMReIbeO3BZEfYJyfuKK6lUUm3LoOOXv4D5ucONczD9dri?=
- =?us-ascii?Q?XeD7s0lkIhXcFGKSl19ejWQEfaEvgtptid+H3qoI1LmMJTNpIshLD14uIeEs?=
- =?us-ascii?Q?/Q=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?Li1exKrXQsIvElTmyn4QrPvpvxLBJ3jZS4eEcYjRh03RZCb4e9bcF0b9MRtx?=
- =?us-ascii?Q?jxQC5Wt1+KuXqbAuxFopSZurAJRirD2yN99N3TsQK/iE9K6oBb7sA5f36bZF?=
- =?us-ascii?Q?glTrUcCrhHDLtK18ESQO7iuYVKfm8vLtPo9UGqXrOG/tPqfCthrN3BqmTOvl?=
- =?us-ascii?Q?voiEjQ7U5AtTdXuO3cD0YMEkDomEsHqotv91DPdYq/WTHQ8JR+jBsyV8IHxA?=
- =?us-ascii?Q?DuZOFzl11A4fTwL7fMyK/JGbpG8FSUz+efNHyNlLUaqtPzSUDjl3fwchTJ8D?=
- =?us-ascii?Q?Ytf9O03BNV5OGI4HiLWwU/i6NXUJAR56oRJBX5kNLf5LChPet218rT/s4+/x?=
- =?us-ascii?Q?cu4W40c1qiXU2Aoo4Yi6CgBi+FlujID2eDV+BkxwQcak9lrOIVkOFqQ3Yc+q?=
- =?us-ascii?Q?enAKj0QIyq+8cRVV+yJRdDfFHK/ksNiAnfvb8cdJv4C4xqYT+6Qvd7WA8wJj?=
- =?us-ascii?Q?Yz9uiECDntesXD5oUN5M1fCBCiG/tZP6rPEw2+yEgoL+Pnp6pYHkKfjif4mw?=
- =?us-ascii?Q?k6q7eqir+Ro6aQLKqYRLXF7LLzf/ZzA2lU2zE+QQ3ydjVMQKxu3JwJQ5kodo?=
- =?us-ascii?Q?FKuq8qZiaVBf0cDLzPPA4EepbkyRrvr80J5uJzomqFYZKJkz6Ia9JKcdK+QG?=
- =?us-ascii?Q?C8g4fZ80HPvRMC0Org1iDg3v8gDbRbtz0Mkm/01UdjeHNvBG15ZYtGKHtiVG?=
- =?us-ascii?Q?Cv3i4KUGxWYHWuhQfkfNZFswc4oc+jef36g16cRI1JvYU3blbxff+QXcQj/C?=
- =?us-ascii?Q?2u1gnUnKNrFq2Mo9NHgMiLUNwkWmJfMf5tiSmtOAg6NBI23T+A8P6n6Y9YGU?=
- =?us-ascii?Q?LNVV915bJxVo6Hkr/waR9+kg5Uh5JQfoj23pSZJfszKlsqmmyZo+b0/KfYwF?=
- =?us-ascii?Q?rqBCaEx+98/VMr6ouC4tYv31wbmhNgztThdFXC1YqnGB8zYvpNCPEYvdmWcy?=
- =?us-ascii?Q?xCBXedslzKqNPsYRLwoMRg=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c13fb1f-5775-40ce-7587-08db1f656253
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Mar 2023 23:40:50.6570
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zpr1y0uJyEVoXCuC2j7mqsC6XlFSdlJv5cL6yXQ/InPAAz7PF7RkekRkeNNminShm0g/UsLtPer9pttok7TYYZR0ULuZ+AsL4daYFPSmz1M=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYYPR10MB7566
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-07_16,2023-03-07_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=875 bulkscore=0
- malwarescore=0 spamscore=0 mlxscore=0 suspectscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303070208
-X-Proofpoint-GUID: z45Hshh_dqBTKdx4Qr_T1trx_QmjoROn
-X-Proofpoint-ORIG-GUID: z45Hshh_dqBTKdx4Qr_T1trx_QmjoROn
+References: <20230306210312.2614988-1-vernon2gm@gmail.com> <20230306210312.2614988-4-vernon2gm@gmail.com>
+In-Reply-To: <20230306210312.2614988-4-vernon2gm@gmail.com>
+From:   Justin Tee <justintee8345@gmail.com>
+Date:   Tue, 7 Mar 2023 16:40:28 -0800
+Message-ID: <CABPRKS-DRvmZpoXBTogjEf5Q+oL5GR71nSVRgmVo5vWx-9OQow@mail.gmail.com>
+Subject: Re: [PATCH v2 3/4] scsi: lpfc: fix lpfc_cpu_affinity_check() if no
+ further cpus set
+To:     Vernon Yang <vernon2gm@gmail.com>
+Cc:     torvalds@linux-foundation.org, tytso@mit.edu, Jason@zx2c4.com,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        yury.norov@gmail.com, andriy.shevchenko@linux.intel.com,
+        linux@rasmusvillemoes.dk, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, linux-kernel@vger.kernel.org,
+        wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Justin Tee <justin.tee@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Vernon,
 
-Lee,
+Is it possible to move the new helper routine lpfc_next_present_cpu
+into the lpfc.h header file around where lpfc_next_online_cpu is
+defined?
 
-> My worry is that this won't always work. Looking at the code, the
-> buffer sizes used for VPD pages include 8, 32, 64, and 252 bytes. I'm
-> not sure how reading 255 bytes into an 8-byte buffer would work.
+Also, with slight modifications we could use the new
+lpfc_next_present_cpu helper routine for the
+lpfc_nvmet_setup_io_context() patch as well so that we can contain all
+lpfc changes within one patch.
 
-In the scsi_get_vpd_buf() case we will allocate a 255 byte buffer since
-that's what scsi_get_vpd_size() returns for a VDASD.
+---
+ drivers/scsi/lpfc/lpfc.h       | 20 ++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c  | 31 +++++++------------------------
+ drivers/scsi/lpfc/lpfc_nvmet.c |  5 +----
+ 3 files changed, 28 insertions(+), 28 deletions(-)
 
-And in the scsi_get_vpd_page() case, where a buffer already exists, we
-clamp the INQUIRY size to the minimum of scsi_get_vpd_size() and the
-buffer length provided by the caller.
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index cf55f8e3bd9f..f342d6bc5726 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -1737,6 +1737,26 @@ lpfc_next_online_cpu(const struct cpumask
+*mask, unsigned int start)
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+     return cpu_it;
+ }
++
++/**
++ * lpfc_next_present_cpu - Finds next present CPU after n
++ * @n: the cpu prior to search
++ *
++ * Note: If no next present cpu, then fallback to first present cpu.
++ *
++ **/
++static inline unsigned int lpfc_next_present_cpu(int n)
++{
++    unsigned int cpu;
++
++    cpu =3D cpumask_next(n, cpu_present_mask);
++
++    if (cpu >=3D nr_cpu_ids)
++        cpu =3D cpumask_first(cpu_present_mask);
++
++    return cpu;
++}
++
+ /**
+  * lpfc_sli4_mod_hba_eq_delay - update EQ delay
+  * @phba: Pointer to HBA context object.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 3e1e1d17b2b4..f28af338341f 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12560,10 +12560,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba
+*phba, int vectors)
+                     (new_cpup->eq !=3D LPFC_VECTOR_MAP_EMPTY) &&
+                     (new_cpup->phys_id =3D=3D cpup->phys_id))
+                     goto found_same;
+-                new_cpu =3D cpumask_next(
+-                    new_cpu, cpu_present_mask);
+-                if (new_cpu =3D=3D nr_cpumask_bits)
+-                    new_cpu =3D first_cpu;
++                new_cpu =3D lpfc_next_present_cpu(new_cpu);
+             }
+             /* At this point, we leave the CPU as unassigned */
+             continue;
+@@ -12575,9 +12572,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba,
+int vectors)
+              * chance of having multiple unassigned CPU entries
+              * selecting the same IRQ.
+              */
+-            start_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
+-            if (start_cpu =3D=3D nr_cpumask_bits)
+-                start_cpu =3D first_cpu;
++            start_cpu =3D lpfc_next_present_cpu(new_cpu);
+
+             lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+                     "3337 Set Affinity: CPU %d "
+@@ -12610,10 +12605,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba
+*phba, int vectors)
+                 if (!(new_cpup->flag & LPFC_CPU_MAP_UNASSIGN) &&
+                     (new_cpup->eq !=3D LPFC_VECTOR_MAP_EMPTY))
+                     goto found_any;
+-                new_cpu =3D cpumask_next(
+-                    new_cpu, cpu_present_mask);
+-                if (new_cpu =3D=3D nr_cpumask_bits)
+-                    new_cpu =3D first_cpu;
++                new_cpu =3D lpfc_next_present_cpu(new_cpu);
+             }
+             /* We should never leave an entry unassigned */
+             lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+@@ -12629,9 +12621,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba,
+int vectors)
+              * chance of having multiple unassigned CPU entries
+              * selecting the same IRQ.
+              */
+-            start_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
+-            if (start_cpu =3D=3D nr_cpumask_bits)
+-                start_cpu =3D first_cpu;
++            start_cpu =3D lpfc_next_present_cpu(new_cpu);
+
+             lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+                     "3338 Set Affinity: CPU %d "
+@@ -12702,9 +12692,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba,
+int vectors)
+                 new_cpup->core_id =3D=3D cpup->core_id) {
+                 goto found_hdwq;
+             }
+-            new_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
+-            if (new_cpu =3D=3D nr_cpumask_bits)
+-                new_cpu =3D first_cpu;
++            new_cpu =3D lpfc_next_present_cpu(new_cpu);
+         }
+
+         /* If we can't match both phys_id and core_id,
+@@ -12716,10 +12704,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba
+*phba, int vectors)
+             if (new_cpup->hdwq !=3D LPFC_VECTOR_MAP_EMPTY &&
+                 new_cpup->phys_id =3D=3D cpup->phys_id)
+                 goto found_hdwq;
+-
+-            new_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
+-            if (new_cpu =3D=3D nr_cpumask_bits)
+-                new_cpu =3D first_cpu;
++            new_cpu =3D lpfc_next_present_cpu(new_cpu);
+         }
+
+         /* Otherwise just round robin on cfg_hdw_queue */
+@@ -12728,9 +12713,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba,
+int vectors)
+         goto logit;
+  found_hdwq:
+         /* We found an available entry, copy the IRQ info */
+-        start_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
+-        if (start_cpu =3D=3D nr_cpumask_bits)
+-            start_cpu =3D first_cpu;
++        start_cpu =3D lpfc_next_present_cpu(new_cpu);
+         cpup->hdwq =3D new_cpup->hdwq;
+  logit:
+         lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.=
+c
+index 7517dd55fe91..2d8ac2ceb6f3 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1620,10 +1620,7 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
+             cpu =3D cpumask_first(cpu_present_mask);
+             continue;
+         }
+-        cpu =3D cpumask_next(cpu, cpu_present_mask);
+-        if (cpu =3D=3D nr_cpu_ids)
+-            cpu =3D cpumask_first(cpu_present_mask);
+-
++        cpu =3D lpfc_next_present_cpu(cpu);
+     }
+
+     for_each_present_cpu(i) {
+--=20
+2.38.0
+
+Thanks,
+Justin
+
+On Mon, Mar 6, 2023 at 1:10=E2=80=AFPM Vernon Yang <vernon2gm@gmail.com> wr=
+ote:
+>
+> When cpumask_next() the return value is greater than or equal to
+> nr_cpu_ids, it indicates invalid.
+>
+> Before commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask
+> optimizations"), when cpumask_next() returned an invalid cpu, the driver
+> used the judgment equal to nr_cpu_ids to indicate the invalid cpu, so it
+> happened to work normally, but this is the wrong approach.
+>
+> After commit 596ff4a09b89 ("cpumask: re-introduce constant-sized cpumask
+> optimizations"), these incorrect practices actively buggy, so fix it to
+> correctly.
+>
+> Signed-off-by: Vernon Yang <vernon2gm@gmail.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 43 ++++++++++++++++-------------------
+>  1 file changed, 20 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.=
+c
+> index 61958a24a43d..acfffdbe9ba1 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -12473,6 +12473,16 @@ lpfc_hba_eq_hdl_array_init(struct lpfc_hba *phba=
+)
+>         }
+>  }
+>
+> +static inline int lpfc_next_present_cpu(int n, int first_cpu)
+> +{
+> +       n =3D cpumask_next(n, cpu_present_mask);
+> +
+> +       if (n >=3D nr_cpu_ids)
+> +               n =3D first_cpu;
+> +
+> +       return n;
+> +}
+> +
+>  /**
+>   * lpfc_cpu_affinity_check - Check vector CPU affinity mappings
+>   * @phba: pointer to lpfc hba data structure.
+> @@ -12561,10 +12571,8 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, i=
+nt vectors)
+>                                     (new_cpup->eq !=3D LPFC_VECTOR_MAP_EM=
+PTY) &&
+>                                     (new_cpup->phys_id =3D=3D cpup->phys_=
+id))
+>                                         goto found_same;
+> -                               new_cpu =3D cpumask_next(
+> -                                       new_cpu, cpu_present_mask);
+> -                               if (new_cpu =3D=3D nr_cpumask_bits)
+> -                                       new_cpu =3D first_cpu;
+> +
+> +                               new_cpu =3D lpfc_next_present_cpu(new_cpu=
+, first_cpu);
+>                         }
+>                         /* At this point, we leave the CPU as unassigned =
+*/
+>                         continue;
+> @@ -12576,9 +12584,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, in=
+t vectors)
+>                          * chance of having multiple unassigned CPU entri=
+es
+>                          * selecting the same IRQ.
+>                          */
+> -                       start_cpu =3D cpumask_next(new_cpu, cpu_present_m=
+ask);
+> -                       if (start_cpu =3D=3D nr_cpumask_bits)
+> -                               start_cpu =3D first_cpu;
+> +                       start_cpu =3D lpfc_next_present_cpu(new_cpu, firs=
+t_cpu);
+>
+>                         lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>                                         "3337 Set Affinity: CPU %d "
+> @@ -12611,10 +12617,8 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, i=
+nt vectors)
+>                                 if (!(new_cpup->flag & LPFC_CPU_MAP_UNASS=
+IGN) &&
+>                                     (new_cpup->eq !=3D LPFC_VECTOR_MAP_EM=
+PTY))
+>                                         goto found_any;
+> -                               new_cpu =3D cpumask_next(
+> -                                       new_cpu, cpu_present_mask);
+> -                               if (new_cpu =3D=3D nr_cpumask_bits)
+> -                                       new_cpu =3D first_cpu;
+> +
+> +                               new_cpu =3D lpfc_next_present_cpu(new_cpu=
+, first_cpu);
+>                         }
+>                         /* We should never leave an entry unassigned */
+>                         lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+> @@ -12630,9 +12634,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, in=
+t vectors)
+>                          * chance of having multiple unassigned CPU entri=
+es
+>                          * selecting the same IRQ.
+>                          */
+> -                       start_cpu =3D cpumask_next(new_cpu, cpu_present_m=
+ask);
+> -                       if (start_cpu =3D=3D nr_cpumask_bits)
+> -                               start_cpu =3D first_cpu;
+> +                       start_cpu =3D lpfc_next_present_cpu(new_cpu, firs=
+t_cpu);
+>
+>                         lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>                                         "3338 Set Affinity: CPU %d "
+> @@ -12703,9 +12705,8 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, in=
+t vectors)
+>                             new_cpup->core_id =3D=3D cpup->core_id) {
+>                                 goto found_hdwq;
+>                         }
+> -                       new_cpu =3D cpumask_next(new_cpu, cpu_present_mas=
+k);
+> -                       if (new_cpu =3D=3D nr_cpumask_bits)
+> -                               new_cpu =3D first_cpu;
+> +
+> +                       new_cpu =3D lpfc_next_present_cpu(new_cpu, first_=
+cpu);
+>                 }
+>
+>                 /* If we can't match both phys_id and core_id,
+> @@ -12718,9 +12719,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, in=
+t vectors)
+>                             new_cpup->phys_id =3D=3D cpup->phys_id)
+>                                 goto found_hdwq;
+>
+> -                       new_cpu =3D cpumask_next(new_cpu, cpu_present_mas=
+k);
+> -                       if (new_cpu =3D=3D nr_cpumask_bits)
+> -                               new_cpu =3D first_cpu;
+> +                       new_cpu =3D lpfc_next_present_cpu(new_cpu, first_=
+cpu);
+>                 }
+>
+>                 /* Otherwise just round robin on cfg_hdw_queue */
+> @@ -12729,9 +12728,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, in=
+t vectors)
+>                 goto logit;
+>   found_hdwq:
+>                 /* We found an available entry, copy the IRQ info */
+> -               start_cpu =3D cpumask_next(new_cpu, cpu_present_mask);
+> -               if (start_cpu =3D=3D nr_cpumask_bits)
+> -                       start_cpu =3D first_cpu;
+> +               start_cpu =3D lpfc_next_present_cpu(new_cpu, first_cpu);
+>                 cpup->hdwq =3D new_cpup->hdwq;
+>   logit:
+>                 lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+> --
+> 2.34.1
+>
