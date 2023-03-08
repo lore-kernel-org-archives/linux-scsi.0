@@ -2,63 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65101C6FD1F
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 11:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92DA5C6FD1F
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 11:39:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230111AbjCHLeY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 06:34:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56642 "EHLO
+        id S229483AbjCHLiq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 06:38:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230099AbjCHLeX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 06:34:23 -0500
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E45499BD0
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 03:34:20 -0800 (PST)
-Received: by mail-lf1-x132.google.com with SMTP id s22so20899017lfi.9
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Mar 2023 03:34:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678275258;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qEIlAOLqJOUEga8jWhhCTfIkDeYpmS53nHyd5ftpdw4=;
-        b=gzNuAFeHu67qA3jHUwFjwfCv3mmKuwAbDAkUqtUl4onK2bQyZOy0/x0IMyaY3yYxnF
-         EvYOnuWXh7TSXJeIYsvxPHwIbgOCKNZQm/v5FCu5L+lRo3kAav4sZAPMSfgxF4uId3KD
-         XhA1D4oE4okvpInh6KtwraZSdPynW5O898MwOuVmhGItAbwarj1ql4Xkp/GTklxP4SsN
-         VsrST1Stm2lNllEIxgdXq2S9RVSyT0Gyyk/fv5fhX3OwFRTDdPXibLSLzeHgP1xEBtG0
-         NQAEZCz3bTULePFpQLly8Nu3tbjFRsIgfX0l6TE82wMIQc0V8+KnfnrpArVoY4S0c5BT
-         SrrQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678275258;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qEIlAOLqJOUEga8jWhhCTfIkDeYpmS53nHyd5ftpdw4=;
-        b=vmfuWFYt/Y39C/cLYbB+nWYSKnZzqIU/T5wR6KKrvwpFiIlThmrhHl+JqlvNkf9peK
-         nzwPrV69NdiQ1MxGJ7oRWx6w1Loj4xW/berJdtX12rayyqYlMm16t08DgPpd94qBv5jS
-         MUUPWXZ482WOWLJs7E3dTN1KR5F7iciSpYnOoe2YxZL3jD2VCeqmCRUxEJhkzul5UTsc
-         gj05CPMkQpH1h4Mb6pBX8gEfgUDr64j3zsuwxL7urI7kjkDcVhrIdssyxknem5/03ffQ
-         4L++lboMcOB0unZc2hykvCxCZgofT6Uy/gFxMmG6ciRtcKhOHoKVHjax+7BH9ACs+Xn3
-         KC2Q==
-X-Gm-Message-State: AO0yUKXjdoy5GntVVb3+8BpfgSaChsgVGh/fsGb1jOzj/pTrbi/RJO58
-        0oklooMhlWwaFQXRjicNAx8yZA==
-X-Google-Smtp-Source: AK7set+jHlT9ogIKu5mT4G8gT8OABan5198fY6k3RPqdGCoJd95XO36AFMf8+59KJJKUt4o8QUirvw==
-X-Received: by 2002:a19:f508:0:b0:4dc:4bda:c26f with SMTP id j8-20020a19f508000000b004dc4bdac26fmr4630854lfb.23.1678275258643;
-        Wed, 08 Mar 2023 03:34:18 -0800 (PST)
-Received: from [192.168.1.101] (abyj16.neoplus.adsl.tpnet.pl. [83.9.29.16])
-        by smtp.gmail.com with ESMTPSA id t15-20020ac24c0f000000b004cb35b31b96sm2311175lfq.257.2023.03.08.03.34.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Mar 2023 03:34:18 -0800 (PST)
-Message-ID: <cf6af928-78a9-7990-71d4-9f17daf718d8@linaro.org>
-Date:   Wed, 8 Mar 2023 12:34:15 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH v7 3/6] phy: qcom-qmp: Add SM6125 UFS PHY support
-Content-Language: en-US
-To:     Johan Hovold <johan@kernel.org>
-Cc:     Lux Aliaga <they@mint.lgbt>, agross@kernel.org,
-        andersson@kernel.org, robh+dt@kernel.org,
+        with ESMTP id S230228AbjCHLiL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 06:38:11 -0500
+Received: from amity.mint.lgbt (vmi888983.contaboserver.net [149.102.157.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30BC54617F
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 03:38:06 -0800 (PST)
+Received: from amity.mint.lgbt (mx.mint.lgbt [127.0.0.1])
+        by amity.mint.lgbt (Postfix) with ESMTP id 4PWr0X120dz1S5Jn
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 06:38:03 -0500 (EST)
+Authentication-Results: amity.mint.lgbt (amavisd-new);
+        dkim=pass (2048-bit key) reason="pass (just generated, assumed good)"
+        header.d=mint.lgbt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mint.lgbt; h=
+        content-transfer-encoding:content-type:mime-version:message-id
+        :references:in-reply-to:user-agent:subject:to:from:date; s=dkim;
+         t=1678275483; x=1679139484; bh=fUz9L+nr5UDOp/B833d5gx+2B4OI8cyq
+        Eq9E6OrbgcI=; b=ZT10jEWW2dVZfS8psDQuNQeE0vk1OffgWGF+qHGbP9L+uBXo
+        kEZO+EltdbXZtR2z/gotMlLq3RlqGTK8yCddN6BelRMPhqrpU4ERb9ngx2OWqeR9
+        ay6LvfgQZ4AqcYgtXQpd9+QoGiI0jC+r4rju6dBPVFLmzoF7+ow2k44KkBhkGJ6b
+        UayhbTqmGQXh/gHIoS2O8Qmncm+I3yTy++iTZTKCKA6wUqzYkW/OdfeaeI5JZIwd
+        f7g12LICKP9nVNUXa8zC8V+H4u6K4+gz4dyd2xnt0UFmvc2Phdr7YIOM1brzVJrR
+        zvSaTsroXq9b40Nt0td2WlQ3s4JY6+i8O4Ak9w==
+X-Virus-Scanned: amavisd-new at amity.mint.lgbt
+Received: from amity.mint.lgbt ([127.0.0.1])
+        by amity.mint.lgbt (amity.mint.lgbt [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id xox8rQrMlopk for <linux-scsi@vger.kernel.org>;
+        Wed,  8 Mar 2023 06:38:03 -0500 (EST)
+Received: from [127.0.0.1] (unknown [186.105.8.42])
+        by amity.mint.lgbt (Postfix) with ESMTPSA id 4PWr0L6QcFz1S4yx;
+        Wed,  8 Mar 2023 06:37:54 -0500 (EST)
+Date:   Wed, 08 Mar 2023 08:37:48 -0300
+From:   Lux Aliaga <they@mint.lgbt>
+To:     Johan Hovold <johan@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>
+CC:     agross@kernel.org, andersson@kernel.org, robh+dt@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
         kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
         bvanassche@acm.org, keescook@chromium.org, tony.luck@intel.com,
@@ -68,90 +52,100 @@ Cc:     Lux Aliaga <they@mint.lgbt>, agross@kernel.org,
         linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
         phone-devel@vger.kernel.org, martin.botka@somainline.org,
         marijn.suijten@somainline.org
-References: <20230306170817.3806-1-they@mint.lgbt>
- <20230306170817.3806-4-they@mint.lgbt>
- <25c17af5-8f6b-a2c3-dab3-f9bc69711db7@linaro.org>
- <ZAhrT1ICTQjfdeGq@hovoldconsulting.com>
- <64ab4061-6a8b-662e-1c7a-99b0da26751c@linaro.org>
- <ZAhwTcMZoCQVULQe@hovoldconsulting.com>
-From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Subject: Re: [PATCH v7 3/6] phy: qcom-qmp: Add SM6125 UFS PHY support
+User-Agent: K-9 Mail for Android
 In-Reply-To: <ZAhwTcMZoCQVULQe@hovoldconsulting.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20230306170817.3806-1-they@mint.lgbt> <20230306170817.3806-4-they@mint.lgbt> <25c17af5-8f6b-a2c3-dab3-f9bc69711db7@linaro.org> <ZAhrT1ICTQjfdeGq@hovoldconsulting.com> <64ab4061-6a8b-662e-1c7a-99b0da26751c@linaro.org> <ZAhwTcMZoCQVULQe@hovoldconsulting.com>
+Message-ID: <DE127158-6956-42E9-B7AE-9687B4ABD6DA@mint.lgbt>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Autocrypt: addr=they@mint.lgbt; keydata=
+ mDMEYyUigxYJKwYBBAHaRw8BAQdA4Emr08ZPSL9p/JLdojT2GPRmh6URPjLQf9l/Kf7x5eC0G0x1
+ eCBBbGlhZ2EgPHRoZXlAbWludC5sZ2J0PoiTBBMWCgA7FiEEYa2kUv8kbagAwdmwtWyAWWhjdDcF
+ AmMlIoMCGwMFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQtWyAWWhjdDf/YQD/VfoHtwZa
+ OyBStI87Sv3Wdydps+MALWt7RfPA/AVd/i0A/21kQ+Wr6Hrb7Lz43H3+JLTaQk1XGKn7HMvpARdw
+ tVYBuDgEYyUigxIKKwYBBAGXVQEFAQEHQJE2MuI8EY9+pcwq9ynsMxCh1J0AGGo7hO2n9EQtOClI
+ AwEIB4h4BBgWCgAgFiEEYa2kUv8kbagAwdmwtWyAWWhjdDcFAmMlIoMCGwwACgkQtWyAWWhjdDe+
+ xwD/ZtWx58K/+zLhrdO/kjGftMVM+J3mPA5fJxRYC2Ut42ABAKb0aGOEwFS5XvkOwCLUAMqLGjRg
+ SDwi1EbSA+iQnkkB
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-On 8.03.2023 12:23, Johan Hovold wrote:
-> On Wed, Mar 08, 2023 at 12:15:39PM +0100, Konrad Dybcio wrote:
->>
->>
->> On 8.03.2023 12:02, Johan Hovold wrote:
->>> On Wed, Mar 08, 2023 at 11:09:48AM +0100, Konrad Dybcio wrote:
->>>>
->>>>
->>>> On 6.03.2023 18:08, Lux Aliaga wrote:
->>>>> The SM6125 UFS PHY is compatible with the one from SM6115. Add a
->>>>> compatible for it and modify the config from SM6115 to make them
->>>>> compatible with the SC8280XP binding
->>>>>
->>>>> Signed-off-by: Lux Aliaga <they@mint.lgbt>
->>>>> Reviewed-by: Martin Botka <martin.botka@somainline.org>
->>>>> ---
->>>>>  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 12 ++++++++++++
->>>>>  1 file changed, 12 insertions(+)
->>>>>
->>>>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>>> index 318eea35b972..44c29fdfc551 100644
->>>>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>>> @@ -620,6 +620,13 @@ static const char * const qmp_phy_vreg_l[] = {
->>>>>  	"vdda-phy", "vdda-pll",
->>>>>  };
->>>>>  
->>>>> +static const struct qmp_ufs_offsets qmp_ufs_offsets_v3_660 = {
->>>>> +	.serdes		= 0,
->>>>> +	.pcs		= 0xc00,
->>>>> +	.tx		= 0x400,
->>>>> +	.rx		= 0x600,
->>>>> +};
->>>>> +
->>>>>  static const struct qmp_ufs_offsets qmp_ufs_offsets_v5 = {
->>>>>  	.serdes		= 0,
->>>>>  	.pcs		= 0xc00,
->>>>> @@ -693,6 +700,8 @@ static const struct qmp_phy_cfg sdm845_ufsphy_cfg = {
->>>>>  static const struct qmp_phy_cfg sm6115_ufsphy_cfg = {
->>>>>  	.lanes			= 1,
->>>>>  
->>>>> +	.offsets		= &qmp_ufs_offsets_v3_660,
->>>> Will this not trigger OOB r/w for the users of qcom,sm6115-smp-ufs-phy
->>>> which specify the regions separately (old binding style)?
->>>
->>> No, that should work fine.
+On 8 March 2023 08:23:57 GMT-03:00, Johan Hovold <johan@kernel=2Eorg> wrot=
+e:
+>On Wed, Mar 08, 2023 at 12:15:39PM +0100, Konrad Dybcio wrote:
+>>=20
+>>=20
+>> On 8=2E03=2E2023 12:02, Johan Hovold wrote:
+>> > On Wed, Mar 08, 2023 at 11:09:48AM +0100, Konrad Dybcio wrote:
+>> >>
+>> >>
+>> >> On 6=2E03=2E2023 18:08, Lux Aliaga wrote:
+>> >>> The SM6125 UFS PHY is compatible with the one from SM6115=2E Add a
+>> >>> compatible for it and modify the config from SM6115 to make them
+>> >>> compatible with the SC8280XP binding
+>> >>>
+>> >>> Signed-off-by: Lux Aliaga <they@mint=2Elgbt>
+>> >>> Reviewed-by: Martin Botka <martin=2Ebotka@somainline=2Eorg>
+>> >>> ---
+>> >>>  drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec | 12 ++++++++++++
+>> >>>  1 file changed, 12 insertions(+)
+>> >>>
+>> >>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec b/drivers/ph=
+y/qualcomm/phy-qcom-qmp-ufs=2Ec
+>> >>> index 318eea35b972=2E=2E44c29fdfc551 100644
+>> >>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec
+>> >>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs=2Ec
+>> >>> @@ -620,6 +620,13 @@ static const char * const qmp_phy_vreg_l[] =3D=
+ {
+>> >>>  	"vdda-phy", "vdda-pll",
+>> >>>  };
+>> >>> =20
+>> >>> +static const struct qmp_ufs_offsets qmp_ufs_offsets_v3_660 =3D {
+>> >>> +	=2Eserdes		=3D 0,
+>> >>> +	=2Epcs		=3D 0xc00,
+>> >>> +	=2Etx		=3D 0x400,
+>> >>> +	=2Erx		=3D 0x600,
+>> >>> +};
+>> >>> +
+>> >>>  static const struct qmp_ufs_offsets qmp_ufs_offsets_v5 =3D {
+>> >>>  	=2Eserdes		=3D 0,
+>> >>>  	=2Epcs		=3D 0xc00,
+>> >>> @@ -693,6 +700,8 @@ static const struct qmp_phy_cfg sdm845_ufsphy_c=
+fg =3D {
+>> >>>  static const struct qmp_phy_cfg sm6115_ufsphy_cfg =3D {
+>> >>>  	=2Elanes			=3D 1,
+>> >>> =20
+>> >>> +	=2Eoffsets		=3D &qmp_ufs_offsets_v3_660,
+>> >> Will this not trigger OOB r/w for the users of qcom,sm6115-smp-ufs-p=
+hy
+>> >> which specify the regions separately (old binding style)?
+>> >=20
+>> > No, that should work fine=2E
 >> So do you think the SM6115 binding could be updated too? Or should
->> we keep it as-is for ABI purposes?..
-> 
-> They could be and the possibility has been raised. I think it may be
-> more important to convert the old combo-phy binding (it's on my list,
-> but I keep getting preempted), but at some point we can get rid of the
-> legacy UFS binding as well.
-Okay sounds good!
-
-> 
->>> But looks like this series needs to be rebased on 6.3-rc1 as these
->>> offsets are now already set in mainline.
->> ..Or did you do that already and I can't find it?
-> 
-> It seems a previous version of this patch was merged almost two months
-> ago.
-> 
-> 	9b9e29af984c ("phy: qcom-qmp: Add SM6125 UFS PHY support")
-> 
-> Not sure what failed here.
-My eyes :)
-
-Konrad
-> 
-> Johan
+>> we keep it as-is for ABI purposes?=2E=2E
+>
+>They could be and the possibility has been raised=2E I think it may be
+>more important to convert the old combo-phy binding (it's on my list,
+>but I keep getting preempted), but at some point we can get rid of the
+>legacy UFS binding as well=2E
+>
+>> > But looks like this series needs to be rebased on 6=2E3-rc1 as these
+>> > offsets are now already set in mainline=2E
+>> =2E=2EOr did you do that already and I can't find it?
+>
+>It seems a previous version of this patch was merged almost two months
+>ago=2E
+>
+>	9b9e29af984c ("phy: qcom-qmp: Add SM6125 UFS PHY support")
+>
+>Not sure what failed here=2E
+>
+>Johan
+Yes, but it received some comments regarding using v5 offsets instead of v=
+3-660=2E I could spin off this change into a new patch if necessary=2E
