@@ -2,38 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F9EC64EC4
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 20:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A95C742A7
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 21:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230039AbjCHUDZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 15:03:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43488 "EHLO
+        id S229846AbjCHVpU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 16:45:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229809AbjCHUDX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 15:03:23 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E8539BA0;
-        Wed,  8 Mar 2023 12:03:22 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C2E1EB81DDC;
-        Wed,  8 Mar 2023 20:03:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F021CC433D2;
-        Wed,  8 Mar 2023 20:03:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678305799;
-        bh=ZOJZzFkzo22oFPUVhPTC+vDa6ZOA9KNgV7uiJ7HpC+c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G+aSkGY3nJuQjQopgH7Ed766WYaltgfSsv4yJjk2nCxNYi5Z/7UkaNIQD2Nsu0giX
-         bSCTOoPRZM5pVEUQwXUnVh3ZUhXcgWdOQvcYCOPqAR89sFphwrAZatYetZIQ246RPG
-         5ePbA3JZ4NNeMxbWsAiNRbwarkT7GgUK9hzhNR2FhcV01YOVLYUxA460pDLF5zuOqL
-         jPkTU9DiVCGRzI4zpnUwjEFyFVMKOk/J6kpj6LLD3KacB1Hamhx9g/kc9oFVw4maCe
-         PKdEIsHO1lU7exECj8VD52Nhi2EhtlIgo0AcNP5njF+DkTBlPDmFtnWJfvbkeBufIr
-         nKdiZ7HbKhLEw==
-Date:   Wed, 8 Mar 2023 12:03:17 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
+        with ESMTP id S230371AbjCHVpH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 16:45:07 -0500
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4601D25BBE
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 13:44:45 -0800 (PST)
+Received: by mail-wr1-x42b.google.com with SMTP id bx12so16724497wrb.11
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Mar 2023 13:44:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1678311875;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=6Z0DHi72Ho6QJq4m3N8OZ9dErQvB6DsgdYARNWx4l/8=;
+        b=Qmz6hTSfStErW/uuYxt22VPPZUMOP+dEC8iLow0ink6piNJrG6Gr86nYzMQp0kbcPy
+         PvD4sVjLKeBEr+MrEPd01+8fajyY65TTeZxLw78L0CN8dYGG3qA0bZq76bQ7b6ibPv19
+         VQvUoAA5HRwPy9Ey91e3ifnr2P44/jKAYDB5i2D2juWmDjFZM5YZwIGAugncAXOj+LZp
+         ry2HUFsrd6q/QpIE381/h414FFVPsS1+jZgNl2uFrJhKsjHakyx6yAKueswrC5jRwQTH
+         LDSYIckdebYgbAA/DEGxEResPBl8sZ1oezJlbwqD8pFXgwJDkr7k3kOGaVRWyU455kms
+         TeJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678311875;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6Z0DHi72Ho6QJq4m3N8OZ9dErQvB6DsgdYARNWx4l/8=;
+        b=Zp+EKq9k77lSKuT5ZFLW5ClSzF1nQ2Fftl/fQrlt8fWcKMDSEeCmRTrlbvbd9MrJyY
+         qLA8zA46ubaqoX6F32pXUpinEbh5vSWyAo1CF95t7VARqXotQoYha/UyhOh3mNibaewx
+         DMSI70B7eYLJOrOh5ypoCT2z49dP83godQlyUVJCjwBGi7buBDZLpfk0E/Ps5e4XYVHl
+         S8zLH9u7AZ2KHzznlwrm/7hpRIvQOyUGZbg7gNprUMcoUx6v2TKZJfaUVQHD3TNE/C1p
+         N496prDAIls+Wv9RemnQcrQdPhkoxYTy1h/ZTHnXToAG2Fgh0E0swzMuMc7b6xONX28a
+         F9Dg==
+X-Gm-Message-State: AO0yUKXrS8hNJWHATs0jdFi+orBVu6j+HNIgk0S70oUfvfuQXBQMhpeo
+        oOmg4HyAGixifgVvLvK02e+EQQ==
+X-Google-Smtp-Source: AK7set82QrXg3puqALBiBX/T3axcFBDmM3MURhZbG3RHzTinBQBBF2402lh8DaHdmAhABXc6oxlhhA==
+X-Received: by 2002:adf:ee8c:0:b0:2c7:9931:4f7d with SMTP id b12-20020adfee8c000000b002c799314f7dmr12344475wro.18.1678311875322;
+        Wed, 08 Mar 2023 13:44:35 -0800 (PST)
+Received: from linaro.org ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id w7-20020a5d6087000000b002c567b58e9asm16416772wrt.56.2023.03.08.13.44.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Mar 2023 13:44:34 -0800 (PST)
+Date:   Wed, 8 Mar 2023 23:44:33 +0200
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Eric Biggers <ebiggers@kernel.org>
 Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -50,45 +67,60 @@ Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
         linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/7] Add dedicated Qcom ICE driver
-Message-ID: <ZAjqBemusfSKEWgF@sol.localdomain>
+Subject: Re: [RFC PATCH v2 4/7] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
+ dedicated driver
+Message-ID: <ZAkBwZNWMTsXlt+p@linaro.org>
 References: <20230308155838.1094920-1-abel.vesa@linaro.org>
+ <20230308155838.1094920-5-abel.vesa@linaro.org>
+ <ZAjppY2K0/XPBHxG@sol.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230308155838.1094920-1-abel.vesa@linaro.org>
+In-Reply-To: <ZAjppY2K0/XPBHxG@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Abel,
-
-On Wed, Mar 08, 2023 at 05:58:31PM +0200, Abel Vesa wrote:
-> As both SDCC and UFS drivers use the ICE with duplicated implementation,
-> while none of the currently supported platforms make use concomitantly
-> of the same ICE IP block instance, the new SM8550 allows both UFS and
-> SDCC to do so. In order to support such scenario, there is a need for
-> a unified implementation and a devicetree node to be shared between
-> both types of storage devices. So lets drop the duplicate implementation
-> of the ICE from both SDCC and UFS and make it a dedicated (soc) driver.
-> Also, switch all UFS and SDCC devicetree nodes to use the new ICE
-> approach.
+On 23-03-08 12:01:41, Eric Biggers wrote:
+> On Wed, Mar 08, 2023 at 05:58:35PM +0200, Abel Vesa wrote:
+> >  * Switched QCOM_INLINE_CRYPTO_ENGINE to tristate and made it built-in
+> >    if any of the UFS or the SDHC drivers are built-in. This is to allow
+> >    the API to be available even if the built-in driver doesn't have
+> >    crypto enabled.
+> [...]
+> > diff --git a/drivers/soc/qcom/Kconfig b/drivers/soc/qcom/Kconfig
+> > index a8f283086a21..c584369e9810 100644
+> > --- a/drivers/soc/qcom/Kconfig
+> > +++ b/drivers/soc/qcom/Kconfig
+> > @@ -275,4 +275,10 @@ config QCOM_ICC_BWMON
+> >  	  the fixed bandwidth votes from cpufreq (CPU nodes) thus achieve high
+> >  	  memory throughput even with lower CPU frequencies.
+> >  
+> > +config QCOM_INLINE_CRYPTO_ENGINE
+> > +	tristate
+> > +	depends on SCSI_UFS_CRYPTO || MMC_CRYPTO
+> > +	default y if SCSI_UFS_QCOM=y || MMC_SDHCI_MSM=y
+> > +	select QCOM_SCM
 > 
-> See each individual patch for changelogs.
+> What are the "depends on" and "default y" lines above for?
 > 
-> The v1 is here:
-> https://lore.kernel.org/all/20230214120253.1098426-1-abel.vesa@linaro.org/
+> You're already selecting this from SCSI_UFS_QCOM and MSM_SDHCI_MSM, as I had
+> suggested.  Isn't that enough?
+
+We have the following:
+(SCSI_UFS_QCOM && SCSI_UFS_CRYPTO) || (MMC_SDHCI_MSM && MMC_CRYPTO)
+
+So lets take as example the scenario: (m && y) || (y && n).
+
+The QCOM_INLINE_CRYPTO_ENGINE will be set to 'm' and the sdhci driver
+will not be able to link properly since the ICE API is part of a module.
+
+Therefore, if just one of SCSI_UFS_QCOM and MMC_SDHCI_MSM is built-in
+and at least one of the crypto options are enabled, set the
+QCOM_INLINE_CRYPTO_ENGINE to 'y' by default in order to make the
+built-in one linkage will not fail.
+
+Might not be the cleanest way to do this, so I'm open to suggestions.
+
 > 
-> Abel Vesa (7):
->   dt-bindings: soc: qcom: Add schema for Inline Crypto Engine
->   dt-bindings: ufs: qcom: Add ICE phandle and drop core clock
->   dt-bindings: mmc: sdhci-msm: Add ICE phandle and drop core clock
->   soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
->   scsi: ufs: ufs-qcom: Switch to the new ICE API
->   mmc: sdhci-msm: Switch to the new ICE API
->   arm64: dts: qcom: Add the Inline Crypto Engine nodes
-
-Does this address all the comments on v1?  I had also asked some questions on
-v1.  It would be helpful if you would respond.
-
-- Eric
+> - Eric
