@@ -2,128 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C77CDC678D5
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 22:37:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AEA8C742A7
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 23:11:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229905AbjCHWh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 17:37:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60308 "EHLO
+        id S230340AbjCHXL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 18:11:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbjCHWh1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 17:37:27 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED52565460;
-        Wed,  8 Mar 2023 14:37:25 -0800 (PST)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 328Lupav015496;
-        Wed, 8 Mar 2023 22:37:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=ngea5itn2PRHnG9Bc1YLjFtw8iaYKohomeLhBkd2C7c=;
- b=plX2UNx21H/FvW/kkh0Mnk1zaesasKk5BYnh4fqQxv6P8SABxyJw0GCbtiRldKdnAoj8
- c6Oh4RBZ8Ep927PtJeBv2luRvpiEnS51MSfV91kbD+yJ1fcU5C4LOTdxvfZKYRyZ/BTc
- kESzaAXlfFFJQc35/bQMjLJSqFrFbqQ9GKHMb/0pKkhhskt6y49wJ7nJRkQfX6JYc0Cy
- XkgEG/h94vj6zsR0d2xm/EcD+F2WgvKDphM8M835q7+ySFwCd5+gFabLU2V2CS7m1Dv2
- 8hNiNljE0A1G68LO8JAnAH0XQax7P9dSjdW9UlX18VtaQfdI7D2lPepBCs086dRC/LgO uA== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p72qar2b3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 08 Mar 2023 22:37:04 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 328Mb3iR019155
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 8 Mar 2023 22:37:03 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Wed, 8 Mar 2023
- 14:37:03 -0800
-Message-ID: <ec627f76-380b-bdfd-e736-1626d5bde0e4@quicinc.com>
-Date:   Wed, 8 Mar 2023 14:37:02 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [RFC PATCH v1 4/4] ufs: mcq: Added ufshcd_mcq_abort()
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
-        <quic_cang@quicinc.com>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
+        with ESMTP id S230126AbjCHXLJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 18:11:09 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D6CC6923C;
+        Wed,  8 Mar 2023 15:10:41 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AF7856193B;
+        Wed,  8 Mar 2023 23:10:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3F94C433EF;
+        Wed,  8 Mar 2023 23:10:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678317031;
+        bh=6K5Aos/pHDOzNcZcmESeumuhe0HreLjKYHuJ1XTrzPQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=k/DseVQbYHn/At0guNyNZP4BN8i6WzjB0uRmhQobxO94ZBF0jJgd1PQlMGc04OpGE
+         lIyKOJJTGkFOUXl1nCFzpKhe2MBgIyG30zjvFh8gaq/Ry3OWbr6iw/+DwdTHfdbfT6
+         g6tDn+K/sH73TtnH0pXB6xFjCYSDJE5U8ygmaBnmDVCUtS25eS1W9ltWXSYuZK1Lzi
+         iDbk9WM5rfiKALXn+gKk6Nwn52Qcpy8GlvtIpdkRhyG0wvRL1waJ4isIaHZAuLd/8b
+         zYsmc2akgBrq5ajRhZNYtg8BOomZdsybcO3o7ld6yFFSh3hJ8IslyB0hPBarBpdIEO
+         E4LzQ0XBIIc5A==
+Date:   Wed, 8 Mar 2023 23:10:29 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1678247309.git.quic_nguyenb@quicinc.com>
- <c7fcbb70f0e74d225c1a09f107ba1058270739be.1678247309.git.quic_nguyenb@quicinc.com>
- <85994527-d09d-f381-3dda-7cfb9ce98d4b@acm.org>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <85994527-d09d-f381-3dda-7cfb9ce98d4b@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: UlNTLqGm8QTih0AwmmEQuOMzwQbdmbSe
-X-Proofpoint-ORIG-GUID: UlNTLqGm8QTih0AwmmEQuOMzwQbdmbSe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-08_15,2023-03-08_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- adultscore=0 impostorscore=0 suspectscore=0 clxscore=1015 bulkscore=0
- mlxlogscore=804 spamscore=0 mlxscore=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303080189
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/7] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
+ dedicated driver
+Message-ID: <ZAkV5ZNeK5iHU0Uq@gmail.com>
+References: <20230308155838.1094920-1-abel.vesa@linaro.org>
+ <20230308155838.1094920-5-abel.vesa@linaro.org>
+ <ZAjppY2K0/XPBHxG@sol.localdomain>
+ <ZAkBwZNWMTsXlt+p@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZAkBwZNWMTsXlt+p@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/2023 11:02 AM, Bart Van Assche wrote:
-> On 3/7/23 20:01, Bao D. Nguyen wrote:
->> +    if (ufshcd_mcq_cqe_search(hba, hwq, tag)) {
->> +        dev_err(hba->dev, "%s: cmd found in cq. hwq=%d, tag=%d\n",
->> +                __func__, hwq->id, tag);
->> +        /*
->> +         * The command should not be 'stuck' in the CQ for such a 
->> long time.
->> +         * Is interrupt missing? Process the CQEs here. If the 
->> interrupt is
->> +         * invoked at a later time, the CQ will be empty because the 
->> CQEs
->> +         * are already processed here.
->> +         */
->> +        ufshcd_mcq_poll_cqe_lock(hba, hwq);
->> +        err = SUCCESS;
->> +        goto out;
->> +    }
->
-> Please remove the above code and also the definition of the 
-> ufshcd_mcq_cqe_search() function. The SCSI error handler submits an 
-> abort to deal with command processing timeouts. 
-> ufshcd_mcq_cqe_search() can only return true in case of a software bug 
-> at the host side. Addressing such bugs is out of scope for the SCSI 
-> error handler.
+On Wed, Mar 08, 2023 at 11:44:33PM +0200, Abel Vesa wrote:
+> On 23-03-08 12:01:41, Eric Biggers wrote:
+> > On Wed, Mar 08, 2023 at 05:58:35PM +0200, Abel Vesa wrote:
+> > >  * Switched QCOM_INLINE_CRYPTO_ENGINE to tristate and made it built-in
+> > >    if any of the UFS or the SDHC drivers are built-in. This is to allow
+> > >    the API to be available even if the built-in driver doesn't have
+> > >    crypto enabled.
+> > [...]
+> > > diff --git a/drivers/soc/qcom/Kconfig b/drivers/soc/qcom/Kconfig
+> > > index a8f283086a21..c584369e9810 100644
+> > > --- a/drivers/soc/qcom/Kconfig
+> > > +++ b/drivers/soc/qcom/Kconfig
+> > > @@ -275,4 +275,10 @@ config QCOM_ICC_BWMON
+> > >  	  the fixed bandwidth votes from cpufreq (CPU nodes) thus achieve high
+> > >  	  memory throughput even with lower CPU frequencies.
+> > >  
+> > > +config QCOM_INLINE_CRYPTO_ENGINE
+> > > +	tristate
+> > > +	depends on SCSI_UFS_CRYPTO || MMC_CRYPTO
+> > > +	default y if SCSI_UFS_QCOM=y || MMC_SDHCI_MSM=y
+> > > +	select QCOM_SCM
+> > 
+> > What are the "depends on" and "default y" lines above for?
+> > 
+> > You're already selecting this from SCSI_UFS_QCOM and MSM_SDHCI_MSM, as I had
+> > suggested.  Isn't that enough?
+> 
+> We have the following:
+> (SCSI_UFS_QCOM && SCSI_UFS_CRYPTO) || (MMC_SDHCI_MSM && MMC_CRYPTO)
+> 
+> So lets take as example the scenario: (m && y) || (y && n).
+> 
+> The QCOM_INLINE_CRYPTO_ENGINE will be set to 'm' and the sdhci driver
+> will not be able to link properly since the ICE API is part of a module.
+> 
+> Therefore, if just one of SCSI_UFS_QCOM and MMC_SDHCI_MSM is built-in
+> and at least one of the crypto options are enabled, set the
+> QCOM_INLINE_CRYPTO_ENGINE to 'y' by default in order to make the
+> built-in one linkage will not fail.
+> 
 
-This is an attempt to handle the error case similar to SDB mode where it 
-prints "%s: cmd was completed, but without a notifying intr, tag = %d" 
-in the ufshcd_abort() function.
+That does not make sense.  If MMC_CRYPTO is disabled, then the sdhci-msm driver
+should not call any of the ICE APIs.  Likewise for ufs-qcom and SCSI_UFS_CRYPTO.
 
-In this case the command has been completed by the hardware, but some 
-reasons the software has not processed it. We have seen this print 
-happened during debug sessions, so the error case does happen in SBL mode.
-
-Are you suggesting we should return error in this case without calling 
-ufshcd_mcq_poll_cqe_lock()?
-
-Thanks.
-
->
->
-> Thanks,
->
-> Bart.
-
-
+- Eric
