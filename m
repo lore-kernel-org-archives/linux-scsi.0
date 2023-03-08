@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A72AC678D5
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 04:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F24BC64EC4
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 04:04:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229814AbjCHEDd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Mar 2023 23:03:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41422 "EHLO
+        id S229960AbjCHEEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Mar 2023 23:04:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229636AbjCHEDb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 23:03:31 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66C8D57082;
-        Tue,  7 Mar 2023 20:03:26 -0800 (PST)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3283REkQ006180;
-        Wed, 8 Mar 2023 04:02:56 GMT
+        with ESMTP id S229866AbjCHEEF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2023 23:04:05 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B4BD5CC24;
+        Tue,  7 Mar 2023 20:04:02 -0800 (PST)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3282bhJs031723;
+        Wed, 8 Mar 2023 04:03:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=vLG0cuvGWwomiGvEcNdnNA1lLH0Ww/GRLBlWnGtv8oc=;
- b=p3z819SSSwbS3+sd9NRZXFFYvwmpK29dfSgicdxNoN7YYmlryROLsYa5jz8ZUvx2bqOt
- 6tEVjWCJ2i2R7xq52EN7duplzglNZ5/2jzKcROJnSAfWPu+Wl3EwKIN8TepKvDi1T//P
- vBnEHSNb/hhGlUvOwdwVGanMWw2qzRGn+kBY0Vf65ZxKy4uuZVPO9GJTwI0ILcZhzv2H
- iPoi4N6Lknv63dkxljPXjdRbogfv1YfRj2J7s12pSrxoJ01U/bbJ4t8DkL4T1RUTYY2o
- iPJnox5bSqTlQHFaxYvAqXvuOXAUfgjHjLAPKBh0zmJrAkFiV0J9juy7bX+FUe7aQIT0 Sg== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6fey0epe-1
+ bh=8lLAK8Acp1MkXbdacmEzJO/cMgeF3hITkmgbQ6E2DjQ=;
+ b=OsLoUvWjNbN2sgE8OURFuiLh3aDV9tZrBNcme95mZan0+I2U2VxgGOTAe+1z0eaPsEVO
+ bRyL3CE51rhTwwo7nRPsYpXeli6rVTQHAaqQjDaXpyXq16+W2dM2JQCIr/KQXkw8IRE5
+ ghujW7Gq6krqZr0xh/g8LyhSjqXt1RXgMHYZkM7rNYmWgNzyF1zuuCAgkvF1lUR/Iiax
+ r3jywvAOafQz+IpDYZZXmR3oaJiraWF+cgHhCL7aC2W667JdFE19f2DovvxJE4JvhF6y
+ 3mgQ3QYXo37j4GXvKzp7VesxeZxUzfdkX7aUXsP5EGxqQreD+Y3NURhbySmSU5YSAdIY WQ== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6fga0g07-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 08 Mar 2023 04:02:56 +0000
+        Wed, 08 Mar 2023 04:03:28 +0000
 Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32842tBA029988
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32843RWS024009
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 8 Mar 2023 04:02:55 GMT
+        Wed, 8 Mar 2023 04:03:27 GMT
 Received: from stor-berry.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Tue, 7 Mar 2023 20:02:54 -0800
+ 15.2.986.41; Tue, 7 Mar 2023 20:03:27 -0800
 From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
         <bvanassche@acm.org>, <mani@kernel.org>,
@@ -48,16 +48,10 @@ CC:     <linux-scsi@vger.kernel.org>,
         "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "Arthur Simchaev" <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-arm-msm@vger.kernel.org>
-Subject: [RFC PATCH v1 1/4] ufs: mcq: Use ufshcd_mcq_poll_cqe_lock() in mcq mode
-Date:   Tue, 7 Mar 2023 20:01:41 -0800
-Message-ID: <b4f9153f9181506a954da1a877dbd3a222982dd0.1678247309.git.quic_nguyenb@quicinc.com>
+        open list <linux-kernel@vger.kernel.org>
+Subject: [RFC PATCH v1 3/4] ufs: mcq: Add support for clean up mcq resources
+Date:   Tue, 7 Mar 2023 20:01:43 -0800
+Message-ID: <392b790072c2307d366ac80b7552d5f09ae25dfc.1678247309.git.quic_nguyenb@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1678247309.git.quic_nguyenb@quicinc.com>
 References: <cover.1678247309.git.quic_nguyenb@quicinc.com>
@@ -68,118 +62,104 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: nZ5790PnhxRv9pG8ib3gVBGo7leFVBTc
-X-Proofpoint-ORIG-GUID: nZ5790PnhxRv9pG8ib3gVBGo7leFVBTc
+X-Proofpoint-GUID: k75NpJsotz9JjY94a2Je6f9XPJCDa2si
+X-Proofpoint-ORIG-GUID: k75NpJsotz9JjY94a2Je6f9XPJCDa2si
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-07_18,2023-03-07_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- lowpriorityscore=0 phishscore=0 mlxlogscore=999 adultscore=0
- malwarescore=0 spamscore=0 impostorscore=0 bulkscore=0 clxscore=1011
- priorityscore=1501 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2212070000 definitions=main-2303080033
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ lowpriorityscore=0 malwarescore=0 priorityscore=1501 suspectscore=0
+ spamscore=0 mlxscore=0 clxscore=1015 mlxlogscore=877 impostorscore=0
+ bulkscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303080033
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for adding mcq error handler support, update the mcq
-code to use the ufshcd_mcq_poll_cqe_lock() in interrupt context
-instead of using ufshcd_mcq_poll_cqe_nolock(). This is to keep
-synchronization between mcq interrupt and error handler contexts
-because both need to access the mcq hardware in separate contexts.
+Update ufshcd_clear_cmds() to clean up the mcq resources similar
+to the function ufshcd_utrl_clear() does for sdb mode.
+
+Update ufshcd_try_to_abort_task() to support mcq mode so that
+this function can be invoked in either mcq or sdb mode.
 
 Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 ---
- drivers/ufs/core/ufs-mcq.c     | 6 +++---
- drivers/ufs/core/ufshcd-priv.h | 2 --
- drivers/ufs/core/ufshcd.c      | 2 +-
- drivers/ufs/host/ufs-qcom.c    | 2 +-
- include/ufs/ufshcd.h           | 2 +-
- 5 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/ufs/core/ufshcd.c | 40 +++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 37 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 31df052..63729dd 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -277,8 +277,8 @@ static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
- 	ufshcd_compl_one_cqe(hba, tag, cqe);
- }
- 
--unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
--					 struct ufs_hw_queue *hwq)
-+static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
-+						struct ufs_hw_queue *hwq)
- {
- 	unsigned long completed_reqs = 0;
- 
-@@ -294,7 +294,6 @@ unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
- 
- 	return completed_reqs;
- }
--EXPORT_SYMBOL_GPL(ufshcd_mcq_poll_cqe_nolock);
- 
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 				       struct ufs_hw_queue *hwq)
-@@ -307,6 +306,7 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 
- 	return completed_reqs;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_mcq_poll_cqe_lock);
- 
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
- {
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 529f850..9597e955 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -71,8 +71,6 @@ void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
- void ufshcd_mcq_select_mcq_mode(struct ufs_hba *hba);
- u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
- void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
--unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
--					 struct ufs_hw_queue *hwq);
- struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
- 					   struct request *req);
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 629442c..e4d1b4e 100644
+index 7e52af6..408c16c 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -6739,7 +6739,7 @@ static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
- 			ufshcd_mcq_write_cqis(hba, events, i);
+@@ -2988,7 +2988,26 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+ static int ufshcd_clear_cmds(struct ufs_hba *hba, u32 mask)
+ {
+ 	unsigned long flags;
++	int err, result, tag;
  
- 		if (events & UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS)
--			ufshcd_mcq_poll_cqe_nolock(hba, hwq);
-+			ufshcd_mcq_poll_cqe_lock(hba, hwq);
++	if (is_mcq_enabled(hba)) {
++		/*
++		 * MCQ mode. Clean up the MCQ resources similar to
++		 * what the ufshcd_utrl_clear() does for SDB mode.
++		 */
++		flags = (unsigned long)mask;
++		for_each_set_bit(tag, &flags, hba->nutrs) {
++			err = ufshcd_mcq_sq_cleanup(hba, tag, &result);
++			if (err || result) {
++				dev_err(hba->dev, "%s: failed tag=%d. err=%d, result=%d\n",
++					__func__, tag, err, result);
++				return FAILED;
++			}
++		}
++		return 0;
++	}
++
++	/* Single Doorbell Mode */
+ 	/* clear outstanding transaction before retry */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_utrl_clear(hba, mask);
+@@ -7344,6 +7363,20 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ 			 */
+ 			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
+ 				__func__, tag);
++			if (is_mcq_enabled(hba)) {
++				/* mcq mode */
++				if (!lrbp->cmd) {
++					/* command completed already */
++					dev_err(hba->dev, "%s: cmd at tag=%d is cleared.\n",
++						__func__, tag);
++					goto out;
++				}
++				/* sleep for max. 200us to stabilize */
++				usleep_range(100, 200);
++				continue;
++			}
++
++			/* single door bell mode */
+ 			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 			if (reg & (1 << tag)) {
+ 				/* sleep for max. 200us to stabilize */
+@@ -7410,8 +7443,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 
+ 	ufshcd_hold(hba, false);
+ 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	/* If command is already aborted/completed, return FAILED. */
+-	if (!(test_bit(tag, &hba->outstanding_reqs))) {
++	if (!is_mcq_enabled(hba) && !(test_bit(tag, &hba->outstanding_reqs))) {
++		/* If command is already aborted/completed, return FAILED. */
+ 		dev_err(hba->dev,
+ 			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
+ 			__func__, tag, hba->outstanding_reqs, reg);
+@@ -7440,7 +7473,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
  	}
+ 	hba->req_abort_count++;
  
- 	return IRQ_HANDLED;
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 34fc453..c686fb8 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1558,7 +1558,7 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *__hba)
- 	struct ufs_hw_queue *hwq = &hba->uhq[id];
- 
- 	ufshcd_mcq_write_cqis(hba, 0x1, id);
--	ufshcd_mcq_poll_cqe_nolock(hba, hwq);
-+	ufshcd_mcq_poll_cqe_lock(hba, hwq);
- 
- 	return IRQ_HANDLED;
- }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 05e4164..5d7f9b2 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1244,7 +1244,7 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val);
- void ufshcd_hba_stop(struct ufs_hba *hba);
- void ufshcd_schedule_eh_work(struct ufs_hba *hba);
- void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
--unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
-+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 					 struct ufs_hw_queue *hwq);
- void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
- void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg);
+-	if (!(reg & (1 << tag))) {
++	if (!is_mcq_enabled(hba) && !(reg & (1 << tag))) {
++		/* only execute this code in single doorbell mode */
+ 		dev_err(hba->dev,
+ 		"%s: cmd was completed, but without a notifying intr, tag = %d",
+ 		__func__, tag);
 -- 
 2.7.4
 
