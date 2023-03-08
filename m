@@ -2,111 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AEA8C742A7
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 23:11:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5910C64EC4
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 23:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230340AbjCHXL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 18:11:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53624 "EHLO
+        id S230078AbjCHXOK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 18:14:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230126AbjCHXLJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 18:11:09 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D6CC6923C;
-        Wed,  8 Mar 2023 15:10:41 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AF7856193B;
-        Wed,  8 Mar 2023 23:10:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3F94C433EF;
-        Wed,  8 Mar 2023 23:10:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678317031;
-        bh=6K5Aos/pHDOzNcZcmESeumuhe0HreLjKYHuJ1XTrzPQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=k/DseVQbYHn/At0guNyNZP4BN8i6WzjB0uRmhQobxO94ZBF0jJgd1PQlMGc04OpGE
-         lIyKOJJTGkFOUXl1nCFzpKhe2MBgIyG30zjvFh8gaq/Ry3OWbr6iw/+DwdTHfdbfT6
-         g6tDn+K/sH73TtnH0pXB6xFjCYSDJE5U8ygmaBnmDVCUtS25eS1W9ltWXSYuZK1Lzi
-         iDbk9WM5rfiKALXn+gKk6Nwn52Qcpy8GlvtIpdkRhyG0wvRL1waJ4isIaHZAuLd/8b
-         zYsmc2akgBrq5ajRhZNYtg8BOomZdsybcO3o7ld6yFFSh3hJ8IslyB0hPBarBpdIEO
-         E4LzQ0XBIIc5A==
-Date:   Wed, 8 Mar 2023 23:10:29 +0000
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 4/7] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
- dedicated driver
-Message-ID: <ZAkV5ZNeK5iHU0Uq@gmail.com>
-References: <20230308155838.1094920-1-abel.vesa@linaro.org>
- <20230308155838.1094920-5-abel.vesa@linaro.org>
- <ZAjppY2K0/XPBHxG@sol.localdomain>
- <ZAkBwZNWMTsXlt+p@linaro.org>
+        with ESMTP id S230119AbjCHXNz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 18:13:55 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35F446425A;
+        Wed,  8 Mar 2023 15:13:51 -0800 (PST)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 328NBm1H020804;
+        Wed, 8 Mar 2023 23:13:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=jBAYZfIeJ8Uolzed/I2yJ1h25q0GwuqHlg0k3NuZX4M=;
+ b=CBkTRHIwJMBfpgbiI3RXTHvV965rtzNjNPbv2DflQSbtpJDXLgZV/XuxnD2owqG27LYY
+ dfeYfxYzO/F9WicXvWXbl7149BmTZ4e1xsnEqF+wzrysDjWeqg2MSRllobwh1AfsQfIn
+ 90rMS1E9XEDXHlDGq71vYzyQcbNIjlqWjZ5BaDvv1rvHe/QqND9ngnhiIkcDgIohyYmB
+ L0yYn8dRPgfk9MIwgWisjNg6EYktsOGC9sexa9aegMUll35i6O1NHn6WhjM6FYNQ/f1f
+ m/z4XXniaxpPG44bycNcWIOytg3mA8187RsoPg9vToOh1iNRD1aTs2FGOX+sFWWMTn32 og== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6vrms6h2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Mar 2023 23:13:38 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 328NDb8L024779
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 8 Mar 2023 23:13:37 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.41; Wed, 8 Mar 2023 15:13:36 -0800
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>
+CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
+        <beanhuo@micron.com>, <linux-scsi@vger.kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 1/1] scsi: ufs: mcq: Use active_reqs to check busy in clock scaling
+Date:   Wed, 8 Mar 2023 15:13:23 -0800
+Message-ID: <a24e0d646aac70eae0fc5e05fac0c58bb7e6e680.1678317160.git.quic_asutoshd@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZAkBwZNWMTsXlt+p@linaro.org>
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: kgcxh9hOInDNsfunLGwsh6L7g2-HGXmG
+X-Proofpoint-GUID: kgcxh9hOInDNsfunLGwsh6L7g2-HGXmG
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-08_15,2023-03-08_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
+ mlxscore=0 malwarescore=0 suspectscore=0 adultscore=0 phishscore=0
+ clxscore=1015 priorityscore=1501 lowpriorityscore=0 impostorscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303080193
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 08, 2023 at 11:44:33PM +0200, Abel Vesa wrote:
-> On 23-03-08 12:01:41, Eric Biggers wrote:
-> > On Wed, Mar 08, 2023 at 05:58:35PM +0200, Abel Vesa wrote:
-> > >  * Switched QCOM_INLINE_CRYPTO_ENGINE to tristate and made it built-in
-> > >    if any of the UFS or the SDHC drivers are built-in. This is to allow
-> > >    the API to be available even if the built-in driver doesn't have
-> > >    crypto enabled.
-> > [...]
-> > > diff --git a/drivers/soc/qcom/Kconfig b/drivers/soc/qcom/Kconfig
-> > > index a8f283086a21..c584369e9810 100644
-> > > --- a/drivers/soc/qcom/Kconfig
-> > > +++ b/drivers/soc/qcom/Kconfig
-> > > @@ -275,4 +275,10 @@ config QCOM_ICC_BWMON
-> > >  	  the fixed bandwidth votes from cpufreq (CPU nodes) thus achieve high
-> > >  	  memory throughput even with lower CPU frequencies.
-> > >  
-> > > +config QCOM_INLINE_CRYPTO_ENGINE
-> > > +	tristate
-> > > +	depends on SCSI_UFS_CRYPTO || MMC_CRYPTO
-> > > +	default y if SCSI_UFS_QCOM=y || MMC_SDHCI_MSM=y
-> > > +	select QCOM_SCM
-> > 
-> > What are the "depends on" and "default y" lines above for?
-> > 
-> > You're already selecting this from SCSI_UFS_QCOM and MSM_SDHCI_MSM, as I had
-> > suggested.  Isn't that enough?
-> 
-> We have the following:
-> (SCSI_UFS_QCOM && SCSI_UFS_CRYPTO) || (MMC_SDHCI_MSM && MMC_CRYPTO)
-> 
-> So lets take as example the scenario: (m && y) || (y && n).
-> 
-> The QCOM_INLINE_CRYPTO_ENGINE will be set to 'm' and the sdhci driver
-> will not be able to link properly since the ICE API is part of a module.
-> 
-> Therefore, if just one of SCSI_UFS_QCOM and MMC_SDHCI_MSM is built-in
-> and at least one of the crypto options are enabled, set the
-> QCOM_INLINE_CRYPTO_ENGINE to 'y' by default in order to make the
-> built-in one linkage will not fail.
-> 
+Multi Circular Queue doesn't use outstanding_reqs.
+But the ufs clock scaling functions use outstanding_reqs to
+determine if there're requests pending. When MCQ is enabled
+this check always returns false.
 
-That does not make sense.  If MMC_CRYPTO is disabled, then the sdhci-msm driver
-should not call any of the ICE APIs.  Likewise for ufs-qcom and SCSI_UFS_CRYPTO.
+Hence use active_reqs to check if there're pending requests.
 
-- Eric
+Fixes: eacb139b77ff ("scsi: ufs: core: mcq: Enable multi-circular queue")
+Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+
+--
+v1 -> v2:
+ - Added a Fixes tag as suggested by Mani
+---
+ drivers/ufs/core/ufshcd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 172d25fef740..c6b35123c83b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1500,7 +1500,7 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
+ 	scaling->window_start_t = curr_t;
+ 	scaling->tot_busy_t = 0;
+ 
+-	if (hba->outstanding_reqs) {
++	if (scaling->active_reqs) {
+ 		scaling->busy_start_t = curr_t;
+ 		scaling->is_busy_started = true;
+ 	} else {
+@@ -2118,7 +2118,7 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->clk_scaling.active_reqs--;
+-	if (!hba->outstanding_reqs && scaling->is_busy_started) {
++	if (!scaling->active_reqs && scaling->is_busy_started) {
+ 		scaling->tot_busy_t += ktime_to_us(ktime_sub(ktime_get(),
+ 					scaling->busy_start_t));
+ 		scaling->busy_start_t = 0;
+-- 
+2.7.4
+
