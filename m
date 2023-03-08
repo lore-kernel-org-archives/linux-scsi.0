@@ -2,115 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ADCAC6FD19
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 21:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56085C678D5
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 22:27:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230171AbjCHVz1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 16:55:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58346 "EHLO
+        id S230221AbjCHW1h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 17:27:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbjCHVzV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 16:55:21 -0500
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01752D3300
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 13:55:04 -0800 (PST)
-Received: by mail-wr1-x42a.google.com with SMTP id h11so41649wrm.5
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Mar 2023 13:55:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678312503;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PNobrJtyVxKais+5xCBZIp/sku4QQfBasurHEecIWAE=;
-        b=Xx0Z7goD6qsCry/gPmvS47RqLg7qVg1rsqP0/ivv6dVLBUn5MS10EP/EdHwYpbDGEU
-         amc1TtUHaLR9QISTSc4s13jqYliAxZotYqA5v7ma1xa+nruXOjRgMn4SyBj9LF172nlI
-         3fEfyk1sCkU4sqemUmyXLsZGL+g8BQpqebMUMA8JFX9RDGsUbWTlFLEzacTlewE643L2
-         wpcwC/tuVbqFrGu44C0xcZkIvml71vXIU76g5z+CreInh1uzWrMmwRrdhqNJLnuAf9gP
-         rXTuvAevUDQi1yyT0CRPjN2A+odDaicPcBsSP3ZUKufVU118R2TdNE2okzHMM37ZLwaL
-         wnXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678312503;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PNobrJtyVxKais+5xCBZIp/sku4QQfBasurHEecIWAE=;
-        b=0NVo1D65r7Puvigp+1D8LTsXo1HjZ7j0y+4n6Czg9E0Hmq4yRPvZlSJ87Sb1jC4qYM
-         S73MjIq+WZbxT1DuRwdTQhHUNegNin0u4LJsIM8YxX02TJAgmp59TK8j2jNf6IJUY5rh
-         3r1u9w4EMwlAI7URaqYh8F6Wd9RekOSxljFT8YXy8h/cH8gxNIBAnCsfTBegFU2IyXjy
-         M4uDA9wiws0H5H1KcRxEX15Z++F6/FW2VpG3vMAsWbaSZYg5JFoH3dh/Eyj0VtKm0293
-         I8XcSZNG/7S9eMRK+5Uj+9QhLdY0EdeZJb8EmYTPxPULHM/PPiZchsQK8n8qXi+dh7Pg
-         1iSg==
-X-Gm-Message-State: AO0yUKWy01GcrqZkO2OWzI+30JIAjonNx87MqOddm4HUVZAF/ki1/btg
-        8keHY9nnynglfC87JHfMc1nn1Q==
-X-Google-Smtp-Source: AK7set8/BDV1TRoYFJRl+Ho21B1yvco18zhN9eA6Vxb9VJyRxA2mql6ty9uvzWGEDOdDdPzgRii47w==
-X-Received: by 2002:adf:f44a:0:b0:2c9:ee50:b295 with SMTP id f10-20020adff44a000000b002c9ee50b295mr13070782wrp.28.1678312503333;
-        Wed, 08 Mar 2023 13:55:03 -0800 (PST)
-Received: from linaro.org ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id w2-20020a5d6802000000b002c7163660a9sm16132508wru.105.2023.03.08.13.55.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Mar 2023 13:55:02 -0800 (PST)
-Date:   Wed, 8 Mar 2023 23:55:01 +0200
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/7] Add dedicated Qcom ICE driver
-Message-ID: <ZAkENY2DWTqIr86m@linaro.org>
-References: <20230308155838.1094920-1-abel.vesa@linaro.org>
- <ZAjqBemusfSKEWgF@sol.localdomain>
+        with ESMTP id S229558AbjCHW1g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 17:27:36 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF4F47D577;
+        Wed,  8 Mar 2023 14:27:35 -0800 (PST)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 328F2JPo020998;
+        Wed, 8 Mar 2023 22:27:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=BnxJZOUWAPz9fhWBxQIvv8l5fd/RNCl9syenTA+Xu9o=;
+ b=eL7lzc+35XtXO35B6Osdzr5QJb+e+DL1LfwtDL+Q5RXBBEllA0je18hcZE25VqNL1XYT
+ UCldtuTGrqSJfQELpwKS27hiCs3du8R2skdaWW8YTYPHBVj5rjtR4xAzdkQtNvvY8HUX
+ dE1LdbZ3mhjb2YW5gGXGC5QyiFhZ6fHySZRNu+iDQCMP+mpACH+Klo0KyP7+wjjknI+V
+ 7k1LqyQsZ6Yrn+dPFw4cmI0wh+em/b1o+Lalow0cv4VEnxQMuZHC3glyNUh5N6iRw5Uo
+ 9Q8Zcd9uZBK6QwX5KrmB0gXcxvr2uBzGVGh9LIGUWZUjwWSSXPW+aYeqaKx0FOVEMles NQ== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6vnah2ww-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Mar 2023 22:27:13 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 328MRCj7021491
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 8 Mar 2023 22:27:12 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Wed, 8 Mar 2023
+ 14:27:12 -0800
+Message-ID: <f4f5eef5-c0d4-0de6-71df-c70f0ce4064a@quicinc.com>
+Date:   Wed, 8 Mar 2023 14:27:11 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZAjqBemusfSKEWgF@sol.localdomain>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [RFC PATCH v1 2/4] ufs: mcq: Add supporting functions for mcq
+ abort
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1678247309.git.quic_nguyenb@quicinc.com>
+ <b84abc7ea5bddc78ab3c70e9a7b5108a5bc9448f.1678247309.git.quic_nguyenb@quicinc.com>
+ <fa4bfc9e-2e75-2e00-2b64-816f4bc26eda@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <fa4bfc9e-2e75-2e00-2b64-816f4bc26eda@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: R1Cp1VZNh3ORtuGdMmw-HrylbIUx0A5p
+X-Proofpoint-ORIG-GUID: R1Cp1VZNh3ORtuGdMmw-HrylbIUx0A5p
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-08_15,2023-03-08_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 adultscore=0
+ spamscore=0 clxscore=1015 mlxlogscore=999 impostorscore=0 mlxscore=0
+ phishscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303080189
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23-03-08 12:03:17, Eric Biggers wrote:
-> Hi Abel,
-> 
-> On Wed, Mar 08, 2023 at 05:58:31PM +0200, Abel Vesa wrote:
-> > As both SDCC and UFS drivers use the ICE with duplicated implementation,
-> > while none of the currently supported platforms make use concomitantly
-> > of the same ICE IP block instance, the new SM8550 allows both UFS and
-> > SDCC to do so. In order to support such scenario, there is a need for
-> > a unified implementation and a devicetree node to be shared between
-> > both types of storage devices. So lets drop the duplicate implementation
-> > of the ICE from both SDCC and UFS and make it a dedicated (soc) driver.
-> > Also, switch all UFS and SDCC devicetree nodes to use the new ICE
-> > approach.
-> > 
-> > See each individual patch for changelogs.
-> > 
-> > The v1 is here:
-> > https://lore.kernel.org/all/20230214120253.1098426-1-abel.vesa@linaro.org/
-> > 
-> > Abel Vesa (7):
-> >   dt-bindings: soc: qcom: Add schema for Inline Crypto Engine
-> >   dt-bindings: ufs: qcom: Add ICE phandle and drop core clock
-> >   dt-bindings: mmc: sdhci-msm: Add ICE phandle and drop core clock
-> >   soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
-> >   scsi: ufs: ufs-qcom: Switch to the new ICE API
-> >   mmc: sdhci-msm: Switch to the new ICE API
-> >   arm64: dts: qcom: Add the Inline Crypto Engine nodes
-> 
-> Does this address all the comments on v1?  I had also asked some questions on
-> v1.  It would be helpful if you would respond.
+Hi Bart, thank you very much for the reviews.
 
-Sorry about not doing that earlier. Did that now.
+On 3/8/2023 10:48 AM, Bart Van Assche wrote:
+> On 3/7/23 20:01, Bao D. Nguyen wrote:
+>> +/* Maximum MCQ registers polling time */
+>
+> registers -> register
+I will make the change in the next rev.
+>
+>> +#define MCQ_POLL_TIMEOUT   500
+>
+>>       struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
+>> +    u32 mcq_poll_ms;
+>>   };
+>
+> Why has the new member variable 'mcq_poll_ms' been introduced since 
+> its value is never changed?
+>
+This is to give us the flexibility to override this parameter in the 
+downstream driver if needed.
+> Thanks,
+>
+> Bart.
 
-> 
-> - Eric
+
