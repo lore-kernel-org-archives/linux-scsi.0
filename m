@@ -2,564 +2,149 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 068AAC6FD1E
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 16:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5A70C678D5
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 18:42:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232404AbjCHQAv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 11:00:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47916 "EHLO
+        id S229868AbjCHSmV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 13:42:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232442AbjCHP7z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 10:59:55 -0500
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03AE2A56BF
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Mar 2023 07:59:28 -0800 (PST)
-Received: by mail-wm1-x331.google.com with SMTP id fm20-20020a05600c0c1400b003ead37e6588so1640858wmb.5
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Mar 2023 07:59:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678291160;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xlkJ43vk7P2I8VJnYV/tDeORllmV6CsNFLr6sCgkF18=;
-        b=e/CmqSlBFJ05W9lE6TrYjE12XayQTdxPNYj1Qg6Upj8VFuLAC73A6kN3eC2cWSb3oc
-         vaKj9clisPRwPYWpF5HkN3c5u6Y9mRFzQgwPOAa8HYl7cWMJDkhjgkAdOC78Lmre2gqz
-         zuok1NMCS36fuEONm+hA0KzFIu6wYT27ncNqKLWtZBIVqkeexq3bFSV6Ox3/emzRaxiz
-         X0mAs6TCOt1fiUXEd4jq4wNMprBauLmBAlRoybINk4TKvqqYaZm2nvJ5EHc5GxkZTcXR
-         OGkZQoULlHsw5TTHXMbVHfmJt7n3oVSomi28z6c0zN/LOMc7jSAS1X4YTs9opjy8dOQ5
-         BbmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678291160;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xlkJ43vk7P2I8VJnYV/tDeORllmV6CsNFLr6sCgkF18=;
-        b=tL2Zxk6KSIMGGQS32uAjIqp6SK9MbyTzFk1r74pywNby9g0BG7RCYt7nzRThd2dl1U
-         oltI5e3t0/oYeok3Uet6/V0N/goUH4OLsVHR1XtBIJ3W27Wda4+LyZ6T9ffivqxpKxq4
-         K7NQE/3QG8Ypu57q4Tzl1i+QzTSPZokA1JDhGSXxcWdqKDySZf/ucETvlWkrTxzSq1iP
-         BIndv7zjge4K222yyyCsAhB+38hoF03aSqzDRxfy6JzVDImzqBiQtO3+tR9eb4sT91cF
-         7iSAgd/i3RosHGwZaWi2lXrlTOjUx7/o+rdSP4ol72JC88qRbcJLa1NQcqQrC6tQBMqN
-         tjMQ==
-X-Gm-Message-State: AO0yUKV1l3p/u8wjyAO6oVCYV/O60eRf1yVnaJJ+06DMgwA2VqjuZQw+
-        gBl41L3Sq322BH3j/XE8dZBhDg==
-X-Google-Smtp-Source: AK7set/Fk81BRAvEaEZ4n/aVjxSPcXXt7wsoigiUp9lQW/Ia06McQ6AyO/YEhz89liErYygZ+JjlJw==
-X-Received: by 2002:a05:600c:3d8b:b0:3eb:578d:ded3 with SMTP id bi11-20020a05600c3d8b00b003eb578dded3mr17442801wmb.35.1678291160552;
-        Wed, 08 Mar 2023 07:59:20 -0800 (PST)
-Received: from hackbox.lan ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id 16-20020a05600c229000b003eb2e33f327sm2548430wmf.2.2023.03.08.07.59.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Mar 2023 07:59:19 -0800 (PST)
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [RFC PATCH v2 7/7] arm64: dts: qcom: Add the Inline Crypto Engine nodes
-Date:   Wed,  8 Mar 2023 17:58:38 +0200
-Message-Id: <20230308155838.1094920-8-abel.vesa@linaro.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230308155838.1094920-1-abel.vesa@linaro.org>
-References: <20230308155838.1094920-1-abel.vesa@linaro.org>
+        with ESMTP id S230140AbjCHSmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 13:42:09 -0500
+Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-vi1eur04on2052.outbound.protection.outlook.com [40.107.8.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E81F3C0810;
+        Wed,  8 Mar 2023 10:42:00 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=EKyFbTAzg08YCmICyCFFf/eZDZIXsL0j84ifQY91bCrCSY9O+jJh24IF6tc7SsEVV/djGJCc29q192Q2z626b2AGZUliNONs1Bft91rsHUzliq0/h0MtHDsqjJDEv2ISFqi4U28/rcsaokXVtB0NWzoZ5pxIpDf8XbXkSAJp6Vzb0ldGCtcnrJnbLkuAo0fPzILRzXVJLY1pc7cta5InsIU0bS8UpCqSLjyuqimXxvSX00xY6JjIZ2tXXuyD/Btp+NI2uRB80HkqOFYnBs7nBE7XokSUHGaRUtR5VdaVQmuIGeuXGzEn4SddnFG01FlkgGxCnPw/ka3uur+7R8lUdA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5qRdw4lNUBJIkUpoCpF1wcFR5snKb8Q8hFnzSRAWP1k=;
+ b=eMXfzRgoCdVrxMraP+lJbx8LrIYiFmZPoVRHEXUSunL7wGWdlfIrFUpxcvIhhW1kYsDXDOdugBdJaj3Eg9IBw3hkD6EChHniKCKNI0bW3fFZIK4vbdfstWVTCd8jyyIbRyl1hUN0oTww5QUvE0/JPF43E10TzcTLvUzYOBokR86RHWqzPrqucMgH9c7M1mKMI5zwadP4l1kxEsf/SR9BmgJfzmrDIoDVW+Or+8cMQddhaWhOwyAvs1L8or7ZOwEmP7yyMDL5nHJehst3Gm8kP4CNKN5wfs8b4QQQtQw9aPEQW5/4/b+S/JhZY8c1PmgRGaH5Pg/BIM2ruNryuci4Tg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5qRdw4lNUBJIkUpoCpF1wcFR5snKb8Q8hFnzSRAWP1k=;
+ b=IlIoAcblH0JydEoriMdZe493JQQ1eGBFGNGjivvdiSyJa8ByWgYxm/rlxuERVO/vDCmTnuopFM4EYs8YUArGJ9apCEUTVb7n5DIFI12dzeEKn3rsx/ZEzMH/5aNm+1V5VzYJE7ulJWRWaKdPy32BezbqOzVkJ+u64l/+vmPb4cGo6gqLR5h46OU1vpFxTtMnzoZ41zCkNVfTNuJImTLl/Nb0/hBMsFmU7q7B6p50oqAm8H0dawGCiO9SBoDdaNachPPSVK9bHDuIZ+UZoJz4a+c/dLgHDrdHqKfwpa+KG4g5Rb1wp3Ec5tbIkQ23ddrVUO6AjWqxEn8ZEokoueZ5Sw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by PAXPR04MB8271.eurprd04.prod.outlook.com (2603:10a6:102:1ca::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.29; Wed, 8 Mar
+ 2023 18:41:58 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::32a5:c2e6:91d9:1a68]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::32a5:c2e6:91d9:1a68%4]) with mapi id 15.20.6178.016; Wed, 8 Mar 2023
+ 18:41:58 +0000
+Message-ID: <a4ecf9eb-509a-84a6-8a9f-a3f5ea54ecac@suse.com>
+Date:   Wed, 8 Mar 2023 10:41:51 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
+Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Lee Duncan <leeman.duncan@gmail.com>,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>,
+        Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
+ <88927435-ae58-c24b-e7b7-b675985de433@leemhuis.info>
+ <86D685F2-D411-460B-A09B-6BE942372F0A@gmail.com>
+ <yq1zg8pl1nq.fsf@ca-mkp.ca.oracle.com>
+ <f8c5619f-1e1a-f759-6ab6-ea84bba3d635@suse.com>
+ <yq1edq0jg2h.fsf@ca-mkp.ca.oracle.com>
+From:   Lee Duncan <lduncan@suse.com>
+In-Reply-To: <yq1edq0jg2h.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR3P281CA0103.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:a1::19) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM5PR04MB3089:EE_|PAXPR04MB8271:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0abad45e-b0ca-492e-3c8f-08db2004cc24
+X-LD-Processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: LjFatBBxlOcVEg0zi4AB53BzgcabXKbfp8XJulPtfHOpx5sT1eNury2l3fzA4yW43dssq+yqVDnJWblpoIyExgVKUcx9tRn9uvz2OCHXR5v+zQJTPebqjkFo4ADssG8PWJjDU9BOva8vTyaL//frnUxCRv8Un0ISdcQMkUCLAcdiCv183UIl64vG7hC35PL3VqhHfi+NU4dOMFog8Yv51nniU06zRT6LVyC/zsjDk/QIT/k+D5UE1D6u6r3V1djGGKdx0dCQOVSnFlfa/bXcuMRfdEucK6ZCbzmO5sKSOVA3PwgLe0j39YWUlpw9ZKydnj1LwW+k4CDKfVMgLOEfexgrMHh+MJt0TIFALx0aHNn2LM+A/Xq+iTR8jC3v87RgQhPUOAl7U5lfxFweRwHbk14HzPFRFjdzKuBuhbOLtoGHbVBqfW0DIU5+L52RdP3ug58EYOEWbbTLStZzw2dTgTQRw6RiT6fLkWtX6+4h7HzkAIVtWi+70HKxDmaPZwpMeKs67Yt/0My680IaVRpdq1Px1elhDEtWgA44bRB+yxEpCEHKYBAWP3GRWeHgWpodSn4Xi5D6Nv0h1TnTOo0ohFTBHBHdbQPYM0OueurVjbUtZbY8foX3fMgeCAehxrm7CMH/3Ft93FH3+rleO+pfNtjl+YcLRTLEisgDW1SBwoztNqV7KYD+yl7PTliE5MPi56MjqzxOUr3r/aWSJuIxqrFI2MtBWY38iGMJbvYcGyE=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(346002)(376002)(366004)(39860400002)(136003)(396003)(451199018)(4744005)(31686004)(5660300002)(8936002)(2906002)(41300700001)(66946007)(66476007)(66556008)(8676002)(4326008)(6916009)(316002)(53546011)(6666004)(6512007)(54906003)(478600001)(6486002)(6506007)(31696002)(38100700002)(186003)(86362001)(26005)(2616005)(36756003)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QTVLWHMyQy9UNCtqNTladmV3NXB1UlhBSXMzb3J1b0Z1bUs3enpMNU94MURC?=
+ =?utf-8?B?cEtmYU9pLzYzbmlWajFBeFlLbElCanJIcmMwMlZMRllGbndXU2ZEellkWHlV?=
+ =?utf-8?B?L25tdVZJUzF2bVo3bmtOYUtCSjBBYlJpaDhnbTFKYTYzVFkzVVlkREErdzVH?=
+ =?utf-8?B?MkFQRkhONVZmakZxQkNzbEp1NXVEZm1hb29NeUtHcWtNTnIrK2xaU1hvMUda?=
+ =?utf-8?B?K2JpcXphVWs0SlZXcGJvcXdHYzJXU20rUHZEM2oyWTV6dVBJczl2TndWSHJ6?=
+ =?utf-8?B?a3U0RmhlNzhJQUZwMDRGYkRySmNUa1E2WFBjK09lK01GTU9tcXZoNG4wTkZD?=
+ =?utf-8?B?NnREcm5nbVJ1TGhuMkVBOWxlRmNSNkEwN3lHSHduOFVCWGNlcW9HeW9FUlgr?=
+ =?utf-8?B?YmNSTEtGdGFpc3pQNk9wUklDOEx5cy9KNUtnRUJFK0xwT0tRZTFTc3dVdmtL?=
+ =?utf-8?B?OXE0cmxtMjYyNUEzVXB5ZGRWaFRrV3h1aE1ucTZpRjBmVkRLLzF1TmNjSGFP?=
+ =?utf-8?B?YlFnaXZnamQ2Sk9IMU9XLzVjbHlxMGdubjBuK1hmZktxVjhINTdSa1pselZl?=
+ =?utf-8?B?d0dseFpPK0pqZUdma1RWY0VWckp0ekpTNnZCSWhRSlpaa0xqbm9MbWNrR25x?=
+ =?utf-8?B?angxbTFNdzJhZm00UXAweXl3MmJIblgvaDNxak90bHdoQmpJbm1EbE9WODdo?=
+ =?utf-8?B?MzdVUFVzdCs3NUpSb0gyQnhlVGR5S1hJL0tLQ0k3N3ZVb1FZSjd6REcrRlQ2?=
+ =?utf-8?B?NTM3RStoKzhTL2ZKb28rQWMrSFFKNW9BUlRxaVVESkp1VEtxMFhLdjRtNnU4?=
+ =?utf-8?B?S3c5K3o0UTNpOTlReGlXb2VVbTJwQ0JZMnlFdytBdkYvSG91UVk5aWJnTEdz?=
+ =?utf-8?B?Vk1tWFZrV0ZCbHZzNlNLdThWbmQ1SGY1OUxlWXNabGJXdzNHd0l0Z1VkUmk2?=
+ =?utf-8?B?TERoOTRhbzBUbElicnZDUCtWWGNPdmRJdTM2b2pxdmUybEF3b2NsK2FFcEdw?=
+ =?utf-8?B?WXZiTlVRVmtBb241bFFEalJ1cVhhREJ3OE5uNkozaGt3bG9PUWx4YytuVU5s?=
+ =?utf-8?B?SXBhU3crSG9VdHdWcE5WTTNlVnUyZXJOSnRrVUlwZi9pRDVCQzNIdUtQdXJP?=
+ =?utf-8?B?eUZiQWhaZWVwRmVLcnBkYmljdkJZS0tVV1dwNnJpUTBmUXlsSFVlMW9mcndZ?=
+ =?utf-8?B?d3lNVnZpRjg3a0Z2cmlNaklBa291aW93WkcvSU5JTTBJMVBsamNzTEpUcisr?=
+ =?utf-8?B?VHdGQWJYbzFoaXJZY0E3YWxxMlJsTm04WllGRFhveU5OZk9RMzhFMnc2TUJF?=
+ =?utf-8?B?ZGozTkphazdhUzl2cjcvelU2QWxBWXpqd2JvdTZzcUphRDNxWEM0MkloSWEz?=
+ =?utf-8?B?MmQzUHE5U0dGTGlrUDVGVUsveVBkQSsyZm8zNU9EQms3QnRLK1hrTHREVnpq?=
+ =?utf-8?B?L2ZjSTZNK1lwc2tPQ0FRWGdYSzEyTzRJeXA1YzZ4bkFyb0ZEcTgrZmhqVEJa?=
+ =?utf-8?B?Z1UxWEtMRmcvTEdpdHJ3OU9DVnZPL01hYk1kSk0vN2pmV0s1c1dmb3h1Rmtr?=
+ =?utf-8?B?dXNNYXo3bFJNQ0xxTk1KdENHWTRoZHVjS2g5YVVlOG9URWtpZkkxUFhXYmxL?=
+ =?utf-8?B?ci93OTJTTjIweVJRbDBIMytIcDJFeG16L3AyY0dQZEwwSjJZT1VFdXo2WDVF?=
+ =?utf-8?B?dGNxUzVNd01HY1FZVW1GY0N5OEdjdi9TWC80VWdDTndpUHBvWjV2bUJIS3Ir?=
+ =?utf-8?B?a2R4RFd1ZjFtcmNFdThoK3pYbUJTSnhiYVlydlNYZDMwMmM4WW1WQ2J4UUdo?=
+ =?utf-8?B?eHpURzVmUXNvUTQveHRlREh5elBnTXZ4ZVBEOUlNajRPODJSNnFEUk92UkhY?=
+ =?utf-8?B?MXhlL1AxY0xOSzdrOHRJbGwra1M4U3gyRDk1eEFsOVZlSjNzUGMweGlDWGdO?=
+ =?utf-8?B?OUVEY2tQaEtuVWtkcnJRWGg1NXNudi9BWG5lOU9RWTNnWThGTWZpWnV1LzVu?=
+ =?utf-8?B?dmlINmtwWS9JRCtKbi9MMERxK0Jrc3FMYnNVT2trTEhkZHJaNFE5ZWRJSHRP?=
+ =?utf-8?B?d09rbzNqTWtZQzRSY01ydXhIMnN4eFZKdVpoWUVndXRWemxpaCtzbFF3Qndz?=
+ =?utf-8?Q?LiEpW51kfD/PQ274H4sZs1zec?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0abad45e-b0ca-492e-3c8f-08db2004cc24
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Mar 2023 18:41:58.3223
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: jTGdTIKEwkR46FtSiUkhP9GPrKEIDKDDoo3p7VsVgGqxNuQxqE45hb9XCksGNZkuHuwLJ9LiZKHBWaCr0ndYvw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8271
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drop all properties related to ICE from every UFS and SDCC node,
-for all platforms, and add dedicated ICE nodes for each platform.
-On most platforms, there is only one ICE instance, used by either
-UFS or SDCC, but there are some platforms that have two separate
-instances and, therefore, two separate nodes are added.
+On 3/7/23 15:40, Martin K. Petersen wrote:
+> 
+> Lee,
+> 
+>> My worry is that this won't always work. Looking at the code, the
+>> buffer sizes used for VPD pages include 8, 32, 64, and 252 bytes. I'm
+>> not sure how reading 255 bytes into an 8-byte buffer would work.
+> 
+> In the scsi_get_vpd_buf() case we will allocate a 255 byte buffer since
+> that's what scsi_get_vpd_size() returns for a VDASD.
+> 
+> And in the scsi_get_vpd_page() case, where a buffer already exists, we
+> clamp the INQUIRY size to the minimum of scsi_get_vpd_size() and the
+> buffer length provided by the caller.
+> 
 
-Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
----
+Please add my Reviewed-by tag then.
 
-Changes since v1:
- * Made changes for all platforms that use ICE, as a single patch since
-   most changes look really similar.
-
- arch/arm64/boot/dts/qcom/sdm630.dtsi | 18 +++++++++-----
- arch/arm64/boot/dts/qcom/sdm670.dtsi | 15 +++++++----
- arch/arm64/boot/dts/qcom/sdm845.dtsi | 21 +++++++++-------
- arch/arm64/boot/dts/qcom/sm6115.dtsi | 37 +++++++++++++++++-----------
- arch/arm64/boot/dts/qcom/sm6350.dtsi | 31 ++++++++++++++---------
- arch/arm64/boot/dts/qcom/sm8150.dtsi | 21 +++++++++-------
- arch/arm64/boot/dts/qcom/sm8450.dtsi | 22 ++++++++++-------
- 7 files changed, 102 insertions(+), 63 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/qcom/sdm630.dtsi b/arch/arm64/boot/dts/qcom/sdm630.dtsi
-index 5827cda270a0..2aed49104d9d 100644
---- a/arch/arm64/boot/dts/qcom/sdm630.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sdm630.dtsi
-@@ -1330,9 +1330,8 @@ opp-200000000 {
- 		sdhc_1: mmc@c0c4000 {
- 			compatible = "qcom,sdm630-sdhci", "qcom,sdhci-msm-v5";
- 			reg = <0x0c0c4000 0x1000>,
--			      <0x0c0c5000 0x1000>,
--			      <0x0c0c8000 0x8000>;
--			reg-names = "hc", "cqhci", "ice";
-+			      <0x0c0c5000 0x1000>;
-+			reg-names = "hc", "cqhci";
- 
- 			interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
- 					<GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
-@@ -1340,9 +1339,8 @@ sdhc_1: mmc@c0c4000 {
- 
- 			clocks = <&gcc GCC_SDCC1_AHB_CLK>,
- 				 <&gcc GCC_SDCC1_APPS_CLK>,
--				 <&xo_board>,
--				 <&gcc GCC_SDCC1_ICE_CORE_CLK>;
--			clock-names = "iface", "core", "xo", "ice";
-+				 <&xo_board>;
-+			clock-names = "iface", "core", "xo";
- 
- 			interconnects = <&a2noc 2 &a2noc 10>,
- 					<&gnoc 0 &cnoc 27>;
-@@ -1353,6 +1351,8 @@ sdhc_1: mmc@c0c4000 {
- 			pinctrl-1 = <&sdc1_state_off>;
- 			power-domains = <&rpmpd SDM660_VDDCX>;
- 
-+			qcom,ice = <&ice>;
-+
- 			bus-width = <8>;
- 			non-removable;
- 
-@@ -1382,6 +1382,12 @@ opp-384000000 {
- 			};
- 		};
- 
-+		ice: inline-crypto-engine@c0c8000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0x0c0c8000 0x8000>;
-+			clocks = <&gcc GCC_SDCC1_ICE_CORE_CLK>;
-+		};
-+
- 		usb2: usb@c2f8800 {
- 			compatible = "qcom,sdm660-dwc3", "qcom,dwc3";
- 			reg = <0x0c2f8800 0x400>;
-diff --git a/arch/arm64/boot/dts/qcom/sdm670.dtsi b/arch/arm64/boot/dts/qcom/sdm670.dtsi
-index 02f14692dd9d..7c1c01a8fdae 100644
---- a/arch/arm64/boot/dts/qcom/sdm670.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sdm670.dtsi
-@@ -416,9 +416,8 @@ qusb2_hstx_trim: hstx-trim@1eb {
- 		sdhc_1: mmc@7c4000 {
- 			compatible = "qcom,sdm670-sdhci", "qcom,sdhci-msm-v5";
- 			reg = <0 0x007c4000 0 0x1000>,
--			      <0 0x007c5000 0 0x1000>,
--			      <0 0x007c8000 0 0x8000>;
--			reg-names = "hc", "cqhci", "ice";
-+			      <0 0x007c5000 0 0x1000>;
-+			reg-names = "hc", "cqhci";
- 
- 			interrupts = <GIC_SPI 641 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 644 IRQ_TYPE_LEVEL_HIGH>;
-@@ -427,9 +426,8 @@ sdhc_1: mmc@7c4000 {
- 			clocks = <&gcc GCC_SDCC1_AHB_CLK>,
- 				 <&gcc GCC_SDCC1_APPS_CLK>,
- 				 <&rpmhcc RPMH_CXO_CLK>,
--				 <&gcc GCC_SDCC1_ICE_CORE_CLK>,
- 				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>;
--			clock-names = "iface", "core", "xo", "ice", "bus";
-+			clock-names = "iface", "core", "xo", "bus";
- 
- 			iommus = <&apps_smmu 0x140 0xf>;
- 
-@@ -440,10 +438,17 @@ sdhc_1: mmc@7c4000 {
- 
- 			bus-width = <8>;
- 			non-removable;
-+			qcom,ice = <&ice>;
- 
- 			status = "disabled";
- 		};
- 
-+		ice: inline-crypto-engine@7c8000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x007c8000 0 0x8000>;
-+			clocks = <&gcc GCC_SDCC1_ICE_CORE_CLK>;
-+		};
-+
- 		gpi_dma0: dma-controller@800000 {
- 			#dma-cells = <3>;
- 			compatible = "qcom,sdm670-gpi-dma", "qcom,sdm845-gpi-dma";
-diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-index 479859bd8ab3..80cf76dc612c 100644
---- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-@@ -2543,9 +2543,8 @@ mmss_noc: interconnect@1740000 {
- 		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sdm845-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
--			reg = <0 0x01d84000 0 0x2500>,
--			      <0 0x01d90000 0 0x8000>;
--			reg-names = "std", "ice";
-+			reg = <0 0x01d84000 0 0x2500>;
-+			reg-names = "std";
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
- 			phys = <&ufs_mem_phy_lanes>;
- 			phy-names = "ufsphy";
-@@ -2565,8 +2564,7 @@ ufs_mem_hc: ufshc@1d84000 {
- 				"ref_clk",
- 				"tx_lane0_sync_clk",
- 				"rx_lane0_sync_clk",
--				"rx_lane1_sync_clk",
--				"ice_core_clk";
-+				"rx_lane1_sync_clk";
- 			clocks =
- 				<&gcc GCC_UFS_PHY_AXI_CLK>,
- 				<&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-@@ -2575,8 +2573,7 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&rpmhcc RPMH_CXO_CLK>,
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
--				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
- 			freq-table-hz =
- 				<50000000 200000000>,
- 				<0 0>,
-@@ -2585,12 +2582,18 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<0 0>,
- 				<0 0>,
- 				<0 0>,
--				<0 0>,
--				<0 300000000>;
-+				<0 0>;
-+			qcom,ice = <&ice>;
- 
- 			status = "disabled";
- 		};
- 
-+		ice: inline-crypto-engine@1d90000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x01d90000 0 0x8000>;
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		ufs_mem_phy: phy@1d87000 {
- 			compatible = "qcom,sdm845-qmp-ufs-phy";
- 			reg = <0 0x01d87000 0 0x18c>;
-diff --git a/arch/arm64/boot/dts/qcom/sm6115.dtsi b/arch/arm64/boot/dts/qcom/sm6115.dtsi
-index 4d6ec815b78b..0ac12c839bc1 100644
---- a/arch/arm64/boot/dts/qcom/sm6115.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm6115.dtsi
-@@ -717,9 +717,8 @@ sram@4690000 {
- 		sdhc_1: mmc@4744000 {
- 			compatible = "qcom,sm6115-sdhci", "qcom,sdhci-msm-v5";
- 			reg = <0x0 0x04744000 0x0 0x1000>,
--			      <0x0 0x04745000 0x0 0x1000>,
--			      <0x0 0x04748000 0x0 0x8000>;
--			reg-names = "hc", "cqhci", "ice";
-+			      <0x0 0x04745000 0x0 0x1000>;
-+			reg-names = "hc", "cqhci";
- 
- 			interrupts = <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 352 IRQ_TYPE_LEVEL_HIGH>;
-@@ -727,18 +726,24 @@ sdhc_1: mmc@4744000 {
- 
- 			clocks = <&gcc GCC_SDCC1_AHB_CLK>,
- 				 <&gcc GCC_SDCC1_APPS_CLK>,
--				 <&rpmcc RPM_SMD_XO_CLK_SRC>,
--				 <&gcc GCC_SDCC1_ICE_CORE_CLK>;
--			clock-names = "iface", "core", "xo", "ice";
-+				 <&rpmcc RPM_SMD_XO_CLK_SRC>;
-+			clock-names = "iface", "core", "xo";
- 
- 			pinctrl-0 = <&sdc1_state_on>;
- 			pinctrl-1 = <&sdc1_state_off>;
- 			pinctrl-names = "default", "sleep";
- 
- 			bus-width = <8>;
-+			qcom,ice = <&sdhc_ice>;
- 			status = "disabled";
- 		};
- 
-+		sdhc_ice: inline-crypto-engine@4748000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x04748000 0 0x8000>;
-+			clocks = <&gcc GCC_SDCC1_ICE_CORE_CLK>;
-+		};
-+
- 		sdhc_2: mmc@4784000 {
- 			compatible = "qcom,sm6115-sdhci", "qcom,sdhci-msm-v5";
- 			reg = <0x0 0x04784000 0x0 0x1000>;
-@@ -784,8 +789,8 @@ opp-202000000 {
- 
- 		ufs_mem_hc: ufs@4804000 {
- 			compatible = "qcom,sm6115-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
--			reg = <0x0 0x04804000 0x0 0x3000>, <0x0 0x04810000 0x0 0x8000>;
--			reg-names = "std", "ice";
-+			reg = <0x0 0x04804000 0x0 0x3000>;
-+			reg-names = "std";
- 			interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>;
- 			phys = <&ufs_mem_phy_lanes>;
- 			phy-names = "ufsphy";
-@@ -803,16 +808,14 @@ ufs_mem_hc: ufs@4804000 {
- 				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
- 				 <&rpmcc RPM_SMD_XO_CLK_SRC>,
- 				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
--				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--				 <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>;
- 			clock-names = "core_clk",
- 				      "bus_aggr_clk",
- 				      "iface_clk",
- 				      "core_clk_unipro",
- 				      "ref_clk",
- 				      "tx_lane0_sync_clk",
--				      "rx_lane0_sync_clk",
--				      "ice_core_clk";
-+				      "rx_lane0_sync_clk";
- 
- 			freq-table-hz = <50000000 200000000>,
- 					<0 0>,
-@@ -820,12 +823,18 @@ ufs_mem_hc: ufs@4804000 {
- 					<37500000 150000000>,
- 					<0 0>,
- 					<0 0>,
--					<0 0>,
--					<75000000 300000000>;
-+					<0 0>;
-+			qcom,ice = <&ufs_ice>;
- 
- 			status = "disabled";
- 		};
- 
-+		ufs_ice: inline-crypto-engine@4810000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x04810000 0 0x8000>;
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		ufs_mem_phy: phy@4807000 {
- 			compatible = "qcom,sm6115-qmp-ufs-phy";
- 			reg = <0x0 0x04807000 0x0 0x1c4>;
-diff --git a/arch/arm64/boot/dts/qcom/sm6350.dtsi b/arch/arm64/boot/dts/qcom/sm6350.dtsi
-index 1e1d366c92c1..ed28f8e3626b 100644
---- a/arch/arm64/boot/dts/qcom/sm6350.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm6350.dtsi
-@@ -638,9 +638,8 @@ rng: rng@793000 {
- 		sdhc_1: mmc@7c4000 {
- 			compatible = "qcom,sm6350-sdhci", "qcom,sdhci-msm-v5";
- 			reg = <0 0x007c4000 0 0x1000>,
--				<0 0x007c5000 0 0x1000>,
--				<0 0x007c8000 0 0x8000>;
--			reg-names = "hc", "cqhci", "ice";
-+				<0 0x007c5000 0 0x1000>;
-+			reg-names = "hc", "cqhci";
- 
- 			interrupts = <GIC_SPI 641 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 644 IRQ_TYPE_LEVEL_HIGH>;
-@@ -659,6 +658,7 @@ sdhc_1: mmc@7c4000 {
- 			bus-width = <8>;
- 			non-removable;
- 			supports-cqe;
-+			qcom,ice = <&sdhc_ice>;
- 
- 			status = "disabled";
- 
-@@ -682,6 +682,12 @@ opp-384000000 {
- 			};
- 		};
- 
-+		sdhc_ice: inline-crypto-engine@c0c8000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x007c8000 0 0x8000>;
-+			clocks = <&gcc GCC_SDCC1_ICE_CORE_CLK>;
-+		};
-+
- 		gpi_dma0: dma-controller@800000 {
- 			compatible = "qcom,sm6350-gpi-dma";
- 			reg = <0 0x00800000 0 0x60000>;
-@@ -933,9 +939,8 @@ mmss_noc: interconnect@1740000 {
- 		ufs_mem_hc: ufs@1d84000 {
- 			compatible = "qcom,sm6350-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
--			reg = <0 0x01d84000 0 0x3000>,
--			      <0 0x01d90000 0 0x8000>;
--			reg-names = "std", "ice";
-+			reg = <0 0x01d84000 0 0x3000>;
-+			reg-names = "std";
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
- 			phys = <&ufs_mem_phy_lanes>;
- 			phy-names = "ufsphy";
-@@ -955,8 +960,7 @@ ufs_mem_hc: ufs@1d84000 {
- 				      "ref_clk",
- 				      "tx_lane0_sync_clk",
- 				      "rx_lane0_sync_clk",
--				      "rx_lane1_sync_clk",
--				      "ice_core_clk";
-+				      "rx_lane1_sync_clk";
- 			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
- 				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
- 				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-@@ -964,8 +968,7 @@ ufs_mem_hc: ufs@1d84000 {
- 				 <&rpmhcc RPMH_QLINK_CLK>,
- 				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
--				 <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
- 			freq-table-hz =
- 				<50000000 200000000>,
- 				<0 0>,
-@@ -974,8 +977,8 @@ ufs_mem_hc: ufs@1d84000 {
- 				<75000000 300000000>,
- 				<0 0>,
- 				<0 0>,
--				<0 0>,
- 				<0 0>;
-+			qcom,ice = <&ufs_ice>;
- 
- 			status = "disabled";
- 		};
-@@ -1007,6 +1010,12 @@ ufs_mem_phy_lanes: phy@1d87400 {
- 			};
- 		};
- 
-+		ufs_ice: inline-crypto-engine@1d90000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x01d90000 0 0x8000>;
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		ipa: ipa@1e40000 {
- 			compatible = "qcom,sm6350-ipa";
- 
-diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
-index fd20096cfc6e..844c7b80d205 100644
---- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
-@@ -1983,9 +1983,8 @@ pcie1_lane: phy@1c0e200 {
- 		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sm8150-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
--			reg = <0 0x01d84000 0 0x2500>,
--			      <0 0x01d90000 0 0x8000>;
--			reg-names = "std", "ice";
-+			reg = <0 0x01d84000 0 0x2500>;
-+			reg-names = "std";
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
- 			phys = <&ufs_mem_phy_lanes>;
- 			phy-names = "ufsphy";
-@@ -2004,8 +2003,7 @@ ufs_mem_hc: ufshc@1d84000 {
- 				"ref_clk",
- 				"tx_lane0_sync_clk",
- 				"rx_lane0_sync_clk",
--				"rx_lane1_sync_clk",
--				"ice_core_clk";
-+				"rx_lane1_sync_clk";
- 			clocks =
- 				<&gcc GCC_UFS_PHY_AXI_CLK>,
- 				<&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-@@ -2014,8 +2012,7 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&rpmhcc RPMH_CXO_CLK>,
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
--				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
- 			freq-table-hz =
- 				<37500000 300000000>,
- 				<0 0>,
-@@ -2024,8 +2021,8 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<0 0>,
- 				<0 0>,
- 				<0 0>,
--				<0 0>,
--				<0 300000000>;
-+				<0 0>;
-+			qcom,ice = <&ice>;
- 
- 			status = "disabled";
- 		};
-@@ -2057,6 +2054,12 @@ ufs_mem_phy_lanes: phy@1d87400 {
- 			};
- 		};
- 
-+		ice: inline-crypto-engine@1d90000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x01d90000 0 0x8000>;
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		tcsr_mutex: hwlock@1f40000 {
- 			compatible = "qcom,tcsr-mutex";
- 			reg = <0x0 0x01f40000 0x0 0x20000>;
-diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-index 1a744a33bcf4..8ebe6184a9c3 100644
---- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-@@ -3989,9 +3989,8 @@ system-cache-controller@19200000 {
- 		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sm8450-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
--			reg = <0 0x01d84000 0 0x3000>,
--			      <0 0x01d88000 0 0x8000>;
--			reg-names = "std", "ice";
-+			reg = <0 0x01d84000 0 0x3000>;
-+			reg-names = "std";
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
- 			phys = <&ufs_mem_phy_lanes>;
- 			phy-names = "ufsphy";
-@@ -4015,8 +4014,7 @@ ufs_mem_hc: ufshc@1d84000 {
- 				"ref_clk",
- 				"tx_lane0_sync_clk",
- 				"rx_lane0_sync_clk",
--				"rx_lane1_sync_clk",
--				"ice_core_clk";
-+				"rx_lane1_sync_clk";
- 			clocks =
- 				<&gcc GCC_UFS_PHY_AXI_CLK>,
- 				<&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-@@ -4025,8 +4023,7 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&rpmhcc RPMH_CXO_CLK>,
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
--				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
- 			freq-table-hz =
- 				<75000000 300000000>,
- 				<0 0>,
-@@ -4035,8 +4032,9 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<75000000 300000000>,
- 				<0 0>,
- 				<0 0>,
--				<0 0>,
--				<75000000 300000000>;
-+				<0 0>;
-+			qcom,ice = <&ice>;
-+
- 			status = "disabled";
- 		};
- 
-@@ -4066,6 +4064,12 @@ ufs_mem_phy_lanes: phy@1d87400 {
- 			};
- 		};
- 
-+		ice: inline-crypto-engine@1d88000 {
-+			compatible = "qcom,inline-crypto-engine";
-+			reg = <0 0x01d88000 0 0x8000>;
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		sdhc_2: mmc@8804000 {
- 			compatible = "qcom,sm8450-sdhci", "qcom,sdhci-msm-v5";
- 			reg = <0 0x08804000 0 0x1000>;
 -- 
-2.34.1
+Lee
 
