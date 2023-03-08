@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD2EC64EC4
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 18:48:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F5BC64EC4
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Mar 2023 18:53:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230183AbjCHSsL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 13:48:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48264 "EHLO
+        id S229955AbjCHSxj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 13:53:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230185AbjCHSsK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 13:48:10 -0500
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AC8732CDA;
-        Wed,  8 Mar 2023 10:48:08 -0800 (PST)
-Received: by mail-pj1-f49.google.com with SMTP id fr5-20020a17090ae2c500b0023af8a036d2so2617146pjb.5;
-        Wed, 08 Mar 2023 10:48:08 -0800 (PST)
+        with ESMTP id S230182AbjCHSxc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 13:53:32 -0500
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3264DB53C4;
+        Wed,  8 Mar 2023 10:53:26 -0800 (PST)
+Received: by mail-pl1-f169.google.com with SMTP id a2so18614545plm.4;
+        Wed, 08 Mar 2023 10:53:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678301288;
+        d=1e100.net; s=20210112; t=1678301605;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=iTlBbJFynkKPtsOkjuxxiMzK3mo7Hdi33fadWlp+efc=;
-        b=Q09ufSHThgFH64NP5IiLRBlSVt710NIR97v+QKwu/N6InseGNj52xtHJgdg2Knvjb/
-         wwwuvhVtcaND1x/tgAWIdh4Z8tM+rs6g1Tz7o3ImnwIpBM2d1pAbswp0i7ZdDep2q3Av
-         43GrqBPnZ3JG2AF397c3gakcJREnHmPIE4Bhjrr1vSGBdIueSeWGL3evSHOb9kSfbGmV
-         oNs8PW5qRBaNer0a3AX+ahebFBRVi5UtHsB6s93nRvXnEqHACR6IRNqanIHwyL1ilo64
-         Z3yUu7rdyEUDGHwTDDn+ll3FPmqoJphE3hN7gWhp+aYUoSahU5WCGNbIeUrck0vAYRVk
-         EmqQ==
-X-Gm-Message-State: AO0yUKWd2SjHcSVTYRudZcYNCU0nrKXsuovgopJX1RtfUiM63Snsaza1
-        ko+882QSCJro+MNVH2CT9ydydUKQ6Eg=
-X-Google-Smtp-Source: AK7set9+zgUyljVlKYt7LNNXhgge3r5SP4SXG5hBYbjYo13u7NbpHcsIoINw/r/NquY5b7aOzZCWVA==
-X-Received: by 2002:a17:902:ce8a:b0:19c:f698:8564 with SMTP id f10-20020a170902ce8a00b0019cf6988564mr24602290plg.17.1678301287844;
-        Wed, 08 Mar 2023 10:48:07 -0800 (PST)
+        bh=yo5iZIVCpsc6WipDqKqc0Cf6s6LcIC4WeUZ0sxhn9MM=;
+        b=5VLECZFa76LVLXmT3/vzjysiEJTAWuRXWRuoCqtOdz4A2OvpnaURlW73Vl/KL6/1TE
+         54EgS+NIw/z7RNKOXegKLfVRziiS3oZS5tRG4nMTFLs6ubPNnqdRwk6jrt6B2C09YdPV
+         FWWx+8qT2yasrQK3csUdfq8rPzKVUIsQHqAnbJQWKo9985HxAj65cIxsmPQA3ZvhxPfg
+         OFLc4WSX6S8OivAc+owIaDl7Tt9e5Js8n76eO/sZCRzjSrnmbJu8eBwkFob7MCNhjyv1
+         Y2h5xgvi8dYXae+/uyoh9ZN28XmMJoNUWvl2/Wm6jEj3/dKmrA9J9nrOq1exNWhXpsML
+         bn0g==
+X-Gm-Message-State: AO0yUKUFIqqq+LAy/c84/bhZUZiRprdWzbP0oe1ucg+l+SbFi/ug6j2x
+        4SDnD4YSzydThgi6GfBPQl8=
+X-Google-Smtp-Source: AK7set9ev5koA42vJU8VZ8pRd7u19QyKlDCpnRlLuQ2Xyr12DiulyGAHiVCrQSHI7uTVkfysbf6iyA==
+X-Received: by 2002:a17:90b:3907:b0:234:b964:5703 with SMTP id ob7-20020a17090b390700b00234b9645703mr20265178pjb.18.1678301605462;
+        Wed, 08 Mar 2023 10:53:25 -0800 (PST)
 Received: from [192.168.132.235] ([63.145.95.70])
-        by smtp.gmail.com with ESMTPSA id kp3-20020a170903280300b00198ef76ce8dsm10137649plb.72.2023.03.08.10.48.06
+        by smtp.gmail.com with ESMTPSA id kz5-20020a170902f9c500b00196025a34b9sm10117371plb.159.2023.03.08.10.53.24
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Mar 2023 10:48:07 -0800 (PST)
-Message-ID: <fa4bfc9e-2e75-2e00-2b64-816f4bc26eda@acm.org>
-Date:   Wed, 8 Mar 2023 10:48:06 -0800
+        Wed, 08 Mar 2023 10:53:24 -0800 (PST)
+Message-ID: <30fea558-75bd-8d5c-b981-079fca5c1bf5@acm.org>
+Date:   Wed, 8 Mar 2023 10:53:23 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [RFC PATCH v1 2/4] ufs: mcq: Add supporting functions for mcq
- abort
+Subject: Re: [RFC PATCH v1 3/4] ufs: mcq: Add support for clean up mcq
+ resources
 Content-Language: en-US
 To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
@@ -51,12 +51,11 @@ To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1678247309.git.quic_nguyenb@quicinc.com>
- <b84abc7ea5bddc78ab3c70e9a7b5108a5bc9448f.1678247309.git.quic_nguyenb@quicinc.com>
+ <392b790072c2307d366ac80b7552d5f09ae25dfc.1678247309.git.quic_nguyenb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <b84abc7ea5bddc78ab3c70e9a7b5108a5bc9448f.1678247309.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <392b790072c2307d366ac80b7552d5f09ae25dfc.1678247309.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -64,18 +63,30 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/7/23 20:01, Bao D. Nguyen wrote:
-> +/* Maximum MCQ registers polling time */
+>   static int ufshcd_clear_cmds(struct ufs_hba *hba, u32 mask)
+>   {
+>   	unsigned long flags;
+> +	int err, result, tag;
+>   
+> +	if (is_mcq_enabled(hba)) {
+> +		/*
+> +		 * MCQ mode. Clean up the MCQ resources similar to
+> +		 * what the ufshcd_utrl_clear() does for SDB mode.
+> +		 */
+> +		flags = (unsigned long)mask;
+> +		for_each_set_bit(tag, &flags, hba->nutrs) {
+> +			err = ufshcd_mcq_sq_cleanup(hba, tag, &result);
+> +			if (err || result) {
+> +				dev_err(hba->dev, "%s: failed tag=%d. err=%d, result=%d\n",
+> +					__func__, tag, err, result);
+> +				return FAILED;
+> +			}
+> +		}
+> +		return 0;
+> +	}
 
-registers -> register
-
-> +#define MCQ_POLL_TIMEOUT   500
-
->   	struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
-> +	u32 mcq_poll_ms;
->   };
-
-Why has the new member variable 'mcq_poll_ms' been introduced since its 
-value is never changed?
+Please change the type of the 'mask' argument from u32 into unsigned 
+long such that the assignment of 'mask' to 'flags' can be removed.
 
 Thanks,
 
