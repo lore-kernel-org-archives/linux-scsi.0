@@ -2,141 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EFFFC61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 22:48:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A5EC64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 22:55:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230492AbjCIWsw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 17:48:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52866 "EHLO
+        id S231347AbjCIWzQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 17:55:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231244AbjCIWsu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 17:48:50 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0AFB37F32;
-        Thu,  9 Mar 2023 14:48:23 -0800 (PST)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329MdOiw022701;
-        Thu, 9 Mar 2023 22:48:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=jCp5r5nHForfVmyWDKvzdKSTFdbqCc1jRZu9dDZ7yr8=;
- b=FZd1cK4L3t/xturiKdlksICu3LaRD7N39qQ4Rsgbz+bDgv2Q4EU+bHupVmTISPACZHVl
- UVPfXR+6x5QOHXLijv6mwn+1DZFWy/MtDa3AjtKFBSEtQf6yyHrig2NITfnMZuQWSnCl
- T3CGbHjFUnpAo3VfZ7wdJkLHSzSs8jfE7TOrC9evDPKFai1u3jUvEmiGe8eXSermsfus
- esXVhmxMPrJp4BGsJ4S0JJjf6PoX/EsAnrA3Vild6In3vFQMiB+YUpasIqVBEpp8v4XR
- 8HQH9AC8Q6ms5C0DsfzA05y7qPvluHJx5xoT3+Bz8mdphiC1QxeopbAw1QqcwdkQvep5 jg== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p72qaufxc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 09 Mar 2023 22:48:01 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 329Mm0ia016411
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 9 Mar 2023 22:48:00 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Thu, 9 Mar 2023
- 14:47:59 -0800
-Message-ID: <821e6994-9fed-2c15-6c25-b1761a267ec9@quicinc.com>
-Date:   Thu, 9 Mar 2023 14:47:59 -0800
+        with ESMTP id S230481AbjCIWzK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 17:55:10 -0500
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACB6D65058;
+        Thu,  9 Mar 2023 14:54:41 -0800 (PST)
+Received: by mail-pj1-f47.google.com with SMTP id ce8-20020a17090aff0800b0023a61cff2c6so6912288pjb.0;
+        Thu, 09 Mar 2023 14:54:41 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678402472;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9DHNxVrsY82uW8tniKyTIOA7RxD60GlDeGu+usTAULI=;
+        b=QMDC2o4qnVpB4mskNuM7SkHyf1Prg8cLIuvl4Q6Ff0h7eus+MKjck08GdCDG8KdVvZ
+         JGF9T6+uEvX5AmbqTQ2b6VLTIE3zcRQJUEeuQZ9D85coiJdLpphZyByGBthP96Gcvo9g
+         cNL9UtrYxbnby1JHzZ9Zg6g+m7jzfDrdvTsr3jfmJLZkO9UzySMng+Ykk07CYg7NUl/9
+         8A4+IsL4tF/g/HlE7vpJHoy0iEBw1gczhplHSERGQ2mlrbjGtzkZoCRlek4K+C+mABqn
+         fejzZ37/L27mZw5P6QBXuvnyQg4RTOdXsF/He6MInegTqHnyibjHAZCzA+VSrmENLaQN
+         +Meg==
+X-Gm-Message-State: AO0yUKXXxRP9tn+UUobFEm3ZzE+fWiCk5SWgZSGza6AGuugOItegspPm
+        YswmTuNK7Jil4jajhrhvVDY=
+X-Google-Smtp-Source: AK7set+jkRQluRAU5RZj4XY0WCg95mDlja9mv+95zKVHerFsG1t+RXQCJPKskXKnb/j6TqXtmAFDFQ==
+X-Received: by 2002:a17:903:514:b0:19e:68e4:859c with SMTP id jn20-20020a170903051400b0019e68e4859cmr18952806plb.36.1678402471908;
+        Thu, 09 Mar 2023 14:54:31 -0800 (PST)
+Received: from [192.168.132.235] ([63.145.95.70])
+        by smtp.gmail.com with ESMTPSA id jy13-20020a17090342cd00b0019ea9e5815bsm158581plb.45.2023.03.09.14.54.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Mar 2023 14:54:31 -0800 (PST)
+Message-ID: <a7970fd0-ee6f-f1c1-e8c4-6ee42237a567@acm.org>
+Date:   Thu, 9 Mar 2023 14:54:30 -0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
 Subject: Re: [RFC PATCH v2 1/3] ufs: mcq: Add supporting functions for mcq
  abort
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
-        <quic_cang@quicinc.com>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1678338926.git.quic_nguyenb@quicinc.com>
  <68b786f390dbd93218a482d18c513bc332e82da3.1678338926.git.quic_nguyenb@quicinc.com>
  <1ca7dbef-5747-29c2-a11c-086cf36d636f@acm.org>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <1ca7dbef-5747-29c2-a11c-086cf36d636f@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+ <821e6994-9fed-2c15-6c25-b1761a267ec9@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <821e6994-9fed-2c15-6c25-b1761a267ec9@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: aLZV0joGzHDQNUtH9aELvuC5zuX_qFvX
-X-Proofpoint-ORIG-GUID: aLZV0joGzHDQNUtH9aELvuC5zuX_qFvX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-09_12,2023-03-09_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- adultscore=0 impostorscore=0 suspectscore=0 clxscore=1015 bulkscore=0
- mlxlogscore=999 spamscore=0 mlxscore=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303090182
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/9/2023 10:15 AM, Bart Van Assche wrote:
-> On 3/8/23 21:28, Bao D. Nguyen wrote:
->> +static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
->> +        struct ufs_hw_queue *hwq, int task_tag)
->> +{
->> +    struct utp_transfer_req_desc *utrd;
->> +    u32 mask = hwq->max_entries - 1;
->> +    bool ret = false;
->> +    u64 addr, match;
->> +    u32 i;
->
-> The variable name "i" is usually used for a loop index. In this case 
-> it represents a slot in the submission queue. How about renaming "i" 
-> into "slot"?
-I will make the change.
->
->> +static inline void ufshcd_mcq_update_sq_head_slot(struct 
->> ufs_hw_queue *q)
->> +{
->> +    u32 val = readl(q->mcq_sq_head);
->> +
->> +    q->sq_head_slot = val / sizeof(struct utp_transfer_req_desc);
->> +}
->
-> Please modify this function such that it returns the head slot value 
-> instead of storing it in a member variable and remove the sq_head_slot 
-> member variable. Storing the sq_head_slot value in a member variable 
-> seems wrong to me since the value of that variable will be outdated as 
-> soon as the submission queue is restarted.
->
-I can modify the function that I am introducing in this patch namely 
-ufshcd_mcq_update_sq_head_slot() according to your suggestion.
-However, to keep the original mcq code consistent with this change, 
-should I make the same modifications to these existing functions 
-ufshcd_mcq_update_cq_tail_slot(), ufshcd_mcq_update_cq_head() in a 
-separate patch and include in this series?
+On 3/9/23 14:47, Bao D. Nguyen wrote:
+> On 3/9/2023 10:15 AM, Bart Van Assche wrote:
+>> On 3/8/23 21:28, Bao D. Nguyen wrote:
+>>> +static inline bool ufshcd_mcq_is_sq_empty(struct ufs_hw_queue *q)
+>>> +{
+>>> +    return q->sq_head_slot == q->sq_tail_slot;
+>>> +}
+>>
+>> Please remove this function and inline this function into its callers.
+> 
+> Same comment. Should I also update the existing ufshcd_mcq_is_cq_empty() 
+> in a separate patch together with ufshcd_mcq_update_cq_tail_slot(), 
+> ufshcd_mcq_update_cq_head() mentioned above?
 
->> +static inline bool ufshcd_mcq_is_sq_empty(struct ufs_hw_queue *q)
->> +{
->> +    return q->sq_head_slot == q->sq_tail_slot;
->> +}
->
-> Please remove this function and inline this function into its callers.
+Hi Bao,
 
-Same comment. Should I also update the existing ufshcd_mcq_is_cq_empty() 
-in a separate patch together with ufshcd_mcq_update_cq_tail_slot(), 
-ufshcd_mcq_update_cq_head() mentioned above?
+Modifying the existing code may improve uniformity of the UFS host 
+controller driver. If any existing code is refactored, please do that 
+via a separate patch.
 
 Thanks,
 
-Bao
-
->
-> Thanks,
->
-> Bart.
-
+Bart.
 
