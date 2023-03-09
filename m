@@ -2,134 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0972AC6FD19
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:31:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80F60C64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230427AbjCISbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 13:31:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59924 "EHLO
+        id S230009AbjCISib (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 13:38:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229977AbjCISbH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:31:07 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34B7F693F;
-        Thu,  9 Mar 2023 10:31:05 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4EBCA61CBB;
-        Thu,  9 Mar 2023 18:31:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10531C433EF;
-        Thu,  9 Mar 2023 18:31:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678386664;
-        bh=OxAVh16i6IS88ISIABoRkC+frhPtYq64zT19SQCyKuE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O/CTkObKg7x/D/u0C5N5X1Oe97RxLUH9xaQb+tvbS0VyIbeXR3gZfQgQJoq2Y+eU6
-         ApNVEfFzmVjpK122Zj0KuSSGs3ZWk8ult+K7iQtgck7Q6XiZ1UiDGKYuldXFyw7ec9
-         0wskKSCc7dXvIAfKo3uXFG6i1uWX5W2t9bf7DDi6ez4IVixa8IRd6EhST86ZvFfwUE
-         4jmRAsUFcgDB2OZGUAcCcH0YZb+IDOxPvphulo5tOTsJzIqpzqMmgLgm9Pyd7uQyz8
-         wMIKFTyeHowrCRL8A1MyTBRwk8Y0EC7JDQn3qBSbuYctpA9Co1DzkcmKhajDFNTW7j
-         C3J/3pCbY7AOA==
-Date:   Thu, 9 Mar 2023 10:31:02 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Abel Vesa <abel.vesa@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 7/7] arm64: dts: qcom: Add the Inline Crypto
- Engine nodes
-Message-ID: <ZAol5o5a6HZYgRaG@sol.localdomain>
-References: <20230308155838.1094920-1-abel.vesa@linaro.org>
- <20230308155838.1094920-8-abel.vesa@linaro.org>
- <4eab53fc-2d26-dc93-3ae6-c0b2546ad3e0@linaro.org>
+        with ESMTP id S229870AbjCISia (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:38:30 -0500
+Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.199])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CDF7FF16BD;
+        Thu,  9 Mar 2023 10:38:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=LmXry
+        pUhkfQZNqHBXt/FnFD1GHWz24KdFa4arN1jaDs=; b=OeGEkv9b2LimBM9xgXpwk
+        olYySl+AaRQp/4TBZNoRWsvyDb4bS3atoHeRy5n+BunTBSemigD1Iv08CO+eS1rw
+        mDPXgA717P625BEjaXGNYbaZpi7F/Kohtam2Mi0n6YQhQqM8AHLa4YXpwLpdfk7x
+        3n8Pp/UUoJCdUNI0ZAbvIk=
+Received: from leanderwang-LC2.localdomain (unknown [111.206.145.21])
+        by zwqz-smtp-mta-g2-0 (Coremail) with SMTP id _____wCXBZ6VJwpkAS33Cg--.7263S2;
+        Fri, 10 Mar 2023 02:38:13 +0800 (CST)
+From:   Zheng Wang <zyytlz.wz@163.com>
+To:     njavali@marvell.com
+Cc:     mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hackerzheng666@gmail.com, 1395428693sheep@gmail.com,
+        alex000young@gmail.com, Zheng Wang <zyytlz.wz@163.com>
+Subject: [PATCH] scsi: qla4xxx: Fix use after free bug in da9150_charger_remove due to race condition
+Date:   Fri, 10 Mar 2023 02:38:12 +0800
+Message-Id: <20230309183812.299349-1-zyytlz.wz@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4eab53fc-2d26-dc93-3ae6-c0b2546ad3e0@linaro.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _____wCXBZ6VJwpkAS33Cg--.7263S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrKFyUKw1xtw4rAr1UWFy3Jwb_yoWkWrX_C3
+        yqvryxKr1aqr4kKr17Xr13ArWxWF4kXF90kFyrtF13AFy5uwn3X3yDuFZ0vw4UG39FyFy3
+        Cw1jyrW5Zrn8KjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRMwZ2DUUUUU==
+X-Originating-IP: [111.206.145.21]
+X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiQhctU1aEEmt7MAAAsL
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 09, 2023 at 11:31:46AM +0100, Krzysztof Kozlowski wrote:
-> On 08/03/2023 16:58, Abel Vesa wrote:
-> > Drop all properties related to ICE from every UFS and SDCC node,
-> > for all platforms, and add dedicated ICE nodes for each platform.
-> > On most platforms, there is only one ICE instance, used by either
-> > UFS or SDCC, but there are some platforms that have two separate
-> > instances and, therefore, two separate nodes are added.
-> > 
-> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> > ---
-> > 
-> > Changes since v1:
-> >  * Made changes for all platforms that use ICE, as a single patch since
-> >    most changes look really similar.
-> > 
-> >  arch/arm64/boot/dts/qcom/sdm630.dtsi | 18 +++++++++-----
-> >  arch/arm64/boot/dts/qcom/sdm670.dtsi | 15 +++++++----
-> >  arch/arm64/boot/dts/qcom/sdm845.dtsi | 21 +++++++++-------
-> >  arch/arm64/boot/dts/qcom/sm6115.dtsi | 37 +++++++++++++++++-----------
-> >  arch/arm64/boot/dts/qcom/sm6350.dtsi | 31 ++++++++++++++---------
-> >  arch/arm64/boot/dts/qcom/sm8150.dtsi | 21 +++++++++-------
-> >  arch/arm64/boot/dts/qcom/sm8450.dtsi | 22 ++++++++++-------
-> >  7 files changed, 102 insertions(+), 63 deletions(-)
-> > 
-> > diff --git a/arch/arm64/boot/dts/qcom/sdm630.dtsi b/arch/arm64/boot/dts/qcom/sdm630.dtsi
-> > index 5827cda270a0..2aed49104d9d 100644
-> > --- a/arch/arm64/boot/dts/qcom/sdm630.dtsi
-> > +++ b/arch/arm64/boot/dts/qcom/sdm630.dtsi
-> > @@ -1330,9 +1330,8 @@ opp-200000000 {
-> >  		sdhc_1: mmc@c0c4000 {
-> >  			compatible = "qcom,sdm630-sdhci", "qcom,sdhci-msm-v5";
-> >  			reg = <0x0c0c4000 0x1000>,
-> > -			      <0x0c0c5000 0x1000>,
-> > -			      <0x0c0c8000 0x8000>;
-> > -			reg-names = "hc", "cqhci", "ice";
-> > +			      <0x0c0c5000 0x1000>;
-> > +			reg-names = "hc", "cqhci";
-> 
-> I believe this will break the ICE on these platforms without valid
-> reason. The commit msg does not explain why you do it or why this is
-> necessary.
-> 
-> We already we received comment that we keep breaking Qualcomm platforms
-> all the time and need to keep them in some shape.
-> 
-> Also, patchset is non-applicable in current set (breaks users) and
-> neither commit nor cover letter mentions it.
-> 
+In qla4xxx_probe_adapter, &ha->dpc_work is bound with
+qla4xxx_do_dpc. qla4xxx_post_aen_work may be called
+to start the work.
 
-FWIW, I tested this patchset on SDA845, and ICE continues to work fine.
+If we remove the module which will call qla4xxx_remove_adapter
+  to make cleanup, there may be a unfinished work. The possible
+  sequence is as follows:
 
-(Though if I understand the patchset correctly, the ICE clock is no longer
-turned off when the UFS host controller is suspended.  That isn't ideal as it
-wastes power.  I would like that to be fixed.)
+Fix it by canceling the work before cleanup in qla4xxx_remove_adapter
 
-Anyway, when you say "break the ICE", do you really mean "make an incompatible
-change to the device-tree bindings"?
+CPU0                  CPUc1
 
-I'd think there would be no problem with that as long as everything is updated
-at once, which this patchset does.
+                    |qla4xxx_do_dpc
+qla4xxx_remove_adapter|
+scsi_remove_host  	|
+kfree(ha->host)   	|
+                    |
+                    |   iscsi_host_for_each_session
+                    |   //use ha->host
+Fixes: afaf5a2d341d ("[SCSI] Initial Commit of qla4xxx")
+Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I've heard before that some people consider the device-tree bindings to be a
-stable UAPI.  That doesn't make sense to me.  Actually, my original ICE patches
-ran into this issue too, and the resolution was simply that the Qualcomm
-platforms maintainer (Bjorn) decided to take the patches anyway.  I never heard
-any complaints afterwards.  Maybe the same is fine here too?
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 005502125b27..d530cc853f43 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -9001,6 +9001,7 @@ static void qla4xxx_remove_adapter(struct pci_dev *pdev)
+ 	if (!pci_is_enabled(pdev))
+ 		return;
+ 
++	cancel_work_sync(&ha->dpc_work);
+ 	ha = pci_get_drvdata(pdev);
+ 
+ 	if (is_qla40XX(ha))
+-- 
+2.25.1
 
-- Eric
