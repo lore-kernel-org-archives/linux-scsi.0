@@ -2,252 +2,206 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9C4C678D5
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 03:10:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E5C4C61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 05:02:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229817AbjCIDKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 22:10:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54318 "EHLO
+        id S229606AbjCIFCt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 00:02:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbjCIDKe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 22:10:34 -0500
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F99F8093D;
-        Wed,  8 Mar 2023 19:10:29 -0800 (PST)
-Received: by mail-lf1-x136.google.com with SMTP id bi9so594212lfb.2;
-        Wed, 08 Mar 2023 19:10:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678331428;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cZT0VdYfK85i7JqaF0sU+l1RnZ8kiQAjGhATCe5ADqc=;
-        b=CHHP2Dg4BzqFPcWOJV9lYrMn63gamrZxZZLFr7TXXPL3rAWCRoceYt3/tq8F7Ptluv
-         04qPrirU6WtuuqeUVRPyCUTsfgINz9Uu2bZ0X/Zm4olcaaVAiPiOcvO7x4eJxdaDxxuJ
-         HLGvdEYv2gWoj8YXNrPtAoDViBTP42nXW6x+bcgw3+V1rvjMCLolH+qY19gpOyil5j6q
-         MchgKMvDsIFEW7ofbBVVN64ub5uzbQsuXZ75KXRuUvuoyl6wyen9itBKUnDBFqg47h6l
-         IqsNZzLNpR5s7iVrekgL1yA2yUigq4+0bHtqciPemqf0M4uU6Uck04kfx3xls7QFH3uw
-         /3TQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678331428;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cZT0VdYfK85i7JqaF0sU+l1RnZ8kiQAjGhATCe5ADqc=;
-        b=mGljUWLP3IL3ALqLYes/kXrxNmIZgGv+Oj6kYpyUMTXEj39B+WtcM79FSZbpqM1ePz
-         Dzbw/3W0Z9mbgcQoG5eLrWSJNf/U3ZOhrJFrmcHzPPZUZtLWT/LxEvGrbOTpVC2lmN6p
-         tMx1Eepr1LrAqTM5axwdi0zjGN6GgJSZdRcM8Z3D4dVOHVzgwDxKC7GVu2i2BxMnClyp
-         65o2HF82LxNYwOCCTpNYmexd8kvSxJIofBJK5uq/B9WbzEJQFau5yYYfAc+09NqlgTEQ
-         NjAZjnnPqDXkRKA0OocMYmpaV+IecjIN7toOgu8dLsa4hCpdipbr39X+iV+kgSr1Z1ho
-         Fymg==
-X-Gm-Message-State: AO0yUKWlpKpjlATdLH+z5CQRJhqP3tiRwms48jUAmAGNpJcRc/9G7W11
-        hBlnk1wpnk2uqg9z4NbotiXBNlDR7arb9FdT7g==
-X-Google-Smtp-Source: AK7set8ulpWzK57+vwWTfXuanyiIynSqBU0FD/z4SN1OvW8kkILOi7VeSWTmRJwQ4Xpyc5XvqA3I3/k97ows1IKmn7A=
-X-Received: by 2002:ac2:530d:0:b0:4db:1809:29a1 with SMTP id
- c13-20020ac2530d000000b004db180929a1mr11230830lfh.2.1678331427410; Wed, 08
- Mar 2023 19:10:27 -0800 (PST)
-MIME-Version: 1.0
-References: <cover.1678247309.git.quic_nguyenb@quicinc.com> <c7fcbb70f0e74d225c1a09f107ba1058270739be.1678247309.git.quic_nguyenb@quicinc.com>
-In-Reply-To: <c7fcbb70f0e74d225c1a09f107ba1058270739be.1678247309.git.quic_nguyenb@quicinc.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Thu, 9 Mar 2023 11:10:15 +0800
-Message-ID: <CAGaU9a_CkxHU-k519TL2hfLZSM6Hfoo6sAELmJ+6Vy2X2ZCOrw@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 4/4] ufs: mcq: Added ufshcd_mcq_abort()
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S229468AbjCIFCs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 00:02:48 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84C33D5A58;
+        Wed,  8 Mar 2023 21:02:40 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3293a3Xk013313;
+        Thu, 9 Mar 2023 05:02:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=XignhGqn0DKeadkVrirF3wS6LskIOAPVlPWY/Ol1iCk=;
+ b=X7oSz9WWbum/xCIJp/Pel6alrg3YjyCwnQRPiSfC5KvFEM+vXjSLJoFuijCBb9Txou3o
+ FKvOpeTKUxWUe51V9Kh+T6MTwAfbcjlEGzKBtSfr98r+OA8I+nu7oEh1RzDgnHjYAJPN
+ IfPcMaU2/6RyoxdQTdrb4xv3q9QN5kHT1gz4qG+vwgeY4d57PGzHfv6cTxE5NcxpTwKt
+ hXGXW6KJ/j2vsRJT/jiz0NZcWMHZTLOXFnAZaSr1e1dZCcb53w7WN3VaX3Z2RxYkrTTr
+ FB68Uv9Y/fSGQyVwjnrPy7w3+9zyMQf/2FQjUI8OP8+Qm9UkAzHRFQrj4ysg2xgbFAat Dw== 
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6ycb9ajj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Mar 2023 05:02:20 +0000
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+        by APTAIPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32952Hif006518;
+        Thu, 9 Mar 2023 05:02:17 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 3p4ff2jphu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Thu, 09 Mar 2023 05:02:17 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32952G89006513;
+        Thu, 9 Mar 2023 05:02:16 GMT
+Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
+        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 32952GFP006511;
+        Thu, 09 Mar 2023 05:02:16 +0000
+Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
+        id C90E244FE; Thu,  9 Mar 2023 13:02:14 +0800 (CST)
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com, quic_ziqichen@quicinc.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v1] scsi: ufs: core: print trs for pending requests in MCQ mode
+Date:   Thu,  9 Mar 2023 13:01:31 +0800
+Message-Id: <1678338122-88611-1-git-send-email-quic_ziqichen@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Pe9L2GZu-HR2YKxG5hJyOLlisJleWSkG
+X-Proofpoint-ORIG-GUID: Pe9L2GZu-HR2YKxG5hJyOLlisJleWSkG
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-09_02,2023-03-08_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
+ clxscore=1015 mlxscore=0 adultscore=0 phishscore=0 lowpriorityscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303090038
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bao,
+We don't have outstanding_reqs bitmap in MCQ mode. And in consideration
+of the queue depth may increase beyond 64 in the future, we reworked
+ufshcd_print_trs() to get rid of usage of bitmap so that we can print
+trs for pending requests in both SDB and MCQ mode.
 
-On Wed, Mar 8, 2023 at 12:10=E2=80=AFPM Bao D. Nguyen <quic_nguyenb@quicinc=
-.com> wrote:
->
-> Add ufshcd_mcq_abort() to support ufs abort in mcq mode.
->
-> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> ---
->  drivers/ufs/core/ufs-mcq.c     | 76 ++++++++++++++++++++++++++++++++++++=
-++++++
->  drivers/ufs/core/ufshcd-priv.h |  5 ++-
->  drivers/ufs/core/ufshcd.c      | 11 ++++--
->  3 files changed, 88 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index e27d8eb..6c65cd5 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -646,3 +646,79 @@ static bool ufshcd_mcq_cqe_search(struct ufs_hba *hb=
-a,
->         spin_unlock(&hwq->cq_lock);
->         return ret;
->  }
-> +
-> +/**
-> + * ufshcd_mcq_abort - Abort the command in MCQ.
-> + * @cmd - The command to be aborted.
-> + *
-> + * Returns SUCCESS or FAILED error codes
-> + */
-> +int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
-> +{
-> +       struct Scsi_Host *host =3D cmd->device->host;
-> +       struct ufs_hba *hba =3D shost_priv(host);
-> +       int tag =3D scsi_cmd_to_rq(cmd)->tag;
-> +       struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
-> +       struct ufs_hw_queue *hwq;
-> +       int err =3D FAILED;
-> +
-> +       if (!lrbp->cmd) {
-> +               dev_err(hba->dev,
-> +                       "%s: skip abort. cmd at tag %d already completed.=
-\n",
-> +                       __func__, tag);
-> +               goto out;
-> +       }
-> +
-> +       /* Skip task abort in case previous aborts failed and report fail=
-ure */
-> +       if (lrbp->req_abort_skip) {
-> +               dev_err(hba->dev, "%s: skip abort. tag %d failed earlier\=
-n",
-> +                       __func__, tag);
-> +               goto out;
-> +       }
-> +
-> +       hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-> +
-> +       if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
-> +               /*
-> +                * Failure. The command should not be "stuck" in SQ for
-> +                * a long time which resulted in command being aborted.
-> +                */
-> +               dev_err(hba->dev, "%s: cmd found in sq. hwq=3D%d, tag=3D%=
-d\n",
-> +                               __func__, hwq->id, tag);
-> +               /* Set the Command Type to 0xF per the spec */
-> +               ufshcd_mcq_nullify_cmd(hba, hwq);
-> +               goto out;
-> +       }
-> +
-> +       if (ufshcd_mcq_cqe_search(hba, hwq, tag)) {
-> +               dev_err(hba->dev, "%s: cmd found in cq. hwq=3D%d, tag=3D%=
-d\n",
-> +                               __func__, hwq->id, tag);
-> +               /*
-> +                * The command should not be 'stuck' in the CQ for such a=
- long time.
-> +                * Is interrupt missing? Process the CQEs here. If the in=
-terrupt is
-> +                * invoked at a later time, the CQ will be empty because =
-the CQEs
-> +                * are already processed here.
-> +                */
-> +               ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +               err =3D SUCCESS;
-> +               goto out;
-> +       }
-> +
-> +       /*
-> +        * The command is not in the Submission Queue, and it is not
-> +        * in the Completion Queue either. Query the device to see if
-> +        * the command is being processed in the device.
-> +        */
-> +       if (ufshcd_try_to_abort_task(hba, tag)) {
-> +               dev_err(hba->dev, "%s: device abort failed %d\n", __func_=
-_, err);
-> +               lrbp->req_abort_skip =3D true;
-> +               goto out;
-> +       }
-> +
-> +       err =3D SUCCESS;
-> +       if (lrbp->cmd)
-> +               ufshcd_release_scsi_cmd(hba, lrbp);
-> +
-> +out:
-> +       return err;
-> +}
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-> index 0527926..d883c03 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -77,7 +77,10 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba =
-*hba,
->                                        struct ufs_hw_queue *hwq);
->
->  int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag, int *result=
-);
-> -
-> +int ufshcd_mcq_abort(struct scsi_cmnd *cmd);
-> +int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
-> +void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-> +                               struct ufshcd_lrb *lrbp);
->  #define UFSHCD_MCQ_IO_QUEUE_OFFSET     1
->  #define SD_ASCII_STD true
->  #define SD_RAW false
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 408c16c..e06399e 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -302,7 +302,6 @@ static int ufshcd_setup_hba_vreg(struct ufs_hba *hba,=
- bool on);
->  static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
->  static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
->                                          struct ufs_vreg *vreg);
-> -static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
->  static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
->                                                  bool enable);
->  static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
-> @@ -5414,7 +5413,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
-hba *hba, u32 intr_status)
->  }
->
->  /* Release the resources allocated for processing a SCSI command. */
-> -static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-> +void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
->                                     struct ufshcd_lrb *lrbp)
->  {
->         struct scsi_cmnd *cmd =3D lrbp->cmd;
-> @@ -7340,7 +7339,7 @@ static void ufshcd_set_req_abort_skip(struct ufs_hb=
-a *hba, unsigned long bitmap)
->   *
->   * Returns zero on success, non-zero on failure
->   */
-> -static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
-> +int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
->  {
->         struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
->         int err =3D 0;
-> @@ -7500,6 +7499,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->                 goto release;
->         }
->
-> +       if (is_mcq_enabled(hba)) {
-> +               /* MCQ mode. Branch off to handle abort for mcq mode */
-> +               err =3D ufshcd_mcq_abort(cmd);
-> +               goto release;
-> +       }
-> +
->         /* Skip task abort in case previous aborts failed and report fail=
-ure */
->         if (lrbp->req_abort_skip) {
->                 dev_err(hba->dev, "%s: skipping abort\n", __func__);
-> --
-> 2.7.4
->
+Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+---
+ drivers/ufs/core/ufshcd.c | 68 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 39 insertions(+), 29 deletions(-)
 
-It seems that ufshcd_abort_all() also needs an error handling flow for MCQ.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index e43aee1..a654d66 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -542,47 +542,57 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
+ }
+ 
+ static
+-void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
++void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
+ {
+ 	const struct ufshcd_lrb *lrbp;
+ 	int prdt_length;
+-	int tag;
+ 
+-	for_each_set_bit(tag, &bitmap, hba->nutrs) {
+-		lrbp = &hba->lrb[tag];
++	lrbp = &hba->lrb[tag];
+ 
+-		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+-				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
+-		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
+-				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
+-		dev_err(hba->dev,
++	dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
++			tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
++	dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
++			tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
++	dev_err(hba->dev,
+ 			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+ 			tag, (u64)lrbp->utrd_dma_addr);
+ 
+-		ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
+-				sizeof(struct utp_transfer_req_desc));
+-		dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
++	ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
++					sizeof(struct utp_transfer_req_desc));
++	dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
+ 			(u64)lrbp->ucd_req_dma_addr);
+-		ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
+-				sizeof(struct utp_upiu_req));
+-		dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
++	ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
++					sizeof(struct utp_upiu_req));
++	dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
+ 			(u64)lrbp->ucd_rsp_dma_addr);
+-		ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
+-				sizeof(struct utp_upiu_rsp));
++	ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
++					sizeof(struct utp_upiu_rsp));
+ 
+-		prdt_length = le16_to_cpu(
+-			lrbp->utr_descriptor_ptr->prd_table_length);
+-		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
+-			prdt_length /= ufshcd_sg_entry_size(hba);
++	prdt_length = le16_to_cpu(
++		lrbp->utr_descriptor_ptr->prd_table_length);
++	if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
++		prdt_length /= ufshcd_sg_entry_size(hba);
+ 
+-		dev_err(hba->dev,
++	dev_err(hba->dev,
+ 			"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
+ 			tag, prdt_length,
+ 			(u64)lrbp->ucd_prdt_dma_addr);
+ 
+-		if (pr_prdt)
+-			ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
+-				ufshcd_sg_entry_size(hba) * prdt_length);
++	if (pr_prdt)
++		ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
++						ufshcd_sg_entry_size(hba) * prdt_length);
++}
++
++static void ufshcd_print_trs_all(struct ufs_hba *hba, bool pr_prdt)
++{
++	const struct ufshcd_lrb *lrbp;
++	int tag;
++
++	for (tag = 0; tag < hba->nutrs; tag++) {
++		lrbp = &hba->lrb[tag];
++
++		if (lrbp->cmd)
++			ufshcd_print_tr(hba, tag, pr_prdt);
+ 	}
+ }
+ 
+@@ -5332,7 +5342,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 
+ 	if ((host_byte(result) != DID_OK) &&
+ 	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
+-		ufshcd_print_trs(hba, 1 << lrbp->task_tag, true);
++		ufshcd_print_tr(hba, lrbp->task_tag, true);
+ 	return result;
+ }
+ 
+@@ -6406,7 +6416,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		ufshcd_print_pwr_info(hba);
+ 		ufshcd_print_evt_hist(hba);
+ 		ufshcd_print_tmrs(hba, hba->outstanding_tasks);
+-		ufshcd_print_trs(hba, hba->outstanding_reqs, pr_prdt);
++		ufshcd_print_trs_all(hba, pr_prdt);
+ 		spin_lock_irqsave(hba->host->host_lock, flags);
+ 	}
+ 
+@@ -7435,9 +7445,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 		ufshcd_print_evt_hist(hba);
+ 		ufshcd_print_host_state(hba);
+ 		ufshcd_print_pwr_info(hba);
+-		ufshcd_print_trs(hba, 1 << tag, true);
++		ufshcd_print_tr(hba, tag, true);
+ 	} else {
+-		ufshcd_print_trs(hba, 1 << tag, false);
++		ufshcd_print_tr(hba, tag, false);
+ 	}
+ 	hba->req_abort_count++;
+ 
+-- 
+2.7.4
 
-Thanks,
-Stanley
