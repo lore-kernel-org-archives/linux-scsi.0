@@ -2,135 +2,172 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21DB7C6FD1F
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 10:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FFFDC64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 12:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230431AbjCIKby (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 05:31:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54646 "EHLO
+        id S229708AbjCIMNs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 07:13:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230321AbjCIKbx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 05:31:53 -0500
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4291629156
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 02:31:50 -0800 (PST)
-Received: by mail-ed1-x52a.google.com with SMTP id s11so4987886edy.8
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Mar 2023 02:31:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678357909;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7CF8z9jOtSHETZ35/S5CyQ9qW+jDKWLcnRE2tTycAxk=;
-        b=lz2qXv02Qi0cPLKJ8qrTLl4kUwKDbhY5yYCkCKeO+SS273hkfqFOlMrGvpxRj8f1Bx
-         BiI6EVRN9nGDJTdNGPXh1msUnHkck/zaquorFZGQpIUCDDN3W/uqpBDSOR29It0BoNsG
-         cZLZ8fZYx/LdZcNQ+Pi1qhuSLRynQpoCYntoSrxF7KP2wGdzoWSJizeDiGBgMSE1PISH
-         aw6LYPGBlqG6Q2CSfwyq4LgIl/lfCASstHMuiYOdLDFjI16fVozkvDijYIMMF8wAXZQd
-         dtxLnPXKfcW1OsJk6VY4iXoV2m5MvlSvkEDJWWeJtMdJPy9AfhHBsQ/A+xrkLkXOOwn0
-         lMrA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678357909;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7CF8z9jOtSHETZ35/S5CyQ9qW+jDKWLcnRE2tTycAxk=;
-        b=N97T3sO/+1erzybPc6uM54INRSqZnKJdZ6w6FzOEm0tui6qetltXf7Dg7cdTEYvHpU
-         rCUK4g9X8raRXV0L4ziv67TpVnwyiK+nCErxwzZcD5vvLMN8GuUuv/gUNV3DI8lD9lU5
-         Tg56IR1hrYexa74mZul3eQ0AJ7MdX/zq/nBANV1dcLzZoALl0I7ayIKxdZ5Ht0uDkUIU
-         wxCvbPU52QfolZVyRbVD3QNNCerZYXJhN+ivarPdVVD/+jGLdJaMhRH0+q7mGaInhncV
-         Z+KWkkKujebnSN2W1K5e2KKXk7vrbz++KHz9/6htr6xM7XEHAymBAfB9e7Tx+yxAc2Sx
-         q9xg==
-X-Gm-Message-State: AO0yUKXHT8PdMeKu2MzMoM6lnjFb3QO8V3r+pbzQjGSVig4Hy5qNRhR5
-        NfJBja2TYeslUpjXWJ6fUrMJ9w==
-X-Google-Smtp-Source: AK7set9Dg6O4cO0YA5JkJqzyy2QEjbu78MIGWlRIZmzieAqsZkY6bSqEUGwojwHo/WXVK7gGEqKJlw==
-X-Received: by 2002:a17:907:7e82:b0:8f4:6efd:833f with SMTP id qb2-20020a1709077e8200b008f46efd833fmr26844959ejc.3.1678357908781;
-        Thu, 09 Mar 2023 02:31:48 -0800 (PST)
-Received: from ?IPV6:2a02:810d:15c0:828:7ee2:e73e:802e:45c1? ([2a02:810d:15c0:828:7ee2:e73e:802e:45c1])
-        by smtp.gmail.com with ESMTPSA id mb3-20020a170906eb0300b008e772c97db6sm8603741ejb.128.2023.03.09.02.31.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Mar 2023 02:31:48 -0800 (PST)
-Message-ID: <4eab53fc-2d26-dc93-3ae6-c0b2546ad3e0@linaro.org>
-Date:   Thu, 9 Mar 2023 11:31:46 +0100
+        with ESMTP id S229628AbjCIMNq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 07:13:46 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1258E34B4
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 04:13:44 -0800 (PST)
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329B1URP029527;
+        Thu, 9 Mar 2023 12:13:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=u4hdTlW6uoeMWitNP7MAg2BPzYS3BXtjumqJOt7g4Fc=;
+ b=bvhAw4shmW84DjO865jG7HC4XLiZClvslIAZESc9OXzBzXhmJIZje5iLWDxXs6wHZr7G
+ 5ygOJkorKrdeHOYMJgTZaEV2Auv8uHxLN2IjsJol576QGdaraXT2s5WLZKbPpcWPhLRU
+ hcUsp+phNph2MKmDtWwp66wkOUkV5MDMt6KdPhWRxGxVsbEYx5YDShYScufQCGqSgrq3
+ tEQUsCcU+0KEcBY+mgUKGKecxu8k/DTitSW+Zie0QacjPBk/Ic9xsgOQ3P51G/CUX5id
+ fU0n/9/zqH9kmRtJqJ/Sw+tAiEImyhMVR47VkI1xSUL2kTfVfiCo6hILJubkikfst4Lv SQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3p6t3br3r6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Mar 2023 12:13:35 +0000
+Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 329Bq2Ar011420;
+        Thu, 9 Mar 2023 12:13:35 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3p6t3br3q4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Mar 2023 12:13:35 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32941B5Z020006;
+        Thu, 9 Mar 2023 12:13:33 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3p6ftvjax6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Mar 2023 12:13:33 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 329CDTfY29360410
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 9 Mar 2023 12:13:29 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A311920049;
+        Thu,  9 Mar 2023 12:13:29 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8818E20040;
+        Thu,  9 Mar 2023 12:13:29 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.171.11.215])
+        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Thu,  9 Mar 2023 12:13:29 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1paF9E-00374g-33;
+        Thu, 09 Mar 2023 13:13:28 +0100
+Date:   Thu, 9 Mar 2023 12:13:28 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH] scsi: core: Simplify the code for waking up the error
+ handler
+Message-ID: <20230309121328.GD620522@t480-pf1aa2c2.fritz.box>
+References: <20230307215151.3705164-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20230307215151.3705164-1-bvanassche@acm.org>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: qwNFzLzQV-Rqd4Y7lbSSms5uIvzqCT_a
+X-Proofpoint-ORIG-GUID: kLL-oGKxldcGPcR33MHia-l1vVr4e_0A
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [RFC PATCH v2 7/7] arm64: dts: qcom: Add the Inline Crypto Engine
- nodes
-Content-Language: en-US
-To:     Abel Vesa <abel.vesa@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20230308155838.1094920-1-abel.vesa@linaro.org>
- <20230308155838.1094920-8-abel.vesa@linaro.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230308155838.1094920-8-abel.vesa@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-09_06,2023-03-08_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
+ malwarescore=0 bulkscore=0 mlxlogscore=999 spamscore=0 priorityscore=1501
+ lowpriorityscore=0 clxscore=1011 impostorscore=0 phishscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2303090097
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/03/2023 16:58, Abel Vesa wrote:
-> Drop all properties related to ICE from every UFS and SDCC node,
-> for all platforms, and add dedicated ICE nodes for each platform.
-> On most platforms, there is only one ICE instance, used by either
-> UFS or SDCC, but there are some platforms that have two separate
-> instances and, therefore, two separate nodes are added.
+On Tue, Mar 07, 2023 at 01:51:51PM -0800, Bart Van Assche wrote:
+> scsi_dec_host_busy() is called from the hot path and hence must not
+> obtain the host lock if no commands have failed. scsi_dec_host_busy()
+> tests three different variables of which at least two are set if a
+> command failed. Commit 3bd6f43f5cb3 ("scsi: core: Ensure that the
+> SCSI error handler gets woken up") introduced a call_rcu() call to
+> ensure that all tasks observe the host state change before the
+> host_failed change. Simplify the approach for guaranteeing that the host
+> state and host_failed/host_eh_scheduled changes are observed in order by using
+> smp_store_release() to update host_failed or host_eh_scheduled after
+> having update the host state and smp_load_acquire() before reading the
+> host state.
+
+It's probably just me, but "simplify" is a bit of a misnomer when you
+replace RCU by plain memory barriers. And I'm kind of wondering what we
+improve here? It seems to me that at least as far as the hot path is
+concerned, nothing really changes? The situation for
+`scsi_eh_scmd_add()` seems to improve, but that is already way off the
+hot path.
+
 > 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Cc: John Garry <john.g.garry@oracle.com>
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
+>  drivers/scsi/scsi_error.c | 22 ++++------------------
+>  drivers/scsi/scsi_lib.c   | 31 +++++++++----------------------
+>  include/scsi/scsi_cmnd.h  |  2 --
+>  3 files changed, 13 insertions(+), 42 deletions(-)
 > 
-> Changes since v1:
->  * Made changes for all platforms that use ICE, as a single patch since
->    most changes look really similar.
-> 
->  arch/arm64/boot/dts/qcom/sdm630.dtsi | 18 +++++++++-----
->  arch/arm64/boot/dts/qcom/sdm670.dtsi | 15 +++++++----
->  arch/arm64/boot/dts/qcom/sdm845.dtsi | 21 +++++++++-------
->  arch/arm64/boot/dts/qcom/sm6115.dtsi | 37 +++++++++++++++++-----------
->  arch/arm64/boot/dts/qcom/sm6350.dtsi | 31 ++++++++++++++---------
->  arch/arm64/boot/dts/qcom/sm8150.dtsi | 21 +++++++++-------
->  arch/arm64/boot/dts/qcom/sm8450.dtsi | 22 ++++++++++-------
->  7 files changed, 102 insertions(+), 63 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sdm630.dtsi b/arch/arm64/boot/dts/qcom/sdm630.dtsi
-> index 5827cda270a0..2aed49104d9d 100644
-> --- a/arch/arm64/boot/dts/qcom/sdm630.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sdm630.dtsi
-> @@ -1330,9 +1330,8 @@ opp-200000000 {
->  		sdhc_1: mmc@c0c4000 {
->  			compatible = "qcom,sdm630-sdhci", "qcom,sdhci-msm-v5";
->  			reg = <0x0c0c4000 0x1000>,
-> -			      <0x0c0c5000 0x1000>,
-> -			      <0x0c0c8000 0x8000>;
-> -			reg-names = "hc", "cqhci", "ice";
-> +			      <0x0c0c5000 0x1000>;
-> +			reg-names = "hc", "cqhci";
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 2aa2c2aee6e7..2a809145da06 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -87,7 +87,8 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
+>  
+>  	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
+>  	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
+> -		shost->host_eh_scheduled++;
+> +		smp_store_release(&shost->host_eh_scheduled,
+> +				  shost->host_eh_scheduled + 1);
 
-I believe this will break the ICE on these platforms without valid
-reason. The commit msg does not explain why you do it or why this is
-necessary.
+Probably should be documented.
 
-We already we received comment that we keep breaking Qualcomm platforms
-all the time and need to keep them in some shape.
+>  		scsi_eh_wakeup(shost);
+>  	}
+>  
+> @@ -312,12 +301,9 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>  
+>  	scsi_eh_reset(scmd);
+>  	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+> +	smp_store_release(&shost->host_failed, shost->host_failed + 1);
 
-Also, patchset is non-applicable in current set (breaks users) and
-neither commit nor cover letter mentions it.
+Same.
 
-Best regards,
-Krzysztof
+> +	scsi_eh_wakeup(shost);
+>  	spin_unlock_irqrestore(shost->host_lock, flags);
+> -	/*
+> -	 * Ensure that all tasks observe the host state change before the
+> -	 * host_failed change.
+> -	 */
+> -	call_rcu_hurry(&scmd->rcu, scsi_eh_inc_host_failed);
+>  }
+>  
+>  /**
 
+-- 
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
