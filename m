@@ -2,85 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 111BFC61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 15:46:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 876ABC64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 17:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230511AbjCIPqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 10:46:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51040 "EHLO
+        id S229751AbjCIRVL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 12:21:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229943AbjCIPp7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 10:45:59 -0500
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCDA3E4C5B;
-        Thu,  9 Mar 2023 07:45:58 -0800 (PST)
-Received: by mail-pl1-f179.google.com with SMTP id a2so2432138plm.4;
-        Thu, 09 Mar 2023 07:45:58 -0800 (PST)
+        with ESMTP id S230154AbjCIRUv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 12:20:51 -0500
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6900CE776D
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 09:20:48 -0800 (PST)
+Received: by mail-pj1-f43.google.com with SMTP id kb15so2771252pjb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Mar 2023 09:20:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678376758;
+        d=1e100.net; s=20210112; t=1678382448;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=biZNX5KZ/hMnGZ5e5usbkfRsd1fpRjUN8x8r4dcxMI0=;
-        b=4Vy9T0LYmB2rtcUpAOG2AaIuFrgegeScMLkO8ccyiP9YgS+V2KiVyX2BDTzhIEQEJp
-         m8l/Yj518RC5gdn8k36cBg2AecuBraocMR13itdUtN1nPqxkI4v/BeQduZjI7Jj8eamh
-         t66hWSFqPjedsoi+MvxU3/Z64Y+JTXBJTi2qz8VFTcJ77ajDvreQZDWGdtmVfuJtsZnC
-         VRGWrY1QGh97RHxasSPz6HVCxVm/Sf613YGIkVazrj2aeHTBb8gofN8LXMDR/gLxof6M
-         Lkvo3MjZbOvHzQfJyPN4NN+w0URdmRCWtp9uOd2vfl30+3ZdCymmNcmKYk0eDCUM943L
-         8ayQ==
-X-Gm-Message-State: AO0yUKXrLWwrBgJPmJ20BZMZ1nyUu6ilsE3mhrdS+7kWe2eZuFL7WAmG
-        mjfOflHe8K/OXE1IlT2cYuXj0XCAR3M=
-X-Google-Smtp-Source: AK7set+xPX0lIUeqjOBJsgMn1+hDVCVKiXFB5AlWnVU0ciJ2KmKKfMm6Y6dXl5EDibkB+IhgTTZ2gg==
-X-Received: by 2002:a05:6a20:3d0b:b0:c9:9312:5f1d with SMTP id y11-20020a056a203d0b00b000c993125f1dmr29893458pzi.4.1678376758123;
-        Thu, 09 Mar 2023 07:45:58 -0800 (PST)
+        bh=4Yf82plxQRkYzl958tL7s3YBZ0jIbJ7dxewGO9/zsno=;
+        b=kUnXJ2aq7wEpRLsdzh7ufS66CtoFP60iEn52f0NONt9CELtQIa2KeYSeCx15d8KWGl
+         8ITS8wuBk7UeGW5/W3aBBpBi9/F4aAww1WNTzCBYrhj7L6GfMrS0JOadpoYPmaLLQ8xa
+         2KYcaxHrDehjCQXRvfyAD9F92vkR++3cVloyy3cX0jmUhyykRYXdaVsMOvEm12E1jbID
+         A77h+q+MgDZXZghtJKeWC7lx9Snu5INFD5wmo9HA7g+BxwHeZnwMvvdJnyE2ZcO1BkFu
+         5bbH2/NJfr1bceS+xJhQQm4trLy9wzXqeoJs7A55CZXFpbwxbW9jWy4sZsTOFicdywiS
+         Rc0w==
+X-Gm-Message-State: AO0yUKUR2eBb0mXGqKfkFpiE3U5diK6XpQa8gGtVdAPBDhDJaypl4spy
+        MZsz3dU/e4SSj5uzMb/nRXWPUvLoUQM=
+X-Google-Smtp-Source: AK7set9haymCiPsnZT1uutmqNApGCK9lFC0ppfwXxYfYSfrG2T5d2alx/CQOpYY5hCYRVQ034E0elQ==
+X-Received: by 2002:a17:90b:1a8b:b0:233:f365:1d0b with SMTP id ng11-20020a17090b1a8b00b00233f3651d0bmr23262148pjb.5.1678382447380;
+        Thu, 09 Mar 2023 09:20:47 -0800 (PST)
 Received: from [192.168.132.235] ([63.145.95.70])
-        by smtp.gmail.com with ESMTPSA id 142-20020a630594000000b004fbe302b3f6sm11203167pgf.74.2023.03.09.07.45.57
+        by smtp.gmail.com with ESMTPSA id rj7-20020a17090b3e8700b00233cde36909sm194390pjb.21.2023.03.09.09.20.46
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Mar 2023 07:45:57 -0800 (PST)
-Message-ID: <99f2ea8e-e543-fc14-91d7-0e7e29d2f381@acm.org>
-Date:   Thu, 9 Mar 2023 07:45:56 -0800
+        Thu, 09 Mar 2023 09:20:46 -0800 (PST)
+Message-ID: <53e12a05-f485-f24c-0887-35900c2307c0@acm.org>
+Date:   Thu, 9 Mar 2023 09:20:45 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH v4] scsi: ufs: core: Add trace event for MCQ
+Subject: Re: [PATCH] scsi: core: Simplify the code for waking up the error
+ handler
 Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
-References: <1677836154-29192-1-git-send-email-quic_ziqichen@quicinc.com>
- <67db2c6b-c3b0-c525-e6a9-2b2fe6c6adbb@acm.org>
- <f80fd91b-3a03-5c38-72c0-cd5c3edb33b8@quicinc.com>
- <8a83ec79-be04-ec5c-f3ef-67f64dc55f12@acm.org>
- <f96b1867-142f-7fdc-8123-58fe3bdce844@quicinc.com>
+To:     Benjamin Block <bblock@linux.ibm.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230307215151.3705164-1-bvanassche@acm.org>
+ <20230309121328.GD620522@t480-pf1aa2c2.fritz.box>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <f96b1867-142f-7fdc-8123-58fe3bdce844@quicinc.com>
+In-Reply-To: <20230309121328.GD620522@t480-pf1aa2c2.fritz.box>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/23 18:44, Ziqi Chen wrote:
-> Thanks for you suggestion. But the member hwq->id is an Unsigned 
-> integer. if you want to identify SDB mode and MCQ mode,  using "0" is 
-> enough, Or how about add string such as below?
+On 3/9/23 04:13, Benjamin Block wrote:
+> On Tue, Mar 07, 2023 at 01:51:51PM -0800, Bart Van Assche wrote:
+>> scsi_dec_host_busy() is called from the hot path and hence must not
+>> obtain the host lock if no commands have failed. scsi_dec_host_busy()
+>> tests three different variables of which at least two are set if a
+>> command failed. Commit 3bd6f43f5cb3 ("scsi: core: Ensure that the
+>> SCSI error handler gets woken up") introduced a call_rcu() call to
+>> ensure that all tasks observe the host state change before the
+>> host_failed change. Simplify the approach for guaranteeing that the host
+>> state and host_failed/host_eh_scheduled changes are observed in order by using
+>> smp_store_release() to update host_failed or host_eh_scheduled after
+>> having update the host state and smp_load_acquire() before reading the
+>> host state.
 > 
-> ufshcd_command: MCQ: complete_rsp: 1d84000.ufshc: tag: 14, DB: 0x0, 
-> size: 32768, IS: 0, LBA: 5979448,opcode: 0x2a (WRITE_10),group_id: 0x0, 
-> hqid: 2
+> It's probably just me, but "simplify" is a bit of a misnomer when you
+> replace RCU by plain memory barriers. And I'm kind of wondering what we
+> improve here? It seems to me that at least as far as the hot path is
+> concerned, nothing really changes? The situation for
+> `scsi_eh_scmd_add()` seems to improve, but that is already way off the
+> hot path.
 
-Hi Ziqi,
+Hi Benjamin,
 
-Since 0 is a valid queue ID using 0 to identify the legacy command 
-submission mechanism is ambiguous.
+The advantages of the approach introduced by this patch are as follows:
+* The size of struct scsi_cmnd is reduced. This may improve performance
+   by reducing the number of cache misses.
+* One call_rcu() call is eliminated. This reduces the error handler
+   wake-up latency.
+
+>>   	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
+>>   	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
+>> -		shost->host_eh_scheduled++;
+>> +		smp_store_release(&shost->host_eh_scheduled,
+>> +				  shost->host_eh_scheduled + 1);
+> 
+> Probably should be documented.
+
+I will add a comment above each new store release / load acquire operation.
 
 Thanks,
 
 Bart.
+
