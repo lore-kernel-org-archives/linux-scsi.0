@@ -2,169 +2,252 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0323CC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 02:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9C4C678D5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 03:10:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229936AbjCIC4H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Mar 2023 21:56:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35202 "EHLO
+        id S229817AbjCIDKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Mar 2023 22:10:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjCIC4F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 21:56:05 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FD24738B0;
-        Wed,  8 Mar 2023 18:56:03 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3290l3Zg004404;
-        Thu, 9 Mar 2023 02:44:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=HLldECmdExjhq46993MhUQCY8si2mDULKtG81aeLExc=;
- b=JMbhjKo+jUlbPJeW/KCsmqGnUiMcEeijuyGXKb7243hWmoRpmaJ3814rZ7CxUIwtAZE2
- GzK9WCxs4NGmD0ez3+oj8fOCdqKCAydfOJ5Tfmjdv9ZYeYSGTsdYfZXfJHU/gkBnvDuo
- fnndUxhF6sHNO7gmfJX52MWM8hA0+8fNWc3sH4V8RXO+0oOLn8F/2ZK861D8681LSw7y
- zIWO1zHx5gBhda8ub/OYpfcDwoN2Y2i/rtgRDjETm7jgtRg3ImdqXS28c1reEi3iSTt1
- 7Emzcr4tvOCF0kHaRfF/AwFup/2A188+InvNVVFYNn1NAwsghXyS8wUQ7sGeSS89KttS 3Q== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6ycb92bn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 09 Mar 2023 02:44:24 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3292iNcP031073
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 9 Mar 2023 02:44:23 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Wed, 8 Mar 2023
- 18:44:20 -0800
-Message-ID: <f96b1867-142f-7fdc-8123-58fe3bdce844@quicinc.com>
-Date:   Thu, 9 Mar 2023 10:44:17 +0800
+        with ESMTP id S229772AbjCIDKe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2023 22:10:34 -0500
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F99F8093D;
+        Wed,  8 Mar 2023 19:10:29 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id bi9so594212lfb.2;
+        Wed, 08 Mar 2023 19:10:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678331428;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cZT0VdYfK85i7JqaF0sU+l1RnZ8kiQAjGhATCe5ADqc=;
+        b=CHHP2Dg4BzqFPcWOJV9lYrMn63gamrZxZZLFr7TXXPL3rAWCRoceYt3/tq8F7Ptluv
+         04qPrirU6WtuuqeUVRPyCUTsfgINz9Uu2bZ0X/Zm4olcaaVAiPiOcvO7x4eJxdaDxxuJ
+         HLGvdEYv2gWoj8YXNrPtAoDViBTP42nXW6x+bcgw3+V1rvjMCLolH+qY19gpOyil5j6q
+         MchgKMvDsIFEW7ofbBVVN64ub5uzbQsuXZ75KXRuUvuoyl6wyen9itBKUnDBFqg47h6l
+         IqsNZzLNpR5s7iVrekgL1yA2yUigq4+0bHtqciPemqf0M4uU6Uck04kfx3xls7QFH3uw
+         /3TQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678331428;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cZT0VdYfK85i7JqaF0sU+l1RnZ8kiQAjGhATCe5ADqc=;
+        b=mGljUWLP3IL3ALqLYes/kXrxNmIZgGv+Oj6kYpyUMTXEj39B+WtcM79FSZbpqM1ePz
+         Dzbw/3W0Z9mbgcQoG5eLrWSJNf/U3ZOhrJFrmcHzPPZUZtLWT/LxEvGrbOTpVC2lmN6p
+         tMx1Eepr1LrAqTM5axwdi0zjGN6GgJSZdRcM8Z3D4dVOHVzgwDxKC7GVu2i2BxMnClyp
+         65o2HF82LxNYwOCCTpNYmexd8kvSxJIofBJK5uq/B9WbzEJQFau5yYYfAc+09NqlgTEQ
+         NjAZjnnPqDXkRKA0OocMYmpaV+IecjIN7toOgu8dLsa4hCpdipbr39X+iV+kgSr1Z1ho
+         Fymg==
+X-Gm-Message-State: AO0yUKWlpKpjlATdLH+z5CQRJhqP3tiRwms48jUAmAGNpJcRc/9G7W11
+        hBlnk1wpnk2uqg9z4NbotiXBNlDR7arb9FdT7g==
+X-Google-Smtp-Source: AK7set8ulpWzK57+vwWTfXuanyiIynSqBU0FD/z4SN1OvW8kkILOi7VeSWTmRJwQ4Xpyc5XvqA3I3/k97ows1IKmn7A=
+X-Received: by 2002:ac2:530d:0:b0:4db:1809:29a1 with SMTP id
+ c13-20020ac2530d000000b004db180929a1mr11230830lfh.2.1678331427410; Wed, 08
+ Mar 2023 19:10:27 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v4] scsi: ufs: core: Add trace event for MCQ
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
-        <quic_cang@quicinc.com>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
+References: <cover.1678247309.git.quic_nguyenb@quicinc.com> <c7fcbb70f0e74d225c1a09f107ba1058270739be.1678247309.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <c7fcbb70f0e74d225c1a09f107ba1058270739be.1678247309.git.quic_nguyenb@quicinc.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Thu, 9 Mar 2023 11:10:15 +0800
+Message-ID: <CAGaU9a_CkxHU-k519TL2hfLZSM6Hfoo6sAELmJ+6Vy2X2ZCOrw@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 4/4] ufs: mcq: Added ufshcd_mcq_abort()
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
-References: <1677836154-29192-1-git-send-email-quic_ziqichen@quicinc.com>
- <67db2c6b-c3b0-c525-e6a9-2b2fe6c6adbb@acm.org>
- <f80fd91b-3a03-5c38-72c0-cd5c3edb33b8@quicinc.com>
- <8a83ec79-be04-ec5c-f3ef-67f64dc55f12@acm.org>
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <8a83ec79-be04-ec5c-f3ef-67f64dc55f12@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 8aeZATOU9Ckv_9taop9evzjRDr5kum0p
-X-Proofpoint-ORIG-GUID: 8aeZATOU9Ckv_9taop9evzjRDr5kum0p
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-08_15,2023-03-08_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
- clxscore=1015 mlxscore=0 adultscore=0 phishscore=0 lowpriorityscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303090022
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Bao,
 
+On Wed, Mar 8, 2023 at 12:10=E2=80=AFPM Bao D. Nguyen <quic_nguyenb@quicinc=
+.com> wrote:
+>
+> Add ufshcd_mcq_abort() to support ufs abort in mcq mode.
+>
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> ---
+>  drivers/ufs/core/ufs-mcq.c     | 76 ++++++++++++++++++++++++++++++++++++=
+++++++
+>  drivers/ufs/core/ufshcd-priv.h |  5 ++-
+>  drivers/ufs/core/ufshcd.c      | 11 ++++--
+>  3 files changed, 88 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index e27d8eb..6c65cd5 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -646,3 +646,79 @@ static bool ufshcd_mcq_cqe_search(struct ufs_hba *hb=
+a,
+>         spin_unlock(&hwq->cq_lock);
+>         return ret;
+>  }
+> +
+> +/**
+> + * ufshcd_mcq_abort - Abort the command in MCQ.
+> + * @cmd - The command to be aborted.
+> + *
+> + * Returns SUCCESS or FAILED error codes
+> + */
+> +int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
+> +{
+> +       struct Scsi_Host *host =3D cmd->device->host;
+> +       struct ufs_hba *hba =3D shost_priv(host);
+> +       int tag =3D scsi_cmd_to_rq(cmd)->tag;
+> +       struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
+> +       struct ufs_hw_queue *hwq;
+> +       int err =3D FAILED;
+> +
+> +       if (!lrbp->cmd) {
+> +               dev_err(hba->dev,
+> +                       "%s: skip abort. cmd at tag %d already completed.=
+\n",
+> +                       __func__, tag);
+> +               goto out;
+> +       }
+> +
+> +       /* Skip task abort in case previous aborts failed and report fail=
+ure */
+> +       if (lrbp->req_abort_skip) {
+> +               dev_err(hba->dev, "%s: skip abort. tag %d failed earlier\=
+n",
+> +                       __func__, tag);
+> +               goto out;
+> +       }
+> +
+> +       hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+> +
+> +       if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
+> +               /*
+> +                * Failure. The command should not be "stuck" in SQ for
+> +                * a long time which resulted in command being aborted.
+> +                */
+> +               dev_err(hba->dev, "%s: cmd found in sq. hwq=3D%d, tag=3D%=
+d\n",
+> +                               __func__, hwq->id, tag);
+> +               /* Set the Command Type to 0xF per the spec */
+> +               ufshcd_mcq_nullify_cmd(hba, hwq);
+> +               goto out;
+> +       }
+> +
+> +       if (ufshcd_mcq_cqe_search(hba, hwq, tag)) {
+> +               dev_err(hba->dev, "%s: cmd found in cq. hwq=3D%d, tag=3D%=
+d\n",
+> +                               __func__, hwq->id, tag);
+> +               /*
+> +                * The command should not be 'stuck' in the CQ for such a=
+ long time.
+> +                * Is interrupt missing? Process the CQEs here. If the in=
+terrupt is
+> +                * invoked at a later time, the CQ will be empty because =
+the CQEs
+> +                * are already processed here.
+> +                */
+> +               ufshcd_mcq_poll_cqe_lock(hba, hwq);
+> +               err =3D SUCCESS;
+> +               goto out;
+> +       }
+> +
+> +       /*
+> +        * The command is not in the Submission Queue, and it is not
+> +        * in the Completion Queue either. Query the device to see if
+> +        * the command is being processed in the device.
+> +        */
+> +       if (ufshcd_try_to_abort_task(hba, tag)) {
+> +               dev_err(hba->dev, "%s: device abort failed %d\n", __func_=
+_, err);
+> +               lrbp->req_abort_skip =3D true;
+> +               goto out;
+> +       }
+> +
+> +       err =3D SUCCESS;
+> +       if (lrbp->cmd)
+> +               ufshcd_release_scsi_cmd(hba, lrbp);
+> +
+> +out:
+> +       return err;
+> +}
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
+v.h
+> index 0527926..d883c03 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -77,7 +77,10 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba =
+*hba,
+>                                        struct ufs_hw_queue *hwq);
+>
+>  int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag, int *result=
+);
+> -
+> +int ufshcd_mcq_abort(struct scsi_cmnd *cmd);
+> +int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+> +void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
+> +                               struct ufshcd_lrb *lrbp);
+>  #define UFSHCD_MCQ_IO_QUEUE_OFFSET     1
+>  #define SD_ASCII_STD true
+>  #define SD_RAW false
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 408c16c..e06399e 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -302,7 +302,6 @@ static int ufshcd_setup_hba_vreg(struct ufs_hba *hba,=
+ bool on);
+>  static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+>  static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+>                                          struct ufs_vreg *vreg);
+> -static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+>  static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
+>                                                  bool enable);
+>  static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+> @@ -5414,7 +5413,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
+hba *hba, u32 intr_status)
+>  }
+>
+>  /* Release the resources allocated for processing a SCSI command. */
+> -static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
+> +void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
+>                                     struct ufshcd_lrb *lrbp)
+>  {
+>         struct scsi_cmnd *cmd =3D lrbp->cmd;
+> @@ -7340,7 +7339,7 @@ static void ufshcd_set_req_abort_skip(struct ufs_hb=
+a *hba, unsigned long bitmap)
+>   *
+>   * Returns zero on success, non-zero on failure
+>   */
+> -static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+> +int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+>  {
+>         struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
+>         int err =3D 0;
+> @@ -7500,6 +7499,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>                 goto release;
+>         }
+>
+> +       if (is_mcq_enabled(hba)) {
+> +               /* MCQ mode. Branch off to handle abort for mcq mode */
+> +               err =3D ufshcd_mcq_abort(cmd);
+> +               goto release;
+> +       }
+> +
+>         /* Skip task abort in case previous aborts failed and report fail=
+ure */
+>         if (lrbp->req_abort_skip) {
+>                 dev_err(hba->dev, "%s: skipping abort\n", __func__);
+> --
+> 2.7.4
+>
 
-On 3/7/2023 11:47 PM, Bart Van Assche wrote:
-> On 3/6/23 21:53, Ziqi Chen wrote:
->> You are right,  users may hate it if the trace events for legacy mode 
->> and MCQ mode are different. But if I merge them into one event, it 
->> will print much invalid information as we can not add if-else into 
->> TP_printk().
->>
->> (For example:  in SDB legacy mode, you can see such invalid prints " 
->> hqid = 0 , sqt= 0, cqh=0, cqt = 0")
->>
->> Users may hate these invalid information.
->>
->> Anyway, I have made new version that merge 2 mode into one event, but 
->> are you sure we really need to use this way? if yes , I can push new 
->> version here.
->>
->> Or, could you give some suggestions if you have better way.
->>
->> Below is a piece of new version code , you can preview.
->>
->>      TP_fast_assign(
->>          __assign_str(dev_name, dev_name);
->>          __entry->str_t = str_t;
->>          __entry->tag = tag;
->>          __entry->doorbell = doorbell;
->>          __entry->hwq_id = hwq? hwq->id: 0;
->>          __entry->sq_tail = hwq? hwq->sq_tail_slot: 0;
->>          __entry->cq_head = hwq? hwq->cq_head_slot: 0;
->>          __entry->cq_tail = hwq? hwq->cq_tail_slot: 0;
->>          __entry->transfer_len = transfer_len;
->>          __entry->lba = lba;
->>          __entry->intr = intr;
->>          __entry->opcode = opcode;
->>          __entry->group_id = group_id;
->>      ),
->>
->>      TP_printk(
->>          "%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, 
->> opcode: 0x%x (%s),"
->>          "group_id: 0x%x, hqid: %d, sqt: %d, cqh: %d, cqt: %d",
->>          show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name), 
->> __entry->tag,
->>          __entry->doorbell, __entry->transfer_len, __entry->intr, 
->> __entry->lba,
->>          (u32)__entry->opcode, str_opcode(__entry->opcode), 
->> (u32)__entry->group_id,
->>          __entry->hwq_id,__entry->sq_tail, __entry->cq_head, 
->> __entry->cq_tail
->>      )
-> 
-> Hi Ziqi,
-> 
-> Please reply below the original e-mail instead of above. This is 
-> expected on Linux kernel mailing lists.
-> 
-> Regarding your question: I propose to leave out the sq_tail, cq_head and 
-> cq_tail information. That information may be useful for hardware 
-> developers but is not useful for other users of the Linux kernel. So the 
-> only piece of information that is left that is MCQ-specific is the 
-> hardware queue index. I expect that users will be fine to see that 
-> information in trace events.
-> 
-> How about reporting hardware queue index -1 for legacy mode instead of 
-> 0? That will allow users to tell the difference between legacy mode and 
-> MCQ mode from the trace events.
-> 
-> Thanks,
-> 
-> Bart.
+It seems that ufshcd_abort_all() also needs an error handling flow for MCQ.
 
-Hi Bart,
-
-Thanks for you suggestion. But the member hwq->id is an Unsigned 
-integer. if you want to identify SDB mode and MCQ mode,  using "0" is 
-enough, Or how about add string such as below?
-
-ufshcd_command: MCQ: complete_rsp: 1d84000.ufshc: tag: 14, DB: 0x0, 
-size: 32768, IS: 0, LBA: 5979448,opcode: 0x2a (WRITE_10),group_id: 0x0, 
-hqid: 2
-
-Ziqi
-> 
+Thanks,
+Stanley
