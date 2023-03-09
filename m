@@ -2,176 +2,380 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B98C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 19:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EF2C64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 19:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229806AbjCITB0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 14:01:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48672 "EHLO
+        id S229634AbjCIT0Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 14:26:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230474AbjCITBV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 14:01:21 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5A21FB27F
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 11:01:15 -0800 (PST)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329HnOLQ018259;
-        Thu, 9 Mar 2023 19:00:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=BQfsYxXtfIolDH9558aH4yPaQJ7cLyZ+Z2O/65+YDlI=;
- b=SA7QT+dMBLk9CFgZEOpNy/cT8BZO2jL3w+NBoYKD9ajtSkRGbujh/jv5qPtlWnYHGz2M
- pFMaBtL6CET0YEKVWj7M8aZdw3bFRONTyAhJwFqB/5r/ORk1l4e87huNBGP3na8qZMwj
- 6Qrb/bmCsCTZFXo/JSzwTWymeqz+eTmW3D0CBjO1nitA1sM1LMlyvIYpkV3QnBFE52RX
- IxprH14PyDkLqJJTMaN1w03MOavgccSguxi+jsNmR9iUxUjW34FFulelqXO6h1+JGmYW
- yZ00eG0g40TCROsG8PUiNAoGGB0EiyOnSH0Ur7FFLc1uwt6VaPdJ8shU3wQTmPYv0W1b GQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3p418y3kd8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Mar 2023 19:00:06 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 329Hj98N021530;
-        Thu, 9 Mar 2023 19:00:06 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3p6fu9w5h8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Mar 2023 19:00:06 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SYHaFIv6uk5bGkNc69DAD5L1jY//abAk3tgcIOZR/ka0paLqJZ/sx4St5o87DhjW6BVEpsdTKptWxyBk4KopYho2BiEJU0RF8kaEz+zSg7dL7CWDHXNEP571WCiBLCmQcvhd2OaqF8yg16uTAtsKue1zfDQxomszjX7PC5pgl0PpBnrCL0I1s8z32hSn7tNeKYC0/SIaG3c5yORVn+y2AZvWH+SFNQTbobD2CKQg4o/oTXUvTOdPBsmCCNkwTBYYJDz1ipuVjUp5j6WS7zmtek3OZMyWKg6A4OhZQf/9Zbr7YmCb3oQUcj+Z1zpufHnRq4084/tqwKHYg6tT2PrG6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BQfsYxXtfIolDH9558aH4yPaQJ7cLyZ+Z2O/65+YDlI=;
- b=Mt4yNWkDvrI5vkUQjeu+q8ixQSaoN+zJPHhPX+p2DHwaObvl4gTQMKdKzanJdyGKLkWblFfHapf1H/umJ3QTudGz5/3C95HTYQONB4m80+oEF63jG4cA6CsZFwF/PsPgap+sjYj6yPyA3GagLDSFPq/lhAO/hGgWCXfOo+jMoc1knSBPTrHpDLWJNPa9g80Eq6HohBRCZbpUu0r13BruboI9V4gGnES9wz7JTNqRnYtU+7MTsdIYoMUIPN/lUg1dzdyKtFK7T61zvfpwSuKQZIiWhJ/hPUC785Hk65XGOuwxY8tgJLWxfHK65DXfS1JgaZYVO3MsDFoIylqaLjX06A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BQfsYxXtfIolDH9558aH4yPaQJ7cLyZ+Z2O/65+YDlI=;
- b=btBHWTIuUM46wDhL7g77AZAkyfRSQ2WM1ShnWQEQ4K7OZEiyW8/wgFsSOE31HUiJwqFPsg8E3+Pgzyxybhw4uGbg3URBewkw7ULlj3cyJghvrhLWLMT3U5WavllhZFeMalki0/+aZL5KKahSGiywQ7dS4oeBGksIs4jsWfwsR6k=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DM4PR10MB5920.namprd10.prod.outlook.com (2603:10b6:8:af::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6178.19; Thu, 9 Mar 2023 19:00:03 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::7276:bc4c:17a0:7267]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::7276:bc4c:17a0:7267%4]) with mapi id 15.20.6178.017; Thu, 9 Mar 2023
- 19:00:03 +0000
-Message-ID: <65a75b0e-fc55-e036-c259-de58a363cea9@oracle.com>
-Date:   Thu, 9 Mar 2023 18:59:59 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 01/81] scsi: qla2xxx: Refer directly to the
- qla2xxx_driver_template
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230304003103.2572793-1-bvanassche@acm.org>
- <20230304003103.2572793-2-bvanassche@acm.org>
- <fb29154c-fdac-8b45-1e8a-4b4e732e4dd7@oracle.com>
- <db248a4c-14bb-3e8f-7d25-c7e56ac7efcf@acm.org>
-Content-Language: en-US
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <db248a4c-14bb-3e8f-7d25-c7e56ac7efcf@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO6P123CA0010.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:338::14) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S229549AbjCIT0X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 14:26:23 -0500
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 914E3E8267
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 11:26:21 -0800 (PST)
+Received: by mail-pl1-f173.google.com with SMTP id y11so3129849plg.1
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Mar 2023 11:26:21 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678389981;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jIvNZpJ81sA1BdAg3dHE543o/j6unwNvmKCmX/pvn6s=;
+        b=C/VSMQ12ulexTQB8XU0C/hEGPidIgmgQhmsAA6NJBhkBMFH6+QamADXSt5tBgQvdHH
+         O6gCVkDjG2VZd8ch+nX3oM39JHqR+nvM9tOWK75LdeZHFm5RtTW+0JPYcIXYJiGmaazy
+         A0MloNDKvtPeh0dUn7eC1XIGNLAhDRMV0sefo1nUXlXHnLxc7VS9kBrtyQ1YIDO3m5FI
+         Pes/Aw8LCGPtEwAiPvmDBEaOJt43SClGoxM/W/1Iki8DGmbFIHJV2yORxaWJovddP8Sk
+         0pjbtkAlS/7wyi0MAAN6xCqOorIHFOuzjYNOrHtHNBCs80zZLGQeYrRVL7yPjAcQ6pPW
+         lJgA==
+X-Gm-Message-State: AO0yUKUwDFBXCItj6VLe7Qb4G4sn51aN8mOeyqSohFW6EExdy6ceqTXE
+        ND/nvWkJt9qMP1ZpbewVjDWYTu5kelk=
+X-Google-Smtp-Source: AK7set/01ptM1yKB2jzot3OvrgD+Pnhhd8LwXN8nu6AnqiGUgwZ6RFioKWNTsBXFmVZ5lNryF4ViBg==
+X-Received: by 2002:a05:6a20:8f0c:b0:cd:1ccf:2485 with SMTP id b12-20020a056a208f0c00b000cd1ccf2485mr8685769pzk.16.1678389980906;
+        Thu, 09 Mar 2023 11:26:20 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:bf9f:35c8:4915:cb24])
+        by smtp.gmail.com with ESMTPSA id j24-20020a62b618000000b0058d8f23af26sm11570955pff.157.2023.03.09.11.26.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Mar 2023 11:26:19 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 00/82] Constify most SCSI host templates
+Date:   Thu,  9 Mar 2023 11:24:52 -0800
+Message-Id: <20230309192614.2240602-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DM4PR10MB5920:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5c6fc8ba-a67d-4346-d5c0-08db20d07d62
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: mgWf185iyltXqarUq7ApM37dOCcbX5/7WLtOkqJJScIVRhGUsXwTh4AwYGnVvMqTIUAWvpAYmIBt2WK1DxSNCeutXRbajMKVzTLOnEuP0uuMci8FdLxoeWKvgGCBZAMtZH4tyvT3+dhx86yZxVxItIYpkS4idieKmaE9H07voZGsmer5E3lmg5hmTBOsOo7c9by2gBxg7FoOTJ6T3jqe7dQQZhl23UpsuRhd2il0e39oB02rdC6uXxqblMMziMybTTVqTmSLMy/q9+BRXvrrS4YnxVl+n2zE3OnWBokx4ZcgzRaV1tZ+xTCxe7oEVTDUG32ZvPvP9VnHjLuGntNt9AL4dmBMu5C2+llprbV+yrdDT8jnUZ43wvJuGF2j22ZTd3YPMXNbxgS2IQ/pH0a4EWz67Cua3a2JuoWOWzDo/Myo+3yheUjqnhuDPd17fzMU2A1gbe5WX4juUGbmXJtAY6JTdGQrG6mZ8uPnAc68fMX6/cZ8JFzMOWkAXHO32bV0X3zC2VLlhKGAEJLaQvolZyVMghbiwpkEBmlgNT/gHsuMqrNso0qrD97wNRFZYO0FXXkuTq3skxZ7f9wjBoPWnkrQyKHsQ9ZcMml1XJZ0EwvqIkwhWVe9C6YbsOBb1oUFnSxq9RMdjQnXlrH44DNl39AEKBgjeyFW+TVJxVEKxi1GBN/Xieaiev/bj+IGeLvuFbvZbn8/Rmtfl1PH7uEFkYEmaBr6MIGV7Q8MgwBrR0E=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(136003)(346002)(376002)(366004)(39860400002)(396003)(451199018)(31686004)(2906002)(5660300002)(26005)(66476007)(36756003)(4744005)(8936002)(8676002)(54906003)(66946007)(41300700001)(4326008)(110136005)(6636002)(316002)(86362001)(478600001)(36916002)(6486002)(66556008)(31696002)(6666004)(38100700002)(6512007)(6506007)(53546011)(186003)(2616005)(83380400001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?N3ZZQk5mWkxrdzdacEtGN2N5ZVlkK1VSYUxHUFRWdlpnQndLeDlLbkdPU0tL?=
- =?utf-8?B?YVh3Q3lpVVRGZ1J3RWFSVmJVeWE0SnFFVEp1ZnJSazBQbjI5b0ZiVVdpQitu?=
- =?utf-8?B?YmNPSUYyWTBsODZRMU5MZ0ZiVVpzVSsvSkdickJIUjlKUk15VnhxRDhRQ2Rt?=
- =?utf-8?B?ZC9rTXBIczRlNEkxR1N2OWVnYit3QU1oS3VJL0RDSjE2UUhNY0FaTkdwbXJR?=
- =?utf-8?B?NHkwT1QyZWlyVGdyTFBrZ1ZsM2h5MEc5QXhWSTcybEFMUkY3REtleFZGSHY3?=
- =?utf-8?B?ZzNETW9OVTB4SGpCYkhiaXMzN013WUNkMTlMT1RtbjdhdlpJZU85elJWcFJO?=
- =?utf-8?B?ZFMvUnV6d3RLd1RTeTFtWFI2YTNTaUFuUWNzWE9ZTHREcndyT3dvckx2UGdv?=
- =?utf-8?B?eVNxZU91VEdvSElmMzlJemNnQklraGFGcW5ZZ0pTNGxkWms0NmRnOXFHWmg5?=
- =?utf-8?B?SmZuQmwrS2l6NmxpUjVQSFFrUlVzc0Yya25pQTFzaWt0WjJqNG9aUkZUVVpB?=
- =?utf-8?B?cTV6U2Z1MStaOGwyK0ltODZMMjhZVlRRREllQkdxSXZzWWdyQ01Wcm4vTmJ5?=
- =?utf-8?B?cUlsMzhDWTBkUC8rOFBBb0NrRG1UaUUxaDNtM1AydUZ5Q2N6aGdWUlFqL2lT?=
- =?utf-8?B?L0ZtaU1MeW9XdzZ6TE1IUlV0eG10R25EMlI5TTUxQ1VHenh3QnMxZkdLNWJV?=
- =?utf-8?B?UEpHQndPbW9NdjQ1WXEyaXN1dTJuVWJIcEh3R2RvUDZmdTkxTVZicitXdjdI?=
- =?utf-8?B?aUthWlFlYVBoOS96ekd0RUhzcVlMVjNwdnl6aGg4T2svMTRMYXJDQVNjVDJL?=
- =?utf-8?B?QXZGak5zQVdvWkM2R2NBcXlCeUhETGRQMVpzQ1hUTVE5T01tZjJvVzlUUWtB?=
- =?utf-8?B?RFhNN1ZtcExoSHBBNHpQUHM4UDBNUHdmR0xXUEFuc3BjRFN0Skp5T2lvTU1G?=
- =?utf-8?B?cHdSMU8rQS9kUkZveHlldUtZVHYrOC9icmNlY1ZySWN0T1A5TWYyM3FOMmFs?=
- =?utf-8?B?V1JXMmZUZmZJUEIrcjU4TW9YU2NidEg0UTVRWXBZUTJRY0MwcndVbVJrM1dK?=
- =?utf-8?B?cTkzaG9SeGpwa2F5Tm4vVFRSZGxtZ1g2enJ2VHZ0dHAveGxIejU2ZUlrK2dF?=
- =?utf-8?B?RFRwWEt5YkdmWnFWR21UMnRDZUVPeS9haW1ldGFXTi9mbjdMaFp4TXhQc2Vm?=
- =?utf-8?B?UmNMT2tjTXFVWFJGU2k4bkJUdS95UHFWd2J5NjMyUVlvdEd1VEFSREx0NURv?=
- =?utf-8?B?MXgwY21qOHJpeDViKzc4RkNpdXErdkhjbHVMQXp4UlVwMi9neUlzK2NsY29W?=
- =?utf-8?B?M3ZmSUptRTYvcm9aZW82a0xnSlNucXVZUkloS2FjdGpvZDdFVlg2NVZYNmFy?=
- =?utf-8?B?WVF5ZzhyZ3dDNjg5aUVXZ2k0dkoycmh6WkZWSkF3VVFQTDhCR3dlSGwxcVJM?=
- =?utf-8?B?SS95M0RONDVSaHVraXlBWTVBRkJCTGgzd2lEaUc5SU5MY1JLVHVjTGE1d2lX?=
- =?utf-8?B?T3c4eld4NEJoR2k4VEFiVkFzQlNVZ0kySkEyUVh4ZEZLakZoTGNLcFRmQXph?=
- =?utf-8?B?LzRod0J5Q3BmOHpUeDMxbnJpZE5iMm10Z1RuVm9MWEIwT3Rsc05KNlFSb3Vm?=
- =?utf-8?B?SGJvTXZvQ2Z0ZkJpTDZ5Mjk5eG12dWloakRtS2x1aE02WloxbFZJbmVuN0d2?=
- =?utf-8?B?cnlXN0U0NWU3ZituSlJXQzNZeVJCSUJIbjA3OStGTlhnV3V2WUxUUE5TUHo3?=
- =?utf-8?B?NjYveE93Sk1SZEVkY0E3c1M0UHhDQkF6MVNOVEVxSmgvVlQxbldLWEQrMDVq?=
- =?utf-8?B?WStpMUZ2RTM1Lzd1bHd0UVJvTytWWWE2a21zQ2lnNmcyRkV1akdOdjQvMkhw?=
- =?utf-8?B?QVdWUHVvbythSnQ2OTdHcXNvYVQvbFhuRk1NOEFreHBSd0dRcGxscUtNZHQ1?=
- =?utf-8?B?enVoSmgvYkJZMVlvWjB5bnRRNUJJQ1RrZGNJUnhKK3h3cVpLUzVJeTRrTysy?=
- =?utf-8?B?Q1Y0OVFmMGlwd0kwY21XUUVRRFZPS3I0aXZ4Y0J3UTVKZFczeXUyR0NQeDd4?=
- =?utf-8?B?SElUWkF5UDBQbS85K21ibXpyZVYwUThBNEhFbjdtY3ZDWkNMcW9wVEhrZFo4?=
- =?utf-8?B?OHNxQ2hCU1BVQ1ZXTVdIRG92U1lwR25CWTQvc0V6V2szTVZnTzhENDVqK3Zu?=
- =?utf-8?B?NWc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: qBCIoFnOH5xLpR4Q8QEt3Pt7LsdjAZe/5YLCnuiOMoj5429J3LqEz1f16XBATbiaKKIfrG3ZhzWPiwLiF4HSGHEGyIhHzsvvBPXKrrbKT4O8YYqCOytRGbhpX7Ia9/iqZ8Rjsz92WUpvldacIg+sr6dl5yYa0RGEc4r1403fgPbn2JkEmcgKNJO3XyLhP9EKUN8kOrCXDDZPdgPv0FpKVmaftXok/BlBVVP9B4V1kEczpP3g9JFGx8VGSvTwETfoAcqdfgZvLaO7hOjIYHLplBM9oUJeLSUjMXIhN4AgWBQJg1rRyXgYwNgP50VzJF59WFvO5LlBdKoBiYw5gZ7qHPXP89PKLqb4fWiGaG9Bk77y84a2MgUTtX0sGmIGSbmEVdj/h8TQd6EaNK4I820qa/ZlAxBupP/dQW5gkBr3OyNXHg/t3E096GIsdz35hV/XizbhVuXPWUXJn7dSl+bXyFnUONwX5TT0PVDdtweOOm5DIhPmU8M7tdPIz5RzLAMwvtiuWJnt6UrdNxBT86GTlnPmsbwznMiPq/vCJ7h000/xIf+yRzwo4XgUYU89/o4DXB+rwh+iaXP+IHpiwqztYBP8P2f70m+H8g7xe746y36mDZgxH6w9BB6xTbooNrjjyfBcHysdAo9A7Urbu6k+51ds3juEeuht+VoZUGdXfxsuB4dLw1RnpBLkDcQ/LX7hgMN/UFBrXoFXDwCbXDHSB4kwRSGHR3cipWUf9PgJZPORQQxR1vmBjuRJzdlPGq/XaYRLWhDLWqLZ0YmQeE0yL/fF0vXXYz6Qxdywmh6mxfDpuRaKgzrr5Vyxb6nOkbvuygPsxuef9himUD6HYBKaueCxURj/hNaMli7RzXS12wg=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c6fc8ba-a67d-4346-d5c0-08db20d07d62
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2023 19:00:03.4316
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nXnZb/MPEIdJjESV1hY3pv72Sqq9wYmqZVElU8n21LQqz7zmJxm2Fmf7/2WOQ9lDodGUBegodmR80exI0YOVgw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB5920
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-09_10,2023-03-09_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=996 adultscore=0
- phishscore=0 suspectscore=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303090152
-X-Proofpoint-GUID: NjJoU2aNt3WgsiY06-X8CmFDgp5GxuDG
-X-Proofpoint-ORIG-GUID: NjJoU2aNt3WgsiY06-X8CmFDgp5GxuDG
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/03/2023 18:42, Bart Van Assche wrote:
-> On 3/6/23 05:10, John Garry wrote:
->> Apart from that, I will say that I haven't studied the driver in 
->> detail, but my impression is that we should just set this flag 
->> per-shost in base_vha->host.active_mode, and not the host template 
->> supported_mode member. Indeed, we don't even seem to be making this 
->> driver scsi_host_template as const in this series, which I thought was 
->> the aim (and I assume because of this).
-> 
-> This patch is necessary because this patch prevents to declare the 
-> 'hostt' member of struct Scsi_Host const.
+Hi Martin,
 
-ok, sure, but I am just saying that that the pre-existing code looks 
-suspicious. However, as I mentioned before, things like this (modifying 
-the host template) could be improved later by someone.
+It helps humans and the compiler if it is made explicit that SCSI host
+templates are not modified. Hence this patch series that constifies most
+SCSI host templates. Please consider this patch series for the next merge
+window.
 
 Thanks,
-John
+
+Bart.
+
+Changes compared to v1:
+- Simplified the qla2xxx patch as requested by John Garry.
+- Removed a file from the ata patch that was added accidentally.
+- Extracted the isci changes from the iscsi patch and moved these into a
+  separate patch.
+- Added Reviewed-by / Acked-by tags.
+
+Bart Van Assche (82):
+  scsi: qla2xxx: Refer directly to the qla2xxx_driver_template
+  scsi: core: Declare most SCSI host template pointers const
+  scsi: core: Declare SCSI host template pointer members const
+  ata: Declare SCSI host templates const
+  firewire: sbp2: Declare the SCSI host template const
+  RDMA/srp: Declare the SCSI host template const
+  scsi: message: fusion: Declare SCSI host template members const
+  scsi: zfcp: Declare SCSI host template const
+  scsi: 3w-9xxx: Declare SCSI host template const
+  scsi: 3w-sas: Declare SCSI host template const
+  scsi: 3w-xxxx: Declare SCSI host template const
+  scsi: BusLogic: Declare SCSI host template const
+  scsi: a100u2w: Declare SCSI host template const
+  scsi: a2091: Declare SCSI host template const
+  scsi: a3000: Declare SCSI host template const
+  scsi: aacraid: Declare SCSI host template const
+  scsi: advansys: Declare SCSI host template const
+  scsi: aha152x: Declare SCSI host template const
+  scsi: aha1542: Declare SCSI host template const
+  scsi: aic94xx: Declare SCSI host template const
+  scsi: arcmsr: Declare SCSI host template const
+  scsi: acornscsi: Declare SCSI host template const
+  scsi: arxescsi: Declare SCSI host template const
+  scsi: aha1740: Declare SCSI host template const
+  scsi: cumana: Declare SCSI host template const
+  scsi: eesox: Declare SCSI host template const
+  scsi: oak: Declare SCSI host template const
+  scsi: powertec: Declare SCSI host template const
+  scsi: atp870u: Declare SCSI host template const
+  scsi: dc395x: Declare SCSI host template const
+  scsi: dmx3191d: Declare SCSI host template const
+  scsi: elx: efct: Declare SCSI host template const
+  scsi: esas2r: Declare SCSI host template const
+  scsi: esp_scsi: Declare SCSI host template const
+  scsi: fcoe: Declare SCSI host template const
+  scsi: fnic: Declare host template const
+  scsi: qedf: Declare host template const
+  scsi: fdomain: Declare SCSI host template const
+  scsi: NCR5380: Declare SCSI host template const
+  scsi: gvp11: Declare SCSI host template const
+  scsi: hisi_sas: Declare SCSI host template const
+  scsi: hpsa: Declare SCSI host template const
+  scsi: hptiop: Declare SCSI host template const
+  scsi: ibmvfc: Declare SCSI host template const
+  scsi: imm: Declare SCSI host template const
+  scsi: initio: Declare SCSI host template const
+  scsi: ipr: Declare SCSI host template const
+  scsi: isci: Declare SCSI host template const
+  scsi: iscsi: Declare SCSI host template const
+  scsi: mac53c94: Declare SCSI host template const
+  scsi: mac_scsi: Declare SCSI host template const
+  scsi: megaraid: Declare SCSI host template const
+  scsi: mesh: Declare SCSI host template const
+  scsi: mpi3mr: Declare SCSI host template const
+  scsi: mpt3sas: Declare SCSI host template const
+  scsi: mvme147: Declare SCSI host template const
+  scsi: mvsas: Declare SCSI host template const
+  scsi: mvumi: Declare SCSI host template const
+  scsi: myrb: Declare SCSI host template const
+  scsi: myrs: Declare SCSI host template const
+  scsi: nsp32: Declare SCSI host template const
+  scsi: pcmcia-sym53c500: Declare SCSI host template const
+  scsi: pcmcia-pm8001: Declare SCSI host template const
+  scsi: pmcraid: Declare SCSI host template const
+  scsi: ppa: Declare SCSI host template const
+  scsi: ps3rom: Declare SCSI host template const
+  scsi: qla1280: Declare SCSI host template const
+  scsi: qla2xxx: Declare SCSI host template const
+  scsi: qlogicpti: Declare SCSI host template const
+  scsi: sgiwd93: Declare SCSI host template const
+  scsi: smartpqi: Declare SCSI host template const
+  scsi: snic: Declare SCSI host template const
+  scsi: stex: Declare SCSI host template const
+  scsi: sym53c8xx: Declare SCSI host template const
+  scsi: virtio-scsi: Declare SCSI host template const
+  scsi: wd719x: Declare SCSI host template const
+  scsi: xen-scsifront: Declare SCSI host template const
+  scsi: rts5208: Declare SCSI host template const
+  scsi: target: tcm-loop: Declare SCSI host template const
+  scsi: ufs: Declare SCSI host template const
+  usb: uas: Declare two host templates and host template pointers const
+  scsi: core: Update a source code comment
+
+ drivers/ata/acard-ahci.c                  |  2 +-
+ drivers/ata/ahci.c                        |  2 +-
+ drivers/ata/ahci.h                        |  2 +-
+ drivers/ata/ahci_brcm.c                   |  2 +-
+ drivers/ata/ahci_ceva.c                   |  2 +-
+ drivers/ata/ahci_da850.c                  |  2 +-
+ drivers/ata/ahci_dm816.c                  |  2 +-
+ drivers/ata/ahci_dwc.c                    |  2 +-
+ drivers/ata/ahci_imx.c                    |  2 +-
+ drivers/ata/ahci_mtk.c                    |  2 +-
+ drivers/ata/ahci_mvebu.c                  |  2 +-
+ drivers/ata/ahci_platform.c               |  2 +-
+ drivers/ata/ahci_qoriq.c                  |  2 +-
+ drivers/ata/ahci_seattle.c                |  2 +-
+ drivers/ata/ahci_st.c                     |  2 +-
+ drivers/ata/ahci_sunxi.c                  |  2 +-
+ drivers/ata/ahci_tegra.c                  |  2 +-
+ drivers/ata/ahci_xgene.c                  |  2 +-
+ drivers/ata/ata_generic.c                 |  2 +-
+ drivers/ata/ata_piix.c                    |  6 +++---
+ drivers/ata/libahci.c                     |  4 ++--
+ drivers/ata/libahci_platform.c            |  2 +-
+ drivers/ata/libata-core.c                 |  4 ++--
+ drivers/ata/libata-scsi.c                 |  2 +-
+ drivers/ata/libata-sff.c                  |  8 ++++----
+ drivers/ata/libata.h                      |  2 +-
+ drivers/ata/pata_acpi.c                   |  2 +-
+ drivers/ata/pata_ali.c                    |  2 +-
+ drivers/ata/pata_amd.c                    |  2 +-
+ drivers/ata/pata_arasan_cf.c              |  2 +-
+ drivers/ata/pata_artop.c                  |  2 +-
+ drivers/ata/pata_atiixp.c                 |  2 +-
+ drivers/ata/pata_atp867x.c                |  2 +-
+ drivers/ata/pata_buddha.c                 |  2 +-
+ drivers/ata/pata_cmd640.c                 |  2 +-
+ drivers/ata/pata_cmd64x.c                 |  2 +-
+ drivers/ata/pata_cs5520.c                 |  2 +-
+ drivers/ata/pata_cs5530.c                 |  2 +-
+ drivers/ata/pata_cs5535.c                 |  2 +-
+ drivers/ata/pata_cs5536.c                 |  2 +-
+ drivers/ata/pata_cypress.c                |  2 +-
+ drivers/ata/pata_efar.c                   |  2 +-
+ drivers/ata/pata_ep93xx.c                 |  2 +-
+ drivers/ata/pata_falcon.c                 |  2 +-
+ drivers/ata/pata_ftide010.c               |  2 +-
+ drivers/ata/pata_gayle.c                  |  2 +-
+ drivers/ata/pata_hpt366.c                 |  2 +-
+ drivers/ata/pata_hpt37x.c                 |  2 +-
+ drivers/ata/pata_hpt3x2n.c                |  2 +-
+ drivers/ata/pata_hpt3x3.c                 |  2 +-
+ drivers/ata/pata_icside.c                 |  2 +-
+ drivers/ata/pata_imx.c                    |  2 +-
+ drivers/ata/pata_isapnp.c                 |  2 +-
+ drivers/ata/pata_it8213.c                 |  2 +-
+ drivers/ata/pata_it821x.c                 |  2 +-
+ drivers/ata/pata_ixp4xx_cf.c              |  2 +-
+ drivers/ata/pata_jmicron.c                |  2 +-
+ drivers/ata/pata_legacy.c                 |  2 +-
+ drivers/ata/pata_macio.c                  |  2 +-
+ drivers/ata/pata_marvell.c                |  2 +-
+ drivers/ata/pata_mpc52xx.c                |  2 +-
+ drivers/ata/pata_mpiix.c                  |  2 +-
+ drivers/ata/pata_netcell.c                |  2 +-
+ drivers/ata/pata_ninja32.c                |  2 +-
+ drivers/ata/pata_ns87410.c                |  2 +-
+ drivers/ata/pata_ns87415.c                |  2 +-
+ drivers/ata/pata_octeon_cf.c              |  2 +-
+ drivers/ata/pata_of_platform.c            |  2 +-
+ drivers/ata/pata_oldpiix.c                |  2 +-
+ drivers/ata/pata_opti.c                   |  2 +-
+ drivers/ata/pata_optidma.c                |  2 +-
+ drivers/ata/pata_parport/pata_parport.c   |  2 +-
+ drivers/ata/pata_pcmcia.c                 |  2 +-
+ drivers/ata/pata_pdc2027x.c               |  2 +-
+ drivers/ata/pata_pdc202xx_old.c           |  2 +-
+ drivers/ata/pata_piccolo.c                |  2 +-
+ drivers/ata/pata_platform.c               |  4 ++--
+ drivers/ata/pata_pxa.c                    |  2 +-
+ drivers/ata/pata_radisys.c                |  2 +-
+ drivers/ata/pata_rb532_cf.c               |  2 +-
+ drivers/ata/pata_rdc.c                    |  2 +-
+ drivers/ata/pata_rz1000.c                 |  2 +-
+ drivers/ata/pata_sc1200.c                 |  2 +-
+ drivers/ata/pata_sch.c                    |  2 +-
+ drivers/ata/pata_serverworks.c            |  6 +++---
+ drivers/ata/pata_sil680.c                 |  2 +-
+ drivers/ata/pata_sis.c                    |  2 +-
+ drivers/ata/pata_sl82c105.c               |  2 +-
+ drivers/ata/pata_triflex.c                |  2 +-
+ drivers/ata/pata_via.c                    |  2 +-
+ drivers/ata/pdc_adma.c                    |  2 +-
+ drivers/ata/sata_dwc_460ex.c              |  2 +-
+ drivers/ata/sata_fsl.c                    |  2 +-
+ drivers/ata/sata_highbank.c               |  2 +-
+ drivers/ata/sata_inic162x.c               |  2 +-
+ drivers/ata/sata_mv.c                     |  4 ++--
+ drivers/ata/sata_nv.c                     |  8 ++++----
+ drivers/ata/sata_promise.c                |  2 +-
+ drivers/ata/sata_qstor.c                  |  2 +-
+ drivers/ata/sata_rcar.c                   |  2 +-
+ drivers/ata/sata_sil.c                    |  2 +-
+ drivers/ata/sata_sil24.c                  |  2 +-
+ drivers/ata/sata_sis.c                    |  2 +-
+ drivers/ata/sata_svw.c                    |  2 +-
+ drivers/ata/sata_sx4.c                    |  2 +-
+ drivers/ata/sata_uli.c                    |  2 +-
+ drivers/ata/sata_via.c                    |  2 +-
+ drivers/ata/sata_vsc.c                    |  2 +-
+ drivers/firewire/sbp2.c                   |  4 ++--
+ drivers/infiniband/ulp/iser/iscsi_iser.c  |  4 ++--
+ drivers/infiniband/ulp/srp/ib_srp.c       |  2 +-
+ drivers/message/fusion/mptfc.c            |  2 +-
+ drivers/message/fusion/mptsas.c           |  2 +-
+ drivers/message/fusion/mptspi.c           |  2 +-
+ drivers/s390/scsi/zfcp_scsi.c             |  2 +-
+ drivers/scsi/3w-9xxx.c                    |  3 +--
+ drivers/scsi/3w-sas.c                     |  3 +--
+ drivers/scsi/3w-xxxx.c                    |  2 +-
+ drivers/scsi/BusLogic.c                   |  4 ++--
+ drivers/scsi/a100u2w.c                    |  2 +-
+ drivers/scsi/a2091.c                      |  2 +-
+ drivers/scsi/a3000.c                      |  2 +-
+ drivers/scsi/aacraid/linit.c              |  2 +-
+ drivers/scsi/advansys.c                   |  2 +-
+ drivers/scsi/aha152x.c                    |  4 ++--
+ drivers/scsi/aha1542.c                    |  5 +++--
+ drivers/scsi/aha1740.c                    |  2 +-
+ drivers/scsi/aic94xx/aic94xx_init.c       |  2 +-
+ drivers/scsi/am53c974.c                   |  2 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c          |  2 +-
+ drivers/scsi/arm/acornscsi.c              |  2 +-
+ drivers/scsi/arm/arxescsi.c               |  2 +-
+ drivers/scsi/arm/cumana_1.c               |  2 +-
+ drivers/scsi/arm/cumana_2.c               |  2 +-
+ drivers/scsi/arm/eesox.c                  |  2 +-
+ drivers/scsi/arm/oak.c                    |  2 +-
+ drivers/scsi/arm/powertec.c               |  2 +-
+ drivers/scsi/atp870u.c                    |  4 ++--
+ drivers/scsi/be2iscsi/be_main.c           |  2 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c          |  4 ++--
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c        |  2 +-
+ drivers/scsi/cxgbi/libcxgbi.c             |  2 +-
+ drivers/scsi/cxgbi/libcxgbi.h             |  2 +-
+ drivers/scsi/dc395x.c                     |  2 +-
+ drivers/scsi/dmx3191d.c                   |  2 +-
+ drivers/scsi/elx/efct/efct_xport.c        |  2 +-
+ drivers/scsi/esas2r/esas2r_main.c         |  2 +-
+ drivers/scsi/esp_scsi.c                   |  2 +-
+ drivers/scsi/esp_scsi.h                   |  2 +-
+ drivers/scsi/fcoe/fcoe.c                  |  2 +-
+ drivers/scsi/fdomain.c                    |  2 +-
+ drivers/scsi/fnic/fnic_main.c             |  2 +-
+ drivers/scsi/g_NCR5380.c                  |  4 ++--
+ drivers/scsi/gvp11.c                      |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas.h          |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c    |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  2 +-
+ drivers/scsi/hosts.c                      |  4 ++--
+ drivers/scsi/hpsa.c                       |  2 +-
+ drivers/scsi/hptiop.c                     |  2 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c            |  2 +-
+ drivers/scsi/imm.c                        |  2 +-
+ drivers/scsi/initio.c                     |  2 +-
+ drivers/scsi/ipr.c                        |  2 +-
+ drivers/scsi/isci/init.c                  |  2 +-
+ drivers/scsi/iscsi_tcp.c                  |  4 ++--
+ drivers/scsi/jazz_esp.c                   |  2 +-
+ drivers/scsi/libiscsi.c                   |  2 +-
+ drivers/scsi/mac53c94.c                   |  2 +-
+ drivers/scsi/mac_esp.c                    |  2 +-
+ drivers/scsi/mac_scsi.c                   |  2 +-
+ drivers/scsi/megaraid.c                   |  2 +-
+ drivers/scsi/megaraid/megaraid_mbox.c     |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  2 +-
+ drivers/scsi/mesh.c                       |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  4 ++--
+ drivers/scsi/mvme147.c                    |  2 +-
+ drivers/scsi/mvsas/mv_init.c              |  2 +-
+ drivers/scsi/mvumi.c                      |  2 +-
+ drivers/scsi/myrb.c                       |  2 +-
+ drivers/scsi/myrs.c                       |  2 +-
+ drivers/scsi/nsp32.c                      |  2 +-
+ drivers/scsi/pcmcia/sym53c500_cs.c        |  4 ++--
+ drivers/scsi/pm8001/pm8001_init.c         |  2 +-
+ drivers/scsi/pmcraid.c                    |  2 +-
+ drivers/scsi/ppa.c                        |  2 +-
+ drivers/scsi/ps3rom.c                     |  2 +-
+ drivers/scsi/qedf/qedf_main.c             |  2 +-
+ drivers/scsi/qedi/qedi_gbl.h              |  2 +-
+ drivers/scsi/qedi/qedi_iscsi.c            |  2 +-
+ drivers/scsi/qla1280.c                    |  2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h            |  2 +-
+ drivers/scsi/qla2xxx/qla_mid.c            |  2 +-
+ drivers/scsi/qla2xxx/qla_os.c             |  4 ++--
+ drivers/scsi/qla2xxx/qla_target.c         |  3 +--
+ drivers/scsi/qlogicpti.c                  |  2 +-
+ drivers/scsi/scsi_error.c                 | 16 ++++++++--------
+ drivers/scsi/scsi_sysfs.c                 |  6 +++---
+ drivers/scsi/sgiwd93.c                    |  2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c     |  2 +-
+ drivers/scsi/snic/snic_main.c             |  2 +-
+ drivers/scsi/stex.c                       |  2 +-
+ drivers/scsi/sun3x_esp.c                  |  2 +-
+ drivers/scsi/sun_esp.c                    |  2 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c       |  4 ++--
+ drivers/scsi/virtio_scsi.c                |  2 +-
+ drivers/scsi/wd719x.c                     |  2 +-
+ drivers/scsi/xen-scsifront.c              |  2 +-
+ drivers/scsi/zorro_esp.c                  |  2 +-
+ drivers/staging/rts5208/rtsx.c            |  2 +-
+ drivers/target/loopback/tcm_loop.c        |  2 +-
+ drivers/ufs/core/ufshcd.c                 |  2 +-
+ drivers/usb/image/microtek.c              |  2 +-
+ drivers/usb/storage/uas.c                 |  2 +-
+ drivers/usb/storage/usb.c                 |  2 +-
+ drivers/usb/storage/usb.h                 |  2 +-
+ include/linux/ahci_platform.h             |  2 +-
+ include/linux/ata_platform.h              |  2 +-
+ include/linux/libata.h                    | 10 +++++-----
+ include/linux/raid_class.h                |  2 +-
+ include/scsi/libfc.h                      |  2 +-
+ include/scsi/libiscsi.h                   |  2 +-
+ include/scsi/scsi_host.h                  |  6 +++---
+ 225 files changed, 269 insertions(+), 271 deletions(-)
+
