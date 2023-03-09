@@ -2,113 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D80C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 22:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E317AC64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 23:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230417AbjCIW44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 17:56:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40406 "EHLO
+        id S231147AbjCIXhI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 18:37:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229910AbjCIW4y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 17:56:54 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B21F622113;
-        Thu,  9 Mar 2023 14:56:53 -0800 (PST)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329MsJAj031474;
-        Thu, 9 Mar 2023 22:56:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=JqMVd9UYPMSGxNcKuDmyvd2PQYOsJShLk7Q0FXb4cAA=;
- b=nLQoBXML9Pbi0LwoD1XjSh4bzfwHxFxahyTvA3tDDfxLjVDuIDAAYNJVdkl2x5nzvqGn
- CelN1QbndhCBY2BuUikm/w98VJcC8yKDbG9UV4skSe2/whs3CP6+YszGVvcZ3cstd4Fw
- u8u7QNigsmkrRKOH4wf7oaSK3jjv9DCoXMNLtfqhliJOH6KF4EM+/QB6hbSyBRK7cYao
- ajqVi3geIjYIPHf5DXj++ojwkrhDLDxaYaWpiy4NPnqRAWU4tfFOsrOyqxJF8j5cpj5I
- iU8xQZbKPL9FAgfSSrd4SbQEeb67PIQ7cnnPEzm+83vwgytC4H7fzTZ9ELPkToknIHaV eQ== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p7nbd8g91-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 09 Mar 2023 22:56:26 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 329MuPNa023982
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 9 Mar 2023 22:56:25 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Thu, 9 Mar 2023
- 14:56:25 -0800
-Message-ID: <c1237665-60a6-97ec-3b9d-6067853aea48@quicinc.com>
-Date:   Thu, 9 Mar 2023 14:56:24 -0800
+        with ESMTP id S231258AbjCIXhE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 18:37:04 -0500
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE5A9106A04
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 15:36:56 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id bi9so4434627lfb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Mar 2023 15:36:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678405015;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Pz86KEiMFgUOd6pTvJoAJJJfwI/jdCQkNURF8Fq6k08=;
+        b=DZtFrc8qBu4nujlbaktFL+esUBy9EOeRfI5WRyUbXLrCNCR2+6AC1uF9FhnyCkuVhs
+         QNZ8gn0RrUSlv7QmPyefPzpoITFRm07tMwAjhgtzZsh5gnPWhipuZsT9+I1l/faTnanT
+         6xW/HWXVm3e5GXvDOIyLRQP3QCMuzLHVD2cNlfMKqCIpIRsnucwrVIma56H9ca8jiNQz
+         BsQ9juwY6KE+hIphtqZfyFIqlnNIoJsVlqomennU0G+GIsQYsxM2jVVoTBQNW0CGturA
+         wnZuDfIoNGUTk3/bShH/MzxAqdSbKhEG4QPch+UiSokhgtOwoeuoggqAe7CItidalUbN
+         9sOg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678405015;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Pz86KEiMFgUOd6pTvJoAJJJfwI/jdCQkNURF8Fq6k08=;
+        b=YaCDfJM23eealmRwaVoaxqyCNiNI1bRJCCNANCCFa1X8zSD9reyJc657LdQ+sKT08u
+         JRDLlKFeo/HAvFAJdtUXBi+gtjUN0XBtgCvz6a8+3Vuq9Fog2wryfsVm1aR4KOvAXO1g
+         Q/PTxPQf2daah0dv9nJsTcXZb3fkhRYX8TN+sKdyj6ba3XAG/Hcpw8NDA4lOQ76qR8dE
+         Tx9W4mBlLd1OsGmsaxW5DOKmQG09hIzI26Kt7IeVT0Tpg4gScjCKmIQZ5+fNOMSL4M5d
+         6AEyRBgd/6FGOifTmxjjI9E402mxyKt4epxPsjgF4WntUz29H609d+VqDH3Yw8ip4sj8
+         WTlA==
+X-Gm-Message-State: AO0yUKVp82sl/01ibPikByU93lLnczXQ2Xdt3X8IeMxf2RRAUCPsi34I
+        DHN79/W8YrbaQcUtR5Ryej4=
+X-Google-Smtp-Source: AK7set+2ysFiB7+hfLhnYByQaAezjyOEthnXRPOTAJxiIGCsDkGC0sNUdeU498oGzYAk3gjW73hxFg==
+X-Received: by 2002:ac2:55b0:0:b0:4e0:a426:6ddc with SMTP id y16-20020ac255b0000000b004e0a4266ddcmr6101189lfg.0.1678405014921;
+        Thu, 09 Mar 2023 15:36:54 -0800 (PST)
+Received: from mobilestation ([95.79.133.202])
+        by smtp.gmail.com with ESMTPSA id f20-20020a19ae14000000b004db2978e330sm60609lfc.258.2023.03.09.15.36.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Mar 2023 15:36:54 -0800 (PST)
+Date:   Fri, 10 Mar 2023 02:36:51 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.g.garry@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Samuel Holland <samuel@sholland.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Ondrej Zary <linux@zary.sk>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH v2 04/82] ata: Declare SCSI host templates const
+Message-ID: <20230309233651.tcymciicgla5pw3e@mobilestation>
+References: <20230309192614.2240602-1-bvanassche@acm.org>
+ <20230309192614.2240602-5-bvanassche@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [RFC PATCH v2 1/3] ufs: mcq: Add supporting functions for mcq
- abort
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
-        <quic_cang@quicinc.com>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1678338926.git.quic_nguyenb@quicinc.com>
- <68b786f390dbd93218a482d18c513bc332e82da3.1678338926.git.quic_nguyenb@quicinc.com>
- <1ca7dbef-5747-29c2-a11c-086cf36d636f@acm.org>
- <821e6994-9fed-2c15-6c25-b1761a267ec9@quicinc.com>
- <a7970fd0-ee6f-f1c1-e8c4-6ee42237a567@acm.org>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <a7970fd0-ee6f-f1c1-e8c4-6ee42237a567@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: IKO4PvGpm3KrtErwCR6QFYnFNXvekRfg
-X-Proofpoint-ORIG-GUID: IKO4PvGpm3KrtErwCR6QFYnFNXvekRfg
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-09_12,2023-03-09_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- mlxlogscore=999 impostorscore=0 malwarescore=0 clxscore=1015 adultscore=0
- lowpriorityscore=0 bulkscore=0 spamscore=0 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2303090183
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230309192614.2240602-5-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/9/2023 2:54 PM, Bart Van Assche wrote:
-> On 3/9/23 14:47, Bao D. Nguyen wrote:
->> On 3/9/2023 10:15 AM, Bart Van Assche wrote:
->>> On 3/8/23 21:28, Bao D. Nguyen wrote:
->>>> +static inline bool ufshcd_mcq_is_sq_empty(struct ufs_hw_queue *q)
->>>> +{
->>>> +    return q->sq_head_slot == q->sq_tail_slot;
->>>> +}
->>>
->>> Please remove this function and inline this function into its callers.
->>
->> Same comment. Should I also update the existing 
->> ufshcd_mcq_is_cq_empty() in a separate patch together with 
->> ufshcd_mcq_update_cq_tail_slot(), ufshcd_mcq_update_cq_head() 
->> mentioned above?
->
-> Hi Bao,
->
-> Modifying the existing code may improve uniformity of the UFS host 
-> controller driver. If any existing code is refactored, please do that 
-> via a separate patch.
-Thanks Bart. I will make that change in a separate patch.
->
-> Thanks,
->
-> Bart.
->
+On Thu, Mar 09, 2023 at 11:24:56AM -0800, Bart Van Assche wrote:
+> Make it explicit that ATA host templates are not modified.
+> 
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.g.garry@oracle.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+
+[nip]
+
+>  drivers/ata/ahci_dwc.c                  |  2 +-
+
+[nip]
+
+>  111 files changed, 129 insertions(+), 129 deletions(-)
+> 
+
+[nip]
+  
+> diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
+> index 8fb66860db31..4bfbb09cdc02 100644
+> --- a/drivers/ata/ahci_dwc.c
+> +++ b/drivers/ata/ahci_dwc.c
+> @@ -398,7 +398,7 @@ static const struct ata_port_info ahci_dwc_port_info = {
+>  	.port_ops	= &ahci_dwc_port_ops,
+>  };
+>  
+> -static struct scsi_host_template ahci_dwc_scsi_info = {
+> +static const struct scsi_host_template ahci_dwc_scsi_info = {
+>  	AHCI_SHT(DRV_NAME),
+>  };
+>  
+
+For DWC AHCI SATA
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+
+-Serge(y)
+
+[nip]
 
