@@ -2,61 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87946C6FD19
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 21:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D805C6FD19
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 21:56:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231249AbjCIV43 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 16:56:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50422 "EHLO
+        id S231264AbjCIV4m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 16:56:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230526AbjCIVzy (ORCPT
+        with ESMTP id S231185AbjCIVzy (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 16:55:54 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BE23EFF6B;
-        Thu,  9 Mar 2023 13:55:43 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8B2AF5A83;
+        Thu,  9 Mar 2023 13:55:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678398943; x=1709934943;
+  t=1678398950; x=1709934950;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=6a26TpaTO3Swq0OhnR7pZAw5dPnmyLg49YT96Gy6n6I=;
-  b=pbun/5UQtKLsFxfaaKqoZd6XehKf6IIkIhjmPhXFNrgSPv3HXXpBd+QZ
-   sdF7qbPrGvTJ2AnR5N2oVtmPw6G4dp3HQBYkOQbgx5SnxMtrj3O/0AUte
-   jKimdcjkTViwOrFcsrxdYKmio0fB9waXX2QWPm4skjumTiRejNzeYZis3
-   jVqhWS1wiCOs7zct0luFBWrzLF+2OYI8IBfUI3UC4VgVe4L8YEH2FKZFO
-   BOlwLLC9mDmTI5PD54Z0fW9mMSWkaIUJN2js4h/8YFL924T+N3UQHNAVR
-   TqWqakIDZ3eOCh6qbGSjtAfdj/FCn/8kn4CJonnwxfWh2mcOqfx2V5Rtz
-   Q==;
+  bh=1i4sqNn+3mjUau8eq/zzmlqAHqw+oYQkGo3JDQZfROE=;
+  b=JB+T8ckYpZdaRHF/igpZs8Y2sMuVEjkoub4w2944PnKR0pZ3Nqgt/X/3
+   OuOT2bcjskASkstLhKQ8lLtI9w3/E2BvDdtsa1k2mabqpxAWhb3d/Me2C
+   S0U7vvONorhDKuctYrwvVK2ag5sj8tTICmjrLHr3HCoQyomniHmZEQBVc
+   vk3ps2gF2UwhurdYU+VcuOe6oVsJ4j7Lbs0U7+5F0iCdzIg/G41knV6MO
+   xl23f3Uz/2DP/JcVHELTxY36+ZErKGLkxhGIFwgRQBlg3cnZdwS1AFQUW
+   p0CaIwbFrZhezF/aMSqjPDcLTYaXfdBSgK4evqf30NiGN1ikgYUNHRGQq
+   w==;
 X-IronPort-AV: E=Sophos;i="5.98,247,1673884800"; 
-   d="scan'208";a="225270969"
+   d="scan'208";a="225271013"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2023 05:55:43 +0800
-IronPort-SDR: ZEBBXIvF49USCdYEyU5DA419rWJmiqvFfKvwpKEhPofHaD+P0yxqJ3KKr0MqjbWbeDnRIjySd1
- TPw1B/Jc/a5hdvgg27o/B2ttF1RmzA9iJs7xEjljkgiMdsA+7iJgb/3ZgbdrKeKmrmUVSHhqK2
- 3k9lvVeY7n5B58xBQnxJ0CqU8YYnHytWKRIL0B6OWPC0tWHQqt5m11BQxve6ICLQ2K4wB4xvp/
- o8nBoldhcFHB1A7vNjweCt2pzsd+pwPAhUkYiBHmKRbeVjGU8nJveb17V1JViwHW+KY3CZ40u1
- o18=
+  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2023 05:55:50 +0800
+IronPort-SDR: 0yVlf/yuIshtqFxTl3ARxVnZrzR94uQyRFCnXm9tOj26aoCbRrxdbmeHsVqHIznDez6hM7Goal
+ 3DZTDhhL3mggcbBmE0MkDF+PTXIz1cEqCYEm5vwdcfoFdlYAx/+cXB5uO3rrfH0pIC4yx+H8Sb
+ SXV1rrfIGqOXQrVaLN5Dg3yZJUb4sbCR9FuVp3+7aJk2YlJYgD+jgSgYP3y596iZqqQDeuom/m
+ RwEtx/fr4nfpBUBABsbUzjuOHx8jP/p/A8YZy6lHGPDEkHSfau5xctFgzqCqnDXbWImepQZP6U
+ Nsc=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Mar 2023 13:06:36 -0800
-IronPort-SDR: DFY4a4L9YH9r1ynzWYWH0LcA1ux/NLj9Q/32xmzM6ro56tknivMbfZx9rOJF4M1jcgnxrYPTPQ
- yO4d8Z1Tdud5UgyNIFriUXypgdVMUq4M6DJT0ek2fsYoqK4esu/PfWNMEneYOp0rMtFkP6HQ3b
- ts5AF5fXyVFE2DViJy8QDaeVOL50keEaiCN58e1LNz5Qc22+WgGS/1SNImj8UrLGCtDB77HN9o
- lrMNSvtVM1h225xjVR2BsMhlorX+E4rCzWLh+A97tc1leTm+8xWkyaCjBLsgXqiXqMXl6a3qDn
- cac=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Mar 2023 13:06:43 -0800
+IronPort-SDR: tTiIOs8AcsVjZtIqbyJACIYchQBAcnxG99wRinwSbp9sZkRARbkpimgqOP+fRXGkkd1GfIqxaE
+ 4gJF8GTXM+hfK8vE3VujQ80JRx5I6blSN27turae4RMx+BK+d/gVFpnIlHLR5XrbO4u0Fxbe/M
+ 5IYchRm0KJ9C+TEoZeoONWOOeMr5qWbrzFkkDW+iO7EmuhORClPagyuoCfOnh3Z4EQkVhmY3BF
+ EC7jNy+/dcBhTEbob0TpVkmOMymaGqKJJ/umayAeBsvwSZP69lnD/ToSOYAdaZHItt6F6uUj12
+ K10=
 WDCIronportException: Internal
 Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.41])
-  by uls-op-cesaip01.wdc.com with ESMTP; 09 Mar 2023 13:55:41 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 09 Mar 2023 13:55:48 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v4 06/19] scsi: support retrieving sub-pages of mode pages
-Date:   Thu,  9 Mar 2023 22:54:58 +0100
-Message-Id: <20230309215516.3800571-7-niklas.cassel@wdc.com>
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH v4 08/19] scsi: detect support for command duration limits
+Date:   Thu,  9 Mar 2023 22:55:00 +0100
+Message-Id: <20230309215516.3800571-9-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230309215516.3800571-1-niklas.cassel@wdc.com>
 References: <20230309215516.3800571-1-niklas.cassel@wdc.com>
@@ -68,131 +67,202 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Allow scsi_mode_sense() to retrieve sub-pages of mode pages by adding
-the subpage argument. Change all the current caller sites to specify
-the subpage 0.
+Introduce the function scsi_cdl_check() to detect if a device supports
+command duration limits (CDL). Support for the READ 16, WRITE 16,
+READ 32 and WRITE 32 commands are checked using the function
+scsi_report_opcode() to probe the rwcdlp and cdlp bits as they indicate
+the mode page defining the command duration limits descriptors that
+apply to the command being tested.
+
+If any of these commands support CDL, the field cdl_supported of
+struct scsi_device is set to 1 to indicate that the device supports CDL.
+
+Support for CDL for a device is advertizes through sysfs using the new
+cdl_supported device attribute. This attribute value is 1 for a device
+supporting CDL and 0 otherwise.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c           | 4 +++-
- drivers/scsi/scsi_transport_sas.c | 2 +-
- drivers/scsi/sd.c                 | 9 ++++-----
- drivers/scsi/sr.c                 | 2 +-
- include/scsi/scsi_device.h        | 8 ++++----
- 5 files changed, 13 insertions(+), 12 deletions(-)
+ Documentation/ABI/testing/sysfs-block-device |  9 +++
+ drivers/scsi/scsi.c                          | 81 ++++++++++++++++++++
+ drivers/scsi/scsi_scan.c                     |  3 +
+ drivers/scsi/scsi_sysfs.c                    |  2 +
+ include/scsi/scsi_device.h                   |  3 +
+ 5 files changed, 98 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fac9c31161d2..633c4e8af830 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2144,6 +2144,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
-  *	@sdev:	SCSI device to be queried
-  *	@dbd:	set to prevent mode sense from returning block descriptors
-  *	@modepage: mode page being requested
-+ *	@subpage: sub-page of the mode page being requested
-  *	@buffer: request buffer (may not be smaller than eight bytes)
-  *	@len:	length of request buffer.
-  *	@timeout: command timeout
-@@ -2155,7 +2156,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
-  *	Returns zero if successful, or a negative error number on failure
-  */
- int
--scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-+scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage, int subpage,
- 		  unsigned char *buffer, int len, int timeout, int retries,
- 		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
- {
-@@ -2175,6 +2176,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 	dbd = sdev->set_dbd_for_ms ? 8 : dbd;
- 	cmd[1] = dbd & 0x18;	/* allows DBD and LLBA bits */
- 	cmd[2] = modepage;
-+	cmd[3] = subpage;
- 
- 	sshdr = exec_args.sshdr;
- 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 74b99f2b0b74..d704c484a251 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1245,7 +1245,7 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
- 	if (!buffer)
- 		return -ENOMEM;
- 
--	error = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
-+	error = scsi_mode_sense(sdev, 1, 0x19, 0, buffer, BUF_SIZE, 30*HZ, 3,
- 				&mode_data, NULL);
- 
- 	if (error)
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4f28dd617eca..8e856a7a6338 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -183,7 +183,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 		return count;
- 	}
- 
--	if (scsi_mode_sense(sdp, 0x08, 8, buffer, sizeof(buffer), SD_TIMEOUT,
-+	if (scsi_mode_sense(sdp, 0x08, 8, 0, buffer, sizeof(buffer), SD_TIMEOUT,
- 			    sdkp->max_retries, &data, NULL))
- 		return -EINVAL;
- 	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
-@@ -2610,9 +2610,8 @@ sd_do_mode_sense(struct scsi_disk *sdkp, int dbd, int modepage,
- 	if (sdkp->device->use_10_for_ms && len < 8)
- 		len = 8;
- 
--	return scsi_mode_sense(sdkp->device, dbd, modepage, buffer, len,
--			       SD_TIMEOUT, sdkp->max_retries, data,
--			       sshdr);
-+	return scsi_mode_sense(sdkp->device, dbd, modepage, 0, buffer, len,
-+			       SD_TIMEOUT, sdkp->max_retries, data, sshdr);
+diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
+index 7ac7b19b2f72..ee3610a25845 100644
+--- a/Documentation/ABI/testing/sysfs-block-device
++++ b/Documentation/ABI/testing/sysfs-block-device
+@@ -95,3 +95,12 @@ Description:
+ 		This file does not exist if the HBA driver does not implement
+ 		support for the SATA NCQ priority feature, regardless of the
+ 		device support for this feature.
++
++
++What:		/sys/block/*/device/cdl_supported
++Date:		Mar, 2023
++KernelVersion:	v6.4
++Contact:	linux-scsi@vger.kernel.org
++Description:
++		(RO) Indicates if the device supports the command duration
++		limits feature found in some ATA and SCSI devices.
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 43ef70556027..e233eb6cce11 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -560,6 +560,87 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
  }
+ EXPORT_SYMBOL(scsi_report_opcode);
  
- /*
-@@ -2869,7 +2868,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	if (sdkp->protection_type == 0)
- 		return;
++#define SCSI_CDL_CHECK_BUF_LEN	64
++
++static bool scsi_cdl_check_cmd(struct scsi_device *sdev, u8 opcode, u16 sa,
++			       unsigned char *buf)
++{
++	int ret;
++	u8 cdlp;
++
++	/* Check operation code */
++	ret = scsi_report_opcode(sdev, buf, SCSI_CDL_CHECK_BUF_LEN, opcode, sa);
++	if (ret <= 0)
++		return false;
++
++	if ((buf[1] & 0x03) != 0x03)
++		return false;
++
++	/* See SPC-6, one command format of REPORT SUPPORTED OPERATION CODES */
++	cdlp = (buf[1] & 0x18) >> 3;
++	if (buf[0] & 0x01) {
++		/* rwcdlp == 1 */
++		switch (cdlp) {
++		case 0x01:
++			/* T2A page */
++			return true;
++		case 0x02:
++			/* T2B page */
++			return true;
++		}
++	} else {
++		/* rwcdlp == 0 */
++		switch (cdlp) {
++		case 0x01:
++			/* A page */
++			return true;
++		case 0x02:
++			/* B page */
++			return true;
++		}
++	}
++
++	return false;
++}
++
++/**
++ * scsi_cdl_check - Check if a SCSI device supports Command Duration Limits
++ * @sdev: The device to check
++ */
++void scsi_cdl_check(struct scsi_device *sdev)
++{
++	bool cdl_supported;
++	unsigned char *buf;
++
++	buf = kmalloc(SCSI_CDL_CHECK_BUF_LEN, GFP_KERNEL);
++	if (!buf) {
++		sdev->cdl_supported = 0;
++		return;
++	}
++
++	/* Check support for READ_16, WRITE_16, READ_32 and WRITE_32 commands */
++	cdl_supported =
++		scsi_cdl_check_cmd(sdev, READ_16, 0, buf) ||
++		scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf) ||
++		scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, READ_32, buf) ||
++		scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, WRITE_32, buf);
++	if (cdl_supported) {
++		/*
++		 * We have CDL support: force the use of READ16/WRITE16.
++		 * READ32 and WRITE32 will be used for devices that support
++		 * the T10_PI_TYPE2_PROTECTION protection type.
++		 */
++		sdev->use_16_for_rw = 1;
++		sdev->use_10_for_rw = 0;
++
++		sdev->cdl_supported = 1;
++	} else {
++		sdev->cdl_supported = 0;
++	}
++
++	kfree(buf);
++}
++
+ /**
+  * scsi_device_get  -  get an additional reference to a scsi_device
+  * @sdev:	device to get a reference to
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 4e842d79de31..0b703c136266 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1084,6 +1084,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (sdev->scsi_level >= SCSI_3)
+ 		scsi_attach_vpd(sdev);
  
--	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
-+	res = scsi_mode_sense(sdp, 1, 0x0a, 0, buffer, 36, SD_TIMEOUT,
- 			      sdkp->max_retries, &data, &sshdr);
++	scsi_cdl_check(sdev);
++
+ 	sdev->max_queue_depth = sdev->queue_depth;
+ 	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
+ 	sdev->sdev_bflags = *bflags;
+@@ -1621,6 +1623,7 @@ void scsi_rescan_device(struct device *dev)
+ 	device_lock(dev);
  
- 	if (res < 0 || !data.header_length ||
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 9e51dcd30bfd..09fdb0e269d9 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -830,7 +830,7 @@ static int get_capabilities(struct scsi_cd *cd)
- 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+ 	scsi_attach_vpd(sdev);
++	scsi_cdl_check(sdev);
  
- 	/* ask for mode page 0x2a */
--	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
-+	rc = scsi_mode_sense(cd->device, 0, 0x2a, 0, buffer, ms_len,
- 			     SR_TIMEOUT, 3, &data, NULL);
+ 	if (sdev->handler && sdev->handler->rescan)
+ 		sdev->handler->rescan(sdev);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ee28f73af4d4..4994148e685b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -670,6 +670,7 @@ sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
++sdev_rd_attr (cdl_supported, "%d\n");
  
- 	if (rc < 0 || data.length > ms_len ||
+ static ssize_t
+ sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
+@@ -1300,6 +1301,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_preferred_path.attr,
+ #endif
+ 	&dev_attr_queue_ramp_up_period.attr,
++	&dev_attr_cdl_supported.attr,
+ 	REF_EVT(media_change),
+ 	REF_EVT(inquiry_change_reported),
+ 	REF_EVT(capacity_change_reported),
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index de310f21406c..ff4ad3596fa7 100644
+index 9564b47cf2ab..1cce42ad9f5c 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -419,10 +419,10 @@ extern int scsi_track_queue_full(struct scsi_device *, int);
+@@ -216,6 +216,8 @@ struct scsi_device {
+ 	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
+ 	unsigned silence_suspend:1;	/* Do not print runtime PM related messages */
  
- extern int scsi_set_medium_removal(struct scsi_device *, char);
++	unsigned cdl_supported:1;	/* Command duration limits supported */
++
+ 	unsigned int queue_stopped;	/* request queue is quiesced */
+ 	bool offline_already;		/* Device offline message logged */
  
--extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
--			   unsigned char *buffer, int len, int timeout,
--			   int retries, struct scsi_mode_data *data,
--			   struct scsi_sense_hdr *);
-+int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-+		    int subpage, unsigned char *buffer, int len, int timeout,
-+		    int retries, struct scsi_mode_data *data,
-+		    struct scsi_sense_hdr *);
- extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
- 			    unsigned char *buffer, int len, int timeout,
- 			    int retries, struct scsi_mode_data *data,
+@@ -362,6 +364,7 @@ extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
+ extern void scsi_remove_device(struct scsi_device *);
+ extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+ void scsi_attach_vpd(struct scsi_device *sdev);
++void scsi_cdl_check(struct scsi_device *sdev);
+ 
+ extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
+ extern int __must_check scsi_device_get(struct scsi_device *);
 -- 
 2.39.2
 
