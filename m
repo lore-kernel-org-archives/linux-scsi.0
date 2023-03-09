@@ -2,84 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74E7C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 17:28:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EA4C61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:15:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230179AbjCIR26 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 12:28:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52506 "EHLO
+        id S229872AbjCISP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 13:15:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbjCIR24 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 12:28:56 -0500
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FA4AF6C5D;
-        Thu,  9 Mar 2023 09:28:55 -0800 (PST)
-Received: by mail-pj1-f50.google.com with SMTP id fr5-20020a17090ae2c500b0023af8a036d2so6154300pjb.5;
-        Thu, 09 Mar 2023 09:28:55 -0800 (PST)
+        with ESMTP id S229827AbjCISP1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:15:27 -0500
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29A435F519;
+        Thu,  9 Mar 2023 10:15:26 -0800 (PST)
+Received: by mail-pj1-f47.google.com with SMTP id kb15so2902731pjb.1;
+        Thu, 09 Mar 2023 10:15:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678382935;
+        d=1e100.net; s=20210112; t=1678385725;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hC+FSZZkCYvYaA4XO9ZGH/kkkiSMtQVDfB8Gu4rcu4Y=;
-        b=Z/gF9ub/Xa9Z9185HOcY46Aqlkb9u0iQHVcquP8M3sz3qeCeH6pkZ9DC370ODmqkkM
-         oExIQtZmSaAxUxY3414yBsiJIZAqfORQNh2adXZdosu9g0Mi/h6QSenP0EFd8Tex6noI
-         yHpvmAZuodvpIb1f5hYbGrxpYNwi38HPr/9wefFcKcDEq2Fg8L3+GphWMPkEUfaVDVPK
-         1g0me6bmncpcNEhejMQgtBmQYe7U+ksukmxrlAnw2oV3JKmGTDfjO20cVUMmHiXSk8n4
-         4LiuReqTpZOtRazzC6wy1bHZFqRREl/HWmJekAmbZeU9KLBki3GlmYfXBMJ+EsyIexIt
-         zPDw==
-X-Gm-Message-State: AO0yUKXvVx7m/0HjL0dMFC1/hTVKsl3Lv2LDiLcg6iZUOOPsVk5Tkdux
-        2KxQWnl+jBIIod47ET+JCvM=
-X-Google-Smtp-Source: AK7set9kIVZhEexhx7ftxyqL45Op9w2m01aZOvbOID9w5ytSdPPbsESJVm04rE6lT6MztDo/Kvr7/A==
-X-Received: by 2002:a05:6a20:690e:b0:cb:f76c:ceda with SMTP id q14-20020a056a20690e00b000cbf76ccedamr18063090pzj.22.1678382934893;
-        Thu, 09 Mar 2023 09:28:54 -0800 (PST)
+        bh=1n3W7Mep7n+u6WTkNpOQ23YBe9QKdrpVK921z9QG0TQ=;
+        b=zXYeIFavPNXs0NSUY1vaTouA5F2poUYh82kKkaxUnIcAai5sw/s+Jm4lsNOGWMk9dj
+         I3H/3ItEw+H56JFnPN2+ifYoPAMsV+BFQdT0cFA+dzKh4t4byQaCRYD9BmNM4xegpFhd
+         2yDyca1H+gv6S4sks80zv9ZpRmEyXJP9jAxSIADEIvIlrSgQTFaZZMIpJ6yRHNerqmV0
+         q8Uwl9jEvjhq04Mz2HWKaqSFveeAMnoWB8iMh5+5Hhbply1QBLyfyDO3JYNb2IVEX5X8
+         wY9ayCqr6xs0wDiNQs4fPhb+1l5OLmfG+YBXVatx4U3pt7KVLPJCZDmyv1f9INYqescZ
+         F8xA==
+X-Gm-Message-State: AO0yUKXHvuQJYX/SYP9J5+f3OYJbSiq72f4/w/yjkL+BwFuWGfZHDZvt
+        6/nlx0Dm4xxhF/35beQZ+f8=
+X-Google-Smtp-Source: AK7set9GeDtPXB8h9zEYbgrrWoaLeCxwdQdVIz0UEBRPu3qTrNRUmyZBlWQmaCpnfCkVEMpxXLYVYQ==
+X-Received: by 2002:a05:6a20:8407:b0:cd:363d:b27c with SMTP id c7-20020a056a20840700b000cd363db27cmr32359263pzd.16.1678385725521;
+        Thu, 09 Mar 2023 10:15:25 -0800 (PST)
 Received: from [192.168.132.235] ([63.145.95.70])
-        by smtp.gmail.com with ESMTPSA id a14-20020a62e20e000000b005cdc64a287dsm11543452pfi.115.2023.03.09.09.28.53
+        by smtp.gmail.com with ESMTPSA id 1-20020a630301000000b004fb11a7f2d4sm11207080pgd.57.2023.03.09.10.15.24
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Mar 2023 09:28:54 -0800 (PST)
-Message-ID: <3d858407-481b-a55b-4aa9-513e4a4ca44e@acm.org>
-Date:   Thu, 9 Mar 2023 09:28:53 -0800
+        Thu, 09 Mar 2023 10:15:24 -0800 (PST)
+Message-ID: <1ca7dbef-5747-29c2-a11c-086cf36d636f@acm.org>
+Date:   Thu, 9 Mar 2023 10:15:23 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH v1] scsi: ufs: core: print trs for pending requests in MCQ
- mode
+Subject: Re: [RFC PATCH v2 1/3] ufs: mcq: Add supporting functions for mcq
+ abort
 Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, quic_nguyenb@quicinc.com, mani@kernel.org,
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
         stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com
+        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         open list <linux-kernel@vger.kernel.org>
-References: <1678338122-88611-1-git-send-email-quic_ziqichen@quicinc.com>
+References: <cover.1678338926.git.quic_nguyenb@quicinc.com>
+ <68b786f390dbd93218a482d18c513bc332e82da3.1678338926.git.quic_nguyenb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1678338122-88611-1-git-send-email-quic_ziqichen@quicinc.com>
+In-Reply-To: <68b786f390dbd93218a482d18c513bc332e82da3.1678338926.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/23 21:01, Ziqi Chen wrote:
-> +static void ufshcd_print_trs_all(struct ufs_hba *hba, bool pr_prdt)
+On 3/8/23 21:28, Bao D. Nguyen wrote:
+> +static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
+> +		struct ufs_hw_queue *hwq, int task_tag)
 > +{
-> +	const struct ufshcd_lrb *lrbp;
-> +	int tag;
-> +
-> +	for (tag = 0; tag < hba->nutrs; tag++) {
-> +		lrbp = &hba->lrb[tag];
-> +
-> +		if (lrbp->cmd)
-> +			ufshcd_print_tr(hba, tag, pr_prdt);
->   	}
->   }
+> +	struct utp_transfer_req_desc *utrd;
+> +	u32 mask = hwq->max_entries - 1;
+> +	bool ret = false;
+> +	u64 addr, match;
+> +	u32 i;
 
-There is a race in this code: lrbp->cmd may be cleared after it has been 
-read and before or while ufshcd_print_tr() is in progress. How about 
-preventing that race by blk_mq_tagset_busy_iter() to iterate over 
-pending SCSI commands?
+The variable name "i" is usually used for a loop index. In this case it 
+represents a slot in the submission queue. How about renaming "i" into 
+"slot"?
+
+> +static inline void ufshcd_mcq_update_sq_head_slot(struct ufs_hw_queue *q)
+> +{
+> +	u32 val = readl(q->mcq_sq_head);
+> +
+> +	q->sq_head_slot = val / sizeof(struct utp_transfer_req_desc);
+> +}
+
+Please modify this function such that it returns the head slot value 
+instead of storing it in a member variable and remove the sq_head_slot 
+member variable. Storing the sq_head_slot value in a member variable 
+seems wrong to me since the value of that variable will be outdated as 
+soon as the submission queue is restarted.
+
+> +static inline bool ufshcd_mcq_is_sq_empty(struct ufs_hw_queue *q)
+> +{
+> +	return q->sq_head_slot == q->sq_tail_slot;
+> +}
+
+Please remove this function and inline this function into its callers.
 
 Thanks,
 
