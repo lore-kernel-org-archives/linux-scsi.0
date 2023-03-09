@@ -2,252 +2,274 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3D0C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 21:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D6E1C6FD19
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 21:55:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230383AbjCIVmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 16:42:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59266 "EHLO
+        id S229874AbjCIVz3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 16:55:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230035AbjCIVmu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 16:42:50 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D72B7F8A71;
-        Thu,  9 Mar 2023 13:42:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678398168; x=1709934168;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=+W5mXRlASR1f5Mca9nZTtyECB+l2HEDka/TiDsd7FV4=;
-  b=GrY5Wt2hqMKEgxxdcFXfrbbiqzOw7ve4lEdvGuRoJLT58Nrhg6LGQOam
-   L813vVSQ1GN0QM0mK7EnePtT2T/PxHy+xDSv6UGNxdr4w7iTL4r0Erpb3
-   57xtZQENoUG8APT09WcPcbrCo86XhnrhRyvy0nfc0o663NOpNiGTBOTtj
-   ePt2p6zvkogV6770EFt7raDHuJ90Q9CZYi4oVypFQsPLeSsuXVzmIaJOW
-   QBVWfjok43TzmiLQqEd19LEKHsi8dWjiB3r80R49NqRTU7Tiump4EEwuS
-   rHgxjUUKukiOS+CsGWXCsLNWoIRkp6qMrVeFUDcHGgBeLDIGj61SJ7S8f
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10644"; a="324926977"
-X-IronPort-AV: E=Sophos;i="5.98,247,1673942400"; 
-   d="scan'208";a="324926977"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2023 13:42:45 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10644"; a="746478750"
-X-IronPort-AV: E=Sophos;i="5.98,247,1673942400"; 
-   d="scan'208";a="746478750"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 09 Mar 2023 13:42:41 -0800
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1paO24-0003FF-1U;
-        Thu, 09 Mar 2023 21:42:40 +0000
-Date:   Fri, 10 Mar 2023 05:41:49 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Zheng Wang <zyytlz.wz@163.com>, njavali@marvell.com
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        hackerzheng666@gmail.com, 1395428693sheep@gmail.com,
-        alex000young@gmail.com, Zheng Wang <zyytlz.wz@163.com>
-Subject: Re: [PATCH] scsi: qla4xxx: Fix use after free bug in
- da9150_charger_remove due to race condition
-Message-ID: <202303100523.6OSGFoVE-lkp@intel.com>
-References: <20230309183812.299349-1-zyytlz.wz@163.com>
+        with ESMTP id S229560AbjCIVz2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 16:55:28 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89949EE765;
+        Thu,  9 Mar 2023 13:55:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1678398926; x=1709934926;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=IRBUQr/7nuIPn23czZxNpbmCg/RRCktmc3ZoibdXGAg=;
+  b=PlRA105kd0TA9JG1257tBLjBCBjR8RAvXejHb4k9F0j9+11iQy4FCHbP
+   YkUa+cEMkgYyK6TSvJN/8HDJlr6ng89JGTvaaxbRgofIryivD5afuzhIa
+   YDjV2wZC4ZhKnLSam8wCQ4v01pwOmLn691aWWfEEbgKw7drVdcBmRg96k
+   iwmAyuIyOLZiAY3XdCChX2eBPNiObF6GSb62sWt78VW8yki2s2PMoaY8h
+   iayRui9S9UOVRk7RLB/0LqAcpc+QNKE38u0mLcOPEqYuglSt8mD9ALSYF
+   Q0za/W0NYnEd57jEBpAS5jJkpdmx4BThBmuFgyKm99SP/0LedHeAM2Y8+
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.98,247,1673884800"; 
+   d="scan'208";a="225270933"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2023 05:55:24 +0800
+IronPort-SDR: 5ITnYOCvLSI5fZPjeIDoaLIZv1vu0GM4LS8cZ8LLDqBBvVHamYl68u//+7Hz4eCcHCN03wjtGB
+ w/D+YtuFKqsfYXPKiiul2RMe1VHuTlrlpr+Voc+1sj5EogxQwQ1cxyuwZOWJMN2Ywl+KkIsI6A
+ rnLgtIvMsvqDHG72qwILEFU3azW5zLJGxT5vSgNh2C6BmRXmKTP34JNv45wjZt6VAGa64m/MFu
+ RyJE0+tU9fV5191HCQHQwZqUjPDqHNISmVDkK5sTjAXp4IPqbYQEWv980Z+rmpWS9kB0QbDY72
+ A5A=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Mar 2023 13:06:18 -0800
+IronPort-SDR: A6gciQK0xeKmFkX4fP53xIE8SHyAIY1tC5nS983dkTUKth9tt/1cFhe1LPYJzTe7/MjxYYFp5F
+ wkBt+lgxejiSKy3XxRcKB3Y1q6nG/ugWabjmpVHpq6daxtgF31dxKnsqWTdOV8/xUl09xko9gO
+ 8+Yf6SkJkXEIgypG1FROhhGgjZjGPPBPTGiXohmwFFaB/MWOrFfxZqYtSGXh+fCxHyTIh3YpmE
+ s+rTH77ERVpHmo5cjiMWllMlN1o8Y+B1J+qYoJOsDmP9pQT6g7uErbtBy/OuWEXUs1Cy7CozXw
+ kbw=
+WDCIronportException: Internal
+Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.41])
+  by uls-op-cesaip01.wdc.com with ESMTP; 09 Mar 2023 13:55:23 -0800
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH v4 00/19] Add Command Duration Limits support
+Date:   Thu,  9 Mar 2023 22:54:52 +0100
+Message-Id: <20230309215516.3800571-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230309183812.299349-1-zyytlz.wz@163.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Zheng,
+Hello,
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v6.3-rc1 next-20230309]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Zheng-Wang/scsi-qla4xxx-Fix-use-after-free-bug-in-da9150_charger_remove-due-to-race-condition/20230310-024016
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230309183812.299349-1-zyytlz.wz%40163.com
-patch subject: [PATCH] scsi: qla4xxx: Fix use after free bug in da9150_charger_remove due to race condition
-config: s390-randconfig-r044-20230308 (https://download.01.org/0day-ci/archive/20230310/202303100523.6OSGFoVE-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project 67409911353323ca5edf2049ef0df54132fa1ca7)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install s390 cross compiling tool for clang build
-        # apt-get install binutils-s390x-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/f5410be5e51edb79365b3e0be8c80e4ff34e7e50
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Zheng-Wang/scsi-qla4xxx-Fix-use-after-free-bug-in-da9150_charger_remove-due-to-race-condition/20230310-024016
-        git checkout f5410be5e51edb79365b3e0be8c80e4ff34e7e50
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=s390 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash drivers/scsi/qla4xxx/
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303100523.6OSGFoVE-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/scsi/qla4xxx/ql4_os.c:10:
-   In file included from include/linux/inet.h:42:
-   In file included from include/net/net_namespace.h:43:
-   In file included from include/linux/skbuff.h:28:
-   In file included from include/linux/dma-mapping.h:10:
-   In file included from include/linux/scatterlist.h:9:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:547:31: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           val = __raw_readb(PCI_IOBASE + addr);
-                             ~~~~~~~~~~ ^
-   include/asm-generic/io.h:560:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           val = __le16_to_cpu((__le16 __force)__raw_readw(PCI_IOBASE + addr));
-                                                           ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/big_endian.h:37:59: note: expanded from macro '__le16_to_cpu'
-   #define __le16_to_cpu(x) __swab16((__force __u16)(__le16)(x))
-                                                             ^
-   include/uapi/linux/swab.h:102:54: note: expanded from macro '__swab16'
-   #define __swab16(x) (__u16)__builtin_bswap16((__u16)(x))
-                                                        ^
-   In file included from drivers/scsi/qla4xxx/ql4_os.c:10:
-   In file included from include/linux/inet.h:42:
-   In file included from include/net/net_namespace.h:43:
-   In file included from include/linux/skbuff.h:28:
-   In file included from include/linux/dma-mapping.h:10:
-   In file included from include/linux/scatterlist.h:9:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:573:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           val = __le32_to_cpu((__le32 __force)__raw_readl(PCI_IOBASE + addr));
-                                                           ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/big_endian.h:35:59: note: expanded from macro '__le32_to_cpu'
-   #define __le32_to_cpu(x) __swab32((__force __u32)(__le32)(x))
-                                                             ^
-   include/uapi/linux/swab.h:115:54: note: expanded from macro '__swab32'
-   #define __swab32(x) (__u32)__builtin_bswap32((__u32)(x))
-                                                        ^
-   In file included from drivers/scsi/qla4xxx/ql4_os.c:10:
-   In file included from include/linux/inet.h:42:
-   In file included from include/net/net_namespace.h:43:
-   In file included from include/linux/skbuff.h:28:
-   In file included from include/linux/dma-mapping.h:10:
-   In file included from include/linux/scatterlist.h:9:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:584:33: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           __raw_writeb(value, PCI_IOBASE + addr);
-                               ~~~~~~~~~~ ^
-   include/asm-generic/io.h:594:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           __raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
-                                                         ~~~~~~~~~~ ^
-   include/asm-generic/io.h:604:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           __raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
-                                                         ~~~~~~~~~~ ^
-   include/asm-generic/io.h:692:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           readsb(PCI_IOBASE + addr, buffer, count);
-                  ~~~~~~~~~~ ^
-   include/asm-generic/io.h:700:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           readsw(PCI_IOBASE + addr, buffer, count);
-                  ~~~~~~~~~~ ^
-   include/asm-generic/io.h:708:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           readsl(PCI_IOBASE + addr, buffer, count);
-                  ~~~~~~~~~~ ^
-   include/asm-generic/io.h:717:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           writesb(PCI_IOBASE + addr, buffer, count);
-                   ~~~~~~~~~~ ^
-   include/asm-generic/io.h:726:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           writesw(PCI_IOBASE + addr, buffer, count);
-                   ~~~~~~~~~~ ^
-   include/asm-generic/io.h:735:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           writesl(PCI_IOBASE + addr, buffer, count);
-                   ~~~~~~~~~~ ^
->> drivers/scsi/qla4xxx/ql4_os.c:9004:20: warning: variable 'ha' is uninitialized when used here [-Wuninitialized]
-           cancel_work_sync(&ha->dpc_work);
-                             ^~
-   drivers/scsi/qla4xxx/ql4_os.c:8995:26: note: initialize the variable 'ha' to silence this warning
-           struct scsi_qla_host *ha;
-                                   ^
-                                    = NULL
-   13 warnings generated.
+This series adds support for Command Duration Limits.
+The series is based on linux tag: v6.3-rc1
+The series can also be found in git:
+https://github.com/floatious/linux/commits/cdl-v4
 
 
-vim +/ha +9004 drivers/scsi/qla4xxx/ql4_os.c
+=================
+CDL in ATA / SCSI
+=================
+Command Duration Limits is defined in:
+T13 ATA Command Set - 5 (ACS-5) and
+T10 SCSI Primary Commands - 6 (SPC-6) respectively
+(a simpler version of CDL is defined in T10 SPC-5).
 
-  8963	
-  8964	static void qla4xxx_destroy_fw_ddb_session(struct scsi_qla_host *ha)
-  8965	{
-  8966		struct ddb_entry *ddb_entry;
-  8967		int idx;
-  8968	
-  8969		for (idx = 0; idx < MAX_DDB_ENTRIES; idx++) {
-  8970	
-  8971			ddb_entry = qla4xxx_lookup_ddb_by_fw_index(ha, idx);
-  8972			if ((ddb_entry != NULL) &&
-  8973			    (ddb_entry->ddb_type == FLASH_DDB)) {
-  8974	
-  8975				qla4xxx_destroy_ddb(ha, ddb_entry);
-  8976				/*
-  8977				 * we have decremented the reference count of the driver
-  8978				 * when we setup the session to have the driver unload
-  8979				 * to be seamless without actually destroying the
-  8980				 * session
-  8981				 **/
-  8982				try_module_get(qla4xxx_iscsi_transport.owner);
-  8983				iscsi_destroy_endpoint(ddb_entry->conn->ep);
-  8984				qla4xxx_free_ddb(ha, ddb_entry);
-  8985				iscsi_session_teardown(ddb_entry->sess);
-  8986			}
-  8987		}
-  8988	}
-  8989	/**
-  8990	 * qla4xxx_remove_adapter - callback function to remove adapter.
-  8991	 * @pdev: PCI device pointer
-  8992	 **/
-  8993	static void qla4xxx_remove_adapter(struct pci_dev *pdev)
-  8994	{
-  8995		struct scsi_qla_host *ha;
-  8996	
-  8997		/*
-  8998		 * If the PCI device is disabled then it means probe_adapter had
-  8999		 * failed and resources already cleaned up on probe_adapter exit.
-  9000		 */
-  9001		if (!pci_is_enabled(pdev))
-  9002			return;
-  9003	
-> 9004		cancel_work_sync(&ha->dpc_work);
-  9005		ha = pci_get_drvdata(pdev);
-  9006	
-  9007		if (is_qla40XX(ha))
-  9008			qla4xxx_prevent_other_port_reinit(ha);
-  9009	
-  9010		/* destroy iface from sysfs */
-  9011		qla4xxx_destroy_ifaces(ha);
-  9012	
-  9013		if ((!ql4xdisablesysfsboot) && ha->boot_kset)
-  9014			iscsi_boot_destroy_kset(ha->boot_kset);
-  9015	
-  9016		qla4xxx_destroy_fw_ddb_session(ha);
-  9017		qla4_8xxx_free_sysfs_attr(ha);
-  9018	
-  9019		qla4xxx_sysfs_ddb_remove(ha);
-  9020		scsi_remove_host(ha->host);
-  9021	
-  9022		qla4xxx_free_adapter(ha);
-  9023	
-  9024		scsi_host_put(ha->host);
-  9025	
-  9026		pci_disable_pcie_error_reporting(pdev);
-  9027		pci_disable_device(pdev);
-  9028	}
-  9029	
+CDL defines Duration Limits Descriptors (DLD).
+7 DLDs for read commands and 7 DLDs for write commands.
+Simply put, a DLD contains a limit and a policy.
+
+A command can specify that a certain limit should be applied by setting
+the DLD index field (3 bits, so 0-7) in the command itself.
+
+The DLD index points to one of the 7 DLDs.
+DLD index 0 means no descriptor, so no limit.
+DLD index 1-7 means DLD 1-7.
+
+A DLD can have a few different policies, but the two major ones are:
+-Policy 0xF (abort), command will be completed with command aborted error
+(ATA) or status CHECK CONDITION (SCSI), with sense data indicating that
+the command timed out.
+-Policy 0xD (complete-unavailable), command will be completed without
+error (ATA) or status GOOD (SCSI), with sense data indicating that the
+command timed out. Note that the command will not have transferred any
+data to/from the device when the command timed out, even though the
+command returned success.
+
+Regardless of the CDL policy, in case of a CDL timeout, the I/O will
+result in a -ETIME error to user-space.
+
+The DLDs are defined in the CDL log page(s) and are readable and writable.
+Reading and writing the CDL DLDs are outside the scope of the kernel.
+If a user wants to read or write the descriptors, they can do so using a
+user-space application that sends passthrough commands, such as cdl-tools:
+https://github.com/westerndigitalcorporation/cdl-tools/commits/cdl-v4
+
+
+================================
+The introduction of ioprio hints
+================================
+What the kernel does provide, is a method to let I/O use one of the CDL DLDs
+defined in the device. Note that the kernel will simply forward the DLD index
+to the device, so the kernel currently does not know, nor does it need to know,
+how the DLDs are defined inside the device.
+
+The way that the CDL DLD index is supplied to the kernel is by introducing a
+new 10 bit "ioprio hint" field within the existing 16 bit ioprio definition.
+
+Currently, only 6 out of the 16 ioprio bits are in use, the remaining 10 bits
+are unused, and are currently explicitly disallowed to be set by the kernel.
+
+For now, we only add ioprio hints representing CDL DLD index 1-7. Additional
+ioprio hints for other QoS features could be defined in the future.
+
+A theoretical future work could be to make an I/O scheduler aware of these
+hints. E.g. for CDL, an I/O scheduler could make use of the duration limit
+in each descriptor, and take that information into account while scheduling
+commands. Right now, the ioprio hints will be ignored by the I/O schedulers.
+
+
+==============================
+How to use CDL from user-space
+==============================
+Since CDL is mutually exclusive with NCQ priority
+(see ncq_prio_enable and sas_ncq_prio_enable in
+Documentation/ABI/testing/sysfs-block-device),
+CDL has to be explicitly enabled using:
+echo 1 > /sys/block/$bdev/device/cdl_enable
+
+Since the ioprio hints are supplied through the existing I/O priority API,
+it should be simple for an application to make use of the ioprio hints.
+
+It simply has to reuse one of the new macros defined in
+include/uapi/linux/ioprio.h: IOPRIO_PRIO_HINT() or IOPRIO_PRIO_VALUE_HINT(),
+and supply one of the new hints defined in include/uapi/linux/ioprio.h:
+IOPRIO_HINT_DEV_DURATION_LIMIT_[1-7], which indicates that the I/O should
+use the corresponding CDL DLD index 1-7.
+
+By reusing the I/O priority API, the user can both define a DLD to use per
+AIO (io_uring sqe->ioprio or libaio iocb->aio_reqprio) or per-thread
+(ioprio_set()).
+
+
+=======
+Testing
+=======
+With the following fio patches (authored by Damien):
+https://github.com/floatious/fio/commits/cdl-v4
+
+fio adds support for ioprio hints, such that CDL can be tested using e.g.:
+fio --ioengine=io_uring --cmdprio_percentage=10 --cmdprio_hint=DLD_index
+
+A simple way to test is to use a DLD with a very short duration limit,
+and send large reads. Regardless of the CDL policy, in case of a CDL
+timeout, the I/O will result in a -ETIME error to user-space.
+
+We also provide a CDL test suite located in the cdl-tools repo, see:
+https://github.com/westerndigitalcorporation/cdl-tools/blob/cdl-v4/README.md#testing-a-system-command-duration-limits-support
+
+
+We have tested this patch series using:
+-real hardware
+-the following QEMU implementation:
+https://github.com/floatious/qemu/tree/cdl
+(NOTE: the QEMU implementation requires you to define the CDL policy at compile
+time, so you currently need to recompile QEMU when switching between policies.)
+
+
+===================
+Further information
+===================
+For further information about CDL, see Damien's slides:
+
+Presented at SDC 2021:
+https://www.snia.org/sites/default/files/SDC/2021/pdfs/SNIA-SDC21-LeMoal-Be-On-Time-command-duration-limits-Feature-Support-in%20Linux.pdf
+
+Presented at Lund Linux Con 2022:
+https://drive.google.com/file/d/1I6ChFc0h4JY9qZdO1bY5oCAdYCSZVqWw/view?usp=sharing
+
+
+================
+Changes since V3
+================
+-Changed user-facing API, instead of introducing a new ioprio class, introduce
+ new ioprio hints.
+-Dropped sysfs API for reading the DLDs. We can introduce a new block level
+ (sysfs) API later on (instead of exposing an API that is tied to ATA/SCSI).
+-Picked up Reviewed-by tags from Hannes and Bart.
+-Improved commit message for patch "block: introduce BLK_STS_DURATION_LIMIT"
+ (thanks Bart).
+-Patch "scsi: sd: set read/write commands CDL index" is now split into two
+ patches: "scsi: allow enabling and disabling command duration limits" and
+ "scsi: sd: set read/write commands CDL index".
+-The cdl_enable sysfs attribute is now defined in scsi_sysfs.c instead of sd.c.
+ CDL is defined in SPC-6, so the feature is not really unique to disks.
+
+
+For older change logs, see previous patch series versions:
+https://lore.kernel.org/linux-scsi/20230124190308.127318-1-niklas.cassel@wdc.com/
+https://lore.kernel.org/linux-scsi/20230112140412.667308-1-niklas.cassel@wdc.com/
+https://lore.kernel.org/linux-scsi/20221208105947.2399894-1-niklas.cassel@wdc.com/
+
+
+Kind regards,
+Niklas & Damien
+
+Damien Le Moal (13):
+  ioprio: cleanup interface definition
+  block: introduce ioprio hints
+  block: introduce BLK_STS_DURATION_LIMIT
+  scsi: support retrieving sub-pages of mode pages
+  scsi: support service action in scsi_report_opcode()
+  scsi: detect support for command duration limits
+  scsi: allow enabling and disabling command duration limits
+  scsi: sd: set read/write commands CDL index
+  ata: libata: detect support for command duration limits
+  ata: libata-scsi: handle CDL bits in ata_scsiop_maint_in()
+  ata: libata-scsi: add support for CDL pages mode sense
+  ata: libata: add ATA feature control sub-page translation
+  ata: libata: set read/write commands CDL index
+
+Niklas Cassel (6):
+  scsi: core: allow libata to complete successful commands via EH
+  scsi: rename and move get_scsi_ml_byte()
+  scsi: sd: handle read/write CDL timeout failures
+  ata: libata-scsi: remove unnecessary !cmd checks
+  ata: libata: change ata_eh_request_sense() to not set CHECK_CONDITION
+  ata: libata: handle completion of CDL commands using policy 0xD
+
+ Documentation/ABI/testing/sysfs-block-device |  22 ++
+ block/bfq-iosched.c                          |   8 +-
+ block/blk-core.c                             |   3 +
+ block/ioprio.c                               |   6 +-
+ drivers/ata/libata-core.c                    | 214 ++++++++++-
+ drivers/ata/libata-eh.c                      | 130 ++++++-
+ drivers/ata/libata-sata.c                    | 103 ++++-
+ drivers/ata/libata-scsi.c                    | 371 +++++++++++++++----
+ drivers/ata/libata.h                         |   2 +-
+ drivers/scsi/scsi.c                          | 171 ++++++++-
+ drivers/scsi/scsi_error.c                    |  48 ++-
+ drivers/scsi/scsi_lib.c                      |  15 +-
+ drivers/scsi/scsi_priv.h                     |   6 +
+ drivers/scsi/scsi_scan.c                     |   3 +
+ drivers/scsi/scsi_sysfs.c                    |  33 ++
+ drivers/scsi/scsi_transport_sas.c            |   2 +-
+ drivers/scsi/sd.c                            |  59 ++-
+ drivers/scsi/sr.c                            |   2 +-
+ include/linux/ata.h                          |  11 +-
+ include/linux/blk_types.h                    |   6 +
+ include/linux/libata.h                       |  42 ++-
+ include/scsi/scsi_cmnd.h                     |   5 +
+ include/scsi/scsi_device.h                   |  18 +-
+ include/uapi/linux/ioprio.h                  |  68 +++-
+ 24 files changed, 1195 insertions(+), 153 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.39.2
+
