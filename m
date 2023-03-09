@@ -2,119 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 281DEC6FD19
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:46:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C9DC64EC4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230508AbjCISq2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 13:46:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53046 "EHLO
+        id S231204AbjCISxo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 13:53:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230139AbjCISqW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:46:22 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87116F9EDE;
-        Thu,  9 Mar 2023 10:46:21 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id h11-20020a17090a2ecb00b00237c740335cso2816837pjs.3;
-        Thu, 09 Mar 2023 10:46:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678387581;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6QQXhhWy/WX7t9a+HyBFcajzfrIYmYwyOCh7SSy3BNE=;
-        b=bVNyOQ89k5/Ns185lY+/SXtVZL2LquT42XxUewY3ZLyK290zFcDxcFgSHod0xWu/7j
-         g3S5IyQpLYtkd1UTYF9XSBjaggAci+SKLYHFNR8+5KbfsEMKWUs7mur13EDh57yzAWdX
-         ZpRATm+RZUbYFhI4yEa1DuMscwCUGQtwSqhBQr3aAEMcfD1MBOYP/ppdKCHnx9O1AinH
-         fVNPvw8croW4y+Xln7CMjZQUfDsOHp9At+WAh/Qd0gpGeH0PIJ/qOyf0ILMKyUvNXXLL
-         QL5TiZyE3Y/dMLWYosDgClubfGKhBvgGTgmw2x5y79jxeQb2K4blImtjGN1QEEu9DB7g
-         2BEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678387581;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6QQXhhWy/WX7t9a+HyBFcajzfrIYmYwyOCh7SSy3BNE=;
-        b=dLpdL8LG303OdSJrwtBXnrY0B72BQF9b9mwWNgP70WpSVSqEkw1HGaOjOvX1bujqNC
-         6A6EsnXC0d+55UIx7yEJ51k1QNmnpkz5R2JxSg89s41apbHyCx7htpEeUHPn90V199Bc
-         3KUEe++8fJAKRkzlpDaFeuklwUXxkrM99DVvJHHkg7QuWW7TAaH7R+xgH/9pLStwATQC
-         VkdiImrHQl3c6y1k+lpvegG/zv/vU2lqfq9imU3SGIyqWttf2i3aNhhJgWCpoj3oYVoA
-         3agu9JVBjkq1V29ufJ/BK9zdqO26vzgWKaz+QfTV4wmuzzOsn26fbv7OFjwAwxkGXeWQ
-         Qm7A==
-X-Gm-Message-State: AO0yUKUUJ1HiVG6iRMTtmgCnvpc7K4AN4vxQpS9aCdUXOKtpeY/R6Cb4
-        FlWu1mMiRS0IxWMJ3YvLtQ/Ugl31R1s+KwZWPRY=
-X-Google-Smtp-Source: AK7set9Yd4KF1cKAXgU/qKkoIyWdYbYFyUt+1wTvRd2DJvggJ+jYl6d7heMCgT1M7TO94/bmDhILkSpuplZh/gFnt9c=
-X-Received: by 2002:a17:902:cf46:b0:19e:f660:81d0 with SMTP id
- e6-20020a170902cf4600b0019ef66081d0mr2744589plg.12.1678387580889; Thu, 09 Mar
- 2023 10:46:20 -0800 (PST)
+        with ESMTP id S231236AbjCISxf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:53:35 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55746284E
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 10:53:24 -0800 (PST)
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329HPB2v020082;
+        Thu, 9 Mar 2023 18:53:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=zpIh2BnmW2LpReBe8Wa2ABsiF9SQi+S7UmFo9HpAwE0=;
+ b=J9d5IgreqMBw3WwkFT/GKOoGiNYSt2keWO+fzFmEfrAJ48SyHoQAC0UXqOk5AzizJI9Q
+ xRvhfK05UEAg/S7oZkGKeiYqV5cHjoYsYfda+T1Gq06Fy/VY14pjYvGgWdhn4JhedMEr
+ ZiMcGY5mBheJfgMN1Uke1XC02unLqRHFREMqgsTDIdvhRHCaPzme/RZQ2I8DxYNMdyV5
+ Whjwcl8CQyeI45KrxQCHc1Cn/+hXJwGwEOgvJmFqtLcR5mpzyHUSzP+r4MmDoibUGqy8
+ wVNYk5UcWrKDZRXVrKDCo1Q2g/MLbaRHsNfWd3dmqvY2445OovJtgs+3ch1M0jIP4CGA YQ== 
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3p7j155qgx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Mar 2023 18:53:16 +0000
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 329ITS5Y024925;
+        Thu, 9 Mar 2023 18:53:15 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([9.208.129.114])
+        by ppma01wdc.us.ibm.com (PPS) with ESMTPS id 3p6g9jaktu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Mar 2023 18:53:15 +0000
+Received: from smtpav04.wdc07v.mail.ibm.com (smtpav04.wdc07v.mail.ibm.com [10.39.53.231])
+        by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 329IrDJv33293018
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 9 Mar 2023 18:53:13 GMT
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ABE7258054;
+        Thu,  9 Mar 2023 18:53:13 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2801C58045;
+        Thu,  9 Mar 2023 18:53:13 +0000 (GMT)
+Received: from [9.163.78.237] (unknown [9.163.78.237])
+        by smtpav04.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+        Thu,  9 Mar 2023 18:53:13 +0000 (GMT)
+Message-ID: <dbba03ed-90bf-6fe6-357b-c15b8624ba75@linux.vnet.ibm.com>
+Date:   Thu, 9 Mar 2023 12:53:12 -0600
 MIME-Version: 1.0
-References: <20230309183812.299349-1-zyytlz.wz@163.com>
-In-Reply-To: <20230309183812.299349-1-zyytlz.wz@163.com>
-From:   Zheng Hacker <hackerzheng666@gmail.com>
-Date:   Fri, 10 Mar 2023 02:46:09 +0800
-Message-ID: <CAJedcCy-b5aCi33FV84WtOSQXOf3YrEGheOAKdBSzBHdv4bG4w@mail.gmail.com>
-Subject: Re: [PATCH] scsi: qla4xxx: Fix use after free bug in
- da9150_charger_remove due to race condition
-To:     Zheng Wang <zyytlz.wz@163.com>
-Cc:     njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, 1395428693sheep@gmail.com,
-        alex000young@gmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 47/81] scsi: ipr: Declare SCSI host template const
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230304003103.2572793-1-bvanassche@acm.org>
+ <20230304003103.2572793-48-bvanassche@acm.org>
+From:   Brian King <brking@linux.vnet.ibm.com>
+In-Reply-To: <20230304003103.2572793-48-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 2uX4LL_Dqm6cbPwuBdroPZnDfjZ4l6q2
+X-Proofpoint-GUID: 2uX4LL_Dqm6cbPwuBdroPZnDfjZ4l6q2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-09_10,2023-03-09_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 impostorscore=0
+ bulkscore=0 lowpriorityscore=0 malwarescore=0 clxscore=1011 mlxscore=0
+ priorityscore=1501 spamscore=0 mlxlogscore=999 suspectscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2303090148
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sorry about the fix. This is a false positive which should be ignored.
-The work will be posted on ha->dpc_thread. In qla4xxx_remove_adapter,
-it will call destroy_workqueue(ha->dpc_thread);
-
-Regards,
-Zheng
-
-Zheng Wang <zyytlz.wz@163.com> =E4=BA=8E2023=E5=B9=B43=E6=9C=8810=E6=97=A5=
-=E5=91=A8=E4=BA=94 02:38=E5=86=99=E9=81=93=EF=BC=9A
->
-> In qla4xxx_probe_adapter, &ha->dpc_work is bound with
-> qla4xxx_do_dpc. qla4xxx_post_aen_work may be called
-> to start the work.
->
-> If we remove the module which will call qla4xxx_remove_adapter
->   to make cleanup, there may be a unfinished work. The possible
->   sequence is as follows:
->
-> Fix it by canceling the work before cleanup in qla4xxx_remove_adapter
->
-> CPU0                  CPUc1
->
->                     |qla4xxx_do_dpc
-> qla4xxx_remove_adapter|
-> scsi_remove_host        |
-> kfree(ha->host)         |
->                     |
->                     |   iscsi_host_for_each_session
->                     |   //use ha->host
-> Fixes: afaf5a2d341d ("[SCSI] Initial Commit of qla4xxx")
-> Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
+On 3/3/23 6:30 PM, Bart Van Assche wrote:
+> Make it explicit that the SCSI host template is not modified.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/qla4xxx/ql4_os.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
-c
-> index 005502125b27..d530cc853f43 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -9001,6 +9001,7 @@ static void qla4xxx_remove_adapter(struct pci_dev *=
-pdev)
->         if (!pci_is_enabled(pdev))
->                 return;
->
-> +       cancel_work_sync(&ha->dpc_work);
->         ha =3D pci_get_drvdata(pdev);
->
->         if (is_qla40XX(ha))
-> --
-> 2.25.1
->
+>  drivers/scsi/ipr.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index c74053f0b72f..4d3c280a7360 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -6736,7 +6736,7 @@ static const char *ipr_ioa_info(struct Scsi_Host *host)
+>  	return buffer;
+>  }
+> 
+> -static struct scsi_host_template driver_template = {
+> +static const struct scsi_host_template driver_template = {
+>  	.module = THIS_MODULE,
+>  	.name = "IPR",
+>  	.info = ipr_ioa_info,
+
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
