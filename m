@@ -2,101 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EA4C61DA4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:15:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0972AC6FD19
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 18:31:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229872AbjCISP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 13:15:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37170 "EHLO
+        id S230427AbjCISbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 13:31:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229827AbjCISP1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:15:27 -0500
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29A435F519;
-        Thu,  9 Mar 2023 10:15:26 -0800 (PST)
-Received: by mail-pj1-f47.google.com with SMTP id kb15so2902731pjb.1;
-        Thu, 09 Mar 2023 10:15:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678385725;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1n3W7Mep7n+u6WTkNpOQ23YBe9QKdrpVK921z9QG0TQ=;
-        b=zXYeIFavPNXs0NSUY1vaTouA5F2poUYh82kKkaxUnIcAai5sw/s+Jm4lsNOGWMk9dj
-         I3H/3ItEw+H56JFnPN2+ifYoPAMsV+BFQdT0cFA+dzKh4t4byQaCRYD9BmNM4xegpFhd
-         2yDyca1H+gv6S4sks80zv9ZpRmEyXJP9jAxSIADEIvIlrSgQTFaZZMIpJ6yRHNerqmV0
-         q8Uwl9jEvjhq04Mz2HWKaqSFveeAMnoWB8iMh5+5Hhbply1QBLyfyDO3JYNb2IVEX5X8
-         wY9ayCqr6xs0wDiNQs4fPhb+1l5OLmfG+YBXVatx4U3pt7KVLPJCZDmyv1f9INYqescZ
-         F8xA==
-X-Gm-Message-State: AO0yUKXHvuQJYX/SYP9J5+f3OYJbSiq72f4/w/yjkL+BwFuWGfZHDZvt
-        6/nlx0Dm4xxhF/35beQZ+f8=
-X-Google-Smtp-Source: AK7set9GeDtPXB8h9zEYbgrrWoaLeCxwdQdVIz0UEBRPu3qTrNRUmyZBlWQmaCpnfCkVEMpxXLYVYQ==
-X-Received: by 2002:a05:6a20:8407:b0:cd:363d:b27c with SMTP id c7-20020a056a20840700b000cd363db27cmr32359263pzd.16.1678385725521;
-        Thu, 09 Mar 2023 10:15:25 -0800 (PST)
-Received: from [192.168.132.235] ([63.145.95.70])
-        by smtp.gmail.com with ESMTPSA id 1-20020a630301000000b004fb11a7f2d4sm11207080pgd.57.2023.03.09.10.15.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Mar 2023 10:15:24 -0800 (PST)
-Message-ID: <1ca7dbef-5747-29c2-a11c-086cf36d636f@acm.org>
-Date:   Thu, 9 Mar 2023 10:15:23 -0800
+        with ESMTP id S229977AbjCISbH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 13:31:07 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34B7F693F;
+        Thu,  9 Mar 2023 10:31:05 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4EBCA61CBB;
+        Thu,  9 Mar 2023 18:31:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10531C433EF;
+        Thu,  9 Mar 2023 18:31:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678386664;
+        bh=OxAVh16i6IS88ISIABoRkC+frhPtYq64zT19SQCyKuE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=O/CTkObKg7x/D/u0C5N5X1Oe97RxLUH9xaQb+tvbS0VyIbeXR3gZfQgQJoq2Y+eU6
+         ApNVEfFzmVjpK122Zj0KuSSGs3ZWk8ult+K7iQtgck7Q6XiZ1UiDGKYuldXFyw7ec9
+         0wskKSCc7dXvIAfKo3uXFG6i1uWX5W2t9bf7DDi6ez4IVixa8IRd6EhST86ZvFfwUE
+         4jmRAsUFcgDB2OZGUAcCcH0YZb+IDOxPvphulo5tOTsJzIqpzqMmgLgm9Pyd7uQyz8
+         wMIKFTyeHowrCRL8A1MyTBRwk8Y0EC7JDQn3qBSbuYctpA9Co1DzkcmKhajDFNTW7j
+         C3J/3pCbY7AOA==
+Date:   Thu, 9 Mar 2023 10:31:02 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Abel Vesa <abel.vesa@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 7/7] arm64: dts: qcom: Add the Inline Crypto
+ Engine nodes
+Message-ID: <ZAol5o5a6HZYgRaG@sol.localdomain>
+References: <20230308155838.1094920-1-abel.vesa@linaro.org>
+ <20230308155838.1094920-8-abel.vesa@linaro.org>
+ <4eab53fc-2d26-dc93-3ae6-c0b2546ad3e0@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [RFC PATCH v2 1/3] ufs: mcq: Add supporting functions for mcq
- abort
-Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1678338926.git.quic_nguyenb@quicinc.com>
- <68b786f390dbd93218a482d18c513bc332e82da3.1678338926.git.quic_nguyenb@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <68b786f390dbd93218a482d18c513bc332e82da3.1678338926.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4eab53fc-2d26-dc93-3ae6-c0b2546ad3e0@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/23 21:28, Bao D. Nguyen wrote:
-> +static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
-> +		struct ufs_hw_queue *hwq, int task_tag)
-> +{
-> +	struct utp_transfer_req_desc *utrd;
-> +	u32 mask = hwq->max_entries - 1;
-> +	bool ret = false;
-> +	u64 addr, match;
-> +	u32 i;
+On Thu, Mar 09, 2023 at 11:31:46AM +0100, Krzysztof Kozlowski wrote:
+> On 08/03/2023 16:58, Abel Vesa wrote:
+> > Drop all properties related to ICE from every UFS and SDCC node,
+> > for all platforms, and add dedicated ICE nodes for each platform.
+> > On most platforms, there is only one ICE instance, used by either
+> > UFS or SDCC, but there are some platforms that have two separate
+> > instances and, therefore, two separate nodes are added.
+> > 
+> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> > ---
+> > 
+> > Changes since v1:
+> >  * Made changes for all platforms that use ICE, as a single patch since
+> >    most changes look really similar.
+> > 
+> >  arch/arm64/boot/dts/qcom/sdm630.dtsi | 18 +++++++++-----
+> >  arch/arm64/boot/dts/qcom/sdm670.dtsi | 15 +++++++----
+> >  arch/arm64/boot/dts/qcom/sdm845.dtsi | 21 +++++++++-------
+> >  arch/arm64/boot/dts/qcom/sm6115.dtsi | 37 +++++++++++++++++-----------
+> >  arch/arm64/boot/dts/qcom/sm6350.dtsi | 31 ++++++++++++++---------
+> >  arch/arm64/boot/dts/qcom/sm8150.dtsi | 21 +++++++++-------
+> >  arch/arm64/boot/dts/qcom/sm8450.dtsi | 22 ++++++++++-------
+> >  7 files changed, 102 insertions(+), 63 deletions(-)
+> > 
+> > diff --git a/arch/arm64/boot/dts/qcom/sdm630.dtsi b/arch/arm64/boot/dts/qcom/sdm630.dtsi
+> > index 5827cda270a0..2aed49104d9d 100644
+> > --- a/arch/arm64/boot/dts/qcom/sdm630.dtsi
+> > +++ b/arch/arm64/boot/dts/qcom/sdm630.dtsi
+> > @@ -1330,9 +1330,8 @@ opp-200000000 {
+> >  		sdhc_1: mmc@c0c4000 {
+> >  			compatible = "qcom,sdm630-sdhci", "qcom,sdhci-msm-v5";
+> >  			reg = <0x0c0c4000 0x1000>,
+> > -			      <0x0c0c5000 0x1000>,
+> > -			      <0x0c0c8000 0x8000>;
+> > -			reg-names = "hc", "cqhci", "ice";
+> > +			      <0x0c0c5000 0x1000>;
+> > +			reg-names = "hc", "cqhci";
+> 
+> I believe this will break the ICE on these platforms without valid
+> reason. The commit msg does not explain why you do it or why this is
+> necessary.
+> 
+> We already we received comment that we keep breaking Qualcomm platforms
+> all the time and need to keep them in some shape.
+> 
+> Also, patchset is non-applicable in current set (breaks users) and
+> neither commit nor cover letter mentions it.
+> 
 
-The variable name "i" is usually used for a loop index. In this case it 
-represents a slot in the submission queue. How about renaming "i" into 
-"slot"?
+FWIW, I tested this patchset on SDA845, and ICE continues to work fine.
 
-> +static inline void ufshcd_mcq_update_sq_head_slot(struct ufs_hw_queue *q)
-> +{
-> +	u32 val = readl(q->mcq_sq_head);
-> +
-> +	q->sq_head_slot = val / sizeof(struct utp_transfer_req_desc);
-> +}
+(Though if I understand the patchset correctly, the ICE clock is no longer
+turned off when the UFS host controller is suspended.  That isn't ideal as it
+wastes power.  I would like that to be fixed.)
 
-Please modify this function such that it returns the head slot value 
-instead of storing it in a member variable and remove the sq_head_slot 
-member variable. Storing the sq_head_slot value in a member variable 
-seems wrong to me since the value of that variable will be outdated as 
-soon as the submission queue is restarted.
+Anyway, when you say "break the ICE", do you really mean "make an incompatible
+change to the device-tree bindings"?
 
-> +static inline bool ufshcd_mcq_is_sq_empty(struct ufs_hw_queue *q)
-> +{
-> +	return q->sq_head_slot == q->sq_tail_slot;
-> +}
+I'd think there would be no problem with that as long as everything is updated
+at once, which this patchset does.
 
-Please remove this function and inline this function into its callers.
+I've heard before that some people consider the device-tree bindings to be a
+stable UAPI.  That doesn't make sense to me.  Actually, my original ICE patches
+ran into this issue too, and the resolution was simply that the Qualcomm
+platforms maintainer (Bjorn) decided to take the patches anyway.  I never heard
+any complaints afterwards.  Maybe the same is fine here too?
 
-Thanks,
-
-Bart.
+- Eric
