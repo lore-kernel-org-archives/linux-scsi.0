@@ -2,185 +2,269 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94EC5C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 22:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D98C6FD1F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 22:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231393AbjCIWeT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 17:34:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53422 "EHLO
+        id S231445AbjCIWeW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 17:34:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229580AbjCIWeF (ORCPT
+        with ESMTP id S231365AbjCIWeF (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 17:34:05 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F18FBF4010;
-        Thu,  9 Mar 2023 14:33:49 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329Lwt4U021591;
-        Thu, 9 Mar 2023 22:33:33 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51BB5E2503;
+        Thu,  9 Mar 2023 14:33:51 -0800 (PST)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 329LwpQb026384;
+        Thu, 9 Mar 2023 22:33:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=bRemT9/AY9I+Ye4JFKI3Em6dmfbYBI59cUNld/i/EVE=;
- b=i+eSbak3FhVGGVD5HGwok71kuWYYyenys8zZ/y7hTaZzPWrw+nSiEU35B+ukR9hImb5K
- k6xLWfUtgj2uVzWqdiWj0k12X0zeM1vpqjjwQj5JX6+cH9yva/I3QKm4h1x3QYdsCEZz
- GZnojKuq+j1WRLr3iWP/0wyE9Pa9EyGZi7agBSZpmyGomTIKiNlF7T+Q5OG4jU78yKA/
- crPYZ8yytfLlvXuin8exZpN4Wn+4AjzgHpSxYp0qzgpbx2hyOKgTrRI6RQjtx7v2l2G4
- /r4dJBTbOze0pwhJ4YUtjLnDUbbB7ltRr/WT8mTgUcKfa49kaQEMjLIMn8kMTVCFeD5l gg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3p41813uxx-1
+ bh=hfMoiu+lZ0BV8kkTEIEtnhK4hdFmkp5P2iTT08J2NxY=;
+ b=mlLgGw6XDkjZDdS4vker+SWIzo6sIaS7j1G/j9gbMz58WNqOerEwu0LDQWM02EUWmqu3
+ rrCdOwEitUFDzziEciKSHoisxadB7q6JMlw6Tlw7Zsg5jhD4p/dR5sVWAnbhmEBMgCcv
+ e4egJKil4rE54xRro5stvWL3Q/m8Mga6bQ9gjPMwRDO1MGj3/Fjog202SzdqhO2RU+FA
+ DdYbWzDiMYJ2RgLHnD3t08KE2/dA9Kvdg1ijbwUbPGvv8dPzoiFsx72VFDS33vMWy1X6
+ oQQz17cACPupQTgVW3wRIESaIBQG8LRdvFDBC3ZZ73puiubxlEONtbB1cq74V6rkfDUg oA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3p415j43ef-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Mar 2023 22:33:32 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 329LmFde036440;
-        Thu, 9 Mar 2023 22:33:32 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2177.outbound.protection.outlook.com [104.47.57.177])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3p6g47nhaj-2
+        Thu, 09 Mar 2023 22:33:29 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 329Kf86I007359;
+        Thu, 9 Mar 2023 22:33:29 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2171.outbound.protection.outlook.com [104.47.57.171])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3p6g4hw9r6-8
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Mar 2023 22:33:32 +0000
+        Thu, 09 Mar 2023 22:33:28 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ncCJYyPcECXwuHr15m5/zrHsRpBJZiN/JVmZyU9yFeWYwJCg5oP8+voLl9yn43dINDXKzNqU8V62iPC4nEXkMxc54hDiANPeOs194HZw6KU+MmxFbcZd8YWB2Mc6t9Ezwdb4Y7i+q5DfKN9i7mNIgzcB/NN2qxIIB6I1zzpjQhAzbzZk1EQCU6dqsiz3KbNWeJYgoPItVgR2lKmyFUATcafWiSQf491pcIdA97Q1vLgsyztFOOkMXTUPJ8NSZE0y6RcRTLWoyBIbCuQOPpqDcV0q1mu6uC9Zo7H9dAP3/C5mRL3lnEUSFPxcSS+ik8UBMSuQLePFf1dJuXljP3Dn3g==
+ b=KKg2j4ES6x+xzf42xCi3qKUKMyL2GIDeWzk2Y36Rvyn3e6VNt9jZYFuhw/k/OHZOSHWGubLEW82ODJRM1Ly6DOG7dbRzpPg49FnemQEXMxhC+trwjLs48vNbPFgztelngYe/WslOqac6CMBmGeIPtuNvcSDsuF7sOWMKNQrWqggntTvgbaetjZqjtZ5/dcNlThK97IPKIArk0yuCMZULJNS1j3pBilOjmf1krXsc42JvmMiO1YDyZif/5yuAHv75Xd/GcAXcwMB7G7+IVejnfT4wfPvzlnvr/Oq8bsa446mcb9E6rV80+ZcEWWM1OtpgDXrIBwm0KRwniCQvT8pDUA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bRemT9/AY9I+Ye4JFKI3Em6dmfbYBI59cUNld/i/EVE=;
- b=d+82sT0Up+ivyXMxEf2rg/ExYdJo2r/5Y036neBsnEkGMr+sPr5/WekmrJoRpjM05UrtgU1E51E7uTMQQTDSEY5yV+XOXONJpwUppnfe4G6QwaqUm/mhyyO9xhbcEm/DlPOGvK9BHLD1q4+xXC6Ye1US57ckI5sy1yXgRyyvVOo3j+AWzIO8FxXFvbbwAicts6VTQm3qLv3gED4JSBol+U1B1B5XF+aXlVAVuYofbz76Zmx3UCOabj8cGh73k6sAuPwca5ZfgDSqyMrLgSfGvA+7xVFtSQPxEjBrkfkHDKVs6YaZ09UI2ZqHO4etjrSxg/b6xkuoNlfu/FpxhlCG+A==
+ bh=hfMoiu+lZ0BV8kkTEIEtnhK4hdFmkp5P2iTT08J2NxY=;
+ b=HeD4M2EC2dt7ZEbYgJXRH4Yq03OC/ior5PmMrZM7S7nm65j0LeIG3jeAxEjpmjJSusPqSbAKH7iDTsrsph9Pko2LaJ3pluM+e6LJRFD1bHctzkoWYdqk6MMW1p6B6MEyk2Md4qy9NPQ/KVBO6HyRt4dm3UDhiJ0hZS9tQ5wfllvavQX/VKXKnD9Dl4ZWfQPtsdhjImd0+O6Immjz0qNeHpbL04tLrJojroze6lVeVvtJt1o+05pi2gxvbGqdh7lHI9uJKhEYWGtiHYDnnEQDV6Dv4w37+OcivIUlGG+fLH7h1L4q3ObyMp5iA32z4E0d3VBIyGS5P7rINPnFzmmH/A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bRemT9/AY9I+Ye4JFKI3Em6dmfbYBI59cUNld/i/EVE=;
- b=EmQpnd4uaT1WOe7JYFgh3jqTe76GbdEg0AGx7G7GVbbQAUQTe53tU59D90odnpgP0uVmfsZofs7is2cxKmDr39GrwXwfhpVk2yWe8Qz6/EdPLCWmeFpQ7qYZ9Ht0dC4304yyGnhJTJWtDDgWBCoPwMMwMTDdw+arPzywAbFJ0Nw=
+ bh=hfMoiu+lZ0BV8kkTEIEtnhK4hdFmkp5P2iTT08J2NxY=;
+ b=Hs6by4XCXTVP5RBJ+csECpX/GJoAePsBZF+OIW4aa3kYgqI8hBxqqfM/XuvVF4f8892ozcgvvTAwLRr2EyZ8Xbk+R9fX6YbaF5NCnOfgJJQYyx4nNADc9a+4hmX2PK41ZPWX6yrEsOOSQTLxW08fLVyBpdVwmmo7Renlk+DPrEw=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
  PH8PR10MB6479.namprd10.prod.outlook.com (2603:10b6:510:22d::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.17; Thu, 9 Mar
- 2023 22:33:30 +0000
+ 2023 22:33:24 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::7dd7:8d22:104:8d64]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::7dd7:8d22:104:8d64%7]) with mapi id 15.20.6178.019; Thu, 9 Mar 2023
- 22:33:30 +0000
+ 22:33:24 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     mlombard@redhat.com, martin.petersen@oracle.com,
         mgurtovoy@nvidia.com, sagi@grimberg.me, d.bogdanov@yadro.com,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 11/18] IB/isert: Fix use after free during conn cleanup
-Date:   Thu,  9 Mar 2023 16:33:05 -0600
-Message-Id: <20230309223312.94595-12-michael.christie@oracle.com>
+Subject: [PATCH 07/18] scsi: target: Treat CMD_T_FABRIC_STOP like CMD_T_STOP
+Date:   Thu,  9 Mar 2023 16:33:01 -0600
+Message-Id: <20230309223312.94595-8-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230309223312.94595-1-michael.christie@oracle.com>
 References: <20230309223312.94595-1-michael.christie@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: DM6PR03CA0055.namprd03.prod.outlook.com
- (2603:10b6:5:100::32) To DM5PR10MB1466.namprd10.prod.outlook.com
+X-ClientProxiedBy: DM6PR03CA0037.namprd03.prod.outlook.com
+ (2603:10b6:5:100::14) To DM5PR10MB1466.namprd10.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|PH8PR10MB6479:EE_
-X-MS-Office365-Filtering-Correlation-Id: e94df0cf-3c40-4b21-4612-08db20ee4f1b
+X-MS-Office365-Filtering-Correlation-Id: 4540be1c-4cea-4421-46a4-08db20ee4b9d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: DxTnQsngryZKUukEZFO/+0bYXhB6CALjy6n293b8dHf0mcORHwVVoLKAbInvZxzUw+ZahOCaATJEuGw5v9J7yUDUNyDR++kM+LVW50uQtMqzJkDBrAhplsSuCn1Vw5Qqj8+FCq18csITYoEbV8fKtskpiZ7czD3wJaai+ZhkXcMXqkswbaddlhxj3DUeff/ETMhtT2UHba5cxl06AZs1pgdsS8RhyfdggLrv4GSKj7kVBSP4knoyNynBLjkPYPMvbhlw0MVW4L1yJXOAlqkngZMvec+AXxqm+9o3G4POW4QmPIxucMELtpEVj+Yprkd+vyR47gGQDCObC2GKRKVRZC8jvETE4hNsx7PCm7d4duR1Hmzh96xPhpHIGbh6Xsr6EqEn5jPymqj38ZKvLSL8Xwc9BUThEtydCtUj10rReQMjEpadTDm4qGnrYSgymuxI6PDDhbKSpkC25KmHD0qiukHB3tXvgv4uaEuvhkGqlF2q9LD6E72qY/bJbc+Vqr4lTyHDKeOhj7IYP42iXsJgjvjjSa6YXWueMbud0zfQ2f+Z6i5O/M96tE7mjWbmhi4tZgwn1W9kH835KmSRnJt7ifJTQVMWGf8qLoDRu/KeDYbkZy2a3EbPwty0gvwWTFV8gQK3aHa/KTVcPRAgZWSxiA==
+X-Microsoft-Antispam-Message-Info: NEF/1AcV8kxBnP7mBYEMrzSDezVGHjhTc7KThaRoB88LlT1TVofKbDwzeIELnhe9ByYiMTbt1m2BcmPQoTssBZre2k7MXvpZrix2e1E5NYb3tBzVTUisKPBEMUGb7mDj4erfotSN/PfHNNXqbLsksroJm9Uy0iOYRRcwyJ4st9CEJOwUfEWQT8eISIi8bXajNtCKJ06fJM8zez5y8WuhzJZFQMCQknemTWL1S0sEGU8i0Aa0/mkie3+4Ob++S20XXaOyNlD6opxNWsqlB55NU+1e0zjM+l3nuPR1ty65M/218MPTJxWwLZDdlAkezhtMj5jL7+kPNSnoQdQLMJ4XY3iZmHiDSLToi8zFghc3BMVTwYeQqxLHJDZqeG9XkfB+iD4N1sJnAvwmZ7m5A1S6TXb/Kwt/O46d0gfGFwo/8v3RFGNrhiBUgddjn/eX1LasKGGmU7yIyUXR83tG3oTVD+0dbazS9d/Loz2oiqU+ze6pKPvCu8m0HGjipcTTe14UD+wLCz2nSiT0BxyJxz7wVgS0NF/dtqmH2yQc3HqqdW6ezkGZQNb7zaQPtlx8nAP+sDzv1lYdF952nEfg1XqiwzYs3D4ov7BAgZWmQjG3i6kDo6lyGaFYCDLf1dheI5dEX4xXzFySR2Adf/APdYNz3Q==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(136003)(39860400002)(346002)(366004)(396003)(376002)(451199018)(2906002)(5660300002)(36756003)(66476007)(26005)(8936002)(4326008)(66556008)(41300700001)(1076003)(8676002)(316002)(86362001)(478600001)(6486002)(66946007)(6666004)(6512007)(107886003)(6506007)(38100700002)(186003)(2616005)(83380400001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?srpHxT6w906atXhoyyUcl0VJa7H7Yh9lBuhmKFF/6MY4WahiylbkuBqMrFz2?=
- =?us-ascii?Q?Gdr24f5JYuJn2+dNVYaRTFqjjq5Jt1kghYIRLL+dVa9Gx/q0AbAAq+W8cZpe?=
- =?us-ascii?Q?PIaKIVQI+pUfi8Ldm6sMUEGVD8sdtOQDJ+NpkT6m+40dqP4SbZIIr5ZJccF0?=
- =?us-ascii?Q?tADjWoYceh/SVy4qaCjprGSVg9yGbbHd4AJCP6/rjbyLchZs+V2179ZcialW?=
- =?us-ascii?Q?tE3v3+M57G+gudmyGVSxRMXgJLK/UJyNyJ5DbZ+hPR0/qNvMkPDecfPosn5g?=
- =?us-ascii?Q?0DZmEadPm3CWpnp5sm7y3jiLKLRj863uGnHYD5syes66BTJ/IOKYVtifQXc2?=
- =?us-ascii?Q?S8zqjzurNj73B+z77QMNBE4Tmy3/LLfH9dysSQXU4/OnSmVXfJ8TIxOyu2NY?=
- =?us-ascii?Q?YNT/s5Tgxgyp7d9ZD3rmi7/KkYJQLt6xsyYVD9nJV2wKVS1aLaEPryYLBg8r?=
- =?us-ascii?Q?yaJTq1ukk4ZrO+aVqOREK7uKUHe+80s1i6vGR3AI53C7bL6Lk10rRq+Y/n7i?=
- =?us-ascii?Q?9ohCac4OkgV+Rcp5T74M4pQF9EsAMCB65Nq02lMR8oYUHfSpojQqM1Advo0l?=
- =?us-ascii?Q?jj5T/IziB1NSVrv+VylCoPhMRuv0qQ/ysG1D4bWGapUBs+1L4VgrNiUAws/E?=
- =?us-ascii?Q?QKOOCwfRs+ODq7gmM46lYzsxMcWijJ4hsBUy6YrcBYDaBKdGrphZbb61gHWJ?=
- =?us-ascii?Q?CC8Sn4LXaf8bvwwjjfTGAdpSpv2n4tiGNjR+UaMo9uZ6RrImdFhkl0a7NAw6?=
- =?us-ascii?Q?KKzqtK0Ke7O0fipCrHGnkPCLrZIpB4MdTwtTrtDV9umNVGeiXqEuxjEr8++n?=
- =?us-ascii?Q?Z5tGFA7daOskbobegUYt07EqmDJ8bHA3ZiM2ZoM55t/uGDdaODi6vYJz8Xrh?=
- =?us-ascii?Q?JeCSne5iVwl75NdvQiCMUa2GK4bIN2z7rJqUcOrlSruazbA/u8nZWKzvaHG/?=
- =?us-ascii?Q?Aj28hdahpQVicI6iy/DA82O82U8dPvilaSoSEvCZdmRtDuQ2xOLphjvtQAZQ?=
- =?us-ascii?Q?U1L617plctGW3ZxTlgK/WL0XqprzxkkbLmxk/wpOVuTXfaI42tEmB1OciOxK?=
- =?us-ascii?Q?14uSw2rYdIFlG71sDvIdodm+HToPaqF39ionnA1v0SjB+1QBa3dOEQq2yC/2?=
- =?us-ascii?Q?3rXo8QNnRO5yxtRFwKHy3Xj4/UXIc10H80FhJrhGpU29oSuj9PeqDLkA6yy1?=
- =?us-ascii?Q?HHuS4DCP/b4nyeFkt3iCVM5/L3D5UWzybIvnRt+i/j2XNtwV1Z+QUsa6Wf6v?=
- =?us-ascii?Q?I6fN8tpYspBu1z62IK84v9HHwK1zPOXS2BH4KrjVBZXY3e6VPFgCqKWOwzwO?=
- =?us-ascii?Q?Xe1GcSsOQJ/wVm6cCOTKcs6ZKxt5yO/1Kh7+1auCSYrt5Ng49/gl3NYuWDvF?=
- =?us-ascii?Q?JC0nDiQqrJsbB5FKb5Miok9qJ1Vhufzr2ee0XTnoe5cbXesIVPqH/jfBMnLY?=
- =?us-ascii?Q?1y8eD5SlxdfJWP/lElUnfsO9fEOzJFzHkjxQAlzX4IoPegXB9hjkyH6zyAO+?=
- =?us-ascii?Q?u2y+JrNDahjESe3dx/rx5TjptIUtjDLukQ4TpN/BoKBbIjsS1SdDVfELtXWM?=
- =?us-ascii?Q?iHwRB/Bk3dBQOsgccjf3EP8dGpXHHN7LZCBLgRVtEbHfjYOnGQCeMRak1xOS?=
- =?us-ascii?Q?Ug=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?WQsEP6oWvdbrUMefJRVPTdnPPD/6LpCHiwy8/Ndls9L3geQKE+vIFKsWWhML?=
+ =?us-ascii?Q?Or4E4baBS7MJt+XsOpS8YYEnINRPaRdbf8rbJssQ41J6JS2rovfXqc5Ah6IP?=
+ =?us-ascii?Q?szubUldm/w9nWOmv4MaBAr2R6qOoaRhb97KdCLJftswN4JTruqeguI8WOhm6?=
+ =?us-ascii?Q?0QHQz3bs+4gDx5DYH2Htfntr60twPECgZYPloQkReALXG4Sj//uftH3LaB0K?=
+ =?us-ascii?Q?YgpOtUkK99GOzfl15XUnGM/gHwUJPVArcrR3agI01GDBJKJkemdSskQpCIxK?=
+ =?us-ascii?Q?j2CIcD1GXYLYQ6K1UrPIfQllP7J/zpu8N7sN658rSCa6tmfeMkXX7dq63J5u?=
+ =?us-ascii?Q?kPyFPxcDLrnEFoVqxQ/QFfw6J3/CiYBZngos3SGwfNWaN1mJMAPpN/M/BTZ0?=
+ =?us-ascii?Q?CLm2mEh130nR90xIDrSquiTc58TqZ4UvXxirsEFwlVdrknTPRxG6a60R/JBG?=
+ =?us-ascii?Q?1pFs5pcHLLDuFGmvPJkMHTTb9lWJbW8E2ruK7snlfKSiKIPEc3GnIyGxrILp?=
+ =?us-ascii?Q?L36dJW+6cGSfQBvAOd0gdXZZaGSSesYEBoqWqteITKyKIV66O5xVDmxjl2VO?=
+ =?us-ascii?Q?pF29yRabbCeQ8IzRScdEeCgLjXu9OnW4BE4Drv8xIuDloP85KHFl0ojYaBSn?=
+ =?us-ascii?Q?eKOQBaJMB2Wj+gej2JKMosxrvTAxLQSdecMX/4IYrbSRg9PJo7b1I5EbDics?=
+ =?us-ascii?Q?6zOwmxw63DO/kJywqo8KjRKcQqYqGh9loKVcahVhhgNfMK0himHvM8/LdatO?=
+ =?us-ascii?Q?osUk+WoAp36bMQdAQFAKR37XUQw+zEIDlTHdzdSX0aoXsZCg7L/Z3I7IwCX0?=
+ =?us-ascii?Q?WflVRb8nnouEobMEa0ZpV2F6Zno6NcZB9DUd2OYOLxMiXz9/EdOl21+nbIpH?=
+ =?us-ascii?Q?laddKhmNSJVtzzDwM4BmF9XBtzvtLkYwKzbaYQ9eetGbYXgP75kjCgldk+9R?=
+ =?us-ascii?Q?AFXxtHolFpsFm2aNDx2IWoBZHHjvv/tYFEVOGxvsGNVxGjgp6h8wxzrh3seC?=
+ =?us-ascii?Q?7v23vBdKnBcdG8MGzVaFfANsBvpEjoEqiSagUR5NukBsDyFmx3fN+5nAg4tr?=
+ =?us-ascii?Q?gGFuAXLttQKBtZFsHDfpRippUpEMy6foBZRF88d41isIRx0oYT36+46R4d+s?=
+ =?us-ascii?Q?0pCY4KUcU0fmXcjOEzZXzu8z+8C6ysx69bHRwMmFbj+pb/lZxmRAIZRUV0gr?=
+ =?us-ascii?Q?P+tnHyYyP/mCstdcF8etwlczIrdkqeBEDioaQLoLjhsgmsjOKFZvD3bEC96e?=
+ =?us-ascii?Q?82eDqilR4vFUm96+D3lN+n+3AqXpLQN29BrNlTpNwXEl8qI2RZc/uNNceZ3h?=
+ =?us-ascii?Q?N1flzUhYa0ujCJHMliznb5tBSyf7IhMpKGbmobEVnUdQFh/l3A4vfYbYC2Qv?=
+ =?us-ascii?Q?g9CO84cHJQi8TnNfWxaCQfZgqvMIWnX5oorG+i5B050hJ+d7uu23I1MoQ1xR?=
+ =?us-ascii?Q?yEy+Bw9ewTP68kMe7xsLDkVzPW66kpfg9qTLlNbSs4VE2u4xaHuLcH45tcYz?=
+ =?us-ascii?Q?gVp66litG7Ub2ui/XMNIyj8iBovA1KHZsXAXaliOWkDPsmVNX9vOnWQfw9AT?=
+ =?us-ascii?Q?7Xc1mFCL67kRciKrhghPLT/lHK3Ih3qp4ApigoXToq5NG7sRoQWCggH8mn6y?=
+ =?us-ascii?Q?5g=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: TVL9h/KrXYOOOjGsE14qm1eYxfdHPW2kDgsE9YuDwTES8N8ZU4hX+kJASWFWjVFULael6jCno3lCQLMoqjm0AQmYgbHI1ENuah3qezmS7iM08/q+CD5ik+U6pxz1fmPyt680TEQkNS0lcMtfnnkQpzlkTWA9HPdwOE9CNg/y7MMpRqLU0Tc3d7JCXV7jLQ23j+bbbPZymuo0xCwN5pp1GXi48zT4e/1g4W/sURXXJmf6IBMCwRxrbfUCpjKaV/zRPSybk0GJoXTlYlR4W17XRquHjAtHkOguTPP075/3jSVCR6k2KbtVeShfMz/2L3l/za/LHn8QU2J7OSKDwoiV+r4Yh3yhqsg6mPHTuD/WGCJZgb1dLm33HFpuJ81fhPXT6Jh8HIvOCxHL1wA/IEKzU8sJvJmwH9RzV6KcGjmOrehWntHVsAWCBkZXrg+ne1OfDpQ8pSy/2CVlkbotic58Gj5BdVuPWGAwDjbZkFjduHKkiuY/YlXHOUToIL4nkmf2tixabvrH9S1IXLw+gtBTPhyG5KvwB5GMwFVpJ5y4xM9rycetK2zweYaYslEodGUmp+uS3uBAf+LDqITdIIwXT4aEZycjcM9cK1qs99z7WQEJIcaRAgpScSCnntXzqqEBDyg5T66ngI6fEGXPA2cd2fGhi6KYGuDKaIzCWnEYNRKtkxOlV2gPU/C/WXamp+BzELNk9SXCPC9LYMDuUR6n/e6hzRZq9VMzrIpHVfcDz7bpFK7kl3aXfDKHJJb8QSUHFHhrrarOnBqQC1wHUystBv9erIfAT9JVB6F+KgcEdsTSRYSYz0/AwzRzIzYAdPnGd/A4ECy6R8WxvZ6aH0AxZl4y6Usy5lgZfR0ckdwoSE5bZVHRluDNMKO9gb1XqnIp
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: X5D8qq6P5IXvRVsWU+5hwG8dQHNxi8gDFQw93vkJAdibFN2zZJ3FgyUNjrzmyogN65bHj79QORjM3TuL/QT7AzmO+rQhsxfgmNPbT5JFR+x3c1c0EwhMmCAlw5tXEX7KPH+ip3rqMVdG0IXD5alylfndncZR2nsXWXyzB5nMBtmUgSU8F22WWZT0DsBiB1Fmxra3nkAVh1cbTm0KhD9sHQrRAZOvoSkURAo9C+ewcZX2Q471sWrGjSLHBThTguqZYTdIjuDmKc2qrAQ3s+aQGkZMz7A/C+LBE5Eo4aoioRfG8T093UzBlA2FABQuSwxAus93QLXEcuESvohNF6mG09E4pH3B4QmaG/zYwFX0XP8ov2Kk09NdoY6EnCVLrdd3BPkRwIGwvCQ+6ebk4wJqDo/0DbzHmjVvdJaWr4OLVonyEao5JHfka6LrJJGGyRuOGU498nzxMFmMCv5ocf82rkKBY5OBy5Gm4/Pjk4OfJvBhbjZNY6+9qgBOPejD+Iq+qIN95b9JDDQvjfZP0N1LXXO6zcbYVJiza57Bt8XTUSxiNs1+PTI82sUpwWmgUHup/VJRfklQhIrs+Er1qwTlRjmkLMphfD3liAN9i4gNMDE78mtfQC5ARXhGthmgv1IHY97r50/acbXvMhjRw7dz4Vd3mdtjGUgGjkpofYJBYfky2OHT4pU4RIiF/oRAPkPNL0ANEPwnjIFGEOUOQMlaiUL87ujX+u/otU1biK25RPCFHYYPZj9MiEvs9GDwZYpLRjmJWEK0f6pGAgVpSsfQEw9QZv7vSIzPZKCvl5+/4gNv9Bha7Eap5ngMVCmZeAfSYGu5mgy5XEsF8hPQyGpWZAUuVPYhSU/dQy5bMaZPvbvjo5KTcDUsyJQ/fnvpg46w
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e94df0cf-3c40-4b21-4612-08db20ee4f1b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4540be1c-4cea-4421-46a4-08db20ee4b9d
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2023 22:33:30.5956
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2023 22:33:24.7367
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: RqkMEDz+hH1NnDx5yq2l1csDR80GxGal55pufdNO96np4QCtZaiO8mEJbZauk//kPq/4d4XORXP1HDUJ1e1WQRYtf+Zue8VXu//O+rIFxHk=
+X-MS-Exchange-CrossTenant-UserPrincipalName: svFhL/qkI2GLZ1HYowGyrX/QtdoYfxhj0gF/UVEEDW75y/odH1vahZALZRfUYVqOqyAXiHchTT5SXPqhiJ5ORpUE5OCLzgUzP99AmxzQr+4=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR10MB6479
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-09_12,2023-03-09_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 mlxscore=0
- mlxlogscore=999 adultscore=0 suspectscore=0 phishscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 mlxscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 phishscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
  definitions=main-2303090180
-X-Proofpoint-ORIG-GUID: F267OsLxrQv6kv_WYcsGDFAClA2NKu8j
-X-Proofpoint-GUID: F267OsLxrQv6kv_WYcsGDFAClA2NKu8j
+X-Proofpoint-GUID: 6PVY67tFoYlZF9eoDUcZz-GSQ1iSr1Og
+X-Proofpoint-ORIG-GUID: 6PVY67tFoYlZF9eoDUcZz-GSQ1iSr1Og
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We can end up freeing a command too early during conn cleanup by doing:
+iscsit will set CMD_T_FABRIC_STOP on running commands when its transport
+connection is down and it can't send/recv IO (tx/rx threads are killed
+or the cleanup thread is run from the one thats up). It will then loop
+over running commands and wait for LIO core to complete them or clean
+them up if they were on an internal queue waiting to be sent or ackd.
 
-1. Send iserts N 1MB writes.
-2. Pull cable or down the port isert is using.
-3. isert_wait_conn's call to isert_put_unsol_pending_cmds races
-with a running isert_send_done -> isert_completion_put -> isert_put_cmd
-where isert_put_unsol_pending_cmds sees the cmd on the conn_cmd_list
-and it does a isert_put_cmd which will free the cmd. Then isert_send_done
-is run and will access the freed command while doing it's normal command
-completion:
-isert_completion_put -> isert_put_cmd -> transport_generic_free_cmd
+Currently, CMD_T_FABRIC_STOP only stops TMRs from operating on the
+command but for isert we need to prevent LIO core from calling into
+iscsit callouts when the connection is being brought down. If LIO core
+queues commands to iscsit and it ends up adding to an internal queue
+instead of passing back to the driver then we can end up hanging waiting
+on command completion that never occurs because it's stuck on the internal
+list (the tx thread is stopped at this time, so it will never loop over
+the response list and call into isert). We also want to sync up on a
+point where we no longer call into isert so it can cleanup it's structs.
 
-This patch has us increment write_data_done, so
-isert_put_unsol_pending_cmds can correctly detect commands which will we
-will not be calling isert_send_done for.
-
-Fixes: 38a2d0d429f1 ("IB/isert: convert to the generic RDMA READ/WRITE API")
-[code written and suggested by]
-Suggested-by: Sagi Grimberg <sagi@grimberg.me>
+This has LIO core treat CMD_T_FABRIC_STOP like CMD_T_STOP during
+command execution and also fixes the locking around the
+target_cmd_interrupted calls so fabric modules can make sure cmds are
+never marked both CMD_T_COMPLETE and CMD_T_STOP|CMD_T_FABRIC_STOP.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
-
 ---
- drivers/infiniband/ulp/isert/ib_isert.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_sbc.c       |  2 +-
+ drivers/target/target_core_transport.c | 27 +++++++++++++++-----------
+ 2 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index 516fa37494e1..a44da60352f6 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1636,7 +1636,7 @@ isert_rdma_read_done(struct ib_cq *cq, struct ib_wc *wc)
- 	if (isert_prot_cmd(isert_conn, se_cmd))
- 		ret = isert_check_pi_status(se_cmd, isert_cmd->rw.reg->mr);
- 	isert_rdma_rw_ctx_destroy(isert_cmd, isert_conn);
--	cmd->write_data_done = 0;
-+	cmd->write_data_done = se_cmd->data_length; /* done fetching data */
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index c1cf37a1b4ce..ff1ae779543f 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -457,7 +457,7 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 		 * we don't have to perform the write operation.
+ 		 */
+ 		WARN_ON(!(cmd->transport_state &
+-			(CMD_T_ABORTED | CMD_T_STOP)));
++			(CMD_T_ABORTED | CMD_T_STOP | CMD_T_FABRIC_STOP)));
+ 		goto out;
+ 	}
+ 	/*
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 86adff2a86ed..1c23079a5d7f 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -737,8 +737,8 @@ static int transport_cmd_check_stop_to_fabric(struct se_cmd *cmd)
+ 	 * Determine if frontend context caller is requesting the stopping of
+ 	 * this command for frontend exceptions.
+ 	 */
+-	if (cmd->transport_state & CMD_T_STOP) {
+-		pr_debug("%s:%d CMD_T_STOP for ITT: 0x%08llx\n",
++	if (cmd->transport_state & (CMD_T_STOP | CMD_T_FABRIC_STOP)) {
++		pr_debug("%s:%d CMD_T_STOP|CMD_T_FABRIC_STOP for ITT: 0x%08llx\n",
+ 			__func__, __LINE__, cmd->tag);
  
- 	isert_dbg("Cmd: %p RDMA_READ comp calling execute_cmd\n", isert_cmd);
- 	spin_lock_bh(&cmd->istate_lock);
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+@@ -889,7 +889,7 @@ static bool target_cmd_interrupted(struct se_cmd *cmd)
+ 		INIT_WORK(&cmd->work, target_abort_work);
+ 		queue_work(target_completion_wq, &cmd->work);
+ 		return true;
+-	} else if (cmd->transport_state & CMD_T_STOP) {
++	} else if (cmd->transport_state & (CMD_T_STOP | CMD_T_FABRIC_STOP)) {
+ 		if (cmd->transport_complete_callback)
+ 			cmd->transport_complete_callback(cmd, false, &post_ret);
+ 		complete_all(&cmd->t_transport_stop_comp);
+@@ -907,13 +907,15 @@ void target_complete_cmd_with_sense(struct se_cmd *cmd, u8 scsi_status,
+ 	int success, cpu;
+ 	unsigned long flags;
+ 
+-	if (target_cmd_interrupted(cmd))
++	spin_lock_irqsave(&cmd->t_state_lock, flags);
++	if (target_cmd_interrupted(cmd)) {
++		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 		return;
++	}
+ 
+ 	cmd->scsi_status = scsi_status;
+ 	cmd->sense_reason = sense_reason;
+ 
+-	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	switch (cmd->scsi_status) {
+ 	case SAM_STAT_CHECK_CONDITION:
+ 		if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE)
+@@ -2277,10 +2279,12 @@ void target_execute_cmd(struct se_cmd *cmd)
+ 	 *
+ 	 * If the received CDB has already been aborted stop processing it here.
+ 	 */
+-	if (target_cmd_interrupted(cmd))
++	spin_lock_irq(&cmd->t_state_lock);
++	if (target_cmd_interrupted(cmd)) {
++		spin_unlock_irq(&cmd->t_state_lock);
+ 		return;
++	}
+ 
+-	spin_lock_irq(&cmd->t_state_lock);
+ 	cmd->t_state = TRANSPORT_PROCESSING;
+ 	cmd->transport_state |= CMD_T_ACTIVE | CMD_T_SENT;
+ 	spin_unlock_irq(&cmd->t_state_lock);
+@@ -2847,9 +2851,9 @@ transport_generic_new_cmd(struct se_cmd *cmd)
+ 	 * Determine if frontend context caller is requesting the stopping of
+ 	 * this command for frontend exceptions.
+ 	 */
+-	if (cmd->transport_state & CMD_T_STOP &&
++	if (cmd->transport_state & (CMD_T_STOP | CMD_T_FABRIC_STOP) &&
+ 	    !cmd->se_tfo->write_pending_must_be_called) {
+-		pr_debug("%s:%d CMD_T_STOP for ITT: 0x%08llx\n",
++		pr_debug("%s:%d CMD_T_STOP|CMD_T_FABRIC_STOPfor ITT: 0x%08llx\n",
+ 			 __func__, __LINE__, cmd->tag);
+ 
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+@@ -2880,11 +2884,12 @@ static void transport_write_pending_qf(struct se_cmd *cmd)
+ 	bool stop;
+ 
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+-	stop = (cmd->transport_state & (CMD_T_STOP | CMD_T_ABORTED));
++	stop = (cmd->transport_state &
++		(CMD_T_STOP | CMD_T_FABRIC_STOP | CMD_T_ABORTED));
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 
+ 	if (stop) {
+-		pr_debug("%s:%d CMD_T_STOP|CMD_T_ABORTED for ITT: 0x%08llx\n",
++		pr_debug("%s:%d CMD_T_STOP|CMD_T_FABRIC_STOP|CMD_T_ABORTED for ITT: 0x%08llx\n",
+ 			__func__, __LINE__, cmd->tag);
+ 		complete_all(&cmd->t_transport_stop_comp);
+ 		return;
 -- 
 2.31.1
 
