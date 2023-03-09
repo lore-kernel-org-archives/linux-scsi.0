@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0D2C64EC4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 21:57:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05769C61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 21:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231312AbjCIV45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 16:56:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50562 "EHLO
+        id S230416AbjCIV5N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 16:57:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230151AbjCIVz6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 16:55:58 -0500
+        with ESMTP id S231232AbjCIV4K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 16:56:10 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3D0FF16AC;
-        Thu,  9 Mar 2023 13:55:56 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA90AF4D96;
+        Thu,  9 Mar 2023 13:55:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678398956; x=1709934956;
+  t=1678398959; x=1709934959;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Hb7jAHjMWTWZt4gJYnW7U10Z4zAALD8fUvl65/ingZQ=;
-  b=KdfIJN7uJtpZtJ3fKslmXlbbadjTUZeQBhYBPJfK9mbFKDbSk+4JmK9C
-   luy92AJpnOr9YUXqVVYHi3uAHbVL5v9fhLngzJDqkTnmIowyfz9JVUjl1
-   JZhyTpvP9k6wXoLT84iw4pQMZTPOv/Mru9x9wmM9kYJeYGqk//a2DH3Tp
-   CpCRVa6nt/Ni5ifNhkzXSKRTWRSx/0cea+48nu+KQYNyqntc3Uxo6VBHO
-   73drCiiV4UAsXLDb1A7QSvXH/Vnb81pIU9JcuXsKbAh/oYGsNTdCfVqW6
-   IbnNkRsp6edkw94EimuuyNo0w1HiE/aX5X3C3Gapv0dftBmMEFJ5flQqw
-   A==;
+  bh=mmP5xhNzgcv2fg9WGa4um6nD+0nuRWAD43QMcPgLImE=;
+  b=dETs0L99wD7yxb7s/3m5Uh6qPhQx5lxADDrtBNqmSSc1vYlto27vmvpn
+   bU85W0GtlpjcM0At4OviPmwfA8ugFMNm2waU/VT2XI27+eay0JXSrxC2Y
+   1iexaK5kdZo3hoYAKW0P23lmhRxoNhfHEOA78TMaiv+fQGMbe5B8bg7QT
+   SVgoiP8aTIK6T7DYkhq9cz/N0XNsqQlPJjt5k3S/I7UnADrec0m9TWkWR
+   6TUZE4ZW70SAUqB8dj75iriroO5Ok/GcGEcn7QVSERtl1v3aBpEBC+KUR
+   aXJaPRO1JkB+2UFBFLjry+bepwngwayPMgBBll5agU6jZ5ozWOD+MeDSA
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.98,247,1673884800"; 
-   d="scan'208";a="225271025"
+   d="scan'208";a="225271030"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2023 05:55:56 +0800
-IronPort-SDR: dU5uDFNA9vRygIJBRxn+IpY9GqngZG74JOmVOcmBdS9Qi5zTRlEcVRc7bUi08FMgKsvOGxgx3X
- licOsgAtpYODT1XlC7YuXoM3XnaB5TwdmXNrCWuLPl9EV7Gb3bq6LXW/E9q9PdF/hhnKBYcaRo
- c87LeX1qmFA7gQmWHYq2Ajzd1mm7ohX8hjAT8zqmXGKuHO2RS4ZfVl27XpJ8CS9TMKis+N71S3
- d3uOhgSM71x8yjkwwkf2N7Ak4WSaH0VJkkLS62ZJu+dTODHue4HqOwyAbN8yGnxdFRBrBgrjHB
- ZMU=
+  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2023 05:55:59 +0800
+IronPort-SDR: OH7ARXoip+2Ozlq7+0cIqu7YlL5Cd82BPa18KG81NUDBxwtBmI0mjM5aizTcLO4wuTn/uMmO+K
+ guY7QLn6hWkt8ajBwBzJcLGQ8Rc1a2kgcgsl0uv9Ka7KNwDcFvTw7g0iCuu6WeAEkKosUDZDSi
+ klJRHgyL/8lacAM2EFAutP8LMYGmK0iTwKTeg+5c4JpyvcYYPa0cvRXhs2LCmeLFGkq8O9HB4/
+ Ll9K+NvkvV4DYm9/LX1yhSF1tOKWIKcgX8qpMbIE0bSda0/RXqc/cz2Q7Z1OKlG/6onVA840cs
+ ezA=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Mar 2023 13:06:49 -0800
-IronPort-SDR: 7wJn2+OVweDoU2k7DwNjMrqAxPU9NJOxcahZWvpfzYJcvqJw/XPqmYhMDsTmjUyR7ibzHfGiEk
- xh+JBxfCUZGJGacA0n9AN3xXQ4IvmOBeACX90GDtL08L8zgphqoJgZz0WGf3NukBigGmb7lkQO
- i1ioZGgRp32K3MBxONSkr6Umd+bor+J2QJDn4yp6PcONXsAK4X9o/bpo10HC68CxVWAHdZfO9x
- gayN2r3zdJTLLxEOof7B08a28zQHdcIe9toaQ/w5aUWHw/v4JLS4RH86dOIebEIuZ2H5LRvAW4
- to8=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Mar 2023 13:06:53 -0800
+IronPort-SDR: fgyAYIZClVEdcBaXQ2JtP9R8LrxgXHODlgB3SsiJgClfnXwOmuNakKad3BzwzziBnt7t59muYq
+ 899srIBNJAI83UrhtIE3XaGSDbB8+gHkSzN74GZT7hJFkQMCEpjMM/q3NEXiQCs/NwU7rvi8Yt
+ lEb5PEK4ZQ9rqw5/Rut1iQI5vvTJvnbrjhpHxTzUk2p+cqfrr85U/2BEV6Hu1+fVShqj4kHlgP
+ 8S2uw1A5/sVxzXMtMOPDASJPVp1UkVvZYqq8bRj5jkz3s2Q9Ei6ynbciDZtecr1YFTe96jeGAS
+ ZSk=
 WDCIronportException: Internal
 Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.41])
-  by uls-op-cesaip01.wdc.com with ESMTP; 09 Mar 2023 13:55:55 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 09 Mar 2023 13:55:58 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -53,9 +53,9 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v4 10/19] scsi: sd: set read/write commands CDL index
-Date:   Thu,  9 Mar 2023 22:55:02 +0100
-Message-Id: <20230309215516.3800571-11-niklas.cassel@wdc.com>
+Subject: [PATCH v4 11/19] scsi: sd: handle read/write CDL timeout failures
+Date:   Thu,  9 Mar 2023 22:55:03 +0100
+Message-Id: <20230309215516.3800571-12-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230309215516.3800571-1-niklas.cassel@wdc.com>
 References: <20230309215516.3800571-1-niklas.cassel@wdc.com>
@@ -65,125 +65,177 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Commands using a duration limit descriptor that has limit policies set
+to a value other than 0x0 may be failed by the device if one of the
+limits are exceeded. For such commands, since the failure is the result
+of the user duration limit configuration and workload, the commands
+should not be retried and terminated immediately. Furthermore, to allow
+the user to differentiate these "soft" failures from hard errors due to
+hardware problem, a different error code than EIO should be returned.
 
-Introduce the command duration limits helper function sd_cdl_dld() to
-set the DLD bits of READ/WRITE 16 and READ/WRITE 32 commands to
-indicate to the device the command duration limit descriptor to apply
-to the commands.
+There are 2 cases to consider:
+(1) The failure is due to a limit policy failing the command with a
+check condition sense key, that is, any limit policy other than 0xD.
+For this case, scsi_check_sense() is modified to detect failures with
+the ABORTED COMMAND sense key and the COMMAND TIMEOUT BEFORE PROCESSING
+or COMMAND TIMEOUT DURING PROCESSING or COMMAND TIMEOUT DURING
+PROCESSING DUE TO ERROR RECOVERY additional sense code. For these
+failures, a SUCCESS disposition is returned so that
+scsi_finish_command() is called to terminate the command.
 
-When command duration limits are enabled, sd_cdl_dld() obtains the
-index of the descriptor to apply to the command using the hints field of
-the request IO priority value (hints IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
-IOPRIO_HINT_DEV_DURATION_LIMIT_7).
+(2) The failure is due to a limit policy set to 0xD, which result in the
+command being terminated with a GOOD status, COMPLETED sense key, and
+DATA CURRENTLY UNAVAILABLE additional sense code. To handle this case,
+the scsi_check_sense() is modified to return a SUCCESS disposition so
+that scsi_finish_command() is called to terminate the command.
+In addition, scsi_decide_disposition() has to be modified to see if a
+command being terminated with GOOD status has sense data.
+This is as defined in SCSI Primary Commands - 6 (SPC-6), so all
+according to spec, even if GOOD status commands were not checked before.
 
-If command duration limits is disabled (which is the default), the limit
-index "0" is always used to indicate "no limit" for a command.
+If scsi_check_sense() detects sense data representing a duration limit,
+scsi_check_sense() will set the newly introduced SCSI ML byte
+SCSIML_STAT_DL_TIMEOUT. This SCSI ML byte is checked in
+scsi_noretry_cmd(), so that a command that failed because of a CDL
+timeout cannot be retried. The SCSI ML byte is also checked in
+scsi_result_to_blk_status() to complete the command request with the
+BLK_STS_DURATION_LIMIT status, which result in the user seeing ETIME
+errors for the failed commands.
 
+Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- drivers/scsi/sd.c | 40 ++++++++++++++++++++++++++++++++++------
- 1 file changed, 34 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_error.c | 45 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c   |  4 ++++
+ drivers/scsi/scsi_priv.h  |  1 +
+ 3 files changed, 50 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c4be44832b49..791c160e6eca 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1042,13 +1042,14 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
- 
- static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
- 				       sector_t lba, unsigned int nr_blocks,
--				       unsigned char flags)
-+				       unsigned char flags, unsigned int dld)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index cf5ec5f5f4f6..dc85a75b33d9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -536,6 +536,7 @@ static inline void set_scsi_ml_byte(struct scsi_cmnd *cmd, u8 status)
+  */
+ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
  {
- 	cmd->cmd_len = SD_EXT_CDB_SIZE;
- 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
- 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
- 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
- 	cmd->cmnd[10] = flags;
-+	cmd->cmnd[11] = dld & 0x07;
- 	put_unaligned_be64(lba, &cmd->cmnd[12]);
- 	put_unaligned_be32(lba, &cmd->cmnd[20]); /* Expected Indirect LBA */
- 	put_unaligned_be32(nr_blocks, &cmd->cmnd[28]);
-@@ -1058,12 +1059,12 @@ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
++	struct request *req = scsi_cmd_to_rq(scmd);
+ 	struct scsi_device *sdev = scmd->device;
+ 	struct scsi_sense_hdr sshdr;
  
- static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
- 				       sector_t lba, unsigned int nr_blocks,
--				       unsigned char flags)
-+				       unsigned char flags, unsigned int dld)
- {
- 	cmd->cmd_len  = 16;
- 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
--	cmd->cmnd[1]  = flags;
--	cmd->cmnd[14] = 0;
-+	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
-+	cmd->cmnd[14] = (dld & 0x03) << 6;
- 	cmd->cmnd[15] = 0;
- 	put_unaligned_be64(lba, &cmd->cmnd[2]);
- 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
-@@ -1115,6 +1116,31 @@ static blk_status_t sd_setup_rw6_cmnd(struct scsi_cmnd *cmd, bool write,
- 	return BLK_STS_OK;
- }
+@@ -595,6 +596,22 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+ 		if (sshdr.asc == 0x10) /* DIF */
+ 			return SUCCESS;
  
-+/*
-+ * Check if a command has a duration limit set. If it does, and the target
-+ * device supports CDL and the feature is enabled, return the limit
-+ * descriptor index to use. Return 0 (no limit) otherwise.
-+ */
-+static int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	int hint;
++		/*
++		 * Check aborts due to command duration limit policy:
++		 * ABORTED COMMAND additional sense code with the
++		 * COMMAND TIMEOUT BEFORE PROCESSING or
++		 * COMMAND TIMEOUT DURING PROCESSING or
++		 * COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY
++		 * additional sense code qualifiers.
++		 */
++		if (sshdr.asc == 0x2e &&
++		    sshdr.ascq >= 0x01 && sshdr.ascq <= 0x03) {
++			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
++			req->cmd_flags |= REQ_FAILFAST_DEV;
++			req->rq_flags |= RQF_QUIET;
++			return SUCCESS;
++		}
 +
-+	if (!sdp->cdl_supported || !sdp->cdl_enable)
-+		return 0;
-+
-+	/*
-+	 * Use "no limit" if the request ioprio does not specify a duration
-+	 * limit hint.
-+	 */
-+	hint = IOPRIO_PRIO_HINT(req_get_ioprio(scsi_cmd_to_rq(scmd)));
-+	if (hint < IOPRIO_HINT_DEV_DURATION_LIMIT_1 ||
-+	    hint > IOPRIO_HINT_DEV_DURATION_LIMIT_7)
-+		return 0;
-+
-+	return (hint - IOPRIO_HINT_DEV_DURATION_LIMIT_1) + 1;
-+}
-+
- static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = scsi_cmd_to_rq(cmd);
-@@ -1126,6 +1152,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
- 	bool write = rq_data_dir(rq) == WRITE;
- 	unsigned char protect, fua;
-+	unsigned int dld;
- 	blk_status_t ret;
- 	unsigned int dif;
- 	bool dix;
-@@ -1175,6 +1202,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 	fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
- 	dix = scsi_prot_sg_count(cmd);
- 	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
-+	dld = sd_cdl_dld(sdkp, cmd);
+ 		if (sshdr.asc == 0x44 && sdev->sdev_bflags & BLIST_RETRY_ITF)
+ 			return ADD_TO_MLQUEUE;
+ 		if (sshdr.asc == 0xc1 && sshdr.ascq == 0x01 &&
+@@ -691,6 +708,14 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+ 		}
+ 		return SUCCESS;
  
- 	if (dif || dix)
- 		protect = sd_setup_protect_cmnd(cmd, dix, dif);
-@@ -1183,10 +1211,10 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
++	case COMPLETED:
++		if (sshdr.asc == 0x55 && sshdr.ascq == 0x0a) {
++			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
++			req->cmd_flags |= REQ_FAILFAST_DEV;
++			req->rq_flags |= RQF_QUIET;
++		}
++		return SUCCESS;
++
+ 	default:
+ 		return SUCCESS;
+ 	}
+@@ -785,6 +810,14 @@ static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
+ 	switch (get_status_byte(scmd)) {
+ 	case SAM_STAT_GOOD:
+ 		scsi_handle_queue_ramp_up(scmd->device);
++		if (scmd->sense_buffer && SCSI_SENSE_VALID(scmd))
++			/*
++			 * If we have sense data, call scsi_check_sense() in
++			 * order to set the correct SCSI ML byte (if any).
++			 * No point in checking the return value, since the
++			 * command has already completed successfully.
++			 */
++			scsi_check_sense(scmd);
+ 		fallthrough;
+ 	case SAM_STAT_COMMAND_TERMINATED:
+ 		return SUCCESS;
+@@ -1807,6 +1840,10 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
+ 		return !!(req->cmd_flags & REQ_FAILFAST_DRIVER);
+ 	}
  
- 	if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
- 		ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
--					 protect | fua);
-+					 protect | fua, dld);
- 	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
- 		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
--					 protect | fua);
-+					 protect | fua, dld);
- 	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
- 		   sdp->use_10_for_rw || protect) {
- 		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
++	/* Never retry commands aborted due to a duration limit timeout */
++	if (scsi_ml_byte(scmd->result) == SCSIML_STAT_DL_TIMEOUT)
++		return true;
++
+ 	if (!scsi_status_is_check_condition(scmd->result))
+ 		return false;
+ 
+@@ -1966,6 +2003,14 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		if (scmd->cmnd[0] == REPORT_LUNS)
+ 			scmd->device->sdev_target->expecting_lun_change = 0;
+ 		scsi_handle_queue_ramp_up(scmd->device);
++		if (scmd->sense_buffer && SCSI_SENSE_VALID(scmd))
++			/*
++			 * If we have sense data, call scsi_check_sense() in
++			 * order to set the correct SCSI ML byte (if any).
++			 * No point in checking the return value, since the
++			 * command has already completed successfully.
++			 */
++			scsi_check_sense(scmd);
+ 		fallthrough;
+ 	case SAM_STAT_COMMAND_TERMINATED:
+ 		return SUCCESS;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 633c4e8af830..b894432ca0b9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -601,6 +601,8 @@ static blk_status_t scsi_result_to_blk_status(int result)
+ 		return BLK_STS_MEDIUM;
+ 	case SCSIML_STAT_TGT_FAILURE:
+ 		return BLK_STS_TARGET;
++	case SCSIML_STAT_DL_TIMEOUT:
++		return BLK_STS_DURATION_LIMIT;
+ 	}
+ 
+ 	switch (host_byte(result)) {
+@@ -798,6 +800,8 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 				blk_stat = BLK_STS_ZONE_OPEN_RESOURCE;
+ 			}
+ 			break;
++		case COMPLETED:
++			fallthrough;
+ 		default:
+ 			action = ACTION_FAIL;
+ 			break;
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 74324fba4281..f42388ecb024 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -27,6 +27,7 @@ enum scsi_ml_status {
+ 	SCSIML_STAT_NOSPC		= 0x02,	/* Space allocation on the dev failed */
+ 	SCSIML_STAT_MED_ERROR		= 0x03,	/* Medium error */
+ 	SCSIML_STAT_TGT_FAILURE		= 0x04,	/* Permanent target failure */
++	SCSIML_STAT_DL_TIMEOUT		= 0x05, /* Command Duration Limit timeout */
+ };
+ 
+ static inline u8 scsi_ml_byte(int result)
 -- 
 2.39.2
 
