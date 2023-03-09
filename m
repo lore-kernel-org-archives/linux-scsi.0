@@ -2,48 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32047C64EC4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 19:30:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84BFDC61DA4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Mar 2023 19:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230119AbjCITaI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Mar 2023 14:30:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55900 "EHLO
+        id S230289AbjCITaL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Mar 2023 14:30:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230248AbjCIT3P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 14:29:15 -0500
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9221B6131A
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 11:29:10 -0800 (PST)
-Received: by mail-pg1-f181.google.com with SMTP id d8so1719596pgm.3
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Mar 2023 11:29:10 -0800 (PST)
+        with ESMTP id S230501AbjCIT3Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2023 14:29:16 -0500
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E05F2F16A0
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Mar 2023 11:29:13 -0800 (PST)
+Received: by mail-pj1-f49.google.com with SMTP id ce8-20020a17090aff0800b0023a61cff2c6so6603996pjb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Mar 2023 11:29:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678390150;
+        d=1e100.net; s=20210112; t=1678390153;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=4+4v/C2RuRmCm2hrk+4AAfVZyUrantTB0vKA7PER/Cs=;
-        b=krBOJI8JjPHrv4ybcn27zPA2iJUw4+/y7n9NpMaifxFappO1MsXyBJUAO1D2qw/hTT
-         6ZbDsGJwUCxsH4djjDfD5Tdo3ntPHwYUQ9sGmTLemj6EMToSeNCSC2NXnmYJBwAcptBw
-         ut7/i1G8I0UEjuUWAtL9BpNq+n8pL74LGK68h/kqjGARCvpnEBbqI56JyulctbqP3tvK
-         kcQHF+uYXr23x1ZerDUdz7eamVILDH2bVCc+zJejwgnIJnRGcruiLGfnDAXt4fmTfvup
-         ZCF08iV9x6i0lH/jSMG8jkpUnZpjy5r5KaB3cgRbsHTHgl5en9rZcguODKAKriH+3ihq
-         VzPQ==
-X-Gm-Message-State: AO0yUKUTWvp4Fp1LLuCiN9XIC5GN4EKmSPIpAR4/J16lai6h5PfZOShX
-        IYVbEmogcGhMzsbYnYa3Ut8=
-X-Google-Smtp-Source: AK7set+ZBzrgpOk6eOP2esO4wW3hDU4RjMtpHXQz/W0DhdHlVPGFQ8Xh1QIrL9fU3AXoc+vlMsDxLQ==
-X-Received: by 2002:aa7:8ec8:0:b0:5db:bc21:8dfa with SMTP id b8-20020aa78ec8000000b005dbbc218dfamr20725202pfr.19.1678390150086;
-        Thu, 09 Mar 2023 11:29:10 -0800 (PST)
+        bh=THmZYnay788Z96nrcUtNDJXy0MOLvmys8mHIpIwdLfY=;
+        b=152eKzOk4ljhGZCDQ4Fvf3rkPyx3E2dty/LNdwBDnpo5PrrlnNvDrzVIi4xD68POkP
+         PS4tTEWiwCd8clwxF9tAAwz6f3+ajah5+XNtkt0CKQC1BFsZ+QOMooU6bjKvjwyHfK0C
+         4mnlGtGAZ32sLCihWhYFvInbQu3ZxbMKPFKI4ryzB3E0xD1jljZELTylbxIJnV77I/B1
+         /O7WHrxHalpSh3kElMLZkwSdPWzWR+0eBKO7O6vq5+toouk0C07ONTczE4HAKpaindks
+         eYwHd4WFCpQuVABwWxJrQmKPZW7sknVxnzKP6DJqhVv63S61WijaotpKo7vodiYhawo/
+         VYzg==
+X-Gm-Message-State: AO0yUKUTc6NImJGTAltOlayuVU7GOIFjQl/xRwKK4V/oPLqHJtiZ59+Q
+        tHwpYMvdKblRY9jOmwdD0iY=
+X-Google-Smtp-Source: AK7set8SNoA83pn9KRFbhkU8AMRIuQPXbEctu+B21Sblo8VR2o6mIaiDql+MGlLv0Z2SBzjxUpAPcg==
+X-Received: by 2002:a05:6a20:a111:b0:cc:d386:ec1a with SMTP id q17-20020a056a20a11100b000ccd386ec1amr25536198pzk.2.1678390153355;
+        Thu, 09 Mar 2023 11:29:13 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:bf9f:35c8:4915:cb24])
-        by smtp.gmail.com with ESMTPSA id j24-20020a62b618000000b0058d8f23af26sm11570955pff.157.2023.03.09.11.29.08
+        by smtp.gmail.com with ESMTPSA id j24-20020a62b618000000b0058d8f23af26sm11570955pff.157.2023.03.09.11.29.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Mar 2023 11:29:09 -0800 (PST)
+        Thu, 09 Mar 2023 11:29:12 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 50/82] scsi: mac53c94: Declare SCSI host template const
-Date:   Thu,  9 Mar 2023 11:25:42 -0800
-Message-Id: <20230309192614.2240602-51-bvanassche@acm.org>
+Subject: [PATCH v2 52/82] scsi: megaraid: Declare SCSI host template const
+Date:   Thu,  9 Mar 2023 11:25:44 -0800
+Message-Id: <20230309192614.2240602-53-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
 In-Reply-To: <20230309192614.2240602-1-bvanassche@acm.org>
 References: <20230309192614.2240602-1-bvanassche@acm.org>
@@ -57,19 +60,47 @@ Make it explicit that the SCSI host template is not modified.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mac53c94.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/megaraid.c                   | 2 +-
+ drivers/scsi/megaraid/megaraid_mbox.c     | 2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-index f75928f7773e..6a019132109c 100644
---- a/drivers/scsi/mac53c94.c
-+++ b/drivers/scsi/mac53c94.c
-@@ -392,7 +392,7 @@ static void set_dma_cmds(struct fsc_state *state, struct scsi_cmnd *cmd)
- 	mac53c94_priv(cmd)->this_residual = total;
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index bf491af9f0d6..3115ab991fc6 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4100,7 +4100,7 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
+ 	return rval;
  }
  
--static struct scsi_host_template mac53c94_template = {
-+static const struct scsi_host_template mac53c94_template = {
- 	.proc_name	= "53c94",
- 	.name		= "53C94",
- 	.queuecommand	= mac53c94_queue,
+-static struct scsi_host_template megaraid_template = {
++static const struct scsi_host_template megaraid_template = {
+ 	.module				= THIS_MODULE,
+ 	.name				= "MegaRAID",
+ 	.proc_name			= "megaraid_legacy",
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 132de68c14e9..ef2b6380e19a 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -325,7 +325,7 @@ ATTRIBUTE_GROUPS(megaraid_sdev);
+ /*
+  * Scsi host template for megaraid unified driver
+  */
+-static struct scsi_host_template megaraid_template_g = {
++static const struct scsi_host_template megaraid_template_g = {
+ 	.module				= THIS_MODULE,
+ 	.name				= "LSI Logic MegaRAID driver",
+ 	.proc_name			= "megaraid",
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3ceece988338..406a346cbc08 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3505,7 +3505,7 @@ ATTRIBUTE_GROUPS(megaraid_host);
+ /*
+  * Scsi host template for megaraid_sas driver
+  */
+-static struct scsi_host_template megasas_template = {
++static const struct scsi_host_template megasas_template = {
+ 
+ 	.module = THIS_MODULE,
+ 	.name = "Avago SAS based MegaRAID driver",
