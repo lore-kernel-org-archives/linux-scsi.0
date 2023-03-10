@@ -2,51 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 776FBC6FD19
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Mar 2023 21:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCC3CC6FA99
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Mar 2023 21:47:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232195AbjCJVr0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Mar 2023 16:47:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60224 "EHLO
+        id S232201AbjCJVre (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Mar 2023 16:47:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232041AbjCJVrB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 16:47:01 -0500
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 773591314FA
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 13:44:59 -0800 (PST)
-Received: by mail-ed1-x534.google.com with SMTP id ay14so25995270edb.11
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 13:44:59 -0800 (PST)
+        with ESMTP id S232144AbjCJVrE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 16:47:04 -0500
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFEF4149D06
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 13:45:02 -0800 (PST)
+Received: by mail-ed1-x533.google.com with SMTP id a25so26285261edb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 13:45:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678484679;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZDeD1c8jiZFvcLWzJgOEOd/4N4UZiwFHXqIKU182kOk=;
-        b=JyG+ACdLOcfxTA50XxnxCh7wM4cKF89tKtqh8zVaGOWFSYzYQNvJ7J2uZlfRT8aZ+G
-         R71uFFNjMuMMD2tdQUtH1CNlwQzkGWCOCUc48IBscZi/1PK9Psy4n23tdGK+z/UzhVP4
-         rBdkNufoyjp+DISa6DHjPPU4BAS2Ku9Us+TPqkPS26TbUVrRh696GRxYG+k1kh8I4TE9
-         Hc7TafaabsQMK7scV2MYcOxM2VGoOxuNlbyCj0D+ENnIMdBeFF9rbeqUWVRJmn33fYpq
-         bqAcRt+q6tzQ7XD8U3RnOwT2N1ukDFJ9eOQk/gNvRfExvpFW+hmDS6rR3qNH9flTSSZB
-         Uteg==
+        d=linaro.org; s=google; t=1678484680;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Y/tNj9gS25pI9VyRe21DRJsXFmXi538O3sDmJsaIhbM=;
+        b=mHe+pKeIu1CXbogKykneE+Fc+HhQ3E2/eoguPMQut6YTvOAz1EhASWFdf/7bfL247/
+         z7QRjGBRyKglxyCfaEAwl3mzkZlUOiSlzskD/okpjWOrGvwcDsyatzbEXNKNZfDvRkQ6
+         WzGjeE5QzI7y3yg9pMftyw6nAGAPsLUZA27z00CtMF+/+cCRmc4mBJxLiG8HuSgOupKf
+         QmZa2V1EY12i0B60PKfX2Fivzd9kV780zd60tYf7MMADlormeIe1BOWMbUUD2E7XNBoj
+         f8dksX5HAgHm2n8OJQzR7k61dlBN+uEAbUHOq+A3yL+uNAy0SWLHBy7NXjJLWZKBmi0S
+         fTww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678484679;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZDeD1c8jiZFvcLWzJgOEOd/4N4UZiwFHXqIKU182kOk=;
-        b=t58B9v0YH4+zU+Yv19DmJ2O9RNQ9nOOhKaXZn/ifinYUNFPaDREISxNMzq4KhJtGvO
-         NN/NmpBUmZE9OdGKuOG9qRoh4s60/4I+0y2RcdROE+G4Cww8MhJ/CrSHyrfaoGe7fYOO
-         nvn7XkGBWlDTkVJTwpb1KtfW8o4RcgNgGw73mVm0Yt+2ecXA9vJE9CUW+mC3mo0+SdOu
-         6Wug3MpyyVLKQW4hatvolmVTeIsVpVal28YZaCgk05wy63UoUKI+2Ek0kVdgpKzw0cP6
-         W3Jns5wFOJ6rhJ/nurkjb05mVvylHdEls+ipGv0nfk4FSKF462Xq3Tsztok8lVQDD2Gu
-         +Bdg==
-X-Gm-Message-State: AO0yUKUAA4AoB+NK3UJrCsxA/HuAY9456vAbg1cXfctCdcv+HkB6k1Lo
-        K1UWle/HUS9d/PsucRbINQkPBg==
-X-Google-Smtp-Source: AK7set+M49wnt3MxSeCs0h1xmBgIiP4OJipKtz39vYdOVUEOao/bMt7H1KnDHnhgyi1uB06shGL3JQ==
-X-Received: by 2002:a17:906:539a:b0:88d:f759:15ae with SMTP id g26-20020a170906539a00b0088df75915aemr26028674ejo.42.1678484679060;
-        Fri, 10 Mar 2023 13:44:39 -0800 (PST)
+        d=1e100.net; s=20210112; t=1678484680;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Y/tNj9gS25pI9VyRe21DRJsXFmXi538O3sDmJsaIhbM=;
+        b=09Nd4e6IVE6NeMIxluLFYCkmQI48coe3tTgcYffudHgcfGyBLpNJAsjgp/lSDBLblE
+         rHavkwn8ehMuHnR2wKD3+c+XFIODbxp0JWZT+Dl/cGOTkcwETIef4j/C7iXVx4a1oXDM
+         ZBJW8PorHpp4+508d2ewyMcUSgSWQgDvBZ00rbrsg6edJt8fdqSbigZ/SrbTtGy2hCck
+         ONzbMdvY/pPtoTB+XI9m0bnluZEuQGbqyMFHL+I4CpsA7rk3PvpZ6Xz+CU5xRPHgblk3
+         Ry09yM9QIdhnpf82hpg+QfD56LcHIUgVrCLzmEhp+6QqIZtey2rbR1AmtDMOPz77ZUPp
+         Mdmw==
+X-Gm-Message-State: AO0yUKX2RyrNILAkqs2kszN5o873fJIlK+k6E6WpVQEXegHQ2m/Bln+2
+        iNfI2SZnIjdIaF5NrsqgWc1JVw==
+X-Google-Smtp-Source: AK7set8DLp9mJ4FR8mx3RvxrKuccd1KMSGK8/5PRNVTAH2zIEOB1tnCrI4pH8lb5tGq2IO0YUqWmjA==
+X-Received: by 2002:a17:907:6e0f:b0:907:672b:736a with SMTP id sd15-20020a1709076e0f00b00907672b736amr33166740ejc.31.1678484680278;
+        Fri, 10 Mar 2023 13:44:40 -0800 (PST)
 Received: from krzk-bin.. ([2a02:810d:15c0:828:34:52e3:a77e:cac5])
-        by smtp.gmail.com with ESMTPSA id k11-20020a17090627cb00b008cce6c5da29sm334571ejc.70.2023.03.10.13.44.37
+        by smtp.gmail.com with ESMTPSA id k11-20020a17090627cb00b008cce6c5da29sm334571ejc.70.2023.03.10.13.44.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Mar 2023 13:44:38 -0800 (PST)
+        Fri, 10 Mar 2023 13:44:39 -0800 (PST)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -59,37 +61,43 @@ To:     Alim Akhtar <alim.akhtar@samsung.com>,
         linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-msm@vger.kernel.org
-Subject: [PATCH 1/3] ufs: qcom: add __maybe_unused to OF ID table
-Date:   Fri, 10 Mar 2023 22:44:33 +0100
-Message-Id: <20230310214435.275127-1-krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 2/3] ufs: exynos: drop of_match_ptr for ID table
+Date:   Fri, 10 Mar 2023 22:44:34 +0100
+Message-Id: <20230310214435.275127-2-krzysztof.kozlowski@linaro.org>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230310214435.275127-1-krzysztof.kozlowski@linaro.org>
+References: <20230310214435.275127-1-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver can be built on ACPI and its .of_match_table uses
-of_match_ptr(), thus annotate the actual table as maybe unused.
+The driver can match only via the DT table so the table should be always
+used and the of_match_ptr does not have any sense (this also allows ACPI
+matching via PRP0001, even though it is not relevant here).
+
+  drivers/ufs/host/ufs-exynos.c:1738:34: error: ‘exynos_ufs_of_match’ defined but not used [-Werror=unused-const-variable=]
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 2 +-
+ drivers/ufs/host/ufs-exynos.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index a02cd866e2f8..82d02e7f3b4f 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1693,7 +1693,7 @@ static int ufs_qcom_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
--static const struct of_device_id ufs_qcom_of_match[] = {
-+static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
- 	{ .compatible = "qcom,ufshc"},
- 	{},
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 7c985fc38db1..0bf5390739e1 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1761,7 +1761,7 @@ static struct platform_driver exynos_ufs_pltform = {
+ 	.driver	= {
+ 		.name	= "exynos-ufshc",
+ 		.pm	= &exynos_ufs_pm_ops,
+-		.of_match_table = of_match_ptr(exynos_ufs_of_match),
++		.of_match_table = exynos_ufs_of_match,
+ 	},
  };
+ module_platform_driver(exynos_ufs_pltform);
 -- 
 2.34.1
 
