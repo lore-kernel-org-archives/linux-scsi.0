@@ -2,62 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1175C74A5B
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Mar 2023 09:40:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F7CC6FD1C
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Mar 2023 09:43:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229916AbjCJJk1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Mar 2023 04:40:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48646 "EHLO
+        id S231394AbjCJJn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Mar 2023 04:43:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230271AbjCJJji (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 04:39:38 -0500
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61CAF2D149
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 01:37:45 -0800 (PST)
-Received: by mail-ed1-x530.google.com with SMTP id cy23so17895815edb.12
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 01:37:45 -0800 (PST)
+        with ESMTP id S229995AbjCJJm4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 04:42:56 -0500
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 062B91C7C0
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 01:42:21 -0800 (PST)
+Received: by mail-wr1-x42c.google.com with SMTP id e13so4432033wro.10
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 01:42:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678441064;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=72MIaSfWuU9e23TmX4jMSQ8I9cDWMHGQ0vlumsHCWRY=;
-        b=oAdyF9OPlB0+VurFpfI9tL2uxeN9JTolrLXu424nx1gEhj+QjaA/1bvJ7DJBKjT/Vz
-         V7SeOlcmUAsdK6CQhyEd2nBks0w+TzUHBmp+HaVN5zffM71mW+j6sTk9YFMO5STC2UVT
-         2OuSZpvpkUyJPsAvea1CgVh+Bx3S6F+tkmye74DpZjCqapcGkgcXcDoEfvVzts78zJTM
-         Ce+pzxyf7gsWIn3arLSZ8lNXk6vNJKt9V+TJTSAPnQusSHKEXpXa4MXeR/veeNk74MYX
-         6PYpQKLC6/iTc11ClawHywABYhEnOV6DviLmOmzWtpJqTMCrSXlCaL+2YFKc1Cst2AbG
-         Lm9g==
+        d=linaro.org; s=google; t=1678441337;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=LPInLZOYzoIRoYx9Oo6+KDA8Q8BwRlCDWnK6VRoNQtY=;
+        b=VksT2yUtiBhAGeXiIMD5vubmOwq8Z+1ZDssMnKiobsfS7Pa4KkKezwLm1LP53Qsbpx
+         bqhSoOGTWnasgW5MYrdFS0LiG9+8F1RXqkc8bCBg9+rVlq3Wnq0lXTA/ZeKwKcCPHaJS
+         7OmpFCM3pigjrmMrKTNpXw+5mO6xr82fTzpAVnIAtx/cUTHESxBK77usRf9RD+b1HoyE
+         Q+/JnQ+iCNdAY4Vyx9X9Q/uRIQ9pmuwjzXXF/G7Ceh375fO3BxUEjqR6GNQwpyoLA6x1
+         noS1yhDL3BTa9W+wwwyUS+g31jas1IFYIJtkIaLzttgWOSuI4gE4ZHeMSepncJfLezsh
+         hV5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678441064;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=72MIaSfWuU9e23TmX4jMSQ8I9cDWMHGQ0vlumsHCWRY=;
-        b=5JNINU5tQNi/kYzTOCRsTawAnA79dGwSwlf7QpGc+fGUA2gOzXAavtooHOK7eugzuF
-         ZlbdZgYM8hs+TUu3k3kisRqeMiTCnxSq/dEMPYZlKMDore3nExl7XaWHqsKzAPvTWEVI
-         GxkoLHGl9hJxnGE0H6J1qp+QiOjLM2LC5u5EEqA3JWYMp8wk5EGammclKhkHeczhEP2v
-         989TQzt+t3AtRI67+7fklW02RhhI0lsWy4EZfsGXPgCBQK03giijShCYv+5uGVd4ZN+B
-         5/5xSzghhFBepiMD+UteRUPj9cix3j/77sJ8KwxEohOPKaSn50ILssJiwuv5HSKO+N3F
-         YVDw==
-X-Gm-Message-State: AO0yUKWJzLsbxeO1CrmmkrXM8GJe+lu7KYSFZ56geFkjlZlBr2167mTo
-        WbCgURmTXWvxYsXszLQ6KgV7Lg==
-X-Google-Smtp-Source: AK7set/eFfiMqvRDo7L2flhVa4/blql11k6Nnytdu12WJy0s9z80h3CK/JPZUQ2Clnp0i+jFDAmoew==
-X-Received: by 2002:a17:907:c24:b0:8aa:bf48:aae1 with SMTP id ga36-20020a1709070c2400b008aabf48aae1mr34138480ejc.6.1678441063852;
-        Fri, 10 Mar 2023 01:37:43 -0800 (PST)
-Received: from ?IPV6:2a02:810d:15c0:828:2a59:841a:ebc:7974? ([2a02:810d:15c0:828:2a59:841a:ebc:7974])
-        by smtp.gmail.com with ESMTPSA id i9-20020a508709000000b004c0897f045bsm605087edb.56.2023.03.10.01.37.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Mar 2023 01:37:43 -0800 (PST)
-Message-ID: <e9413338-7f33-8fd7-11cf-17a9b31aba57@linaro.org>
-Date:   Fri, 10 Mar 2023 10:37:42 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [RFC PATCH v2 7/7] arm64: dts: qcom: Add the Inline Crypto Engine
- nodes
-Content-Language: en-US
-To:     Abel Vesa <abel.vesa@linaro.org>
+        d=1e100.net; s=20210112; t=1678441337;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LPInLZOYzoIRoYx9Oo6+KDA8Q8BwRlCDWnK6VRoNQtY=;
+        b=4W6RWSgJy1A15//umrzFsSPGs4YQnBeVteNRa1RqB3phwi9WknsK101wV52mXaTXKK
+         uoi2mvILohERmUP7SN6MFiJv7C/dnvPs223K7qaRiFfYofJ3RioBk4DwB1ec69B6Q3R0
+         R+KcXaHM6bSYdfWoNP0fCPv0eyf+u70SPItUi/cvSxNwPRHtLJ0/iGVeBo1SXlfEgsFM
+         XduYA4znY745CR3DWdmmJJd2IWuYOCBSKP3TsuS9NIlZM+iq09L94WC0HYn6ZruvJijb
+         CpKx0RGI/vM7nM2MEMslXLiUHV/k+1YKX9QYw/Etu+oq/3FTkJ80+hnf9BKu5NkYi6vV
+         25ww==
+X-Gm-Message-State: AO0yUKWn0waSkUi9xPQQpSFTWwG0Y2QEQLDO1HOqzXRDFWXDa5k9ZQaQ
+        nUv1JRymGkhBibZOXyKuY+EOvw==
+X-Google-Smtp-Source: AK7set9RTGOc68ELXC0tenT4FKlqCU3FXruN/fg2t3uOkYxqzGZ8byBrnmngtpQdc6EUT36OJxzkRA==
+X-Received: by 2002:a5d:5386:0:b0:2c3:e20b:82aa with SMTP id d6-20020a5d5386000000b002c3e20b82aamr16264290wrv.22.1678441336747;
+        Fri, 10 Mar 2023 01:42:16 -0800 (PST)
+Received: from linaro.org ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id t15-20020adfe10f000000b002c5526234d2sm1671789wrz.8.2023.03.10.01.42.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Mar 2023 01:42:14 -0800 (PST)
+Date:   Fri, 10 Mar 2023 11:42:12 +0200
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Cc:     Eric Biggers <ebiggers@kernel.org>,
         Ulf Hansson <ulf.hansson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -75,6 +68,9 @@ Cc:     Eric Biggers <ebiggers@kernel.org>,
         linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 7/7] arm64: dts: qcom: Add the Inline Crypto
+ Engine nodes
+Message-ID: <ZAr7dIFHzd71n5L5@linaro.org>
 References: <20230308155838.1094920-1-abel.vesa@linaro.org>
  <20230308155838.1094920-8-abel.vesa@linaro.org>
  <4eab53fc-2d26-dc93-3ae6-c0b2546ad3e0@linaro.org>
@@ -83,35 +79,40 @@ References: <20230308155838.1094920-1-abel.vesa@linaro.org>
  <ZAr2nlFSKkBBQgcY@linaro.org>
  <4ea944dd-8a42-e83f-607c-1a36124d19bb@linaro.org>
  <ZAr5v/jbd18K5Lug@linaro.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <ZAr5v/jbd18K5Lug@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <e9413338-7f33-8fd7-11cf-17a9b31aba57@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e9413338-7f33-8fd7-11cf-17a9b31aba57@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/03/2023 10:34, Abel Vesa wrote:
->>> I assume you mean it breaks if someone is using old approach DTS with a
->>> kernel that would have ICE driver merged. Yes, that it does. And for
->>> that, in the v3, I'll make of_qcom_ice_get check if there is a reg entry
->>> with name "ice" and create an ICE instance but for the same dev as the
->>> consumer driver. OTOH, if there is no reg entry called "ice", it will
->>> look up a device based on phande of qcom,ice property. This will allow
->>> legacy style DTS to work fine, while using the unified driver as a
->>> library, in that case. For newer platforms, the recommended approach
->>> will be to add a new ICE node and use qcom,ice property.
->>
->> For the driver this sounds good. I still think that existing (older) DTS
->> should not have regs removed, because this affects other users of kernel
->> DTS.
+On 23-03-10 10:37:42, Krzysztof Kozlowski wrote:
+> On 10/03/2023 10:34, Abel Vesa wrote:
+> >>> I assume you mean it breaks if someone is using old approach DTS with a
+> >>> kernel that would have ICE driver merged. Yes, that it does. And for
+> >>> that, in the v3, I'll make of_qcom_ice_get check if there is a reg entry
+> >>> with name "ice" and create an ICE instance but for the same dev as the
+> >>> consumer driver. OTOH, if there is no reg entry called "ice", it will
+> >>> look up a device based on phande of qcom,ice property. This will allow
+> >>> legacy style DTS to work fine, while using the unified driver as a
+> >>> library, in that case. For newer platforms, the recommended approach
+> >>> will be to add a new ICE node and use qcom,ice property.
+> >>
+> >> For the driver this sounds good. I still think that existing (older) DTS
+> >> should not have regs removed, because this affects other users of kernel
+> >> DTS.
+> > 
+> > Yes, that's what I meant, the already supported platforms will remain
+> > with ice reg in the consumer node.
 > 
-> Yes, that's what I meant, the already supported platforms will remain
-> with ice reg in the consumer node.
+> ... unless you plan to add to them UFS ICE, which would be nice feature
+> thus justifying DTS re-shuffle :)
 
-... unless you plan to add to them UFS ICE, which would be nice feature
-thus justifying DTS re-shuffle :)
+By supported I meant the ones that have ICE support already :)
 
-Best regards,
-Krzysztof
-
+> 
+> Best regards,
+> Krzysztof
+> 
