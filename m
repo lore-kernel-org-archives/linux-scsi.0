@@ -2,143 +2,198 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AE5BC6FA99
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Mar 2023 12:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F34C6FA99
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Mar 2023 12:38:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229936AbjCJMay (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Mar 2023 07:30:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39580 "EHLO
+        id S230391AbjCJMh7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Mar 2023 07:37:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjCJMaw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 07:30:52 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0093710A295
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2023 04:30:51 -0800 (PST)
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32AC4xVs020849;
-        Fri, 10 Mar 2023 12:30:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=7iDdBJSMhAIHWDWoDtSWM0HUJWlt5CGcZv6I/o76KYc=;
- b=co/4CdKPzFGN3I0YQGGueD7u2ptiYGQqkKsXAdTr/ROteZa/TGXQiLteOqpAlY5QsAm6
- WY84WM3g0G2Pt0QLWp/vPSkVcWd7vCRqCB1JaMxIFhax+TDJK1GhovGQ7AlCtnaTJUxo
- d8Fns58Bv5Keu9RDR7+mpdXwdvQfkKqPacCd9qHkLQAkHWXERSl4vluqXzoLeKyUJ7ZR
- eWI0jKEEA36eTIcnkNRn/af2jjbUlOkQ6NnPPI8yOFOrTzeLati44bNlD53WVBz5odty
- q/TCkd2o8JLy66RyfOPLdX690iGtmG/j+IWipjwpB3/MwbZcZn1bsntnmscMcsgVabV1 NA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3p7va7mqt7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Mar 2023 12:30:41 +0000
-Received: from m0098410.ppops.net (m0098410.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32ACKIh3003272;
-        Fri, 10 Mar 2023 12:30:41 GMT
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3p7va7mqsj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Mar 2023 12:30:41 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32A8fKkP014957;
-        Fri, 10 Mar 2023 12:30:38 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-        by ppma03fra.de.ibm.com (PPS) with ESMTPS id 3p6gbwau98-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Mar 2023 12:30:38 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ACUYje35979648
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Mar 2023 12:30:34 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CC2C02004E;
-        Fri, 10 Mar 2023 12:30:34 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B7D1B2004B;
-        Fri, 10 Mar 2023 12:30:34 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.179.10.180])
-        by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Fri, 10 Mar 2023 12:30:34 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1pabtK-003tRc-0n;
-        Fri, 10 Mar 2023 13:30:34 +0100
-Date:   Fri, 10 Mar 2023 12:30:34 +0000
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH] scsi: core: Simplify the code for waking up the error
- handler
-Message-ID: <20230310123034.GF620522@t480-pf1aa2c2.fritz.box>
-References: <20230307215151.3705164-1-bvanassche@acm.org>
- <20230309121328.GD620522@t480-pf1aa2c2.fritz.box>
- <53e12a05-f485-f24c-0887-35900c2307c0@acm.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <53e12a05-f485-f24c-0887-35900c2307c0@acm.org>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: o7AcBXSv68VLUvg2V082QOM73GtXW3hr
-X-Proofpoint-GUID: erNop0sIb96v8XB_yPyn3rZ2jxiz2T-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S230417AbjCJMhg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 07:37:36 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8846310BA7E;
+        Fri, 10 Mar 2023 04:37:14 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 231FFB82289;
+        Fri, 10 Mar 2023 12:37:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD4EEC433EF;
+        Fri, 10 Mar 2023 12:37:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678451831;
+        bh=9sWEZ+1Z6ff9ke3ovuR4A8ZZM7aSKC6q9nzpFqVYUWQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=K691tFqLWrfiRfkOdRaxKhOpqrE5N6Tl7R8UW/BN88jIdJ7JKkjCE3asYO5lAI38D
+         cifNUwzA5C+G0YPnIO9l1noAiJurl8yS5sXZR/gM/1y3Q5OJj2zXUxhKO3tNBaaWJs
+         uDIgNSvo06xTcgI4sKtAMEATeHvDMJy2zTFXrpQRwanGm34POeb/CLp52hmBEaMwIi
+         76XnA/4TcwYTG3zPZd7Aj5pMjWjESNoJ+Bq5k8YzD0tf86hzUo0vD85ypOGMYvcbR3
+         AFew8gkuY3Q8JQ4cDdAqLpn6dB4A2cFAjixOcEsAmHZbt1IqB5qtQOlweeYld4XKzE
+         sZwtjVx1Eqo+A==
+From:   Chao Yu <chao@kernel.org>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com
+Cc:     bvanassche@acm.org, hch@infradead.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Chao Yu <chao@kernel.org>
+Subject: [PATCH v5] scsi: support packing multi-segment in UNMAP command
+Date:   Fri, 10 Mar 2023 20:36:04 +0800
+Message-Id: <20230310123604.1820231-1-chao@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-10_03,2023-03-09_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 mlxscore=0
- phishscore=0 clxscore=1015 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 adultscore=0 impostorscore=0 spamscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303100096
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 09, 2023 at 09:20:45AM -0800, Bart Van Assche wrote:
-> On 3/9/23 04:13, Benjamin Block wrote:
-> > On Tue, Mar 07, 2023 at 01:51:51PM -0800, Bart Van Assche wrote:
-> >> scsi_dec_host_busy() is called from the hot path and hence must not
-> >> obtain the host lock if no commands have failed. scsi_dec_host_busy()
-> >> tests three different variables of which at least two are set if a
-> >> command failed. Commit 3bd6f43f5cb3 ("scsi: core: Ensure that the
-> >> SCSI error handler gets woken up") introduced a call_rcu() call to
-> >> ensure that all tasks observe the host state change before the
-> >> host_failed change. Simplify the approach for guaranteeing that the host
-> >> state and host_failed/host_eh_scheduled changes are observed in order by using
-> >> smp_store_release() to update host_failed or host_eh_scheduled after
-> >> having update the host state and smp_load_acquire() before reading the
-> >> host state.
-> > 
-> > It's probably just me, but "simplify" is a bit of a misnomer when you
-> > replace RCU by plain memory barriers. And I'm kind of wondering what we
-> > improve here? It seems to me that at least as far as the hot path is
-> > concerned, nothing really changes? The situation for
-> > `scsi_eh_scmd_add()` seems to improve, but that is already way off the
-> > hot path.
-> 
-> Hi Benjamin,
-> 
-> The advantages of the approach introduced by this patch are as follows:
-> * The size of struct scsi_cmnd is reduced. This may improve performance
->    by reducing the number of cache misses.
-> * One call_rcu() call is eliminated. This reduces the error handler
->    wake-up latency.
+As SCSI SBC4 specification section 5.30.2 describes that it can
+support unmapping one or more LBA range in single UNMAP command.
 
-Is that really a problem today? From personal experience we hardly ever
-have any real SCSI timeouts in our environments, and once we are at the
-point where we add commands to EH, we are already past the (default) 30s
-timeout for disks IIRC, so is the RCU latency significant at that point?
+However, previously we only pack one LBA range in UNMAP command
+by default no matter device gives the block limits that says it
+can support unmapping multiple LBA ranges with a single UNMAP
+command.
 
-I'm just wondering, because at least IMHO plain memory barrier are more
-complex than RCU - at least in understanding them.
+This patch sets max_discard_segments config according to block
+limits of device, and supports unmapping multiple LBA ranges with
+a single UNMAP command.
 
+Signed-off-by: Chao Yu <chao@kernel.org>
+---
+v5:
+- fix to assign cmd->cmnd[7] and cmd->cmnd[8] w/ data_len correctly.
+- fix to let ufshpb recognize and handle discard request which contains
+multiple ranges correctly.
+ drivers/scsi/sd.c         | 36 +++++++++++++++++++++++++-----------
+ drivers/scsi/sd.h         |  1 +
+ drivers/ufs/core/ufshpb.c | 21 +++++++++++++++++++--
+ 3 files changed, 45 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4bb87043e6db..1908b31c7342 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -792,6 +792,8 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	q->limits.discard_granularity =
+ 		max(sdkp->physical_block_size,
+ 		    sdkp->unmap_granularity * logical_block_size);
++	blk_queue_max_discard_segments(q, min_t(u32, U16_MAX,
++				sdkp->max_unmap_block_desc_count));
+ 	sdkp->provisioning_mode = mode;
+ 
+ 	switch (mode) {
+@@ -851,9 +853,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 	struct scsi_device *sdp = cmd->device;
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+ 	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
+-	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+-	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+-	unsigned int data_len = 24;
++	unsigned short segments = blk_rq_nr_discard_segments(rq);
++	unsigned int data_len = 8 + 16 * segments;
++	unsigned int descriptor_offset = 8;
++	struct bio *bio;
+ 	char *buf;
+ 
+ 	buf = sd_set_special_bvec(rq, data_len);
+@@ -862,12 +865,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = UNMAP;
+-	cmd->cmnd[8] = 24;
++	cmd->cmnd[7] = data_len >> 8;
++	cmd->cmnd[8] = data_len & 0xff;
++
++	put_unaligned_be16(6 + 16 * segments, &buf[0]);
++	put_unaligned_be16(16 * segments, &buf[2]);
+ 
+-	put_unaligned_be16(6 + 16, &buf[0]);
+-	put_unaligned_be16(16, &buf[2]);
+-	put_unaligned_be64(lba, &buf[8]);
+-	put_unaligned_be32(nr_blocks, &buf[16]);
++	__rq_for_each_bio(bio, rq) {
++		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
++		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
++
++		put_unaligned_be64(lba, &buf[descriptor_offset]);
++		put_unaligned_be32(nr_blocks, &buf[descriptor_offset + 8]);
++		descriptor_offset += 16;
++	}
+ 
+ 	cmd->allowed = sdkp->max_retries;
+ 	cmd->transfersize = data_len;
+@@ -2917,7 +2928,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	sdkp->opt_xfer_blocks = get_unaligned_be32(&vpd->data[12]);
+ 
+ 	if (vpd->len >= 64) {
+-		unsigned int lba_count, desc_count;
++		unsigned int lba_count;
+ 
+ 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&vpd->data[36]);
+ 
+@@ -2925,9 +2936,12 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 			goto out;
+ 
+ 		lba_count = get_unaligned_be32(&vpd->data[20]);
+-		desc_count = get_unaligned_be32(&vpd->data[24]);
+ 
+-		if (lba_count && desc_count)
++		/* Extract the MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT. */
++		sdkp->max_unmap_block_desc_count =
++					get_unaligned_be32(&vpd->data[24]);
++
++		if (lba_count && sdkp->max_unmap_block_desc_count)
+ 			sdkp->max_unmap_blocks = lba_count;
+ 
+ 		sdkp->unmap_granularity = get_unaligned_be32(&vpd->data[28]);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..e7c51d23395b 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -119,6 +119,7 @@ struct scsi_disk {
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
++	u32		max_unmap_block_desc_count;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
+ 	u32		index;
+diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
+index a46a7666c891..327b29cf506f 100644
+--- a/drivers/ufs/core/ufshpb.c
++++ b/drivers/ufs/core/ufshpb.c
+@@ -383,13 +383,30 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	rgn = hpb->rgn_tbl + rgn_idx;
+ 	srgn = rgn->srgn_tbl + srgn_idx;
+ 
+-	/* If command type is WRITE or DISCARD, set bitmap as dirty */
+-	if (ufshpb_is_write_or_discard(cmd)) {
++	/* If command type is WRITE, set bitmap as dirty */
++	if (op_is_write(req_op(scsi_cmd_to_rq(cmd)))) {
+ 		ufshpb_iterate_rgn(hpb, rgn_idx, srgn_idx, srgn_offset,
+ 				   transfer_len, true);
+ 		return 0;
+ 	}
+ 
++	/* If command type is DISCARD, set bitmap as dirty */
++	if (op_is_discard(req_op(scsi_cmd_to_rq(cmd)))) {
++		struct bio *bio;
++
++		__rq_for_each_bio(bio, scsi_cmd_to_rq(cmd)) {
++			lpn = sectors_to_logical(cmd->device,
++						bio->bi_iter.bi_sector);
++			transfer_len = sectors_to_logical(cmd->device,
++							bio_sectors(bio));
++			ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx,
++						&srgn_idx, &srgn_offset);
++			ufshpb_iterate_rgn(hpb, rgn_idx, srgn_idx,
++					srgn_offset, transfer_len, true);
++		}
++		return 0;
++	}
++
+ 	if (!ufshpb_is_supported_chunk(hpb, transfer_len))
+ 		return 0;
+ 
 -- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.25.1
+
