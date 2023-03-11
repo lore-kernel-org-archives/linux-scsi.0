@@ -2,69 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9CE2C74A4B
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Mar 2023 04:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFFD0C6FD1C
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Mar 2023 17:47:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229636AbjCKEwO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Mar 2023 23:52:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37292 "EHLO
+        id S229956AbjCKRrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Mar 2023 12:47:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229776AbjCKEwL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 23:52:11 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87F8612CBAE;
-        Fri, 10 Mar 2023 20:52:10 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 316F4B824B6;
-        Sat, 11 Mar 2023 04:52:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D047AC4339B;
-        Sat, 11 Mar 2023 04:52:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678510327;
-        bh=071mMextrEUT74H8Z9xw0kJIWRG6LDVPVsMuC9fZtLE=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=CAepQPSdKbGX95cC2dxKeixArcox0NH7HYJH1wn4X7lL6fwWPAL/MQ1xGN933ledB
-         BsWj2lKLhRVGeiPYBdgfNE3XsuuqNqXY0wjNuiylX7kFGW/V4YaIVZlT3ctdea6FJN
-         D2i3h5iFNESZEyAx0ZCdYHp4McAY58LNWGhCrUGX+KeegYIBlKxYPDrnSp80snk3pZ
-         rCjPT6ARWAe8L1eHrE7eHLW4rqDg+oGdXP8oBL6KCVKV+ktvKbx24+Y+r5HjaxmM61
-         iZBAoCUQkTW1I1qipqz54tdNp9Z7M3aFnoWz+pdHDYSZ08oNNKQygRpMIe/G3OvHOv
-         CKokSJh7ZOOQQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C0D4BE61B75;
-        Sat, 11 Mar 2023 04:52:07 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.3-rc1
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <f34e06d6f44d17ad720e3a62497c612aebf5aab1.camel@HansenPartnership.com>
-References: <f34e06d6f44d17ad720e3a62497c612aebf5aab1.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <f34e06d6f44d17ad720e3a62497c612aebf5aab1.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 288b3271d920c9ba949c3bab0f749f4cecc70e09
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ef5f68cc1f829b492b19cd4df5af4454aa816b93
-Message-Id: <167851032778.30895.12444734641506682720.pr-tracker-bot@kernel.org>
-Date:   Sat, 11 Mar 2023 04:52:07 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229437AbjCKRrS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Mar 2023 12:47:18 -0500
+Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.216])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A863393FA;
+        Sat, 11 Mar 2023 09:47:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=O/eC/
+        VP3xR/fK2+k85eSTE/1aYsChEdTIJsTVPzdm+w=; b=Dq8AWLQjBIAdKjsGBDdLV
+        0SqVYZJsj2F28HXZp2zDZ4h2UwznSG15KVQV0hNeXzqlvjfh5q+f2/XTnT9iX6oM
+        uff0wkgGJNwWW0GhhFa8QYAflQ4Jh57GPekicving74Ujun7NQ0u5vyE7qIFN4m9
+        LJkeXNELEWFB1aKRZCKMkk=
+Received: from leanderwang-LC2.localdomain (unknown [111.206.145.21])
+        by zwqz-smtp-mta-g2-1 (Coremail) with SMTP id _____wBnbZmLvgxkO4YPDA--.56172S2;
+        Sun, 12 Mar 2023 01:46:51 +0800 (CST)
+From:   Zheng Wang <zyytlz.wz@163.com>
+To:     njavali@marvell.com
+Cc:     sebastian.reichel@collabora.com, mrangankar@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, hackerzheng666@gmail.com,
+        1395428693sheep@gmail.com, alex000young@gmail.com,
+        Zheng Wang <zyytlz.wz@163.com>
+Subject: [PATCH v2] power: supply: da9150: Fix use after free bug in  da9150_charger_remove due to race condition
+Date:   Sun, 12 Mar 2023 01:46:50 +0800
+Message-Id: <20230311174650.3979517-1-zyytlz.wz@163.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _____wBnbZmLvgxkO4YPDA--.56172S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7AFy7trWftrWkCF4DXr1UWrg_yoW8XFWrp3
+        98Cr9xGF48tFWUtF4kt3W7CFyUGa43CryY9r4xG345Zw13Zw4jqr15JFn8tFy7Ar4fAF4I
+        vanYq3y2g3W5GrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziID73UUUUU=
+X-Originating-IP: [111.206.145.21]
+X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiXRMvU1WBo4DxnQAAsp
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 10 Mar 2023 17:12:32 -0500:
+In da9150_charger_probe, &charger->otg_work is bound with
+da9150_charger_otg_work. da9150_charger_otg_ncb may be
+called to start the work.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+If we remove the module which will call da9150_charger_remove
+to make cleanup, there may be a unfinished work. The possible
+sequence is as follows:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ef5f68cc1f829b492b19cd4df5af4454aa816b93
+Fix it by canceling the work before cleanup in the da9150_charger_remove
 
-Thank you!
+CPU0                  CPUc1
 
+                    |da9150_charger_otg_work
+da9150_charger_remove      |
+power_supply_unregister  |
+device_unregister   |
+power_supply_dev_release|
+kfree(psy)          |
+                    |
+                    | 	power_supply_changed(charger->usb);
+                    |   //use
+
+Fixes: c1a281e34dae ("power: Add support for DA9150 Charger")
+Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
+---
+v2:
+- fix wrong description in commit message and mov cancel_work_sync
+after usb_unregister_notifier suggested by Sebastian Reichel
+---
+ drivers/power/supply/da9150-charger.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/power/supply/da9150-charger.c b/drivers/power/supply/da9150-charger.c
+index 14da5c595dd9..a87aeaea38e1 100644
+--- a/drivers/power/supply/da9150-charger.c
++++ b/drivers/power/supply/da9150-charger.c
+@@ -657,6 +657,7 @@ static int da9150_charger_remove(struct platform_device *pdev)
+ 
+ 	if (!IS_ERR_OR_NULL(charger->usb_phy))
+ 		usb_unregister_notifier(charger->usb_phy, &charger->otg_nb);
++	cancel_work_sync(&charger->otg_work);
+ 
+ 	power_supply_unregister(charger->battery);
+ 	power_supply_unregister(charger->usb);
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.25.1
+
