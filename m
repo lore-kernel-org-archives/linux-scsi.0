@@ -2,88 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA68DC6FD19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Mar 2023 02:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9CE2C74A4B
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Mar 2023 04:52:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229835AbjCKCFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Mar 2023 21:05:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50366 "EHLO
+        id S229636AbjCKEwO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Mar 2023 23:52:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229817AbjCKCFt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 21:05:49 -0500
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9BC1143688;
-        Fri, 10 Mar 2023 18:05:48 -0800 (PST)
-Received: by mail-lf1-x135.google.com with SMTP id i28so9069271lfv.0;
-        Fri, 10 Mar 2023 18:05:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678500347;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JFMM/LW85+BkmtqLGtTq7h5t/zGOgNTjSKHsZWTz0ks=;
-        b=Bd/+0fto6WSHdEzDcuwWFsiVdUjzT1t4KSbBXI4q6x09sK0ONCUG0g4800pnmlPKWx
-         HNd0aCeoGFE9R6HrD5X/7KNzBupSaBCJWTYYHpAeyo6KSeM8JJHe1/9gHM4W+2vAQxg6
-         NbR9mi+myDFeGdDQWhQGmC0VJc0Rpx5ictYCkjqgz5TDQ7ZmhPHIVa2ohrv+yvREijT+
-         OxnLVq/8yKaMufdBizA84T5pshIDzgubAqLSRHe+B5BCgs2w1D31V33uHSxiH+P+7oBh
-         BYwySXTW2pnjkFxNdDPhG/rkEYuyRxBHZdUzgbea8nfZLlHeSj1YW0gecXkdWtQPBMch
-         7PVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678500347;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JFMM/LW85+BkmtqLGtTq7h5t/zGOgNTjSKHsZWTz0ks=;
-        b=O9PqI3O/a0qhsnXebfvHIBEUZ2kqW/tSF5q/Ha3WJerynM2jfHRfulSkBemd9mEqj0
-         wjOQWsBw0wHZhK3rNqGm52sbfVNSf22d99WyqYcnerSHzAea+lLicd3sSBRAjo6vFRpx
-         P6bG0iSAeFL3iVH4+tGhki2jXlhhCIbZE6vAGbomUmc6wZCX4n8vtAOmrUABhhbNOcVi
-         eKSrXY6tNJ7BZRhhe/yQr1PmMw2ommoVmjD7ZxjahHRh+kaLCV/tR1yzcs2hqBvclJi3
-         t0WTPNt60Jl2qNnCm03QyKC+qx8yKZ7ypdWrjnsmfIAfpypZEXd6OuFSM3YcosboDCVw
-         Xa/A==
-X-Gm-Message-State: AO0yUKXDO/P0pzSZB8MUSaxC8ZBY6E75mb/s/8MM0iMihtxzXsrh9BGK
-        YNCs5g0yg5eozIrkdhkbOTziCd9GRek2zIJfNA==
-X-Google-Smtp-Source: AK7set+lQcIx9X3YBDKKn3Bwz3OktR/0HzADRDx80+zlEgH3rVxeKKai9VN2RdVnOt2ZBcD1lWiW6A6CyQPq32uOFo8=
-X-Received: by 2002:ac2:44b4:0:b0:4d5:ca43:703d with SMTP id
- c20-20020ac244b4000000b004d5ca43703dmr8437303lfm.0.1678500346671; Fri, 10 Mar
- 2023 18:05:46 -0800 (PST)
-MIME-Version: 1.0
-References: <20230307065448.15279-1-powen.kao@mediatek.com> <20230307065448.15279-6-powen.kao@mediatek.com>
-In-Reply-To: <20230307065448.15279-6-powen.kao@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Sat, 11 Mar 2023 10:05:35 +0800
-Message-ID: <CAGaU9a92W5a_z_0cg=-BD_dAzzcN_SrpyN+MzN7xXefmeb-D8w@mail.gmail.com>
-Subject: Re: [PATCH v4 5/5] scsi: ufs: ufs-mediatek: Add MCQ support for MTK platform
-To:     Po-Wen Kao <powen.kao@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        alice.chao@mediatek.com, naomi.chu@mediatek.com,
-        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
-        eddie.huang@mediatek.com, mason.zhang@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229776AbjCKEwL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2023 23:52:11 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87F8612CBAE;
+        Fri, 10 Mar 2023 20:52:10 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 316F4B824B6;
+        Sat, 11 Mar 2023 04:52:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D047AC4339B;
+        Sat, 11 Mar 2023 04:52:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678510327;
+        bh=071mMextrEUT74H8Z9xw0kJIWRG6LDVPVsMuC9fZtLE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=CAepQPSdKbGX95cC2dxKeixArcox0NH7HYJH1wn4X7lL6fwWPAL/MQ1xGN933ledB
+         BsWj2lKLhRVGeiPYBdgfNE3XsuuqNqXY0wjNuiylX7kFGW/V4YaIVZlT3ctdea6FJN
+         D2i3h5iFNESZEyAx0ZCdYHp4McAY58LNWGhCrUGX+KeegYIBlKxYPDrnSp80snk3pZ
+         rCjPT6ARWAe8L1eHrE7eHLW4rqDg+oGdXP8oBL6KCVKV+ktvKbx24+Y+r5HjaxmM61
+         iZBAoCUQkTW1I1qipqz54tdNp9Z7M3aFnoWz+pdHDYSZ08oNNKQygRpMIe/G3OvHOv
+         CKokSJh7ZOOQQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C0D4BE61B75;
+        Sat, 11 Mar 2023 04:52:07 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.3-rc1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <f34e06d6f44d17ad720e3a62497c612aebf5aab1.camel@HansenPartnership.com>
+References: <f34e06d6f44d17ad720e3a62497c612aebf5aab1.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <f34e06d6f44d17ad720e3a62497c612aebf5aab1.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 288b3271d920c9ba949c3bab0f749f4cecc70e09
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ef5f68cc1f829b492b19cd4df5af4454aa816b93
+Message-Id: <167851032778.30895.12444734641506682720.pr-tracker-bot@kernel.org>
+Date:   Sat, 11 Mar 2023 04:52:07 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 7, 2023 at 2:57=E2=80=AFPM Po-Wen Kao <powen.kao@mediatek.com> =
-wrote:
->
-> Changes
-> - Implement vops and setup irq
-> - Fix pm flow under mcq mode
->
-> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-> ---
->  drivers/ufs/host/ufs-mediatek.c | 192 +++++++++++++++++++++++++++++++-
->  drivers/ufs/host/ufs-mediatek.h |  33 ++++++
->  2 files changed, 223 insertions(+), 2 deletions(-)
->
+The pull request you sent on Fri, 10 Mar 2023 17:12:32 -0500:
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ef5f68cc1f829b492b19cd4df5af4454aa816b93
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
