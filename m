@@ -2,96 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFFD0C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Mar 2023 17:47:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FADBC6FD19
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Mar 2023 14:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229956AbjCKRrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Mar 2023 12:47:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33218 "EHLO
+        id S230021AbjCLOYi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Mar 2023 10:24:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjCKRrS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Mar 2023 12:47:18 -0500
+        with ESMTP id S229494AbjCLOYg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Mar 2023 10:24:36 -0400
 Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.216])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A863393FA;
-        Sat, 11 Mar 2023 09:47:13 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C031D46170;
+        Sun, 12 Mar 2023 07:24:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=O/eC/
-        VP3xR/fK2+k85eSTE/1aYsChEdTIJsTVPzdm+w=; b=Dq8AWLQjBIAdKjsGBDdLV
-        0SqVYZJsj2F28HXZp2zDZ4h2UwznSG15KVQV0hNeXzqlvjfh5q+f2/XTnT9iX6oM
-        uff0wkgGJNwWW0GhhFa8QYAflQ4Jh57GPekicving74Ujun7NQ0u5vyE7qIFN4m9
-        LJkeXNELEWFB1aKRZCKMkk=
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=4Zscu
+        iQPwnHKfbAbpvcHFmQ/w/W3FQBM8Le/KlBVmX8=; b=YQklslgIvM7mi1Co4Qh5c
+        3etl9t3wkCXV3MV5Sw1sG0m35C4r7TC8TPu9ytBAePYuB2hYV8nda1AcjVzlmhV1
+        MyXmzggw5wRXI/ZsglyTyx6AGK8l6JSqwnJDmLNUmFfRQRdZZwXbsYcTpAOQ+BH2
+        eiEZxIfCTe/8Iu0+Egtp3U=
 Received: from leanderwang-LC2.localdomain (unknown [111.206.145.21])
-        by zwqz-smtp-mta-g2-1 (Coremail) with SMTP id _____wBnbZmLvgxkO4YPDA--.56172S2;
-        Sun, 12 Mar 2023 01:46:51 +0800 (CST)
+        by zwqz-smtp-mta-g4-2 (Coremail) with SMTP id _____wC3g3x84A1kSDt1DA--.34606S2;
+        Sun, 12 Mar 2023 22:23:56 +0800 (CST)
 From:   Zheng Wang <zyytlz.wz@163.com>
-To:     njavali@marvell.com
-Cc:     sebastian.reichel@collabora.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+To:     sathya.prakash@broadcom.com
+Cc:     sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, hackerzheng666@gmail.com,
         1395428693sheep@gmail.com, alex000young@gmail.com,
         Zheng Wang <zyytlz.wz@163.com>
-Subject: [PATCH v2] power: supply: da9150: Fix use after free bug in  da9150_charger_remove due to race condition
-Date:   Sun, 12 Mar 2023 01:46:50 +0800
-Message-Id: <20230311174650.3979517-1-zyytlz.wz@163.com>
+Subject: [PATCH] scsi: message: mptlan: Fix use after free bug in mptlan_remove due to race condition
+Date:   Sun, 12 Mar 2023 22:23:54 +0800
+Message-Id: <20230312142354.1857371-1-zyytlz.wz@163.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _____wBnbZmLvgxkO4YPDA--.56172S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFy7trWftrWkCF4DXr1UWrg_yoW8XFWrp3
-        98Cr9xGF48tFWUtF4kt3W7CFyUGa43CryY9r4xG345Zw13Zw4jqr15JFn8tFy7Ar4fAF4I
-        vanYq3y2g3W5GrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziID73UUUUU=
+X-CM-TRANSID: _____wC3g3x84A1kSDt1DA--.34606S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWrurykGF4Dur1fWry5Wr13CFg_yoW8Jry7pr
+        ZFka48CrZ5Jw1Iy3WDtFy8AFyrC3WIgrWkKrWSg342vr1FkFyYq340kFy2kw1xXFs5Ga13
+        Zr4DJFs7GayDKFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zi-eOJUUUUU=
 X-Originating-IP: [111.206.145.21]
-X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiXRMvU1WBo4DxnQAAsp
+X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/xtbBzg0wU2I0Xm+hTwABso
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In da9150_charger_probe, &charger->otg_work is bound with
-da9150_charger_otg_work. da9150_charger_otg_ncb may be
-called to start the work.
+In mptlan_probe, it called mpt_register_lan_device and bound 
+&priv->post_buckets_task with mpt_lan_post_receive_buckets_work.
+When it calls lan_reply, it will finally call 
+mpt_lan_wake_post_buckets_task to start the work.
 
-If we remove the module which will call da9150_charger_remove
-to make cleanup, there may be a unfinished work. The possible
-sequence is as follows:
+When we call mptlan_remove to remove the driver, there
+may be a sequence as follows:
 
-Fix it by canceling the work before cleanup in the da9150_charger_remove
+Fix it by finishing the work before cleanup in mptlan_remove
 
-CPU0                  CPUc1
+CPU0                  CPU1
 
-                    |da9150_charger_otg_work
-da9150_charger_remove      |
-power_supply_unregister  |
-device_unregister   |
-power_supply_dev_release|
-kfree(psy)          |
+                    |mpt_lan_post_receive_buckets_work
+mptlan_remove       |
+  free_netdev       |
+    kfree(dev);     |
                     |
-                    | 	power_supply_changed(charger->usb);
+                    | dev->mtu
                     |   //use
 
-Fixes: c1a281e34dae ("power: Add support for DA9150 Charger")
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
 ---
-v2:
-- fix wrong description in commit message and mov cancel_work_sync
-after usb_unregister_notifier suggested by Sebastian Reichel
----
- drivers/power/supply/da9150-charger.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/message/fusion/mptlan.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/power/supply/da9150-charger.c b/drivers/power/supply/da9150-charger.c
-index 14da5c595dd9..a87aeaea38e1 100644
---- a/drivers/power/supply/da9150-charger.c
-+++ b/drivers/power/supply/da9150-charger.c
-@@ -657,6 +657,7 @@ static int da9150_charger_remove(struct platform_device *pdev)
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index 142eb5d5d9df..de2e7bcf4784 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1433,7 +1433,9 @@ mptlan_remove(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+ 	struct net_device	*dev = ioc->netdev;
++	struct mpt_lan_priv *priv = netdev_priv(dev);
  
- 	if (!IS_ERR_OR_NULL(charger->usb_phy))
- 		usb_unregister_notifier(charger->usb_phy, &charger->otg_nb);
-+	cancel_work_sync(&charger->otg_work);
- 
- 	power_supply_unregister(charger->battery);
- 	power_supply_unregister(charger->usb);
++	cancel_delayed_work_sync(&priv->post_buckets_task);
+ 	if(dev != NULL) {
+ 		unregister_netdev(dev);
+ 		free_netdev(dev);
 -- 
 2.25.1
 
