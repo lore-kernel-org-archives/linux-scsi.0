@@ -2,75 +2,66 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 654F3C7618D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 18:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9F1C74A4B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 18:32:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbjCMS3b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 14:29:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60646 "EHLO
+        id S231373AbjCMSch (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 14:32:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229712AbjCMS32 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 14:29:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F37B882A92;
-        Mon, 13 Mar 2023 11:28:47 -0700 (PDT)
+        with ESMTP id S231370AbjCMSb7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 14:31:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CD7E74DD2;
+        Mon, 13 Mar 2023 11:31:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3D13661468;
-        Mon, 13 Mar 2023 18:27:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01344C433D2;
-        Mon, 13 Mar 2023 18:27:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678732060;
-        bh=/UptELta1fbfIVlSU3lW1JfbEsBBjNSMIYGDMc0a6Bc=;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5EAAF6144F;
+        Mon, 13 Mar 2023 18:31:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DA98C433EF;
+        Mon, 13 Mar 2023 18:31:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1678732265;
+        bh=7ZRV77H3/Rk/VKIst+mj/szmufYFv+bj01MKZJGyaLo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VvvKyry0IHRmRY/4zqVRDhYa1hlwWP5XO8DPtmSV86lG3jJNM7uxAeqCM3/hMjEnS
-         /4fGZINOj3BbOFj7VtuSn5/zADgew9/AhucSrWiCDWCAvWqK46vpsQ6ipb+6neCHzX
-         D26bSYYK00ZZp7wS/PyFzdSBom5Fc1YvU4I2sz/4csGzme6PYNmreJ9TJMdSLn2pJ3
-         cgxXHKzmvZ0aDqUoSafiMpZKQIjdbzRSu92/wVYzEbmBwzFm5rb1KpTZ9Ix5kcdW8E
-         IH7F21aKBHvZjZ0vyXFvDpM4UNcMSFajBrFy3LzzWeznIYwqpqWY/2y3YL9Y5Kytyi
-         kj7t2/qKpgCbw==
-Date:   Mon, 13 Mar 2023 11:27:38 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v3 2/7] dt-bindings: mmc: sdhci-msm: Add ICE phandle
- and drop core clock
-Message-ID: <ZA9rGihWeLhUYMdA@sol.localdomain>
-References: <20230313115202.3960700-1-abel.vesa@linaro.org>
- <20230313115202.3960700-3-abel.vesa@linaro.org>
+        b=gKJRsP+S8QrdgdUP2Vse03STXMWfG+LUTy4SaTvA6ICf2sWhjS1CwD6Y1tM1XyuI8
+         isU1SG19SMT+pajpJs4nUoVm2Unw0FeTXe+pUtOiTK5yCFuj62pOcvF8okgYSYSz85
+         Z97AVvHhNQDtUO60MbVCitwXzlREq31L1vQg0pZI=
+Date:   Mon, 13 Mar 2023 19:29:54 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc:     Martin Petersen <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        Michael Cyr <mikecyr@linux.ibm.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Chris Boot <bootc@bootc.net>,
+        "Michael S . Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Juergen Gross <jgross@suse.com>, linux-scsi@vger.kernel.org,
+        linux@yadro.com
+Subject: Re: [PATCH v3 07/12] usb: gadget: f_tcm: remove default fabric ops
+ callouts
+Message-ID: <ZA9roqfJY6pqCPgD@kroah.com>
+References: <20230313181110.20566-1-d.bogdanov@yadro.com>
+ <20230313181110.20566-8-d.bogdanov@yadro.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230313115202.3960700-3-abel.vesa@linaro.org>
+In-Reply-To: <20230313181110.20566-8-d.bogdanov@yadro.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 13, 2023 at 01:51:57PM +0200, Abel Vesa wrote:
-> Subject: Re: [RFC PATCH v3 2/7] dt-bindings: mmc: sdhci-msm: Add ICE phandle
-> and drop core clock
+On Mon, Mar 13, 2023 at 09:11:05PM +0300, Dmitry Bogdanov wrote:
+> Remove callouts that have the implementation like a
+> default implementation in TCM Core.
+> 
+> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
-"and drop core clock" should be removed from the subject now, right?  Same for
-patch 3.
-
-- Eric
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
