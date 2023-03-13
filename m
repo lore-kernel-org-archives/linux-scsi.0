@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCBB1C7618E
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 18:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D24F9C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 18:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229978AbjCMSLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S230173AbjCMSLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 13 Mar 2023 14:11:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51664 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230062AbjCMSLZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 14:11:25 -0400
+        with ESMTP id S230075AbjCMSL0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 14:11:26 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE62569CF4;
-        Mon, 13 Mar 2023 11:11:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03BA06B331;
+        Mon, 13 Mar 2023 11:11:21 -0700 (PDT)
 Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
-        by mta-01.yadro.com (Proxmox) with ESMTP id 4D12034214D;
-        Mon, 13 Mar 2023 21:11:18 +0300 (MSK)
+        by mta-01.yadro.com (Proxmox) with ESMTP id 8AF8C34214F;
+        Mon, 13 Mar 2023 21:11:19 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
         :cc:content-transfer-encoding:content-type:content-type:date
         :from:from:in-reply-to:message-id:mime-version:references
-        :reply-to:subject:subject:to:to; s=mta-01; bh=t6YmvwSRe7WGVlVA6i
-        xDRMSG7+0Bihd9czouuiOCJH0=; b=CXxFYOt6kGbtZqgWqsnPL61HnwHq3rCtxd
-        1l+xsx3boFO1ZqHXK1uETawDZQpZHZ0WhYBFmfQUF+8svdNrX/ZS8wIRcbfNHJMM
-        WBXC5TQwwbQI2Udic1aD7WuxtZPFnkKjxel0AzLmdaxSTyPem+6TCDFuqXxD5gtD
-        I8CcFV40o=
+        :reply-to:subject:subject:to:to; s=mta-01; bh=3eAU+aIyF6YkjbljD8
+        h+LIF0eqC0rHsc6DFVHsIfcxk=; b=RiA72RaayMMwQaPC+CwmXinKjcypgW26Oq
+        wZdzn8LUJHFlx7+EHBr8Pro3QlX+nyAikQxz6E3aq2twouOS1J6R1PdSPC9uae0q
+        D99o/2yKrg2aHO4T5HepAosUe/JTH1VJXuDrt8pCvrfMzhn9od8fLeBUYc/k2WgB
+        FyZTHoQNc=
 Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Proxmox) with ESMTPS id 449E9342145;
-        Mon, 13 Mar 2023 21:11:18 +0300 (MSK)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id 81FA2342145;
+        Mon, 13 Mar 2023 21:11:19 +0300 (MSK)
 Received: from NB-591.corp.yadro.com (10.199.20.11) by
  T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Mon, 13 Mar 2023 21:11:17 +0300
+ 15.2.1118.9; Mon, 13 Mar 2023 21:11:18 +0300
 From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
 To:     Martin Petersen <martin.petersen@oracle.com>,
         <target-devel@vger.kernel.org>
@@ -51,9 +51,9 @@ CC:     Bart Van Assche <bvanassche@acm.org>,
         Jason Wang <jasowang@redhat.com>,
         Juergen Gross <jgross@suse.com>, <linux-scsi@vger.kernel.org>,
         <linux@yadro.com>, Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH v3 02/12] infiniband: srpt: remove default fabric ops callouts
-Date:   Mon, 13 Mar 2023 21:11:00 +0300
-Message-ID: <20230313181110.20566-3-d.bogdanov@yadro.com>
+Subject: [PATCH v3 04/12] scsi: target: loop: remove default fabric ops callouts
+Date:   Mon, 13 Mar 2023 21:11:02 +0300
+Message-ID: <20230313181110.20566-5-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230313181110.20566-1-d.bogdanov@yadro.com>
 References: <20230313181110.20566-1-d.bogdanov@yadro.com>
@@ -72,81 +72,85 @@ default implementation in TCM Core.
 
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/infiniband/ulp/srpt/ib_srpt.c | 33 ---------------------------
- 1 file changed, 33 deletions(-)
+ drivers/target/loopback/tcm_loop.c | 41 ------------------------------
+ 1 file changed, 41 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index 3c3fae738c3e..3e9343fd2d8e 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -3300,11 +3300,6 @@ static int srpt_check_true(struct se_portal_group *se_tpg)
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 139031ccb700..5c8646c2d4e9 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -480,30 +480,6 @@ static int tcm_loop_check_demo_mode(struct se_portal_group *se_tpg)
  	return 1;
  }
  
--static int srpt_check_false(struct se_portal_group *se_tpg)
+-static int tcm_loop_check_demo_mode_cache(struct se_portal_group *se_tpg)
 -{
 -	return 0;
 -}
 -
- static struct srpt_port *srpt_tpg_to_sport(struct se_portal_group *tpg)
+-/*
+- * Allow I_T Nexus full READ-WRITE access without explict Initiator Node ACLs for
+- * local virtual Linux/SCSI LLD passthrough into VM hypervisor guest
+- */
+-static int tcm_loop_check_demo_mode_write_protect(struct se_portal_group *se_tpg)
+-{
+-	return 0;
+-}
+-
+-/*
+- * Because TCM_Loop does not use explict ACLs and MappedLUNs, this will
+- * never be called for TCM_Loop by target_core_fabric_configfs.c code.
+- * It has been added here as a nop for target_fabric_tf_ops_check()
+- */
+-static int tcm_loop_check_prod_mode_write_protect(struct se_portal_group *se_tpg)
+-{
+-	return 0;
+-}
+-
+ static int tcm_loop_check_prot_fabric_only(struct se_portal_group *se_tpg)
  {
- 	return tpg->se_tpg_wwn->priv;
-@@ -3334,11 +3329,6 @@ static u16 srpt_get_tag(struct se_portal_group *tpg)
- 	return 1;
+ 	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg, struct tcm_loop_tpg,
+@@ -511,21 +487,11 @@ static int tcm_loop_check_prot_fabric_only(struct se_portal_group *se_tpg)
+ 	return tl_tpg->tl_fabric_prot_type;
  }
  
--static u32 srpt_tpg_get_inst_index(struct se_portal_group *se_tpg)
+-static u32 tcm_loop_get_inst_index(struct se_portal_group *se_tpg)
 -{
 -	return 1;
 -}
 -
- static void srpt_release_cmd(struct se_cmd *se_cmd)
+ static u32 tcm_loop_sess_get_index(struct se_session *se_sess)
  {
- 	struct srpt_send_ioctx *ioctx = container_of(se_cmd,
-@@ -3378,24 +3368,6 @@ static void srpt_close_session(struct se_session *se_sess)
- 	srpt_disconnect_ch_sync(ch);
+ 	return 1;
  }
  
--/**
-- * srpt_sess_get_index - return the value of scsiAttIntrPortIndex (SCSI-MIB)
-- * @se_sess: SCSI target session.
-- *
-- * A quote from RFC 4455 (SCSI-MIB) about this MIB object:
-- * This object represents an arbitrary integer used to uniquely identify a
-- * particular attached remote initiator port to a particular SCSI target port
-- * within a particular SCSI target device within a particular SCSI instance.
-- */
--static u32 srpt_sess_get_index(struct se_session *se_sess)
+-static void tcm_loop_set_default_node_attributes(struct se_node_acl *se_acl)
 -{
--	return 0;
+-	return;
 -}
 -
--static void srpt_set_default_node_attrs(struct se_node_acl *nacl)
--{
--}
--
- /* Note: only used from inside debug printk's by the TCM core. */
- static int srpt_get_tcm_cmd_state(struct se_cmd *se_cmd)
+ static int tcm_loop_get_cmd_state(struct se_cmd *se_cmd)
  {
-@@ -3866,18 +3838,13 @@ static const struct target_core_fabric_ops srpt_template = {
- 	.fabric_name			= "srpt",
- 	.tpg_get_wwn			= srpt_get_fabric_wwn,
- 	.tpg_get_tag			= srpt_get_tag,
--	.tpg_check_demo_mode		= srpt_check_false,
- 	.tpg_check_demo_mode_cache	= srpt_check_true,
- 	.tpg_check_demo_mode_write_protect = srpt_check_true,
--	.tpg_check_prod_mode_write_protect = srpt_check_false,
--	.tpg_get_inst_index		= srpt_tpg_get_inst_index,
- 	.release_cmd			= srpt_release_cmd,
- 	.check_stop_free		= srpt_check_stop_free,
- 	.close_session			= srpt_close_session,
--	.sess_get_index			= srpt_sess_get_index,
- 	.sess_get_initiator_sid		= NULL,
- 	.write_pending			= srpt_write_pending,
--	.set_default_node_attributes	= srpt_set_default_node_attrs,
- 	.get_cmd_state			= srpt_get_tcm_cmd_state,
- 	.queue_data_in			= srpt_queue_data_in,
- 	.queue_status			= srpt_queue_status,
+ 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
+@@ -1124,18 +1090,11 @@ static const struct target_core_fabric_ops loop_ops = {
+ 	.tpg_get_wwn			= tcm_loop_get_endpoint_wwn,
+ 	.tpg_get_tag			= tcm_loop_get_tag,
+ 	.tpg_check_demo_mode		= tcm_loop_check_demo_mode,
+-	.tpg_check_demo_mode_cache	= tcm_loop_check_demo_mode_cache,
+-	.tpg_check_demo_mode_write_protect =
+-				tcm_loop_check_demo_mode_write_protect,
+-	.tpg_check_prod_mode_write_protect =
+-				tcm_loop_check_prod_mode_write_protect,
+ 	.tpg_check_prot_fabric_only	= tcm_loop_check_prot_fabric_only,
+-	.tpg_get_inst_index		= tcm_loop_get_inst_index,
+ 	.check_stop_free		= tcm_loop_check_stop_free,
+ 	.release_cmd			= tcm_loop_release_cmd,
+ 	.sess_get_index			= tcm_loop_sess_get_index,
+ 	.write_pending			= tcm_loop_write_pending,
+-	.set_default_node_attributes	= tcm_loop_set_default_node_attributes,
+ 	.get_cmd_state			= tcm_loop_get_cmd_state,
+ 	.queue_data_in			= tcm_loop_queue_data_in,
+ 	.queue_status			= tcm_loop_queue_status,
 -- 
 2.25.1
 
