@@ -2,199 +2,154 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D8AC74A5B
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 09:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18C68C6FD19
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 09:26:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229994AbjCMJSV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 05:18:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55190 "EHLO
+        id S230024AbjCMJ0J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 05:26:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229689AbjCMJST (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 05:18:19 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41772113D1;
-        Mon, 13 Mar 2023 02:18:15 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D7SK8Y029779;
-        Mon, 13 Mar 2023 09:17:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=0H7NGg+no3R1jEB+A9Rmw3VAqYB+CcMABuXkv6FUM3M=;
- b=IJGkpibQB0zxFhT75OVyywJa+YjNJ9yQIucR44IntJHC5EvhyGKhuXJtHbErgH2Dn9Vk
- 9ubwtOJ0Rq6F/EJjXekaiXq3VAtiuHfc1ERZhpcsk7I8G+oXSF1d5MjsQskhFjZagYDj
- CGvE2cSCuet71H6w32qjYnY07j4R9Z2ucsP5jv/2aHtzEaVG7zdUsS+/4QhYSztfZPXj
- ewDgbdzdx51zBYZtwbrLfZ6AuHgSzpPLSnUwzDHXCSp0bRcCEzHt/0xcu1Vyl3A57dPM
- IHIWfxPLuwAowPdzxJk9IXXUVM/hoNxPdqMCQkyFGezOVHeX7G0dV9aRDUobu6JzzGum RQ== 
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p9yew08hq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 13 Mar 2023 09:17:50 +0000
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32D9HlAc009088;
-        Mon, 13 Mar 2023 09:17:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 3p8jqm9tbk-1;
-        Mon, 13 Mar 2023 09:17:47 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32D9HlVU009083;
-        Mon, 13 Mar 2023 09:17:47 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 32D9HkiP009082;
-        Mon, 13 Mar 2023 09:17:47 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id 97CFD452E; Mon, 13 Mar 2023 17:17:45 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-trace-kernel@vger.kernel.org (open list:TRACING)
-Subject: [PATCH v5] scsi: ufs: core: Add trace event for MCQ
-Date:   Mon, 13 Mar 2023 17:16:05 +0800
-Message-Id: <1678699023-6645-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: zMmCpXuZLgWsQLgS0pZELvB1skl3au7W
-X-Proofpoint-ORIG-GUID: zMmCpXuZLgWsQLgS0pZELvB1skl3au7W
+        with ESMTP id S229996AbjCMJ0B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 05:26:01 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FBE2274AF;
+        Mon, 13 Mar 2023 02:25:57 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32CNIoiq031842;
+        Mon, 13 Mar 2023 09:25:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=LulHpAlCWmj2ogZPG5xEVNfajbZ8kvJlscAYYCMzaeA=;
+ b=eU/FVKS25cms1MwqB7hlORSixoxnsH0R14E6SHOK9GlTpgRtX6Q8PJ5ZHDZR7fXZBOw6
+ nEcyPeF9vWbof8zt0DS/8Mngj9dcvwAQJgzWxx7v59tzXDmooohctjp2D3GC8KSXdBWp
+ uxhmI75DHXAQKdVIPsYGKoQlQZ+VhrsW1OO1VDC359gmgDN/8Yv5GsDTys+YpFtyLUQz
+ bdWJuNuztgdShBuRIiTQ1yRUqT9RzxTHE9tLYoL7NHThMnxTxKdqjceBazM7YHnQX7cw
+ xf36dxAjKzeLNS0velySSKne40OscSefQUnW2Ux3ycrKdiSYY+col0wqsmn5MwEBSADI 4w== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3p8g81bdgn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Mar 2023 09:25:52 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32D83Wos002367;
+        Mon, 13 Mar 2023 09:25:51 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3p8g3aw8mp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Mar 2023 09:25:51 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fpkg3aRaoV84Fv8s+68VYkzi40dXnV8xL9rUGFQKTaWMSQ0n3KePxud9W7qj8iM5FyT/1ubTgY4jnG9Opg8vczBIQvk82k6ViqBIWwJ3KkyQid7MvvhFTIhCOxuTDQ9VQ/0YvpRva3W/X/xDwZVPuvPC9qzYeANONkpIehvIWLZInyL/Aw3B2VBkuC0+pqhhixZm3i40vqINL3d/JQvD3zwQD7kUy01iFPezOkPVw7ruk3IsYY9spPuAfwcaSamoKOL2AuE5iZDpAJzMzUFl2GQDO/tLQ/X3AF1VrCXMdwvh5uboAVLcHcw+rcHkjb9bQCvfDgEU88RT0hgfQauXpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LulHpAlCWmj2ogZPG5xEVNfajbZ8kvJlscAYYCMzaeA=;
+ b=OxniCXR1DdU3SWShkvuZP1jS/62r9B7gl74dVermVx6tAPzDbIlXNxinlRmTAnlgwWjbUebaapt21RrchKxMyXlFNM8a7GyfRjTEV5qAVhPfirfJyr7LHSgdbKbasluuS06Q1jVtRZ0FUff4L4WpN2DRnh/rHT66Cp06OQSOuMz3Sio6aXi8/580amjcCO24WWjsf3FHA3ouHbJMyz2cS08QjbvkmOk6OGtVUVfaYpWSM3PAzXCKn0oCx2DtdauQssKUD/f69K80iXTWWnknB5g5OxHKjj18dJJM08z7f/1sDTPDwbIbGgBl18QffQhcZ+aFJjMDJaXFosc48x7usA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LulHpAlCWmj2ogZPG5xEVNfajbZ8kvJlscAYYCMzaeA=;
+ b=KvwfdqbuRBo4pwLkdhA0rlJc2BKtfQ8ZSGwVgNEAI4ZwpMaAu+rRkyquYi6pMNVmwMnh+Rv3SlumJX8zQB0G/WgjLpcwnhCRdOOhq0IWO5c1NwZDbngR+URSjfJ7RdCyEPzhOyEd6BxYDkCZLDwyMJtlRIYWDY7rUEVxvAuKR5M=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by PH0PR10MB5658.namprd10.prod.outlook.com (2603:10b6:510:fd::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.24; Mon, 13 Mar
+ 2023 09:25:49 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::7276:bc4c:17a0:7267]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::7276:bc4c:17a0:7267%6]) with mapi id 15.20.6178.024; Mon, 13 Mar 2023
+ 09:25:49 +0000
+Message-ID: <675d4ffe-2295-10e9-03bf-9ab2c800cb5f@oracle.com>
+Date:   Mon, 13 Mar 2023 09:25:45 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v2 00/11] scsi_debug: Some minor improvements
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, bvanassche@acm.org,
+        linux-kernel@vger.kernel.org, dgilbert@interlog.com
+References: <20230313084505.1487337-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20230313084505.1487337-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AS4PR10CA0025.EURPRD10.PROD.OUTLOOK.COM
+ (2603:10a6:20b:5d8::14) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH0PR10MB5658:EE_
+X-MS-Office365-Filtering-Correlation-Id: 39a59e93-49d8-429c-237c-08db23a4ef04
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: TFRs5ZIOJ+iPkxjjPchpBGR4vsFbYKpKJHcw4KuHcsthKrl6nBuTsLUy917Mk2gIxMgmrjMifyIOE/C2KvtztpGrw5jyEQMnpYCjQNb+wdE7v/8r9pWtwx/LqZKhJVSW4ej49/t+/MS4s5++S9JrRXRIeFSzXEeBjtofq5TXk6yJha+00XHIRnka8s8ILKIuoZed8G+tMuDHKVtr+B0A0xtN03RuPjAhrZ0b8K7ig+xStAKFh0sA9fl5qPQJyvioGjiY/PjPibmAVxP9g6/sAMJ3wHzOIsLNWFIxCzFyu4lGszYtVTxeDVx5ImJ6mFKJ6mSa7XAhgCBHKtoCJYwwSdcSvzJMGynodQj3iI5sUZ/jC95KUBAUXMmr8j4oPRIym1O+AImwQf17SyC6vU+AwVYnJVNqJkqPcj2o1PEr3P6VTPaFGzqX5xH9d2P7Bj4n8ZHjtC9xAmbM8n+jo9nPouVsLO7W7TgdWdp8PtwzMlBPXnIf62twbKWnlDpzvdfBppkj15QIqBC5Mp0WHfIkIJqV0/mYQMqy2TNwNoY0biSFTEHMJ1BCvjweLNN5T6ohs0iLebJtFpwFa3mCILVSELb87w8HmnObgm7i6Z13ycaaCrxR4Q8VCSBCt3OdTtWVenRGhe8obEICRYfa+yVhHIthHSWUGlAdpwKjy0UhHWV+kYp05EwsShmJylg8ZxKpDh2v8ylAsobaZW4tMAQxN1vF4UEaVju/muQqrS4UdOY=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(39860400002)(136003)(396003)(346002)(366004)(376002)(451199018)(6666004)(36916002)(316002)(38100700002)(478600001)(6636002)(6512007)(8936002)(186003)(558084003)(8676002)(6506007)(36756003)(26005)(5660300002)(4326008)(66556008)(66476007)(66946007)(41300700001)(31696002)(86362001)(2616005)(6486002)(2906002)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dTNQandrVjFVc0hqUURuZnB1NW9aNjNvZUg1dWlkaDRYLzU4MjRQeTZURkJH?=
+ =?utf-8?B?QmVMN0hidFJsMWNRZXBDY0hzMjkwUmN4dUkxNWRTU2JMUVQ3NGpDK2JXZXpn?=
+ =?utf-8?B?ZFdPOFJkdFZUM2RWdzIzU2gyUXgrOWZwdHBLYUdLWjR1QjRRVklQZEFsYmJt?=
+ =?utf-8?B?T1Z2RW1aYkZseU9QMXhQdG9uWkRTOVc1K0FMZU5zOFNCRGZBK0pQZkdQNGU1?=
+ =?utf-8?B?blVWVmJKbWxiWlVJeWJXbnJ0Z2Z2SWF6dVZLV2NqY1V2Zkp5UTdNR3ROOXBV?=
+ =?utf-8?B?cXQvRUJFUDZ6S212dHBCRDNnRVRWRHViMXpaVzQ3ZWdPM0dIaG1GWFNiaG9X?=
+ =?utf-8?B?clRBMG9Lb0NKR3gvYk14SGpXQmMrelFpZUlhdU50VlFPMzNJb0NhbElqR0x5?=
+ =?utf-8?B?aEtqTVdzUmFQclhHK2xVTU04M0R2bEtNZmgwRmt3VDJUa1BHR2xGSlgrS1V3?=
+ =?utf-8?B?QlhPUGhFT3BXdStITitEWldkbUVDWE5Gc2xnOGJTK1hyTVJmZUpSVnNvQytY?=
+ =?utf-8?B?TkZDL2RZbllQNHZKekVvY2Zsazd0aFBaWlZLS2s1WHQ4UGpZdFhJLzJaUjFB?=
+ =?utf-8?B?aTBJeVQzYXU3ZXUyS0FDMC8xSW13aWJ4Y2xNcFZmTytrcGg0N1VMWXBJM2Nt?=
+ =?utf-8?B?eVE3VmRYYUpNa0pZRmRDblJDVXMvYlc1SmhudFI3bGw0N3I2TEdXYWFtUXl1?=
+ =?utf-8?B?SEhpUWc0VU5NTFE5TFZnSENlcFpvWk8xYTJ2R2RpVnA2c3lpbnhsN1ZJYUJq?=
+ =?utf-8?B?WEJ4bDE4bHhsM1NYdE5MSnFuYXJvelJ5bTdHZHZYZEdJSG5LYTUzSlRRcFR5?=
+ =?utf-8?B?TWszdHFXRm5YL1lhaFl1Z3VhazdiR0JqYmdwcWhwNUNNaUJQZjFmTSs3TFN5?=
+ =?utf-8?B?dThBamlsd1JiRUIyREprQXRiNDhIMHJtRE9PeGxwanFveThsWVFqU2ZNWDRo?=
+ =?utf-8?B?eTZaQkNCTm41RVYrZVFDTkRzTU9aZGJLaFQ2enpTUTNFQUZjc2JCUmt2ajZR?=
+ =?utf-8?B?REUxeFREbXdSMUh6NEtVdXJsZFVRUlBMVXRZaXpWdTFMYS9VQ2hOSXpubmhh?=
+ =?utf-8?B?RWRiTWRGR2VvaVNxLzAzWWxkSEJwTFU1bHEzdS9OMEoxTWVGVitzOXg2Yi9D?=
+ =?utf-8?B?dUtNNkZrODRORnhMQVg4VFI2NWV0bHFIQ2JDcU84d1Q0OFBvbXo3TTlyS0xj?=
+ =?utf-8?B?MWdpazdCdERhU0gySkZ4aUMvaE1qRHFUdndydm9xWXpzN2tUOEtiY2Y5M1Z4?=
+ =?utf-8?B?RFR4d0NUOHQ3cVhXMEs0NWhhcDdUWnJSSUZ6MmhPbWFzSTNJZXczTDdJc29o?=
+ =?utf-8?B?K0FDcEFUTXZHaURtSGVwQnEzS2ErS013TENwbWtUYWhPNVRwdFM2bG9YWkVq?=
+ =?utf-8?B?bUZ6S1Q4QmJoYVg5VGticWlXempFaWtsTVA5a0RmdHRVaVJEY3pjNkt6TXBJ?=
+ =?utf-8?B?YkEzZVhYeWFkb0ZBaEUxZko4eUNMaWU5Zi9meWlEUWZnL0hpTE5GcFlzbnBV?=
+ =?utf-8?B?alIzL3o5dGY2UTRKNksrMHduMmxBL3lHVUFpMi9nOTEwbjRDMDR5emFBVUl1?=
+ =?utf-8?B?Y25USGRReGNtcXphWkNNM0ZNZjU2Y1lOZmRha1JhTmtxWWFURzcrR0RmUUM4?=
+ =?utf-8?B?ekorN0hOZ1VTb3BSc3lReUwrd1VFc2VVNWhSNzJmTVpEaXE1UGFNcVNtWWJk?=
+ =?utf-8?B?b09VZk5SSG9HUHN3dVV1d3pIOWVGeitjL2xFeCtUclluS3hIV3dEOGMraUoz?=
+ =?utf-8?B?ekZ4a0k5bUp0UjlzOW1Kbk9PZHY3MFFTRDl2cDZ1SUlOQThIc0VzV01qMmZX?=
+ =?utf-8?B?bjRJSktqTzZ1eEppbUtnbzViQytyN0FMM1A0WVdGdlAvSWh5TXRzdE9mYlBZ?=
+ =?utf-8?B?NCtDZHROeXVqdkYwMVhzY0Z6Zm5MdjVTd1dkR2o0RTRLUU9Qc0ZYN1FiNnlY?=
+ =?utf-8?B?Y2xmdzgzb2NrNUQ1WERVbk5acGJGSHlWVHlVLzNyd1BNWE5BeXlkK05TcTFv?=
+ =?utf-8?B?LzBBc3c5OXRXdHUzdTJTT0dIUGFLRy9kUnA4S21aS3EzelRtNnFxS0hEWDZz?=
+ =?utf-8?B?N0RFeXluTG8rWVRDcHpkRUZsbG82OW9ZRG9vT0g3dUlab0kwZlY2S0RwcTQ1?=
+ =?utf-8?B?YXJnaHcrTTZnb0FueE1jMG1HTHhsQi9MeTlnbFFnKzgvTGhybWdJOGwrUTZy?=
+ =?utf-8?B?K2c9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: DtgZ7N/c6WN16LsfJsmy6bl20r2knIK7k6Ys1hdK7mIAq5qDehKu1Ng7B7MfupeDVmpd4ytU3I+xBL/QEb+gtUVgUDAoQ77n/jyKehmWRExxES5NsV45jJ257999sykD+Tt7VouRO421drEGoNM/IaP0pX3vgKiui+FsWVQYcOPPNxVj2oYn5TwBK1/YgWVHWmWchtE2lNe3HulpL164FvHn5+byofgm3r4hwgT4btIr9o5Rroa/4ecWG5x4/Ylt1HBhGcKFI8IIFZOx9TC8/9xXH52ipSJk3Opy+fA02qqi5dytKpKq2bU/hLbO4PboEAEM+VjHGu8G1CibO/UNIAw0RAj1gECAcPfzfz5xptLwDSC4rBG2RuSjQO3qTL7nvdicGqgUQZFeJlw8Ke0cuiajWyVd0rqOKsdTZ903F2vB90iLb5pKxfrNY6brQITdRccL1MZAaVICSn1up4rvzNomD5H+2OiyhKTh+xRDWNhwLXzwDqLMBkQgR9V/sEyVStY23CV6olukGWthvCW/V+gpmjKW8TSom/vs1YN3OWHzOOySyLvz0xXrG72VZ6lScoNxzQ+DxSZ/ZgPDLZhADrGJFz7UBK66Gt9rXN0ZVW1xN/osSCRWY+gU8WlNinaZKzlWSP7DIx95HPmgWGtVDxorIfmYxoQ6lCp48Q5ScdnB6LJwZM83KHNdfYGjsO5WTdcEbUpe+5HbaIqTs45xQJLp972OiNXMKVtVbTSnhZXKPRZwrk42N3nU+b4JuOfFXeoISKDxaiRUg/uc7D8TotdFM9nHK8WIzWSZ/62gyuqdOcA795k1JnZ/XrEVByDSQD79aGUkvgwpR8Tj9S2PYPUgJ0Sld7zE8/mntcQAHd4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39a59e93-49d8-429c-237c-08db23a4ef04
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2023 09:25:49.7034
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0vhCDuavyXX1DGpbx7+OV72fM7NyROWYVuVpnfuqTVYgUb66eo7wyLE52U0gQjz1wrmZV/KbtXlRtiJDxecZiw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5658
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-13_02,2023-03-10_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- priorityscore=1501 bulkscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- clxscore=1015 mlxscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 mlxscore=0
+ mlxlogscore=750 suspectscore=0 adultscore=0 phishscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2303130075
+ definitions=main-2303130077
+X-Proofpoint-ORIG-GUID: d3-sJtd52R5_6zA9gXm8mjJQbshCOlHm
+X-Proofpoint-GUID: d3-sJtd52R5_6zA9gXm8mjJQbshCOlHm
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Added a new trace event to record MCQ relevant information
-for each request in MCQ mode, include hardware queue ID,
-SQ tail slot, CQ head slot and CQ tail slot.
-
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-
----
-Changes to v4:
-- Merged MCQ and SDB trace event as one.
-
-Changes to v3:
-- Free trace_ufshcd_command_mcq() from dependency on trace_ufshcd_command().
-
-Changes to v2:
-- Shorten printing strings.
-
-Changes to v1:
-- Adjust the order of fileds to keep them aligned.
----
- drivers/ufs/core/ufshcd.c  | 15 ++++++++++++---
- include/trace/events/ufs.h | 24 +++++++++++++-----------
- 2 files changed, 25 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3b3cf78..53a7287 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -422,10 +422,12 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- {
- 	u64 lba = 0;
- 	u8 opcode = 0, group_id = 0;
--	u32 intr, doorbell;
-+	u32 doorbell = 0, hwq_id = 0;
-+	u32 intr;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct ufs_hw_queue *hwq = NULL;
- 	int transfer_len = -1;
- 
- 	if (!cmd)
-@@ -456,9 +458,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	}
- 
- 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
--	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+
-+	if (is_mcq_enabled(hba)) {
-+		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
-+		hwq_id = hwq->id;
-+	} else {
-+		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+		hwq_id = -1;
-+	}
- 	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
--			doorbell, transfer_len, intr, lba, opcode, group_id);
-+			doorbell, hwq_id, transfer_len, intr, lba, opcode, group_id);
- }
- 
- static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 599739e..37637ff 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -268,20 +268,21 @@ DEFINE_EVENT(ufshcd_template, ufshcd_wl_runtime_resume,
- 
- TRACE_EVENT(ufshcd_command,
- 	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
--		 unsigned int tag, u32 doorbell, int transfer_len, u32 intr,
--		 u64 lba, u8 opcode, u8 group_id),
-+		 unsigned int tag, u32 doorbell, u32 hwq_id, int transfer_len,
-+		 u32 intr, u64 lba, u8 opcode, u8 group_id),
- 
--	TP_ARGS(dev_name, str_t, tag, doorbell, transfer_len,
--				intr, lba, opcode, group_id),
-+	TP_ARGS(dev_name, str_t, tag, doorbell, hwq_id, transfer_len,
-+			intr, lba, opcode, group_id),
- 
- 	TP_STRUCT__entry(
- 		__string(dev_name, dev_name)
- 		__field(enum ufs_trace_str_t, str_t)
- 		__field(unsigned int, tag)
- 		__field(u32, doorbell)
--		__field(int, transfer_len)
-+		__field(u32, hwq_id)
- 		__field(u32, intr)
- 		__field(u64, lba)
-+		__field(int, transfer_len)
- 		__field(u8, opcode)
- 		__field(u8, group_id)
- 	),
-@@ -291,19 +292,20 @@ TRACE_EVENT(ufshcd_command,
- 		__entry->str_t = str_t;
- 		__entry->tag = tag;
- 		__entry->doorbell = doorbell;
--		__entry->transfer_len = transfer_len;
-+		__entry->hwq_id = hwq_id;
- 		__entry->intr = intr;
- 		__entry->lba = lba;
-+		__entry->transfer_len = transfer_len;
- 		__entry->opcode = opcode;
- 		__entry->group_id = group_id;
- 	),
- 
- 	TP_printk(
--		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x",
--		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
--		__entry->tag, __entry->doorbell, __entry->transfer_len,
--		__entry->intr, __entry->lba, (u32)__entry->opcode,
--		str_opcode(__entry->opcode), (u32)__entry->group_id
-+		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hqid: %d",
-+		 show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-+		 __entry->tag, __entry->doorbell, __entry->transfer_len, __entry->intr,
-+		 __entry->lba, (u32)__entry->opcode, str_opcode(__entry->opcode),
-+		 (u32)__entry->group_id, __entry->hwq_id
- 	)
- );
- 
--- 
-2.7.4
-
+I'm going to resend this as I seem to be missing patch #9 of 11.
