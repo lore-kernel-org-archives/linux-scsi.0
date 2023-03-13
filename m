@@ -2,116 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA29C6FD19
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 21:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 602FCC61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 23:01:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229642AbjCMVgd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 17:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51432 "EHLO
+        id S230227AbjCMXBb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 19:01:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjCMVgc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 17:36:32 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9DD7898D1;
-        Mon, 13 Mar 2023 14:36:31 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id y11so14521301plg.1;
-        Mon, 13 Mar 2023 14:36:31 -0700 (PDT)
+        with ESMTP id S229881AbjCMXBX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 19:01:23 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78621211DB;
+        Mon, 13 Mar 2023 16:00:34 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id i9so3745934wrp.3;
+        Mon, 13 Mar 2023 16:00:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678748408;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lQ8HCvy+knNv4fgP277vjD/YWRmgOe4jFTBMj1XoMvQ=;
+        b=NaFGprQgPLF5N3bvetu4WdLJuW1Pb02I28YZafmKEfgTsFlfNzBGm7iqsbBr7smFoE
+         3xVbSltMaYkOl1ELg/3Q3lg8su8siBq+aun6McYn6tIw9o0oWUOxg8WO/N7tqNXIK3Vy
+         WT1FkEgmQ2w1xPaHhpBStO8GOLBiMNyI11eHvnImXyvMqU3t8GIojA4BusoMzCS3/FDu
+         fuIVGMvkzNmhYXFdvUxfPjdzCg7k3BEsuKDWQkue5D0uSCgvJcBG0PibP3hFhX7NgItf
+         stMggtvA9OJz6nTqQDoHtS7HYU24fnSWN26zLzCYz9DdxdOiGPMZ9LQlfecWF+VzhSC8
+         EuRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678743391;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20210112; t=1678748408;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/dZytMHjh8b67xix8O8bZdnN1Cx47vlb8v10mIqLg8o=;
-        b=KHjxi/Cg9cur6Nsd2pX5mgSv3/r8NaXgoCm39cU71V7gBTII0iGbOL8cUTUnxLlioT
-         noBHtT6ltrjuNT6p5waY75+qH3tvS8KkmnBDSZvWKMhteUq4z60PA89SFWzvt9ff0X+q
-         PXN5ZE65+vuus13o2w6jX4mR5ozSU203mIcdSYRZGARAwfyzYLE1p7/XfUaNfMIM57il
-         n2wzYLHkRg1YLUKuLDxo43ektKuh0/3GiXkQ2+OM5X5eWJzuqzEQIcxQ6Bm9L5mXFKiQ
-         dhpN7/cFkqvUaBKdXNTo4JzJB86mr1RYvIdjU39Ye5+jkRYOt2uSaAZnzVC2iTi2A4EE
-         JrlA==
-X-Gm-Message-State: AO0yUKWk4IGdMU9d4Ll6p7rwPpm/RzvcyOhNlW2cWoAIP36zUHoxX5FR
-        ZPRUqoat3P1/Jw/+Ijm69hScKo0aIPw=
-X-Google-Smtp-Source: AK7set95DQi/rzm/uIe/p/jfOg3q8h1plmMCNBcRUGzfD97ucntNbYRG/dNYXe96dkgT9h0Tp7WxCA==
-X-Received: by 2002:a05:6a20:7f8c:b0:d0:36d5:cf1f with SMTP id d12-20020a056a207f8c00b000d036d5cf1fmr12093386pzj.5.1678743391250;
-        Mon, 13 Mar 2023 14:36:31 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:9cdb:df66:226e:e52a? ([2620:15c:211:201:9cdb:df66:226e:e52a])
-        by smtp.gmail.com with ESMTPSA id a17-20020a62e211000000b006247123adf1sm172621pfi.143.2023.03.13.14.36.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Mar 2023 14:36:30 -0700 (PDT)
-Message-ID: <5d317f56-b1ba-e35a-a558-e462a70a4717@acm.org>
-Date:   Mon, 13 Mar 2023 14:36:27 -0700
+        bh=lQ8HCvy+knNv4fgP277vjD/YWRmgOe4jFTBMj1XoMvQ=;
+        b=ZBsahoPwC2eP+v2xXL6pNLmGw3JquvukcYDsoL8T3pz4sRB6X9GBxVuLKuqVLtQUMq
+         yUvdsk/vew0hO+5PILJc9Eh3+B9ish5CuCVgjzk4gKuLsRRlXV+M5zO+h70S+KQVmFdj
+         F8wXUbn5K9nyn7Cez+caXQV2zRGzdWY6/IyI47LhpKI/zlSK0+yYGDchwk5k0pRjgLMB
+         ne2LXEYhwUUUbk1a1OLxZIcDaIOCZIBG7WOiRyUrQX91nbXnsdPoBeTz/kfm7STANJzq
+         kTfWb7v69cdF1k9JhkdKBkF/AEHw4htfKC6XeJzMGF69eEjoSbEZ7a2l1io9Tt1UAnRg
+         FQwg==
+X-Gm-Message-State: AO0yUKU58bkIzL24oWo3TdpoY7gzGvdEtDFn8jb6wuJHooqF6tJFXePl
+        393RVOCIayW04NHARHvgzA==
+X-Google-Smtp-Source: AK7set/uhvWPQ0Ie9gQ1N3wv4IkubfAyRs1bC9cnXC/JpgVKHE6EO6sgTZpjN7pB+iKjNG7hZbsabQ==
+X-Received: by 2002:adf:e34c:0:b0:2c7:17a5:8687 with SMTP id n12-20020adfe34c000000b002c717a58687mr25075279wrj.0.1678748407393;
+        Mon, 13 Mar 2023 16:00:07 -0700 (PDT)
+Received: from playfield-dev-2 ([2a00:23c8:881a:8601:beed:984d:cecc:ef14])
+        by smtp.gmail.com with ESMTPSA id t18-20020a1c7712000000b003ed2987690dsm961375wmi.26.2023.03.13.16.00.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Mar 2023 16:00:07 -0700 (PDT)
+Date:   Mon, 13 Mar 2023 23:00:03 +0000
+From:   Jules Irenge <jbi.octave@gmail.com>
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux@highpoint-tech.com, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: hptiop:Convert snprintf() to sysfs_emit()
+Message-ID: <ZA+q87K8vP72y69l@playfield-dev-2>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v4 5/5] scsi: ufs: ufs-mediatek: Add MCQ support for MTK
- platform
-Content-Language: en-US
-To:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        alice.chao@mediatek.com, naomi.chu@mediatek.com,
-        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
-        eddie.huang@mediatek.com, mason.zhang@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-References: <20230307065448.15279-1-powen.kao@mediatek.com>
- <20230307065448.15279-6-powen.kao@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230307065448.15279-6-powen.kao@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/6/23 22:54, Po-Wen Kao wrote:
-> +static unsigned int mtk_mcq_irq[UFSHCD_MAX_Q_NR];
+Coccinnelle reports a warning
+Warning: Use scnprintf or sprintf
 
-Shouldn't there be one instance of this array per controller such that 
-this driver can support multiple host controllers instead of only one?
+Following the advice on kernel documentation
+https://www.kernel.org/doc/html/latest/filesystems/sysfs.html
 
-> -	err = ufshcd_make_hba_operational(hba);
-> +	if (!hba->mcq_enabled) {
-> +		err = ufshcd_make_hba_operational(hba);
-> +	} else {
-> +		ufs_mtk_config_mcq(hba, false);
-> +		ufshcd_mcq_make_queues_operational(hba);
-> +		ufshcd_mcq_config_mac(hba, hba->nutrs);
-> +		ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-> +			      REG_UFS_MEM_CFG);
-> +	}
+For show(device *...) functions we should only use sysfs_emit() or sysfs_emit_at()
+especially when formatting the value to be returned to user space.
 
-ufshcd_config_mcq() in the UFSHCD core already calls 
-ufshcd_mcq_config_mac(). Why is there another call to 
-ufshcd_mcq_config_mac() in the MediaTek driver?
+Convert snprintf() to sysfs_emit()
 
-> +	/*
-> +	 * Disable MCQ_CQ_EVENT interrupt.
-> +	 * Use CQ Tail Entry Push Status instead.
-> +	 */
-> +	ufshcd_disable_intr(hba, MCQ_CQ_EVENT_STATUS);
+Signed-off-by: Jules Irenge <jbi.octave@gmail.com>
+---
+ drivers/scsi/hptiop.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-UFS host controller drivers should not call ufshcd_disable_intr().
-
- From the UFSHCI 4.0 specification: "MCQ CQ Event Status (CQES): This 
-bit is transparent and becomes ‘1’ when all of the following conditions 
-are met:
-• Controller is operating in MCQ mode (Config.QT=1)
-• ESI is not enabled (Config.ESIE=0)
-• CQES set only for Events in Queues that do not have interrupt 
-aggregation enabled or the Events that do not belong to MCQIACRy.IACTH 
-counter operation criteria.
-• At least one bit in CQISy is set and associated bit in CQIEy is set. 
-y=0..31"
-
-Is there perhaps a bug in the MediaTek controller that causes the MCQ CQ 
-Event Status to be set in ESI mode? If not, can the above 
-ufshcd_disable_intr() call be left out?
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 7e8903718245..3ae4a0a8be57 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -1111,7 +1111,7 @@ static int hptiop_adjust_disk_queue_depth(struct scsi_device *sdev,
+ static ssize_t hptiop_show_version(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", driver_ver);
++	return sysfs_emit(buf, "%s\n", driver_ver);
+ }
+ 
+ static ssize_t hptiop_show_fw_version(struct device *dev,
+@@ -1120,7 +1120,7 @@ static ssize_t hptiop_show_fw_version(struct device *dev,
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d.%d.%d.%d\n",
++	return sysfs_emit(buf, "%d.%d.%d.%d\n",
+ 				hba->firmware_version >> 24,
+ 				(hba->firmware_version >> 16) & 0xff,
+ 				(hba->firmware_version >> 8) & 0xff,
+-- 
+2.39.2
 
