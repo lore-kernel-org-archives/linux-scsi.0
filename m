@@ -2,101 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 064E8C61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 21:10:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA29C6FD19
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 21:36:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229754AbjCMVKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 17:10:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
+        id S229642AbjCMVgd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 17:36:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbjCMVKs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 17:10:48 -0400
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A1192C661;
-        Mon, 13 Mar 2023 14:10:11 -0700 (PDT)
-Received: by mail-pj1-f54.google.com with SMTP id h11-20020a17090a2ecb00b00237c740335cso13047900pjs.3;
-        Mon, 13 Mar 2023 14:10:11 -0700 (PDT)
+        with ESMTP id S229449AbjCMVgc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 17:36:32 -0400
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9DD7898D1;
+        Mon, 13 Mar 2023 14:36:31 -0700 (PDT)
+Received: by mail-pl1-f175.google.com with SMTP id y11so14521301plg.1;
+        Mon, 13 Mar 2023 14:36:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678741771;
+        d=1e100.net; s=20210112; t=1678743391;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NlbP4RMuI0UuGpDLkK+kTJ9DE1XKYPJgo0MhTNATv38=;
-        b=cbKDqV0ze5AvyQmXeGBELpf8Ock5/8DBqbUwtBHfv3xAQzcnDfjxxQEhFrqJK9s1Lh
-         cEBm3OrjM80MuXMJFIxrBVqh98wmesN09J+3t0fYSsYr4ZJlHayn0s0GxfOWpUfxZ1Gi
-         G04v/us8Tgzbr+kQU3e/T6OwC/xJKLN0LecOArW/9vFJfLwp/dEHqAT19nB4SAIBtig1
-         OCpvNNXvlwQ4hcEqx4orsr37UAek8m9B3d+02rxfmxmpQT31or6tTFP8wjopb9TwKdgt
-         mwNVqZ3i6fA0oL20sV9TA/BTfxYFrcbvkTddpcAZSXdS6kwc4red/egMCDuaKTs5sAkL
-         VfiA==
-X-Gm-Message-State: AO0yUKVjZS1tv7Fg8BcM9KeaEjvtQwqKMuOReXnenSTXh/Y/cqoCEwJp
-        zO2ZGwfkpytkyMFM/7BQ3s0=
-X-Google-Smtp-Source: AK7set+QSfPstXZPjDc6o/gv7ERNFNhqrNhy/iy0ONgwO/xGZ//yARXWv+44cLD9sfmyrcpV81ZI6w==
-X-Received: by 2002:a17:90a:bd85:b0:23b:d506:226e with SMTP id z5-20020a17090abd8500b0023bd506226emr5992734pjr.42.1678741770779;
-        Mon, 13 Mar 2023 14:09:30 -0700 (PDT)
+        bh=/dZytMHjh8b67xix8O8bZdnN1Cx47vlb8v10mIqLg8o=;
+        b=KHjxi/Cg9cur6Nsd2pX5mgSv3/r8NaXgoCm39cU71V7gBTII0iGbOL8cUTUnxLlioT
+         noBHtT6ltrjuNT6p5waY75+qH3tvS8KkmnBDSZvWKMhteUq4z60PA89SFWzvt9ff0X+q
+         PXN5ZE65+vuus13o2w6jX4mR5ozSU203mIcdSYRZGARAwfyzYLE1p7/XfUaNfMIM57il
+         n2wzYLHkRg1YLUKuLDxo43ektKuh0/3GiXkQ2+OM5X5eWJzuqzEQIcxQ6Bm9L5mXFKiQ
+         dhpN7/cFkqvUaBKdXNTo4JzJB86mr1RYvIdjU39Ye5+jkRYOt2uSaAZnzVC2iTi2A4EE
+         JrlA==
+X-Gm-Message-State: AO0yUKWk4IGdMU9d4Ll6p7rwPpm/RzvcyOhNlW2cWoAIP36zUHoxX5FR
+        ZPRUqoat3P1/Jw/+Ijm69hScKo0aIPw=
+X-Google-Smtp-Source: AK7set95DQi/rzm/uIe/p/jfOg3q8h1plmMCNBcRUGzfD97ucntNbYRG/dNYXe96dkgT9h0Tp7WxCA==
+X-Received: by 2002:a05:6a20:7f8c:b0:d0:36d5:cf1f with SMTP id d12-20020a056a207f8c00b000d036d5cf1fmr12093386pzj.5.1678743391250;
+        Mon, 13 Mar 2023 14:36:31 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:9cdb:df66:226e:e52a? ([2620:15c:211:201:9cdb:df66:226e:e52a])
-        by smtp.gmail.com with ESMTPSA id l10-20020a17090aaa8a00b002311dbb2bc5sm273276pjq.45.2023.03.13.14.09.28
+        by smtp.gmail.com with ESMTPSA id a17-20020a62e211000000b006247123adf1sm172621pfi.143.2023.03.13.14.36.28
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Mar 2023 14:09:30 -0700 (PDT)
-Message-ID: <5ee20e75-8a61-be89-5302-45f390a0cbd6@acm.org>
-Date:   Mon, 13 Mar 2023 14:09:27 -0700
+        Mon, 13 Mar 2023 14:36:30 -0700 (PDT)
+Message-ID: <5d317f56-b1ba-e35a-a558-e462a70a4717@acm.org>
+Date:   Mon, 13 Mar 2023 14:36:27 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH v5] scsi: ufs: core: Add trace event for MCQ
+Subject: Re: [PATCH v4 5/5] scsi: ufs: ufs-mediatek: Add MCQ support for MTK
+ platform
 Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, quic_nguyenb@quicinc.com, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+To:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
-References: <1678699023-6645-1-git-send-email-quic_ziqichen@quicinc.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        alice.chao@mediatek.com, naomi.chu@mediatek.com,
+        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
+        eddie.huang@mediatek.com, mason.zhang@mediatek.com,
+        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
+References: <20230307065448.15279-1-powen.kao@mediatek.com>
+ <20230307065448.15279-6-powen.kao@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1678699023-6645-1-git-send-email-quic_ziqichen@quicinc.com>
+In-Reply-To: <20230307065448.15279-6-powen.kao@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/13/23 02:16, Ziqi Chen wrote:
-> Added a new trace event to record MCQ relevant information
-> for each request in MCQ mode, include hardware queue ID,
-> SQ tail slot, CQ head slot and CQ tail slot.
+On 3/6/23 22:54, Po-Wen Kao wrote:
+> +static unsigned int mtk_mcq_irq[UFSHCD_MAX_Q_NR];
 
-Added a new trace event ... -> Add the MCQ information in the existing 
-trace event ...
+Shouldn't there be one instance of this array per controller such that 
+this driver can support multiple host controllers instead of only one?
 
- From Documentation/process/submitting-patches.rst: "Describe your 
-changes in imperative mood, e.g. "make xyzzy do frotz"".
+> -	err = ufshcd_make_hba_operational(hba);
+> +	if (!hba->mcq_enabled) {
+> +		err = ufshcd_make_hba_operational(hba);
+> +	} else {
+> +		ufs_mtk_config_mcq(hba, false);
+> +		ufshcd_mcq_make_queues_operational(hba);
+> +		ufshcd_mcq_config_mac(hba, hba->nutrs);
+> +		ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
+> +			      REG_UFS_MEM_CFG);
+> +	}
 
-> Changes to v1:
-> - Adjust the order of fileds to keep them aligned.
-                         ^^^^^^
-                         fields?
+ufshcd_config_mcq() in the UFSHCD core already calls 
+ufshcd_mcq_config_mac(). Why is there another call to 
+ufshcd_mcq_config_mac() in the MediaTek driver?
 
-> -	u32 intr, doorbell;
-> +	u32 doorbell = 0, hwq_id = 0;
-> +	u32 intr;
+> +	/*
+> +	 * Disable MCQ_CQ_EVENT interrupt.
+> +	 * Use CQ Tail Entry Push Status instead.
+> +	 */
+> +	ufshcd_disable_intr(hba, MCQ_CQ_EVENT_STATUS);
 
-Since hwq_id can be assigned the value -1, shouldn't its type be changed 
-from u32 into int, int16_t or int32_t?
+UFS host controller drivers should not call ufshcd_disable_intr().
 
-> +	struct ufs_hw_queue *hwq = NULL;
+ From the UFSHCI 4.0 specification: "MCQ CQ Event Status (CQES): This 
+bit is transparent and becomes ‘1’ when all of the following conditions 
+are met:
+• Controller is operating in MCQ mode (Config.QT=1)
+• ESI is not enabled (Config.ESIE=0)
+• CQES set only for Events in Queues that do not have interrupt 
+aggregation enabled or the Events that do not belong to MCQIACRy.IACTH 
+counter operation criteria.
+• At least one bit in CQISy is set and associated bit in CQIEy is set. 
+y=0..31"
 
-Is this pointer only used inside one branch of the if-statement below? 
-If so, can it be moved under "if (is_mcq_enabled(hba)) {"?
-
-> +		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hqid: %d",
-
-Consider changing "hqid" into "hwq_id" to make the trace information 
-easier to understand.
+Is there perhaps a bug in the MediaTek controller that causes the MCQ CQ 
+Event Status to be set in ESI mode? If not, can the above 
+ufshcd_disable_intr() call be left out?
 
 Thanks,
 
 Bart.
+
