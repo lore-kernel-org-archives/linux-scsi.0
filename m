@@ -2,103 +2,131 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 602FCC61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 23:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E49F1C7618D
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 23:43:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230227AbjCMXBb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 19:01:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47580 "EHLO
+        id S230155AbjCMXnw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 19:43:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229881AbjCMXBX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 19:01:23 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78621211DB;
-        Mon, 13 Mar 2023 16:00:34 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id i9so3745934wrp.3;
-        Mon, 13 Mar 2023 16:00:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678748408;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lQ8HCvy+knNv4fgP277vjD/YWRmgOe4jFTBMj1XoMvQ=;
-        b=NaFGprQgPLF5N3bvetu4WdLJuW1Pb02I28YZafmKEfgTsFlfNzBGm7iqsbBr7smFoE
-         3xVbSltMaYkOl1ELg/3Q3lg8su8siBq+aun6McYn6tIw9o0oWUOxg8WO/N7tqNXIK3Vy
-         WT1FkEgmQ2w1xPaHhpBStO8GOLBiMNyI11eHvnImXyvMqU3t8GIojA4BusoMzCS3/FDu
-         fuIVGMvkzNmhYXFdvUxfPjdzCg7k3BEsuKDWQkue5D0uSCgvJcBG0PibP3hFhX7NgItf
-         stMggtvA9OJz6nTqQDoHtS7HYU24fnSWN26zLzCYz9DdxdOiGPMZ9LQlfecWF+VzhSC8
-         EuRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678748408;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lQ8HCvy+knNv4fgP277vjD/YWRmgOe4jFTBMj1XoMvQ=;
-        b=ZBsahoPwC2eP+v2xXL6pNLmGw3JquvukcYDsoL8T3pz4sRB6X9GBxVuLKuqVLtQUMq
-         yUvdsk/vew0hO+5PILJc9Eh3+B9ish5CuCVgjzk4gKuLsRRlXV+M5zO+h70S+KQVmFdj
-         F8wXUbn5K9nyn7Cez+caXQV2zRGzdWY6/IyI47LhpKI/zlSK0+yYGDchwk5k0pRjgLMB
-         ne2LXEYhwUUUbk1a1OLxZIcDaIOCZIBG7WOiRyUrQX91nbXnsdPoBeTz/kfm7STANJzq
-         kTfWb7v69cdF1k9JhkdKBkF/AEHw4htfKC6XeJzMGF69eEjoSbEZ7a2l1io9Tt1UAnRg
-         FQwg==
-X-Gm-Message-State: AO0yUKU58bkIzL24oWo3TdpoY7gzGvdEtDFn8jb6wuJHooqF6tJFXePl
-        393RVOCIayW04NHARHvgzA==
-X-Google-Smtp-Source: AK7set/uhvWPQ0Ie9gQ1N3wv4IkubfAyRs1bC9cnXC/JpgVKHE6EO6sgTZpjN7pB+iKjNG7hZbsabQ==
-X-Received: by 2002:adf:e34c:0:b0:2c7:17a5:8687 with SMTP id n12-20020adfe34c000000b002c717a58687mr25075279wrj.0.1678748407393;
-        Mon, 13 Mar 2023 16:00:07 -0700 (PDT)
-Received: from playfield-dev-2 ([2a00:23c8:881a:8601:beed:984d:cecc:ef14])
-        by smtp.gmail.com with ESMTPSA id t18-20020a1c7712000000b003ed2987690dsm961375wmi.26.2023.03.13.16.00.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Mar 2023 16:00:07 -0700 (PDT)
-Date:   Mon, 13 Mar 2023 23:00:03 +0000
-From:   Jules Irenge <jbi.octave@gmail.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux@highpoint-tech.com, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: hptiop:Convert snprintf() to sysfs_emit()
-Message-ID: <ZA+q87K8vP72y69l@playfield-dev-2>
+        with ESMTP id S230146AbjCMXnu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 19:43:50 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43F6E6A9D9;
+        Mon, 13 Mar 2023 16:43:49 -0700 (PDT)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32DLDu18002184;
+        Mon, 13 Mar 2023 23:43:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : to : references : from : in-reply-to : content-type :
+ content-transfer-encoding : subject; s=pp1;
+ bh=Gv6BzKgYo3dK7DSYQXcTqKfNpyn4PfO3sRW07kk10AE=;
+ b=EWb6Vu+I/vDE4xptqm4lUwkTX1UlJm2fy9kQOPhKXtrGyQm+rUZTdHdy7PQhCYBIkyeZ
+ UMXivuWKirgX74uut0tFK65bi2SvLbvv8Xzdx9odM51OGg2sUJ30/C+0VQiHToCBr96P
+ YMEg6+Hdiljk6q77AQkV7h2r5gI6AK0k0vQFNesCCdDGzQZsxwt+Sj7UkNLvtl45CYpu
+ YjEOhWoCuUiU8L1YQjVyng4geMAtFNkFEFO1gQvFR4QZtnFOpd6Ri6eWsH82RgRyZAID
+ 6GWmnvefvcFgguEey45sR4T9BdCIdsn7z5aE0UmYTatg7CZecNWen6r6lS/Wq7VKbuhY Yw== 
+Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pabjgk39u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 13 Mar 2023 23:43:43 +0000
+Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
+        by ppma02wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32DKjpdK017165;
+        Mon, 13 Mar 2023 23:43:43 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([9.208.130.98])
+        by ppma02wdc.us.ibm.com (PPS) with ESMTPS id 3p8h97gm9y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 13 Mar 2023 23:43:43 +0000
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+        by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32DNhgpu10093134
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Mar 2023 23:43:42 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 127E658054;
+        Mon, 13 Mar 2023 23:43:42 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4CD1A5805A;
+        Mon, 13 Mar 2023 23:43:41 +0000 (GMT)
+Received: from [9.163.74.216] (unknown [9.163.74.216])
+        by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+        Mon, 13 Mar 2023 23:43:41 +0000 (GMT)
+Message-ID: <bd593f83-4aa2-3a6c-9e87-fe3cba0e7782@linux.vnet.ibm.com>
+Date:   Mon, 13 Mar 2023 18:43:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Brian King <brking@us.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+References: <a5a3527c-d662-5bd1-e1dd-ad4930d10b3a@opensource.wdc.com>
+ <3dbd9ae4-a101-e55d-79c8-9b3a96ab5b17@linux.vnet.ibm.com>
+ <be79092f-fdd6-9f0f-4ffa-95ffc4b778c5@linux.vnet.ibm.com>
+ <369448ed-f89a-c2db-1850-91450d8b5998@opensource.wdc.com>
+ <dc892956-56bf-19aa-f206-b3bbcc781fea@huawei.com>
+ <5f2efa8a-8207-403c-12e8-74f43d8d8a14@linux.vnet.ibm.com>
+ <6c1f12d2-9211-85ef-dfd5-e091ea1559d7@suse.de>
+ <b7c0f38b-b56f-761b-9ce7-7b3d67a564d0@linux.vnet.ibm.com>
+ <afaf9f0e-b29d-123b-68f0-38e4a741e07d@oracle.com>
+From:   Brian King <brking@linux.vnet.ibm.com>
+In-Reply-To: <afaf9f0e-b29d-123b-68f0-38e4a741e07d@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: iLaWMFuqTZYAQ_syPCrRukGt4urhLA7_
+X-Proofpoint-ORIG-GUID: iLaWMFuqTZYAQ_syPCrRukGt4urhLA7_
+Subject: RE: Do we still need the scsi IPR driver ?
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-13_11,2023-03-13_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 malwarescore=0
+ priorityscore=1501 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ mlxlogscore=999 spamscore=0 adultscore=0 phishscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303130186
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Coccinnelle reports a warning
-Warning: Use scnprintf or sprintf
+On 3/10/23 3:56 AM, John Garry wrote:
+> On 13/10/2022 04:36, Brian King wrote:
+>>>> I've made some progress. I was able to dig up the code to move ipr to use error_handler
+>>>> and have gotten it to compile, but haven't gotten to trying it in the lab yet.
+>>>>
+>>> Hmm. In which machines can I find an IPR installed? I could go hunting in our lab, maybe I can locate one and aid testing/development ...
+>> Any Power 9 or older generation PowerVM based system would have an IPR installed as the boot device.
+>> Additionally, on Power 10 systems, ipr SAS controllers are available as an add in card.
+>>
+>> However, the SATA support in ipr was only used to attach the onboard SATA DVD. Power 8 systems were
+>> the last generation of systems that had an onboard SATA DVD. So, to do any testing with a
+>> SATA DVD, you'd need a Power 8 or older system.
+>>
+>> Right now I have a patch that removes the SATA support from ipr completely and a patch that changes
+>> to use the error_handler libata support. The one that changes to use the error_handler libata API
+>> adds a bit of complexity for a function that should have few or no users that would need this support
+>> on a current upstream kernel, since only Power 8 and older systems use this support. I'm getting
+>> a system setup to try out both patches, but at this point I'm leaning towards the patch that
+>> removes the libata dependency from ipr.
+> 
+> Hi Brian,
+> 
+> I was just wondering did you ever get to test these patches you mention? Or any other update on this topic?
 
-Following the advice on kernel documentation
-https://www.kernel.org/doc/html/latest/filesystems/sysfs.html
+Yes. I've been running both patches in the lab. I'm still leaning towards the patch that just
+removes the libata dependency from ipr, since that is the simpler patch. I'll try to get something sent
+out soon.
 
-For show(device *...) functions we should only use sysfs_emit() or sysfs_emit_at()
-especially when formatting the value to be returned to user space.
+Thanks,
 
-Convert snprintf() to sysfs_emit()
+Brian
 
-Signed-off-by: Jules Irenge <jbi.octave@gmail.com>
----
- drivers/scsi/hptiop.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 7e8903718245..3ae4a0a8be57 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1111,7 +1111,7 @@ static int hptiop_adjust_disk_queue_depth(struct scsi_device *sdev,
- static ssize_t hptiop_show_version(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%s\n", driver_ver);
-+	return sysfs_emit(buf, "%s\n", driver_ver);
- }
- 
- static ssize_t hptiop_show_fw_version(struct device *dev,
-@@ -1120,7 +1120,7 @@ static ssize_t hptiop_show_fw_version(struct device *dev,
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%d.%d.%d.%d\n",
-+	return sysfs_emit(buf, "%d.%d.%d.%d\n",
- 				hba->firmware_version >> 24,
- 				(hba->firmware_version >> 16) & 0xff,
- 				(hba->firmware_version >> 8) & 0xff,
 -- 
-2.39.2
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
 
