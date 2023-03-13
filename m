@@ -2,156 +2,199 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF0AC61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 09:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D8AC74A5B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 09:18:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229673AbjCMJBU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 05:01:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45498 "EHLO
+        id S229994AbjCMJSV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 05:18:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229568AbjCMJBB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 05:01:01 -0400
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A95FB48E02
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Mar 2023 01:57:21 -0700 (PDT)
-Received: from submission (posteo.de [185.67.36.169]) 
-        by mout01.posteo.de (Postfix) with ESMTPS id 1CA482401FA
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Mar 2023 09:57:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.de; s=2017;
-        t=1678697840; bh=Xogzb4/sWEPr9eGuFX02FXsCmyUAvw12H0hK+tdOhsQ=;
-        h=Subject:To:From:Date:From;
-        b=W4lVLheBFx9KckeHVc97VQSRwvQy+EQu3wXejd8AVbF0CM7Ofmy7i1x0ZbjHF7JN5
-         PJp84USBZ5OBQ4idsk+V6KZtJRo8I/eeohSY1yKzT9WWhzJYpvAsOHorQXWYIfhjSj
-         /dhKOhhkAn1bAaKtZRRCSEX7ehQc67ZMfgyBSLFtScWs5gCPpR42N11K2YwoYeQ7s5
-         FNv7sL10ei+9SwnMpJJjlq74MhniMlcjuYqmYI4xs86Zh+qJLGbYz0jingY9QOs3mR
-         ml2+okE2AYSbAcOFW7kizTQzLLECSIDlJy1qTj9kzpThs61FmKUbpnrJXDBs/Lt/de
-         W6IRBCm/YBXFw==
-Received: from customer (localhost [127.0.0.1])
-        by submission (posteo.de) with ESMTPSA id 4PZrBl4Wlrz9rxG
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Mar 2023 09:57:19 +0100 (CET)
-Subject: Re: Force ignore LBPME bit by using quirks?
-To:     linux-scsi@vger.kernel.org
-References: <2162608f-7515-bfa7-9a5f-047495713eed@posteo.de>
-From:   darkpenguin <darkpenguin@posteo.de>
-Message-ID: <d12671d8-c6e8-32c6-000d-8c28e9a0b71e@posteo.de>
-Date:   Mon, 13 Mar 2023 08:57:19 +0000
-MIME-Version: 1.0
-In-Reply-To: <2162608f-7515-bfa7-9a5f-047495713eed@posteo.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229689AbjCMJST (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 05:18:19 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41772113D1;
+        Mon, 13 Mar 2023 02:18:15 -0700 (PDT)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D7SK8Y029779;
+        Mon, 13 Mar 2023 09:17:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=0H7NGg+no3R1jEB+A9Rmw3VAqYB+CcMABuXkv6FUM3M=;
+ b=IJGkpibQB0zxFhT75OVyywJa+YjNJ9yQIucR44IntJHC5EvhyGKhuXJtHbErgH2Dn9Vk
+ 9ubwtOJ0Rq6F/EJjXekaiXq3VAtiuHfc1ERZhpcsk7I8G+oXSF1d5MjsQskhFjZagYDj
+ CGvE2cSCuet71H6w32qjYnY07j4R9Z2ucsP5jv/2aHtzEaVG7zdUsS+/4QhYSztfZPXj
+ ewDgbdzdx51zBYZtwbrLfZ6AuHgSzpPLSnUwzDHXCSp0bRcCEzHt/0xcu1Vyl3A57dPM
+ IHIWfxPLuwAowPdzxJk9IXXUVM/hoNxPdqMCQkyFGezOVHeX7G0dV9aRDUobu6JzzGum RQ== 
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p9yew08hq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 13 Mar 2023 09:17:50 +0000
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+        by APTAIPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32D9HlAc009088;
+        Mon, 13 Mar 2023 09:17:47 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 3p8jqm9tbk-1;
+        Mon, 13 Mar 2023 09:17:47 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32D9HlVU009083;
+        Mon, 13 Mar 2023 09:17:47 GMT
+Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
+        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 32D9HkiP009082;
+        Mon, 13 Mar 2023 09:17:47 +0000
+Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
+        id 97CFD452E; Mon, 13 Mar 2023 17:17:45 +0800 (CST)
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com, quic_ziqichen@quicinc.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-trace-kernel@vger.kernel.org (open list:TRACING)
+Subject: [PATCH v5] scsi: ufs: core: Add trace event for MCQ
+Date:   Mon, 13 Mar 2023 17:16:05 +0800
+Message-Id: <1678699023-6645-1-git-send-email-quic_ziqichen@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: zMmCpXuZLgWsQLgS0pZELvB1skl3au7W
+X-Proofpoint-ORIG-GUID: zMmCpXuZLgWsQLgS0pZELvB1skl3au7W
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-13_02,2023-03-10_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ priorityscore=1501 bulkscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
+ clxscore=1015 mlxscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2303130075
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/03/23 11:55, darkpenguin wrote:
-> Hello,
-> 
-> Short version: is it possible to force ignore the LBPME bit and use
-> UNMAP anyway? Maybe via quirks?
-> 
-> Long version: I've got a JMS567-based DAS from Sabrent (DS-4SSD) that
-> has an, um, "weird" firmware (they've tweaked it for their reasons, and
-> now it even refuses to reflash). It identifies as 152d:1561 (JMS561),
-> and does not have the LBPME bit set. However, they say that Windows
-> ignores this bit, and works just fine, which is why they never noticed
-> the problem. So it's definitely actually supported.
-> 
-> I've seen a proposed patch that enables the same behaviour, but it was
-> rejected for obvious reasons:
-> https://www.spinics.net/lists/linux-scsi/msg95062.html
-> But in the bottom, it was suggested that this might be better
-> implemented via quirking.
-> 
-> Is there currently a way to force UNMAP on this device regardless of the
-> LBPME bit? Was it implemented by quirking? I would prefer to avoid using
-> a patched kernel, and I'm not even sure if that patch would still be
-> (correctly) applicable to a modern kernel.
-> 
-> (Please CC me, I'm not on the list.)
+Added a new trace event to record MCQ relevant information
+for each request in MCQ mode, include hardware queue ID,
+SQ tail slot, CQ head slot and CQ tail slot.
 
+Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 
-Followup: judging by this
-https://wiki.archlinux.org/title/Solid_state_drive#External_SSD_with_TRIM_support
-,
-my problem actually goes even deeper. I see that you can override the
-wrongly-set LBPME bit by switching provisioning_mode manually. In my
-case though, the LBPU bit is also 0. Argh...
+---
+Changes to v4:
+- Merged MCQ and SDB trace event as one.
 
-My assumption is that the Windows driver is also made by the chip
-manufacturer, so it ignores all the bits as long as it knows what the
-identified device should be capable of.
+Changes to v3:
+- Free trace_ufshcd_command_mcq() from dependency on trace_ufshcd_command().
 
-I can switch provisioning_mode, but after that, if I issue a blkdiscard
-command of any size, I get an error, and provisioning_mode goes to
-"disabled".
+Changes to v2:
+- Shorten printing strings.
 
-Maybe it's because the kernel treats this device as JMS561 (as
-advertised by the device), which does not support UNMAP? This is what
-gives me this idea:
+Changes to v1:
+- Adjust the order of fileds to keep them aligned.
+---
+ drivers/ufs/core/ufshcd.c  | 15 ++++++++++++---
+ include/trace/events/ufs.h | 24 +++++++++++++-----------
+ 2 files changed, 25 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3b3cf78..53a7287 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -422,10 +422,12 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ {
+ 	u64 lba = 0;
+ 	u8 opcode = 0, group_id = 0;
+-	u32 intr, doorbell;
++	u32 doorbell = 0, hwq_id = 0;
++	u32 intr;
+ 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+ 	struct scsi_cmnd *cmd = lrbp->cmd;
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
++	struct ufs_hw_queue *hwq = NULL;
+ 	int transfer_len = -1;
+ 
+ 	if (!cmd)
+@@ -456,9 +458,16 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 	}
+ 
+ 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+-	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++
++	if (is_mcq_enabled(hba)) {
++		hwq = ufshcd_mcq_req_to_hwq(hba, rq);
++		hwq_id = hwq->id;
++	} else {
++		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++		hwq_id = -1;
++	}
+ 	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
+-			doorbell, transfer_len, intr, lba, opcode, group_id);
++			doorbell, hwq_id, transfer_len, intr, lba, opcode, group_id);
+ }
+ 
+ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+index 599739e..37637ff 100644
+--- a/include/trace/events/ufs.h
++++ b/include/trace/events/ufs.h
+@@ -268,20 +268,21 @@ DEFINE_EVENT(ufshcd_template, ufshcd_wl_runtime_resume,
+ 
+ TRACE_EVENT(ufshcd_command,
+ 	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
+-		 unsigned int tag, u32 doorbell, int transfer_len, u32 intr,
+-		 u64 lba, u8 opcode, u8 group_id),
++		 unsigned int tag, u32 doorbell, u32 hwq_id, int transfer_len,
++		 u32 intr, u64 lba, u8 opcode, u8 group_id),
+ 
+-	TP_ARGS(dev_name, str_t, tag, doorbell, transfer_len,
+-				intr, lba, opcode, group_id),
++	TP_ARGS(dev_name, str_t, tag, doorbell, hwq_id, transfer_len,
++			intr, lba, opcode, group_id),
+ 
+ 	TP_STRUCT__entry(
+ 		__string(dev_name, dev_name)
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__field(unsigned int, tag)
+ 		__field(u32, doorbell)
+-		__field(int, transfer_len)
++		__field(u32, hwq_id)
+ 		__field(u32, intr)
+ 		__field(u64, lba)
++		__field(int, transfer_len)
+ 		__field(u8, opcode)
+ 		__field(u8, group_id)
+ 	),
+@@ -291,19 +292,20 @@ TRACE_EVENT(ufshcd_command,
+ 		__entry->str_t = str_t;
+ 		__entry->tag = tag;
+ 		__entry->doorbell = doorbell;
+-		__entry->transfer_len = transfer_len;
++		__entry->hwq_id = hwq_id;
+ 		__entry->intr = intr;
+ 		__entry->lba = lba;
++		__entry->transfer_len = transfer_len;
+ 		__entry->opcode = opcode;
+ 		__entry->group_id = group_id;
+ 	),
+ 
+ 	TP_printk(
+-		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x",
+-		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+-		__entry->tag, __entry->doorbell, __entry->transfer_len,
+-		__entry->intr, __entry->lba, (u32)__entry->opcode,
+-		str_opcode(__entry->opcode), (u32)__entry->group_id
++		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hqid: %d",
++		 show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
++		 __entry->tag, __entry->doorbell, __entry->transfer_len, __entry->intr,
++		 __entry->lba, (u32)__entry->opcode, str_opcode(__entry->opcode),
++		 (u32)__entry->group_id, __entry->hwq_id
+ 	)
+ );
+ 
+-- 
+2.7.4
 
-$ sudo sg_vpd -a /dev/sdc
-
-Supported VPD pages VPD page:
-  Supported VPD pages [sv]
-  Unit serial number [sn]
-  Device identification [di]
-  Block limits (SBC) [bl]
-  Logical block provisioning (SBC) [lbpv]
-  0xde
-  0xdf
-
-Unit serial number VPD page:
-  Unit serial number: DB98765432146
-
-Device Identification VPD page:
-  Addressed logical unit:
-    designator type: NAA,  code set: Binary
-      0x3042987654321460
-    designator type: T10 vendor identification,  code set: ASCII
-      vendor id: SABRENT
-      vendor specific:  DISK03
-
-Block limits VPD page (SBC):
-  Write same non-zero (WSNZ): 0
-  Maximum compare and write length: 0 blocks [Command not implemented]
-  Optimal transfer length granularity: 1 blocks
-  Maximum transfer length: 65535 blocks
-  Optimal transfer length: 65535 blocks
-  Maximum prefetch transfer length: 65535 blocks
-  Maximum unmap LBA count: 0 [Unmap command not implemented]
-  Maximum unmap block descriptor count: 0 [Unmap command not implemented]
-  Optimal unmap granularity: 0 blocks [not reported]
-  Unmap granularity alignment valid: false
-  Unmap granularity alignment: 0 [invalid]
-  Maximum write same length: 0 blocks [not reported]
-  Maximum atomic transfer length: 0 blocks [not reported]
-  Atomic alignment: 0 [unaligned atomic writes permitted]
-  Atomic transfer length granularity: 0 [no granularity requirement
-  Maximum atomic transfer length with atomic boundary: 0 blocks [not
-reported]
-  Maximum atomic boundary size: 0 blocks [can only write atomic 1 block]
-
-Logical block provisioning VPD page (SBC):
-  Unmap command supported (LBPU): 0
-  Write same (16) with unmap bit supported (LBPWS): 0
-  Write same (10) with unmap bit supported (LBPWS10): 0
-  Logical block provisioning read zeros (LBPRZ): 0
-  Anchored LBAs supported (ANC_SUP): 0
-  Threshold exponent: 1
-  Descriptor present (DP): 0
-  Minimum percentage: 0 [not reported]
-  Provisioning type: 0 (not known or fully provisioned)
-  Threshold percentage: 0 [percentages not supported]
-
-Only hex output supported
-VPD page code=0xde:
- 00     00 de 00 0c 4a 4d 00 00  00 00 00 00 00 00 00 00    ....JM..........
-
-Only hex output supported
-VPD page code=0xdf:
- 00     00 df 00 11 4a 4d 00 00  00 00 00 00 00 00 00 00    ....JM..........
- 10     00 00 00 00 00
-
-
-So... anything I can try in this situation?..
