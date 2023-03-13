@@ -2,118 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C34D4C6FD19
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 04:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B94DC61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 04:14:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbjCMEHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 00:07:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34780 "EHLO
+        id S229771AbjCMEOJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 00:14:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjCMEHt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 00:07:49 -0400
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE41E38B56
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2023 21:07:47 -0700 (PDT)
-Received: by mail-il1-f197.google.com with SMTP id l1-20020a056e021c0100b003180af2a284so5878476ilh.1
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2023 21:07:47 -0700 (PDT)
+        with ESMTP id S229656AbjCMEOI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 00:14:08 -0400
+Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 029C02203B;
+        Sun, 12 Mar 2023 21:14:06 -0700 (PDT)
+Received: by mail-io1-xd30.google.com with SMTP id e11so4528582ioe.3;
+        Sun, 12 Mar 2023 21:14:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678680846;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0XUhL8FFcNhP1iWeAiFBGkWuirlsQdIqQYoFoEIJuKs=;
+        b=SUwtv8PubyTyqt86xU2y0a3JjevLFIWqH0BM9Zo2+N0D5TeCC/5Dl+89ooEFgx8ZlV
+         ROwuuot4uXc8ZawFh89qWVw5l920E2Umz+F4oy8kaOL2FzXEmJpLPhC9JgdCgLMhijuQ
+         IwdQFX68IMa6n/YhWYbi2OS+K1b61Bemj9t7XF9h0ifuHuyfyQKdX9wiSEU0WxWqEDqG
+         EUUfCdCI3c1NOvXTA0UW3xnyJdMg0IcxUAHILw5HLEHbI3mElJF84nLm0okA+bpX/VNi
+         Lrd1LHjZb2cdwfKojLlEcAH9jmpbC4p1ExN7uK46K6UIQKZEvjZivz6IUc42XmmUAcDp
+         9Rmg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678680467;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6BxQX5geAW2yiyf23xq/5pz+19/W3Bs2jWf3P05nAMU=;
-        b=CkhzMz5m3uhI5cUbo4ZteWztBi/zvCmn47Ncg4qTRZILuY16QYS2BHDjnCVA7VvlHy
-         rP+vjt2wWKm3fJk9s9B8f+8l+0tyxtMgmEnGyEKqC+YdnkIW8+LLALujIQhmCc8uDFoG
-         yFp1SLtsV3OvncUh/wvfsejljtkqEcuxTb5sxXBnmHCX1HivSKpJWwa70F34hhJGWafN
-         0ajg67mvBdtkn8EUK2ktibY2Matd9yXqzvheR5bnjAiAQ12YnKDsQa7AhZGympKFnb+Z
-         5A74gztQ2wrBjMS7GafPA691wc84U9HWsTMtlaIdwz8TFaOyRWt6DZ0c1kZussXjOTio
-         9mrg==
-X-Gm-Message-State: AO0yUKWO0gVnjWo+37EOCVLXYzUAEx2Qzv1b59QrH2sN8VN7rGWeHhMX
-        XBpwWM6P1sacW6P4GE12hLifhyUp6oIx9AcutuLFGyIr+SFL
-X-Google-Smtp-Source: AK7set+6YmSoOsuZMNPbgTdK0SElCnNi2p+XuafXIIiCiFmnwNzUYFr2CYmBXIyoVxUJW6keCpIjHoBum8Pq1bsyIALA9IweD0GN
+        d=1e100.net; s=20210112; t=1678680846;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0XUhL8FFcNhP1iWeAiFBGkWuirlsQdIqQYoFoEIJuKs=;
+        b=D+Cso6KheQRdIFzEAYkdlfhGZoMoBA+7A28HfuY7Tu/5icknmcn8FWeANjVVlgkuKX
+         rNcuCGeKc/fJEpnksB8LdH2tKr95DcizKeMpy2R2ijDpPqslZrVjPF15IR9iDaIvllDl
+         prNt7NJ5xrrhoeG4JmW8mwc/V6t8vdXWsQeGY3btnyAMJBnjwo/6yVwIg7bu71oPsr0T
+         aZGif/NAYPOCY7iXEQdr4nSWltfnQE25m5ogAI3KpqmhLt5AL8dor+xrZ1l4ORtOcrdg
+         5piVHX3CdQp6bHCSN/sWx9AAMzkfCkhmhVEvZGI4ehtwGHOMdjEAqOyso5FGfsH4Yxzr
+         4CIg==
+X-Gm-Message-State: AO0yUKXb4jZwwR+I54AoIwRVNFtpKvoFNoMrJfBnRurA7Tdgj6OE9TA6
+        +MWkaK6Lcs0fFvICrv7q2wghByo7W4nIhA==
+X-Google-Smtp-Source: AK7set8nuC3o2iqcZmK+SspoElhwJxaJ0cnSuWnz7DvEEZSLt3+M+jCQEdT+uiqu0U3a8rq+GCbpsA==
+X-Received: by 2002:a5d:9297:0:b0:74c:99e8:7f44 with SMTP id s23-20020a5d9297000000b0074c99e87f44mr5152476iom.2.1678680846323;
+        Sun, 12 Mar 2023 21:14:06 -0700 (PDT)
+Received: from JOEL-DESKTOP.. ([2604:2d80:4d87:cd00:9f51:32d7:1177:67d])
+        by smtp.gmail.com with ESMTPSA id w12-20020a6b4a0c000000b0074e6f2c584dsm2186258iob.12.2023.03.12.21.14.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 12 Mar 2023 21:14:05 -0700 (PDT)
+From:   Joel Selvaraj <joelselvaraj.oss@gmail.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        Joel Selvaraj <joelselvaraj.oss@gmail.com>
+Subject: [PATCH] scsi: core: Add BLIST_SKIP_VPD_PAGES for SKhynix H28U74301AMR
+Date:   Sun, 12 Mar 2023 23:14:02 -0500
+Message-Id: <20230313041402.39330-1-joelselvaraj.oss@gmail.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-X-Received: by 2002:a02:7a45:0:b0:3ae:e73b:ff26 with SMTP id
- z5-20020a027a45000000b003aee73bff26mr16206005jad.1.1678680467173; Sun, 12 Mar
- 2023 21:07:47 -0700 (PDT)
-Date:   Sun, 12 Mar 2023 21:07:47 -0700
-In-Reply-To: <0000000000009afa3c05f3c5988a@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000effe1b05f6c04022@google.com>
-Subject: Re: [syzbot] [scsi?] WARNING in remove_proc_entry (5)
-From:   syzbot <syzbot+04a8437497bcfb4afa95@syzkaller.appspotmail.com>
-To:     anna@kernel.org, chuck.lever@oracle.com, davem@davemloft.net,
-        edumazet@google.com, jejb@linux.ibm.com, jlayton@kernel.org,
-        kuba@kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, netdev@vger.kernel.org,
-        pabeni@redhat.com, syzkaller-bugs@googlegroups.com,
-        trond.myklebust@hammerspace.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-syzbot has found a reproducer for the following issue on:
+Xiaomi Poco F1(qcom/sdm845-xiaomi-beryllium*.dts) comes with a SKhynix
+H28U74301AMR UFS. The sd_read_cpr operation leads to a 120 seconds timeout
+making the device bootup very slow. Like the following:
 
-HEAD commit:    134231664868 Merge tag 'staging-6.3-rc2' of git://git.kern..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=16ae091ac80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=8aef547e348b1ab8
-dashboard link: https://syzkaller.appspot.com/bug?extid=04a8437497bcfb4afa95
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13f21b2ac80000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17ecb766c80000
+[  121.457736] sd 0:0:0:1: [sdb] tag#23 timing out command, waited 120s
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/810b18cfd92d/disk-13423166.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/49409dbd680c/vmlinux-13423166.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/c4a589bbe527/bzImage-13423166.xz
+Setting the BLIST_SKIP_VPD_PAGES allows the device to skip the failing
+sd_read_cpr operation and boot normally.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+04a8437497bcfb4afa95@syzkaller.appspotmail.com
+Signed-off-by: Joel Selvaraj <joelselvaraj.oss@gmail.com>
+---
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-name '2'
-WARNING: CPU: 1 PID: 26 at fs/proc/generic.c:712 remove_proc_entry+0x38d/0x460 fs/proc/generic.c:712
-Modules linked in:
-CPU: 1 PID: 26 Comm: kworker/1:1 Not tainted 6.3.0-rc1-syzkaller-00274-g134231664868 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
-Workqueue: usb_hub_wq hub_event
-RIP: 0010:remove_proc_entry+0x38d/0x460 fs/proc/generic.c:712
-Code: e9 6d fe ff ff e8 c3 c2 7a ff 48 c7 c7 c0 68 99 8c e8 f7 e9 08 08 e8 b2 c2 7a ff 4c 89 e6 48 c7 c7 00 a8 5e 8a e8 33 df 42 ff <0f> 0b e9 a4 fe ff ff e8 97 c2 7a ff 48 8d bd d8 00 00 00 48 b8 00
-RSP: 0018:ffffc90000a1f638 EFLAGS: 00010286
-RAX: 0000000000000000 RBX: 1ffff92000143ec9 RCX: 0000000000000000
-RDX: ffff8880174e1d40 RSI: ffffffff814bf3a7 RDI: 0000000000000001
-RBP: 0000000000000000 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000001 R11: 0000000000000000 R12: ffffc90000a1f710
-R13: dffffc0000000000 R14: ffff88807abf4078 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f84e0c354b8 CR3: 00000000788c7000 CR4: 00000000003506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- scsi_proc_host_rm+0x15d/0x1d0 drivers/scsi/scsi_proc.c:263
- scsi_remove_host+0x108/0x340 drivers/scsi/hosts.c:183
- quiesce_and_remove_host drivers/usb/storage/usb.c:867 [inline]
- usb_stor_disconnect+0x119/0x270 drivers/usb/storage/usb.c:1087
- usb_unbind_interface+0x1dc/0x8e0 drivers/usb/core/driver.c:458
- device_remove drivers/base/dd.c:542 [inline]
- device_remove+0x11f/0x170 drivers/base/dd.c:534
- __device_release_driver drivers/base/dd.c:1240 [inline]
- device_release_driver_internal+0x443/0x610 drivers/base/dd.c:1263
- bus_remove_device+0x22c/0x420 drivers/base/bus.c:574
- device_del+0x48a/0xb80 drivers/base/core.c:3775
- usb_disable_device+0x35a/0x7b0 drivers/usb/core/message.c:1420
- usb_disconnect+0x2db/0x8a0 drivers/usb/core/hub.c:2238
- hub_port_connect drivers/usb/core/hub.c:5246 [inline]
- hub_port_connect_change drivers/usb/core/hub.c:5551 [inline]
- port_event drivers/usb/core/hub.c:5711 [inline]
- hub_event+0x1fbf/0x4e40 drivers/usb/core/hub.c:5793
- process_one_work+0x991/0x1710 kernel/workqueue.c:2390
- process_scheduled_works kernel/workqueue.c:2453 [inline]
- worker_thread+0x858/0x1090 kernel/workqueue.c:2539
- kthread+0x2e8/0x3a0 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
- </TASK>
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index c7080454aea9..bd110a93d047 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -233,6 +233,7 @@ static struct {
+ 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
+ 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
+ 	{"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++	{"SKhynix", "H28U74301AMR", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"DELL", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+-- 
+2.39.2
 
