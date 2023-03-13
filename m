@@ -2,94 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B94DC61DA4
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 04:14:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4405C61DA4
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 04:37:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229771AbjCMEOJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 00:14:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44612 "EHLO
+        id S229950AbjCMEh3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 00:37:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229656AbjCMEOI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 00:14:08 -0400
-Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 029C02203B;
-        Sun, 12 Mar 2023 21:14:06 -0700 (PDT)
-Received: by mail-io1-xd30.google.com with SMTP id e11so4528582ioe.3;
-        Sun, 12 Mar 2023 21:14:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678680846;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=0XUhL8FFcNhP1iWeAiFBGkWuirlsQdIqQYoFoEIJuKs=;
-        b=SUwtv8PubyTyqt86xU2y0a3JjevLFIWqH0BM9Zo2+N0D5TeCC/5Dl+89ooEFgx8ZlV
-         ROwuuot4uXc8ZawFh89qWVw5l920E2Umz+F4oy8kaOL2FzXEmJpLPhC9JgdCgLMhijuQ
-         IwdQFX68IMa6n/YhWYbi2OS+K1b61Bemj9t7XF9h0ifuHuyfyQKdX9wiSEU0WxWqEDqG
-         EUUfCdCI3c1NOvXTA0UW3xnyJdMg0IcxUAHILw5HLEHbI3mElJF84nLm0okA+bpX/VNi
-         Lrd1LHjZb2cdwfKojLlEcAH9jmpbC4p1ExN7uK46K6UIQKZEvjZivz6IUc42XmmUAcDp
-         9Rmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678680846;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=0XUhL8FFcNhP1iWeAiFBGkWuirlsQdIqQYoFoEIJuKs=;
-        b=D+Cso6KheQRdIFzEAYkdlfhGZoMoBA+7A28HfuY7Tu/5icknmcn8FWeANjVVlgkuKX
-         rNcuCGeKc/fJEpnksB8LdH2tKr95DcizKeMpy2R2ijDpPqslZrVjPF15IR9iDaIvllDl
-         prNt7NJ5xrrhoeG4JmW8mwc/V6t8vdXWsQeGY3btnyAMJBnjwo/6yVwIg7bu71oPsr0T
-         aZGif/NAYPOCY7iXEQdr4nSWltfnQE25m5ogAI3KpqmhLt5AL8dor+xrZ1l4ORtOcrdg
-         5piVHX3CdQp6bHCSN/sWx9AAMzkfCkhmhVEvZGI4ehtwGHOMdjEAqOyso5FGfsH4Yxzr
-         4CIg==
-X-Gm-Message-State: AO0yUKXb4jZwwR+I54AoIwRVNFtpKvoFNoMrJfBnRurA7Tdgj6OE9TA6
-        +MWkaK6Lcs0fFvICrv7q2wghByo7W4nIhA==
-X-Google-Smtp-Source: AK7set8nuC3o2iqcZmK+SspoElhwJxaJ0cnSuWnz7DvEEZSLt3+M+jCQEdT+uiqu0U3a8rq+GCbpsA==
-X-Received: by 2002:a5d:9297:0:b0:74c:99e8:7f44 with SMTP id s23-20020a5d9297000000b0074c99e87f44mr5152476iom.2.1678680846323;
-        Sun, 12 Mar 2023 21:14:06 -0700 (PDT)
-Received: from JOEL-DESKTOP.. ([2604:2d80:4d87:cd00:9f51:32d7:1177:67d])
-        by smtp.gmail.com with ESMTPSA id w12-20020a6b4a0c000000b0074e6f2c584dsm2186258iob.12.2023.03.12.21.14.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Mar 2023 21:14:05 -0700 (PDT)
-From:   Joel Selvaraj <joelselvaraj.oss@gmail.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Joel Selvaraj <joelselvaraj.oss@gmail.com>
-Subject: [PATCH] scsi: core: Add BLIST_SKIP_VPD_PAGES for SKhynix H28U74301AMR
-Date:   Sun, 12 Mar 2023 23:14:02 -0500
-Message-Id: <20230313041402.39330-1-joelselvaraj.oss@gmail.com>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S229612AbjCMEh2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 00:37:28 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5AAD4108F
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2023 21:37:27 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D352in017250;
+        Sun, 12 Mar 2023 21:37:25 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=PSB6/B44X5DbBX9m0g6d553JY3v6QF9tsI7GMpZmsrg=;
+ b=hLGKJKxMALhPiMXzXwCNldcc9CV5rIUIg3B+12x8ZD9Ka325dG5qHrKbdxcqMk8YmzXM
+ 5GdSYkBkgQFkdpRue6d+xkEu6aW/cY+QYG4BkG1nDqJYfTdrKYnsx0woLZIm0Sw/5prE
+ L9K9Ak5KM12bmkzmYopIYmC5z2A5H9cvkhFQghjB2FS3G5bSQe7GXy4ujwsdImeGPpES
+ 1FVEcMBrvtL/O8jBLY7Mao3Fl3hU24QjviYTK/W/COOgtxQfdC+Gp4xcqr4HS0lFk8WR
+ YLMMcSSypcgRxIrt5cckpAutLn8johK2Jx3WB4B4lnJQOCYRHbpMmYqV+mrcByXS7F0X OA== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3p8t1t46rm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Sun, 12 Mar 2023 21:37:25 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Sun, 12 Mar
+ 2023 21:37:23 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.42 via Frontend
+ Transport; Sun, 12 Mar 2023 21:37:23 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 574A45B6927;
+        Sun, 12 Mar 2023 21:37:22 -0700 (PDT)
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>,
+        <emilne@redhat.com>, <jmeneghi@redhat.com>
+Subject: [PATCH 0/2] qla2xxx driver fixes
+Date:   Sun, 12 Mar 2023 21:37:09 -0700
+Message-ID: <20230313043711.13500-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: WFikEHXjyegK6ZG49QOTqyaPJKQ8Oe4i
+X-Proofpoint-ORIG-GUID: WFikEHXjyegK6ZG49QOTqyaPJKQ8Oe4i
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-12_10,2023-03-10_01,2023-02-09_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Xiaomi Poco F1(qcom/sdm845-xiaomi-beryllium*.dts) comes with a SKhynix
-H28U74301AMR UFS. The sd_read_cpr operation leads to a 120 seconds timeout
-making the device bootup very slow. Like the following:
+Martin,
 
-[  121.457736] sd 0:0:0:1: [sdb] tag#23 timing out command, waited 120s
+Please apply the qla2xxx driver fixes to the scsi tree
+at your earliest convenience.
 
-Setting the BLIST_SKIP_VPD_PAGES allows the device to skip the failing
-sd_read_cpr operation and boot normally.
+Thanks,
+Nilesh
 
-Signed-off-by: Joel Selvaraj <joelselvaraj.oss@gmail.com>
----
- drivers/scsi/scsi_devinfo.c | 1 +
- 1 file changed, 1 insertion(+)
+Nilesh Javali (1):
+  qla2xxx: perform lockless command completion in abort path
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index c7080454aea9..bd110a93d047 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -233,6 +233,7 @@ static struct {
- 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
- 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
- 	{"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
-+	{"SKhynix", "H28U74301AMR", NULL, BLIST_SKIP_VPD_PAGES},
- 	{"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"DELL", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+Quinn Tran (1):
+  qla2xxx: synchronize the iocb count to be in order
+
+ drivers/scsi/qla2xxx/qla_isr.c |  3 ++-
+ drivers/scsi/qla2xxx/qla_os.c  | 11 +++++++++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+
+base-commit: 901b894af5b933cf6576eec05746f34b46e2ac83
 -- 
-2.39.2
+2.19.0.rc0
 
