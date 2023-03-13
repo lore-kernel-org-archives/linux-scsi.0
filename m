@@ -2,43 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D1FC74A4B
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 14:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E7AC6FD19
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 18:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231344AbjCMOOY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Mar 2023 10:14:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42056 "EHLO
+        id S230194AbjCMSL1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 14:11:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231295AbjCMOOB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 10:14:01 -0400
+        with ESMTP id S229830AbjCMSLZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 14:11:25 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32DA2302B8;
-        Mon, 13 Mar 2023 07:13:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 831E26923B;
+        Mon, 13 Mar 2023 11:11:19 -0700 (PDT)
 Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
-        by mta-01.yadro.com (Proxmox) with ESMTP id AD48C3420C5;
-        Mon, 13 Mar 2023 17:12:59 +0300 (MSK)
+        by mta-01.yadro.com (Proxmox) with ESMTP id D85B834214C;
+        Mon, 13 Mar 2023 21:11:17 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
-        :cc:content-type:content-type:date:from:from:in-reply-to
-        :message-id:mime-version:references:reply-to:subject:subject:to
-        :to; s=mta-01; bh=mlZ+JAFFuM3vyxXBiIq4CVvsCPYlrgUuIpoeAJiQIIE=; b=
-        JtwIv/1jOXuw/uFLwxfQ16H3gG3tZ6rQCBBwBgoZTpjU9V0GBzD7gVrX7Qx3Ovri
-        33dFdiVpbzDmYM8qUgdUL/uDobqUofyFp/i9zb7NgRE4HHAgEYxp/GcPjriEoDqT
-        1MhEZQMCtfoYW1V/OxHYOJdeluKpIjiq0roLQqTPPSw=
+        :cc:content-transfer-encoding:content-type:content-type:date
+        :from:from:in-reply-to:message-id:mime-version:references
+        :reply-to:subject:subject:to:to; s=mta-01; bh=d5NpFgk/odjS1rUJmA
+        7AcC2xftoy2oCWQyNfpUpzt4M=; b=dy1HRgdIbyv1UlaJeDWF5vQdLmiE5kmwt9
+        /XnQhRObVkfvvWTyiTzBjtQMAdG0G1aOEyIVvTjvlkEDdhZeBuyC8EFuzEL450bC
+        LWqVV3uqiyCStDG2QfRifZeMRUV1yxnXTtlr8HKrjk4a8Tsle8MRfY/cliKivQ+A
+        BT0zxqo/U=
 Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Proxmox) with ESMTPS id A1FD234209D;
-        Mon, 13 Mar 2023 17:12:59 +0300 (MSK)
-Received: from yadro.com (10.199.20.11) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Mon, 13 Mar
- 2023 17:12:58 +0300
-Date:   Mon, 13 Mar 2023 17:13:02 +0300
+        by mta-01.yadro.com (Proxmox) with ESMTPS id CEA81342145;
+        Mon, 13 Mar 2023 21:11:17 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.199.20.11) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Mon, 13 Mar 2023 21:11:17 +0300
 From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     Bart Van Assche <bvanassche@acm.org>,
         Jason Gunthorpe <jgg@ziepe.ca>,
         Leon Romanovsky <leon@kernel.org>,
         James Smart <james.smart@broadcom.com>,
@@ -51,16 +50,16 @@ CC:     Martin Petersen <martin.petersen@oracle.com>,
         "Michael S . Tsirkin" <mst@redhat.com>,
         Jason Wang <jasowang@redhat.com>,
         Juergen Gross <jgross@suse.com>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>, Konstantin Shelekhin <k.shelekhin@yadro.com>
-Subject: Re: [PATCH v2 12/12] target: add virtual remote target
-Message-ID: <20230313141302.GA1031@yadro.com>
-References: <20230307080742.24631-1-d.bogdanov@yadro.com>
- <20230307080742.24631-13-d.bogdanov@yadro.com>
- <f1f56999-931a-ebed-6458-89ff45573e59@oracle.com>
+        <linux@yadro.com>, Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH v3 01/12] scsi: target: add default fabric ops callaouts
+Date:   Mon, 13 Mar 2023 21:10:59 +0300
+Message-ID: <20230313181110.20566-2-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230313181110.20566-1-d.bogdanov@yadro.com>
+References: <20230313181110.20566-1-d.bogdanov@yadro.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <f1f56999-931a-ebed-6458-89ff45573e59@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-Originating-IP: [10.199.20.11]
 X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
  T-EXCH-08.corp.yadro.com (172.17.11.58)
@@ -68,98 +67,164 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 10, 2023 at 04:32:32PM -0600, Mike Christie wrote:
-> 
-> Just some nits.
-> 
-> On 3/7/23 2:07 AM, Dmitry Bogdanov wrote:
-> > +
-> > +static int tcm_remote_port_link(
-> > +     struct se_portal_group *se_tpg,
-> > +     struct se_lun *lun)
-> > +{
-> > +     pr_debug("TCM_Remote_ConfigFS: Port Link LUN %lld Successful\n",
-> > +               lun->unpacked_lun);
-> 
-> The l in lun should be one space to the left so it's under the ".
-> It will then match the other code and checkpatch won't complain.
-> 
-> 
-> > +     return 0;
-> > +}
-> > +
-> > +static void tcm_remote_port_unlink(
-> > +     struct se_portal_group *se_tpg,
-> > +     struct se_lun *lun)
-> > +{
-> > +     pr_debug("TCM_Remote_ConfigFS: Port Unlink LUN %lld Successful\n",
-> > +               lun->unpacked_lun);
-> 
-> Same as above.
-> 
-> > +}
-> > +
-> > +static struct se_portal_group *tcm_remote_make_tpg(
-> > +     struct se_wwn *wwn,
-> > +     const char *name)
-> > +{
-> > +     struct tcm_remote_hba *remote_hba = container_of(wwn,
-> > +                     struct tcm_remote_hba, remote_hba_wwn);
-> > +     struct tcm_remote_tpg *remote_tpg;
-> > +     unsigned long tpgt;
-> > +     int ret;
-> > +
-> > +     if (strstr(name, "tpgt_") != name) {
-> > +             pr_err("Unable to locate \"tpgt_#\" directory group\n");
-> > +             return ERR_PTR(-EINVAL);
-> > +     }
-> > +     if (kstrtoul(name+5, 10, &tpgt))
-> 
-> Add spaces so it looks like: "name + 5"
-> 
-> 
-> 
-> > +}
-> > +
-> > +static ssize_t tcm_remote_wwn_version_show(struct config_item *item, char *page)
-> > +{
-> > +     return sprintf(page, "TCM Remote Fabric module %s\n", TCM_REMOTE_VERSION);
-> > +}
-> 
-> 
-> Do we need this? I saw other LIO drivers like iscsi, fcoe and loop have them
-> but they are never updated so it seems useless.
-> 
-> For something like stable trying to manage versions is going to be difficult
-> as well, so it might just be more confusing.
-> 
+There are several callout in target fabric ops that most of fabric
+drivers fills with a function returning the same value.
 
-I absolutely agree that in-kernel modules should not have its own
-versions. Kernel version is enough. 
+Stop requiring such callaouts to exist in the ops, fill them in
+TCM Core.
 
-But targetcli tool reads that file for a fabric and I don't want to
-work it around when I will add support of remote fabric to it.
-So, I am going to keep the version attribute.
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
+ drivers/target/target_core_configfs.c | 94 +++++++++++++++++----------
+ 1 file changed, 61 insertions(+), 33 deletions(-)
 
-> > +
-> > +static int __init tcm_remote_fabric_init(void)
-> > +{
-> > +     int ret = -ENOMEM;
-> 
-> You can drop the -ENOMEM since we set ret the next line.
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 611b0424e305..74b67c346dfe 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -335,6 +335,29 @@ EXPORT_SYMBOL(target_undepend_item);
+ /*##############################################################################
+ // Start functions called by external Target Fabrics Modules
+ //############################################################################*/
++static int target_disable_feature(struct se_portal_group *se_tpg)
++{
++	return 0;
++}
++
++static u32 target_default_get_inst_index(struct se_portal_group *se_tpg)
++{
++	return 1;
++}
++
++static u32 target_default_sess_get_index(struct se_session *se_sess)
++{
++	return 0;
++}
++
++static void target_set_default_node_attributes(struct se_node_acl *se_acl)
++{
++}
++
++static int target_default_get_cmd_state(struct se_cmd *se_cmd)
++{
++	return 0;
++}
+ 
+ static int target_fabric_tf_ops_check(const struct target_core_fabric_ops *tfo)
+ {
+@@ -362,46 +385,14 @@ static int target_fabric_tf_ops_check(const struct target_core_fabric_ops *tfo)
+ 		pr_err("Missing tfo->tpg_get_tag()\n");
+ 		return -EINVAL;
+ 	}
+-	if (!tfo->tpg_check_demo_mode) {
+-		pr_err("Missing tfo->tpg_check_demo_mode()\n");
+-		return -EINVAL;
+-	}
+-	if (!tfo->tpg_check_demo_mode_cache) {
+-		pr_err("Missing tfo->tpg_check_demo_mode_cache()\n");
+-		return -EINVAL;
+-	}
+-	if (!tfo->tpg_check_demo_mode_write_protect) {
+-		pr_err("Missing tfo->tpg_check_demo_mode_write_protect()\n");
+-		return -EINVAL;
+-	}
+-	if (!tfo->tpg_check_prod_mode_write_protect) {
+-		pr_err("Missing tfo->tpg_check_prod_mode_write_protect()\n");
+-		return -EINVAL;
+-	}
+-	if (!tfo->tpg_get_inst_index) {
+-		pr_err("Missing tfo->tpg_get_inst_index()\n");
+-		return -EINVAL;
+-	}
+ 	if (!tfo->release_cmd) {
+ 		pr_err("Missing tfo->release_cmd()\n");
+ 		return -EINVAL;
+ 	}
+-	if (!tfo->sess_get_index) {
+-		pr_err("Missing tfo->sess_get_index()\n");
+-		return -EINVAL;
+-	}
+ 	if (!tfo->write_pending) {
+ 		pr_err("Missing tfo->write_pending()\n");
+ 		return -EINVAL;
+ 	}
+-	if (!tfo->set_default_node_attributes) {
+-		pr_err("Missing tfo->set_default_node_attributes()\n");
+-		return -EINVAL;
+-	}
+-	if (!tfo->get_cmd_state) {
+-		pr_err("Missing tfo->get_cmd_state()\n");
+-		return -EINVAL;
+-	}
+ 	if (!tfo->queue_data_in) {
+ 		pr_err("Missing tfo->queue_data_in()\n");
+ 		return -EINVAL;
+@@ -447,8 +438,36 @@ static int target_fabric_tf_ops_check(const struct target_core_fabric_ops *tfo)
+ 	return 0;
+ }
+ 
++static void target_set_default_ops(struct target_core_fabric_ops *tfo)
++{
++	if (!tfo->tpg_check_demo_mode)
++		tfo->tpg_check_demo_mode = target_disable_feature;
++
++	if (!tfo->tpg_check_demo_mode_cache)
++		tfo->tpg_check_demo_mode_cache = target_disable_feature;
++
++	if (!tfo->tpg_check_demo_mode_write_protect)
++		tfo->tpg_check_demo_mode_write_protect = target_disable_feature;
++
++	if (!tfo->tpg_check_prod_mode_write_protect)
++		tfo->tpg_check_prod_mode_write_protect = target_disable_feature;
++
++	if (!tfo->tpg_get_inst_index)
++		tfo->tpg_get_inst_index = target_default_get_inst_index;
++
++	if (!tfo->sess_get_index)
++		tfo->sess_get_index = target_default_sess_get_index;
++
++	if (!tfo->set_default_node_attributes)
++		tfo->set_default_node_attributes = target_set_default_node_attributes;
++
++	if (!tfo->get_cmd_state)
++		tfo->get_cmd_state = target_default_get_cmd_state;
++}
++
+ int target_register_template(const struct target_core_fabric_ops *fo)
+ {
++	struct target_core_fabric_ops *tfo;
+ 	struct target_fabric_configfs *tf;
+ 	int ret;
+ 
+@@ -461,10 +480,18 @@ int target_register_template(const struct target_core_fabric_ops *fo)
+ 		pr_err("%s: could not allocate memory!\n", __func__);
+ 		return -ENOMEM;
+ 	}
++	tfo = kzalloc(sizeof(struct target_core_fabric_ops), GFP_KERNEL);
++	if (!tfo) {
++		kfree(tf);
++		pr_err("%s: could not allocate memory!\n", __func__);
++		return -ENOMEM;
++	}
++	memcpy(tfo, fo, sizeof(*tfo));
++	target_set_default_ops(tfo);
+ 
+ 	INIT_LIST_HEAD(&tf->tf_list);
+ 	atomic_set(&tf->tf_access_cnt, 0);
+-	tf->tf_ops = fo;
++	tf->tf_ops = tfo;
+ 	target_fabric_setup_cits(tf);
+ 
+ 	mutex_lock(&g_tf_lock);
+@@ -492,6 +519,7 @@ void target_unregister_template(const struct target_core_fabric_ops *fo)
+ 			 */
+ 			rcu_barrier();
+ 			kfree(t->tf_tpg_base_cit.ct_attrs);
++			kfree(t->tf_ops);
+ 			kfree(t);
+ 			return;
+ 		}
+-- 
+2.25.1
 
-I can drop ret variable here at all.
-
-> > +
-> > +     ret = target_register_template(&remote_ops);
-> > +     if (ret)
-> > +             goto out;
-> > +
-> > +     return 0;
-> > +
-> > +out:
-> > +     return ret;
-> > +}
-> > +
-> 
 
