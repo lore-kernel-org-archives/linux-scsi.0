@@ -2,65 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87FF0C74A4B
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 01:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C34D4C6FD19
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 04:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229638AbjCMBoz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 12 Mar 2023 21:44:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52664 "EHLO
+        id S229742AbjCMEHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Mar 2023 00:07:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjCMBoz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Mar 2023 21:44:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2526B28D3D;
-        Sun, 12 Mar 2023 18:44:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CA77FB80DC8;
-        Mon, 13 Mar 2023 01:44:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1551AC433D2;
-        Mon, 13 Mar 2023 01:44:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678671891;
-        bh=o0ATLULxPasoiLpbkvNZurekwvW9bghe33IouHklmN8=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=SAU949H3GdB/cxGqrtOOQNKVXLChr8KrcYhL0l2gMB9hnaPdYRUbXzlFRbWnL3y12
-         T3Ax6Br+qr9z7D5PkXlKuKC9298s3LsjYBsSnzw4IEcn07HBEbzwYw3Ar54OfB33e6
-         t4r4m4K9ov8af6aKBQP6f8N6UXrSXriSrlxBOb+MmLvqMWxx0r4PZicXkhjOPagRWQ
-         Y+dv1GXgf67NbDQIMzxbxv5VjtraxegaVByJk78O9n3CDDOwyzyW8BW+MrgiMSut3o
-         2GDUvWu+CScniezgwohPU/EnfPM8TX2eTJvUrhOUeubVFnXg1ZregCcgyDjZY6eJSh
-         gpQ1LjyD+xDHQ==
-Message-ID: <9e3ffff0-6cc8-b01a-4d2e-5ec49a936415@kernel.org>
-Date:   Mon, 13 Mar 2023 09:44:47 +0800
+        with ESMTP id S229473AbjCMEHt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2023 00:07:49 -0400
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE41E38B56
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2023 21:07:47 -0700 (PDT)
+Received: by mail-il1-f197.google.com with SMTP id l1-20020a056e021c0100b003180af2a284so5878476ilh.1
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2023 21:07:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678680467;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6BxQX5geAW2yiyf23xq/5pz+19/W3Bs2jWf3P05nAMU=;
+        b=CkhzMz5m3uhI5cUbo4ZteWztBi/zvCmn47Ncg4qTRZILuY16QYS2BHDjnCVA7VvlHy
+         rP+vjt2wWKm3fJk9s9B8f+8l+0tyxtMgmEnGyEKqC+YdnkIW8+LLALujIQhmCc8uDFoG
+         yFp1SLtsV3OvncUh/wvfsejljtkqEcuxTb5sxXBnmHCX1HivSKpJWwa70F34hhJGWafN
+         0ajg67mvBdtkn8EUK2ktibY2Matd9yXqzvheR5bnjAiAQ12YnKDsQa7AhZGympKFnb+Z
+         5A74gztQ2wrBjMS7GafPA691wc84U9HWsTMtlaIdwz8TFaOyRWt6DZ0c1kZussXjOTio
+         9mrg==
+X-Gm-Message-State: AO0yUKWO0gVnjWo+37EOCVLXYzUAEx2Qzv1b59QrH2sN8VN7rGWeHhMX
+        XBpwWM6P1sacW6P4GE12hLifhyUp6oIx9AcutuLFGyIr+SFL
+X-Google-Smtp-Source: AK7set+6YmSoOsuZMNPbgTdK0SElCnNi2p+XuafXIIiCiFmnwNzUYFr2CYmBXIyoVxUJW6keCpIjHoBum8Pq1bsyIALA9IweD0GN
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.2
-Subject: Re: [PATCH v5] scsi: support packing multi-segment in UNMAP command
-Content-Language: en-US
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230310123604.1820231-1-chao@kernel.org>
- <ZAs4h2Mu90u4gc3/@infradead.org>
-From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <ZAs4h2Mu90u4gc3/@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a02:7a45:0:b0:3ae:e73b:ff26 with SMTP id
+ z5-20020a027a45000000b003aee73bff26mr16206005jad.1.1678680467173; Sun, 12 Mar
+ 2023 21:07:47 -0700 (PDT)
+Date:   Sun, 12 Mar 2023 21:07:47 -0700
+In-Reply-To: <0000000000009afa3c05f3c5988a@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000effe1b05f6c04022@google.com>
+Subject: Re: [syzbot] [scsi?] WARNING in remove_proc_entry (5)
+From:   syzbot <syzbot+04a8437497bcfb4afa95@syzkaller.appspotmail.com>
+To:     anna@kernel.org, chuck.lever@oracle.com, davem@davemloft.net,
+        edumazet@google.com, jejb@linux.ibm.com, jlayton@kernel.org,
+        kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, netdev@vger.kernel.org,
+        pabeni@redhat.com, syzkaller-bugs@googlegroups.com,
+        trond.myklebust@hammerspace.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/3/10 22:02, Christoph Hellwig wrote:
->> -	/* If command type is WRITE or DISCARD, set bitmap as dirty */
->> -	if (ufshpb_is_write_or_discard(cmd)) {
->> +	/* If command type is WRITE, set bitmap as dirty */
->> +	if (op_is_write(req_op(scsi_cmd_to_rq(cmd)))) {
-> 
-> Umm, a driver has absolutely no business poking into the UNMAP
-> payload.   Someone needs to fix the UFS driver first to not do this.
+syzbot has found a reproducer for the following issue on:
 
-IIUC，originally, HPB driver tries to lookup LBA range{,s} from WRITE/DISCARD
-request, and will dirty mapped HPB regions based on LBA range{,s}, do you mean
-HPB driver should not parse DISCARD request?
+HEAD commit:    134231664868 Merge tag 'staging-6.3-rc2' of git://git.kern..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=16ae091ac80000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8aef547e348b1ab8
+dashboard link: https://syzkaller.appspot.com/bug?extid=04a8437497bcfb4afa95
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13f21b2ac80000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17ecb766c80000
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/810b18cfd92d/disk-13423166.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/49409dbd680c/vmlinux-13423166.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/c4a589bbe527/bzImage-13423166.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+04a8437497bcfb4afa95@syzkaller.appspotmail.com
+
+name '2'
+WARNING: CPU: 1 PID: 26 at fs/proc/generic.c:712 remove_proc_entry+0x38d/0x460 fs/proc/generic.c:712
+Modules linked in:
+CPU: 1 PID: 26 Comm: kworker/1:1 Not tainted 6.3.0-rc1-syzkaller-00274-g134231664868 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
+Workqueue: usb_hub_wq hub_event
+RIP: 0010:remove_proc_entry+0x38d/0x460 fs/proc/generic.c:712
+Code: e9 6d fe ff ff e8 c3 c2 7a ff 48 c7 c7 c0 68 99 8c e8 f7 e9 08 08 e8 b2 c2 7a ff 4c 89 e6 48 c7 c7 00 a8 5e 8a e8 33 df 42 ff <0f> 0b e9 a4 fe ff ff e8 97 c2 7a ff 48 8d bd d8 00 00 00 48 b8 00
+RSP: 0018:ffffc90000a1f638 EFLAGS: 00010286
+RAX: 0000000000000000 RBX: 1ffff92000143ec9 RCX: 0000000000000000
+RDX: ffff8880174e1d40 RSI: ffffffff814bf3a7 RDI: 0000000000000001
+RBP: 0000000000000000 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000000 R12: ffffc90000a1f710
+R13: dffffc0000000000 R14: ffff88807abf4078 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f84e0c354b8 CR3: 00000000788c7000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ scsi_proc_host_rm+0x15d/0x1d0 drivers/scsi/scsi_proc.c:263
+ scsi_remove_host+0x108/0x340 drivers/scsi/hosts.c:183
+ quiesce_and_remove_host drivers/usb/storage/usb.c:867 [inline]
+ usb_stor_disconnect+0x119/0x270 drivers/usb/storage/usb.c:1087
+ usb_unbind_interface+0x1dc/0x8e0 drivers/usb/core/driver.c:458
+ device_remove drivers/base/dd.c:542 [inline]
+ device_remove+0x11f/0x170 drivers/base/dd.c:534
+ __device_release_driver drivers/base/dd.c:1240 [inline]
+ device_release_driver_internal+0x443/0x610 drivers/base/dd.c:1263
+ bus_remove_device+0x22c/0x420 drivers/base/bus.c:574
+ device_del+0x48a/0xb80 drivers/base/core.c:3775
+ usb_disable_device+0x35a/0x7b0 drivers/usb/core/message.c:1420
+ usb_disconnect+0x2db/0x8a0 drivers/usb/core/hub.c:2238
+ hub_port_connect drivers/usb/core/hub.c:5246 [inline]
+ hub_port_connect_change drivers/usb/core/hub.c:5551 [inline]
+ port_event drivers/usb/core/hub.c:5711 [inline]
+ hub_event+0x1fbf/0x4e40 drivers/usb/core/hub.c:5793
+ process_one_work+0x991/0x1710 kernel/workqueue.c:2390
+ process_scheduled_works kernel/workqueue.c:2453 [inline]
+ worker_thread+0x858/0x1090 kernel/workqueue.c:2539
+ kthread+0x2e8/0x3a0 kernel/kthread.c:376
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
 
