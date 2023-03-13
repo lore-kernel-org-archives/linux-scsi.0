@@ -2,92 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D86DC6FD19
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Mar 2023 16:48:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87FF0C74A4B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Mar 2023 01:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231148AbjCLQsc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 12 Mar 2023 12:48:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33482 "EHLO
+        id S229638AbjCMBoz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Mar 2023 21:44:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjCLQsb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Mar 2023 12:48:31 -0400
-Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3DE402200E;
-        Sun, 12 Mar 2023 09:48:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=N4jp8
-        xAkv6nJvns9rj2xzYaBjm242kwG0b+7YqJ0+cc=; b=d071C3qxmpqpF+KJF9YpO
-        m9SEjmPqRNt1HO5i9TEjrNXpcIJ++HSZU4HdTeE/3mOwq8Pv0aq5ceO00OYhrsMg
-        gIhHYoiOhYgLypp7ASZz1USmM36j+XYcBZJbE/lDGbYmQ6QtQHWET9CfMjUlkzEK
-        AeJbOPrELz/BHFMBaaT6Jo=
-Received: from leanderwang-LC2.localdomain (unknown [111.206.145.21])
-        by zwqz-smtp-mta-g0-4 (Coremail) with SMTP id _____wD31E5IAg5k_rGRDA--.2593S2;
-        Mon, 13 Mar 2023 00:48:08 +0800 (CST)
-From:   Zheng Wang <zyytlz.wz@163.com>
-To:     don.brace@microchip.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, hackerzheng666@gmail.com,
-        1395428693sheep@gmail.com, alex000young@gmail.com,
-        Zheng Wang <zyytlz.wz@163.com>
-Subject: [PATCH] scsi: smartpqi: Fix use after free bug in pqi_pci_remove due to race condition
-Date:   Mon, 13 Mar 2023 00:48:06 +0800
-Message-Id: <20230312164806.2104140-1-zyytlz.wz@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229561AbjCMBoz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Mar 2023 21:44:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2526B28D3D;
+        Sun, 12 Mar 2023 18:44:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CA77FB80DC8;
+        Mon, 13 Mar 2023 01:44:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1551AC433D2;
+        Mon, 13 Mar 2023 01:44:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678671891;
+        bh=o0ATLULxPasoiLpbkvNZurekwvW9bghe33IouHklmN8=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=SAU949H3GdB/cxGqrtOOQNKVXLChr8KrcYhL0l2gMB9hnaPdYRUbXzlFRbWnL3y12
+         T3Ax6Br+qr9z7D5PkXlKuKC9298s3LsjYBsSnzw4IEcn07HBEbzwYw3Ar54OfB33e6
+         t4r4m4K9ov8af6aKBQP6f8N6UXrSXriSrlxBOb+MmLvqMWxx0r4PZicXkhjOPagRWQ
+         Y+dv1GXgf67NbDQIMzxbxv5VjtraxegaVByJk78O9n3CDDOwyzyW8BW+MrgiMSut3o
+         2GDUvWu+CScniezgwohPU/EnfPM8TX2eTJvUrhOUeubVFnXg1ZregCcgyDjZY6eJSh
+         gpQ1LjyD+xDHQ==
+Message-ID: <9e3ffff0-6cc8-b01a-4d2e-5ec49a936415@kernel.org>
+Date:   Mon, 13 Mar 2023 09:44:47 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.2
+Subject: Re: [PATCH v5] scsi: support packing multi-segment in UNMAP command
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230310123604.1820231-1-chao@kernel.org>
+ <ZAs4h2Mu90u4gc3/@infradead.org>
+From:   Chao Yu <chao@kernel.org>
+In-Reply-To: <ZAs4h2Mu90u4gc3/@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _____wD31E5IAg5k_rGRDA--.2593S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Aw1xCr1rXr1kXw4fGrWkXrb_yoW8Xr18pF
-        4fJ3sxCr45tryY9w1DA3W0yFy3Cay5KrW3Cwsrt343XF13CryjqryUCa1qvr43XFsYkr4Y
-        yF1Fy3W5WFy7JFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zi-J55UUUUU=
-X-Originating-IP: [111.206.145.21]
-X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiXBAwU1Xl55jdsgAAsP
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In pqi_pci_probe, it calls pqi_alloc_ctrl_info and bound
-&ctrl_info->event_work with pqi_event_worker.
+On 2023/3/10 22:02, Christoph Hellwig wrote:
+>> -	/* If command type is WRITE or DISCARD, set bitmap as dirty */
+>> -	if (ufshpb_is_write_or_discard(cmd)) {
+>> +	/* If command type is WRITE, set bitmap as dirty */
+>> +	if (op_is_write(req_op(scsi_cmd_to_rq(cmd)))) {
+> 
+> Umm, a driver has absolutely no business poking into the UNMAP
+> payload.   Someone needs to fix the UFS driver first to not do this.
 
-When it calls pqi_irq_handler to handle IRQ, 
-it will finally call schedule_work to start the work.
-
-When we call pqi_pci_remove to remove the driver, there
-may be a sequence as follows:
-
-Fix it by finishing the work before cleanup in pqi_remove_ctrl.
-
-CPU0                  CPU1
-
-                    |pqi_event_worker
-pqi_pci_remove      |
-  pqi_remove_ctrl   |
-pqi_free_ctrl_resources|
-pqi_free_ctrl_info|
-     kfree(ctrl_info)  |
-//free ctrl_info   |
-                    |pqi_ctrl_busy
-                    |//use ctrl_info
-
-Fixes: 6c223761eb54 ("smartpqi: initial commit of Microsemi smartpqi driver")
-Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 49a8f91810b6..555f1af38f38 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -8939,6 +8939,7 @@ static void pqi_take_ctrl_offline_deferred(struct pqi_ctrl_info *ctrl_info)
- 	pqi_perform_lockup_action();
- 	pqi_stop_heartbeat_timer(ctrl_info);
- 	pqi_free_interrupts(ctrl_info);
-+	cancel_work_sync(&ctrl_info->event_work);
- 	pqi_cancel_rescan_worker(ctrl_info);
- 	pqi_cancel_update_time_worker(ctrl_info);
- 	pqi_ctrl_wait_until_quiesced(ctrl_info);
--- 
-2.25.1
+IIUC，originally, HPB driver tries to lookup LBA range{,s} from WRITE/DISCARD
+request, and will dirty mapped HPB regions based on LBA range{,s}, do you mean
+HPB driver should not parse DISCARD request?
 
