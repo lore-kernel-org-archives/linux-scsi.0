@@ -2,108 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C60B8C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 14:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CFD9C74A4B
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 16:22:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231266AbjCNO5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Mar 2023 10:57:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57878 "EHLO
+        id S229835AbjCNQWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Mar 2023 12:22:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231277AbjCNO5g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 10:57:36 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA06BA72B4;
-        Tue, 14 Mar 2023 07:57:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678805854; x=1710341854;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=wsWt0ajWiHIUCoESjiyIhbxqW6sgiOPv1o6XUe8cND8=;
-  b=nak9xn6A6h9znMQG9MbzmkvslDX5LFOW2xY+cc3jGhH1agtQV/UZofBP
-   39C7O7iQFubr+El6HnmDS7CUQjMLKdgUtffK3VRLC+LovBnNgsCKziPwF
-   v9aK34mJDaHhGp1GH11dxp0BVc7tYJi/4NvWmPTHb167roZw4LWchpPSN
-   pNlH6HrvCCGdUUXbPPC3WuZjXXsly1F5VYgSgAi2vD5OjR7SoMvrfitsX
-   9zZv4h1VHH1aPxZmNIffjWcz/Bmosg34EOgkteSeb0Ul3cae7WTVWOeT1
-   f/3O3xW8mVLM+oeBZ2vFjCvwZRKpvleHtY7sJ/T94L00rEB400LSAae6L
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="334929591"
-X-IronPort-AV: E=Sophos;i="5.98,260,1673942400"; 
-   d="scan'208";a="334929591"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 07:57:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="629063168"
-X-IronPort-AV: E=Sophos;i="5.98,260,1673942400"; 
-   d="scan'208";a="629063168"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga003.jf.intel.com with ESMTP; 14 Mar 2023 07:57:31 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id CF4C0209; Tue, 14 Mar 2023 16:58:16 +0200 (EET)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v1 1/1] scsi: fnic: Switch to use %ptTs
-Date:   Tue, 14 Mar 2023 16:58:13 +0200
-Message-Id: <20230314145813.66112-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S229974AbjCNQWD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 12:22:03 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777B7D535;
+        Tue, 14 Mar 2023 09:21:16 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 3F4771F8B4;
+        Tue, 14 Mar 2023 16:20:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1678810811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YMm8wGU9lKPlT+0A0cGn5WagEyZwDalHzp2AUlTmDSc=;
+        b=apwyjtcp/EVS9dM6ody3LL2t8knoB8nIEkBvA1pxqiwOzz/rW7kYmGzKTPhl6qX+N60bfc
+        09kxa5qPRbE7T+TegyInkr0K+RoQXwJHbs8O7989KUl6LHWBfiqoYciRCyA0l76BK4A2TM
+        FlyoVXbV21z0S2oLgnsWPb6tlTHCnL8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1678810811;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YMm8wGU9lKPlT+0A0cGn5WagEyZwDalHzp2AUlTmDSc=;
+        b=tsgGseOXY4Gd4cEIMivm3EcJCLye24yO236m81+SJPybZDJP79Q5z92hu2ZEUvoNIGPYM7
+        TOBcwBkuYF19m3BA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 25FBE13A26;
+        Tue, 14 Mar 2023 16:20:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id I35UCLueEGS9YAAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 14 Mar 2023 16:20:11 +0000
+Message-ID: <bc73fcf1-d679-ec43-8235-b6342f78c1ba@suse.de>
+Date:   Tue, 14 Mar 2023 17:20:10 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [RFC 0/9] Make iscsid-kernel communications namespace-aware
+To:     Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, netdev@vger.kernel.org
+Cc:     Lee Duncan <lduncan@suse.com>
+References: <cover.1675876731.git.lduncan@suse.com>
+Content-Language: en-US
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <cover.1675876731.git.lduncan@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use %ptTs instead of open-coded variant to print contents
-of time64_t type in human readable form.
+On 2/8/23 18:40, Lee Duncan wrote:
+> From: Lee Duncan <lduncan@suse.com>
+> 
+> This is a request for comment on a set of patches that
+> modify the kernel iSCSI initiator communications so that
+> they are namespace-aware. The goal is to allow multiple
+> iSCSI daemon (iscsid) to run at once as long as they
+> are in separate namespaces, and so that iscsid can
+> run in containers.
+> 
+> Comments and suggestions are more than welcome. I do not
+> expect that this code is production-ready yet, and
+> networking isn't my strongest suit (yet).
+> 
+> These patches were originally posted in 2015 by Chris
+> Leech. There were some issues at the time about how
+> to handle namespaces going away. I hope to address
+> any issues raised with this patchset and then
+> to merge these changes upstream to address working
+> in working in containers.
+> 
+> My contribution thus far has been to update these patches
+> to work with the current upstream kernel.
+> 
+> Chris Leech/Lee Duncan (9):
+>    iscsi: create per-net iscsi netlink kernel sockets
+>    iscsi: associate endpoints with a host
+>    iscsi: sysfs filtering by network namespace
+>    iscsi: make all iSCSI netlink multicast namespace aware
+>    iscsi: set netns for iscsi_tcp hosts
+>    iscsi: check net namespace for all iscsi lookup
+>    iscsi: convert flashnode devices from bus to class
+>    iscsi: rename iscsi_bus_flash_* to iscsi_flash_*
+>    iscsi: filter flashnode sysfs by net namespace
+> 
+>   drivers/infiniband/ulp/iser/iscsi_iser.c |   7 +-
+>   drivers/scsi/be2iscsi/be_iscsi.c         |   6 +-
+>   drivers/scsi/bnx2i/bnx2i_iscsi.c         |   6 +-
+>   drivers/scsi/cxgbi/libcxgbi.c            |   6 +-
+>   drivers/scsi/iscsi_tcp.c                 |   7 +
+>   drivers/scsi/qedi/qedi_iscsi.c           |   6 +-
+>   drivers/scsi/qla4xxx/ql4_os.c            |  64 +--
+>   drivers/scsi/scsi_transport_iscsi.c      | 625 ++++++++++++++++-------
+>   include/scsi/scsi_transport_iscsi.h      |  63 ++-
+>   9 files changed, 537 insertions(+), 253 deletions(-)
+> 
+Awesome work!
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/scsi/fnic/fnic_trace.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+Thanks for this!
 
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index e03967463561..f3c3a26a1384 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -781,28 +781,21 @@ void copy_and_format_trace_data(struct fc_trace_hdr *tdata,
- 				fnic_dbgfs_t *fnic_dbgfs_prt, int *orig_len,
- 				u8 rdata_flag)
- {
--	struct tm tm;
- 	int j, i = 1, len;
--	char *fc_trace, *fmt;
- 	int ethhdr_len = sizeof(struct ethhdr) - 1;
- 	int fcoehdr_len = sizeof(struct fcoe_hdr);
- 	int fchdr_len = sizeof(struct fc_frame_header);
- 	int max_size = fnic_fc_trace_max_pages * PAGE_SIZE * 3;
-+	char *fc_trace;
- 
- 	tdata->frame_type = tdata->frame_type & 0x7F;
- 
- 	len = *orig_len;
- 
--	time64_to_tm(tdata->time_stamp.tv_sec, 0, &tm);
--
--	fmt = "%02d:%02d:%04ld %02d:%02d:%02d.%09lu ns%8x       %c%8x\t";
--	len += scnprintf(fnic_dbgfs_prt->buffer + len,
--		max_size - len,
--		fmt,
--		tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900,
--		tm.tm_hour, tm.tm_min, tm.tm_sec,
--		tdata->time_stamp.tv_nsec, tdata->host_no,
--		tdata->frame_type, tdata->frame_len);
-+	len += scnprintf(fnic_dbgfs_prt->buffer + len, max_size - len,
-+			 "%ptTs.%09lu ns%8x       %c%8x\t",
-+			 &tdata->time_stamp.tv_sec, tdata->time_stamp.tv_nsec,
-+			 tdata->host_no, tdata->frame_type, tdata->frame_len);
- 
- 	fc_trace = (char *)FC_TRACE_ADDRESS(tdata);
- 
--- 
-2.39.2
+Comments to follow on the individual patches.
 
+Cheers,
+
+Hannes
