@@ -2,229 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBACBC7618B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 11:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16578C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 11:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231394AbjCNLSU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Mar 2023 07:18:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50526 "EHLO
+        id S230220AbjCNLUU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Mar 2023 07:20:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229682AbjCNLRs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 07:17:48 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 596BA22CA2;
-        Tue, 14 Mar 2023 04:17:18 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EASRkD022089;
-        Tue, 14 Mar 2023 11:16:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=g1l3lyZNTBh60xFeKe5WpfcYWJXdi2SY59E6+ExCylA=;
- b=HuQAWFwhGUPhA92v20L8oPByAdo6IWy3gU8y0IqkFFGt1exGo584P87YDWrlRKxto8mp
- m+zAW7+uajztzZLaiV3DKvst5bNlEfU5enaWztgLaED3mGbsjbcAqgicKnJueJ1mXvpR
- GODfdnrZ/5HOGbmRnj8xlMg8+gnV+5ngSM1sLItM75hYLsInD3RDEElRv4P2+KBOuBRy
- W37XphJxyu//9Jrsu5vME5aBF0xFLeQJ7bXia1o9Y+YbZngCbnMum5LFInFzVkbtCfD9
- +AHgnC3gNWpBtw1tSV3oiNXLFsRTS2qbsemydTKgy0BuLy26UhZRhHWlsmG+SjmIDCts Rw== 
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pa6n32ppa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 11:16:44 +0000
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32EBGfpq013655;
-        Tue, 14 Mar 2023 11:16:41 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 3p8jqmemx3-1;
-        Tue, 14 Mar 2023 11:16:41 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EBGfAN013516;
-        Tue, 14 Mar 2023 11:16:41 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 32EBGeSI013506;
-        Tue, 14 Mar 2023 11:16:41 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id B523B3E37; Tue, 14 Mar 2023 19:16:39 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2] scsi: ufs: core: print trs for pending requests in MCQ mode
-Date:   Tue, 14 Mar 2023 19:16:32 +0800
-Message-Id: <1678792597-3232-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: RspmfyAqmEnJPkDCKwZmhlrHt1iW7LAA
-X-Proofpoint-GUID: RspmfyAqmEnJPkDCKwZmhlrHt1iW7LAA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-14_04,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 mlxscore=0
- bulkscore=0 mlxlogscore=999 impostorscore=0 priorityscore=1501
- adultscore=0 phishscore=0 spamscore=0 lowpriorityscore=0 clxscore=1015
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303140096
+        with ESMTP id S231543AbjCNLUI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 07:20:08 -0400
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761D098EAE
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2023 04:19:38 -0700 (PDT)
+Received: by mail-ed1-x52c.google.com with SMTP id r11so8888116edd.5
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2023 04:19:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1678792776;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=LfuSyrbgYklZNRYuX498I2Gj36dx2cQqVAnZUrMSsiA=;
+        b=Ez1hwm6zCZNgiJrYGZKnwO37CFP0s9UVxeeQfBZ39E0sRGNdXmc3jXnV52tZZZ+PuF
+         quwSnxfxRatAylNCuPoLqO6dcYhQnN2oDSJCm1o8FwICm3zXkspR1ID/uoUaxMoMTgfR
+         Oz488I0qrhX06gAHHs1OwJkQC6cl9iYLmw0/2wVwDTbBRss/Hdng46P/LHpkVR9deZV/
+         OLFIczi0Qh+PPXrGuv5QQXykifMrO9Sp2BikhVYleI7K6P1Y8WWOpqjt3Gf3APhxKUH8
+         ZvuX3g45w/0xsGyIRaWrhSKKzBeSZjCHVOeC8vsuKe01x/S8XZFHast3t4pPWOEjVJOf
+         fDUg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678792776;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=LfuSyrbgYklZNRYuX498I2Gj36dx2cQqVAnZUrMSsiA=;
+        b=SlgLh1rZmmUIHKMA+2YmrECyBtn5ZMgq87rYOMGH4knQrgWSjLzZQ0MemYBSP80oBJ
+         TJZBoG3SOVGMuPJ/Fs5cr/lIBk7MaXJhPXBwJ+l2mcMkdwWanoljPvypDAP5dRe4uJHm
+         AqgfSHMQwH3IArIAWTfiYtdQ3SGTamxZEpnPq7j3qAz1WiaV6Ssd7tY/kdO+WV3UeA1Y
+         tZ0kCp4h6/Dkv87ClwCmvsL3JBkK3yH9H4dFeDm5/SuGrNO0vMDirZb9Be6xR6MVdbfe
+         njNSYTZYad/huV600n40snnKVbN09ZBC4FSYLbpFW525P6OzmNw6D06Zy6acQ0gSaggV
+         25LQ==
+X-Gm-Message-State: AO0yUKU+5xKnygy/wCERBykZQfidagD0cjP8Iwf1x9MRB52iQmrAyLqB
+        xPIi49QFGMw3nBIntzoNjfpzoA==
+X-Google-Smtp-Source: AK7set8+S0OeYa45ddASmejw+HGDXlolNs2ImcYbzLEefmpVjwJ95EUrTVXLHu44Ydqk4f2fBgUGDQ==
+X-Received: by 2002:a17:907:e8e:b0:92c:a80e:2259 with SMTP id ho14-20020a1709070e8e00b0092ca80e2259mr2174660ejc.1.1678792776356;
+        Tue, 14 Mar 2023 04:19:36 -0700 (PDT)
+Received: from ?IPV6:2a02:810d:15c0:828:59be:4b3f:994b:e78c? ([2a02:810d:15c0:828:59be:4b3f:994b:e78c])
+        by smtp.gmail.com with ESMTPSA id h7-20020a17090634c700b0092be625d981sm1010231ejb.91.2023.03.14.04.19.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Mar 2023 04:19:35 -0700 (PDT)
+Message-ID: <5ca73037-799b-2110-8a72-cc6a7e71850f@linaro.org>
+Date:   Tue, 14 Mar 2023 12:19:34 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [RFC PATCH v3 1/7] dt-bindings: crypto: Add Qualcomm Inline
+ Crypto Engine
+Content-Language: en-US
+To:     Abel Vesa <abel.vesa@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20230313115202.3960700-1-abel.vesa@linaro.org>
+ <20230313115202.3960700-2-abel.vesa@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230313115202.3960700-2-abel.vesa@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We don't have outstanding_reqs bitmap in MCQ mode. And in consideration
-of the queue depth may increase beyond 64 in the future, we reworked
-ufshcd_print_trs() to get rid of usage of bitmap so that we can print
-trs for pending requests in both SDB and MCQ mode.
+On 13/03/2023 12:51, Abel Vesa wrote:
+> Add schema file for new Qualcomm Inline Crypto Engine driver.
+> 
+> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
 
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 
----
-Changes to v1:
-- Use blk_mq_tagset_busy_iter() to iterate over pending requests.
----
- drivers/ufs/core/ufshcd.c | 97 ++++++++++++++++++++++++++++-------------------
- 1 file changed, 58 insertions(+), 39 deletions(-)
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1d58cb2..3ce1be5 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -542,48 +542,67 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- }
- 
- static
--void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
-+void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
- {
- 	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
--	int tag;
- 
--	for_each_set_bit(tag, &bitmap, hba->nutrs) {
--		lrbp = &hba->lrb[tag];
-+	lrbp = &hba->lrb[tag];
- 
--		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
--				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
--		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
--				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
--		dev_err(hba->dev,
--			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
--			tag, (u64)lrbp->utrd_dma_addr);
--
--		ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
--				sizeof(struct utp_transfer_req_desc));
--		dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
--			(u64)lrbp->ucd_req_dma_addr);
--		ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
--				sizeof(struct utp_upiu_req));
--		dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
--			(u64)lrbp->ucd_rsp_dma_addr);
--		ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
--				sizeof(struct utp_upiu_rsp));
--
--		prdt_length = le16_to_cpu(
--			lrbp->utr_descriptor_ptr->prd_table_length);
--		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
--			prdt_length /= ufshcd_sg_entry_size(hba);
-+	dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
-+			tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
-+	dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
-+			tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
-+	dev_err(hba->dev,
-+		"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
-+		tag, (u64)lrbp->utrd_dma_addr);
-+
-+	ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
-+			sizeof(struct utp_transfer_req_desc));
-+	dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
-+		(u64)lrbp->ucd_req_dma_addr);
-+	ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
-+			sizeof(struct utp_upiu_req));
-+	dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
-+		(u64)lrbp->ucd_rsp_dma_addr);
-+	ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
-+			sizeof(struct utp_upiu_rsp));
-+
-+	prdt_length = le16_to_cpu(
-+		lrbp->utr_descriptor_ptr->prd_table_length);
-+	if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
-+		prdt_length /= ufshcd_sg_entry_size(hba);
- 
--		dev_err(hba->dev,
--			"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
--			tag, prdt_length,
--			(u64)lrbp->ucd_prdt_dma_addr);
-+	dev_err(hba->dev,
-+		"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
-+		tag, prdt_length,
-+		(u64)lrbp->ucd_prdt_dma_addr);
- 
--		if (pr_prdt)
--			ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
--				ufshcd_sg_entry_size(hba) * prdt_length);
--	}
-+	if (pr_prdt)
-+		ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
-+			ufshcd_sg_entry_size(hba) * prdt_length);
-+}
-+
-+static bool ufshcd_print_tr_iter(struct request *req, void *priv)
-+{
-+	struct scsi_device *sdev = req->q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct ufs_hba *hba = shost_priv(shost);
-+
-+	if (!IS_ERR_OR_NULL(hba))
-+		ufshcd_print_tr(hba, req->tag, *(bool *)priv);
-+
-+	return true;
-+}
-+
-+/**
-+ * ufshcd_print_trs_all - print trs for all started requests.
-+ * @hba: per-adapter instance.
-+ * @pr_prdt: need to print prdt or not.
-+ */
-+static void ufshcd_print_trs_all(struct ufs_hba *hba, bool pr_prdt)
-+{
-+	blk_mq_tagset_busy_iter(&hba->host->tag_set, ufshcd_print_tr_iter, &pr_prdt);
- }
- 
- static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
-@@ -5332,7 +5351,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 
- 	if ((host_byte(result) != DID_OK) &&
- 	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
--		ufshcd_print_trs(hba, 1 << lrbp->task_tag, true);
-+		ufshcd_print_tr(hba, lrbp->task_tag, true);
- 	return result;
- }
- 
-@@ -6406,7 +6425,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		ufshcd_print_pwr_info(hba);
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_tmrs(hba, hba->outstanding_tasks);
--		ufshcd_print_trs(hba, hba->outstanding_reqs, pr_prdt);
-+		ufshcd_print_trs_all(hba, pr_prdt);
- 		spin_lock_irqsave(hba->host->host_lock, flags);
- 	}
- 
-@@ -7435,9 +7454,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
--		ufshcd_print_trs(hba, 1 << tag, true);
-+		ufshcd_print_tr(hba, tag, true);
- 	} else {
--		ufshcd_print_trs(hba, 1 << tag, false);
-+		ufshcd_print_tr(hba, tag, false);
- 	}
- 	hba->req_abort_count++;
- 
--- 
-2.7.4
+Best regards,
+Krzysztof
 
