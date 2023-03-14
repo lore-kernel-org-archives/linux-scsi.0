@@ -2,86 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA167C05027
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 18:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CA2C05027
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 20:58:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230020AbjCNSNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Mar 2023 14:13:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35736 "EHLO
+        id S229951AbjCNU6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Mar 2023 16:58:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjCNSNm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 14:13:42 -0400
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 404031CBED;
-        Tue, 14 Mar 2023 11:13:37 -0700 (PDT)
-Received: by mail-pf1-f178.google.com with SMTP id ay18so10287205pfb.2;
-        Tue, 14 Mar 2023 11:13:37 -0700 (PDT)
+        with ESMTP id S229780AbjCNU6e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 16:58:34 -0400
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 153BC22CA7
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2023 13:58:33 -0700 (PDT)
+Received: by mail-pl1-f179.google.com with SMTP id x11so17919927pln.12
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2023 13:58:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678817617;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=shjOGf3us/BM8xDvslDFXavV6ys4MahLutw/vfYX6aM=;
-        b=FHNky5FbRujLsGDqo9HBt4O9FAe386beercnMTVbIbgVw8TAGKzMooYdNsU1sCRRxS
-         JXWlvwjZa3hNDGNlsDLscuQVboTSb5BbIHsUYCyZEqsMT5W5nt78Hi2Syv1TLNqhO3+w
-         UdqDfr2oOGnYK9nBspmt6nPBQ1Z12JLFP2+j+9VppMtP0BjyovCC9mTiw4YT1nKJydgB
-         /olW/5eJrHmVn6UNMQzi//hXvbtFQHNVxhU20/dMU1dOSAn2cWP1oysui5Jt7nOEEI8s
-         xwpZArnaHgLT39vTE1SbDB71B0TIs5aCrIgQj1mwaUr8XIz7UCw//lDGNJExGfIuo76r
-         bjpw==
-X-Gm-Message-State: AO0yUKULsB+7BMBudDJsUDZk4HqqrGft3lFGQMduG7mfA2bfN7drC5+v
-        RNEhU+Sg5NoBsw6jnEGkWGg=
-X-Google-Smtp-Source: AK7set/Km0QT0pAtwmzkW3cd3nztFqhRP9idHwCg5shq5E/ZsERUt/xe28cabD1HwLK76qUKkC+5cQ==
-X-Received: by 2002:a62:1a4c:0:b0:623:79d9:a8e6 with SMTP id a73-20020a621a4c000000b0062379d9a8e6mr6482026pfa.19.1678817616607;
-        Tue, 14 Mar 2023 11:13:36 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:9cdb:df66:226e:e52a? ([2620:15c:211:201:9cdb:df66:226e:e52a])
-        by smtp.gmail.com with ESMTPSA id g24-20020aa78198000000b0058b927b9653sm1965634pfi.92.2023.03.14.11.13.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Mar 2023 11:13:36 -0700 (PDT)
-Message-ID: <70bf37fb-bc66-d341-7c2d-bf1785ba464f@acm.org>
-Date:   Tue, 14 Mar 2023 11:13:33 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v6] scsi: ufs: core: Add trace event for MCQ
-Content-Language: en-US
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, quic_nguyenb@quicinc.com, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
-References: <1678792580-3178-1-git-send-email-quic_ziqichen@quicinc.com>
+        d=1e100.net; s=20210112; t=1678827512;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=L+iEwKs38qVEIWRs4AnDpSDFcrFdOmxuMiJcx4NiH1w=;
+        b=YgBa1Gr/huVqj16GNHrKT+Ejqmup2WKYsAzgij1Lv7FLl7/3Q+3RSyRzjVmop/7TQq
+         c33NHq/qBhmaLrn91co6kdW/TXkf3AIGkmycLhPFPLDGpVO6y7hSzu7gS3X2VlF+lSIZ
+         VZdM42YaN+s28GqaWlH16N9QuwfybLl7B1Si6NaxU39SRC/JX9c3vVMVfFMJOICfKhVv
+         Caq7KXClRZZhYPdY3b9Ufuc9RPlBnGFITKPMWO8gvnWpU3wleet5P4aUXviklPOsYJUI
+         +JjWFLd4Wrr4Ri0ydCEiO5fWBM7FzIvhVXLyEZoMUxf2aNnGfrwdL3MI6D7VlJEMctKL
+         3pyg==
+X-Gm-Message-State: AO0yUKVdwznqw88ylAb3X4lgHDeQX+ZOCKXaNJTo186sCUqIJliXOcHO
+        +W1fjPw126Abt+M+taKSjq8=
+X-Google-Smtp-Source: AK7set98j0B7bhbr203IBgJRKBqiN0Hu5X9aV7AlCl1RiiTuHyFsoLlAdZxvCCnkzySx+RX/lphXrw==
+X-Received: by 2002:a17:90a:f3ca:b0:23d:3a3f:950b with SMTP id ha10-20020a17090af3ca00b0023d3a3f950bmr3052732pjb.22.1678827512408;
+        Tue, 14 Mar 2023 13:58:32 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:558a:e74:a7b9:2212])
+        by smtp.gmail.com with ESMTPSA id x14-20020a17090a530e00b002348d711ebbsm2153386pjh.16.2023.03.14.13.58.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Mar 2023 13:58:31 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1678792580-3178-1-git-send-email-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>
+Subject: [PATCH 1/2] scsi: ufs: core: Disable the reset settle delay
+Date:   Tue, 14 Mar 2023 13:58:12 -0700
+Message-Id: <20230314205822.313447-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/14/23 04:15, Ziqi Chen wrote:
->   	TP_printk(
-> -		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x",
-> -		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-> -		__entry->tag, __entry->doorbell, __entry->transfer_len,
-> -		__entry->intr, __entry->lba, (u32)__entry->opcode,
-> -		str_opcode(__entry->opcode), (u32)__entry->group_id
-> +		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hwq_id: %d",
-> +		 show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-> +		 __entry->tag, __entry->doorbell, __entry->transfer_len, __entry->intr,
-> +		 __entry->lba, (u32)__entry->opcode, str_opcode(__entry->opcode),
-> +		 (u32)__entry->group_id, __entry->hwq_id
+Neither UFS host controllers nor UFS devices require a ten second delay
+after a host reset or after a bus reset. Hence this patch.
 
-The alignment of the TP_printk() arguments looks odd. Please make sure 
-that arguments 2 and later start in the same column as the opening 
-double quote (") instead of one column to the right of that double quote.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-
-Bart.
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 172d25fef740..ce7b765aa2af 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8744,6 +8744,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.max_sectors		= (1 << 20) / SECTOR_SIZE, /* 1 MiB */
+ 	.max_host_blocked	= 1,
+ 	.track_queue_depth	= 1,
++	.skip_settle_delay	= 1,
+ 	.sdev_groups		= ufshcd_driver_groups,
+ 	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
+ };
