@@ -2,123 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 045B8C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 12:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5099FC7618E
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 12:15:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231686AbjCNMI1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Mar 2023 08:08:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42250 "EHLO
+        id S230449AbjCNMPG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Mar 2023 08:15:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231699AbjCNMIX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 08:08:23 -0400
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 461E334F5F;
-        Tue, 14 Mar 2023 05:07:45 -0700 (PDT)
-Received: by mail-ed1-x52b.google.com with SMTP id da10so61171818edb.3;
-        Tue, 14 Mar 2023 05:07:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678795636;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AGJ/J3etGXzzl0b+NHW/iN6M3fmzVQmhjKRcIxTWVds=;
-        b=ka8JGNS5D9SBcMnt4d472x2hwdFkFyldNKxnGEnO6pkvYSlUbIPqO4QQXn8NmzwyVC
-         8rk0yUI9Ytm+zUIbnPDGByyhREZTWaoVHCxqr4ft5G7ajdPtRGbMnPcEvfISWe33JRdS
-         2zRjYKlZv0ukmKIM/H+sCicuGvpuDBWpJEavqLje0lpLqJ6a2VYTridpp5gFZJJD/8JH
-         OGSN3wph8HBzAGDNII2yYIqbjNDKCH0vsLyK6uYB3NXGFwph+zJjCETmmrwsneflYZSh
-         CNI3KkJJK1fAfWwer4wZpllE82hWWa8pfYSbJKnUcfO0jTEFk/Iz//RQLwUCp3Me57+v
-         VDfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678795636;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AGJ/J3etGXzzl0b+NHW/iN6M3fmzVQmhjKRcIxTWVds=;
-        b=CLUOrZl1slwXwTtGA6dYbTgtrI2Xy2AXViuSITlTjvZcoO2w0UbLdJ29eb2VMiPAQI
-         41q1u8VLH7lw6OP7lIfTNlhEzlPCSWdkVb92UfY0eX5fxiiXXY2bWzEuXrNtJ9Wijito
-         E1ik1JmmfZ1rehvaH3Y9hB7SIHlysSqMkmGyZzu+s7F2qzLpiQycUebiiSpj8Jyyb71r
-         Iojr7uepPBlFlZxPn6IEJIQAxpuONEOM2Pz96gJ5AmNWyEcMT4cT908/u+pOR7uFJyP3
-         zLcJV/D6aELISJ/s2zaQV3yVern005VJ1Q6J6kAE/bLyf/2RPIi///uzmRenftQ3qm/9
-         QaJA==
-X-Gm-Message-State: AO0yUKWn4aYxtqsBKLUpOrrM5FAqWk8pFlO112MzqR+BZ4VzTFS1Hp54
-        J2wfECZO/8jZ9Ubp2VgEEoY=
-X-Google-Smtp-Source: AK7set/ZXQ+XfAoC7QvC3zJZuOUeUmwsfD1u7z9CGxTW9HvRYx2Fw+SlEkD2QSWMCctkfcyjX1j1Tw==
-X-Received: by 2002:aa7:d38b:0:b0:4fb:fd9f:7375 with SMTP id x11-20020aa7d38b000000b004fbfd9f7375mr7624487edq.2.1678795636347;
-        Tue, 14 Mar 2023 05:07:16 -0700 (PDT)
-Received: from eldamar.lan (c-82-192-242-114.customer.ggaweb.ch. [82.192.242.114])
-        by smtp.gmail.com with ESMTPSA id v30-20020a50d59e000000b004af7191fe35sm948475edi.22.2023.03.14.05.07.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Mar 2023 05:07:15 -0700 (PDT)
-Sender: Salvatore Bonaccorso <salvatore.bonaccorso@gmail.com>
-Received: by eldamar.lan (Postfix, from userid 1000)
-        id BBA70BE2DE0; Tue, 14 Mar 2023 13:07:14 +0100 (CET)
-Date:   Tue, 14 Mar 2023 13:07:14 +0100
-From:   Salvatore Bonaccorso <carnil@debian.org>
-To:     Andrew Cooper <Andrew.Cooper3@citrix.com>
-Cc:     Juergen Gross <jgross@suse.com>,
-        Joost Roeleveld <joost@antarean.org>,
-        Christoph Hellwig <hch@infradead.org>, jejb@linux.ibm.com,
+        with ESMTP id S231821AbjCNMN6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 08:13:58 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C51DA0F23;
+        Tue, 14 Mar 2023 05:13:10 -0700 (PDT)
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EC0GcT016896;
+        Tue, 14 Mar 2023 12:12:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=Ild5HBQy6ZyBXnH/8IOYxskl2r9VDYJMtmuh3COMvf4=;
+ b=gVHrHveBQlzm/opojwkN+cQXT3hXkiBOjRMQUkEfJ+FBzI3Oqujo518Hsr5quaX4cbEO
+ rPXdMFrGtXXe8o78TvRz6e7enKVdJ676z+8ukmq8AqAq1Pfhhj0h9y2mynfkSZhsHoXM
+ QzcA6KWWUivF+IrYMsvr6GZeAvDtUQEVYKOY4HxbIANgVE0yBajqlb/GyniyD4AlQN+o
+ agcytVm1QtJ4t6XVa8fhV2yt2LfS9cH1bvIkyJrkr6ljECyMF5377cDwX0ZB2i+dDTlc
+ 2lhDI3wduuqmRo5l4Ps6U8o6ZZoqq+p8MtnKwMDBGCLWuqEmLg693qQNPzrkzbMhf1E0 nA== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3paph23uc1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Mar 2023 12:12:42 +0000
+Received: from m0098410.ppops.net (m0098410.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EBM4ME025738;
+        Tue, 14 Mar 2023 12:12:41 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3paph23ub2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Mar 2023 12:12:41 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E7uGPY001011;
+        Tue, 14 Mar 2023 12:12:39 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3p8h96mrw0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Mar 2023 12:12:39 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCaLK000540
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Mar 2023 12:12:36 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id AE8BC2007A;
+        Tue, 14 Mar 2023 12:12:36 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2A1212007D;
+        Tue, 14 Mar 2023 12:12:36 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 14 Mar 2023 12:12:36 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        adi@kriegisch.at
-Subject: Re: Report in downstream Debian: mpt3sas broken with xen dom0 with
- update to 5.10.149 in 5.10.y.
-Message-ID: <ZBBjcu2YH9HFY06l@eldamar.lan>
-References: <Y1JkuKTjVYrOWbvm@eldamar.lan>
- <85ad4508-b979-c792-e92b-01bc16260dec@acm.org>
- <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
- <2fd505a07bd26d76f1166761fa50905414edb7ef.camel@linux.ibm.com>
- <30a056c8-071f-4259-3253-75e718af619d@suse.com>
- <Y1bEQMS5SNTbZO/3@infradead.org>
- <858a4288-46ac-d423-a529-b3b77b7fbc8a@citrix.com>
- <20230314111752.EGroupware.TiNRv1BSroWqKL7zQtfNLJ8@_>
- <4c5de098-5cd3-116b-54cb-6972c6c06818@suse.com>
- <8cc36c16-4aa0-9c47-ab2f-c75c1e22772f@citrix.com>
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH v3 19/38] mpt fusion: add HAS_IOPORT dependencies
+Date:   Tue, 14 Mar 2023 13:11:57 +0100
+Message-Id: <20230314121216.413434-20-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20230314121216.413434-1-schnelle@linux.ibm.com>
+References: <20230314121216.413434-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8cc36c16-4aa0-9c47-ab2f-c75c1e22772f@citrix.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: QksM_jC-8JxG-rApA-S_A3Bu3alLe2cV
+X-Proofpoint-GUID: VvXgicXL0JQoVNjoq33IbC4bol01cN8l
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-14_06,2023-03-14_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 malwarescore=0
+ suspectscore=0 adultscore=0 phishscore=0 bulkscore=0 mlxscore=0
+ mlxlogscore=917 spamscore=0 lowpriorityscore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303140103
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Andrew,
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
-On Tue, Mar 14, 2023 at 11:41:08AM +0000, Andrew Cooper wrote:
-> On 14/03/2023 11:23 am, Juergen Gross wrote:
-> > On 14.03.23 12:17, Joost Roeleveld wrote:
-> >>> On Mon, Oct 24, 2022 at 05:28:05PM +0000, Andrew Cooper wrote:
-> >>>> I don't know exactly how this translates to Linux internals, but most
-> >>>> devices are fine and it's routinely the mpt2/3sas drivers which
-> >>>> encounter problems.  It would be lovely if we could get to the
-> >>>> bottom of
-> >>>> this for once and for all.
-> >>>
-> >>> So to summarize my two mails: I think te use of dma_get_required_mask
-> >>> in mpt3sas is wrong, and the dma_get_required_mask return value from
-> >>> xen-swiotlb is also wrong. Fixing either one should fix this problem,
-> >>> and I think we should fix both.
-> >>
-> >> Hi all,
-> >>
-> >> Is there anything that can be done to get this fixed in xen and the
-> >> kernel somehow?
-> >> I keep having to manually patch the mpt3sas driver to prevent it from
-> >> being able to switch to 32bit mode each time I upgrade the kernel.
-> >
-> > Just use 5.10.173.
-> 
-> Its still broken even in 6.1
-> 
-> We've just stumbled over this yet again in XenServer.
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+ drivers/message/fusion/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The mentioned commit has been backported to 6.1.16, 5.15.100 and
-5.10.173. Is the issue still reproducible with 6.1.16?
+diff --git a/drivers/message/fusion/Kconfig b/drivers/message/fusion/Kconfig
+index a3d0288fd0e2..88a6e506a942 100644
+--- a/drivers/message/fusion/Kconfig
++++ b/drivers/message/fusion/Kconfig
+@@ -2,7 +2,7 @@
+ 
+ menuconfig FUSION
+ 	bool "Fusion MPT device support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	Say Y here to get to see options for Fusion Message
+ 	Passing Technology (MPT) drivers.
+-- 
+2.37.2
 
-Regards,
-Salvatore
