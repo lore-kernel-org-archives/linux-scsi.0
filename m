@@ -2,65 +2,67 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CFD9C74A4B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 16:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83501C6FD1C
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Mar 2023 16:22:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229835AbjCNQWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Mar 2023 12:22:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45558 "EHLO
+        id S231149AbjCNQWm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Mar 2023 12:22:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229974AbjCNQWD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 12:22:03 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777B7D535;
-        Tue, 14 Mar 2023 09:21:16 -0700 (PDT)
+        with ESMTP id S230054AbjCNQWf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2023 12:22:35 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EBA483DB;
+        Tue, 14 Mar 2023 09:22:04 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 3F4771F8B4;
-        Tue, 14 Mar 2023 16:20:11 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id D0AE921DDD;
+        Tue, 14 Mar 2023 16:21:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1678810811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1678810898; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YMm8wGU9lKPlT+0A0cGn5WagEyZwDalHzp2AUlTmDSc=;
-        b=apwyjtcp/EVS9dM6ody3LL2t8knoB8nIEkBvA1pxqiwOzz/rW7kYmGzKTPhl6qX+N60bfc
-        09kxa5qPRbE7T+TegyInkr0K+RoQXwJHbs8O7989KUl6LHWBfiqoYciRCyA0l76BK4A2TM
-        FlyoVXbV21z0S2oLgnsWPb6tlTHCnL8=
+        bh=vhRbYtHZMpwO8/vJpp6XFG49+84U78NFWeqB+NtGZ8c=;
+        b=tKMRiJj6AaOAafhjAgTcUusVdJlkaZoMVs6rwTT+GSx91QpEB7rkIRa1I6+bLigRl+9KPp
+        JcBVorYIXseleeIL3gtAXJ0Rc7MQ60qPRyYWKPybqmff/8evQ+3gwwd/KhoE9sHE2GQVio
+        ZpHB5Yscal67249tppm9bQBsUzpPB90=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1678810811;
+        s=susede2_ed25519; t=1678810898;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YMm8wGU9lKPlT+0A0cGn5WagEyZwDalHzp2AUlTmDSc=;
-        b=tsgGseOXY4Gd4cEIMivm3EcJCLye24yO236m81+SJPybZDJP79Q5z92hu2ZEUvoNIGPYM7
-        TOBcwBkuYF19m3BA==
+        bh=vhRbYtHZMpwO8/vJpp6XFG49+84U78NFWeqB+NtGZ8c=;
+        b=1F6AucFzNNQXbJst9r4oVX5Ly/wsLyGo+GX/nLU8McgJXD5JqT9TRs1n+7ivZsonvVATS+
+        hZ8oL4VQW0/VKsCQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 25FBE13A26;
-        Tue, 14 Mar 2023 16:20:11 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AEC1113A26;
+        Tue, 14 Mar 2023 16:21:38 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id I35UCLueEGS9YAAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 14 Mar 2023 16:20:11 +0000
-Message-ID: <bc73fcf1-d679-ec43-8235-b6342f78c1ba@suse.de>
-Date:   Tue, 14 Mar 2023 17:20:10 +0100
+        id aMwDKhKfEGR+YQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 14 Mar 2023 16:21:38 +0000
+Message-ID: <b867f388-df15-df08-349e-4c80aabec5a7@suse.de>
+Date:   Tue, 14 Mar 2023 17:21:38 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.8.0
-Subject: Re: [RFC 0/9] Make iscsid-kernel communications namespace-aware
+Subject: Re: [RFC PATCH 1/9] iscsi: create per-net iscsi netlink kernel
+ sockets
+Content-Language: en-US
 To:     Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org,
         open-iscsi@googlegroups.com, netdev@vger.kernel.org
-Cc:     Lee Duncan <lduncan@suse.com>
+Cc:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>
 References: <cover.1675876731.git.lduncan@suse.com>
-Content-Language: en-US
+ <95df16a252bc2c9f0e7fba667d2f542814c9b91b.1675876733.git.lduncan@suse.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <cover.1675876731.git.lduncan@suse.com>
+In-Reply-To: <95df16a252bc2c9f0e7fba667d2f542814c9b91b.1675876733.git.lduncan@suse.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -70,55 +72,17 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 2/8/23 18:40, Lee Duncan wrote:
 > From: Lee Duncan <lduncan@suse.com>
 > 
-> This is a request for comment on a set of patches that
-> modify the kernel iSCSI initiator communications so that
-> they are namespace-aware. The goal is to allow multiple
-> iSCSI daemon (iscsid) to run at once as long as they
-> are in separate namespaces, and so that iscsid can
-> run in containers.
+> Prepare iSCSI netlink to operate in multiple namespaces.
 > 
-> Comments and suggestions are more than welcome. I do not
-> expect that this code is production-ready yet, and
-> networking isn't my strongest suit (yet).
+> Signed-off-by: Chris Leech <cleech@redhat.com>
+> Signed-off-by: Lee Duncan <lduncan@suse.com
+> ---
+>   drivers/scsi/scsi_transport_iscsi.c | 73 +++++++++++++++++++++++++----
+>   1 file changed, 63 insertions(+), 10 deletions(-)
 > 
-> These patches were originally posted in 2015 by Chris
-> Leech. There were some issues at the time about how
-> to handle namespaces going away. I hope to address
-> any issues raised with this patchset and then
-> to merge these changes upstream to address working
-> in working in containers.
-> 
-> My contribution thus far has been to update these patches
-> to work with the current upstream kernel.
-> 
-> Chris Leech/Lee Duncan (9):
->    iscsi: create per-net iscsi netlink kernel sockets
->    iscsi: associate endpoints with a host
->    iscsi: sysfs filtering by network namespace
->    iscsi: make all iSCSI netlink multicast namespace aware
->    iscsi: set netns for iscsi_tcp hosts
->    iscsi: check net namespace for all iscsi lookup
->    iscsi: convert flashnode devices from bus to class
->    iscsi: rename iscsi_bus_flash_* to iscsi_flash_*
->    iscsi: filter flashnode sysfs by net namespace
-> 
->   drivers/infiniband/ulp/iser/iscsi_iser.c |   7 +-
->   drivers/scsi/be2iscsi/be_iscsi.c         |   6 +-
->   drivers/scsi/bnx2i/bnx2i_iscsi.c         |   6 +-
->   drivers/scsi/cxgbi/libcxgbi.c            |   6 +-
->   drivers/scsi/iscsi_tcp.c                 |   7 +
->   drivers/scsi/qedi/qedi_iscsi.c           |   6 +-
->   drivers/scsi/qla4xxx/ql4_os.c            |  64 +--
->   drivers/scsi/scsi_transport_iscsi.c      | 625 ++++++++++++++++-------
->   include/scsi/scsi_transport_iscsi.h      |  63 ++-
->   9 files changed, 537 insertions(+), 253 deletions(-)
-> 
-Awesome work!
-
-Thanks for this!
-
-Comments to follow on the individual patches.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
 Hannes
+
