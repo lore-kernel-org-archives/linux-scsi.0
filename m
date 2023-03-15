@@ -2,87 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B70EC76195
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 15:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD9EC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 15:57:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232034AbjCOP4k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 11:56:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52248 "EHLO
+        id S232168AbjCOP5o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 11:57:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232604AbjCOP43 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 11:56:29 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8FEB86173
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2023 08:55:47 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id lr16-20020a17090b4b9000b0023f187954acso146103pjb.2
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2023 08:55:47 -0700 (PDT)
+        with ESMTP id S232642AbjCOP5U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 11:57:20 -0400
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E3D760D66;
+        Wed, 15 Mar 2023 08:56:54 -0700 (PDT)
+Received: by mail-pj1-f41.google.com with SMTP id u3-20020a17090a450300b00239db6d7d47so2518520pjg.4;
+        Wed, 15 Mar 2023 08:56:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678895691;
+        d=1e100.net; s=20210112; t=1678895789;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=31tsdFxQ1OrbQyTrPqZ2t57o3ti/+KY6VqYoMIINrTk=;
-        b=sXUcl/UUPL5bJ14AUZcJlfGDAKSJ30HUdAP3vsv7J1VZnJ9442vfIOPjTS6SxuNZ3o
-         GKMrD/J+ZkiSKBt/PZatWW+LtzxxnIJj9vMv407HIocRXXOAYZBYkdrHP+zFddROFqyu
-         V19faNMfa66nVvkKQRBuui/4m5KPPO5OjuO7CjfZDQnM59pjU94c1HFeYaiHa1aZfj0X
-         /DFMFCfqyVLpZOWaSGB64sWSn3+ti8YeSCAnong+27Z6Txa29M/MtadblGNz49k6Mo/9
-         h7YGoNjoty4pUpcNVw7bMeDiSk6liin3S9un24+UhlgQMX9nbKsuNpYbtgb73eyEO0Ng
-         kqAg==
-X-Gm-Message-State: AO0yUKUH0yv+3gmAPA6QT6fDF53lMFWhnyBsIjjDjbSrl82yQMI2PhZI
-        oDgPYWyaDv96eA+GZuq4TVs=
-X-Google-Smtp-Source: AK7set8CvyMBYNpsVQ1ulwm1slqg9wBeLboZini2A7ps4GwZ7dCWre4A6l+CMSlKRkQEFtOxHfNB+w==
-X-Received: by 2002:a17:902:e353:b0:19c:a9b8:58eb with SMTP id p19-20020a170902e35300b0019ca9b858ebmr36780plc.12.1678895691173;
-        Wed, 15 Mar 2023 08:54:51 -0700 (PDT)
+        bh=VLyRa659ppZfr00XgXbmuzNUZ7mOL5EaQxAMAj2ecCE=;
+        b=UA1AJwe7Lud1kXe08YqG6yOUT0nCebGYXcouW/0KHeMxoJKkwBuXbd1rKymFYXeyME
+         iD9rj5poFmkiLOLgW70M1ZFlEDU711C2x+JP33zfWUca4O0rr5DQtMaWuRL9Wd7ScguA
+         lOYnF7MixFOCIKa2FQ/xfBT5G2NClLxH6lqkBlPn9G3SDKOaAY6OHuDOza8SkZET2jg4
+         S58wdMl2f2EgjSb4rQPE7o4eNF0Dy2MxBLtNcmZtHRS3+R+yVn/odXGAmWHHR08Hi/Lr
+         r59XEpioNasp38yV3J9e3DFAwgCOqAcF/7YS08fSOdqebr5z6Vp/obB+vYks9P4lra5S
+         cGOg==
+X-Gm-Message-State: AO0yUKWk6IClywsQstkD9Q5ZFfANSp18VEcAOoKt+VFWYwAMzRx9cFzY
+        iMbRUHlaPeoUD4zsZrRaM30=
+X-Google-Smtp-Source: AK7set/0V5JL2LKWGKw+Y/5UKZF8d55Rr6cupu0hHWB4V3dlqgHhnpvW/wPfEywuY4yoTqrjeFkO7w==
+X-Received: by 2002:a17:90b:3ec5:b0:23b:50ff:59ba with SMTP id rm5-20020a17090b3ec500b0023b50ff59bamr251840pjb.21.1678895789629;
+        Wed, 15 Mar 2023 08:56:29 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:558a:e74:a7b9:2212? ([2620:15c:211:201:558a:e74:a7b9:2212])
-        by smtp.gmail.com with ESMTPSA id kr11-20020a170903080b00b00198f36a8941sm3267245plb.221.2023.03.15.08.54.49
+        by smtp.gmail.com with ESMTPSA id b11-20020a170902ed0b00b0019e81c8fd01sm3810169pld.249.2023.03.15.08.56.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Mar 2023 08:54:50 -0700 (PDT)
-Message-ID: <cd4e5d83-8cbb-ee3c-09ed-7e69b2298b8c@acm.org>
-Date:   Wed, 15 Mar 2023 08:54:48 -0700
+        Wed, 15 Mar 2023 08:56:29 -0700 (PDT)
+Message-ID: <0aa8141d-52e2-de27-7805-71395c01f015@acm.org>
+Date:   Wed, 15 Mar 2023 08:56:26 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH 2/2] scsi: ufs: core: Set the residual byte count
+Subject: Re: [PATCH v7] scsi: ufs: core: Add trace event for MCQ
 Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
+        quic_cang@quicinc.com, quic_nguyenb@quicinc.com, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>
-References: <20230314205844.313519-1-bvanassche@acm.org>
- <c93b751f-1300-bb85-bf33-42147f0b3353@intel.com>
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:TRACING" <linux-trace-kernel@vger.kernel.org>
+References: <1678866271-49601-1-git-send-email-quic_ziqichen@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c93b751f-1300-bb85-bf33-42147f0b3353@intel.com>
+In-Reply-To: <1678866271-49601-1-git-send-email-quic_ziqichen@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/15/23 05:59, Adrian Hunter wrote:
-> On 14/03/23 22:58, Bart Van Assche wrote:
->> It is important for the SCSI core to know the residual byte count.
->> Hence, extract the residual byte count from the UFS response and pass it to
->> the SCSI core. A few examples of the output of a debugging patch that has
->> been applied on top of this patch:
->>
->> [    1.937750] cmd 0x12: len = 255; resid = 241
->> [ ... ]
->> [    1.993400] cmd 0xa0: len = 4096; resid = 4048
->> [ ... ]
-> 
-> Should this be a fix for stable?
+On 3/15/23 00:44, Ziqi Chen wrote:
+> Add MCQ hardware queue ID in the existing trace event
+> ufshcd_command().
 
-Hi Adrian,
-
-I have considered to add "Cc: stable" to this patch. I have not done 
-this because I'm not sure that all UFS devices implement the residual 
-count correctly.
-
-Thanks,
-
-Bart.
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
