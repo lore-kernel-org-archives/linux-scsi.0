@@ -2,93 +2,231 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBC51C7618B
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 07:59:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78360C61DA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 08:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231474AbjCOH7K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 03:59:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39094 "EHLO
+        id S230491AbjCOIEI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 04:04:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230451AbjCOH7J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 03:59:09 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B24D834038;
-        Wed, 15 Mar 2023 00:59:06 -0700 (PDT)
-Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
-        by mta-01.yadro.com (Proxmox) with ESMTP id 967CB341DF9;
-        Wed, 15 Mar 2023 10:59:04 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
-        :cc:content-type:content-type:date:from:from:in-reply-to
-        :message-id:mime-version:references:reply-to:subject:subject:to
-        :to; s=mta-01; bh=SYHt2RiwOOFnYnUtSK+XR/+XEjQbm1wWqqHi1WdGY6Y=; b=
-        ZQ2z0b28wPTqU6m0t41eUGs0My+Rn1WplUG1edq6kWZYx1XDmPy5lMrZcmwz7yJE
-        EuTn+H78Ax8PsrBc+2U7/0DOkpWfrGDIqsUTUpy8TT00xSPBEYdH/X/e6gIt7uH+
-        S4wycmUq3VOxTidRqi487IW9CnmewbrZjDspN6pUC48=
-Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Proxmox) with ESMTPS id 886AE341CBA;
-        Wed, 15 Mar 2023 10:59:04 +0300 (MSK)
-Received: from yadro.com (10.199.20.11) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Wed, 15 Mar
- 2023 10:59:03 +0300
-Date:   Wed, 15 Mar 2023 10:59:04 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        Michael Cyr <mikecyr@linux.ibm.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        Chris Boot <bootc@bootc.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Michael S . Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Juergen Gross <jgross@suse.com>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>, Konstantin Shelekhin <k.shelekhin@yadro.com>
-Subject: Re: [PATCH v3 12/12] target: add virtual remote target
-Message-ID: <20230315075904.GC1031@yadro.com>
-References: <20230313181110.20566-1-d.bogdanov@yadro.com>
- <20230313181110.20566-13-d.bogdanov@yadro.com>
- <c004e7a8-8478-cc75-e174-5c0bbd22f4fc@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <c004e7a8-8478-cc75-e174-5c0bbd22f4fc@oracle.com>
-X-Originating-IP: [10.199.20.11]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+        with ESMTP id S229946AbjCOIEG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 04:04:06 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8FAC14B;
+        Wed, 15 Mar 2023 01:04:05 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32F1vN4U010611;
+        Wed, 15 Mar 2023 07:32:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=EBmFRKF3cukwatNtZYWHrNuIzVocFYfwaITHZFB934c=;
+ b=k2Y2MzojHTuT4MrbjW/FDCMSy8ohTF6GhfxW0+0sB8a+VSZ7nckFnRFkbzV/yAf90YdT
+ WTsPHpl+cXQYZE4/cnnavBbIWPqs3I8DX6kYOsEPA1dFWC+Ee3lUg2qTR/azG/NazEg+
+ 5zHTWoFrprLAOAtt/WO5l7HOm4g7RgNjCxbVsL9X8uORz/1gkjL+iX3O3FheXMgGzIyN
+ 2yQkb9hgfKGy57JP6dz7NSP0L03A71YFm7z8RcSC3Vt7aLjFbWyKZsgsErRQWe/G+gSk
+ OM14xBGp1n62xMLadi9sphDBGR8VRnMWqr4swUl1cCQMmUr1xNRndjze4LrwZl/EJnUr 6A== 
+Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pb2by8uqm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 07:32:17 +0000
+Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+        by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32F7WFNJ008232;
+        Wed, 15 Mar 2023 07:32:15 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3p8jqmaw7q-1;
+        Wed, 15 Mar 2023 07:32:15 +0000
+Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32F7WF03008225;
+        Wed, 15 Mar 2023 07:32:15 GMT
+Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
+        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 32F7WEaY008220;
+        Wed, 15 Mar 2023 07:32:15 +0000
+Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
+        id DB8B8452A; Wed, 15 Mar 2023 15:32:13 +0800 (CST)
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com, quic_ziqichen@quicinc.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3] scsi: ufs: core: print trs for pending requests in MCQ mode
+Date:   Wed, 15 Mar 2023 15:31:52 +0800
+Message-Id: <1678865517-43139-1-git-send-email-quic_ziqichen@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: HqVpwE1lbo2FWOfQd2K_lSWj7lx9RjW8
+X-Proofpoint-GUID: HqVpwE1lbo2FWOfQd2K_lSWj7lx9RjW8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-15_03,2023-03-14_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ priorityscore=1501 suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0
+ spamscore=0 lowpriorityscore=0 impostorscore=0 clxscore=1015 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2302240000 definitions=main-2303150063
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 12:09:31PM -0500, Mike Christie wrote:
-> 
-> On 3/13/23 1:11 PM, Dmitry Bogdanov wrote:
-> > +
-> > +static int tcm_remote_port_link(
-> > +     struct se_portal_group *se_tpg,
-> > +     struct se_lun *lun)
-> > +{
-i> 
-> Oh no, what happened. Something probably got messed up in your patch
-> management because I saw the 0/12 patch said the coding style was
-> fixed up.
-> 
-> If Martin will take a follow up patch or it's not a big deal to him,
-> I'm ok.
-> 
-> Reviewed-by: Mike Christie <michael.christie@oracle.com>
-> 
+We don't have outstanding_reqs bitmap in MCQ mode. And in consideration
+of the queue depth may increase beyond 64 in the future, we reworked
+ufshcd_print_trs() to get rid of usage of bitmap so that we can print
+trs for pending requests in both SDB and MCQ mode.
 
-Mike, the code style is the same as in v2. AFAIR you said not to mix
-the first function argument in the same line with the first argument in
-the next line. In my patch there is no such mix anymore. Either all
-arguments are inline or all arguments in the next lines.
+Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+
+---
+Changes to v2:
+- Removed null pointer check.
+
+Changes to v1:
+- Use blk_mq_tagset_busy_iter() to iterate over pending requests.
+---
+ drivers/ufs/core/ufshcd.c | 96 ++++++++++++++++++++++++++++-------------------
+ 1 file changed, 57 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 1d58cb2..9b36d69 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -542,48 +542,66 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
+ }
+ 
+ static
+-void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
++void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
+ {
+ 	const struct ufshcd_lrb *lrbp;
+ 	int prdt_length;
+-	int tag;
+ 
+-	for_each_set_bit(tag, &bitmap, hba->nutrs) {
+-		lrbp = &hba->lrb[tag];
++	lrbp = &hba->lrb[tag];
+ 
+-		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+-				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
+-		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
+-				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
+-		dev_err(hba->dev,
+-			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+-			tag, (u64)lrbp->utrd_dma_addr);
+-
+-		ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
+-				sizeof(struct utp_transfer_req_desc));
+-		dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
+-			(u64)lrbp->ucd_req_dma_addr);
+-		ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
+-				sizeof(struct utp_upiu_req));
+-		dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
+-			(u64)lrbp->ucd_rsp_dma_addr);
+-		ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
+-				sizeof(struct utp_upiu_rsp));
+-
+-		prdt_length = le16_to_cpu(
+-			lrbp->utr_descriptor_ptr->prd_table_length);
+-		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
+-			prdt_length /= ufshcd_sg_entry_size(hba);
++	dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
++			tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
++	dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
++			tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
++	dev_err(hba->dev,
++		"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
++		tag, (u64)lrbp->utrd_dma_addr);
++
++	ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
++			sizeof(struct utp_transfer_req_desc));
++	dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
++		(u64)lrbp->ucd_req_dma_addr);
++	ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
++			sizeof(struct utp_upiu_req));
++	dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
++		(u64)lrbp->ucd_rsp_dma_addr);
++	ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
++			sizeof(struct utp_upiu_rsp));
++
++	prdt_length = le16_to_cpu(
++		lrbp->utr_descriptor_ptr->prd_table_length);
++	if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
++		prdt_length /= ufshcd_sg_entry_size(hba);
+ 
+-		dev_err(hba->dev,
+-			"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
+-			tag, prdt_length,
+-			(u64)lrbp->ucd_prdt_dma_addr);
++	dev_err(hba->dev,
++		"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
++		tag, prdt_length,
++		(u64)lrbp->ucd_prdt_dma_addr);
+ 
+-		if (pr_prdt)
+-			ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
+-				ufshcd_sg_entry_size(hba) * prdt_length);
+-	}
++	if (pr_prdt)
++		ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
++			ufshcd_sg_entry_size(hba) * prdt_length);
++}
++
++static bool ufshcd_print_tr_iter(struct request *req, void *priv)
++{
++	struct scsi_device *sdev = req->q->queuedata;
++	struct Scsi_Host *shost = sdev->host;
++	struct ufs_hba *hba = shost_priv(shost);
++
++	ufshcd_print_tr(hba, req->tag, *(bool *)priv);
++
++	return true;
++}
++
++/**
++ * ufshcd_print_trs_all - print trs for all started requests.
++ * @hba: per-adapter instance.
++ * @pr_prdt: need to print prdt or not.
++ */
++static void ufshcd_print_trs_all(struct ufs_hba *hba, bool pr_prdt)
++{
++	blk_mq_tagset_busy_iter(&hba->host->tag_set, ufshcd_print_tr_iter, &pr_prdt);
+ }
+ 
+ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
+@@ -5332,7 +5350,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 
+ 	if ((host_byte(result) != DID_OK) &&
+ 	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
+-		ufshcd_print_trs(hba, 1 << lrbp->task_tag, true);
++		ufshcd_print_tr(hba, lrbp->task_tag, true);
+ 	return result;
+ }
+ 
+@@ -6406,7 +6424,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		ufshcd_print_pwr_info(hba);
+ 		ufshcd_print_evt_hist(hba);
+ 		ufshcd_print_tmrs(hba, hba->outstanding_tasks);
+-		ufshcd_print_trs(hba, hba->outstanding_reqs, pr_prdt);
++		ufshcd_print_trs_all(hba, pr_prdt);
+ 		spin_lock_irqsave(hba->host->host_lock, flags);
+ 	}
+ 
+@@ -7435,9 +7453,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 		ufshcd_print_evt_hist(hba);
+ 		ufshcd_print_host_state(hba);
+ 		ufshcd_print_pwr_info(hba);
+-		ufshcd_print_trs(hba, 1 << tag, true);
++		ufshcd_print_tr(hba, tag, true);
+ 	} else {
+-		ufshcd_print_trs(hba, 1 << tag, false);
++		ufshcd_print_tr(hba, tag, false);
+ 	}
+ 	hba->req_abort_count++;
+ 
+-- 
+2.7.4
 
