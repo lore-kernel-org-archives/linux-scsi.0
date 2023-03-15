@@ -2,112 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E5F5C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 19:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A400CC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 21:29:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232856AbjCOTXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 15:23:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38064 "EHLO
+        id S230391AbjCOV37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 17:29:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232869AbjCOTXD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 15:23:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60B2D96C06
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2023 12:22:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678908134;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=i+mGYYulQUCelnuxj3PjgHCArB8Ei0mGxcOTGUHa8as=;
-        b=Teh+yOeUCVohYlRW+7d5ZrpB0TJhUfc0LhundYpe4w4RnZR2noWJ+jLmkuPxXsfqRj+eFt
-        ez144sB7cikViECiHd5oBlztn/R9vbRkoFzWGhMyyaSq5YeUdEN/NhdVhChk4YfXuvl4Vy
-        Hrk0hJaEPWM3fY3H+yguir4h5oDM3NM=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-22-MIUoPsYsPhadvaVkGwszxA-1; Wed, 15 Mar 2023 15:22:11 -0400
-X-MC-Unique: MIUoPsYsPhadvaVkGwszxA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S232817AbjCOV3t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 17:29:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E02E1CDDE;
+        Wed, 15 Mar 2023 14:29:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 45D673801F4E;
-        Wed, 15 Mar 2023 19:22:10 +0000 (UTC)
-Received: from desnesn.remote.csb (ovpn-116-3.gru2.redhat.com [10.97.116.3])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DB1E340C6E69;
-        Wed, 15 Mar 2023 19:22:07 +0000 (UTC)
-From:   Desnes Nunes <desnesn@redhat.com>
-To:     iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
-        storagedev@microchip.com, linux-kernel@vger.kernel.org
-Cc:     hch@lst.de, martin.petersen@oracle.com, don.brace@microchip.com,
-        m.szyprowski@samsung.com, robin.murphy@arm.com, jejb@linux.ibm.com,
-        jsnitsel@redhat.com, Desnes Nunes <desnesn@redhat.com>
-Subject: [PATCH 3/3] scsi: smartpqi: fix DMA overlapping mappings asymmetry
-Date:   Wed, 15 Mar 2023 16:21:30 -0300
-Message-Id: <20230315192130.970021-4-desnesn@redhat.com>
-In-Reply-To: <20230315192130.970021-1-desnesn@redhat.com>
-References: <20230315192130.970021-1-desnesn@redhat.com>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6322BB81F64;
+        Wed, 15 Mar 2023 21:29:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCA22C433D2;
+        Wed, 15 Mar 2023 21:29:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678915783;
+        bh=Yckfzy+k6leZIz3lpyhOzkGl4+G0fpYDMqkxdZUVMOU=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=VagIOalEaXYkmeCS3Th9wPfp87XAWM99rfWwSGlfUuWCY8ew7Dc5FlMXPm2vTEMsI
+         MSf4rXWQlZn4yQTNNqh+cwR7LV3R2oWQ43Vjy1JednQnTzwzOf5OgpPhKJzLzjE/kY
+         /QqjTsUMijVG+9vLmxnxAjdedQdIlwVXhZXC+lEk4f4WsDAbsKUxA59aUkBbK7dZQC
+         yvBTEnTKztmx2XiNeIE4rwvEM/w7qig8Dnq0jaj3fECFJLFd5/dqRomzfCSzZ5qIe0
+         IDUS+N0YfIIpMzfMoTnpsMD2mqjN7dnAxCfoP5LZ8uhjxAUH3bFGz9+1VsRUS8N+Y+
+         INFJ5IimL/lwg==
+Date:   Wed, 15 Mar 2023 16:29:41 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Zhuo Chen <chenzhuo.1@bytedance.com>
+Cc:     sathyanarayanan.kuppuswamy@linux.intel.com, bhelgaas@google.com,
+        ruscur@russell.cc, oohall@gmail.com, fancer.lancer@gmail.com,
+        jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com,
+        james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ntb@lists.linux.dev,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v3 1/9] PCI/AER: Add
+ pci_aer_clear_uncorrect_error_status() to PCI core
+Message-ID: <20230315212941.GA1788160@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220928105946.12469-2-chenzhuo.1@bytedance.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, pqi_keep_device_offline() calls pqi_build_raid_path_request()
-(i.e., a wrapper to pqi_map_single()), but there isn't a pqi_pci_unmap()
-call in pqi_keep_device_offline(). Hence, this is flaged as an API viola-
-tion due to the overlapping mapping of the physical address.
+On Wed, Sep 28, 2022 at 06:59:38PM +0800, Zhuo Chen wrote:
+> In lpfc_aer_cleanup_state(), uncorrectable error status needs to be
+> cleared, which can be done by calling pci_aer_clear_nonfatal_status()
+> and pci_aer_clear_fatal_status(). Meanwhile they can be combined in
+> one function (the same in dpc_process_error). So add
+> pci_aer_clear_uncorrect_error_status() function to PCI core and
+> export symbol to other modules which wants to use it.
 
-This patch fixes following warning:
+Sorry for getting back to this so late.
 
-  DMA-API: smartpqi 0000:43:00.0: cacheline tracking EEXIST, overlapping
-  mappings aren't supported
-  WARNING: CPU: 0 PID: 15 at kernel/dma/debug.c:570
-  add_dma_entry+0x1f6/0x2f0
-  CPU: 0 PID: 15 Comm: kworker/0:1 Not tainted 6.3.0-rc1-linux #1
-  Call Trace:
-   <TASK>
-   dma_map_page_attrs+0x6f/0xa0
-   pqi_map_single+0xaa/0x160 [smartpqi]
-   pqi_keep_device_offline+0xaf/0x160 [smartpqi]
-   ? dma_unmap_page_attrs+0x1a1/0x1e0
-   ? pqi_identify_physical_device.constprop.0+0xd3/0xe0 [smartpqi]
-   pqi_update_scsi_devices+0x284/0x7e0 [smartpqi]
-   pqi_scan_scsi_devices+0x87/0xe0 [smartpqi]
-   pqi_ctrl_init+0x725/0xa60 [smartpqi]
-   pqi_pci_probe+0xa7/0x130 [smartpqi]
-   local_pci_probe+0x46/0xa0
-   work_for_cpu_fn+0x16/0x20
-   process_one_work+0x2bf/0x670
-   ? __pfx_worker_thread+0x10/0x10
-   worker_thread+0x1d1/0x3b0
-   ? __pfx_worker_thread+0x10/0x10
-   kthread+0xf3/0x120
-   ? __pfx_kthread+0x10/0x10
-   ret_from_fork+0x2c/0x50
-   </TASK>
+Why does lpfc need this?  I think AER error status should be cleared
+by the PCI core, not by individual drivers, so I really would rather
+not add a new interface for drivers to use.
 
-Fixes: be76f90668d8 ("scsi: smartpqi: Add TEST UNIT READY check for SANITIZE operation")
-Signed-off-by: Desnes Nunes <desnesn@redhat.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 49a8f91810b6..6fca497ca605 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1726,6 +1726,8 @@ static bool pqi_keep_device_offline(struct pqi_ctrl_info *ctrl_info,
- 
- 	rc = pqi_submit_raid_request_synchronous(ctrl_info, &request.header, 0, &error_info);
- 
-+	pqi_pci_unmap(ctrl_info->pci_dev, request.sg_descriptors, 1, dir);
-+
- 	if (rc)
- 		goto out; /* Assume not offline */
- 
--- 
-2.39.1
-
+> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+> ---
+>  drivers/pci/pcie/aer.c | 16 ++++++++++++++++
+>  include/linux/aer.h    |  5 +++++
+>  2 files changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index e2d8a74f83c3..4e637121be23 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -286,6 +286,22 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
+>  		pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, status);
+>  }
+>  
+> +int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev)
+> +{
+> +	int aer = dev->aer_cap;
+> +	u32 status;
+> +
+> +	if (!pcie_aer_is_native(dev))
+> +		return -EIO;
+> +
+> +	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, &status);
+> +	if (status)
+> +		pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, status);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_aer_clear_uncorrect_error_status);
+> +
+>  /**
+>   * pci_aer_raw_clear_status - Clear AER error registers.
+>   * @dev: the PCI device
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 97f64ba1b34a..154690c278cb 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -45,6 +45,7 @@ struct aer_capability_regs {
+>  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
+>  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
+>  int pci_aer_clear_nonfatal_status(struct pci_dev *dev);
+> +int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev);
+>  void pci_save_aer_state(struct pci_dev *dev);
+>  void pci_restore_aer_state(struct pci_dev *dev);
+>  #else
+> @@ -60,6 +61,10 @@ static inline int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
+>  {
+>  	return -EINVAL;
+>  }
+> +static inline int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev)
+> +{
+> +	return -EINVAL;
+> +}
+>  static inline void pci_save_aer_state(struct pci_dev *dev) {}
+>  static inline void pci_restore_aer_state(struct pci_dev *dev) {}
+>  #endif
+> -- 
+> 2.30.1 (Apple Git-130)
+> 
