@@ -2,231 +2,125 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78360C61DA4
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 08:04:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4A89C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 10:06:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230491AbjCOIEI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 04:04:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47622 "EHLO
+        id S231948AbjCOKGJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 06:06:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229946AbjCOIEG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 04:04:06 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8FAC14B;
-        Wed, 15 Mar 2023 01:04:05 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32F1vN4U010611;
-        Wed, 15 Mar 2023 07:32:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=EBmFRKF3cukwatNtZYWHrNuIzVocFYfwaITHZFB934c=;
- b=k2Y2MzojHTuT4MrbjW/FDCMSy8ohTF6GhfxW0+0sB8a+VSZ7nckFnRFkbzV/yAf90YdT
- WTsPHpl+cXQYZE4/cnnavBbIWPqs3I8DX6kYOsEPA1dFWC+Ee3lUg2qTR/azG/NazEg+
- 5zHTWoFrprLAOAtt/WO5l7HOm4g7RgNjCxbVsL9X8uORz/1gkjL+iX3O3FheXMgGzIyN
- 2yQkb9hgfKGy57JP6dz7NSP0L03A71YFm7z8RcSC3Vt7aLjFbWyKZsgsErRQWe/G+gSk
- OM14xBGp1n62xMLadi9sphDBGR8VRnMWqr4swUl1cCQMmUr1xNRndjze4LrwZl/EJnUr 6A== 
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pb2by8uqm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 15 Mar 2023 07:32:17 +0000
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32F7WFNJ008232;
-        Wed, 15 Mar 2023 07:32:15 GMT
+        with ESMTP id S231936AbjCOKFk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 06:05:40 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B7C259E47;
+        Wed, 15 Mar 2023 03:04:56 -0700 (PDT)
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32F9Cefn029844;
+        Wed, 15 Mar 2023 10:04:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : to : cc : references : from : subject : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=wm6XrG90RA3+jZ6n23uggt2rMBObnN4VNBwJHfOpGTE=;
+ b=M44Xqnl31paXV/L6fzU/kv1+TckR4GM33EjTNJwlLwfFKkPYY+mhuqwHgWlcvE+sPOyR
+ uMcz05rEHIjqfgFlf5oE0i1hM48skicjimHl4MGGS+wNx66Dildwo7lOEewbdDJ20ttN
+ XoSsGW5VGFgizJ4uFYswHwPQc8PVAprz4Z/uHtc98zecjF28B8l2pNkHYXbt8o0uG5qi
+ b1wEWmjLRIdFeIM6cCksZSrjuMht4XcNfuv40NZDNZSeMBupQu7POG3bd8lilsuACAfC
+ cjuI3CEyqRc2REIdtJzpVKTCzdeApEFpUJKBD3aAaGk4wKSczmcCZxbCpRPcKEadlO99 Ew== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3p8jqmaw7q-1;
-        Wed, 15 Mar 2023 07:32:15 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32F7WF03008225;
-        Wed, 15 Mar 2023 07:32:15 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 32F7WEaY008220;
-        Wed, 15 Mar 2023 07:32:15 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id DB8B8452A; Wed, 15 Mar 2023 15:32:13 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3] scsi: ufs: core: print trs for pending requests in MCQ mode
-Date:   Wed, 15 Mar 2023 15:31:52 +0800
-Message-Id: <1678865517-43139-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: HqVpwE1lbo2FWOfQd2K_lSWj7lx9RjW8
-X-Proofpoint-GUID: HqVpwE1lbo2FWOfQd2K_lSWj7lx9RjW8
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pbb67hbx8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 10:04:29 +0000
+Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32F9VHqX017522;
+        Wed, 15 Mar 2023 10:04:28 GMT
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pbb67hbw0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 10:04:28 +0000
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32F3UQXO008910;
+        Wed, 15 Mar 2023 10:04:26 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3pb29t0gh0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 10:04:25 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+        by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32FA4Nsf46596788
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Mar 2023 10:04:23 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 845BF2006B;
+        Wed, 15 Mar 2023 10:04:23 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 24C1220063;
+        Wed, 15 Mar 2023 10:04:23 +0000 (GMT)
+Received: from [9.152.212.230] (unknown [9.152.212.230])
+        by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Wed, 15 Mar 2023 10:04:23 +0000 (GMT)
+Message-ID: <33ed9615-b570-03c7-9a7a-d07f020d3222@linux.ibm.com>
+Date:   Wed, 15 Mar 2023 11:04:22 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+To:     Christoph Hellwig <hch@lst.de>,
+        Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        snitzer@kernel.org, axboe@kernel.dk,
+        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
+        kbusch@kernel.org, target-devel@vger.kernel.org,
+        Jan Hoeppner <hoeppner@linux.ibm.com>
+References: <20230224174502.321490-1-michael.christie@oracle.com>
+ <20230224174502.321490-3-michael.christie@oracle.com>
+ <20230314171119.GB6780@lst.de>
+Content-Language: en-US
+From:   Stefan Haberland <sth@linux.ibm.com>
+Subject: Re: [PATCH v4 02/18] block: Rename BLK_STS_NEXUS to
+ BLK_STS_RESV_CONFLICT
+In-Reply-To: <20230314171119.GB6780@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: Gm8knda4ABLDpRDHcHrrp25yIqxkZsPd
+X-Proofpoint-GUID: mK6UREPnREctSNluacMB5DE7veYDb5Ae
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-15_03,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- priorityscore=1501 suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0
- spamscore=0 lowpriorityscore=0 impostorscore=0 clxscore=1015 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2302240000 definitions=main-2303150063
+ definitions=2023-03-15_04,2023-03-15_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 bulkscore=0
+ priorityscore=1501 mlxscore=0 adultscore=0 spamscore=0 impostorscore=0
+ mlxlogscore=999 phishscore=0 lowpriorityscore=0 suspectscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2302240000 definitions=main-2303150086
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We don't have outstanding_reqs bitmap in MCQ mode. And in consideration
-of the queue depth may increase beyond 64 in the future, we reworked
-ufshcd_print_trs() to get rid of usage of bitmap so that we can print
-trs for pending requests in both SDB and MCQ mode.
+Am 14.03.23 um 18:11 schrieb Christoph Hellwig:
+> On Fri, Feb 24, 2023 at 11:44:46AM -0600, Mike Christie wrote:
+>> BLK_STS_NEXUS is used for NVMe/SCSI reservation conflicts or in dasd's
+>> case something similar. This renames BLK_STS_NEXUS so it better reflects
+>> this.
+> I like this rename a lot.
+>
+>> diff --git a/drivers/s390/block/dasd.c b/drivers/s390/block/dasd.c
+>> index a9c2a8d76c45..a2899d9690d4 100644
+>> --- a/drivers/s390/block/dasd.c
+>> +++ b/drivers/s390/block/dasd.c
+>> @@ -2723,7 +2723,7 @@ static void __dasd_cleanup_cqr(struct dasd_ccw_req *cqr)
+>>   	else if (status == 0) {
+>>   		switch (cqr->intrc) {
+>>   		case -EPERM:
+>> -			error = BLK_STS_NEXUS;
+>> +			error = BLK_STS_RESV_CONFLICT;
+>>   			break;
+> But is this really a reservation conflict?  Or should the DASD code
+> maybe use a different error code here?
+>
 
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+This also fits for the DASD case. We use this error code for a
+reservation/locking conflict of the DASD device when the lock we
+previously held was stolen.
 
----
-Changes to v2:
-- Removed null pointer check.
-
-Changes to v1:
-- Use blk_mq_tagset_busy_iter() to iterate over pending requests.
----
- drivers/ufs/core/ufshcd.c | 96 ++++++++++++++++++++++++++++-------------------
- 1 file changed, 57 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1d58cb2..9b36d69 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -542,48 +542,66 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- }
- 
- static
--void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
-+void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
- {
- 	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
--	int tag;
- 
--	for_each_set_bit(tag, &bitmap, hba->nutrs) {
--		lrbp = &hba->lrb[tag];
-+	lrbp = &hba->lrb[tag];
- 
--		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
--				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
--		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
--				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
--		dev_err(hba->dev,
--			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
--			tag, (u64)lrbp->utrd_dma_addr);
--
--		ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
--				sizeof(struct utp_transfer_req_desc));
--		dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
--			(u64)lrbp->ucd_req_dma_addr);
--		ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
--				sizeof(struct utp_upiu_req));
--		dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
--			(u64)lrbp->ucd_rsp_dma_addr);
--		ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
--				sizeof(struct utp_upiu_rsp));
--
--		prdt_length = le16_to_cpu(
--			lrbp->utr_descriptor_ptr->prd_table_length);
--		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
--			prdt_length /= ufshcd_sg_entry_size(hba);
-+	dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
-+			tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
-+	dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
-+			tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
-+	dev_err(hba->dev,
-+		"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
-+		tag, (u64)lrbp->utrd_dma_addr);
-+
-+	ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
-+			sizeof(struct utp_transfer_req_desc));
-+	dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
-+		(u64)lrbp->ucd_req_dma_addr);
-+	ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
-+			sizeof(struct utp_upiu_req));
-+	dev_err(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
-+		(u64)lrbp->ucd_rsp_dma_addr);
-+	ufshcd_hex_dump("UPIU RSP: ", lrbp->ucd_rsp_ptr,
-+			sizeof(struct utp_upiu_rsp));
-+
-+	prdt_length = le16_to_cpu(
-+		lrbp->utr_descriptor_ptr->prd_table_length);
-+	if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
-+		prdt_length /= ufshcd_sg_entry_size(hba);
- 
--		dev_err(hba->dev,
--			"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
--			tag, prdt_length,
--			(u64)lrbp->ucd_prdt_dma_addr);
-+	dev_err(hba->dev,
-+		"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
-+		tag, prdt_length,
-+		(u64)lrbp->ucd_prdt_dma_addr);
- 
--		if (pr_prdt)
--			ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
--				ufshcd_sg_entry_size(hba) * prdt_length);
--	}
-+	if (pr_prdt)
-+		ufshcd_hex_dump("UPIU PRDT: ", lrbp->ucd_prdt_ptr,
-+			ufshcd_sg_entry_size(hba) * prdt_length);
-+}
-+
-+static bool ufshcd_print_tr_iter(struct request *req, void *priv)
-+{
-+	struct scsi_device *sdev = req->q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct ufs_hba *hba = shost_priv(shost);
-+
-+	ufshcd_print_tr(hba, req->tag, *(bool *)priv);
-+
-+	return true;
-+}
-+
-+/**
-+ * ufshcd_print_trs_all - print trs for all started requests.
-+ * @hba: per-adapter instance.
-+ * @pr_prdt: need to print prdt or not.
-+ */
-+static void ufshcd_print_trs_all(struct ufs_hba *hba, bool pr_prdt)
-+{
-+	blk_mq_tagset_busy_iter(&hba->host->tag_set, ufshcd_print_tr_iter, &pr_prdt);
- }
- 
- static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
-@@ -5332,7 +5350,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 
- 	if ((host_byte(result) != DID_OK) &&
- 	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
--		ufshcd_print_trs(hba, 1 << lrbp->task_tag, true);
-+		ufshcd_print_tr(hba, lrbp->task_tag, true);
- 	return result;
- }
- 
-@@ -6406,7 +6424,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		ufshcd_print_pwr_info(hba);
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_tmrs(hba, hba->outstanding_tasks);
--		ufshcd_print_trs(hba, hba->outstanding_reqs, pr_prdt);
-+		ufshcd_print_trs_all(hba, pr_prdt);
- 		spin_lock_irqsave(hba->host->host_lock, flags);
- 	}
- 
-@@ -7435,9 +7453,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
--		ufshcd_print_trs(hba, 1 << tag, true);
-+		ufshcd_print_tr(hba, tag, true);
- 	} else {
--		ufshcd_print_trs(hba, 1 << tag, false);
-+		ufshcd_print_tr(hba, tag, false);
- 	}
- 	hba->req_abort_count++;
- 
--- 
-2.7.4
+Acked-by: Stefan Haberland <sth@linux.ibm.com>
 
