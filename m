@@ -2,122 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE7EC61DA4
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 06:36:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF36FC61DA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 07:36:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbjCOGg1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 02:36:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47192 "EHLO
+        id S231663AbjCOHgk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 03:36:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjCOGg0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 02:36:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77BF03BDB1;
-        Tue, 14 Mar 2023 23:36:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1C808B81BFD;
-        Wed, 15 Mar 2023 06:36:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 629D8C433D2;
-        Wed, 15 Mar 2023 06:36:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1678862182;
-        bh=WwlkMPoTr7BtqZZplFY4E95heUdFj/Fz74AR3mmmC24=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=awdNmW6vLrlHNIdqn6ZpKdZBFl+/GcVjIdYiv8bUK8bqTRrNhNSLS5qwf4knQZKQ0
-         5HOj7lCJ+tHjZb6SfCByVxMDK7aS8G6r3X1RXRgMs13b+o1dLxavlUfZQdRerHXYTK
-         ZQnOEnJwo8lnV+6gtdEBVcgfHp2wEOvZfYWVTI7M=
-Date:   Wed, 15 Mar 2023 07:36:19 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     "Seymour, Shane M" <shane.seymour@hpe.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH for-next] scsi: Implement host state statistics
-Message-ID: <ZBFnYwtr+2bfjvcY@kroah.com>
-References: <DM4PR84MB1373DCD07EABD28D88129C50FDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
+        with ESMTP id S231628AbjCOHgR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 03:36:17 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1797F2597C;
+        Wed, 15 Mar 2023 00:33:19 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32F6mvEs017010;
+        Wed, 15 Mar 2023 07:31:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=LH+TSvTjRGvXKwA78t2b1ZRjLec2Gy2NWtX1+MviS8k=;
+ b=YCuWAkTqCAK3AtTsKsm8mv996en94G02v4IkyEbt5sjf6fIIn771kQDGhc8StQg3BZSB
+ Tdlbi9EYNyxPXmwB45ZX5t10Jfur30WXQhRdrM6gDPytuCT6ezHp1t63tAGqJP+wx0JA
+ MHj1jASEveBduvjVNNTRDUNO0fog0MhnYqBlKg77ithx8uZyYuzjcjxMr4tKHKK31g4O
+ Lt9m3FHKyli0a/bLs4Blh+XVRSW9ZIORa+dxFqJ9YP/s7TpyGkdU/EhHpgy/e8Qxlcg2
+ 4uj19i+SHO6z5h1ZJwxUywNO21ZZO4u5kZadP/Z5UQ6/St7YjAmJm8H3RN7eHdSusjv5 aw== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pb2cr0ub9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 07:31:17 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32F7VGjZ002580
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 07:31:16 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Wed, 15 Mar
+ 2023 00:31:12 -0700
+Message-ID: <52bd8c2d-31f6-1f69-1d83-cf21ee66aec8@quicinc.com>
+Date:   Wed, 15 Mar 2023 15:31:10 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM4PR84MB1373DCD07EABD28D88129C50FDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v2] scsi: ufs: core: print trs for pending requests in MCQ
+ mode
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
+        <mani@kernel.org>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1678792597-3232-1-git-send-email-quic_ziqichen@quicinc.com>
+ <bde102c7-ab4f-a301-072f-8d6b7acde8a8@acm.org>
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <bde102c7-ab4f-a301-072f-8d6b7acde8a8@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: AsiB4Ym38SApLA7cckQgK6xKoVWTq-WD
+X-Proofpoint-GUID: AsiB4Ym38SApLA7cckQgK6xKoVWTq-WD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-15_03,2023-03-14_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ malwarescore=0 phishscore=0 bulkscore=0 clxscore=1015 lowpriorityscore=0
+ spamscore=0 impostorscore=0 mlxscore=0 suspectscore=0 priorityscore=1501
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2302240000 definitions=main-2303150063
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 15, 2023 at 06:08:19AM +0000, Seymour, Shane M wrote:
-> The following patch implements host state statistics via sysfs. The intent
-> is to allow user space to see the state changes and be able to report when
-> a host changes state. The files do not separate out the time spent into
-> each state but only into three:
+sure
 
-Why does userspace care about these things at all?  What tool needs them
-and what can userspace do with the information?
+Best Regards,
+Ziqi
 
+On 3/15/2023 2:09 AM, Bart Van Assche wrote:
+> On 3/14/23 04:16, Ziqi Chen wrote:
+>> +static bool ufshcd_print_tr_iter(struct request *req, void *priv)
+>> +{
+>> +    struct scsi_device *sdev = req->q->queuedata;
+>> +    struct Scsi_Host *shost = sdev->host;
+>> +    struct ufs_hba *hba = shost_priv(shost);
+>> +
+>> +    if (!IS_ERR_OR_NULL(hba))
+>> +        ufshcd_print_tr(hba, req->tag, *(bool *)priv);
 > 
-> $ ll /sys/class/scsi_host/host0/stats
-> total 0
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_first_change_time
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_last_change_time
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_other_count
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_other_ns
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_recovery_count
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_recovery_ns
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_running_count
-> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_running_ns
+> I think that the "if (!IS_ERR_OR_NULL(hba))" code can be removed safely. 
+> Otherwise this patch looks good to me.
 > 
-> They are running, recovery and other. The running state is SHOST_CREATED
-> and SHOST_RUNNING. The recovery state is SHOST_RECOVERY,
-> SHOST_CANCEL_RECOVERY, and SHOST_DEL_RECOVERY. Any other state gets
-> accounted for in other.
+> Thanks,
 > 
-> The current state is not accounted for in the information read. Because
-> of that you must read:
-> 
-> 1. The last_change_time for that host
-> 2. the current state of a host and the uptime
-> 3. each of the above *count and *ns files
-> 4. Re-read the last_change_time
-> 5. Compare the two last_change_time values read and if different try again.
-> 6. The total time read from the *ns files is subtracted from the uptime and
->    that time is then allocated to the current state time.
-> 
-> The first change time is to determine when the host was created so programs
-> can determine if it was newly created or not.
-> 
-> A (GPLv2) program called hostmond will be released in a few months that
-> will monitor these interfaces and report (local host only via syslog(3C))
-> when hosts change state.
-
-We kind of need to see this before the kernel changes can be accepted
-for obvious reasons, what is preventing that from happening now?
-
-> +static ssize_t state_first_change_time_show(struct device *dev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(dev);
-> +
-> +	return scnprintf(buf, PAGE_SIZE, "%lld",
-> +		ktime_to_ns(shost->stats->state_first_change_time));
-
-Please always use sysfs_emit() instead of the crazy scnprintf() for
-sysfs entries.
-
-> +struct scsi_host_stats {
-> +	ktime_t state_running_ns;
-> +	ktime_t state_recovery_ns;
-> +	ktime_t state_other_ns;
-> +	ktime_t state_first_change_time;
-> +	ktime_t state_last_change_time;
-> +	uint32_t state_running_count;
-> +	uint32_t state_recovery_count;
-> +	uint32_t state_other_count;
-
-u32 is a kernel type, not uint32_t please, but I don't know what the
-scsi layer is used to.
-
-thanks,
-
-greg k-h
+> Bart.
