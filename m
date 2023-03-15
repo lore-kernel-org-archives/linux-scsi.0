@@ -2,129 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC5CC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 14:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6492EC7618B
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 15:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233214AbjCOO6I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 10:58:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44636 "EHLO
+        id S231374AbjCOPVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 11:21:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233212AbjCOO5l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 10:57:41 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D15466E82;
-        Wed, 15 Mar 2023 07:57:16 -0700 (PDT)
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32FDaVL0030730;
-        Wed, 15 Mar 2023 14:55:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=uoz5zI1JEmZrgbYJhxEqPsCfCisyx6nw3mZeEmzgV+k=;
- b=tSVFLgOAREHIBWvXB1UXeVJnlITq9SElOnsHZCYFLN+Uhp+02x7fzEnkTVcUNn5cg+/y
- w2k7vS3Ah5fdwAJOEAtVQKoOjpuBjAxIMo5op6FsRE5N7aHjN+zNilZpE15YjwQfDTA1
- 2zfI9OGsuoFM/RrYrT2gD0VmwS3l0ZeLSiVZ3GkNJoy52YxWXbYVSugnFLaNUX+IooRv
- lqf6dt+JT2i0FYAEycD+3vdpC2y5oZOTTN7MIHaHWhNgRyEZMoNovpy9CPO3S4noqnuL
- qrOlVNA0i5WpKuUvq+GIJpyD3c7MAXYcuS6rAAoEGvfoomTD54RjpPsaH9lj+fJiLjx7 HQ== 
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pbdb7npu8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 15 Mar 2023 14:55:49 +0000
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32EN6XMn003172;
-        Wed, 15 Mar 2023 14:55:47 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma01fra.de.ibm.com (PPS) with ESMTPS id 3pb29t0rkf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 15 Mar 2023 14:55:47 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32FEthMp9044526
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Mar 2023 14:55:43 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A552C20043;
-        Wed, 15 Mar 2023 14:55:43 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8C5EE20040;
-        Wed, 15 Mar 2023 14:55:43 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.179.0.219])
-        by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Wed, 15 Mar 2023 14:55:43 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1pcSXW-006wBf-35;
-        Wed, 15 Mar 2023 15:55:42 +0100
-Date:   Wed, 15 Mar 2023 14:55:42 +0000
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
-        hare@suse.de, axboe@kernel.dk, sconnor@purestorage.com,
-        michael.christie@oracle.com, brian@purestorage.com,
-        yukuai3@huawei.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: Re: [PATCH -next] scsi: scsi_dh_alua: fix memleak for 'qdata' in
- alua_activate()
-Message-ID: <20230315145542.GI620522@t480-pf1aa2c2.fritz.box>
-References: <20230315062154.668812-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20230315062154.668812-1-yukuai1@huaweicloud.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 2YON9TtXUgsw-k-5S5ieW7MeP-yr8F2u
-X-Proofpoint-ORIG-GUID: 2YON9TtXUgsw-k-5S5ieW7MeP-yr8F2u
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S229725AbjCOPVR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 11:21:17 -0400
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A422653D8F;
+        Wed, 15 Mar 2023 08:21:16 -0700 (PDT)
+Received: by mail-wr1-f46.google.com with SMTP id v16so17712787wrn.0;
+        Wed, 15 Mar 2023 08:21:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678893675;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nWpDQmZNg8zKVk12QskQ7NNS05C4fI/JmZBKLdKyu8Q=;
+        b=HCHm5BAbrrspNAkvTtbS1D4ARQ3US/XQ0mF7S3yD6NYelDY9rnOZZu/gdGoR2c8FZP
+         2lRBphLvkq1iUb8F5qeYyqFmObybhJE0GIrwtg3lgiTA1xtX1t3vpHSZdd5jPdO/bSvi
+         PM6gg2amBQAwlYgm5bWmxBVPX5aM5tfHmXTSXH5eLrLNuyj3jnrSiUH5mOaBbAjHSUOO
+         RqrnluoFk9x+0uRZks9SccoPgYL/+isEf4+S80iuZDnbtQ32taG9NXBZlxqyQawc3W7P
+         xHHr1MeNKI7bcuYc2ahHMD5/6csEoa7DPclD0Fi9Im3wv+X32uwYfSRI1jlSgpkFw06L
+         1oZQ==
+X-Gm-Message-State: AO0yUKVPDivhiO1LoKzAVKJsjD+X6/Gy78qA898gge/t2E1eMzrBAWMo
+        dzEf0Eq+lbQGOF55d3xh8gs=
+X-Google-Smtp-Source: AK7set8XwzdvNeHBY5z3hradfYk7oCFJwo3n7uKyUDx9TjYSH8kKZ/J2vcGdpEctyrcfLkbwPeX00Q==
+X-Received: by 2002:a5d:464a:0:b0:2cf:f231:a477 with SMTP id j10-20020a5d464a000000b002cff231a477mr1897987wrs.1.1678893675123;
+        Wed, 15 Mar 2023 08:21:15 -0700 (PDT)
+Received: from [192.168.64.192] (bzq-219-42-90.isdn.bezeqint.net. [62.219.42.90])
+        by smtp.gmail.com with ESMTPSA id j19-20020a5d6e53000000b002cfea3c49d5sm4605071wrz.52.2023.03.15.08.21.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Mar 2023 08:21:14 -0700 (PDT)
+Message-ID: <6a6c8647-2d1f-dd60-6e69-25aafe312cd5@grimberg.me>
+Date:   Wed, 15 Mar 2023 17:21:12 +0200
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-15_08,2023-03-15_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- mlxlogscore=999 bulkscore=0 priorityscore=1501 mlxscore=0 adultscore=0
- malwarescore=0 impostorscore=0 clxscore=1011 spamscore=0 suspectscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2302240000 definitions=main-2303150118
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 11/18] IB/isert: Fix use after free during conn cleanup
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>, mlombard@redhat.com,
+        martin.petersen@oracle.com, mgurtovoy@nvidia.com,
+        d.bogdanov@yadro.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+References: <20230309223312.94595-1-michael.christie@oracle.com>
+ <20230309223312.94595-12-michael.christie@oracle.com>
+From:   Sagi Grimberg <sagi@grimberg.me>
+In-Reply-To: <20230309223312.94595-12-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 15, 2023 at 02:21:54PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> If alua_rtpg_queue() failed from alua_activate(), then 'qdata' is not
-> freed, which will cause following memleak:
-> 
-> unreferenced object 0xffff88810b2c6980 (size 32):
->   comm "kworker/u16:2", pid 635322, jiffies 4355801099 (age 1216426.076s)
->   hex dump (first 32 bytes):
->     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->     40 39 24 c1 ff ff ff ff 00 f8 ea 0a 81 88 ff ff  @9$.............
->   backtrace:
->     [<0000000098f3a26d>] alua_activate+0xb0/0x320
->     [<000000003b529641>] scsi_dh_activate+0xb2/0x140
->     [<000000007b296db3>] activate_path_work+0xc6/0xe0 [dm_multipath]
->     [<000000007adc9ace>] process_one_work+0x3c5/0x730
->     [<00000000c457a985>] worker_thread+0x93/0x650
->     [<00000000cb80e628>] kthread+0x1ba/0x210
->     [<00000000a1e61077>] ret_from_fork+0x22/0x30
-> 
-> Fix the problem by freeing 'qdata' in error path.
-> 
-> Fixes: 625fe857e4fa ("scsi: scsi_dh_alua: Check scsi_device_get() return value")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-
-Looks good to me.
-
-
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
