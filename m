@@ -2,106 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B181C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 06:22:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE7EC61DA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Mar 2023 06:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230155AbjCOGWx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 02:22:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57594 "EHLO
+        id S230094AbjCOGg1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 02:36:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231191AbjCOGWr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 02:22:47 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48CA52FCF9;
-        Tue, 14 Mar 2023 23:22:41 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pc0gJ6W5qz4f4fBy;
-        Wed, 15 Mar 2023 14:22:36 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R8tZBFkjiTNEw--.32962S4;
-        Wed, 15 Mar 2023 14:22:38 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
-        hare@suse.de, axboe@kernel.dk, sconnor@purestorage.com,
-        michael.christie@oracle.com, brian@purestorage.com,
-        yukuai3@huawei.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: [PATCH -next] scsi: scsi_dh_alua: fix memleak for 'qdata' in alua_activate()
-Date:   Wed, 15 Mar 2023 14:21:54 +0800
-Message-Id: <20230315062154.668812-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229488AbjCOGg0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 02:36:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77BF03BDB1;
+        Tue, 14 Mar 2023 23:36:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1C808B81BFD;
+        Wed, 15 Mar 2023 06:36:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 629D8C433D2;
+        Wed, 15 Mar 2023 06:36:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1678862182;
+        bh=WwlkMPoTr7BtqZZplFY4E95heUdFj/Fz74AR3mmmC24=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=awdNmW6vLrlHNIdqn6ZpKdZBFl+/GcVjIdYiv8bUK8bqTRrNhNSLS5qwf4knQZKQ0
+         5HOj7lCJ+tHjZb6SfCByVxMDK7aS8G6r3X1RXRgMs13b+o1dLxavlUfZQdRerHXYTK
+         ZQnOEnJwo8lnV+6gtdEBVcgfHp2wEOvZfYWVTI7M=
+Date:   Wed, 15 Mar 2023 07:36:19 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     "Seymour, Shane M" <shane.seymour@hpe.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH for-next] scsi: Implement host state statistics
+Message-ID: <ZBFnYwtr+2bfjvcY@kroah.com>
+References: <DM4PR84MB1373DCD07EABD28D88129C50FDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R8tZBFkjiTNEw--.32962S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4UZr13ZrW3Gr4UArWxtFb_yoW8Aw18pr
-        Z8Kas8CrW8XF4UuFWjyF13JFyY9FW8uFy8JFWft34rGFy8GFyUt347Cr1jgrWDJF97Jry7
-        Ar1UCFyjqryDJw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-        Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I
-        0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v2
-        6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
-        UZa9-UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DM4PR84MB1373DCD07EABD28D88129C50FDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Wed, Mar 15, 2023 at 06:08:19AM +0000, Seymour, Shane M wrote:
+> The following patch implements host state statistics via sysfs. The intent
+> is to allow user space to see the state changes and be able to report when
+> a host changes state. The files do not separate out the time spent into
+> each state but only into three:
 
-If alua_rtpg_queue() failed from alua_activate(), then 'qdata' is not
-freed, which will cause following memleak:
+Why does userspace care about these things at all?  What tool needs them
+and what can userspace do with the information?
 
-unreferenced object 0xffff88810b2c6980 (size 32):
-  comm "kworker/u16:2", pid 635322, jiffies 4355801099 (age 1216426.076s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    40 39 24 c1 ff ff ff ff 00 f8 ea 0a 81 88 ff ff  @9$.............
-  backtrace:
-    [<0000000098f3a26d>] alua_activate+0xb0/0x320
-    [<000000003b529641>] scsi_dh_activate+0xb2/0x140
-    [<000000007b296db3>] activate_path_work+0xc6/0xe0 [dm_multipath]
-    [<000000007adc9ace>] process_one_work+0x3c5/0x730
-    [<00000000c457a985>] worker_thread+0x93/0x650
-    [<00000000cb80e628>] kthread+0x1ba/0x210
-    [<00000000a1e61077>] ret_from_fork+0x22/0x30
+> 
+> $ ll /sys/class/scsi_host/host0/stats
+> total 0
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_first_change_time
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_last_change_time
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_other_count
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_other_ns
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_recovery_count
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_recovery_ns
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_running_count
+> -r--r--r--. 1 root root 4096 Mar 13 22:43 state_running_ns
+> 
+> They are running, recovery and other. The running state is SHOST_CREATED
+> and SHOST_RUNNING. The recovery state is SHOST_RECOVERY,
+> SHOST_CANCEL_RECOVERY, and SHOST_DEL_RECOVERY. Any other state gets
+> accounted for in other.
+> 
+> The current state is not accounted for in the information read. Because
+> of that you must read:
+> 
+> 1. The last_change_time for that host
+> 2. the current state of a host and the uptime
+> 3. each of the above *count and *ns files
+> 4. Re-read the last_change_time
+> 5. Compare the two last_change_time values read and if different try again.
+> 6. The total time read from the *ns files is subtracted from the uptime and
+>    that time is then allocated to the current state time.
+> 
+> The first change time is to determine when the host was created so programs
+> can determine if it was newly created or not.
+> 
+> A (GPLv2) program called hostmond will be released in a few months that
+> will monitor these interfaces and report (local host only via syslog(3C))
+> when hosts change state.
 
-Fix the problem by freeing 'qdata' in error path.
+We kind of need to see this before the kernel changes can be accepted
+for obvious reasons, what is preventing that from happening now?
 
-Fixes: 625fe857e4fa ("scsi: scsi_dh_alua: Check scsi_device_get() return value")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> +static ssize_t state_first_change_time_show(struct device *dev,
+> +	struct device_attribute *attr, char *buf)
+> +{
+> +	struct Scsi_Host *shost = class_to_shost(dev);
+> +
+> +	return scnprintf(buf, PAGE_SIZE, "%lld",
+> +		ktime_to_ns(shost->stats->state_first_change_time));
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 362fa631f39b..a226dc1b65d7 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1145,10 +1145,12 @@ static int alua_activate(struct scsi_device *sdev,
- 	rcu_read_unlock();
- 	mutex_unlock(&h->init_mutex);
- 
--	if (alua_rtpg_queue(pg, sdev, qdata, true))
-+	if (alua_rtpg_queue(pg, sdev, qdata, true)) {
- 		fn = NULL;
--	else
-+	} else {
-+		kfree(qdata);
- 		err = SCSI_DH_DEV_OFFLINED;
-+	}
- 	kref_put(&pg->kref, release_port_group);
- out:
- 	if (fn)
--- 
-2.31.1
+Please always use sysfs_emit() instead of the crazy scnprintf() for
+sysfs entries.
 
+> +struct scsi_host_stats {
+> +	ktime_t state_running_ns;
+> +	ktime_t state_recovery_ns;
+> +	ktime_t state_other_ns;
+> +	ktime_t state_first_change_time;
+> +	ktime_t state_last_change_time;
+> +	uint32_t state_running_count;
+> +	uint32_t state_recovery_count;
+> +	uint32_t state_other_count;
+
+u32 is a kernel type, not uint32_t please, but I don't know what the
+scsi layer is used to.
+
+thanks,
+
+greg k-h
