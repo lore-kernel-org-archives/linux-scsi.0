@@ -2,255 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E029C6FD1F
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 11:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DFEFC6FD19
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 11:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229850AbjCPLCl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Mar 2023 07:02:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56860 "EHLO
+        id S229852AbjCPLCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Mar 2023 07:02:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjCPLCk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2023 07:02:40 -0400
+        with ESMTP id S229523AbjCPLCm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2023 07:02:42 -0400
 Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 129CB497EF
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2023 04:02:39 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id gp15-20020a17090adf0f00b0023d1bbd9f9eso4970207pjb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2023 04:02:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B2C5497EF
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2023 04:02:41 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id gp15-20020a17090adf0f00b0023d1bbd9f9eso4970393pjb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2023 04:02:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1678964558;
+        d=broadcom.com; s=google; t=1678964561;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=pWgUILMo208KL6qMozPFMcB2ZRZyvD4fJw228I237UI=;
-        b=KBhBynPiaUBAxZJS3LQO8FrhXGH0pr+K5ywgawCNvMn3EUmeb3N0qieL6mJD/ugVMV
-         xg2g+BS5NHuFN8CHgyPAt525GmWX3MWd/T/LX+vX54pv4aioi59sgj2JlD2xvhfsLUPi
-         nUvb6Z+M80WP8LDV3qLWW8+StCizq9ufvwqOE=
+        bh=l3qOOiEywtyE2UuGBQVQWoHeKjT9ByiYMBk4GpO1Qb0=;
+        b=YnW0v0ZdfChKyYsfHgW+4umwdFXpWUiWXjomOAzl/SZCJejPoMeuRiP8TFzZRK4JBj
+         v1m2K3kOWguV2UpCSJwM1LaZZWLw1GjtFSaCYFrRh942aF5axZ8fycA7wuoehfddNtIk
+         8B0l/z6NUeW09R5SMoZHbhYupO6qtzasIJDkQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678964558;
+        d=1e100.net; s=20210112; t=1678964561;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pWgUILMo208KL6qMozPFMcB2ZRZyvD4fJw228I237UI=;
-        b=nJWTU/RqaSNoS/uJpiP+PKwChH8HeYhsHND1OZt59Z6kHNojOdwtvHK2nGbIwIGKX/
-         wf64EpTPj/85W0El6ORgI9X6KI21TR3tTHAMtcXcoHB9966To8N48e355IDPj6WsxlBi
-         +cpiIOjcbgxzyfm9vERyBmqya+D05RZkhz1zTPr0lnqCPP06o5WGfYsQxuayhOm9So6Y
-         9IwGCbe6fd9MNzchaIDlnR+V5HKEOVmOh+WX3shC26lK/UzYWo9aurFHbcWuPOPHc1yG
-         pKoOQ9cbdMvfRCxUPB7DWyxO3qkxbPCii5AXXHtRJ940A1lFF1Fzl5oKpA8rI9N1yitg
-         zdrQ==
-X-Gm-Message-State: AO0yUKWzyESUjckTZ+lfsCDWk0DYGfMP7+fiKVs+y+txy4HbyZSCwkcn
-        4QIbsU/sykv+nDCpAekz8NqbZXZFogZ43Xj7GPR4ku0yr5Oq1PVT92GvoLvCfdmaiEmkQrk+sCL
-        FdSvxBpVH5y/qmBVVtMPmEe63/+AUS0mpRTmAcXQtW0yR3fBcPJB9VVx//irvd0B/rF9K/mPpsj
-        WOzzVwQNbnzA==
-X-Google-Smtp-Source: AK7set8P3aQHirwVISYF+sQ+vwDJPpLLxSjmnW2hYkaLc75MU2Shqt5LhXOVz4ogsM2gn3O+/jKheg==
-X-Received: by 2002:a17:90a:1a41:b0:23c:fef0:d441 with SMTP id 1-20020a17090a1a4100b0023cfef0d441mr3291342pjl.33.1678964558124;
-        Thu, 16 Mar 2023 04:02:38 -0700 (PDT)
+        bh=l3qOOiEywtyE2UuGBQVQWoHeKjT9ByiYMBk4GpO1Qb0=;
+        b=Pz1L6wmH0xpHnH2uvQ+fhk2MyfKbcdeGtNCvbacEMAcf1gZ5QoZ7KZ1HlSSgs+CdQ9
+         a3THr93VgdJOflbnpA8EhpCZEG0SB+b09i/9x0k/z4yrYIoNYj++ff2f0R4Wmg5EJLQn
+         WXXZ+fjjvRzN8a5AwooHu32i9W89V5pja9Ke5iwxLNQArYrthS/ihiqeF0qHwa7kivFV
+         Yla0SA+SeNzBOXs+6On6SJJYZYC9r8HYQBm3rnqGR2Kbs3VktP2APuSpITm2YfzwoHDl
+         v43YvN4/KZ7P5MO0sm1a08IyZh8MFNJ07VK0OfedUe9+OCwlByyplA/MJOt7t6L7xOGU
+         5H5w==
+X-Gm-Message-State: AO0yUKUSvPQ4sMfwzQ132Ep9eoGhDuWl0sj06jYOiySDECRb5bvkUNJf
+        BcP+9qBUPIZpSy0hXyAwCVRjcntls/eRCKQLOyaeCJWlMq7zk+NQRwf2XBh2vOTcd5Wv8K+1i6F
+        mpiFiPqr0+XInPWPmT1RnkKwiD9kNV40HpTmw5c4c0+rqGLc2VJH6d0JMAOQYHgmTEkYxBmfEGN
+        Rvm7aPG28TVQ==
+X-Google-Smtp-Source: AK7set+JkydwoZbMT3OYZcysY9k5KN+p7vvsGu7JCeyo+lR2uViAPirLdf6lP6efXCNhRVNW97hP7w==
+X-Received: by 2002:a17:902:c40c:b0:19e:2eb5:712d with SMTP id k12-20020a170902c40c00b0019e2eb5712dmr2955896plk.25.1678964560797;
+        Thu, 16 Mar 2023 04:02:40 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id kb5-20020a170903338500b0019a6cce2060sm5343590plb.57.2023.03.16.04.02.35
+        by smtp.gmail.com with ESMTPSA id kb5-20020a170903338500b0019a6cce2060sm5343590plb.57.2023.03.16.04.02.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Mar 2023 04:02:37 -0700 (PDT)
+        Thu, 16 Mar 2023 04:02:40 -0700 (PDT)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 1/8] mpi3mr: Successive VD delete and add causes FW Fault
-Date:   Thu, 16 Mar 2023 16:32:02 +0530
-Message-Id: <20230316110209.60145-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH 2/8] mpi3mr: fix admin queues memory leak upon soft reset
+Date:   Thu, 16 Mar 2023 16:32:03 +0530
+Message-Id: <20230316110209.60145-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230316110209.60145-1-ranjan.kumar@broadcom.com>
 References: <20230316110209.60145-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001bad1905f70266e3"
+        boundary="0000000000004424b605f70266d7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001bad1905f70266e3
+--0000000000004424b605f70266d7
 Content-Transfer-Encoding: 8bit
 
-Upon Virtual disk removal, firmware sends device status
-change event(Virtual disk remove event) and expects the
-driver to start device remove handshake(by sending target
-reset and IOU control command to firmware).But the driver
-does not initiate the device remove handshake which leads
-to the firmware FAULT.
+After soft reset, while setting up admin queue pairs driver initially sets
+admin request base and admin reply base addresses to NULL. It leads to DMA
+memory pointed by these pointers getting leaked.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  8 +++++-
- drivers/scsi/mpi3mr/mpi3mr_os.c | 48 +++++++++++++++++++++++----------
- 2 files changed, 41 insertions(+), 15 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 23de2603e71f..4cb00bdb0039 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -652,7 +652,11 @@ union _form_spec_inf {
- 	struct tgt_dev_vd vd_inf;
- };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 758f7ca9e0ee..25ac3bc597f5 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2597,14 +2597,12 @@ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc)
+ 	mrioc->num_admin_req = mrioc->admin_req_q_sz /
+ 	    MPI3MR_ADMIN_REQ_FRAME_SZ;
+ 	mrioc->admin_req_ci = mrioc->admin_req_pi = 0;
+-	mrioc->admin_req_base = NULL;
  
--
-+enum mpi3mr_dev_state {
-+	MPI3MR_DEV_CREATED = 1,
-+	MPI3MR_DEV_REMOVE_HS_STARTED = 2,
-+	MPI3MR_DEV_DELETED = 3,
-+};
+ 	mrioc->admin_reply_q_sz = MPI3MR_ADMIN_REPLY_Q_SIZE;
+ 	mrioc->num_admin_replies = mrioc->admin_reply_q_sz /
+ 	    MPI3MR_ADMIN_REPLY_FRAME_SZ;
+ 	mrioc->admin_reply_ci = 0;
+ 	mrioc->admin_reply_ephase = 1;
+-	mrioc->admin_reply_base = NULL;
  
- /**
-  * struct mpi3mr_tgt_dev - target device data structure
-@@ -676,6 +680,7 @@ union _form_spec_inf {
-  * @enclosure_logical_id: Enclosure logical identifier
-  * @dev_spec: Device type specific information
-  * @ref_count: Reference count
-+ * @state: device state
-  */
- struct mpi3mr_tgt_dev {
- 	struct list_head list;
-@@ -697,6 +702,7 @@ struct mpi3mr_tgt_dev {
- 	u64 enclosure_logical_id;
- 	union _form_spec_inf dev_spec;
- 	struct kref ref_count;
-+	enum mpi3mr_dev_state state;
- };
- 
- /**
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 6eaeba41072c..7ebd00dfd396 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -652,6 +652,7 @@ static void mpi3mr_tgtdev_add_to_list(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_tgtdev_get(tgtdev);
- 	INIT_LIST_HEAD(&tgtdev->list);
- 	list_add_tail(&tgtdev->list, &mrioc->tgtdev_list);
-+	tgtdev->state = MPI3MR_DEV_CREATED;
- 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
- }
- 
-@@ -659,20 +660,25 @@ static void mpi3mr_tgtdev_add_to_list(struct mpi3mr_ioc *mrioc,
-  * mpi3mr_tgtdev_del_from_list -Delete tgtdevice from the list
-  * @mrioc: Adapter instance reference
-  * @tgtdev: Target device
-+ * @must_delete: Must delete the target device from the list irrespective
-+ * of the device state.
-  *
-  * Remove the target device from the target device list
-  *
-  * Return: Nothing.
-  */
- static void mpi3mr_tgtdev_del_from_list(struct mpi3mr_ioc *mrioc,
--	struct mpi3mr_tgt_dev *tgtdev)
-+	struct mpi3mr_tgt_dev *tgtdev, bool must_delete)
- {
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
--	if (!list_empty(&tgtdev->list)) {
--		list_del_init(&tgtdev->list);
--		mpi3mr_tgtdev_put(tgtdev);
-+	if ((tgtdev->state == MPI3MR_DEV_REMOVE_HS_STARTED) || (must_delete == true)) {
-+		if (!list_empty(&tgtdev->list)) {
-+			list_del_init(&tgtdev->list);
-+			tgtdev->state = MPI3MR_DEV_DELETED;
-+			mpi3mr_tgtdev_put(tgtdev);
-+		}
- 	}
- 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
- }
-@@ -1036,7 +1042,7 @@ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
- 			    tgtdev->perst_id);
- 			if (tgtdev->host_exposed)
- 				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
--			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-+			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, true);
- 			mpi3mr_tgtdev_put(tgtdev);
- 		}
- 	}
-@@ -1281,12 +1287,12 @@ static void mpi3mr_devstatuschg_evt_bh(struct mpi3mr_ioc *mrioc,
- 		if (!tgtdev->host_exposed)
- 			mpi3mr_report_tgtdev_to_host(mrioc, tgtdev->perst_id);
- 	}
--	if (tgtdev->starget && tgtdev->starget->hostdata) {
--		if (delete)
--			mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
--	}
-+
-+	if (delete)
-+		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
-+
- 	if (cleanup) {
--		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-+		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, false);
- 		mpi3mr_tgtdev_put(tgtdev);
- 	}
- 
-@@ -1604,7 +1610,7 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 		case MPI3_EVENT_SAS_TOPO_PHY_RC_TARG_NOT_RESPONDING:
- 			if (tgtdev->host_exposed)
- 				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
--			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-+			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, false);
- 			mpi3mr_tgtdev_put(tgtdev);
- 			break;
- 		case MPI3_EVENT_SAS_TOPO_PHY_RC_RESPONDING:
-@@ -1762,7 +1768,7 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
- 			if (tgtdev->host_exposed)
- 				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
--			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-+			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, false);
- 			mpi3mr_tgtdev_put(tgtdev);
- 			break;
- 		default:
-@@ -2016,12 +2022,18 @@ static int mpi3mr_create_tgtdev(struct mpi3mr_ioc *mrioc,
- 	int retval = 0;
- 	struct mpi3mr_tgt_dev *tgtdev = NULL;
- 	u16 perst_id = 0;
-+	unsigned long flags;
- 
- 	perst_id = le16_to_cpu(dev_pg0->persistent_id);
- 	if (perst_id == MPI3_DEVICE0_PERSISTENTID_INVALID)
- 		return retval;
- 
--	tgtdev = mpi3mr_get_tgtdev_by_perst_id(mrioc, perst_id);
-+	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-+	tgtdev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, perst_id);
-+	if (tgtdev)
-+		tgtdev->state = MPI3MR_DEV_CREATED;
-+	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-+
- 	if (tgtdev) {
- 		mpi3mr_update_tgtdev(mrioc, tgtdev, dev_pg0, true);
- 		mpi3mr_tgtdev_put(tgtdev);
-@@ -2219,6 +2231,14 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
- 	u8 retrycount = 5;
- 	struct mpi3mr_drv_cmd *drv_cmd = cmdparam;
- 	struct delayed_dev_rmhs_node *delayed_dev_rmhs = NULL;
-+	struct mpi3mr_tgt_dev *tgtdev = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-+	tgtdev = __mpi3mr_get_tgtdev_by_handle(mrioc, handle);
-+	if (tgtdev && (iou_rc == MPI3_CTRL_OP_REMOVE_DEVICE))
-+		tgtdev->state = MPI3MR_DEV_REMOVE_HS_STARTED;
-+	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
- 
- 	if (drv_cmd)
- 		goto issue_cmd;
-@@ -5108,7 +5128,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 	list_for_each_entry_safe(tgtdev, tgtdev_next, &mrioc->tgtdev_list,
- 	    list) {
- 		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
--		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-+		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, true);
- 		mpi3mr_tgtdev_put(tgtdev);
- 	}
- 	mpi3mr_stop_watchdog(mrioc);
+ 	if (!mrioc->admin_req_base) {
+ 		mrioc->admin_req_base = dma_alloc_coherent(&mrioc->pdev->dev,
 -- 
 2.31.1
 
 
---0000000000001bad1905f70266e3
+--0000000000004424b605f70266d7
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -321,13 +172,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFn1fndB4eozN/VtvbBW/BYmBY4ZrW58
-EpU6Ew6/rR9FMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDMx
-NjExMDIzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEUw5NdZPbNdBMbbMSI1ZNSmLREGcEPi
+3LXg89hCCx99MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDMx
+NjExMDI0MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAQu69gxbN2e+OuVYsJB/yFl0qW/Gm5Qv8bPFmAHsHVFpPy2Pko
-SFowDHIwuPIFOyHMbjZqmHwEw9JbsBIm0j4ca2zjIeyAPSmdhbxRJjZJjrVXxAymJLWOeCgrFdPw
-0sjQn9LHvXLRkhly9USGScEzuxSdU9t60PBhcJ73ZGDzkEMQCVb/ixYBmWVYccfREFYzgcUR9ESr
-H71NZ9dcigGj3eFcdgHttHU8osrd/5SPN+sn4lUN4I88/1ncb+e9XfZqgOri8Z04fgtAS8fP5+Uj
-J0rdE8aJWnPsw1uf+G/gu4i9JrwxbZIlJ28OrzhL5KwfzRTKBrhYwyc1Ni4OEy5i
---0000000000001bad1905f70266e3--
+ATANBgkqhkiG9w0BAQEFAASCAQBcAFRbMA6zBd7L6ioUswn6rEf+czOoU165VmX9V4eo4SLhuSkS
+csOjHSo7PN0PPQ7WC3DNuhV5vdLZ6IXRDcGgwBdw8wKFNBhyE7aJmWZJvjSh7uCzLktpdnWRG4Xg
+jV5wdiOO6vdiVfOIzX91HfRAyFIMYPOBNzErgb5sEVWAt++y1NtD5vnSbi4NVocs/xp48LurgZHl
++y9V2dLlZIfMbVXm8I6peCoCn99teoDniWOr2xtYBF1YB9HaWI/hmn4J7Trg49sOkHeZSFGjwr71
+OHqPW7btKCtwxTp4MoFHZBWlcy/cS8OFtCw0EtR370Km3Nd2LMn2gEhlIDHq1589
+--0000000000004424b605f70266d7--
