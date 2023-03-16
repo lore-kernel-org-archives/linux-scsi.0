@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B299C6FD1F
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 16:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A146EC7618E
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 16:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231216AbjCPQek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Mar 2023 12:34:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42306 "EHLO
+        id S230326AbjCPQfT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Mar 2023 12:35:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230399AbjCPQeP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2023 12:34:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61A42E6FC2;
-        Thu, 16 Mar 2023 09:33:36 -0700 (PDT)
+        with ESMTP id S230372AbjCPQeY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2023 12:34:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A4F9E6FF4;
+        Thu, 16 Mar 2023 09:33:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E7DE8620B5;
-        Thu, 16 Mar 2023 16:33:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EAB3C433D2;
-        Thu, 16 Mar 2023 16:33:23 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 57A16B8226B;
+        Thu, 16 Mar 2023 16:33:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB753C433D2;
+        Thu, 16 Mar 2023 16:33:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678984404;
-        bh=WGCgXaDEB0c9XvwrN6uOYDH2mU7THCTBUJzAPot+ir4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UkHeyI8j5VfIQXcBb/KVPg4Pz0DvejBEPZTyFKBZQlQA3zYhEBskwiRem8/VcZE8a
-         pfnSodtc3vlNibuKCfNZGvFmw2qZpD0dimiw4P9PaSzZf9QB5bwPkST1yZPCMEynlR
-         oCZrlM5mCGm4XJyX7lI5IVaWB/iNWtM/Dfb+JJAUf1bWISyrpFJt4XUI5XP2qIkpTB
-         JJ/GhoNsMAdlGTq6AeGGImzJcV3z+CCsoIyGxlz5tsMux1dRZxgc4HnJdnayyCWxLy
-         7fdyMwOh3HW1vzW4KOgO8VH7sLa1vlKvhweTH0PuRW7Jt15c/moctcIlVJUcX9vWEo
-         h1d2+PTEO7/dg==
+        s=k20201202; t=1678984428;
+        bh=Y38himw7kgZijWJW9L1MkW0vWORfRC3VqLMfCnLO/Kc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=PoSXbGgndyvGedw8xyUwtB/w+iW8FSPo9pLSB8gXTbUYDY/t0VmURLMkF2+U0K521
+         65G5Eiu0jtq6PZivUyzeVL4XQ93Kei7EZ0uC+5j81Bxhk5pChxejEm+IQ6LRDc2Tc8
+         fQT5WTCkvwNXRJxdK4r/jOZP/Dg05upflTcquflUzBNgKHdffz0pmWPW80c1xhrzor
+         PUYBQo0B5VqlpWsCdAEcBKKYCJ8LKwZPkPYdQzAUcRYzbCdXTBKkJ3Y3ZGAP/bW04V
+         Be6qNArmxPlnrHa05nQSuwno4FS8SGmW0Bo1qGvTTWb6w6ihZ+G0OicPiMKlaKssPr
+         m2qcahp46QSVQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Adrien Thierry <athierry@redhat.com>,
         Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        beanhuo@micron.com, avri.altman@wdc.com, stanley.chu@mediatek.com,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        beanhuo@micron.com, avri.altman@wdc.com, keosung.park@samsung.com,
+        kwmad.kim@samsung.com, andersson@kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 2/6] scsi: ufs: core: Initialize devfreq synchronously
-Date:   Thu, 16 Mar 2023 12:33:03 -0400
-Message-Id: <20230316163309.708796-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 1/3] scsi: ufs: core: Initialize devfreq synchronously
+Date:   Thu, 16 Mar 2023 12:33:38 -0400
+Message-Id: <20230316163344.708931-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230316163309.708796-1-sashal@kernel.org>
-References: <20230316163309.708796-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -120,15 +118,15 @@ Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 47 ++++++++++++++++++++++++++-------------
- include/ufs/ufshcd.h      |  1 +
+ drivers/scsi/ufs/ufshcd.c | 47 ++++++++++++++++++++++++++-------------
+ drivers/scsi/ufs/ufshcd.h |  1 +
  2 files changed, 32 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index edd34dac91b1d..e652624c449a9 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1354,6 +1354,13 @@ static int ufshcd_devfreq_target(struct device *dev,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 120831428ec6f..eaa91aec036b1 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1307,6 +1307,13 @@ static int ufshcd_devfreq_target(struct device *dev,
  	struct ufs_clk_info *clki;
  	unsigned long irq_flags;
  
@@ -142,7 +140,7 @@ index edd34dac91b1d..e652624c449a9 100644
  	if (!ufshcd_is_clkscaling_supported(hba))
  		return -EINVAL;
  
-@@ -8184,22 +8191,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+@@ -7881,22 +7888,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
  	if (ret)
  		goto out;
  
@@ -165,7 +163,7 @@ index edd34dac91b1d..e652624c449a9 100644
  	ufs_bsg_probe(hba);
  	ufshpb_init(hba);
  	scsi_scan_host(hba->host);
-@@ -8338,6 +8329,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+@@ -8030,6 +8021,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
  	if (ret) {
  		pm_runtime_put_sync(hba->dev);
  		ufshcd_hba_exit(hba);
@@ -178,7 +176,7 @@ index edd34dac91b1d..e652624c449a9 100644
  	}
  }
  
-@@ -9892,12 +9889,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -9590,12 +9587,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  	 */
  	ufshcd_set_ufs_dev_active(hba);
  
@@ -207,20 +205,20 @@ index edd34dac91b1d..e652624c449a9 100644
 +rpm_put_sync:
 +	pm_runtime_put_sync(dev);
  free_tmf_queue:
- 	blk_mq_destroy_queue(hba->tmf_queue);
+ 	blk_cleanup_queue(hba->tmf_queue);
  free_tmf_tag_set:
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index b54f22840dabf..0ef1ec6a3b4d1 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -894,6 +894,7 @@ struct ufs_hba {
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index c8513cc6c2bdd..33d9c096ec7fd 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -838,6 +838,7 @@ struct ufs_hba {
  	struct completion *uic_async_done;
  
  	enum ufshcd_state ufshcd_state;
 +	bool logical_unit_scan_finished;
  	u32 eh_flags;
  	u32 intr_mask;
- 	u16 ee_ctrl_mask;
+ 	u16 ee_ctrl_mask; /* Exception event mask */
 -- 
 2.39.2
 
