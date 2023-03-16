@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79DEBC6FD19
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 16:33:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B299C6FD1F
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 16:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjCPQdN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Mar 2023 12:33:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39234 "EHLO
+        id S231216AbjCPQek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Mar 2023 12:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230378AbjCPQdG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2023 12:33:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66EAAE4C6B;
-        Thu, 16 Mar 2023 09:32:55 -0700 (PDT)
+        with ESMTP id S230399AbjCPQeP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2023 12:34:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61A42E6FC2;
+        Thu, 16 Mar 2023 09:33:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9A776B82271;
-        Thu, 16 Mar 2023 16:32:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22515C4339C;
-        Thu, 16 Mar 2023 16:32:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E7DE8620B5;
+        Thu, 16 Mar 2023 16:33:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EAB3C433D2;
+        Thu, 16 Mar 2023 16:33:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678984372;
-        bh=lDiWoWQ+GwADVgkaV1LC3rRiuX5euPjHLyQ5cmQYoRI=;
+        s=k20201202; t=1678984404;
+        bh=WGCgXaDEB0c9XvwrN6uOYDH2mU7THCTBUJzAPot+ir4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=p8df/iDQgcnKy2hIy8i/4XboLQKLYFXonwunsHrTjSvdpSMhEow3p/K833vMc9sLn
-         8A7SbMYfYL+fQEQKVvWGlSwT1VhUaccHiCHD/U2tbdO10gDtGjk40x3gNUGLIJi96E
-         rY9ilaQwZ3FYFM4474turREcR1Mr4doHm6RsxXGwfTdlQPEkwqikHivC/9pjMyQOn3
-         vHea1qo3RwICrprcz7ZWNhWLSzQjc+2KMPoTQ1Mu4sWWMtiLi0mfdzEtzt+zORBlJa
-         8WvtcW/N7kNf4WK+q/Xt+rSvo1HE7T+COV05mPiK8wv408OvP+HUwGwA6nnomAqY3Y
-         Lm2SumywdSJeA==
+        b=UkHeyI8j5VfIQXcBb/KVPg4Pz0DvejBEPZTyFKBZQlQA3zYhEBskwiRem8/VcZE8a
+         pfnSodtc3vlNibuKCfNZGvFmw2qZpD0dimiw4P9PaSzZf9QB5bwPkST1yZPCMEynlR
+         oCZrlM5mCGm4XJyX7lI5IVaWB/iNWtM/Dfb+JJAUf1bWISyrpFJt4XUI5XP2qIkpTB
+         JJ/GhoNsMAdlGTq6AeGGImzJcV3z+CCsoIyGxlz5tsMux1dRZxgc4HnJdnayyCWxLy
+         7fdyMwOh3HW1vzW4KOgO8VH7sLa1vlKvhweTH0PuRW7Jt15c/moctcIlVJUcX9vWEo
+         h1d2+PTEO7/dg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Adrien Thierry <athierry@redhat.com>,
@@ -38,14 +38,14 @@ Cc:     Adrien Thierry <athierry@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         beanhuo@micron.com, avri.altman@wdc.com, stanley.chu@mediatek.com,
-        quic_asutoshd@quicinc.com, mani@kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 3/7] scsi: ufs: core: Initialize devfreq synchronously
-Date:   Thu, 16 Mar 2023 12:32:20 -0400
-Message-Id: <20230316163227.708614-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 2/6] scsi: ufs: core: Initialize devfreq synchronously
+Date:   Thu, 16 Mar 2023 12:33:03 -0400
+Message-Id: <20230316163309.708796-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230316163227.708614-1-sashal@kernel.org>
-References: <20230316163227.708614-1-sashal@kernel.org>
+In-Reply-To: <20230316163309.708796-1-sashal@kernel.org>
+References: <20230316163309.708796-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -125,10 +125,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 32 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2ddc1aba0ad75..d7fa053a78965 100644
+index edd34dac91b1d..e652624c449a9 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -1357,6 +1357,13 @@ static int ufshcd_devfreq_target(struct device *dev,
+@@ -1354,6 +1354,13 @@ static int ufshcd_devfreq_target(struct device *dev,
  	struct ufs_clk_info *clki;
  	unsigned long irq_flags;
  
@@ -142,7 +142,7 @@ index 2ddc1aba0ad75..d7fa053a78965 100644
  	if (!ufshcd_is_clkscaling_supported(hba))
  		return -EINVAL;
  
-@@ -8152,22 +8159,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+@@ -8184,22 +8191,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
  	if (ret)
  		goto out;
  
@@ -165,7 +165,7 @@ index 2ddc1aba0ad75..d7fa053a78965 100644
  	ufs_bsg_probe(hba);
  	ufshpb_init(hba);
  	scsi_scan_host(hba->host);
-@@ -8306,6 +8297,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+@@ -8338,6 +8329,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
  	if (ret) {
  		pm_runtime_put_sync(hba->dev);
  		ufshcd_hba_exit(hba);
@@ -178,7 +178,7 @@ index 2ddc1aba0ad75..d7fa053a78965 100644
  	}
  }
  
-@@ -9912,12 +9909,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -9892,12 +9889,30 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  	 */
  	ufshcd_set_ufs_dev_active(hba);
  
@@ -208,12 +208,12 @@ index 2ddc1aba0ad75..d7fa053a78965 100644
 +	pm_runtime_put_sync(dev);
  free_tmf_queue:
  	blk_mq_destroy_queue(hba->tmf_queue);
- 	blk_put_queue(hba->tmf_queue);
+ free_tmf_tag_set:
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 97a09a14c6349..4b6d63ca8c5d8 100644
+index b54f22840dabf..0ef1ec6a3b4d1 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -896,6 +896,7 @@ struct ufs_hba {
+@@ -894,6 +894,7 @@ struct ufs_hba {
  	struct completion *uic_async_done;
  
  	enum ufshcd_state ufshcd_state;
