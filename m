@@ -2,212 +2,186 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89CDAC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 02:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E3BC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Mar 2023 02:47:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229552AbjCPCAo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Mar 2023 22:00:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51258 "EHLO
+        id S229707AbjCPCrQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Mar 2023 22:47:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjCPCAj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 22:00:39 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3E02AF2BB
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2023 19:00:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678932037; x=1710468037;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=frvO2agJBLyaiESLPLi6KEXOHNLtpqWj0D7l6//gTck=;
-  b=iz87SVw6rK3M3drbNCVMC36JurLMYrRwCyUAO9/g/YU1/Nl0HH+O8JpW
-   CgEG8GwlUdXNwRx8+c2FGjajwAKV6HdIvx5cVgIBKb/P3z+Pn1BNfn1Cz
-   6AMBC4E91ewbwFwKXc+WZWNtsscXWfxj+lKkHfxSg9ccV3cYqmvNtsMCp
-   tNTAXup6eWsPiAP878LQofpC88Ja/ca5e6xZHkNSffoY/e9Rv0wyo8wlk
-   hqLDKiDC3NF5C+My4B0IjxiZYmTSDOIiX6F3xpmuQXz5e/F7pv1NG2Yrk
-   5ORdwrTfWCyz7IM1bx121yzt64Gvpr5DucsjnknG1bAIB1dlZBkvZyd1N
-   A==;
-X-IronPort-AV: E=Sophos;i="5.98,264,1673884800"; 
-   d="scan'208";a="224020860"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Mar 2023 10:00:34 +0800
-IronPort-SDR: rT6KX154jYOxokcnbUxzqftz6DopVJTwrGiRJ0Idj9ZCJ3SBPTNZ9bNWTgWDyFEHHPGTN8bOqV
- 7ImWxri8Pep6y+GTWevLC5PvmLBct3T0JgbN/H2RMj2keqwTunPaKt3dF3t8UzECC1JukJhY7b
- 8Hqqdx68fT1uG3qLvJOGy9Jr/xhumIHKlkgjnJgdCwMNuOtgxKHyiP/Dl+Z887lUXHJzY+9/ha
- vodM1B8vc9ymawqp+Cn3A+ok4+cpSU1wjV96IH27fSGw4c27UxGrpeR77dA7/I7f9jJUqjc1As
- IWk=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Mar 2023 18:17:00 -0700
-IronPort-SDR: vYw9XbBrl/5d2TPwwDc71yIdyxdNJwxsbqKd7BX4xfzn82mrw4B24yCgp38h1NY24NWc6xW3LR
- NVYHNYTWtxcqx2Snq6dxPvusGijO0Rgw/HFtkYW6dDuPCxi8UkyixtlWUD9LIHvaSKKhisisO2
- /hsoZUardKrnOIZxEwt3FB77OMNng1xzZEwpFugWZmaqSbLP8HF3udyqBSj6eM95rzkSHHlHzW
- mpkVDW4RL0rrjpMWRBXl2DEm/Du/xLYqM12AXXlweWtDug9VdhT7koOeBD2i4+AyApIuQW7MEv
- cdM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Mar 2023 19:00:35 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PcVpV0ZKdz1RtVy
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2023 19:00:34 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1678932032; x=1681524033; bh=frvO2agJBLyaiESLPLi6KEXOHNLtpqWj0D7
-        l6//gTck=; b=O5NEhEOYDYzRLeeVx579qgOZqzEvmwyli7naBjmovIziFs+apeo
-        ftJqf5TZ6kye6zPJs7GtC5sED71/KDXOw+cIkKJbd2gVQ4mJCc4Odo1cYYziH8Vk
-        Mv0ezm2WHyWGlxEbUtcuURlLpKMWpWg4xssr4Ceo1xTZEuOURT4JZOV20S6ra+IC
-        Wb2E15lA7rG+5425HA4Jf3ViTxUGhf2YBjqcE+8pKajcW6PnVObFUmlwpnIySuDx
-        lGbv3xUlG7YiX+BJnqA7Om7wrC6XK0nQtnaT27/q+YagS3M0z6dRA2TmYYQP9tgW
-        F8SIKp90Ai1q0akUNr1jsz77CMB+0Yi7Sow==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GtpT_sKl1_8S for <linux-scsi@vger.kernel.org>;
-        Wed, 15 Mar 2023 19:00:32 -0700 (PDT)
-Received: from [10.89.80.69] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.80.69])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PcVpR4Bd2z1RtVm;
-        Wed, 15 Mar 2023 19:00:31 -0700 (PDT)
-Message-ID: <c91be70e-14a9-7ad6-ba7c-975a640a34d3@opensource.wdc.com>
-Date:   Thu, 16 Mar 2023 11:00:30 +0900
+        with ESMTP id S229732AbjCPCrN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2023 22:47:13 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FAEBCC305
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2023 19:47:08 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32G0xxq5003667;
+        Thu, 16 Mar 2023 02:47:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=7mq9Lf0kUtzwHrHw5kPEZ4SSwLr/Sc2X9+Y79ehMvjA=;
+ b=BfXgLxf2/6uyKM/ebjdwlz/yqE21sGpqnPyQ93CZa3moYXd9ZiF77DO7qqF0rJIhoboC
+ PP16nZ2XGVNwWAjC887EYPpT6tIS0Ta38t15rc0h4CCy2SfgU0DuG/ekjPbZ8PTQroFJ
+ EhDTNWt2NnL5stKm/iBvf36Au59uxoVqPj9aMMocQ0NrA71GQxzmj7ZD4ienSm/8xIE1
+ PHxJd4IIS37SQyGMmc2tQ6SuNVQ8taTYd7aIvovEhH083sj99YxyPJ8e8YSz9X6+og40
+ EjY6flGGO2rtC26OFVGGnetNJI2wiYXRyAP2tMvgVy1mgt6Kn3lLfNsIgNusL9XoRVko Kw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pbs2ag33w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 16 Mar 2023 02:46:59 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32G20J3c020428;
+        Thu, 16 Mar 2023 02:46:58 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pbq45nh56-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 16 Mar 2023 02:46:58 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Nk51vLAgnItn/6qfJOnwy4Nxpi9jKQPax1TJ+24w2aiTRDRUDzbBaDNF9ywbtb3jH9CjFRnlEfdmy6jxPxZob1L0H/CWXx4WqXLRcg57IzbE8XwGMtEwLKGAayYPQ6MAyGahkoUH0/1gkyq6w9dq2diE8KAPkUD5D7l3TfCS7qtdhRyEZmUofXIkA3n50eNyPtINve49myj9GIE2jumU1BwoHucJojjHk9cDx6RxRtOjqLiSpqBqMRNMhXUBPKLK1sa/6MxgE9K31gtw5CApGhxcQ2U+ZCcl3hjdPZEJFaEzP/EgqjYcAfTqu3iLTkvouUAgaJZHDGXXQGuqjkKtmg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7mq9Lf0kUtzwHrHw5kPEZ4SSwLr/Sc2X9+Y79ehMvjA=;
+ b=lDbyA8gQ/XmL0Msr8LVIMrZt3RAy1VRWtqrwIRh2WyJYsTXfwXgMn+IcrE3IofCAg9jeMGKrHskF2xeMMbLQ5g3piwVYTwstWmCOc5pxy9rFntb8/vpGWjEony/mP+1KSLOakUPgICUmUJAWLJ5r/OcBSmgb5vkYb4xPbXXtGs55YMT6z8TJX+0XuOcWrKBiED1j9b6PSOokEIi6nP/s5cUn/iWxNjK+dvBxzwRgjF57vQeuldEsq/eERstxQr0uzH3Cviwm0oU/e5vIVN70CSggi7Qyr0qATQGp8O9/xhZnOay3v7v9h4qG63CeM/dRVKJ/R0Zo/Y46ocw94Rxsug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7mq9Lf0kUtzwHrHw5kPEZ4SSwLr/Sc2X9+Y79ehMvjA=;
+ b=GQMpwN5E47Xx6GcPFRiR/6avyAUqlRUYIcY5QbunBVSdB+rgphEMBzNy+BfHHeHGbtRf+uJKPMqZc4AQYVcLjgbts9uFtaUPHrpxzTg9MSeI6tagGJ4iLZNS4iuBX2Xc/QijUxI4/aqkrNweaa8iJJVDtgvAkUQaXXHyM0yqIQw=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by DS7PR10MB7178.namprd10.prod.outlook.com (2603:10b6:8:e1::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.24; Thu, 16 Mar
+ 2023 02:46:56 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::8ef9:5939:13aa:d6a2]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::8ef9:5939:13aa:d6a2%8]) with mapi id 15.20.6178.031; Thu, 16 Mar 2023
+ 02:46:56 +0000
+To:     darkpenguin <darkpenguin@posteo.de>
+Cc:     linux-scsi@vger.kernel.org
+Subject: Re: Force ignore LBPME bit by using quirks?
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq17cvh4eko.fsf@ca-mkp.ca.oracle.com>
+References: <2162608f-7515-bfa7-9a5f-047495713eed@posteo.de>
+        <d12671d8-c6e8-32c6-000d-8c28e9a0b71e@posteo.de>
+Date:   Wed, 15 Mar 2023 22:46:54 -0400
+In-Reply-To: <d12671d8-c6e8-32c6-000d-8c28e9a0b71e@posteo.de>
+        (darkpenguin@posteo.de's message of "Mon, 13 Mar 2023 08:57:19 +0000")
+Content-Type: text/plain
+X-ClientProxiedBy: SA0PR11CA0104.namprd11.prod.outlook.com
+ (2603:10b6:806:d1::19) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.8.0
-Subject: Re: [PATCH v4 02/19] block: introduce ioprio hints
-Content-Language: en-US
-To:     Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230309215516.3800571-1-niklas.cassel@wdc.com>
- <20230309215516.3800571-3-niklas.cassel@wdc.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20230309215516.3800571-3-niklas.cassel@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DS7PR10MB7178:EE_
+X-MS-Office365-Filtering-Correlation-Id: c2496c7e-dcc2-4898-1c65-08db25c8b4f5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: IjhhtbereqMOkaq3CXUwZjL6LTTZ5j9U91mAsqEu/QbInKC2+skWzom/BwzleCIcpSO/jHtDE0Ih0P+notEILViYwsU/lUmBbhUWu+JhEZiH45LNwjCATgKnWYFcPkY93+Qui78KM6bb8XXjYJ/XPE75wDpL18O4bUJmr8GXVCClCtqIH8u/3CVvxUWj1Tr3ppfyzip3TFNet+aXvycz3zw8a7DJQjmRiDCTV3g9DzmeGuNJxP7luAEl/I/xy4SgYOqX7Mk447vSTgEncKcdFaxGKtR7Nw1DOoKghsi0ipVbqqp/RipPUvEry2NZ6UJeYLwF+r3bCB5pgCT5dUbKhCqyDiUDxyn1HEn/HkRr91y9FQBItjDoXc7N0XdFRd7glKSSGP7KyfU9UeQRUMgs64dQde4khOAOsDEFKizdL1cSt7KuySQTsan3oPUI2HP6e0uDATIiMB2efHilExy0zJ2uZikAWyIRpSW4WPXQtmiM41bupz+iA7vIDwFv7I5NEOZouH7qiCd0jSGKW9XQNMQXA7SVbvqEZPdmrx3HIxI9DUuWMImqTyBODnBz0PeG6GfL/03XkkwoUxKbWhWdD3fGCbAkFewjtYE5eVJOdfDEiJ8Z3K/TvJ5Qt5zEl7GltU/r12HVnERGstkrLWE2Yg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(136003)(346002)(366004)(376002)(39860400002)(396003)(451199018)(41300700001)(2906002)(86362001)(83380400001)(5660300002)(66946007)(6916009)(66556008)(316002)(38100700002)(4326008)(36916002)(478600001)(66476007)(26005)(8936002)(186003)(6486002)(6512007)(8676002)(6506007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?vq2RnPiT+McFff9Bnk1fXMMMAF3I0aH0nj913oaGbkTTDSFCBCFT25+4ztd3?=
+ =?us-ascii?Q?bDCRuPPlr8waGCTn6WgxuvYJKnOqIlgPv8HfPMc3su8cZQ52Y3i/T0OsFL07?=
+ =?us-ascii?Q?OuZiUkB/FskbT0xeVgAxPVSw5M1XL9A3d+8mVfwDXpOeZP32CNu55AfkNMc3?=
+ =?us-ascii?Q?mg4B+I/XGs5yAKabeIhp7MuPj5jq6n8F4fvc4OcOd1Gm1qHQ4+9o257Y2+7P?=
+ =?us-ascii?Q?0+wPLV6hPrForAPyh4vj/EjXkC365E7KDmU5COKclrrPVbxV+M1xegSOxlYt?=
+ =?us-ascii?Q?BoGJ1czy//uXufXtjum9Kx3iTqr9/ZVgACHZG/cLe4XWCWtj7gNhNIWGvJoX?=
+ =?us-ascii?Q?PyXoRTgLi7TtOVFNcmAtIPJjLYrWQbJ7endLyizSyhe8qtyRdvMM//ipuPl/?=
+ =?us-ascii?Q?+pDfcVj4mae3AKxw1i0r5LO4tDiIjekATr0IbRSNlvF6ABC7F3XEYASXrkH9?=
+ =?us-ascii?Q?9BT2D3KgBlhgen24goV7qcvZq+PZ4IEVWjMNg7t+ZPaN8TkeNkQUfScGyOa1?=
+ =?us-ascii?Q?inSEioH/o9VSCzqhD+dKRGR5Voal2eR5q4TYii22Z9IhmM7qRpOMr1mv17Wv?=
+ =?us-ascii?Q?fGhUumWmA86+4Up2fPvGcfjZwFpL9P8HI9i+ZuHO2ACPwUEHH8FyDTN3AceX?=
+ =?us-ascii?Q?wvuy0ralpJoRHGy+vOLvuLUmbKd8la0V344g+sdgWh4P2Psq0iQECrqIX3IE?=
+ =?us-ascii?Q?Ge/7uLoyIor7knriS4T66vwontf+UvEe1st20IqiMWuKO+R2ZpwkshhCfBEC?=
+ =?us-ascii?Q?VU1ZGwJpu82JK0kWEEPJAXFyPme357iqCs6L+/CRpG//c/2BxcHV0Z4zW0ZP?=
+ =?us-ascii?Q?g4syqkF4M6fxg4uMmgeoJkuzNldHxTQbFtlAJt5t7Q4GOzwuGJO9ypu7rXGM?=
+ =?us-ascii?Q?IgCZ3kTp1OMNAhMgyO2CWZjpEHIvBKUKGqPe/LwwhrMlPOleeXx4WjH/Yiwd?=
+ =?us-ascii?Q?ftTgOzbaRVoRl/h2966+EOstJUm17ScFMb6nQU+29O994wc0VgBJrCHHR3Sf?=
+ =?us-ascii?Q?07Szg4pwRUzBBaG2PUTLSlwYuYFo8A8FNAvwGp+U/Ei/rLHF80tk30/N9hhu?=
+ =?us-ascii?Q?afVoN9ltDf2zxCDPY3FC8F7mNTQU4Cf+bYVDgHJOtAH49ml/INOBicmbQy9P?=
+ =?us-ascii?Q?OTXqKLx6eE+FB1iTKvCXObA2alAtzP3xb0KY+RGV+Zeaa3uHQNpP/Lt6JKqw?=
+ =?us-ascii?Q?6KdpVtdkJpXjHA2lMkeqibVUk3vMV3sMGYfJLP/yqQkI6mH5Vcf11uUWlU3Y?=
+ =?us-ascii?Q?xLp2piXCEsOKTCjzc7o0fUe1FIIBWFP2NT/dIE0C7kRz7fQIoOt2RuCo7QQ2?=
+ =?us-ascii?Q?F2iTtpqbWzvH+4rRfTKbKcnXJzRPvWOgpJwmvvrHkQjivDi1cr6B6nlNLTs0?=
+ =?us-ascii?Q?vcFnWUCcvMRfXUNIgEsq/w3IsWif+EoUv8Cq/2uWbOfxntv5IQI1LDrOnjNT?=
+ =?us-ascii?Q?yogFgqpyu/z4RPa9pZdXmuwDhR1OysKKyHMAtWe9r/suV0BVUdA9UeB1W1QS?=
+ =?us-ascii?Q?C6mJ+jblLOyeB1JSdCWJhmUzyODBuuYAk/ww9Gw8u5EUe6zEweUWmCDrkbOn?=
+ =?us-ascii?Q?ayw+YwnTNFPJQSssjjTGMRDWwf7SlWkzWIhV4R7OsPhAutAVfLcjBQc5ikPO?=
+ =?us-ascii?Q?Xw=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: dc0nM/XQ0DYJeJz93j3Du7vqD3XwbwMyJASnywX5v5ITZApUV1kvad9ZQMY88c6zbbEPTXxuhYNXPwyuiQbOUbByK/Mbxi28KXlBwmZSCuuraJmaDvbFgjI37W3x3vlXVrY+yv/ih4YRfrN7vYZU4pEjLhkr2bPwoYs7wWpLeKzSNA5Q8RbettfuZ8Up024jj9n0BlIq5rR+0miD8kwQkSlR1ayG9/JMK9xtGzt0nopPFvgRgivSNlDWTbmEG0U/gAM5sLjyTJCL2dqikNpAfBZSoIp1VYqQybU2yuwCFuvW1/Fk+O3YrUDY0RxSEekXX8N27ItIud+3pNhbSBWEDusy5UTYEOARcnr0bi0V6oTygsJJ80i7PvGPdfX6XnLZ34DcqqL8gEdRd7WXc33EJKJ91fI1DBE3g1X9tAIZE4aDnVRkr+pHm+3dREMPauG6NkXm1r7TU7a1wvsnElrCCY8xioBQzcQCATx7EslRkf75ra+YPYRl+wxt3o1cjrXcUsUf0HxR9V0FzYn6NeAdIXC7rhTl4l9GOjWpBRnh8jbYQf+1j7eYxuntT3ID78UVUgRt6MTzvAZ9Wa2EELbmCAkrf710WdfZZONi+M7ZpO5YqjoE+Z0a2jglKfRH2tCjK4AVJGAfGFw5DxbM5XGzxilaVqZZIvoE3FaRdCEOGxQR1TjwkanEerqwGGB2Mo+FkNFeUdDBrKkuLpMB8Xeivs0W90wHcyECLP/mmS8eFcENL+OE9oLNrstj0zv1wATrEE6kuNr9Z4TKmThEEXgu7dHkAHftJS3p6SDPbpgALK0=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c2496c7e-dcc2-4898-1c65-08db25c8b4f5
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2023 02:46:56.5049
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: StD2UQlfzmWsQacAfrK106s7zp5R90nYiKh0NGPIg6AOXmYdp1qAbMZdSTye1MnvJ22ySg03y5/Dh/nCLVepOdzWalEy4lcK+QiOj2TtWE8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB7178
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-16_02,2023-03-15_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
+ suspectscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
+ definitions=main-2303160023
+X-Proofpoint-GUID: d5qdnf3o4MouoD6wrNB66zmc_Ikct1Hk
+X-Proofpoint-ORIG-GUID: d5qdnf3o4MouoD6wrNB66zmc_Ikct1Hk
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/03/10 6:54, Niklas Cassel wrote:
-> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> 
-> IO priorities currently only use 6-bits of the 16-bits ioprio value: the
-> 3-upper bits are used to define up to 8 priority classes (4 of which are
-> valid) and the 3 lower bits of the value are used to define a priority
-> level for the real-time and best-effort class.
-> 
-> The remaining 10-bits between the IO priority class and level are
-> unused, and in fact, cannot be used by the user as doing so would
-> either result in the value being completely ignored, or in an error
-> returned by ioprio_check_cap().
-> 
-> Use these 10-bits of an ioprio value to allow a user to specify IO
-> hints. An IO hint is defined as a 10-bits value, allowing up to 1023
-> different hints to be specified, with the value 0 being reserved as the
-> "no hint" case. An IO hint can apply to any IO that specifies a valid
-> priority class other than NONE, regardless of the IO priority level
-> specified.
-> 
-> To do so, the macros IOPRIO_PRIO_HINT() and IOPRIO_PRIO_VALUE_HINT() are
-> introduced in include/uapi/linux/ioprio.h to respectively allow a user
-> to get and set a hint in an ioprio value.
-> 
-> To support the ATA and SCSI command duration limits feature, 7 hints
-> are defined: IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
-> IOPRIO_HINT_DEV_DURATION_LIMIT_7, allowing a user to specify which
-> command duration limit descriptor should be applied to the commands
-> serving an IO. Specifying these hints has for now no effect whatsoever
-> if the target block devices do not support the command duration limits
-> feature. However, in the future, block IO schedulers can be modified to
-> optimize IO issuing order based on these hints, even for devices that
-> do not support the command duration limits feature.
-> 
-> Given that the 7 duration limits hints defined have no effect on any
-> block layer component, the actual definition of the duration limits
-> implied by these hints remains at the device level.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 
-Jens, Martin,
+> my problem actually goes even deeper. I see that you can override the
+> wrongly-set LBPME bit by switching provisioning_mode manually. In my
+> case though, the LBPU bit is also 0. Argh...
 
-Any thoughts on this new interface ?
+Argh indeed.
 
-Bart,
+We'd need these reported:
 
-I would like to hear your opinion as well.
+> Block limits VPD page (SBC):
+>   Maximum unmap LBA count: 0 [Unmap command not implemented]
+>   Maximum unmap block descriptor count: 0 [Unmap command not implemented]
+>   Optimal unmap granularity: 0 blocks [not reported]
+>   Maximum write same length: 0 blocks [not reported]
 
+and these:
 
-> ---
->  include/uapi/linux/ioprio.h | 49 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 49 insertions(+)
-> 
-> diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
-> index 4444b4e4fdad..607c7617b9d2 100644
-> --- a/include/uapi/linux/ioprio.h
-> +++ b/include/uapi/linux/ioprio.h
-> @@ -58,4 +58,53 @@ enum {
->  #define IOPRIO_NORM	4
->  #define IOPRIO_BE_NORM	IOPRIO_NORM
->  
-> +/*
-> + * The 10-bits between the priority class and the priority level are used to
-> + * optionally define IO hints for any combination of IO priority class and
-> + * level. Depending on the kernel configuration, IO scheduler being used and
-> + * the target IO device being used, hints can influence how IOs are processed
-> + * without affecting the IO scheduling ordering defined by the IO priority
-> + * class and level.
-> + */
-> +#define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
-> +#define IOPRIO_HINT_NR_BITS		10
-> +#define IOPRIO_NR_HINTS			(1 << IOPRIO_HINT_NR_BITS)
-> +#define IOPRIO_HINT_MASK		(IOPRIO_NR_HINTS - 1)
-> +#define IOPRIO_PRIO_HINT(ioprio)	\
-> +	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
-> +
-> +/*
-> + * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
-> + * a class, level and hint.
-> + */
-> +#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
-> +	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
-> +	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
-> +	 ((level) & IOPRIO_LEVEL_MASK))
-> +
-> +/*
-> + * IO hints.
-> + */
-> +enum {
-> +	/* No hint */
-> +	IOPRIO_HINT_NONE = 0,
-> +
-> +	/*
-> +	 * Device command duration limits: indicate to the device a desired
-> +	 * duration limit for the commands that will be used to process an IO.
-> +	 * These will currently only be effective for SCSI and ATA devices that
-> +	 * support the command duration limits feature. If this feature is
-> +	 * enabled, then the commands issued to the device to process an IO with
-> +	 * one of these hints set will have the duration limit index (dld field)
-> +	 * set to the value of the hint.
-> +	 */
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_1 = 1,
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_2 = 2,
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_3 = 3,
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_4 = 4,
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_5 = 5,
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_6 = 6,
-> +	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
-> +};
-> +
->  #endif /* _UAPI_LINUX_IOPRIO_H */
+> Logical block provisioning VPD page (SBC):
+>   Unmap command supported (LBPU): 0
+>   Write same (16) with unmap bit supported (LBPWS): 0
+>   Write same (10) with unmap bit supported (LBPWS10): 0
+>   Provisioning type: 0 (not known or fully provisioned)
+
+but they are all 0.
+
+Last resort would be to see if ATA DSM TRIM passthrough works. However,
+your device does not have the ATA Information VPD page either:
+
+> $ sudo sg_vpd -a /dev/sdc
+>
+> Supported VPD pages VPD page:
+>   Supported VPD pages [sv]
+>   Unit serial number [sn]
+>   Device identification [di]
+>   Block limits (SBC) [bl]
+>   Logical block provisioning (SBC) [lbpv]
+>   0xde
+>   0xdf
+
+So I'm afraid that we literally have nothing to work with.
+
+Is this USB storage or UASP?
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Martin K. Petersen	Oracle Linux Engineering
