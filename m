@@ -2,93 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E9BC7618A
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 16:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D79CC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 17:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229820AbjCQQ71 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Mar 2023 12:59:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
+        id S230288AbjCQRjL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Mar 2023 13:39:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229988AbjCQQ7Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 12:59:24 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4418A20D25;
-        Fri, 17 Mar 2023 09:59:22 -0700 (PDT)
+        with ESMTP id S230472AbjCQRjG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 13:39:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F7E5BE;
+        Fri, 17 Mar 2023 10:38:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 0FBE7CE20FF;
-        Fri, 17 Mar 2023 16:59:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B00E0C433EF;
-        Fri, 17 Mar 2023 16:59:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1EA6160AAD;
+        Fri, 17 Mar 2023 17:38:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 88A1AC4339B;
+        Fri, 17 Mar 2023 17:38:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679072358;
-        bh=Yr+loVbWv0qK18b3WpWr9ZR4G6QuOAV94eNluGFAb18=;
-        h=Date:From:To:Cc:Subject:From;
-        b=XniyUM26LziXHrexP/d/DUVLjnjl4qsrffDi+ERWh6SmXsGgmg7VJxMQtVgwshxny
-         dFvp0OpJhh/vfqa/cGeur5SEtghfBr9J8PS6x8rdr83Z7Jg2vnxLMEeyE9TQQsK9k7
-         7EyZpAMUKl0mpKAA3yBGWpDbAHZ/lKDCvl9dgxS3rljmW+AJt7BkR1YjB4s6tSDzHl
-         sk9WX3evD6kjhJWmuXcjEuXv0dg0BRT/rZhwCXMgMMRhznb5ZkmA2GgzdfCJPufpnS
-         /+KkNz7UZCe78TZKjBmBuqymn9RqBm3tnfT5q/gONOSHXhhcKMvGHhTCTTBOeDycaQ
-         bAouUTD5ks0FQ==
-Date:   Fri, 17 Mar 2023 10:59:48 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Bodo Stroesser <bostroesser@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] uapi: target: Replace fake flex-array with
- flexible-array member
-Message-ID: <ZBSchMvTdl7VObKI@work>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+        s=k20201202; t=1679074732;
+        bh=2V4F1CyRZqIf+kESmVtK1KFtQOH0/dMcHiPUA1zTwYQ=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=kLs4uXxSc0fW+4x2Ue36WT8aAYlKzi9df4SQaGM13CdpTDib0j+rSL4nImS1QSXNo
+         r8vHFjiR+KxGTf7K9XgJupRxP0QrBbBJ1TPWI0psPqhJtlINDRtd9Q9MnkaTBCMN+j
+         q9eCNwJ1kYvI3ZOjn8XdmrJhzQlR4A6iUOvbNrwFw9XdyyV/iTHcCcA7uEoJCYzd8H
+         djPhSHv6Yy897WuBxF1vVM1xUJlSXdaRb1rWSxebCDSfkbCZ42LHOgIh39VusGFstp
+         cJXH3P9kjSsAJ8snefWqxmvCWeiOd7fpLNcFVXe4STt/ckqimHAM5RAYl969GZKsEa
+         w1gjKkgY5CTTA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 76817C43161;
+        Fri, 17 Mar 2023 17:38:52 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.3-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <38f463c2d76c3edceaebbfd777e086798eec525d.camel@HansenPartnership.com>
+References: <38f463c2d76c3edceaebbfd777e086798eec525d.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <38f463c2d76c3edceaebbfd777e086798eec525d.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: c6001025d53ab56d7159cf313313c6b5bd250380
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 7622976c8f4f233fac251263e08adee27969abcd
+Message-Id: <167907473248.9394.6705023645713932924.pr-tracker-bot@kernel.org>
+Date:   Fri, 17 Mar 2023 17:38:52 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Zero-length arrays as fake flexible arrays are deprecated and we are
-moving towards adopting C99 flexible-array members instead.
+The pull request you sent on Thu, 16 Mar 2023 22:58:46 -0400:
 
-Address the following warning found with GCC-13 and
--fstrict-flex-arrays=3 enabled:
-  CC      drivers/target/target_core_user.o
-drivers/target/target_core_user.c: In function ‘queue_cmd_ring’:
-drivers/target/target_core_user.c:1096:15: warning: array subscript 0 is outside array bounds of ‘struct iovec[0]’ [-Warray-bounds=]
- 1096 |         iov = &entry->req.iov[0];
-      |               ^~~~~~~~~~~~~~~~~~
-In file included from drivers/target/target_core_user.c:31:
-./include/uapi/linux/target_core_user.h:122:38: note: while referencing ‘iov’
-  122 |                         struct iovec iov[0];
-      |                                      ^~~
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-routines on memcpy() and help us make progress towards globally
-enabling -fstrict-flex-arrays=3 [1].
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/7622976c8f4f233fac251263e08adee27969abcd
 
-Link: https://github.com/KSPP/linux/issues/21
-Link: https://github.com/KSPP/linux/issues/270
-Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- include/uapi/linux/target_core_user.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you!
 
-diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
-index fbd8ca67e107..f925a77f19ed 100644
---- a/include/uapi/linux/target_core_user.h
-+++ b/include/uapi/linux/target_core_user.h
-@@ -119,7 +119,7 @@ struct tcmu_cmd_entry {
- 			__u64 cdb_off;
- 			__u64 __pad1;
- 			__u64 __pad2;
--			struct iovec iov[0];
-+			__DECLARE_FLEX_ARRAY(struct iovec, iov);
- 		} req;
- 		struct {
- 			__u8 scsi_status;
 -- 
-2.34.1
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
