@@ -2,78 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6C8C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 16:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E9BC7618A
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 16:59:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbjCQQ4g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Mar 2023 12:56:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60698 "EHLO
+        id S229820AbjCQQ71 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Mar 2023 12:59:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjCQQ4e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 12:56:34 -0400
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7636269069;
-        Fri, 17 Mar 2023 09:56:33 -0700 (PDT)
-Received: by mail-pj1-f45.google.com with SMTP id 6-20020a17090a190600b00237c5b6ecd7so9785997pjg.4;
-        Fri, 17 Mar 2023 09:56:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679072193;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/EDMCWi2+pIYPO7/XjcMvWvrVqhfRSJwEgLRyN06IhM=;
-        b=eNZ8URL7CJMXzDPLLKm28Rz2w5vZQej7Uh290IeqenDX9GBj0dIPI9eCAZypzGzlk4
-         LeNxp6BcvZ+6X0wQe0QM38sEPo/qxgn70vyysK62Z8rvjTfe1cjksizNUNqd6KsnTaxS
-         qk/7mso6xVsikzOQkzUTMVVLJXwDloRx2vfubBLoebfLEzRT8qPTF4XKyg9CMlVs61K3
-         OOXNS6ikh5oK3Wd/p09fVETX3Zn1ZRC69X7Wp+iqvKzkWt/AU2TI+KUg8JmuU+O3Dxow
-         +Lk5i7wxeevL9QugbM4n6wB7aJ07zdlji5vldiXnOBriXz/dUl02BLACymkuXXAfnpw6
-         62fA==
-X-Gm-Message-State: AO0yUKXW2olrazvML7pW6BijlBBUQIXsVG5LbITTTT8Bzf5Of5r98sTX
-        +n1IwKJclHBs7JAC+7YWihk=
-X-Google-Smtp-Source: AK7set9+vucF+M5QAaPH0ImOhBRU8mJ5PzWB43bOiUM7l98DemgZa5Ck1nVTRJiWD4OsyqVp6HnShg==
-X-Received: by 2002:a05:6a20:b915:b0:d7:380b:660 with SMTP id fe21-20020a056a20b91500b000d7380b0660mr4467704pzb.3.1679072192555;
-        Fri, 17 Mar 2023 09:56:32 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:ad26:bef0:6406:d659? ([2620:15c:211:201:ad26:bef0:6406:d659])
-        by smtp.gmail.com with ESMTPSA id e25-20020a62aa19000000b005a817ff3903sm1819707pff.3.2023.03.17.09.56.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Mar 2023 09:56:31 -0700 (PDT)
-Message-ID: <86bbac36-f727-7330-bfcc-a4cd5a544d6c@acm.org>
-Date:   Fri, 17 Mar 2023 09:56:29 -0700
+        with ESMTP id S229988AbjCQQ7Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 12:59:24 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4418A20D25;
+        Fri, 17 Mar 2023 09:59:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 0FBE7CE20FF;
+        Fri, 17 Mar 2023 16:59:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B00E0C433EF;
+        Fri, 17 Mar 2023 16:59:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679072358;
+        bh=Yr+loVbWv0qK18b3WpWr9ZR4G6QuOAV94eNluGFAb18=;
+        h=Date:From:To:Cc:Subject:From;
+        b=XniyUM26LziXHrexP/d/DUVLjnjl4qsrffDi+ERWh6SmXsGgmg7VJxMQtVgwshxny
+         dFvp0OpJhh/vfqa/cGeur5SEtghfBr9J8PS6x8rdr83Z7Jg2vnxLMEeyE9TQQsK9k7
+         7EyZpAMUKl0mpKAA3yBGWpDbAHZ/lKDCvl9dgxS3rljmW+AJt7BkR1YjB4s6tSDzHl
+         sk9WX3evD6kjhJWmuXcjEuXv0dg0BRT/rZhwCXMgMMRhznb5ZkmA2GgzdfCJPufpnS
+         /+KkNz7UZCe78TZKjBmBuqymn9RqBm3tnfT5q/gONOSHXhhcKMvGHhTCTTBOeDycaQ
+         bAouUTD5ks0FQ==
+Date:   Fri, 17 Mar 2023 10:59:48 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Bodo Stroesser <bostroesser@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH][next] uapi: target: Replace fake flex-array with
+ flexible-array member
+Message-ID: <ZBSchMvTdl7VObKI@work>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v4 02/19] block: introduce ioprio hints
-Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230309215516.3800571-1-niklas.cassel@wdc.com>
- <20230309215516.3800571-3-niklas.cassel@wdc.com>
- <c91be70e-14a9-7ad6-ba7c-975a640a34d3@opensource.wdc.com>
- <70b757f9-cc0c-ebd9-a597-f6ea14acbedb@acm.org> <ZBQxoRQ4/7au/1ou@x1-carbon>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZBQxoRQ4/7au/1ou@x1-carbon>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/17/23 02:23, Niklas Cassel wrote:
-> When you have the time, we would be very grateful if you could provide
-> a more thorough review, i.e. provide a R-b tag or give some feedback.
-> 
-> Your help is appreciated!
+Zero-length arrays as fake flexible arrays are deprecated and we are
+moving towards adopting C99 flexible-array members instead.
 
-Although I'm overloaded, I will try to find some time to review this 
-patch series.
+Address the following warning found with GCC-13 and
+-fstrict-flex-arrays=3 enabled:
+  CC      drivers/target/target_core_user.o
+drivers/target/target_core_user.c: In function ‘queue_cmd_ring’:
+drivers/target/target_core_user.c:1096:15: warning: array subscript 0 is outside array bounds of ‘struct iovec[0]’ [-Warray-bounds=]
+ 1096 |         iov = &entry->req.iov[0];
+      |               ^~~~~~~~~~~~~~~~~~
+In file included from drivers/target/target_core_user.c:31:
+./include/uapi/linux/target_core_user.h:122:38: note: while referencing ‘iov’
+  122 |                         struct iovec iov[0];
+      |                                      ^~~
 
-Thanks,
+This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+routines on memcpy() and help us make progress towards globally
+enabling -fstrict-flex-arrays=3 [1].
 
-Bart.
+Link: https://github.com/KSPP/linux/issues/21
+Link: https://github.com/KSPP/linux/issues/270
+Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ include/uapi/linux/target_core_user.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
+index fbd8ca67e107..f925a77f19ed 100644
+--- a/include/uapi/linux/target_core_user.h
++++ b/include/uapi/linux/target_core_user.h
+@@ -119,7 +119,7 @@ struct tcmu_cmd_entry {
+ 			__u64 cdb_off;
+ 			__u64 __pad1;
+ 			__u64 __pad2;
+-			struct iovec iov[0];
++			__DECLARE_FLEX_ARRAY(struct iovec, iov);
+ 		} req;
+ 		struct {
+ 			__u8 scsi_status;
+-- 
+2.34.1
 
