@@ -2,188 +2,179 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 143F7C7618E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 15:18:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1115C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 16:53:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231231AbjCQPSQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Mar 2023 11:18:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47468 "EHLO
+        id S230161AbjCQQxE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Mar 2023 12:53:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230509AbjCQPSN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 11:18:13 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11909298EC;
-        Fri, 17 Mar 2023 08:18:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1679066289; x=1710602289;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=gk71JEOi4FAYdh6fRRydoATdOQaiPRSPkGDJN9O3Ga8=;
-  b=vbi/dRMEBNTFpP3qsdh24rxadi+A923tT+kfgDMPOSUpKN6bC6bVwp0w
-   YyfQQ9I1hGBknLLhE0WyTYc+aHifnMSvj78N6qoZWEi2UQdZMLw++xScJ
-   0/nUOzEnM/TsEv/mKYZNQ9irELC5WI+qkFs9sVto2vUDuT8Wob9hc3J0W
-   BHi8tgsENc4p88ZKbBM+2itZis6t3QeViUtSUdM4yLmdGV2dgn5qWH6e2
-   h1HEsL55rts4y/FTnMDwSJmYC4tjDQmUZLi0BZauCgR7FOGUiDzko+GWV
-   Inr66uzp1et46r6jhZBu3r0Zzxys4JKU17o2rIP7KGPZVQnj5JHyMM86J
-   g==;
-X-IronPort-AV: E=Sophos;i="5.98,268,1673938800"; 
-   d="scan'208";a="205233007"
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Mar 2023 08:18:09 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 17 Mar 2023 08:18:08 -0700
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21 via Frontend Transport; Fri, 17 Mar 2023 08:18:08 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=K8Rr/fZ8M7W49b0yZ8KoKQQbpUoGBrkJR4w1CB9z1JM1mES5Zw2xI0SzZpLh2hg6ovdQuZuOG4uNZngvdUSmJaRqdkj7Ehvwzvr0Tbc48sFrsdQin434jZC3QJP738WHw1X0cLdgHtWUmxY8PGutukG87uWd3rCKm6mQfUuOVJvFfszVeX404UiBMCduFAqmiTp3VpcFMr/fcA7kmn4wbkKVcb+pcSEzAtKWBLgUhzdwCxgFn2kRKi50X4DeDFWg6bYygglQWp2I3+EhbHEMC9oa3AOvL1CycTuumbMON4ZlZ1vfvdNwoHU9JlyJLQPBf9EYlE2QflEw4Wl5ZX3cvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=h57uJsEgfHRJPOgBehBBE5nbC2XJ6g6eHkbBHKmV46U=;
- b=iZrQ+M6oogkyppoU0P3/egu2xYp5yN0HYlvLBuIFvnfmZna9xHi+vLp4cHPSDM/VEdUpfDBNnsGhj6lFc/HQVVD79fjKSFFGEqdBqYKHqqVvvUA6sorTJ3XdupaSTFVe6EWbRzhDjs07oQZRswWGXGeUJsuq4ZsQF4CjxW3FTljOX9nZ+4wDA1+G9XA4yD35SDnFHw6FaRz9WJmBcy8viYJfa9OCoBwosyrAlenbotZNiYz3ks/Q7liOyowDLStvoe8MWPz3mx23XBqXrnBxdm2F/OTOwrv72W1FNwd7V4MTvhBLXN0XzjsPlDuTROIqng7CagqHbKVKe+8nVO0fsw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=h57uJsEgfHRJPOgBehBBE5nbC2XJ6g6eHkbBHKmV46U=;
- b=odR8uPIoIOKUL2b7eq9RxQCNi1uPNoiSQ9oM6K0x2rC/7gKQjocYhYoBdoIqgBvF+xisMjbnwCe5nG55RdhG8RQrnBxsPDplrAe3iMf5jjeMD48E0Wbniz6730Bfg4KhXBMfbdIaepRFK7RoXFH7SA9eCJnlLNyZ9/1BlEem5Kg=
-Received: from CY4PR11MB1238.namprd11.prod.outlook.com (2603:10b6:903:2f::17)
- by DS7PR11MB6175.namprd11.prod.outlook.com (2603:10b6:8:99::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.24; Fri, 17 Mar
- 2023 15:18:05 +0000
-Received: from CY4PR11MB1238.namprd11.prod.outlook.com
- ([fe80::d753:5f87:f63b:3a56]) by CY4PR11MB1238.namprd11.prod.outlook.com
- ([fe80::d753:5f87:f63b:3a56%11]) with mapi id 15.20.6178.033; Fri, 17 Mar
- 2023 15:18:05 +0000
-From:   <Don.Brace@microchip.com>
-To:     <jiapeng.chong@linux.alibaba.com>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <storagedev@microchip.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <abaci@linux.alibaba.com>
-Subject: RE: [PATCH] scsi: hpsa: Remove the unused variable transMethod
-Thread-Topic: [PATCH] scsi: hpsa: Remove the unused variable transMethod
-Thread-Index: AQHZWJRo6BZ36MhljE2Z9r7NjO3PNq7/D2Sw
-Date:   Fri, 17 Mar 2023 15:18:05 +0000
-Message-ID: <CY4PR11MB12384AA421B9CE94FBC8A5F0E1BD9@CY4PR11MB1238.namprd11.prod.outlook.com>
-References: <20230317054940.86685-1-jiapeng.chong@linux.alibaba.com>
-In-Reply-To: <20230317054940.86685-1-jiapeng.chong@linux.alibaba.com>
-Accept-Language: en-US
+        with ESMTP id S229924AbjCQQw4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 12:52:56 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67799B06CF;
+        Fri, 17 Mar 2023 09:52:51 -0700 (PDT)
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32HEwqQ8020323;
+        Fri, 17 Mar 2023 16:52:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=h8CQp6+iDtm9xUAsI4h9p4NSx/w9aaH83EG+p9E7o4E=;
+ b=ERElVEZTgBBo3qZCD79YO/gjby2BjRYUp9sJVszQFiATdN3gRa2MK/3J4J+2/2SU1QDu
+ Hf7p1j+4BCEwYxRxbCT/qbRnIcHgJ8x/1xjlNHW9fFOYSmjBYbHh/EdFcqMB0C2UepN/
+ X/nyxp+YqkkdApjEvNwzfUZ5xR/1LdeIHxDoJltGncMWeznqiKVoO0+ZQeICOGNNlQQU
+ GFQbk3apDc77QFWZTVW/Rnfi67ceFCnKwOAgTdc+m1MLgf2e7amKwjHfX2hLfhs5P5nN
+ Xh6cTV9SMnEeySla9SbiK4prexkUyxB+nITo8SpEZSWQhnlQDf3dMussKvEmqvDLPp1s Lg== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pctetk4r3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Mar 2023 16:52:46 +0000
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32H6Ytg0029187;
+        Fri, 17 Mar 2023 16:52:43 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+        by ppma06ams.nl.ibm.com (PPS) with ESMTPS id 3pbskt2e80-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Mar 2023 16:52:43 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32HGqfHv55968178
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Mar 2023 16:52:41 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0237C2004B;
+        Fri, 17 Mar 2023 16:52:41 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6D3F820040;
+        Fri, 17 Mar 2023 16:52:40 +0000 (GMT)
+Received: from [9.171.87.24] (unknown [9.171.87.24])
+        by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Fri, 17 Mar 2023 16:52:40 +0000 (GMT)
+Message-ID: <8f17a884-09d2-b6a1-7ced-77dd4b4f21a5@linux.ibm.com>
+Date:   Fri, 17 Mar 2023 17:52:40 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH for-next] scsi: Implement host state statistics
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microchip.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: CY4PR11MB1238:EE_|DS7PR11MB6175:EE_
-x-ms-office365-filtering-correlation-id: a738aeae-dacb-40da-9fb1-08db26faceb2
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: lG66zWngCKRARJ2xRwe1aDzn45G7ObdTqWqucp/yiYcPpWOBXuVXtuzDgmeBl7070ob3NYIUvB6YAYwe1l/WDkQSRSt3veUAJ1cbUjV8+GjGKjjYsB8298Oy0az+g1zgIPIQ3HXhRnuGThSeg6W1pDFAbqPKrCHvAE3TcNrlPyvp0m3nQ0LJ+DIw58ezHa/Pa7gOAW1sIoT67PxImaB53fiwzHxHuFBT9tJHgZR7aLDb/UlN8oi2HER03HNH/ezpCvpQVcwo5rM7aqpLsuwXQ61CiHVAJnwIoHwRNdoFp3H7HYBgRIhAeciJw9ZZbwVdeu7kwjPVGgHQbQC9Gh3cizm++Afose+e8g1wHL6ksiJWG+yM2gXhTLYUtIcINt28HBqpuvQIYdnBfs6PabNQ1g24s8dnzV3WeCftF6qmEj7EolOyrZEOQigKYGGBpM5edkG4z9t3Rk5xeVdaZIWpdxD5Dny/qiaHtK9YX40nCfCueC18aco7nRO0nPe+7OUn5auAdAd2NvG0B/gP4SDaXd4k3oAGgdz7HeH0QGFfiBHfgvhOc/HDIPLfTaY7Jj6HC3PzvayEGDOnY62lbGjGwSrS8EOKheInjY7Llz8co1iS9FrlKBaTQc5ayUv05gD0xn9ML8sRFDwZDoVy3g3kZ1chSpyAg2KtyKgSuzNQq8dLLjwn6kMsTTGCw8zjpsk1
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR11MB1238.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(346002)(39860400002)(376002)(366004)(396003)(136003)(451199018)(478600001)(64756008)(86362001)(66476007)(186003)(966005)(76116006)(66556008)(4326008)(66946007)(66446008)(8676002)(5660300002)(9686003)(26005)(52536014)(83380400001)(8936002)(6506007)(7696005)(33656002)(71200400001)(6916009)(316002)(54906003)(41300700001)(38070700005)(55016003)(122000001)(2906002)(38100700002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?R3hXBjm9Bo3HspE+pXTTD4r5nmUc7IG3rPxF8QuB8mhEj23yQzuV5wrnZL89?=
- =?us-ascii?Q?AU1Fah34Vn4qt+asd6kmTmgiw8Bi6x1Hz9ImPL1Gwpol9HLqR5bZldPowkZu?=
- =?us-ascii?Q?N12vM2GN9/LmjvFjG97Nz808WJgCAKxtUMjvwGBP7FtmyAOdM8GY1xmRWByE?=
- =?us-ascii?Q?9ej42RyBgrLBTjtJBMFg+Qvekp5bDUdsU0kear1eLl+oDtX8ok1vFR2esYyh?=
- =?us-ascii?Q?aE/cTP+Uy7YUFDVoYyaJlTmTPWr76FGH1ar9lxKosHrZhO4UabIFtfbEebGw?=
- =?us-ascii?Q?2xDtXsV0eBzcAssBW+Ytj2DmbMLm/DqxATMUPjXoFKX8dUSOlgt6JR8/mQhY?=
- =?us-ascii?Q?8IBUoS8KMiQ6tWIyuMXkWO3AvQrUBzqEn5F5wyIG1zSSUob5JF2RJDZm+Tsb?=
- =?us-ascii?Q?/D9QvrVup2UpS11d22tb0rv9okPKOvm1pHCk/mDUrckK8HvFwGdGir5J6TSb?=
- =?us-ascii?Q?QeyXXXWzU330TCq7S03kROwTxm9lT1pnk68+wmncIGZPlg83gJinycxJWFZl?=
- =?us-ascii?Q?+sV51GFafnQWirV3P/q+Bkl+r6DrB524z7uFMZsiVABHCJ9VEQvKzO/c4xOA?=
- =?us-ascii?Q?Fe6NMjQxo0c8nlhGfnq0nr0vG/ZHxCQuTfjWo9UvWV8NJGsc7bpXbCLi20gJ?=
- =?us-ascii?Q?W6D3WqLtk5IM37mpEp7+LVRKQWN/1e+QFtc4zCOc/SfVI4+KnAZt6jyzbk6j?=
- =?us-ascii?Q?NDqAGo9CC+oehM2FlXwHxyZ/zavxl0bPqvaRIrKmXa1a5zSzatzpOVESQX5W?=
- =?us-ascii?Q?g6Qx5Re3N8el+FpYk+xwVmYvqLD1hif6HIMxG/95nLLUIfWrw+BKA5kBXFbp?=
- =?us-ascii?Q?dgSUWK1lJhayv67w2/NTSLqEeiRU7Q9bFb5Jwd8pUmn+837v0yI7kocf0XYe?=
- =?us-ascii?Q?QaxDlSOsd5Ra4PRslWDEqGcsmZeB5GBKDu7zMhzrPs6pZ88BS80MGNVwhXjr?=
- =?us-ascii?Q?PLq6l8xIURJ6+SlkKsmIX+9n1nc9iXN+bRA93UPRXGLoVGvj3XGs3CBNFHWQ?=
- =?us-ascii?Q?xkLz7ZIzEIba5BcjGWIGnOVDz4aMzuTm5+a9U7G0cKdfSodvNQUUW1O/s2rL?=
- =?us-ascii?Q?GOmzZVT7QN8DSLRG3BF8mzlJP1nin/xEm5ZbBM1LOQ2YrBAfTBrCClTd5iah?=
- =?us-ascii?Q?OBNzzGE2zcG6LnIstO4JJ0S3EJeCCbMO0KrKpT6BYzrDyuGEAuSNiMWOpv+t?=
- =?us-ascii?Q?fd19hOXDyoQ7Yhqm6sCiDnpP9r0yKz6qoULPN/xvsxGjCnKnnjmRNTGtNXsd?=
- =?us-ascii?Q?g+6ANI+APb0dsE7XCt01mIx5D90Udy8RQt/2MsJ3aIv/b2HrPHqfcfnSfYkC?=
- =?us-ascii?Q?rDCvYsHhd/gffj2MiKkdE8RgBuhjZm1u/6O6zS+wU0dYIH/t3/ng1F6wgbPR?=
- =?us-ascii?Q?akf7pTzkwMMV7Z+EJ5aM8AZZoRvmNvGLO8SUb9oET8OCmEXcS0ytApsmrjH5?=
- =?us-ascii?Q?ijSdKsVXKLzAuuPQgjEZ7eYybqI7PA5YUPk32U47OCmgOINJcyewhjfqIP/w?=
- =?us-ascii?Q?di/jjZnMJzM3r67s1kjXVqnUbYGNgFBz+HkM0hmj2eMzgDW3e/tGmgAv0jwR?=
- =?us-ascii?Q?rZ23RgZZ3/8+Quc12o+/oULGbU7qJk4yH6Ngw6de?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+To:     "Seymour, Shane M" <shane.seymour@hpe.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <DM4PR84MB1373DCD07EABD28D88129C50FDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
+ <ZBFnYwtr+2bfjvcY@kroah.com>
+ <DM4PR84MB13737BE099BF599DF83617DBFDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
+From:   Steffen Maier <maier@linux.ibm.com>
+In-Reply-To: <DM4PR84MB13737BE099BF599DF83617DBFDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: lAloHn_hzzGVQjWWlB4znDzOpmgvgTpW
+X-Proofpoint-ORIG-GUID: lAloHn_hzzGVQjWWlB4znDzOpmgvgTpW
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR11MB1238.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a738aeae-dacb-40da-9fb1-08db26faceb2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2023 15:18:05.4393
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: OYupKwFHbNLb204lwHxrdDmY40Vm9LbKm9hS39crER9CpE/EPoDB3KATjMR/QKBJDWBInk3Osx74Hnox9xThvA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR11MB6175
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-17_10,2023-03-16_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
+ suspectscore=0 spamscore=0 priorityscore=1501 bulkscore=0 impostorscore=0
+ malwarescore=0 phishscore=0 adultscore=0 clxscore=1011 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
+ definitions=main-2303170111
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Jiapeng Chong [mailto:jiapeng.chong@linux.alibaba.com]=20
-Subject: [PATCH] scsi: hpsa: Remove the unused variable transMethod
+On 3/15/23 23:41, Seymour, Shane M wrote:
+>> On Wed, Mar 15, 2023 at 06:08:19AM +0000, Seymour, Shane M wrote:
+>>> The following patch implements host state statistics via sysfs. The intent
+>>> is to allow user space to see the state changes and be able to report when
+>>> a host changes state. The files do not separate out the time spent into
+>>> each state but only into three:
+>>
+>> Why does userspace care about these things at all?  What tool needs them
+>> and what can userspace do with the information?
+>>
+> 
+> In enterprise setups you may a significant number of LUNs presented to a
+> system (100s to 1000s) via a single HBA (usually via FC). Having a HBA going
+> into error handling causes issues. Every time a host goes into SCSI EH all
+> I/O to that host is blocked until SCSI EH completes. That means waiting for
+> every I/O to either complete or timeout before starting any recovery
+> processing.
+> 
+> At this time there is no way for anything outside of the kernel to know if a
+> HBA is having any issues. The cause of those issues can vary significantly,
+> just two examples:
+> 
+> 1) Storage end point issues
+> 2) SAN issues (e.g. laser transmit power at any point in the SAN)
+> 
+> My experience with downstream distros is that nobody seems to notice the
+> noise that SCSI EH produces (LUN, device, bus, host resets) and we see it
+> when we get a vmcore and have to try and work out what caused an I/O hang.
 
-Variable transMethod is not effectively used, so delete it.
+I hear you. Especially, the fact that the very desirable asynchronous aborts 
+and even eh with escalations seems pretty much silent as long as a SCSI command 
+succeeds within one of the allowed retries. I suspect this was done in order 
+not to unsettle users by showing intermediate recovery, which can still lead to 
+successful I/O eventually.
 
-drivers/scsi/hpsa.c:9478:16: warning: variable 'transMethod' set but not us=
-ed.
+FWIW, at some point we figured out a nice scsi_logging_level of 4605, in order 
+to see any problems with lun probing ("why don't I get my volume in Linux?") or 
+timeouts/aborts/eh ("why are things so slow?") without producing kernel 
+messages for regular good I/O. Of course, it's not set by default, but can be 
+dynamically set if one suspects such problems.
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3D4554
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+> I wanted to be more proactive in warning users that you've got a potential
+> storage issue you need to look at. It won't help when you have a sudden
+> massive issue but if you have an issue that is slowly getting worse over
+> a period of time you will at least get some warning.
+> 
+>>>
+>>> A (GPLv2) program called hostmond will be released in a few months that
+>>> will monitor these interfaces and report (local host only via syslog(3C))
+>>> when hosts change state.
+>>
+>> We kind of need to see this before the kernel changes can be accepted
+>> for obvious reasons, what is preventing that from happening now?
+> 
+> If you don't mind I'll answer this in my reply to James' email soon since
+> he commented about this.
+> 
+>>
+>> Please always use sysfs_emit() instead of the crazy scnprintf() for
+>> sysfs entries.
+> 
+> No problem I can make that change.
+> 
+>>
+>> u32 is a kernel type, not uint32_t please, but I don't know what the
+>> scsi layer is used to.
+> 
+> No problem I can make that change.
+> 
+>>
+>> thanks,
+>>
+>> greg k-h
+> 
+> Thank you for your willingness to provide feedback.
+> 
+> Shane
 
-Acked-by: Don Brace <don.brace@microchip.com>
-Thanks for your patch.
+-- 
+Mit freundlichen Gruessen / Kind regards
+Steffen Maier
 
----
- drivers/scsi/hpsa.c | 6 ------
- 1 file changed, 6 deletions(-)
+Linux on IBM Z and LinuxONE
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c index fec7e17747f7..=
-2f2b46a95102 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -9475,8 +9475,6 @@ static void hpsa_free_performant_mode(struct ctlr_inf=
-o *h)  static int hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)  =
-{
-        u32 trans_support;
--       unsigned long transMethod =3D CFGTBL_Trans_Performant |
--                                       CFGTBL_Trans_use_short_tags;
-        int i, rc;
-
-        if (hpsa_simple_mode)
-@@ -9488,14 +9486,10 @@ static int hpsa_put_ctlr_into_performant_mode(struc=
-t ctlr_info *h)
-
-        /* Check for I/O accelerator mode support */
-        if (trans_support & CFGTBL_Trans_io_accel1) {
--               transMethod |=3D CFGTBL_Trans_io_accel1 |
--                               CFGTBL_Trans_enable_directed_msix;
-                rc =3D hpsa_alloc_ioaccel1_cmd_and_bft(h);
-                if (rc)
-                        return rc;
-        } else if (trans_support & CFGTBL_Trans_io_accel2) {
--               transMethod |=3D CFGTBL_Trans_io_accel2 |
--                               CFGTBL_Trans_enable_directed_msix;
-                rc =3D hpsa_alloc_ioaccel2_cmd_and_bft(h);
-                if (rc)
-                        return rc;
---
-2.20.1.7.g153144c
+https://www.ibm.com/privacy/us/en/
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Gregor Pillen
+Geschaeftsfuehrung: David Faller
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
 
