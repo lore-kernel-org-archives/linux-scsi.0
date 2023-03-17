@@ -2,179 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1115C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 16:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6C8C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Mar 2023 16:56:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230161AbjCQQxE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Mar 2023 12:53:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56164 "EHLO
+        id S229908AbjCQQ4g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Mar 2023 12:56:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229924AbjCQQw4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 12:52:56 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67799B06CF;
-        Fri, 17 Mar 2023 09:52:51 -0700 (PDT)
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32HEwqQ8020323;
-        Fri, 17 Mar 2023 16:52:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=h8CQp6+iDtm9xUAsI4h9p4NSx/w9aaH83EG+p9E7o4E=;
- b=ERElVEZTgBBo3qZCD79YO/gjby2BjRYUp9sJVszQFiATdN3gRa2MK/3J4J+2/2SU1QDu
- Hf7p1j+4BCEwYxRxbCT/qbRnIcHgJ8x/1xjlNHW9fFOYSmjBYbHh/EdFcqMB0C2UepN/
- X/nyxp+YqkkdApjEvNwzfUZ5xR/1LdeIHxDoJltGncMWeznqiKVoO0+ZQeICOGNNlQQU
- GFQbk3apDc77QFWZTVW/Rnfi67ceFCnKwOAgTdc+m1MLgf2e7amKwjHfX2hLfhs5P5nN
- Xh6cTV9SMnEeySla9SbiK4prexkUyxB+nITo8SpEZSWQhnlQDf3dMussKvEmqvDLPp1s Lg== 
-Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pctetk4r3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 17 Mar 2023 16:52:46 +0000
-Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
-        by ppma06ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32H6Ytg0029187;
-        Fri, 17 Mar 2023 16:52:43 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-        by ppma06ams.nl.ibm.com (PPS) with ESMTPS id 3pbskt2e80-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 17 Mar 2023 16:52:43 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32HGqfHv55968178
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Mar 2023 16:52:41 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0237C2004B;
-        Fri, 17 Mar 2023 16:52:41 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6D3F820040;
-        Fri, 17 Mar 2023 16:52:40 +0000 (GMT)
-Received: from [9.171.87.24] (unknown [9.171.87.24])
-        by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Fri, 17 Mar 2023 16:52:40 +0000 (GMT)
-Message-ID: <8f17a884-09d2-b6a1-7ced-77dd4b4f21a5@linux.ibm.com>
-Date:   Fri, 17 Mar 2023 17:52:40 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH for-next] scsi: Implement host state statistics
-Content-Language: en-US
-To:     "Seymour, Shane M" <shane.seymour@hpe.com>,
-        Greg KH <gregkh@linuxfoundation.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <DM4PR84MB1373DCD07EABD28D88129C50FDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
- <ZBFnYwtr+2bfjvcY@kroah.com>
- <DM4PR84MB13737BE099BF599DF83617DBFDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
-From:   Steffen Maier <maier@linux.ibm.com>
-In-Reply-To: <DM4PR84MB13737BE099BF599DF83617DBFDBF9@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: lAloHn_hzzGVQjWWlB4znDzOpmgvgTpW
-X-Proofpoint-ORIG-GUID: lAloHn_hzzGVQjWWlB4znDzOpmgvgTpW
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S229488AbjCQQ4e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2023 12:56:34 -0400
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7636269069;
+        Fri, 17 Mar 2023 09:56:33 -0700 (PDT)
+Received: by mail-pj1-f45.google.com with SMTP id 6-20020a17090a190600b00237c5b6ecd7so9785997pjg.4;
+        Fri, 17 Mar 2023 09:56:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679072193;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/EDMCWi2+pIYPO7/XjcMvWvrVqhfRSJwEgLRyN06IhM=;
+        b=eNZ8URL7CJMXzDPLLKm28Rz2w5vZQej7Uh290IeqenDX9GBj0dIPI9eCAZypzGzlk4
+         LeNxp6BcvZ+6X0wQe0QM38sEPo/qxgn70vyysK62Z8rvjTfe1cjksizNUNqd6KsnTaxS
+         qk/7mso6xVsikzOQkzUTMVVLJXwDloRx2vfubBLoebfLEzRT8qPTF4XKyg9CMlVs61K3
+         OOXNS6ikh5oK3Wd/p09fVETX3Zn1ZRC69X7Wp+iqvKzkWt/AU2TI+KUg8JmuU+O3Dxow
+         +Lk5i7wxeevL9QugbM4n6wB7aJ07zdlji5vldiXnOBriXz/dUl02BLACymkuXXAfnpw6
+         62fA==
+X-Gm-Message-State: AO0yUKXW2olrazvML7pW6BijlBBUQIXsVG5LbITTTT8Bzf5Of5r98sTX
+        +n1IwKJclHBs7JAC+7YWihk=
+X-Google-Smtp-Source: AK7set9+vucF+M5QAaPH0ImOhBRU8mJ5PzWB43bOiUM7l98DemgZa5Ck1nVTRJiWD4OsyqVp6HnShg==
+X-Received: by 2002:a05:6a20:b915:b0:d7:380b:660 with SMTP id fe21-20020a056a20b91500b000d7380b0660mr4467704pzb.3.1679072192555;
+        Fri, 17 Mar 2023 09:56:32 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ad26:bef0:6406:d659? ([2620:15c:211:201:ad26:bef0:6406:d659])
+        by smtp.gmail.com with ESMTPSA id e25-20020a62aa19000000b005a817ff3903sm1819707pff.3.2023.03.17.09.56.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 17 Mar 2023 09:56:31 -0700 (PDT)
+Message-ID: <86bbac36-f727-7330-bfcc-a4cd5a544d6c@acm.org>
+Date:   Fri, 17 Mar 2023 09:56:29 -0700
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-17_10,2023-03-16_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
- suspectscore=0 spamscore=0 priorityscore=1501 bulkscore=0 impostorscore=0
- malwarescore=0 phishscore=0 adultscore=0 clxscore=1011 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
- definitions=main-2303170111
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v4 02/19] block: introduce ioprio hints
+Content-Language: en-US
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20230309215516.3800571-1-niklas.cassel@wdc.com>
+ <20230309215516.3800571-3-niklas.cassel@wdc.com>
+ <c91be70e-14a9-7ad6-ba7c-975a640a34d3@opensource.wdc.com>
+ <70b757f9-cc0c-ebd9-a597-f6ea14acbedb@acm.org> <ZBQxoRQ4/7au/1ou@x1-carbon>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZBQxoRQ4/7au/1ou@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/15/23 23:41, Seymour, Shane M wrote:
->> On Wed, Mar 15, 2023 at 06:08:19AM +0000, Seymour, Shane M wrote:
->>> The following patch implements host state statistics via sysfs. The intent
->>> is to allow user space to see the state changes and be able to report when
->>> a host changes state. The files do not separate out the time spent into
->>> each state but only into three:
->>
->> Why does userspace care about these things at all?  What tool needs them
->> and what can userspace do with the information?
->>
+On 3/17/23 02:23, Niklas Cassel wrote:
+> When you have the time, we would be very grateful if you could provide
+> a more thorough review, i.e. provide a R-b tag or give some feedback.
 > 
-> In enterprise setups you may a significant number of LUNs presented to a
-> system (100s to 1000s) via a single HBA (usually via FC). Having a HBA going
-> into error handling causes issues. Every time a host goes into SCSI EH all
-> I/O to that host is blocked until SCSI EH completes. That means waiting for
-> every I/O to either complete or timeout before starting any recovery
-> processing.
-> 
-> At this time there is no way for anything outside of the kernel to know if a
-> HBA is having any issues. The cause of those issues can vary significantly,
-> just two examples:
-> 
-> 1) Storage end point issues
-> 2) SAN issues (e.g. laser transmit power at any point in the SAN)
-> 
-> My experience with downstream distros is that nobody seems to notice the
-> noise that SCSI EH produces (LUN, device, bus, host resets) and we see it
-> when we get a vmcore and have to try and work out what caused an I/O hang.
+> Your help is appreciated!
 
-I hear you. Especially, the fact that the very desirable asynchronous aborts 
-and even eh with escalations seems pretty much silent as long as a SCSI command 
-succeeds within one of the allowed retries. I suspect this was done in order 
-not to unsettle users by showing intermediate recovery, which can still lead to 
-successful I/O eventually.
+Although I'm overloaded, I will try to find some time to review this 
+patch series.
 
-FWIW, at some point we figured out a nice scsi_logging_level of 4605, in order 
-to see any problems with lun probing ("why don't I get my volume in Linux?") or 
-timeouts/aborts/eh ("why are things so slow?") without producing kernel 
-messages for regular good I/O. Of course, it's not set by default, but can be 
-dynamically set if one suspects such problems.
+Thanks,
 
-> I wanted to be more proactive in warning users that you've got a potential
-> storage issue you need to look at. It won't help when you have a sudden
-> massive issue but if you have an issue that is slowly getting worse over
-> a period of time you will at least get some warning.
-> 
->>>
->>> A (GPLv2) program called hostmond will be released in a few months that
->>> will monitor these interfaces and report (local host only via syslog(3C))
->>> when hosts change state.
->>
->> We kind of need to see this before the kernel changes can be accepted
->> for obvious reasons, what is preventing that from happening now?
-> 
-> If you don't mind I'll answer this in my reply to James' email soon since
-> he commented about this.
-> 
->>
->> Please always use sysfs_emit() instead of the crazy scnprintf() for
->> sysfs entries.
-> 
-> No problem I can make that change.
-> 
->>
->> u32 is a kernel type, not uint32_t please, but I don't know what the
->> scsi layer is used to.
-> 
-> No problem I can make that change.
-> 
->>
->> thanks,
->>
->> greg k-h
-> 
-> Thank you for your willingness to provide feedback.
-> 
-> Shane
-
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z and LinuxONE
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Gregor Pillen
-Geschaeftsfuehrung: David Faller
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+Bart.
 
