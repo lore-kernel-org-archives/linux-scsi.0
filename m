@@ -2,92 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75442C61DA4
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Mar 2023 08:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07232C74A5B
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Mar 2023 13:01:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbjCRIRR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Mar 2023 04:17:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44860 "EHLO
+        id S229665AbjCRNBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Mar 2023 09:01:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbjCRIRP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Mar 2023 04:17:15 -0400
-Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.196])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C7B2C30B12;
-        Sat, 18 Mar 2023 01:17:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=4Zscu
-        iQPwnHKfbAbpvcHFmQ/w/W3FQBM8Le/KlBVmX8=; b=W7TZZHEMq4pHjNGXx7U0Z
-        PNzezY/dj57On/CUfiPsGlPFqpCT3nHsNsBoJfFSkL/7aD6Jnrx4TBSnDUOt90C3
-        TGDT9d9L8Jsx7f59XolYlWua1xZzCmQl7Olf9S1zHg2GrFCM+VStI0HypDJtVNie
-        9xNLPaOGlJTq87vPU9rdiE=
-Received: from leanderwang-LC2.localdomain (unknown [111.206.145.21])
-        by zwqz-smtp-mta-g3-0 (Coremail) with SMTP id _____wAX3rBlcxVk4smqAQ--.34220S2;
-        Sat, 18 Mar 2023 16:16:37 +0800 (CST)
-From:   Zheng Wang <zyytlz.wz@163.com>
-To:     sathya.prakash@broadcom.com
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, hackerzheng666@gmail.com,
-        1395428693sheep@gmail.com, alex000young@gmail.com,
-        Zheng Wang <zyytlz.wz@163.com>
-Subject: [PATCH RESEND] scsi: message: mptlan: Fix use after free bug in mptlan_remove due to race condition
-Date:   Sat, 18 Mar 2023 16:16:35 +0800
-Message-Id: <20230318081635.796479-1-zyytlz.wz@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229640AbjCRNBB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Mar 2023 09:01:01 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7512C66F;
+        Sat, 18 Mar 2023 06:00:58 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id z21so30303526edb.4;
+        Sat, 18 Mar 2023 06:00:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1679144457;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=6vdkOe9PDpkNSQ/x0t7vPqLMcU3kTL7t8MTur54JSuE=;
+        b=DQk+rU8btnnaErKEz5K1gVJ9Hw7fP07Vmbro03HZD+a2YFbGWV/cCLBOogDECPwgS4
+         pboT0zq1vQvbLROmaE3sA10QyXJkPBn9ZK4mk6fukaA37ITBxvCtGG9rJIVZ8T7d7Xj1
+         WSdRtNsEip0n1dKqQhOUA8OoiIFYPKjVUlFPLjIxNSwMqQAkims2SGix0r/r7a640P26
+         Xi1kcHBQtAE+dTeXnEkow/eEP356zUobRSIclGwCO2mYKE8ZpzZCHrXWLr3C7yIhU/Pf
+         3+NsZEtTUXdrAc/MZBCWCEtOdC5Nv9WcQHQFuNQRFuUhDCci1DX13Wzq+P4Vhfnauy2d
+         Lrlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679144457;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6vdkOe9PDpkNSQ/x0t7vPqLMcU3kTL7t8MTur54JSuE=;
+        b=B365gAnxwRvePfUXVwOkp7EIAFnfoN5lXOracH95hwAExz9tyBJ0cMgamEvNa6k3XM
+         89rw74WHD6FKVBZXsWT8h2AELzzSPsabu8MW9khV55mv2giO64nTdi1K5DXZ44JZ9lms
+         KaA34qGwuUkEnyrz7wrHCAr63W+2P7zhIGJPfxEZOeiXcmXt9NEXcmvjE55+M2W1qj2F
+         iJV7+xDk6FB3ygGEpL6TLkFwvRv2Pn4+jesfXbEDnz0qg2xMTmXH9jMJTWtnYveK1z8n
+         7QDDzKUZiP54WU5pDCc7LFSmJKHzVXIxTBIWN5swt4++H7wQkOdUinWWA6QW7123Ccwr
+         4s7Q==
+X-Gm-Message-State: AO0yUKVCDUQKTneuag7U7jpzV7Pn6/9HtVOwBNl6J9Cm8VyER0vJgV1F
+        KpcfI8c/XfV3QoIaei5OIyS2VEWAbPg=
+X-Google-Smtp-Source: AK7set81wi7yHnNaHILHOCoa40of7SYjOnHmyp851kgJqe2pbcV2r3HjIQrkjTNlowzS4caq80rCfg==
+X-Received: by 2002:a17:907:a066:b0:92a:7178:ab56 with SMTP id ia6-20020a170907a06600b0092a7178ab56mr2664232ejc.39.1679144456993;
+        Sat, 18 Mar 2023 06:00:56 -0700 (PDT)
+Received: from [192.168.178.40] (ip5f5b4297.dynamic.kabel-deutschland.de. [95.91.66.151])
+        by smtp.gmail.com with ESMTPSA id 22-20020a170906309600b0092f289b6fdbsm2149277ejv.181.2023.03.18.06.00.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 18 Mar 2023 06:00:56 -0700 (PDT)
+Message-ID: <d563cca7-57c6-289a-f551-a378f219aed4@gmail.com>
+Date:   Sat, 18 Mar 2023 14:00:55 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH][next] uapi: target: Replace fake flex-array with
+ flexible-array member
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+References: <ZBSchMvTdl7VObKI@work>
+Content-Language: en-US
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <ZBSchMvTdl7VObKI@work>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _____wAX3rBlcxVk4smqAQ--.34220S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWrurykGF4Dur1fWry5Wr13CFg_yoW8Jry7pr
-        ZFka48CrZ5Jw1Iy3WDtFy8AFyrC3WIgrWkKrWSg342vr1FkFyYq340kFy2kw1xXFs5Ga13
-        Zr4DJFs7GayDKFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zicyCZUUUUU=
-X-Originating-IP: [111.206.145.21]
-X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiGgk2U1aEEnaPhAAAsL
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In mptlan_probe, it called mpt_register_lan_device and bound 
-&priv->post_buckets_task with mpt_lan_post_receive_buckets_work.
-When it calls lan_reply, it will finally call 
-mpt_lan_wake_post_buckets_task to start the work.
+On 17.03.23 17:59, Gustavo A. R. Silva wrote:
+> Zero-length arrays as fake flexible arrays are deprecated and we are
+> moving towards adopting C99 flexible-array members instead.
+> 
+> Address the following warning found with GCC-13 and
+> -fstrict-flex-arrays=3 enabled:
+>    CC      drivers/target/target_core_user.o
+> drivers/target/target_core_user.c: In function ‘queue_cmd_ring’:
+> drivers/target/target_core_user.c:1096:15: warning: array subscript 0 is outside array bounds of ‘struct iovec[0]’ [-Warray-bounds=]
+>   1096 |         iov = &entry->req.iov[0];
+>        |               ^~~~~~~~~~~~~~~~~~
+> In file included from drivers/target/target_core_user.c:31:
+> ./include/uapi/linux/target_core_user.h:122:38: note: while referencing ‘iov’
+>    122 |                         struct iovec iov[0];
+>        |                                      ^~~
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/21
+> Link: https://github.com/KSPP/linux/issues/270
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+>   include/uapi/linux/target_core_user.h | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
+> index fbd8ca67e107..f925a77f19ed 100644
+> --- a/include/uapi/linux/target_core_user.h
+> +++ b/include/uapi/linux/target_core_user.h
+> @@ -119,7 +119,7 @@ struct tcmu_cmd_entry {
+>   			__u64 cdb_off;
+>   			__u64 __pad1;
+>   			__u64 __pad2;
+> -			struct iovec iov[0];
+> +			__DECLARE_FLEX_ARRAY(struct iovec, iov);
+>   		} req;
+>   		struct {
+>   			__u8 scsi_status;
 
-When we call mptlan_remove to remove the driver, there
-may be a sequence as follows:
+Looks good. Thank you.
 
-Fix it by finishing the work before cleanup in mptlan_remove
-
-CPU0                  CPU1
-
-                    |mpt_lan_post_receive_buckets_work
-mptlan_remove       |
-  free_netdev       |
-    kfree(dev);     |
-                    |
-                    | dev->mtu
-                    |   //use
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
----
- drivers/message/fusion/mptlan.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 142eb5d5d9df..de2e7bcf4784 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -1433,7 +1433,9 @@ mptlan_remove(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
- 	struct net_device	*dev = ioc->netdev;
-+	struct mpt_lan_priv *priv = netdev_priv(dev);
- 
-+	cancel_delayed_work_sync(&priv->post_buckets_task);
- 	if(dev != NULL) {
- 		unregister_netdev(dev);
- 		free_netdev(dev);
--- 
-2.25.1
-
+Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
