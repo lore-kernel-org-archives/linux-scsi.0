@@ -2,115 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07232C74A5B
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Mar 2023 13:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C3AC7618A
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Mar 2023 01:56:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229665AbjCRNBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Mar 2023 09:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48952 "EHLO
+        id S229713AbjCSB4b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Mar 2023 21:56:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229640AbjCRNBB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Mar 2023 09:01:01 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7512C66F;
-        Sat, 18 Mar 2023 06:00:58 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id z21so30303526edb.4;
-        Sat, 18 Mar 2023 06:00:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679144457;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6vdkOe9PDpkNSQ/x0t7vPqLMcU3kTL7t8MTur54JSuE=;
-        b=DQk+rU8btnnaErKEz5K1gVJ9Hw7fP07Vmbro03HZD+a2YFbGWV/cCLBOogDECPwgS4
-         pboT0zq1vQvbLROmaE3sA10QyXJkPBn9ZK4mk6fukaA37ITBxvCtGG9rJIVZ8T7d7Xj1
-         WSdRtNsEip0n1dKqQhOUA8OoiIFYPKjVUlFPLjIxNSwMqQAkims2SGix0r/r7a640P26
-         Xi1kcHBQtAE+dTeXnEkow/eEP356zUobRSIclGwCO2mYKE8ZpzZCHrXWLr3C7yIhU/Pf
-         3+NsZEtTUXdrAc/MZBCWCEtOdC5Nv9WcQHQFuNQRFuUhDCci1DX13Wzq+P4Vhfnauy2d
-         Lrlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679144457;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6vdkOe9PDpkNSQ/x0t7vPqLMcU3kTL7t8MTur54JSuE=;
-        b=B365gAnxwRvePfUXVwOkp7EIAFnfoN5lXOracH95hwAExz9tyBJ0cMgamEvNa6k3XM
-         89rw74WHD6FKVBZXsWT8h2AELzzSPsabu8MW9khV55mv2giO64nTdi1K5DXZ44JZ9lms
-         KaA34qGwuUkEnyrz7wrHCAr63W+2P7zhIGJPfxEZOeiXcmXt9NEXcmvjE55+M2W1qj2F
-         iJV7+xDk6FB3ygGEpL6TLkFwvRv2Pn4+jesfXbEDnz0qg2xMTmXH9jMJTWtnYveK1z8n
-         7QDDzKUZiP54WU5pDCc7LFSmJKHzVXIxTBIWN5swt4++H7wQkOdUinWWA6QW7123Ccwr
-         4s7Q==
-X-Gm-Message-State: AO0yUKVCDUQKTneuag7U7jpzV7Pn6/9HtVOwBNl6J9Cm8VyER0vJgV1F
-        KpcfI8c/XfV3QoIaei5OIyS2VEWAbPg=
-X-Google-Smtp-Source: AK7set81wi7yHnNaHILHOCoa40of7SYjOnHmyp851kgJqe2pbcV2r3HjIQrkjTNlowzS4caq80rCfg==
-X-Received: by 2002:a17:907:a066:b0:92a:7178:ab56 with SMTP id ia6-20020a170907a06600b0092a7178ab56mr2664232ejc.39.1679144456993;
-        Sat, 18 Mar 2023 06:00:56 -0700 (PDT)
-Received: from [192.168.178.40] (ip5f5b4297.dynamic.kabel-deutschland.de. [95.91.66.151])
-        by smtp.gmail.com with ESMTPSA id 22-20020a170906309600b0092f289b6fdbsm2149277ejv.181.2023.03.18.06.00.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 18 Mar 2023 06:00:56 -0700 (PDT)
-Message-ID: <d563cca7-57c6-289a-f551-a378f219aed4@gmail.com>
-Date:   Sat, 18 Mar 2023 14:00:55 +0100
+        with ESMTP id S229488AbjCSB4a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Mar 2023 21:56:30 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7844423106;
+        Sat, 18 Mar 2023 18:56:28 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32IMxwQs013262;
+        Sun, 19 Mar 2023 01:56:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2022-7-12; bh=RxhjsdBpZE/lJYRYkb8EdOpC1aFHuownfvQO9eeSD5k=;
+ b=l5jsOH5OBSz5sg8LxN6BPxWvdK53RdRaUhhTtBBTgGDZyg/Z7wgQf+4PpZJE+P4e15Zj
+ mg5NTCnDvNUO4ZeRvnylBgak1o6U0PCEBi2eDezuvPynGbtkJeAaYMeuIulz7MlSkvZh
+ zIPQ/0bpQ7zGEWClxQRlbzHJhA0jzKbPD6O0FrJZClg05XtsQFKusqUwZNufGa0W1b4I
+ R0ZeCLnNgnEMfW6qqKfLYeJiqtMmte57q3/KQe9E9DTOKz6wnKEi2wpTz/FoiHg7KGkc
+ 2mZ9nC90aO3g55x4qw4vYwhFXg7XwxjVN7Kp9ekQkkbREjv3ynb2bS7j9I2Aemz+/20O /Q== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pd433h5hq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 19 Mar 2023 01:56:26 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32INfJlb031053;
+        Sun, 19 Mar 2023 01:56:25 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pd3raauba-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 19 Mar 2023 01:56:25 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32J1uO5E014254;
+        Sun, 19 Mar 2023 01:56:25 GMT
+Received: from mnchrist-mac.us.oracle.com (dhcp-10-154-118-173.vpn.oracle.com [10.154.118.173])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pd3raauaw-1;
+        Sun, 19 Mar 2023 01:56:24 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     mlombard@redhat.com, martin.petersen@oracle.com,
+        d.bogdanov@yadro.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH v5 0/9] target: TMF and recovery fixes
+Date:   Sat, 18 Mar 2023 20:56:11 -0500
+Message-Id: <20230319015620.96006-1-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH][next] uapi: target: Replace fake flex-array with
- flexible-array member
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <ZBSchMvTdl7VObKI@work>
-Content-Language: en-US
-From:   Bodo Stroesser <bostroesser@gmail.com>
-In-Reply-To: <ZBSchMvTdl7VObKI@work>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-18_16,2023-03-16_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ mlxlogscore=980 mlxscore=0 bulkscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
+ definitions=main-2303190014
+X-Proofpoint-ORIG-GUID: dqkobbG25tgL1_wIWipCYtlXbEK0h2kE
+X-Proofpoint-GUID: dqkobbG25tgL1_wIWipCYtlXbEK0h2kE
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17.03.23 17:59, Gustavo A. R. Silva wrote:
-> Zero-length arrays as fake flexible arrays are deprecated and we are
-> moving towards adopting C99 flexible-array members instead.
-> 
-> Address the following warning found with GCC-13 and
-> -fstrict-flex-arrays=3 enabled:
->    CC      drivers/target/target_core_user.o
-> drivers/target/target_core_user.c: In function ‘queue_cmd_ring’:
-> drivers/target/target_core_user.c:1096:15: warning: array subscript 0 is outside array bounds of ‘struct iovec[0]’ [-Warray-bounds=]
->   1096 |         iov = &entry->req.iov[0];
->        |               ^~~~~~~~~~~~~~~~~~
-> In file included from drivers/target/target_core_user.c:31:
-> ./include/uapi/linux/target_core_user.h:122:38: note: while referencing ‘iov’
->    122 |                         struct iovec iov[0];
->        |                                      ^~~
-> 
-> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-> routines on memcpy() and help us make progress towards globally
-> enabling -fstrict-flex-arrays=3 [1].
-> 
-> Link: https://github.com/KSPP/linux/issues/21
-> Link: https://github.com/KSPP/linux/issues/270
-> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> ---
->   include/uapi/linux/target_core_user.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
-> index fbd8ca67e107..f925a77f19ed 100644
-> --- a/include/uapi/linux/target_core_user.h
-> +++ b/include/uapi/linux/target_core_user.h
-> @@ -119,7 +119,7 @@ struct tcmu_cmd_entry {
->   			__u64 cdb_off;
->   			__u64 __pad1;
->   			__u64 __pad2;
-> -			struct iovec iov[0];
-> +			__DECLARE_FLEX_ARRAY(struct iovec, iov);
->   		} req;
->   		struct {
->   			__u8 scsi_status;
+The following patches apply over Martin's 6.4 branches and Linus's tree.
+They fix a couple regressions in iscsit that occur when there are TMRs
+executing and a connection is closed. It also includes Dimitry's fixes in
+related code paths for cmd cleanup when ERL2 is used and the write pending
+hang during conn cleanup.
 
-Looks good. Thank you.
+This version of the patchset brings it back to just regressions and fixes
+for bugs we have a lot of users hitting. I'm going to fix isert and get it
+hooked into iscsit properly in a second patchset, because this one was
+getting so large. I've also moved my cleanup type of patches for a 3rd
+patchset.
 
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
+v5:
+- Fix
+scsi: target: Fix multiple LUN_RESET handling
+so we don't execute a reset before it's submited.
+- Move isert changes to separate patchset.
+- Add write pending fix.
+v4:
+- Fix
+[PATCH v3 07/14] scsi: target: Fix multiple LUN_RESET handling
+so it doesn't add back the bug where resets can wait on each other
+and deadlock.
+- Updated
+[PATCH v3 06/14] scsi: target: iscsit: Fix TAS handling during conn
+so it handles the case where commands have passed the STOP checks and
+have not yet hit them.
+- Added patch to handle another hang found while testnig where we wait
+on the free_compl but never drop a ref due to being in the wrong state.
+v3:
+- Drop patch "iscsit: Fix isert disconnect handling during login"
+- Add patch to drop cmd lock in completion callout
+- Add patch to clean up recovery commands earlier when ERL2 is used
+- Add patch to handle use-after-free in isert
+v2:
+- Fix wait/stop use during login failures
+- Add patches to support isert
+
+
