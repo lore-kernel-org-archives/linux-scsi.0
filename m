@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A585C7618E
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:11:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D39C4C7619A
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230267AbjCTBLC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 21:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38618 "EHLO
+        id S229568AbjCTBLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 21:11:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231826AbjCTBKR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:10:17 -0400
+        with ESMTP id S232019AbjCTBKq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:10:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93122279A9;
-        Sun, 19 Mar 2023 18:01:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 345B218177;
+        Sun, 19 Mar 2023 18:02:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CF369611DE;
-        Mon, 20 Mar 2023 00:55:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CCAEC4339B;
-        Mon, 20 Mar 2023 00:55:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 51AA9611DF;
+        Mon, 20 Mar 2023 00:55:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7C13C433EF;
+        Mon, 20 Mar 2023 00:55:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273742;
-        bh=VnTPf/szTOud0X6FMxF6YhZTKnb4cW1BG76NA4zbN4E=;
+        s=k20201202; t=1679273748;
+        bh=JMuotiYhQZ1D2/JpJmP0dz52A6CEWCyf8t2vwXN+fNw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uTNC/yDqjGpD8jwtlrIdj3usrwZLUKDD4H6g470W6HJRVIkN3VmnOztLCyBU5u6p0
-         ZZfVVhBCx9VvmcCoKjABrJAHsn8jewvZ5+Pz/ZJ1FksY7Sgzaq3Y4NxWrTALD7dQcC
-         ZU8DDqh19zBBCMFJpBh1rWUFW+dFaXMs9xgGFIysVpFq80aGt8lO0fBooIQ+FsvCJ0
-         PzW/0pxPyOVhgDiOw498phQwSLwYlJ6wi/dg5fYIaJz9XFsAx8+3XwU1jzKun0xgvl
-         XEOx2idrt2cHsHDI6lbDQ0Eq83L7XUkj659kF13wz71m+FiDmIYH+/hDPy365BBj2m
-         s/CgKUasXFWRw==
+        b=oa4wZOkgwi4Dq33mbJ4l0qsUyoRTbvMm+0q9ADD3Xv9PfpEidirP1RV79H4p0HZXj
+         x04c6+yVvShyPBKDP+jXuxboMLJi5594xIzKAQ8ByY5XDGkG0LRHU+9JFUZsSypi7U
+         tL7LJvBo3HYEFLwiElc7gZ0kVJAc03gqy04N9Fl/2idTDytlpt36u/DfZRNPiPibif
+         j39AdFnBxN7SlK7KjHiavlTxJJOatxi/nShB+qwo4XZj0GZ539XyHF/VRpZPOH759+
+         YAgNR3fbauRgKrgA+7V76LX3Y/7xVihUZOfWzUSMd5eqZssn/X9Fallr4rsrb3AZSC
+         DzKNCOkByLl+g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kang Chen <void0red@gmail.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
+Cc:     Jakob Koschel <jkl820.git@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 09/17] scsi: hisi_sas: Check devm_add_action() return value
-Date:   Sun, 19 Mar 2023 20:55:11 -0400
-Message-Id: <20230320005521.1428820-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 12/17] scsi: lpfc: Avoid usage of list iterator variable after loop
+Date:   Sun, 19 Mar 2023 20:55:14 -0400
+Message-Id: <20230320005521.1428820-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230320005521.1428820-1-sashal@kernel.org>
 References: <20230320005521.1428820-1-sashal@kernel.org>
@@ -52,36 +53,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kang Chen <void0red@gmail.com>
+From: Jakob Koschel <jkl820.git@gmail.com>
 
-[ Upstream commit 06d1a90de60208054cca15ef200138cfdbb642a9 ]
+[ Upstream commit 2850b23e9f9ae3696e472d2883ea1b43aafa884e ]
 
-In case devm_add_action() fails, check it in the caller of
-interrupt_preinit_v3_hw().
+If the &epd_pool->list is empty when executing
+lpfc_get_io_buf_from_expedite_pool() the function would return an invalid
+pointer. Even in the case if the list is guaranteed to be populated, the
+iterator variable should not be used after the loop to be more robust for
+future changes.
 
-Link: https://lore.kernel.org/r/20230227031030.893324-1-void0red@gmail.com
-Signed-off-by: Kang Chen <void0red@gmail.com>
-Acked-by: Xiang Chen <chenxiang66@hisilicon.com>
+Linus proposed to avoid any use of the list iterator variable after the
+loop, in the attempt to move the list iterator variable declaration into
+the macro to avoid any potential misuse after the loop [1].
+
+Link: https://lore.kernel.org/all/CAHk-=wgRr_D8CB-D9Kg-c=EHreAsk5SqXPwr9Y7k9sA6cWXJ6w@mail.gmail.com/ [1]
+Signed-off-by: Jakob Koschel <jkl820.git@gmail.com>
+Link: https://lore.kernel.org/r/20230301-scsi-lpfc-avoid-list-iterator-after-loop-v1-1-325578ae7561@gmail.com
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index fa22cb712be5a..9515ab66a7789 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2424,8 +2424,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
- 	shost->nr_hw_queues = hisi_hba->cq_nvecs;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1f1d346adc038..30bc72324f068 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -22166,20 +22166,20 @@ lpfc_get_io_buf_from_private_pool(struct lpfc_hba *phba,
+ static struct lpfc_io_buf *
+ lpfc_get_io_buf_from_expedite_pool(struct lpfc_hba *phba)
+ {
+-	struct lpfc_io_buf *lpfc_ncmd;
++	struct lpfc_io_buf *lpfc_ncmd = NULL, *iter;
+ 	struct lpfc_io_buf *lpfc_ncmd_next;
+ 	unsigned long iflag;
+ 	struct lpfc_epd_pool *epd_pool;
  
--	devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
--	return 0;
-+	return devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
- }
+ 	epd_pool = &phba->epd_pool;
+-	lpfc_ncmd = NULL;
  
- static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	spin_lock_irqsave(&epd_pool->lock, iflag);
+ 	if (epd_pool->count > 0) {
+-		list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
++		list_for_each_entry_safe(iter, lpfc_ncmd_next,
+ 					 &epd_pool->list, list) {
+-			list_del(&lpfc_ncmd->list);
++			list_del(&iter->list);
+ 			epd_pool->count--;
++			lpfc_ncmd = iter;
+ 			break;
+ 		}
+ 	}
 -- 
 2.39.2
 
