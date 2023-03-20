@@ -2,170 +2,248 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E977AC6FD1F
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Mar 2023 15:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 027FBC7619A
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:54:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230254AbjCSPsi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 11:48:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54646 "EHLO
+        id S229992AbjCTAyX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 20:54:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230119AbjCSPsh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 11:48:37 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48CB1199C5;
-        Sun, 19 Mar 2023 08:48:34 -0700 (PDT)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32JAbniY007500;
-        Sun, 19 Mar 2023 15:48:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=jc+DcRtgoWcf7EiGfkE5u26xvptH/cUaHTgE5NbU2+U=;
- b=S5RE1eQZ84412pwG82TQpmTQAf0Vd0kwCBNcel/Ddeb8WvHYcuPKLrmTaC9r2dMnKjwf
- fvFJm9y2L8IrFFqCdD2hmisdoCVkHOnW0xZlhggQ5PR40HMNVI5ObFmYHSnI/JJ7eSS3
- bQDngTMnkFfIv99AgXkZkgwXLpdhfOW2CA1///ZTcwXe3OBYat5RFgE0of5aTmROLWeu
- g68UhfQlIVIj7iOJDwlicChY14YNuYPhFR1+QO+JxhYoOije56SjuQm4SRxivegbyCC8
- wJcxrLYuf+uGDWNhxbv3fxmV0esikeGvUJeSN3ax1s1qYchptS9IgF27NsLcBzFV47pt 9w== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pd5bc9uvu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 19 Mar 2023 15:48:28 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32JBJghr030373;
-        Sun, 19 Mar 2023 15:48:28 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2170.outbound.protection.outlook.com [104.47.57.170])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pd3rasx5h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 19 Mar 2023 15:48:28 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KCV29/Yk7w0Dd761zk67kd2Z2FoQDBAypHSoCUW9A+O0OHC1sitmlltzJSi1+qnSl0IThP9dNpD601CgXoXpDAToBrNow4CRrNxL0LDWh6v1lNrKx4tVNn5lb0e6BZjd9zBsronNtwjUMjAhPQxvMxB5yUZn6E6QLD59fte0wmDFW1l7tLg5VgJvjnGA7JgCsr0oAd44mgOkfgnkAWfusSCT+qGSgtpCzaWVsZw0NL+pfh43YbKfvNhxcSOMuQQCkwX0H3YecLSe3umKliAriS2eUeI1yjuBpnzVKG54xEcpoMd5dIvkrfmm7K7MGmVF7efukaEsQDuhx0av1e++TQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jc+DcRtgoWcf7EiGfkE5u26xvptH/cUaHTgE5NbU2+U=;
- b=Mjo1W3wPiyKzEHt1PM7+r7nsyLBI73sakXhtQsQker9cdKxySlX5SYyhDtqx+NS7se1agKOhq+anmQO+korz66JXQjSjt5PiFfECglqKSdDje+BJxpiMn750f/0MJWJf7sB55PcTnYA1VynCfPVMimNfVjHhaapCg7k5b6WzIyQNIaq+g0oUzUVFZDhHZ3dT+QtIOVI7xKrVov92w6G5lsa5d2fii+C6gi3AcIZOwC5lQo5Hk+WS5cYxcY2OEaDgl6hEKz1OR4w8/Dngj153aqH013zZ3eUjeEON4Hxc+Tir+pCphD4mmJF82invlxS8BP9pEX6X+yy8Vi0e2E0egQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jc+DcRtgoWcf7EiGfkE5u26xvptH/cUaHTgE5NbU2+U=;
- b=fuuQZ5oETy+2JspgktR283xCx7GJDV2sDwHqm8PVPWG8xntTRteDNmlm+gjhBzde/31yosd9BuuAT+rY2c7wy8FQ11W00oytCaoplfvY+2iAzr3bQjLM5gfsWFlnlLzcwXuuxYlPQbGSrVcNy3OoRx9QXHIKZo+EUfmsioDQe8I=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- SJ0PR10MB6327.namprd10.prod.outlook.com (2603:10b6:a03:44d::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Sun, 19 Mar
- 2023 15:48:23 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::7dd7:8d22:104:8d64]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::7dd7:8d22:104:8d64%7]) with mapi id 15.20.6178.037; Sun, 19 Mar 2023
- 15:48:26 +0000
-Message-ID: <b6606537-5200-041b-3157-2e81ef6ac3be@oracle.com>
-Date:   Sun, 19 Mar 2023 10:48:24 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH 3/5] vhost-scsi: Remove vhost_scsi_mutex from port
- link/unlink
-To:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        stefanha@redhat.com, jasowang@redhat.com, mst@redhat.com,
-        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
-References: <20230223001949.2884-1-michael.christie@oracle.com>
- <20230223001949.2884-4-michael.christie@oracle.com>
-Content-Language: en-US
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20230223001949.2884-4-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DM6PR18CA0019.namprd18.prod.outlook.com
- (2603:10b6:5:15b::32) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        with ESMTP id S229968AbjCTAyF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:54:05 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B211E9D9;
+        Sun, 19 Mar 2023 17:53:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 98C06B80D3F;
+        Mon, 20 Mar 2023 00:53:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95958C433EF;
+        Mon, 20 Mar 2023 00:53:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679273603;
+        bh=ymHo4xqSlXI+y30Wq1XO9baK0xek3CKTl4Oe3cPo/Ks=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=d2T/btNrq2Wj3/sywSmTC9zHKsJ+Ki1bl50OYgVREYSv/7OuHmAcr0E1jWfPzoQjK
+         WpoLLxtAV53BZsyN+h4L0vvYxsp0TVyn43Q+k8paX+ne43WFoHjfJM2ZBx/1K5krGS
+         Gchb8nq69dtgveO7WLqkERFehRssqI4kQPQB3J+ycOn4uo6Zzk7qZQdfPjZPHnzBuJ
+         Y7It0yXqGlZ0FIMAsBXNaNj8C0xGKgYafilUHANKLmIgQM/nkj4Ixr/3nNBbjim4Jz
+         l20NKLIX8Nqd/uJA8M40oXGuL6gFdS4NiwJs1CiE87EawLjd+xhu1s+8CGZBxgD47C
+         gS55hnXJRI2cQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Vernon Yang <vernon2gm@gmail.com>,
+        Yury Norov <yury.norov@gmail.com>,
+        "Jason A . Donenfeld" <Jason@zx2c4.com>,
+        Sasha Levin <sashal@kernel.org>, mpe@ellerman.id.au,
+        tytso@mit.edu, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, christophe.leroy@csgroup.eu,
+        npiggin@gmail.com, dmitry.osipenko@collabora.com, joel@jms.id.au,
+        nathanl@linux.ibm.com, gustavoars@kernel.org,
+        naveen.n.rao@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
+        wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 09/30] cpumask: fix incorrect cpumask scanning result checks
+Date:   Sun, 19 Mar 2023 20:52:34 -0400
+Message-Id: <20230320005258.1428043-9-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230320005258.1428043-1-sashal@kernel.org>
+References: <20230320005258.1428043-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|SJ0PR10MB6327:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4b2940a9-fc2d-4d5a-0faf-08db28916067
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: q4Vw5DP/Y+RWzIvF4IU+jE0NetFEEyXOTdxme2rjjOpBbVIMYkOpc6ugMM8ABk07QQ0ZULKl9YEVezYsyiLDP3F0r9rxRL4x2kmSIiL4AJbMsIGMXilwXGWzLVsjlFx0U0M96NaQTNtGalLSV1eWjfKI2DA4pHEgEopleZghixyoPmTYSpQBwbJg2wIu5UAWzlQwB/n9QZEnP+fSosTdas2EebPtpHsMFr/DzkPUKCe9BXEJ1/US/k4hpT0h1+H4fujMGpg4kIXyyG2FqSCCZL0O+a+lghig5bqABLkwQVDKMInyI1uQzA4Sh/2Fb/3aobyBFmJHZWBYC6tVIY69Yy7kiKa22J37ejOEPFqWva5oE7jznuFwa63IzvbWJqQpQ6IDnhYsXOSrbVz2rV/xGkYzUSiv5o5t4vASqUdVUc/4+7lvoboxWPKk4EjNQhDIWZYPki51hHguShgoOQL9DTsGs5iAqrosrj/Rmb93M9Uy/TRU4+XiT+H3XLD5UvHQAoW0TMAmmCixiAg/2s4L3DYDuLtT6lhKs+ybyt3DnL33DKvv3j+ZPPj2iV1JiLX1i2Hxa1Lr7kO/K6/qIPtbymD/xequmEH7/xM82A0//uzlneOeIvSWu2L3/JlcrQEZJRajsNGyvihKbQmSrV8L1yG/W21caXWf/SJN0Bloz1sF27g2vTn5AUm3aaTbJUvJrUhtpuso6r422Pqjb1XWosj4ihcRMyO43+oiiRdjn0A=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(376002)(396003)(39860400002)(346002)(136003)(366004)(451199018)(316002)(6486002)(86362001)(31696002)(2616005)(38100700002)(478600001)(53546011)(6506007)(186003)(26005)(36756003)(6512007)(2906002)(4744005)(41300700001)(31686004)(8936002)(8676002)(5660300002)(66556008)(66476007)(66946007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Y2ExZFd1ZmFPZUJkT09EVUF1RThQaFhZbTd2M1NSRjRzNlN6R3ZqOFoyODll?=
- =?utf-8?B?NmM5T1Nxd20weWcvalhxUE5LZ0prNVZkeTI4TWRSckV3eUFaS0lPdXNXc0d3?=
- =?utf-8?B?MFJVOVRzZXlMK3dUdlR5N1JpdHNwUmdhcDNHWmhzaTNyam9pMTRYSlV4SEhm?=
- =?utf-8?B?L2F3aGZXUkdvSGNjMk80bEgwWkV3SnpmVENPRll2VDVjeDBVcmYvQzZOSWc5?=
- =?utf-8?B?Mkxob2M4cXc5ZmI5alZWa25GbXFKdmJXYXlIL1hTYkhYOXZxYkpaSjIvZUox?=
- =?utf-8?B?MkZRSG5RR0U4eVMvUGRqM2ZrNFE5eDFXYVhUQ3Nac1ZVRmRsWHE2d1paRjhT?=
- =?utf-8?B?YWRlZ05WM21WNkNaNjMyelZaUmpPQnFtVzQzYUM3K3pUczNRNDdoYkRxWHk1?=
- =?utf-8?B?MTV5eHBNU3BmY3BiVUNYVlZqNDFocFo5dlJESU5oNUlDdGc5ZzNEUnRsa1F0?=
- =?utf-8?B?d0lzWWxyRitPZDA1ek5Kdk10QWhHMHpvV1VMR0V0eTRKaVZGcEljVVFreXhK?=
- =?utf-8?B?M1pFL3FzQVZscHdiOXNPQlBFR2JvVDJOa2FjWW10SnFrR1ZuS0xyc2kxeGVR?=
- =?utf-8?B?UDNjOWlzUjNabkQ2MmVEQWpRQVBuTXVQQldIY2RnRHdJTkt3RCs0YktURGVH?=
- =?utf-8?B?RmhmYlZubWJOejdLRUMrc3djRVdkWVhvUzJibnJsZEltVXBoK3BhVjdHUkht?=
- =?utf-8?B?b0pVcDNlbjUyZmNibFd5amF0d0dRdFlqZWM0cU8zYUJmZG9ISjREY1dWc2pp?=
- =?utf-8?B?VGY4a1BNdWh1S2RtU0drQUtVamFiQkVqT1hQb3ExUUZXRnBBN3FITHFIZ1cv?=
- =?utf-8?B?SitoUkdUekx2UG1LdWRGMnB0SWtVMTc1OUxkK01zZ3ZsbjBySDg4NklJN2hm?=
- =?utf-8?B?Um9tMWFYeG84NjhRS2E3MnAyUEQ2S0NqdmxQVGgzY1lqaWhFdGdNMGRlY29n?=
- =?utf-8?B?OVpYeURhL1FhdDIxNDJBVGdxWXlMMUZwN3MxSjZTV0RDeFdCSGJLNWNDVmdl?=
- =?utf-8?B?eWFEYmJoL3NsOHFsd2hIZjlyakVzTzREZnYreHlmZzFkTFlwWU4vQ3hJMmlT?=
- =?utf-8?B?cFUxOWJuTUNpbXdaS3lIV0kxcWkybWtlLzNoVE9LQ0EzWWtHeW1tVDUxTGxR?=
- =?utf-8?B?cmVJTUlWY0xUeGpGeGxaSzR2VUhTY3pteUVybmhnVWJRV25KcEorY1AvTmUr?=
- =?utf-8?B?R3VUTExGUkVGT2lnUzhiUmlvUngrbEtoT25mc3BYVDZjZWZhbCtnVzU1RUZP?=
- =?utf-8?B?Vk1RZDNWSDZnMDlCVTFNY1FZRzV3RHU0aDhUdWFyclBsN1JwcHBIb04xL2RI?=
- =?utf-8?B?ZWErVHJwejNvbDFabmxiMHpFRlVNZG5GeThRSFdZc2tydFgxQjFuVnpVUk1J?=
- =?utf-8?B?dGlobjhMRDJhMHVrNzFEWUd1a1RCSGZRUmVoelRINWQ3SVU2cXh0VHE1MzZq?=
- =?utf-8?B?Z2dtcEJUVGhUQXdDcG1wd3hrVmpVMUo1YVJ1TEVSVTBGcm1YNEk2cmx4TjBI?=
- =?utf-8?B?djlWVGxvcHpvZFdOOFhHL1BqOGRGWjVLc2NaTFVpWHlqOGplT2V4bGdSNmJ4?=
- =?utf-8?B?YmhFWnVpdm5VM3hQTWtjMlhBYU0vNmJhQlRVS2o4RkhzYmV2Yy9kYmVWdmVV?=
- =?utf-8?B?MmNEcHY5SjRub0ViMkl1NGZWRGtXVzdsODNJOU1RSEs1R21nQXNBQWd6K3Zj?=
- =?utf-8?B?cDdrQ1VtRjhSWE1ibHF2S0Y2Z3djNXRjdzBYd1ltTWZ6aEZEN0VHSThHNG10?=
- =?utf-8?B?c0NtSkM2Qzc3VWRlNXlwWjJRSkJaWG15WS9MY3R4UGJMdVdFVE1SS0N5OGlT?=
- =?utf-8?B?VnA3dFpsWTNoWDVXS3d4bGZiaTBZTjAvbUpIaVVPWU5aQjVUZ25zK1g2YW9h?=
- =?utf-8?B?RVB5TmlxMEFuQUpJOTMvUENXYWhGQ054clpDaDVrY1lJcFkvVGtMMzF4aHp3?=
- =?utf-8?B?MC9McDZOZUR0R2pOcHFRV2NWY3BYLzVETGE2UTJKRXNGekJXSnNpUWZCU1V3?=
- =?utf-8?B?MW9zV1pDRWRDcCttb3JCRnd5alR2L2hNMFJ2elZ2RFk3ZTZIWTh5SXdiaU5L?=
- =?utf-8?B?MWEzME5uN0ZtaHFlZDBnakR6dkF0NkE1ZUxscVg1T3ZkZ0xpckdTM1hXZENN?=
- =?utf-8?B?THloT1MrdUc4amt1MFZRMlRsbEZKTmpEdWpDUWw5S3MySk4yZG94ZnhRTjRu?=
- =?utf-8?B?UGc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 4U9IQmpQ5aSmKjqkRlBMtrCh4XHlKIYvMaXmuZT4zljlYRTkbs8IbgcvKRCh/fciPHpjbh6H45qRp2MGPdS+730tGFSSpyLPwlChOkhJhZbIfqmhoj4NFUsutk4CFQsmzgz3XYDRASeUJ3OEUztzKPGtkUy6KtXX/deg+Q1tzWEzEXqs72iJQhKDNAUDuLzBofzqNTKOFH4SuyrkI7qrdfyFxTc1aW00d3L5UPyVvCZkZA1NBnzk/xEu++Wcv6yGTfpeiMWEIRRD8aeYoXrxsJtnLfn91HwqTd8CDTSoXIxKvbtK5KeGmgud8M6JhSpkRJqfLh/QV8YKDDDOkG1rOvq4vouauzZ8L1eObrWab8k96a6sw6P12iwhEnBPl8rjdaHA3oQb6nnPhtOa6UE5HCyejx3QxhMotTwVqd36WNiD/oFgPAyTbzUD3fpDwvF49eYy4joWg5ESf/QSA+nijpE+Jc4AOCr+/x5Ot+ZRzZW5cCiAYa3PrYNm6JLxA69cKJXsYWCAoLQMGkmJFJrYdRPxqbi7u2Q7O/Efl4cF6Orh/OG4TtadvDgxDf0iZAA8Cnptj/dF9MC7kTLD7+VY0njXlIfRIruaS5+AoAfz3X7OBFEnwFh+I8GxpowPo0sZmlnr2+SxfDKx42d0f/5TaQqEnLKEF9jXdYfnMTTL1hs0QKOc9rk+zF66jlNvu+9nOeSRbXPYxVmN2wIHTXiBZkIlkPgsT30DejOKmQm/woN7tdcYMyDXeTFb4LqbkZF5R0Fb1PJDNi6wPUg+oUjSp5qO+SPUEV6rZdBG+S4o2moxEuP7Q04SLjin9oMJx2cl8+qxj2Ia5aGYg5FcxOXfu2NN7yw8r0Hy36AAzjKiHUk=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b2940a9-fc2d-4d5a-0faf-08db28916067
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2023 15:48:25.8605
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BgGoEeNb253AQRHajDP9XnDUXdsLWS4RVru1nV9cah81Ll2uxlduMH2B+y8s1a01U4JqoQsWKyOPu1zka+q7hd1Jjjvy9rimhS/Frd8qb54=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB6327
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-19_07,2023-03-16_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
- mlxlogscore=811 mlxscore=0 bulkscore=0 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
- definitions=main-2303190134
-X-Proofpoint-ORIG-GUID: HNr8OjwNWCiKMzusfvRALXHdH6RCHI1E
-X-Proofpoint-GUID: HNr8OjwNWCiKMzusfvRALXHdH6RCHI1E
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/22/23 6:19 PM, Mike Christie wrote:
-> We don't need the vhost_scsi_mutex in vhost_scsi_port_link and
-> vhost_scsi_port_unlink because LIO has a refcount on the se_tpg for us,
-> so it can't be removed while these functions are called. This removes the
-> vhost_scsi_mutex from those functions to avoid cases where we are adding
-> or removing LUNs to vhost-deviceA but are stuck waiting on the
-> vhost_scsi_mutex because we are running vhost_scsi_clear_endpoint on
-> vhost-deviceB and it's stuck in vhost_scsi_flush waiting for a flakey
-> physical device.
+From: Linus Torvalds <torvalds@linux-foundation.org>
 
-I'm going to self Nack these patches. This patch has a bug where we can
-leak vhost_scsi_tmf structs. It's ok to drop the vhost_scsi_mutex use but
-in vhost_scsi_port_unlink it needs to be replaced with the device->mutex
-or we need to flush the tmf/VHOST_SCSI_VQ_CTL queue to make sure outstanding
-tmfs are freed.
+[ Upstream commit 8ca09d5fa3549d142c2080a72a4c70ce389163cd ]
+
+It turns out that commit 596ff4a09b89 ("cpumask: re-introduce
+constant-sized cpumask optimizations") exposed a number of cases of
+drivers not checking the result of "cpumask_next()" and friends
+correctly.
+
+The documented correct check for "no more cpus in the cpumask" is to
+check for the result being equal or larger than the number of possible
+CPU ids, exactly _because_ we've always done those constant-sized
+cpumask scans using a widened type before.  So the return value of a
+cpumask scan should be checked with
+
+	if (cpu >= nr_cpu_ids)
+		...
+
+because the cpumask scan did not necessarily stop exactly *at* that
+maximum CPU id.
+
+But a few cases ended up instead using checks like
+
+	if (cpu == nr_cpumask_bits)
+		...
+
+which used that internal "widened" number of bits.  And that used to
+work pretty much by accident (ok, in this case "by accident" is simply
+because it matched the historical internal implementation of the cpumask
+scanning, so it was more of a "intentionally using implementation
+details rather than an accident").
+
+But the extended constant-sized optimizations then did that internal
+implementation differently, and now that code that did things wrong but
+matched the old implementation no longer worked at all.
+
+Which then causes subsequent odd problems due to using what ends up
+being an invalid CPU ID.
+
+Most of these cases require either unusual hardware or special uses to
+hit, but the random.c one triggers quite easily.
+
+All you really need is to have a sufficiently small CONFIG_NR_CPUS value
+for the bit scanning optimization to be triggered, but not enough CPUs
+to then actually fill that widened cpumask.  At that point, the cpumask
+scanning will return the NR_CPUS constant, which is _not_ the same as
+nr_cpumask_bits.
+
+This just does the mindless fix with
+
+   sed -i 's/== nr_cpumask_bits/>= nr_cpu_ids/'
+
+to fix the incorrect uses.
+
+The ones in the SCSI lpfc driver in particular could probably be fixed
+more cleanly by just removing that repeated pattern entirely, but I am
+not emptionally invested enough in that driver to care.
+
+Reported-and-tested-by: Guenter Roeck <linux@roeck-us.net>
+Link: https://lore.kernel.org/lkml/481b19b5-83a0-4793-b4fd-194ad7b978c3@roeck-us.net/
+Reported-and-tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/lkml/CAMuHMdUKo_Sf7TjKzcNDa8Ve+6QrK+P8nSQrSQ=6LTRmcBKNww@mail.gmail.com/
+Reported-by: Vernon Yang <vernon2gm@gmail.com>
+Link: https://lore.kernel.org/lkml/20230306160651.2016767-1-vernon2gm@gmail.com/
+Cc: Yury Norov <yury.norov@gmail.com>
+Cc: Jason A. Donenfeld <Jason@zx2c4.com>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/powerpc/xmon/xmon.c         |  2 +-
+ drivers/char/random.c            |  2 +-
+ drivers/net/wireguard/queueing.h |  2 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 14 +++++++-------
+ 4 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/arch/powerpc/xmon/xmon.c b/arch/powerpc/xmon/xmon.c
+index 0da66bc4823d4..3b4e2475fc4ef 100644
+--- a/arch/powerpc/xmon/xmon.c
++++ b/arch/powerpc/xmon/xmon.c
+@@ -1277,7 +1277,7 @@ static int xmon_batch_next_cpu(void)
+ 	while (!cpumask_empty(&xmon_batch_cpus)) {
+ 		cpu = cpumask_next_wrap(smp_processor_id(), &xmon_batch_cpus,
+ 					xmon_batch_start_cpu, true);
+-		if (cpu == nr_cpumask_bits)
++		if (cpu >= nr_cpu_ids)
+ 			break;
+ 		if (xmon_batch_start_cpu == -1)
+ 			xmon_batch_start_cpu = cpu;
+diff --git a/drivers/char/random.c b/drivers/char/random.c
+index ce3ccd172cc86..253f2ddb89130 100644
+--- a/drivers/char/random.c
++++ b/drivers/char/random.c
+@@ -1311,7 +1311,7 @@ static void __cold try_to_generate_entropy(void)
+ 			/* Basic CPU round-robin, which avoids the current CPU. */
+ 			do {
+ 				cpu = cpumask_next(cpu, &timer_cpus);
+-				if (cpu == nr_cpumask_bits)
++				if (cpu >= nr_cpu_ids)
+ 					cpu = cpumask_first(&timer_cpus);
+ 			} while (cpu == smp_processor_id() && num_cpus > 1);
+ 
+diff --git a/drivers/net/wireguard/queueing.h b/drivers/net/wireguard/queueing.h
+index 583adb37ee1e3..125284b346a77 100644
+--- a/drivers/net/wireguard/queueing.h
++++ b/drivers/net/wireguard/queueing.h
+@@ -106,7 +106,7 @@ static inline int wg_cpumask_choose_online(int *stored_cpu, unsigned int id)
+ {
+ 	unsigned int cpu = *stored_cpu, cpu_index, i;
+ 
+-	if (unlikely(cpu == nr_cpumask_bits ||
++	if (unlikely(cpu >= nr_cpu_ids ||
+ 		     !cpumask_test_cpu(cpu, cpu_online_mask))) {
+ 		cpu_index = id % cpumask_weight(cpu_online_mask);
+ 		cpu = cpumask_first(cpu_online_mask);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 25ba20e428255..3fbd3bec26fc1 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12507,7 +12507,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 					goto found_same;
+ 				new_cpu = cpumask_next(
+ 					new_cpu, cpu_present_mask);
+-				if (new_cpu == nr_cpumask_bits)
++				if (new_cpu >= nr_cpu_ids)
+ 					new_cpu = first_cpu;
+ 			}
+ 			/* At this point, we leave the CPU as unassigned */
+@@ -12521,7 +12521,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 			 * selecting the same IRQ.
+ 			 */
+ 			start_cpu = cpumask_next(new_cpu, cpu_present_mask);
+-			if (start_cpu == nr_cpumask_bits)
++			if (start_cpu >= nr_cpu_ids)
+ 				start_cpu = first_cpu;
+ 
+ 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -12557,7 +12557,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 					goto found_any;
+ 				new_cpu = cpumask_next(
+ 					new_cpu, cpu_present_mask);
+-				if (new_cpu == nr_cpumask_bits)
++				if (new_cpu >= nr_cpu_ids)
+ 					new_cpu = first_cpu;
+ 			}
+ 			/* We should never leave an entry unassigned */
+@@ -12575,7 +12575,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 			 * selecting the same IRQ.
+ 			 */
+ 			start_cpu = cpumask_next(new_cpu, cpu_present_mask);
+-			if (start_cpu == nr_cpumask_bits)
++			if (start_cpu >= nr_cpu_ids)
+ 				start_cpu = first_cpu;
+ 
+ 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -12648,7 +12648,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 				goto found_hdwq;
+ 			}
+ 			new_cpu = cpumask_next(new_cpu, cpu_present_mask);
+-			if (new_cpu == nr_cpumask_bits)
++			if (new_cpu >= nr_cpu_ids)
+ 				new_cpu = first_cpu;
+ 		}
+ 
+@@ -12663,7 +12663,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 				goto found_hdwq;
+ 
+ 			new_cpu = cpumask_next(new_cpu, cpu_present_mask);
+-			if (new_cpu == nr_cpumask_bits)
++			if (new_cpu >= nr_cpu_ids)
+ 				new_cpu = first_cpu;
+ 		}
+ 
+@@ -12674,7 +12674,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+  found_hdwq:
+ 		/* We found an available entry, copy the IRQ info */
+ 		start_cpu = cpumask_next(new_cpu, cpu_present_mask);
+-		if (start_cpu == nr_cpumask_bits)
++		if (start_cpu >= nr_cpu_ids)
+ 			start_cpu = first_cpu;
+ 		cpup->hdwq = new_cpup->hdwq;
+  logit:
+-- 
+2.39.2
 
