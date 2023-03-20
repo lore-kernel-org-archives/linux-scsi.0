@@ -2,45 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7402EC6FD1F
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54793C7618A
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:58:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230316AbjCTA5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 20:57:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34556 "EHLO
+        id S230196AbjCTA57 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 20:57:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230027AbjCTA4Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:56:24 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 071541E5E6;
-        Sun, 19 Mar 2023 17:55:01 -0700 (PDT)
+        with ESMTP id S230194AbjCTA4n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:56:43 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4928B1F5E2;
+        Sun, 19 Mar 2023 17:55:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id DF80ACE1024;
-        Mon, 20 Mar 2023 00:54:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 505ADC433D2;
-        Mon, 20 Mar 2023 00:54:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4213D611F1;
+        Mon, 20 Mar 2023 00:54:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9270DC433D2;
+        Mon, 20 Mar 2023 00:54:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273676;
-        bh=dedyIN+QCvBkCBfVWpXsX2Tzfh/6ufEr3d4L7AHy/PA=;
+        s=k20201202; t=1679273691;
+        bh=st7aYBmLfd0MyXZF/9PgTN++ECgcprKMlOymemBkRRc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gjy8NiJuTRIXEBXFOvcm7A6F5FkgWdfJEjSyUuIIfBNJdWRDMKVE5azx40FCIUm2t
-         oTZWL+/JPKaUu5OV5z5+7O8DUfFonBq0+VTopZXPRiUSF+U6vU2J68o+9DhxFLES8K
-         enSbGBUuLKdhgnZnUYQy3fVRvvaTsBS8txX8omc74kcOPK5bbIhXHU8q71KgTb068Y
-         MlUy/Twu/8ZbCGj5pR9s14XB1Oei45eMWsRWItyiYNGHABE7DWJG2d4ULIujyncNQP
-         u+4tXTgc77B4WqBtW5cP8MwN329tegWJ+MYENxkHfOrn3SOZPw87WlqdXJMeY9EzW7
-         S5wJxLO5yWChw==
+        b=HLRMPdHSe+5qdtsoVw+bVryKYy7oU4p2dP43c3eFTf0sa34fAIlQQQz64SEcSpZxL
+         tLdvD34bfulzsSHwizWQMMflScyIk4c2Iqakmjp7Mv2QsgYKzNd/m9w4rWWlXmOv6+
+         H3omJEpdHy++icBSvGo5/VjUyeHz/YC8r+xr46WsFSoSv5vSvIn1HobXHIDxxt2b22
+         M2bxZUAGI5avsOWgVqiuhS/HVjMoV6hl7SAlTg++65Ow/1L+gA9Rmq3llZEoT7Pcgx
+         ONgRf7lDrfWaUROAMmgdhn7dHv7I3/hQubIXpfhf+xbmexHl0rfmrZgp2IT0h9QtNy
+         6AmzQqlL2J4pA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maurizio Lombardi <mlombard@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, mgurtovoy@nvidia.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 09/29] scsi: target: iscsi: Fix an error message in iscsi_check_key()
-Date:   Sun, 19 Mar 2023 20:53:51 -0400
-Message-Id: <20230320005413.1428452-9-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 17/29] scsi: mpi3mr: Wait for diagnostic save during controller init
+Date:   Sun, 19 Mar 2023 20:53:59 -0400
+Message-Id: <20230320005413.1428452-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230320005413.1428452-1-sashal@kernel.org>
 References: <20230320005413.1428452-1-sashal@kernel.org>
@@ -52,53 +54,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 6cc55c969b7ce8d85e09a636693d4126c3676c11 ]
+[ Upstream commit 0a319f1629495d27879b7ebf6eee62b8cf6e4c37 ]
 
-The first half of the error message is printed by pr_err(), the second half
-is printed by pr_debug(). The user will therefore see only the first part
-of the message and will miss some useful information.
+If a controller reset operation is triggered to recover the controller from
+a fault state, then wait for the snapdump to be saved in the firmware
+region before proceeding to reset the controller.
 
-Link: https://lore.kernel.org/r/20230214141556.762047-1-mlombard@redhat.com
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Link: https://lore.kernel.org/r/20230228140835.4075-4-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_parameters.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 2317fb077db0e..557516c642c3b 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -1262,18 +1262,20 @@ static struct iscsi_param *iscsi_check_key(
- 		return param;
- 
- 	if (!(param->phase & phase)) {
--		pr_err("Key \"%s\" may not be negotiated during ",
--				param->name);
-+		char *phase_name;
-+
- 		switch (phase) {
- 		case PHASE_SECURITY:
--			pr_debug("Security phase.\n");
-+			phase_name = "Security";
- 			break;
- 		case PHASE_OPERATIONAL:
--			pr_debug("Operational phase.\n");
-+			phase_name = "Operational";
- 			break;
- 		default:
--			pr_debug("Unknown phase.\n");
-+			phase_name = "Unknown";
- 		}
-+		pr_err("Key \"%s\" may not be negotiated during %s phase.\n",
-+				param->name, phase_name);
- 		return NULL;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 4efab23b40d25..832d9c0179cf1 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1198,7 +1198,7 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
+  */
+ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ {
+-	u32 ioc_config, ioc_status, timeout;
++	u32 ioc_config, ioc_status, timeout, host_diagnostic;
+ 	int retval = 0;
+ 	enum mpi3mr_iocstate ioc_state;
+ 	u64 base_info;
+@@ -1252,6 +1252,23 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 			    retval, mpi3mr_iocstate_name(ioc_state));
  	}
- 
+ 	if (ioc_state != MRIOC_STATE_RESET) {
++		if (ioc_state == MRIOC_STATE_FAULT) {
++			timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
++			mpi3mr_print_fault_info(mrioc);
++			do {
++				host_diagnostic =
++					readl(&mrioc->sysif_regs->host_diagnostic);
++				if (!(host_diagnostic &
++				      MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS))
++					break;
++				if (!pci_device_is_present(mrioc->pdev)) {
++					mrioc->unrecoverable = 1;
++					ioc_err(mrioc, "controller is not present at the bringup\n");
++					goto out_device_not_present;
++				}
++				msleep(100);
++			} while (--timeout);
++		}
+ 		mpi3mr_print_fault_info(mrioc);
+ 		ioc_info(mrioc, "issuing soft reset to bring to reset state\n");
+ 		retval = mpi3mr_issue_reset(mrioc,
 -- 
 2.39.2
 
