@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E14C7618E
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F48C7618E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:03:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231286AbjCTBD0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 21:03:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44020 "EHLO
+        id S231309AbjCTBD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 21:03:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231289AbjCTBCk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:02:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86C32233E2;
-        Sun, 19 Mar 2023 17:57:31 -0700 (PDT)
+        with ESMTP id S231314AbjCTBCs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:02:48 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8E012364E;
+        Sun, 19 Mar 2023 17:57:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E2832611E8;
-        Mon, 20 Mar 2023 00:55:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 682E2C433A0;
-        Mon, 20 Mar 2023 00:55:46 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BD1D7B80D4A;
+        Mon, 20 Mar 2023 00:56:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B661CC433D2;
+        Mon, 20 Mar 2023 00:56:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273747;
-        bh=l2A9QQihpFJRFhhKWIMSe7D1FvrYtIWgCPHdfGY7ya0=;
+        s=k20201202; t=1679273778;
+        bh=vLPdEk4Fjw1BwPXpeXL7Y2+eIf5Xwbn9TjCRARSDY0U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ndset1lRKenhMTsXVRGqJBzc6SqqNVq3wAaYca5PnBR8HTbyOg1Rl3chi/MPrJyIJ
-         Y9OqVQSqlHGpPZOYu6tJIChRbr3nAbyCpyTD2PwmQ57r3P+f0w9PXl8W5UOk7nooJZ
-         UvltgN3jkm8vluyctDUQdt4iQi3tXo9kw/PZhPJsgq1OJFZ/z9i4h0bRf4Lp42H/Up
-         wsYSJ5PTNUDiKB/DXahElnWHSbsxr+XmGGOUquXEyoWtm/9uIDYyAILSyUsTmyA1Qq
-         Z7CmSQ5GjHx4rT1NBxFZT9bpYo0+B4i4QgONFpMwBTVqT5rw36+FedoNNgK2JXQSyt
-         ppbet8QFhUATA==
+        b=ubGDHpDW7BbdOc9xjwRpE1t6nG3HdhdzCo1gx7kxWyOgctbnJPu8U8dHkRwOLDLVW
+         VZ98DJ753k716SQOzWaV21VW73mpq6utUdtLvYSllh3fqrPwQLHn1XeBJoLPP5wmzq
+         lHvvkE0qmR6lCL805MUQI7BBzTqu04Bnr+QaF0dIMCLnu1UO154VKGUbjQ14plqwq7
+         FSWL5MQKxODPXq1ltOROcw1GcJJXhDzOcL9+kiC/cDf+J/5ThpcBU68cBg5C2e1Hgb
+         iDHPb0dXCr/pmEPicxDTNL/pU6nF/hRk/NbYQBdAVXo7kje0IhllyOYBpbj9Q4SLZ+
+         mHcSYvd1PkRpg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justin.tee@broadcom.com>,
-        Kang Chen <void0red@gmail.com>,
+Cc:     Kang Chen <void0red@gmail.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 11/17] scsi: lpfc: Check kzalloc() in lpfc_sli4_cgn_params_read()
-Date:   Sun, 19 Mar 2023 20:55:13 -0400
-Message-Id: <20230320005521.1428820-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 08/15] scsi: hisi_sas: Check devm_add_action() return value
+Date:   Sun, 19 Mar 2023 20:55:52 -0400
+Message-Id: <20230320005559.1429040-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230320005521.1428820-1-sashal@kernel.org>
-References: <20230320005521.1428820-1-sashal@kernel.org>
+In-Reply-To: <20230320005559.1429040-1-sashal@kernel.org>
+References: <20230320005559.1429040-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,57 +52,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Kang Chen <void0red@gmail.com>
 
-[ Upstream commit 312320b0e0ec21249a17645683fe5304d796aec1 ]
+[ Upstream commit 06d1a90de60208054cca15ef200138cfdbb642a9 ]
 
-If kzalloc() fails in lpfc_sli4_cgn_params_read(), then we rely on
-lpfc_read_object()'s routine to NULL check pdata.
+In case devm_add_action() fails, check it in the caller of
+interrupt_preinit_v3_hw().
 
-Currently, an early return error is thrown from lpfc_read_object() to
-protect us from NULL ptr dereference, but the errno code is -ENODEV.
-
-Change the errno code to a more appropriate -ENOMEM.
-
-Reported-by: Kang Chen <void0red@gmail.com>
-Link: https://lore.kernel.org/all/20230226102338.3362585-1-void0red@gmail.com
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20230228044336.5195-1-justintee8345@gmail.com
+Link: https://lore.kernel.org/r/20230227031030.893324-1-void0red@gmail.com
+Signed-off-by: Kang Chen <void0red@gmail.com>
+Acked-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 ++
- drivers/scsi/lpfc/lpfc_sli.c  | 4 ----
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 855817f6fe671..f79299f6178cd 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7056,6 +7056,8 @@ lpfc_sli4_cgn_params_read(struct lpfc_hba *phba)
- 	/* Find out if the FW has a new set of congestion parameters. */
- 	len = sizeof(struct lpfc_cgn_param);
- 	pdata = kzalloc(len, GFP_KERNEL);
-+	if (!pdata)
-+		return -ENOMEM;
- 	ret = lpfc_read_object(phba, (char *)LPFC_PORT_CFG_NAME,
- 			       pdata, len);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index cd41dc061d874..65971bd80186b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2402,8 +2402,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
+ 	shost->nr_hw_queues = hisi_hba->cq_nvecs;
  
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7d333167047f5..1f1d346adc038 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -22376,10 +22376,6 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
- 	struct lpfc_dmabuf *pcmd;
- 	u32 rd_object_name[LPFC_MBX_OBJECT_NAME_LEN_DW] = {0};
+-	devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
+-	return 0;
++	return devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
+ }
  
--	/* sanity check on queue memory */
--	if (!datap)
--		return -ENODEV;
--
- 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
+ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
 -- 
 2.39.2
 
