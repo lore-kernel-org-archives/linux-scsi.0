@@ -2,28 +2,28 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647DBC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 06:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E086C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 06:45:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229735AbjCTGTP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Mar 2023 02:19:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45238 "EHLO
+        id S229983AbjCTGpJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Mar 2023 02:45:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjCTGTM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Mar 2023 02:19:12 -0400
+        with ESMTP id S229968AbjCTGpH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Mar 2023 02:45:07 -0400
 Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE8C2AF12;
-        Sun, 19 Mar 2023 23:19:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761832D40;
+        Sun, 19 Mar 2023 23:45:06 -0700 (PDT)
 Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
         by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1pe8rK-0002Pe-7N; Mon, 20 Mar 2023 07:19:06 +0100
-Message-ID: <472c53aa-4803-cde9-8f80-cbd7d33dc9c5@leemhuis.info>
-Date:   Mon, 20 Mar 2023 07:19:05 +0100
+        id 1pe9GS-0007YZ-Gk; Mon, 20 Mar 2023 07:45:04 +0100
+Message-ID: <e6314dd6-df75-fff8-1e3c-546b2b44be5b@leemhuis.info>
+Date:   Mon, 20 Mar 2023 07:45:04 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.8.0
-X-Mozilla-News-Host: news://nntp.lore.kernel.org:119
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+Subject: Re: Consider picking up "scsi: core: Fix a procfs host directory
+ removal regression" for stable
 Content-Language: en-US, de-DE
 From:   "Linux regression tracking (Thorsten Leemhuis)" 
         <regressions@leemhuis.info>
@@ -35,28 +35,32 @@ Cc:     Linux kernel regressions list <regressions@lists.linux.dev>,
         scsi <linux-scsi@vger.kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Consider picking up "scsi: core: Fix a procfs host directory removal
- regression" for stable
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
+          Linux regressions mailing list 
+          <regressions@lists.linux.dev>
+References: <472c53aa-4803-cde9-8f80-cbd7d33dc9c5@leemhuis.info>
+In-Reply-To: <472c53aa-4803-cde9-8f80-cbd7d33dc9c5@leemhuis.info>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1679293148;53b2ef1d;
-X-HE-SMSGID: 1pe8rK-0002Pe-7N
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1679294706;df4130bf;
+X-HE-SMSGID: 1pe9GS-0007YZ-Gk
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Greg. From https://bugzilla.kernel.org/show_bug.cgi?id=217215 it
-looks like you want to add be03df3d4bfe ("scsi: core: Fix a procfs host
-directory removal regression") to your stable queue. It lacks a stable
-tag, but fixes a bug in a commit that afaics was backported to all
-stable series last week.
+On 20.03.23 07:19, Linux regression tracking (Thorsten Leemhuis) wrote:
+> Hi Greg. From https://bugzilla.kernel.org/show_bug.cgi?id=217215 it
+> looks like you want to add be03df3d4bfe ("scsi: core: Fix a procfs host
+> directory removal regression") to your stable queue. It lacks a stable
+> tag, but fixes a bug in a commit that afaics was backported to all
+> stable series last week.
+> 
+> Side note: would you scripts have noticed this automatically and added
+> it to the queue today? (Just wondering if this mail actually makes any
+> difference.)
 
-Side note: would you scripts have noticed this automatically and added
-it to the queue today? (Just wondering if this mail actually makes any
-difference.)
+Sorry, ignore that, I noticed that fix is already in your queue (I
+looked at it before writing that mail, but it seems I somehow missed it
+and only noticed now; sorry for the noise).
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
+Ciao, Thorsten
