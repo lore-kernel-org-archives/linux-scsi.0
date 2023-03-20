@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06268C7618A
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:54:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DBF2C7618E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229984AbjCTAy2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 20:54:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34402 "EHLO
+        id S230014AbjCTAy3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 20:54:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229986AbjCTAyI (ORCPT
+        with ESMTP id S229987AbjCTAyI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:54:08 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F4E11E5C7;
-        Sun, 19 Mar 2023 17:53:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A6491F4AB;
+        Sun, 19 Mar 2023 17:53:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F03A6611DF;
-        Mon, 20 Mar 2023 00:53:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96B42C4339B;
-        Mon, 20 Mar 2023 00:53:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F57961151;
+        Mon, 20 Mar 2023 00:53:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9874C433EF;
+        Mon, 20 Mar 2023 00:53:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273609;
-        bh=7EL9TvrvjginXKOzqR86t0df7hgPP3aHNpYPzaCP28E=;
+        s=k20201202; t=1679273606;
+        bh=dedyIN+QCvBkCBfVWpXsX2Tzfh/6ufEr3d4L7AHy/PA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LAwQe5K2wAAqF1nlrODMv5G6IYirx1fuW366q2nKG/w/wk/+3ZcN28oksUIRd53rT
-         A6kDj9oL9oETuEpqfIobyEVWkbwsV59F1983hVsUhxqWc1yqENcKyYsAjO8MAe9Xnl
-         PyBDCnvhSfUiJ9nw9SKycfiNwMk24bvrGZCmgbdAt/V4GFl/SnvsLHRkoXbq1hwcUi
-         nSjimgwpNVPF5UubrzHhnAgIkpswbn+ozJWiruQkRKj370NUCjV6/kMGh6OMF0k5d2
-         IadzJTyD+VZ9wb5iO5738SUDG67MxcWaAuw0KuFlREjss3u9+dYrfQ8Nzz3yatHugw
-         nsKow1HtkASEA==
+        b=K93jTR6bWb2SOueZxsSKSdlrajS7zfvx4yvpx/hz9GQTWdpVQnOtxnqUM3FZq2tXh
+         hpvZiCdr6zqyFx3HuY1mj/KdzEx508cYupHdUvkev8xkMuUi8+qBjOpiD6FqMBTM5A
+         y4m59tld9wLk808b4yG1AJ8sszM4RsSWXEG/5BkYMekJY9ed6flRKsP1fvyZI0wrXn
+         7zhhMCFpHg+Bayu8LGSTt2LjkcQ2kKFE/Erv+Mv5HIqzSp+fg7Nc9/QQpR3aEpKQXb
+         Y3M6jqPI9O6zOs42C7dRGq9Zb0fYVM0km+kgiMMhZEX8UxbLvuQKQe3Uv9w6+Dxg8v
+         HKzF/PIEobYMQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kang Chen <void0red@gmail.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
+Cc:     Maurizio Lombardi <mlombard@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 12/30] scsi: hisi_sas: Check devm_add_action() return value
-Date:   Sun, 19 Mar 2023 20:52:37 -0400
-Message-Id: <20230320005258.1428043-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, mgurtovoy@nvidia.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 10/30] scsi: target: iscsi: Fix an error message in iscsi_check_key()
+Date:   Sun, 19 Mar 2023 20:52:35 -0400
+Message-Id: <20230320005258.1428043-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230320005258.1428043-1-sashal@kernel.org>
 References: <20230320005258.1428043-1-sashal@kernel.org>
@@ -52,36 +52,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kang Chen <void0red@gmail.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
 
-[ Upstream commit 06d1a90de60208054cca15ef200138cfdbb642a9 ]
+[ Upstream commit 6cc55c969b7ce8d85e09a636693d4126c3676c11 ]
 
-In case devm_add_action() fails, check it in the caller of
-interrupt_preinit_v3_hw().
+The first half of the error message is printed by pr_err(), the second half
+is printed by pr_debug(). The user will therefore see only the first part
+of the message and will miss some useful information.
 
-Link: https://lore.kernel.org/r/20230227031030.893324-1-void0red@gmail.com
-Signed-off-by: Kang Chen <void0red@gmail.com>
-Acked-by: Xiang Chen <chenxiang66@hisilicon.com>
+Link: https://lore.kernel.org/r/20230214141556.762047-1-mlombard@redhat.com
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/target/iscsi/iscsi_target_parameters.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 0c3fcb8078062..a63279f55d096 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2495,8 +2495,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
- 	shost->nr_hw_queues = hisi_hba->cq_nvecs;
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 2317fb077db0e..557516c642c3b 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -1262,18 +1262,20 @@ static struct iscsi_param *iscsi_check_key(
+ 		return param;
  
--	devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
--	return 0;
-+	return devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
- }
+ 	if (!(param->phase & phase)) {
+-		pr_err("Key \"%s\" may not be negotiated during ",
+-				param->name);
++		char *phase_name;
++
+ 		switch (phase) {
+ 		case PHASE_SECURITY:
+-			pr_debug("Security phase.\n");
++			phase_name = "Security";
+ 			break;
+ 		case PHASE_OPERATIONAL:
+-			pr_debug("Operational phase.\n");
++			phase_name = "Operational";
+ 			break;
+ 		default:
+-			pr_debug("Unknown phase.\n");
++			phase_name = "Unknown";
+ 		}
++		pr_err("Key \"%s\" may not be negotiated during %s phase.\n",
++				param->name, phase_name);
+ 		return NULL;
+ 	}
  
- static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
 -- 
 2.39.2
 
