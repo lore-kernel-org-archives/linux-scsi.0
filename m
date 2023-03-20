@@ -2,61 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D03C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 08:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEE0FC7618A
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 08:48:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230410AbjCTIhH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Mar 2023 04:37:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60948 "EHLO
+        id S230326AbjCTIsI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Mar 2023 04:48:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230402AbjCTIhG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Mar 2023 04:37:06 -0400
-Received: from mail.surechiers.com (mail.surechiers.com [80.211.239.236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 858D41B56F
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Mar 2023 01:37:05 -0700 (PDT)
-Received: by mail.surechiers.com (Postfix, from userid 1002)
-        id 6F20083E70; Mon, 20 Mar 2023 09:36:13 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=surechiers.com;
-        s=mail; t=1679301390;
-        bh=xg3VVY9SU+I+f+ynMyY8e0Lum0EY/KrTvpy5BYTg7yw=;
-        h=Date:From:To:Subject:From;
-        b=rLj015lW/0lmQNZpot4dMvy2Pj/hvqtw005/uJ5TwvImc7yh9E5cQibKXrKnAFYAl
-         Ebv/RmGZ1q7DlNlYZg6rrsSYNBkLHC7ym1hKHHGuhaoopyLExLda1HC1F4fkgZ+l4o
-         mUSPwuZXkm/UiaiFnHR8quF7sOGUzTAyUOTfS2KzSX0zs1pVKAlnoIaVttS1bp9uMd
-         XWtmjMkutzZ1lUh3fxn8PNsuNZMGTGlX5oB7fLPekHSvjygPUttWRdSkqcn1iqIFeP
-         7XF0xezV6ieScJzILWUa/R1c+v94+gzZYZdZBwjOzRDbBpLEET68TOxkfpZrcGe4nc
-         ryoZSzgJ2I0aQ==
-Received: by mail.surechiers.com for <linux-scsi@vger.kernel.org>; Mon, 20 Mar 2023 08:36:09 GMT
-Message-ID: <20230320084500-0.1.s.1uhv.0.6aralunbo4@surechiers.com>
-Date:   Mon, 20 Mar 2023 08:36:09 GMT
-From:   =?UTF-8?Q? "J=C3=A1chym_Zdr=C3=A1hal" ?= 
-        <jachym.zdrahal@surechiers.com>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Renovace podlahy
-X-Mailer: mail.surechiers.com
+        with ESMTP id S230060AbjCTIsG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Mar 2023 04:48:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5B9E55A0;
+        Mon, 20 Mar 2023 01:48:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2FA5461263;
+        Mon, 20 Mar 2023 08:48:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CA5BC433EF;
+        Mon, 20 Mar 2023 08:48:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1679302084;
+        bh=ujA6Uw61/p6mzFCHl2TPNTrn3EeopZSQcSvdx284HS4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZoB1JsImlGki7ySeaRm7mmOXjE2Q7Pjj4iLMOA86bMnJH4CZaGmQd3JOhuSTrw9qL
+         YzhHE79drltHGj1OyeQXqpWTmpi90mogbicQIxYTc3zA3dH4r9C3FKGkAyAWIvzDHD
+         7oBBGHNQbxU2m0wWqENh0YqTxcqMbj5nUSuneiSo=
+Date:   Mon, 20 Mar 2023 09:47:57 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Linux regressions mailing list <regressions@lists.linux.dev>
+Cc:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: Consider picking up "scsi: core: Fix a procfs host directory
+ removal regression" for stable
+Message-ID: <ZBgdvX4hV3zmdZOc@kroah.com>
+References: <472c53aa-4803-cde9-8f80-cbd7d33dc9c5@leemhuis.info>
+ <e6314dd6-df75-fff8-1e3c-546b2b44be5b@leemhuis.info>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e6314dd6-df75-fff8-1e3c-546b2b44be5b@leemhuis.info>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dobr=C3=A9 r=C3=A1no,
+On Mon, Mar 20, 2023 at 07:45:04AM +0100, Linux regression tracking (Thorsten Leemhuis) wrote:
+> On 20.03.23 07:19, Linux regression tracking (Thorsten Leemhuis) wrote:
+> > Hi Greg. From https://bugzilla.kernel.org/show_bug.cgi?id=217215 it
+> > looks like you want to add be03df3d4bfe ("scsi: core: Fix a procfs host
+> > directory removal regression") to your stable queue. It lacks a stable
+> > tag, but fixes a bug in a commit that afaics was backported to all
+> > stable series last week.
+> > 
+> > Side note: would you scripts have noticed this automatically and added
+> > it to the queue today? (Just wondering if this mail actually makes any
+> > difference.)
+> 
+> Sorry, ignore that, I noticed that fix is already in your queue (I
+> looked at it before writing that mail, but it seems I somehow missed it
+> and only noticed now; sorry for the noise).
 
-m=C4=9Bli byste z=C3=A1jem o beze=C5=A1v=C3=A9, chemicky, n=C3=A1razu a o=
-t=C4=9Bru odoln=C3=A9 podlahy?
+It's not noise, verifying that we actually picked up known fixes is
+good, I'd much rather a few "do you really have this fix" emails get
+sent than not sent at all and we miss things.
 
-Zaji=C5=A1=C5=A5uj=C3=AD spolehlivost bez ohledu na to, zda je pou=C5=BE=C3=
-=ADv=C3=A1te v n=C3=A1ro=C4=8Dn=C3=BDch v=C3=BDrobn=C3=ADch prostorech, s=
-kladech, komunika=C4=8Dn=C3=ADch tras=C3=A1ch nebo komer=C4=8Dn=C3=ADch p=
-rostor=C3=A1ch.
+And I just checked, yes, if Sasha hadn't picked this up with his
+scripts, my scripts would have caught it as well, so it was a good test
+that our independant processes are working.
 
-Navrhli jsme snadno =C4=8Distiteln=C3=A9, hygienick=C3=A9 a protiskluzov=C3=
-=A9 podlahy pro pr=C5=AFmyslov=C3=A9 i komer=C4=8Dn=C3=AD pou=C5=BEit=C3=AD=
-=2E
+thanks,
 
-Mohu nab=C3=ADdnout bezplatn=C3=BD audit va=C5=A1ich podlah spolu s kompl=
-exn=C3=AD anal=C3=BDzou podkladu. Mohu o tomhle zavolat?
-
-
-J=C3=A1chym Zdr=C3=A1hal
+greg k-h
