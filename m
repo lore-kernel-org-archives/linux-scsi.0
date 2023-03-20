@@ -2,48 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB38C7618E
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0473CC6FD1F
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:36:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230288AbjCTBcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 21:32:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46912 "EHLO
+        id S229774AbjCTBgA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 21:36:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230290AbjCTBcG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:32:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ABE71C7F5;
-        Sun, 19 Mar 2023 18:24:52 -0700 (PDT)
+        with ESMTP id S229765AbjCTBfl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:35:41 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B84E176B3;
+        Sun, 19 Mar 2023 18:29:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AA9E9B80D4E;
-        Mon, 20 Mar 2023 00:57:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9043DC433D2;
-        Mon, 20 Mar 2023 00:57:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 18CADB80D4F;
+        Mon, 20 Mar 2023 00:54:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDDCAC433EF;
+        Mon, 20 Mar 2023 00:54:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273865;
-        bh=RxUOKQnkZ51m0C4w7P7Mc8ot7XLDQpDTuCM0VAoHUxw=;
+        s=k20201202; t=1679273686;
+        bh=S92CcyWhvxH5rDjNGNtndcNeQr7FnAOumVDxLSX/x6M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QpCNVph5UHEgjAgLtUF3Ez0Qh10lsjyDCtL4F8qLjb6nVf4BL/peKsNE7zHTIwRzj
-         B+bsBemwjEuvpjcOoKDALFpQj0kDP0uWlbiskAFlqr7OIpICUsIGdPtJ2KcOz0OJbq
-         iZpxbsCiNbzq2e+eJOAhS9NRqDOZoV/LQitgHI6xE5a0aOlqliFqQCl1/dUscnoIbW
-         dtxqMIb/ylr11LFSpXFL/U3MC/2Xl6U8QF1nbJCRjhj9eDHVPtRuIm2BiOOkjX/HPF
-         Fc8g6LagZtOWxJ89qQ8OnX+aT8k5qGCM6/ZIbMY3++gJR5S7lvJEYssHglbUtvbY5B
-         p2MHdv7CR0cqg==
+        b=cqKd6T9ZOdxacCNLCOxiZ+pjpfT3U7+dxUqS1gcI4mcevx+vooeTbIUDiPaVvXmUN
+         EfpDqcQ2KS19xrQwZehR39/rwhj8253kGUjQST9ziBHmREpgaOL+rKNqSJrIwH0h0G
+         NmYR2doIY4Tk1/VonvC4YBFPR+J03bK9pM+juRY6hqIS7H3eutfl3FjByUQHHfdF0v
+         T12z/JbRv4Bm9TX1aajBZp7TKl6CFAdHBjvUOAbs69CSUWh6D3BpnfsHg1DPOK113S
+         Lu0Fn0SYVDULQ2YuJTuOxXq5NABz92q7Wh9Qv1D612VAu/QHFzMZ8sxJeyuWykiqN6
+         6sxjkWTugc3rA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maurizio Lombardi <mlombard@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Jakob Koschel <jkl820.git@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, mgurtovoy@nvidia.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 5/9] scsi: target: iscsi: Fix an error message in iscsi_check_key()
-Date:   Sun, 19 Mar 2023 20:57:28 -0400
-Message-Id: <20230320005732.1429533-5-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 14/29] scsi: lpfc: Avoid usage of list iterator variable after loop
+Date:   Sun, 19 Mar 2023 20:53:56 -0400
+Message-Id: <20230320005413.1428452-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230320005732.1429533-1-sashal@kernel.org>
-References: <20230320005732.1429533-1-sashal@kernel.org>
+In-Reply-To: <20230320005413.1428452-1-sashal@kernel.org>
+References: <20230320005413.1428452-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,53 +53,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+From: Jakob Koschel <jkl820.git@gmail.com>
 
-[ Upstream commit 6cc55c969b7ce8d85e09a636693d4126c3676c11 ]
+[ Upstream commit 2850b23e9f9ae3696e472d2883ea1b43aafa884e ]
 
-The first half of the error message is printed by pr_err(), the second half
-is printed by pr_debug(). The user will therefore see only the first part
-of the message and will miss some useful information.
+If the &epd_pool->list is empty when executing
+lpfc_get_io_buf_from_expedite_pool() the function would return an invalid
+pointer. Even in the case if the list is guaranteed to be populated, the
+iterator variable should not be used after the loop to be more robust for
+future changes.
 
-Link: https://lore.kernel.org/r/20230214141556.762047-1-mlombard@redhat.com
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Linus proposed to avoid any use of the list iterator variable after the
+loop, in the attempt to move the list iterator variable declaration into
+the macro to avoid any potential misuse after the loop [1].
+
+Link: https://lore.kernel.org/all/CAHk-=wgRr_D8CB-D9Kg-c=EHreAsk5SqXPwr9Y7k9sA6cWXJ6w@mail.gmail.com/ [1]
+Signed-off-by: Jakob Koschel <jkl820.git@gmail.com>
+Link: https://lore.kernel.org/r/20230301-scsi-lpfc-avoid-list-iterator-after-loop-v1-1-325578ae7561@gmail.com
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_parameters.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index caab1045742df..d2c8c4929f93a 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -1270,18 +1270,20 @@ static struct iscsi_param *iscsi_check_key(
- 		return param;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 43e06bb917e77..b44bb3ae22ad9 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -21886,20 +21886,20 @@ lpfc_get_io_buf_from_private_pool(struct lpfc_hba *phba,
+ static struct lpfc_io_buf *
+ lpfc_get_io_buf_from_expedite_pool(struct lpfc_hba *phba)
+ {
+-	struct lpfc_io_buf *lpfc_ncmd;
++	struct lpfc_io_buf *lpfc_ncmd = NULL, *iter;
+ 	struct lpfc_io_buf *lpfc_ncmd_next;
+ 	unsigned long iflag;
+ 	struct lpfc_epd_pool *epd_pool;
  
- 	if (!(param->phase & phase)) {
--		pr_err("Key \"%s\" may not be negotiated during ",
--				param->name);
-+		char *phase_name;
-+
- 		switch (phase) {
- 		case PHASE_SECURITY:
--			pr_debug("Security phase.\n");
-+			phase_name = "Security";
+ 	epd_pool = &phba->epd_pool;
+-	lpfc_ncmd = NULL;
+ 
+ 	spin_lock_irqsave(&epd_pool->lock, iflag);
+ 	if (epd_pool->count > 0) {
+-		list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
++		list_for_each_entry_safe(iter, lpfc_ncmd_next,
+ 					 &epd_pool->list, list) {
+-			list_del(&lpfc_ncmd->list);
++			list_del(&iter->list);
+ 			epd_pool->count--;
++			lpfc_ncmd = iter;
  			break;
- 		case PHASE_OPERATIONAL:
--			pr_debug("Operational phase.\n");
-+			phase_name = "Operational";
- 			break;
- 		default:
--			pr_debug("Unknown phase.\n");
-+			phase_name = "Unknown";
  		}
-+		pr_err("Key \"%s\" may not be negotiated during %s phase.\n",
-+				param->name, phase_name);
- 		return NULL;
  	}
- 
 -- 
 2.39.2
 
