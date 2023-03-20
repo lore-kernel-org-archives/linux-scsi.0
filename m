@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7F23C7618A
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:58:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C78DC761A6
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:59:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230384AbjCTA6a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 20:58:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34494 "EHLO
+        id S229884AbjCTA7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 20:59:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230307AbjCTA52 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:57:28 -0400
+        with ESMTP id S230075AbjCTA6G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:58:06 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C68962054B;
-        Sun, 19 Mar 2023 17:55:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6120120A3E;
+        Sun, 19 Mar 2023 17:55:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0DE42B80D41;
-        Mon, 20 Mar 2023 00:54:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6642C4339E;
-        Mon, 20 Mar 2023 00:54:36 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BEF79B80D4D;
+        Mon, 20 Mar 2023 00:54:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9522EC4339C;
+        Mon, 20 Mar 2023 00:54:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273677;
-        bh=Z/5pUP0s8QoM8bKw6tdKdB8VFTtHE5wyXCfzu2k2FR4=;
+        s=k20201202; t=1679273685;
+        bh=x8V2g7ZD+Au9PDGMbS/5phCngMePeOQTK1SYJlN3vCo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AzJPZm+z048e2pBPcXs3hdNi4QyxhkqMEHYh0hIT1T73vt7ZICH4f+DbB0NFT3RzV
-         QiN1C7W0Zyf7uIt/SzxXtRx+NkGBH5N8l016VuYk/3zH1urChn0+dfxae49rQLalPx
-         w3LDU4STmOxRZGA26AUYceMVcHk2VFSiZreH2pVDe4DOYdc4bqtu4sAOi39AEmc6tU
-         CKqwLbGMNGYTlvfbbrEhSwKgZqV8RNcu8aJU5wr+esPwVnb0gmg4Rss1GAygV9rPev
-         GxNkWoHcogqcCwgb2jGSqc1e3cBXDtKeLeNJU9iOOBebd2wRJoVJ4sBP6h+8URFjuQ
-         /+ucU7uiJtR1g==
+        b=qPey1SWgQuyTPwZ2R4r4LZjcA+EuNMyTsFkD3U/IIN7euxXiMBeVOQ2q/mvhSNyqh
+         qgSLqbInZDSaKCeT7WZC3f62prevriAi9RB8qVw6sgwiAd1V1c5OqUwzfBs+UBm4Dp
+         jSEVtN/THbk0FhRVrtSjxYEAuM/8elKTkn6jwHaFY1GmVT0N2z2rBIlne1dunjtJ5k
+         FDQZ1dBZ4JiLae+2lvGZqTPtvLthDTaizpyAGJrpO5TDL5WlLhUOp19C98QQ65/uec
+         bfdRKHXVp133w8M7kd/HqzLWNApgTeMklCw36x7WAZqR+zg1Ckehr+0CHgLXdAlvZz
+         E4Cnywd0WgHcw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc:     Justin Tee <justin.tee@broadcom.com>,
+        Kang Chen <void0red@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 10/29] scsi: qla2xxx: Add option to disable FC2 Target support
-Date:   Sun, 19 Mar 2023 20:53:52 -0400
-Message-Id: <20230320005413.1428452-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 13/29] scsi: lpfc: Check kzalloc() in lpfc_sli4_cgn_params_read()
+Date:   Sun, 19 Mar 2023 20:53:55 -0400
+Message-Id: <20230320005413.1428452-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230320005413.1428452-1-sashal@kernel.org>
 References: <20230320005413.1428452-1-sashal@kernel.org>
@@ -53,81 +53,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Daniel Wagner <dwagner@suse.de>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 877b03795fcf29ff2e2351f7e574ecc9b9c51732 ]
+[ Upstream commit 312320b0e0ec21249a17645683fe5304d796aec1 ]
 
-Commit 44c57f205876 ("scsi: qla2xxx: Changes to support FCP2 Target") added
-support for FC2 Targets. Unfortunately, there are older setups which break
-with this new feature enabled.
+If kzalloc() fails in lpfc_sli4_cgn_params_read(), then we rely on
+lpfc_read_object()'s routine to NULL check pdata.
 
-Allow to disable it via module option.
+Currently, an early return error is thrown from lpfc_read_object() to
+protect us from NULL ptr dereference, but the errno code is -ENODEV.
 
-Link: https://lore.kernel.org/r/20230208152014.109214-1-dwagner@suse.de
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Change the errno code to a more appropriate -ENOMEM.
+
+Reported-by: Kang Chen <void0red@gmail.com>
+Link: https://lore.kernel.org/all/20230226102338.3362585-1-void0red@gmail.com
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20230228044336.5195-1-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h  |  1 +
- drivers/scsi/qla2xxx/qla_init.c |  3 ++-
- drivers/scsi/qla2xxx/qla_os.c   | 10 +++++++++-
- 3 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ drivers/scsi/lpfc/lpfc_sli.c  | 4 ----
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index e3256e721be14..ee54207fc5319 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -192,6 +192,7 @@ extern int ql2xsecenable;
- extern int ql2xenforce_iocb_limit;
- extern int ql2xabts_wait_nvme;
- extern u32 ql2xnvme_queues;
-+extern int ql2xfc2target;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index b535f1fd30100..2f38c8d5a48a9 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7234,6 +7234,8 @@ lpfc_sli4_cgn_params_read(struct lpfc_hba *phba)
+ 	/* Find out if the FW has a new set of congestion parameters. */
+ 	len = sizeof(struct lpfc_cgn_param);
+ 	pdata = kzalloc(len, GFP_KERNEL);
++	if (!pdata)
++		return -ENOMEM;
+ 	ret = lpfc_read_object(phba, (char *)LPFC_PORT_CFG_NAME,
+ 			       pdata, len);
  
- extern int qla2x00_loop_reset(scsi_qla_host_t *);
- extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index a8d822c4e3bac..93f7f3dd5d82b 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1841,7 +1841,8 @@ void qla2x00_handle_rscn(scsi_qla_host_t *vha, struct event_arg *ea)
- 	case RSCN_PORT_ADDR:
- 		fcport = qla2x00_find_fcport_by_nportid(vha, &ea->id, 1);
- 		if (fcport) {
--			if (fcport->flags & FCF_FCP2_DEVICE &&
-+			if (ql2xfc2target &&
-+			    fcport->flags & FCF_FCP2_DEVICE &&
- 			    atomic_read(&fcport->state) == FCS_ONLINE) {
- 				ql_dbg(ql_dbg_disc, vha, 0x2115,
- 				       "Delaying session delete for FCP2 portid=%06x %8phC ",
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 6e33dc16ce6f3..85dc8c9e464f8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -360,6 +360,13 @@ MODULE_PARM_DESC(ql2xnvme_queues,
- 	"1 - Minimum number of queues supported\n"
- 	"8 - Default value");
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index b93c948c4fcc4..43e06bb917e77 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -22096,10 +22096,6 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
+ 	struct lpfc_dmabuf *pcmd;
+ 	u32 rd_object_name[LPFC_MBX_OBJECT_NAME_LEN_DW] = {0};
  
-+int ql2xfc2target = 1;
-+module_param(ql2xfc2target, int, 0444);
-+MODULE_PARM_DESC(qla2xfc2target,
-+		  "Enables FC2 Target support. "
-+		  "0 - FC2 Target support is disabled. "
-+		  "1 - FC2 Target support is enabled (default).");
-+
- static struct scsi_transport_template *qla2xxx_transport_template = NULL;
- struct scsi_transport_template *qla2xxx_transport_vport_template = NULL;
- 
-@@ -4076,7 +4083,8 @@ qla2x00_mark_all_devices_lost(scsi_qla_host_t *vha)
- 	    "Mark all dev lost\n");
- 
- 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
--		if (fcport->loop_id != FC_NO_LOOP_ID &&
-+		if (ql2xfc2target &&
-+		    fcport->loop_id != FC_NO_LOOP_ID &&
- 		    (fcport->flags & FCF_FCP2_DEVICE) &&
- 		    fcport->port_type == FCT_TARGET &&
- 		    !qla2x00_reset_active(vha)) {
+-	/* sanity check on queue memory */
+-	if (!datap)
+-		return -ENODEV;
+-
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+ 		return -ENOMEM;
 -- 
 2.39.2
 
