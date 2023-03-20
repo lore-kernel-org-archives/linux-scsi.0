@@ -2,65 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E086C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 06:45:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D03C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 08:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229983AbjCTGpJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Mar 2023 02:45:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49360 "EHLO
+        id S230410AbjCTIhH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Mar 2023 04:37:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229968AbjCTGpH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Mar 2023 02:45:07 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761832D40;
-        Sun, 19 Mar 2023 23:45:06 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1pe9GS-0007YZ-Gk; Mon, 20 Mar 2023 07:45:04 +0100
-Message-ID: <e6314dd6-df75-fff8-1e3c-546b2b44be5b@leemhuis.info>
-Date:   Mon, 20 Mar 2023 07:45:04 +0100
+        with ESMTP id S230402AbjCTIhG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Mar 2023 04:37:06 -0400
+Received: from mail.surechiers.com (mail.surechiers.com [80.211.239.236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 858D41B56F
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Mar 2023 01:37:05 -0700 (PDT)
+Received: by mail.surechiers.com (Postfix, from userid 1002)
+        id 6F20083E70; Mon, 20 Mar 2023 09:36:13 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=surechiers.com;
+        s=mail; t=1679301390;
+        bh=xg3VVY9SU+I+f+ynMyY8e0Lum0EY/KrTvpy5BYTg7yw=;
+        h=Date:From:To:Subject:From;
+        b=rLj015lW/0lmQNZpot4dMvy2Pj/hvqtw005/uJ5TwvImc7yh9E5cQibKXrKnAFYAl
+         Ebv/RmGZ1q7DlNlYZg6rrsSYNBkLHC7ym1hKHHGuhaoopyLExLda1HC1F4fkgZ+l4o
+         mUSPwuZXkm/UiaiFnHR8quF7sOGUzTAyUOTfS2KzSX0zs1pVKAlnoIaVttS1bp9uMd
+         XWtmjMkutzZ1lUh3fxn8PNsuNZMGTGlX5oB7fLPekHSvjygPUttWRdSkqcn1iqIFeP
+         7XF0xezV6ieScJzILWUa/R1c+v94+gzZYZdZBwjOzRDbBpLEET68TOxkfpZrcGe4nc
+         ryoZSzgJ2I0aQ==
+Received: by mail.surechiers.com for <linux-scsi@vger.kernel.org>; Mon, 20 Mar 2023 08:36:09 GMT
+Message-ID: <20230320084500-0.1.s.1uhv.0.6aralunbo4@surechiers.com>
+Date:   Mon, 20 Mar 2023 08:36:09 GMT
+From:   =?UTF-8?Q? "J=C3=A1chym_Zdr=C3=A1hal" ?= 
+        <jachym.zdrahal@surechiers.com>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Renovace podlahy
+X-Mailer: mail.surechiers.com
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: Consider picking up "scsi: core: Fix a procfs host directory
- removal regression" for stable
-Content-Language: en-US, de-DE
-From:   "Linux regression tracking (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     Linux kernel regressions list <regressions@lists.linux.dev>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
-          Linux regressions mailing list 
-          <regressions@lists.linux.dev>
-References: <472c53aa-4803-cde9-8f80-cbd7d33dc9c5@leemhuis.info>
-In-Reply-To: <472c53aa-4803-cde9-8f80-cbd7d33dc9c5@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1679294706;df4130bf;
-X-HE-SMSGID: 1pe9GS-0007YZ-Gk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20.03.23 07:19, Linux regression tracking (Thorsten Leemhuis) wrote:
-> Hi Greg. From https://bugzilla.kernel.org/show_bug.cgi?id=217215 it
-> looks like you want to add be03df3d4bfe ("scsi: core: Fix a procfs host
-> directory removal regression") to your stable queue. It lacks a stable
-> tag, but fixes a bug in a commit that afaics was backported to all
-> stable series last week.
-> 
-> Side note: would you scripts have noticed this automatically and added
-> it to the queue today? (Just wondering if this mail actually makes any
-> difference.)
+Dobr=C3=A9 r=C3=A1no,
 
-Sorry, ignore that, I noticed that fix is already in your queue (I
-looked at it before writing that mail, but it seems I somehow missed it
-and only noticed now; sorry for the noise).
+m=C4=9Bli byste z=C3=A1jem o beze=C5=A1v=C3=A9, chemicky, n=C3=A1razu a o=
+t=C4=9Bru odoln=C3=A9 podlahy?
 
-Ciao, Thorsten
+Zaji=C5=A1=C5=A5uj=C3=AD spolehlivost bez ohledu na to, zda je pou=C5=BE=C3=
+=ADv=C3=A1te v n=C3=A1ro=C4=8Dn=C3=BDch v=C3=BDrobn=C3=ADch prostorech, s=
+kladech, komunika=C4=8Dn=C3=ADch tras=C3=A1ch nebo komer=C4=8Dn=C3=ADch p=
+rostor=C3=A1ch.
+
+Navrhli jsme snadno =C4=8Distiteln=C3=A9, hygienick=C3=A9 a protiskluzov=C3=
+=A9 podlahy pro pr=C5=AFmyslov=C3=A9 i komer=C4=8Dn=C3=AD pou=C5=BEit=C3=AD=
+=2E
+
+Mohu nab=C3=ADdnout bezplatn=C3=BD audit va=C5=A1ich podlah spolu s kompl=
+exn=C3=AD anal=C3=BDzou podkladu. Mohu o tomhle zavolat?
+
+
+J=C3=A1chym Zdr=C3=A1hal
