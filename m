@@ -2,46 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C696FC7618A
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:54:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA5BC7618E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:55:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229871AbjCTAy7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 20:54:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60308 "EHLO
+        id S229959AbjCTAzJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 20:55:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbjCTAyS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:54:18 -0400
+        with ESMTP id S229961AbjCTAyX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:54:23 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A44D54C02;
-        Sun, 19 Mar 2023 17:53:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A641E5EE;
+        Sun, 19 Mar 2023 17:53:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 37261611E8;
-        Mon, 20 Mar 2023 00:53:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93452C4331D;
-        Mon, 20 Mar 2023 00:53:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1BD7B611F3;
+        Mon, 20 Mar 2023 00:53:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65C58C4339C;
+        Mon, 20 Mar 2023 00:53:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273616;
-        bh=4NGiIwqKyua+k+/w8eJSpy8bX3HReGAYKuq4M46ioQY=;
+        s=k20201202; t=1679273624;
+        bh=SdOk40AzdtEARY4waWJeAh1gvbyptGVEnJMaObhKGtE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pLYkq/GIz60TlAM+ZW6qMbdFwTgMV/Xyk59X5fgGCPIyoMVi8q0BRf+C90ph56aZN
-         5hwj2c3AWgYi7AE/hPnDxOnGyiLee7TKEBs1l2I8KNc7eb8Gl4jVPbFxPKYSkAqRO7
-         lerV+NEWbd055kk4fSH/HhDd8frQdFvVzSxX2fY3wV8vL6c/Gf+yZ8AwQEazvGqxXJ
-         3RKEe547H785uME2HAkj5RxrKxpYgpiyjveVb8TkwOm3qR5lUJ9NXEi/NXhky2rkBK
-         awAQdwdJZfcQz8FaJOhGWAiwK8rYayNVKvTR6es4QB6etjTC9miE0N3yIGmhBFbFIz
-         LJn7XBTqgpzPQ==
+        b=qIufIf/rHRnOdUbbEDMrECau/ECiR68U52gpnM9x0/z56DQ/MO0jm4h0VY6OMvlLx
+         pavXsnN49RdH/GKdGMq+IyPUotP+fcH9BG9OM974up90VFepigcO/qpkyInXoFL/HV
+         9J8owVJHLu2YHOAtx4wdPgC94ty+HVP5riZexShBfLLLPrl3SGmgrDPC2p9/OPMHeN
+         yzzoP8grzj/S0Qa2Jzo0qSIuEoyMJFxmoF/Obd7+YduPesmXxssBz5ADA/SSx8eugA
+         bL1lN1jERBNhG/BSHNxXLlYlthTcqwNFH05sIw23pLiumMRmnY4X/TmQiH7ffXRPLl
+         McYtP6fWZXODg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justin.tee@broadcom.com>,
-        Kang Chen <void0red@gmail.com>,
+Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 14/30] scsi: lpfc: Check kzalloc() in lpfc_sli4_cgn_params_read()
-Date:   Sun, 19 Mar 2023 20:52:39 -0400
-Message-Id: <20230320005258.1428043-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 19/30] scsi: mpi3mr: Return proper values for failures in firmware init path
+Date:   Sun, 19 Mar 2023 20:52:44 -0400
+Message-Id: <20230320005258.1428043-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230320005258.1428043-1-sashal@kernel.org>
 References: <20230320005258.1428043-1-sashal@kernel.org>
@@ -53,57 +54,74 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 312320b0e0ec21249a17645683fe5304d796aec1 ]
+[ Upstream commit ba8a9ba41fbde250fd8b0ed1e5dad0dc9318df46 ]
 
-If kzalloc() fails in lpfc_sli4_cgn_params_read(), then we rely on
-lpfc_read_object()'s routine to NULL check pdata.
+Return proper non-zero return values for all the cases when the controller
+initialization and re-initialization fails.
 
-Currently, an early return error is thrown from lpfc_read_object() to
-protect us from NULL ptr dereference, but the errno code is -ENODEV.
-
-Change the errno code to a more appropriate -ENOMEM.
-
-Reported-by: Kang Chen <void0red@gmail.com>
-Link: https://lore.kernel.org/all/20230226102338.3362585-1-void0red@gmail.com
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20230228044336.5195-1-justintee8345@gmail.com
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Link: https://lore.kernel.org/r/20230228140835.4075-5-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 ++
- drivers/scsi/lpfc/lpfc_sli.c  | 4 ----
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 3fbd3bec26fc1..eeb73da754d0d 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7235,6 +7235,8 @@ lpfc_sli4_cgn_params_read(struct lpfc_hba *phba)
- 	/* Find out if the FW has a new set of congestion parameters. */
- 	len = sizeof(struct lpfc_cgn_param);
- 	pdata = kzalloc(len, GFP_KERNEL);
-+	if (!pdata)
-+		return -ENOMEM;
- 	ret = lpfc_read_object(phba, (char *)LPFC_PORT_CFG_NAME,
- 			       pdata, len);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index fa903a70baac8..29acf6111db30 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3840,8 +3840,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	dprint_init(mrioc, "allocating config page buffers\n");
+ 	mrioc->cfg_page = dma_alloc_coherent(&mrioc->pdev->dev,
+ 	    MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL);
+-	if (!mrioc->cfg_page)
++	if (!mrioc->cfg_page) {
++		retval = -1;
+ 		goto out_failed_noretry;
++	}
  
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 55a0d4013439f..3aa7206537de7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -22113,10 +22113,6 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
- 	struct lpfc_dmabuf *pcmd;
- 	u32 rd_object_name[LPFC_MBX_OBJECT_NAME_LEN_DW] = {0};
+ 	mrioc->cfg_page_sz = MPI3MR_DEFAULT_CFG_PAGE_SZ;
  
--	/* sanity check on queue memory */
--	if (!datap)
--		return -ENODEV;
--
- 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
+@@ -3903,8 +3905,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		dprint_init(mrioc, "allocating memory for throttle groups\n");
+ 		sz = sizeof(struct mpi3mr_throttle_group_info);
+ 		mrioc->throttle_groups = kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
+-		if (!mrioc->throttle_groups)
++		if (!mrioc->throttle_groups) {
++			retval = -1;
+ 			goto out_failed_noretry;
++		}
+ 	}
+ 
+ 	retval = mpi3mr_enable_events(mrioc);
+@@ -3924,6 +3928,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		mpi3mr_memset_buffers(mrioc);
+ 		goto retry_init;
+ 	}
++	retval = -1;
+ out_failed_noretry:
+ 	ioc_err(mrioc, "controller initialization failed\n");
+ 	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
+@@ -4036,6 +4041,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		ioc_err(mrioc,
+ 		    "cannot create minimum number of operational queues expected:%d created:%d\n",
+ 		    mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
++		retval = -1;
+ 		goto out_failed_noretry;
+ 	}
+ 
+@@ -4102,6 +4108,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		mpi3mr_memset_buffers(mrioc);
+ 		goto retry_init;
+ 	}
++	retval = -1;
+ out_failed_noretry:
+ 	ioc_err(mrioc, "controller %s is failed\n",
+ 	    (is_resume)?"resume":"re-initialization");
 -- 
 2.39.2
 
