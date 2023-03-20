@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE936C7619A
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:56:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E879C7618E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 00:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230149AbjCTA4R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 20:56:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33814 "EHLO
+        id S230163AbjCTA4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 20:56:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230031AbjCTAzu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:55:50 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13A193A9E;
-        Sun, 19 Mar 2023 17:54:36 -0700 (PDT)
+        with ESMTP id S230095AbjCTAzv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 20:55:51 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C62417698;
+        Sun, 19 Mar 2023 17:54:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 95DE9CE1011;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 250E0B80D42;
+        Mon, 20 Mar 2023 00:53:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C55EFC4339B;
         Mon, 20 Mar 2023 00:53:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88FE0C433EF;
-        Mon, 20 Mar 2023 00:53:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273619;
-        bh=WzWlooNL+youDZAqH1zIuGXudHT3njW4GJcNY/hn40k=;
+        s=k20201202; t=1679273622;
+        bh=N8x5NnJNmqAdrO5S6zIHrDFxpD9W5ZWTcvipzajTFJc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ODVNXu3+42eEsMyt3qKVeMAH4ih/ElO2b+dGjX3oEQowopSLKsj8GzQkCXplVI2+d
-         WKJNpiK11OqI8Csc4KmtCMD7fMWTuULaCcbaZTWCULVKGpINlLvnEDGP2OZxOYVTp1
-         TRyrBs9UxcGhA2ewPNhZNevpY+7CZddbtJiNSgvoqJ62oXwdocfT/tTPKNOk7hMD2D
-         UNfoTyUiRKH03GK2YLgfxNgC6gm7CjDasvu1cubc8SiD+48VRjl0Qxqo4G6Ew4CTyo
-         1w9U3OKE0TnuKN0RopiD0KLOWk7UyZ7TjJ3vHN4CclKKILRoelcJt9cSktDSWidL4o
-         VT05v0S0MQE+A==
+        b=qpD33lvA7p5ZeVy5RxO/N871s+aFxp1gm9Y3rgijCFPDoC90rvQhuOGywSvihUvXe
+         AvSOzOhHeB/fHkCol/EhhmzYF/yJtSu0saC7o3fOR5Rz9vFoCBut4B63OmEjgMJiFL
+         r3oAVUKvI1RBfUQDiqiPs85YcwPKu9WWzFnWbuibuo2P86nGHZwHH63eohQufqY/pv
+         h9yXQ9bboelKu3V6bP1TUmBZrU7Vek130OZzbXLU8h3vEIBp8J7GPDjpTm0+FTdf9T
+         zhx+QE7Bd/5TrNKmKoMrrdiA1vrQwOdvRFgChNL2LufZchWVMsUhBSNn79SCxZL/lO
+         LnWfxmg4wOdQg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
@@ -40,9 +40,9 @@ Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
         kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 16/30] scsi: mpi3mr: ioctl timeout when disabling/enabling interrupt
-Date:   Sun, 19 Mar 2023 20:52:41 -0400
-Message-Id: <20230320005258.1428043-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 18/30] scsi: mpi3mr: Wait for diagnostic save during controller init
+Date:   Sun, 19 Mar 2023 20:52:43 -0400
+Message-Id: <20230320005258.1428043-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230320005258.1428043-1-sashal@kernel.org>
 References: <20230320005258.1428043-1-sashal@kernel.org>
@@ -56,121 +56,58 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 02ca7da2919ada525fb424640205110e24646b50 ]
+[ Upstream commit 0a319f1629495d27879b7ebf6eee62b8cf6e4c37 ]
 
-As part of Task Management handling, the driver will disable and enable the
-MSIx index zero which belongs to the Admin reply queue. During this
-transition the driver loses some interrupts and this leads to Admin request
-and ioctl timeouts.
-
-After enabling the interrupts, poll the Admin reply queue to avoid
-timeouts.
+If a controller reset operation is triggered to recover the controller from
+a fault state, then wait for the snapdump to be saved in the firmware
+region before proceeding to reset the controller.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Link: https://lore.kernel.org/r/20230228140835.4075-2-ranjan.kumar@broadcom.com
+Link: https://lore.kernel.org/r/20230228140835.4075-4-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  3 +++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 12 ++++++++++--
- drivers/scsi/mpi3mr/mpi3mr_os.c |  1 +
- 3 files changed, 14 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 8a438f248a820..68f29ffb05b82 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -903,6 +903,7 @@ struct scmd_priv {
-  * @admin_reply_ephase:Admin reply queue expected phase
-  * @admin_reply_base: Admin reply queue base virtual address
-  * @admin_reply_dma: Admin reply queue base dma address
-+ * @admin_reply_q_in_use: Queue is handled by poll/ISR
-  * @ready_timeout: Controller ready timeout
-  * @intr_info: Interrupt cookie pointer
-  * @intr_info_count: Number of interrupt cookies
-@@ -1056,6 +1057,7 @@ struct mpi3mr_ioc {
- 	u8 admin_reply_ephase;
- 	void *admin_reply_base;
- 	dma_addr_t admin_reply_dma;
-+	atomic_t admin_reply_q_in_use;
- 
- 	u32 ready_timeout;
- 
-@@ -1391,4 +1393,5 @@ void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc);
- void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc);
-+int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc);
- #endif /*MPI3MR_H_INCLUDED*/
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 758f7ca9e0ee8..4254e46a20f1a 100644
+index 4254e46a20f1a..fa903a70baac8 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -415,7 +415,7 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 		    le64_to_cpu(scsi_reply->sense_data_buffer_address));
- }
- 
--static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
-+int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
+@@ -1198,7 +1198,7 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
+  */
+ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
  {
- 	u32 exp_phase = mrioc->admin_reply_ephase;
- 	u32 admin_reply_ci = mrioc->admin_reply_ci;
-@@ -423,12 +423,17 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 	u64 reply_dma = 0;
- 	struct mpi3_default_reply_descriptor *reply_desc;
- 
-+	if (!atomic_add_unless(&mrioc->admin_reply_q_in_use, 1, 1))
-+		return 0;
-+
- 	reply_desc = (struct mpi3_default_reply_descriptor *)mrioc->admin_reply_base +
- 	    admin_reply_ci;
- 
- 	if ((le16_to_cpu(reply_desc->reply_flags) &
--	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
-+	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
-+		atomic_dec(&mrioc->admin_reply_q_in_use);
- 		return 0;
-+	}
- 
- 	do {
- 		if (mrioc->unrecoverable)
-@@ -454,6 +459,7 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 	writel(admin_reply_ci, &mrioc->sysif_regs->admin_reply_queue_ci);
- 	mrioc->admin_reply_ci = admin_reply_ci;
- 	mrioc->admin_reply_ephase = exp_phase;
-+	atomic_dec(&mrioc->admin_reply_q_in_use);
- 
- 	return num_admin_replies;
- }
-@@ -2605,6 +2611,7 @@ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc)
- 	mrioc->admin_reply_ci = 0;
- 	mrioc->admin_reply_ephase = 1;
- 	mrioc->admin_reply_base = NULL;
-+	atomic_set(&mrioc->admin_reply_q_in_use, 0);
- 
- 	if (!mrioc->admin_req_base) {
- 		mrioc->admin_req_base = dma_alloc_coherent(&mrioc->pdev->dev,
-@@ -4155,6 +4162,7 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 		memset(mrioc->admin_req_base, 0, mrioc->admin_req_q_sz);
- 	if (mrioc->admin_reply_base)
- 		memset(mrioc->admin_reply_base, 0, mrioc->admin_reply_q_sz);
-+	atomic_set(&mrioc->admin_reply_q_in_use, 0);
- 
- 	if (mrioc->init_cmds.reply) {
- 		memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 6eaeba41072cb..a794cc8a1c0b1 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3720,6 +3720,7 @@ int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
- 		mpi3mr_poll_pend_io_completions(mrioc);
- 		mpi3mr_ioc_enable_intr(mrioc);
- 		mpi3mr_poll_pend_io_completions(mrioc);
-+		mpi3mr_process_admin_reply_q(mrioc);
+-	u32 ioc_config, ioc_status, timeout;
++	u32 ioc_config, ioc_status, timeout, host_diagnostic;
+ 	int retval = 0;
+ 	enum mpi3mr_iocstate ioc_state;
+ 	u64 base_info;
+@@ -1252,6 +1252,23 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 			    retval, mpi3mr_iocstate_name(ioc_state));
  	}
- 	switch (tm_type) {
- 	case MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
+ 	if (ioc_state != MRIOC_STATE_RESET) {
++		if (ioc_state == MRIOC_STATE_FAULT) {
++			timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
++			mpi3mr_print_fault_info(mrioc);
++			do {
++				host_diagnostic =
++					readl(&mrioc->sysif_regs->host_diagnostic);
++				if (!(host_diagnostic &
++				      MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS))
++					break;
++				if (!pci_device_is_present(mrioc->pdev)) {
++					mrioc->unrecoverable = 1;
++					ioc_err(mrioc, "controller is not present at the bringup\n");
++					goto out_device_not_present;
++				}
++				msleep(100);
++			} while (--timeout);
++		}
+ 		mpi3mr_print_fault_info(mrioc);
+ 		ioc_info(mrioc, "issuing soft reset to bring to reset state\n");
+ 		retval = mpi3mr_issue_reset(mrioc,
 -- 
 2.39.2
 
