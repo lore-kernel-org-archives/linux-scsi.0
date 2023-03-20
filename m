@@ -2,50 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14AA9C7619A
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:02:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E14C7618E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Mar 2023 01:03:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231266AbjCTBC3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Mar 2023 21:02:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45336 "EHLO
+        id S231286AbjCTBD0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Mar 2023 21:03:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231426AbjCTBAi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:00:38 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F361B22DF7;
-        Sun, 19 Mar 2023 17:57:01 -0700 (PDT)
+        with ESMTP id S231289AbjCTBCk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2023 21:02:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86C32233E2;
+        Sun, 19 Mar 2023 17:57:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6A774B80D53;
-        Mon, 20 Mar 2023 00:54:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C270C4339B;
-        Mon, 20 Mar 2023 00:54:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E2832611E8;
+        Mon, 20 Mar 2023 00:55:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 682E2C433A0;
+        Mon, 20 Mar 2023 00:55:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679273690;
-        bh=q7UJfo6NwOY9VIrBaKXIFeOu0aWzwN+x8ftA5Ue6vL4=;
+        s=k20201202; t=1679273747;
+        bh=l2A9QQihpFJRFhhKWIMSe7D1FvrYtIWgCPHdfGY7ya0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z32p9MPS//ZJGDVD5F4sram1xmax6+5Ofo/E+bJaWRbN3BVEO+x2jJjcyB3+sC/dr
-         ICiHMFRrbYvNLs0aOAlk78R51aXCxQGmFPvmMOmWpA4Z8Syv5jjpHqyBhnJQrszFBe
-         y7ytDZUD0CpaQG/1YUatgV7cEWyYW3u2dDxI1lLlalhVwRRD7HtgEKumga3n2Kh+pW
-         10KDJ1UwFD14dpDuKsdDNx1K9ODkoy73daLouNO3Y7nzhJJOlV1eUURv1hyDn1wbpP
-         chlWHJ0Xixprseca3ajqOrfElM0C4Wy+qwoDGGHLd55X8SpYjDqYPPOJc/TEoolG2N
-         M+vR/P5srhnHA==
+        b=Ndset1lRKenhMTsXVRGqJBzc6SqqNVq3wAaYca5PnBR8HTbyOg1Rl3chi/MPrJyIJ
+         Y9OqVQSqlHGpPZOYu6tJIChRbr3nAbyCpyTD2PwmQ57r3P+f0w9PXl8W5UOk7nooJZ
+         UvltgN3jkm8vluyctDUQdt4iQi3tXo9kw/PZhPJsgq1OJFZ/z9i4h0bRf4Lp42H/Up
+         wsYSJ5PTNUDiKB/DXahElnWHSbsxr+XmGGOUquXEyoWtm/9uIDYyAILSyUsTmyA1Qq
+         Z7CmSQ5GjHx4rT1NBxFZT9bpYo0+B4i4QgONFpMwBTVqT5rw36+FedoNNgK2JXQSyt
+         ppbet8QFhUATA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     Justin Tee <justin.tee@broadcom.com>,
+        Kang Chen <void0red@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 16/29] scsi: mpi3mr: Driver unload crashes host when enhanced logging is enabled
-Date:   Sun, 19 Mar 2023 20:53:58 -0400
-Message-Id: <20230320005413.1428452-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 11/17] scsi: lpfc: Check kzalloc() in lpfc_sli4_cgn_params_read()
+Date:   Sun, 19 Mar 2023 20:55:13 -0400
+Message-Id: <20230320005521.1428820-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230320005413.1428452-1-sashal@kernel.org>
-References: <20230320005413.1428452-1-sashal@kernel.org>
+In-Reply-To: <20230320005521.1428820-1-sashal@kernel.org>
+References: <20230320005521.1428820-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,36 +53,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 5b06a7169c59ce0c77ef8b9c82aa07c478f82aac ]
+[ Upstream commit 312320b0e0ec21249a17645683fe5304d796aec1 ]
 
-Prevent driver from trying to dereference a NULL pointer in a debug print
-while removing a device during driver unload.
+If kzalloc() fails in lpfc_sli4_cgn_params_read(), then we rely on
+lpfc_read_object()'s routine to NULL check pdata.
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Link: https://lore.kernel.org/r/20230228140835.4075-3-ranjan.kumar@broadcom.com
+Currently, an early return error is thrown from lpfc_read_object() to
+protect us from NULL ptr dereference, but the errno code is -ENODEV.
+
+Change the errno code to a more appropriate -ENOMEM.
+
+Reported-by: Kang Chen <void0red@gmail.com>
+Link: https://lore.kernel.org/all/20230226102338.3362585-1-void0red@gmail.com
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20230228044336.5195-1-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ drivers/scsi/lpfc/lpfc_sli.c  | 4 ----
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index 3b61815979dab..b795a325534d3 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -1552,7 +1552,8 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 855817f6fe671..f79299f6178cd 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7056,6 +7056,8 @@ lpfc_sli4_cgn_params_read(struct lpfc_hba *phba)
+ 	/* Find out if the FW has a new set of congestion parameters. */
+ 	len = sizeof(struct lpfc_cgn_param);
+ 	pdata = kzalloc(len, GFP_KERNEL);
++	if (!pdata)
++		return -ENOMEM;
+ 	ret = lpfc_read_object(phba, (char *)LPFC_PORT_CFG_NAME,
+ 			       pdata, len);
  
- 	list_for_each_entry_safe(mr_sas_phy, next_phy,
- 	    &mr_sas_port->phy_list, port_siblings) {
--		if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
-+		if ((!mrioc->stop_drv_processing) &&
-+		    (mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
- 			dev_info(&mr_sas_port->port->dev,
- 			    "remove: sas_address(0x%016llx), phy(%d)\n",
- 			    (unsigned long long)
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 7d333167047f5..1f1d346adc038 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -22376,10 +22376,6 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
+ 	struct lpfc_dmabuf *pcmd;
+ 	u32 rd_object_name[LPFC_MBX_OBJECT_NAME_LEN_DW] = {0};
+ 
+-	/* sanity check on queue memory */
+-	if (!datap)
+-		return -ENODEV;
+-
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+ 		return -ENOMEM;
 -- 
 2.39.2
 
