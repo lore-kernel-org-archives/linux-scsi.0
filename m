@@ -2,39 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C7C4C74A5B
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Mar 2023 07:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5521AC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Mar 2023 07:47:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229736AbjCUH3g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Mar 2023 03:29:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56932 "EHLO
+        id S230330AbjCUHrV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Mar 2023 03:47:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbjCUH3d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2023 03:29:33 -0400
+        with ESMTP id S230171AbjCUHrU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2023 03:47:20 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D11534027;
-        Tue, 21 Mar 2023 00:29:29 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PgjrW5G0xzrVDj;
-        Tue, 21 Mar 2023 15:28:27 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAED8CC13;
+        Tue, 21 Mar 2023 00:46:45 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Pgk9j4S5YznY85;
+        Tue, 21 Mar 2023 15:43:21 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Tue, 21 Mar 2023 15:29:27 +0800
+ 15.1.2507.21; Tue, 21 Mar 2023 15:46:27 +0800
 From:   Xingui Yang <yangxingui@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <john.g.garry@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH] scsi: libsas: Add end eh callback
-Date:   Tue, 21 Mar 2023 07:22:59 +0000
-Message-ID: <20230321072259.35366-1-yangxingui@huawei.com>
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+        <chenxiang66@hisilicon.com>
+Subject: [PATCH RESEND] scsi: libsas: Add end eh callback
+Date:   Tue, 21 Mar 2023 07:39:59 +0000
+Message-ID: <20230321073959.736-1-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  dggpemm500012.china.huawei.com (7.185.36.89)
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -53,9 +54,9 @@ Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 ---
  drivers/scsi/hisi_sas/hisi_sas_main.c  | 12 +++++++++---
  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  7 +++++--
- drivers/scsi/libsas/sas_ata.c          |  4 ++++
+ drivers/scsi/libsas/sas_ata.c          |  5 +++++
  include/scsi/libsas.h                  |  2 ++
- 4 files changed, 20 insertions(+), 5 deletions(-)
+ 4 files changed, 21 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
 index 325d6d6a21c3..61686ead0027 100644
@@ -120,16 +121,22 @@ index 66fcb340b98e..abad57de4aee 100644
  			slot = &hisi_hba->slot_info[iptt];
  			slot->cmplt_queue_slot = rd_point;
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 77714a495cbb..2d48643a08cf 100644
+index 77714a495cbb..25a064087311 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -539,6 +539,10 @@ void sas_ata_end_eh(struct ata_port *ap)
+@@ -534,11 +534,16 @@ void sas_ata_end_eh(struct ata_port *ap)
+ {
+ 	struct domain_device *dev = ap->private_data;
+ 	struct sas_ha_struct *ha = dev->port->ha;
++	struct sas_internal *i = dev_to_sas_internal(dev);
+ 	unsigned long flags;
+ 
  	spin_lock_irqsave(&ha->lock, flags);
  	if (test_and_clear_bit(SAS_DEV_EH_PENDING, &dev->state))
  		ha->eh_active--;
 +
 +	if (i->dft->lldd_end_eh)
-+		i->dft->lldd_end_eh(device);
++		i->dft->lldd_end_eh(dev);
 +
  	spin_unlock_irqrestore(&ha->lock, flags);
  }
