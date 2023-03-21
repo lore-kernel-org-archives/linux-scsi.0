@@ -2,182 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56DC9C74A5B
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Mar 2023 13:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 383D1C74A5B
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Mar 2023 14:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231236AbjCUNsx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Mar 2023 09:48:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45552 "EHLO
+        id S230135AbjCUOXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Mar 2023 10:23:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231280AbjCUNsm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2023 09:48:42 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B66D93D927;
-        Tue, 21 Mar 2023 06:48:24 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PgtDD73D6zKs3R;
-        Tue, 21 Mar 2023 21:46:04 +0800 (CST)
-Received: from [10.67.101.126] (10.67.101.126) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Tue, 21 Mar 2023 21:48:21 +0800
-Message-ID: <b1524366-0e32-adb2-e7ef-fd0de5ef473c@huawei.com>
-Date:   Tue, 21 Mar 2023 21:48:21 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH RESEND] scsi: libsas: Add end eh callback
-Content-Language: en-CA
-To:     John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>, <chenxiang66@hisilicon.com>
-References: <20230321073959.736-1-yangxingui@huawei.com>
- <4d9606b2-374c-8a76-05c4-7bd861b3b8bc@oracle.com>
-From:   yangxingui <yangxingui@huawei.com>
-In-Reply-To: <4d9606b2-374c-8a76-05c4-7bd861b3b8bc@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+        with ESMTP id S229513AbjCUOXX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2023 10:23:23 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F106E5072A;
+        Tue, 21 Mar 2023 07:22:57 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32LELMFx034262;
+        Tue, 21 Mar 2023 14:22:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=E4/hcGhIwKILSk4TaiplmGQpCnV33KGRDstB6/1AMjU=;
+ b=p74ZCJr2prkDbPojlaRwFdJHepSgbmVBVRVLmCxTK2imUkE1+X/JP0syFsBAottl7WZJ
+ FK7OgFpusjJ83TIjI8d0j0BqgP2FWKxVKSUpUneZid5mjJi4cJzA84Q4h6BCKMtadOo8
+ Xm1wep1dioyHdMfelCmB1AcDURPh/YDY0FHCfVP32pUuvcwYNHdzfckIlesBZ0aBjCW6
+ d57J4QE5s3csMQgIM/diWrkOxqRWBm+lo7yQiBp5S522xkmicdl/SgKYhxn5LxGsC867
+ ZExo0Du3oD6tJOqouFGFpsdYBPvn3CQSzNTr0xZgMDIAqpgBp3GdmLA4LyUhmmQnjAkW NA== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pfbpmckx1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Mar 2023 14:22:44 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32L8prDf022328;
+        Tue, 21 Mar 2023 14:22:42 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3pd4x6crvk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Mar 2023 14:22:41 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32LEMcY644237400
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 21 Mar 2023 14:22:38 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 437412004D;
+        Tue, 21 Mar 2023 14:22:38 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2D30C2004B;
+        Tue, 21 Mar 2023 14:22:38 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.179.3.208])
+        by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Tue, 21 Mar 2023 14:22:38 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1pecsn-002N2T-1t;
+        Tue, 21 Mar 2023 15:22:37 +0100
+Date:   Tue, 21 Mar 2023 14:22:37 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Ye Bin <yebin@huaweicloud.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ye Bin <yebin10@huawei.com>
+Subject: Re: [PATCH] scsi: fix hung_task when change host from recovery to
+ running via sysfs
+Message-ID: <20230321142237.GC311313@t480-pf1aa2c2.fritz.box>
+References: <20230321084204.1860900-1-yebin@huaweicloud.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20230321084204.1860900-1-yebin@huaweicloud.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: KsxfCXHDwgXQoQjYry9vKwkkxdYXqVKP
+X-Proofpoint-GUID: KsxfCXHDwgXQoQjYry9vKwkkxdYXqVKP
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.101.126]
-X-ClientProxiedBy: dggpemm500012.china.huawei.com (7.185.36.89) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-21_10,2023-03-21_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 clxscore=1011 spamscore=0 bulkscore=0 suspectscore=0
+ mlxscore=0 phishscore=0 priorityscore=1501 mlxlogscore=999 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303150002 definitions=main-2303210110
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi John,
+On Tue, Mar 21, 2023 at 04:42:04PM +0800, Ye Bin wrote:
+> From: Ye Bin <yebin10@huawei.com>
+>
+> When do follow test:
+> Step1: echo  "recovery" > /sys/class/scsi_host/host0/state
 
-On 2023/3/21 17:31, John Garry wrote:
-> On 21/03/2023 07:39, Xingui Yang wrote:
->> If an error occurs while the disk is processing an NCQ command and the 
->> host
->> received the abnormal SDB FIS, let libata EH to analyze the NCQ error, 
->> and
->> it is not necessary to reset the target to recover.
->>
->> Then the hisi_sas has some special process to set dev_status to normal 
->> when
->> end the eh for NCQ error without reset the target, so add a callback and
->> fill it in for the hisi_sas driver.
-> 
-> What is so special about this driver such that it is the only one to get 
-> this treatment? We generally don't just add callbacks for specific 
-> driver usage, i.e. you need to make it generic.
-Yes, I agree very much. it may be a common requirement for the lldd 
-performs a specific state restoration after eh complete. such as, we set 
-the device state to normal instead of doing it in the target reset 
-function.
-> 
-> I would need to refresh my memory on the ATA EH handling to review this 
-> further, which I will do when I get a chance.
-Thanks
-Xingui
-> 
->>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> ---
->>   drivers/scsi/hisi_sas/hisi_sas_main.c  | 12 +++++++++---
->>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  7 +++++--
->>   drivers/scsi/libsas/sas_ata.c          |  5 +++++
->>   include/scsi/libsas.h                  |  2 ++
->>   4 files changed, 21 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c 
->> b/drivers/scsi/hisi_sas/hisi_sas_main.c
->> index 325d6d6a21c3..61686ead0027 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
->> @@ -1777,9 +1777,6 @@ static int hisi_sas_I_T_nexus_reset(struct 
->> domain_device *device)
->>       struct device *dev = hisi_hba->dev;
->>       int rc;
->> -    if (sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR)
->> -        sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
->> -
->>       rc = hisi_sas_internal_task_abort_dev(sas_dev, false);
->>       if (rc < 0) {
->>           dev_err(dev, "I_T nexus reset: internal abort (%d)\n", rc);
->> @@ -1967,6 +1964,14 @@ static bool 
->> hisi_sas_internal_abort_timeout(struct sas_task *task,
->>       return false;
->>   }
->> +static void hisi_sas_end_eh(struct domain_device *dev)
->> +{
->> +    struct hisi_sas_device *sas_dev = dev->lldd_dev;
->> +
->> +    if (sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR)
->> +        sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
->> +}
->> +
->>   static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
->>   {
->>       hisi_sas_port_notify_formed(sas_phy);
->> @@ -2083,6 +2088,7 @@ static struct sas_domain_function_template 
->> hisi_sas_transport_ops = {
->>       .lldd_write_gpio    = hisi_sas_write_gpio,
->>       .lldd_tmf_aborted    = hisi_sas_tmf_aborted,
->>       .lldd_abort_timeout    = hisi_sas_internal_abort_timeout,
->> +    .lldd_end_eh        = hisi_sas_end_eh,
->>   };
->>   void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c 
->> b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
->> index 66fcb340b98e..abad57de4aee 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
->> @@ -2433,15 +2433,18 @@ static int complete_v3_hw(struct hisi_sas_cq *cq)
->>               struct hisi_sas_device *sas_dev =
->>                   &hisi_hba->devices[device_id];
->>               struct domain_device *device = sas_dev->sas_device;
->> +            bool force_reset = true;
->>               dev_err(dev, "erroneous completion disk err dev id=%d 
->> sas_addr=0x%llx CQ hdr: 0x%x 0x%x 0x%x 0x%x\n",
->>                   device_id, itct->sas_addr, dw0, dw1,
->>                   complete_hdr->act, dw3);
->> -            if (is_ncq_err_v3_hw(complete_hdr))
->> +            if (is_ncq_err_v3_hw(complete_hdr)) {
->>                   sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
->> +                force_reset = false;
->> +            }
->> -            sas_ata_device_link_abort(device, true);
->> +            sas_ata_device_link_abort(device, force_reset);
->>           } else if (likely(iptt < HISI_SAS_COMMAND_ENTRIES_V3_HW)) {
->>               slot = &hisi_hba->slot_info[iptt];
->>               slot->cmplt_queue_slot = rd_point;
->> diff --git a/drivers/scsi/libsas/sas_ata.c 
->> b/drivers/scsi/libsas/sas_ata.c
->> index 77714a495cbb..25a064087311 100644
->> --- a/drivers/scsi/libsas/sas_ata.c
->> +++ b/drivers/scsi/libsas/sas_ata.c
->> @@ -534,11 +534,16 @@ void sas_ata_end_eh(struct ata_port *ap)
->>   {
->>       struct domain_device *dev = ap->private_data;
->>       struct sas_ha_struct *ha = dev->port->ha;
->> +    struct sas_internal *i = dev_to_sas_internal(dev);
->>       unsigned long flags;
->>       spin_lock_irqsave(&ha->lock, flags);
->>       if (test_and_clear_bit(SAS_DEV_EH_PENDING, &dev->state))
->>           ha->eh_active--;
->> +
->> +    if (i->dft->lldd_end_eh)
->> +        i->dft->lldd_end_eh(dev);
->> +
->>       spin_unlock_irqrestore(&ha->lock, flags);
->>   }
->> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
->> index 159823e0afbf..659395ef616e 100644
->> --- a/include/scsi/libsas.h
->> +++ b/include/scsi/libsas.h
->> @@ -683,6 +683,8 @@ struct sas_domain_function_template {
->>       int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
->>       int (*lldd_query_task)(struct sas_task *);
->> +    void (*lldd_end_eh)(struct domain_device *dev);
->> +
->>       /* Special TMF callbacks */
->>       void (*lldd_tmf_exec_complete)(struct domain_device *dev);
->>       void (*lldd_tmf_aborted)(struct sas_task *task);
-> 
-> 
-> .
+Hmm, that make me wonder, what potential use-case this is for? Just
+testing?
+
+For SDEVs we explicitly filter what states can be set from user-space.
+Only `SDEV_RUNNING` and `SDEV_OFFLINE` can be set in
+`store_state_field()`.
+    There is probably quite a few other bad things you can do with this
+interface by using any of the other states used for device destruction
+or EH, and then trigger I/O or said destruction/EH otherwise.
+    Not sure handling this one special case of `SHOST_RECOVERY` is quite
+enough.
+
+
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index ee28f73af4d4..ae6b1476b869 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -216,6 +216,9 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
+>
+>       if (scsi_host_set_state(shost, state))
+>               return -EINVAL;
+> +     else
+> +             wake_up(&shost->host_wait);
+> +
+>       return count;
+>  }
+>
+> --
+> 2.31.1
+>
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Gesch�ftsf�hrung: David Faller
+Sitz der Ges.: B�blingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
