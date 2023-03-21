@@ -2,104 +2,151 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E91C7618D
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Mar 2023 07:13:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C7C4C74A5B
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Mar 2023 07:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbjCUHNq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Mar 2023 03:13:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33428 "EHLO
+        id S229736AbjCUH3g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Mar 2023 03:29:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229642AbjCUHNp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2023 03:13:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7FCE39CFF
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2023 00:12:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679382766;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=p8ugM/ytesWqF34fV4HlXU0YWGvC9AcHqKjsu6is6SE=;
-        b=OYNxgqNVm8Fthd71MLq6Qq0gthP6cL2c8CV0FZNODj2pT2ogtpf0MfQC1FrdMhwfGtbNU0
-        Ti+I0sPKlwklogKFxZhl6vnIpk4GO40aPf4es/LV8ujHr5bfy1GjAredzvey3CWzfmGmbT
-        6mmpLXfsADt22DSqrK5YyFY6xEZs6mc=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-244-15g20eUDPQSb2qaGr2noZQ-1; Tue, 21 Mar 2023 03:12:45 -0400
-X-MC-Unique: 15g20eUDPQSb2qaGr2noZQ-1
-Received: by mail-wm1-f71.google.com with SMTP id o37-20020a05600c512500b003edd119ec9eso3188683wms.0
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2023 00:12:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679382764;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=p8ugM/ytesWqF34fV4HlXU0YWGvC9AcHqKjsu6is6SE=;
-        b=MfAmGp8lX4ueZl/T43Erv4PZzBV5m8aDjLjGvqRslMLzsxPU0IYNAGb2MumieTEHKJ
-         YZ7FzYwiiAGvf6f7YY0G7nZ2MKDSe4t1ZTBQLVYpe04ilYVc/ZiQTa6Lop85xcYmApzj
-         daESB8Kd+pINgVbW36Ysx+oWQivywxk9sTkJvMaAYvF8HxGQ7XUa4YbRxeXMxFKu63VE
-         cGz+6fiPmG05h6FUbAzwR/NTga1SCgXMgkDdAYJOaGChkvOemYYcmlsPcB4ap0XcMYXY
-         fgxOEy+KirKaUyncJHRSXgq/K2s09REQqocZX68pO2/YZMdhb49Z6FQx4bbU2lAATTC8
-         cWsw==
-X-Gm-Message-State: AO0yUKXuT2rxBhgfp8O0WhdLFcM5xhNTyqrluG8ng7cj2b9f9DhbEiNr
-        QSZEN+qiX3Lu+S0uc/CJFrpivpvbYd3Iupnb9bl3YkObiBqJsxp8Lty0hqH5bEfIec68Ja5v4BO
-        KZyFLqvy3qtQh6iZl3c4ujA==
-X-Received: by 2002:a5d:5686:0:b0:2cf:ee25:18ce with SMTP id f6-20020a5d5686000000b002cfee2518cemr1688024wrv.27.1679382764458;
-        Tue, 21 Mar 2023 00:12:44 -0700 (PDT)
-X-Google-Smtp-Source: AK7set/dVewTSOqdyJmq47xput657YXM3zFLzlzIaRrCvNgpUkq9OkJ2e35jg3xMjhBxDWtcYlageg==
-X-Received: by 2002:a5d:5686:0:b0:2cf:ee25:18ce with SMTP id f6-20020a5d5686000000b002cfee2518cemr1688010wrv.27.1679382764180;
-        Tue, 21 Mar 2023 00:12:44 -0700 (PDT)
-Received: from redhat.com ([2.52.1.105])
-        by smtp.gmail.com with ESMTPSA id z6-20020a056000110600b002c557f82e27sm10510774wrw.99.2023.03.21.00.12.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Mar 2023 00:12:43 -0700 (PDT)
-Date:   Tue, 21 Mar 2023 03:12:40 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     michael.christie@oracle.com
-Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        stefanha@redhat.com, jasowang@redhat.com, sgarzare@redhat.com,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v2 0/7] vhost-scsi: Fix crashes and management op hangs
-Message-ID: <20230321031147-mutt-send-email-mst@kernel.org>
-References: <20230321020624.13323-1-michael.christie@oracle.com>
- <e1a96cd4-e520-caf5-7d5f-1de270c4fecb@oracle.com>
+        with ESMTP id S229541AbjCUH3d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2023 03:29:33 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D11534027;
+        Tue, 21 Mar 2023 00:29:29 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PgjrW5G0xzrVDj;
+        Tue, 21 Mar 2023 15:28:27 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Tue, 21 Mar 2023 15:29:27 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
+Subject: [PATCH] scsi: libsas: Add end eh callback
+Date:   Tue, 21 Mar 2023 07:22:59 +0000
+Message-ID: <20230321072259.35366-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e1a96cd4-e520-caf5-7d5f-1de270c4fecb@oracle.com>
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 20, 2023 at 09:29:50PM -0500, michael.christie@oracle.com wrote:
-> On 3/20/23 9:06 PM, Mike Christie wrote:
-> > The following patches were made over Linus tree.
-> 
-> Hi Michael, I see you merged my first version of the patchset in your
-> vhost branch.
-> 
-> Do you want me to just send a followup patchset?
-> 
-> The major diff between the 2 versions:
-> 
-> 1. I added the first 2 patches which fix some bugs in the existing code
-> I found while doing some code review and testing another LIO patchset
-> plus v1.
-> 
-> Note: The other day I posted that I thought the 3rd patch in v1 caused
-> the bugs but they were already in the code.
-> 
-> 2. In v2 I made one of the patches not need the vhost device lock when
-> unmapping/mapping LUNs, so you can add new LUNs even if one LUN on the same
-> vhost_scsi device was hung.
-> 
-> Since it's not regressions with the existing patches, I can just send those
-> as a followup patchset if that's preferred.
+If an error occurs while the disk is processing an NCQ command and the host
+received the abnormal SDB FIS, let libata EH to analyze the NCQ error, and
+it is not necessary to reset the target to recover.
 
-It's ok, I will drop v1 and replace it with v2.
-Do you feel any of this is needed in this release?
+Then the hisi_sas has some special process to set dev_status to normal when
+end the eh for NCQ error without reset the target, so add a callback and
+fill it in for the hisi_sas driver.
 
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 12 +++++++++---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  7 +++++--
+ drivers/scsi/libsas/sas_ata.c          |  4 ++++
+ include/scsi/libsas.h                  |  2 ++
+ 4 files changed, 20 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 325d6d6a21c3..61686ead0027 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1777,9 +1777,6 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 	struct device *dev = hisi_hba->dev;
+ 	int rc;
+ 
+-	if (sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR)
+-		sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+-
+ 	rc = hisi_sas_internal_task_abort_dev(sas_dev, false);
+ 	if (rc < 0) {
+ 		dev_err(dev, "I_T nexus reset: internal abort (%d)\n", rc);
+@@ -1967,6 +1964,14 @@ static bool hisi_sas_internal_abort_timeout(struct sas_task *task,
+ 	return false;
+ }
+ 
++static void hisi_sas_end_eh(struct domain_device *dev)
++{
++	struct hisi_sas_device *sas_dev = dev->lldd_dev;
++
++	if (sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR)
++		sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
++}
++
+ static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
+ {
+ 	hisi_sas_port_notify_formed(sas_phy);
+@@ -2083,6 +2088,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_write_gpio	= hisi_sas_write_gpio,
+ 	.lldd_tmf_aborted	= hisi_sas_tmf_aborted,
+ 	.lldd_abort_timeout	= hisi_sas_internal_abort_timeout,
++	.lldd_end_eh		= hisi_sas_end_eh,
+ };
+ 
+ void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 66fcb340b98e..abad57de4aee 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2433,15 +2433,18 @@ static int complete_v3_hw(struct hisi_sas_cq *cq)
+ 			struct hisi_sas_device *sas_dev =
+ 				&hisi_hba->devices[device_id];
+ 			struct domain_device *device = sas_dev->sas_device;
++			bool force_reset = true;
+ 
+ 			dev_err(dev, "erroneous completion disk err dev id=%d sas_addr=0x%llx CQ hdr: 0x%x 0x%x 0x%x 0x%x\n",
+ 				device_id, itct->sas_addr, dw0, dw1,
+ 				complete_hdr->act, dw3);
+ 
+-			if (is_ncq_err_v3_hw(complete_hdr))
++			if (is_ncq_err_v3_hw(complete_hdr)) {
+ 				sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
++				force_reset = false;
++			}
+ 
+-			sas_ata_device_link_abort(device, true);
++			sas_ata_device_link_abort(device, force_reset);
+ 		} else if (likely(iptt < HISI_SAS_COMMAND_ENTRIES_V3_HW)) {
+ 			slot = &hisi_hba->slot_info[iptt];
+ 			slot->cmplt_queue_slot = rd_point;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 77714a495cbb..2d48643a08cf 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -539,6 +539,10 @@ void sas_ata_end_eh(struct ata_port *ap)
+ 	spin_lock_irqsave(&ha->lock, flags);
+ 	if (test_and_clear_bit(SAS_DEV_EH_PENDING, &dev->state))
+ 		ha->eh_active--;
++
++	if (i->dft->lldd_end_eh)
++		i->dft->lldd_end_eh(device);
++
+ 	spin_unlock_irqrestore(&ha->lock, flags);
+ }
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 159823e0afbf..659395ef616e 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -683,6 +683,8 @@ struct sas_domain_function_template {
+ 	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
+ 	int (*lldd_query_task)(struct sas_task *);
+ 
++	void (*lldd_end_eh)(struct domain_device *dev);
++
+ 	/* Special TMF callbacks */
+ 	void (*lldd_tmf_exec_complete)(struct domain_device *dev);
+ 	void (*lldd_tmf_aborted)(struct sas_task *task);
 -- 
-MST
+2.17.1
 
