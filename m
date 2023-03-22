@@ -2,48 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22341C6FD1F
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Mar 2023 19:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A07C7C77B60
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Mar 2023 19:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230387AbjCVT6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Mar 2023 15:58:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44368 "EHLO
+        id S231221AbjCVT6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Mar 2023 15:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230510AbjCVT5x (ORCPT
+        with ESMTP id S230382AbjCVT5x (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2023 15:57:53 -0400
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718B567003
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:33 -0700 (PDT)
-Received: by mail-pl1-f178.google.com with SMTP id u5so20279587plq.7
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:33 -0700 (PDT)
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 776466A9D1
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:34 -0700 (PDT)
+Received: by mail-pj1-f46.google.com with SMTP id fy10-20020a17090b020a00b0023b4bcf0727so20263892pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679515053;
+        d=1e100.net; s=20210112; t=1679515054;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=07ZQaPfc2uMfGLVpQX+PlaqpVOWVCeYsM+H7InAN6kE=;
-        b=ixKKgrHwgZHWuVD6WepiKB5F9E7/aWhaD/BWCmaXA2YuTFF3/wSh/kN6Jghg5XgHVS
-         aejFEc8I5VWlLHZpg/GTzf72jELwF4mxoBD7Sd+kj4pHJHNFsPUClIGoijC5KwrZjw0/
-         Hz4T0yBBbzfRVSVEafjWvkhNQn3m8fAhwBiPHV3QjoMvJ85py9O8TzpViISM5CLbT9VN
-         zqK9TRgmB9SYZ8imJSlk8vAeoA2zYZr1gZeoKosfAbdi62qTvWFStQYMv2JCj0MHMQ+I
-         b2tkUzFtVEPvvzN6nN82J3/zVT+E4RjSdrm4u5ODHSbyTNIzujsW6KG2/dCTOP+K044L
-         YdBQ==
-X-Gm-Message-State: AO0yUKUvjz9374qEI8aqf2MFKsuLl5dPflyQYqoiLR36PdQEakqYA21X
-        f4rPXou/zj6PPEISeE3O9fM=
-X-Google-Smtp-Source: AK7set+D4OL/Zqbym1eSaEAqDEVarGJ8BBrKxcqsh9rkIobj77VdFK8Evu66meJUyy0VyJYKH6ootQ==
-X-Received: by 2002:a17:90b:1c8c:b0:237:99b8:4eef with SMTP id oo12-20020a17090b1c8c00b0023799b84eefmr5019694pjb.9.1679515052677;
-        Wed, 22 Mar 2023 12:57:32 -0700 (PDT)
+        bh=9Eqt+ITNuMCviCw/LJKFT6yVsmzr7b0qC6Hk9y7auM8=;
+        b=xMxl9t827AI9kI3LVv2eb/kUlOe5/at0/7Cua8m3vV2s7ykBypYUMFVydIBEWAmP1v
+         +zsUNvebYAPZtvw12xRoRyjn6x/L2UvKa9y3SP1W063DbGqO6C+Y5Mw91rMC7ewvFJeh
+         +imJtBKS0VQMuj2ebExj7pRVQtbjTOiFMg4R9LRTRIhfvgDaQK4nsawO5ehf4sJKdEOZ
+         CnvgOhepCq7R9MXqAJNXXzsgBQrRSY5ZvANKfi1wZibNxCOTxt9TvkRKAGpD/L/AB83Z
+         /8VOfogtWSbTuNARrMZHJedOX120+DsP2PsBJqLd+avM/aeifYWWaJf8gph895VweI32
+         nF/A==
+X-Gm-Message-State: AO0yUKVfs0SZsY0AOgDt2vuaIXHMEBqPq1lPZMm3xPHVQuM68ffMZSZr
+        f2MxbXr8xf5+hAX5+9v+/oU=
+X-Google-Smtp-Source: AK7set96ib2cF5DIy0vB9Mokr4mdhacHH3zsHFq7eU8Pu460+Kpt6C78caPdiZxVRwMdSSbzNtO3Yw==
+X-Received: by 2002:a17:90b:4b43:b0:23f:680e:78be with SMTP id mi3-20020a17090b4b4300b0023f680e78bemr4262987pjb.48.1679515054056;
+        Wed, 22 Mar 2023 12:57:34 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ad4e:d902:f46f:5b50])
-        by smtp.gmail.com with ESMTPSA id g2-20020a17090adac200b00233cde36909sm13574815pjx.21.2023.03.22.12.57.31
+        by smtp.gmail.com with ESMTPSA id g2-20020a17090adac200b00233cde36909sm13574815pjx.21.2023.03.22.12.57.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Mar 2023 12:57:32 -0700 (PDT)
+        Wed, 22 Mar 2023 12:57:33 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 38/80] scsi: fdomain: Declare SCSI host template const
-Date:   Wed, 22 Mar 2023 12:54:33 -0700
-Message-Id: <20230322195515.1267197-39-bvanassche@acm.org>
+Subject: [PATCH v3 39/80] scsi: NCR5380: Declare SCSI host template const
+Date:   Wed, 22 Mar 2023 12:54:34 -0700
+Message-Id: <20230322195515.1267197-40-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
 In-Reply-To: <20230322195515.1267197-1-bvanassche@acm.org>
 References: <20230322195515.1267197-1-bvanassche@acm.org>
@@ -57,19 +59,28 @@ Make it explicit that the SCSI host template is not modified.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/fdomain.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/g_NCR5380.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
-index 444eac9b2466..504c4e0c5d17 100644
---- a/drivers/scsi/fdomain.c
-+++ b/drivers/scsi/fdomain.c
-@@ -496,7 +496,7 @@ static int fdomain_biosparam(struct scsi_device *sdev,
- 	return 0;
- }
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 0c768e7d06b9..f6305e3e60f4 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -219,7 +219,7 @@ static int hp_c2502_irqs[] = {
+ 	9, 5, 7, 3, 4, -1
+ };
  
--static struct scsi_host_template fdomain_template = {
-+static const struct scsi_host_template fdomain_template = {
+-static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
++static int generic_NCR5380_init_one(const struct scsi_host_template *tpnt,
+ 			struct device *pdev, int base, int irq, int board)
+ {
+ 	bool is_pmio = base <= 0xffff;
+@@ -689,7 +689,7 @@ static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
+ 
+ #include "NCR5380.c"
+ 
+-static struct scsi_host_template driver_template = {
++static const struct scsi_host_template driver_template = {
  	.module			= THIS_MODULE,
- 	.name			= "Future Domain TMC-16x0",
- 	.proc_name		= "fdomain",
+ 	.proc_name		= DRV_MODULE_NAME,
+ 	.name			= "Generic NCR5380/NCR53C400 SCSI",
