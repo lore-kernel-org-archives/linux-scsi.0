@@ -2,49 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB4D8C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Mar 2023 19:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F506C6FD1F
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Mar 2023 19:57:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230169AbjCVT4y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Mar 2023 15:56:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42422 "EHLO
+        id S230186AbjCVT47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Mar 2023 15:56:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230064AbjCVT4n (ORCPT
+        with ESMTP id S230074AbjCVT4n (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2023 15:56:43 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 763CB5ADF4
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:56:32 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id o2so12884226plg.4
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:56:32 -0700 (PDT)
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D608D5BD8A
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:56:34 -0700 (PDT)
+Received: by mail-pj1-f52.google.com with SMTP id j3-20020a17090adc8300b0023d09aea4a6so24641567pjv.5
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:56:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679514992;
+        d=1e100.net; s=20210112; t=1679514994;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wlyhrjS/HEDGCdAm7rlCI5/1sqj4pYqwf5Yq1hTnrno=;
-        b=4WQl2rd9fqYY6rQiAsPEyK3YSTagiimP/xOa0Kmb3RErvnfFsK7c2403dOqfs+IMxZ
-         aXcYnTZ/e3flALU34SQ3jdpjdi2vMCO7mC+vcucpIbcvLBUTjSofRlF2gZCCLqgxNmyU
-         r0A+Sznasf9lJzcY7O6PP5f/RwEQ3CRF0TbVplovrgezZYx+qHgtRRiiu+ZFU3ue23dT
-         4nwF3xH9sUbCWHbDcOHJCoon/JGuy0KKmqPDFw+R6Qf0PR0Rot+MZO6l214dffzy8giI
-         gtXwFjXrMlgsegjgQkFUVWjXTyy6zLW6+/Qjamr8hJ7FghCQzDGyHkPUnQtQ2wuDaO0q
-         uSGQ==
-X-Gm-Message-State: AO0yUKX8VhNY8tPhp48Zr/fIZmJDxToGtLkhta+Id/NvKHZrwe5xncdc
-        iWVMcDCJcHl7M06bjlggvkVzPIEAgHI=
-X-Google-Smtp-Source: AK7set8jShp4aZ69rpZlLyVg4jeW4inWmOlLsL8c/lzGbN/YDCYUnCXyA1s7jb8w7/tm2TsHkFMJhQ==
-X-Received: by 2002:a17:90b:4c04:b0:23f:5ab0:68a2 with SMTP id na4-20020a17090b4c0400b0023f5ab068a2mr4764936pjb.40.1679514991884;
-        Wed, 22 Mar 2023 12:56:31 -0700 (PDT)
+        bh=Wvru8kVY2I3MSun55wPTjy7EC406KfhAV63CSzUeJMc=;
+        b=e32GONq6vuNiMJsfSFXmkbPkLk/m9B8KD76Nd6ViGVODLR779uqu8JiF4sCZmuHv2e
+         /jyPkJWTtVyn6udko6YOIleM/63vIIqfvLLBe84lKR7PChtE5mKEedZRiyFgG2qkw2Sp
+         t/7QtO3TQW8ECzn3EHDcZZASDsxghRqNjl63Gg/hvA0wKbqtoFvZX8ktD1rsUR0sWaVG
+         Mb6472WdZ413OdGDGKEFiBa28wBdj0gkhDAm1AabXRNFL8iiJjHNQ3NzYXOCNJLtvwc7
+         kC2W8NDkulh64e2ZU1TMF11+dF5zT0QdD37QzVdGuLW//FCARFiXDWpBt9iA7dVywlFT
+         o9Qw==
+X-Gm-Message-State: AO0yUKUc3HJGJh/HdgrpoTTTVjT172qmrykb8tL2ACI31EK6RPKndbmR
+        3wM+J4KtE+Da2fHR/RiCGO0=
+X-Google-Smtp-Source: AK7set8HIpdM4JgLBZOjoV3ptUVa++sxeD7qvtY5ZIsAk7xwgz69W0KSsXMfdcjWU2JWAe/vSiloNQ==
+X-Received: by 2002:a17:90b:3eca:b0:23d:e0c1:8b8e with SMTP id rm10-20020a17090b3eca00b0023de0c18b8emr4855475pjb.17.1679514994338;
+        Wed, 22 Mar 2023 12:56:34 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ad4e:d902:f46f:5b50])
-        by smtp.gmail.com with ESMTPSA id g2-20020a17090adac200b00233cde36909sm13574815pjx.21.2023.03.22.12.56.30
+        by smtp.gmail.com with ESMTPSA id g2-20020a17090adac200b00233cde36909sm13574815pjx.21.2023.03.22.12.56.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Mar 2023 12:56:31 -0700 (PDT)
+        Wed, 22 Mar 2023 12:56:33 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Adam Radford <aradford@gmail.com>,
+        Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 10/80] scsi: 3w-sas: Declare SCSI host template const
-Date:   Wed, 22 Mar 2023 12:54:05 -0700
-Message-Id: <20230322195515.1267197-11-bvanassche@acm.org>
+Subject: [PATCH v3 12/80] scsi: BusLogic: Declare SCSI host template const
+Date:   Wed, 22 Mar 2023 12:54:07 -0700
+Message-Id: <20230322195515.1267197-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
 In-Reply-To: <20230322195515.1267197-1-bvanassche@acm.org>
 References: <20230322195515.1267197-1-bvanassche@acm.org>
@@ -56,22 +56,31 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Make it explicit that the SCSI host template is not modified.
 
+Acked-by: Khalid Aziz <khalid@gonehiking.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/3w-sas.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/BusLogic.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index f41c93454f0c..55989eaa2d9f 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -1530,8 +1530,7 @@ static int twl_slave_configure(struct scsi_device *sdev)
- 	return 0;
- } /* End twl_slave_configure() */
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index f7b7ffda1161..72ceaf650b0d 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -54,7 +54,7 @@
+ #define FAILURE (-1)
+ #endif
  
--/* scsi_host_template initializer */
--static struct scsi_host_template driver_template = {
-+static const struct scsi_host_template driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "3w-sas",
- 	.queuecommand		= twl_scsi_queue,
+-static struct scsi_host_template blogic_template;
++static const struct scsi_host_template blogic_template;
+ 
+ /*
+   blogic_drvr_options_count is a count of the number of BusLogic Driver
+@@ -3663,7 +3663,7 @@ static int __init blogic_parseopts(char *options)
+   Get it all started
+ */
+ 
+-static struct scsi_host_template blogic_template = {
++static const struct scsi_host_template blogic_template = {
+ 	.module = THIS_MODULE,
+ 	.proc_name = "BusLogic",
+ 	.write_info = blogic_write_info,
