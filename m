@@ -2,51 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6405C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Mar 2023 19:58:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93FFAC76196
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Mar 2023 19:58:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230428AbjCVT6D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Mar 2023 15:58:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42502 "EHLO
+        id S230444AbjCVT6E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Mar 2023 15:58:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230308AbjCVT5c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2023 15:57:32 -0400
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 569006923B
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:14 -0700 (PDT)
-Received: by mail-pl1-f182.google.com with SMTP id le6so20265831plb.12
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:14 -0700 (PDT)
+        with ESMTP id S230283AbjCVT5h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2023 15:57:37 -0400
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1B146A05E
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:15 -0700 (PDT)
+Received: by mail-pj1-f45.google.com with SMTP id gp15-20020a17090adf0f00b0023d1bbd9f9eso24687825pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2023 12:57:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679515034;
+        d=1e100.net; s=20210112; t=1679515035;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=BvVVQ+ktXujbe64yu0zbTHHU9T+PctoEBb3huhrnTek=;
-        b=WBSEOyi+OtaC15W58jeJkk5lnO9UUqUbaBf59EcC+GWgY6PBR93clDkdVdCJqdW74u
-         ZLc1+aBcB21KZm81m90bJrw5Ksgm7aWbxLSh0lJzOMy1bWvtHH3JcbkgZflZhNgjaylq
-         2SL3xCkFdbDj7yY4YvZoczU2W1i4spR9mY+snn/QtvDnQjfHbmbXzrvV0l0Avi7oUQPv
-         ctctPae2htIAAr6CxBiWkEXZqF7QEGQvAbXGotAQhZl0R229rzhtGSNAFRIftXH+Ca6h
-         y9tpT12U1GOS7QqvaJkOtg/ew1/DCJi2Ww+ObbAx4cBcyuoYrt222jAxDI29cCCz+AlM
-         lIAA==
-X-Gm-Message-State: AO0yUKVyoqGrygBqNqWfZTmwEsugLef9dBecN7XLsA3iYVa2noEbwHEF
-        20oejFL7AJt/0uKR2v9C5os=
-X-Google-Smtp-Source: AK7set9b8TfAnp6aiaG57OQEDXLqVjkYO0m/2M5Yd9G/35LeOjmEtF7aNXXjoKbovXx+iEDb3TYNuA==
-X-Received: by 2002:a17:90b:4f91:b0:234:656d:2366 with SMTP id qe17-20020a17090b4f9100b00234656d2366mr4607365pjb.42.1679515033776;
-        Wed, 22 Mar 2023 12:57:13 -0700 (PDT)
+        bh=JFvxo/sJNe3B0K/5I7wr+cSfqXHj+OqtPwyJqG3lYLo=;
+        b=MVKss67bFKguOMtIEjlwHHPsatFTzmFEcVF3CZUIQtFZRj8vha6n1xLy+dJLyo/rY8
+         5Z0rJD/DZ33peGomRUElxnj6OHDNQw2A3L+sumPZZnZFasByRNl7M5eWdqH4Wh6kCI31
+         xJjeF0+9fW+7hYUuX6Iy2OipgmspQtPsQIx+kUiskl+NpGTUnSnuJLaxNnz5H/l7ECOT
+         knnov24lG6UbU68lo6WOSG4Kj7EYbGWanHZFYnaPfwImPOdpCtNm3yrU1hlHEQgJ99gZ
+         6Vo5OcDG2DfJn+7O3Y7pS/YlHXJKIgjvMnr2/LitzLY870FL9zyChbqSno48y1lD9lmc
+         /98Q==
+X-Gm-Message-State: AO0yUKUHvBC+tI43laHFu6uoW4GW9ToRkSjNpoDCvw21agvbii0rMjZx
+        6UQLyBTob/ghgbPwdryOLI0=
+X-Google-Smtp-Source: AK7set8HAuVlzUpKmSMGywWdqc2wG+udlceedkWJxajdCtLq5jaXIPwaUGdWx1VMmg+/MX7UoEDaiw==
+X-Received: by 2002:a17:90b:4b43:b0:23f:680e:78be with SMTP id mi3-20020a17090b4b4300b0023f680e78bemr4262310pjb.48.1679515034955;
+        Wed, 22 Mar 2023 12:57:14 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ad4e:d902:f46f:5b50])
-        by smtp.gmail.com with ESMTPSA id g2-20020a17090adac200b00233cde36909sm13574815pjx.21.2023.03.22.12.57.12
+        by smtp.gmail.com with ESMTPSA id g2-20020a17090adac200b00233cde36909sm13574815pjx.21.2023.03.22.12.57.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Mar 2023 12:57:13 -0700 (PDT)
+        Wed, 22 Mar 2023 12:57:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Oliver Neukum <oliver@neukum.org>,
-        Ali Akcaagac <aliakc@web.de>,
-        Jamie Lenehan <lenehan@twibble.org>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 30/80] scsi: dc395x: Declare SCSI host template const
-Date:   Wed, 22 Mar 2023 12:54:25 -0700
-Message-Id: <20230322195515.1267197-31-bvanassche@acm.org>
+Subject: [PATCH v3 31/80] scsi: dmx3191d: Declare SCSI host template const
+Date:   Wed, 22 Mar 2023 12:54:26 -0700
+Message-Id: <20230322195515.1267197-32-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
 In-Reply-To: <20230322195515.1267197-1-bvanassche@acm.org>
 References: <20230322195515.1267197-1-bvanassche@acm.org>
@@ -60,19 +59,19 @@ Make it explicit that the SCSI host template is not modified.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/dc395x.c | 2 +-
+ drivers/scsi/dmx3191d.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 670a836a6ba1..c8e86f8a631e 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -4541,7 +4541,7 @@ static int dc395x_show_info(struct seq_file *m, struct Scsi_Host *host)
- }
+diff --git a/drivers/scsi/dmx3191d.c b/drivers/scsi/dmx3191d.c
+index a171ce6b70b2..dfb091d34363 100644
+--- a/drivers/scsi/dmx3191d.c
++++ b/drivers/scsi/dmx3191d.c
+@@ -39,7 +39,7 @@
+ #define DMX3191D_REGION_LEN	8
  
  
--static struct scsi_host_template dc395x_driver_template = {
-+static const struct scsi_host_template dc395x_driver_template = {
- 	.module                 = THIS_MODULE,
- 	.proc_name              = DC395X_NAME,
- 	.show_info              = dc395x_show_info,
+-static struct scsi_host_template dmx3191d_driver_template = {
++static const struct scsi_host_template dmx3191d_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= DMX3191D_DRIVER_NAME,
+ 	.name			= "Domex DMX3191D",
