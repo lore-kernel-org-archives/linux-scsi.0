@@ -2,163 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F55BC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DABBC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:25:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230109AbjCWKVk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 06:21:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37854 "EHLO
+        id S229873AbjCWKZc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:25:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229904AbjCWKVi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:21:38 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30CA412073;
-        Thu, 23 Mar 2023 03:21:35 -0700 (PDT)
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N8CGDJ007016;
-        Thu, 23 Mar 2023 10:21:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=0ERauraqE3u5evuE0GULp57jTa/HLBK6Uf3QRaUQIVE=;
- b=D8Tp5ok6YSREwpehFrO6R0ojDsAqSYVGNm3xrmEJRRBIykSW2b9Z0FKnnkyqvo04l+kd
- 1Z2OSt971FeJZkMMizHRyaYhz7eRi49i8nztEyrHJqkYxmVz8rJMcxlmQT2QZ9a7bsTI
- WAP9EoN5pj9XdV/TNDtUWvxv4kduGNXO/nxkTAJh5TbI3/4mEbRD7aCkWCp3Npw7R8gx
- smcCNebi1yFV6tAH3fzmHOui1A1I8AY4+UZsQucoDo9q3QUwp5gdl5KY+JRc8Bgsh80a
- 3Aa5SGWhX4LIO8CdWfvFnydYF8totxgRPLlPJxc4hMI/8Gzj8JB56zw2REa44TAO5hSI 8Q== 
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pgk22axbx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 10:21:20 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32N4bnuN025421;
-        Thu, 23 Mar 2023 10:21:17 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-        by ppma03fra.de.ibm.com (PPS) with ESMTPS id 3pd4x661ws-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 10:21:17 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32NALDDb64094702
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Mar 2023 10:21:13 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AC8F420078;
-        Thu, 23 Mar 2023 10:21:13 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9B08020077;
-        Thu, 23 Mar 2023 10:21:13 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.152.212.164])
-        by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Thu, 23 Mar 2023 10:21:13 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1pfI4H-0045Lj-0q;
-        Thu, 23 Mar 2023 11:21:13 +0100
-Date:   Thu, 23 Mar 2023 10:21:13 +0000
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "yebin (H)" <yebin10@huawei.com>
-Cc:     Ye Bin <yebin@huaweicloud.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: fix hung_task when change host from recovery to
- running via sysfs
-Message-ID: <20230323102113.GA859586@t480-pf1aa2c2>
-References: <20230321084204.1860900-1-yebin@huaweicloud.com>
- <20230321142237.GC311313@t480-pf1aa2c2.fritz.box>
- <641A58D0.1020205@huawei.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <641A58D0.1020205@huawei.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: O4pV-Ep14vT41oUpQBA0_T6_WQWsgRrM
-X-Proofpoint-GUID: O4pV-Ep14vT41oUpQBA0_T6_WQWsgRrM
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 36 URL's were un-rewritten
+        with ESMTP id S229775AbjCWKZ3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:25:29 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56E4A2733
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:27 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id l37so155521wms.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1679567126;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=kHn9LOj3LUennLbrotyH9RAcC3peesavIxumXBNqtGI=;
+        b=oTI0vmMM419/N7JVC4Vrcln3XBbpXf1EdxcX3+wAFgQaENApiOqHJBYpdG/KR11aYX
+         AJT+iicsK7rFu1bob/i8F6Sf8AfP0hxtTNVqZwR1mX067nZCfz+P4g8hKXZAx6DjntwI
+         0NRB41aPwSjAvGdLu+J12vLAU+a9IJCPiMZoiPFmyGiqUO7jSJ53GA5lkcXd68pfBZLD
+         9WN9Gmf1ydbOG8/a4VkkJifvW6qBlujgmz6nBwJS6M5TCHLzw1wwWkmdvAoqVEvWFESd
+         5xZXqKHyQqONcR7Rxny1jUo0j1fdWybsVm2hd+AdT+Mc4QOV6m00Gl3dPTxCNR3T6O7A
+         Gj/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679567126;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kHn9LOj3LUennLbrotyH9RAcC3peesavIxumXBNqtGI=;
+        b=tAgy1308PYI6rmLzcJCTn5UvW9pRQhi95FTKf3+uv4qSuQDY7A4R99w4bPMcyVrEra
+         daNslvtC6WyNCCy4jLuDq9ZhdkO2+f50erRMJH/SfMEMgdPkkR/BYumabC2u1WROLGcG
+         StP7Pab1wuFSX4oWGR6t9thnFQ5ZetfgsFk84plbxLBwRFhyVC2w3FYXEAaVLffcKeT7
+         eIzfLZ51ljoYVx/SoFikE3jhKasbRmmTCiJ//Rq8p4s6W3l0ogAlX8UdCUUoPtNWxPJ6
+         POoOZNoPA9eAWJHg7gZlOWVmPqq9xUy/MiLUOdFMsZmTy2rFf1PEoS1lkl1SSX/i3KsY
+         7/Hw==
+X-Gm-Message-State: AO0yUKV6RdhVlyQbn1pDtbTSPV2b6QJmm4XBpKG4JbbA7Av1eU3k55+V
+        JmieNAsIo9VYpSRoRvNCq2xdtA==
+X-Google-Smtp-Source: AK7set+qnEKd/C7PSYy2U+bBo9nWl1+ztXVMq+whW9CzH2XcIwXbrg5phWt9nVCwDU1EOtkYtvORYQ==
+X-Received: by 2002:a05:600c:2211:b0:3ed:1fa1:73c5 with SMTP id z17-20020a05600c221100b003ed1fa173c5mr1880205wml.27.1679567125801;
+        Thu, 23 Mar 2023 03:25:25 -0700 (PDT)
+Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:8261:5fff:fe11:bdda])
+        by smtp.gmail.com with ESMTPSA id e23-20020a5d5957000000b002cfefa50a8esm15753530wri.98.2023.03.23.03.25.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Mar 2023 03:25:25 -0700 (PDT)
+From:   Neil Armstrong <neil.armstrong@linaro.org>
+Subject: [PATCH 0/8] arm64: qcom: sm8450: bindings check cleanup
+Date:   Thu, 23 Mar 2023 11:25:15 +0100
+Message-Id: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-22_21,2023-03-22_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
- mlxlogscore=999 impostorscore=0 priorityscore=1501 lowpriorityscore=0
- bulkscore=0 malwarescore=0 adultscore=0 spamscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303150002 definitions=main-2303230075
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAspHGQC/x2MSQqDQBAAvyJzTsMsWSRfCR5m6WiDtjI9hoD49
+ zQ5VlHUYQQroZhnd5iKHxJaWcFdOpOnyCMCFWXjrQ82+ABt3SiDLP31ZmHfpFWMC5QGibgQjwJ
+ v+qJA7+7BPrxHDM7oLUVBSDVynvTH+zyr3Cr+azWv4Tx/QLNN9Y4AAAA=
+To:     Rob Clark <robdclark@gmail.com>,
+        Abhinav Kumar <quic_abhinavk@quicinc.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Sean Paul <sean@poorly.run>, David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Lee Jones <lee@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        linux-scsi@vger.kernel.org,
+        Neil Armstrong <neil.armstrong@linaro.org>
+X-Mailer: b4 0.12.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 22, 2023 at 09:24:32AM +0800, yebin (H) wrote:
-> On 2023/3/21 22:22, Benjamin Block wrote:
-> > On Tue, Mar 21, 2023 at 04:42:04PM +0800, Ye Bin wrote:
-> >> From: Ye Bin <yebin10@huawei.com>
-> >>
-> >> When do follow test:
-> >> Step1: echo  "recovery" > /sys/class/scsi_host/host0/state
-> >
-> > Hmm, that make me wonder, what potential use-case this is for? Just
-> > testing?
->
-> Thank you for your reply.
-> Actually, I'm looking for a way to temporarily stop sending IO to the
-> driver.
-> Setting the state of the host to recovery can do this, but I changed
-> the state to running and found that the process could not be woken up.
-> I don't know what the purpose of designing this sysfs interface was.
-> But this modification can solve the effect I want to achieve.
+A few fixes to pass the DT bindings check successfully
+for sm8450 qrd & hdk DTs.
 
-My first thought when seeing this was that maybe we should also limit
-this interface to say `SHOST_RUNNING` and `SHOST_RECOVERY` (similar to
-what is done in `store_state_field()`).
-    That would limit the amount of corner cases drastically.
+The following are still needed to pass all the checks:
+- https://lore.kernel.org/r/20230308082424.140224-3-manivannan.sadhasivam@linaro.org
+- https://lore.kernel.org/r/20230130-topic-sm8450-upstream-pmic-glink-v5-5-552f3b721f9e@linaro.org
+- https://lore.kernel.org/all/20230308075648.134119-1-manivannan.sadhasivam@linaro.org/
 
-And in case of setting `SHOST_RUNNING` after the scsi host was set to
-`SHOST_RECOVERY`, we could also make use of the already existing
-function `scsi_restart_operations()` to handle the restart in the same
-way as EH does.
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+---
+Neil Armstrong (8):
+      dt-bindings: display: msm: sm8450-mdss: Fix DSI compatible
+      dt-bindings: mfd: qcom,spmi-pmic: document pm8450 pmic
+      dt-bindings: ufs: qcom: document the fact the UFS controller can have an ICE core
+      arm64: dts: qcom: sm8450: remove invalid properties in cluster-sleep nodes
+      arm64: dts: qcom: sm8450: remove invalid power-domain-names in pcie nodes
+      arm64: dts: qcom: sm8450: remove invalid npl clock in vamacro node
+      arm64: dts: qcom: sm8450: remove invalid reg-names from ufs node
+      arm64: dts: qcom: sm8450: fix pcie1 gpios properties name
 
-But it's not up to me, to make that call.
+ .../bindings/display/msm/qcom,sm8450-mdss.yaml           |  2 +-
+ .../devicetree/bindings/mfd/qcom,spmi-pmic.yaml          |  1 +
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml      |  2 +-
+ arch/arm64/boot/dts/qcom/sm8450.dtsi                     | 16 ++++------------
+ 4 files changed, 7 insertions(+), 14 deletions(-)
+---
+base-commit: b9e9869138880e668fa8cb3b186d04cd13bd57a6
+change-id: 20230323-topic-sm8450-upstream-dt-bindings-fixes-81630722ee31
 
-> > For SDEVs we explicitly filter what states can be set from user-space.
-> > Only `SDEV_RUNNING` and `SDEV_OFFLINE` can be set in
-> > `store_state_field()`.
-> >      There is probably quite a few other bad things you can do with this
-> > interface by using any of the other states used for device destruction
-> > or EH, and then trigger I/O or said destruction/EH otherwise.
-> >      Not sure handling this one special case of `SHOST_RECOVERY` is quite
-> > enough.
-> >
-> >> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> >> index ee28f73af4d4..ae6b1476b869 100644
-> >> --- a/drivers/scsi/scsi_sysfs.c
-> >> +++ b/drivers/scsi/scsi_sysfs.c
-> >> @@ -216,6 +216,9 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
-> >>
-> >>        if (scsi_host_set_state(shost, state))
-> >>                return -EINVAL;
-> >> +     else
-> >> +             wake_up(&shost->host_wait);
-
-In the very least, this should first check whether we really just made
-the transition from `SHOST_RECOVERY` to `SHOST_RUNNING` before calling
-this `wake_up()`.
-    And for that - first get old state, then set the new state - we
-probably would also need to grab the `host_lock` to make that race free.
-
-Just calling `wake_up()` without knowing what state transition we just
-made doesn't sound right to me.
-
-> >> +
-> >>        return count;
-> >>   }
-> >>
-> >> --
-> >> 2.31.1
-> >>
-> 
-
+Best regards,
 -- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+Neil Armstrong <neil.armstrong@linaro.org>
+
