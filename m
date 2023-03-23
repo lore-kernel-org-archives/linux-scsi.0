@@ -2,393 +2,211 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3489C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 09:57:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E434C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:12:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230004AbjCWJ5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 05:57:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50210 "EHLO
+        id S230343AbjCWKMu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:12:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229951AbjCWJ5B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 05:57:01 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E56830EB0;
-        Thu, 23 Mar 2023 02:56:04 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N4wUNe012451;
-        Thu, 23 Mar 2023 09:54:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=xehSbS+s0c5yXxqmHCnm4b44HXDj2CwqiJavRokDY8o=;
- b=K4hcvWOZhV5MYW/waDmIPtOdvd5kIzhxP8Xw3cNSdGh175ZiK4LJo4Cx0Yi5iRUqHoEZ
- I0UkPI0VU50UrZOSJ3+cygCDsmJ67vBXSbpg/MdJHUjnyJ347fKkstJdEy5VdRVvErVc
- fbBxdzGxMEicgCK4UDEz2gyjo57WjUPFZjAQZHYTsCUy7s5owzVzrrdOHVDbWbdQk1nW
- 0GgiFIokuXf6ofT5nPQYDsHSTn108Eb38tDfUUoGsgG0ZssweF9JFawOR393KtxwYQaK
- DqIsQUIVBZn9bIn4u7W0WrD0Vl6OyOLfYz4Lkitydtgp06+5XZyaQ8ndQ1UIKcwDlkP5 Lw== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pgbf715s7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 09:54:26 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32N9sPIJ023604
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 09:54:25 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Thu, 23 Mar 2023 02:54:25 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S230110AbjCWKMs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:12:48 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DAB412BC4;
+        Thu, 23 Mar 2023 03:12:48 -0700 (PDT)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N5hnVn019251;
+        Thu, 23 Mar 2023 10:12:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=fZBfnP+9Vx7Ja83eWNIyUH71xZAjTRAvmW/la/p3lJE=;
+ b=aEjD9Dk38GhmXU7cedNUgSJwwKrddZb9s+VU8eKowlNnlAdiscOB9QY5+EWQE1rm3m+M
+ h1gXkqhImvFx2srJCoGCUO5tkblpRrSS8tVvuIfnA7BhEXYhCfbw3EhYBXj848uMFRzq
+ Gg0xfqDx6C3llCTE2EbtAmOBzcLSqhDPgwCw+76JWkCxUgDVa0i4IKkiytR0h0pTtSAe
+ EZh1TryBBBTZksNOrYJGGnkKbIPVMH1DlyxIw4v/A45ALjY+I+Oue+L3uAXerQoSszNL
+ ifUhJwOotW4pi/F0HxyyNJeApPK9J4h/aBJ1pI5LIVU9yXrjRdml8CrqNoDRyxvG+TyY 6w== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pd5bckdhr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 23 Mar 2023 10:12:32 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32N9sQJB032951;
+        Thu, 23 Mar 2023 10:12:32 GMT
+Received: from nam02-bn1-obe.outbound.protection.outlook.com (mail-bn1nam02lp2042.outbound.protection.outlook.com [104.47.51.42])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pgmj1gqwq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 23 Mar 2023 10:12:32 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KfC84SYvzWOEk81ezEKo6KofUzoNt86FkGkatw/Rn23l4x3wWXNUtSPT4vsSH3wra8NEQPbjt/9KEoGeqFa8seeZEI1aGynsw7Ll68vsL55iov+oUEDRjN/RFYonp9KxX8hKYfqHDJu5kcJn4YUhOuY7+L1Y+X1CcRw0kFE+UNx6Z0VBip3jKM4hoJyUcyeEhY2npe0CiOZaMJh8dN+Ygl9bOmVd5tPONwf2Hy7rLI3X5S/zsz+5ccWbbUvV2c/vQEiAr3HcU8DInyfCtX+VE5tZRBolaXCaLA0498Ndixjhj28Kp3WTRhjZspdzZxMBQ7n/9hkTbE3L4pQTXmg5eg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fZBfnP+9Vx7Ja83eWNIyUH71xZAjTRAvmW/la/p3lJE=;
+ b=ToLmzZEJDAV9SnZ+CGeNtozIAAP8HixozIPwXVG8UsWOs0aAy9XAMJyxrhI9kfExb7tuW0y2888Pq675uvJFwnK23mDNYr+by93sM02K6UT9ivVH1tQ0dz3uNzzKVsaezrR3lO9G44HDBWM6AF/vcz6qIB8sh8qV4dm1geYEvPQC95NX97a+8y+uI31XVOKAgyNrQQRvNhuudY//LM/ZDgCF5L6+VMxxRTVKYFAADeN1icFNXk7SM1vwrwbSlQuQB1ZO2mPVS1wVNDUSmtYaVFssVrA1OgomrWBWb0Ts8hKFGqBbTQL79gnmx/FokeSboM9Y3+LlZZY049CGmG0uSA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fZBfnP+9Vx7Ja83eWNIyUH71xZAjTRAvmW/la/p3lJE=;
+ b=v4DwfUp2OB6eEgqzk2MlA8f7Dyko7sZbb88bd1ecot5T4qja02/NUwpJpFQx1pQ9gWTATe63BujIoe1iZ5E5ebBoKGy4DNBMh8i9p9C0mXiWumj961JqrNCzPGmEgzJqZxlqIY1MVVaZTXGJ7ox9EyyWyWhvgdeu+AR8wlBdaac=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DS0PR10MB7049.namprd10.prod.outlook.com (2603:10b6:8:14b::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Thu, 23 Mar
+ 2023 10:07:28 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::7276:bc4c:17a0:7267]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::7276:bc4c:17a0:7267%5]) with mapi id 15.20.6178.038; Thu, 23 Mar 2023
+ 10:07:28 +0000
+Message-ID: <e251e5c3-152e-3ebe-aa9f-c5cfa36cfc3f@oracle.com>
+Date:   Thu, 23 Mar 2023 10:07:23 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [RFC PATCH v3 1/5] ufs: mcq: Add supporting functions for mcq
+ abort
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Eric Biggers <ebiggers@google.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [RFC PATCH v3 1/5] ufs: mcq: Add supporting functions for mcq abort
-Date:   Thu, 23 Mar 2023 02:53:31 -0700
-Message-ID: <90b7b370269674fd7c0f505b59e0993c5b95a316.1679564391.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1679564391.git.quic_nguyenb@quicinc.com>
 References: <cover.1679564391.git.quic_nguyenb@quicinc.com>
+ <90b7b370269674fd7c0f505b59e0993c5b95a316.1679564391.git.quic_nguyenb@quicinc.com>
+Content-Language: en-US
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <90b7b370269674fd7c0f505b59e0993c5b95a316.1679564391.git.quic_nguyenb@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0078.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:190::11) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: io4UVUNdW3JE3cEOpicUCtRoqtrQYZb3
-X-Proofpoint-GUID: io4UVUNdW3JE3cEOpicUCtRoqtrQYZb3
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB7049:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8624b42e-5ec6-44df-addf-08db2b8668bd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ih+NjxZu6J+BUQ2WHPpuwmZfIxvK7iMNH6N+Keijc5IQJ8yOs1PKRDrpcodUQhtg+F+9xEXebx8GoO6f/z0KQHiOAIplZHyRtjyO2tcaBsIoF0QtFJU/YD6Ds9KBG7M/pWdZjilbFole+3gjotrvqxaKiW+xTyZYtGbSrNQ8sjpaCWLBlUtapBNouiworlNcGxHC94TPALMLCx5QATfsXCEYqsOeM8KgQsi7RyX8hdbzUiHZhTz4tNn9W6eGF/2mDQwFkxt1rltZNTJKgTSlbFKBbQEVezzOG5H4mNkabyLroBwQVXdHE6YxItoHKLebNytmfEBOk5ieLstDjUOCaQo/LT9/BaRWMtBPKMvSMNWNeULa+YXYmNQUudlT9YcQJkCgffMQQYjpzghQIWme5uzjHoUp4YCY8gm+Mrq096iqEuXTvpc8sF0TO+7IdQc9u+8n/uNcvVZMmX97eBek/+CR2OtVM+JoPgrWc4cK8sbLkFUe3PVJ/iET/N/E2MiualVQSX9hZW00t8c6VJtHlw3j5bCXvdiqe55Wlz+KEL2e1eY7wzecL/X6MWy7FNX6a09I8btlS5TCSZSeZKJFwklK1285X6VO5m1KfKGD6BLlS34wK6Xk3hISkZXyffkVT9MB9+gY1mNRXfM6/WKjxS3/xirfCDmZsZR54wqMLGzDpXkuHsnXjrpI0+LhGBAvJpCP2NtEoEgGWh0p2TNcRptYUO410J71is8rCctvhmynD3NaF+SKf3PtqBk0DE++
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(396003)(346002)(376002)(136003)(39860400002)(366004)(451199018)(31686004)(6486002)(36916002)(478600001)(36756003)(921005)(38100700002)(86362001)(31696002)(186003)(2616005)(4744005)(41300700001)(8936002)(316002)(2906002)(7416002)(5660300002)(6666004)(26005)(6506007)(53546011)(6512007)(66946007)(66556008)(8676002)(4326008)(66476007)(54906003)(6636002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SVlYbDZyZklxK0s0ZmNCZVRYV0xkcDQ0KzVqNnFSUTBnemcvWXdqbC9Db1Fu?=
+ =?utf-8?B?YngwdzREM0J5eXlyU3ozQ0p5WXZwbmhLdmpyb0hsOUZkRFpzWm9XWDdTK2Z4?=
+ =?utf-8?B?eXJtS0lWcjk3cFpESEUrS01US2FLZC9UbWp3MDkyUWdWNEJyMlVWOXRONW5H?=
+ =?utf-8?B?dkpZWnhLVjBET3FTL0kyM2grc3d2Q2dnR2dUQVZSNTVaQjR5ZWZ0QU1QNVpJ?=
+ =?utf-8?B?WHh6L3paOXlJeXkwcGpScTY4U2t3Z1F1Mm5CSk9sUnRuanZXcHNBSVlUSVVx?=
+ =?utf-8?B?K3lYNHJJcXc5Y0IrazhjS0RMRnJNS3FjaXAwc1dOa0ZiZjRIc0QvSmZOd1Y1?=
+ =?utf-8?B?bldZclg0L3JjbTZXNWREM041MTJGZmFtTGoxTVpwYWVTWit6WXE0d0cvYm00?=
+ =?utf-8?B?dUptQXl6UHRWQnFIdTRzK25lVEpwWlpqUlpsUFV3S3hIMWtiYW9kdU93bmM0?=
+ =?utf-8?B?a21HeERWYWxzclgwbExHMmtFMnloZkZKcjFYYnhhek9GWkdFd2E3akxGUHRt?=
+ =?utf-8?B?LzdLZTNDQnlaSnBTenpza0VwckZvOXUxdDlDdDA2UGlMSExUem4rRDB2a21J?=
+ =?utf-8?B?dGs0T3R1SnIwUjhZanZBU3hOMU5EK29XWEtnb3dSeVZiYWFETVZoaUd2T1Nk?=
+ =?utf-8?B?S25NYWVTeUtkSGJYQm1GT3h2cVdZeklZZDFNTFpJSTl3R2VFZkFiTHNHSHhV?=
+ =?utf-8?B?UlhmZzlMNSs3ZFBDOGp2SkNWQzQ1dHlqVUtHb3JneUViWG9DZnZkSVJsbmhT?=
+ =?utf-8?B?SlNFRGg0Q0gvMVgrQ3M2RWNOV3lGakN5WkRFTVBqNGtmMnhobTVpV0lTQkdG?=
+ =?utf-8?B?VHFSTnJWenFsN2VFSDNyLy9DQnA0U3AwM1JVbUVaUFFtMEI3ejBTempDSlAr?=
+ =?utf-8?B?TzlZKzRJV0xBdXc5RzFBSUhGNVZnYU9iUTdOM2tITllwUHN3eldac2lNNnM0?=
+ =?utf-8?B?NHVtSTBYbHd5UFhDVy8wVnIvdU1FL2xsdSs1cjE2YWdEZVVsN3l4TW9vZFY3?=
+ =?utf-8?B?ZUgxQVVoK0ZPZDZBN0pjQ2FoZlNYMU5tRThHUUljQk5XZW80c2puRmFId3dQ?=
+ =?utf-8?B?V0wrcjNFNytQNzFsOUV3QUVDRkRSdTg0NVNoY3N0VzZlcHVYbE1jV3Vadnll?=
+ =?utf-8?B?LzJqNCtxQndNQlM1d0FzQ2lDZWFiMkVNVDBFbTNUM1ZOT05FY0szaFJqU0xF?=
+ =?utf-8?B?YkNmSkwxaXVNdkxEMDZXQnNMZG9aSFVrVHgrQzAzMWl1dWp0RnVGRXRJdldj?=
+ =?utf-8?B?dk1ZOTJpd1k0RGxzck1mempoWXJSdTlyY3pRRzZtZG9ERy9IU0tSUlM5TkZj?=
+ =?utf-8?B?QmFCeG5EZ0dYYzZuVmluaVNrRVd0QS9JRHBybzlMZVV4YmwrMm5zeEQwRGFl?=
+ =?utf-8?B?di9yVUZSR0hQVXJ1MU1lcEJDMGx6d1J5M2ZPZExvU1VFZy9BeW9lQ1FxeW14?=
+ =?utf-8?B?NkxwUS9lSW9Md05WaHcySzdQT3pHWkVvUVFvR3RMYkQwOXlvUWNvS3c0NG9v?=
+ =?utf-8?B?TVJ6R1lzaThhMU13MWV2alFaYTdwZjhGUDBtNmpoMzhlS3NvQmdpaVpuQk9z?=
+ =?utf-8?B?MDVnYStLWUNZL2VFK0MrYVdWM004RHRJY1hveGZoSHhmZ0h4TThZOVU4Tmly?=
+ =?utf-8?B?TnFqS2RCMFVmNWFFdU9kQit6YzgyMUNiN1AxaHVPTGxUOGtYdm1BQjN2aUxD?=
+ =?utf-8?B?L3Y0UjVmb0NHd0NrNDI2a2lQMkorQTVmS3RZUFJHMFBCNjJETTBpTUVudmVP?=
+ =?utf-8?B?bHJ1TVNJQVl0SEIvMlZRWFMvZUN2eG93bVZ3VFNNcGlSRHNvRUlnRkI3TWVI?=
+ =?utf-8?B?SElKSUhoQmtLUCsrUmZMZDJyY2dFdzhvSExSajFKRFRVL3MzMzBrWGt6Nnh2?=
+ =?utf-8?B?dFhZR3RRK2pBeWx1eHJPVC9VakJUT0hVSFZnbnFZRThpdjVqTEhNVTRkNTJX?=
+ =?utf-8?B?TkxhUitodDFhZ2kvc3h5Z3VuTTVFNllRZThmV2hCS2NYZjlnUndiVExmNDZv?=
+ =?utf-8?B?NUpoQWp6Q2NleUtZQTMyRXAzNHhtanlIVXNxZXF6ODVkWDBXOWVQR1lxeFdU?=
+ =?utf-8?B?dnd1Y3RRdEpTdUkxdXdiSGNYT0hocFlENzR3aVpwcUJTaVdxWU9MWHpvVmdF?=
+ =?utf-8?B?TXBGNkxrMUJUb2hEYlgzc2wxT0J6Mnh5d2hWdm93ckthaWJvR29weWkwNHlW?=
+ =?utf-8?B?cEE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?RE96M25tTUVPS2x4aXJMN0NEMnBuM0hGUFkwWTlLeUhhNTk0V2lFdFpWSXI3?=
+ =?utf-8?B?MVU5MlNHN0d4VnNqa3UxS281clNsUTJsUFEwWnl3RHpaUnYvUERINDdqQk5Y?=
+ =?utf-8?B?TlV4T1hQSjhadW5JSmtpdlJBMElHN0N2cFQxVzlXa0htaDlrRG9Eek44V01V?=
+ =?utf-8?B?UC9wMENpdDRETlZmZE5peG9lMlFjcWFvNVhDYXU4U2YwV00xVEZrNHIyeXY0?=
+ =?utf-8?B?VHFDWnNhR21YNmgvRU9UVzh1YS9ORDNYODhkY2NBZnhPOTVOMkhMNWFmaFFn?=
+ =?utf-8?B?YmZsWEV0aXNhUUlNQisvN3FrbW43bjBIUEZZeUxsRlBVNDgxTTBiT1d2aXNJ?=
+ =?utf-8?B?SWtMN3dEOFdraU1JSDI2WWd1S1hVREtBRllaR3lpTW5iek1yZUZwUWduaW5K?=
+ =?utf-8?B?NnFqUFQ0cGhaRUVuSVlobU41UkJaY1Vsd2lsYWo5c1ZaNE9sdFZ6M1RkVGFW?=
+ =?utf-8?B?U01qWVR3SFkxbWZ6WmV5dUMxcStJQ0NBUzV6WUJpR3dNVXhDTnY1NFBDRnQw?=
+ =?utf-8?B?RVhrRzFkK3BkMU9QVkRTM3llQUh6c0dXaWxNZlk0UFM3Qnc1UGVoQ0ltMjdi?=
+ =?utf-8?B?M3p4TDhwQzlQMUNNNkRPR05heFhRam9kWmh0azAvUWVFRE1yZ1gvVW5FUkpw?=
+ =?utf-8?B?OWFRcTMveDR6eG5QcW1LYWkyQzJFTjB4bVBhTkJqeHRjUWUwYTVKeWsrZ2Ix?=
+ =?utf-8?B?bUpFRGZuUzdUVWN0MFVNTm9iY3FmbFZIdXQ4L1lHTkI5RzJzMjJ2ZkdjelhS?=
+ =?utf-8?B?UHQxVC9HTzRzV3NQWWMzL0dkN0syMXVPYU9VY1hJSVEvR0tlNEhxbUl6QkQy?=
+ =?utf-8?B?MjBoYVNTV1RrQjV1UVBXN09Ca3doOVQzWi9FcGNJVUVGbnVhRkdOaHBOMjR4?=
+ =?utf-8?B?NDdaSkFoZ0gwUGIyb2kwQk90blhXbzc2SDY0TGhYaFFDandNdUNBTGkxUHJu?=
+ =?utf-8?B?WFJrbHdreC93K0VFTWt1NklDMFJoVW8yaUZXZGYvMmtVNC82SlcvNXlGR0Ni?=
+ =?utf-8?B?QjlTQStzME5KKzNNcllXM2VibGpkSU51QTRiekxPaXl2K1FWTzEwOVE0WSs4?=
+ =?utf-8?B?bjNiS2Y0SGxoRGh0SlYzL0pxeWtqd1JrbWlMRGV0b2pITlJjQktmRXorOHFV?=
+ =?utf-8?B?U3VFclRrOFYybzYrd1F5Z0c5c2Y2ZjJ4cjJuS3R4RVU4U2QwTVg1OFNTZk80?=
+ =?utf-8?B?WDF5S05FTU9XMUNIdkc3WHVpTVg0N2JzSExZSUl4djNIUEhuMk5OWG9nc1VM?=
+ =?utf-8?B?NVVGenFYdDlacm9YbXJhMkVpcnA2MmRLVkhId3h3T251MnQ1dWhEQkwzL2ZF?=
+ =?utf-8?B?VHN0OHdMQjRHWGxYV0xKc0VrVGx5aFpLV29ocDIwdWJ3a05wckVqcDY5VGc1?=
+ =?utf-8?B?d0tmWnNEZE9KbGNjb0NmSGJ3YXZLejZvUHBIRE41SXZHaVVkRnlzRllLWEZH?=
+ =?utf-8?Q?x0wNqYIP?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8624b42e-5ec6-44df-addf-08db2b8668bd
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2023 10:07:28.7925
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8IMdJtKjfC7wEuIunoYUEjXlZSJi4J6zf0ATKIIxP2jl7ZOVwbFNZSFhBp2ESCuc6IuLTX8qbPul/VdMqLKjwQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7049
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-22_21,2023-03-22_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- mlxlogscore=999 mlxscore=0 phishscore=0 lowpriorityscore=0
- priorityscore=1501 suspectscore=0 spamscore=0 bulkscore=0 clxscore=1011
- adultscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2303150002 definitions=main-2303230074
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 spamscore=0
+ suspectscore=0 mlxlogscore=999 malwarescore=0 phishscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
+ definitions=main-2303230076
+X-Proofpoint-ORIG-GUID: 7_J8XFMRTeqgLJCA3J8XN1EbUBveT--y
+X-Proofpoint-GUID: 7_J8XFMRTeqgLJCA3J8XN1EbUBveT--y
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add supporting functions to handle ufs abort in mcq mode.
+On 23/03/2023 09:53, Bao D. Nguyen wrote:
+> +static int ufshcd_mcq_poll_register(void __iomem *reg, u32 mask,
+> +			u32 val, unsigned long timeout_ms)
+> +{
+> +	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+> +	int err = 0;
+> +
+> +	/* ignore bits that we don't intend to wait on */
+> +	val = val & mask;
+> +
+> +	while ((readl(reg) & mask) != val) {
+> +		usleep_range(10, 50);
+> +		if (time_after(jiffies, timeout)) {
+> +			err = -ETIMEDOUT;
+> +			break;
+> +		}
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
----
- drivers/ufs/core/ufs-mcq.c     | 189 +++++++++++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  10 +++
- drivers/ufs/core/ufshcd.c      |   4 +-
- include/ufs/ufshci.h           |  17 ++++
- 4 files changed, 218 insertions(+), 2 deletions(-)
+This looks just like readl_poll_timeout()
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 31df052..29d0e37 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -12,6 +12,9 @@
- #include <linux/module.h>
- #include <linux/platform_device.h>
- #include "ufshcd-priv.h"
-+#include <linux/delay.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <linux/bitfield.h>
- 
- #define MAX_QUEUE_SUP GENMASK(7, 0)
- #define UFS_MCQ_MIN_RW_QUEUES 2
-@@ -27,6 +30,9 @@
- #define MCQ_ENTRY_SIZE_IN_DWORD	8
- #define CQE_UCD_BA GENMASK_ULL(63, 7)
- 
-+/* Max mcq register polling time in millisecond unit */
-+#define MCQ_POLL_MS 500
-+
- static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
- {
- 	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_RW_QUEUES,
-@@ -429,3 +435,186 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
- 	host->host_tagset = 1;
- 	return 0;
- }
-+
-+static int ufshcd_mcq_poll_register(void __iomem *reg, u32 mask,
-+			u32 val, unsigned long timeout_ms)
-+{
-+	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
-+	int err = 0;
-+
-+	/* ignore bits that we don't intend to wait on */
-+	val = val & mask;
-+
-+	while ((readl(reg) & mask) != val) {
-+		usleep_range(10, 50);
-+		if (time_after(jiffies, timeout)) {
-+			err = -ETIMEDOUT;
-+			break;
-+		}
-+	}
-+
-+	return err;
-+}
-+
-+static int ufshcd_mcq_sq_stop(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
-+{
-+	void __iomem *reg;
-+	u32 i = hwq->id;
-+	int err;
-+
-+	writel(SQ_STOP, mcq_opr_base(hba, OPR_SQD, i) + REG_SQRTC);
-+	reg = mcq_opr_base(hba, OPR_SQD, i) + REG_SQRTS;
-+	err = ufshcd_mcq_poll_register(reg, SQ_STS, SQ_STS, MCQ_POLL_MS);
-+	if (err)
-+		dev_err(hba->dev, "%s: failed. hwq-id=%d, err=%d\n",
-+			__func__, i, err);
-+	return err;
-+}
-+
-+static int ufshcd_mcq_sq_start(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
-+{
-+	void __iomem *reg;
-+	u32 i = hwq->id;
-+	int err;
-+
-+	writel(SQ_START, mcq_opr_base(hba, OPR_SQD, i) + REG_SQRTC);
-+	reg = mcq_opr_base(hba, OPR_SQD, i) + REG_SQRTS;
-+	err = ufshcd_mcq_poll_register(reg, SQ_STS, 0, MCQ_POLL_MS);
-+	if (err)
-+		dev_err(hba->dev, "%s: failed. hwq-id=%d, err=%d\n",
-+			__func__, i, err);
-+	return err;
-+}
-+
-+/**
-+ * ufshcd_mcq_sq_cleanup - Clean up Submission Queue resources
-+ * associated with the pending command.
-+ * @hba - per adapter instance.
-+ * @task_tag - The command's task tag.
-+ * @result - Result of the Clean up operation.
-+ *
-+ * Returns 0 and result on completion. Returns error code if
-+ * the operation fails.
-+ */
-+int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag, int *result)
-+{
-+	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
-+	struct scsi_cmnd *cmd = lrbp->cmd;
-+	struct ufs_hw_queue *hwq;
-+	void __iomem *reg, *opr_sqd_base;
-+	u32 nexus, i;
-+	int err;
-+
-+	if (task_tag != hba->nutrs - UFSHCD_NUM_RESERVED) {
-+		if (!cmd)
-+			return FAILED;
-+		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+	} else {
-+		hwq = hba->dev_cmd_queue;
-+	}
-+
-+	i = hwq->id;
-+
-+	spin_lock(&hwq->sq_lock);
-+
-+	/* stop the SQ fetching before working on it */
-+	err = ufshcd_mcq_sq_stop(hba, hwq);
-+	if (err)
-+		goto unlock;
-+
-+	/* SQCTI = EXT_IID, IID, LUN, Task Tag */
-+	nexus = lrbp->lun << 8 | task_tag;
-+	opr_sqd_base = mcq_opr_base(hba, OPR_SQD, i);
-+	writel(nexus, opr_sqd_base + REG_SQCTI);
-+
-+	/* SQRTCy.ICU = 1 */
-+	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
-+
-+	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
-+	reg = opr_sqd_base + REG_SQRTS;
-+	err = ufshcd_mcq_poll_register(reg, SQ_CUS, SQ_CUS, MCQ_POLL_MS);
-+	if (err) {
-+		dev_err(hba->dev, "%s: failed. hwq=%d, lun=0x%x, tag=%d\n",
-+			__func__, i, lrbp->lun, task_tag);
-+		*result = FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg));
-+	}
-+
-+	err = ufshcd_mcq_sq_start(hba, hwq);
-+
-+unlock:
-+	spin_unlock(&hwq->sq_lock);
-+	return err;
-+}
-+
-+static u64 ufshcd_mcq_get_cmd_desc_addr(struct ufs_hba *hba,
-+					int task_tag)
-+{
-+	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
-+	__le32 hi = lrbp->utr_descriptor_ptr->command_desc_base_addr_hi;
-+	__le32 lo = lrbp->utr_descriptor_ptr->command_desc_base_addr_lo;
-+
-+	return le64_to_cpu((__le64)hi << 32 | lo);
-+}
-+
-+/**
-+ * ufshcd_mcq_nullify_cmd - Nullify utrd. Host controller does not fetch
-+ * transfer with Command Type = 0xF. post the Completion Queue with OCS=ABORTED.
-+ * @hba - per adapter instance.
-+ * @hwq - Hardware Queue of the nullified utrd.
-+ */
-+static void ufshcd_mcq_nullify_cmd(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
-+{
-+	struct utp_transfer_req_desc *utrd;
-+	u32 dword_0;
-+
-+	utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
-+			hwq->id * sizeof(struct utp_transfer_req_desc));
-+	dword_0 = le32_to_cpu(utrd->header.dword_0);
-+	dword_0 &= ~UPIU_COMMAND_TYPE_MASK;
-+	dword_0 |= FIELD_PREP(UPIU_COMMAND_TYPE_MASK, 0xF);
-+	utrd->header.dword_0 = cpu_to_le32(dword_0);
-+}
-+
-+/**
-+ * ufshcd_mcq_sqe_search - Search for the cmd in the Submission Queue (SQ)
-+ * @hba - per adapter instance.
-+ * @hwq - Hardware Queue to be searched.
-+ * @task_tag - The command's task tag.
-+ *
-+ * Returns true if the SQE containing the command is present in the SQ
-+ * (not fetched by the controller); returns false if the SQE is not in the SQ.
-+ */
-+static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
-+		struct ufs_hw_queue *hwq, int task_tag)
-+{
-+	struct utp_transfer_req_desc *utrd;
-+	u32 mask = hwq->max_entries - 1;
-+	bool ret = false;
-+	u64 addr, match;
-+	u32 sq_head_slot;
-+
-+	spin_lock(&hwq->sq_lock);
-+
-+	ufshcd_mcq_sq_stop(hba, hwq);
-+	sq_head_slot = ufshcd_mcq_get_sq_head_slot(hwq);
-+	if (sq_head_slot == hwq->sq_tail_slot)
-+		goto out;
-+
-+	addr = ufshcd_mcq_get_cmd_desc_addr(hba, task_tag);
-+	while (sq_head_slot != hwq->sq_tail_slot) {
-+		utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
-+				sq_head_slot * sizeof(struct utp_transfer_req_desc));
-+		match = le64_to_cpu((__le64)utrd->command_desc_base_addr_hi << 32 |
-+				utrd->command_desc_base_addr_lo) & CQE_UCD_BA;
-+		if (addr == match) {
-+			ret = true;
-+			goto out;
-+		}
-+		sq_head_slot = (sq_head_slot + 1) & mask;
-+	}
-+
-+out:
-+	ufshcd_mcq_sq_start(hba, hwq);
-+	spin_unlock(&hwq->sq_lock);
-+	return ret;
-+}
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 529f850..1a40cf7 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -78,6 +78,8 @@ struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 				       struct ufs_hw_queue *hwq);
- 
-+int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag, int *result);
-+
- #define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
- #define SD_ASCII_STD true
- #define SD_RAW false
-@@ -403,4 +405,12 @@ static inline struct cq_entry *ufshcd_mcq_cur_cqe(struct ufs_hw_queue *q)
- 
- 	return cqe + q->cq_head_slot;
- }
-+
-+static inline u32 ufshcd_mcq_get_sq_head_slot(struct ufs_hw_queue *q)
-+{
-+	u32 val = readl(q->mcq_sq_head);
-+
-+	return val / sizeof(struct utp_transfer_req_desc);
-+}
-+
- #endif /* _UFSHCD_PRIV_H_ */
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 629442c..504f041 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -56,7 +56,8 @@
- #define NOP_OUT_RETRIES    10
- /* Timeout after 50 msecs if NOP OUT hangs without response */
- #define NOP_OUT_TIMEOUT    50 /* msecs */
--
-+/* Maximum MCQ registers polling time */
-+#define MCQ_POLL_TIMEOUT   500
- /* Query request retries */
- #define QUERY_REQ_RETRIES 3
- /* Query request timeout */
-@@ -173,7 +174,6 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
--	UFSHCD_NUM_RESERVED	= 1,
- 	UFSHCD_CMD_PER_LUN	= 32 - UFSHCD_NUM_RESERVED,
- 	UFSHCD_CAN_QUEUE	= 32 - UFSHCD_NUM_RESERVED,
- };
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 11424bb..ceb8664 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -99,6 +99,9 @@ enum {
- enum {
- 	REG_SQHP		= 0x0,
- 	REG_SQTP		= 0x4,
-+	REG_SQRTC		= 0x8,
-+	REG_SQCTI		= 0xC,
-+	REG_SQRTS		= 0x10,
- };
- 
- enum {
-@@ -111,12 +114,26 @@ enum {
- 	REG_CQIE		= 0x4,
- };
- 
-+enum {
-+	SQ_START		= 0x0,
-+	SQ_STOP			= 0x1,
-+	SQ_ICU			= 0x2,
-+};
-+
-+enum {
-+	SQ_STS			= 0x1,
-+	SQ_CUS			= 0x2,
-+};
-+
-+#define SQ_ICU_ERR_CODE_MASK		GENMASK(7, 4)
-+#define UPIU_COMMAND_TYPE_MASK		GENMASK(31, 28)
- #define UFS_MASK(mask, offset)		((mask) << (offset))
- 
- /* UFS Version 08h */
- #define MINOR_VERSION_NUM_MASK		UFS_MASK(0xFFFF, 0)
- #define MAJOR_VERSION_NUM_MASK		UFS_MASK(0xFFFF, 16)
- 
-+#define UFSHCD_NUM_RESERVED	1
- /*
-  * Controller UFSHCI version
-  * - 2.x and newer use the following scheme:
--- 
-2.7.4
+> +	}
+> +
+> +	return err;
+> +}
 
