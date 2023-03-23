@@ -2,62 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DABBC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC038C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:25:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229873AbjCWKZc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 06:25:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41816 "EHLO
+        id S230267AbjCWKZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:25:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229775AbjCWKZ3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:25:29 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56E4A2733
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:27 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id l37so155521wms.2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:27 -0700 (PDT)
+        with ESMTP id S230450AbjCWKZa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:25:30 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4261AF
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:29 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id r29so19837845wra.13
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1679567126;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=kHn9LOj3LUennLbrotyH9RAcC3peesavIxumXBNqtGI=;
-        b=oTI0vmMM419/N7JVC4Vrcln3XBbpXf1EdxcX3+wAFgQaENApiOqHJBYpdG/KR11aYX
-         AJT+iicsK7rFu1bob/i8F6Sf8AfP0hxtTNVqZwR1mX067nZCfz+P4g8hKXZAx6DjntwI
-         0NRB41aPwSjAvGdLu+J12vLAU+a9IJCPiMZoiPFmyGiqUO7jSJ53GA5lkcXd68pfBZLD
-         9WN9Gmf1ydbOG8/a4VkkJifvW6qBlujgmz6nBwJS6M5TCHLzw1wwWkmdvAoqVEvWFESd
-         5xZXqKHyQqONcR7Rxny1jUo0j1fdWybsVm2hd+AdT+Mc4QOV6m00Gl3dPTxCNR3T6O7A
-         Gj/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679567126;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=linaro.org; s=google; t=1679567128;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=kHn9LOj3LUennLbrotyH9RAcC3peesavIxumXBNqtGI=;
-        b=tAgy1308PYI6rmLzcJCTn5UvW9pRQhi95FTKf3+uv4qSuQDY7A4R99w4bPMcyVrEra
-         daNslvtC6WyNCCy4jLuDq9ZhdkO2+f50erRMJH/SfMEMgdPkkR/BYumabC2u1WROLGcG
-         StP7Pab1wuFSX4oWGR6t9thnFQ5ZetfgsFk84plbxLBwRFhyVC2w3FYXEAaVLffcKeT7
-         eIzfLZ51ljoYVx/SoFikE3jhKasbRmmTCiJ//Rq8p4s6W3l0ogAlX8UdCUUoPtNWxPJ6
-         POoOZNoPA9eAWJHg7gZlOWVmPqq9xUy/MiLUOdFMsZmTy2rFf1PEoS1lkl1SSX/i3KsY
-         7/Hw==
-X-Gm-Message-State: AO0yUKV6RdhVlyQbn1pDtbTSPV2b6QJmm4XBpKG4JbbA7Av1eU3k55+V
-        JmieNAsIo9VYpSRoRvNCq2xdtA==
-X-Google-Smtp-Source: AK7set+qnEKd/C7PSYy2U+bBo9nWl1+ztXVMq+whW9CzH2XcIwXbrg5phWt9nVCwDU1EOtkYtvORYQ==
-X-Received: by 2002:a05:600c:2211:b0:3ed:1fa1:73c5 with SMTP id z17-20020a05600c221100b003ed1fa173c5mr1880205wml.27.1679567125801;
-        Thu, 23 Mar 2023 03:25:25 -0700 (PDT)
+        bh=MbMpIW2XeTgOIuij0DvAphORXQYIJr8R5bBmK3u0n4s=;
+        b=OiM1Yacj+a6ZH6zyF+4WbfsKHoee7NXm2MM9OOs2n5bJzfOLIGXc12cwtoMMbg5V3G
+         3E7MUGqH2EfT+LLrFi30N1TD5vnz9MtKSQJ7qwGhKdoghrG2YNuKlZpFNEbNpPfb+JNC
+         For/VV8QIang/A28V7HMQQzpxwmJI796xxhu2taDRIfLRuuphtt55iNSeSB1TPRM88kr
+         MbeZOoHUYvYqUSMsB/kCZa2vQ1FUlEiDJMmqJPeIQn3BXlnkPEmWDHVnFESQ6FJvikYa
+         cSWdtPSS6SLsNYVNt6bjg783EluGuECjGfV2WXUqqcBqC1eByii9qGUXoZ2JXGQ/O6yJ
+         vBgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679567128;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MbMpIW2XeTgOIuij0DvAphORXQYIJr8R5bBmK3u0n4s=;
+        b=FLkqQBafAbeKdzRTBCieJ7CJ0eCozDucGHEPm7mBYn1YujReFCuAkDXu5+mlISagEd
+         h/3lh05TU8z9yRGo4MU6Vq2Ap5NiGgZ+2a2pfGAyrh/gm4trU7UpviK3PSaXx8VDUJ58
+         QpLnMvKB1a0zF5mflbs1DYHJmprpLT7HJAUlAdXcmnYAKN7IXjU3yS8DwMnxiQvI3CXt
+         KmHQpfCF3fCgg7CtxR0t2EIqmhNuQt8LIXH9du7x4L3OJNKOvq6owpb1fnktBFc+omun
+         KHPwAYVdZVnFoTdQZ+jhLXynmv/or+cuPjc6/QVNivtQ0cVsS/60Se7MR6VwmGlaIDuv
+         92AA==
+X-Gm-Message-State: AAQBX9d96A0I8R5lDKc4WQinFIY9jDAA4Bm6NDGs5kun3k8XfFUKQqTa
+        IxY770n55GrWjV/ZZsVucRCduw==
+X-Google-Smtp-Source: AKy350YnpJ9aARdt0vtWcfFYEivcldCh8Vl38PKNmqoJ8yqlx/THGzhpYzjoV1hW1Xn0hKBSv96fHw==
+X-Received: by 2002:adf:ed43:0:b0:2ce:a8d5:4a89 with SMTP id u3-20020adfed43000000b002cea8d54a89mr2146384wro.37.1679567128111;
+        Thu, 23 Mar 2023 03:25:28 -0700 (PDT)
 Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:8261:5fff:fe11:bdda])
-        by smtp.gmail.com with ESMTPSA id e23-20020a5d5957000000b002cfefa50a8esm15753530wri.98.2023.03.23.03.25.24
+        by smtp.gmail.com with ESMTPSA id e23-20020a5d5957000000b002cfefa50a8esm15753530wri.98.2023.03.23.03.25.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Mar 2023 03:25:25 -0700 (PDT)
+        Thu, 23 Mar 2023 03:25:27 -0700 (PDT)
 From:   Neil Armstrong <neil.armstrong@linaro.org>
-Subject: [PATCH 0/8] arm64: qcom: sm8450: bindings check cleanup
-Date:   Thu, 23 Mar 2023 11:25:15 +0100
-Message-Id: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
+Date:   Thu, 23 Mar 2023 11:25:17 +0100
+Subject: [PATCH 2/8] dt-bindings: mfd: qcom,spmi-pmic: document pm8450 pmic
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAspHGQC/x2MSQqDQBAAvyJzTsMsWSRfCR5m6WiDtjI9hoD49
- zQ5VlHUYQQroZhnd5iKHxJaWcFdOpOnyCMCFWXjrQ82+ABt3SiDLP31ZmHfpFWMC5QGibgQjwJ
- v+qJA7+7BPrxHDM7oLUVBSDVynvTH+zyr3Cr+azWv4Tx/QLNN9Y4AAAA=
+Message-Id: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-2-3ead1e418fe4@linaro.org>
+References: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
+In-Reply-To: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
 To:     Rob Clark <robdclark@gmail.com>,
         Abhinav Kumar <quic_abhinavk@quicinc.com>,
         Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
@@ -84,36 +84,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A few fixes to pass the DT bindings check successfully
-for sm8450 qrd & hdk DTs.
-
-The following are still needed to pass all the checks:
-- https://lore.kernel.org/r/20230308082424.140224-3-manivannan.sadhasivam@linaro.org
-- https://lore.kernel.org/r/20230130-topic-sm8450-upstream-pmic-glink-v5-5-552f3b721f9e@linaro.org
-- https://lore.kernel.org/all/20230308075648.134119-1-manivannan.sadhasivam@linaro.org/
+Add a compatible for PM8450, commonly found with SM8450.
 
 Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
-Neil Armstrong (8):
-      dt-bindings: display: msm: sm8450-mdss: Fix DSI compatible
-      dt-bindings: mfd: qcom,spmi-pmic: document pm8450 pmic
-      dt-bindings: ufs: qcom: document the fact the UFS controller can have an ICE core
-      arm64: dts: qcom: sm8450: remove invalid properties in cluster-sleep nodes
-      arm64: dts: qcom: sm8450: remove invalid power-domain-names in pcie nodes
-      arm64: dts: qcom: sm8450: remove invalid npl clock in vamacro node
-      arm64: dts: qcom: sm8450: remove invalid reg-names from ufs node
-      arm64: dts: qcom: sm8450: fix pcie1 gpios properties name
+ Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
- .../bindings/display/msm/qcom,sm8450-mdss.yaml           |  2 +-
- .../devicetree/bindings/mfd/qcom,spmi-pmic.yaml          |  1 +
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml      |  2 +-
- arch/arm64/boot/dts/qcom/sm8450.dtsi                     | 16 ++++------------
- 4 files changed, 7 insertions(+), 14 deletions(-)
----
-base-commit: b9e9869138880e668fa8cb3b186d04cd13bd57a6
-change-id: 20230323-topic-sm8450-upstream-dt-bindings-fixes-81630722ee31
+diff --git a/Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml b/Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml
+index 975c30aad23c..15deeff2d447 100644
+--- a/Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml
++++ b/Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml
+@@ -57,6 +57,7 @@ properties:
+           - qcom,pm8350
+           - qcom,pm8350b
+           - qcom,pm8350c
++          - qcom,pm8450
+           - qcom,pm8550
+           - qcom,pm8550b
+           - qcom,pm8550ve
 
-Best regards,
 -- 
-Neil Armstrong <neil.armstrong@linaro.org>
+2.34.1
 
