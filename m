@@ -2,310 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87317C761AF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:18:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F55BC6FD1C
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:21:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229904AbjCWKSK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 06:18:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57598 "EHLO
+        id S230109AbjCWKVk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:21:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjCWKRr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:17:47 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A582B1ADC5;
-        Thu, 23 Mar 2023 03:17:35 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32NAClb3013185;
-        Thu, 23 Mar 2023 03:17:28 -0700
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3pfx91mxdc-1
+        with ESMTP id S229904AbjCWKVi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:21:38 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30CA412073;
+        Thu, 23 Mar 2023 03:21:35 -0700 (PDT)
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N8CGDJ007016;
+        Thu, 23 Mar 2023 10:21:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=0ERauraqE3u5evuE0GULp57jTa/HLBK6Uf3QRaUQIVE=;
+ b=D8Tp5ok6YSREwpehFrO6R0ojDsAqSYVGNm3xrmEJRRBIykSW2b9Z0FKnnkyqvo04l+kd
+ 1Z2OSt971FeJZkMMizHRyaYhz7eRi49i8nztEyrHJqkYxmVz8rJMcxlmQT2QZ9a7bsTI
+ WAP9EoN5pj9XdV/TNDtUWvxv4kduGNXO/nxkTAJh5TbI3/4mEbRD7aCkWCp3Npw7R8gx
+ smcCNebi1yFV6tAH3fzmHOui1A1I8AY4+UZsQucoDo9q3QUwp5gdl5KY+JRc8Bgsh80a
+ 3Aa5SGWhX4LIO8CdWfvFnydYF8totxgRPLlPJxc4hMI/8Gzj8JB56zw2REa44TAO5hSI 8Q== 
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pgk22axbx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 03:17:28 -0700
-Received: from m0045851.ppops.net (m0045851.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32NAHRi8025206;
-        Thu, 23 Mar 2023 03:17:27 -0700
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2049.outbound.protection.outlook.com [104.47.74.49])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3pfx91mxd5-1
+        Thu, 23 Mar 2023 10:21:20 +0000
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32N4bnuN025421;
+        Thu, 23 Mar 2023 10:21:17 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+        by ppma03fra.de.ibm.com (PPS) with ESMTPS id 3pd4x661ws-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 03:17:27 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HwlJOFNrLoNH/PjARG7KOpbkz7pNSZ7/bEq2mch4DbnJUf4IhmNvzTRozSTL2y9qJh+lPGzKsDKJeWER9wj9XNENFLhJhcw2mhizzU6jemfc/ZIlY1E2wKoIQ8ZrOiqZiHJjNF3LxKegPYD8L/oz0D0SNoyQi8c5hcavRxXcOBN67TWG+U9ZWcLDARHXNBxZB2h74OdqHalHDt6UeaoWXRFPT/XawIfB8RBpcy+BRh7p0hoWg4njp/laGOLvABDp8Eorgv+c24+x6OybAih4pl8LSykOkU7zU2e3m4WNbz574Z9Aw9pMWnmH8JOb60Ss0TE8EieTrTzmP3/rLO44Aw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BMueSi0pjBv7TaPIFtqOzAam/Ft93n7IkQ4hfPXYhDM=;
- b=JeDbKncEazFmyVz+vOVVoy849tOkk1N9oltsKzD4FnAbLVSw1DjRh6eot5K2StB8BFP4i1fJNPm+owiA/EApNWJD9ed1ihH/wdZbnB/PvQpTU0HNwm94LscDobP78eERToh4iHNst+xSMwkrb/ug5uKQ1kuazEHRdbmbJnT8q1qGNZsp2bv9hU5ZMHaU9hc7hW8heanu1pkKVvt8qrpsdpz0lKCHePgEb7fN4HUNI1h6WVJ25xK5mkcJt3zET0J0P08guLkSm0y1vag8ZfKhtf/vNABKGVaCJecuOWpdsZ0K/KFFNBveTzFXaJyDsj1NRtSiC1sV5ponaiIwV6KZdQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BMueSi0pjBv7TaPIFtqOzAam/Ft93n7IkQ4hfPXYhDM=;
- b=O+wX5/qMW4F4t55OUi3p9ruRBrKni1ggAkuRnab9/DPyNep6v+N2sDy8uMAmHFaOwgN+aBLfhUUhs/Ad7X6t5Gx24FMkJQuLraI+yn9m4JFjCWqsMFACOSbZcFBl8DvlRx5PEgmKcIPexwErHStyXSrobLw9JAXMCOtm52ZBqwk=
-Received: from CO6PR18MB4419.namprd18.prod.outlook.com (2603:10b6:5:35a::11)
- by CO6PR18MB4515.namprd18.prod.outlook.com (2603:10b6:303:13a::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.38; Thu, 23 Mar
- 2023 10:17:25 +0000
-Received: from CO6PR18MB4419.namprd18.prod.outlook.com
- ([fe80::b27c:4e9c:400f:ae0c]) by CO6PR18MB4419.namprd18.prod.outlook.com
- ([fe80::b27c:4e9c:400f:ae0c%6]) with mapi id 15.20.6178.038; Thu, 23 Mar 2023
- 10:17:25 +0000
-From:   Manish Rangankar <mrangankar@marvell.com>
-To:     Zheng Hacker <hackerzheng666@gmail.com>,
-        Mike Christie <michael.christie@oracle.com>
-CC:     Zheng Wang <zyytlz.wz@163.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "1395428693sheep@gmail.com" <1395428693sheep@gmail.com>,
-        "alex000young@gmail.com" <alex000young@gmail.com>
-Subject: RE: [EXT] Re: [PATCH RESEND] scsi: qedi: Fix use after free bug in
- qedi_remove due to race condition
-Thread-Topic: [EXT] Re: [PATCH RESEND] scsi: qedi: Fix use after free bug in
- qedi_remove due to race condition
-Thread-Index: AQHZW0aeIwJaPaUoRUqXylFeiiLwu68HvRsAgABrmWA=
-Date:   Thu, 23 Mar 2023 10:17:25 +0000
-Message-ID: <CO6PR18MB44199B7F8AABE14ED404CF61D8879@CO6PR18MB4419.namprd18.prod.outlook.com>
-References: <20230318081303.792969-1-zyytlz.wz@163.com>
- <bce4f9d8-e4b9-39e6-4534-34b7dc7d43ac@oracle.com>
- <CAJedcCx9s9HSbJEEb_RUmW7yjSMkYaoXhuH9qrqYo1smpL=iJw@mail.gmail.com>
-In-Reply-To: <CAJedcCx9s9HSbJEEb_RUmW7yjSMkYaoXhuH9qrqYo1smpL=iJw@mail.gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: =?utf-8?B?UEcxbGRHRStQR0YwSUc1dFBTSmliMlI1TG5SNGRDSWdjRDBpWXpwY2RYTmxj?=
- =?utf-8?B?bk5jYlhKaGJtZGhibXRoY2x4aGNIQmtZWFJoWEhKdllXMXBibWRjTURsa09E?=
- =?utf-8?B?UTVZall0TXpKa015MDBZVFF3TFRnMVpXVXRObUk0TkdKaE1qbGxNelZpWEcx?=
- =?utf-8?B?elozTmNiWE5uTFdVMU5tTTVZVFUxTFdNNU5qTXRNVEZsWkMwNE5qRTVMV0V3?=
- =?utf-8?B?WkRBMVltRmpOekJrT1Z4aGJXVXRkR1Z6ZEZ4bE5UWmpPV0UxTmkxak9UWXpM?=
- =?utf-8?B?VEV4WldRdE9EWXhPUzFoTUdRd05XSmhZemN3WkRsaWIyUjVMblI0ZENJZ2Mz?=
- =?utf-8?B?bzlJak0zTWpRaUlIUTlJakV6TXpJME1EUXdNalF5TVRneE1EQXlPQ0lnYUQw?=
- =?utf-8?B?aVpuVXJWMWR2VkRKbVdEUjFWMDFhVjB3eVRWRkRiRzVuTm5OclBTSWdhV1E5?=
- =?utf-8?B?SWlJZ1ltdzlJakFpSUdKdlBTSXhJaUJqYVQwaVkwRkJRVUZGVWtoVk1WSlRV?=
- =?utf-8?B?bFZHVGtOblZVRkJTRmxKUVVGQ2MwRjRWMjlqUmpOYVFWSkZVekpZYUUxdlNF?=
- =?utf-8?B?OHdSVkpNV21WRmVXZGpOMUZPUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVWhCUVVGQlFVZERRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVVkJRVkZCUWtGQlFVRXhSa2d6WVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZLTkVGQlFVSm9RVWRSUVZwQlFubEJSMVZCWTNkQ2VrRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlJVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRm5RVUZCUVVGQmJtZEJRVUZIVFVGa1VVSjZRVWhSUVdKM1FuUkJSamhC?=
- =?utf-8?B?WTBGQ2JFRklTVUZqZDBKMlFVYzBRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCWjBGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VkZCUVVGQlFVRkJRVUZEUVVGQlFVRkJRMlZCUVVGQldYZENNVUZJVFVGa1FV?=
- =?utf-8?B?SjJRVWN3UVZoM1FuZEJSMmRCWW5kQ2RVRkhWVUZpWjBJeFFVY3dRVmxuUW14?=
- =?utf-8?B?QlNFbEJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVKQlFVRkJRVUZCUVVGQlNVRkJRVUZCUVVvMFFVRkJRbXBC?=
- =?utf-8?B?U0ZWQlkzZENNRUZIT0VGaVVVSm1RVWhOUVdOM1FuVkJSamhCV2tGQ2FFRklU?=
- =?utf-8?B?VUZoUVVKbVFVaFpRVTFCUVhsQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?Q?FBQUFB?=
-x-dg-rorf: true
-x-dg-refone: =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkZRVUZCUVVGQlFVRkJRV2RCUVVGQlFVRnVaMEZC?=
- =?utf-8?B?UVVkTlFXUlJRbnBCU0ZGQlluZENkRUZHT0VGamQwSjZRVWMwUVZoM1FuSkJS?=
- =?utf-8?B?MVZCWlZGQ00wRkhPRUZqWjBKclFVaE5RVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCVVVGQlFVRkJRVUZCUVVOQlFV?=
- =?utf-8?B?RkJRVUZEWlVGQlFVRlpkMEl4UVVoTlFXUkJRblpCUnpCQldIZENla0ZJVFVG?=
- =?utf-8?B?aVowSm1RVWMwUVdKM1FtdEJSMVZCWWtGQ2NFRkhNRUZoVVVJd1FVZFZRV05u?=
- =?utf-8?B?UW1aQlNGbEJUVUZCZVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFrRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkpRVUZCUVVGQlNqUkJRVUZDYWtGSVZVRmpkMEl3UVVjNFFXSlJR?=
- =?utf-8?B?bVpCU0UxQlkzZENkVUZHT0VGamQwSjNRVWRGUVZsM1FteEJSamhCWkdkQmQw?=
- =?utf-8?B?RkVTVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVVZCUVVGQlFVRkJRVUZCWjBGQlFVRkJRVzVuUVVGQlIxRkJZa0ZDZDBG?=
- =?utf-8?B?R09FRmpkMEp5UVVoclFXTkJRbXhCUmpoQldYZENiMEZIUlVGa1FVSm1RVWN3?=
- =?utf-8?B?UVZwUlFucEJTRTFCV1ZGQ2JrRkhWVUZZZDBJeVFVUkJRVTFuUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGUlFVRkJRVUZCUVVGQlEwRkJRVUZCUVVObFFVRkJR?=
- =?utf-8?B?VnBCUW5OQlNFRkJXSGRDZWtGSGQwRlpVVUpxUVVkelFWaDNRbXBCUjJkQldW?=
- =?utf-8?B?RkNNRUZHT0VGaVVVSnNRVWhOUVdOM1FtaEJSMk5CV2xGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?Q?FBQUFB?=
-x-dg-reftwo: =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkNRVUZCUVVGQlFVRkJRVWxCUVVGQlFVRktO?=
- =?utf-8?B?RUZCUVVKclFVZDNRV05CUW1aQlNGRkJXbEZDYUVGSE1FRmpkMEptUVVjNFFX?=
- =?utf-8?B?Sm5RbXhCUjFGQlkyZENjRUZJV1VGYVVVSm1RVWRaUVdGUlFuTkJSMVZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUlVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?blFVRkJRVUZCYm1kQlFVRkhWVUZpVVVKb1FVZHJRV0pCUW1aQlIwVkJXa0ZD?=
- =?utf-8?B?YTBGSVNVRmFVVUo2UVVoTlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkVVVUZCUVVGQlFVRkJRVUZCUVVGQlFWRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkRRVUZCUVVGQlEyVkJRVUZCWWxGQ2FFRklTVUZrWjBKc1FV?=
- =?utf-8?B?ZDNRV0pCUW1aQlNFRkJZMmRDZGtGSGIwRmFVVUpxUVVoUlFWaDNRbXBCUnpo?=
- =?utf-8?B?QldrRkNiRUZJVFVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUpCUVVGQlFVRkJRVUZCU1VGQlFVRkJRVW8wUVVGQlFuUkJSMFZC?=
- =?utf-8?B?WTJkQ01rRkhWVUZpUVVKelFVWTRRV1JCUW14QlNFbEJZbEZDY0VGSE5FRmtV?=
- =?utf-8?B?VUo2UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFV?=
- =?utf-8?B?RkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVG?=
- =?utf-8?B?QlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZC?=
- =?utf-8?B?UVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJRVUZCUVVGQlFVRkJR?=
- =?utf-8?B?VUZCUVVGQlFVRkJRVUZCUVVGRlFVRkJRVUZCUVVGQlFXZEJRVUZCUVVFaUx6?=
- =?utf-8?Q?48L21ldGE+?=
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: CO6PR18MB4419:EE_|CO6PR18MB4515:EE_
-x-ms-office365-filtering-correlation-id: 23cb01a7-a9fd-4eaf-53e3-08db2b87cc74
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: nn7jdqNIujP15fXdnmG/KFnzhcQzF9FhaksuCpUQoXYMQfeGMEUdak7IVKesVzI9JC4rhZorVfpE04u73iaFF0O+a+hSfh+BMmJxl5GBSSmwtX77uNxqAMd9GUFSnFNGHS/KSQpatrFCCZU+vBxI1kN3MmSpR6AsY7Jdy6kfZshaRz1GAuCo2iDpFTGthMVGAx3bCYdfgBwvIp5xieIO88PdHtK4vVgyHYmwVsGRlKuf4nsMOZpydjuyd9yz+0iVkrS3OnGkUspDG14AyEpVMRE+MqDbA2nb5FSQHwlwmCtpgk2y/WWC1eBpvSowBxaRpOPfi2NYsK4jArXMxr9Tp5Tr1dYer5+AmFn/PSPYQA9JYZwAmt+Q4E0CYk1r2uAsEHtfMdJ1ySHX3lP4RtWrgESUv5v+4U26HCaZPbd6+fl8Wh5FOAepZHEeJzNXc9tpEc8M3+7iY/fv6Hk/CaH1enLHJAkARn18G8v6UhmJt8DAAsS+zrnQXagjPyYEj8XXp3EugpZeQUbxBF+NbeuJieoK8xf2VQhMOSbIEVlCZ6RSuN8bWgs+aeH7cv3rZKUlr4WfEyvLCxRE7UB6kZD8hb01QGgcGgYOZ7UhI72NSxzOk1Je/4gkHM0cgyHs+xc6Kijkedbxjqqbl1cC75LU6urbOynmA/LSgznj/LTWG1/zBA7po43y6oXmgtQP2GCqEU+cSGWDOkIHBPcy4vPuvA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO6PR18MB4419.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(136003)(396003)(39860400002)(366004)(346002)(376002)(451199018)(86362001)(33656002)(38070700005)(122000001)(38100700002)(2906002)(41300700001)(66476007)(64756008)(8676002)(4326008)(66446008)(5660300002)(52536014)(8936002)(66556008)(55016003)(66946007)(53546011)(9686003)(186003)(83380400001)(6506007)(54906003)(110136005)(478600001)(76116006)(316002)(26005)(7696005)(71200400001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?YlMzczdIRE14KzBSVFVHb3Z6ckdMbzJiYVQ1dFd0OHZEcExqWW9UaER5S3p0?=
- =?utf-8?B?QktYWWJxTnJKbUJUcklyaFZuNzd0RXFzTGpLLzAzejVZUHBUYkpXOHB4Q0JG?=
- =?utf-8?B?MENSdkRmK1dKK0Nnc3VPb1J6ZUhSRHdRb3lFVVlaOVZtSlpISnVKSjVEWnVD?=
- =?utf-8?B?WVdSOXRsMm13NU12NG1sRGc0NERmRktsaWE0Z1AvZzRucDdwam5vUW9aMHdn?=
- =?utf-8?B?UXRJeTliQmp2SndXV3FOcmpOYklJUDVhYWROVi8zMHRyOXNsYnhWSUVXY2VV?=
- =?utf-8?B?emxZNTNvTjZFK3BHUmNLeGs0NUVsSVplaDk1bEhUUHI0eXgxeFBMZGFKM2V5?=
- =?utf-8?B?NUFOdnR6V3JPeEVxdWY2a08wR04wVU5Zd25GV3M1dE5NVVBZNDYyQXBxRUNh?=
- =?utf-8?B?aXJjSitzb1ZWNFVpNVFpUjBUYlY0OFFVM29LQnpWeXYwbWN0SXYzUksvZTFF?=
- =?utf-8?B?WGV1NWJmaTEySWlUbGtucUZRcy82RUhBbFJwV2xrdEkyN2d1U2xUN2xjYTAz?=
- =?utf-8?B?MGc5V0hDMU9rdFZVc0QzSVhDWStpdmR3Y0JwMkRMbnQ1VGh4ODZJRDdyc1Qv?=
- =?utf-8?B?UmUyVzlkKzJaV2w0V24xcHJGRmEwbXlzc1NNbnBHWUEyemRZNStBMHJhRWg5?=
- =?utf-8?B?VE5jMWgrekhrVXpzUWtoeTA5MytTT05BRDZNbkhQVk10Q3lBelJRWUJpeThM?=
- =?utf-8?B?WkRRcUI0SFkvTy9HUzVvQ1paWjM3MlJUcUZIQ3hIM0hMb2NlVmtKSjFFWTgz?=
- =?utf-8?B?RTl4a2cwaTBnbjU2aXlBSzVEQk9OL2xTSDB4WHhnN3RsWjVPeXNnRlVKVCtT?=
- =?utf-8?B?TEFad2tvMVdFbGdGWTJQN2NGUjlrYUhhcFovaEQ3dlUyUWNBT1IwUjhoZE96?=
- =?utf-8?B?NEl6S01Bc0hZL3ZDKzBybG1RV2puK1BsNGFYc2NDbTUvWXRpNzVvT2E5amxa?=
- =?utf-8?B?R3dSUjJoSlR6d3NLT0FubFhnRHFaVDh5UlNPMWo2UWNPQytEUHFRVCs4Zm1z?=
- =?utf-8?B?MTFwV1RtTVVLZ3VIRXoxKy9rV1dTN0FtVW9vZnBPM2Q3ZlZkKzJJOE42VVR0?=
- =?utf-8?B?MEhFVTJ5TndxNHRNNFg5WldjdHU5UHJuWTVxN0F5dXl2MGhFWmwycDdUL0k0?=
- =?utf-8?B?M01oQW5lZjk2ZkZQdG1wZnNTWnZIbmtiQ3BVK1M3eFA5UmRReE9tck5yV1Y3?=
- =?utf-8?B?SUJrRFo4WFdTaklBOTg0d0t4NjRkRzQ3UHFBdERjU3ZjcFJ1aDNXdkxWcWhi?=
- =?utf-8?B?ODBQSG56bHZXMHlJTXNYRnJYTmtGUFd5bU1EUmJNbE1BbWFMc3hZQkZPQys1?=
- =?utf-8?B?N1JEZkZ4emtPQm00Yk1qN0lvRFN6ZlloU2d2c1lISEJyQ3B2b0YwR1BCUzFl?=
- =?utf-8?B?UUl3a083bG5NbU5adlRyc3VnSDhGNitlcE0vcVZ0UG1TNVoxWEwwSWNabjJi?=
- =?utf-8?B?TUdhY3h6RGEycG5lbXY2ZStmRzBpdzZpL1Y4WVlCZ0lMbGg3TmxLZDd2RC9Z?=
- =?utf-8?B?ajZ1VmZRYlRDaWFWT09SSW1sd2s0MnpFZzVmQWNialRRUnpkZ3R0aEZ4Q0VB?=
- =?utf-8?B?dXVaUUcwdjZCOG1YMmxPRWlTOW5DeDlGR2pLbzRDb25jVTQwanV5RFVGZEc3?=
- =?utf-8?B?dE9waGJHbHdFZ3ZXMDJDSmtIa1o4c0hkQWw1T1V6WS9CdWlOV2lkMHZaVHJW?=
- =?utf-8?B?VnltLzF4aFBjMU9ueWF1Q3E5eCt2OXRFT01nUGNyMjZhVHgxRkd0Tm5OY0pR?=
- =?utf-8?B?QU13NUVibTlYSzk5Yjk5ZDdrVHNtVkR6YVBuK3hjK2RkNXViaXV4Q01KdFdy?=
- =?utf-8?B?Y0swcmVTemhNUTJoL2o5T0RpTWV2KzJrUUZ4K3RmcTEyTkdwRkdraDJUNHp4?=
- =?utf-8?B?QmZvdEp0Skl0UWJRRjFob3BDMXdYOEJFdTVCYmMwdEdBbGNQREw0RGRic1h6?=
- =?utf-8?B?SXRNLy80eVV4T1FJcS9wTVdpUmx5dHZXRndKWFBCVmIybjJHK3k5SlZnUFlU?=
- =?utf-8?B?WEFXVGhxc09QTVBrOUdEYTlsOGl5bnVUajZtdXJKZGxrUm5kWnJ4bGZIWWg0?=
- =?utf-8?B?NXJtM1U2RFRKV3NpbUFnTWtKSG1KWnBvdnRMOFF3Qmo4dVd2YnNsUkZKTjUx?=
- =?utf-8?Q?NRTabn4aJAzJF+w8HR+YCexat?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Thu, 23 Mar 2023 10:21:17 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32NALDDb64094702
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 23 Mar 2023 10:21:13 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id AC8F420078;
+        Thu, 23 Mar 2023 10:21:13 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9B08020077;
+        Thu, 23 Mar 2023 10:21:13 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.152.212.164])
+        by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Thu, 23 Mar 2023 10:21:13 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1pfI4H-0045Lj-0q;
+        Thu, 23 Mar 2023 11:21:13 +0100
+Date:   Thu, 23 Mar 2023 10:21:13 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     "yebin (H)" <yebin10@huawei.com>
+Cc:     Ye Bin <yebin@huaweicloud.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: fix hung_task when change host from recovery to
+ running via sysfs
+Message-ID: <20230323102113.GA859586@t480-pf1aa2c2>
+References: <20230321084204.1860900-1-yebin@huaweicloud.com>
+ <20230321142237.GC311313@t480-pf1aa2c2.fritz.box>
+ <641A58D0.1020205@huawei.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <641A58D0.1020205@huawei.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: O4pV-Ep14vT41oUpQBA0_T6_WQWsgRrM
+X-Proofpoint-GUID: O4pV-Ep14vT41oUpQBA0_T6_WQWsgRrM
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 36 URL's were un-rewritten
 MIME-Version: 1.0
-X-OriginatorOrg: marvell.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CO6PR18MB4419.namprd18.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 23cb01a7-a9fd-4eaf-53e3-08db2b87cc74
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Mar 2023 10:17:25.3655
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YWa8pxeNF1WjHoiUFWns3AfTNLgUrltGBlkxJg2ZH2EJcGxqdYhU3W3r86/YqYD+wbWmW82TGvHNXs8UGJcYJg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR18MB4515
-X-Proofpoint-GUID: sHTvhTQrI49dTNdkkUkAm1sU1lN_TKbc
-X-Proofpoint-ORIG-GUID: 23JXC1ieTS_Xjmhp7ENNe9Q7hQdGApew
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-22_21,2023-03-22_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ mlxlogscore=999 impostorscore=0 priorityscore=1501 lowpriorityscore=0
+ bulkscore=0 malwarescore=0 adultscore=0 spamscore=0 phishscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303150002 definitions=main-2303230075
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhlbmcgSGFja2VyIDxo
-YWNrZXJ6aGVuZzY2NkBnbWFpbC5jb20+DQo+IFNlbnQ6IFRodXJzZGF5LCBNYXJjaCAyMywgMjAy
-MyA5OjE1IEFNDQo+IFRvOiBNaWtlIENocmlzdGllIDxtaWNoYWVsLmNocmlzdGllQG9yYWNsZS5j
-b20+DQo+IENjOiBaaGVuZyBXYW5nIDx6eXl0bHoud3pAMTYzLmNvbT47IE5pbGVzaCBKYXZhbGkg
-PG5qYXZhbGlAbWFydmVsbC5jb20+Ow0KPiBNYW5pc2ggUmFuZ2Fua2FyIDxtcmFuZ2Fua2FyQG1h
-cnZlbGwuY29tPjsgR1ItUUxvZ2ljLVN0b3JhZ2UtDQo+IFVwc3RyZWFtIDxHUi1RTG9naWMtU3Rv
-cmFnZS1VcHN0cmVhbUBtYXJ2ZWxsLmNvbT47DQo+IGplamJAbGludXguaWJtLmNvbTsgbWFydGlu
-LnBldGVyc2VuQG9yYWNsZS5jb207IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZzsgbGlu
-dXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gMTM5NTQyODY5M3NoZWVwQGdtYWlsLmNvbTsg
-YWxleDAwMHlvdW5nQGdtYWlsLmNvbQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIFJFU0VO
-RF0gc2NzaTogcWVkaTogRml4IHVzZSBhZnRlciBmcmVlIGJ1ZyBpbg0KPiBxZWRpX3JlbW92ZSBk
-dWUgdG8gcmFjZSBjb25kaXRpb24NCj4gDQo+IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tDQo+IE1pa2UgQ2hyaXN0aWUgPG1pY2hhZWwuY2hyaXN0aWVAb3JhY2xlLmNvbT4g5LqO
-MjAyM+W5tDPmnIgyMeaXpeWRqOS6jCAwMDoxMeWGmQ0KPiDpgZPvvJoNCj4gPg0KPiA+IE9uIDMv
-MTgvMjMgMzoxMyBBTSwgWmhlbmcgV2FuZyB3cm90ZToNCj4gPiA+IEluIHFlZGlfcHJvYmUsIGl0
-IGNhbGxzIF9fcWVkaV9wcm9iZSwgd2hpY2ggYm91bmQNCj4gPiA+ICZxZWRpLT5yZWNvdmVyeV93
-b3JrIHdpdGggcWVkaV9yZWNvdmVyeV9oYW5kbGVyIGFuZCBib3VuZA0KPiA+ID4gJnFlZGktPmJv
-YXJkX2Rpc2FibGVfd29yayB3aXRoIHFlZGlfYm9hcmRfZGlzYWJsZV93b3JrLg0KPiA+ID4NCj4g
-PiA+IFdoZW4gaXQgY2FsbHMgcWVkaV9zY2hlZHVsZV9yZWNvdmVyeV9oYW5kbGVyLCBpdCB3aWxs
-IGZpbmFsbHkgY2FsbA0KPiA+ID4gc2NoZWR1bGVfZGVsYXllZF93b3JrIHRvIHN0YXJ0IHRoZSB3
-b3JrLg0KPiA+ID4NCj4gPiA+IFdoZW4gd2UgY2FsbCBxZWRpX3JlbW92ZSB0byByZW1vdmUgdGhl
-IGRyaXZlciwgdGhlcmUgbWF5IGJlIGENCj4gPiA+IHNlcXVlbmNlIGFzIGZvbGxvd3M6DQo+ID4g
-Pg0KPiA+ID4gRml4IGl0IGJ5IGZpbmlzaGluZyB0aGUgd29yayBiZWZvcmUgY2xlYW51cCBpbiBx
-ZWRpX3JlbW92ZS4NCj4gPiA+DQo+ID4gPiBDUFUwICAgICAgICAgICAgICAgICAgQ1BVMQ0KPiA+
-ID4NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgIHxxZWRpX3JlY292ZXJ5X2hhbmRsZXINCj4g
-PiA+IHFlZGlfcmVtb3ZlICAgICAgICAgIHwNCj4gPiA+ICAgX19xZWRpX3JlbW92ZSAgICAgIHwN
-Cj4gPiA+IGlzY3NpX2hvc3RfZnJlZSAgICAgIHwNCj4gPiA+IHNjc2lfaG9zdF9wdXQgICAgICAg
-IHwNCj4gPiA+IC8vZnJlZSBzaG9zdCAgICAgICAgIHwNCj4gPiA+ICAgICAgICAgICAgICAgICAg
-ICAgIHxpc2NzaV9ob3N0X2Zvcl9lYWNoX3Nlc3Npb24NCj4gPiA+ICAgICAgICAgICAgICAgICAg
-ICAgIHwvL3VzZSBxZWRpLT5zaG9zdA0KPiA+ID4NCj4gPiA+IEZpeGVzOiA0YjEwNjhmNWQ3NGIg
-KCJzY3NpOiBxZWRpOiBBZGQgTUZXIGVycm9yIHJlY292ZXJ5IHByb2Nlc3MiKQ0KPiA+ID4gU2ln
-bmVkLW9mZi1ieTogWmhlbmcgV2FuZyA8enl5dGx6Lnd6QDE2My5jb20+DQo+ID4gPiAtLS0NCj4g
-PiA+ICBkcml2ZXJzL3Njc2kvcWVkaS9xZWRpX21haW4uYyB8IDQgKysrKw0KPiA+ID4gIDEgZmls
-ZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKykNCj4gPiA+DQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL3FlZGkvcWVkaV9tYWluLmMNCj4gPiA+IGIvZHJpdmVycy9zY3NpL3FlZGkvcWVk
-aV9tYWluLmMgaW5kZXggZjJlZTQ5NzU2ZGY4Li4yNTIyM2Y2ZjUzNDQNCj4gPiA+IDEwMDY0NA0K
-PiA+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9tYWluLmMNCj4gPiA+ICsrKyBiL2Ry
-aXZlcnMvc2NzaS9xZWRpL3FlZGlfbWFpbi5jDQo+ID4gPiBAQCAtMjQxNCw2ICsyNDE0LDEwIEBA
-IHN0YXRpYyB2b2lkIF9fcWVkaV9yZW1vdmUoc3RydWN0IHBjaV9kZXYNCj4gKnBkZXYsIGludCBt
-b2RlKQ0KPiA+ID4gICAgICAgaW50IHJ2YWw7DQo+ID4gPiAgICAgICB1MTYgcmV0cnkgPSAxMDsN
-Cj4gPiA+DQo+ID4gPiArICAgICAvKmNhbmNlbCB3b3JrKi8NCj4gPg0KPiA+IFRoaXMgY29tbWVu
-dCBpcyBub3QgbmVlZGVkLiBUaGUgbmFtZSBvZiB0aGUgZnVuY3Rpb25zIHlvdSBhcmUgY2FsbGlu
-Zw0KPiA+IGhhdmUgImNhbmNlbCIgYW5kICJ3b3JrIiBpbiB0aGVtIHNvIHdlIGtub3cuIElmIHlv
-dSB3YW50IHRvIGFkZCBhDQo+ID4gY29tbWVudCBleHBsYWluIHdoeSB0aGUgY2FuY2VsIGNhbGxz
-IGFyZSBuZWVkZWQgaGVyZS4NCj4gPg0KPiANCj4gSGksDQo+IA0KPiBTb3JyeSBmb3IgbXkgbGF0
-ZSByZXBseSBhbmQgdGhhbmtzIGZvciB5b3VyIGFkdmljZS4gV2lsbCByZW1vdmUgaXQgaW4gdGhl
-IG5leHQNCj4gdmVyc2lvbiBvZiBwYXRjaC4NCj4gDQo+ID4NCj4gPiA+ICsgICAgIGNhbmNlbF9k
-ZWxheWVkX3dvcmtfc3luYygmcWVkaS0+cmVjb3Zlcnlfd29yayk7DQo+ID4gPiArICAgICBjYW5j
-ZWxfZGVsYXllZF93b3JrX3N5bmMoJnFlZGktPmJvYXJkX2Rpc2FibGVfd29yayk7DQo+ID4NCj4g
-Pg0KPiA+IEhvdyBkbyB5b3Uga25vdyBhZnRlciB5b3UgaGF2ZSBjYWxsZWQgY2FuY2VsX2RlbGF5
-ZWRfd29ya19zeW5jIHRoYXQNCj4gPiBzY2hlZHVsZV9yZWNvdmVyeV9oYW5kbGVyIG9yIHNjaGVk
-dWxlX2h3X2Vycl9oYW5kbGVyIGNhbid0IGJlIGNhbGxlZD8NCj4gPiBJIGRvbid0IGtub3cgdGhl
-IHFlZCBkcml2ZXIgd2VsbCwgYnV0IGl0IGxvb2tzIGxpa2UgeW91IGNvdWxkIGhhdmUNCj4gPiBv
-cGVyYXRpb25zIHN0aWxsIHJ1bm5pbmcsIHNvIGFmdGVyIHlvdSBjYW5jZWwgaGVyZSBvbmUgb2Yg
-dGhvc2Ugb3BzDQo+ID4gY291bGQgbGVhZCB0byB0aGVtIHNjaGVkdWxpbmcgdGhlIHdvcmsgYWdh
-aW4uDQo+ID4NCj4gDQo+IFNvcnJ5IEkgZGlkbid0IGtub3cgaG93IHRvIG1ha2Ugc3VyZSB0aGVy
-ZSdzIG5vIG1vcmUgc2NoZWR1bGUuIEJ1dCBJIGRvDQo+IHRoaW5rIHRoaXMgaXMgaW1wb3J0YW50
-LiBNYXliZSB0aGVyZSdyZSBzb21lb25lIGVsc2Ugd2hvIGNhbiBnaXZlIHVzIGFkdmljZS4NCj4g
-DQo+IEJlc3QgcmVnYXJkcywNCj4gWmhlbmcNCj4gPg0KDQpCZXN0IHBsYWNlIHRvIGNhbGwgY2Fu
-Y2VsX2RlbGF5ZWRfd29ya19zeW5jIGlzIGFmdGVyIHFlZGlfb3BzLT5zdG9wKHFlZGktPmNkZXYp
-IGFuZCANCnFlZGlfb3BzLT5sbDItPnN0b3AocWVkaS0+Y2Rldik7LCBhZnRlciB0aGVzZSBxZWQg
-Y2FsbHMgZmlybXdhcmUgd2lsbCBub3QgcG9zdCBhbnkgZXZlbnRzIHRvIHFlZGkgZHJpdmVyLg0K
-DQpUaGFua3MsDQpNYW5pc2gNCg0K
+On Wed, Mar 22, 2023 at 09:24:32AM +0800, yebin (H) wrote:
+> On 2023/3/21 22:22, Benjamin Block wrote:
+> > On Tue, Mar 21, 2023 at 04:42:04PM +0800, Ye Bin wrote:
+> >> From: Ye Bin <yebin10@huawei.com>
+> >>
+> >> When do follow test:
+> >> Step1: echo  "recovery" > /sys/class/scsi_host/host0/state
+> >
+> > Hmm, that make me wonder, what potential use-case this is for? Just
+> > testing?
+>
+> Thank you for your reply.
+> Actually, I'm looking for a way to temporarily stop sending IO to the
+> driver.
+> Setting the state of the host to recovery can do this, but I changed
+> the state to running and found that the process could not be woken up.
+> I don't know what the purpose of designing this sysfs interface was.
+> But this modification can solve the effect I want to achieve.
+
+My first thought when seeing this was that maybe we should also limit
+this interface to say `SHOST_RUNNING` and `SHOST_RECOVERY` (similar to
+what is done in `store_state_field()`).
+    That would limit the amount of corner cases drastically.
+
+And in case of setting `SHOST_RUNNING` after the scsi host was set to
+`SHOST_RECOVERY`, we could also make use of the already existing
+function `scsi_restart_operations()` to handle the restart in the same
+way as EH does.
+
+But it's not up to me, to make that call.
+
+> > For SDEVs we explicitly filter what states can be set from user-space.
+> > Only `SDEV_RUNNING` and `SDEV_OFFLINE` can be set in
+> > `store_state_field()`.
+> >      There is probably quite a few other bad things you can do with this
+> > interface by using any of the other states used for device destruction
+> > or EH, and then trigger I/O or said destruction/EH otherwise.
+> >      Not sure handling this one special case of `SHOST_RECOVERY` is quite
+> > enough.
+> >
+> >> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> >> index ee28f73af4d4..ae6b1476b869 100644
+> >> --- a/drivers/scsi/scsi_sysfs.c
+> >> +++ b/drivers/scsi/scsi_sysfs.c
+> >> @@ -216,6 +216,9 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
+> >>
+> >>        if (scsi_host_set_state(shost, state))
+> >>                return -EINVAL;
+> >> +     else
+> >> +             wake_up(&shost->host_wait);
+
+In the very least, this should first check whether we really just made
+the transition from `SHOST_RECOVERY` to `SHOST_RUNNING` before calling
+this `wake_up()`.
+    And for that - first get old state, then set the new state - we
+probably would also need to grab the `host_lock` to make that race free.
+
+Just calling `wake_up()` without knowing what state transition we just
+made doesn't sound right to me.
+
+> >> +
+> >>        return count;
+> >>   }
+> >>
+> >> --
+> >> 2.31.1
+> >>
+> 
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
