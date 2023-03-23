@@ -2,134 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1766CC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 13:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C85B2C761AF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 13:59:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231600AbjCWNqg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 09:46:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60170 "EHLO
+        id S231901AbjCWN7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 09:59:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230335AbjCWNqd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 09:46:33 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECF829E31;
-        Thu, 23 Mar 2023 06:46:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679579192; x=1711115192;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=9ennairkf3iy0DLpGRVHy/xvU8CQYM6AxEOs9CSrRLY=;
-  b=n84k5Mr+WnnIXTGJdpSsQtWXgh52fA39Kj/VLzG2jDFgyWZ9eZdBshjZ
-   Pzg/r2f7UPFWN8XkO1ZVzr58nhJC5QaYjsyyTAbMYddS5app9dhOug5st
-   wxvCA047HpGp6vN2ijZji3Jv2+6OCsH/TyqpuwDxUconRvpVa5/ZEglYl
-   E6MCbFoxCG+s+rSKPtyzv2MNRwZglHMJScPP3DGcfBFBGvq0UMmeG2tLT
-   +LnkGa1wN/zSodgWjvTozlZgcYcSfrLf9xuQYESCM/Z8iMxQQiTsDd1jn
-   nDahcQobPOlXb+eFdHBAzKlJqbddLV+C0mqUYaGbyj4s3Nx+LHv/OEc2q
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10657"; a="339523432"
-X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
-   d="scan'208";a="339523432"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 06:46:30 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10657"; a="928241273"
-X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
-   d="scan'208";a="928241273"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 23 Mar 2023 06:46:28 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pfLGt-000EPt-2m;
-        Thu, 23 Mar 2023 13:46:27 +0000
-Date:   Thu, 23 Mar 2023 21:46:10 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dgilbert@interlog.com
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bvanassche@acm.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate
- sdebug_queued_cmd
-Message-ID: <202303232141.ElpLC72H-lkp@intel.com>
-References: <20230323094555.584624-7-john.g.garry@oracle.com>
+        with ESMTP id S231996AbjCWN6s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 09:58:48 -0400
+Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8FA82685E;
+        Thu, 23 Mar 2023 06:58:41 -0700 (PDT)
+Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-17ec8963db8so7375fac.8;
+        Thu, 23 Mar 2023 06:58:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679579921;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=3EdY5iCPNRdL2TyeF/Jo7q7w4WXQEC68Fw8bFxtFUC0=;
+        b=gw0l4X4Hg0CUQuBES4DYIfpSLSTLKqQNUwrGwFLFM0fRw0X7OqOaMkrCBwgmzwyPO1
+         5P+Jc8Dpwu3w7JxO/d3u6ylXkbaLNAfOoyVFL9j99Lmvg+lN3jVtXj8lNZvB0BucV1PP
+         qtDnfBm+gVrt2zR0qm/QeUdMt/iSkm9fnuz9e3SxB4WmmXTXZa/3mbpOa+YnsLSbAxZT
+         dlOxbfYjEtprhuCt6re/hp4iVfwpNn/UTUYdyu8vhN5ZBGViQR0WIVF7y2s7PDk+iB2e
+         0Pi9L7Tuco76T8ZhTOXTT1sHEOAod4G60kd18yxopnoiK84vqxbhTC8YHxKt+8gSIdE5
+         A9CQ==
+X-Gm-Message-State: AAQBX9c+hsF96kJwkjDSztIvowMSy0ME3fvt4iZ8n0BM2Kl8ZjJNvRhv
+        EspEDaSebfIr/+Yaux9Vxg==
+X-Google-Smtp-Source: AKy350ahvKVl/qTqdPvklQDydqu6nw60l4wULSmXqHKjZDmyQTqFM7vvOu4LY79a97GpbICq0EgPrQ==
+X-Received: by 2002:a05:6870:b006:b0:178:fe16:4e6c with SMTP id y6-20020a056870b00600b00178fe164e6cmr1979157oae.50.1679579921108;
+        Thu, 23 Mar 2023 06:58:41 -0700 (PDT)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id vd21-20020a0568708f9500b0017ae1aede32sm6104388oab.46.2023.03.23.06.58.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Mar 2023 06:58:40 -0700 (PDT)
+Received: (nullmailer pid 3103740 invoked by uid 1000);
+        Thu, 23 Mar 2023 13:58:37 -0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230323094555.584624-7-john.g.garry@oracle.com>
+From:   Rob Herring <robh@kernel.org>
+To:     Neil Armstrong <neil.armstrong@linaro.org>
+Cc:     Lee Jones <lee@kernel.org>,
+        Abhinav Kumar <quic_abhinavk@quicinc.com>,
+        David Airlie <airlied@gmail.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Avri Altman <avri.altman@wdc.com>, Sean Paul <sean@poorly.run>,
+        freedreno@lists.freedesktop.org,
+        Bjorn Andersson <andersson@kernel.org>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Rob Clark <robdclark@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, devicetree@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Andy Gross <agross@kernel.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-1-3ead1e418fe4@linaro.org>
+References: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
+ <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-1-3ead1e418fe4@linaro.org>
+Message-Id: <167957963042.3095255.5445133387110199668.robh@kernel.org>
+Subject: Re: [PATCH 1/8] dt-bindings: display: msm: sm8450-mdss: Fix DSI
+ compatible
+Date:   Thu, 23 Mar 2023 08:58:37 -0500
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi John,
 
-I love your patch! Perhaps something to improve:
+On Thu, 23 Mar 2023 11:25:16 +0100, Neil Armstrong wrote:
+> The DSI compatible changed between patchset revisions, but that wasn't
+> reflected in the bindings. Fix it.
+> 
+> 0eda3c6cb1c5 ("dt-bindings: display/msm: add support for the display on SM8450")
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
+>  Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.yaml | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on next-20230323]
-[cannot apply to jejb-scsi/for-next linus/master v6.3-rc3]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230323094555.584624-7-john.g.garry%40oracle.com
-patch subject: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd
-config: i386-randconfig-a002 (https://download.01.org/0day-ci/archive/20230323/202303232141.ElpLC72H-lkp@intel.com/config)
-compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/be81e49de2c71f280dd3eac902d05afcb1061d12
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
-        git checkout be81e49de2c71f280dd3eac902d05afcb1061d12
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/scsi/
+yamllint warnings/errors:
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303232141.ElpLC72H-lkp@intel.com/
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.example.dtb: display-subsystem@ae00000: phy@ae94400:compatible:0: 'qcom,sm8450-dsi-phy-5nm' was expected
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.yaml
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.example.dtb: display-subsystem@ae00000: phy@ae96400:compatible:0: 'qcom,sm8450-dsi-phy-5nm' was expected
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.yaml
+Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.example.dtb: /example-0/display-subsystem@ae00000/phy@ae94400: failed to match any schema with compatible: ['qcom,dsi-phy-5nm-8450']
+Documentation/devicetree/bindings/display/msm/qcom,sm8450-mdss.example.dtb: /example-0/display-subsystem@ae00000/phy@ae96400: failed to match any schema with compatible: ['qcom,dsi-phy-5nm-8450']
 
-All warnings (new ones prefixed by >>):
+doc reference errors (make refcheckdocs):
 
->> drivers/scsi/scsi_debug.c:5579:27: warning: no previous prototype for function 'sdebug_alloc_queued_cmd' [-Wmissing-prototypes]
-   struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
-                             ^
-   drivers/scsi/scsi_debug.c:5579:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
-   ^
-   static 
-   1 warning generated.
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-1-3ead1e418fe4@linaro.org
 
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
 
-vim +/sdebug_alloc_queued_cmd +5579 drivers/scsi/scsi_debug.c
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
 
-  5578	
-> 5579	struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
-  5580	{
-  5581		struct sdebug_queued_cmd *sqcp = kmem_cache_zalloc(queued_cmd_cache, GFP_ATOMIC);
-  5582		struct sdebug_defer *sd_dp;
-  5583	
-  5584		if (!sqcp)
-  5585			return NULL;
-  5586	
-  5587		sd_dp = &sqcp->sd_dp;
-  5588	
-  5589		hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL_PINNED);
-  5590		sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
-  5591		INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
-  5592	
-  5593		sqcp->scmd = scmd;
-  5594		sd_dp->sqa_idx = -1;
-  5595	
-  5596		return sqcp;
-  5597	}
-  5598	
+pip3 install dtschema --upgrade
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
