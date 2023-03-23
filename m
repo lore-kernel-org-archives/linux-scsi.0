@@ -2,164 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37212C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 17:25:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D03C74A5B
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 18:13:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231965AbjCWRZM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 13:25:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33048 "EHLO
+        id S229953AbjCWSNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 14:13:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjCWRY4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 13:24:56 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F552686C;
-        Thu, 23 Mar 2023 10:24:52 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 8D76675C90;
-        Thu, 23 Mar 2023 17:24:50 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 733B060AE0;
-        Thu, 23 Mar 2023 17:24:50 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id X4If3C_OIL3F; Thu, 23 Mar 2023 17:24:50 +0000 (UTC)
-Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 834B460ADC;
-        Thu, 23 Mar 2023 17:24:49 +0000 (UTC)
-Message-ID: <fd810b7f-5520-1054-735f-8434a237c6e4@interlog.com>
-Date:   Thu, 23 Mar 2023 13:24:48 -0400
+        with ESMTP id S229499AbjCWSNm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 14:13:42 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70BA930EA;
+        Thu, 23 Mar 2023 11:13:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679595221; x=1711131221;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=CItIdhfWQzSLqxClwXxP9K65h4AwMiALZAMPIBdeqKQ=;
+  b=Di8YOgegGwVwZXe6uCG4j3xAscsSn3jwWzGMTCyVshy60WLww2MsRWHe
+   3lPpCIPYigQ4i8hwFvw0Pm94p+I/rb+fBbZ9o3LIAhU5jMK9gx36RyhVE
+   vM5T8VXcEZifx+8C0ufXi6huZWiy5RNDVkl4ML3LLTCDcEhUArKiua9B/
+   wiMwMx4Mp7BjdxW9/lx6X2TDwTl7PWcu2kgsS1T1ciWkuYMGIn2V2NTD+
+   JJ4IXwPnpIsdJqcB6GPmu3P6ei+PdCifqc426SCUc5n3KdPkRbt9NyXN/
+   9C9pw5gslAyHef93fP5FCnJWyr6iSXDFvGInZGH0YhO3jPhSZGlNxXIsi
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="402162368"
+X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
+   d="scan'208";a="402162368"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 11:13:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="714924898"
+X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
+   d="scan'208";a="714924898"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 23 Mar 2023 11:13:38 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pfPRS-000Ebo-06;
+        Thu, 23 Mar 2023 18:13:38 +0000
+Date:   Fri, 24 Mar 2023 02:13:17 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, dgilbert@interlog.com
+Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bvanassche@acm.org,
+        John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate
+ sdebug_queued_cmd
+Message-ID: <202303240216.2NoF5RCq-lkp@intel.com>
+References: <20230323094555.584624-7-john.g.garry@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
-Content-Language: en-CA
-To:     John Garry <john.g.garry@oracle.com>,
-        "haowenchao (C)" <haowenchao2@huawei.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     linfeilong@huawei.com, louhongxiang@huawei.com
-References: <20230323115601.178494-1-haowenchao2@huawei.com>
- <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
- <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
- <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230323094555.584624-7-john.g.garry@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-03-23 12:25, John Garry wrote:
-> On 23/03/2023 13:13, haowenchao (C) wrote:
->> On 2023/3/23 20:40, John Garry wrote:
->>> On 23/03/2023 11:55, Wenchao Hao wrote:
->>>> The original error injection mechanism was based on scsi_host which
->>>> could not inject fault for a single SCSI device.
->>>>
->>>> This patchset provides the ability to inject errors for a single
->>>> SCSI device. Now we supports inject timeout errors, queuecommand
->>>> errors, and hostbyte, driverbyte, statusbyte, and sense data for
->>>> specific SCSI Command.
->>>
->>> There is already a basic mechanism to generate errors - like timeouts - on 
->>> "nth" command. Can you say why you want this new interface? What special 
->>> scenarios are you trying to test/validate (which could not be achieved based 
->>> on the current mechanism)?
->>>
->>
->> I am testing a new error handle policy which is based on single scsi_device
->> without set host to RECOVERY. So I need a method to generate errors for
->> single SCSI devices.
->>
->> While we can not generate errors for single device with current mechanism
->> because it is designed for host-wide error generation.
->>
->>> With this series we would have 2x methods to inject errors, which is less 
->>> than ideal, and they seem to possibly conflict as well, e.g. I set timeout 
->>> for nth command via current interface and then use the new interface to set 
->>> timeout for some other cadence. What behavior to expect ...?
->>
->> I did not take this issue in consideration. I now assume the users would
->> not use these 2 methods at same time.
->>
->> What's more, I don not know where to write the usage of this newly added
->> interface, maybe we can explain these in doc?
-> 
-> sysfs entries are described in Documentation/ABI, but please don't add elaborate 
-> programming interfaces in sysfs files (like in these patches) - a sysfs file 
-> should be just for reading or writing a single value
+Hi John,
 
-Hi,
-Maybe this link might help for scsi_debug documentation:
-     https://doug-gilbert.github.io/scsi_debug.html
+I love your patch! Perhaps something to improve:
 
-And rather than sysfs for complicated, per (pseudo_ device
-settings, perhaps we could think about a SCSI mechanism like
-the "Unit Attention" mode page [0x0] which is vendor specific
-and used by Seagate and WDC for this sort of thing.
-A framework is already in the scsi_debug driver to change
-some mode page settings:
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on next-20230323]
+[cannot apply to jejb-scsi/for-next linus/master v6.3-rc3]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-# sdparm /dev/sg0
-     /dev/sg0: Linux     scsi_debug        0191
-Read write error recovery mode page:
-   AWRE          1  [cha: n, def:  1]
-   ARRE          1  [cha: n, def:  1]
-   PER           0  [cha: n, def:  0]
-Caching (SBC) mode page:
-   WCE           1  [cha: y, def:  1]
-   RCD           0  [cha: n, def:  0]
-Control mode page:
-   SWP           0  [cha: n, def:  0]
-Informational exceptions control mode page:
-   EWASC         0  [cha: n, def:  0]
-   DEXCPT        1  [cha: n, def:  1]
-   MRIE          0  [cha: y, def:  0]
+url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230323094555.584624-7-john.g.garry%40oracle.com
+patch subject: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd
+config: riscv-allmodconfig (https://download.01.org/0day-ci/archive/20230324/202303240216.2NoF5RCq-lkp@intel.com/config)
+compiler: riscv64-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/be81e49de2c71f280dd3eac902d05afcb1061d12
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
+        git checkout be81e49de2c71f280dd3eac902d05afcb1061d12
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=riscv olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/scsi/
 
-As can be seen WCE and MRIE are changeable, so
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202303240216.2NoF5RCq-lkp@intel.com/
 
-# sdparm --clear=WCE /dev/sg0
-# sdparm --get=WCE /dev/sg0
-     /dev/sg0: Linux     scsi_debug        0191
-WCE           0  [cha: y, def:  1]
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/scsi_debug.c:5579:27: warning: no previous prototype for 'sdebug_alloc_queued_cmd' [-Wmissing-prototypes]
+    5579 | struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
+         |                           ^~~~~~~~~~~~~~~~~~~~~~~
 
 
-Doug Gilbert
+vim +/sdebug_alloc_queued_cmd +5579 drivers/scsi/scsi_debug.c
 
+  5578	
+> 5579	struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
+  5580	{
+  5581		struct sdebug_queued_cmd *sqcp = kmem_cache_zalloc(queued_cmd_cache, GFP_ATOMIC);
+  5582		struct sdebug_defer *sd_dp;
+  5583	
+  5584		if (!sqcp)
+  5585			return NULL;
+  5586	
+  5587		sd_dp = &sqcp->sd_dp;
+  5588	
+  5589		hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL_PINNED);
+  5590		sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
+  5591		INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
+  5592	
+  5593		sqcp->scmd = scmd;
+  5594		sd_dp->sqa_idx = -1;
+  5595	
+  5596		return sqcp;
+  5597	}
+  5598	
 
->>> I'm not saying that I am a huge fan of the current inject mechanism, but at 
->>> the very least you need to provide more justification for this series.
->>>>>
->>>> The first patch add an sysfs interface to add and inquiry single
->>>> device's error injection info; the second patch defined how to remove
->>>> an injection which has been added. The following 3 patches use the
->>>> injection info and generate the related error type.
->>>>
->>>> Wenchao Hao (5):
->>>>    scsi:scsi_debug: Add sysfs interface to manage scsi devices' error
->>>>      injection
->>>>    scsi:scsi_debug: Define grammar to remove added error injection
->>>>    scsi:scsi_debug: timeout command if the error is injected
->>>>    scsi:scsi_debug: Return failed value if the error is injected
->>>>    scsi:scsi_debug: set command's result and sense data if the error is
->>>>      injected
->>>>
->>>>   drivers/scsi/scsi_debug.c | 296 ++++++++++++++++++++++++++++++++++++++
->>>>   1 file changed, 296 insertions(+)
->>>>
->>>
->>>
->>
-> 
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
