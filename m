@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E313C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 09:57:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0FC8C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 09:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231253AbjCWJ5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 05:57:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50368 "EHLO
+        id S231268AbjCWJ5i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 05:57:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230455AbjCWJ4o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 05:56:44 -0400
+        with ESMTP id S231210AbjCWJ4u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 05:56:50 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EC7612BC9;
-        Thu, 23 Mar 2023 02:55:54 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N5m8k1031101;
-        Thu, 23 Mar 2023 09:55:23 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 742FB2886E;
+        Thu, 23 Mar 2023 02:55:59 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N95p26028342;
+        Thu, 23 Mar 2023 09:54:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=9nK1QVzD5wgTB9KziIcEmOW4Vd3VDIQjJ2WXRImwQhE=;
- b=ADy2+ubK4QRmpMuE4OvPCtcUstI1gtnAf0cix+HImMN3r4EOKLEpdcWlMeyklBZjVxQM
- CJDJlR2UnT3292V0e2vYdB+PKvMOLAHLL/zd5jfmLZa7CJ6eKaJGOKTpwfm1e9f7HVbx
- ccAllrH33L5ox9WwkHyQbi0FDRWYQx6xUjzSgJwxC9Djnzgqp+dFjnp9w+b3/GUtEPOJ
- yQcwhVcNBcwlZoFV9eMm61RZmXPg5ukVhYl8YF+svazOsDE7qeMX54O1ATcgLRdOqNt0
- DqRVGOfz1/nZPYPzDeq5qZKuzgi87WF95o/S6qmo/OETw7Mxqu2DCzUQv0a4bFBhWGHs DQ== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pg3c9aese-1
+ bh=b7lBknDZbj/cY/j9cKG/0VDahEq1L4VQILxWupDjmkI=;
+ b=jUb88aTzlInPQOlQdyjrln7y+whngo01nbpjT7rRX0Rd6+2mtUw3pFHMmtSjA9J1ZiIb
+ 2rnNgCq4bMbUHldZD0W1XWvIf5kr1sY/8o4eCTk2puQyV9TPv7Mpqg86VY5skG417Imd
+ 3baSuw/ppU7jRa8ICnBmGmK02Y/j/k9EcctG2R3a9bDZpCG8QnlRcDeoRY4OES75+Agw
+ GvQS1TcWOSxoQ3m5oFwUNuaEoWWUCi7syzPmURFwcQUDTLX9as3g74zHCljuRgREiUUC
+ WqxxzrGh2oK0FHNJLnBfgw1ZKA/oM8iKkRdCb+L6+jb84EHIhmDvZEKDDtM13G6FmNqN 4w== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pgghj0j6x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 09:55:23 +0000
+        Thu, 23 Mar 2023 09:54:31 +0000
 Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32N9tMM0004593
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32N9sU3D020335
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 23 Mar 2023 09:55:22 GMT
+        Thu, 23 Mar 2023 09:54:30 GMT
 Received: from stor-berry.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Thu, 23 Mar 2023 02:55:21 -0700
+ 15.2.986.41; Thu, 23 Mar 2023 02:54:30 -0700
 From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
         <bvanassche@acm.org>, <mani@kernel.org>,
@@ -49,9 +49,9 @@ CC:     <linux-scsi@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [RFC PATCH v3 5/5] ufs: core: Add error handling for MCQ mode
-Date:   Thu, 23 Mar 2023 02:53:35 -0700
-Message-ID: <ca3db7cecba6ee9796c55afb812d5523cef4bad5.1679564391.git.quic_nguyenb@quicinc.com>
+Subject: [RFC PATCH v3 2/5] ufs: mcq: Add support for clean up mcq resources
+Date:   Thu, 23 Mar 2023 02:53:32 -0700
+Message-ID: <ec8ab005c6b814986548d0d01bf5de5e83119f27.1679564391.git.quic_nguyenb@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1679564391.git.quic_nguyenb@quicinc.com>
 References: <cover.1679564391.git.quic_nguyenb@quicinc.com>
@@ -62,156 +62,107 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: G-EjhWkYiT1xtAbhj34cFfXy7Ajk-6Za
-X-Proofpoint-ORIG-GUID: G-EjhWkYiT1xtAbhj34cFfXy7Ajk-6Za
+X-Proofpoint-GUID: XU5nqGASyFV7XgoledHAXpAzHiLnvCcw
+X-Proofpoint-ORIG-GUID: XU5nqGASyFV7XgoledHAXpAzHiLnvCcw
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-22_21,2023-03-22_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- mlxlogscore=984 bulkscore=0 priorityscore=1501 mlxscore=0 malwarescore=0
- clxscore=1015 suspectscore=0 adultscore=0 impostorscore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ malwarescore=0 priorityscore=1501 impostorscore=0 suspectscore=0
+ mlxlogscore=865 bulkscore=0 lowpriorityscore=0 spamscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303150002 definitions=main-2303230074
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add support for error handling for MCQ mode.
+Update ufshcd_clear_cmds() to clean up the mcq resources similar
+to the function ufshcd_utrl_clear() does for sdb mode.
+
+Update ufshcd_try_to_abort_task() to support mcq mode so that
+this function can be invoked in either mcq or sdb mode.
 
 Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 ---
- drivers/ufs/core/ufshcd.c | 81 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 70 insertions(+), 11 deletions(-)
+ drivers/ufs/core/ufshcd.c | 41 +++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 37 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3c28627..be4299e 100644
+index 504f041..0ecd03e 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -3104,6 +3104,12 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		err = -ETIMEDOUT;
- 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
- 			__func__, lrbp->task_tag);
-+
-+		/* MCQ mode */
-+		if (is_mcq_enabled(hba))
-+			return ufshcd_clear_cmds(hba, 1U << lrbp->task_tag);
-+
-+		/* SDB mode */
- 		if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
- 			/* successfully cleared the command, retry if needed */
- 			err = -EAGAIN;
-@@ -5536,6 +5542,10 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
+@@ -2984,10 +2984,28 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+  * @mask and wait until the controller confirms that these requests have been
+  * cleared.
   */
- static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+-static int ufshcd_clear_cmds(struct ufs_hba *hba, u32 mask)
++static int ufshcd_clear_cmds(struct ufs_hba *hba, unsigned long mask)
  {
-+	struct ufshcd_lrb *lrbp;
-+	u32 hwq_num, utag;
-+	int tag;
-+
- 	/* Resetting interrupt aggregation counters first and reading the
- 	 * DOOR_BELL afterward allows us to handle all the completed requests.
- 	 * In order to prevent other interrupts starvation the DB is read once
-@@ -5554,7 +5564,22 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
- 	 * do not want polling to trigger spurious interrupt complaints.
- 	 */
--	ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-+	if (!is_mcq_enabled(hba)) {
-+		ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-+		goto out;
-+	}
-+
-+	/* mcq mode */
-+	for (tag = 0; tag < hba->nutrs; tag++) {
-+		lrbp = &hba->lrb[tag];
-+		if (lrbp->cmd) {
-+			utag = blk_mq_unique_tag(scsi_cmd_to_rq(lrbp->cmd));
-+			hwq_num = blk_mq_unique_tag_to_hwq(utag);
-+			ufshcd_poll(hba->host, hwq_num);
-+		}
-+	}
-+
-+out:
- 
- 	return IRQ_HANDLED;
- }
-@@ -6323,18 +6348,36 @@ static bool ufshcd_abort_all(struct ufs_hba *hba)
- 	bool needs_reset = false;
- 	int tag, ret;
- 
--	/* Clear pending transfer requests */
--	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
--		ret = ufshcd_try_to_abort_task(hba, tag);
--		dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
--			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
--			ret ? "failed" : "succeeded");
--		if (ret) {
--			needs_reset = true;
--			goto out;
-+	if (is_mcq_enabled(hba)) {
-+		struct ufshcd_lrb *lrbp;
-+		int tag;
-+
-+		for (tag = 0; tag < hba->nutrs; tag++) {
-+			lrbp = &hba->lrb[tag];
-+			if (lrbp->cmd) {
-+				ret = ufshcd_try_to_abort_task(hba, tag);
-+				dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-+					hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-+					ret ? "failed" : "succeeded");
-+			}
-+			if (ret) {
-+				needs_reset = true;
-+				goto out;
-+			}
-+		}
-+	} else {
-+		/* Clear pending transfer requests */
-+		for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-+			ret = ufshcd_try_to_abort_task(hba, tag);
-+			dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-+				hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-+				ret ? "failed" : "succeeded");
-+			if (ret) {
-+				needs_reset = true;
-+				goto out;
-+			}
- 		}
- 	}
--
- 	/* Clear pending task management requests */
- 	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
- 		if (ufshcd_clear_tm_cmd(hba, tag)) {
-@@ -7266,6 +7309,8 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 	unsigned long flags, pending_reqs = 0, not_cleared = 0;
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
-+	struct ufs_hw_queue *hwq;
-+	struct ufshcd_lrb *lrbp;
- 	u32 pos;
- 	int err;
- 	u8 resp = 0xF, lun;
-@@ -7281,6 +7326,20 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 		goto out;
- 	}
+ 	unsigned long flags;
++	int err, result, tag;
  
 +	if (is_mcq_enabled(hba)) {
-+		for (pos = 0; pos < hba->nutrs; pos++) {
-+			lrbp = &hba->lrb[pos];
-+			if (lrbp->cmd && lrbp->lun == lun) {
-+				ufshcd_clear_cmds(hba, 1U << pos);
-+				hwq = ufshcd_mcq_req_to_hwq(hba,
-+					scsi_cmd_to_rq(lrbp->cmd));
-+				ufshcd_mcq_poll_cqe_lock(hba, hwq);
++		/*
++		 * MCQ mode. Clean up the MCQ resources similar to
++		 * what the ufshcd_utrl_clear() does for SDB mode.
++		 */
++		for_each_set_bit(tag, &mask, hba->nutrs) {
++			err = ufshcd_mcq_sq_cleanup(hba, tag, &result);
++			if (err || result) {
++				dev_err(hba->dev, "%s: failed tag=%d. err=%d, result=%d\n",
++					__func__, tag, err, result);
++				return FAILED;
 +			}
 +		}
-+		err = 0;
-+		goto out;
++		return 0;
 +	}
 +
- 	/* clear the commands that were pending for corresponding LUN */
- 	spin_lock_irqsave(&hba->outstanding_lock, flags);
- 	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
++	/* Single Doorbell Mode */
+ 	/* clear outstanding transaction before retry */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_utrl_clear(hba, mask);
+@@ -7343,6 +7361,20 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ 			 */
+ 			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
+ 				__func__, tag);
++			if (is_mcq_enabled(hba)) {
++				/* mcq mode */
++				if (lrbp->cmd) {
++					/* sleep for max. 200us to stabilize */
++					usleep_range(100, 200);
++					continue;
++				}
++				/* command completed already */
++				dev_err(hba->dev, "%s: cmd at tag=%d is cleared.\n",
++					__func__, tag);
++				goto out;
++			}
++
++			/* single door bell mode */
+ 			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 			if (reg & (1 << tag)) {
+ 				/* sleep for max. 200us to stabilize */
+@@ -7409,8 +7441,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 
+ 	ufshcd_hold(hba, false);
+ 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	/* If command is already aborted/completed, return FAILED. */
+-	if (!(test_bit(tag, &hba->outstanding_reqs))) {
++	if (!is_mcq_enabled(hba) && !(test_bit(tag, &hba->outstanding_reqs))) {
++		/* If command is already aborted/completed, return FAILED. */
+ 		dev_err(hba->dev,
+ 			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
+ 			__func__, tag, hba->outstanding_reqs, reg);
+@@ -7439,7 +7471,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	}
+ 	hba->req_abort_count++;
+ 
+-	if (!(reg & (1 << tag))) {
++	if (!is_mcq_enabled(hba) && !(reg & (1 << tag))) {
++		/* only execute this code in single doorbell mode */
+ 		dev_err(hba->dev,
+ 		"%s: cmd was completed, but without a notifying intr, tag = %d",
+ 		__func__, tag);
 -- 
 2.7.4
 
