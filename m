@@ -2,131 +2,131 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE957C761AF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 09:46:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DC2C76195
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 09:46:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230418AbjCWJqv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 05:46:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35346 "EHLO
+        id S229738AbjCWJqx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 05:46:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229836AbjCWJqq (ORCPT
+        with ESMTP id S229848AbjCWJqq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 05:46:46 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E37DF24713;
-        Thu, 23 Mar 2023 02:46:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81C132471D;
+        Thu, 23 Mar 2023 02:46:45 -0700 (PDT)
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N5hsEn010794;
-        Thu, 23 Mar 2023 09:46:41 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N5htvh010804;
+        Thu, 23 Mar 2023 09:46:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=HfTBBoWYHz2kT7EBYRxC4bYLFSZHaaAwDiRoFHfzvVA=;
- b=z9PRxXvvGfcrQo3vgLB03+hC0FKv5Eu9UyJ0sJpiNqdcHVkWTWyd2idhHEl7zKsDzNqU
- TYNTqyL2vZdm6/3oiYiGjxcQ3E/6OPPjvrlv835Y452uoEk7ijvy6ATEmMbt1xNZSkNj
- hHrt1xMB/xdM5xDdn0U3ZsmNVD5ci1YkOXaSe/p3PVhM0+Gtya75U2Pd6PwH4TXChATW
- r6AS6h+SwsaVX5xq/ZdXZG8NUHsd3xPvOlAauW5uS9GkIgkmrBYwN5fAMDMUlyuN/0gW
- lG1Qv69+D/02JGIL4j7Z92BXBMfo2gaw4TX1dAKyiKRxXuhb8aPlxFVzSCqm52D6B5hP hw== 
+ bh=vTQfNp5u2wr7k5ga6IP7ndOMPutnmoj1QRDsG24TqO8=;
+ b=QT4ws+MJTbg5KCYvzzFroldlkgOSI+27qfUv5z64YC4+tDt7MOTHUViGxoXHv6rwD25F
+ r0QC2IclYN3GOg6TG521CAtR5D142D0efXcUiQUspp5GCcEyzmBPHbaiY5Eq7xoPsJiR
+ mnr0r2Ejue6Ak5pes1UjjDlL23yMDrmmFGD0Xd5Tsm752/EoPZ25W8ukV6t7Qew0Iklv
+ RvogqpDXd37cBSYYwuYUqBpFgMAI92LGEGVqEtXPMO8WQaJnak6OuGyi0etjRO1LIUZc
+ W46RjMcX29YC+HmRSXEkKbOyauqxVm5CV5HDsZuFC6zKl46VdGRri87NJP6P/NFIWg4e 1w== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pd433u9hs-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pd433u9hu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 23 Mar 2023 09:46:42 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32N9cdiH006987;
+        Thu, 23 Mar 2023 09:46:41 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2042.outbound.protection.outlook.com [104.47.66.42])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3pgmamg7ry-9
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Thu, 23 Mar 2023 09:46:41 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32N9cdiD006987;
-        Thu, 23 Mar 2023 09:46:40 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2042.outbound.protection.outlook.com [104.47.66.42])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3pgmamg7ry-6
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Mar 2023 09:46:40 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZRrq6WS6CMlTjaMIOdznYOd+uOI4n4zDYq1h6PraYm8FX3PcLPg1nKSxP6rphISYuGxyNvW1zZv1yqzYyrijp355SyiEZGVAV+aditF/+dBkgv6cJtAcOxLDXkJv9F/juhF/e0rere9iGHG5tL/BCeQLAJzT6jCF3FSA5ZgtlLIip9jW+I5kbEsTbKkwUvrnbZbWpCocy0kl5bUFPhLFP8Q/mbDfG1oDl+1sjba+9pLRqvrTLt0g1QHZl/y69m+RgRH/M6SlehckJcwSkbpviU2BWREHMt1WLlfg0A9qkcWdobnLQBaCESmyFXwP8h5tQfF59OoeWKBTxDceNMg3eQ==
+ b=lzFE4lNtOnfGrWapfvnjIWSV5ypEmIEGFSZJ08FybFaJ4H/IbBETi5dAz4E/z9dthmhVEPQu317+pKh2uriaYIAOy1ujtZiq/bUZWu314jlc/Sr9dGQEqK09Vo15CMzzvw166lU8XqbcGIGI/WCSgqKtfTRBTtxZgyhYaqMqBAnU4iTK0jxN83r7uZSPHVho+az/c1CIzR/Kt4YeorYYznL1E175gbBS7DZU8jETJWXajvvuw49zJCBvMwmzGoj8iXOIjztPpCMLFDU23xfz14YrFmTPhh+ovoSNHU6C00ZuhG5xvUj9vSuZ3447g9VeAKvoMfOCsJjek9H83vRudg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HfTBBoWYHz2kT7EBYRxC4bYLFSZHaaAwDiRoFHfzvVA=;
- b=U22ZCp3bGEShTElhlbYkkd53sFSyNyvve7scw1UV5NBiFvWlfe6/CzukHVEilwX6vcNBfJMKTv0cAQY9JPkcM8WFUp9UsutA86o+LugsSvZo22UdMWHTaYVTxgtFn2kCRa6BK3iXfW5NN68y/mnMdt5w9Oq4TUKOrQxkTnCFrVM0M/BUt91ALxt7+I0Vo8GF+/K5VwUNmltA7QKx/FJa64IA4Bf1qXZZJ8DQn7Q/7ATlTNdleicc/R38mAc7UXmPVHKjPknK+A3vzIRt0rGK8OzV9iC22G8cs/BlKdMVtj4XM5PEmQrjcfisZ+w+n8zppOIi9DbPLHO+F/QuAFsR/Q==
+ bh=vTQfNp5u2wr7k5ga6IP7ndOMPutnmoj1QRDsG24TqO8=;
+ b=Bb46B/uLqPgxXNutFnlQB7s7scT+u1288WUxR6gHPXFx/ayZ6HMPQr9hKgzTp8O+TW3nzEOsUtA0PaGcwvrZ9eWxN05GXEbCNVk5MgEAd8VyfAPJpQaXK1ZvAagQ4K7zMeZ/kdxL0S4UsxZ3g73TVVxUB3SawFJovbrUObCe81lyNzQxJ/kB5CrhDxmF5u/gA/eu5hiLRxEU5MemckzMZmiiXnry//aSDN24lL02iIhURnZcZc86fYwyJ0UIG99J6ZYodlCDzihV6k8eTlPX130tLNC3OfrG1XdiEWBUH8NdD60rdrATVDpCfNij2mZI2Fx3SufD4VaETzkZMBbMCQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HfTBBoWYHz2kT7EBYRxC4bYLFSZHaaAwDiRoFHfzvVA=;
- b=tkfEc7bon+Mzdk55mM11N7v9fdnHCPd4/1u9QcwGrm9Tpuhma9sIVuETbLmcCzzR6ebNu/N1wRjzW7miFYmbNUs7Lhb21xMNRHmUtGODPS+8YIv7YYkXzQ+MCon+xsVhc+4z79NvoJhQ+qSC1+jX1GuFTRb0NeaOo8BTW9KYDlE=
+ bh=vTQfNp5u2wr7k5ga6IP7ndOMPutnmoj1QRDsG24TqO8=;
+ b=bfK2osoUAxogXo58xZ8dVxdtKAtPFG6kdvbDUc7PsXnPFqolbY91rMkncWxFqN7LUOgfGasEYqCIrxC4xyM5z2txFumaWwRQEhdCRJv3HRmW3/btyDPMEfebhmOG4gvlGkiUzqQRShJyXe4OXAgOOfwTpwDSscZMStguRRmJ0jk=
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
  by CH0PR10MB5273.namprd10.prod.outlook.com (2603:10b6:610:db::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.38; Thu, 23 Mar
- 2023 09:46:35 +0000
+ 2023 09:46:37 +0000
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::7276:bc4c:17a0:7267]) by DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::7276:bc4c:17a0:7267%5]) with mapi id 15.20.6178.038; Thu, 23 Mar 2023
- 09:46:35 +0000
+ 09:46:37 +0000
 From:   John Garry <john.g.garry@oracle.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         dgilbert@interlog.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         bvanassche@acm.org, John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v2 07/11] scsi: scsi_debug: Use blk_mq_tagset_busy_iter() in sdebug_blk_mq_poll()
-Date:   Thu, 23 Mar 2023 09:45:51 +0000
-Message-Id: <20230323094555.584624-8-john.g.garry@oracle.com>
+Subject: [PATCH v2 09/11] scsi: scsi_debug: Use scsi_host_busy() in delay_store() and ndelay_store()
+Date:   Thu, 23 Mar 2023 09:45:53 +0000
+Message-Id: <20230323094555.584624-10-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230323094555.584624-1-john.g.garry@oracle.com>
 References: <20230323094555.584624-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: LO4P123CA0690.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:37b::7) To DM6PR10MB4313.namprd10.prod.outlook.com
+X-ClientProxiedBy: DM6PR07CA0091.namprd07.prod.outlook.com
+ (2603:10b6:5:337::24) To DM6PR10MB4313.namprd10.prod.outlook.com
  (2603:10b6:5:212::20)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH0PR10MB5273:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2d2168c3-95f4-4d98-0647-08db2b837cf0
+X-MS-Office365-Filtering-Correlation-Id: 51d043da-d7a1-476e-29e6-08db2b837eec
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: n2ohzUpCMqrC95/aX/WnHewORNguAk4rPPrKPxXwopU8retitbXGE3BnVkTgNVYZP0xCNmjJ4sqhVdDYoUMp9ZE4pWDkLke9upv+EjFs0xWLQfb19Xvy6XVD87qU7a+EVIrmwHfYj4t+CdgIMuauwkf57UmaAwDN4VdL/9+sBwi0lFVNizMkd8LojxtmJ0JZ058eLgJOyI7tffwTMZIftlxBIyIKLI01bkS/bM176Torf597UvgVWsRG+G+3QImTsC2EHaKJYIxcPJv2aeg/qIZNXWwgsgBuGXYKJSJwegCdUFfPGgv80yJivZaqFBWklUY6lQp9DlqJ26VORb2+zUa8PX3OVavu6v6N6Qs82RWEajoaRDDQa2Zka72V3So5SCnombg4v7eMI/jmrCE1Y3kyd2E9VAECyp7encpXcrsAPR66+Zm4MIhvXC4e9sgiAIirZb1PdZIWpFTMaO/PNm4lLLtIQPc1WYD3oiN+hcMaNKKHqn5PON9BrzOLYsjSAP363dCqlAQTVPMSbV1AUa/qw5yZCbFf13/UwgYOE6Evmfiw2rnu1GhZi34TePKQHZyrYvOwJdENKcbbfXgHXRoIdPzZt0pqDG/YNYqFBnv2G5kRrb2xSU0YVE5hYEPTO0Y6D0fPOOSw9KOOWT03PQ==
+X-Microsoft-Antispam-Message-Info: hrMAQ1uO4q0KQN7G3DpvMWC+vkWh8OYwMdw1jLRfbAMHBBIo3NHRPxDg6y5mO449d4UMNyki1/nTUSvswtEWgcN1Q6FXZ9agO6plIaNrRObSQQXNd0qc9wVdNaagyOVlk8FKWbh2ZYJ5H5tlBXWeHO7+0vU+ilvm2UW5ucyd3cTK5DHDVVrkn6LxazAf7xoDyz7tOgJC+jwd8kEdSmLz2YCmRCL5gtfHAc9rnvzl+4v0LjTdIWQykJrBFy7h8O08QFu09EjS45THp/CuNCq1b2V8v48IGxCSvnN/ZhJ1gKZjNl3xG1mnBVmOy33D2b4tutxjJ8+SbBHTNCur6AdwVuXZ5N+DgTicYGEhKR1XkXH5E95LfiodrDxmtjD2S0ud3MQE02WuXnI4PrnX2SH4Y3Q5Vccpr4RKKY0c8fAomdDwosfmdSvLKrcBQSMeDvyl+CgDk1rIKKIi/BfSirFpQ08mTI+qgXSb3T03akhAmxqhyjI73WVE4yXLD5p6+ybyHidTZ4PLJ9YqmwZqRLWgjHNlfgzIv9XhzFqnbM2wOpIQzrevpIMVMUN1Ps2h8/F9YF54xvu07nav8Cd4rXyDdDVQKwmtolzjpN4pGCA/g2I+CdQvWJgOotnT+Ke3vGln0n54JRw1Z6/DjMzjj8Cnaw==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(396003)(136003)(366004)(346002)(39860400002)(376002)(451199018)(6486002)(316002)(5660300002)(2616005)(8936002)(83380400001)(26005)(103116003)(41300700001)(478600001)(86362001)(38100700002)(2906002)(36756003)(4326008)(6506007)(66476007)(186003)(66556008)(6666004)(107886003)(66946007)(1076003)(6512007)(8676002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?5smE3f/AXF5eXU8ySbeW3nKHvi8f7Qa0KdpJ0aYPtKrHo3SQJcqC3R2wtxZY?=
- =?us-ascii?Q?jHjd8LDdw+9K2k4mMF2FMl/Ps+G2aTjPY/p6Kkw3aedX6edTie8ClRzNXF0G?=
- =?us-ascii?Q?2kzjII75IJNQSPjk+9wkvfPahlk6MMZbFvahr9C7GjIrP/hDLMKVFd2cff5x?=
- =?us-ascii?Q?1tGYPq4rWa5JuiwdtGrry7lDHblwVtNq50DmRudziQ73lq9P7upPYupjyxd6?=
- =?us-ascii?Q?V5vAINNdLpydeeE4z6YoEZI4aZp+DuAs7jMvUG8Ooa9PphBSpyiZzGrAb8VP?=
- =?us-ascii?Q?oKA+McTwCI7fXcL+c7saUdE+2vIY7fijySrd5wReY9eKEM7OAZ2swarWXgh9?=
- =?us-ascii?Q?oL3yUaUDbRA8ehK9BkqRRJrwx2xNEnr4oJ6hi5b83f0BXffupI8I7bGTUPiW?=
- =?us-ascii?Q?Z0htDx3lDY5uY/WFpUUXQpUUViQKuuHCA2ROX02CC+1hoxd5EEmr0OPRSYTA?=
- =?us-ascii?Q?oqtI2YrHvlj0PoZxusZRQEw/scWd9C6/p0ufK2lVfob47ozQoiLOaQFW2aSk?=
- =?us-ascii?Q?+SeiawsI3NSVLnoZClWF54kXXEdIR1Shk7DA0iIfWmEM9B/hiCZDH/yfxANc?=
- =?us-ascii?Q?2EHH7pQQq0vFdmkLFkTqVnWoXZo35mmYC+ae4/mkPEKktX3BTR0p3FCRgwv6?=
- =?us-ascii?Q?4abgqyscEzu5/FvjlxEW+KqVXibJHz1RqWBrInWDGZRd1bq3huTq1SUzXwnr?=
- =?us-ascii?Q?hc/swvs/v9Qoul0pmAXqCECk51e1C8XsT0x5fC6OnySn1mqkQ2+7grB5xcSH?=
- =?us-ascii?Q?CjttwfRTA/r6BN583IgX5Z61yxc6h+q3lP+gCeyrapkHIHxg+7I2hlx6hIR4?=
- =?us-ascii?Q?FJuAL9J50GJjV8UdqWld/zNwPUi+6F6svnyXwR2kUJgLXg5gnvo5Cfv36vji?=
- =?us-ascii?Q?aJiCQ5HnkwcFdPCGWdpgZM8YovyNOEH6MCfLw0QpbGzLbMENII2t+Sjme24m?=
- =?us-ascii?Q?q8bs/QRpVMJoFDJHdU/Z/gFNmWCkcG/6wwrE0ZVavkDQ3uoz+awlIuF1qc4f?=
- =?us-ascii?Q?QdRt80ieFZ6/psQZ2GMhXazd6A9LWQ7URKjfNa5ifgUuOhys4JbALoxAmPnn?=
- =?us-ascii?Q?P631fn6DgJyT2Ozew/5nvsK7xJr1txKc4w0oJ6bkVbMTdAj6vIyh0LyWRdC+?=
- =?us-ascii?Q?hEu5GK3ZEjhW0jSRc4GqHa2hqGqPOJJIa05kdZNI2TYAPlUiGYFwpbEffYl0?=
- =?us-ascii?Q?0vUbExsj/2aoRV0YrjYRsrDJP0BiRDY+dcSM8T39g7doONGVwrMz4FTNsGj/?=
- =?us-ascii?Q?+0eofmEwMHtIntHyLNL36WJvc5Jf6Syk+0JgdwZBPhx0idn2xjgjDZV5Whbb?=
- =?us-ascii?Q?EB5tk7sGQBLt3ZGp72Vt4B9uFrevHTEnh2pqVz4tVBDuN7A+gBEa13/yNPGh?=
- =?us-ascii?Q?h/90wEjnT9qc9isGRhkTric3F9Uy5aFoEH8gg5SRmARWS2uIAaeV1m3wax3E?=
- =?us-ascii?Q?38s7aO7rRddRODA1h4Cesp/YmmnNtDtX2xAg/flbnKLbfGrWD6zNZeDRG2R/?=
- =?us-ascii?Q?zkKeR32fcLTYAzfN7cjjNZphcMIYWeMn3R44t1U9ISNYqEik/3Ivs/hfY+pb?=
- =?us-ascii?Q?fWiIeM1VPszZzSDF1FyI31xnNLd0l9DIHmAC+jY2J/AJgEODbtxeGq/rgdWX?=
- =?us-ascii?Q?bA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?HHJ4HRfHe+MmCvWUnCct7iYPPvMB/Rmv/xmZOuzaONgteZQFIdUYLjFtMD/0?=
+ =?us-ascii?Q?kJWWRub6kFqJFob1T0QJnNInrUauBYKWFvuANQ6KZXZMijin7hVy6OQ3r3eP?=
+ =?us-ascii?Q?w5m9g/5DEcppEZXPr4z7Whoz1c6p0k0QzSxBsK/aZCy6qJDatX6ESWnVwAv8?=
+ =?us-ascii?Q?L8bkEZqKyf8q7SbI0rzKKSMrhAsXW4BBLBbu70wPmuWLvXpmTTpeSrU0reMM?=
+ =?us-ascii?Q?5kcQM5kspCG9X+ytYPwsQUI8OOVGKwzkU3ocBnvJ2y+j8BF/sKSX1PaVY+0z?=
+ =?us-ascii?Q?gBNBTPZ6Z50uVJQbydBh6DYWb7HCXXalzBz+5kmhOzxXktFf33yFNW0wnIhu?=
+ =?us-ascii?Q?hgSsN+9tzEQJ+w0PmPlEfIJVVeU7cXLLSRX1nCOxrGh8b2q2B3ggwib4esZq?=
+ =?us-ascii?Q?AR7D0X0klhr0Fi7swWL0UntGAN0Osz7GlH+PQ0Ul8dwmpCf1KFk+sbGkq66f?=
+ =?us-ascii?Q?vCQyKeRAbPeP5uw4ONTn1UDy4a1E00jJfiFDQlabsEutKpxoi/NMVQw0iprB?=
+ =?us-ascii?Q?nciNjsNRkgPgV+TyjkGGZj0goODiy8U8Ez9Y548cYPQDKcjBA2NVqhyfEUoD?=
+ =?us-ascii?Q?kfZ1xESKucHp9EwSrJ1YcZoS+zrP8fdTjdzIfsUnoH6IZ0l3caN8yXBFjBFy?=
+ =?us-ascii?Q?qnxJ+L907gv0bfM9mdAefZTYSdXYUEQHLDQw2khsJ6a1WLZ7ZWSZ74tlf4FU?=
+ =?us-ascii?Q?By4E6gYaFQLOuAdrjpuA7Ht43L2d61O6wYk9x3QpQJFRUc5fPVdAXBr/gcTk?=
+ =?us-ascii?Q?TiiayQ/iLkG9NN9cYIRuIaTXEa+YnkESJFqwGM0G1atQSXngz7QxZ5ASCAXj?=
+ =?us-ascii?Q?rUr1BukBY8ZA0n/2gkSbZFn5n6jAULtXLUMkygxiofcpfKHHt6UGkJbisOwd?=
+ =?us-ascii?Q?7bU4SOcb0GbLYwlMkPFMkP1OQQrNgeXiLHRBkwuhGgdbO02Uu/2saSdmdJyL?=
+ =?us-ascii?Q?jeHjFrXwSvxK8NXKZdOOIzTGeA524Sr5wylwMNmQ0e3neju4zFYujdollBSF?=
+ =?us-ascii?Q?/VojAz7PC1He8Mj0RGLvpWDGc1Cb2FBSnCi3g5dLcpqNyVk8kHlMdJfYOnkw?=
+ =?us-ascii?Q?XpKceV3s2JzvpICxGbklwE9yHIsvD801AoyAc6FlMNnqvbIKoxiTWj+luz+4?=
+ =?us-ascii?Q?ZlMeysmN+Oz4hzFsqxklla3P5LcHrX5U5yuIZEMxHBRCyLwvV6n4Q0aJjCGp?=
+ =?us-ascii?Q?YBGhYtXGGFGgb3RSCsZXRKMNbMlaVlZYV1pVjFc17ip1Imy0NaBliLRm0rSJ?=
+ =?us-ascii?Q?Jf4XHTwe1Ma8QxtZLG3YvR2V/birHJ5q7tD79Vh3TMCWpnwEnKEK5uUmWbYh?=
+ =?us-ascii?Q?YLaKGwgaVlcVELO8S/AqRVcE5ZjpP4OuNcsmGbGkIrqdZBR/sa0E4lCOm+Ei?=
+ =?us-ascii?Q?2Uw0pUjD3Q9K/L16YVj0REtYwidIaN7QiT9ipqFkxLpOD27BriJN/d0WAbKw?=
+ =?us-ascii?Q?tcStGiKnbHGwtOpZM4DNu/QUXqpDppahM8vEycqyyxlZdIARvq7bhBf14ccM?=
+ =?us-ascii?Q?ZuHrPn2YwaRZBH4VcC3Rn8TJGEDogDKOQ6j61YoEJyZIW59Z/Yl2GSEmjgAF?=
+ =?us-ascii?Q?clNcVgxnzI4U7DWzAUaXy013sm4HEYtp24vcb3wY6WWlwObWis/ROHnwLsk4?=
+ =?us-ascii?Q?HQ=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 3zdA92DltuIiQHdq28JWIAaqN0LImSwMsnryPJedIJGyip05q8d4QbNRiKMiJ+pyiYI9gPxAOB8S82i33CfmKgjJa7ArSUZDkQJyU48pbD7qJ91Cxg5EPHNtSia58JOLwy4nVPkzzGEu0SGx29lRk71TWwpPqVFyQ6xXH6JQ3qcrvSF0f2orBMXjdLNipvpQOr2lIaY1uSXpkLLuuCrbk2e21ynFeL2CsLraKt5IRzBYquZOG8SJ9WzOfsY5xGPI1H9fCCzpDmpbK+SYshXDWTpnvLxLdx+FdYZjKMo7lyBB58nO66ZCksryPGWBMiFemeWwz4hiF4PivLEdD7Icahbb3WUhevorfKTMMhs1M4Kjm6uNaYlz/wC7TeU96IYFRmWA4tzy4ClzlRlqSEwBtLDc66GuOiZB5Kb6+0WTyBkYRFh5D9gFFuyh8RZz+DsL/RYiTMANY8zz0arYbXemeqD1sw+7iqQ5F1xJno1CVtFo9GfIUV2ehRyRbKSLQaY3TzPpMt/J4wm7OZC4s2zAfKQ5ObQNI/M8l7FEY5jESBBfmanvSlJ23g1z2MTuKmslVGHfEYReH/5tCr89kqcXXakuJGKqvt91xw6N/BhaNOTM/1T986+PFOpGgITLLC3i06dDlgganl/TCIMwAaulkxdrHTdIHEdbGXcG6jv8/+p3Q4auc5tJ8Rzj8tNPtDY+rhGjv2hH3ScegPyh35J2+w3B6lOFs9Ue/G2pMUm9pANgvu76QhR2DTzR/US2ip/KcUQ3HWX3oEM0+Ke4oK4Flrq1Zc64vv4gV/0R97i6p+1pV2xNBFDHTjOZRCGYsFx+WU9mGnxUs1DpwUvVtsMULJSnz1A9VDLnH2XoiGOUKVQ=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 4ICosJD9M1e9LkOTjgO9EmOeeOm3PRWKM/ELiWhPc3hCJCayeduGDbqdxxx9oFtByyUotyhPIj+11XBMCK8Ymh5D1qeFNkmP2rj3Lq7kBur/VnUHwZtUGIaE7mE8ddEs5XWxBGXzN4SLz+QC9kmHHPB+ZQMwPv1VJbNMqiHUv2ycHfQPTBfUtsi80bFgS6zaKmgMx9LahJYjrWNjQcEKem2m+1m3s+ftWhshy5T6njYt1PiF/mn6I1Swqw4B/MWyMDy7ATtHJ8ctFnu1kHCctBOcpTcga67zH5eACEOigeV3nijVGclE06zyI2a/c7cnVW4QPH5+o3BydT2HjSIlQ065uUGUu02qp8ZIyRi7HrvejiBwpWgdHTdrUSFeMZssecj1zNH7DKzL/84Tp0my81ugLFL7XRWBquj92spK7t+M4wHHVq2IplNBPjhuA6W5ziHOYpY6ivRYNozYz1JAZlWCQPIjXHhq+cxefuln8x5Bc+/o2vpdp6WbBJv5mdlykydiHUal49Cl25hqXAUhue/mQO/gL0eLiGDfsWGKWGNQdxwNjAOaaO127HMlDVILcvhwb31KM9zRoIcbvgvUy6AzyzSi3wh9LuurmQ8sbXxgJ0lS7DW+M+YvEVHkZiV9JIL9LY8pJXFTSZBVkLweF4ZyLfPzTjh9V5LmK06J9TFHjojGflAt8lAFM0Qi8pkRHMMAcKyvzKnnDsV5m3kBzITKC4OaqEjxoYP/tWZfICh6/ymub6h9OoShr/XP4UlpyfUOAoGaBOzr05vo6aeIsYWVrWR4A31SOWPYPsL+gQqQ6mYI+WJ8kkW6lX713DzAwk8+gCBbpbcfrjkjD4RNm1EUaLSZlQhO9wQXvpOvdEU=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d2168c3-95f4-4d98-0647-08db2b837cf0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 51d043da-d7a1-476e-29e6-08db2b837eec
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2023 09:46:34.1903
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2023 09:46:37.4267
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: m6XoToCmXfgFwwUHjBPXMWPa3xVNMeOUmBNANZn4bjM0PmpWHaTwhhP50Ir+SpxlBMNfwJFIHJrNX963tflFAg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: fYVvLTWqt2zbgMD/HA6xzd5tVgYIKrXDgkh43s8nUzISHNBg4WeIwoieufY9jvf9zUFwNAxIhVJlwpC/24Y6iw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5273
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
@@ -135,247 +135,83 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwa
  mlxlogscore=999 suspectscore=0 phishscore=0 bulkscore=0 adultscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303150002 definitions=main-2303230073
-X-Proofpoint-ORIG-GUID: mHb5BfZf9n-aOzpt8GguSYVVuyslwyca
-X-Proofpoint-GUID: mHb5BfZf9n-aOzpt8GguSYVVuyslwyca
+X-Proofpoint-ORIG-GUID: 9VCWR6naogU_ZNWC7KJYdI5J_Klcvydx
+X-Proofpoint-GUID: 9VCWR6naogU_ZNWC7KJYdI5J_Klcvydx
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of iterating all deferred commands in the submission queue
-structures, use blk_mq_tagset_busy_iter(), which is a standard API for
-this.
+The functions to update ndelay and delay value first check whether we have
+any in-flight IO for any host. It does this by checking if any tag is used
+in the global submit queues.
+
+We can achieve the same by setting the host as blocked and then ensuring
+that we have no in-flight commands with scsi_host_busy().
+
+Note that scsi_host_busy() checks SCMD_STATE_INFLIGHT flag, which is only
+set per command after we ensure that the host is not blocked, i.e. we
+see more commands active after the check for scsi_host_busy() returns 0.
 
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/scsi_debug.c | 195 +++++++++++++++++++-------------------
- 1 file changed, 98 insertions(+), 97 deletions(-)
+ drivers/scsi/scsi_debug.c | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 6606e71cd0a9..627bc98c18ae 100644
+index 3e2e7f24d90d..8a0fe403e225 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -7510,123 +7510,124 @@ static void sdebug_map_queues(struct Scsi_Host *shost)
- 	}
- }
+@@ -6061,16 +6061,15 @@ static ssize_t delay_store(struct device_driver *ddp, const char *buf,
+ 	if (count > 0 && sscanf(buf, "%d", &jdelay) == 1) {
+ 		res = count;
+ 		if (sdebug_jdelay != jdelay) {
+-			int j, k;
+-			struct sdebug_queue *sqp;
++			struct sdebug_host_info *sdhp;
  
--static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
-+struct sdebug_blk_mq_poll_data {
-+	unsigned int queue_num;
-+	int *num_entries;
-+};
+ 			mutex_lock(&sdebug_host_list_mutex);
+ 			block_unblock_all_queues(true);
+-			for (j = 0, sqp = sdebug_q_arr; j < submit_queues;
+-			     ++j, ++sqp) {
+-				k = find_first_bit(sqp->in_use_bm,
+-						   sdebug_max_queue);
+-				if (k != sdebug_max_queue) {
 +
-+/*
-+ * We don't handle aborted commands here, but it does not seem possible to have
-+ * aborted polled commands from schedule_resp()
-+ */
-+static bool sdebug_blk_mq_poll_iter(struct request *rq, void *opaque)
- {
--	bool first;
--	bool retiring = false;
--	int num_entries = 0;
--	unsigned int qc_idx = 0;
--	unsigned long iflags;
--	ktime_t kt_from_boot = ktime_get_boottime();
--	struct sdebug_queue *sqp;
--	struct sdebug_queued_cmd *sqcp;
--	struct scsi_cmnd *scp;
-+	struct sdebug_blk_mq_poll_data *data = opaque;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-+	struct sdebug_scsi_cmd *sdsc = scsi_cmd_priv(cmd);
- 	struct sdebug_defer *sd_dp;
-+	u32 unique_tag = blk_mq_unique_tag(rq);
-+	u16 hwq = blk_mq_unique_tag_to_hwq(unique_tag);
-+	struct sdebug_queued_cmd *sqcp;
-+	struct sdebug_queue *sqp;
-+	unsigned long flags;
-+	int queue_num = data->queue_num;
-+	bool retiring = false;
-+	int qc_idx;
-+	ktime_t time;
- 
--	sqp = sdebug_q_arr + queue_num;
-+	/* We're only interested in one queue for this iteration */
-+	if (hwq != queue_num)
-+		return true;
- 
--	spin_lock_irqsave(&sqp->qc_lock, iflags);
-+	/* Subsequent checks would fail if this failed, but check anyway */
-+	if (!test_bit(SCMD_STATE_INFLIGHT, &cmd->state))
-+		return true;
- 
--	qc_idx = find_first_bit(sqp->in_use_bm, sdebug_max_queue);
--	if (qc_idx >= sdebug_max_queue)
--		goto unlock;
-+	time = ktime_get_boottime();
- 
--	for (first = true; first || qc_idx + 1 < sdebug_max_queue; )   {
--		unsigned long flags;
--		struct sdebug_scsi_cmd *sdsc;
--		if (first) {
--			first = false;
--			if (!test_bit(qc_idx, sqp->in_use_bm))
--				continue;
--		} else {
--			qc_idx = find_next_bit(sqp->in_use_bm, sdebug_max_queue, qc_idx + 1);
--		}
--		if (qc_idx >= sdebug_max_queue)
--			break;
-+	spin_lock_irqsave(&sdsc->lock, flags);
-+	sqcp = TO_QEUEUED_CMD(cmd);
-+	if (!sqcp) {
-+		spin_unlock_irqrestore(&sdsc->lock, flags);
-+		return true;
-+	}
- 
--		sqcp = sqp->qc_arr[qc_idx];
--		if (!sqcp) {
--			pr_err("sqcp is NULL, queue_num=%d, qc_idx=%u from %s\n",
--			       queue_num, qc_idx, __func__);
--			break;
--		}
--		sd_dp = &sqcp->sd_dp;
-+	sqp = sdebug_q_arr + queue_num;
-+	sd_dp = &sqcp->sd_dp;
- 
--		scp = sqcp->scmd;
--		if (unlikely(scp == NULL)) {
--			pr_err("scp is NULL, queue_num=%d, qc_idx=%u from %s\n",
--			       queue_num, qc_idx, __func__);
--			break;
--		}
--		sdsc = scsi_cmd_priv(scp);
--		spin_lock_irqsave(&sdsc->lock, flags);
--		if (READ_ONCE(sd_dp->defer_t) == SDEB_DEFER_POLL) {
--			struct sdebug_queued_cmd *_sqcp = TO_QEUEUED_CMD(scp);
--
--			if (_sqcp != sqcp) {
--				pr_err("inconsistent queued cmd tag=%#x\n",
--				       blk_mq_unique_tag(scsi_cmd_to_rq(scp)));
--				spin_unlock_irqrestore(&sdsc->lock, flags);
--				continue;
--			}
-+	if (READ_ONCE(sd_dp->defer_t) != SDEB_DEFER_POLL) {
-+		spin_unlock_irqrestore(&sdsc->lock, flags);
-+		return true;
-+	}
- 
--			if (kt_from_boot < sd_dp->cmpl_ts) {
--				spin_unlock_irqrestore(&sdsc->lock, flags);
--				continue;
--			}
-+	if (time < sd_dp->cmpl_ts) {
-+		spin_unlock_irqrestore(&sdsc->lock, flags);
-+		return true;
-+	}
- 
--		} else		/* ignoring non REQ_POLLED requests */ {
--			spin_unlock_irqrestore(&sdsc->lock, flags);
--			continue;
--		}
--		if (unlikely(atomic_read(&retired_max_queue) > 0))
--			retiring = true;
-+	if (unlikely(atomic_read(&retired_max_queue) > 0))
-+		retiring = true;
- 
--		if (unlikely(!test_and_clear_bit(qc_idx, sqp->in_use_bm))) {
-+	qc_idx = sd_dp->sqa_idx;
-+	sqp->qc_arr[qc_idx] = NULL;
-+	if (unlikely(!test_and_clear_bit(qc_idx, sqp->in_use_bm))) {
-+		spin_unlock_irqrestore(&sdsc->lock, flags);
-+		pr_err("Unexpected completion sqp %p queue_num=%d qc_idx=%u\n",
-+			sqp, queue_num, qc_idx);
-+		sdebug_free_queued_cmd(sqcp);
-+		return true;
-+	}
++			list_for_each_entry(sdhp, &sdebug_host_list, host_list) {
++				struct Scsi_Host *shost = sdhp->shost;
 +
-+	if (unlikely(retiring)) {	/* user has reduced max_queue */
-+		int k, retval = atomic_read(&retired_max_queue);
-+
-+		if (qc_idx >= retval) {
-+			pr_err("index %d too large\n", retval);
- 			spin_unlock_irqrestore(&sdsc->lock, flags);
--			pr_err("Unexpected completion sqp %p queue_num=%d qc_idx=%u from %s\n",
--				sqp, queue_num, qc_idx, __func__);
- 			sdebug_free_queued_cmd(sqcp);
--			break;
--		}
--		sqp->qc_arr[qc_idx] = NULL;
--		if (unlikely(retiring)) {	/* user has reduced max_queue */
--			int k, retval;
--
--			retval = atomic_read(&retired_max_queue);
--			if (qc_idx >= retval) {
--				pr_err("index %d too large\n", retval);
--				spin_unlock_irqrestore(&sdsc->lock, flags);
--				sdebug_free_queued_cmd(sqcp);
--				break;
--			}
--			k = find_last_bit(sqp->in_use_bm, retval);
--			if ((k < sdebug_max_queue) || (k == retval))
--				atomic_set(&retired_max_queue, 0);
--			else
--				atomic_set(&retired_max_queue, k + 1);
-+			return true;
- 		}
--		spin_unlock_irqrestore(&sdsc->lock, flags);
--		spin_unlock_irqrestore(&sqp->qc_lock, iflags);
++				if (scsi_host_busy(shost)) {
+ 					res = -EBUSY;   /* queued commands */
+ 					break;
+ 				}
+@@ -6103,20 +6102,20 @@ static ssize_t ndelay_store(struct device_driver *ddp, const char *buf,
+ 	    (ndelay >= 0) && (ndelay < (1000 * 1000 * 1000))) {
+ 		res = count;
+ 		if (sdebug_ndelay != ndelay) {
+-			int j, k;
+-			struct sdebug_queue *sqp;
++			struct sdebug_host_info *sdhp;
  
--		if (sdebug_statistics) {
--			atomic_inc(&sdebug_completions);
--			if (raw_smp_processor_id() != sd_dp->issuing_cpu)
--				atomic_inc(&sdebug_miss_cpus);
--		}
-+		k = find_last_bit(sqp->in_use_bm, retval);
-+		if ((k < sdebug_max_queue) || (k == retval))
-+			atomic_set(&retired_max_queue, 0);
-+		else
-+			atomic_set(&retired_max_queue, k + 1);
-+	}
- 
--		sdebug_free_queued_cmd(sqcp);
-+	ASSIGN_QEUEUED_CMD(cmd, NULL);
-+	spin_unlock_irqrestore(&sdsc->lock, flags);
- 
--		scsi_done(scp); /* callback to mid level */
--		num_entries++;
--		spin_lock_irqsave(&sqp->qc_lock, iflags);
--		if (find_first_bit(sqp->in_use_bm, sdebug_max_queue) >= sdebug_max_queue)
--			break;
-+	if (sdebug_statistics) {
-+		atomic_inc(&sdebug_completions);
-+		if (raw_smp_processor_id() != sd_dp->issuing_cpu)
-+			atomic_inc(&sdebug_miss_cpus);
- 	}
- 
--unlock:
--	spin_unlock_irqrestore(&sqp->qc_lock, iflags);
-+	sdebug_free_queued_cmd(sqcp);
- 
-+	scsi_done(cmd); /* callback to mid level */
-+	(*data->num_entries)++;
-+	return true;
-+}
+ 			mutex_lock(&sdebug_host_list_mutex);
+ 			block_unblock_all_queues(true);
+-			for (j = 0, sqp = sdebug_q_arr; j < submit_queues;
+-			     ++j, ++sqp) {
+-				k = find_first_bit(sqp->in_use_bm,
+-						   sdebug_max_queue);
+-				if (k != sdebug_max_queue) {
 +
-+static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
-+{
-+	int num_entries = 0;
-+	unsigned long iflags;
-+	struct sdebug_queue *sqp;
-+	struct sdebug_blk_mq_poll_data data = {
-+		.queue_num = queue_num,
-+		.num_entries = &num_entries,
-+	};
-+	sqp = sdebug_q_arr + queue_num;
++			list_for_each_entry(sdhp, &sdebug_host_list, host_list) {
++				struct Scsi_Host *shost = sdhp->shost;
 +
-+	spin_lock_irqsave(&sqp->qc_lock, iflags);
++				if (scsi_host_busy(shost)) {
+ 					res = -EBUSY;   /* queued commands */
+ 					break;
+ 				}
+ 			}
 +
-+	blk_mq_tagset_busy_iter(&shost->tag_set, sdebug_blk_mq_poll_iter,
-+				&data);
-+
-+	spin_unlock_irqrestore(&sqp->qc_lock, iflags);
- 	if (num_entries > 0)
- 		atomic_add(num_entries, &sdeb_mq_poll_count);
- 	return num_entries;
+ 			if (res > 0) {
+ 				sdebug_ndelay = ndelay;
+ 				sdebug_jdelay = ndelay  ? JDELAY_OVERRIDDEN
 -- 
 2.35.3
 
