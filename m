@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 415FBC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3338AC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231630AbjCWKtJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 06:49:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55818 "EHLO
+        id S229990AbjCWKug (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:50:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231635AbjCWKsy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:48:54 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAB6A1E2A2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:47:23 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id x3so84445319edb.10
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:47:23 -0700 (PDT)
+        with ESMTP id S229881AbjCWKuG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:50:06 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C8071CF4D
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:49:16 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id i5so37608549eda.0
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:49:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1679568442;
+        d=linaro.org; s=google; t=1679568555;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=ZwBaazd46Os1h8UWb3mzhS3tM1p34VAmXxtP/Asef4g=;
-        b=Dtslf0444+9v58G4yE+r0N4jTKSFCxfgxadg83fFpxNHJ4ac4nlxy0bFQDZh3eNAKB
-         6WssITCbUrDgO1As33oV9qKLdQbyrHIJ2/gRtUdUK8XNctG/tWxxNfnYwi9XdL67Rwz2
-         jN5zgGK5gewqPRnTYvHYAntqZ1Mrs6KMySeUgtH1R0O51kUmgjC5iviB4XcBg1oXkJ4C
-         wsPdAy3FmmaFAuFdsxIiH2CG84/CHpAs1LMRnB5QWHwBtoXNosOoPlLukKgM+rmy+rJ4
-         VrJPlkZfxEfp7h9c067CxWlfsxIXgtjVtA8ANFGhrqOP7GyVkLgwoh2y61aQiFLP4vgB
-         YbAQ==
+        bh=jdmMkNYxmngZXiNYiht2ilt6fUvVv06Iyevz/3gM66w=;
+        b=knL6YRcg5zsmePbOUt885QbvljOR9/ZH2VAfHYCS9NPtcEA99FIDn2aGyVoKH45TDP
+         kY4TGvy1bFecBjHRiAzkZqafAk48jM42rPImDiVazQJ1K4uPnxp2X3H7l8YDR3vrKiaG
+         bAhM3d45FMUaRUrZC/m5sz7RaK9Qq7EF0ndRb90gi0nndmoIde+euM2opzWTF0AVBNzf
+         a6Kz7mgcLQzsLr5usmDkLqwLp8e2IO1FKBVUFCOSaq4hBEHR3RjyptFflQ7DOr7ctz1q
+         6/+HA/yeiJUsx+d7tW+lmhylYdCBCGLRQI8MBYWB/0ecazdd0cphn8d2J3Jc2ePY4AAt
+         uFYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679568442;
+        d=1e100.net; s=20210112; t=1679568555;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZwBaazd46Os1h8UWb3mzhS3tM1p34VAmXxtP/Asef4g=;
-        b=lBTFcFvgUQO8XxCuzZPBegD8fjn+YDBIDgcZgtavsh0+0WzFlnVOkYlTI/PRJrbBHq
-         DC1PPRgjU2roX8T/qx97KLA5ri4wZl6NkI4jsXrqXbbQtkpFhhndN+zbtEiOsqJpa83g
-         1nYPZcqoQp2+OsNl6TpwEJ+AkH61eHMfrLGRn1O6x5nA/iyKNhCriiT2j2gtWi86C2Dx
-         4cBAbrn6k3CZg/4L4rqMsyh21Gn1a7zCgpfFwKfav8dizA41KDLWQ1mUkbLzrP4K38DJ
-         cPK3TS200XFZZRJsDXVnVCVPEW7dIy4KqBEV7nJZiTAbl/Cw3ExD7jtnB4b+qQuVsMLk
-         1cZg==
-X-Gm-Message-State: AO0yUKXe6Zn/VbmUsXvjpBN6fdGkI5E5XqLD0W5opHJHtiRXKp+p5WEI
-        d6iFSdsl++SgVx4k+lI5YMgshg==
-X-Google-Smtp-Source: AK7set+syZHTlqpATJV5H45QwNgqlRP+3WJYWaGjq6Y6tMtvCBdNqC47gy0P9OOBSjJ/vCiMdvKECQ==
-X-Received: by 2002:a17:906:9457:b0:930:a74:52bb with SMTP id z23-20020a170906945700b009300a7452bbmr5414585ejx.14.1679568442296;
-        Thu, 23 Mar 2023 03:47:22 -0700 (PDT)
+        bh=jdmMkNYxmngZXiNYiht2ilt6fUvVv06Iyevz/3gM66w=;
+        b=rDM46DdgQg4h4fgzb1iUdMzwpGfqNaoPBXS1hqqh+T11/EBT1FURv16fHmaMmLIJZe
+         mN/26+giHIVLg5g22rNF70tu1SMrFt1BQaYZN/V/RckxCxBQilKnMcmKqRlwjfwlplnX
+         Zfoj173b5gaTg8jKNT4gTI+QLzHqQ8iMg0KpCeYTvLjzBUTQu618rJNUlQkTjD2z2/fB
+         mAWO6/SExjYb0mdW+SzRBpGC4MQaWjud4d6T3f0eu5O61fgvEQGqn4mAHON8waJPB5jz
+         HUXJUQy/c3R3G94ymOfxIdw8P1++L0szySW+WC99ARA98iIvN4l/t6k2oI/BYZwmTrGq
+         V2lQ==
+X-Gm-Message-State: AO0yUKUL/pCwQ0GPSUH7bPxbaVukoBHm8L9yKCRlQUsLmvNPxjfeTElo
+        yixFMFMyiHn3S3dSZ7jdoPY7iw==
+X-Google-Smtp-Source: AK7set+NsAafWsPdCnhOJpdiMsM9t3ZFahPLZkyds6zcH6FQTKUdAj8NfgayvaoFiyTcm1PQimdckg==
+X-Received: by 2002:a05:6402:64e:b0:4fc:709f:7abd with SMTP id u14-20020a056402064e00b004fc709f7abdmr9636033edx.2.1679568554775;
+        Thu, 23 Mar 2023 03:49:14 -0700 (PDT)
 Received: from ?IPV6:2a02:810d:15c0:828:a665:ed1e:3966:c991? ([2a02:810d:15c0:828:a665:ed1e:3966:c991])
-        by smtp.gmail.com with ESMTPSA id q18-20020a170906b29200b008c607dd7cefsm8484887ejz.79.2023.03.23.03.47.20
+        by smtp.gmail.com with ESMTPSA id v4-20020a509544000000b004fb402a2a37sm9079721eda.33.2023.03.23.03.49.13
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Mar 2023 03:47:21 -0700 (PDT)
-Message-ID: <35e3aa8b-ccff-25fa-42da-d8934ef366c6@linaro.org>
-Date:   Thu, 23 Mar 2023 11:47:20 +0100
+        Thu, 23 Mar 2023 03:49:14 -0700 (PDT)
+Message-ID: <9614782e-0d78-e8f2-a438-452cfa86f80b@linaro.org>
+Date:   Thu, 23 Mar 2023 11:49:12 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
-Subject: Re: [PATCH 6/8] arm64: dts: qcom: sm8450: remove invalid npl clock in
- vamacro node
+Subject: Re: [PATCH 7/8] arm64: dts: qcom: sm8450: remove invalid reg-names
+ from ufs node
 Content-Language: en-US
 To:     Neil Armstrong <neil.armstrong@linaro.org>,
         Rob Clark <robdclark@gmail.com>,
@@ -79,9 +79,9 @@ Cc:     linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
         Krzysztof Kozlowski <krzk@kernel.org>,
         linux-scsi@vger.kernel.org
 References: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
- <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-6-3ead1e418fe4@linaro.org>
+ <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-7-3ead1e418fe4@linaro.org>
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-6-3ead1e418fe4@linaro.org>
+In-Reply-To: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-7-3ead1e418fe4@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -90,15 +90,26 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 23/03/2023 11:25, Neil Armstrong wrote:
 > Fixes the following DT bindings check error:
-> codec@33f0000: clocks: [[137, 57, 1], [137, 102, 1], [137, 103, 1], [137, 70, 1]] is too long
-> codec@33f0000: clock-names: 'oneOf' conditional failed, one must be fixed:
-> 	        ['mclk', 'macro', 'dcodec', 'npl'] is too long
+> ufshc@1d84000: Unevaluated properties are not allowed ('reg-names' was unexpected)
 > 
-> The implementation was checked and this npl clock isn't used for the VA macro.
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
+>  arch/arm64/boot/dts/qcom/sm8450.dtsi | 1 -
+>  1 file changed, 1 deletion(-)
 > 
+> diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> index ef9bae2e6acc..8ecc48c7c5ef 100644
+> --- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> @@ -3996,7 +3996,6 @@ ufs_mem_hc: ufshc@1d84000 {
+>  				     "jedec,ufs-2.0";
+>  			reg = <0 0x01d84000 0 0x3000>,
+>  			      <0 0x01d88000 0 0x8000>;
+> -			reg-names = "std", "ice";
 
-This does not look correct. DTS looks good, you miss some patches in
-your tree.
+This is also part of:
+https://lore.kernel.org/linux-arm-msm/20230308155838.1094920-8-abel.vesa@linaro.org/#Z31arch:arm64:boot:dts:qcom:sm8450.dtsi
+but I actually wonder whether you just missed some binding patch?
 
 Best regards,
 Krzysztof
