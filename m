@@ -2,114 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11EE0C761AF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 13:14:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1766CC6FD1C
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 13:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231422AbjCWNOT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 09:14:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44880 "EHLO
+        id S231600AbjCWNqg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 09:46:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230165AbjCWNOS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 09:14:18 -0400
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FA629756
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 06:14:16 -0700 (PDT)
-Received: by mail-wm1-x32a.google.com with SMTP id s13so1224715wmr.4
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 06:14:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1679577255;
-        h=content-transfer-encoding:in-reply-to:organization:references:cc:to
-         :content-language:subject:reply-to:from:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=3ozbiTjZMTtZdhbfQMuafqLt5s0mYlr+S+oK5ku6wPM=;
-        b=lZT4yTsZI86TtOEPmavRCOef4D3RW1/nuZBrTzMbE98FuAzEIyWdjLDegnf6jrxZA+
-         ONjkVPvzSXDq88fS+6uvpspwpVLfj7god+2EuT5bsj6nKTpu7cbyXlXJQdX9OEDOdepB
-         syE9WfGnMbNFde06i6F3ixx2V0DbrfH+dZHIlaf49AJsawg656MXcwsT9BMUjL7hnxki
-         gXw5ww2yJmINWWYwei7sFMPdJnSkkzgYORHmb7bz7OJYWX/DNcZBkv5lehSjkSuTnHo6
-         M4nzoMLmTmrsmqOVP7mWrYBY8IrxinwiliUyVl6MADd+4Ty2C/ig8WfYV8E0zh0IvO90
-         /UBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679577255;
-        h=content-transfer-encoding:in-reply-to:organization:references:cc:to
-         :content-language:subject:reply-to:from:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3ozbiTjZMTtZdhbfQMuafqLt5s0mYlr+S+oK5ku6wPM=;
-        b=ZcItzmsErbM6Vm8nXDluD0AG+Iyj40CVWwe2CIl5RY3cp1+MbSy6p0UpIOubv4kNQR
-         Xog8YycLWKaJpD2rMkfp4dQYIBWCTdD+wNVZGC3FeYiTfsDKXaReCdPQ7jZH9+toqEiR
-         JzkNYkcNBMYFVvPB0EuvTMzoNyZ8gsF6//M1wwHe8XwPDeEZTB27iAiz4v5laKG2dr0u
-         XJ8qvA8Uzd/3NoNGcgMk25PBh9uTnX3d51VRxtNwHmv3kySk26vFcveCVn3SLGI3V/MX
-         xcCxar69a3LOXwq8lok6+qlrW+zinM1Hy9caqoCbPeBDft5y58hW6ACwzVclRnOMkwa2
-         pngw==
-X-Gm-Message-State: AO0yUKUAnSohIK6A9XJa6A+3kbv/AkZB2okLJZnsYcMSFvs6xPBrJwN1
-        yzi1zO3IY3xbW4Bs5w8YRfujwA==
-X-Google-Smtp-Source: AK7set9KH31TZh7tubmQPEjPzDWKzuzoSIfSWMARsbW8oRdJ+eBdyMTtKXVVNWxugh2iobMdSN2lww==
-X-Received: by 2002:a05:600c:a0c:b0:3ee:90fa:aedf with SMTP id z12-20020a05600c0a0c00b003ee90faaedfmr1139192wmp.11.1679577254774;
-        Thu, 23 Mar 2023 06:14:14 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:982:cbb0:e25a:65de:379a:3899? ([2a01:e0a:982:cbb0:e25a:65de:379a:3899])
-        by smtp.gmail.com with ESMTPSA id g20-20020a05600c4ed400b003edc4788fa0sm1992204wmq.2.2023.03.23.06.14.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Mar 2023 06:14:14 -0700 (PDT)
-Message-ID: <215efc34-68bf-53d7-2191-a5132c3d2198@linaro.org>
-Date:   Thu, 23 Mar 2023 14:14:12 +0100
+        with ESMTP id S230335AbjCWNqd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 09:46:33 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECF829E31;
+        Thu, 23 Mar 2023 06:46:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679579192; x=1711115192;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=9ennairkf3iy0DLpGRVHy/xvU8CQYM6AxEOs9CSrRLY=;
+  b=n84k5Mr+WnnIXTGJdpSsQtWXgh52fA39Kj/VLzG2jDFgyWZ9eZdBshjZ
+   Pzg/r2f7UPFWN8XkO1ZVzr58nhJC5QaYjsyyTAbMYddS5app9dhOug5st
+   wxvCA047HpGp6vN2ijZji3Jv2+6OCsH/TyqpuwDxUconRvpVa5/ZEglYl
+   E6MCbFoxCG+s+rSKPtyzv2MNRwZglHMJScPP3DGcfBFBGvq0UMmeG2tLT
+   +LnkGa1wN/zSodgWjvTozlZgcYcSfrLf9xuQYESCM/Z8iMxQQiTsDd1jn
+   nDahcQobPOlXb+eFdHBAzKlJqbddLV+C0mqUYaGbyj4s3Nx+LHv/OEc2q
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10657"; a="339523432"
+X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
+   d="scan'208";a="339523432"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 06:46:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10657"; a="928241273"
+X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
+   d="scan'208";a="928241273"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 23 Mar 2023 06:46:28 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pfLGt-000EPt-2m;
+        Thu, 23 Mar 2023 13:46:27 +0000
+Date:   Thu, 23 Mar 2023 21:46:10 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, dgilbert@interlog.com
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org, John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate
+ sdebug_queued_cmd
+Message-ID: <202303232141.ElpLC72H-lkp@intel.com>
+References: <20230323094555.584624-7-john.g.garry@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-From:   Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH 4/8] arm64: dts: qcom: sm8450: remove invalid properties
- in cluster-sleep nodes
-Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Rob Clark <robdclark@gmail.com>,
-        Abhinav Kumar <quic_abhinavk@quicinc.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Sean Paul <sean@poorly.run>, David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Lee Jones <lee@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        linux-scsi@vger.kernel.org
-References: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
- <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-4-3ead1e418fe4@linaro.org>
- <0bcad5cc-112f-386c-b70e-146530ac4898@linaro.org>
-Organization: Linaro Developer Services
-In-Reply-To: <0bcad5cc-112f-386c-b70e-146530ac4898@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230323094555.584624-7-john.g.garry@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23/03/2023 11:51, Krzysztof Kozlowski wrote:
-> On 23/03/2023 11:25, Neil Armstrong wrote:
->> Fixes the following DT bindings check error:
->> domain-idle-states: cluster-sleep-0: 'idle-state-name', 'local-timer-stop' do not match any of the regexes:
->> 'pinctrl-[0-9]+'
->> domain-idle-states: cluster-sleep-1: 'idle-state-name', 'local-timer-stop' do not match any of the regexes:
->> 'pinctrl-[0-9]+'
-> 
-> I don't get from the commit msg why these properties are not correct
-> here. The idle states allow them, so maybe something is missing in the
-> binding? At least commit msg should explain this.
+Hi John,
 
-The domain-idle-states bindings doesn't document those 2 properties, so perhaps it's missing ?
+I love your patch! Perhaps something to improve:
 
-Neil
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on next-20230323]
+[cannot apply to jejb-scsi/for-next linus/master v6.3-rc3]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-> 
-> Best regards,
-> Krzysztof
-> 
+url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230323094555.584624-7-john.g.garry%40oracle.com
+patch subject: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd
+config: i386-randconfig-a002 (https://download.01.org/0day-ci/archive/20230323/202303232141.ElpLC72H-lkp@intel.com/config)
+compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/be81e49de2c71f280dd3eac902d05afcb1061d12
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
+        git checkout be81e49de2c71f280dd3eac902d05afcb1061d12
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/scsi/
 
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202303232141.ElpLC72H-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/scsi_debug.c:5579:27: warning: no previous prototype for function 'sdebug_alloc_queued_cmd' [-Wmissing-prototypes]
+   struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
+                             ^
+   drivers/scsi/scsi_debug.c:5579:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
+   ^
+   static 
+   1 warning generated.
+
+
+vim +/sdebug_alloc_queued_cmd +5579 drivers/scsi/scsi_debug.c
+
+  5578	
+> 5579	struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
+  5580	{
+  5581		struct sdebug_queued_cmd *sqcp = kmem_cache_zalloc(queued_cmd_cache, GFP_ATOMIC);
+  5582		struct sdebug_defer *sd_dp;
+  5583	
+  5584		if (!sqcp)
+  5585			return NULL;
+  5586	
+  5587		sd_dp = &sqcp->sd_dp;
+  5588	
+  5589		hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL_PINNED);
+  5590		sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
+  5591		INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
+  5592	
+  5593		sqcp->scmd = scmd;
+  5594		sd_dp->sqa_idx = -1;
+  5595	
+  5596		return sqcp;
+  5597	}
+  5598	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
