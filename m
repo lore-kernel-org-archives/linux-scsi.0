@@ -2,129 +2,165 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D03C74A5B
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 18:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 667D7C6FD1C
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 23:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229953AbjCWSNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 14:13:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36690 "EHLO
+        id S230416AbjCWXgm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 19:36:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229499AbjCWSNm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 14:13:42 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70BA930EA;
-        Thu, 23 Mar 2023 11:13:41 -0700 (PDT)
+        with ESMTP id S229738AbjCWXgl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 19:36:41 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F7EB24127;
+        Thu, 23 Mar 2023 16:36:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679595221; x=1711131221;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=CItIdhfWQzSLqxClwXxP9K65h4AwMiALZAMPIBdeqKQ=;
-  b=Di8YOgegGwVwZXe6uCG4j3xAscsSn3jwWzGMTCyVshy60WLww2MsRWHe
-   3lPpCIPYigQ4i8hwFvw0Pm94p+I/rb+fBbZ9o3LIAhU5jMK9gx36RyhVE
-   vM5T8VXcEZifx+8C0ufXi6huZWiy5RNDVkl4ML3LLTCDcEhUArKiua9B/
-   wiMwMx4Mp7BjdxW9/lx6X2TDwTl7PWcu2kgsS1T1ciWkuYMGIn2V2NTD+
-   JJ4IXwPnpIsdJqcB6GPmu3P6ei+PdCifqc426SCUc5n3KdPkRbt9NyXN/
-   9C9pw5gslAyHef93fP5FCnJWyr6iSXDFvGInZGH0YhO3jPhSZGlNxXIsi
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="402162368"
-X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
-   d="scan'208";a="402162368"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 11:13:41 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="714924898"
-X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
-   d="scan'208";a="714924898"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 23 Mar 2023 11:13:38 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pfPRS-000Ebo-06;
-        Thu, 23 Mar 2023 18:13:38 +0000
-Date:   Fri, 24 Mar 2023 02:13:17 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dgilbert@interlog.com
-Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bvanassche@acm.org,
-        John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate
- sdebug_queued_cmd
-Message-ID: <202303240216.2NoF5RCq-lkp@intel.com>
-References: <20230323094555.584624-7-john.g.garry@oracle.com>
+        d=hansenpartnership.com; s=20151216; t=1679614599;
+        bh=LA5jBfp0rmzD1As+Zr0AF8LsPuTbDZTwOeZzx+XkVIU=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=CUnWljrOUvRugxlQ+41Zo9xhxD1A+CiOD7JqWkRAKnz8ZGWhGKZycb7HMlgAUmbEY
+         Rk0+ezZzUBn2QS78zmIqx6u46u96VOjBP9hhQp7Lil44iVRc3iPIEATVJcfnEkgtev
+         81QvDDjhkSfc2gu1Ql6BskLSm6FqOBvSusi1otYk=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id BC8721286D37;
+        Thu, 23 Mar 2023 19:36:39 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id PG33SogVEtQA; Thu, 23 Mar 2023 19:36:39 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1679614599;
+        bh=LA5jBfp0rmzD1As+Zr0AF8LsPuTbDZTwOeZzx+XkVIU=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=CUnWljrOUvRugxlQ+41Zo9xhxD1A+CiOD7JqWkRAKnz8ZGWhGKZycb7HMlgAUmbEY
+         Rk0+ezZzUBn2QS78zmIqx6u46u96VOjBP9hhQp7Lil44iVRc3iPIEATVJcfnEkgtev
+         81QvDDjhkSfc2gu1Ql6BskLSm6FqOBvSusi1otYk=
+Received: from [153.66.160.227] (unknown [153.66.160.227])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1856E1286D27;
+        Thu, 23 Mar 2023 19:36:39 -0400 (EDT)
+Message-ID: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.3-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Thu, 23 Mar 2023 19:36:37 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230323094555.584624-7-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi John,
+Four small fixes, three in drivers.  The core fix adds a UFS device to
+an existing quirk to avoid a huge delay on boot.
 
-I love your patch! Perhaps something to improve:
+The patch is available here:
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on next-20230323]
-[cannot apply to jejb-scsi/for-next linus/master v6.3-rc3]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230323094555.584624-7-john.g.garry%40oracle.com
-patch subject: [PATCH v2 06/11] scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd
-config: riscv-allmodconfig (https://download.01.org/0day-ci/archive/20230324/202303240216.2NoF5RCq-lkp@intel.com/config)
-compiler: riscv64-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/be81e49de2c71f280dd3eac902d05afcb1061d12
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review John-Garry/scsi-scsi_debug-Fix-check-for-sdev-queue-full/20230323-175305
-        git checkout be81e49de2c71f280dd3eac902d05afcb1061d12
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=riscv olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/scsi/
+The short changelog is:
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303240216.2NoF5RCq-lkp@intel.com/
+Joel Selvaraj (1):
+      scsi: core: Add BLIST_SKIP_VPD_PAGES for SKhynix H28U74301AMR
 
-All warnings (new ones prefixed by >>):
+Nilesh Javali (1):
+      scsi: qla2xxx: Perform lockless command completion in abort path
 
->> drivers/scsi/scsi_debug.c:5579:27: warning: no previous prototype for 'sdebug_alloc_queued_cmd' [-Wmissing-prototypes]
-    5579 | struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
-         |                           ^~~~~~~~~~~~~~~~~~~~~~~
+Quinn Tran (1):
+      scsi: qla2xxx: Synchronize the IOCB count to be in order
 
+Yu Kuai (1):
+      scsi: scsi_dh_alua: Fix memleak for 'qdata' in alua_activate()
 
-vim +/sdebug_alloc_queued_cmd +5579 drivers/scsi/scsi_debug.c
+And the diffstat:
 
-  5578	
-> 5579	struct sdebug_queued_cmd *sdebug_alloc_queued_cmd(struct scsi_cmnd *scmd)
-  5580	{
-  5581		struct sdebug_queued_cmd *sqcp = kmem_cache_zalloc(queued_cmd_cache, GFP_ATOMIC);
-  5582		struct sdebug_defer *sd_dp;
-  5583	
-  5584		if (!sqcp)
-  5585			return NULL;
-  5586	
-  5587		sd_dp = &sqcp->sd_dp;
-  5588	
-  5589		hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL_PINNED);
-  5590		sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
-  5591		INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
-  5592	
-  5593		sqcp->scmd = scmd;
-  5594		sd_dp->sqa_idx = -1;
-  5595	
-  5596		return sqcp;
-  5597	}
-  5598	
+ drivers/scsi/device_handler/scsi_dh_alua.c |  6 ++++--
+ drivers/scsi/qla2xxx/qla_isr.c             |  3 ++-
+ drivers/scsi/qla2xxx/qla_os.c              | 11 +++++++++++
+ drivers/scsi/scsi_devinfo.c                |  1 +
+ 4 files changed, 18 insertions(+), 3 deletions(-)
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+With full diff below.
+
+James
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 362fa631f39b..a226dc1b65d7 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1145,10 +1145,12 @@ static int alua_activate(struct scsi_device *sdev,
+ 	rcu_read_unlock();
+ 	mutex_unlock(&h->init_mutex);
+ 
+-	if (alua_rtpg_queue(pg, sdev, qdata, true))
++	if (alua_rtpg_queue(pg, sdev, qdata, true)) {
+ 		fn = NULL;
+-	else
++	} else {
++		kfree(qdata);
+ 		err = SCSI_DH_DEV_OFFLINED;
++	}
+ 	kref_put(&pg->kref, release_port_group);
+ out:
+ 	if (fn)
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 030625ebb4e6..71feda2cdb63 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1900,6 +1900,8 @@ qla2x00_get_sp_from_handle(scsi_qla_host_t *vha, const char *func,
+ 	}
+ 
+ 	req->outstanding_cmds[index] = NULL;
++
++	qla_put_fw_resources(sp->qpair, &sp->iores);
+ 	return sp;
+ }
+ 
+@@ -3112,7 +3114,6 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
+ 	}
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 
+-	qla_put_fw_resources(sp->qpair, &sp->iores);
+ done:
+ 	/* Return the vendor specific reply to API */
+ 	bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = rval;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 80c4ee9df2a4..bee1b8a82020 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1865,6 +1865,17 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
+ 	for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
+ 		sp = req->outstanding_cmds[cnt];
+ 		if (sp) {
++			/*
++			 * perform lockless completion during driver unload
++			 */
++			if (qla2x00_chip_is_down(vha)) {
++				req->outstanding_cmds[cnt] = NULL;
++				spin_unlock_irqrestore(qp->qp_lock_ptr, flags);
++				sp->done(sp, res);
++				spin_lock_irqsave(qp->qp_lock_ptr, flags);
++				continue;
++			}
++
+ 			switch (sp->cmd_type) {
+ 			case TYPE_SRB:
+ 				qla2x00_abort_srb(qp, sp, res, &flags);
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index bc9d280417f6..3fcaf10a9dfe 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -234,6 +234,7 @@ static struct {
+ 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
+ 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
+ 	{"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++	{"SKhynix", "H28U74301AMR", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"DELL", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+
