@@ -2,110 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8318FC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:26:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B18C4C6FD1C
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Mar 2023 10:43:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231394AbjCWK0Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 06:26:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41998 "EHLO
+        id S231614AbjCWKnH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:43:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231397AbjCWKZ7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:25:59 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D404B1C7E5
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:35 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id l27so11546169wrb.2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2023 03:25:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1679567134;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=FaktxrHqSVBJvgr5m72rtimmU8b1rgEPNt97tFbcEsI=;
-        b=RA/Lgk4VwDZLxmXqWCBeVhDkzv9+CRUnqPoo9qv4UtG2XacS8baIy+fTIVEV82opdv
-         CAjK2Ah7Dy9KSx5k2zPAgeq2dxSnBLeGXdmEf6/8/VZU0eTtKhmridKEGg/n2wWxlFVF
-         pH68Xtcbv5kZXA82o/cTGLfrcXJIPqgeBLsOdGqziepgcUDnC0IlmjLXgsrIjUvujNKy
-         ATRzK4Chla46roFSYqSZ9kQ1tl1zVSDCzmU5m/eael73KeqBOf1HLH4Mlam0PHYF2S7s
-         MZj+/aYc1u6miyHQ4A6newI6jdqIkfLsMq0vtI8rqmqe7vJz2KYOzrcRo53ggOdnlW/a
-         QhQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679567134;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FaktxrHqSVBJvgr5m72rtimmU8b1rgEPNt97tFbcEsI=;
-        b=DN+TGWdcsreYmGkoqRrYzongPxVUhM4VJIaUUX+sUP00e2Mv5hAm1+6fX5yYN8f5XL
-         70qjQ+jjTIF0+UJF/0B8aAgtKhJGd+c2z40qR3wDsm1ZXmLW9KIW0ahc/JatyrLPIIr5
-         MDPsAW7RILJJ1Ic3Q/bDs74aum9aNmyo0Gyc5UJaBLxI5GpwZl1Ov3bf+VFZzXw7mSv9
-         Q0mpQpy0mfm7MrGbeBcQ/+xuP1SN56h6TNscurq5Foxj2FA2zYOeYTHtBAlLe7urE/7n
-         xzokNFEd+UtnCVc/x7ZP9/5F1fPPOxj4/+A8aQeG4AwBa2laDsXRNcX+pwzT+GvOB+ww
-         X9lw==
-X-Gm-Message-State: AAQBX9dCrh4mUYSCNqE+7cL317fkN9zz+pgSm2Epf1McPT5o9S0wf90Q
-        UNbuwMmJ1CpwG3tLvpHCilh4Pw==
-X-Google-Smtp-Source: AKy350YQA+jMkbW6mQuuJtWYSx09at+iDrv03avXAv4uZ7HMAI6MrP6YJqgswmSR4K9JmG855UqLyA==
-X-Received: by 2002:adf:ff8f:0:b0:2da:53e3:57d1 with SMTP id j15-20020adfff8f000000b002da53e357d1mr2029999wrr.62.1679567134135;
-        Thu, 23 Mar 2023 03:25:34 -0700 (PDT)
-Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:8261:5fff:fe11:bdda])
-        by smtp.gmail.com with ESMTPSA id e23-20020a5d5957000000b002cfefa50a8esm15753530wri.98.2023.03.23.03.25.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Mar 2023 03:25:33 -0700 (PDT)
-From:   Neil Armstrong <neil.armstrong@linaro.org>
-Date:   Thu, 23 Mar 2023 11:25:22 +0100
-Subject: [PATCH 7/8] arm64: dts: qcom: sm8450: remove invalid reg-names
- from ufs node
+        with ESMTP id S230456AbjCWKmt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 06:42:49 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2391E39B93;
+        Thu, 23 Mar 2023 03:40:00 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N9c2jD012567;
+        Thu, 23 Mar 2023 10:38:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=x4gGfbzba1hFOh69yFSCSNrEAtDOldJBZZWSAOaH1Tk=;
+ b=L9F5G/jjhnIKdp/Nx/uu5HDtA7nrpL48Q13W+cpIPOQTNLQ735zPH7cMrYmPfoCFZh9g
+ hiVH/eBv/gYVkXX+QRY0HLykYRkovu3s61CKmoJUvcq1EDXDNNzpXwo9jckbYm1uocR7
+ HJn9ZXhgLwpH3ExaLUJBo3P+OR/ptidwRSBqE7fg9ag6Nduh9ygCkAMu2Gdt6V9Obu67
+ 2EUTgajr1uAo/MBV7JeApI2vsQh5AGj8DblSWg6v3md6TVq/XDWbrPtdFoJJNcIMqKbV
+ 85w63Fb7CJ6+x3eSVxDJIdS/64Gt00bp6HcGWeMRzti7sRV2BJY6Kb8gFFG52Ppi5UNu oA== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pgm9x8461-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 23 Mar 2023 10:38:33 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32NAcW6f015397
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 23 Mar 2023 10:38:33 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Thu, 23 Mar
+ 2023 03:38:32 -0700
+Message-ID: <3d34a25b-5311-e660-a724-b1c11bbaf5fc@quicinc.com>
+Date:   Thu, 23 Mar 2023 03:38:31 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-7-3ead1e418fe4@linaro.org>
-References: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
-In-Reply-To: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
-To:     Rob Clark <robdclark@gmail.com>,
-        Abhinav Kumar <quic_abhinavk@quicinc.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Sean Paul <sean@poorly.run>, David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Lee Jones <lee@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [RFC PATCH v3 1/5] ufs: mcq: Add supporting functions for mcq
+ abort
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <bvanassche@acm.org>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        linux-scsi@vger.kernel.org,
-        Neil Armstrong <neil.armstrong@linaro.org>
-X-Mailer: b4 0.12.1
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1679564391.git.quic_nguyenb@quicinc.com>
+ <90b7b370269674fd7c0f505b59e0993c5b95a316.1679564391.git.quic_nguyenb@quicinc.com>
+ <e251e5c3-152e-3ebe-aa9f-c5cfa36cfc3f@oracle.com>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <e251e5c3-152e-3ebe-aa9f-c5cfa36cfc3f@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Ut5nuLZeD5l4MgNjxhop62huPm-FlNFM
+X-Proofpoint-ORIG-GUID: Ut5nuLZeD5l4MgNjxhop62huPm-FlNFM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-22_21,2023-03-22_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 spamscore=0 impostorscore=0
+ priorityscore=1501 clxscore=1011 mlxscore=0 bulkscore=0 lowpriorityscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303150002 definitions=main-2303230080
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fixes the following DT bindings check error:
-ufshc@1d84000: Unevaluated properties are not allowed ('reg-names' was unexpected)
-
-Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
----
- arch/arm64/boot/dts/qcom/sm8450.dtsi | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-index ef9bae2e6acc..8ecc48c7c5ef 100644
---- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-@@ -3996,7 +3996,6 @@ ufs_mem_hc: ufshc@1d84000 {
- 				     "jedec,ufs-2.0";
- 			reg = <0 0x01d84000 0 0x3000>,
- 			      <0 0x01d88000 0 0x8000>;
--			reg-names = "std", "ice";
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
- 			phys = <&ufs_mem_phy_lanes>;
- 			phy-names = "ufsphy";
-
--- 
-2.34.1
+On 3/23/2023 3:07 AM, John Garry wrote:
+> On 23/03/2023 09:53, Bao D. Nguyen wrote:
+>> +static int ufshcd_mcq_poll_register(void __iomem *reg, u32 mask,
+>> +            u32 val, unsigned long timeout_ms)
+>> +{
+>> +    unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+>> +    int err = 0;
+>> +
+>> +    /* ignore bits that we don't intend to wait on */
+>> +    val = val & mask;
+>> +
+>> +    while ((readl(reg) & mask) != val) {
+>> +        usleep_range(10, 50);
+>> +        if (time_after(jiffies, timeout)) {
+>> +            err = -ETIMEDOUT;
+>> +            break;
+>> +        }
+>
+> This looks just like readl_poll_timeout()
+I will make the change in the next revision. Thanks John.
+>
+>> +    }
+>> +
+>> +    return err;
+>> +}
+>
 
