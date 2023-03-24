@@ -2,80 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1EFCC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 01:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2501C6FD1C
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 03:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229834AbjCXBlx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 21:41:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58120 "EHLO
+        id S230501AbjCXDmS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Mar 2023 23:42:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229499AbjCXBlv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 21:41:51 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7C8D40C0;
-        Thu, 23 Mar 2023 18:41:50 -0700 (PDT)
-Received: from canpemm500010.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PjPyV3RdwzKrWD;
-        Fri, 24 Mar 2023 09:39:30 +0800 (CST)
-Received: from [10.174.178.185] (10.174.178.185) by
- canpemm500010.china.huawei.com (7.192.105.118) with Microsoft SMTP Server
+        with ESMTP id S229794AbjCXDmQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 23:42:16 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35E00211F8;
+        Thu, 23 Mar 2023 20:42:14 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PjScP4L0xzbcCX;
+        Fri, 24 Mar 2023 11:39:01 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 24 Mar 2023 09:41:48 +0800
-Subject: Re: [PATCH] scsi: fix hung_task when change host from recovery to
- running via sysfs
-To:     Mike Christie <michael.christie@oracle.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Ye Bin <yebin@huaweicloud.com>
-References: <20230321084204.1860900-1-yebin@huaweicloud.com>
- <20230321142237.GC311313@t480-pf1aa2c2.fritz.box>
- <641A58D0.1020205@huawei.com>
- <1df01cd0-e56e-b615-9418-e3fd69819798@oracle.com>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From:   "yebin (H)" <yebin10@huawei.com>
-Message-ID: <641CFFDC.2040201@huawei.com>
-Date:   Fri, 24 Mar 2023 09:41:48 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+ 15.1.2507.21; Fri, 24 Mar 2023 11:42:10 +0800
+Message-ID: <0a6fc4bd-82a1-3200-3061-4634531b5a63@huawei.com>
+Date:   Fri, 24 Mar 2023 11:42:09 +0800
 MIME-Version: 1.0
-In-Reply-To: <1df01cd0-e56e-b615-9418-e3fd69819798@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.185]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- canpemm500010.china.huawei.com (7.192.105.118)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <linfeilong@huawei.com>, <louhongxiang@huawei.com>
+References: <20230323115601.178494-1-haowenchao2@huawei.com>
+ <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
+ <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
+ <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
+From:   "haowenchao (C)" <haowenchao2@huawei.com>
+In-Reply-To: <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2023/3/24 0:12, Mike Christie wrote:
-> On 3/21/23 8:24 PM, yebin (H) wrote:
->>
->> On 2023/3/21 22:22, Benjamin Block wrote:
->>> On Tue, Mar 21, 2023 at 04:42:04PM +0800, Ye Bin wrote:
->>>> From: Ye Bin <yebin10@huawei.com>
+On 2023/3/24 0:25, John Garry wrote:
+> On 23/03/2023 13:13, haowenchao (C) wrote:
+>> On 2023/3/23 20:40, John Garry wrote:
+>>> On 23/03/2023 11:55, Wenchao Hao wrote:
+>>>> The original error injection mechanism was based on scsi_host which
+>>>> could not inject fault for a single SCSI device.
 >>>>
->>>> When do follow test:
->>>> Step1: echo  "recovery" > /sys/class/scsi_host/host0/state
->>> Hmm, that make me wonder, what potential use-case this is for? Just
->>> testing?
->> Thank you for your reply.
->> Actually, I'm looking for a way to temporarily stop sending IO to the driver.
-> Is this just for testing something or does a user/app need this
-> functionality for something?
+>>>> This patchset provides the ability to inject errors for a single
+>>>> SCSI device. Now we supports inject timeout errors, queuecommand
+>>>> errors, and hostbyte, driverbyte, statusbyte, and sense data for
+>>>> specific SCSI Command.
+>>>
+>>> There is already a basic mechanism to generate errors - like timeouts - on "nth" command. Can you say why you want this new interface? What special scenarios are you trying to test/validate (which could not be achieved based on the current mechanism)?
+>>>
+>>
+>> I am testing a new error handle policy which is based on single scsi_device
+>> without set host to RECOVERY. So I need a method to generate errors for
+>> single SCSI devices.
+>>
+>> While we can not generate errors for single device with current mechanism
+>> because it is designed for host-wide error generation.
+>>
+>>> With this series we would have 2x methods to inject errors, which is less than ideal, and they seem to possibly conflict as well, e.g. I set timeout for nth command via current interface and then use the new interface to set timeout for some other cadence. What behavior to expect ...?
+>>
+>> I did not take this issue in consideration. I now assume the users would
+>> not use these 2 methods at same time.
+>>
+>> What's more, I don not know where to write the usage of this newly added
+>> interface, maybe we can explain these in doc?
+> 
+> sysfs entries are described in Documentation/ABI, but please don't add elaborate programming interfaces in sysfs files (like in these patches) - a sysfs file should be just for reading or writing a single value
+> 
 
-This can be used to store IO in the block layer, enabling some fault recovery
-that is insensitive to the upper layer.Also want to use this state to test the
-block layer.
+If sysfs is not recommended, what about proc?
 
-> We used to be able to block specific devices but we removed that.
-> It was useful for people like us where we need to do some low kernel
-> testing like testing for how upper layers handle IO hangs, but I
-> think it was not useful for other users so it was removed.
->
-> .
->
+>>
+>>>
+>>> I'm not saying that I am a huge fan of the current inject mechanism, but at the very least you need to provide more justification for this series.
+>>>>>
+>>>> The first patch add an sysfs interface to add and inquiry single
+>>>> device's error injection info; the second patch defined how to remove
+>>>> an injection which has been added. The following 3 patches use the
+>>>> injection info and generate the related error type.
+>>>>
+>>>> Wenchao Hao (5):
+>>>>    scsi:scsi_debug: Add sysfs interface to manage scsi devices' error
+>>>>      injection
+>>>>    scsi:scsi_debug: Define grammar to remove added error injection
+>>>>    scsi:scsi_debug: timeout command if the error is injected
+>>>>    scsi:scsi_debug: Return failed value if the error is injected
+>>>>    scsi:scsi_debug: set command's result and sense data if the error is
+>>>>      injected
+>>>>
+>>>>   drivers/scsi/scsi_debug.c | 296 ++++++++++++++++++++++++++++++++++++++
+>>>>   1 file changed, 296 insertions(+)
+>>>>
+>>>
+>>>
+>>
+> 
 
