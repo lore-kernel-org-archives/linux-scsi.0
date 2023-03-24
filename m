@@ -2,69 +2,203 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BFE0C6FD20
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 16:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33253C6FD20
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 17:32:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232012AbjCXQbM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 12:31:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40634 "EHLO
+        id S231834AbjCXRcK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 13:32:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231823AbjCXQbJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 12:31:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B8F3469C;
-        Fri, 24 Mar 2023 09:31:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S231836AbjCXRcE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 13:32:04 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D1A117CC9;
+        Fri, 24 Mar 2023 10:32:00 -0700 (PDT)
+Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 05BDB62BD4;
-        Fri, 24 Mar 2023 16:31:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6A9F9C433EF;
-        Fri, 24 Mar 2023 16:31:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679675467;
-        bh=FrqcRhfq8Ns4v7PkuzfuLpnvv8DbtBSesc4kWRkQcpM=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=XU8DGjvkTHtANmBsg1h4bA4hyAru2QEQqSDnFswpAbLA5bCkW0dOmwn/RSuuuWsuw
-         Q3LaeeEFUS6YF9P4Oy2J77hG61qtHZ3Kvy+j2oqbf+UvdfBgWBQpW210hs8bd6ykJc
-         SB26w2aBgk9jzvv+nqlL0usaT4gwlwfQ3Q/OHa5e3sdJyRwFe1hZvBvqLeGJXJtD0j
-         1npz7Gpt871xVSVNuWdIzn4dK1ISBZflxDd6e6rCRjRM3uY5E5gRX8V/VOJeva23tG
-         7BygyJrrAm/YSSbBsrEnssS4fpkPimLOKuauU/+OLmlInbUbKOoRH9r1OYUChp9KrA
-         UyLuuuZ231fdg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 59655E2A039;
-        Fri, 24 Mar 2023 16:31:07 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.3-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
-References: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: a13faca032acbf2699293587085293bdfaafc8ae
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 6dd74c51b48567e6ec56276aa35c8d25f6472f6f
-Message-Id: <167967546735.8924.4856686892293566084.pr-tracker-bot@kernel.org>
-Date:   Fri, 24 Mar 2023 16:31:07 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 686BC7606D;
+        Fri, 24 Mar 2023 17:31:59 +0000 (UTC)
+Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
+        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 57E0A2ECDC;
+        Fri, 24 Mar 2023 17:31:59 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
+        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
+        with ESMTP id f6B9S7shUpQr; Fri, 24 Mar 2023 17:31:58 +0000 (UTC)
+Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 0B9202ECDB;
+        Fri, 24 Mar 2023 17:31:57 +0000 (UTC)
+Message-ID: <5763743e-1923-d06e-04b7-19dfa0e8e2f4@interlog.com>
+Date:   Fri, 24 Mar 2023 13:31:57 -0400
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
+Content-Language: en-CA
+To:     "haowenchao (C)" <haowenchao2@huawei.com>,
+        John Garry <john.g.garry@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     linfeilong@huawei.com, louhongxiang@huawei.com
+References: <20230323115601.178494-1-haowenchao2@huawei.com>
+ <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
+ <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
+ <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
+ <fd810b7f-5520-1054-735f-8434a237c6e4@interlog.com>
+ <164655df-0db3-0ec5-fb84-ff52204577e9@huawei.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <164655df-0db3-0ec5-fb84-ff52204577e9@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Thu, 23 Mar 2023 19:36:37 -0400:
+On 2023-03-23 23:42, haowenchao (C) wrote:
+> On 2023/3/24 1:24, Douglas Gilbert wrote:
+>> On 2023-03-23 12:25, John Garry wrote:
+>>> On 23/03/2023 13:13, haowenchao (C) wrote:
+>>>> On 2023/3/23 20:40, John Garry wrote:
+>>>>> On 23/03/2023 11:55, Wenchao Hao wrote:
+>>>>>> The original error injection mechanism was based on scsi_host which
+>>>>>> could not inject fault for a single SCSI device.
+>>>>>>
+>>>>>> This patchset provides the ability to inject errors for a single
+>>>>>> SCSI device. Now we supports inject timeout errors, queuecommand
+>>>>>> errors, and hostbyte, driverbyte, statusbyte, and sense data for
+>>>>>> specific SCSI Command.
+>>>>>
+>>>>> There is already a basic mechanism to generate errors - like timeouts - on 
+>>>>> "nth" command. Can you say why you want this new interface? What special 
+>>>>> scenarios are you trying to test/validate (which could not be achieved 
+>>>>> based on the current mechanism)?
+>>>>>
+>>>>
+>>>> I am testing a new error handle policy which is based on single scsi_device
+>>>> without set host to RECOVERY. So I need a method to generate errors for
+>>>> single SCSI devices.
+>>>>
+>>>> While we can not generate errors for single device with current mechanism
+>>>> because it is designed for host-wide error generation.
+>>>>
+>>>>> With this series we would have 2x methods to inject errors, which is less 
+>>>>> than ideal, and they seem to possibly conflict as well, e.g. I set timeout 
+>>>>> for nth command via current interface and then use the new interface to set 
+>>>>> timeout for some other cadence. What behavior to expect ...?
+>>>>
+>>>> I did not take this issue in consideration. I now assume the users would
+>>>> not use these 2 methods at same time.
+>>>>
+>>>> What's more, I don not know where to write the usage of this newly added
+>>>> interface, maybe we can explain these in doc?
+>>>
+>>> sysfs entries are described in Documentation/ABI, but please don't add 
+>>> elaborate programming interfaces in sysfs files (like in these patches) - a 
+>>> sysfs file should be just for reading or writing a single value
+>>
+>> Hi,
+>> Maybe this link might help for scsi_debug documentation:
+>>      https://doug-gilbert.github.io/scsi_debug.html
+>>
+>> And rather than sysfs for complicated, per (pseudo_ device
+>> settings, perhaps we could think about a SCSI mechanism like
+>> the "Unit Attention" mode page [0x0] which is vendor specific
+>> and used by Seagate and WDC for this sort of thing.
+>> A framework is already in the scsi_debug driver to change
+>> some mode page settings:
+>>
+>> # sdparm /dev/sg0
+>>      /dev/sg0: Linux     scsi_debug        0191
+>> Read write error recovery mode page:
+>>    AWRE          1  [cha: n, def:  1]
+>>    ARRE          1  [cha: n, def:  1]
+>>    PER           0  [cha: n, def:  0]
+>> Caching (SBC) mode page:
+>>    WCE           1  [cha: y, def:  1]
+>>    RCD           0  [cha: n, def:  0]
+>> Control mode page:
+>>    SWP           0  [cha: n, def:  0]
+>> Informational exceptions control mode page:
+>>    EWASC         0  [cha: n, def:  0]
+>>    DEXCPT        1  [cha: n, def:  1]
+>>    MRIE          0  [cha: y, def:  0]
+>>
+>> As can be seen WCE and MRIE are changeable, so
+>>
+>> # sdparm --clear=WCE /dev/sg0
+>> # sdparm --get=WCE /dev/sg0
+>>      /dev/sg0: Linux     scsi_debug        0191
+>> WCE           0  [cha: y, def:  1]
+>>
+>>
+>> Doug Gilbert
+>>
+>>
+> 
+> Do you mean define scsi_debug's own format of mode page0(Vendor specific)
+> which contains these error injection info, and set/get these parameters
+> via sdparm?
+> If so, do we need to modify the sdparm code for these changes?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Not a problem.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/6dd74c51b48567e6ec56276aa35c8d25f6472f6f
+> I want to add more injections in scsi_debug to test the SCSI middle layer,
+> for example, control return SUCCESS in scsi_debug_abort() or
+> scsi_debug_device_reset().
+> 
+> These injections are more oriented to developers to trigger and observe
+> the error handler of SCSI middle layer.
+> 
+> We can extend other error injections conveniently via my interface,
+> for example, add a new error code to add a new injection to control the
+> return value of scsi_debug_abort().
+> 
+> If it's not recommended to add this interface in sysfs, what about proc? Like
+> /proc/scsi/scsi, we can write "scsi remove-single-device h:c:t:l" to manage
+> device.
 
-Thank you!
+In the past, procfs has been used for this sort of thing
+but the powers that be want to phase that usage out.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+debugfs, even though it is usually mounted under sysfs at
+/sys/kernel/debug , does not seem to have the "one value
+per variable" restriction. So debugfs or configfs
+( /sys/kernel/config ) might be better candidates.
+See 'df -ahT' .
+
+>>>>> I'm not saying that I am a huge fan of the current inject mechanism, but at 
+>>>>> the very least you need to provide more justification for this series.
+>>>>>>>
+>>>>>> The first patch add an sysfs interface to add and inquiry single
+>>>>>> device's error injection info; the second patch defined how to remove
+>>>>>> an injection which has been added. The following 3 patches use the
+>>>>>> injection info and generate the related error type.
+>>>>>>
+>>>>>> Wenchao Hao (5):
+>>>>>>    scsi:scsi_debug: Add sysfs interface to manage scsi devices' error
+>>>>>>      injection
+>>>>>>    scsi:scsi_debug: Define grammar to remove added error injection
+>>>>>>    scsi:scsi_debug: timeout command if the error is injected
+>>>>>>    scsi:scsi_debug: Return failed value if the error is injected
+>>>>>>    scsi:scsi_debug: set command's result and sense data if the error is
+>>>>>>      injected
+>>>>>>
+>>>>>>   drivers/scsi/scsi_debug.c | 296 ++++++++++++++++++++++++++++++++++++++
+>>>>>>   1 file changed, 296 insertions(+)
+>>>>>>
+>>>>>
+>>>>>
+>>>>
+>>>
+>>
+>>
+> 
+
