@@ -2,203 +2,140 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33253C6FD20
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 17:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C63C6FD20
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 18:18:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231834AbjCXRcK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 13:32:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54694 "EHLO
+        id S231639AbjCXSSP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 14:18:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231836AbjCXRcE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 13:32:04 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D1A117CC9;
-        Fri, 24 Mar 2023 10:32:00 -0700 (PDT)
-Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 686BC7606D;
-        Fri, 24 Mar 2023 17:31:59 +0000 (UTC)
-Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
-        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 57E0A2ECDC;
-        Fri, 24 Mar 2023 17:31:59 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
-        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
-        with ESMTP id f6B9S7shUpQr; Fri, 24 Mar 2023 17:31:58 +0000 (UTC)
-Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 0B9202ECDB;
-        Fri, 24 Mar 2023 17:31:57 +0000 (UTC)
-Message-ID: <5763743e-1923-d06e-04b7-19dfa0e8e2f4@interlog.com>
-Date:   Fri, 24 Mar 2023 13:31:57 -0400
+        with ESMTP id S230190AbjCXSSN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 14:18:13 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D78A6A70;
+        Fri, 24 Mar 2023 11:18:09 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32OIE3SS011947;
+        Fri, 24 Mar 2023 18:17:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2022-7-12;
+ bh=rej/w0yBsHdzYkty3qZTIcOQI1jK0Mox+FFsFSqnNv8=;
+ b=gXFXWo/U0+9qr8zzpk2eVkhZYJ0FEExjLYE76ljJb7XbRJHt++867XhEtalaLdjzQt33
+ DGhWysLVjM7lSKd+LenNxuv2xfmMg8wq8bwIyX/aLd7vgmtownAjsiGdqGCuUmF7IdG/
+ QuVRh2VqITgGosOL1d5BC38XrkvraJa2g9rMXBjFPYfSGy4UzzihURW/JJaIWtz2qJPZ
+ DZcc5gCh1BpWJqbPxuaRydMHRZ38BXWmFRyMmjDqdPJ8Z3MlvfTvclvhB9sAsH2N+H5E
+ ZSLKKTG1paaHvPfmlempPIP+emhucUY2JJHd7YsTElrQR+SEZ8tMjGomuYqxE28ojr9L Dw== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3phgy9g08a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Mar 2023 18:17:49 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32OGnJYx001315;
+        Fri, 24 Mar 2023 18:17:48 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3pgxk4bx3x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Mar 2023 18:17:48 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32OIHiEL021017;
+        Fri, 24 Mar 2023 18:17:47 GMT
+Received: from mnchrist-mac.us.oracle.com (dhcp-10-154-153-54.vpn.oracle.com [10.154.153.54])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3pgxk4bx19-2;
+        Fri, 24 Mar 2023 18:17:47 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        snitzer@kernel.org, axboe@kernel.dk,
+        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
+        kbusch@kernel.org, target-devel@vger.kernel.org
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Subject: [PATCH v5 01/18] block: Add PR callouts for read keys and reservation
+Date:   Fri, 24 Mar 2023 13:17:24 -0500
+Message-Id: <20230324181741.13908-2-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230324181741.13908-1-michael.christie@oracle.com>
+References: <20230324181741.13908-1-michael.christie@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
-Content-Language: en-CA
-To:     "haowenchao (C)" <haowenchao2@huawei.com>,
-        John Garry <john.g.garry@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     linfeilong@huawei.com, louhongxiang@huawei.com
-References: <20230323115601.178494-1-haowenchao2@huawei.com>
- <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
- <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
- <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
- <fd810b7f-5520-1054-735f-8434a237c6e4@interlog.com>
- <164655df-0db3-0ec5-fb84-ff52204577e9@huawei.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <164655df-0db3-0ec5-fb84-ff52204577e9@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-24_11,2023-03-24_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ mlxlogscore=999 spamscore=0 adultscore=0 bulkscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2303240143
+X-Proofpoint-GUID: SEAyr6A4ObJgZIJbyXP6stjTQzwUjTEA
+X-Proofpoint-ORIG-GUID: SEAyr6A4ObJgZIJbyXP6stjTQzwUjTEA
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-03-23 23:42, haowenchao (C) wrote:
-> On 2023/3/24 1:24, Douglas Gilbert wrote:
->> On 2023-03-23 12:25, John Garry wrote:
->>> On 23/03/2023 13:13, haowenchao (C) wrote:
->>>> On 2023/3/23 20:40, John Garry wrote:
->>>>> On 23/03/2023 11:55, Wenchao Hao wrote:
->>>>>> The original error injection mechanism was based on scsi_host which
->>>>>> could not inject fault for a single SCSI device.
->>>>>>
->>>>>> This patchset provides the ability to inject errors for a single
->>>>>> SCSI device. Now we supports inject timeout errors, queuecommand
->>>>>> errors, and hostbyte, driverbyte, statusbyte, and sense data for
->>>>>> specific SCSI Command.
->>>>>
->>>>> There is already a basic mechanism to generate errors - like timeouts - on 
->>>>> "nth" command. Can you say why you want this new interface? What special 
->>>>> scenarios are you trying to test/validate (which could not be achieved 
->>>>> based on the current mechanism)?
->>>>>
->>>>
->>>> I am testing a new error handle policy which is based on single scsi_device
->>>> without set host to RECOVERY. So I need a method to generate errors for
->>>> single SCSI devices.
->>>>
->>>> While we can not generate errors for single device with current mechanism
->>>> because it is designed for host-wide error generation.
->>>>
->>>>> With this series we would have 2x methods to inject errors, which is less 
->>>>> than ideal, and they seem to possibly conflict as well, e.g. I set timeout 
->>>>> for nth command via current interface and then use the new interface to set 
->>>>> timeout for some other cadence. What behavior to expect ...?
->>>>
->>>> I did not take this issue in consideration. I now assume the users would
->>>> not use these 2 methods at same time.
->>>>
->>>> What's more, I don not know where to write the usage of this newly added
->>>> interface, maybe we can explain these in doc?
->>>
->>> sysfs entries are described in Documentation/ABI, but please don't add 
->>> elaborate programming interfaces in sysfs files (like in these patches) - a 
->>> sysfs file should be just for reading or writing a single value
->>
->> Hi,
->> Maybe this link might help for scsi_debug documentation:
->>      https://doug-gilbert.github.io/scsi_debug.html
->>
->> And rather than sysfs for complicated, per (pseudo_ device
->> settings, perhaps we could think about a SCSI mechanism like
->> the "Unit Attention" mode page [0x0] which is vendor specific
->> and used by Seagate and WDC for this sort of thing.
->> A framework is already in the scsi_debug driver to change
->> some mode page settings:
->>
->> # sdparm /dev/sg0
->>      /dev/sg0: Linux     scsi_debug        0191
->> Read write error recovery mode page:
->>    AWRE          1  [cha: n, def:  1]
->>    ARRE          1  [cha: n, def:  1]
->>    PER           0  [cha: n, def:  0]
->> Caching (SBC) mode page:
->>    WCE           1  [cha: y, def:  1]
->>    RCD           0  [cha: n, def:  0]
->> Control mode page:
->>    SWP           0  [cha: n, def:  0]
->> Informational exceptions control mode page:
->>    EWASC         0  [cha: n, def:  0]
->>    DEXCPT        1  [cha: n, def:  1]
->>    MRIE          0  [cha: y, def:  0]
->>
->> As can be seen WCE and MRIE are changeable, so
->>
->> # sdparm --clear=WCE /dev/sg0
->> # sdparm --get=WCE /dev/sg0
->>      /dev/sg0: Linux     scsi_debug        0191
->> WCE           0  [cha: y, def:  1]
->>
->>
->> Doug Gilbert
->>
->>
-> 
-> Do you mean define scsi_debug's own format of mode page0(Vendor specific)
-> which contains these error injection info, and set/get these parameters
-> via sdparm?
-> If so, do we need to modify the sdparm code for these changes?
+Add callouts for reading keys and reservations. This allows LIO to support
+the READ_KEYS and READ_RESERVATION commands and will allow dm-multipath
+to optimize it's error handling so it can check if it's getting an error
+because there's an existing reservation or if we need to retry different
+paths.
 
-Not a problem.
+Note: This only initially adds the struct definitions in the kernel as I'm
+not sure if we wanted to export the interface to userspace yet. read_keys
+and read_reservation are exactly what dm-multipath and LIO need, but for a
+userspace interface we may want something like SCSI's READ_FULL_STATUS and
+NVMe's report reservation commands. Those are overkill for dm/LIO and
+READ_FULL_STATUS is sometimes broken for SCSI devices.
 
-> I want to add more injections in scsi_debug to test the SCSI middle layer,
-> for example, control return SUCCESS in scsi_debug_abort() or
-> scsi_debug_device_reset().
-> 
-> These injections are more oriented to developers to trigger and observe
-> the error handler of SCSI middle layer.
-> 
-> We can extend other error injections conveniently via my interface,
-> for example, add a new error code to add a new injection to control the
-> return value of scsi_debug_abort().
-> 
-> If it's not recommended to add this interface in sysfs, what about proc? Like
-> /proc/scsi/scsi, we can write "scsi remove-single-device h:c:t:l" to manage
-> device.
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/pr.h | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-In the past, procfs has been used for this sort of thing
-but the powers that be want to phase that usage out.
-
-debugfs, even though it is usually mounted under sysfs at
-/sys/kernel/debug , does not seem to have the "one value
-per variable" restriction. So debugfs or configfs
-( /sys/kernel/config ) might be better candidates.
-See 'df -ahT' .
-
->>>>> I'm not saying that I am a huge fan of the current inject mechanism, but at 
->>>>> the very least you need to provide more justification for this series.
->>>>>>>
->>>>>> The first patch add an sysfs interface to add and inquiry single
->>>>>> device's error injection info; the second patch defined how to remove
->>>>>> an injection which has been added. The following 3 patches use the
->>>>>> injection info and generate the related error type.
->>>>>>
->>>>>> Wenchao Hao (5):
->>>>>>    scsi:scsi_debug: Add sysfs interface to manage scsi devices' error
->>>>>>      injection
->>>>>>    scsi:scsi_debug: Define grammar to remove added error injection
->>>>>>    scsi:scsi_debug: timeout command if the error is injected
->>>>>>    scsi:scsi_debug: Return failed value if the error is injected
->>>>>>    scsi:scsi_debug: set command's result and sense data if the error is
->>>>>>      injected
->>>>>>
->>>>>>   drivers/scsi/scsi_debug.c | 296 ++++++++++++++++++++++++++++++++++++++
->>>>>>   1 file changed, 296 insertions(+)
->>>>>>
->>>>>
->>>>>
->>>>
->>>
->>
->>
-> 
+diff --git a/include/linux/pr.h b/include/linux/pr.h
+index 94ceec713afe..3003daec28a5 100644
+--- a/include/linux/pr.h
++++ b/include/linux/pr.h
+@@ -4,6 +4,18 @@
+ 
+ #include <uapi/linux/pr.h>
+ 
++struct pr_keys {
++	u32	generation;
++	u32	num_keys;
++	u64	keys[];
++};
++
++struct pr_held_reservation {
++	u64		key;
++	u32		generation;
++	enum pr_type	type;
++};
++
+ struct pr_ops {
+ 	int (*pr_register)(struct block_device *bdev, u64 old_key, u64 new_key,
+ 			u32 flags);
+@@ -14,6 +26,19 @@ struct pr_ops {
+ 	int (*pr_preempt)(struct block_device *bdev, u64 old_key, u64 new_key,
+ 			enum pr_type type, bool abort);
+ 	int (*pr_clear)(struct block_device *bdev, u64 key);
++	/*
++	 * pr_read_keys - Read the registered keys and return them in the
++	 * pr_keys->keys array. The keys array will have been allocated at the
++	 * end of the pr_keys struct, and pr_keys->num_keys must be set to the
++	 * number of keys the array can hold. If there are more than can fit
++	 * in the array, success will still be returned and pr_keys->num_keys
++	 * will reflect the total number of keys the device contains, so the
++	 * caller can retry with a larger array.
++	 */
++	int (*pr_read_keys)(struct block_device *bdev,
++			struct pr_keys *keys_info);
++	int (*pr_read_reservation)(struct block_device *bdev,
++			struct pr_held_reservation *rsv);
+ };
+ 
+ #endif /* LINUX_PR_H */
+-- 
+2.25.1
 
