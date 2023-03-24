@@ -2,186 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA137C6FD1C
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 15:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 683BBC6FD20
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 16:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232306AbjCXPVZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 11:21:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49400 "EHLO
+        id S231274AbjCXQCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 12:02:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232191AbjCXPVX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 11:21:23 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0923613D5C;
-        Fri, 24 Mar 2023 08:21:23 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id gp15-20020a17090adf0f00b0023d1bbd9f9eso5407127pjb.0;
-        Fri, 24 Mar 2023 08:21:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679671282;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GuNSBy6vfFDe28dNRfX4SB+2S6cCkmFLQ9UkLH9oJas=;
-        b=SJEzPH6GvQz6+WQY4BW9AX5dwFdAl/ZJkoJXElxyABCW1+/4hkHvUKDrwS0xkxoQcS
-         aTyvpDBa4duQG3lbOWprm/MSyF9yKsPE1YVeGWuxzxuM8lpLGov/qkXiRAWqnoz9nxCK
-         nKZZKqdP3uuJ3R2XLjAFZVuAmoh8z0hxbZhlUE/JAeMlcJElGl/iNIn0ObgipG5zIROD
-         orWNjLguakkU9CM6VSFSOejapFjV8TVbr8ZslRwWHh9aS2pEhN+VI+qiGMwqcKnwTE5B
-         aDNE0Rz30lVzEBK69E5kPVO5m1a9Dyn/HzHy7c7j/DEM4Zj6NlgEl9YHUtkuwbaE0KF5
-         L1Zw==
+        with ESMTP id S229441AbjCXQCD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 12:02:03 -0400
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97D6519C4C;
+        Fri, 24 Mar 2023 09:02:02 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id kq3so2178076plb.13;
+        Fri, 24 Mar 2023 09:02:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679671282;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=GuNSBy6vfFDe28dNRfX4SB+2S6cCkmFLQ9UkLH9oJas=;
-        b=TyRRjAh+yIT0wawYEmiOf0olE1k9NFbWZ0Cp5nz5CGl1ylF05IdJW36/PJaXRYyB+Q
-         MrFZX6ugJlZyDx+nmcG8OA0WWA4GJD/oFm6Au46pLNcLpLFCxOJaZpr3YL74lHmCQ5uo
-         +9XTJO5i2ZP8tNNOAJQV2O9L0mgu0l2KcEq4rGVcHG5RmkwSR49SvIeTS23sJ1vtlxmY
-         78PjwRwMgGXmBzkvCzpZPYcMWJzVnluTE1nKu4MoxOBh0sY00prKJ3RCQ9bUQup9YE6I
-         sU9PLvlnV06RULjqh57imbvAwhzxNbe51KagdUXOoiUM+f1IfzjzxUzLBf60l/Iw77Cf
-         wt5A==
-X-Gm-Message-State: AAQBX9e5aO4wAD6FAEFCavzTICQ8VJ0FuIcXpZlTP+NeWvmDvYplJYvK
-        sdUctddgO16byuuuS3dLvKZsDKDubQ/Hzty+8uE=
-X-Google-Smtp-Source: AKy350apRZVKRldeUfMtQzstR+ipp+PqDrH9j3UA7h11zbpM2D7WsRhHH8Um9MNbelje5a1bCxt58vdoDxql9Zbz1vw=
-X-Received: by 2002:a17:902:768b:b0:1a1:f0ad:8622 with SMTP id
- m11-20020a170902768b00b001a1f0ad8622mr985496pll.12.1679671282323; Fri, 24 Mar
- 2023 08:21:22 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1679673722;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TQeDTswkf5n66eJVZ3PJ439rYq/MSFC/te2Yd7ITppg=;
+        b=3uIFI7OazQrVqTYZp7kS+AcfQ05NuvK+DptlKMoSAb5d1jtSSiFjloM3MjWs2ftqBm
+         OL2LJSJWKL11AgkdXgipPqrhgIVOqwg7qX1dmNKrF3dve4zKj6mCPPBdpi5WXAFHcp0l
+         m8vy39qXmSX68Ed4YHsjZlzgKPFztcqDCQ38KnXMxTLkVLFpMg4OpBAXytEKDCGBU+0R
+         XiribBI6U0RL473QhDac4Di4gcjyg6cLogp6X2+MLfygbQfvfYKgQbR+RqagjKCaLQv1
+         324KL+iCUBC43nuGj5arPrtf0AoTqayuhwEQm9+kAWCWeDyO7pBJOP6hSq3J0dodYsXi
+         V5aA==
+X-Gm-Message-State: AO0yUKXDHZbfFISuILK5EoHCWBfWlbxnXGKXXo9G2sxKgTyOFxQZlFi/
+        cllrEN3q0w1M/z7m2Y/BehQ=
+X-Google-Smtp-Source: AK7set8+oF2VqQfXa1R/1dsnOqyLOVngF/N0nrkA6UdHQI51ywjXPbPatvD3t9wajutj7VAmZFGQzg==
+X-Received: by 2002:a05:6a20:cc59:b0:db:9a60:a52d with SMTP id hq25-20020a056a20cc5900b000db9a60a52dmr2663193pzb.41.1679673722000;
+        Fri, 24 Mar 2023 09:02:02 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:2421:e16e:b98f:7e76? ([2620:15c:211:201:2421:e16e:b98f:7e76])
+        by smtp.gmail.com with ESMTPSA id i22-20020aa78b56000000b005aa60d8545esm14043267pfd.61.2023.03.24.09.01.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 24 Mar 2023 09:02:00 -0700 (PDT)
+Message-ID: <0a152b0a-4fa9-c727-6e41-910e1eb71e2c@acm.org>
+Date:   Fri, 24 Mar 2023 09:01:58 -0700
 MIME-Version: 1.0
-References: <20230318081303.792969-1-zyytlz.wz@163.com> <bce4f9d8-e4b9-39e6-4534-34b7dc7d43ac@oracle.com>
- <CAJedcCx9s9HSbJEEb_RUmW7yjSMkYaoXhuH9qrqYo1smpL=iJw@mail.gmail.com> <CO6PR18MB44199B7F8AABE14ED404CF61D8879@CO6PR18MB4419.namprd18.prod.outlook.com>
-In-Reply-To: <CO6PR18MB44199B7F8AABE14ED404CF61D8879@CO6PR18MB4419.namprd18.prod.outlook.com>
-From:   Zheng Hacker <hackerzheng666@gmail.com>
-Date:   Fri, 24 Mar 2023 23:21:09 +0800
-Message-ID: <CAJedcCwgiLiLx7Uz6a3z67XQrOAUBHmfMvr1fenEnQ8MfmMtWg@mail.gmail.com>
-Subject: Re: [EXT] Re: [PATCH RESEND] scsi: qedi: Fix use after free bug in
- qedi_remove due to race condition
-To:     Manish Rangankar <mrangankar@marvell.com>
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Zheng Wang <zyytlz.wz@163.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "1395428693sheep@gmail.com" <1395428693sheep@gmail.com>,
-        "alex000young@gmail.com" <alex000young@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
+Content-Language: en-US
+To:     "haowenchao (C)" <haowenchao2@huawei.com>,
+        John Garry <john.g.garry@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     linfeilong@huawei.com, louhongxiang@huawei.com
+References: <20230323115601.178494-1-haowenchao2@huawei.com>
+ <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
+ <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
+ <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
+ <0a6fc4bd-82a1-3200-3061-4634531b5a63@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0a6fc4bd-82a1-3200-3061-4634531b5a63@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Manish Rangankar <mrangankar@marvell.com> =E4=BA=8E2023=E5=B9=B43=E6=9C=882=
-3=E6=97=A5=E5=91=A8=E5=9B=9B 18:17=E5=86=99=E9=81=93=EF=BC=9A
->
->
->
-> > -----Original Message-----
-> > From: Zheng Hacker <hackerzheng666@gmail.com>
-> > Sent: Thursday, March 23, 2023 9:15 AM
-> > To: Mike Christie <michael.christie@oracle.com>
-> > Cc: Zheng Wang <zyytlz.wz@163.com>; Nilesh Javali <njavali@marvell.com>=
-;
-> > Manish Rangankar <mrangankar@marvell.com>; GR-QLogic-Storage-
-> > Upstream <GR-QLogic-Storage-Upstream@marvell.com>;
-> > jejb@linux.ibm.com; martin.petersen@oracle.com; linux-
-> > scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > 1395428693sheep@gmail.com; alex000young@gmail.com
-> > Subject: [EXT] Re: [PATCH RESEND] scsi: qedi: Fix use after free bug in
-> > qedi_remove due to race condition
-> >
-> > External Email
-> >
-> > ----------------------------------------------------------------------
-> > Mike Christie <michael.christie@oracle.com> =E4=BA=8E2023=E5=B9=B43=E6=
-=9C=8821=E6=97=A5=E5=91=A8=E4=BA=8C 00:11=E5=86=99
-> > =E9=81=93=EF=BC=9A
-> > >
-> > > On 3/18/23 3:13 AM, Zheng Wang wrote:
-> > > > In qedi_probe, it calls __qedi_probe, which bound
-> > > > &qedi->recovery_work with qedi_recovery_handler and bound
-> > > > &qedi->board_disable_work with qedi_board_disable_work.
-> > > >
-> > > > When it calls qedi_schedule_recovery_handler, it will finally call
-> > > > schedule_delayed_work to start the work.
-> > > >
-> > > > When we call qedi_remove to remove the driver, there may be a
-> > > > sequence as follows:
-> > > >
-> > > > Fix it by finishing the work before cleanup in qedi_remove.
-> > > >
-> > > > CPU0                  CPU1
-> > > >
-> > > >                      |qedi_recovery_handler
-> > > > qedi_remove          |
-> > > >   __qedi_remove      |
-> > > > iscsi_host_free      |
-> > > > scsi_host_put        |
-> > > > //free shost         |
-> > > >                      |iscsi_host_for_each_session
-> > > >                      |//use qedi->shost
-> > > >
-> > > > Fixes: 4b1068f5d74b ("scsi: qedi: Add MFW error recovery process")
-> > > > Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
-> > > > ---
-> > > >  drivers/scsi/qedi/qedi_main.c | 4 ++++
-> > > >  1 file changed, 4 insertions(+)
-> > > >
-> > > > diff --git a/drivers/scsi/qedi/qedi_main.c
-> > > > b/drivers/scsi/qedi/qedi_main.c index f2ee49756df8..25223f6f5344
-> > > > 100644
-> > > > --- a/drivers/scsi/qedi/qedi_main.c
-> > > > +++ b/drivers/scsi/qedi/qedi_main.c
-> > > > @@ -2414,6 +2414,10 @@ static void __qedi_remove(struct pci_dev
-> > *pdev, int mode)
-> > > >       int rval;
-> > > >       u16 retry =3D 10;
-> > > >
-> > > > +     /*cancel work*/
-> > >
-> > > This comment is not needed. The name of the functions you are calling
-> > > have "cancel" and "work" in them so we know. If you want to add a
-> > > comment explain why the cancel calls are needed here.
-> > >
-> >
-> > Hi,
-> >
-> > Sorry for my late reply and thanks for your advice. Will remove it in t=
-he next
-> > version of patch.
-> >
-> > >
-> > > > +     cancel_delayed_work_sync(&qedi->recovery_work);
-> > > > +     cancel_delayed_work_sync(&qedi->board_disable_work);
-> > >
-> > >
-> > > How do you know after you have called cancel_delayed_work_sync that
-> > > schedule_recovery_handler or schedule_hw_err_handler can't be called?
-> > > I don't know the qed driver well, but it looks like you could have
-> > > operations still running, so after you cancel here one of those ops
-> > > could lead to them scheduling the work again.
-> > >
-> >
-> > Sorry I didn't know how to make sure there's no more schedule. But I do
-> > think this is important. Maybe there're someone else who can give us ad=
-vice.
-> >
-> > Best regards,
-> > Zheng
-> > >
->
-> Best place to call cancel_delayed_work_sync is after qedi_ops->stop(qedi-=
->cdev) and
-> qedi_ops->ll2->stop(qedi->cdev);, after these qed calls firmware will not=
- post any events to qedi driver.
->
+On 3/23/23 20:42, haowenchao (C) wrote:
+> If sysfs is not recommended, what about proc?
 
-Sorry for my late reply. Will apply that in next version.
+procfs is for process information and should not be used for any other 
+purpose.
 
-Best reagrds,
-Zheng
+Thanks,
 
-> Thanks,
-> Manish
->
+Bart.
+
