@@ -2,169 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88467C76195
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 03:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A86ECC77B60
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 06:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231355AbjCXDm2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Mar 2023 23:42:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60700 "EHLO
+        id S231387AbjCXGwy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 02:52:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231308AbjCXDm1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2023 23:42:27 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACE8229E09;
-        Thu, 23 Mar 2023 20:42:24 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PjScG6lTJzSnBj;
-        Fri, 24 Mar 2023 11:38:54 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 24 Mar 2023 11:42:22 +0800
-Message-ID: <164655df-0db3-0ec5-fb84-ff52204577e9@huawei.com>
-Date:   Fri, 24 Mar 2023 11:42:21 +0800
+        with ESMTP id S230372AbjCXGwx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 02:52:53 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA76124C80;
+        Thu, 23 Mar 2023 23:52:52 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 753F9B822AD;
+        Fri, 24 Mar 2023 06:52:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66CBDC433EF;
+        Fri, 24 Mar 2023 06:52:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679640770;
+        bh=eAgzktUw36k84XyIpPeAFS22zFe2LwUnrI5YTkK3tLk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Uy30E47500cQwy4yveoh3p8sqXsEoe+5WtY81PxbQuING23HmwERsmB7HB8++fsRL
+         6tf9dyoa+9lOSJDTyt8wAonTHUJ0J2SrrJaC/GykO8O2X81R5HlxhLGQiOswPNt15v
+         LBKYrhQ/4EyL5pWH9aYSkZf0utMxXoAMTpLO+bozn4KB0AlAclLd69fkP65H8p14bB
+         dQ4qZmtsnGVZ6bOEqV+QlcvaokRXCD0k2xn1sCYyZj8BvIQfmiZGbrrSS4IhJH2lFf
+         AeuQ51n2upKFnkTasj7teSd/zFmIgybVLp+nXod5NVPr4G+lsLl+ScgH1UzpcAA9Nh
+         FeR0MtGg+uDTg==
+Date:   Thu, 23 Mar 2023 23:52:47 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Neil Armstrong <neil.armstrong@linaro.org>
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Rob Clark <robdclark@gmail.com>,
+        Abhinav Kumar <quic_abhinavk@quicinc.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Sean Paul <sean@poorly.run>, David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Lee Jones <lee@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        linux-scsi@vger.kernel.org, Luca Weiss <luca.weiss@fairphone.com>
+Subject: Re: [PATCH 7/8] arm64: dts: qcom: sm8450: remove invalid reg-names
+ from ufs node
+Message-ID: <20230324065247.GA9598@sol.localdomain>
+References: <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-0-3ead1e418fe4@linaro.org>
+ <20230323-topic-sm8450-upstream-dt-bindings-fixes-v1-7-3ead1e418fe4@linaro.org>
+ <9614782e-0d78-e8f2-a438-452cfa86f80b@linaro.org>
+ <316d7d7d-b370-36e1-648a-400447d2dd47@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
-Content-Language: en-US
-To:     <dgilbert@interlog.com>, John Garry <john.g.garry@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <linfeilong@huawei.com>, <louhongxiang@huawei.com>
-References: <20230323115601.178494-1-haowenchao2@huawei.com>
- <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
- <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
- <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
- <fd810b7f-5520-1054-735f-8434a237c6e4@interlog.com>
-From:   "haowenchao (C)" <haowenchao2@huawei.com>
-In-Reply-To: <fd810b7f-5520-1054-735f-8434a237c6e4@interlog.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemm600012.china.huawei.com (7.193.23.74)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <316d7d7d-b370-36e1-648a-400447d2dd47@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/3/24 1:24, Douglas Gilbert wrote:
-> On 2023-03-23 12:25, John Garry wrote:
->> On 23/03/2023 13:13, haowenchao (C) wrote:
->>> On 2023/3/23 20:40, John Garry wrote:
->>>> On 23/03/2023 11:55, Wenchao Hao wrote:
->>>>> The original error injection mechanism was based on scsi_host which
->>>>> could not inject fault for a single SCSI device.
->>>>>
->>>>> This patchset provides the ability to inject errors for a single
->>>>> SCSI device. Now we supports inject timeout errors, queuecommand
->>>>> errors, and hostbyte, driverbyte, statusbyte, and sense data for
->>>>> specific SCSI Command.
->>>>
->>>> There is already a basic mechanism to generate errors - like timeouts - on "nth" command. Can you say why you want this new interface? What special scenarios are you trying to test/validate (which could not be achieved based on the current mechanism)?
->>>>
->>>
->>> I am testing a new error handle policy which is based on single scsi_device
->>> without set host to RECOVERY. So I need a method to generate errors for
->>> single SCSI devices.
->>>
->>> While we can not generate errors for single device with current mechanism
->>> because it is designed for host-wide error generation.
->>>
->>>> With this series we would have 2x methods to inject errors, which is less than ideal, and they seem to possibly conflict as well, e.g. I set timeout for nth command via current interface and then use the new interface to set timeout for some other cadence. What behavior to expect ...?
->>>
->>> I did not take this issue in consideration. I now assume the users would
->>> not use these 2 methods at same time.
->>>
->>> What's more, I don not know where to write the usage of this newly added
->>> interface, maybe we can explain these in doc?
->>
->> sysfs entries are described in Documentation/ABI, but please don't add elaborate programming interfaces in sysfs files (like in these patches) - a sysfs file should be just for reading or writing a single value
-> 
+Hi Neil,
+
+On Thu, Mar 23, 2023 at 02:10:44PM +0100, Neil Armstrong wrote:
 > Hi,
-> Maybe this link might help for scsi_debug documentation:
->      https://doug-gilbert.github.io/scsi_debug.html
 > 
-> And rather than sysfs for complicated, per (pseudo_ device
-> settings, perhaps we could think about a SCSI mechanism like
-> the "Unit Attention" mode page [0x0] which is vendor specific
-> and used by Seagate and WDC for this sort of thing.
-> A framework is already in the scsi_debug driver to change
-> some mode page settings:
+> On 23/03/2023 11:49, Krzysztof Kozlowski wrote:
+> > On 23/03/2023 11:25, Neil Armstrong wrote:
+> > > Fixes the following DT bindings check error:
+> > > ufshc@1d84000: Unevaluated properties are not allowed ('reg-names' was unexpected)
+> > > 
+> > > Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> > > ---
+> > >   arch/arm64/boot/dts/qcom/sm8450.dtsi | 1 -
+> > >   1 file changed, 1 deletion(-)
+> > > 
+> > > diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> > > index ef9bae2e6acc..8ecc48c7c5ef 100644
+> > > --- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> > > +++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> > > @@ -3996,7 +3996,6 @@ ufs_mem_hc: ufshc@1d84000 {
+> > >   				     "jedec,ufs-2.0";
+> > >   			reg = <0 0x01d84000 0 0x3000>,
+> > >   			      <0 0x01d88000 0 0x8000>;
+> > > -			reg-names = "std", "ice";
+> > 
+> > This is also part of:
+> > https://lore.kernel.org/linux-arm-msm/20230308155838.1094920-8-abel.vesa@linaro.org/#Z31arch:arm64:boot:dts:qcom:sm8450.dtsi
+> > but I actually wonder whether you just missed some binding patch?
 > 
-> # sdparm /dev/sg0
->      /dev/sg0: Linux     scsi_debug        0191
-> Read write error recovery mode page:
->    AWRE          1  [cha: n, def:  1]
->    ARRE          1  [cha: n, def:  1]
->    PER           0  [cha: n, def:  0]
-> Caching (SBC) mode page:
->    WCE           1  [cha: y, def:  1]
->    RCD           0  [cha: n, def:  0]
-> Control mode page:
->    SWP           0  [cha: n, def:  0]
-> Informational exceptions control mode page:
->    EWASC         0  [cha: n, def:  0]
->    DEXCPT        1  [cha: n, def:  1]
->    MRIE          0  [cha: y, def:  0]
-> 
-> As can be seen WCE and MRIE are changeable, so
-> 
-> # sdparm --clear=WCE /dev/sg0
-> # sdparm --get=WCE /dev/sg0
->      /dev/sg0: Linux     scsi_debug        0191
-> WCE           0  [cha: y, def:  1]
-> 
-> 
-> Doug Gilbert
-> 
+> I'm aware of Abel's RFC patchset to support shared ICE, but this is a cleanup of the current DT,
+> and the current bindings schema doesn't document reg-names.
 > 
 
-Do you mean define scsi_debug's own format of mode page0(Vendor specific)
-which contains these error injection info, and set/get these parameters
-via sdparm?
-If so, do we need to modify the sdparm code for these changes?
+The ufs-qcom driver accesses the "ice" registers by name, so the reg-names can't
+be removed from the device tree.  A few months ago there was a patch to fix the
+device tree schema for qcom,ufs to include the reg-names.  It looks like that
+patch got missed, though:
+https://lore.kernel.org/r/20221209-dt-binding-ufs-v2-2-dc7a04699579@fairphone.com
 
-I want to add more injections in scsi_debug to test the SCSI middle layer,
-for example, control return SUCCESS in scsi_debug_abort() or
-scsi_debug_device_reset().
-
-These injections are more oriented to developers to trigger and observe
-the error handler of SCSI middle layer.
-
-We can extend other error injections conveniently via my interface,
-for example, add a new error code to add a new injection to control the
-return value of scsi_debug_abort().
-
-If it's not recommended to add this interface in sysfs, what about proc? Like
-/proc/scsi/scsi, we can write "scsi remove-single-device h:c:t:l" to manage
-device.
-
->>>> I'm not saying that I am a huge fan of the current inject mechanism, but at the very least you need to provide more justification for this series.
->>>>>>
->>>>> The first patch add an sysfs interface to add and inquiry single
->>>>> device's error injection info; the second patch defined how to remove
->>>>> an injection which has been added. The following 3 patches use the
->>>>> injection info and generate the related error type.
->>>>>
->>>>> Wenchao Hao (5):
->>>>>    scsi:scsi_debug: Add sysfs interface to manage scsi devices' error
->>>>>      injection
->>>>>    scsi:scsi_debug: Define grammar to remove added error injection
->>>>>    scsi:scsi_debug: timeout command if the error is injected
->>>>>    scsi:scsi_debug: Return failed value if the error is injected
->>>>>    scsi:scsi_debug: set command's result and sense data if the error is
->>>>>      injected
->>>>>
->>>>>   drivers/scsi/scsi_debug.c | 296 ++++++++++++++++++++++++++++++++++++++
->>>>>   1 file changed, 296 insertions(+)
->>>>>
->>>>
->>>>
->>>
->>
-> 
-> 
-
+- Eric
