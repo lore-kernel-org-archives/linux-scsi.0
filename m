@@ -2,75 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 683BBC6FD20
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 16:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BFE0C6FD20
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 16:31:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231274AbjCXQCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 12:02:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57718 "EHLO
+        id S232012AbjCXQbM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 12:31:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbjCXQCD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 12:02:03 -0400
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97D6519C4C;
-        Fri, 24 Mar 2023 09:02:02 -0700 (PDT)
-Received: by mail-pl1-f171.google.com with SMTP id kq3so2178076plb.13;
-        Fri, 24 Mar 2023 09:02:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679673722;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TQeDTswkf5n66eJVZ3PJ439rYq/MSFC/te2Yd7ITppg=;
-        b=3uIFI7OazQrVqTYZp7kS+AcfQ05NuvK+DptlKMoSAb5d1jtSSiFjloM3MjWs2ftqBm
-         OL2LJSJWKL11AgkdXgipPqrhgIVOqwg7qX1dmNKrF3dve4zKj6mCPPBdpi5WXAFHcp0l
-         m8vy39qXmSX68Ed4YHsjZlzgKPFztcqDCQ38KnXMxTLkVLFpMg4OpBAXytEKDCGBU+0R
-         XiribBI6U0RL473QhDac4Di4gcjyg6cLogp6X2+MLfygbQfvfYKgQbR+RqagjKCaLQv1
-         324KL+iCUBC43nuGj5arPrtf0AoTqayuhwEQm9+kAWCWeDyO7pBJOP6hSq3J0dodYsXi
-         V5aA==
-X-Gm-Message-State: AO0yUKXDHZbfFISuILK5EoHCWBfWlbxnXGKXXo9G2sxKgTyOFxQZlFi/
-        cllrEN3q0w1M/z7m2Y/BehQ=
-X-Google-Smtp-Source: AK7set8+oF2VqQfXa1R/1dsnOqyLOVngF/N0nrkA6UdHQI51ywjXPbPatvD3t9wajutj7VAmZFGQzg==
-X-Received: by 2002:a05:6a20:cc59:b0:db:9a60:a52d with SMTP id hq25-20020a056a20cc5900b000db9a60a52dmr2663193pzb.41.1679673722000;
-        Fri, 24 Mar 2023 09:02:02 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:2421:e16e:b98f:7e76? ([2620:15c:211:201:2421:e16e:b98f:7e76])
-        by smtp.gmail.com with ESMTPSA id i22-20020aa78b56000000b005aa60d8545esm14043267pfd.61.2023.03.24.09.01.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 24 Mar 2023 09:02:00 -0700 (PDT)
-Message-ID: <0a152b0a-4fa9-c727-6e41-910e1eb71e2c@acm.org>
-Date:   Fri, 24 Mar 2023 09:01:58 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH 0/5]scsi:scsi_debug: Add error injection for single device
-Content-Language: en-US
-To:     "haowenchao (C)" <haowenchao2@huawei.com>,
-        John Garry <john.g.garry@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     linfeilong@huawei.com, louhongxiang@huawei.com
-References: <20230323115601.178494-1-haowenchao2@huawei.com>
- <b5f8240e-f46a-b83b-ed16-66c2d8c5571f@oracle.com>
- <c9d213e2-5ab4-0db2-f87a-247519debbbb@huawei.com>
- <750a4b24-6122-6faa-fed4-25e3167ea376@oracle.com>
- <0a6fc4bd-82a1-3200-3061-4634531b5a63@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <0a6fc4bd-82a1-3200-3061-4634531b5a63@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S231823AbjCXQbJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 12:31:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B8F3469C;
+        Fri, 24 Mar 2023 09:31:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 05BDB62BD4;
+        Fri, 24 Mar 2023 16:31:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6A9F9C433EF;
+        Fri, 24 Mar 2023 16:31:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679675467;
+        bh=FrqcRhfq8Ns4v7PkuzfuLpnvv8DbtBSesc4kWRkQcpM=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=XU8DGjvkTHtANmBsg1h4bA4hyAru2QEQqSDnFswpAbLA5bCkW0dOmwn/RSuuuWsuw
+         Q3LaeeEFUS6YF9P4Oy2J77hG61qtHZ3Kvy+j2oqbf+UvdfBgWBQpW210hs8bd6ykJc
+         SB26w2aBgk9jzvv+nqlL0usaT4gwlwfQ3Q/OHa5e3sdJyRwFe1hZvBvqLeGJXJtD0j
+         1npz7Gpt871xVSVNuWdIzn4dK1ISBZflxDd6e6rCRjRM3uY5E5gRX8V/VOJeva23tG
+         7BygyJrrAm/YSSbBsrEnssS4fpkPimLOKuauU/+OLmlInbUbKOoRH9r1OYUChp9KrA
+         UyLuuuZ231fdg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 59655E2A039;
+        Fri, 24 Mar 2023 16:31:07 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.3-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
+References: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <f2515dfb43cd4dd334ea2bda00f8576f69a40178.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: a13faca032acbf2699293587085293bdfaafc8ae
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 6dd74c51b48567e6ec56276aa35c8d25f6472f6f
+Message-Id: <167967546735.8924.4856686892293566084.pr-tracker-bot@kernel.org>
+Date:   Fri, 24 Mar 2023 16:31:07 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/23/23 20:42, haowenchao (C) wrote:
-> If sysfs is not recommended, what about proc?
+The pull request you sent on Thu, 23 Mar 2023 19:36:37 -0400:
 
-procfs is for process information and should not be used for any other 
-purpose.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks,
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/6dd74c51b48567e6ec56276aa35c8d25f6472f6f
 
-Bart.
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
