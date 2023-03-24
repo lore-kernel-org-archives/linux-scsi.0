@@ -2,61 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92546C76195
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 21:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13EC6C6FD20
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Mar 2023 21:07:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232120AbjCXVHf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 17:07:35 -0400
+        id S232315AbjCXVHr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 17:07:47 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232081AbjCXVHa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 17:07:30 -0400
+        with ESMTP id S231977AbjCXVHe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 17:07:34 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A18FB206B5;
-        Fri, 24 Mar 2023 14:07:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D42E1F5FD;
+        Fri, 24 Mar 2023 14:07:26 -0700 (PDT)
 Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32OL4GHL006330;
-        Fri, 24 Mar 2023 21:07:07 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32OL4P03006442;
+        Fri, 24 Mar 2023 21:07:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=NCjvrc7Wpz+DaegJFn5Jy0vVWEJp5qfRagdUGDd7FO4=;
- b=fUO29j0/kd4uZ9gB1qSdSiF13vgKmOmjcWrF4TlTMdHCYjnraOtvtt5il8a3PV3sQTNk
- 9Z+Ma8E+b1gsEewN+lqb/Yag/NeT2KUyullJiozFm31eQwCDqdorrWV5Ev6HJHrCRVP3
- GiMtXds4hCzsSBM1r0S87ea4XR/x18EcP1dKV3XWx2QZOazmTHQecfPLKnd40DbJbyEo
- vBtMT3Yj7l9BQecMalwLmDRR+PK37OuUDT+oPlZz5PJnllXQ7L88dGTeFhwD2fyTqwHL
- XaAIaFpi5euGT+3yWPJDmQ9v75TiXpY/JpRJxc+yPtIQR9cbuOymvpMn4Agycg4LkK4X tA== 
+ bh=bOEEQ3ULyAOwpIjBOULA6je1JKKwgPN/L4E/At7MsoM=;
+ b=ebH+92K+mGejUZfbDCwboi1xZCiN1uFDhab48APOz33G1M6g3EA2J38Jlm/eq7mgZ5Fd
+ oUDEcoDp74JOiJlqH+8szRcRREomoJVrztlGhXlGVbhqNfQCaPZUPsS9TAfFHH/EixEn
+ KpHDYSkx6j1ONdoG5YJqNF9sJP6BD4T4EDUZLMLH3RadAhRXCuQvk1djGVkkFtNTDErX
+ 2HkggNYNCAvTnqRx1MrGGGOCEoy0KCZpO/uLgfKG3jMud3OBIWE9IvBw0lgoTWPOjxXW
+ bOg3Z4jWFUVW1mJjbRnj7cTxf3zu6qy3sZcqVwVptVOCNN8drcOf8NRnGyOlan+Dub4t CA== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3phkey806p-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3phkey806v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Mar 2023 21:07:07 +0000
+        Fri, 24 Mar 2023 21:07:09 +0000
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32OIn276027708;
-        Fri, 24 Mar 2023 21:07:06 GMT
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32OKa6bY027823;
+        Fri, 24 Mar 2023 21:07:09 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pgxk4se31-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pgxk4se4d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Mar 2023 21:07:06 +0000
+        Fri, 24 Mar 2023 21:07:08 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32OL76f2017159;
-        Fri, 24 Mar 2023 21:07:06 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32OL76fA017159;
+        Fri, 24 Mar 2023 21:07:08 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pgxk4se2p-1;
-        Fri, 24 Mar 2023 21:07:06 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pgxk4se2p-5;
+        Fri, 24 Mar 2023 21:07:08 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nguyenb@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        Ziqi Chen <quic_ziqichen@quicinc.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v1 1/1] scsi: fnic: Switch to use %ptTs
-Date:   Fri, 24 Mar 2023 17:06:52 -0400
-Message-Id: <167969123959.59527.3782523368342950875.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org
+Subject: Re: [PATCH v7] scsi: ufs: core: Add trace event for MCQ
+Date:   Fri, 24 Mar 2023 17:06:56 -0400
+Message-Id: <167969123965.59527.12606811786229269286.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230314145813.66112-1-andriy.shevchenko@linux.intel.com>
-References: <20230314145813.66112-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1678866271-49601-1-git-send-email-quic_ziqichen@quicinc.com>
+References: <1678866271-49601-1-git-send-email-quic_ziqichen@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -64,26 +68,26 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-24_11,2023-03-24_01,2023-02-09_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- malwarescore=0 spamscore=0 mlxlogscore=644 adultscore=0 mlxscore=0
+ malwarescore=0 spamscore=0 mlxlogscore=905 adultscore=0 mlxscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303200000 definitions=main-2303240160
-X-Proofpoint-GUID: q-XnmCuVyNHroP0HSjgFeA6ZBTsbiACk
-X-Proofpoint-ORIG-GUID: q-XnmCuVyNHroP0HSjgFeA6ZBTsbiACk
+X-Proofpoint-GUID: tJB-xe9-xJlBGOgc9-B5E--NPDFLft5V
+X-Proofpoint-ORIG-GUID: tJB-xe9-xJlBGOgc9-B5E--NPDFLft5V
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 14 Mar 2023 16:58:13 +0200, Andy Shevchenko wrote:
+On Wed, 15 Mar 2023 15:44:25 +0800, Ziqi Chen wrote:
 
-> Use %ptTs instead of open-coded variant to print contents
-> of time64_t type in human readable form.
+> Add MCQ hardware queue ID in the existing trace event
+> ufshcd_command().
 > 
 > 
 
 Applied to 6.4/scsi-queue, thanks!
 
-[1/1] scsi: fnic: Switch to use %ptTs
-      https://git.kernel.org/mkp/scsi/c/58b42c949b30
+[1/1] scsi: ufs: core: Add trace event for MCQ
+      https://git.kernel.org/mkp/scsi/c/4a52338bf288
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
