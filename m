@@ -2,94 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F632C76196
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Mar 2023 01:17:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D235C76195
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Mar 2023 01:18:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231873AbjCYBRB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 21:17:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59158 "EHLO
+        id S232016AbjCYBSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 21:18:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbjCYBQ6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 21:16:58 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94D09C66C;
-        Fri, 24 Mar 2023 18:16:57 -0700 (PDT)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32P154QH002515;
-        Sat, 25 Mar 2023 01:16:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=pRfUw1TcLkxrZYUseep4cpWIrPgTJqx/blEDFv8gWg4=;
- b=yVqI1zCAiuRUG5ZdLXhptvab6CNCl6CfIcTiJZY0890g4kBGoWRApBa4C+ccBPzavnD7
- ihIPhNQNnGiodI1gXg0tpUUJytk4cKTlbf/RuHesRWTFGvlUNvA1TA8JAzAhmNpVkvMW
- QO1Mmi071cistw+iBtolE+79g/CMtgyr0LrtIlQLN3YOC2nUhM082UPJkSDkdVcn56KQ
- 8g/1BSk47AbqeGOVCSztRmTzDWbf54PKyEZ65yPnsHDpGaK6vsGmfsr2sN2A41tEAD7b
- A8uUMr++zahzKbxT/WYYrbNiKMiwCiOKViX4+uLpc1hZcwRYL/pVYCt3T2NYC4VhBe4H nw== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3phpyu00dc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 25 Mar 2023 01:16:53 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32OMP3q4027817;
-        Sat, 25 Mar 2023 01:16:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pgxk4xx6q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 25 Mar 2023 01:16:52 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32P1GpkA018222;
-        Sat, 25 Mar 2023 01:16:51 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pgxk4xx6j-1;
-        Sat, 25 Mar 2023 01:16:51 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jerry Snitselaar <jsnitsel@redhat.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v2] scsi: mpt3sas: Don't print sense pool info twice
-Date:   Fri, 24 Mar 2023 21:16:44 -0400
-Message-Id: <167970695940.326111.1002403744280234640.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230324193204.567932-1-jsnitsel@redhat.com>
-References: <20230321061419.3139051-1-jsnitsel@redhat.com> <20230324193204.567932-1-jsnitsel@redhat.com>
+        with ESMTP id S231913AbjCYBSk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 21:18:40 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE36F1A950;
+        Fri, 24 Mar 2023 18:18:38 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Pk1Rt3QHsz4f3mLW;
+        Sat, 25 Mar 2023 09:18:34 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUiDpSx5kmy0NFg--.49234S7;
+        Sat, 25 Mar 2023 09:18:36 +0800 (CST)
+From:   Ye Bin <yebin@huaweicloud.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Ye Bin <yebin10@huawei.com>
+Subject: [PATCH 3/5] scsi: limit to set the host state
+Date:   Sat, 25 Mar 2023 09:17:32 +0800
+Message-Id: <20230325011734.507453-4-yebin@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230325011734.507453-1-yebin@huaweicloud.com>
+References: <20230325011734.507453-1-yebin@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-24_11,2023-03-24_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- malwarescore=0 spamscore=0 mlxlogscore=999 adultscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2303250007
-X-Proofpoint-GUID: hBRYg6PkQVXnXGyPhSc1IpRSoxPgJ87d
-X-Proofpoint-ORIG-GUID: hBRYg6PkQVXnXGyPhSc1IpRSoxPgJ87d
+X-CM-TRANSID: _Ch0CgCnUiDpSx5kmy0NFg--.49234S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7ArWfKFy7WFykXFy5Kr47CFg_yoW8GFWkpF
+        WDJa4agw4UWas7Kws3Wrs8Wr9xK348WryqgFZ2g34ruF18J3y5Ka1kCa45ZF45JFWfCFn7
+        JF4qqF98Cay0yFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvGb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
+        A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+        6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+        Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+        Jr0_Gr1lF7xvr2IYc2Ij64vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
+        0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
+        17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
+        C0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
+        6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
+        73UjIFyTuYvjxU2PEfUUUUU
+X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 24 Mar 2023 12:32:04 -0700, Jerry Snitselaar wrote:
+From: Ye Bin <yebin10@huawei.com>
 
-> _base_allocate_sense_dma_pool() already prints out the sense pool
-> information, so don't print it a second time after calling it in
-> _base_allocate_memory_pools(). In addition the version in
-> _base_allocate_memory_pools() was using the wrong size value, sz,
-> which was last assigned when doing some nvme calculations instead of
-> sense_sz to determine the pool size in kilobytes.
-> 
-> [...]
+Now, we can set the host state with any value. Actually, it doesn't
+make sense. As previous patch introduce SHOST_BLOCKED state, set this
+state, it will blocking IO. So this patch limit to set the host with
+running/blocked state.
 
-Applied to 6.3/scsi-fixes, thanks!
+Signed-off-by: Ye Bin <yebin10@huawei.com>
+---
+ drivers/scsi/scsi_sysfs.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-[1/1] scsi: mpt3sas: Don't print sense pool info twice
-      https://git.kernel.org/mkp/scsi/c/d684a7a26f7d
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b14f95ac594e..42c5936c7711 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -203,6 +203,7 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
+ 	int i;
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	enum scsi_host_state state = 0;
++	enum scsi_host_state old_state;
+ 	unsigned long flags;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(shost_states); i++) {
+@@ -216,8 +217,13 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
+ 	if (!state)
+ 		return -EINVAL;
+ 
++	if (state != SHOST_RUNNING && state != SHOST_BLOCKED)
++		return -EINVAL;
++
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (scsi_host_set_state(shost, state)) {
++	old_state = shost->shost_state;
++	if ((old_state != SHOST_RUNNING && old_state != SHOST_BLOCKED) ||
++	    scsi_host_set_state(shost, state)) {
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		return -EINVAL;
+ 	}
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.31.1
+
