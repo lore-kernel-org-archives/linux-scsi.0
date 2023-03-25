@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9788DC6FD1C
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Mar 2023 01:18:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7026AC76196
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Mar 2023 01:18:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232091AbjCYBSs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Mar 2023 21:18:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34892 "EHLO
+        id S232128AbjCYBSx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Mar 2023 21:18:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231716AbjCYBSk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 21:18:40 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A68381A94A;
-        Fri, 24 Mar 2023 18:18:38 -0700 (PDT)
+        with ESMTP id S231950AbjCYBSl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2023 21:18:41 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A93321A95D;
+        Fri, 24 Mar 2023 18:18:39 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Pk1Rt1cfDz4f3mLK;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pk1Rt6wlZz4f3lXK;
         Sat, 25 Mar 2023 09:18:34 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgCnUiDpSx5kmy0NFg--.49234S6;
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUiDpSx5kmy0NFg--.49234S8;
         Sat, 25 Mar 2023 09:18:36 +0800 (CST)
 From:   Ye Bin <yebin@huaweicloud.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Ye Bin <yebin10@huawei.com>
-Subject: [PATCH 2/5] scsi: introduce SHOST_BLOCKED state to support blocking IO
-Date:   Sat, 25 Mar 2023 09:17:31 +0800
-Message-Id: <20230325011734.507453-3-yebin@huaweicloud.com>
+Subject: [PATCH 4/5] scsi: blocking IO when host is blocked
+Date:   Sat, 25 Mar 2023 09:17:33 +0800
+Message-Id: <20230325011734.507453-5-yebin@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230325011734.507453-1-yebin@huaweicloud.com>
 References: <20230325011734.507453-1-yebin@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCnUiDpSx5kmy0NFg--.49234S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7tr4xGw47ur4DuF4xury7trb_yoW8KryfpF
-        WDXw1xC3y8GayIkwnIg3Z8Gr95Ka97WrWqqFyUWa47Wa4jy34Y9w4DCFyUZay8GrW7Krnx
-        WF4DWF1DCFWrJrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvGb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
-        A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-        Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-        Jr0_Gr1lF7xvr2IYc2Ij64vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
-        0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
-        17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
-        C0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
-        6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-        73UjIFyTuYvjxUzMKuUUUUU
+X-CM-TRANSID: _Ch0CgCnUiDpSx5kmy0NFg--.49234S8
+X-Coremail-Antispam: 1UD129KBjvJXoW7urWrXr48tr4kCr13Cw4Uurg_yoW8Gr48pF
+        Z0qa42kr48GFW09a98WF15XrySgayDGryUJa4fWwn8JF98t34jqan8GFyUXFy8GF4Fkrsr
+        XFsrtFyYkF1UXr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvEb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+        Cq3wA2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+        rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+        AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+        14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+        xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+        z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+        v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+        1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+        AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI
+        42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
+        evJa73UjIFyTuYvjxU2CJmUUUUU
 X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -57,84 +57,46 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Ye Bin <yebin10@huawei.com>
 
-SHOST_BLOCKED state to blocking io in block layer. This state use for
-test, Only running state and blocked state can be switched to each
-other.
+Unlike recovery state may block other process, blocking IO only
+when host is blocked.
 
 Signed-off-by: Ye Bin <yebin10@huawei.com>
 ---
- drivers/scsi/hosts.c      | 11 +++++++++++
- drivers/scsi/scsi_sysfs.c |  1 +
- include/scsi/scsi_host.h  |  1 +
- 3 files changed, 13 insertions(+)
+ drivers/scsi/scsi_lib.c  | 4 ++++
+ include/scsi/scsi_host.h | 5 +++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 9b6fbbe15d92..3b497fd4d329 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -90,6 +90,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
- 		switch (oldstate) {
- 		case SHOST_CREATED:
- 		case SHOST_RECOVERY:
-+		case SHOST_BLOCKED:
- 			break;
- 		default:
- 			goto illegal;
-@@ -99,6 +100,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
- 	case SHOST_RECOVERY:
- 		switch (oldstate) {
- 		case SHOST_RUNNING:
-+		case SHOST_BLOCKED:
- 			break;
- 		default:
- 			goto illegal;
-@@ -109,6 +111,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
- 		switch (oldstate) {
- 		case SHOST_CREATED:
- 		case SHOST_RUNNING:
-+		case SHOST_BLOCKED:
- 		case SHOST_CANCEL_RECOVERY:
- 			break;
- 		default:
-@@ -144,6 +147,14 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
- 			goto illegal;
- 		}
- 		break;
-+	case SHOST_BLOCKED:
-+		switch (oldstate) {
-+		case SHOST_RUNNING:
-+			break;
-+		default:
-+			goto illegal;
-+		}
-+		break;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b7c569a42aa4..492487717f41 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1731,6 +1731,10 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 			ret = BLK_STS_OFFLINE;
+ 		goto out_dec_target_busy;
  	}
- 	shost->shost_state = state;
- 	return 0;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index cc0ae5e3def3..b14f95ac594e 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -69,6 +69,7 @@ static const struct {
- 	{ SHOST_RECOVERY, "recovery" },
- 	{ SHOST_CANCEL_RECOVERY, "cancel/recovery" },
- 	{ SHOST_DEL_RECOVERY, "deleted/recovery", },
-+	{ SHOST_BLOCKED, "blocked", },
- };
- const char *scsi_host_state_name(enum scsi_host_state state)
- {
++
++	if (unlikely(scsi_host_blocked(shost)))
++		goto out_dec_target_busy;
++
+ 	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
+ 		goto out_dec_target_busy;
+ 
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 587cc767bb67..9e99317b11fa 100644
+index 9e99317b11fa..571321bbb706 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -527,6 +527,7 @@ enum scsi_host_state {
- 	SHOST_RECOVERY,
- 	SHOST_CANCEL_RECOVERY,
- 	SHOST_DEL_RECOVERY,
-+	SHOST_BLOCKED,
- };
+@@ -745,6 +745,11 @@ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
+ 		shost->tmf_in_progress;
+ }
  
- struct Scsi_Host {
++static inline int scsi_host_blocked(struct Scsi_Host *shost)
++{
++	return shost->shost_state == SHOST_BLOCKED;
++}
++
+ extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
+ extern void scsi_flush_work(struct Scsi_Host *);
+ 
 -- 
 2.31.1
 
