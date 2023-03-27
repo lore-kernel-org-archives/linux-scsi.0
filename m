@@ -2,63 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43D9DC761A6
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 07:59:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9FD9C76195
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 10:20:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232921AbjC0H7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 03:59:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55050 "EHLO
+        id S233561AbjC0KUK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 06:20:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232920AbjC0H7G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 03:59:06 -0400
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F7A149E2
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 00:59:04 -0700 (PDT)
-Received: by mail-ed1-x530.google.com with SMTP id eg48so32041436edb.13
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 00:59:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1679903943;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=YQKQzGOMARwoG57LLxeRnpM5fxI1Xzye0MM/44WhAFs=;
-        b=H9T+KHI5mScbjXZM39U4rvF4EZJwf2VlsFbYg9jFeDzvxCrfXaWnuREo0bRRpCT5Pr
-         Vi3lynoo+ImNMm3DtJL0sEYEN7NIenQ7HR/Xq/9RHy2xsA/AOgCa8Pd19GkXZM8jcaK6
-         FTa2blSR5rLJkL61N4WPWAghb2b4bUqkxMG960dCC3dapL2AXrgzPktGXs/BvIELvIQz
-         5h76LyQb+qmpcxJyyhXXNJ8chrHZ1+vpkb/L4R0fpnleHUGfSnHGXDnmb/CcWUL1ur9W
-         rqi3XZ3uxTNe6GSLcVD125ahJ34Qk5o0BWPDHz/+kXgIhyN6O2QmW5JY5hoVkPAYxDia
-         AMRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679903943;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YQKQzGOMARwoG57LLxeRnpM5fxI1Xzye0MM/44WhAFs=;
-        b=ZKoiTA/53sK113yvTOq7+LZcBky7a29fB5sbdguZy8hqSbnfAwvoq2NB79HOJxbIKg
-         lIAqNW26VwSx6rpb+XiiCGV9nR4kYZZpxgoBnIh5BzrU161vIdQmwbj3faZKlZAyue40
-         kTaMDULeMvGelIvfeRFNUARZ8VbLhRSQiVch0rkbt+qFJpHrAToXNgcyEb35CJ9E0bjG
-         XKiTumt7OInFfh4kpEQhsDSa9eMuZGmvgC94SoOsURB/KzofGlfrewAL92Wsj3/VPNlj
-         4K+Y8B7qfEE1IyuOjpTyNB9rfuJvavNpadTBwweFjCtuGg9NP0llbhKmGTfv1tFPM9wH
-         tcrw==
-X-Gm-Message-State: AAQBX9dhlJCK+R2CQ/YBOnQlSYO+6QlWhXA9Fn5zN3qZVrfAC8vqWTuG
-        jIlkr8t0+8Lh7cD/7wI1gi34ihQOlHgEyK37nmQ=
-X-Google-Smtp-Source: AKy350YO1pg1SW4DGaty/B43Uir5N+0/YScvp+JK1pk8Mp6Js5yKlyJ9IMJb9KGnKGG3fEXiLEjFRg==
-X-Received: by 2002:a17:906:bcec:b0:926:8992:4310 with SMTP id op12-20020a170906bcec00b0092689924310mr11870849ejb.38.1679903943007;
-        Mon, 27 Mar 2023 00:59:03 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:198e:c1a5:309b:d678? ([2a02:810d:15c0:828:198e:c1a5:309b:d678])
-        by smtp.gmail.com with ESMTPSA id xo20-20020a170907bb9400b0093f0fbebfc2sm3296956ejc.144.2023.03.27.00.59.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Mar 2023 00:59:02 -0700 (PDT)
-Message-ID: <6162759b-a9ab-5ce3-e216-8213501ab174@linaro.org>
-Date:   Mon, 27 Mar 2023 09:59:01 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v2 06/12] scsi: ufs: dt-bindings: Add SC8180x binding
-Content-Language: en-US
-To:     Vinod Koul <vkoul@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>
-Cc:     linux-arm-msm@vger.kernel.org,
+        with ESMTP id S232983AbjC0KUI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 06:20:08 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1A6540E0;
+        Mon, 27 Mar 2023 03:20:07 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9CD37B81058;
+        Mon, 27 Mar 2023 10:20:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04071C433D2;
+        Mon, 27 Mar 2023 10:20:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679912405;
+        bh=xOkv83dpb4qhFn4mZHxypeMOPMtKkrIkKCWh451KMTQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AcXbauTPw+0VyaNcBBIMwTjPQPdMHPCUnzEYVlvaTYJZBzqSTUQWBlih703SyxA6t
+         ZE98somqk8SFdVpm98yPLs6lEPBpgOD/LkcgcNte6J49aB0A62FlC2nQoVwST9mASJ
+         He0gsfys17zmfcM+1QPTDWasMtJfQrIJU4oGbt+HvIv5ZmUpnSH7v0Bmzt24rEnBXU
+         mMX0wcpES8Cf22TX6MxXxzWZ4WMXGJ3w63J+4n4BeIJqvq6gDIGQbZXN6tbheQo8WV
+         b4aQm3I478xul05JKrgvf0413u9Iq4NHurSGiqIvUnD+7mfEnsxb2PVn8upvkZkiwU
+         z2DSs6QFUKAjw==
+Date:   Mon, 27 Mar 2023 15:49:52 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     Bjorn Andersson <andersson@kernel.org>,
+        linux-arm-msm@vger.kernel.org,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
@@ -67,34 +44,56 @@ Cc:     linux-arm-msm@vger.kernel.org,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 06/12] scsi: ufs: dt-bindings: Add SC8180x binding
+Message-ID: <20230327101952.GB16424@thinkpad>
 References: <20230325122444.249507-1-vkoul@kernel.org>
  <20230325122444.249507-7-vkoul@kernel.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 In-Reply-To: <20230325122444.249507-7-vkoul@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25/03/2023 13:24, Vinod Koul wrote:
-
-Subject: drop second/last, redundant "binding". The "dt-bindings" prefix
-is already stating that these are bindings.
-
-Same in all other patches.
-
+On Sat, Mar 25, 2023 at 05:54:38PM +0530, Vinod Koul wrote:
 > Document the UFS HC for SC8180x SoC
-
-Finish sentences with full stop. Same in all other patches.
-
 > 
 > Signed-off-by: Vinod Koul <vkoul@kernel.org>
+
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+
+Thanks,
+Mani
+
 > ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index c5a06c048389..a3db34f35f4f 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -26,6 +26,7 @@ properties:
+>            - qcom,msm8994-ufshc
+>            - qcom,msm8996-ufshc
+>            - qcom,msm8998-ufshc
+> +          - qcom,sc8180x-ufshc
+>            - qcom,sc8280xp-ufshc
+>            - qcom,sdm845-ufshc
+>            - qcom,sm6350-ufshc
+> @@ -105,6 +106,7 @@ allOf:
+>            contains:
+>              enum:
+>                - qcom,msm8998-ufshc
+> +              - qcom,sc8280x-ufshc
+>                - qcom,sc8280xp-ufshc
+>                - qcom,sm8250-ufshc
+>                - qcom,sm8350-ufshc
+> -- 
+> 2.39.2
+> 
 
-
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-Best regards,
-Krzysztof
-
+-- 
+மணிவண்ணன் சதாசிவம்
