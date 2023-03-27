@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 533FBC77B61
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 19:24:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19179C77B60
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 20:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231139AbjC0TYD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 15:24:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48040 "EHLO
+        id S230155AbjC0UNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 16:13:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbjC0TYB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 15:24:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E9F9CD;
-        Mon, 27 Mar 2023 12:24:01 -0700 (PDT)
+        with ESMTP id S229940AbjC0UNA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 16:13:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B79B1BDF;
+        Mon, 27 Mar 2023 13:12:59 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AE46C6147A;
-        Mon, 27 Mar 2023 19:24:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94616C433EF;
-        Mon, 27 Mar 2023 19:23:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0F6C6614E2;
+        Mon, 27 Mar 2023 20:12:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21EF9C433EF;
+        Mon, 27 Mar 2023 20:12:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679945040;
-        bh=iujBnATPdseZ2OyDbUQdNGaFQkW0LiQ28bu7WznPQQc=;
+        s=k20201202; t=1679947978;
+        bh=ztuneWnacYJNX61OcSRLH6dtkEQaVL91CZmSDSc+HvA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=S8HupFN2ydPYE0W7hyZpOHT9iHChgB2KA0DLs1Glti21Pfff1QyFCgp1gmaCAFRcr
-         CkByPMdUjBGkOVyXDxkaa77lWPhlt0U5jfdinFnOCCpV2ikccWqU+5ELj/SsGNE1IM
-         c7KF3o8yZUsB9BxgLBJV1qtq0/boxa0b9PMBEtPQl9YtZmIiJPsSoSySTgmw6WeRh4
-         amys3xKJVaCnEYA2qZ0D0vLKNyfvcKceog76ZPjfHFyiU0I9bT5EJ9HrxffrCejRxw
-         ad/g6bBKOKzTO6tmUClJkzBrz64F6epSP28/NtmeUhP6fwp6Aa21LfCN1jff55xQfA
-         yElep5IED3pOg==
-Date:   Mon, 27 Mar 2023 12:27:04 -0700
-From:   Bjorn Andersson <andersson@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
+        b=BGKc7m3TJ1K2Ad+LniE+5DTg+auW75CPse6loLp5HVcL/vZvqbDF9t19XyobR6gzU
+         qE8zqtxoQgi8BOnBQOIYzGcrBan8AgDwAY1AGcKU6dAzqu+Bg99o5POZl8tv0yAJgu
+         G2uzAInEbtj7GrgHfQpKpRWEAV19EvxCo7lt0es5RKzByzgJ7/pkdAAxOqn+sLzqOa
+         dG20RD9sOICkaRFYrBWzyz63wDiXXdcv9ELvhHVpWi+lOJ4rPzAo7nwhSK323biZMb
+         gzjV4Yn13exs+q6DU+ir1A6ToP2zFU6cHj8v5MbWwMF46mS4Fbx3WBsR6hNO7anLBX
+         pAcJw7Ano5gEA==
+Date:   Mon, 27 Mar 2023 20:12:56 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Bjorn Andersson <andersson@kernel.org>
 Cc:     Abel Vesa <abel.vesa@linaro.org>,
         Ulf Hansson <ulf.hansson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -55,99 +55,34 @@ Cc:     Abel Vesa <abel.vesa@linaro.org>,
         linux-scsi@vger.kernel.org
 Subject: Re: [PATCH v4 4/7] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
  dedicated driver
-Message-ID: <20230327192704.ywczpr2otbwxnsh5@ripper>
+Message-ID: <ZCH4yE9nmj/3e1Vx@gmail.com>
 References: <20230327134734.3256974-1-abel.vesa@linaro.org>
  <20230327134734.3256974-5-abel.vesa@linaro.org>
  <20230327185358.c4emwquhouq42itf@ripper>
  <20230327190954.GE73752@sol.localdomain>
+ <20230327192704.ywczpr2otbwxnsh5@ripper>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230327190954.GE73752@sol.localdomain>
+In-Reply-To: <20230327192704.ywczpr2otbwxnsh5@ripper>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 27, 2023 at 12:09:54PM -0700, Eric Biggers wrote:
-> On Mon, Mar 27, 2023 at 11:53:58AM -0700, Bjorn Andersson wrote:
-> > > +int qcom_ice_program_key(struct qcom_ice *ice,
-> > > +			 u8 algorithm_id, u8 key_size,
-> > > +			 const u8 crypto_key[], u8 data_unit_size,
-> > > +			 int slot)
-> > > +{
-> > > +	struct device *dev = ice->dev;
-> > > +	union {
-> > > +		u8 bytes[AES_256_XTS_KEY_SIZE];
-> > > +		u32 words[AES_256_XTS_KEY_SIZE / sizeof(u32)];
-> > > +	} key;
-> > > +	int i;
-> > > +	int err;
-> > > +
-> > > +	/* Only AES-256-XTS has been tested so far. */
-> > > +	if (algorithm_id != QCOM_ICE_CRYPTO_ALG_AES_XTS ||
-> > > +	    key_size != QCOM_ICE_CRYPTO_KEY_SIZE_256) {
-> > > +		dev_err_ratelimited(dev,
-> > > +				    "Unhandled crypto capability; algorithm_id=%d, key_size=%d\n",
-> > > +				    algorithm_id, key_size);
-> > > +		return -EINVAL;
-> > > +	}
-> > > +
-> > > +	memcpy(key.bytes, crypto_key, AES_256_XTS_KEY_SIZE);
-> > > +
-> > > +	/*
-> > > +	 * The SCM call byte-swaps the 32-bit words of the key.
-> > > +	 * So we have to do the same, in order for the final key be correct.
+On Mon, Mar 27, 2023 at 12:27:04PM -0700, Bjorn Andersson wrote:
+> 
+> That's a valid reason that I was looking for. Wouldn't this be a common
+> problem, something other parts of the stack would like to avoid?
+> Or it's just a byte array until we get here?
+> 
+> > It could be done with unaligned memory accesses, though, if you prefer that:
 > > 
-> > Does it actually byte swap the words, or is the API just specified to
-> > take the words in big endian format?
 > 
-> [Note, this is existing code I wrote that Abel is just moving to a new file.]
-> 
+> No need to jump through the hoops, but a comment would have saved
+> (robbed?) me from wondering.
 
-Ah right, then I'm inclined to keep it untouched.
+The parameter to qcom_ice_program_key() is 'const u8 crypto_key[]', which has no
+inherent alignment in the type.  It might be that the callers currently only
+pass 4-byte aligned buffers, but I don't think that should be relied on here.
 
-> It doesn't write to the input array, if that is what you are asking.  I was
-> thinking of this as one byte swap cancelling out another.  But sure, the comment
-> could be simplified to something like the following:
-> 
-> 	/* The SCM call requires that the key words be byte-swapped. */
-> 
-
-Last time I looked at a crypto driver, it was full of "switch the
-endian" operations, back and forth. So my request here was simply to
-make it clear which endian is actually expected.
-So I'm guessing the appropriate comment is:
-
-	/* The SCM call requires that the key words are encoded in big endian */
-
-> > How come you memcpy + swap in place, instead of loop over the words and
-> > cpu_to_be32() them into a __be words[] array?
-> > 
-> > > +	 */
-> > > +	for (i = 0; i < ARRAY_SIZE(key.words); i++)
-> > > +		__cpu_to_be32s(&key.words[i]);
-> 
-> With this approach there is no need to worry about unaligned memory accesses.
-
-That's a valid reason that I was looking for. Wouldn't this be a common
-problem, something other parts of the stack would like to avoid?
-Or it's just a byte array until we get here?
-
-> It could be done with unaligned memory accesses, though, if you prefer that:
-> 
-
-No need to jump through the hoops, but a comment would have saved
-(robbed?) me from wondering.
-
-Regards,
-Bjorn
-
-> 	union {
-> 		[...]
-> 		__be32 words[...];
-> 	} key;
-> 
-> 	[...]
-> 		key.words[i] = cpu_to_be32(get_unaligned((__u32 *)crypto_key + i));
-> 
-> - Eric
+- Eric
