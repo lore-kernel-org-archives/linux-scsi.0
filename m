@@ -2,161 +2,128 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 030ECC76195
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 13:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D52C76195
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 13:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232442AbjC0N1Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 09:27:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36318 "EHLO
+        id S229685AbjC0Nrs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 09:47:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232491AbjC0N1D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 09:27:03 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80A3059FD
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 06:25:50 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id B7FFE21F4A;
-        Mon, 27 Mar 2023 13:25:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1679923514; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=jlwV1NAdVqUf/jBBkwg4iHp6LFT18ZbI02dmD/e4ee8=;
-        b=BC76h1YO/Lx9UotSSagrwY/zkLT05ELFW3DFjF6NUFUsQmkd7Ixtgw0qK9v79sz0xdN03f
-        CvgFcq0/uZxWjZ57ql96Xvec+M0d8IB/G0iSTs8crZjVJhKtRJb2nKeR0zzVjshXiLxXGz
-        HMRX5cBM6cpQ7uOnnNzCuh5De8FdjYs=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6869513329;
-        Mon, 27 Mar 2023 13:25:14 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id CNDYFzqZIWTobgAAMHmgww
-        (envelope-from <mwilck@suse.com>); Mon, 27 Mar 2023 13:25:14 +0000
-From:   mwilck@suse.com
-To:     Douglas Gilbert <dgilbert@interlog.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        Franck Bui <fbui@suse.de>, dm-devel@redhat.com,
-        linux-scsi@vger.kernel.org,
-        Benjamin Marzinski <bmarzins@redhat.com>,
-        Martin Wilck <mwilck@suse.com>
-Subject: [PATCH 3/3] udev: add 00-scsi-sg3_config.rules for user configuration
-Date:   Mon, 27 Mar 2023 15:24:59 +0200
-Message-Id: <20230327132459.29531-4-mwilck@suse.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230327132459.29531-1-mwilck@suse.com>
-References: <20230327132459.29531-1-mwilck@suse.com>
+        with ESMTP id S231359AbjC0Nrr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 09:47:47 -0400
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2CD03C02
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 06:47:45 -0700 (PDT)
+Received: by mail-ed1-x52a.google.com with SMTP id eh3so36387159edb.11
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 06:47:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1679924864;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=t7BV/Kx6UCtJpUovRhPsWRP5SzZ7y1ukt8uk3iZ8eAE=;
+        b=IewDs8GfHgkOhz6SEJ76/sfVp2pbQV1qLHUFVt9GRUWIq1NZA0XMYREj5e4akzn1dG
+         lsffQvwAOqeoRRbA2dwP2l9prPLaageiaAgiUoLpPHc2yvjOoVZQZJ5MArHpqUDfdowd
+         OoUCSigMB7NJHVF3pQlYyHBL/ySMsK9DjyK81FHyBVgXlXTCdYOGeVb7HkENSIGwSa/2
+         2Upn7J23OxE5ZIKjgU3RS9oqiAByAs7uaGqtgX6GKKF0P22yvhJJZsXOnqVsK1j2YToT
+         4WWHxRWNjm6FqOGzDPqwQ4K9FM3uPeYfm5jdQ3OsvHZTh043qyblUEeNDSdhvrqx7WF5
+         1skA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679924864;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=t7BV/Kx6UCtJpUovRhPsWRP5SzZ7y1ukt8uk3iZ8eAE=;
+        b=vtRXwa0ORT6+iYHsK140KyOhkwX8UtgevnYkT6SrD1TaOSGaLlIQF4It5gdwFSrI1v
+         XgWhKnpXCbuasxCsXPilyoKSqqvPjxAo4Y05Fv9EOlGWXzHUGkH8GVZbUNxHQ5Ke30BS
+         UiimKeBJXJxgpfsfgrDEsGwnWNz8agcWZwrUqA5ppJfUNGblKH95S/HpJreS/hvMjwKq
+         GXAqdaK453dNYOaQU0P5+BumGrbeDK4aB/cZkQ62+lf9fuLsEfbszkbFIy304Sid6N0S
+         kWcsWPX+Qr4DivVVLzmnj5QDofvOd29UbyybeM7sJGPvMpdvJW0RBwQy0ScVLhWJmqvU
+         C4Tw==
+X-Gm-Message-State: AAQBX9dC78M+uj1xa+1xSM/HSELnrwuQlAG57jTZbDDZ4FCodZHXKHKB
+        QHnoa51A1d9vTcZpRl8sM1blNg==
+X-Google-Smtp-Source: AKy350Y6BVy0kKsBIvMlaCwci6jrmq2SWtNUQBKSoPRQSgF4V0DbngHfYOsYUcqXoCyxZHTNP9etyQ==
+X-Received: by 2002:a17:906:5288:b0:932:3d1b:b67a with SMTP id c8-20020a170906528800b009323d1bb67amr12335753ejm.41.1679924864341;
+        Mon, 27 Mar 2023 06:47:44 -0700 (PDT)
+Received: from localhost.localdomain ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id n7-20020a509347000000b005023ddb37eesm2394303eda.8.2023.03.27.06.47.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Mar 2023 06:47:43 -0700 (PDT)
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v4 0/7] Add dedicated Qcom ICE driver
+Date:   Mon, 27 Mar 2023 16:47:27 +0300
+Message-Id: <20230327134734.3256974-1-abel.vesa@linaro.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+As both SDCC and UFS drivers use the ICE with duplicated implementation,
+while none of the currently supported platforms make use concomitantly
+of the same ICE IP block instance, the new SM8550 allows both UFS and
+SDCC to do so. In order to support such scenario, there is a need for
+a unified implementation and a devicetree node to be shared between
+both types of storage devices. So lets drop the duplicate implementation
+of the ICE from both SDCC and UFS and make it a dedicated (soc) driver.
+Also, switch all UFS and SDCC devicetree nodes to use the new ICE
+approach.
 
-Add a dedicated early rules file to simplify configuring the behavior
-of the SCSI udev rules shipped with sg3_utils.
+See each individual patch for changelogs.
 
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- Makefile.am                       |  1 +
- scripts/00-scsi-sg3_config.rules  | 23 +++++++++++++++++++++++
- scripts/55-scsi-sg3_id.rules      |  6 ++----
- scripts/58-scsi-sg3_symlink.rules |  6 +-----
- 4 files changed, 27 insertions(+), 9 deletions(-)
- create mode 100644 scripts/00-scsi-sg3_config.rules
+The v3 is here:
+https://lore.kernel.org/all/20230313115202.3960700-1-abel.vesa@linaro.org/
 
-diff --git a/Makefile.am b/Makefile.am
-index 240acbe..ce7ee71 100644
---- a/Makefile.am
-+++ b/Makefile.am
-@@ -123,6 +123,7 @@ EXTRA_DIST += \
- 	inhex/z_act_query.hex
- 
- EXTRA_DIST += \
-+	scripts/00-scsi-sg3_config.rules \
- 	scripts/40-usb-blacklist.rules \
- 	scripts/54-before-scsi-sg3_id.rules \
- 	scripts/55-scsi-sg3_id.rules \
-diff --git a/scripts/00-scsi-sg3_config.rules b/scripts/00-scsi-sg3_config.rules
-new file mode 100644
-index 0000000..43d6f16
---- /dev/null
-+++ b/scripts/00-scsi-sg3_config.rules
-@@ -0,0 +1,23 @@
-+# Configuration for SCSI device identification
-+
-+# To apply changes, copy this file to /etc/udev/rules.d and edit to suit your needs.
-+# DO NOT EDIT THIS FILE IN PLACE!
-+
-+ACTION!="add|change", GOTO="scsi_identify_end"
-+SUBSYSTEMS=="scsi", GOTO="scsi_identify"
-+GOTO="scsi_identify_end"
-+LABEL="scsi_identify"
-+
-+# Set ID_SCSI_INQUIRY to 0 to force running "sg_inq" for obtaining device IDs
-+# from SCSI VPDs, rather than looking them up in sysfs (not recommended).
-+ENV{ID_SCSI_INQUIRY}=""
-+
-+# Set enabled unreliable sources for setting the ID_SERIAL property.
-+# See 55-scsi-sg3_id.rules for detailed documentation.
-+ENV{.SCSI_ID_SERIAL_SRC}="T"
-+
-+# Set enabled unreliable sources for creating additional /dev/disk/by-id/scsi* symlinks.
-+# See 58-scsi-sg3_symlink.rules for detailed documentation.
-+ENV{.SCSI_SYMLINK_SRC}=""
-+
-+LABEL="scsi_identify_end"
-diff --git a/scripts/55-scsi-sg3_id.rules b/scripts/55-scsi-sg3_id.rules
-index 33b2ad3..5e9732d 100644
---- a/scripts/55-scsi-sg3_id.rules
-+++ b/scripts/55-scsi-sg3_id.rules
-@@ -36,7 +36,7 @@ KERNEL!="sd*[!0-9]|sr*", GOTO="sg3_utils_id_end"
- # have scanned for VPD pages, so if the vpd page attribute is not
- # present it is not supported (or deemed unsafe to access).
- # Hence we can skip the call to sg_inq and avoid I/O altogether.
--# Set 'ID_SCSI_INQUIRY=0' in an earlier udev rule if the kernel
-+# Set ENV{ID_SCSI_INQUIRY}="0" in 00-scsi-sg3_config.rules if the kernel
- # fails to scan VPD pages correctly; the rules will then fall
- # back to calling sg_vpd directly.
- LABEL="scsi_inquiry"
-@@ -119,9 +119,7 @@ ENV{ID_SCSI_SERIAL}!="?*", ENV{SCSI_IDENT_SERIAL}=="?*", ENV{ID_SCSI_SERIAL}="$e
- # Be aware that multipath actually needs unique identifiers, though.
- # Using ambiguous identifiers for ID_SERIAL can cause data corruption with multipath.
- #
--# To configure this, add an early rule (e.g. /etc/udev/rules.d/00-scsi-serial.rules) e.g. like this:
--# ACTION!="remove", KERNEL=="sd*|sr*|st*|nst*|cciss*", ENV{.SCSI_ID_SERIAL_SRC}="TLVS"
--#
-+# To configure the behavior, set ENV{.SCSI_ID_SERIAL_SRC} in 00-scsi-sg3_config.rules.
- # By default, only T10 vendor ID is allowed.
- ENV{.SCSI_ID_SERIAL_SRC}!="?*", ENV{.SCSI_ID_SERIAL_SRC}="T"
- 
-diff --git a/scripts/58-scsi-sg3_symlink.rules b/scripts/58-scsi-sg3_symlink.rules
-index 99fdc23..dfe8f77 100644
---- a/scripts/58-scsi-sg3_symlink.rules
-+++ b/scripts/58-scsi-sg3_symlink.rules
-@@ -23,12 +23,8 @@ ENV{UDEV_DISABLE_PERSISTENT_STORAGE_RULES_FLAG}=="1", GOTO="sg3_utils_symlink_en
- # This only needs to be changed if some subsystem, like dm-crypt or LVM, depends on the
- # additional symlinks being present for device identification.
- #
--# To configure the behavior, add an early rule (e.g. /etc/udev/rules.d/00-scsi-serial.rules)
--# like this:
--# ACTION!="remove", KERNEL=="sd*|sr*|st*|nst*|cciss*", ENV{.SCSI_SYMLINK_SRC}="TS"
--#
-+# To configure the behavior, set ENV{.SCSI_SYMLINK_SRC} in 00-scsi-sg3_config.rules.
- # By default, no possibly ambiguous additional symlinks will be created.
--ENV{.SCSI_SYMLINK_SRC}!="?*", ENV{.SCSI_SYMLINK_SRC}=""
- 
- # 0: vpd page 0x80 identifier
- ENV{.SCSI_SYMLINK_SRC}=="*S*", ENV{SCSI_IDENT_SERIAL}=="?*", ENV{DEVTYPE}=="disk", \
+Abel Vesa (7):
+  dt-bindings: crypto: Add Qualcomm Inline Crypto Engine
+  dt-bindings: mmc: sdhci-msm: Add ICE phandle
+  dt-bindings: ufs: qcom: Add ICE phandle
+  soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
+  scsi: ufs: ufs-qcom: Switch to the new ICE API
+  mmc: sdhci-msm: Switch to the new ICE API
+  arm64: dts: qcom: sm8550: Add the Inline Crypto Engine node
+
+ .../crypto/qcom,inline-crypto-engine.yaml     |  42 +++
+ .../devicetree/bindings/mmc/sdhci-msm.yaml    |   4 +
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |   4 +
+ arch/arm64/boot/dts/qcom/sm8550.dtsi          |  10 +
+ drivers/mmc/host/Kconfig                      |   2 +-
+ drivers/mmc/host/sdhci-msm.c                  | 220 +++--------
+ drivers/soc/qcom/Kconfig                      |   4 +
+ drivers/soc/qcom/Makefile                     |   1 +
+ drivers/soc/qcom/ice.c                        | 342 ++++++++++++++++++
+ drivers/ufs/host/Kconfig                      |   2 +-
+ drivers/ufs/host/Makefile                     |   4 +-
+ drivers/ufs/host/ufs-qcom-ice.c               | 244 -------------
+ drivers/ufs/host/ufs-qcom.c                   |  95 ++++-
+ drivers/ufs/host/ufs-qcom.h                   |  32 +-
+ include/soc/qcom/ice.h                        |  37 ++
+ 15 files changed, 591 insertions(+), 452 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+ create mode 100644 drivers/soc/qcom/ice.c
+ delete mode 100644 drivers/ufs/host/ufs-qcom-ice.c
+ create mode 100644 include/soc/qcom/ice.h
+
 -- 
-2.39.2
+2.34.1
 
