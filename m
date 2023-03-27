@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 223AEC77B6C
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 17:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6C7C77B6C
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 18:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232244AbjC0RxH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 13:53:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59336 "EHLO
+        id S231834AbjC0SCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 14:02:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232207AbjC0RxE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 13:53:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ADF2170A;
-        Mon, 27 Mar 2023 10:52:59 -0700 (PDT)
+        with ESMTP id S229493AbjC0SCD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 14:02:03 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 404CDEC;
+        Mon, 27 Mar 2023 11:02:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F159E61460;
-        Mon, 27 Mar 2023 17:52:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AABAC433EF;
-        Mon, 27 Mar 2023 17:52:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E8547B818A4;
+        Mon, 27 Mar 2023 18:02:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E79A1C4339B;
+        Mon, 27 Mar 2023 18:01:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679939578;
-        bh=YUjw6HS7Ov0YlFJ936LcRdxbHpWylAOUWlXSpvo0Xus=;
+        s=k20201202; t=1679940119;
+        bh=r3W3CExS6s0aynR90LW9av86zilz2l5bpPiQq8qSgxE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=T1MN3jBV0gb+UwCkF0T7VQ2Ufwhk5sPD+iei9Q9lOdNqlJoDm/Jo6HfJgg4rwrgW0
-         GI1bYD1pNH+oxApvz0AbaIniEKaVLTOSgflI6HGGB2+wNb5tViDNcxVNYJGbdAazK1
-         1mgRzjxvV23vJ/1IxjAInTfWzvNPo90/vLbV+jFu0KxC+ZQ+SInWb2AwBgiVdZ3GB3
-         z0C7NOxbWq5xKDXm65qsQymYFsNwMWWtGmrHUJ0IwlHktznE5yQs33J+z9Yx+IMS6F
-         2zVBD3c6pn6GsiooTVy02KA/pWscHe3Bs1X9n0HXD753oNUjN7TQS267UNSbWk2TZN
-         F1OfRaOGTSjMQ==
-Date:   Mon, 27 Mar 2023 10:52:55 -0700
+        b=e5eKH37trpX6huVMm+kEvfWLbcU5tdQTr1r2ve39BDvGGqv/TSsQSO/2MEhhQqIL5
+         hudw/0svA//Q0jC0gCjlzEOaq9YWJOu9Tka09ExBUq7XZ/TatcLyACvJnOGYXkN6AK
+         LOL5uLSGXEV9OZ5EnAoCWJNiAK71AGI/TNSaDTCPB0dOgHYxIamMjE0+t6Re4WjWZ0
+         1ZrByloe1o0sg0mT6tZDdbw+tH8tg8xXcabHmnRJgmBi4QEBy80jl3Rv2rZ+5J9Sbd
+         anijbDoznXNlGRQMpfxYja5jghHDNhB0hgs+khe/fPuMZYJXkMGyU53pf4nfAUuTYR
+         /sC19gQf19C/A==
+Date:   Mon, 27 Mar 2023 11:01:57 -0700
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     Abel Vesa <abel.vesa@linaro.org>
 Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
@@ -53,55 +53,85 @@ Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 2/7] dt-bindings: mmc: sdhci-msm: Add ICE phandle
-Message-ID: <20230327175255.GB1882@sol.localdomain>
+Subject: Re: [PATCH v4 4/7] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
+ dedicated driver
+Message-ID: <20230327180157.GC1882@sol.localdomain>
 References: <20230327134734.3256974-1-abel.vesa@linaro.org>
- <20230327134734.3256974-3-abel.vesa@linaro.org>
+ <20230327134734.3256974-5-abel.vesa@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230327134734.3256974-3-abel.vesa@linaro.org>
+In-Reply-To: <20230327134734.3256974-5-abel.vesa@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 27, 2023 at 04:47:29PM +0300, Abel Vesa wrote:
-> Starting with SM8550, the ICE will have its own devicetree node
-> so add the qcom,ice property to reference it.
-> 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> ---
-> 
-> The v3 (RFC) is here:
-> https://lore.kernel.org/all/20230313115202.3960700-3-abel.vesa@linaro.org/
-> 
-> Changes since v3:
->  * dropped the "and drop core clock" part from subject line
-> 
-> Changes since v2:
->  * dropped all changes except the qcom,ice property
-> 
->  Documentation/devicetree/bindings/mmc/sdhci-msm.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml b/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
-> index 64df6919abaf..0ad14d5b722e 100644
-> --- a/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
-> +++ b/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
-> @@ -120,6 +120,10 @@ properties:
->      $ref: /schemas/types.yaml#/definitions/uint32
->      description: platform specific settings for DLL_CONFIG reg.
->  
-> +  qcom,ice:
-> +    $ref: /schemas/types.yaml#/definitions/phandle
-> +    description: phandle to the Inline Crypto Engine node
+On Mon, Mar 27, 2023 at 04:47:31PM +0300, Abel Vesa wrote:
+> +	/* For now this driver only supports ICE version 3 and 4. */
+> +	if (major != 3 && major != 4) {
+> +		dev_warn(dev, "Unsupported ICE version: v%d.%d.%d\n",
+> +			 major, minor, step);
+> +		return false;
+> +	}
+
+Version 4 support was not in the original.  This ought to be mentioned in the
+commit message.
+
+> +struct qcom_ice *of_qcom_ice_get(struct device *dev)
+> +{
+> +	struct platform_device *pdev = to_platform_device(dev);
+> +	struct qcom_ice *ice = ERR_PTR(-EPROBE_DEFER);
+> +	struct device_node *node;
+> +	struct resource *res;
+> +	void __iomem *base;
 > +
+> +	if (!dev || !dev->of_node)
+> +		return ERR_PTR(-ENODEV);
+> +
+> +	/* legacy has ice reg range in the consumer DT node */
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice");
+> +	if (res) {
+> +		base = devm_ioremap_resource(&pdev->dev, res);
+> +		if (IS_ERR(base))
+> +			return base;
+> +
+> +		/* create ICE instance using consumer dev */
+> +		return qcom_ice_create(pdev, base);
+> +	}
+> +
+> +	node = of_parse_phandle(dev->of_node, "qcom,ice", 0);
+> +	if (!node) {
+> +		ice = NULL;
+> +		goto out;
+> +	}
 
-It would be helpful if the description was more detailed and explained that this
-is a replacement for the directly specified reg and clock.
+I think a longer comment in this code explaining the legacy implementation vs.
+the new implementation would be helpful.
 
-Otherwise, looks good to me.
+> +	pdev = of_find_device_by_node(node);
+> +	if (!pdev) {
+> +		dev_err(dev, "Cannot find device node %s\n", node->name);
+> +		goto out;
+> +	}
 
-Reviewed-by: Eric Biggers <ebiggers@google.com>
+It is hard to understand the return value in this case, since
+'ice = ERR_PTR(-EPROBE_DEFER)' happens way above.  Maybe do:
+
+	if (!pdev) {
+		dev_err(dev, "Cannot find device node %s\n", node->name);
+		ice = ERR_PTR(-EPROBE_DEFER);
+		goto out;
+	}
+> +
+> +	ice = platform_get_drvdata(pdev);
+> +	if (!ice) {
+> +		dev_err(dev, "Cannot get ice\n");
+> +		put_device(&pdev->dev);
+> +		return ERR_PTR(-ENODEV);
+> +	}
+
+Can this error message be more descriptive?
+
+Otherwise this patch is looking good, thanks!
 
 - Eric
