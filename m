@@ -2,172 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E93C6C77B61
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 21:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3720CC76195
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 23:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229663AbjC0V6o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 17:58:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38720 "EHLO
+        id S229771AbjC0X6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 19:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbjC0V6n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 17:58:43 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20B9B210D;
-        Mon, 27 Mar 2023 14:58:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679954322; x=1711490322;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=K8elsuuHEP+ah5YfSiPOlfAsO3FRV8t6GIdL66uBhyg=;
-  b=ZcGCkwyvZMo11NPbrBxllz7sYABCfhQx9tOIAErgztvxTPZB1xMJTvuK
-   bluh2RzPiEWPytJruN4Tqq3oL2YIQTQ9QwzBPeNJa2EPojYrRqvO/WbkU
-   G41R2E7cxwW58zPmExhUryhvxx9Ex/dea0n4fr8I77+9QeLbOqJ3PJ5PJ
-   JXurzQ6dH35lh12a5CgTXsup2Gg2t7/tu2uhpRK0htOMheN8hCqsgSD97
-   EzUFPQ7TSZDesENyRBrvNhaJrWuKkoqZ5puJSeXXQEbWaaWO9cL4TskzO
-   B1LHrxKByEpNfF2M3Gis7bVaQEkHhR6uOL/s5jvJdhHfeBuN6a41EFYpi
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="403002687"
-X-IronPort-AV: E=Sophos;i="5.98,295,1673942400"; 
-   d="scan'208";a="403002687"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2023 14:58:41 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="929623497"
-X-IronPort-AV: E=Sophos;i="5.98,295,1673942400"; 
-   d="scan'208";a="929623497"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 27 Mar 2023 14:58:36 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pgurL-000I2n-1e;
-        Mon, 27 Mar 2023 21:58:35 +0000
-Date:   Tue, 28 Mar 2023 05:58:20 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Abel Vesa <abel.vesa@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        Eric Biggers <ebiggers@kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev, linux-mmc@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 6/7] mmc: sdhci-msm: Switch to the new ICE API
-Message-ID: <202303280550.QHofWszH-lkp@intel.com>
-References: <20230327134734.3256974-7-abel.vesa@linaro.org>
+        with ESMTP id S229664AbjC0X6m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 19:58:42 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4631719A8
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 16:58:38 -0700 (PDT)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 73AAF7595C;
+        Mon, 27 Mar 2023 23:58:37 +0000 (UTC)
+Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 5A0EF60AA4;
+        Mon, 27 Mar 2023 23:58:37 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
+        with ESMTP id iXSEOSz7t8G1; Mon, 27 Mar 2023 23:58:36 +0000 (UTC)
+Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id E861260256;
+        Mon, 27 Mar 2023 23:58:35 +0000 (UTC)
+Message-ID: <3f02a075-cc30-5584-704b-da88be1d6b31@interlog.com>
+Date:   Mon, 27 Mar 2023 19:58:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230327134734.3256974-7-abel.vesa@linaro.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Reply-To: dgilbert@interlog.com
+Subject: Re: [RFC PATCH 0/3] sg3_utils: udev rules: restrict use of ambiguous
+ device IDs
+Content-Language: en-CA
+To:     mwilck@suse.com, Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        Franck Bui <fbui@suse.de>, dm-devel@redhat.com,
+        linux-scsi@vger.kernel.org,
+        Benjamin Marzinski <bmarzins@redhat.com>
+References: <20230327132459.29531-1-mwilck@suse.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20230327132459.29531-1-mwilck@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Abel,
+On 2023-03-27 09:24, mwilck@suse.com wrote:
+> From: Martin Wilck <mwilck@suse.com>
+> 
+> Most modern SCSI devices provide VPD page 83 with at least one highly
+> reliable device identifier, like NAA Registered Extended or EUI-64, or
+> the ata-id identifier. Other device identifier types have shown to be less
+> reliable and possibly ambiguous. Ambiguity in particular is a problem with
+> multipath-tools, which may group unrelated devices together in a multipath
+> map, causing possible data corruption.
+> 
+> The device identifiers are used in two independent ways by the udev rules:
+> a) to set ID_SERIAL for subsystems like multipath, and b) to create
+> /dev/disk/by-id/scsi-... symlinks. Our udev rules have traditionally created
+> symlinks for every device identifier obtained from either VPD 83 or 80. This
+> may cause issues, especially on large installments with storage devices that
+> exhibit the same identifier for many logical units. At the same time, these
+> symlinks are rarely used.
+> 
+> Avoid using unreliable identifiers for setting ID_SERIAL, and don't create
+> symlinks for these identifiers. Add a configuration method that allows
+> users to easily re-enable these methods and symlinks if they need to
+> (this might be the case on systems with legacy devices that are referenced
+> in /etc/crypttab, lvm.conf, or the like). This is done by introducing
+> environment variables .SCSI_ID_SERIAL_SRC and .SCSI_ID_SYMLINK_SRC, to
+> control use of device identifiers for determining ID_SERIAL and for creating
+> symlinks, respectively. Both variables can contain the letters "T", "L", "V",
+> and "S" to enable T10-vendor ID, NAA local ID, vendor-specific ID, and VPD 80
+> based ID, respectively.
+> 
+> Distributions can change the defaults for these environment variables
+> to provide backward compatibility for their users, while offering users
+> an easy way to change the settings.
+> 
+> I'm sending this as RFC, because I expect that not everyone will agree
+> which identifiers should be enabled by default.
 
-I love your patch! Perhaps something to improve:
+Lets see if anything happens. Applied as sg3_utils revision 1019 and
+pushed to https://github.com/doug-gilbert/sg3_utils .
 
-[auto build test WARNING on robh/for-next]
-[also build test WARNING on mkp-scsi/for-next jejb-scsi/for-next linus/master v6.3-rc4 next-20230327]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Didn't see any effect on an Ubuntu 22.10 when sg3_utils deb package
+built and installed. No sign of 00-scsi-sg3_config.rules being placed
+anywhere by Ubuntu. Does Suse install those rules?
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Abel-Vesa/dt-bindings-crypto-Add-Qualcomm-Inline-Crypto-Engine/20230327-214958
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-patch link:    https://lore.kernel.org/r/20230327134734.3256974-7-abel.vesa%40linaro.org
-patch subject: [PATCH v4 6/7] mmc: sdhci-msm: Switch to the new ICE API
-config: microblaze-randconfig-s042-20230326 (https://download.01.org/0day-ci/archive/20230328/202303280550.QHofWszH-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 12.1.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # apt-get install sparse
-        # sparse version: v0.6.4-39-gce1a6720-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/2b59bf19ddc6de631e808bb2f30d5cf030f37828
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Abel-Vesa/dt-bindings-crypto-Add-Qualcomm-Inline-Crypto-Engine/20230327-214958
-        git checkout 2b59bf19ddc6de631e808bb2f30d5cf030f37828
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=microblaze olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=microblaze SHELL=/bin/bash drivers/soc/qcom/
+Doug Gilbert
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303280550.QHofWszH-lkp@intel.com/
+> Martin Wilck (3):
+>    55-scsi-sg3_id.rules: don't set unreliable device ID by default
+>    58-scsi-sg3_symlink.rules: don't create extra by-id symlinks by
+>      default
+>    udev: add 00-scsi-sg3_config.rules for user configuration
+> 
+>   Makefile.am                       |  1 +
+>   scripts/00-scsi-sg3_config.rules  | 23 ++++++++++++++
+>   scripts/55-scsi-sg3_id.rules      | 53 ++++++++++++++++++++++++++++---
+>   scripts/58-scsi-sg3_symlink.rules | 46 +++++++++++++++++++++------
+>   4 files changed, 109 insertions(+), 14 deletions(-)
+>   create mode 100644 scripts/00-scsi-sg3_config.rules
+> 
 
-sparse warnings: (new ones prefixed by >>)
->> drivers/soc/qcom/ice.c:273:32: sparse: sparse: incorrect type in return expression (different address spaces) @@     expected struct qcom_ice * @@     got void [noderef] __iomem *[assigned] base @@
-   drivers/soc/qcom/ice.c:273:32: sparse:     expected struct qcom_ice *
-   drivers/soc/qcom/ice.c:273:32: sparse:     got void [noderef] __iomem *[assigned] base
-
-vim +273 drivers/soc/qcom/ice.c
-
-a9e1199fcc2742 Abel Vesa 2023-03-27  256  
-a9e1199fcc2742 Abel Vesa 2023-03-27  257  struct qcom_ice *of_qcom_ice_get(struct device *dev)
-a9e1199fcc2742 Abel Vesa 2023-03-27  258  {
-a9e1199fcc2742 Abel Vesa 2023-03-27  259  	struct platform_device *pdev = to_platform_device(dev);
-a9e1199fcc2742 Abel Vesa 2023-03-27  260  	struct qcom_ice *ice = ERR_PTR(-EPROBE_DEFER);
-a9e1199fcc2742 Abel Vesa 2023-03-27  261  	struct device_node *node;
-a9e1199fcc2742 Abel Vesa 2023-03-27  262  	struct resource *res;
-a9e1199fcc2742 Abel Vesa 2023-03-27  263  	void __iomem *base;
-a9e1199fcc2742 Abel Vesa 2023-03-27  264  
-a9e1199fcc2742 Abel Vesa 2023-03-27  265  	if (!dev || !dev->of_node)
-a9e1199fcc2742 Abel Vesa 2023-03-27  266  		return ERR_PTR(-ENODEV);
-a9e1199fcc2742 Abel Vesa 2023-03-27  267  
-a9e1199fcc2742 Abel Vesa 2023-03-27  268  	/* legacy has ice reg range in the consumer DT node */
-a9e1199fcc2742 Abel Vesa 2023-03-27  269  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice");
-a9e1199fcc2742 Abel Vesa 2023-03-27  270  	if (res) {
-a9e1199fcc2742 Abel Vesa 2023-03-27  271  		base = devm_ioremap_resource(&pdev->dev, res);
-a9e1199fcc2742 Abel Vesa 2023-03-27  272  		if (IS_ERR(base))
-a9e1199fcc2742 Abel Vesa 2023-03-27 @273  			return base;
-a9e1199fcc2742 Abel Vesa 2023-03-27  274  
-a9e1199fcc2742 Abel Vesa 2023-03-27  275  		/* create ICE instance using consumer dev */
-a9e1199fcc2742 Abel Vesa 2023-03-27  276  		return qcom_ice_create(pdev, base);
-a9e1199fcc2742 Abel Vesa 2023-03-27  277  	}
-a9e1199fcc2742 Abel Vesa 2023-03-27  278  
-a9e1199fcc2742 Abel Vesa 2023-03-27  279  	node = of_parse_phandle(dev->of_node, "qcom,ice", 0);
-a9e1199fcc2742 Abel Vesa 2023-03-27  280  	if (!node) {
-a9e1199fcc2742 Abel Vesa 2023-03-27  281  		ice = NULL;
-a9e1199fcc2742 Abel Vesa 2023-03-27  282  		goto out;
-a9e1199fcc2742 Abel Vesa 2023-03-27  283  	}
-a9e1199fcc2742 Abel Vesa 2023-03-27  284  
-a9e1199fcc2742 Abel Vesa 2023-03-27  285  	pdev = of_find_device_by_node(node);
-a9e1199fcc2742 Abel Vesa 2023-03-27  286  	if (!pdev) {
-a9e1199fcc2742 Abel Vesa 2023-03-27  287  		dev_err(dev, "Cannot find device node %s\n", node->name);
-a9e1199fcc2742 Abel Vesa 2023-03-27  288  		goto out;
-a9e1199fcc2742 Abel Vesa 2023-03-27  289  	}
-a9e1199fcc2742 Abel Vesa 2023-03-27  290  
-a9e1199fcc2742 Abel Vesa 2023-03-27  291  	ice = platform_get_drvdata(pdev);
-a9e1199fcc2742 Abel Vesa 2023-03-27  292  	if (!ice) {
-a9e1199fcc2742 Abel Vesa 2023-03-27  293  		dev_err(dev, "Cannot get ice\n");
-a9e1199fcc2742 Abel Vesa 2023-03-27  294  		put_device(&pdev->dev);
-a9e1199fcc2742 Abel Vesa 2023-03-27  295  		return ERR_PTR(-ENODEV);
-a9e1199fcc2742 Abel Vesa 2023-03-27  296  	}
-a9e1199fcc2742 Abel Vesa 2023-03-27  297  
-a9e1199fcc2742 Abel Vesa 2023-03-27  298  out:
-a9e1199fcc2742 Abel Vesa 2023-03-27  299  	of_node_put(node);
-a9e1199fcc2742 Abel Vesa 2023-03-27  300  
-a9e1199fcc2742 Abel Vesa 2023-03-27  301  	return ice;
-a9e1199fcc2742 Abel Vesa 2023-03-27  302  }
-a9e1199fcc2742 Abel Vesa 2023-03-27  303  EXPORT_SYMBOL_GPL(of_qcom_ice_get);
-a9e1199fcc2742 Abel Vesa 2023-03-27  304  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
