@@ -2,87 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19179C77B60
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 20:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C18DC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 21:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230155AbjC0UNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 16:13:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38352 "EHLO
+        id S230315AbjC0VZi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 17:25:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229940AbjC0UNA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 16:13:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B79B1BDF;
-        Mon, 27 Mar 2023 13:12:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0F6C6614E2;
-        Mon, 27 Mar 2023 20:12:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21EF9C433EF;
-        Mon, 27 Mar 2023 20:12:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679947978;
-        bh=ztuneWnacYJNX61OcSRLH6dtkEQaVL91CZmSDSc+HvA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BGKc7m3TJ1K2Ad+LniE+5DTg+auW75CPse6loLp5HVcL/vZvqbDF9t19XyobR6gzU
-         qE8zqtxoQgi8BOnBQOIYzGcrBan8AgDwAY1AGcKU6dAzqu+Bg99o5POZl8tv0yAJgu
-         G2uzAInEbtj7GrgHfQpKpRWEAV19EvxCo7lt0es5RKzByzgJ7/pkdAAxOqn+sLzqOa
-         dG20RD9sOICkaRFYrBWzyz63wDiXXdcv9ELvhHVpWi+lOJ4rPzAo7nwhSK323biZMb
-         gzjV4Yn13exs+q6DU+ir1A6ToP2zFU6cHj8v5MbWwMF46mS4Fbx3WBsR6hNO7anLBX
-         pAcJw7Ano5gEA==
-Date:   Mon, 27 Mar 2023 20:12:56 +0000
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Bjorn Andersson <andersson@kernel.org>
-Cc:     Abel Vesa <abel.vesa@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 4/7] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
- dedicated driver
-Message-ID: <ZCH4yE9nmj/3e1Vx@gmail.com>
-References: <20230327134734.3256974-1-abel.vesa@linaro.org>
- <20230327134734.3256974-5-abel.vesa@linaro.org>
- <20230327185358.c4emwquhouq42itf@ripper>
- <20230327190954.GE73752@sol.localdomain>
- <20230327192704.ywczpr2otbwxnsh5@ripper>
+        with ESMTP id S229608AbjC0VZh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 17:25:37 -0400
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22455173E;
+        Mon, 27 Mar 2023 14:25:37 -0700 (PDT)
+Received: by mail-pl1-f174.google.com with SMTP id o11so9772738ple.1;
+        Mon, 27 Mar 2023 14:25:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679952336;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=d+hWlMy+WTq4KqDPKevShzQK5+YLsZ35eRs3qtTHtNE=;
+        b=3eFuHpcjtKoJoPbREpyMnztgs7KUPHnYlqriqNNauMPIY1/fkvZvLpU6Q9KUlAnho9
+         ZDh8xLJlfyN/vM82ocIOKMrQthticF/9TeRYhq/ZiOamQpLragxAosXF3sxikLkADnE9
+         tb5HgJi51fB5jy+zi/R8eAbyJXsEg5PFV097ijzS7xklm2L0lttweKCdNAc0DJOtx9bz
+         5zrUIhwBy/2TQIBuLERpXE7WKPBAanG/6yHib4jbyLF1pvAJXaTHOna9LlTBAAnfEHW0
+         WaSfb9p/atPnewdsgBrdgu7fUJgze/V8Sfg4GcHy1yeeJybM8xb65fG7+mdxtbEXHVne
+         tN/A==
+X-Gm-Message-State: AAQBX9fOL8mjTqy5vewS/NSxiPWOJrs1lVTzwIVIXidGq6utBdVWa+PJ
+        pW13A3XVmnSwk00F3fV2lDk=
+X-Google-Smtp-Source: AKy350ZwOUWKgbKOOim0MTzjxlTJK3v74GbGhJyLYE+2fsi7KxHkpJq05fTGFOMZ0xS0FkofV016PA==
+X-Received: by 2002:a17:90b:4f47:b0:23d:2f73:d3c8 with SMTP id pj7-20020a17090b4f4700b0023d2f73d3c8mr15130777pjb.42.1679952336480;
+        Mon, 27 Mar 2023 14:25:36 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:798e:a3a0:ddc2:c946? ([2620:15c:211:201:798e:a3a0:ddc2:c946])
+        by smtp.gmail.com with ESMTPSA id bf6-20020a170902b90600b001a1bf30cef1sm16668218plb.46.2023.03.27.14.25.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Mar 2023 14:25:36 -0700 (PDT)
+Message-ID: <50fa480e-4c0e-70f2-5185-1d83df9f9e13@acm.org>
+Date:   Mon, 27 Mar 2023 14:25:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230327192704.ywczpr2otbwxnsh5@ripper>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH 3/5] scsi: limit to set the host state
+Content-Language: en-US
+To:     Ye Bin <yebin@huaweicloud.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Ye Bin <yebin10@huawei.com>
+References: <20230325011734.507453-1-yebin@huaweicloud.com>
+ <20230325011734.507453-4-yebin@huaweicloud.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230325011734.507453-4-yebin@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 27, 2023 at 12:27:04PM -0700, Bjorn Andersson wrote:
+On 3/24/23 18:17, Ye Bin wrote:
+> From: Ye Bin <yebin10@huawei.com>
 > 
-> That's a valid reason that I was looking for. Wouldn't this be a common
-> problem, something other parts of the stack would like to avoid?
-> Or it's just a byte array until we get here?
+> Now, we can set the host state with any value. Actually, it doesn't
+> make sense. As previous patch introduce SHOST_BLOCKED state, set this
+> state, it will blocking IO. So this patch limit to set the host with
+> running/blocked state.
 > 
-> > It could be done with unaligned memory accesses, though, if you prefer that:
-> > 
+> Signed-off-by: Ye Bin <yebin10@huawei.com>
+> ---
+>   drivers/scsi/scsi_sysfs.c | 8 +++++++-
+>   1 file changed, 7 insertions(+), 1 deletion(-)
 > 
-> No need to jump through the hoops, but a comment would have saved
-> (robbed?) me from wondering.
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index b14f95ac594e..42c5936c7711 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -203,6 +203,7 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
+>   	int i;
+>   	struct Scsi_Host *shost = class_to_shost(dev);
+>   	enum scsi_host_state state = 0;
+> +	enum scsi_host_state old_state;
+>   	unsigned long flags;
+>   
+>   	for (i = 0; i < ARRAY_SIZE(shost_states); i++) {
+> @@ -216,8 +217,13 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
+>   	if (!state)
+>   		return -EINVAL;
+>   
+> +	if (state != SHOST_RUNNING && state != SHOST_BLOCKED)
+> +		return -EINVAL;
+> +
+>   	spin_lock_irqsave(shost->host_lock, flags);
+> -	if (scsi_host_set_state(shost, state)) {
+> +	old_state = shost->shost_state;
+> +	if ((old_state != SHOST_RUNNING && old_state != SHOST_BLOCKED) ||
+> +	    scsi_host_set_state(shost, state)) {
+>   		spin_unlock_irqrestore(shost->host_lock, flags);
+>   		return -EINVAL;
+>   	}
 
-The parameter to qcom_ice_program_key() is 'const u8 crypto_key[]', which has no
-inherent alignment in the type.  It might be that the callers currently only
-pass 4-byte aligned buffers, but I don't think that should be relied on here.
+Please make sure that the "state != SHOST_RUNNING && state != 
+SHOST_BLOCKED" check occurs only once and also that there is one 
+spin_lock_irqsave() call in this function and only one 
+spin_unlock_irqrestore() call.
 
-- Eric
+Thanks,
+
+Bart.
