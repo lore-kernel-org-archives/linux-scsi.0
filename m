@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A16C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 21:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04040C76195
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 21:34:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232263AbjC0V0w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 17:26:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42838 "EHLO
+        id S232200AbjC0Vec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 17:34:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232254AbjC0V0v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 17:26:51 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28E98199C;
-        Mon, 27 Mar 2023 14:26:51 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id p13-20020a17090a284d00b0023d2e945aebso253813pjf.0;
-        Mon, 27 Mar 2023 14:26:51 -0700 (PDT)
+        with ESMTP id S229674AbjC0Veb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 17:34:31 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BFA02121;
+        Mon, 27 Mar 2023 14:34:30 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id ix20so9784955plb.3;
+        Mon, 27 Mar 2023 14:34:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679952410;
+        d=1e100.net; s=20210112; t=1679952870;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=H+AbrE2EWJ7PQz7DWeOuqK02oPdPI27YJdpRpH9VzJQ=;
-        b=Hm0a1YclLLuaOnGC00etl+JblPRbUhPnDz/ZnNrbBGvBsHC5Lv7b2x/gOci8B2r1a5
-         FrjBTJKdTEVJ+E5qEijdrMl0pGcO3o6vdughC5LewoVCOXfT4AIqelZW5CxGlJMwoB8E
-         1FD2ntMIlhrH0FtGtbTvmyWaBl7/sRePXP18fqGp2KRNVgNNPTfKRPiwoOz1qF7QDjCZ
-         h+nqm+4U/Ov2VhrvU6D0jZF4tQbxzLoWX7xv5AadNenLzhaq2x65ssb6lPkSEdJrCs/k
-         ZAYiBctN2khv1Bpvv93VmF6zhaiqZtUXJZe2eEK6hRvD6EgJjCjmhcm5xS6nk2IA1liu
-         IQuQ==
-X-Gm-Message-State: AAQBX9ehpJh/09BuKoJbRTE7rzxw3xSZGwwP5vEGqFJBi4WoBAJG4uJE
-        OcA8JbbMUSRJWscCBEdlQCI=
-X-Google-Smtp-Source: AKy350YaUKUgKoTa0gsnLHRLizwc++xhPwRLYOpVcQtZ3RTvNBbtiihlkmuQ12r8cnXKPJ5iYIJvyQ==
-X-Received: by 2002:a17:90b:4b4e:b0:23f:7e2e:fe13 with SMTP id mi14-20020a17090b4b4e00b0023f7e2efe13mr14835810pjb.0.1679952410612;
-        Mon, 27 Mar 2023 14:26:50 -0700 (PDT)
+        bh=dJ1Q27BixpjwQZ9TKyNNIa72xj78VYX4qx6Qa2RfEzY=;
+        b=WnV3VDpDZEPs0RHnbAZfmUc21AjCITWQrrAjVbxzfdc7GyV+UgNOLMyXcDjHksVPKw
+         F5ugckPHdWAP8DejfSNoZbJ5CKpzYetSPkeStdEbrEtPmlWuwcILvYluKZ8hc6Wd/wU6
+         Vy/gcjjhQNh6/f6WnMlJTXyJAEMUZXvyEwrofrZU/2M++dCCXAgTDON3loqOgenpBvkg
+         drA1iN2CzAw4MKUZj25LLXLyMB1naUuQWcNS4jK4n7Ik98mIrTGI9+9Gm9ORO8B0DLMX
+         AmcMCaTimVcssliy5YWlXhZ1jRWCtaGx1x7fqw6Tu5va+jCsz0Uo1hCWLhQ1qtueHjIO
+         Lm3A==
+X-Gm-Message-State: AO0yUKWW+muolioPemlebgnWS/TJ1gRCUeDxRaHc9l82YIGFk5DzGYyX
+        8YnSnROfjHyPlL+IxnvScWlysys7KIA=
+X-Google-Smtp-Source: AK7set8/neRjEoh9MuSaSvNMMgp1Z/uzrKMIYu8Y3xQS1NcajTUx6fANbAWdFpjNC7x2uArRCqc11g==
+X-Received: by 2002:a05:6a20:38a5:b0:d9:fc6c:51fa with SMTP id n37-20020a056a2038a500b000d9fc6c51famr9974073pzf.32.1679952869673;
+        Mon, 27 Mar 2023 14:34:29 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:798e:a3a0:ddc2:c946? ([2620:15c:211:201:798e:a3a0:ddc2:c946])
-        by smtp.gmail.com with ESMTPSA id mv21-20020a17090b199500b0023d16f05dd8sm8011910pjb.36.2023.03.27.14.26.49
+        by smtp.gmail.com with ESMTPSA id j3-20020aa783c3000000b0062d2ac22b08sm4095704pfn.65.2023.03.27.14.34.28
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Mar 2023 14:26:50 -0700 (PDT)
-Message-ID: <c72dced5-fb0c-4392-b8ea-ad1ef5e1cef3@acm.org>
-Date:   Mon, 27 Mar 2023 14:26:48 -0700
+        Mon, 27 Mar 2023 14:34:29 -0700 (PDT)
+Message-ID: <f41d7aba-63ce-4c32-c01e-68d3647c7479@acm.org>
+Date:   Mon, 27 Mar 2023 14:34:27 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH 1/5] scsi: fix switch host state race between by sysfs and
- others
+Subject: Re: [PATCH 2/5] scsi: introduce SHOST_BLOCKED state to support
+ blocking IO
 Content-Language: en-US
 To:     Ye Bin <yebin@huaweicloud.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     Ye Bin <yebin10@huawei.com>
 References: <20230325011734.507453-1-yebin@huaweicloud.com>
- <20230325011734.507453-2-yebin@huaweicloud.com>
+ <20230325011734.507453-3-yebin@huaweicloud.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230325011734.507453-2-yebin@huaweicloud.com>
+In-Reply-To: <20230325011734.507453-3-yebin@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -60,48 +60,55 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/24/23 18:17, Ye Bin wrote:
-> From: Ye Bin <yebin10@huawei.com>
-> 
-> Now, switch host state by sysfs isn't hold 'shost->host_lock' lock.
-> It may race with other process, lead to host mixed state.
-> 
-> Signed-off-by: Ye Bin <yebin10@huawei.com>
-> ---
->   drivers/scsi/scsi_sysfs.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index ee28f73af4d4..cc0ae5e3def3 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -202,6 +202,7 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
->   	int i;
->   	struct Scsi_Host *shost = class_to_shost(dev);
->   	enum scsi_host_state state = 0;
-> +	unsigned long flags;
->   
->   	for (i = 0; i < ARRAY_SIZE(shost_states); i++) {
->   		const int len = strlen(shost_states[i].name);
-> @@ -214,8 +215,13 @@ store_shost_state(struct device *dev, struct device_attribute *attr,
->   	if (!state)
->   		return -EINVAL;
->   
-> -	if (scsi_host_set_state(shost, state))
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	if (scsi_host_set_state(shost, state)) {
-> +		spin_unlock_irqrestore(shost->host_lock, flags);
->   		return -EINVAL;
-> +	}
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
->   	return count;
->   }
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 9b6fbbe15d92..3b497fd4d329 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -90,6 +90,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
+>   		switch (oldstate) {
+>   		case SHOST_CREATED:
+>   		case SHOST_RECOVERY:
+> +		case SHOST_BLOCKED:
+>   			break;
+>   		default:
+>   			goto illegal;
+> @@ -99,6 +100,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
+>   	case SHOST_RECOVERY:
+>   		switch (oldstate) {
+>   		case SHOST_RUNNING:
+> +		case SHOST_BLOCKED:
+>   			break;
+>   		default:
+>   			goto illegal;
+> @@ -109,6 +111,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
+>   		switch (oldstate) {
+>   		case SHOST_CREATED:
+>   		case SHOST_RUNNING:
+> +		case SHOST_BLOCKED:
+>   		case SHOST_CANCEL_RECOVERY:
+>   			break;
+>   		default:
+> @@ -144,6 +147,14 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
+>   			goto illegal;
+>   		}
+>   		break;
+> +	case SHOST_BLOCKED:
+> +		switch (oldstate) {
+> +		case SHOST_RUNNING:
+> +			break;
+> +		default:
+> +			goto illegal;
+> +		}
+> +		break;
+>   	}
 
-Please make sure that there is only one spin_unlock_irqrestore() call in 
-this function.
+If a host is blocked, error recovery happens and completes, the host 
+will be unblocked. I don't think that is acceptable.
+
+The "blocked" property is orthogonal to the host state so a new boolean 
+member variable should be introduced in struct Scsi_Host instead of 
+introducing a new SCSI host state.
 
 Thanks,
 
 Bart.
-
-
