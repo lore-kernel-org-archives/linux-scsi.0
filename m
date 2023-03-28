@@ -2,118 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3720CC76195
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Mar 2023 23:58:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883FDC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 00:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229771AbjC0X6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Mar 2023 19:58:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58742 "EHLO
+        id S230224AbjC1ARm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Mar 2023 20:17:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229664AbjC0X6m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 19:58:42 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4631719A8
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 16:58:38 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 73AAF7595C;
-        Mon, 27 Mar 2023 23:58:37 +0000 (UTC)
-Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 5A0EF60AA4;
-        Mon, 27 Mar 2023 23:58:37 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
-        with ESMTP id iXSEOSz7t8G1; Mon, 27 Mar 2023 23:58:36 +0000 (UTC)
-Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id E861260256;
-        Mon, 27 Mar 2023 23:58:35 +0000 (UTC)
-Message-ID: <3f02a075-cc30-5584-704b-da88be1d6b31@interlog.com>
-Date:   Mon, 27 Mar 2023 19:58:34 -0400
+        with ESMTP id S229610AbjC1ARm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2023 20:17:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F15271FCF
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 17:16:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1679962614;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=l9TloykkvVXc8o7UP6x81LrTcABAgCIQ1kB1+I+fT8w=;
+        b=Ko4WJzybRJOiRdB8I8ndDh6A61QVkEeWjkwWInxYvLJvkK9LNI4h5p/v9KeC1f8aVvBwy4
+        edd/BYEcuTVHcv4LfmMF1yx37C6RkasS7ZZSn5oWG4zhtKey5OfP7/ZuMaBkLowoVMSDMz
+        ETfqWp2qUW2heah4NlVjtWJrV1SZp/E=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-458-MCIoBIKPMs2nPLk5m6Gb2Q-1; Mon, 27 Mar 2023 20:16:52 -0400
+X-MC-Unique: MCIoBIKPMs2nPLk5m6Gb2Q-1
+Received: by mail-qk1-f198.google.com with SMTP id c186-20020a379ac3000000b007484744a472so4543362qke.22
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2023 17:16:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679962612;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=l9TloykkvVXc8o7UP6x81LrTcABAgCIQ1kB1+I+fT8w=;
+        b=P8WDK9XENs2Q8Z3L+oaslC59I8bqaUurVZEEcoxj2e6Fgn33VSCcBQZKBPw5uSUX0s
+         QCDJukrmKjDZlA2ec3rmvv2wAJSeoIpZrOxa5zmgmnsul+aRmh/JVff1ReiQloZAHG9l
+         RBQ8zV3aOFlArs3QLK98HyWIEQ854uewds2o1vKSr8YVlJpYGLEaqScweiN02SFFl6w7
+         dd+JwXDrx8y4aABFVoDayo79iLAt9KvNWKv5kq3ys7n9hohg+SKrD2bNFrfhQnETyKS7
+         KsteQCsOifciLQWKtk6xL9csP0jBesvzI9jqLuvmRzecLk4JRVbSYjvQS01Y4XC0M0sE
+         6XVA==
+X-Gm-Message-State: AO0yUKUNfG/r75Z8xcYuoiwUCs26L30/U6qWlw9vryLHXZTFmSVsPzY3
+        0cwpQ9pp4gHDQ+iUmEmZv/061DH0iSqes1ArnCFw/f0BDQxXLdEJPSz19yav/fLAJZ9BLAjW19p
+        VjLXI9Bti0kAv4RCh6NSdBA==
+X-Received: by 2002:a05:622a:18aa:b0:3b8:6442:2575 with SMTP id v42-20020a05622a18aa00b003b864422575mr22673854qtc.49.1679962612316;
+        Mon, 27 Mar 2023 17:16:52 -0700 (PDT)
+X-Google-Smtp-Source: AKy350btSLeE0R9uHWk3nYnNxmFX2+jJghagg9JtvjX2KzEzjA2jaBgsmO5jb10c3S8J3WgiOfmnHw==
+X-Received: by 2002:a05:622a:18aa:b0:3b8:6442:2575 with SMTP id v42-20020a05622a18aa00b003b864422575mr22673825qtc.49.1679962612093;
+        Mon, 27 Mar 2023 17:16:52 -0700 (PDT)
+Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id m4-20020ac866c4000000b003e30aec0b70sm9500482qtp.64.2023.03.27.17.16.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Mar 2023 17:16:51 -0700 (PDT)
+From:   Tom Rix <trix@redhat.com>
+To:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, Tom Rix <trix@redhat.com>
+Subject: [PATCH] scsi: snic: remove unused xfer_len variable
+Date:   Mon, 27 Mar 2023 20:16:47 -0400
+Message-Id: <20230328001647.1778448-1-trix@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [RFC PATCH 0/3] sg3_utils: udev rules: restrict use of ambiguous
- device IDs
-Content-Language: en-CA
-To:     mwilck@suse.com, Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        Franck Bui <fbui@suse.de>, dm-devel@redhat.com,
-        linux-scsi@vger.kernel.org,
-        Benjamin Marzinski <bmarzins@redhat.com>
-References: <20230327132459.29531-1-mwilck@suse.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <20230327132459.29531-1-mwilck@suse.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-03-27 09:24, mwilck@suse.com wrote:
-> From: Martin Wilck <mwilck@suse.com>
-> 
-> Most modern SCSI devices provide VPD page 83 with at least one highly
-> reliable device identifier, like NAA Registered Extended or EUI-64, or
-> the ata-id identifier. Other device identifier types have shown to be less
-> reliable and possibly ambiguous. Ambiguity in particular is a problem with
-> multipath-tools, which may group unrelated devices together in a multipath
-> map, causing possible data corruption.
-> 
-> The device identifiers are used in two independent ways by the udev rules:
-> a) to set ID_SERIAL for subsystems like multipath, and b) to create
-> /dev/disk/by-id/scsi-... symlinks. Our udev rules have traditionally created
-> symlinks for every device identifier obtained from either VPD 83 or 80. This
-> may cause issues, especially on large installments with storage devices that
-> exhibit the same identifier for many logical units. At the same time, these
-> symlinks are rarely used.
-> 
-> Avoid using unreliable identifiers for setting ID_SERIAL, and don't create
-> symlinks for these identifiers. Add a configuration method that allows
-> users to easily re-enable these methods and symlinks if they need to
-> (this might be the case on systems with legacy devices that are referenced
-> in /etc/crypttab, lvm.conf, or the like). This is done by introducing
-> environment variables .SCSI_ID_SERIAL_SRC and .SCSI_ID_SYMLINK_SRC, to
-> control use of device identifiers for determining ID_SERIAL and for creating
-> symlinks, respectively. Both variables can contain the letters "T", "L", "V",
-> and "S" to enable T10-vendor ID, NAA local ID, vendor-specific ID, and VPD 80
-> based ID, respectively.
-> 
-> Distributions can change the defaults for these environment variables
-> to provide backward compatibility for their users, while offering users
-> an easy way to change the settings.
-> 
-> I'm sending this as RFC, because I expect that not everyone will agree
-> which identifiers should be enabled by default.
+clang with W=1 reports
+drivers/scsi/snic/snic_scsi.c:490:6: error: variable
+  'xfer_len' set but not used [-Werror,-Wunused-but-set-variable]
+        u64 xfer_len = 0;
+            ^
+This variable is not used so remove it.
 
-Lets see if anything happens. Applied as sg3_utils revision 1019 and
-pushed to https://github.com/doug-gilbert/sg3_utils .
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ drivers/scsi/snic/snic_scsi.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-Didn't see any effect on an Ubuntu 22.10 when sg3_utils deb package
-built and installed. No sign of 00-scsi-sg3_config.rules being placed
-anywhere by Ubuntu. Does Suse install those rules?
-
-Doug Gilbert
-
-> Martin Wilck (3):
->    55-scsi-sg3_id.rules: don't set unreliable device ID by default
->    58-scsi-sg3_symlink.rules: don't create extra by-id symlinks by
->      default
->    udev: add 00-scsi-sg3_config.rules for user configuration
-> 
->   Makefile.am                       |  1 +
->   scripts/00-scsi-sg3_config.rules  | 23 ++++++++++++++
->   scripts/55-scsi-sg3_id.rules      | 53 ++++++++++++++++++++++++++++---
->   scripts/58-scsi-sg3_symlink.rules | 46 +++++++++++++++++++++------
->   4 files changed, 109 insertions(+), 14 deletions(-)
->   create mode 100644 scripts/00-scsi-sg3_config.rules
-> 
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index 961af6fc21bc..c50ede326cc4 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -487,7 +487,6 @@ snic_process_icmnd_cmpl_status(struct snic *snic,
+ 			       struct scsi_cmnd *sc)
+ {
+ 	u8 scsi_stat = icmnd_cmpl->scsi_status;
+-	u64 xfer_len = 0;
+ 	int ret = 0;
+ 
+ 	/* Mark the IO as complete */
+@@ -496,15 +495,11 @@ snic_process_icmnd_cmpl_status(struct snic *snic,
+ 	if (likely(cmpl_stat == SNIC_STAT_IO_SUCCESS)) {
+ 		sc->result = (DID_OK << 16) | scsi_stat;
+ 
+-		xfer_len = scsi_bufflen(sc);
+-
+ 		/* Update SCSI Cmd with resid value */
+ 		scsi_set_resid(sc, le32_to_cpu(icmnd_cmpl->resid));
+ 
+-		if (icmnd_cmpl->flags & SNIC_ICMND_CMPL_UNDR_RUN) {
+-			xfer_len -= le32_to_cpu(icmnd_cmpl->resid);
++		if (icmnd_cmpl->flags & SNIC_ICMND_CMPL_UNDR_RUN)
+ 			atomic64_inc(&snic->s_stats.misc.io_under_run);
+-		}
+ 
+ 		if (icmnd_cmpl->scsi_status == SAM_STAT_TASK_SET_FULL)
+ 			atomic64_inc(&snic->s_stats.misc.qfull);
+-- 
+2.27.0
 
