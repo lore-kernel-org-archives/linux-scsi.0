@@ -2,78 +2,135 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78F02C76195
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 07:52:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DBEC76196
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 08:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230320AbjC1Hwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 03:52:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42148 "EHLO
+        id S231757AbjC1IqQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 04:46:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229611AbjC1Hwt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 03:52:49 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29516B6
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2023 00:52:48 -0700 (PDT)
+        with ESMTP id S231819AbjC1IqL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 04:46:11 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CFC455A1;
+        Tue, 28 Mar 2023 01:46:06 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D59CE1FD81;
-        Tue, 28 Mar 2023 07:52:46 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id F2E521FDA1;
+        Tue, 28 Mar 2023 08:46:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1679989966; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=xKS7oIq+t2ndrAOcku009L5MpUwMTmCXy0MoElCrtLc=;
-        b=Y4HvdZxTPybgOc4cp1LSdz2cKP/Rbn6UJYSjXzTVV4tzSaqFC086EqeNa+ajtZAAqx8g6Q
-        mylUTeMd1nZEAXjH76/uAlfy//9Zzq0ASO4JZAzlAEl5yM3rPjbZLQybFI/lkt4yPCwm9Q
-        P6MtpwKuOkdQXvV5L1dPPbDt975jZzo=
+        t=1679993165; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=XkRrVX8XzPB5UHUjHXjJ+xWWlRyOClSfTOm/ZrUGMDw=;
+        b=BXUn2XOtBlkO6BfqJ9xz1Y8JkP8uIsgjzDECMGZ0Jh/UurP91nuLzaw9ZDMKbiiO4tpgKn
+        48XtNjyA4FGeWwJDGjFzuzqKiaGnm/Xh/6L5tLJypGtfmM2kE3IixxVyNd5tURiLH/24Hi
+        XN7f7GP61eB39zwsjvWYRnfODaJQtPY=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8D7931390D;
-        Tue, 28 Mar 2023 07:52:46 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AC5A91390D;
+        Tue, 28 Mar 2023 08:46:04 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id DC/+IM6cImR9DwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Tue, 28 Mar 2023 07:52:46 +0000
-Message-ID: <207a735ad9023da3d13b434ba70e34a5406f310c.camel@suse.com>
-Subject: Re: [RFC PATCH 0/3] sg3_utils: udev rules: restrict use of
- ambiguous device IDs
-From:   Martin Wilck <mwilck@suse.com>
-To:     dgilbert@interlog.com, Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        Franck Bui <fbui@suse.de>, dm-devel@redhat.com,
-        linux-scsi@vger.kernel.org,
-        Benjamin Marzinski <bmarzins@redhat.com>
-Date:   Tue, 28 Mar 2023 09:52:45 +0200
-In-Reply-To: <3f02a075-cc30-5584-704b-da88be1d6b31@interlog.com>
-References: <20230327132459.29531-1-mwilck@suse.com>
-         <3f02a075-cc30-5584-704b-da88be1d6b31@interlog.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 
+        id X72GKEypImQKLwAAMHmgww
+        (envelope-from <jgross@suse.com>); Tue, 28 Mar 2023 08:46:04 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        xen-devel@lists.xenproject.org, Dan Carpenter <error27@gmail.com>
+Subject: [PATCH] xen/scsiback: don't call scsiback_free_translation_entry() under lock
+Date:   Tue, 28 Mar 2023 10:46:02 +0200
+Message-Id: <20230328084602.20729-1-jgross@suse.com>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2023-03-27 at 19:58 -0400, Douglas Gilbert wrote:
->=20
-> Lets see if anything happens. Applied as sg3_utils revision 1019 and
-> pushed to https://github.com/doug-gilbert/sg3_utils=A0.
->=20
-> Didn't see any effect on an Ubuntu 22.10 when sg3_utils deb package
-> built and installed. No sign of 00-scsi-sg3_config.rules being placed
-> anywhere by Ubuntu. Does Suse install those rules?
+scsiback_free_translation_entry() shouldn't be called under spinlock,
+as it can sleep.
 
-No, not yet. That's why I sent these patches, I intend to get rid of
-the legacy symlinks on openSUSE with upstream's blessing.
+This requires to split removing a translation entry from the v2p list
+from actually calling kref_put() for the entry.
 
-Regards,
-Martin
+Reported-by: Dan Carpenter <error27@gmail.com>
+Link: https://lore.kernel.org/lkml/Y+JUIl64UDmdkboh@kadam/
+Signed-off-by: Juergen Gross <jgross@suse.com>
+---
+ drivers/xen/xen-scsiback.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 954188b0b858..294f29cdc7aa 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -1010,12 +1010,6 @@ static int scsiback_add_translation_entry(struct vscsibk_info *info,
+ 	return err;
+ }
+ 
+-static void __scsiback_del_translation_entry(struct v2p_entry *entry)
+-{
+-	list_del(&entry->l);
+-	kref_put(&entry->kref, scsiback_free_translation_entry);
+-}
+-
+ /*
+   Delete the translation entry specified
+ */
+@@ -1024,18 +1018,20 @@ static int scsiback_del_translation_entry(struct vscsibk_info *info,
+ {
+ 	struct v2p_entry *entry;
+ 	unsigned long flags;
+-	int ret = 0;
+ 
+ 	spin_lock_irqsave(&info->v2p_lock, flags);
+ 	/* Find out the translation entry specified */
+ 	entry = scsiback_chk_translation_entry(info, v);
+ 	if (entry)
+-		__scsiback_del_translation_entry(entry);
+-	else
+-		ret = -ENOENT;
++		list_del(&entry->l);
+ 
+ 	spin_unlock_irqrestore(&info->v2p_lock, flags);
+-	return ret;
++
++	if (!entry)
++		return -ENOENT;
++
++	kref_put(&entry->kref, scsiback_free_translation_entry);
++	return 0;
+ }
+ 
+ static void scsiback_do_add_lun(struct vscsibk_info *info, const char *state,
+@@ -1239,14 +1235,19 @@ static void scsiback_release_translation_entry(struct vscsibk_info *info)
+ {
+ 	struct v2p_entry *entry, *tmp;
+ 	struct list_head *head = &(info->v2p_entry_lists);
++	struct list_head tmp_list;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&info->v2p_lock, flags);
+ 
+-	list_for_each_entry_safe(entry, tmp, head, l)
+-		__scsiback_del_translation_entry(entry);
++	list_cut_before(&tmp_list, head, head);
+ 
+ 	spin_unlock_irqrestore(&info->v2p_lock, flags);
++
++	list_for_each_entry_safe(entry, tmp, &tmp_list, l) {
++		list_del(&entry->l);
++		kref_put(&entry->kref, scsiback_free_translation_entry);
++	}
+ }
+ 
+ static void scsiback_remove(struct xenbus_device *dev)
+-- 
+2.35.3
 
