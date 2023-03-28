@@ -2,96 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD55C76196
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 10:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83526C76195
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 10:59:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230400AbjC1Kij (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 06:38:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42818 "EHLO
+        id S231293AbjC1K7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 06:59:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230378AbjC1Kii (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 06:38:38 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF75072B6;
-        Tue, 28 Mar 2023 03:38:36 -0700 (PDT)
-X-UUID: ae497446cd5411edb6b9f13eb10bd0fe-20230328
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=9dZSNEzifW+EAseN3wIB9wa4165FEL3Zr0PtIZiGHic=;
-        b=elEqt7OVRNgQjIKwn3/TK8euy0LlOSn9hX5EdPnFDrNvaUhx9UxpY5IRSxnMdQygtJ1i8AqSabowdqCNRK0kwSC2NFPJOJLRbvKlIJ5kca+XK9slXigZRqN7DMooOl+EcKMQOafet2xn4EX3UByuW5VwcWhT8D0R7hgelsISUzY=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.22,REQID:0407e555-0b0e-4a18-a001-24339cb1ffa3,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:90
-X-CID-INFO: VERSION:1.1.22,REQID:0407e555-0b0e-4a18-a001-24339cb1ffa3,IP:0,URL
-        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
-        N:quarantine,TS:90
-X-CID-META: VersionHash:120426c,CLOUDID:15ca2af7-ddba-41c3-91d9-10eeade8eac7,B
-        ulkID:230328183832MI57LJV5,BulkQuantity:0,Recheck:0,SF:38|29|28|17|19|48,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-        ,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-UUID: ae497446cd5411edb6b9f13eb10bd0fe-20230328
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-        (envelope-from <powen.kao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 271382247; Tue, 28 Mar 2023 18:38:30 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.25; Tue, 28 Mar 2023 18:38:28 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.25 via Frontend Transport; Tue, 28 Mar 2023 18:38:28 +0800
-From:   Po-Wen Kao <powen.kao@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
-        <powen.kao@mediatek.com>, <alice.chao@mediatek.com>,
-        <naomi.chu@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <cc.chou@mediatek.com>, <eddie.huang@mediatek.com>,
-        <mason.zhang@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>
-Subject: [PATCH 2/2] scsi: ufs: ufs-mediatek: Add UFSHCD_QUIRK_MCQ_BROKEN_INTR quirk
-Date:   Tue, 28 Mar 2023 18:37:53 +0800
-Message-ID: <20230328103801.11198-2-powen.kao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230328103801.11198-1-powen.kao@mediatek.com>
-References: <20230328103801.11198-1-powen.kao@mediatek.com>
+        with ESMTP id S229778AbjC1K7W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 06:59:22 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 220C372AA
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2023 03:59:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680001162; x=1711537162;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=AgWi3JlZLtYHgT0occJn8x2V6aEoaNyo1HaFua2QQ5s=;
+  b=GKR6ePBYmr6D98sp66G+F+MoF662FEXQAjNa5QuMMkCD/aqURN31W1oL
+   JqfTLDdDEzygmlOqtst/dWxW4wcAD0BdN9tp6dh11niqg8kLbKHVpiSWk
+   bSiBl/JVDYmuOSJVDEEF81yKn1pTB1OcGOP4cRee72O9V/P5PWCZRwHoP
+   CxZs4WQ/LG6DrwQeaCxg+EUKgioNWf9aT/QpQZjslAta+RlRrPl/jwCNh
+   uruMNFujwFm4G/um4EH7ptKpRhFTz0YmaVYbZiaVA6qwISdTp2j91PvOt
+   yQkySpBx6rrvYAWEtpGOgSYfxThe3QCbd0QXdWJTEd+2pwFjGvCEUaVPV
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="320935153"
+X-IronPort-AV: E=Sophos;i="5.98,297,1673942400"; 
+   d="scan'208";a="320935153"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2023 03:59:21 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="716452645"
+X-IronPort-AV: E=Sophos;i="5.98,297,1673942400"; 
+   d="scan'208";a="716452645"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO ahunter-VirtualBox.home\044ger.corp.intel.com) ([10.249.32.11])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2023 03:59:19 -0700
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Lunar Lake
+Date:   Tue, 28 Mar 2023 13:58:32 +0300
+Message-Id: <20230328105832.3495-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set UFSHCD_QUIRK_MCQ_BROKEN_INTR for mtk driver
+Add PCI ID to support Intel Lunar Lake, same as MTL.
 
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ufs/host/ufshcd-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 73e217260390..b4a4a580ad37 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -901,6 +901,8 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 	hba->caps |= UFSHCD_CAP_CLK_SCALING;
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 1c91f43e15c8..9c911787f84c 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -607,6 +607,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x51FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0xA847), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ }	/* terminate list */
+ };
  
- 	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
-+	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
-+
- 	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
- 
- 	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
 -- 
-2.18.0
+2.34.1
 
