@@ -2,165 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F52EC76196
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 14:25:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DC15C6FD18
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 14:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232861AbjC1OZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 10:25:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42830 "EHLO
+        id S232949AbjC1OfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 10:35:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230331AbjC1OZf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 10:25:35 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53CA38A4C
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2023 07:25:33 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PmBhN4QQCzSpr5;
-        Tue, 28 Mar 2023 22:21:56 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Tue, 28 Mar 2023 22:25:30 +0800
-Subject: Re: [PATCH] scsi: libsas: abort all inflight requests when device is
- gone
-To:     John Garry <john.g.garry@oracle.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>,
-        Xingui Yang <yangxingui@huawei.com>
-References: <20230328111524.1657878-1-yanaijie@huawei.com>
- <982d5c0d-1548-0739-d7d6-96a7834709ef@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <eb2f325c-c45b-756c-77a5-3c62fe577aca@huawei.com>
-Date:   Tue, 28 Mar 2023 22:25:30 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S232984AbjC1OfJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 10:35:09 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA47EC146;
+        Tue, 28 Mar 2023 07:35:07 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PmBzW43hYz4f3wYw;
+        Tue, 28 Mar 2023 22:35:03 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgDn4R8X+yJkk4bgFg--.7384S4;
+        Tue, 28 Mar 2023 22:35:04 +0800 (CST)
+From:   Ye Bin <yebin@huaweicloud.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Ye Bin <yebin10@huawei.com>
+Subject: [PATCH v2 0/3] limit set the host state by sysfs
+Date:   Tue, 28 Mar 2023 22:34:39 +0800
+Message-Id: <20230328143442.2684167-1-yebin@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <982d5c0d-1548-0739-d7d6-96a7834709ef@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- canpemm100004.china.huawei.com (7.192.105.92)
+X-CM-TRANSID: _Ch0CgDn4R8X+yJkk4bgFg--.7384S4
+X-Coremail-Antispam: 1UD129KBjvdXoWrJr1fXr1DZw45Gw4DJw1xGrg_yoWxWFcE9a
+        4vqas5Jr1rWFWkCa43GrW8Aas5Kr43Xr4F9F4YkrWF9rW7XF95Kw1vvrW3uFWUuFWxXw45
+        Aw1rXryxGr1xJjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUboAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+        67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+        x7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+        0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Y
+        z7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zV
+        AF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4l
+        IxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WF
+        yUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBI
+        daVFxhVjvjDU0xZFpf9x07UQzVbUUUUU=
+X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/3/28 20:35, John Garry wrote:
-> On 28/03/2023 12:15, Jason Yan wrote:
->> When a disk is removed with inflight IO, the userspace application need
->> to wait for 30 senconds(depends on the timeout configuration) to getback
->> from the kernel. Xingui tried to fix this issue by aborting the ata link
->> for SATA devices[1]. However this approach left the SAS devices 
->> unresolved.
->>
->> This patch try to fix this issue by aborting all inflight requests while
->> the device is gone. This is implemented by itering the tagset.
->>
->> [1] 
->> https://lore.kernel.org/lkml/234e04db-7539-07e4-a6b8-c6b05f78193d@opensource.wdc.com/T/ 
->>
->>
->> Cc: Xingui Yang <yangxingui@huawei.com>
->> Cc: John Garry <john.g.garry@oracle.com>
->> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> Cc: Hannes Reinecke <hare@suse.com>
->> Signed-off-by: Jason Yan <yanaijie@huawei.com>
->> ---
->>   drivers/scsi/libsas/sas_discover.c | 20 ++++++++++++++++++++
->>   1 file changed, 20 insertions(+)
->>
->> diff --git a/drivers/scsi/libsas/sas_discover.c 
->> b/drivers/scsi/libsas/sas_discover.c
->> index 72fdb2e5d047..d2be67f348e0 100644
->> --- a/drivers/scsi/libsas/sas_discover.c
->> +++ b/drivers/scsi/libsas/sas_discover.c
->> @@ -360,8 +360,28 @@ static void sas_destruct_ports(struct 
->> asd_sas_port *port)
->>       }
->>   }
->> +static bool sas_abort_cmd(struct request *req, void *data)
->> +{
->> +    struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
->> +    struct domain_device *dev = data;
->> +
->> +    if (dev == cmd_to_domain_dev(cmd))
->> +        blk_abort_request(req);
-> 
-> I suppose that this is ok, but we're not dealing with libsas "internal" 
-> commands or libata internal commands, though. What about them?
+From: Ye Bin <yebin10@huawei.com>
 
-Hi John,
+Diff v2 vs v1:
+1. Remove set scsi host state by sysfs, as set host state by sysfs
+may lead to functional issue. Scsi host state has it's own running
+state machine.
+2. Introduce 'blocked' sysfs api for set scsi host blocking IO. Use
+this function we can do some test.
 
-Most of the time user space applications are not sensitive to libsas(or 
-libata) "internal" commands. The applications only need the kernel 
-response quickly on their "read" or "write" syscalls. This patch aborts 
-all the application's IO and they will return immediately. We have 
-tested this patch for more than 300 times. The "internal" commands may 
-affects the EH process but in out test it does not affect the 
-application's IO return.
+Ye Bin (3):
+  scsi: forbid to set scsi host state by sysfs
+  scsi: introduce 'blocked' sysfs api
+  scsi: blocking IO when host is set blocked
 
-> 
-> I suppose my series here would help:
-> 
-> https://lore.kernel.org/linux-scsi/1666693096-180008-1-git-send-email-john.garry@huawei.com/ 
+ drivers/scsi/scsi_lib.c   |  2 ++
+ drivers/scsi/scsi_sysfs.c | 58 ++++++++++++++++++++++-----------------
+ include/scsi/scsi_host.h  |  8 ++++++
+ 3 files changed, 43 insertions(+), 25 deletions(-)
 
-This is great. After your series we can manage "internal" commands more 
-effectively, I think. And we can easily control all the commands 
-including the "internal" commands.
+-- 
+2.31.1
 
-> 
-> 
-> Along with Part II
-> 
->> +    return true;
->> +}
->> +
->> +static void sas_abort_domain_cmds(struct domain_device *dev)
->> +{
->> +    struct sas_ha_struct *sas_ha = dev->port->ha;
->> +    struct Scsi_Host *shost = sas_ha->core.shost;
->> +    blk_mq_tagset_busy_iter(&shost->tag_set, sas_abort_cmd, dev);
-> 
-> blk_mq_queue_tag_busy_iter() would be nicer to use here, but it's not 
-> exported - I am not advocating exporting it either. And we don't have 
-> direct access to the scsi device pointer (from which we can look up the 
-> request queue pointer), either.
-> 
->> +}
->> +
->>   void sas_unregister_dev(struct asd_sas_port *port, struct 
->> domain_device *dev)
->>   {
->> +    if (test_bit(SAS_DEV_GONE, &dev->state))
->> +        sas_abort_domain_cmds(dev);
-> 
-> This code is common to expanders. Should we really be calling this for 
-> an expander, even if it is harmless (as it does nothing currently)?
-
-Yes, It does nothing now for expanders. I can filter out the expander 
-devices in advance to avoid the wasting tag itering.
-
-> 
-> And we also seem to be calling this for rphy "which never saw 
-> sas_rphy_add" (see code comment, not shown below), which is 
-> questionable. Should we really do that?
-
-This device has not been initialized completely if "never saw 
-sas_rphy_add", and there will be no IO from the block layer. I think 
-there is no real bug but we need to avoid to iter the tag set too.
-
-Thanks,
-Jason
-
-> 
->> +
->>       if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
->>           !list_empty(&dev->disco_list_node)) {
->>           /* this rphy never saw sas_rphy_add */
-> 
-> 
-> .
