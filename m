@@ -2,56 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E73EC77B61
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 07:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78F02C76195
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 07:52:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232349AbjC1Hrm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 03:47:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33294 "EHLO
+        id S230320AbjC1Hwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 03:52:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232354AbjC1Hrj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 03:47:39 -0400
-Received: from mail.lokoho.com (mail.lokoho.com [217.61.105.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 759183A89
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2023 00:47:36 -0700 (PDT)
-Received: by mail.lokoho.com (Postfix, from userid 1001)
-        id 7973A844D5; Tue, 28 Mar 2023 08:46:03 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lokoho.com; s=mail;
-        t=1679989571; bh=Z0N5VlX9/JlryGOL5I747Le9USomZJCRNNGRT3LbbKc=;
-        h=Date:From:To:Subject:From;
-        b=gVvXzo7raodKtisFYsiCN/Su2JNKY9tKIJHAQaDiXD05kEvHTnlCXARieEID1tccl
-         IvNB+WupNeK36g/MtuqeZzXi2eEgPXUGomkdoEKWmzilBr+uUiBvjEAXJCbSXJXSOr
-         1hskQnxTaMTcg8Cwy331PxGvbFJzei4wYIZJcP9WLUo4PnBxaV3u3TtqUVdULQUEnb
-         9S2WrxTUe7WqdYCZVmXKMkb/t4tVYHp97Zy0fEQNsC8Z+m1WWWFzaxdM7zaocV01qZ
-         G0564oXG4KBhcHA/cAkLy7CEcC0hlso+bRLQbhaJdxc4NoqSVjNQGn3bcEbyc6J1z+
-         OE3blG/JaAPTw==
-Received: by mail.lokoho.com for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2023 07:45:59 GMT
-Message-ID: <20230328074501-0.1.4x.1n0d7.0.kx3ef5h821@lokoho.com>
-Date:   Tue, 28 Mar 2023 07:45:59 GMT
-From:   "Adam Charachuta" <adam.charachuta@lokoho.com>
-To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
-X-Mailer: mail.lokoho.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S229611AbjC1Hwt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 03:52:49 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29516B6
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2023 00:52:48 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id D59CE1FD81;
+        Tue, 28 Mar 2023 07:52:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1679989966; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xKS7oIq+t2ndrAOcku009L5MpUwMTmCXy0MoElCrtLc=;
+        b=Y4HvdZxTPybgOc4cp1LSdz2cKP/Rbn6UJYSjXzTVV4tzSaqFC086EqeNa+ajtZAAqx8g6Q
+        mylUTeMd1nZEAXjH76/uAlfy//9Zzq0ASO4JZAzlAEl5yM3rPjbZLQybFI/lkt4yPCwm9Q
+        P6MtpwKuOkdQXvV5L1dPPbDt975jZzo=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8D7931390D;
+        Tue, 28 Mar 2023 07:52:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id DC/+IM6cImR9DwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Tue, 28 Mar 2023 07:52:46 +0000
+Message-ID: <207a735ad9023da3d13b434ba70e34a5406f310c.camel@suse.com>
+Subject: Re: [RFC PATCH 0/3] sg3_utils: udev rules: restrict use of
+ ambiguous device IDs
+From:   Martin Wilck <mwilck@suse.com>
+To:     dgilbert@interlog.com, Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        Franck Bui <fbui@suse.de>, dm-devel@redhat.com,
+        linux-scsi@vger.kernel.org,
+        Benjamin Marzinski <bmarzins@redhat.com>
+Date:   Tue, 28 Mar 2023 09:52:45 +0200
+In-Reply-To: <3f02a075-cc30-5584-704b-da88be1d6b31@interlog.com>
+References: <20230327132459.29531-1-mwilck@suse.com>
+         <3f02a075-cc30-5584-704b-da88be1d6b31@interlog.com>
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Mon, 2023-03-27 at 19:58 -0400, Douglas Gilbert wrote:
+>=20
+> Lets see if anything happens. Applied as sg3_utils revision 1019 and
+> pushed to https://github.com/doug-gilbert/sg3_utils=A0.
+>=20
+> Didn't see any effect on an Ubuntu 22.10 when sg3_utils deb package
+> built and installed. No sign of 00-scsi-sg3_config.rules being placed
+> anywhere by Ubuntu. Does Suse install those rules?
 
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
+No, not yet. That's why I sent these patches, I intend to get rid of
+the legacy symlinks on openSUSE with upstream's blessing.
 
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
-
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
+Regards,
+Martin
 
 
-Pozdrawiam
-Adam Charachuta
