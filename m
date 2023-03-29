@@ -2,92 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DDCEC6FD18
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 20:50:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA02C6FD18
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 20:50:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229574AbjC2Uun (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Mar 2023 16:50:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55714 "EHLO
+        id S229574AbjC2Uu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Mar 2023 16:50:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjC2Uum (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 16:50:42 -0400
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 862B444B8
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 13:50:40 -0700 (PDT)
-Received: by mail-pl1-f178.google.com with SMTP id iw3so16119033plb.6
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 13:50:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680123040;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9tSHHb5iei2rxNPIyHI4J0jENyddBcSnp4sget8lZBE=;
-        b=kIVSi5ozYdfq83w5xEdRujvarRj4xR7dvBSXIF0kriHn2OI5M2TxeDDVsMihPdSi7x
-         GCDrAUf5tYS3mdLTrx2IABslZUeBwwtmkZFM1ry4SAYqQnpCw4k40H9r46MYfgwAvOzv
-         YA/WjKhp7aGtiPBIr3SzEqW62vNRmiAch/YFBkVlIqwVme3do8Pk2YR9Cd/Udh3qhYbb
-         ljxHyp/1gPfvSTJ+eCM/UivjEyDTJNQEvvxAaoR7TaKjXK+CapDl/1gk2oBPxXV4/G0L
-         cva+yojID35FKnmPFdTWD6lt1r83KcmmSGUFbjPqp7laAt7zv1t/m3/qa98mikg1fZWR
-         xXig==
-X-Gm-Message-State: AAQBX9ctRB798b270saiNNktLq2fNYiHAYjfCZjg4HF7SGw9klOqr1w9
-        6rDqTsfN9+X0SHeAGHjBH5YVd4CaM8I=
-X-Google-Smtp-Source: AKy350aFO7cL+X2sYu2Sneo54r7VQphjsTNmCHK7BXuuiWZdi3obYHEQJpB7Il68wwHGC47JSRTQHw==
-X-Received: by 2002:a17:90b:896:b0:240:6623:733a with SMTP id bj22-20020a17090b089600b002406623733amr3631947pjb.8.1680123039723;
-        Wed, 29 Mar 2023 13:50:39 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:c058:cec1:e4c9:184e? ([2620:15c:211:201:c058:cec1:e4c9:184e])
-        by smtp.gmail.com with ESMTPSA id ij21-20020a17090af81500b0023b3d80c76csm1874061pjb.4.2023.03.29.13.50.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Mar 2023 13:50:39 -0700 (PDT)
-Message-ID: <0461c1c5-19b0-89e7-7ee5-2a1c52907701@acm.org>
-Date:   Wed, 29 Mar 2023 13:50:37 -0700
+        with ESMTP id S229607AbjC2Uu4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 16:50:56 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEDB64C20
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 13:50:52 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32TH9agQ029513;
+        Wed, 29 Mar 2023 20:50:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=M1LcwuJU7E8HNJUZs7WltYMe8BPH8qLRTA6EIglVB94=;
+ b=o4/p4JEe/D5F5hos3bl6MWPkYZYuh45xIj5n2kngW8sot8umaofzCPf2ZqSMVE84ysIV
+ xCBFZGzR4mo5RwZxXP771CVISDMoc+ljcjTpQehs4/uRZaKaDUOeRMd4yOevDp89I8Tb
+ tokZZBs7GDC3yknRj4sFV2sOAFe9PYf6tEd2bCdVuVjktfyLW2SJtjfY6akM25VsPe4A
+ T2/mlaJJ8yT1zTw3NgcNBQvPxhcAZ2S7ehRL0PWaE1OHewpKhd+eLjrtyF3rfMqVlPs8
+ nBEC/enQurBqZvUsxBcWCgQ2//WWjXioDs+rvH7ItT/Gpb9oWSkz/eCupfXv64ZTd1Xi BA== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pm6k837c4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 29 Mar 2023 20:50:22 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32TKoLbF004000
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 29 Mar 2023 20:50:21 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 29 Mar
+ 2023 13:50:20 -0700
+Message-ID: <8dae9795-3d81-ce0c-bc6f-2751d8309ff5@quicinc.com>
+Date:   Wed, 29 Mar 2023 13:50:20 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH] scsi: sr: simplify the sr_open function
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v1 0/5] ufs: core: mcq: Add ufshcd_abort() and error
+ handler support in MCQ mode
 Content-Language: en-US
-To:     Enze Li <lienze@kylinos.cn>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, enze.li@gmx.com
-References: <20230327030237.3407253-1-lienze@kylinos.cn>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230327030237.3407253-1-lienze@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>
+References: <cover.1680083571.git.quic_nguyenb@quicinc.com>
+ <16c79431-0a04-6d07-9965-b3af400b8329@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <16c79431-0a04-6d07-9965-b3af400b8329@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: D_-Fhf4lYpUq4VStBMlchxCIhzYBRI-p
+X-Proofpoint-GUID: D_-Fhf4lYpUq4VStBMlchxCIhzYBRI-p
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-29_14,2023-03-28_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 clxscore=1015 adultscore=0 phishscore=0 suspectscore=0
+ mlxscore=0 impostorscore=0 priorityscore=1501 malwarescore=0
+ mlxlogscore=806 bulkscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2303200000 definitions=main-2303290158
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/26/23 20:02, Enze Li wrote:
-> Simplify the sr_open function by removing the goto label as it does only
-> return one error code.
-> 
-> Signed-off-by: Enze Li <lienze@kylinos.cn>
-> ---
->   drivers/scsi/sr.c | 7 +------
->   1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 9e51dcd30bfd..12869e6d4ebd 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -590,20 +590,15 @@ static int sr_open(struct cdrom_device_info *cdi, int purpose)
->   {
->   	struct scsi_cd *cd = cdi->handle;
->   	struct scsi_device *sdev = cd->device;
-> -	int retval;
->   
->   	/*
->   	 * If the device is in error recovery, wait until it is done.
->   	 * If the device is offline, then disallow any access to it.
->   	 */
-> -	retval = -ENXIO;
->   	if (!scsi_block_when_processing_errors(sdev))
-> -		goto error_out;
-> +		return -ENXIO;
->   
->   	return 0;
-> -
-> -error_out:
-> -	return retval;	
->   }
+On 3/29/2023 1:47 PM, Bart Van Assche wrote:
+> On 3/29/23 03:01, Bao D. Nguyen wrote:
+>> This patch series enable support for ufshcd_abort() and error handler 
+>> in MCQ mode.
+>> The first 3 patches are for supporting ufshcd_abort().
+>> The 4th and 5th patches are for supporting error handler.
+>
+> Is this perhaps a resend of v1? Last time this series was posted it 
+> had version number 3.
+>
+Hi Bart, I am not sure if I did it correctly or not. The last time I 
+posted, it was with RFC tag in the subject. I have made some minor 
+changes to address the comments and some bug fixes. I am posting the 
+patches again without "RFC" tag now.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks,
+
+Bao
+
+> Thanks,
+>
+> Bart.
+
+
