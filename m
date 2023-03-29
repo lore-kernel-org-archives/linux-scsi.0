@@ -2,71 +2,68 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C59DC6FD18
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 20:47:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A159C761A6
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 20:48:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229934AbjC2UrS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Mar 2023 16:47:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51812 "EHLO
+        id S229981AbjC2Usa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Mar 2023 16:48:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229908AbjC2UrN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 16:47:13 -0400
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 838D0448D
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 13:47:12 -0700 (PDT)
-Received: by mail-pl1-f179.google.com with SMTP id iw3so16112541plb.6
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 13:47:12 -0700 (PDT)
+        with ESMTP id S229943AbjC2UsW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 16:48:22 -0400
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FF9844B8;
+        Wed, 29 Mar 2023 13:48:22 -0700 (PDT)
+Received: by mail-pf1-f177.google.com with SMTP id b7so1038187pfv.2;
+        Wed, 29 Mar 2023 13:48:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680122832;
+        d=1e100.net; s=20210112; t=1680122902;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BNnjqFq47OKyG2LCZtN0y6GwuxCrTxQ23BaJuG9I48I=;
-        b=te5JemoCYEhoNC0pe2cex2xCa2wSkbBNT0w5WcrqOO+0ebEMaWY+ZVn14Bf3Ca5+Eh
-         E3Z2lwbLE+KDKZtamsitdcj2Yv3fPI3UhZ8DR4LLxDf0YjngZACOS8VJednt89szjoOI
-         xW5E+gdO5CFb0ayLaJya9+eVesWu44+alq/Lbj/wyV51LklE7EDBxhrlkc3ONu8zHi9H
-         /D6CoQZHieCxwf4iU+GaMBfwfsL+jCFSLqHI6GQnEWhIepfYshwqrYbkYJ7iSicrez9Q
-         aBbNRuOnDF4hj62mT6i+fma5PnDP0tEfYV+0LJtOZz1qf5PxOS+ToRFEKrJfpIziMPQs
-         MgyQ==
-X-Gm-Message-State: AO0yUKVydXmcx2HuOKAPWwkSJVwL1WXoLlT3aF+tdNeLIYGfJouPYB02
-        O1QNeeZp55Q98TPOxa0RQlo=
-X-Google-Smtp-Source: AK7set9RuM/kjqzucgbJOGY6yeH+UL3RH71RJ4+99WZ4kRFABDqddOPb0EyHXjhm7BV+0IEqq/qY3w==
-X-Received: by 2002:a05:6a21:86a9:b0:d9:3257:f2b3 with SMTP id ox41-20020a056a2186a900b000d93257f2b3mr17175293pzb.40.1680122831783;
-        Wed, 29 Mar 2023 13:47:11 -0700 (PDT)
+        bh=mzpgvE6nKQNuR4O/KkAOD/tL9byNb1qJHAAmJlyDmXs=;
+        b=XEx9li+LOz+eBHn0gDdwnF/1MApOjVSzol7kkYjRzAxEhXqMwUhuWLj3HNoyDfMslF
+         5D5+/tWhYsn8nVJSFgiKWIbHy7RBPudDteg6tseVbDxqhi+3cTZtuZYNDKHMLVAxG9H0
+         EYSd1oI8e+up3PpWf7+4UqTSztPR8764d/W3FzDDjhsvuhyQLopkKOPj3/uwJ873rYpa
+         jK7b2z/Jc7PpS7DVTkZ+sMlp97HrC/OVMQylq3G3djwtCQiLgxIGb7KuTSA2uF8ipzoq
+         FWh/D4rg5GNiN10zDOT22ZrX9XILOvL8jILwkwHY0uwot8DuccjsATQkWcTOzOS7+XDL
+         xaGw==
+X-Gm-Message-State: AAQBX9ew3JYsFruCwqDmq+JhY/G3UgX1X6hgqgBWhw0kiZln5preOim8
+        +PWoD5FOXBmo41VJxBEDw0c=
+X-Google-Smtp-Source: AKy350bbqWlYjE+fXIlgWV7IZ86U6AitGIoUAUVrIh21So7TSrCV9nr+UuZrx6rHfXtVafWgqnhmHw==
+X-Received: by 2002:aa7:9908:0:b0:5a8:a0df:a624 with SMTP id z8-20020aa79908000000b005a8a0dfa624mr18118299pff.22.1680122901632;
+        Wed, 29 Mar 2023 13:48:21 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:c058:cec1:e4c9:184e? ([2620:15c:211:201:c058:cec1:e4c9:184e])
-        by smtp.gmail.com with ESMTPSA id j36-20020a635524000000b00502f1540c4asm21846765pgb.81.2023.03.29.13.47.10
+        by smtp.gmail.com with ESMTPSA id h3-20020aa786c3000000b005a9cb8edee3sm23352538pfo.85.2023.03.29.13.48.20
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Mar 2023 13:47:11 -0700 (PDT)
-Message-ID: <16c79431-0a04-6d07-9965-b3af400b8329@acm.org>
-Date:   Wed, 29 Mar 2023 13:47:09 -0700
+        Wed, 29 Mar 2023 13:48:21 -0700 (PDT)
+Message-ID: <c3860fdc-9018-bb8b-e1e7-def3da77dc42@acm.org>
+Date:   Wed, 29 Mar 2023 13:48:19 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH v1 0/5] ufs: core: mcq: Add ufshcd_abort() and error
- handler support in MCQ mode
+Subject: Re: [PATCH 0/2] scsi: ufs: mcq: 2 minor cleanups
 Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org
-References: <cover.1680083571.git.quic_nguyenb@quicinc.com>
+To:     Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230329101303.18377-1-avri.altman@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <cover.1680083571.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <20230329101303.18377-1-avri.altman@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/29/23 03:01, Bao D. Nguyen wrote:
-> This patch series enable support for ufshcd_abort() and error handler in MCQ mode.
-> The first 3 patches are for supporting ufshcd_abort().
-> The 4th and 5th patches are for supporting error handler.
+On 3/29/23 03:13, Avri Altman wrote:
+> 2 (untested) minor mcq cleanups.
 
-Is this perhaps a resend of v1? Last time this series was posted it had 
-version number 3.
+I cannot test this series. I hope someone else can.
 
 Thanks,
 
 Bart.
+
