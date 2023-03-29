@@ -2,219 +2,74 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1E7C6FD18
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 10:05:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CC5FC6FD18
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 10:13:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231492AbjC2KFm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Mar 2023 06:05:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41594 "EHLO
+        id S229926AbjC2KNW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Mar 2023 06:13:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231490AbjC2KFk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 06:05:40 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39DAE46BB;
-        Wed, 29 Mar 2023 03:05:39 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32T9IH6o023887;
-        Wed, 29 Mar 2023 10:03:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=lY7IvVQBr7icpmzXOLrFnDLX1hyh6RGw9P5U96wwnNo=;
- b=fIVscHIiunkkNj5PXVn4wizJJl88a3eOMJO7pt2JF49TGgM4Npg3mdWLMsEOYTRGUd57
- Uz/snyVjIXFWcQAuFheuIUQI0Mn5oB86RjzzRH2veRwEGTwsDMtpGiaN7Cq5XyhlDNqm
- RbCa6RonIwhP6ASU+Vyyfbrmiyzhuj5oNQEb5hbpOkhwGchXHE76MpO2w4p3gOKxIvI0
- XkoobhjoFV3VYRDe2EIQ7APewkTc/NfODvy35MQQ8JgKbFMTby4vQ9LasmhPnyGChw2i
- 49hpMwY9XHF2t45sg61VprmkOmhGwcRZ5s9hp7iK3+VDx9PnQ7ccpeR9BKb2I9oQre3d Lw== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pm5v1sqvy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 29 Mar 2023 10:03:21 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32TA3KE6001419
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 29 Mar 2023 10:03:20 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Wed, 29 Mar 2023 03:03:19 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 3/5] ufs: mcq: Added ufshcd_mcq_abort()
-Date:   Wed, 29 Mar 2023 03:01:47 -0700
-Message-ID: <31935a5da00df441444801934ff1631eb13e90e8.1680083571.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1680083571.git.quic_nguyenb@quicinc.com>
-References: <cover.1680083571.git.quic_nguyenb@quicinc.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: frlAHgw-cMBu_dglpGTe5_DKm1sfUlC5
-X-Proofpoint-ORIG-GUID: frlAHgw-cMBu_dglpGTe5_DKm1sfUlC5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-29_04,2023-03-28_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
- bulkscore=0 mlxscore=0 impostorscore=0 spamscore=0 adultscore=0
- malwarescore=0 suspectscore=0 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2303290083
+        with ESMTP id S229729AbjC2KNV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 06:13:21 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D844C2D5E;
+        Wed, 29 Mar 2023 03:13:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1680084799; x=1711620799;
+  h=from:to:cc:subject:date:message-id;
+  bh=jtzfWNpg8V71nZT+AF+a7PC+PUuPnz6DFGkaJlc3Oc4=;
+  b=BipglQFkFoPVEqaVdPxuEt4117GwyQWH7m255Ijqe3bUAttYZnYT3maL
+   oxcKO2O4izxZ5ArrBruvpi0O/1mVp1BRsCKY5NgBcdaHijqH1RkOa0S+k
+   b9Hb/UiNoG1FhFdf8HRUdbuzEo5aUviL0mVKqIDy+4YOEAW4qQfaFCz9/
+   TuTD4LGZAvfcx/K/tnPtGU6RI8nM5PnGy3/xq9lsEcDkO531qiyvEoXIX
+   R28CpZ6BeRP3Wa4WMLk0WZgGHktQN7vGpPzcE/zduSEgXkW1CCC6v3baD
+   lcGb+tcxh/qmGRbG/e59i/LQKM8IO+3M+sA8kp0yupOGDVx4YVWgi6ndA
+   w==;
+X-IronPort-AV: E=Sophos;i="5.98,300,1673884800"; 
+   d="scan'208";a="226595765"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Mar 2023 18:13:18 +0800
+IronPort-SDR: cpqZ8qXgT+oZmfK7N5tpyFI9tBisK0Sghv6JcosEwQCzzfPNAAGzfFYListmOokL+bgH+OQHl7
+ uO5TAR4gBjRuqIB3aypQXKLhNOB/bUbuR7+lfNe2i26u7XtZ+lAJI1u+J1MGVcXy6+HpUQkvA7
+ iNDVD4VxVZtRV4kUz8V5iHHOZqr76zuvwaSlf1HmEsHxUtff/p38M6ZL9woiC2JQGEGLhxEUn0
+ eVrRvKyNyXTsTPyRcui8R8soke0RUWi3VhezOgDGJC2OP8y5Z8omJlVzZ/EMGLn6dccKRIKeth
+ XF8=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 02:23:47 -0700
+IronPort-SDR: z0rBdREVaLI9B0r5EaKTr1Gzc29yFugofpD/rTDUuQ3IYp2pBY7Qos6xbp/fI5DPe4nTG2V0UF
+ Ekm1+luJjWUtqdsg+TE1+afxIUniKafAnolD8srN4KJcApR87GNOJU6KbnJTxJd7wXd06KA5fN
+ Da09/WSjYTwE6n2LSnKvkmbIDYXSb8uxnAMAu5QakxuGlXq7C0b9jxGFUXaa+BHScHc+Y984Y9
+ tljhsCFRrNtBplIelRP3dGQWwhvFdWemCPo78Wf2BpKejSUme7Fkhw9BRqSffvoidLJbQAzRtU
+ 4Qs=
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.45.30.255])
+  by uls-op-cesaip02.wdc.com with ESMTP; 29 Mar 2023 03:13:17 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH 0/2] scsi: ufs: mcq: 2 minor cleanups
+Date:   Wed, 29 Mar 2023 13:13:01 +0300
+Message-Id: <20230329101303.18377-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add ufshcd_mcq_abort() to support ufs abort in mcq mode.
+2 (untested) minor mcq cleanups.
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
----
- drivers/ufs/core/ufs-mcq.c     | 62 ++++++++++++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  5 +++-
- drivers/ufs/core/ufshcd.c      | 11 ++++++--
- 3 files changed, 74 insertions(+), 4 deletions(-)
+Avri Altman (2):
+  scsi: ufs: mcq: Annotate ufshcd_inc_sq_tail appropriately
+  scsi: ufs: mcq: Use pointer arithmetic in send_command
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 6f6b22c..78bd5d6 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -603,3 +603,65 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- 	spin_unlock(&hwq->sq_lock);
- 	return ret;
- }
-+
-+/**
-+ * ufshcd_mcq_abort - Abort the command in MCQ.
-+ * @cmd - The command to be aborted.
-+ *
-+ * Returns SUCCESS or FAILED error codes
-+ */
-+int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *host = cmd->device->host;
-+	struct ufs_hba *hba = shost_priv(host);
-+	int tag = scsi_cmd_to_rq(cmd)->tag;
-+	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-+	struct ufs_hw_queue *hwq;
-+	int err = FAILED;
-+
-+	if (!lrbp->cmd) {
-+		dev_err(hba->dev,
-+			"%s: skip abort. cmd at tag %d already completed.\n",
-+			__func__, tag);
-+		goto out;
-+	}
-+
-+	/* Skip task abort in case previous aborts failed and report failure */
-+	if (lrbp->req_abort_skip) {
-+		dev_err(hba->dev, "%s: skip abort. tag %d failed earlier\n",
-+			__func__, tag);
-+		goto out;
-+	}
-+
-+	hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+
-+	if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
-+		/*
-+		 * Failure. The command should not be "stuck" in SQ for
-+		 * a long time which resulted in command being aborted.
-+		 */
-+		dev_err(hba->dev, "%s: cmd found in sq. hwq=%d, tag=%d\n",
-+				__func__, hwq->id, tag);
-+		/* Set the Command Type to 0xF per the spec */
-+		ufshcd_mcq_nullify_cmd(hba, hwq);
-+		goto out;
-+	}
-+
-+	/*
-+	 * The command is not in the Submission Queue, and it is not
-+	 * in the Completion Queue either. Query the device to see if
-+	 * the command is being processed in the device.
-+	 */
-+	if (ufshcd_try_to_abort_task(hba, tag)) {
-+		dev_err(hba->dev, "%s: device abort failed %d\n", __func__, err);
-+		lrbp->req_abort_skip = true;
-+		goto out;
-+	}
-+
-+	err = SUCCESS;
-+	if (lrbp->cmd)
-+		ufshcd_release_scsi_cmd(hba, lrbp);
-+
-+out:
-+	return err;
-+}
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 1a40cf7..ef66151 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -79,7 +79,10 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 				       struct ufs_hw_queue *hwq);
- 
- int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag, int *result);
--
-+int ufshcd_mcq_abort(struct scsi_cmnd *cmd);
-+int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
-+void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-+				struct ufshcd_lrb *lrbp);
- #define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
- #define SD_ASCII_STD true
- #define SD_RAW false
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ffccb91..84efb52 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -299,7 +299,6 @@ static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
- static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
--static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
- static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
- 						 bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
-@@ -5438,7 +5437,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- }
- 
- /* Release the resources allocated for processing a SCSI command. */
--static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-+void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
- 				    struct ufshcd_lrb *lrbp)
- {
- 	struct scsi_cmnd *cmd = lrbp->cmd;
-@@ -7374,7 +7373,7 @@ static void ufshcd_set_req_abort_skip(struct ufs_hba *hba, unsigned long bitmap)
-  *
-  * Returns zero on success, non-zero on failure
-  */
--static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
-+int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
- {
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	int err = 0;
-@@ -7534,6 +7533,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto release;
- 	}
- 
-+	if (is_mcq_enabled(hba)) {
-+		/* MCQ mode. Branch off to handle abort for mcq mode */
-+		err = ufshcd_mcq_abort(cmd);
-+		goto release;
-+	}
-+
- 	/* Skip task abort in case previous aborts failed and report failure */
- 	if (lrbp->req_abort_skip) {
- 		dev_err(hba->dev, "%s: skipping abort\n", __func__);
+ drivers/ufs/core/ufshcd-priv.h | 1 +
+ drivers/ufs/core/ufshcd.c      | 5 +++--
+ include/ufs/ufshcd.h           | 2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
 -- 
-2.7.4
+2.17.1
 
