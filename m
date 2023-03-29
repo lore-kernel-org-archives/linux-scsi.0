@@ -2,119 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E41AC74A5B
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 12:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A86B1C74A5B
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 13:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229579AbjC2Mo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Mar 2023 08:44:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53014 "EHLO
+        id S229938AbjC2N0H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Mar 2023 09:26:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbjC2Mo1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 08:44:27 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 546B8F4
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 05:44:26 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PmmPb18cqzgZj1;
-        Wed, 29 Mar 2023 20:41:07 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by canpemm100004.china.huawei.com
- (7.192.105.92) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21; Wed, 29 Mar
- 2023 20:44:23 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>, <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Xingui Yang <yangxingui@huawei.com>
-Subject: [PATCH v2] scsi: libsas: abort all inflight requests when device is gone
-Date:   Wed, 29 Mar 2023 20:43:57 +0800
-Message-ID: <20230329124357.3746533-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229700AbjC2N0B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 09:26:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7A2CD8
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 06:24:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680096291;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=rtS7QVAtuYQjDEY7nXHnoqbfop6chvBfZPGcSLcnwDU=;
+        b=R7G5+qa2bAPZzw5b+Fb/3gBgSFVZQ1nWAdHUXQR9Di0sjpvOTL9HLnhyMRLogWQmCC6HKN
+        j9FJSey9TgocpvbXH2ty11PbEofqDlQEjsSCe9lM85MBoDsX3XjV7o+g7e4Ko76s3JILFD
+        TCFlgU+la7kMRjIKhaz/DmASQ7s8P1k=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-650-CkKAlFiNN76-dNEHmk0CXA-1; Wed, 29 Mar 2023 09:24:50 -0400
+X-MC-Unique: CkKAlFiNN76-dNEHmk0CXA-1
+Received: by mail-qv1-f70.google.com with SMTP id px9-20020a056214050900b005d510cdfc41so6629500qvb.7
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 06:24:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680096290;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rtS7QVAtuYQjDEY7nXHnoqbfop6chvBfZPGcSLcnwDU=;
+        b=H3ZxXNnAfRK9BP2tP4J3Ic6YUuntTIw7MrQtt02GCzhTPet0l2kncAcCse4o3gPCBU
+         vEJhBl6GIdcwinipeQER15Qc1udAZqBAYIlTCSLZMKUv9XJs09noNB4PhgkvhzwJ+jLL
+         f9mQRxse6hwsulqUIRzHycgmRFVjzzhPFvYiv+KgasJ5Q7eJpnaJzBEhQYebGeRSaUcH
+         dpGn4eJNx2XSTfw4kM/DCtAU5HUbypVsoxU3C+Ng0UXGUnqcVL5GtTrlc5812ZoCy2VE
+         NvKz/+3WYXVQ452z1hk3okFN4Q00WjhWMrG0ZjiEH45LPzG2ge0cTkZ93suWjbhIbRp0
+         j2gA==
+X-Gm-Message-State: AO0yUKUAjH9t5xRrjdvzrF27WXfauschj6DrLsG0cJt8KD+IwNk+nJB3
+        MVg/vQoCRbzGAWyRTVCu2bNR/LbTqiaUIIytO1ac+Ny5BZ9gf6GwiyXDTDOH677SICJhr9FMfo7
+        IYiQ7DI26KmzwVd6SfJi3qA==
+X-Received: by 2002:a05:622a:1903:b0:3e3:982b:f535 with SMTP id w3-20020a05622a190300b003e3982bf535mr35038323qtc.33.1680096290100;
+        Wed, 29 Mar 2023 06:24:50 -0700 (PDT)
+X-Google-Smtp-Source: AK7set/pxHT+zYmnDLN7+oI3EGOeAUDzDtVHPAhTMokbOjOy3WQMS3mqH9rtro9CtstXRdGMpp050g==
+X-Received: by 2002:a05:622a:1903:b0:3e3:982b:f535 with SMTP id w3-20020a05622a190300b003e3982bf535mr35038289qtc.33.1680096289729;
+        Wed, 29 Mar 2023 06:24:49 -0700 (PDT)
+Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id l6-20020ac848c6000000b003bfb0ea8094sm9803279qtr.83.2023.03.29.06.24.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Mar 2023 06:24:49 -0700 (PDT)
+From:   Tom Rix <trix@redhat.com>
+To:     martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev,
+        Tom Rix <trix@redhat.com>
+Subject: [PATCH] scsi: target: core: remove unused prod_len variable
+Date:   Wed, 29 Mar 2023 09:24:21 -0400
+Message-Id: <20230329132421.1809362-1-trix@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm100004.china.huawei.com (7.192.105.92)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a disk is removed with inflight IO, the userspace application need
-to wait for 30 senconds(depends on the timeout configuration) to getback
-from the kernel. Xingui tried to fix this issue by aborting the ata link
-for SATA devices[1]. However this approach left the SAS devices unresolved.
+clang with W=1 reports
+drivers/target/target_core_spc.c:229:6: error: variable
+  'prod_len' set but not used [-Werror,-Wunused-but-set-variable]
+        u32 prod_len;
+            ^
+This variable is not used so remove it.
 
-This patch try to fix this issue by aborting all inflight requests while
-the device is gone. This is implemented by itering the tagset.
-
-[1] https://lore.kernel.org/lkml/234e04db-7539-07e4-a6b8-c6b05f78193d@opensource.wdc.com/T/
-
-Cc: Xingui Yang <yangxingui@huawei.com>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Tom Rix <trix@redhat.com>
 ---
+ drivers/target/target_core_spc.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
- v1->v2:
-   1. Rename sas_abort_domain_cmds() to sas_abort_device_scsi_cmds().
-   2. Don't do the aborting for expanders and for devices not completely initialinzed.
-   3. Add a comment to explain why we need to abort these commands.
-
- drivers/scsi/libsas/sas_discover.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 72fdb2e5d047..8c6afe724944 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -360,6 +360,33 @@ static void sas_destruct_ports(struct asd_sas_port *port)
- 	}
- }
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 5bae45c3fb65..89c0d56294cc 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -226,7 +226,6 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 	struct t10_alua_lu_gp_member *lu_gp_mem;
+ 	struct t10_alua_tg_pt_gp *tg_pt_gp;
+ 	unsigned char *prod = &dev->t10_wwn.model[0];
+-	u32 prod_len;
+ 	u32 off = 0;
+ 	u16 len = 0, id_len;
  
-+static bool sas_abort_cmd(struct request *req, void *data)
-+{
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+	struct domain_device *dev = data;
-+
-+	if (dev == cmd_to_domain_dev(cmd))
-+		blk_abort_request(req);
-+	return true;
-+}
-+
-+static void sas_abort_device_scsi_cmds(struct domain_device *dev)
-+{
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *shost = sas_ha->core.shost;
-+
-+	if (dev_is_expander(dev->dev_type))
-+		return;
-+
-+	/*
-+	 * For removed device with active IOs, the user space applications have
-+	 * to spend very long time waiting for the timeout. This is not
-+	 * necessary because a removed device will not return the IOs.
-+	 * Abort the inflight IOs here so that EH can be quickly kicked in.
-+	 */
-+	blk_mq_tagset_busy_iter(&shost->tag_set, sas_abort_cmd, dev);
-+}
-+
- void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
- {
- 	if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
-@@ -372,6 +399,8 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
- 	}
+@@ -267,10 +266,6 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 	 * T10 Vendor Identifier Page, see spc4r17 section 7.7.3.4
+ 	 */
+ 	id_len = 8; /* For Vendor field */
+-	prod_len = 4; /* For VPD Header */
+-	prod_len += 8; /* For Vendor field */
+-	prod_len += strlen(prod);
+-	prod_len++; /* For : */
  
- 	if (!test_and_set_bit(SAS_DEV_DESTROY, &dev->state)) {
-+		if (test_bit(SAS_DEV_GONE, &dev->state))
-+			sas_abort_device_scsi_cmds(dev);
- 		sas_rphy_unlink(dev->rphy);
- 		list_move_tail(&dev->disco_list_node, &port->destroy_list);
- 	}
+ 	if (dev->dev_flags & DF_EMULATED_VPD_UNIT_SERIAL)
+ 		id_len += sprintf(&buf[off+12], "%s:%s", prod,
 -- 
-2.31.1
+2.27.0
 
