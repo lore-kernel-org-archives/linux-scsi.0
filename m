@@ -2,105 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71295C6FD18
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 01:32:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29797C761AF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 03:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229690AbjC2Bcp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 21:32:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40320 "EHLO
+        id S230048AbjC2DHd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 23:07:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbjC2Bcm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 21:32:42 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A561706;
-        Tue, 28 Mar 2023 18:32:41 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id bi9so18156017lfb.12;
-        Tue, 28 Mar 2023 18:32:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680053560;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=R+bl2jOqAxhapHDrn1yb1EQ5+zvuHUKPCi6FQtw5dMg=;
-        b=YA40+Qhla2B04rSM3SnBmkaxakoM4INVok5CAbJ2EXY+z3ICXnU1c1M5qRym2sQrDF
-         TIFApfhL0AXhR+DabzE0zHoX8Pl+gJgkm7oyeLFnB7r1RPULHEgeZJGggPw2tQVqN/tI
-         9AZOiYQQOxkG0CwdxnN98dCVMdc9cRTGg4bfysvN6ScLDZfHrSYbkEPior8lH7dfPsEH
-         tceSvz5H9IzTvM0F/NBRJsZeNTI+Gu9PqcYxgiGPqxteD1znbtt7nw3amlen0ImgV+OT
-         gbpk2dblyx422jTvGFbM9ZlhDJ9ddrOJfT1/mqVFav/7o/IHMl/87+mgbsgDCXF16lMJ
-         KtmQ==
+        with ESMTP id S229517AbjC2DHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 23:07:31 -0400
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E09192D75;
+        Tue, 28 Mar 2023 20:07:30 -0700 (PDT)
+Received: by mail-pl1-f178.google.com with SMTP id kq3so13595350plb.13;
+        Tue, 28 Mar 2023 20:07:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680053560;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=R+bl2jOqAxhapHDrn1yb1EQ5+zvuHUKPCi6FQtw5dMg=;
-        b=3wsR1nNRtE53t69Jcr9VqX5OobofIoC5t/lxvdGOOMyE1IxdZfCtL6i06PPXgjpel+
-         B0Sxw9DpgTYBIVgDQ2DtHrRCkA4+z9NJXC0mULdhBY4l+BQhD8qhmufhCKfkWspGb3hd
-         yJ9lbaPuzavhBUARGVCExq/TnN6/OlymdzBiPk6KKlpv//w+FvcKvrtUiXHXREtlLWfl
-         VwKLrAdocqju95uJ152AN8667IpJP5VTsZf7zc8ktYJSeiQw58XNsBBJ9jgKoz2kNx69
-         F3eS1d2DVQ6pKJsVh7KrBUMvIgjpG7jA4Yk+JSlBpXwdhEkpzyNKtrgSFMpIZfg0XtmC
-         Gj7g==
-X-Gm-Message-State: AAQBX9ebX9oNGCjhGa6I+OMyFqJ4IUF2pMmm7dCpaI1voxz157QTsq5s
-        xbeUiD+ew4o2/MKM8wFkdbpuFoyhyMPcU1Ka7si5RKCAxn/X5VA=
-X-Google-Smtp-Source: AKy350ZJ9jIcLlIPvnGyeqDurFEL4h5eLrfQa1R7Mv2CsUszEPgG4iU/d/cmPNe4aFnJMdQZM7nB7di2+4aaCIXKVyc=
-X-Received: by 2002:a05:6512:159e:b0:4e8:4409:bb76 with SMTP id
- bp30-20020a056512159e00b004e84409bb76mr309412lfb.2.1680053559678; Tue, 28 Mar
- 2023 18:32:39 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1680059250;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=adLZ+hFzOFHt2ehEVGdWFwYoZL3029zv1IubnPhrNWk=;
+        b=0tJWcIEjEgNp59KLzWRwzugsKBzKPdhxLndXUTo9hUFnvmQEJvf+xFkQ4E3xsrpTnD
+         cD8ZFe4EnETVmyzLlu32U4oHFFYAmLEMrG5GkLVzZUxthMx2Cb4HNkcfXkGqU35/FVC8
+         1W0WRBErd+YbuZ+A/JO6TlsruOKM0LehlXtSVqDZmENlMB40mFcls+J69vMu6iK/hwDI
+         V2+XIJPfLKiZV7fBreP6LtBZxI5/Mr+ip9bUvyu4tPKsg+sjDFt400nTEf1jOAYkHxaZ
+         yDkglV7M9BurhXGWMRP5oBTWrjSFF8Y1PxYQ9RsFsZ9jbULR2+cawA7nmkY4WC/Oq7As
+         zRMg==
+X-Gm-Message-State: AO0yUKWpAKs2Nm7KtvxhUeNADfZNSEPDYLz8CFF9CzUy43dwRpcrcC2t
+        /s/7lKrlD5/6843oweUeUHY=
+X-Google-Smtp-Source: AK7set/xqxAZrj+4KgMElymUiMjNGOVkKCU5KvXbtM7U3NOrVD9z4Gj2ye80yVWac/x0Mb2Saw98LA==
+X-Received: by 2002:a05:6a20:c50f:b0:dd:bf6a:4609 with SMTP id gm15-20020a056a20c50f00b000ddbf6a4609mr15757410pzb.49.1680059249872;
+        Tue, 28 Mar 2023 20:07:29 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id v7-20020a62a507000000b005e5b11335b3sm21750075pfm.57.2023.03.28.20.07.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Mar 2023 20:07:29 -0700 (PDT)
+Message-ID: <b66e0433-040d-34b8-05f1-a6741861c684@acm.org>
+Date:   Tue, 28 Mar 2023 20:07:27 -0700
 MIME-Version: 1.0
-References: <20230328103801.11198-1-powen.kao@mediatek.com> <20230328103801.11198-2-powen.kao@mediatek.com>
-In-Reply-To: <20230328103801.11198-2-powen.kao@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 29 Mar 2023 09:32:28 +0800
-Message-ID: <CAGaU9a8f37ZyMjVyYnonNCro55UQJ033Ns+LoaOcWDUg3Gp=3A@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: ufs-mediatek: Add UFSHCD_QUIRK_MCQ_BROKEN_INTR
- quirk
-To:     Po-Wen Kao <powen.kao@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Add host quirk
+ UFSHCD_QUIRK_MCQ_BROKEN_INTR
+Content-Language: en-US
+To:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org,
-        Stanley Chu <stanley.chu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        alice.chao@mediatek.com, naomi.chu@mediatek.com,
-        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
-        eddie.huang@mediatek.com, mason.zhang@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        <angelogioacchino.delregno@collabora.com>
+Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com,
+        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com
+References: <20230328103801.11198-1-powen.kao@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230328103801.11198-1-powen.kao@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 6:42=E2=80=AFPM Po-Wen Kao <powen.kao@mediatek.com>=
- wrote:
->
-> Set UFSHCD_QUIRK_MCQ_BROKEN_INTR for mtk driver
->
-> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-> ---
->  drivers/ufs/host/ufs-mediatek.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index 73e217260390..b4a4a580ad37 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -901,6 +901,8 @@ static int ufs_mtk_init(struct ufs_hba *hba)
->         hba->caps |=3D UFSHCD_CAP_CLK_SCALING;
->
->         hba->quirks |=3D UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
-> +       hba->quirks |=3D UFSHCD_QUIRK_MCQ_BROKEN_INTR;
+On 3/28/23 03:37, Po-Wen Kao wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index acae4e194ec4..1e1271aca1f2 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8493,11 +8493,15 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+>   static void ufshcd_config_mcq(struct ufs_hba *hba)
+>   {
+>   	int ret;
+> -
+> +	u32 intrs;
+>   	ret = ufshcd_mcq_vops_config_esi(hba);
 > +
->         hba->vps->wb_flush_threshold =3D UFS_WB_BUF_REMAIN_PERCENT(80);
->
->         if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
-> --
-> 2.18.0
->
+>   	dev_info(hba->dev, "ESI %sconfigured\n", ret ? "is not " : "");
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+The use of blank lines in the above code is weird. Please make sure 
+there is no blank line inside the declaration block and also that there 
+is a blank line between declarations and statements as required by the 
+kernel coding style.
+
+> -	ufshcd_enable_intr(hba, UFSHCD_ENABLE_MCQ_INTRS);
+> +	intrs = (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_INTR) ?
+> +		(UFSHCD_ENABLE_MCQ_INTRS & ~MCQ_CQ_EVENT_STATUS) : UFSHCD_ENABLE_MCQ_INTRS;
+
+All parentheses in the above expression are superfluous. Please leave 
+these out. Or even better, rewrite the above code as follows:
+
+	intrs = UFSHCD_ENABLE_MCQ_INTRS;
+	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_INTR)
+		intrs &= ~MCQ_CQ_EVENT_STATUS;
+
+> +
+> +	/*
+> +	 * Some platform raises interrupt (per queue) in addition to
+> +	 * CQES (traditional) when ESI is disabled.
+> +	 * Enable this quirk will disable CQES and use per queue interrupt.
+> +	 */
+> +	UFSHCD_QUIRK_MCQ_BROKEN_INTR			= 1 << 20,
+
+Isn't this an UFS controller behavior instead of a platform behavior? 
+Please consider changing "platform raises" into "controllers raise".
+
+Thanks,
+
+Bart.
+
