@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDCC6C76196
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 01:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92366C6FD18
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 01:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbjC2B3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 21:29:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37230 "EHLO
+        id S229573AbjC2BcT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 21:32:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbjC2B3W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 21:29:22 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BC8310CE;
-        Tue, 28 Mar 2023 18:29:21 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id c29so18190060lfv.3;
-        Tue, 28 Mar 2023 18:29:21 -0700 (PDT)
+        with ESMTP id S229436AbjC2BcR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 21:32:17 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 104A310E5;
+        Tue, 28 Mar 2023 18:32:17 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id q16so18160372lfe.10;
+        Tue, 28 Mar 2023 18:32:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680053360;
+        d=gmail.com; s=20210112; t=1680053535;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=J2ZBooKTdQvtfMVgnhuwabyGyb9Yl38IXe8xsUOWjvo=;
-        b=d4fhJHyxuZd/FESgSXv9Frj/cenBy44pnYyeOw6RdevGJ5hGaZW/JaUKicQuOjfQOE
-         lCFsXByYHdquLzahDpeA9QnmeJRC/76MAFuAQBWNxTkCto6ZEbFMlFaTXVgxVwCLvJdr
-         vI0Ew3Yq1RMj9N4S9cwC8mTDEFH0zAEZCs1SLQBKU9qjVSCR1jTJhsatv1aViAD00iVo
-         5YXTcgKAzr9Kcd6PIErZ9uEOVZDoIbNeOJM0b2DPfQ+y/r384xf9aCRghXNbB+zEh20p
-         iQIQDm99H0+EKSe+VgCyRu49TSaD23kIXzf1smy0JdsLYMj4ED/HwuUZvcoUApeH1UJl
-         GxYQ==
+        bh=7ZHGglGdWPxmLZqzE9Llvceqs/qTUTBeEQL05IjQ1GM=;
+        b=XcsoEJJxl1+QHxMh2z9moGG+r4jo5wA6j2Pz55DBO+Ag1Gm0mr3PXkC8s3EPqYcBC/
+         +7VY6+B9iLi3TAsuSyKqTitSZeF7f3qh0bm3BzVhu/doEiY+KH0QGKoV2O0gpflRjw6X
+         jPayASahJ8WBBausFNZG+70PPanU2EHHjcFjo6ZP9nOQOnA0jZyGccK2eWS7wYWg35B8
+         wFmIZFrk7uge/DMV/JintYkGIxM6158Ot5rcv0u6JMSYv3Tfv2fdmvRHsGcF6UcWRYTf
+         FD6t54ZhJsmXouT8lYKsA1+tJdEQhQ4BEBq/fRInizySNx+s+3pAD8V5wUuCkMyVGzcz
+         /sag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680053360;
+        d=1e100.net; s=20210112; t=1680053535;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=J2ZBooKTdQvtfMVgnhuwabyGyb9Yl38IXe8xsUOWjvo=;
-        b=vbVxTqAHVM7uXdDHxB26MQC0H6/yrWtBZRS+W1DdEiS1Afl2b8BShr2P6qITFZhErX
-         M5dHIzpia/7/ql5vRzSTisCR9Ha2IO5EVjowsTqIlz1QQXUmaOBczum5w7o5ogh0Dglh
-         3Mb7GGGNGOyzE9HdInzErrFkBwBkQJFix/D1MSGzS4DpIv2N1jNt90U7SjHbWkcgJ9ZG
-         +yiH/dQXAhhMt/1NWyB4UlW3OawAfT3HFSR7Q3xcsgo4c3Med+iT0zvuEROJBO5dtBoN
-         sJg9xiEqlxHkVtdGQdZHoxa7IGREVz7GXFQstLY9Oegdu6OGlnMyw4ncR5ASFu/djaMK
-         GoJA==
-X-Gm-Message-State: AAQBX9elGQd3PGVYPbzbk/4WkljT/4TEsOL1JMIC7ngY3dHJtnrnxmic
-        Msz76v1Cflw+rzvc/x1WQUTiZP3ArEQKDQ3KMw==
-X-Google-Smtp-Source: AKy350ZzQ6gSicsuEON4vupXM9weznZXLCWciRrzvubMbpNb8S+dfZUJ6rBtuCKYkjhWaPvZQDMOOlwbKf0pYa1EDys=
-X-Received: by 2002:ac2:5322:0:b0:4eb:93a:41f0 with SMTP id
- f2-20020ac25322000000b004eb093a41f0mr3975535lfh.4.1680053359417; Tue, 28 Mar
- 2023 18:29:19 -0700 (PDT)
+        bh=7ZHGglGdWPxmLZqzE9Llvceqs/qTUTBeEQL05IjQ1GM=;
+        b=yBjvg+ukkR1mXz1XEmA4VEb1OVwlOBDWaEybpWXCtm72yGu307Wv0JiVqwt2ahtetm
+         hRoVHASVz6DBwEr/KxkzYHW+xOPrwVtomldr5bgm9HwtfCXLK4U21AIzZQzxSkdNBLVn
+         6mqLwbXcbBLqSf4bEmJ30RBMYvliwHXwZGdFI4IaT3nAYRmHWLKqNvW+4OaLlb0/Y9lI
+         YoJlvtbn2xrcInyP+Ios9PjFpw1zUneZCC4l+MbkSJGatRMDBbSIYKNw0FqQvsXFvmSV
+         t9cA20NnwBGZhiOingtuBkM8lSZNFEgHcq9Tul0V/tUqAxIBbh0LGXKNWVwatP/UcFFX
+         1J/A==
+X-Gm-Message-State: AAQBX9e4hWLtMMH+w1k6oheLEjJ3/DidLueHfoS3UVWi50t9citonAg5
+        Vks1ftfIAP7ZvJEYcpdrgl08Um42osgKnJiJLw==
+X-Google-Smtp-Source: AKy350ZJB6a7OQPoK0lwOGpL2K/wAnPDQc3srlgvjR3MpcfWsa2UceRHwbzl4Nrp2RSgJYQpa/EAliAkUvNWxBzIoIM=
+X-Received: by 2002:ac2:4473:0:b0:4eb:eaf:aa00 with SMTP id
+ y19-20020ac24473000000b004eb0eafaa00mr2977003lfl.4.1680053535096; Tue, 28 Mar
+ 2023 18:32:15 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230328103000.10757-1-powen.kao@mediatek.com>
-In-Reply-To: <20230328103000.10757-1-powen.kao@mediatek.com>
+References: <20230328103801.11198-1-powen.kao@mediatek.com>
+In-Reply-To: <20230328103801.11198-1-powen.kao@mediatek.com>
 From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 29 Mar 2023 09:29:07 +0800
-Message-ID: <CAGaU9a8DyCrUWxYRC=SZ0Qv95qXZPr-dBZGhGfp3xNxB=V4eSA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Make UFS_MCQ_NUM_DEV_CMD_QUEUES a module parameter
+Date:   Wed, 29 Mar 2023 09:32:03 +0800
+Message-ID: <CAGaU9a_dCZA3A_1TP=ijGgXTfiNZffvBe875xXXCKmoN8bQPxA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Add host quirk UFSHCD_QUIRK_MCQ_BROKEN_INTR
 To:     Po-Wen Kao <powen.kao@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
@@ -77,20 +77,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi, Powen,
+Hi Po-Wen,
 
-On Tue, Mar 28, 2023 at 6:38=E2=80=AFPM Po-Wen Kao <powen.kao@mediatek.com>=
+On Tue, Mar 28, 2023 at 6:42=E2=80=AFPM Po-Wen Kao <powen.kao@mediatek.com>=
  wrote:
 >
-> A dedicated queue for dev commands is not mandatory, hence let
-> UFS_MCQ_NUM_DEV_CMD_QUEUES become module parameter `dev_cmd_queues`
-> to allow sharing first hw queue for dev commands.
+> Quirk UFSHCD_QUIRK_MCQ_BROKEN_INTR is introduced for plaforms that
+> implement different interrupt topology from UFSHCI 4.0 spec.
+> Some platform raise per hw queue interrupt in addition to
+> CQES (traditional) when ESI is disabled.
+>
+> Enable this quirk will disable CQES and use only per hw queue
+> interrupt.
 >
 > Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
 > ---
->  drivers/ufs/core/ufs-mcq.c     | 35 +++++++++++++++++++++++++++-------
->  drivers/ufs/core/ufshcd-priv.h |  2 +-
->  drivers/ufs/core/ufshcd.c      |  2 +-
->  3 files changed, 30 insertions(+), 9 deletions(-)
+>  drivers/ufs/core/ufshcd.c | 8 ++++++--
+>  include/ufs/ufshcd.h      | 7 +++++++
+>  2 files changed, 13 insertions(+), 2 deletions(-)
 
 Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
