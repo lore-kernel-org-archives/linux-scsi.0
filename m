@@ -2,68 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BADCC6FD18
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Mar 2023 23:40:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDCC6C76196
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Mar 2023 01:29:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229804AbjC1Xke (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Mar 2023 19:40:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52558 "EHLO
+        id S229733AbjC2B3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Mar 2023 21:29:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229750AbjC1Xkd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 19:40:33 -0400
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF63D1FDB;
-        Tue, 28 Mar 2023 16:40:32 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 38FA5E1AAC;
-        Tue, 28 Mar 2023 23:40:32 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 23ADF60BEA;
-        Tue, 28 Mar 2023 23:40:32 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id 86VQL90VXSlg; Tue, 28 Mar 2023 23:40:31 +0000 (UTC)
-Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 7EBD060BE9;
-        Tue, 28 Mar 2023 23:40:31 +0000 (UTC)
-Message-ID: <9caa24a8-1744-b044-ac7d-782aba05d776@interlog.com>
-Date:   Tue, 28 Mar 2023 19:40:31 -0400
+        with ESMTP id S229532AbjC2B3W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2023 21:29:22 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BC8310CE;
+        Tue, 28 Mar 2023 18:29:21 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id c29so18190060lfv.3;
+        Tue, 28 Mar 2023 18:29:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680053360;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=J2ZBooKTdQvtfMVgnhuwabyGyb9Yl38IXe8xsUOWjvo=;
+        b=d4fhJHyxuZd/FESgSXv9Frj/cenBy44pnYyeOw6RdevGJ5hGaZW/JaUKicQuOjfQOE
+         lCFsXByYHdquLzahDpeA9QnmeJRC/76MAFuAQBWNxTkCto6ZEbFMlFaTXVgxVwCLvJdr
+         vI0Ew3Yq1RMj9N4S9cwC8mTDEFH0zAEZCs1SLQBKU9qjVSCR1jTJhsatv1aViAD00iVo
+         5YXTcgKAzr9Kcd6PIErZ9uEOVZDoIbNeOJM0b2DPfQ+y/r384xf9aCRghXNbB+zEh20p
+         iQIQDm99H0+EKSe+VgCyRu49TSaD23kIXzf1smy0JdsLYMj4ED/HwuUZvcoUApeH1UJl
+         GxYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680053360;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=J2ZBooKTdQvtfMVgnhuwabyGyb9Yl38IXe8xsUOWjvo=;
+        b=vbVxTqAHVM7uXdDHxB26MQC0H6/yrWtBZRS+W1DdEiS1Afl2b8BShr2P6qITFZhErX
+         M5dHIzpia/7/ql5vRzSTisCR9Ha2IO5EVjowsTqIlz1QQXUmaOBczum5w7o5ogh0Dglh
+         3Mb7GGGNGOyzE9HdInzErrFkBwBkQJFix/D1MSGzS4DpIv2N1jNt90U7SjHbWkcgJ9ZG
+         +yiH/dQXAhhMt/1NWyB4UlW3OawAfT3HFSR7Q3xcsgo4c3Med+iT0zvuEROJBO5dtBoN
+         sJg9xiEqlxHkVtdGQdZHoxa7IGREVz7GXFQstLY9Oegdu6OGlnMyw4ncR5ASFu/djaMK
+         GoJA==
+X-Gm-Message-State: AAQBX9elGQd3PGVYPbzbk/4WkljT/4TEsOL1JMIC7ngY3dHJtnrnxmic
+        Msz76v1Cflw+rzvc/x1WQUTiZP3ArEQKDQ3KMw==
+X-Google-Smtp-Source: AKy350ZzQ6gSicsuEON4vupXM9weznZXLCWciRrzvubMbpNb8S+dfZUJ6rBtuCKYkjhWaPvZQDMOOlwbKf0pYa1EDys=
+X-Received: by 2002:ac2:5322:0:b0:4eb:93a:41f0 with SMTP id
+ f2-20020ac25322000000b004eb093a41f0mr3975535lfh.4.1680053359417; Tue, 28 Mar
+ 2023 18:29:19 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v3 03/11] scsi: scsi_debug: Change shost list lock to a
- mutex
-Content-Language: en-CA
-To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
+References: <20230328103000.10757-1-powen.kao@mediatek.com>
+In-Reply-To: <20230328103000.10757-1-powen.kao@mediatek.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Wed, 29 Mar 2023 09:29:07 +0800
+Message-ID: <CAGaU9a8DyCrUWxYRC=SZ0Qv95qXZPr-dBZGhGfp3xNxB=V4eSA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Make UFS_MCQ_NUM_DEV_CMD_QUEUES a module parameter
+To:     Po-Wen Kao <powen.kao@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bvanassche@acm.org
-References: <20230327074310.1862889-1-john.g.garry@oracle.com>
- <20230327074310.1862889-4-john.g.garry@oracle.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <20230327074310.1862889-4-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com,
+        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-03-27 03:43, John Garry wrote:
-> The shost list lock, sdebug_host_list_lock, is a spinlock. We would only
-> lock in non-atomic context in this driver, so use a mutex instead, which
-> is friendlier if we need to schedule when iterating.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com
+Hi, Powen,
 
-Thanks.
+On Tue, Mar 28, 2023 at 6:38=E2=80=AFPM Po-Wen Kao <powen.kao@mediatek.com>=
+ wrote:
+>
+> A dedicated queue for dev commands is not mandatory, hence let
+> UFS_MCQ_NUM_DEV_CMD_QUEUES become module parameter `dev_cmd_queues`
+> to allow sharing first hw queue for dev commands.
+>
+> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+> ---
+>  drivers/ufs/core/ufs-mcq.c     | 35 +++++++++++++++++++++++++++-------
+>  drivers/ufs/core/ufshcd-priv.h |  2 +-
+>  drivers/ufs/core/ufshcd.c      |  2 +-
+>  3 files changed, 30 insertions(+), 9 deletions(-)
 
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
