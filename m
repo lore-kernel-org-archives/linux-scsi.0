@@ -2,122 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1EFC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Mar 2023 11:11:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30800C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Mar 2023 13:11:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231483AbjC3LLy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Mar 2023 07:11:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48290 "EHLO
+        id S231851AbjC3NL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Mar 2023 09:11:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231543AbjC3LLw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2023 07:11:52 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C4D012F
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2023 04:11:50 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PnLMV269rzKprK;
-        Thu, 30 Mar 2023 19:11:18 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by canpemm100004.china.huawei.com
- (7.192.105.92) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21; Thu, 30 Mar
- 2023 19:11:48 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>, <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Xingui Yang <yangxingui@huawei.com>
-Subject: [PATCH v3] scsi: libsas: abort all inflight requests when device is gone
-Date:   Thu, 30 Mar 2023 19:09:30 +0800
-Message-ID: <20230330110930.175539-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.31.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm100004.china.huawei.com (7.192.105.92)
-X-CFilter-Loop: Reflected
+        with ESMTP id S231774AbjC3NLZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2023 09:11:25 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D48A729F;
+        Thu, 30 Mar 2023 06:11:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1680181884; x=1711717884;
+  h=from:to:cc:subject:date:message-id;
+  bh=lgVVQIwI6iLlo2kEEH9j4UdpPk+a4BHv5x14ZPkjMN0=;
+  b=YxSVIMJ8OdLGcoGa2vPV27c52GWH6IJivPHJPSYEH0HjfPb2jbUFO0tk
+   mo4UBrYkxbdNDpUR+La70r9VqPQRrPVv99sfqNJqxoJNAolmuIiZC5vf7
+   WIeb0fPSIlFng2Y+TXlqPt88caCF6FC0rjgJqje2HRuYM14dwZhJFl4o9
+   Tu8ePen4MZZy2fDpiRLrj2QdN6vb6Anx6PIVjtuFdKaGTOEWDwVV6lcHW
+   Xlu97r+G9iqyHC9yfXe0upH/eJWKnklNc8SH7PgcqUUyCkyn478bDaL3n
+   q7LiKD8bY1ZMxliCYMwLjmJW7EqA9n4uMOz1cyCTdGLfDLtmkpPaDdVbP
+   A==;
+X-IronPort-AV: E=Sophos;i="5.98,303,1673884800"; 
+   d="scan'208";a="226881513"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 21:11:23 +0800
+IronPort-SDR: VqJTwR7FZvYcAr3YF1jp8fJHWfodrwzGpVVJtEQSXMhcA9NUWFbrvHdgnjKO6Hhlc71+pVARH6
+ Voc7/JXOaoTSUjR1lrhSsYnsXK0/PaEvRyTT39UqjUgUxbR/VqQyVFYO93lhk/w8dMJJ1Qdo6Q
+ BPe1SdLkGjM3AMhH/9evQpp0po8TGT3lHfBLC1/bqnw8uMh6IZC9jHfpXXS1DyMn8OWtAEcHoY
+ M5ceWAqIpFXMtEcjJgfz0d9vnDfuP/aAdTfh4dk2J7nJUXF/D4U7aGpjrIG0Tb7z1W/4agWwQE
+ b20=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Mar 2023 05:21:51 -0700
+IronPort-SDR: +f30L4CjJfQB9hvZKMAeUD8qzXGdLAXQAQUHwxayKD/FAeMeXDI0ZHm/ncLdx9k5O5H01YREGf
+ xaCrwYT8pwcKyo9FOh7dvgetSpvQ8YqDfjb61wbsdLDaQCpdw/QHnItoKfWjMtWNd37zSW9WCR
+ +purt8sAzLkGsSO41AqL5Kg3mZ4CGl8KnYqKz/HOUMpRoZUxhEhmHPISLkrphQBKobQIdbHe8D
+ 4g2YvenvbpY81ajQ4RvqJPv6Z8lbzyD2qTfWEVcp2e58wwTlvv7bt84WOHLrra8pvRvMLRvRfH
+ Rik=
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.45.30.255])
+  by uls-op-cesaip01.wdc.com with ESMTP; 30 Mar 2023 06:11:21 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs: mcq: Limit the amount of inflight requests
+Date:   Thu, 30 Mar 2023 16:11:09 +0300
+Message-Id: <20230330131109.5722-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a disk is removed with inflight IO, the application need to wait
-for 30 senconds(depends on the timeout configuration) to get back from
-the kernel. Xingui tried to fix this issue by aborting the ATA link for
-SATA devices[1]. However this approach left the SAS devices unresolved.
+in UFS, each request is designated via the triplet <iid, lun, task tag>.
 
-This patch try to fix this issue by aborting all inflight requests while
-the device is gone. This is implemented by itering the tagset.
+In UFS4.0 the Initiator ID field is 8 bits wide, comprised of the
+EXT_IID and IID fields. Together with the task tag (single byte), they
+limit the driver's hw queues capacity.
 
-[1] https://lore.kernel.org/lkml/234e04db-7539-07e4-a6b8-c6b05f78193d@opensource.wdc.com/T/
-
-Cc: Xingui Yang <yangxingui@huawei.com>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- v2->v3:
-   1. Remove 'userspace' before application and fix typo in commit message.
-   2. Add John's reviewed-by tag.
- v1->v2:
-   1. Rename sas_abort_domain_cmds() to sas_abort_device_scsi_cmds().
-   2. Don't do the aborting for expanders and for devices not completely initialinzed.
-   3. Add a comment to explain why we need to abort these commands.
+ drivers/ufs/core/ufshcd.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
- drivers/scsi/libsas/sas_discover.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 72fdb2e5d047..8c6afe724944 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -360,6 +360,33 @@ static void sas_destruct_ports(struct asd_sas_port *port)
- 	}
- }
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 35a3bd95c5e4..d529c42a682a 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8468,6 +8468,10 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto err;
  
-+static bool sas_abort_cmd(struct request *req, void *data)
-+{
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+	struct domain_device *dev = data;
++	if (WARN_ONCE(hba->nutrs * hba->nr_hw_queues > (1 << 16) - 1,
++		     "there can be at most 1<<16 inflight requests\n"))
++		goto err;
 +
-+	if (dev == cmd_to_domain_dev(cmd))
-+		blk_abort_request(req);
-+	return true;
-+}
-+
-+static void sas_abort_device_scsi_cmds(struct domain_device *dev)
-+{
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *shost = sas_ha->core.shost;
-+
-+	if (dev_is_expander(dev->dev_type))
-+		return;
-+
-+	/*
-+	 * For removed device with active IOs, the user space applications have
-+	 * to spend very long time waiting for the timeout. This is not
-+	 * necessary because a removed device will not return the IOs.
-+	 * Abort the inflight IOs here so that EH can be quickly kicked in.
-+	 */
-+	blk_mq_tagset_busy_iter(&shost->tag_set, sas_abort_cmd, dev);
-+}
-+
- void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
- {
- 	if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
-@@ -372,6 +399,8 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
- 	}
- 
- 	if (!test_and_set_bit(SAS_DEV_DESTROY, &dev->state)) {
-+		if (test_bit(SAS_DEV_GONE, &dev->state))
-+			sas_abort_device_scsi_cmds(dev);
- 		sas_rphy_unlink(dev->rphy);
- 		list_move_tail(&dev->disco_list_node, &port->destroy_list);
- 	}
+ 	/*
+ 	 * Previously allocated memory for nutrs may not be enough in MCQ mode.
+ 	 * Number of supported tags in MCQ mode may be larger than SDB mode.
 -- 
-2.31.1
+2.17.1
 
