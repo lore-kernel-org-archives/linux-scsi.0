@@ -2,86 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F393FC74A5B
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Mar 2023 00:53:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2FCC6FD18
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Mar 2023 01:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbjC3AxH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Mar 2023 20:53:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57892 "EHLO
+        id S229693AbjC3B3e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Mar 2023 21:29:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjC3AxG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 20:53:06 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE7054C2F
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 17:53:04 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id br6so22457349lfb.11
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2023 17:53:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680137583;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=E7xemqptwLripvftPpiPZ5BxGFjDwXLXsFzH7aXhh2U=;
-        b=hC4AcC9jdetH7b0GKc9T3Em4dPVXm5nMjhzBNG7GhQfECy8fbHp8+0fPh7bJgAeXyr
-         eD2bl8L+Ml+O/GxhC4hncaZUGABwpTKHDn/kQNHILypwqyz3er4Zh4SpeJlyJmWjn235
-         fjCIVIdsQYvME2m6UnMh+ZvM47Ye/Vsg4eHbMm8ZlYbXWCEoHmmAll5UPNw3NUya40A9
-         NDpihs86Vm7zVLoW/ilaWNQIbtB6+uy5nNMf+xl34TbJkwMmZZlVaeNtxKxkY/yPrmxf
-         3x7OO6JTy37BSrQ+6g1+5k9Mh8IiayhrUMIlZpmO2s8VEMMzYMJPb/WYXmJn60G5zidH
-         /uew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680137583;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=E7xemqptwLripvftPpiPZ5BxGFjDwXLXsFzH7aXhh2U=;
-        b=3yRgVTeOlBTEEBMk1FQLaMKj/QwbD2oSlth6JisBlUAr3SMphQULA0dLjA6i5rhMdC
-         umbYQ+bktuYXFsXar82gm9KFV6uMChiAojKg0q6018aBttGXKglhl/x217lmnYV1YdHN
-         dIrcta3wjdbllorE9slr6zaWyzErK/yTQLTlrzblMZ/ax4uVhJx9KLVP2uAP16qbPdtz
-         lklMmeOwdFAVMV18Ac9O1a6FKzYwLz2p9VJAo1MBkRMOozR7+STHu34eqOZgRPcCbbuk
-         dk14lN/5giIZLyTGYvAyqTwnOVdwHcvVOriyqn1HhNqNO6alFie5U4Saugci5L0qaT0D
-         ivfA==
-X-Gm-Message-State: AAQBX9dqvz7HiQwPGIjlXYvnypFeslXxq8IvFlmyOlnAkVEwZoPp3GRK
-        lWkrzQpxQe2X9zzlL+VY2+54Wesnjrvo7x3fUQ==
-X-Google-Smtp-Source: AKy350bLbwPS4AEgFtkJ8c7i8BWUJhZyt/Vv9TML/juIniBLTQ6PZOxhSOh6XBS+uyoZa+sg0hyl2DmD2jLeX/EdWYY=
-X-Received: by 2002:ac2:4473:0:b0:4eb:eaf:aa00 with SMTP id
- y19-20020ac24473000000b004eb0eafaa00mr4109347lfl.4.1680137582629; Wed, 29 Mar
- 2023 17:53:02 -0700 (PDT)
+        with ESMTP id S229549AbjC3B3d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2023 21:29:33 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 569552132;
+        Wed, 29 Mar 2023 18:29:27 -0700 (PDT)
+X-UUID: 4be679f6ce9a11eda9a90f0bb45854f4-20230330
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=L/zOEaXONDhNZMFsIvxL84Y1YKRJDDGZ4D6js3PM4uA=;
+        b=AmLytvkUWxoEVModBDthdG5gBMWbfK9BYUx2L1VAAzBEAhvN026CyV4PeHm8ovq09hG6jgBaEKXJ1fkFY2cWPe2Rf6i1F10Ey9iYBuhsE+kWwirqB9BEHWyl+qyre8p4vOHEvwrbI1RWU08kDsiMHki4J2LhSEdwLXhY3pH5+Nk=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.22,REQID:71fa2093-0352-4f26-bcc1-181654c7ab3d,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:-5
+X-CID-META: VersionHash:120426c,CLOUDID:ac2bc8b4-beed-4dfc-bd9c-e1b22fa6ccc4,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-UUID: 4be679f6ce9a11eda9a90f0bb45854f4-20230330
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 759130459; Thu, 30 Mar 2023 09:29:21 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.25; Thu, 30 Mar 2023 09:29:20 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.25 via Frontend Transport; Thu, 30 Mar 2023 09:29:20 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
+        <bvanassche@acm.org>
+CC:     <stanley.chu@mediatek.com>
+Subject: [PATCH v1] scsi: core: Cleanup struct ufs_saved_pwr_info
+Date:   Thu, 30 Mar 2023 09:29:18 +0800
+Message-ID: <20230330012918.13748-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-References: <20230329205426.46393-1-athierry@redhat.com>
-In-Reply-To: <20230329205426.46393-1-athierry@redhat.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Thu, 30 Mar 2023 08:52:50 +0800
-Message-ID: <CAGaU9a-Mf3MmSO1fvazNCCFLjA1dboT7obBCQG3uP3VfgJBF6g@mail.gmail.com>
-Subject: Re: [PATCH] Revert "scsi: ufs: core: Initialize devfreq synchronously"
-To:     Adrien Thierry <athierry@redhat.com>
-Cc:     peter.wang@mediatek.com, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Adrien,
+The "is_valid" field of the struct ufs_saved_pwr_info is no
+longer used, and this struct can be replaced by struct
+ufs_pa_layer_attr, without any changes to the functionality.
 
-On Thu, Mar 30, 2023 at 4:54=E2=80=AFAM Adrien Thierry <athierry@redhat.com=
-> wrote:
->
-> This reverts commit 7dafc3e007918384c8693ff8d70381b5c1e9c247.
->
-> This patch introduced a regression [1] where hba->pwr_info is used
-> before being initialized, which could create issues in
-> ufshcd_scale_gear(). Revert it until a better solution is found.
->
-> [1] https://lore.kernel.org/all/CAGaU9a_PMZhqv+YJ0r3w-hJMsR922oxW6Kg59vw+=
-oen-NZ6Otw@mail.gmail.com
->
-> Signed-off-by: Adrien Thierry <athierry@redhat.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c | 7 +++----
+ include/ufs/ufshcd.h      | 7 +------
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-Thank you for posting the revert patch in such a short time.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c32a927ac5d1..97eb28a3006d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1269,7 +1269,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+ 	struct ufs_pa_layer_attr new_pwr_info;
+ 
+ 	if (scale_up) {
+-		memcpy(&new_pwr_info, &hba->clk_scaling.saved_pwr_info.info,
++		memcpy(&new_pwr_info, &hba->clk_scaling.saved_pwr_info,
+ 		       sizeof(struct ufs_pa_layer_attr));
+ 	} else {
+ 		memcpy(&new_pwr_info, &hba->pwr_info,
+@@ -1278,7 +1278,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+ 		if (hba->pwr_info.gear_tx > hba->clk_scaling.min_gear ||
+ 		    hba->pwr_info.gear_rx > hba->clk_scaling.min_gear) {
+ 			/* save the current power mode */
+-			memcpy(&hba->clk_scaling.saved_pwr_info.info,
++			memcpy(&hba->clk_scaling.saved_pwr_info,
+ 				&hba->pwr_info,
+ 				sizeof(struct ufs_pa_layer_attr));
+ 
+@@ -8424,10 +8424,9 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 
+ 	/* Initialize devfreq after UFS device is detected */
+ 	if (ufshcd_is_clkscaling_supported(hba)) {
+-		memcpy(&hba->clk_scaling.saved_pwr_info.info,
++		memcpy(&hba->clk_scaling.saved_pwr_info,
+ 			&hba->pwr_info,
+ 			sizeof(struct ufs_pa_layer_attr));
+-		hba->clk_scaling.saved_pwr_info.is_valid = true;
+ 		hba->clk_scaling.is_allowed = true;
+ 
+ 		ret = ufshcd_devfreq_init(hba);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 431c3afb2ce0..2845fe7f45cd 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -394,11 +394,6 @@ struct ufs_clk_gating {
+ 	struct workqueue_struct *clk_gating_workq;
+ };
+ 
+-struct ufs_saved_pwr_info {
+-	struct ufs_pa_layer_attr info;
+-	bool is_valid;
+-};
+-
+ /**
+  * struct ufs_clk_scaling - UFS clock scaling related data
+  * @active_reqs: number of requests that are pending. If this is zero when
+@@ -428,7 +423,7 @@ struct ufs_clk_scaling {
+ 	ktime_t window_start_t;
+ 	ktime_t busy_start_t;
+ 	struct device_attribute enable_attr;
+-	struct ufs_saved_pwr_info saved_pwr_info;
++	struct ufs_pa_layer_attr saved_pwr_info;
+ 	struct workqueue_struct *workq;
+ 	struct work_struct suspend_work;
+ 	struct work_struct resume_work;
+-- 
+2.18.0
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
