@@ -2,152 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 405DDC77B60
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Mar 2023 14:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D35C7C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Mar 2023 14:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232329AbjC3OHC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Mar 2023 10:07:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55096 "EHLO
+        id S231922AbjC3O33 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Mar 2023 10:29:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232270AbjC3OGv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2023 10:06:51 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60894868D;
-        Thu, 30 Mar 2023 07:06:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1680185210; x=1711721210;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=Rb4O9m+BoxcxM7H/IhLNPkKFgYfv7zgiRrMFFO/fR7I=;
-  b=S9tAt/o8t1rZB7h0V4oRXu5yg041jEmvIdv6Ko7FxlUh5+ZUkxuk/w+r
-   pqb+frbFb5Yb7yG3E6ky+zPtUwvQtcm9M2nQz3fXJsWOobFHqGmLw4/YR
-   u7p8UyK/b3YXNX/6v1gZ3PzWyaLqpS6JIrM4mUVUjXzdq3GHDa0xW2d5Z
-   yli1BluM5cVta56CAgmw/67PnlVDi3KtMypVEXLt8pnS4eHyrEDR980Ce
-   MeQ7znvL/hgchlnZ+Fph0FdoGRIbLafJm2zMebjIHA1r8yBGhF/QfnCml
-   ZDPEoCEUr/7QpMT34OfQHg5pfzRTwTttDY4AF3/BYbJEpVFcf5XSx3rTE
-   g==;
-X-IronPort-AV: E=Sophos;i="5.98,303,1673884800"; 
-   d="scan'208";a="226885471"
-Received: from mail-mw2nam12lp2047.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.47])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 22:06:47 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RzlPXV6FmxZHk8frOkkKmWwE0tHR6ujYeK2ptH7pGNyyOQXwIz1aSCwzsfWdOziweilBFACjQtGnhf8x+wOrI4sK7u9pwXwbhhnedo2SLm/LNr7Bl9rvvRFoLWBhytKPSCzA7tP9sT814bgM2D5VvaetCNz+NREU4V09XaEUzG3OSlWw+XiQzFTqCtT5Qv+f6blxARO4xmxuxiKsWyV5FmiryRfTswChogr604qeikaUQ3PRU8QJqQf3oYJCuHHXIEOj6l/osYNixo+xIrMjc8B4BqtWs97kuPJDpq8zK/dxdIOs2ES3NwA2KMl59QGz3USUXvurnMF9UqIJF5iitg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Rb4O9m+BoxcxM7H/IhLNPkKFgYfv7zgiRrMFFO/fR7I=;
- b=cZbKUu2nNAMu/3AfhxWwTLgyI4OQkeKwOxAHYvM7gwF2y5D1Yo9jclLU3fxH/IXopsPtp711Z1gnMkscMVMoEK9OlkmVRQlctw6Pw+DVo99XEp77/IzHuLjISEQyJwg99k5c5m6cB3dX4HwNgIqLeijdzN+rnGxE2gST8UlAB2SwD99xL5rFp0JXBTY7CdhUsHyJIFwk5ONfYifj5XSFOWIxCz8vcA0CV6dax9vjg8iIiQ/99QnlMxE6ePHuWLSH9dPYyalu3l1WaJ0VjRQiVpWEzshYvNrZAaKYKhFVZQJHUuBM10pbiDzH0mu3z1d+pTZkrINcvy+jIyeWvDYPXw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Rb4O9m+BoxcxM7H/IhLNPkKFgYfv7zgiRrMFFO/fR7I=;
- b=BP9eWPVc9YHiBeXn6bSmkDp6cHyCePEL5V6mbXU/ey5lCFo06LePH+VCyD7JYmwuIB7tDU5arvTf5b5CM++mJwcW3CqinZ2TmYIt+SzBCztYhX8ZI346qQdUA9/iXNzZ1Oz3dQ/f3ZVfkx00FVOOSaCgd3JFvxTnyYMaMx1HDXk=
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
- by CYYPR04MB8839.namprd04.prod.outlook.com (2603:10b6:930:c5::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6222.33; Thu, 30 Mar
- 2023 14:06:42 +0000
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::8c4d:6283:7b41:ed6f]) by PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::8c4d:6283:7b41:ed6f%6]) with mapi id 15.20.6254.020; Thu, 30 Mar 2023
- 14:06:42 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Asutosh Das <quic_asutoshd@quicinc.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: ufs: mcq: Limit the amount of inflight requests
-Thread-Topic: [PATCH] scsi: ufs: mcq: Limit the amount of inflight requests
-Thread-Index: AQHZYwkm/zKpvaKgSEm32+um6tdFCK8TW6GA
-Date:   Thu, 30 Mar 2023 14:06:41 +0000
-Message-ID: <075597d5-86df-84df-039a-50d1c6b8ebd4@wdc.com>
-References: <20230330131109.5722-1-avri.altman@wdc.com>
-In-Reply-To: <20230330131109.5722-1-avri.altman@wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.9.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|CYYPR04MB8839:EE_
-x-ms-office365-filtering-correlation-id: 3f216f59-2379-43a5-d44c-08db3127fcea
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: wLkv6B5alWm9zKMebP6hqs8+/Vy35tPdnComz5V5MpEYcavqUEKpVdwPkCK6DlktZuKkiPNgaEnmqJLCWBBfYfYcUBaUhIawj5YS9S9gFaaqSjzbbrm2NusLb+3fOqg5ZHgYl/pRUo5/9TT76tuZFnMjVGAyy4EEGaKcigkQ1AjGfAq4XMOw2nQKMY9OSWhw4W+c5qvNIy2DGPsXYCCAT/WLQ+CBorW9UEZ6JVU+nyafv4dCuYyttU3EImRYtRyC2fzV2UFgIVjHovFGHbCMFtPVopJILCOx6J6zvdSTy5j/pSzSMxf7YT3TIN+iFwaEZCXw/PB7+VbA0dylJKkvdPcxAqpwdedLF9V10d1HER+Cpno8dWF0OnIF95I1lrN4dXZlmqDSBW6SeOFgYuYtW1Ez7/pC24qh3VPCLHIVqUJ2I8UqwTOAt9kYGOGk7FO7uxspK4MeVFc2Sw8jNDBDcBsE+g5FnlE/jfw9Kv5FHyxeMRoMz/Ju8RQSCOqnxFuAi36ENA3RTGcDq4Z3lIyd6EnAufQhImK6LXOMaKcfERl4Fmc5w97X5uxdTb9rCrB3edKtpKgegwxVYvTU5/T3goq2SZOKaYwHDzJ6wU/POpG39GAhn8KQrNJcyhW8rCegmIK+kFiDCD+3g9K5P7Gk3Qy+7SO7iiANCqV4ne8AsowdRBFZo1n5Lbct3MOjEDkL
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(346002)(376002)(39860400002)(136003)(366004)(396003)(451199021)(6486002)(31686004)(54906003)(53546011)(478600001)(2616005)(316002)(6506007)(26005)(110136005)(6512007)(71200400001)(66446008)(66476007)(8676002)(4326008)(66946007)(66556008)(8936002)(186003)(91956017)(76116006)(41300700001)(82960400001)(38070700005)(122000001)(64756008)(5660300002)(558084003)(2906002)(36756003)(83380400001)(38100700002)(31696002)(86362001)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?NlVGSzk2VGl0Tk5TVG1oRC9taTE4akdjTGwwa1V5TFlRd3V1SEJNTFVOMnVZ?=
- =?utf-8?B?dTM1Znp6RFlsMlNlL3d4Z1R0QXhVUVdwUEg0TWs1RzJ4VGc2U092YjZwK1Vr?=
- =?utf-8?B?Q0FHd1VEUGl5QjE2S1JEUkZFakxnNXp3N2xSa0JlTlcxWldvMG42NzBLTkpB?=
- =?utf-8?B?N3JNRkJpeEhJajZ5d1h2bndGQXRtUlFPaEpkWm9YeE81QVdjN1Zlb0hValBN?=
- =?utf-8?B?RlN3cHBYRjN3YzFvT3NwNW9HdHNHYm4rMUZHeHJudWZJVjJYN0FiN09Sa0Iz?=
- =?utf-8?B?THBpTW9DaUQ1dVNmSnhnYm9tSk5DTzdRSDVEalNpTS9SOEtYTE9OM253YXpY?=
- =?utf-8?B?WlNCKzVWUFl5c1hmeXBnOGJwdWhpY0Z5UXp3eUpKWWdsa0V3TSt5K3c3V05W?=
- =?utf-8?B?VEwrd1hVUGtWVFZHV2pmV1hqM2hVMHU5MkFVeXhLd3A0RW9TUGcrRzVuSElO?=
- =?utf-8?B?SGx2ZkNvR3NuZFVTd2kyUkRTY2ZVaUQwYmJUUWZIZG42Uzlwbk95RmoyNk1V?=
- =?utf-8?B?cmJNVnUrSjdKc2RhZkhBRjNtYWpXaFJIVDFRanVPTGtzeDBYWmZLMmZLSlZt?=
- =?utf-8?B?U2Njb1c4Z0lldlNHNWMraTRmMXZHWlJzam16Y2g4blFQc1hhODQrVUNtdTM4?=
- =?utf-8?B?YnRuaFNyYm80WlN6bEtwdUh2SEZaRWE2R3V1aGJ6REFUSkFyVnY2dEtCMzNs?=
- =?utf-8?B?clF5SERoOGFXRG1CRzRaL01oRHIrWUlWbUF2VVovaW1QNkhVc2JGL3ZtRG55?=
- =?utf-8?B?cThQRDd1cEZLcDYxUHhJb3NvZk5QQWxyNjZaYmRkK0FGTmpGUys4UjBGcGxQ?=
- =?utf-8?B?MXJnaFV3Yjk2eVVmLzFCM3YzVHRsdkdiNlk0a201Sy9BbzZhajcxZ3I4dHg4?=
- =?utf-8?B?anJoMWFpMkFQMHQ0UkZIbmlTWVo3Nm9GN0R5MWtmOERZbEJHKzlzY2l2dml2?=
- =?utf-8?B?azFOcXl2blAxTDZpaW9OUXpRb1R1SDFEWWZaMzVOUVBsdENWWTMvR0pLRVJi?=
- =?utf-8?B?NDhlRHJXQ2dEZE82Z3JMeFc4TVcvTnk0emFSdDFTbGVuYWJWR1dtWEV1NnAr?=
- =?utf-8?B?Yi9UdjRoUlJDSVcyYU41a2JJZXpUVSt1bEozT2swQjJyalBEM3BGMTFwczZr?=
- =?utf-8?B?cWEvaDNoKy9iMGw3OW0wZVE1OXlQbUp1dlVldllHRmFYUFVrK2hMZ0svY29x?=
- =?utf-8?B?a2hMMENHc2wzQi9MYkVVTWV6UmxIRmt6ampSakFFWExqdloybWxhWFFtY0xk?=
- =?utf-8?B?Zlpud0VvN2VTUWY2TFhISWswKzROTlBTMUpXUWJ6WXROVW9MWVpjVHJ1a3Qx?=
- =?utf-8?B?WmRQTGd1WHJQd2dwckJkSytWMkxYbjZ3cHp4d0lKdGxOMFlCSUR6WnpLT0lO?=
- =?utf-8?B?RnFKZmc0anF4WFhSQWZGRzlvckZMMmVoU09EN1FBRDZSa01Uby9ZM0srVmJ4?=
- =?utf-8?B?d0xXTlpGRGUzeERUeTdTMzkxVzY4MWxma0VqUjRoK3ZNdzdVM1Z5ZjlCamF6?=
- =?utf-8?B?MXNUTTdKazdPVHRaYzVZaHJwNGYyTVNxVE5nbkpzVGJDdi9vSko5Vm5pWXRq?=
- =?utf-8?B?akRBVzFUOGcvMkVMa1A4R1oxQkNCNnRvaEoxV2M3MGxQOXdqNHZIRTJZZ3Rl?=
- =?utf-8?B?TlRiOUsyemNkNW1WY0hPK0hqd2E3YXV3U3ZqdFZndzdEclVKQ1R0cGpPLzBH?=
- =?utf-8?B?OW4xMk5nc0NjZFJlTTAxbUZnNnArWkExaGZMWkN4aHBxa1poL1ZCK1NlUmFM?=
- =?utf-8?B?bEVGSEhzYzhlNU9VZkowcmU2dEl6VlROYUJDUHRlTWkxOHVjMGx4ejRKU0tC?=
- =?utf-8?B?SnR3VzZMVVI0c2Z3cjdkM25WVkZSeUo0NjBaZiszYmlIYk44WjRnai8zaWxo?=
- =?utf-8?B?R20xdml6eHRjSWp6aHZWVVNVMmpKUHo3TW5KSEVuVzA1alYwVlN2WFBvTW13?=
- =?utf-8?B?ZEl5RFNhalBKSzZNaHI2anVqRG9QZlMrVkxRTHlneE5pWFNIMUI1cGpmemgx?=
- =?utf-8?B?YXJUSmlnMWdXTkhJb2ErTDdHQlcrSUk5b0cyVFgvOERFbmRtWmlOT3RmNk81?=
- =?utf-8?B?bGxpWkcyWHR3WVRmZ3NaVjFsRXdIVHlQdTRvV0NFU2puMkxzd2plaGZBREdF?=
- =?utf-8?B?czY1Nm5PTEJCcjA2Ny9lazJjdFFjSURuRzR0RDNhdTVNOE9YZDJqeVUxMzJs?=
- =?utf-8?B?ZFE9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <9FDD006DF3CF54439EDE68397ADBDFF1@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S230015AbjC3O32 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2023 10:29:28 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BE59114;
+        Thu, 30 Mar 2023 07:29:27 -0700 (PDT)
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32UDwCuZ001613;
+        Thu, 30 Mar 2023 14:29:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=vAJbS5/a+lyQTEOIx+8F7yJCVx2VLOAAsawZaDWelcA=;
+ b=iuZUfdh8iJH8/ZVPApZuE2/F24zo9grVV8u9loj9A10vvWDZE3yi44lRzV7ONJ41XKkq
+ nuCm3Mzu/QlU1sBB4wA7hg1unFk3RkMzJzTSH5coGg4fQosP8SJNgihJNZxsGVQDruFw
+ vbow7e5g/yceDz++xe9dcbyIUJa5jwWV2RorrX93q9wNlQL9YpXY+BmzdI0zU97uIkO4
+ 9cUrUQjYetxdYk4FFdxbRcMBG6SKVonzn4UHY8zpOEiTh6zDWboBe4jlaRu6SSqiTw/e
+ rP8oetJuWfpcRd2klB1C4jgfMLINGcU+JNpg3b2nDWW1m9Jzpn1CucL/glD8ZaK+noB5 Ew== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pmp7k31mw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 30 Mar 2023 14:29:20 +0000
+Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32UDNfcw004799;
+        Thu, 30 Mar 2023 14:29:19 GMT
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pmp7k31gf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 30 Mar 2023 14:29:19 +0000
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32UBLh2V030969;
+        Thu, 30 Mar 2023 14:29:10 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3phrk6cw9e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 30 Mar 2023 14:29:09 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+        by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32UET6Xv19595644
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 30 Mar 2023 14:29:06 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 500C920049;
+        Thu, 30 Mar 2023 14:29:06 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3D90820043;
+        Thu, 30 Mar 2023 14:29:06 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.152.212.191])
+        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Thu, 30 Mar 2023 14:29:06 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1phtGz-002tcJ-2m;
+        Thu, 30 Mar 2023 16:29:05 +0200
+Date:   Thu, 30 Mar 2023 14:29:05 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Tom Rix <trix@redhat.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Subject: Re: [PATCH] scsi: scsi_transport_fc: remove unused desc_cnt variable
+Message-ID: <20230330142905.GC10558@t480-pf1aa2c2.fritz.box>
+References: <20230326003222.1343671-1-trix@redhat.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20230326003222.1343671-1-trix@redhat.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 8f0qs-GbdrqlkCN6nQLAHbW_01uxQQtu
+X-Proofpoint-GUID: q2DXUZWSd_Er_yRTQIqg94g-xhUzTY19
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: v05fBhyqM2maFkjQoUWYOMDINJmbRAEDObEHKGLHKvOmWTDFflHyryDNQsdI0rqKGD8N0bvVZorYAFripbq3LTkJsjP6ucyRloBHy0DAZCoRhiDB0rANsOpDw50ZvP8HupfolxMGZPhpzMrsQOwYFX2O+dCyqMpOLwMi0vxHbcD5maOBli86sTYnl3e76gz9pe2IDKegZwLyDL6RGlkHr8ZKUBtY/q60l+pRIiE/HH9UvQIGT7SbRX0ZXATr6G0WHToqIKHI1IyBeTYomY54Gr3hBAnYJIMEl317Qml4CXfEn30P2vuIFVQ7XjkiSVYX2Y7uvyCZhmce9hvE/JKS+fVjUo9DTqnMRITXCNaM/2RMYfoWGZSae4ktnjAppW+NitLCIKblt1EJlXE3Z7fbTuaBUkiSbPGk2WoIW9ljwKXC90Owlswv6lbYR1QgwadNNQ88TflCUlysq6bcXEYbJKGKQeoKC4sHfu1cstVluNtYUMNjDwA7UE4Sta0/KEqWk2bmttWQUsOR/qk5IBerfpyGshIyy4kQTKPKucUmlpjmu4CkqnqCF8InJPIfv/iweig2An2rSK9OYGpTe2qerkTPptKDTxZVyILcMCUYOQy3bulLEKC3QtzuxeHQdeNf/l2Cy2MN/SThx+TA1kL5FNmUfOL9X90Xg56DWdnjAHlSPgHh1lWXGG5Q7oZbL1J1bt/aDAtkQooFp8RxjJwi/9cJKYYww0n1UQYGU7L2kCBMozwIWLqt80FH5tzESAzLwSmTJ5qswKwjUcSIcU23KrNRhe4pSOG5ex5KUHdSYQNw2/az1W4rGzrKNv9p7s0IRpPrCu1xL34BtijVrKjiBnQ6ESKginmpMKzWhMH2v/IM6rqhU3QJ1L+RE8TY2pKAcpq3EMaDD1vaiqItMu1zRQ==
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f216f59-2379-43a5-d44c-08db3127fcea
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Mar 2023 14:06:41.9261
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: y6pC+TG3//GMehmcDHYI1/dDVqBXMlxUmm4FhglovEI+3Mu0z+l4fsTTaT/XL8VKwZTVlujLYbKAkwaBMFAmMv6yfSXYEAKwdWM3etAgTFs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYYPR04MB8839
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-30_09,2023-03-30_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 spamscore=0
+ priorityscore=1501 phishscore=0 lowpriorityscore=0 adultscore=0
+ suspectscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2303300106
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gMzAuMDMuMjMgMTU6MTEsIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiArCWlmIChXQVJOX09OQ0Uo
-aGJhLT5udXRycyAqIGhiYS0+bnJfaHdfcXVldWVzID4gKDEgPDwgMTYpIC0gMSwNCj4gKwkJICAg
-ICAidGhlcmUgY2FuIGJlIGF0IG1vc3QgMTw8MTYgaW5mbGlnaHQgcmVxdWVzdHNcbiIpKQ0KPiAr
-CQlnb3RvIGVycjsNCg0KSG1tIHdoeSBub3QgU1pfNjRLIC0gMT8NCg==
+On Sat, Mar 25, 2023 at 08:32:22PM -0400, Tom Rix wrote:
+> clang with W=1 reports
+> drivers/scsi/scsi_transport_fc.c:908:6: error: variable
+>   'desc_cnt' set but not used [-Werror,-Wunused-but-set-variable]
+>         u32 desc_cnt = 0, bytes_remain;
+>             ^
+> This variable is not used so remove it.
+> 
+> Signed-off-by: Tom Rix <trix@redhat.com>
+> ---
+>  drivers/scsi/scsi_transport_fc.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+
+Looks good to me.
+
+
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
