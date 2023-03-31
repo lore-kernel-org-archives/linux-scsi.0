@@ -2,106 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD31AC76196
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Mar 2023 17:59:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D485AC76196
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Mar 2023 18:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232430AbjCaR7u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Mar 2023 13:59:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33160 "EHLO
+        id S231663AbjCaSde (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Mar 2023 14:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231127AbjCaR7t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2023 13:59:49 -0400
+        with ESMTP id S230183AbjCaSdd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2023 14:33:33 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38EA123698
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2023 10:58:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D3671BF49
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2023 11:32:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680285482;
+        s=mimecast20190719; t=1680287569;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=5O8+xHFKv06WCG7nCwq4CEs9To8ieEt1S6DRRcwc6+g=;
-        b=Ppgrrez9sQ0Id5nDNVAaNRgNJlXVYzRQSO42cJo5tSXMHuJ5s3KhwOLZ2EPTwdug3Ky1fo
-        Hl0ofLXD8EcuvaE9QBgPPB8CkAlja+k0NZPMYpGfAfw2u4+nK1sF03ua2YE5bq0kafEZO+
-        aWRr3lNQ+rPxH0YHe/cNpQrIH9TJPB8=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=qR0tNVk25Dp1b/qFdEIIqaZjqxcmkBU+35+rqb5/9Wg=;
+        b=LabgDLKY4gmePt+xWaYRDeYtrW7ymt0NBY6NK/M1woa0BDaWra0BZPZvGLie/Q6QoM2LtN
+        t6KiDIOyvzkmgNYaY5U+/9GPgofQhLorRv488/xDH9A320UhzRTZELPNEbQrfzIwXpvbZA
+        w2kWylNrkjRrKCbqOLfYAN1kGlg4Www=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-178-0O3_L9-XNhii9gXv1_mizA-1; Fri, 31 Mar 2023 13:58:00 -0400
-X-MC-Unique: 0O3_L9-XNhii9gXv1_mizA-1
-Received: by mail-qv1-f69.google.com with SMTP id pe26-20020a056214495a00b005df3eac4c0bso6979843qvb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2023 10:58:00 -0700 (PDT)
+ us-mta-30-UK495WHvOqCLX4it88JVeQ-1; Fri, 31 Mar 2023 14:32:48 -0400
+X-MC-Unique: UK495WHvOqCLX4it88JVeQ-1
+Received: by mail-wm1-f69.google.com with SMTP id o37-20020a05600c512500b003edd119ec9eso11539392wms.0
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2023 11:32:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680285480;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5O8+xHFKv06WCG7nCwq4CEs9To8ieEt1S6DRRcwc6+g=;
-        b=n0krSG1hKvtCNZbSwYCaJx+PtdgCE8cM69X9YY5N1iL2kDk0z0In1IYNmNnIBfPEGE
-         egGJ7rm2OX3ThhuJxmXQsn8s9kaxN7JhpMFwKyDYm5wP6N5XmLa6tumfaFtd6miWpLlr
-         uGRl+Vb8M3CQMJ4shM/2izQED5WLLTPgzLKhyfvn7rpMjnJb+ul2tHEEG8oS/vlrsoll
-         C9dtOqXpnHKsBq0lKcBwYARdwRu9XAWZ/sGUyMKbEkldV79KnA193KHfDNoKmY2Izokf
-         KECxLrbql61i32wAzX3c97WqE8QaQ0rNN7ItQ+V/TJaBm4yQCU8unoOp4gimeDBCHBuD
-         s5Mw==
-X-Gm-Message-State: AAQBX9d4yCTDFO7NsKfE7m0XI2NKHdwUOP4HFbz4OlUAyhXeMasbpRkh
-        jpEaqVrhMgOn74VvkSVLpW2sRJxaXAVL3CsS3A7XA9DvdEcaoMQ1l0SJcby+o3hIDF0OzHZ2A3W
-        gjnqme3V0YjYuDv4yjCbtXA==
-X-Received: by 2002:a05:6214:410f:b0:572:80ea:5fc7 with SMTP id kc15-20020a056214410f00b0057280ea5fc7mr42990020qvb.41.1680285480465;
-        Fri, 31 Mar 2023 10:58:00 -0700 (PDT)
-X-Google-Smtp-Source: AKy350ZAB+2E58L9cx7PfO4++k4UHX5C/oFrianAF5m/clXDQYWYq5EBw8/U5MgBdC3hhUE5TFzLHg==
-X-Received: by 2002:a05:6214:410f:b0:572:80ea:5fc7 with SMTP id kc15-20020a056214410f00b0057280ea5fc7mr42989995qvb.41.1680285480233;
-        Fri, 31 Mar 2023 10:58:00 -0700 (PDT)
-Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
-        by smtp.gmail.com with ESMTPSA id j10-20020a0cfd4a000000b005dd8b934578sm768480qvs.16.2023.03.31.10.57.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Mar 2023 10:57:59 -0700 (PDT)
-From:   Tom Rix <trix@redhat.com>
-To:     njavali@marvell.com, mrangankar@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, nathan@kernel.org,
-        ndesaulniers@google.com
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev,
-        Tom Rix <trix@redhat.com>
-Subject: [PATCH] [SCSI] qla4xxx: remove unused count variable
-Date:   Fri, 31 Mar 2023 13:57:57 -0400
-Message-Id: <20230331175757.1860780-1-trix@redhat.com>
-X-Mailer: git-send-email 2.27.0
+        d=1e100.net; s=20210112; t=1680287566;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qR0tNVk25Dp1b/qFdEIIqaZjqxcmkBU+35+rqb5/9Wg=;
+        b=IchhJ+g+3LezMp1CEDDp2kTqZnx62EF1JZjXTk2uyZojAO4KmWibP7AAtduUTYHJjl
+         lJtH5m9AyGSem2hVIMSF78Rb0v5CbyvHMhK/Nlrb9wjR/ghS5fDMWNImYzDp1VN+OwKg
+         OfcpssVUPxIFpg3SwRoOayO0XQRYoXOW0FZzdXlTeJ4gLEBV06sCGtfGU5iiUHsbpDrs
+         33JWaF0oRsoxu0MI0Vj4v0BrAL3JvUs3D1YgVyF9pGiLQZeYHhGf6lA1Anj4ufOzV6D2
+         6McS24PL96EyR+GXMlvVjLwjgMDG4kuNF6GTTKaEVT1B7r6NtE+UCgVXSp7ts9VRsCR3
+         f2PA==
+X-Gm-Message-State: AO0yUKUfqHOs/Sa1QU7UtWEk+cefHvtuV24uuUJ50TGMyJgLR3EqsPTD
+        B45t/F7HfjXmp9uCwXQXnfl43767V98JhswxCblGGEM+9XHklou5CZN3FNp8VYll8Hz1niA3Plw
+        252DrG1rqCHHXaRuiTeFX2wEs9RKnmw==
+X-Received: by 2002:a1c:4b07:0:b0:3eb:29fe:f911 with SMTP id y7-20020a1c4b07000000b003eb29fef911mr20918839wma.13.1680287566214;
+        Fri, 31 Mar 2023 11:32:46 -0700 (PDT)
+X-Google-Smtp-Source: AK7set8+6s8tXsUcZa8UnWV5R0qtjw2DdDVXU9LGFTZFGoWpmrFfMIg/ADtSasWqBI7AiJjcAjj19Q==
+X-Received: by 2002:a1c:4b07:0:b0:3eb:29fe:f911 with SMTP id y7-20020a1c4b07000000b003eb29fef911mr20918829wma.13.1680287565918;
+        Fri, 31 Mar 2023 11:32:45 -0700 (PDT)
+Received: from [192.168.0.107] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
+        by smtp.gmail.com with ESMTPSA id u17-20020a05600c19d100b003dd1bd0b915sm10704597wmq.22.2023.03.31.11.32.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 31 Mar 2023 11:32:45 -0700 (PDT)
+Message-ID: <33501374-2cc7-ba1c-9d42-0da2aeed4341@redhat.com>
+Date:   Fri, 31 Mar 2023 20:32:44 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH] scsi: sd: mark the scsi device in shutdown as deleted
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20230330164943.11607-1-thenzl@redhat.com>
+ <af17886b-5b18-f71f-9fe7-ea929f30b5a6@oracle.com>
+ <e4dd3ea37807166820e3b3b7e5102e23ab6b3898.camel@HansenPartnership.com>
+ <457808a0-1ec2-d846-075c-7f8812a7a416@redhat.com>
+ <488bb066654104bc6b84fdc45595232305519597.camel@HansenPartnership.com>
+Content-Language: en-US
+From:   Tomas Henzl <thenzl@redhat.com>
+In-Reply-To: <488bb066654104bc6b84fdc45595232305519597.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-clang with W=1 reports
-drivers/scsi/qla4xxx/ql4_isr.c:475:11: error: variable
-  'count' set but not used [-Werror,-Wunused-but-set-variable]
-        uint32_t count = 0;
-                 ^
-This variable is not used so remove it.
+On 3/31/23 17:06, James Bottomley wrote:
+> On Fri, 2023-03-31 at 16:11 +0200, Tomas Henzl wrote:
+>> On 3/31/23 13:48, James Bottomley wrote:
+>>> On Thu, 2023-03-30 at 12:12 -0500, Mike Christie wrote:
+> [...]
+>>>> Are we going to do:
+>>>> 1. __scsi_remove_device sets the state to SDEV_CANCEL at the
+>>>> beginning of the function
+>>>
+>>> It will also interfere with target and host device removal.  They
+>>> traverse their own lists and assume that anything in DEL is already
+>>> being removed, which won't be the case here.  So basically, after
+>>> this happens it's impossible to clean the device trees.  It also
+>>> means any I/O to the root device wouldn't be allowed.
+>>  
+>> How will it interfere? After a return from sd_remove or via
+>> device_unregister->__scsi_remove_device the device state is SDEV_DEL
+>> regardless whether this patch has been added or not. Or is
+>> sd_shutdown called directly?
+> 
+> I thought it was called directly from the restart logic via the
+> device_shutdown() call (see kernel/reboot.c:kernel_restart_prepare())
+> and was completely independent of any other state transitions within
+> the device model ... however, I'd really like *you* to confirm this.
+> 
+> I think by the time it's called, we're already in the system death
+> throes, so if there were going to be an orderly shut down it's already
+> happened, but if not, once you set a devices state to DEL, it will
+> defeat any later attempt to do orderly remove of the host or target.
+After the first device's shutdown method in device_shutdown has been
+called there is now way back (we don't have an opposite to shutdown like
+for suspend resume is) so it can't be undone and also it doesn't matter
+if some structures remain in memory. To me it seems to be the only
+logical consequence but I can't prove it.
 
-Signed-off-by: Tom Rix <trix@redhat.com>
----
- drivers/scsi/qla4xxx/ql4_isr.c | 2 --
- 1 file changed, 2 deletions(-)
+>>> I assume the contention is that if we get here, we're either going
+>>> for immediate shutdown or all the root device remounting to read
+>>> only has already been done?  If so, could you say that?
+>>  
+>> I can't say that, quite the opposite (see body of the mail). When the
+>> system goes shutdown the individual device's .shutdown is called.
+>> Just moments after sd shutdown the LLD shutdown is entered and the
+>> driver stops any I/O immediately anyway. With this patch the I/O is
+>> stopped before reaching LLD with a reasonable message and without
+>> error correction mechanism in place.
+>>
+>> I also assume that no I/O after sd_shutdown was projected when it was
+>> written as there is a cache sync followed by a device power down.
+> 
+> It seems reasonable, but can you validate that?  Shutdown is called
+> both from reboot and kexec and if we stop IO to a quiescing root device
+> before it completes, so that all filesystems come back dirty, we'll
+> have a lot of unhappy users ...
+Validate, I don't know how or what you mean. Making sure that everything
+is in a state when the kernel shutdown procedure may be entered is for
+example on my system done by userspace systemd-shutdown service like so
+:"systemd-shutdown[1]: Syncing filesystems and block devices ..."
+When the kernel shutdown procedure is entered the I/O will be cut off
+abruptly by a LLD.shutdown. That means it depends on scripts like
+systemd and that works well on all systems I checked for reboot but not
+for kexec on everywhere.
+The patch may stop the I/O few msec sooner that is true. But the clearer
+ messages may bring a script writer to fix it.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 6f0e77dc2a34..cf52258ecdde 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -472,14 +472,12 @@ static void qla4xxx_mbox_status_entry(struct scsi_qla_host *ha,
-  **/
- void qla4xxx_process_response_queue(struct scsi_qla_host *ha)
- {
--	uint32_t count = 0;
- 	struct srb *srb = NULL;
- 	struct status_entry *sts_entry;
- 
- 	/* Process all responses from response queue */
- 	while ((ha->response_ptr->signature != RESPONSE_PROCESSED)) {
- 		sts_entry = (struct status_entry *) ha->response_ptr;
--		count++;
- 
- 		/* Advance pointers for next entry */
- 		if (ha->response_out == (RESPONSE_QUEUE_DEPTH - 1)) {
--- 
-2.27.0
+The patch doesn't fix a real bug so it isn't urgent nor important,
+seeing the congestion it creates please just drop it.
+
+Tomas
+
+> 
+> James
+> 
 
