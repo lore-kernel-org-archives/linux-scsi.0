@@ -2,112 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98576C761A6
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Mar 2023 15:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A21C761A6
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Mar 2023 16:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231654AbjCaPHj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Mar 2023 11:07:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33048 "EHLO
+        id S233553AbjCaQTf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Mar 2023 12:19:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230226AbjCaPHi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2023 11:07:38 -0400
-X-Greylist: delayed 11886 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 31 Mar 2023 08:06:54 PDT
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D3291DFBE
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2023 08:06:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1680275208;
-        bh=nVcH5Rcn34Wh14BOzeh6dRnlFo6hzf1EpRVFrRh7Lx0=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=UtiT01GBY0BzZC6T6AoemBE3qshuBS7Vyo2dIWci+LDB+nbyuhcs7CKlfb1dLbgA1
-         0FA0rnA55QN5oGX7jbECz9U+NN4LS5vm3sjZcjey9lT69mxB9jvje148mULNbNO3NL
-         EtFQnS6+qX7YVbVBHwWtum6/bJ+cEVXFc06GJDl8=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C47FF128696A;
-        Fri, 31 Mar 2023 11:06:48 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id uVSS4KJsireh; Fri, 31 Mar 2023 11:06:48 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1680275208;
-        bh=nVcH5Rcn34Wh14BOzeh6dRnlFo6hzf1EpRVFrRh7Lx0=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=UtiT01GBY0BzZC6T6AoemBE3qshuBS7Vyo2dIWci+LDB+nbyuhcs7CKlfb1dLbgA1
-         0FA0rnA55QN5oGX7jbECz9U+NN4LS5vm3sjZcjey9lT69mxB9jvje148mULNbNO3NL
-         EtFQnS6+qX7YVbVBHwWtum6/bJ+cEVXFc06GJDl8=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 2A74512868F7;
-        Fri, 31 Mar 2023 11:06:48 -0400 (EDT)
-Message-ID: <488bb066654104bc6b84fdc45595232305519597.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: sd: mark the scsi device in shutdown as deleted
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Tomas Henzl <thenzl@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org
-Date:   Fri, 31 Mar 2023 11:06:46 -0400
-In-Reply-To: <457808a0-1ec2-d846-075c-7f8812a7a416@redhat.com>
-References: <20230330164943.11607-1-thenzl@redhat.com>
-         <af17886b-5b18-f71f-9fe7-ea929f30b5a6@oracle.com>
-         <e4dd3ea37807166820e3b3b7e5102e23ab6b3898.camel@HansenPartnership.com>
-         <457808a0-1ec2-d846-075c-7f8812a7a416@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S233422AbjCaQS2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2023 12:18:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E85362222A
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2023 09:12:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680279080;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0V0VYuNRGUsctVySLnEH8GinGQ4l5nQcc0Sx6Q5aq0A=;
+        b=bsd6gmiTvMjed0stR8nA4NaZff4a7Gc4/EfMmSjewYHfFs9bmybsJuROxfejbtHTTby6cK
+        mZ+o4MeDJpzgwgawF/3+HgSIkn6OslpIs72A0DlQUISwWUo1WdpR9Xju7MTMJY4xIjYwVZ
+        2cryLw5+kaxi+KjBMjRPhOjqwhQxHSU=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-335-JJSK7rSYNzmbFtG3J_VYoA-1; Fri, 31 Mar 2023 12:11:15 -0400
+X-MC-Unique: JJSK7rSYNzmbFtG3J_VYoA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6C1CF29ABA1F;
+        Fri, 31 Mar 2023 16:11:14 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.33.36.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 42ABB40B3EDB;
+        Fri, 31 Mar 2023 16:11:12 +0000 (UTC)
+From:   David Howells <dhowells@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     David Howells <dhowells@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@kernel.org>,
+        Christian Brauner <brauner@kernel.org>,
+        Chuck Lever III <chuck.lever@oracle.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH v3 41/55] iscsi: Assume "sendpage" is okay in iscsi_tcp_segment_map()
+Date:   Fri, 31 Mar 2023 17:09:00 +0100
+Message-Id: <20230331160914.1608208-42-dhowells@redhat.com>
+In-Reply-To: <20230331160914.1608208-1-dhowells@redhat.com>
+References: <20230331160914.1608208-1-dhowells@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2023-03-31 at 16:11 +0200, Tomas Henzl wrote:
-> On 3/31/23 13:48, James Bottomley wrote:
-> > On Thu, 2023-03-30 at 12:12 -0500, Mike Christie wrote:
-[...]
-> > > Are we going to do:
-> > > 1. __scsi_remove_device sets the state to SDEV_CANCEL at the
-> > > beginning of the function
-> > 
-> > It will also interfere with target and host device removal.  They
-> > traverse their own lists and assume that anything in DEL is already
-> > being removed, which won't be the case here.  So basically, after
-> > this happens it's impossible to clean the device trees.  It also
-> > means any I/O to the root device wouldn't be allowed.
->  
-> How will it interfere? After a return from sd_remove or via
-> device_unregister->__scsi_remove_device the device state is SDEV_DEL
-> regardless whether this patch has been added or not. Or is
-> sd_shutdown called directly?
+As iscsi is now using sendmsg() with MSG_SPLICE_PAGES rather than sendpage,
+assume that sendpage_ok() will return true in iscsi_tcp_segment_map() and
+leave it to TCP to copy the data if not.
 
-I thought it was called directly from the restart logic via the
-device_shutdown() call (see kernel/reboot.c:kernel_restart_prepare())
-and was completely independent of any other state transitions within
-the device model ... however, I'd really like *you* to confirm this.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+cc: "David S. Miller" <davem@davemloft.net>
+cc: Eric Dumazet <edumazet@google.com>
+cc: Jakub Kicinski <kuba@kernel.org>
+cc: Paolo Abeni <pabeni@redhat.com>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: Matthew Wilcox <willy@infradead.org>
+cc: linux-scsi@vger.kernel.org
+cc: target-devel@vger.kernel.org
+cc: netdev@vger.kernel.org
+---
+ drivers/scsi/libiscsi_tcp.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-I think by the time it's called, we're already in the system death
-throes, so if there were going to be an orderly shut down it's already
-happened, but if not, once you set a devices state to DEL, it will
-defeat any later attempt to do orderly remove of the host or target.
-
-> > I assume the contention is that if we get here, we're either going
-> > for immediate shutdown or all the root device remounting to read
-> > only has already been done?  If so, could you say that?
->  
-> I can't say that, quite the opposite (see body of the mail). When the
-> system goes shutdown the individual device's .shutdown is called.
-> Just moments after sd shutdown the LLD shutdown is entered and the
-> driver stops any I/O immediately anyway. With this patch the I/O is
-> stopped before reaching LLD with a reasonable message and without
-> error correction mechanism in place.
-> 
-> I also assume that no I/O after sd_shutdown was projected when it was
-> written as there is a cache sync followed by a device power down.
-
-It seems reasonable, but can you validate that?  Shutdown is called
-both from reboot and kexec and if we stop IO to a quiescing root device
-before it completes, so that all filesystems come back dirty, we'll
-have a lot of unhappy users ...
-
-James
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index c182aa83f2c9..07ba0d864820 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -128,18 +128,11 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
+ 	 * coalescing neighboring slab objects into a single frag which
+ 	 * triggers one of hardened usercopy checks.
+ 	 */
+-	if (!recv && sendpage_ok(sg_page(sg)))
++	if (!recv)
+ 		return;
+ 
+-	if (recv) {
+-		segment->atomic_mapped = true;
+-		segment->sg_mapped = kmap_atomic(sg_page(sg));
+-	} else {
+-		segment->atomic_mapped = false;
+-		/* the xmit path can sleep with the page mapped so use kmap */
+-		segment->sg_mapped = kmap(sg_page(sg));
+-	}
+-
++	segment->atomic_mapped = true;
++	segment->sg_mapped = kmap_atomic(sg_page(sg));
+ 	segment->data = segment->sg_mapped + sg->offset + segment->sg_offset;
+ }
+ 
 
