@@ -2,158 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB62C76196
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Mar 2023 05:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD2CDC77B60
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Mar 2023 07:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229814AbjCaFOF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Mar 2023 01:14:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51462 "EHLO
+        id S231335AbjCaHui (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Mar 2023 03:50:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjCaFOE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2023 01:14:04 -0400
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ED80EB51
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2023 22:14:02 -0700 (PDT)
-Received: by mail-wm1-x32a.google.com with SMTP id j36-20020a05600c1c2400b003f04057c152so962790wms.5
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2023 22:14:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1680239641;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=pULYDGzh4E8UCXDt/pmSRIwAO6ObDjtZf1sR4LLd8yA=;
-        b=kQkec1O6Ot/vcD84SVGs08IGHNMfIgt8VNpntgMvo9olmArl578NgRYSGwest+DLfL
-         ikqw1LsfzghXhMbJPu2RKiA0keZsUJYqAILUx84/3pc8eRM6pVuD+RVxUWyLce0LlNoC
-         zzKZ0ri2OG8wSFxFW8/vwxuEiE7KtTaXLWQP2DymFV2yvKqYlw6JaTk9XalpcnrzzXVw
-         vpYXKs80XH5PnY9VI79q849BmFoY20Aemh/dKcy9q+uHCeWZrSk9+e3I8VA2SW+Lm4sY
-         6Kz0JK+MfYeNy51EO3nUzHkIaR6GK8tFEHaX5OsXw9m094E5SBTHZBabVmd4Q0ewSnc5
-         9qIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680239641;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pULYDGzh4E8UCXDt/pmSRIwAO6ObDjtZf1sR4LLd8yA=;
-        b=2XOwzydWj/tHQ4xHxM71to5/RweZrtZMp7uhCKQtiEJMuo6e0NCoX86+q0jv+kjORK
-         quoQ4ynUH6pq0UJ/yhmrTQtVBDl7bNBGWnBUyMYH6GBZlRYUrx2nhl5hCUZE8d+esV3n
-         d+Tok8XxZw1H97E+qsZfy/j9mZdN4RmHb7h3qPMVUWUam8fEricdrjM2zqC6opYpr7E1
-         gv73TQy1BIvTqReOxlLM2EVPnTHPvsRkKoMZE9169aAXuZjVm0HgFCuEYrFeP4xxU3fE
-         5WR845TAZncYfYpX8P/PyHzO58YoM9HVUU7Ic5mGa3uH+j+kemH370B1mZ8+eBPAVS3L
-         GJMg==
-X-Gm-Message-State: AO0yUKUDt6IzKPTIzURlo7S95AYdMVUfhb4ZyKDmlbHASWBo5X9ifGRl
-        RemYklFGrUhLPJn5/eozwJzuNw==
-X-Google-Smtp-Source: AK7set8+GpaUDXRWjB5QY6Zo9WS9R7HYI+Pvg65VlG7RDva4bJ4tmC4UyBNwr+8bDuf+0i2hFKbHjw==
-X-Received: by 2002:a7b:c44f:0:b0:3ed:d3a7:7077 with SMTP id l15-20020a7bc44f000000b003edd3a77077mr18364656wmi.40.1680239640856;
-        Thu, 30 Mar 2023 22:14:00 -0700 (PDT)
-Received: from linaro.org ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id x21-20020a05600c21d500b003ef64affec7sm1349808wmj.22.2023.03.30.22.13.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Mar 2023 22:14:00 -0700 (PDT)
-Date:   Fri, 31 Mar 2023 08:13:58 +0300
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        with ESMTP id S231213AbjCaHuT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2023 03:50:19 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7997110AA8;
+        Fri, 31 Mar 2023 00:49:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1680248961; x=1711784961;
+  h=from:to:cc:subject:date:message-id;
+  bh=wvFXHtpZ7xPN75TSbGJGueSihEi7iWOy4Ow7TTI4BhQ=;
+  b=CrV2T2fDOBoAZrLP16Hn/uI0uu1L1tfci67n3YaameI9mUeglvsEG/ay
+   uPai+m7VPp5Iy5JnufED7FWb7NcZkkvn06RCYkOeBk3OEjl29VlsVknyl
+   aqoytvEsqT2de1uyhZOosLVhJNL+4ViphnaYWN24mx/efxquPUNPvRdNE
+   doSPkJT/xCT3DUOGv0R8j4WNV3DhKuBjdDfQcDvFTy5SJ3yTWUazipEIM
+   LN5hdv38P5zHGxBQU+uob+h0b2B23ZN6zdYpfOdxuQ7fk3UP0KmX7M9SV
+   syX85wMlePQaw3Co1eI++9pibYxjKf5ewT6eJwYET3o8ZyQs6SIJ/pOOh
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.98,307,1673884800"; 
+   d="scan'208";a="331406323"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Mar 2023 15:47:04 +0800
+IronPort-SDR: UiICxUixaSpM0FBiqKJyNulx0j6qIkigx4HrZOjt/8xxmUZDTbFgovVZ4VWSD3y6x8z1gci8Cq
+ kuqwMGNr0jUvQ34iK9Ko3/xRiC0AKNeuJXS2n6law6/96u2IOI3ciU+Fd7Vldi69s71lB2/hdr
+ 38HkbPvut1uLpJBuldyvSDBK/xCHnra9qTAWnRT3G4JtRz2PmBO1Wd19/91BHCX+EF77o/h/1F
+ RDJFrvFU9rwvUxJ2Kl9CRTdmyyErj9Rg3kgvJKG3x2ucSibzBtz2TXPqnohVmDJulqzTYsd8/I
+ LLA=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Mar 2023 00:03:12 -0700
+IronPort-SDR: b31kBmBQnRDARAFbLux9YmCnsRW8UbbrsifQPGXsyNtpbsPFvacY+QDWVnEFCJijV5x6zXQEOU
+ 8Btw01YRScDFzc03kMKbEW8MnT+H3sOKdn6EjTxHOg/p1xRrwIq7nkg3cAeiGGZob275R+JPIT
+ Wbb1P2Exu75Nllr713JLJ0eOFmFgAntqvJ7d62S5V283nHMQOD61g6EdJ5QRpAji0Mz+HUFSek
+ KODGfEmGHBOzxE+CyetJELXDwDETVo9ETQgjRMfOtRQrdNSQJHHIFPoSdp8KYLcQh5nrysDDeR
+ H84=
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.225.33.176])
+  by uls-op-cesaip02.wdc.com with ESMTP; 31 Mar 2023 00:46:59 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 5/7] scsi: ufs: ufs-qcom: Switch to the new ICE API
-Message-ID: <ZCZsFjKItcIS+U/b@linaro.org>
-References: <20230327134734.3256974-1-abel.vesa@linaro.org>
- <20230327134734.3256974-6-abel.vesa@linaro.org>
- <20230327181934.GD1882@sol.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230327181934.GD1882@sol.localdomain>
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v2] scsi: ufs: mcq: Limit the amount of inflight requests
+Date:   Fri, 31 Mar 2023 10:46:50 +0300
+Message-Id: <20230331074650.75-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23-03-27 11:19:34, Eric Biggers wrote:
-> Hi Abel,
-> 
-> On Mon, Mar 27, 2023 at 04:47:32PM +0300, Abel Vesa wrote:
-> > Now that there is a new dedicated ICE driver, drop the ufs-qcom-ice and
-> > use the new ICE api provided by the Qualcomm soc driver ice. The platforms
-> > that already have ICE support will use the API as library since there will
-> > not be a devicetree node, but instead they have reg range. In this case,
-> > the of_qcom_ice_get will return an ICE instance created for the consumer's
-> > device. But if there are platforms that do not have ice reg in the
-> > consumer devicetree node and instead provide a dedicated ICE devicetree
-> > node, the of_qcom_ice_get will look up the device based on qcom,ice
-> > property and will get the ICE instance registered by the probe function
-> > of the ice driver.
-> > 
-> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> 
-> I am still worried about the ICE clock.  Are you sure it is being managed
-> correctly?  With your patch, the ICE clock gets enabled in ufs_qcom_ice_resume
-> and disabled in ufs_qcom_ice_suspend, which hopefully pair up.  But it also gets
-> enabled in ufs_qcom_ice_enable which isn't paired with anything.  Also, this all
-> happens at a different time from the existing UFS clocks being enabled/disabled.
+in UFS, each request is designated via the triplet <iid, lun, task tag>.
 
-Right, I messed this up since the last version. Sorry about that.
+In UFS4.0 the Initiator ID field is 8 bits wide, comprised of the
+EXT_IID and IID fields. Together with the task tag (single byte), they
+limit the driver's hw queues capacity.
 
-What I need to do is to drop the enabling of the clock from
-qcom_ice_enable and only do it from qcom_ice_resume. As for disabling
-it, it remains as is, that is, in qcom_ice_disable.
+---
+v1 -> v2:
+Attend Johannes's and Bart's comments
 
-Then, I need to enable the clock right before checking the supported
-version. I'll do that with devm_clk_get_enabled (also optional for the
-legacy once as I explained in the reply to the 6th patch).
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/ufs/core/ufshcd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> 
-> I wonder if the ICE clock should be enabled/disabled in ufs_qcom_setup_clocks()
-> instead of what you are doing currently?
-> 
-> > +static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
-> > +{
-> > +	struct ufs_hba *hba = host->hba;
-> > +	struct device *dev = hba->dev;
-> > +
-> > +	host->ice = of_qcom_ice_get(dev);
-> > +	if (host->ice == ERR_PTR(-EOPNOTSUPP)) {
-> > +		dev_warn(dev, "Disabling inline encryption support\n");
-> > +		hba->caps &= ~UFSHCD_CAP_CRYPTO;
-> > +		host->ice = NULL;
-> > +	}
-> > +
-> > +	if (IS_ERR(host->ice))
-> > +		return PTR_ERR(host->ice);
-> > +
-> > +	return 0;
-> > +}
-> 
-> This is still sometimes leaving UFSHCD_CAP_CRYPTO set in cases where ICE is
-> unsupported.
-> 
-> Moving the *setting* of UFSHCD_CAP_CRYPTO into here would fix that.
-> 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 35a3bd95c5e4..cac7c9918c5b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8468,6 +8468,11 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto err;
+ 
++	if (hba->nutrs * hba->nr_hw_queues > SZ_64K - 1) {
++		dev_info(hba->dev, "there can be at most 64K inflight requests\n");
++		goto err;
++	}
++
+ 	/*
+ 	 * Previously allocated memory for nutrs may not be enough in MCQ mode.
+ 	 * Number of supported tags in MCQ mode may be larger than SDB mode.
+-- 
+2.17.1
 
-I'll do exactly that. Thanks.
-
-> It is also hard to understand how the -EOPNOTSUPP case differs from the NULL
-> case.  Can you add a comment?  Or just consider keeping the original behavior,
-> which did not distinguish between these cases (as long as MASK_CRYPTO_SUPPORT
-> was set in REG_CONTROLLER_CAPABILITIES, which was checked first).
-
-I believe it makes more sense to return -EOPNOTSUPP when the driver
-doesn't support a specific version of the HW. If you do not agree, I'll
-make it return NULL then.
-
-> 
-> - Eric
