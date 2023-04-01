@@ -2,179 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6664EC77B6D
-	for <linux-scsi@archiver.kernel.org>; Sat,  1 Apr 2023 08:16:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D09BC76196
+	for <linux-scsi@archiver.kernel.org>; Sat,  1 Apr 2023 19:23:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233639AbjDAIQE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 1 Apr 2023 04:16:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50584 "EHLO
+        id S230044AbjDATXQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 1 Apr 2023 15:23:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233633AbjDAIQC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Apr 2023 04:16:02 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DACFAD0C
-        for <linux-scsi@vger.kernel.org>; Sat,  1 Apr 2023 01:16:00 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4PpVJR0YZlz17LsY;
-        Sat,  1 Apr 2023 16:12:39 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by canpemm100004.china.huawei.com
- (7.192.105.92) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21; Sat, 1 Apr
- 2023 16:15:57 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@opensource.wdc.com>, <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH 3/3] scsi: libsas: Simplify sas_check_parent_topology()
-Date:   Sat, 1 Apr 2023 16:15:26 +0800
-Message-ID: <20230401081526.1655279-4-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230401081526.1655279-1-yanaijie@huawei.com>
-References: <20230401081526.1655279-1-yanaijie@huawei.com>
+        with ESMTP id S229997AbjDATXP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Apr 2023 15:23:15 -0400
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37E4E26582
+        for <linux-scsi@vger.kernel.org>; Sat,  1 Apr 2023 12:23:08 -0700 (PDT)
+Received: by mail-ed1-x529.google.com with SMTP id h8so102531660ede.8
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Apr 2023 12:23:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1680376986;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=SxubnhYm3jfKN0Ni+OwaWHmeJgo11h1uYRx+ExBZagg=;
+        b=dxGgfjhp7yW18ErPJ6AtgVqAzDIKJQBiQp9bXFdKCfFwCnISVqC8opflw9rCXmYjCd
+         RLa7u/LNPZ3qjvkSDwON62jF3LJF3iM3o1GDWaeD2p/O7fMXIVkorf+x88cGetUPpAXV
+         uqjRltcX9nI9LNhHjEk0yecNraB4BT4OojWFICsI+qH3rg0K3pETyCX4KPt71KMeeTxt
+         9azGohH0AfqtLIRSozBJD6lP0J6+uIUj3ARQXF03f1BK18qNjVPs0FP7JcnYWRXVyC7O
+         VeulW1gwCXuA9MtxFyZmRJOJdNV0E16wE+limzxOk7pnJL4SoKAnVaPKh5TqYiQcPl2U
+         CWpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680376986;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=SxubnhYm3jfKN0Ni+OwaWHmeJgo11h1uYRx+ExBZagg=;
+        b=NyrmeWeWoicugGG5yzH+tQb0mKMcDVOPX8EOx3mTCEwnvgZPYCmwmZShDPfE5i8+Sc
+         WHOo/JRA0GHv1dhuCg+7Wsxb5X5RuQnnoZip1x8XNtvaOSce6+MrspIzR+4RH0GPSuC9
+         YOYUy7zcNfyMkAbjBSm9yXVE7cUo2SRLkxRkWcxhv6dg9NcOpE6e/I/UPTmkeXHCqlq8
+         LdwoWt6As1zE9PNnAutAfRfimdgVCYMD18mtJwt9AJ1LInDwWyCjYp6D8ybzsM9jnrdq
+         aJ9baoe2xy12FYQa3rwsXfmaoAsgymxXl76/5B8lOIktPWQc3DURvezaH+khKrmfqgci
+         ysnA==
+X-Gm-Message-State: AAQBX9dbyXl01TvsoiEH1Fvde0q3SuZIOmCpIJxlDK9GMnhE6SbZDfnL
+        5fxB1fEcVl7AIdhEf9CkwbhSdA==
+X-Google-Smtp-Source: AKy350b0NXjR/U8vfwo3A5JtmgyMjcISvzCcUb2nQvie/SWSShZk997o5fmaRBVBxusyDmayNttG2Q==
+X-Received: by 2002:a17:907:2d29:b0:8fa:b2b:9de with SMTP id gs41-20020a1709072d2900b008fa0b2b09demr38707076ejc.25.1680376986626;
+        Sat, 01 Apr 2023 12:23:06 -0700 (PDT)
+Received: from ?IPV6:2a02:810d:15c0:828:ec00:3acd:519:c7c2? ([2a02:810d:15c0:828:ec00:3acd:519:c7c2])
+        by smtp.gmail.com with ESMTPSA id d20-20020a170906c21400b00947792df079sm2385584ejz.115.2023.04.01.12.23.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 01 Apr 2023 12:23:06 -0700 (PDT)
+Message-ID: <fdfc3914-ea61-a281-53ce-7271fab61dad@linaro.org>
+Date:   Sat, 1 Apr 2023 21:23:04 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- canpemm100004.china.huawei.com (7.192.105.92)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH 1/5] dt-bindings: ufs: qcom: add compatible for sa8775p
+Content-Language: en-US
+To:     Bartosz Golaszewski <brgl@bgdev.pl>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+References: <20230331195920.582620-1-brgl@bgdev.pl>
+ <20230331195920.582620-2-brgl@bgdev.pl>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230331195920.582620-2-brgl@bgdev.pl>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Factor out a new helper sas_check_phy_topology() to simplify
-sas_check_parent_topology(). And centralize the calling of
-sas_print_parent_topology_bug().
+On 31/03/2023 21:59, Bartosz Golaszewski wrote:
+> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> 
+> Add the compatible string for the UFS on sa8775p platforms.
+> 
+> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index c5a06c048389..4abd3c0950e2 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -27,6 +27,7 @@ properties:
+>            - qcom,msm8996-ufshc
+>            - qcom,msm8998-ufshc
+>            - qcom,sc8280xp-ufshc
+> +          - qcom,sa8775p-ufshc
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
----
- drivers/scsi/libsas/sas_expander.c | 95 +++++++++++++++++-------------
- 1 file changed, 55 insertions(+), 40 deletions(-)
+Please keep the alphabetical order (also in your second hunk).
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index c0841652f0e0..bffcccdbda6b 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1238,11 +1238,59 @@ static int sas_check_eeds(struct domain_device *child,
- 	return res;
- }
- 
--/* Here we spill over 80 columns.  It is intentional.
-- */
--static int sas_check_parent_topology(struct domain_device *child)
-+
-+static int sas_check_phy_topology(struct domain_device *child, struct ex_phy *parent_phy)
- {
- 	struct expander_device *child_ex = &child->ex_dev;
-+	struct ex_phy *child_phy = &child_ex->ex_phy[parent_phy->attached_phy_id];
-+	struct expander_device *parent_ex = &child->parent->ex_dev;
-+	bool print_topology_bug = false;
-+	int res = 0;
-+
-+	switch (child->parent->dev_type) {
-+	case SAS_EDGE_EXPANDER_DEVICE:
-+		if (child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+			if (parent_phy->routing_attr != SUBTRACTIVE_ROUTING ||
-+				child_phy->routing_attr != TABLE_ROUTING) {
-+				res = -ENODEV;
-+				print_topology_bug = true;
-+			}
-+		} else if (parent_phy->routing_attr == SUBTRACTIVE_ROUTING) {
-+			if (child_phy->routing_attr == SUBTRACTIVE_ROUTING) {
-+				res = sas_check_eeds(child, parent_phy, child_phy);
-+			}
-+			else if (child_phy->routing_attr != TABLE_ROUTING) {
-+				res = -ENODEV;
-+				print_topology_bug = true;
-+			}
-+		} else if (parent_phy->routing_attr == TABLE_ROUTING) {
-+			if (child_phy->routing_attr != SUBTRACTIVE_ROUTING &&
-+			    (child_phy->routing_attr != TABLE_ROUTING ||
-+			    !child_ex->t2t_supp || !parent_ex->t2t_supp)) {
-+				res = -ENODEV;
-+				print_topology_bug = true;
-+			}
-+		}
-+		break;
-+	case SAS_FANOUT_EXPANDER_DEVICE:
-+		if (parent_phy->routing_attr != TABLE_ROUTING ||
-+		    child_phy->routing_attr != SUBTRACTIVE_ROUTING) {
-+			res = -ENODEV;
-+			print_topology_bug = true;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (print_topology_bug)
-+		sas_print_parent_topology_bug(child, parent_phy, child_phy);
-+
-+	return res;
-+}
-+
-+static int sas_check_parent_topology(struct domain_device *child)
-+{
- 	struct expander_device *parent_ex;
- 	int i;
- 	int res = 0;
-@@ -1257,7 +1305,7 @@ static int sas_check_parent_topology(struct domain_device *child)
- 
- 	for (i = 0; i < parent_ex->num_phys; i++) {
- 		struct ex_phy *parent_phy = &parent_ex->ex_phy[i];
--		struct ex_phy *child_phy;
-+		int ret;
- 
- 		if (parent_phy->phy_state == PHY_VACANT ||
- 		    parent_phy->phy_state == PHY_NOT_PRESENT)
-@@ -1266,42 +1314,9 @@ static int sas_check_parent_topology(struct domain_device *child)
- 		if (!sas_phy_match_dev_addr(child, parent_phy))
- 			continue;
- 
--		child_phy = &child_ex->ex_phy[parent_phy->attached_phy_id];
--
--		switch (child->parent->dev_type) {
--		case SAS_EDGE_EXPANDER_DEVICE:
--			if (child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
--				if (parent_phy->routing_attr != SUBTRACTIVE_ROUTING ||
--				    child_phy->routing_attr != TABLE_ROUTING) {
--					sas_print_parent_topology_bug(child, parent_phy, child_phy);
--					res = -ENODEV;
--				}
--			} else if (parent_phy->routing_attr == SUBTRACTIVE_ROUTING) {
--				if (child_phy->routing_attr == SUBTRACTIVE_ROUTING) {
--					res = sas_check_eeds(child, parent_phy, child_phy);
--				} else if (child_phy->routing_attr != TABLE_ROUTING) {
--					sas_print_parent_topology_bug(child, parent_phy, child_phy);
--					res = -ENODEV;
--				}
--			} else if (parent_phy->routing_attr == TABLE_ROUTING) {
--				if (child_phy->routing_attr != SUBTRACTIVE_ROUTING &&
--				    (child_phy->routing_attr != TABLE_ROUTING ||
--				     !child_ex->t2t_supp || !parent_ex->t2t_supp)) {
--					sas_print_parent_topology_bug(child, parent_phy, child_phy);
--					res = -ENODEV;
--				}
--			}
--			break;
--		case SAS_FANOUT_EXPANDER_DEVICE:
--			if (parent_phy->routing_attr != TABLE_ROUTING ||
--			    child_phy->routing_attr != SUBTRACTIVE_ROUTING) {
--				sas_print_parent_topology_bug(child, parent_phy, child_phy);
--				res = -ENODEV;
--			}
--			break;
--		default:
--			break;
--		}
-+		ret = sas_check_phy_topology(child, parent_phy);
-+		if (ret)
-+			res = ret;
- 	}
- 
- 	return res;
--- 
-2.31.1
+Best regards,
+Krzysztof
 
