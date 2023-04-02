@@ -2,178 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47ADAC77B60
-	for <linux-scsi@archiver.kernel.org>; Sat,  1 Apr 2023 19:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE70C7619A
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Apr 2023 04:58:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229944AbjDATZV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 1 Apr 2023 15:25:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49804 "EHLO
+        id S229646AbjDBE6s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Apr 2023 00:58:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbjDATZU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Apr 2023 15:25:20 -0400
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A5A12708
-        for <linux-scsi@vger.kernel.org>; Sat,  1 Apr 2023 12:25:17 -0700 (PDT)
-Received: by mail-ed1-x52c.google.com with SMTP id y4so102600821edo.2
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Apr 2023 12:25:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1680377116;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=77FWYvL8qBVi4MJtC3pgtw0jIHuLIUI8wtQ8Jr492jU=;
-        b=k1KTXGbkEZ9gAB9ri2VFq9SAsme/0wjVnDetam6LLitGx/1Lqccru62N/ORR3BtrUO
-         Ejfjlt8D3aALROwI96uQvQpPNbIbUNB+NKC0GwQIw23ohOf2Ltf2cnpCvwIf4TnvNRqx
-         Jqibd0TUuLr7Ur//lGgVrTWirKhdVpcIM5hsJ1fS6NGsQQyu61F2EfojfvRjFAtNpGwK
-         salx3C7rjfUISLZvaYQ8UPd1XOJL/YzSeycQ8Og7heIhK7kHVwfp1Z8j9ZWR9KXT96np
-         Nvs6T3K6cNzQ3Yv5rcJBr6N4XAsGZWBhnmSpGQH09NND2/frUXA3rxmcmv5qsBpS29uu
-         Srww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680377116;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=77FWYvL8qBVi4MJtC3pgtw0jIHuLIUI8wtQ8Jr492jU=;
-        b=CXn7daLtxlUguJNaxluthlLeuoXxQsRaL5ugE02sXCY0xAYovM3/OSGXV+eMFzIZXf
-         fqanDX2jDZ71Tv/S+3f9iTmrbHLumVpz2FGNFHtWUACDoqb7qPpOPJeuPCu1FCnftU8i
-         DwCfPcs9tfXyqybBnnwPw87U0BSykqWaf/5cqr3xIcYpFFG+diUjMe0eHJiDj7AJJXY+
-         hDK+NHyeLOeSlKaBQuiqNSepdyyS0mfBPe37VUY4AV+gfbaXSJFJU/TYLrtmdj0COkc/
-         3ltZlG1xll2OgzMx85xKTs5cOeWWPUoBcWdErsiy1IZObzr7CdqtJocgSZtJXKJRzDnm
-         x35A==
-X-Gm-Message-State: AAQBX9e3ZPSCDmnNZAtDouhjoAdE9gZupcl/r869afYVC4kkXJDo/vEx
-        9QELNzpabkOYg+Bl3qI7WNSoJg==
-X-Google-Smtp-Source: AKy350Y218oME6QsL2EkWtrjn84dOsXVTk1jUQBJaccGJZPDZrKKwrErNagP2pIgjZfI052yGWMdGg==
-X-Received: by 2002:aa7:ccce:0:b0:501:cf67:97f3 with SMTP id y14-20020aa7ccce000000b00501cf6797f3mr29074550edt.25.1680377115959;
-        Sat, 01 Apr 2023 12:25:15 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:ec00:3acd:519:c7c2? ([2a02:810d:15c0:828:ec00:3acd:519:c7c2])
-        by smtp.gmail.com with ESMTPSA id g29-20020a50d0dd000000b004c0239e41d8sm2444639edf.81.2023.04.01.12.25.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 01 Apr 2023 12:25:15 -0700 (PDT)
-Message-ID: <e1b6f8bc-0bbb-f403-9126-22a89e813de8@linaro.org>
-Date:   Sat, 1 Apr 2023 21:25:14 +0200
+        with ESMTP id S229379AbjDBE6r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Apr 2023 00:58:47 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8FC2FF32
+        for <linux-scsi@vger.kernel.org>; Sat,  1 Apr 2023 21:58:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1680411524; x=1711947524;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Spcdt1MtsHNLI534weepBffByqig80z3Z+Ytrejt28Q=;
+  b=DnM8Wdqhga8yxiqcmYlMrAzCqQm80rRIPR1Myxaduq4wWVcIlQ2dkBnx
+   TmHzH3EMzKnI5dynZN7v/BgLzzvRJ4feAV0IrzKgpb+D7dnlVZ8VYY4gi
+   4ZfVkU2fGrT08qVE9zQijwYmhCT1WLsUn63hqzu5DXDjYvJoQB293v2Hq
+   NXAI7m83znMkJjuV3GeaL2qe7IqEyLHbHYAqlWq5ZiDaCIwZNFyS6oWAy
+   ZsT2OWOqbyFBhZ+4r3sXGASe2xjBOAjy3XMFFvIed1YuX5CZHs6pYdsfK
+   1U8pk3pW2Q0rqCZX4EeuK0TQ6WAkpS1fuMz5ZZMx0nz28mZ9zA6qRtybO
+   w==;
+X-IronPort-AV: E=Sophos;i="5.98,312,1673884800"; 
+   d="scan'208";a="339150256"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Apr 2023 12:58:44 +0800
+IronPort-SDR: oVCD8/tTVtoHPmkQRn+fYK0Z6XltSXAcV9oQzKKKsTWtMr1QtGtS6cjpWQ0fXy9Wzs2SmV0veS
+ AHqIWr4LFGx7lHrvR2L/w/UayBzAAj50GJG9uQAgPbke4auz8wRoLVjBB2zNYCoAICkBapnxLt
+ fbnCaXZWqRoSdHffSA/7rard5bjNP5VYA6sZ1RFlNKVS0Bm7A0QY/MwaTO9MSRiyY0YQYRwF31
+ Qye+Balw00EVNe4hjNaTwcV6M2C1Sy7lHkb8MV4gydwslegSeQ0duhdAyoaCwYb/ESwegTDgul
+ 5aU=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Apr 2023 21:14:49 -0700
+IronPort-SDR: EDfsgdwxahNEqD8wE9nZsQmtXVR8v8LjCYsi1rGQGpj5jSjJPDPYICpvGBDPz7qMhHfDU+o1VK
+ JWtuC9+thrNNPwFPpM3oiOmPskOIfwIGXEzcCcmcIOHlOMjqy79Cr+MfKAgWsdrGX8ht0XB8Ig
+ sHJisv3g5VGnX0yMX1OGLTSlKLlJAlCyX8qIHf3ol8mDiYUPYPhlJimRLF9tU1NSKl7mr7D/JB
+ CJg/gLtRDGj6dV3sxiAjsoh0hwhHjeb9YTzE7KvgQe8SGoWkT8IctIJ7MfnUFx8NNCzaa00Yij
+ gm8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Apr 2023 21:58:44 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Pq1yC5DJKz1RtW0
+        for <linux-scsi@vger.kernel.org>; Sat,  1 Apr 2023 21:58:43 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:content-language:references:to
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1680411522; x=1683003523; bh=Spcdt1MtsHNLI534weepBffByqig80z3Z+Y
+        trejt28Q=; b=N/Ojdz4Q0YvUp+Er63NjFyefNCARCxRJoYJhUXB+P8EmLNX09xy
+        56fnlLbnYvAvwOMgTzIYd7OHVq1qwL8i81l9rrX8ivAr2QEexUDMHTXIG3zStYl+
+        UalLguUKyPopOcT9jxD7ZLPtEPaxpAbb5Fep2DD9nrFvKTcfFaqLSyQ9K+6EsUGc
+        kyJdM51WFdB7CmfoKP99P81js8RtMQNy+5Ci613h4BVHz5OSNCerYfHmx1CBmfcH
+        9QAjTdSHC3WgvxvJMH27ZE7yWD40kuaCiGSSbLyQCH4bsAQGSLZsh/ZHmShrWMO7
+        SbS02LrHkFgGoOgi0m8mwtD8sCKlt9kagwg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id v_02q3EN7o5M for <linux-scsi@vger.kernel.org>;
+        Sat,  1 Apr 2023 21:58:42 -0700 (PDT)
+Received: from [10.225.163.1] (unknown [10.225.163.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Pq1y91Mh2z1RtVm;
+        Sat,  1 Apr 2023 21:58:40 -0700 (PDT)
+Message-ID: <739e2d17-f1c6-fc33-adc4-41cb97b5950d@opensource.wdc.com>
+Date:   Sun, 2 Apr 2023 13:58:39 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
-Subject: Re: [PATCH 2/5] dt-bindings: phy: qmp-ufs: describe the UFS PHY for
- sa8775p
+Subject: Re: [PATCH 1/3] scsi: libsas: Simplify sas_check_eeds()
+To:     Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, hare@suse.com, hch@lst.de,
+        bvanassche@acm.org, jinpu.wang@cloud.ionos.com,
+        john.g.garry@oracle.com
+References: <20230401081526.1655279-1-yanaijie@huawei.com>
+ <20230401081526.1655279-2-yanaijie@huawei.com>
 Content-Language: en-US
-To:     Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-References: <20230331195920.582620-1-brgl@bgdev.pl>
- <20230331195920.582620-3-brgl@bgdev.pl>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230331195920.582620-3-brgl@bgdev.pl>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20230401081526.1655279-2-yanaijie@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/03/2023 21:59, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+On 4/1/23 17:15, Jason Yan wrote:
+> In sas_check_eeds() there is an empty branch. We can reverse the
+> test expression and then remove the empty branch. Also the the test
+> expression is a little bit complex so it deserves an individual
+> function. And make the continuing prototype lines indented after
+> the opening parenthesis to follow the standard coding style.
 > 
-> Add a new compatible for the QMP UFS PHY found on sa8775p platforms and
-> update the clocks property to accommodate three clocks.
-> 
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
 > ---
->  .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        | 34 ++++++++++++++++---
->  1 file changed, 30 insertions(+), 4 deletions(-)
+>  drivers/scsi/libsas/sas_expander.c | 38 ++++++++++++++----------------
+>  1 file changed, 18 insertions(+), 20 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-> index 64ed331880f6..a414b2c2d9cc 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-> +++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-> @@ -16,6 +16,7 @@ description:
->  properties:
->    compatible:
->      enum:
-> +      - qcom,sa8775p-qmp-ufs-phy
->        - qcom,sc8280xp-qmp-ufs-phy
->        - qcom,sm6125-qmp-ufs-phy
->        - qcom,sm8550-qmp-ufs-phy
-> @@ -24,12 +25,12 @@ properties:
->      maxItems: 1
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index dc670304f181..048a931d856a 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1198,37 +1198,35 @@ static void sas_print_parent_topology_bug(struct domain_device *child,
+>  		  sas_route_char(child, child_phy));
+>  }
 >  
->    clocks:
-> -    maxItems: 2
-> +    minItems: 2
-> +    maxItems: 3
->  
->    clock-names:
-> -    items:
-> -      - const: ref
-> -      - const: ref_aux
+> +static bool sas_eeds_valid(struct domain_device *parent, struct domain_device *child)
+> +{
+> +	struct sas_discovery *disc = &parent->port->disc;
 
-Keep it here and add qref. We want to encourage the same clocks
-everywhere it is possible. Otherwise people will add soon 'q_ref' or
-'ref_q' for their variants as third clock.
+Missing blank line after declaration.
 
-> +    minItems: 2
+> +	return (((SAS_ADDR(disc->eeds_a) == SAS_ADDR(parent->sas_addr)) ||
+> +		 (SAS_ADDR(disc->eeds_a) == SAS_ADDR(child->sas_addr))) &&
+> +		((SAS_ADDR(disc->eeds_b) == SAS_ADDR(parent->sas_addr)) ||
+> +		 (SAS_ADDR(disc->eeds_b) == SAS_ADDR(child->sas_addr))));
 
-With this.
+Drop the inner-most and outter-most parenthesis.
 
-> +    maxItems: 3
-
-But without this.
-
->  
->    power-domains:
->      maxItems: 1
-> @@ -51,6 +52,31 @@ properties:
->    "#phy-cells":
->      const: 0
->  
-> +allOf:
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - qcom,sa8775p-qmp-ufs-phy
-> +    then:
-> +      properties:
-> +        clocks:
-> +          maxItems: 3
-> +        clock-names:
-> +          items:
-
-Instead maxItems: 3
-
-
-> +            - const: ref
-> +            - const: ref_aux
-> +            - const: qref
-> +    else:
-> +      properties:
-> +        clocks:
-> +          maxItems: 2
-> +        clock-names:
-> +          items:
-
-Instead maxItems: 2
-
-> +            - const: ref
-> +            - const: ref_aux
+> +}
 > +
->  required:
->    - compatible
->    - reg
+>  static int sas_check_eeds(struct domain_device *child,
+> -				 struct ex_phy *parent_phy,
+> -				 struct ex_phy *child_phy)
+> +			  struct ex_phy *parent_phy,
+> +			  struct ex_phy *child_phy)
+>  {
+>  	int res = 0;
+>  	struct domain_device *parent = child->parent;
+> +	struct sas_discovery *disc = &parent->port->disc;
+>  
+> -	if (SAS_ADDR(parent->port->disc.fanout_sas_addr) != 0) {
+> +	if (SAS_ADDR(disc->fanout_sas_addr) != 0) {
+>  		res = -ENODEV;
+>  		pr_warn("edge ex %016llx phy S:%02d <--> edge ex %016llx phy S:%02d, while there is a fanout ex %016llx\n",
+>  			SAS_ADDR(parent->sas_addr),
+>  			parent_phy->phy_id,
+>  			SAS_ADDR(child->sas_addr),
+>  			child_phy->phy_id,
+> -			SAS_ADDR(parent->port->disc.fanout_sas_addr));
+> -	} else if (SAS_ADDR(parent->port->disc.eeds_a) == 0) {
+> -		memcpy(parent->port->disc.eeds_a, parent->sas_addr,
+> -		       SAS_ADDR_SIZE);
+> -		memcpy(parent->port->disc.eeds_b, child->sas_addr,
+> -		       SAS_ADDR_SIZE);
+> -	} else if (((SAS_ADDR(parent->port->disc.eeds_a) ==
+> -		    SAS_ADDR(parent->sas_addr)) ||
+> -		   (SAS_ADDR(parent->port->disc.eeds_a) ==
+> -		    SAS_ADDR(child->sas_addr)))
+> -		   &&
+> -		   ((SAS_ADDR(parent->port->disc.eeds_b) ==
+> -		     SAS_ADDR(parent->sas_addr)) ||
+> -		    (SAS_ADDR(parent->port->disc.eeds_b) ==
+> -		     SAS_ADDR(child->sas_addr))))
+> -		;
+> -	else {
+> +			SAS_ADDR(disc->fanout_sas_addr));
+> +	} else if (SAS_ADDR(disc->eeds_a) == 0) {
+> +		memcpy(disc->eeds_a, parent->sas_addr, SAS_ADDR_SIZE);
+> +		memcpy(disc->eeds_b, child->sas_addr, SAS_ADDR_SIZE);
+> +	} else if (!sas_eeds_valid(parent, child)) {
+>  		res = -ENODEV;
+>  		pr_warn("edge ex %016llx phy%02d <--> edge ex %016llx phy%02d link forms a third EEDS!\n",
+>  			SAS_ADDR(parent->sas_addr),
 
-Best regards,
-Krzysztof
+-- 
+Damien Le Moal
+Western Digital Research
 
