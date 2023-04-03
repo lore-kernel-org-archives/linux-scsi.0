@@ -2,94 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28B74C76196
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 02:20:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E38C1C7619A
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 03:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231159AbjDCCUl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Apr 2023 22:20:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50668 "EHLO
+        id S230451AbjDCDNW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Apr 2023 23:13:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230191AbjDCCUk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Apr 2023 22:20:40 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FF13B75C
-        for <linux-scsi@vger.kernel.org>; Sun,  2 Apr 2023 19:20:40 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 332Mslil031744;
-        Mon, 3 Apr 2023 02:20:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=BYW/soGWxP3uVq+eKIh4xlUbDheLKnD80vCH63aqoVY=;
- b=3apM5baQhP3Qj1Ilq0z1DFSKmjXj9bDDqS+hB4RVbujXPhKX1aEDpIh+lm/ZuhlL4bT+
- Kpk2Qmxb5l8hJcK5NytgD8eqZL2dBL7OB96xfflzHX7E8wcu2T1zt7Ds6iOCo8ek9yJF
- aXv+EqkP5kRahzYgq7IVfPmomJjiSnVivnj3BJGY2Rt3HwqPXDPN9WdpiiIbSDE5Jqkl
- fi7ZgYuoyemti2jjKFNDgY66BnuR0PRSxoiU5wl5mEA/cq3hc+OsR0buRZ2JVYrEfwlv
- GUTlTJ4prg7eScvAeu03fU2EQAM43PUK5BpNLqOb58gKt5lN3e3oO98Y06xYV35EOD1G YA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ppb71j2bh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 03 Apr 2023 02:20:20 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 332Lum48017517;
-        Mon, 3 Apr 2023 02:20:19 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pptp4n16f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 03 Apr 2023 02:20:19 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3332COOp008162;
-        Mon, 3 Apr 2023 02:20:18 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pptp4n164-1;
-        Mon, 03 Apr 2023 02:20:18 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Stanley Chu <chu.stanley@gmail.com>, peter.wang@mediatek.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Adrien Thierry <athierry@redhat.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] Revert "scsi: ufs: core: Initialize devfreq synchronously"
-Date:   Sun,  2 Apr 2023 22:20:12 -0400
-Message-Id: <168048838483.1036111.6599517072297235004.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230329205426.46393-1-athierry@redhat.com>
-References: <20230329205426.46393-1-athierry@redhat.com>
+        with ESMTP id S231189AbjDCDNS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Apr 2023 23:13:18 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C028F30E2
+        for <linux-scsi@vger.kernel.org>; Sun,  2 Apr 2023 20:13:15 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PqbV66hKVznZsC;
+        Mon,  3 Apr 2023 11:09:50 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Mon, 3 Apr 2023 11:13:13 +0800
+Subject: Re: [PATCH 3/3] scsi: libsas: Simplify sas_check_parent_topology()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
+        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
+        <john.g.garry@oracle.com>
+References: <20230401081526.1655279-1-yanaijie@huawei.com>
+ <20230401081526.1655279-4-yanaijie@huawei.com>
+ <48d385f7-92b5-4e99-7e32-119db6a74f3f@opensource.wdc.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <64897a78-19ff-d064-1edb-7cc7e928b309@huawei.com>
+Date:   Mon, 3 Apr 2023 11:13:12 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-31_07,2023-03-31_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
- mlxlogscore=807 bulkscore=0 malwarescore=0 mlxscore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304030015
-X-Proofpoint-ORIG-GUID: jXcd3s-8fOenT280Hsmgom_DtySkIKx_
-X-Proofpoint-GUID: jXcd3s-8fOenT280Hsmgom_DtySkIKx_
+In-Reply-To: <48d385f7-92b5-4e99-7e32-119db6a74f3f@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ canpemm100004.china.huawei.com (7.192.105.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 29 Mar 2023 16:54:25 -0400, Adrien Thierry wrote:
-
-> This reverts commit 7dafc3e007918384c8693ff8d70381b5c1e9c247.
+On 2023/4/2 13:00, Damien Le Moal wrote:
+> On 4/1/23 17:15, Jason Yan wrote:
+>> Factor out a new helper sas_check_phy_topology() to simplify
+>> sas_check_parent_topology(). And centralize the calling of
+>> sas_print_parent_topology_bug().
+>>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+>> ---
+>>   drivers/scsi/libsas/sas_expander.c | 95 +++++++++++++++++-------------
+>>   1 file changed, 55 insertions(+), 40 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+>> index c0841652f0e0..bffcccdbda6b 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -1238,11 +1238,59 @@ static int sas_check_eeds(struct domain_device *child,
+>>   	return res;
+>>   }
+>>   
+>> -/* Here we spill over 80 columns.  It is intentional.
+>> - */
+>> -static int sas_check_parent_topology(struct domain_device *child)
+>> +
+>> +static int sas_check_phy_topology(struct domain_device *child, struct ex_phy *parent_phy)
 > 
-> This patch introduced a regression [1] where hba->pwr_info is used
-> before being initialized, which could create issues in
-> ufshcd_scale_gear(). Revert it until a better solution is found.
+> Long line. Break after the first argument.
+
+And also some lines exceed 80 columns, I wonder if you want me to break 
+them or something else to shorten them too.
+
 > 
-> [1] https://lore.kernel.org/all/CAGaU9a_PMZhqv+YJ0r3w-hJMsR922oxW6Kg59vw+oen-NZ6Otw@mail.gmail.com
-> 
-> [...]
+>>   {
+>>   	struct expander_device *child_ex = &child->ex_dev;
+>> +	struct ex_phy *child_phy = &child_ex->ex_phy[parent_phy->attached_phy_id];
 
-Applied to 6.3/scsi-fixes, thanks!
+This line is slightly longer than 80, but I prefer to keep them as is.
 
-[1/1] Revert "scsi: ufs: core: Initialize devfreq synchronously"
-      https://git.kernel.org/mkp/scsi/c/86eb94bf8006
+>> +	struct expander_device *parent_ex = &child->parent->ex_dev;
+>> +	bool print_topology_bug = false;
+>> +	int res = 0;
+>> +
+>> +	switch (child->parent->dev_type) {
+>> +	case SAS_EDGE_EXPANDER_DEVICE:
+>> +		if (child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
+>> +			if (parent_phy->routing_attr != SUBTRACTIVE_ROUTING ||
+>> +				child_phy->routing_attr != TABLE_ROUTING) {
+>> +				res = -ENODEV;
+>> +				print_topology_bug = true;
+>> +			}
+>> +		} else if (parent_phy->routing_attr == SUBTRACTIVE_ROUTING) {
+>> +			if (child_phy->routing_attr == SUBTRACTIVE_ROUTING) {
+>> +				res = sas_check_eeds(child, parent_phy, child_phy);
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+And this line too. If someone insist to keep it in 80 columns, it may be 
+written like:
+
++				res = sas_check_eeds(child, parent_phy,
++						     child_phy);
+
+Which I do not like either.
