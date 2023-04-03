@@ -2,86 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C0FC76196
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 19:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D7D1C76188
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 20:05:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232450AbjDCT4i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Apr 2023 15:56:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37856 "EHLO
+        id S232468AbjDCUFk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Apr 2023 16:05:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231706AbjDCT4h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 15:56:37 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9D052105
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2023 12:56:36 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id e15-20020a17090ac20f00b0023d1b009f52so33790866pjt.2
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Apr 2023 12:56:36 -0700 (PDT)
+        with ESMTP id S229945AbjDCUFj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 16:05:39 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC8FE30F2
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2023 13:05:37 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id v1so30586289wrv.1
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Apr 2023 13:05:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1680552336;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ypjGSD9MoiyC/BSmZV4rpdSicxantTDyraV9ZwR3Wko=;
+        b=HUKwUP5VZRNpodrnPPM3ifw1bAJa/1Pwl19tZY0gZTDQdqvslDjrKagBUWgrt8/NY1
+         iJ2tN7m+ZqpRE+cPJMdWcNCThCpokwmT7wlwclKRVO8wDwCdc/pV4pkMjvEhq5no8djC
+         kPGn53hin1pRv+iB8fzqU95rfylIHRDYJ0C5vDUFdDcMnNXlFDzMODxFRuRHDnhIfDgD
+         CXJ6y6TnYjCZVy6iOCDFQph/FZRUWWpdmfYk6xaMyt1+X7y038/HXHZtZNOQxDMfQztv
+         7Znx05mTUxZUmAcoNI+qMtJA3exG/ecL3Ah/qeCHRICM69kcalZ0fIqnlwgmhR9/jGmJ
+         RS1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680551796;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=U0BucDsz4QwnNvJ9wAZhsOYrXi0oInghPHJCceEJBiU=;
-        b=MBLUI8PWwK8Y/H28PY3Lr1II0SiF5BMtwrjVrzRtXNKGrkMUWzdTdxbNb+C2nw9Kyg
-         4vT/ymFq8zzDXRcX19aiKJzZoRpXDbBzgdwTFAnP0Awyrk3MjBouWDoIjNrjFwX9LxwB
-         8cEL5SWYn9RoG5lCVIU0uAlSAFyjX1EG0Mc4QZzWPAFXfwtFjztVsS67+NJYT4NDyE4+
-         isotia6m4zY2RTW4L/0ovscEqrVSCPP1MYz0udA65h/INAa4Hycxm9Z2ftD91S0fbreK
-         rZD1spzaUGWac1T2LyyX7CLeoazFih2FGhxXpAgC6dDjcOly5RVHQ5nB8zwDFUUZGgVE
-         bm/g==
-X-Gm-Message-State: AAQBX9dcivnxJ2I7dcu/dfhH6FhixVsu7Pl72UVJunw6n4pjE0en+/KW
-        QZm/OYcL1mFijXluwHgXU1HMEJdg5jI=
-X-Google-Smtp-Source: AKy350aIaRXEzY1r/sSfF6px/LQ3Lgqv/z1gdvHNp68TZ045W3Tr+ufduR0kIbNRjqdFYkOtaWrZQg==
-X-Received: by 2002:a17:90b:1d8e:b0:23f:37b6:48f4 with SMTP id pf14-20020a17090b1d8e00b0023f37b648f4mr41166547pjb.43.1680551796059;
-        Mon, 03 Apr 2023 12:56:36 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:270b:3345:6931:bb28? ([2620:15c:211:201:270b:3345:6931:bb28])
-        by smtp.gmail.com with ESMTPSA id x3-20020a17090a8a8300b00234465cd2a7sm6455381pjn.56.2023.04.03.12.56.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Apr 2023 12:56:35 -0700 (PDT)
-Message-ID: <eb5335bc-760d-4591-8a73-71f10dcd8155@acm.org>
-Date:   Mon, 3 Apr 2023 12:56:33 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH] scsi: sd: mark the scsi device in shutdown as deleted
-Content-Language: en-US
-To:     Tomas Henzl <thenzl@redhat.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Mike Christie <michael.christie@oracle.com>,
+        d=1e100.net; s=20210112; t=1680552336;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ypjGSD9MoiyC/BSmZV4rpdSicxantTDyraV9ZwR3Wko=;
+        b=Y6tSGIaooAKFgojrIOCVu3PzGPXqqeUp9FdJo+1AYbspNh5I1VqHeCGRxK2nepxeFT
+         TsRS42SaEqJuitqwejqqVPYcs35lxX+wJpZ2SiAeFUw0URZIsXmGUAlWw0tPxUddmEz7
+         ipFBxf3LMf2lTq/cVF+8UmXX+w+CnloVvfUZsBYmMlwboQ8cnIWG2YuynN9mEvJlTuom
+         pwYtNw8K07Xq7adIzw5SqD45l7E9rsJSbUf0GYqLZVLIw9g7N2r4+wgXC0HKE4A5n/Lf
+         r69KA59/hlZl6/p2YgkBpj1RA4cXX/oLsng0Pl/xer4DoYXQ82+Byxm1K+HuA4nSTg4B
+         QKeA==
+X-Gm-Message-State: AAQBX9et11kAUgXXu+wYG7ECGzAtyGbxNRBy6iMvb2UbaV1y/G5Ohvj8
+        SWuEkpHEMwTI+4BLfKt8Mx5y3A==
+X-Google-Smtp-Source: AKy350Ykoxehj3xlHAZUYS0YuJeY0lOEIiHNddtOkaPl+8pQTa1wGWFgeMQoaWYcLwn59zlnlqdkXg==
+X-Received: by 2002:adf:dbcf:0:b0:2ce:da65:1e1d with SMTP id e15-20020adfdbcf000000b002ceda651e1dmr14024101wrj.24.1680552336280;
+        Mon, 03 Apr 2023 13:05:36 -0700 (PDT)
+Received: from localhost.localdomain ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id iv19-20020a05600c549300b003ef69873cf1sm20798037wmb.40.2023.04.03.13.05.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Apr 2023 13:05:35 -0700 (PDT)
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
         linux-scsi@vger.kernel.org
-References: <20230330164943.11607-1-thenzl@redhat.com>
- <af17886b-5b18-f71f-9fe7-ea929f30b5a6@oracle.com>
- <e4dd3ea37807166820e3b3b7e5102e23ab6b3898.camel@HansenPartnership.com>
- <457808a0-1ec2-d846-075c-7f8812a7a416@redhat.com>
- <488bb066654104bc6b84fdc45595232305519597.camel@HansenPartnership.com>
- <33501374-2cc7-ba1c-9d42-0da2aeed4341@redhat.com>
- <0afc900c-2717-6751-de54-9f65bf127484@acm.org>
- <3b5cf6e6-9dec-880f-7807-6d0461cbf514@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <3b5cf6e6-9dec-880f-7807-6d0461cbf514@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v5 0/6] Add dedicated Qcom ICE driver
+Date:   Mon,  3 Apr 2023 23:05:24 +0300
+Message-Id: <20230403200530.2103099-1-abel.vesa@linaro.org>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/2/23 14:49, Tomas Henzl wrote:
-> On 3/31/23 20:48, Bart Van Assche wrote:
->> I'm interested in failing future I/O from inside sd_shutdown() because
->> it would allow me to remove the I/O quiescing code from the UFS driver
->> shutdown callback.
-> I'm aware of this, other drivers do have similar code and so it would
-> help elsewhere as well. The patch as it is doesn't however ensure that
-> there isn't for example an I/O started before sd.shutdown which may
-> arrive in a driver after his shutdown has been called. Because of that I
-> haven't used this as an argument in the discussion here.
+As both SDCC and UFS drivers use the ICE with duplicated implementation,
+while none of the currently supported platforms make use concomitantly
+of the same ICE IP block instance, the new SM8550 allows both UFS and
+SDCC to do so. In order to support such scenario, there is a need for
+a unified implementation and a devicetree node to be shared between
+both types of storage devices. So lets drop the duplicate implementation
+of the ICE from both SDCC and UFS and make it a dedicated (soc) driver.
+Also, switch all UFS and SDCC devicetree nodes to use the new ICE
+approach.
 
-Has it been considered to call blk_mq_freeze_queue() and 
-blk_mq_unfreeze_queue() to wait for I/O that started earlier?
+The v4 is here:
+https://lore.kernel.org/all/20230327134734.3256974-1-abel.vesa@linaro.org/
 
-Has it been considered to set QUEUE_FLAG_DYING to make future SCSI 
-commands fail? See also blk_mq_destroy_queue().
+Changes since v4:
+ * dropped the SDHCI dt-bindings patch as it will be added along
+   with the first use of qcom,ice property from an SDHCI DT node
 
-Thanks,
+See each individual patch for changelogs.
 
-Bart.
+Abel Vesa (6):
+  dt-bindings: crypto: Add Qualcomm Inline Crypto Engine
+  dt-bindings: ufs: qcom: Add ICE phandle
+  soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
+  scsi: ufs: ufs-qcom: Switch to the new ICE API
+  mmc: sdhci-msm: Switch to the new ICE API
+  arm64: dts: qcom: sm8550: Add the Inline Crypto Engine node
+
+ .../crypto/qcom,inline-crypto-engine.yaml     |  42 ++
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |  19 +
+ arch/arm64/boot/dts/qcom/sm8550.dtsi          |  10 +
+ drivers/mmc/host/Kconfig                      |   2 +-
+ drivers/mmc/host/sdhci-msm.c                  | 220 +++--------
+ drivers/soc/qcom/Kconfig                      |   4 +
+ drivers/soc/qcom/Makefile                     |   1 +
+ drivers/soc/qcom/ice.c                        | 365 ++++++++++++++++++
+ drivers/ufs/host/Kconfig                      |   2 +-
+ drivers/ufs/host/Makefile                     |   4 +-
+ drivers/ufs/host/ufs-qcom-ice.c               | 244 ------------
+ drivers/ufs/host/ufs-qcom.c                   |  97 ++++-
+ drivers/ufs/host/ufs-qcom.h                   |  32 +-
+ include/soc/qcom/ice.h                        |  37 ++
+ 14 files changed, 626 insertions(+), 453 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+ create mode 100644 drivers/soc/qcom/ice.c
+ delete mode 100644 drivers/ufs/host/ufs-qcom-ice.c
+ create mode 100644 include/soc/qcom/ice.h
+
+-- 
+2.34.1
 
