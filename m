@@ -2,80 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AED3C76188
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 18:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C0FC76196
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 19:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232851AbjDCSs3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Apr 2023 14:48:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54674 "EHLO
+        id S232450AbjDCT4i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Apr 2023 15:56:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232822AbjDCSs2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 14:48:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4966B10A
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2023 11:47:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680547662;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=gtUjtEty3oWtSyU5P9dqlDBjXIGDm5es4Y+hPi9vAgQ=;
-        b=VPY7xtZgUNm60BdTl70zW7YqYNUgDrMpVmGAlkhi4LU2jcr8TrCidroApBGc4mrM0Q2ryl
-        ZrdP98qLthzHEGVsF+L5bHpOK79izx9+0mG2Pp/PRWaVf3WdDGpthsPegafQU3CqhPYNbQ
-        3NVa4iSLw/V0ysgX0ifeoFiqC381DV4=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-192-SZ5TbfUANv2wo1afbldlWQ-1; Mon, 03 Apr 2023 14:47:38 -0400
-X-MC-Unique: SZ5TbfUANv2wo1afbldlWQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 11D7885A5B1;
-        Mon,  3 Apr 2023 18:47:38 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.45.224.64])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4FC00175AD;
-        Mon,  3 Apr 2023 18:47:37 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     sreekanth.reddy@broadcom.com, ranjan.kumar@broadcom.com,
-        sathya.prakash@broadcom.com
-Subject: [PATCH] scsi: mpt3sas: fix an issue when driver's being removed
-Date:   Mon,  3 Apr 2023 20:47:36 +0200
-Message-Id: <20230403184736.6399-1-thenzl@redhat.com>
+        with ESMTP id S231706AbjDCT4h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 15:56:37 -0400
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9D052105
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2023 12:56:36 -0700 (PDT)
+Received: by mail-pj1-f47.google.com with SMTP id e15-20020a17090ac20f00b0023d1b009f52so33790866pjt.2
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Apr 2023 12:56:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680551796;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=U0BucDsz4QwnNvJ9wAZhsOYrXi0oInghPHJCceEJBiU=;
+        b=MBLUI8PWwK8Y/H28PY3Lr1II0SiF5BMtwrjVrzRtXNKGrkMUWzdTdxbNb+C2nw9Kyg
+         4vT/ymFq8zzDXRcX19aiKJzZoRpXDbBzgdwTFAnP0Awyrk3MjBouWDoIjNrjFwX9LxwB
+         8cEL5SWYn9RoG5lCVIU0uAlSAFyjX1EG0Mc4QZzWPAFXfwtFjztVsS67+NJYT4NDyE4+
+         isotia6m4zY2RTW4L/0ovscEqrVSCPP1MYz0udA65h/INAa4Hycxm9Z2ftD91S0fbreK
+         rZD1spzaUGWac1T2LyyX7CLeoazFih2FGhxXpAgC6dDjcOly5RVHQ5nB8zwDFUUZGgVE
+         bm/g==
+X-Gm-Message-State: AAQBX9dcivnxJ2I7dcu/dfhH6FhixVsu7Pl72UVJunw6n4pjE0en+/KW
+        QZm/OYcL1mFijXluwHgXU1HMEJdg5jI=
+X-Google-Smtp-Source: AKy350aIaRXEzY1r/sSfF6px/LQ3Lgqv/z1gdvHNp68TZ045W3Tr+ufduR0kIbNRjqdFYkOtaWrZQg==
+X-Received: by 2002:a17:90b:1d8e:b0:23f:37b6:48f4 with SMTP id pf14-20020a17090b1d8e00b0023f37b648f4mr41166547pjb.43.1680551796059;
+        Mon, 03 Apr 2023 12:56:36 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:270b:3345:6931:bb28? ([2620:15c:211:201:270b:3345:6931:bb28])
+        by smtp.gmail.com with ESMTPSA id x3-20020a17090a8a8300b00234465cd2a7sm6455381pjn.56.2023.04.03.12.56.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Apr 2023 12:56:35 -0700 (PDT)
+Message-ID: <eb5335bc-760d-4591-8a73-71f10dcd8155@acm.org>
+Date:   Mon, 3 Apr 2023 12:56:33 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH] scsi: sd: mark the scsi device in shutdown as deleted
+Content-Language: en-US
+To:     Tomas Henzl <thenzl@redhat.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20230330164943.11607-1-thenzl@redhat.com>
+ <af17886b-5b18-f71f-9fe7-ea929f30b5a6@oracle.com>
+ <e4dd3ea37807166820e3b3b7e5102e23ab6b3898.camel@HansenPartnership.com>
+ <457808a0-1ec2-d846-075c-7f8812a7a416@redhat.com>
+ <488bb066654104bc6b84fdc45595232305519597.camel@HansenPartnership.com>
+ <33501374-2cc7-ba1c-9d42-0da2aeed4341@redhat.com>
+ <0afc900c-2717-6751-de54-9f65bf127484@acm.org>
+ <3b5cf6e6-9dec-880f-7807-6d0461cbf514@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <3b5cf6e6-9dec-880f-7807-6d0461cbf514@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Warnings may be logged during driver removal:
-mpt3sas 0000:01:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT ..,
-Fix it by deallocating dma memory later.
+On 4/2/23 14:49, Tomas Henzl wrote:
+> On 3/31/23 20:48, Bart Van Assche wrote:
+>> I'm interested in failing future I/O from inside sd_shutdown() because
+>> it would allow me to remove the I/O quiescing code from the UFS driver
+>> shutdown callback.
+> I'm aware of this, other drivers do have similar code and so it would
+> help elsewhere as well. The patch as it is doesn't however ensure that
+> there isn't for example an I/O started before sd.shutdown which may
+> arrive in a driver after his shutdown has been called. Because of that I
+> haven't used this as an argument in the discussion here.
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Has it been considered to call blk_mq_freeze_queue() and 
+blk_mq_unfreeze_queue() to wait for I/O that started earlier?
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 492d1940d596..c3c1f466fe01 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12929,10 +12929,10 @@ _mpt3sas_exit(void)
- 	pr_info("mpt3sas version %s unloading\n",
- 				MPT3SAS_DRIVER_VERSION);
- 
--	mpt3sas_ctl_exit(hbas_to_enumerate);
--
- 	pci_unregister_driver(&mpt3sas_driver);
- 
-+	mpt3sas_ctl_exit(hbas_to_enumerate);
-+
- 	scsih_exit();
- }
- 
--- 
-2.39.2
+Has it been considered to set QUEUE_FLAG_DYING to make future SCSI 
+commands fail? See also blk_mq_destroy_queue().
+
+Thanks,
+
+Bart.
 
