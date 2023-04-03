@@ -2,107 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CF52C77B6C
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 15:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F89C76188
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 15:19:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234281AbjDCPIU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Apr 2023 11:08:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41646 "EHLO
+        id S232557AbjDCPTb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Apr 2023 11:19:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234194AbjDCPIK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 11:08:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BDA64C35;
-        Mon,  3 Apr 2023 08:08:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ADF7561A55;
-        Mon,  3 Apr 2023 15:08:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18A37C4339B;
-        Mon,  3 Apr 2023 15:07:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680534482;
-        bh=Zvq9Hzpetq9+ZiBrci0/SnW1z0Ndhco9dW2OQzO42bc=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=LPSID/hW1iIiGUMdrfSA+O+e5b98RytK7Y34WEdMUQGE3B5wDApQjkEE5j5LWK8IX
-         iuYzO1CRQem0UBb0MQ+yHt7bysq+oQ0HzTXXWSGs9R2uWVdIVfs9zs//X59D67fOTN
-         kkR8fYsJ0VhLg6hSdwaJ5VI3mSZ2hcwWaB7MRGOqNVPFZmJO17v7EvZSXcaKhGrYJf
-         YOsayAmvzQSvVZqafUNir2ALY1AiobPKEfd52C9PVugNvVLiTefUzF8qh3pqLB9yVC
-         OJF12k5hKshsRfEzqU1EqfYrvbkZDZbVBqMlTzMVEA72PlpFMQICPWceC5MK6a/S41
-         X+dDKoQeE4sJg==
-From:   Mark Brown <broonie@kernel.org>
-To:     Bjorn Andersson <andersson@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Georgi Djakov <djakov@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>
-Cc:     linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci@vger.kernel.org,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-phy@lists.infradead.org,
-        Wesley Cheng <quic_wcheng@quicinc.com>,
-        linux-usb@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Liam Girdwood <lgirdwood@gmail.com>
-In-Reply-To: <20230325122444.249507-1-vkoul@kernel.org>
-References: <20230325122444.249507-1-vkoul@kernel.org>
-Subject: Re: (subset) [PATCH v2 00/12] Introduce the SC8180x devices
-Message-Id: <168053447680.47740.2062036242012042206.b4-ty@kernel.org>
-Date:   Mon, 03 Apr 2023 16:07:56 +0100
+        with ESMTP id S232409AbjDCPTa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 11:19:30 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4B041BF;
+        Mon,  3 Apr 2023 08:19:29 -0700 (PDT)
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 333F5vq2011915;
+        Mon, 3 Apr 2023 15:19:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=lPEXog0z2vgGnN6yQE6eRK4XnVVl6t+j0e9y0ybXBds=;
+ b=HlB60iI8X7xkjl0ppdblTSCvrLqTwRxGizHRcpFslNrt66E2z53X3riEc3hQLfAeUBX4
+ aWRIORfhvlVD7nFsiyv2cBcGPZ2IPn3JKZz2ev3TIjSKxFQxfXmxGAMojsQnZZJWHA0I
+ sBYVNo1FEadtu5szUBpRkk5k6tXxiUIinBapid/T4zM6MSUA01PVtr8t5kis1uUWoYHy
+ FkrpYX3QT9tLsdaIhuHdnHSJmi4IkGJfDU4I+Gs5aGs0PGmgbZVu/tXVyHhxtbZLHFjW
+ mdsx4XKm3TwBuKEfSrA3PjiVTZxKQEjc9KXmZC69ElmtyhbRgXCDezCbNmvclHc9m/3b iA== 
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ppxerjcpn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 03 Apr 2023 15:19:06 +0000
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 333DKQHl024917;
+        Mon, 3 Apr 2023 15:19:05 GMT
+Received: from smtprelay07.dal12v.mail.ibm.com ([9.208.130.99])
+        by ppma01wdc.us.ibm.com (PPS) with ESMTPS id 3ppc87m059-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 03 Apr 2023 15:19:05 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 333FJ4hi39911882
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 3 Apr 2023 15:19:04 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3FA3358062;
+        Mon,  3 Apr 2023 15:19:04 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 27A9A58057;
+        Mon,  3 Apr 2023 15:19:03 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.211.71.42])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Mon,  3 Apr 2023 15:19:03 +0000 (GMT)
+Message-ID: <84d55c1032a98de8b2118715d3ec435c409ca0a2.camel@linux.ibm.com>
+Subject: Re: [PATCH] scsi: megaraid: Fix null dereference
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Igor Artemiev <Igor.A.Artemiev@mcst.ru>,
+        Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org
+Date:   Mon, 03 Apr 2023 11:19:00 -0400
+In-Reply-To: <20230403143440.1923323-1-Igor.A.Artemiev@mcst.ru>
+References: <20230403143440.1923323-1-Igor.A.Artemiev@mcst.ru>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13-dev-00303
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 2gGIG2l0kQ-X62-t7P-cyHFdIXdXQYJJ
+X-Proofpoint-GUID: 2gGIG2l0kQ-X62-t7P-cyHFdIXdXQYJJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-03_12,2023-04-03_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=678 phishscore=0
+ clxscore=1011 suspectscore=0 bulkscore=0 malwarescore=0 impostorscore=0
+ mlxscore=0 adultscore=0 priorityscore=1501 spamscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2304030109
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 25 Mar 2023 17:54:32 +0530, Vinod Koul wrote:
-> This introduces Qualcomm SC8180x SoC which features in Lenovo Flex 5G
-> laptop. This also adds support for Primus platform as well as Lenovo Flex 5G
-> laptop.
+On Mon, 2023-04-03 at 17:34 +0300, Igor Artemiev wrote:
+> When cmdid == CMDID_INT_CMDS, the 'mbox' pointer is NULL but is
+> dereferenced below.
 > 
-> I would be great if submaintainers can ack the binding patch so that
-> everything can go thru qcom tree
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
 > 
-> [...]
+> Fixes: 0f2bb84d2a68 ("[SCSI] megaraid: simplify internal command
+> handling")
+> Signed-off-by: Igor Artemiev <Igor.A.Artemiev@mcst.ru>
+> ---
+>  drivers/scsi/megaraid.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+> index bf491af9f0d6..4fbf92dc717e 100644
+> --- a/drivers/scsi/megaraid.c
+> +++ b/drivers/scsi/megaraid.c
+> @@ -1441,6 +1441,7 @@ mega_cmd_done(adapter_t *adapter, u8
+> completed[], int nstatus, int status)
+>                  */
+>                 if (cmdid == CMDID_INT_CMDS) {
+>                         scb = &adapter->int_scb;
+> +                       mbox = (mbox_t *)scb->raw_mbox;
 
-Applied to
+Have you actually seen this and if so which firmware?  I thought
+megaraid internal commands only ever returned success or fail (0 or 1)
+meaning they can never get into the sense processing case that is the
+only consumer of the mbox.
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git for-next
-
-Thanks!
-
-[08/12] regulator: dt-bindings: qcom,rpmh: Add compatible for PMC8180
-        commit: fc4fef625decc80cf3a72e884a4e37288bfa0f9b
-
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
+James
 
