@@ -2,105 +2,158 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF6CC76196
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 09:11:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24305C761A6
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 09:16:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231285AbjDCJLZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Apr 2023 05:11:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59704 "EHLO
+        id S231778AbjDCJQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Apr 2023 05:16:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231621AbjDCJLY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 05:11:24 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EBD27EC0
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2023 02:11:20 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PqlQv2DjYzSkdl;
-        Mon,  3 Apr 2023 17:07:35 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Mon, 3 Apr 2023 17:11:17 +0800
-Subject: Re: [PATCH 1/3] scsi: libsas: Simplify sas_check_eeds()
-To:     John Garry <john.g.garry@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
-        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>
-References: <20230401081526.1655279-1-yanaijie@huawei.com>
- <20230401081526.1655279-2-yanaijie@huawei.com>
- <739e2d17-f1c6-fc33-adc4-41cb97b5950d@opensource.wdc.com>
- <e9729d4e-e6d1-7bf6-25a6-5de92214b019@huawei.com>
- <7481900b-9139-fa1b-3fdd-4fdb9891bf7f@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <0184c5f2-6f0c-451d-e04b-727be45f8626@huawei.com>
-Date:   Mon, 3 Apr 2023 17:11:17 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S231886AbjDCJQp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 05:16:45 -0400
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F01610AA7;
+        Mon,  3 Apr 2023 02:16:22 -0700 (PDT)
+Received: by mail-ed1-x531.google.com with SMTP id ek18so114543056edb.6;
+        Mon, 03 Apr 2023 02:16:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680513380;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=31Wjg/LmLDHA4briEYR2A/3JNw0vmPfLkG9fx2QUjyI=;
+        b=kDStKDmVvvOJM0bR2+MjBZfieu+sJCY9LuX5WxONmwMWwl11Xvezp6WJz4AarJ70AR
+         Hg5CN1+Boj5zbvBxTUdY+IB4HxN/EdzD1g5IfJY1kwXggYdsFENN1My2Zfp5YRl7WRJm
+         xjdNHTvg2nlnMsXolxGzNnXYaaras35U4ftc1ADoG9ALq5O3O16hFveCVojGFR/FPlMr
+         uY542Sx4JlmjI5fAeRb42ZMI3BKKzLB0Tx1OJi2tnIsbp1Rc8s/UNZmkVUW1NBGSkXFg
+         3mNcXkR0iMQft2rGviDuYhleFPbzqbFV+sUNM/z3ERRaiEjjDYUItX1wbnwKNpmf8Hn7
+         PN5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680513380;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=31Wjg/LmLDHA4briEYR2A/3JNw0vmPfLkG9fx2QUjyI=;
+        b=6KM7r3uICYi61aTE6wVO++68W//HKI08ZF+AQNNG8qTgZIyPt7XrGsHMwWX/vSgt6y
+         PSnctWXq9QT07ynGVnriEQgmOP5Ev93ZDv65HJleEUrBfHfTBgoyJc3RQ0lMucLEt2U+
+         E1d0hXBCR5noGdcIOYAANVsmxol7YRYbjHTFB7MsfXFHKfc1ZauLhvr3tueikQ4j/y5b
+         6L5EUShuntrfL1grVwA6cX6LyVrTjfRH4TsrmhOApIQmqNiNW4b7WGTaMflP9KQBw9SD
+         5FUisLuij9M1mcQmYDHMp3+ZdUGQNhoMGeKuTKuDa7agPZ83JRihhLVfLocUze9WxjLz
+         /M9Q==
+X-Gm-Message-State: AAQBX9elzUJjhNvKW1Ip+1WDV9Dg8125B7ban9AgerbbU0tqAjsTr3rD
+        pK4qE+TYxQptFVzwpbrlTS8=
+X-Google-Smtp-Source: AKy350atfEBSrTVKgqBuIzdw/UZRkrKjNrMECkvSgQSsxy/WN1nOkFWrkUvddMqWLQpH1JG8HW51WQ==
+X-Received: by 2002:a17:906:a887:b0:939:e7d6:7c52 with SMTP id ha7-20020a170906a88700b00939e7d67c52mr33738486ejb.20.1680513380242;
+        Mon, 03 Apr 2023 02:16:20 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id l22-20020a1709061c5600b00927f6c799e6sm4243650ejg.132.2023.04.03.02.16.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Apr 2023 02:16:19 -0700 (PDT)
+Date:   Mon, 3 Apr 2023 12:16:16 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     lishuchang@hust.edu.cn
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        hust-os-kernel-patches@googlegroups.com,
+        Dongliang Mu <dzm91@hust.edu.cn>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: lpfc: fix ioremap issues in
+ 'lpfc_sli4_pci_mem_setup'
+Message-ID: <6df77fb0-6b3d-4e3b-9c5a-40e217e8dae9@kili.mountain>
+References: <20230403074821.5121-1-lishuchang@hust.edu.cn>
 MIME-Version: 1.0
-In-Reply-To: <7481900b-9139-fa1b-3fdd-4fdb9891bf7f@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm100004.china.huawei.com (7.192.105.92)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/mixed; boundary="0l+vRQSv3t7ooNLn"
+Content-Disposition: inline
+In-Reply-To: <20230403074821.5121-1-lishuchang@hust.edu.cn>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/4/3 16:12, John Garry wrote:
-> On 03/04/2023 02:37, Jason Yan wrote:
->>>>
->>>> diff --git a/drivers/scsi/libsas/sas_expander.c 
->>>> b/drivers/scsi/libsas/sas_expander.c
->>>> index dc670304f181..048a931d856a 100644
->>>> --- a/drivers/scsi/libsas/sas_expander.c
->>>> +++ b/drivers/scsi/libsas/sas_expander.c
->>>> @@ -1198,37 +1198,35 @@ static void 
->>>> sas_print_parent_topology_bug(struct domain_device *child,
->>>>             sas_route_char(child, child_phy));
->>>>   }
->>>> +static bool sas_eeds_valid(struct domain_device *parent, struct 
->>>> domain_device *child)
->>>> +{
->>>> +    struct sas_discovery *disc = &parent->port->disc;
->>>
->>> Missing blank line after declaration.
->>
->> OK.
->>
->>>
->>>> +    return (((SAS_ADDR(disc->eeds_a) == SAS_ADDR(parent->sas_addr)) ||
->>>> +         (SAS_ADDR(disc->eeds_a) == SAS_ADDR(child->sas_addr))) &&
->>>> +        ((SAS_ADDR(disc->eeds_b) == SAS_ADDR(parent->sas_addr)) ||
->>>> +         (SAS_ADDR(disc->eeds_b) == SAS_ADDR(child->sas_addr))));
->>>
->>> Drop the inner-most and outter-most parenthesis.
->>
->> No problem.
-> 
-> Personally I think that the flow:
-> 
-> if (SAS_ADDR(disc->eeds_a) == SAS_ADDR(parent->sas_addr))
->      return true;
-> if (...)
->      return true;
-> if (...)
->      return true;
-> return false;
-> 
-> ..reads a bit better (than this and the current code). However I don't 
-> feel too strongly about it.
 
-If there is only "||", we can do that. But there is a "&&" so it's not 
-that simple now.
+--0l+vRQSv3t7ooNLn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks,
-Jason
+On Mon, Apr 03, 2023 at 03:48:21PM +0800, lishuchang@hust.edu.cn wrote:
+> @@ -12069,9 +12069,11 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
+>  	return 0;
+>  
+>  out_iounmap_all:
+> -	iounmap(phba->sli4_hba.drbl_regs_memmap_p);
+> +	if (!phba->sli4_hba.drbl_regs_memmap_p)
+> +		iounmap(phba->sli4_hba.drbl_regs_memmap_p);
 
-> 
-> Thanks,
-> John
-> .
+The test is reversed still.
+
+If you make a mistake, you should write a static checker warning so that
+you never make the same mistake again.  ;)  See attached.
+
+
+>  out_iounmap_ctrl:
+> -	iounmap(phba->sli4_hba.ctrl_regs_memmap_p);
+> +	if (!phba->sli4_hba.ctrl_regs_memmap_p)
+
+Also reversed.
+
+> +		iounmap(phba->sli4_hba.ctrl_regs_memmap_p);
+>  out_iounmap_conf:
+>  	iounmap(phba->sli4_hba.conf_regs_memmap_p);
+
+regards,
+dan carpenter
+
+
+
+--0l+vRQSv3t7ooNLn
+Content-Type: text/x-csrc; charset=us-ascii
+Content-Disposition: attachment; filename="check_passing_possible_null.c"
+
+/*
+ * Copyright (C) 2023 Oracle.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, see http://www.gnu.org/copyleft/gpl.txt
+ */
+
+#include "smatch.h"
+#include "smatch_slist.h"
+
+static int my_id;
+
+static void check_non_null(struct expression *expr, const char *name, struct symbol *sym, void *data)
+{
+	struct sm_state *sm, *tmp;
+	sval_t sval;
+
+	sm = get_sm_state(SMATCH_EXTRA, name, sym);
+	if (!sm)
+		return;
+
+	FOR_EACH_PTR(sm->possible, tmp) {
+		if (!estate_get_single_value(tmp->state, &sval) ||
+		    sval.value != 0)
+			continue;
+		sm_warning("'%s' potentially NULL", name);
+		return;
+	} END_FOR_EACH_PTR(tmp);
+}
+
+void check_passing_possible_null(int id)
+{
+	my_id = id;
+
+	add_function_param_key_hook_early("iounmap", &check_non_null, 0, "$", NULL);
+}
+
+--0l+vRQSv3t7ooNLn--
