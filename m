@@ -2,79 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C468C761A6
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 10:32:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F381C761A6
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 15:03:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232016AbjDCKcS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Apr 2023 06:32:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49560 "EHLO
+        id S234139AbjDCPD0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Apr 2023 11:03:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231555AbjDCKcR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 06:32:17 -0400
-Received: from hust.edu.cn (unknown [202.114.0.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87ACB3A9B;
-        Mon,  3 Apr 2023 03:32:16 -0700 (PDT)
-Received: from [IPV6:2001:250:4000:5113:2468:8ae7:d74c:db55] ([172.16.0.254])
-        (user=dzm91@hust.edu.cn mech=PLAIN bits=0)
-        by mx1.hust.edu.cn  with ESMTP id 333AU1XC017671-333AU1XD017671
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
-        Mon, 3 Apr 2023 18:30:02 +0800
-Message-ID: <055f3504-0d01-aaf1-1c0b-379c6be702b1@hust.edu.cn>
-Date:   Mon, 3 Apr 2023 18:30:01 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.8.0
-Subject: Re: [PATCH] scsi: lpfc: fix ioremap issues in
- 'lpfc_sli4_pci_mem_setup'
-To:     Dan Carpenter <error27@gmail.com>
-Cc:     lishuchang@hust.edu.cn, James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+        with ESMTP id S231185AbjDCPDZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 11:03:25 -0400
+X-Greylist: delayed 1617 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 03 Apr 2023 08:03:16 PDT
+Received: from tretyak2.mcst.ru (tretyak2.mcst.ru [212.5.119.215])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79FADE74;
+        Mon,  3 Apr 2023 08:03:16 -0700 (PDT)
+Received: from tretyak2.mcst.ru (localhost [127.0.0.1])
+        by tretyak2.mcst.ru (Postfix) with ESMTP id 947A0102391;
+        Mon,  3 Apr 2023 17:36:15 +0300 (MSK)
+Received: from frog.lab.sun.mcst.ru (frog.lab.sun.mcst.ru [172.16.4.50])
+        by tretyak2.mcst.ru (Postfix) with ESMTP id 8F7D1102390;
+        Mon,  3 Apr 2023 17:35:30 +0300 (MSK)
+Received: from artemiev-i.lab.sun.mcst.ru (avior-1 [192.168.53.223])
+        by frog.lab.sun.mcst.ru (8.13.4/8.12.11) with ESMTP id 333EZ6iP016467;
+        Mon, 3 Apr 2023 17:35:06 +0300
+From:   Igor Artemiev <Igor.A.Artemiev@mcst.ru>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     Igor Artemiev <Igor.A.Artemiev@mcst.ru>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        hust-os-kernel-patches@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230403074821.5121-1-lishuchang@hust.edu.cn>
- <6df77fb0-6b3d-4e3b-9c5a-40e217e8dae9@kili.mountain>
-From:   Dongliang Mu <dzm91@hust.edu.cn>
-In-Reply-To: <6df77fb0-6b3d-4e3b-9c5a-40e217e8dae9@kili.mountain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-FEAS-AUTH-USER: dzm91@hust.edu.cn
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org
+Subject: [PATCH] scsi: megaraid: Fix null dereference
+Date:   Mon,  3 Apr 2023 17:34:40 +0300
+Message-Id: <20230403143440.1923323-1-Igor.A.Artemiev@mcst.ru>
+X-Mailer: git-send-email 2.39.0.152.ga5737674b6
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Anti-Virus: Kaspersky Anti-Virus for Linux Mail Server 5.6.39/RELEASE,
+         bases: 20111107 #2745587, check: 20230403 notchecked
+X-AV-Checked: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+When cmdid == CMDID_INT_CMDS, the 'mbox' pointer is NULL but is
+dereferenced below.
 
-On 2023/4/3 17:16, Dan Carpenter wrote:
-> On Mon, Apr 03, 2023 at 03:48:21PM +0800, lishuchang@hust.edu.cn wrote:
->> @@ -12069,9 +12069,11 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
->>   	return 0;
->>   
->>   out_iounmap_all:
->> -	iounmap(phba->sli4_hba.drbl_regs_memmap_p);
->> +	if (!phba->sli4_hba.drbl_regs_memmap_p)
->> +		iounmap(phba->sli4_hba.drbl_regs_memmap_p);
-> The test is reversed still.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Thanks for your review, Dan. Sorry for my internal careless review. 
-Shuchang is creating a v2 patch to fix all the mentioned issues.
+Fixes: 0f2bb84d2a68 ("[SCSI] megaraid: simplify internal command handling")
+Signed-off-by: Igor Artemiev <Igor.A.Artemiev@mcst.ru>
+---
+ drivers/scsi/megaraid.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Really sorry about this stupid mistake.
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index bf491af9f0d6..4fbf92dc717e 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -1441,6 +1441,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 		 */
+ 		if (cmdid == CMDID_INT_CMDS) {
+ 			scb = &adapter->int_scb;
++			mbox = (mbox_t *)scb->raw_mbox;
+ 
+ 			list_del_init(&scb->list);
+ 			scb->state = SCB_FREE;
+-- 
+2.30.2
 
->
-> If you make a mistake, you should write a static checker warning so that
-> you never make the same mistake again.  ;)  See attached.
->
->
->>   out_iounmap_ctrl:
->> -	iounmap(phba->sli4_hba.ctrl_regs_memmap_p);
->> +	if (!phba->sli4_hba.ctrl_regs_memmap_p)
-> Also reversed.
->
->> +		iounmap(phba->sli4_hba.ctrl_regs_memmap_p);
->>   out_iounmap_conf:
->>   	iounmap(phba->sli4_hba.conf_regs_memmap_p);
-> regards,
-> dan carpenter
->
->
