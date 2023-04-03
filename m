@@ -2,97 +2,143 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98DB5C761A6
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 05:27:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE76C761A6
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Apr 2023 06:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231534AbjDCF1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Apr 2023 01:27:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41134 "EHLO
+        id S231248AbjDCGL2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Apr 2023 02:11:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjDCF1f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 01:27:35 -0400
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 463D95FCF;
-        Sun,  2 Apr 2023 22:27:11 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id D1C3BE1AC4;
-        Mon,  3 Apr 2023 05:26:36 +0000 (UTC)
-Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id C1669609E9;
-        Mon,  3 Apr 2023 05:26:36 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
-        with ESMTP id leviovBKle6R; Mon,  3 Apr 2023 05:26:36 +0000 (UTC)
-Received: from [192.168.48.17] (host-184-164-23-94.dyn.295.ca [184.164.23.94])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id E6C0F60529;
-        Mon,  3 Apr 2023 05:26:35 +0000 (UTC)
-Message-ID: <6c1e4b16-3f4a-6de5-d479-eaed806e4c41@interlog.com>
-Date:   Mon, 3 Apr 2023 01:26:35 -0400
+        with ESMTP id S229933AbjDCGL1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2023 02:11:27 -0400
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED178527F;
+        Sun,  2 Apr 2023 23:11:25 -0700 (PDT)
+Received: by mail-ed1-x52e.google.com with SMTP id ew6so112626051edb.7;
+        Sun, 02 Apr 2023 23:11:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680502284;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gP/NAOYyuv0YBnm/nFebw7X1khDfTArI7Js9IuJTeyU=;
+        b=fvXEIW64HYGcT3RzfX5lo60MtOsOPf4xOlyaT5Gjcv1vp00oIq8IZAh0cE+M6bW0J5
+         NeffADjSx/WOmYqJFZpwQNAnlk6zFOYrCgPClrSki0lXfMy46ipO3y5Tjjf54KsqQ8Uy
+         L4QByAtRMfW9Z+iiUcNfeDykSOLXfzSrvhjeLucMZnlOLHTvWByptBAkzm5KoJaLdhm/
+         tAHOl0RdryGwSxEBMPoDK/uYFuoQuUblB9xUQGmoQcU16PMebXbz++GN4X7PZw5AnCId
+         VO05btGwwuoTAk0ESP/rAqMJDVDD2gXRPC3iB37eBC8GXAehDgLZgn0UyZ6xpS37A6jK
+         KVNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680502284;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gP/NAOYyuv0YBnm/nFebw7X1khDfTArI7Js9IuJTeyU=;
+        b=iW/b8jGSgrVk0yPLL2GLfvhn1LtVWsijKg952KyMZ2MVmvFvJZAKNplzIOiJQy4ag7
+         0pF4b4odVA8kHYorQC2J7UE39JwGZliF8cDYNd6mgFVUXQiSa5+zt53vmejNl95ANjvX
+         t5r9Dwvtm2clrZQPlKEZnQKHPjf2fB+U38YkuiYmRSNagZTfwvjASwbgR8yWomS9EBmA
+         ACn7pHG7QWQou0+4JGbv9dv2IweZR2RJY4v1QYm8H7gGyU6tZGRmbMIyVvhtVsg2tJLD
+         w/DO4ehZXC7Z5ndbtGMFpIbaP6/J5/iixqUALdXfyMEMpBsdJOrxMploPo5xp/Xpt7kK
+         x1Ww==
+X-Gm-Message-State: AAQBX9einmhQNkQqkXo0AYb7Lo8290AACht1ImtFXpVRh5OJ6CNF0KPu
+        ILGKpzUwC6zn7vMTJf3YeeI=
+X-Google-Smtp-Source: AKy350Ye3LiLkSxBkKbzdxrTQTtUxqZAoBTleoqrk1A27MshnAmxLQ3Itn7a+kAQANDTvjUWfdBXFw==
+X-Received: by 2002:a05:6402:d3:b0:4fa:e1fd:5a30 with SMTP id i19-20020a05640200d300b004fae1fd5a30mr34077597edu.19.1680502284345;
+        Sun, 02 Apr 2023 23:11:24 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id u23-20020a50d517000000b004af720b855fsm4062690edi.82.2023.04.02.23.11.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Apr 2023 23:11:23 -0700 (PDT)
+Date:   Mon, 3 Apr 2023 09:11:11 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     oe-kbuild@lists.linux.dev, Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+        Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: Re: [PATCH v2] scsi: ufs: mcq: Limit the amount of inflight requests
+Message-ID: <b5c43582-0a73-45ec-83c2-8c1bfd2af2a2@kili.mountain>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v3 11/11] scsi: scsi_debug: Drop sdebug_queue
-Content-Language: en-CA
-To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bvanassche@acm.org
-References: <20230327074310.1862889-1-john.g.garry@oracle.com>
- <20230327074310.1862889-12-john.g.garry@oracle.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <20230327074310.1862889-12-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230331074650.75-1-avri.altman@wdc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-03-27 03:43, John Garry wrote:
-> It's easy to get scsi_debug to error on throughput testing when we have
-> multiple shosts:
-> 
-> $ lsscsi
-> [7:0:0:0]       disk    Linux   scsi_debug      0191
-> [0:0:0:0]       disk    Linux   scsi_debug      0191
-> 
-> $ fio --filename=/dev/sda --filename=/dev/sdb --direct=1 --rw=read --bs=4k
-> --iodepth=256 --runtime=60 --numjobs=40 --time_based --name=jpg
-> --eta-newline=1 --readonly --ioengine=io_uring --hipri --exitall_on_error
-> jpg: (g=0): rw=read, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=io_uring, iodepth=256
-> ...
-> fio-3.28
-> Starting 40 processes
-> [   27.521809] hrtimer: interrupt took 33067 ns
-> [   27.904660] sd 7:0:0:0: [sdb] tag#171 FAILED Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK cmd_age=0s
-> [   27.904660] sd 0:0:0:0: [sda] tag#58 FAILED Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK cmd_age=0s
-> fio: io_u error [   27.904667] sd 0:0:0:0: [sda] tag#58 CDB: Read(10) 28 00 00 00 27 00 00 01 18 00
-> on file /dev/sda[   27.904670] sd 0:0:0:0: [sda] tag#62 FAILED Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK cmd_age=0s
-> 
-> The issue is related to how the driver manages submit queues and tags. A
-> single array of submit queues - sdebug_q_arr - with its own set of tags is
-> shared among all shosts. As such, for occasions when we have more than one
-> shost it is possible to overload the submit queues and run out of tags.
-> 
-> The struct sdebug_queue is to manage tags and hold the associated
-> queued command entry pointer (for that tag).
-> 
-> Since the tagset iters are now used for functions like
-> sdebug_blk_mq_poll(), there is no need to manage these queues. Indeed,
-> blk-mq already provides what we need for managing tags and queues.
-> 
-> Drop sdebug_queue and all its usage in the driver.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Hi Avri,
 
-Thanks.
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Avri-Altman/scsi-ufs-mcq-Limit-the-amount-of-inflight-requests/20230331-155149
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230331074650.75-1-avri.altman%40wdc.com
+patch subject: [PATCH v2] scsi: ufs: mcq: Limit the amount of inflight requests
+config: parisc-randconfig-m031-20230329 (https://download.01.org/0day-ci/archive/20230401/202304011340.ltlHYazS-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 12.1.0
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <error27@gmail.com>
+| Link: https://lore.kernel.org/r/202304011340.ltlHYazS-lkp@intel.com/
+
+New smatch warnings:
+drivers/ufs/core/ufshcd.c:8473 ufshcd_alloc_mcq() warn: missing error code 'ret'
+
+Old smatch warnings:
+drivers/ufs/core/ufshcd.c:5412 ufshcd_uic_cmd_compl() error: we previously assumed 'hba->active_uic_cmd' could be null (see line 5400)
+drivers/ufs/core/ufshcd.c:2350 ufshcd_hba_capabilities() warn: missing error code? 'err'
+
+vim +/ret +8473 drivers/ufs/core/ufshcd.c
+
+57b1c0ef89ac9d drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8457  static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+57b1c0ef89ac9d drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8458  {
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8459  	int ret;
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8460  	int old_nutrs = hba->nutrs;
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8461  
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8462  	ret = ufshcd_mcq_decide_queue_depth(hba);
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8463  	if (ret < 0)
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8464  		return ret;
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8465  
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8466  	hba->nutrs = ret;
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8467  	ret = ufshcd_mcq_init(hba);
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8468  	if (ret)
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8469  		goto err;
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8470  
+2580a95e61d461 drivers/ufs/core/ufshcd.c Avri Altman   2023-03-31  8471  	if (hba->nutrs * hba->nr_hw_queues > SZ_64K - 1) {
+2580a95e61d461 drivers/ufs/core/ufshcd.c Avri Altman   2023-03-31  8472  		dev_info(hba->dev, "there can be at most 64K inflight requests\n");
+2580a95e61d461 drivers/ufs/core/ufshcd.c Avri Altman   2023-03-31 @8473  		goto err;
+
+ret = -EINVAL;
+
+2580a95e61d461 drivers/ufs/core/ufshcd.c Avri Altman   2023-03-31  8474  	}
+2580a95e61d461 drivers/ufs/core/ufshcd.c Avri Altman   2023-03-31  8475  
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8476  	/*
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8477  	 * Previously allocated memory for nutrs may not be enough in MCQ mode.
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8478  	 * Number of supported tags in MCQ mode may be larger than SDB mode.
+6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon 2013-06-26  8479  	 */
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8480  	if (hba->nutrs != old_nutrs) {
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8481  		ufshcd_release_sdb_queue(hba, old_nutrs);
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8482  		ret = ufshcd_memory_alloc(hba);
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8483  		if (ret)
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8484  			goto err;
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8485  		ufshcd_host_memory_configure(hba);
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8486  	}
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8487  
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8488  	ret = ufshcd_mcq_memory_alloc(hba);
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8489  	if (ret)
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8490  		goto err;
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8491  
+7224c806876e46 drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8492  	return 0;
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8493  err:
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8494  	hba->nutrs = old_nutrs;
+4682abfae2eb3a drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8495  	return ret;
+57b1c0ef89ac9d drivers/ufs/core/ufshcd.c Asutosh Das   2023-01-13  8496  }
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
 
