@@ -2,73 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4927AC761A6
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:30:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE29C77B62
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:31:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236529AbjDDSat (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:30:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51252 "EHLO
+        id S236494AbjDDSbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:31:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236403AbjDDSaE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:30:04 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 584B559D8;
-        Tue,  4 Apr 2023 11:27:23 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id br6so43469784lfb.11;
-        Tue, 04 Apr 2023 11:27:23 -0700 (PDT)
+        with ESMTP id S236515AbjDDSal (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:30:41 -0400
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13EE25588;
+        Tue,  4 Apr 2023 11:27:40 -0700 (PDT)
+Received: by mail-lj1-x233.google.com with SMTP id z42so34834428ljq.13;
+        Tue, 04 Apr 2023 11:27:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680632840;
+        d=1e100.net; s=20210112; t=1680632855;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5g55SbwLmj3fuu3xVa+qGvQr2N7UpbSSnSP357n+4sc=;
-        b=6/Ee2WJyqOy18cbxXPew0vybXqk8WvInCC6NqO92FbdipOvb+8yWZaI7XISX0U1rbA
-         dH2dA35YCEsaER2+gF/aJrEYAtljio4LJ33+OHaqZ8W4eQSWaS7fOG/2ayJ4GqglksbQ
-         xSdLGTL4B3vy3TAL/ppV9efPQjdL9V6gWJ/yl+KPosLg7yO+3dTIS0DQjglFkTnXM1BS
-         QeChxN52RFNq891aFc36dNKt16HCVqqlaNMiJTgJqnhGcQ8Esj1PvXUncSKoB/LMxOXH
-         Xdh+6W/7ms16mQzQAlYO74Z43GDEsKF81bszBfDZyOOWKqOvMdbDSUrhtgsJ79fCvJ1S
-         KPAw==
-X-Gm-Message-State: AAQBX9fP3YiRXavisEgZRs/3J8ekqBZigwSzpCm4ZJQ0Nc0TjEV4zpAm
-        goEe56Z0TqY9coMq5sjsLJAuvUWpiThtVQ==
-X-Google-Smtp-Source: AKy350ZLZ+W1w4X36ZIfETsEeq7Ik8CwNs5LTJ8D7CONZgIE3BdE3ZYntyOV55Gn/rAkQtxupSQc9g==
-X-Received: by 2002:ac2:55af:0:b0:4eb:2a0:4021 with SMTP id y15-20020ac255af000000b004eb02a04021mr987383lfg.34.1680632839841;
-        Tue, 04 Apr 2023 11:27:19 -0700 (PDT)
+        bh=Bti8eJLltyo1mqrSI8i502Bwxb9uKtmIuJYoUhM+oGI=;
+        b=2GxU0KggcEJBrIRqT1b0+mcCizSdsW7O6/NxHo2xvL8VRWUm109UEravYMZr9ffFT7
+         4yGYPaTOq7iHclz1VZbMt7McucXARc3rSktLn5RFqBce+3YWmtIDlCltYf7piWmWmcHO
+         sbrLj8XuceLtAEe6ZEzFiNX+AXK9VPBoAC8PeXLbAHyZnJX2rdkK5eoqZk2/n3O6ssEm
+         lsHmfF7D+JhB79nRugHlA+7l+TqS7d47lhj98q3337xfhlaGqbA/8Ie5/ALEYfdolQ5F
+         0zaLEuR7zSYm/rIGET+jRwe4gHJ3FzDujFL5fampntqB6gg/miTq5nJfZMBLzhUSJrh6
+         JeuA==
+X-Gm-Message-State: AAQBX9fkFwu5acuR3j8dUR8knpu9yisaAJMf7Kos5HX0m6VUMLof08g4
+        vJi5f6n7it8fTdD0zVZ2domkRLdCFpPSjQ==
+X-Google-Smtp-Source: AKy350agqMj/mGaZryslBgOa2I42PdLFUE4fhqrnaZGP1GtVX+5ddhRXGF4bn3Gbf4qYj2bE/Syjyw==
+X-Received: by 2002:a2e:9d0e:0:b0:2a6:3161:6eed with SMTP id t14-20020a2e9d0e000000b002a631616eedmr967251lji.32.1680632855594;
+        Tue, 04 Apr 2023 11:27:35 -0700 (PDT)
 Received: from flawful.org (c-a3f5e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.245.163])
-        by smtp.gmail.com with ESMTPSA id g14-20020ac2538e000000b004db44dfd888sm2435841lfh.30.2023.04.04.11.27.19
+        by smtp.gmail.com with ESMTPSA id t8-20020ac25488000000b004d5813386fdsm2406576lfk.139.2023.04.04.11.27.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Apr 2023 11:27:19 -0700 (PDT)
+        Tue, 04 Apr 2023 11:27:35 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id 8FC43B5; Tue,  4 Apr 2023 20:27:16 +0200 (CEST)
+        id 6787D2C0; Tue,  4 Apr 2023 20:27:34 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680632838; bh=sRNE170mXMWIMMdRjN580krn/bbL2IaR+aAZBckGFfo=;
+        t=1680632854; bh=FHO3iDOGQC1PtH6j/1w7cXF0Z0P1HSJgVq8t6FkMnTg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r7Lz7zQVt3j7RcwVNhoN5SVoq7kJTPP87KqxHbGFpn34ZwWFFDHIBxb//MngBqm7/
-         dUlZgWq2jhrwpjjuzbFADtTDPnBE7ax7A6XNcKQpsU4I3904fMeGtIWj/7ZyDcmxl6
-         uwEehhi/DTtL3uy9w9zIuEyrZYOtcDho6vseRD6E=
+        b=uRyljA7q/ImC7nDLDTKjzP21VSxJi23ABtk0mBsbqcwrQbwU//CvNUAYY4ppPwsN8
+         U3EotOCaCwOKjEukFj+FAg7bzFfyAS0Ml2G5RexH10TAcC4gZL/yGXpJjW8R0YAzTH
+         dtREYacrTffGSEIeiIsxrKsg88HYaoNhm2iGuYKA=
 Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id 7BEF6865;
-        Tue,  4 Apr 2023 20:25:28 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id 26BCA895;
+        Tue,  4 Apr 2023 20:25:29 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680632728; bh=sRNE170mXMWIMMdRjN580krn/bbL2IaR+aAZBckGFfo=;
+        t=1680632732; bh=FHO3iDOGQC1PtH6j/1w7cXF0Z0P1HSJgVq8t6FkMnTg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=W29RbxkLSmxbw65I9yZvXpd4xcxrUq+VK1wVx56Hj9Kq8CtHHubNy/SqKlIsZTVH1
-         Ho3pKSZ+RFchPDKmROapEYTXGJqJsC8BS4zPiDQY9a7o/Dj7Cg9GQ2sAq/s4Vv9de6
-         zMUt4fad2S2lTvrJGDgNcu6JlNbvuGlf/TwZagtA=
+        b=VXj8YQYvd7oIUmIR5b0SoJvUSLp9iUldMB4rjttvpdQKNSY5JgUbMRkFrJijQY86j
+         KhUscay+jum3ZWMWkY7+yYcY9qir1X+AwoEQBUmVOKZ+BU9IbIt83AijDv/bfx3Bas
+         D2kjmA49RGq6+vJs/Iy1yoxiEadTn7rIAtxyChuk=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Paolo Valente <paolo.valente@linaro.org>
+        linux-kernel@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v5 01/19] ioprio: cleanup interface definition
-Date:   Tue,  4 Apr 2023 20:24:06 +0200
-Message-Id: <20230404182428.715140-2-nks@flawful.org>
+Subject: [PATCH v5 02/19] block: introduce ioprio hints
+Date:   Tue,  4 Apr 2023 20:24:07 +0200
+Message-Id: <20230404182428.715140-3-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230404182428.715140-1-nks@flawful.org>
 References: <20230404182428.715140-1-nks@flawful.org>
@@ -80,145 +80,105 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-The IO priority user interface defines the 16-bits ioprio values as
-the combination of the upper 3-bits for an IO priority class and the
-lower 13-bits as priority data. However, the kernel only uses the
-lower 3-bits of the priority data to define priority levels for the RT
-and BE priority classes. The data part of an ioprio value is completely
-ignored for the IDLE and NONE classes. This is enforced by checks done
-in ioprio_check_cap(), which is called for all paths that allow defining
-an IO priority for IOs: the per-context ioprio_set() system call, aio
-interface and io-uring interface.
+IO priorities currently only use 6-bits of the 16-bits ioprio value: the
+3-upper bits are used to define up to 8 priority classes (4 of which are
+valid) and the 3 lower bits of the value are used to define a priority
+level for the real-time and best-effort class.
 
-Clarify this fact in the uapi ioprio.h header file and introduce the
-IOPRIO_PRIO_LEVEL_MASK and IOPRIO_PRIO_LEVEL() macros for users to
-define and get priority levels in an ioprio value. The coarser macro
-IOPRIO_PRIO_DATA() is retained for backward compatibility with old
-applications already using it. There is no functional change introduced
-with this.
+The remaining 10-bits between the IO priority class and level are
+unused, and in fact, cannot be used by the user as doing so would
+either result in the value being completely ignored, or in an error
+returned by ioprio_check_cap().
 
-In-kernel users of the IOPRIO_PRIO_DATA() macro which are explicitly
-handling IO priority data as a priority level are modified to use the
-new IOPRIO_PRIO_LEVEL() macro without any functional change. Since f2fs
-is the only user of this macro not explicitly using that value as a
-priority level, it is left unchanged.
+Use these 10-bits of an ioprio value to allow a user to specify IO
+hints. An IO hint is defined as a 10-bits value, allowing up to 1023
+different hints to be specified, with the value 0 being reserved as the
+"no hint" case. An IO hint can apply to any IO that specifies a valid
+priority class other than NONE, regardless of the IO priority level
+specified.
+
+To do so, the macros IOPRIO_PRIO_HINT() and IOPRIO_PRIO_VALUE_HINT() are
+introduced in include/uapi/linux/ioprio.h to respectively allow a user
+to get and set a hint in an ioprio value.
+
+To support the ATA and SCSI command duration limits feature, 7 hints
+are defined: IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
+IOPRIO_HINT_DEV_DURATION_LIMIT_7, allowing a user to specify which
+command duration limit descriptor should be applied to the commands
+serving an IO. Specifying these hints has for now no effect whatsoever
+if the target block devices do not support the command duration limits
+feature. However, in the future, block IO schedulers can be modified to
+optimize IO issuing order based on these hints, even for devices that
+do not support the command duration limits feature.
+
+Given that the 7 duration limits hints defined have no effect on any
+block layer component, the actual definition of the duration limits
+implied by these hints remains at the device level.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- block/bfq-iosched.c         |  8 ++++----
- block/ioprio.c              |  6 +++---
- include/uapi/linux/ioprio.h | 19 ++++++++++++++-----
- 3 files changed, 21 insertions(+), 12 deletions(-)
+ include/uapi/linux/ioprio.h | 49 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index d9ed3108c17a..a4d2879096a5 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -5523,16 +5523,16 @@ bfq_set_next_ioprio_data(struct bfq_queue *bfqq, struct bfq_io_cq *bic)
- 		bfqq->new_ioprio_class = task_nice_ioclass(tsk);
- 		break;
- 	case IOPRIO_CLASS_RT:
--		bfqq->new_ioprio = IOPRIO_PRIO_DATA(bic->ioprio);
-+		bfqq->new_ioprio = IOPRIO_PRIO_LEVEL(bic->ioprio);
- 		bfqq->new_ioprio_class = IOPRIO_CLASS_RT;
- 		break;
- 	case IOPRIO_CLASS_BE:
--		bfqq->new_ioprio = IOPRIO_PRIO_DATA(bic->ioprio);
-+		bfqq->new_ioprio = IOPRIO_PRIO_LEVEL(bic->ioprio);
- 		bfqq->new_ioprio_class = IOPRIO_CLASS_BE;
- 		break;
- 	case IOPRIO_CLASS_IDLE:
- 		bfqq->new_ioprio_class = IOPRIO_CLASS_IDLE;
--		bfqq->new_ioprio = 7;
-+		bfqq->new_ioprio = IOPRIO_NR_LEVELS - 1;
- 		break;
- 	}
- 
-@@ -5829,7 +5829,7 @@ static struct bfq_queue *bfq_get_queue(struct bfq_data *bfqd,
- 				       struct bfq_io_cq *bic,
- 				       bool respawn)
- {
--	const int ioprio = IOPRIO_PRIO_DATA(bic->ioprio);
-+	const int ioprio = IOPRIO_PRIO_LEVEL(bic->ioprio);
- 	const int ioprio_class = IOPRIO_PRIO_CLASS(bic->ioprio);
- 	struct bfq_queue **async_bfqq = NULL;
- 	struct bfq_queue *bfqq;
-diff --git a/block/ioprio.c b/block/ioprio.c
-index 32a456b45804..f0d9e818abc5 100644
---- a/block/ioprio.c
-+++ b/block/ioprio.c
-@@ -33,7 +33,7 @@
- int ioprio_check_cap(int ioprio)
- {
- 	int class = IOPRIO_PRIO_CLASS(ioprio);
--	int data = IOPRIO_PRIO_DATA(ioprio);
-+	int level = IOPRIO_PRIO_LEVEL(ioprio);
- 
- 	switch (class) {
- 		case IOPRIO_CLASS_RT:
-@@ -49,13 +49,13 @@ int ioprio_check_cap(int ioprio)
- 			fallthrough;
- 			/* rt has prio field too */
- 		case IOPRIO_CLASS_BE:
--			if (data >= IOPRIO_NR_LEVELS || data < 0)
-+			if (level >= IOPRIO_NR_LEVELS)
- 				return -EINVAL;
- 			break;
- 		case IOPRIO_CLASS_IDLE:
- 			break;
- 		case IOPRIO_CLASS_NONE:
--			if (data)
-+			if (level)
- 				return -EINVAL;
- 			break;
- 		default:
 diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
-index f70f2596a6bf..4444b4e4fdad 100644
+index 4444b4e4fdad..607c7617b9d2 100644
 --- a/include/uapi/linux/ioprio.h
 +++ b/include/uapi/linux/ioprio.h
-@@ -17,7 +17,7 @@
- 	 ((data) & IOPRIO_PRIO_MASK))
- 
- /*
-- * These are the io priority groups as implemented by the BFQ and mq-deadline
-+ * These are the io priority classes as implemented by the BFQ and mq-deadline
-  * schedulers. RT is the realtime class, it always gets premium service. For
-  * ATA disks supporting NCQ IO priority, RT class IOs will be processed using
-  * high priority NCQ commands. BE is the best-effort scheduling class, the
-@@ -32,11 +32,20 @@ enum {
- };
- 
- /*
-- * The RT and BE priority classes both support up to 8 priority levels.
-+ * The RT and BE priority classes both support up to 8 priority levels that
-+ * can be specified using the lower 3-bits of the priority data.
-  */
--#define IOPRIO_NR_LEVELS	8
--#define IOPRIO_BE_NR		IOPRIO_NR_LEVELS
-+#define IOPRIO_LEVEL_NR_BITS		3
-+#define IOPRIO_NR_LEVELS		(1 << IOPRIO_LEVEL_NR_BITS)
-+#define IOPRIO_LEVEL_MASK		(IOPRIO_NR_LEVELS - 1)
-+#define IOPRIO_PRIO_LEVEL(ioprio)	((ioprio) & IOPRIO_LEVEL_MASK)
- 
-+#define IOPRIO_BE_NR			IOPRIO_NR_LEVELS
-+
-+/*
-+ * Possible values for the "which" argument of the ioprio_get() and
-+ * ioprio_set() system calls (see "man ioprio_set").
-+ */
- enum {
- 	IOPRIO_WHO_PROCESS = 1,
- 	IOPRIO_WHO_PGRP,
-@@ -44,7 +53,7 @@ enum {
- };
- 
- /*
-- * Fallback BE priority level.
-+ * Fallback BE class priority level.
-  */
+@@ -58,4 +58,53 @@ enum {
  #define IOPRIO_NORM	4
  #define IOPRIO_BE_NORM	IOPRIO_NORM
+ 
++/*
++ * The 10-bits between the priority class and the priority level are used to
++ * optionally define IO hints for any combination of IO priority class and
++ * level. Depending on the kernel configuration, IO scheduler being used and
++ * the target IO device being used, hints can influence how IOs are processed
++ * without affecting the IO scheduling ordering defined by the IO priority
++ * class and level.
++ */
++#define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
++#define IOPRIO_HINT_NR_BITS		10
++#define IOPRIO_NR_HINTS			(1 << IOPRIO_HINT_NR_BITS)
++#define IOPRIO_HINT_MASK		(IOPRIO_NR_HINTS - 1)
++#define IOPRIO_PRIO_HINT(ioprio)	\
++	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
++
++/*
++ * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
++ * a class, level and hint.
++ */
++#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
++	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
++	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
++	 ((level) & IOPRIO_LEVEL_MASK))
++
++/*
++ * IO hints.
++ */
++enum {
++	/* No hint */
++	IOPRIO_HINT_NONE = 0,
++
++	/*
++	 * Device command duration limits: indicate to the device a desired
++	 * duration limit for the commands that will be used to process an IO.
++	 * These will currently only be effective for SCSI and ATA devices that
++	 * support the command duration limits feature. If this feature is
++	 * enabled, then the commands issued to the device to process an IO with
++	 * one of these hints set will have the duration limit index (dld field)
++	 * set to the value of the hint.
++	 */
++	IOPRIO_HINT_DEV_DURATION_LIMIT_1 = 1,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_2 = 2,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_3 = 3,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_4 = 4,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_5 = 5,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_6 = 6,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
++};
++
+ #endif /* _UAPI_LINUX_IOPRIO_H */
 -- 
 2.39.2
 
