@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 171F5C77B62
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:50:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2DBC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:56:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235811AbjDDSuM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:50:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52708 "EHLO
+        id S236032AbjDDS44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:56:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233075AbjDDSuL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:50:11 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B942359D;
-        Tue,  4 Apr 2023 11:50:10 -0700 (PDT)
+        with ESMTP id S235669AbjDDS4y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:56:54 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F4DC4220;
+        Tue,  4 Apr 2023 11:56:51 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 198E41FD6D;
-        Tue,  4 Apr 2023 18:50:09 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 46E2321EA4;
+        Tue,  4 Apr 2023 18:56:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1680634209; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1680634610; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=D5J5+D27bRvzgzTEkC0FVNs0sL5xfSwjdS/nLCYSJHw=;
-        b=CwRjH9NskiBZa906TFpIAKgVg4+BRwJMXonqtgdDpJ4Jw2g/Fs+TTu5NogNt8Uurks5N0G
-        PTGv1S5DTgWjP/KsJ+03bTmoeoby5cwgb8rmT3HFuNzq9OHfAVF9uxyooie3FFVawxKA0d
-        OBVGQ+VAjyZ/IC97Jnlkme+3Ieynqoo=
+        bh=eBVBp6XXh/4w1Cs9NPpHS5q/BvJUFc2xuxmLnBgLD0E=;
+        b=LDs7Dns77Y7cz4LnfqBQxk/JHLmLxVUicagXwD6KRoT82/ts9lglkuOSFX/RvIzbQRfK9e
+        jYY0lc3vOhPYr7LnItEvLtgifR+yfQjJy3dHMTq4S6MLgwXhjBbRX2FmNJ10ExQ5uClSTW
+        m+HxkVrinRxyPfOvfOB0ac4UKKigXec=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1680634209;
+        s=susede2_ed25519; t=1680634610;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=D5J5+D27bRvzgzTEkC0FVNs0sL5xfSwjdS/nLCYSJHw=;
-        b=nZZyOLWB/fjvX6xVF/vGl+D6RGaDeh+Wp+Ie84i4s6cxjt4SRl5tVswSZOQIRIs4YJMvyI
-        TYLoNFaLthrBR5Ag==
+        bh=eBVBp6XXh/4w1Cs9NPpHS5q/BvJUFc2xuxmLnBgLD0E=;
+        b=6QxzjCG51yhstrf/hmioMtRUUjdi/M7uxZo8YN1v/0Kty2b2OdW7G1GDzKYR/Uq6MehuSW
+        4N4sARH2RyW0VpDA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E6F321391A;
-        Tue,  4 Apr 2023 18:50:08 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B98131391A;
+        Tue,  4 Apr 2023 18:56:49 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id AiOHN2BxLGRSZgAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 04 Apr 2023 18:50:08 +0000
-Message-ID: <f73713fd-a67b-e5c1-646f-18b51d5f06de@suse.de>
-Date:   Tue, 4 Apr 2023 20:50:08 +0200
+        id h5ZvLPFyLGQ/aQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 04 Apr 2023 18:56:49 +0000
+Message-ID: <a309d4e4-133d-af3c-afb9-9757b10c9d81@suse.de>
+Date:   Tue, 4 Apr 2023 20:56:49 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v5 10/19] scsi: sd: set read/write commands CDL index
+Subject: Re: [PATCH v5 11/19] scsi: sd: handle read/write CDL timeout failures
 Content-Language: en-US
 To:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -64,9 +64,9 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
 References: <20230404182428.715140-1-nks@flawful.org>
- <20230404182428.715140-11-nks@flawful.org>
+ <20230404182428.715140-12-nks@flawful.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230404182428.715140-11-nks@flawful.org>
+In-Reply-To: <20230404182428.715140-12-nks@flawful.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -74,31 +74,58 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/4/23 20:24, Niklas Cassel wrote:
-> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> From: Niklas Cassel <niklas.cassel@wdc.com>
 > 
-> Introduce the command duration limits helper function sd_cdl_dld() to
-> set the DLD bits of READ/WRITE 16 and READ/WRITE 32 commands to
-> indicate to the device the command duration limit descriptor to apply
-> to the commands.
+> Commands using a duration limit descriptor that has limit policies set
+> to a value other than 0x0 may be failed by the device if one of the
+> limits are exceeded. For such commands, since the failure is the result
+> of the user duration limit configuration and workload, the commands
+> should not be retried and terminated immediately. Furthermore, to allow
+> the user to differentiate these "soft" failures from hard errors due to
+> hardware problem, a different error code than EIO should be returned.
 > 
-> When command duration limits are enabled, sd_cdl_dld() obtains the
-> index of the descriptor to apply to the command using the hints field of
-> the request IO priority value (hints IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
-> IOPRIO_HINT_DEV_DURATION_LIMIT_7).
+> There are 2 cases to consider:
+> (1) The failure is due to a limit policy failing the command with a
+> check condition sense key, that is, any limit policy other than 0xD.
+> For this case, scsi_check_sense() is modified to detect failures with
+> the ABORTED COMMAND sense key and the COMMAND TIMEOUT BEFORE PROCESSING
+> or COMMAND TIMEOUT DURING PROCESSING or COMMAND TIMEOUT DURING
+> PROCESSING DUE TO ERROR RECOVERY additional sense code. For these
+> failures, a SUCCESS disposition is returned so that
+> scsi_finish_command() is called to terminate the command.
 > 
-> If command duration limits is disabled (which is the default), the limit
-> index "0" is always used to indicate "no limit" for a command.
+> (2) The failure is due to a limit policy set to 0xD, which result in the
+> command being terminated with a GOOD status, COMPLETED sense key, and
+> DATA CURRENTLY UNAVAILABLE additional sense code. To handle this case,
+> the scsi_check_sense() is modified to return a SUCCESS disposition so
+> that scsi_finish_command() is called to terminate the command.
+> In addition, scsi_decide_disposition() has to be modified to see if a
+> command being terminated with GOOD status has sense data.
+> This is as defined in SCSI Primary Commands - 6 (SPC-6), so all
+> according to spec, even if GOOD status commands were not checked before.
 > 
+> If scsi_check_sense() detects sense data representing a duration limit,
+> scsi_check_sense() will set the newly introduced SCSI ML byte
+> SCSIML_STAT_DL_TIMEOUT. This SCSI ML byte is checked in
+> scsi_noretry_cmd(), so that a command that failed because of a CDL
+> timeout cannot be retried. The SCSI ML byte is also checked in
+> scsi_result_to_blk_status() to complete the command request with the
+> BLK_STS_DURATION_LIMIT status, which result in the user seeing ETIME
+> errors for the failed commands.
+> 
+> Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 > Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 > ---
->   drivers/scsi/sd.c | 40 ++++++++++++++++++++++++++++++++++------
->   1 file changed, 34 insertions(+), 6 deletions(-)
+>   drivers/scsi/scsi_error.c | 45 +++++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/scsi_lib.c   |  4 ++++
+>   drivers/scsi/scsi_priv.h  |  1 +
+>   3 files changed, 50 insertions(+)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
 Hannes
+
 
