@@ -2,122 +2,221 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A98C77B60
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 20:26:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9173C76188
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 21:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235909AbjDDU02 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 16:26:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40248 "EHLO
+        id S236274AbjDDVlu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 17:41:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232696AbjDDU01 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 16:26:27 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB6821991;
-        Tue,  4 Apr 2023 13:26:26 -0700 (PDT)
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 334K70Pv014113;
-        Tue, 4 Apr 2023 20:26:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=i6aB4JJNLQij09Ni0yj4yCW7jSclGoDkvC3zyJBEcYg=;
- b=N4b3z3eV+HcvvA70+NsSdUflT3GbwlNZwCCxoNrVVIZDsjr8wXLHfEjNmE3rKyQ1ZCkq
- Iebk+w4OcVMmGYTk+FW0VmIkb2BuKwr75rxiG0SbubSEDNJm89Zoi9fRSGxv1jfOfrVv
- htFlzQj55DLUnzZS9U8MbnQJqBqD9VgL2oVnFrFVbMqslAQQy1tQDM/CWzfl05qlou79
- hkWSCxIBRncNsFCSxtBYa0s1k/7Cxrm4dhqLNOfasrAmK7uV1lFiih7MYgxWKDyw9qcV
- 4tjcVgZKm1fStrQdgB8igGJxt1d1EvKLinDvsObBLl1GBHVxunc98kc7I9VL7znWaMeS Hg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3prs3ntt3k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 04 Apr 2023 20:26:14 +0000
-Received: from m0098404.ppops.net (m0098404.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 334KFlF9029194;
-        Tue, 4 Apr 2023 20:26:14 GMT
-Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3prs3ntt2v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 04 Apr 2023 20:26:14 +0000
-Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
-        by ppma04wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 334IoLhQ009612;
-        Tue, 4 Apr 2023 20:26:12 GMT
-Received: from smtprelay05.wdc07v.mail.ibm.com ([9.208.129.117])
-        by ppma04wdc.us.ibm.com (PPS) with ESMTPS id 3ppc87twdg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 04 Apr 2023 20:26:12 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-        by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 334KQB3D30147188
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 4 Apr 2023 20:26:11 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 49FA158058;
-        Tue,  4 Apr 2023 20:26:11 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7939E58057;
-        Tue,  4 Apr 2023 20:26:10 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.211.71.42])
-        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-        Tue,  4 Apr 2023 20:26:10 +0000 (GMT)
-Message-ID: <fa174980e5c9bdafae3426fffe45b97b37f69c84.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: ses: Handle enclosure with just a primary
- component gracefully
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Jiri Kosina <jikos@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        with ESMTP id S234988AbjDDVlt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 17:41:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99753AB0;
+        Tue,  4 Apr 2023 14:41:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6456B639B3;
+        Tue,  4 Apr 2023 21:41:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12877C433D2;
+        Tue,  4 Apr 2023 21:41:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680644506;
+        bh=lMszXUPs3xmT4/L30IdHdQrLlqYnTYyFa1K84xFbLzU=;
+        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
+        b=suGmChBU3viKp/0FZp/PClBH3B/13p89RcgTbkDT3EsMOXC3oDkh6gYjPX2bapCZ/
+         aGs5TKU6V9bgcqh1+blinlxGO/YS49LgT+ZRsn9CSuZPUp3XhsRjKZLNJQERP6YH7n
+         SH0zxfrw3GYMpps3+hAiPGqPJhzv05asqqtUeUY3Xpu/X0hkpApOyLdZR3MDWmeS9l
+         bznh3G5HdNQLT0FjYySymJB7exOOe9Wsj+D0Gp1bOXwFubBCPhL4NtvoRFPcBS1Tka
+         gIFnl1bh9qp5+7QWCvUEVBHU7dlLZ+y16JCBSFBb75449My+VcOMpvtX1EiA9MhlVW
+         Y9JbxaO1APLFA==
+Date:   Tue, 4 Apr 2023 23:41:42 +0200 (CEST)
+From:   Jiri Kosina <jikos@kernel.org>
+To:     James Bottomley <jejb@linux.ibm.com>
+cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Ding Hui <dinghui@sangfor.com.cn>,
         Michal Kolar <mich.k@seznam.cz>
-Date:   Tue, 04 Apr 2023 16:26:08 -0400
-In-Reply-To: <nycvar.YFH.7.76.2304042122270.29760@cbobk.fhfr.pm>
-References: <nycvar.YFH.7.76.2304042122270.29760@cbobk.fhfr.pm>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+Subject: [PATCH v2] scsi: ses: Handle enclosure with just a primary component
+ gracefully
+In-Reply-To: <fa174980e5c9bdafae3426fffe45b97b37f69c84.camel@linux.ibm.com>
+Message-ID: <nycvar.YFH.7.76.2304042251560.29760@cbobk.fhfr.pm>
+References: <nycvar.YFH.7.76.2304042122270.29760@cbobk.fhfr.pm> <fa174980e5c9bdafae3426fffe45b97b37f69c84.camel@linux.ibm.com>
+User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: Ya0Kq7dXkrb_NM_bMs6U_EsFjNyQFSc9
-X-Proofpoint-ORIG-GUID: E5riHLf57a1bVUeAFacSct6HtTo0n0GW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-04_10,2023-04-04_05,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- priorityscore=1501 lowpriorityscore=0 clxscore=1011 bulkscore=0
- suspectscore=0 mlxscore=0 malwarescore=0 impostorscore=0 adultscore=0
- phishscore=0 mlxlogscore=650 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2303200000 definitions=main-2304040182
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2023-04-04 at 21:23 +0200, Jiri Kosina wrote:
-> From: Jiri Kosina <jkosina@suse.cz>
+On Tue, 4 Apr 2023, James Bottomley wrote:
+
+> > This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has
+> > no components") and introduces proper handling of case where there
+> > are no detected secondary components, but primary component
+> > (enumerated in num_enclosures) does exist. That fix was originally
+> > proposed by Ding Hui <dinghui@sangfor.com.cn>.
 > 
-> This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has
-> no components") and introduces proper handling of case where there
-> are no detected secondary components, but primary component
-> (enumerated in num_enclosures) does exist. That fix was originally
-> proposed by Ding Hui <dinghui@sangfor.com.cn>.
+> I think everything in here looks fine except this:
+> 
+> > --- a/drivers/scsi/ses.c
+> > +++ b/drivers/scsi/ses.c
+> > @@ -509,9 +509,6 @@ static int ses_enclosure_find_by_addr(struct
+> > enclosure_device *edev,
+> >         int i;
+> >         struct ses_component *scomp;
+> >  
+> > -       if (!edev->component[0].scratch)
+> > -               return 0;
+> > -
+> >         for (i = 0; i < edev->components; i++) {
+> >                 scomp = edev->component[i].scratch;
+> >                 if (scomp->addr != efd->addr)
+> 
+> If you remove the check, then scomp could be NULL here and we'll oops
+> on scomp->addr.
 
-I think everything in here looks fine except this:
+This hunk was taken from the original 2020 fix, but you are right, thanks 
+for spotting this.
 
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -509,9 +509,6 @@ static int ses_enclosure_find_by_addr(struct
-> enclosure_device *edev,
-> Â Â Â Â Â Â Â Â int i;
-> Â Â Â Â Â Â Â Â struct ses_component *scomp;
-> Â 
-> -Â Â Â Â Â Â Â if (!edev->component[0].scratch)
-> -Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â return 0;
-> -
-> Â Â Â Â Â Â Â Â for (i = 0; i < edev->components; i++) {
-> Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â scomp = edev->component[i].scratch;
-> Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â if (scomp->addr != efd->addr)
+Please find v2 below, with this hunk removed, and Tested-by: added.
 
-If you remove the check, then scomp could be NULL here and we'll oops
-on scomp->addr.
 
-Regards,
 
-James
+
+
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: [PATCH] scsi: ses: Handle enclosure with just a primary component gracefully
+
+This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has no
+components") and introduces proper handling of case where there are no detected
+secondary components, but primary component (enumerated in num_enclosures)
+does exist. That fix was originally proposed by Ding Hui <dinghui@sangfor.com.cn>.
+
+Completely ignoring devices that have one primary enclosure and no secondary one
+results in ses_intf_add() bailing completely
+
+	scsi 2:0:0:254: enclosure has no enumerated components
+        scsi 2:0:0:254: Failed to bind enclosure -12ven in valid configurations such
+
+even on valid configurations with 1 primary and 0 secondary enclosures as below:
+
+	# sg_ses /dev/sg0
+	  3PARdata  SES               3321
+	Supported diagnostic pages:
+	  Supported Diagnostic Pages [sdp] [0x0]
+	  Configuration (SES) [cf] [0x1]
+	  Short Enclosure Status (SES) [ses] [0x8]
+	# sg_ses -p cf /dev/sg0
+	  3PARdata  SES               3321
+	Configuration diagnostic page:
+	  number of secondary subenclosures: 0
+	  generation code: 0x0
+	  enclosure descriptor list
+	    Subenclosure identifier: 0 [primary]
+	      relative ES process id: 0, number of ES processes: 1
+	      number of type descriptor headers: 1
+	      enclosure logical identifier (hex): 20000002ac02068d
+	      enclosure vendor: 3PARdata  product: VV                rev: 3321
+	  type descriptor header and text list
+	    Element type: Unspecified, subenclosure id: 0
+	      number of possible elements: 1
+
+The changelog for the original fix follows
+
+=====
+We can get a crash when disconnecting the iSCSI session,
+the call trace like this:
+
+  [ffff00002a00fb70] kfree at ffff00000830e224
+  [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
+  [ffff00002a00fbd0] device_del at ffff0000086b6a98
+  [ffff00002a00fc50] device_unregister at ffff0000086b6d58
+  [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
+  [ffff00002a00fca0] scsi_remove_device at ffff000008706134
+  [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
+  [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
+  [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
+  [ffff00002a00fdb0] process_one_work at ffff00000810f35c
+  [ffff00002a00fe00] worker_thread at ffff00000810f648
+  [ffff00002a00fe70] kthread at ffff000008116e98
+
+In ses_intf_add, components count could be 0, and kcalloc 0 size scomp,
+but not saved in edev->component[i].scratch
+
+In this situation, edev->component[0].scratch is an invalid pointer,
+when kfree it in ses_intf_remove_enclosure, a crash like above would happen
+The call trace also could be other random cases when kfree cannot catch
+the invalid pointer
+
+We should not use edev->component[] array when the components count is 0
+We also need check index when use edev->component[] array in
+ses_enclosure_data_process
+=====
+
+Reported-by: Michal Kolar <mich.k@seznam.cz>
+Tested-by: Michal Kolar <mich.k@seznam.cz>
+Originally-by: Ding Hui <dinghui@sangfor.com.cn>
+Cc: stable@vger.kernel.org
+Fixes: 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has no components")
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+---
+
+v1 -> v2:
+
+	- fix potential oops in ses_enclosure_find_by_addr() spotted by 
+	  James
+	- add Tested-by:
+
+ drivers/scsi/ses.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index b11a9162e73a..f3fa92f493ec 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -602,8 +602,10 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ 						components++,
+ 						type_ptr[0],
+ 						name);
+-				else
++				else if (components < edev->components)
+ 					ecomp = &edev->component[components++];
++				else
++					ecomp = ERR_PTR(-EINVAL);
+ 
+ 				if (!IS_ERR(ecomp)) {
+ 					if (addl_desc_ptr) {
+@@ -734,11 +736,6 @@ static int ses_intf_add(struct device *cdev,
+ 			components += type_ptr[1];
+ 	}
+ 
+-	if (components == 0) {
+-		sdev_printk(KERN_WARNING, sdev, "enclosure has no enumerated components\n");
+-		goto err_free;
+-	}
+-
+ 	ses_dev->page1 = buf;
+ 	ses_dev->page1_len = len;
+ 	buf = NULL;
+@@ -780,9 +777,11 @@ static int ses_intf_add(struct device *cdev,
+ 		buf = NULL;
+ 	}
+ page2_not_supported:
+-	scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
+-	if (!scomp)
+-		goto err_free;
++	if (components > 0) {
++		scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
++		if (!scomp)
++			goto err_free;
++	}
+ 
+ 	edev = enclosure_register(cdev->parent, dev_name(&sdev->sdev_gendev),
+ 				  components, &ses_enclosure_callbacks);
+-- 
+Jiri Kosina
+SUSE Labs
 
