@@ -2,130 +2,183 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2DBC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F2AC761A6
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 19:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236032AbjDDS44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:56:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58250 "EHLO
+        id S235157AbjDDTX7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 15:23:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235669AbjDDS4y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:56:54 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F4DC4220;
-        Tue,  4 Apr 2023 11:56:51 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S230080AbjDDTX5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 15:23:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C934810E5;
+        Tue,  4 Apr 2023 12:23:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 46E2321EA4;
-        Tue,  4 Apr 2023 18:56:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1680634610; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eBVBp6XXh/4w1Cs9NPpHS5q/BvJUFc2xuxmLnBgLD0E=;
-        b=LDs7Dns77Y7cz4LnfqBQxk/JHLmLxVUicagXwD6KRoT82/ts9lglkuOSFX/RvIzbQRfK9e
-        jYY0lc3vOhPYr7LnItEvLtgifR+yfQjJy3dHMTq4S6MLgwXhjBbRX2FmNJ10ExQ5uClSTW
-        m+HxkVrinRxyPfOvfOB0ac4UKKigXec=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1680634610;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eBVBp6XXh/4w1Cs9NPpHS5q/BvJUFc2xuxmLnBgLD0E=;
-        b=6QxzjCG51yhstrf/hmioMtRUUjdi/M7uxZo8YN1v/0Kty2b2OdW7G1GDzKYR/Uq6MehuSW
-        4N4sARH2RyW0VpDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B98131391A;
-        Tue,  4 Apr 2023 18:56:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id h5ZvLPFyLGQ/aQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 04 Apr 2023 18:56:49 +0000
-Message-ID: <a309d4e4-133d-af3c-afb9-9757b10c9d81@suse.de>
-Date:   Tue, 4 Apr 2023 20:56:49 +0200
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E1B163902;
+        Tue,  4 Apr 2023 19:23:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 484FBC433EF;
+        Tue,  4 Apr 2023 19:23:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680636235;
+        bh=OuMl4MZe4WJtRSbESB4JIV0giVD3UlgbBluQ/2Sz5/M=;
+        h=Date:From:To:cc:Subject:From;
+        b=bPNdwAnQg9PHrMv6WoZ+5Qcjxn4OTon6Khg3X2n6gCdj/yNXN8cfK72oh3xkyFtiK
+         MNoViqdTkzOQzRX8nYwMxtBsRCbRMjYyKE4vTnmC/X4dV2rtvUwvPQEp+RnS1aYN29
+         Qao5Y2UwD1hibOjqMXhcUwm/ZonVf29ZT8M9PQGeLEtx8V7V4BRQ1tFBu7bVULVXD3
+         VWlmf34u/sZHm435VMSjT9H72y0l9Sh5p+u4i8yPWlaTYNPN7cPH0nIhDK0N9iIIeJ
+         IxVq2tz2FNZW7VUW9NcLiOZi+1mravSCFcfa0XdqhfI08QBKLUBB4UfzDhRJbleEUx
+         eMS8ELdb+9fTw==
+Date:   Tue, 4 Apr 2023 21:23:42 +0200 (CEST)
+From:   Jiri Kosina <jikos@kernel.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ding Hui <dinghui@sangfor.com.cn>,
+        Michal Kolar <mich.k@seznam.cz>
+Subject: [PATCH] scsi: ses: Handle enclosure with just a primary component
+ gracefully
+Message-ID: <nycvar.YFH.7.76.2304042122270.29760@cbobk.fhfr.pm>
+User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v5 11/19] scsi: sd: handle read/write CDL timeout failures
-Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230404182428.715140-1-nks@flawful.org>
- <20230404182428.715140-12-nks@flawful.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230404182428.715140-12-nks@flawful.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/4/23 20:24, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
-> 
-> Commands using a duration limit descriptor that has limit policies set
-> to a value other than 0x0 may be failed by the device if one of the
-> limits are exceeded. For such commands, since the failure is the result
-> of the user duration limit configuration and workload, the commands
-> should not be retried and terminated immediately. Furthermore, to allow
-> the user to differentiate these "soft" failures from hard errors due to
-> hardware problem, a different error code than EIO should be returned.
-> 
-> There are 2 cases to consider:
-> (1) The failure is due to a limit policy failing the command with a
-> check condition sense key, that is, any limit policy other than 0xD.
-> For this case, scsi_check_sense() is modified to detect failures with
-> the ABORTED COMMAND sense key and the COMMAND TIMEOUT BEFORE PROCESSING
-> or COMMAND TIMEOUT DURING PROCESSING or COMMAND TIMEOUT DURING
-> PROCESSING DUE TO ERROR RECOVERY additional sense code. For these
-> failures, a SUCCESS disposition is returned so that
-> scsi_finish_command() is called to terminate the command.
-> 
-> (2) The failure is due to a limit policy set to 0xD, which result in the
-> command being terminated with a GOOD status, COMPLETED sense key, and
-> DATA CURRENTLY UNAVAILABLE additional sense code. To handle this case,
-> the scsi_check_sense() is modified to return a SUCCESS disposition so
-> that scsi_finish_command() is called to terminate the command.
-> In addition, scsi_decide_disposition() has to be modified to see if a
-> command being terminated with GOOD status has sense data.
-> This is as defined in SCSI Primary Commands - 6 (SPC-6), so all
-> according to spec, even if GOOD status commands were not checked before.
-> 
-> If scsi_check_sense() detects sense data representing a duration limit,
-> scsi_check_sense() will set the newly introduced SCSI ML byte
-> SCSIML_STAT_DL_TIMEOUT. This SCSI ML byte is checked in
-> scsi_noretry_cmd(), so that a command that failed because of a CDL
-> timeout cannot be retried. The SCSI ML byte is also checked in
-> scsi_result_to_blk_status() to complete the command request with the
-> BLK_STS_DURATION_LIMIT status, which result in the user seeing ETIME
-> errors for the failed commands.
-> 
-> Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
->   drivers/scsi/scsi_error.c | 45 +++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/scsi_lib.c   |  4 ++++
->   drivers/scsi/scsi_priv.h  |  1 +
->   3 files changed, 50 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+From: Jiri Kosina <jkosina@suse.cz>
 
-Cheers,
+This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has no
+components") and introduces proper handling of case where there are no detected
+secondary components, but primary component (enumerated in num_enclosures)
+does exist. That fix was originally proposed by Ding Hui <dinghui@sangfor.com.cn>.
 
-Hannes
+Completely ignoring devices that have one primary enclosure and no secondary one
+results in ses_intf_add() bailing completely
 
+	scsi 2:0:0:254: enclosure has no enumerated components
+        scsi 2:0:0:254: Failed to bind enclosure -12ven in valid configurations such
+
+even on valid configurations with 1 primary and 0 secondary enclosures as below:
+
+	# sg_ses /dev/sg0
+	  3PARdata  SES               3321
+	Supported diagnostic pages:
+	  Supported Diagnostic Pages [sdp] [0x0]
+	  Configuration (SES) [cf] [0x1]
+	  Short Enclosure Status (SES) [ses] [0x8]
+	# sg_ses -p cf /dev/sg0
+	  3PARdata  SES               3321
+	Configuration diagnostic page:
+	  number of secondary subenclosures: 0
+	  generation code: 0x0
+	  enclosure descriptor list
+	    Subenclosure identifier: 0 [primary]
+	      relative ES process id: 0, number of ES processes: 1
+	      number of type descriptor headers: 1
+	      enclosure logical identifier (hex): 20000002ac02068d
+	      enclosure vendor: 3PARdata  product: VV                rev: 3321
+	  type descriptor header and text list
+	    Element type: Unspecified, subenclosure id: 0
+	      number of possible elements: 1
+
+The changelog for the original fix follows
+
+=====
+We can get a crash when disconnecting the iSCSI session,
+the call trace like this:
+
+  [ffff00002a00fb70] kfree at ffff00000830e224
+  [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
+  [ffff00002a00fbd0] device_del at ffff0000086b6a98
+  [ffff00002a00fc50] device_unregister at ffff0000086b6d58
+  [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
+  [ffff00002a00fca0] scsi_remove_device at ffff000008706134
+  [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
+  [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
+  [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
+  [ffff00002a00fdb0] process_one_work at ffff00000810f35c
+  [ffff00002a00fe00] worker_thread at ffff00000810f648
+  [ffff00002a00fe70] kthread at ffff000008116e98
+
+In ses_intf_add, components count could be 0, and kcalloc 0 size scomp,
+but not saved in edev->component[i].scratch
+
+In this situation, edev->component[0].scratch is an invalid pointer,
+when kfree it in ses_intf_remove_enclosure, a crash like above would happen
+The call trace also could be other random cases when kfree cannot catch
+the invalid pointer
+
+We should not use edev->component[] array when the components count is 0
+We also need check index when use edev->component[] array in
+ses_enclosure_data_process
+=====
+
+Reported-by: Michal Kolar <mich.k@seznam.cz>
+Originally-by: Ding Hui <dinghui@sangfor.com.cn>
+Cc: stable@vger.kernel.org
+Fixes: 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has no components")
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+---
+ drivers/scsi/ses.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index b11a9162e73a..b54f2c6c08c3 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -509,9 +509,6 @@ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
+ 	int i;
+ 	struct ses_component *scomp;
+ 
+-	if (!edev->component[0].scratch)
+-		return 0;
+-
+ 	for (i = 0; i < edev->components; i++) {
+ 		scomp = edev->component[i].scratch;
+ 		if (scomp->addr != efd->addr)
+@@ -602,8 +599,10 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ 						components++,
+ 						type_ptr[0],
+ 						name);
+-				else
++				else if (components < edev->components)
+ 					ecomp = &edev->component[components++];
++				else
++					ecomp = ERR_PTR(-EINVAL);
+ 
+ 				if (!IS_ERR(ecomp)) {
+ 					if (addl_desc_ptr) {
+@@ -734,11 +733,6 @@ static int ses_intf_add(struct device *cdev,
+ 			components += type_ptr[1];
+ 	}
+ 
+-	if (components == 0) {
+-		sdev_printk(KERN_WARNING, sdev, "enclosure has no enumerated components\n");
+-		goto err_free;
+-	}
+-
+ 	ses_dev->page1 = buf;
+ 	ses_dev->page1_len = len;
+ 	buf = NULL;
+@@ -780,9 +774,11 @@ static int ses_intf_add(struct device *cdev,
+ 		buf = NULL;
+ 	}
+ page2_not_supported:
+-	scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
+-	if (!scomp)
+-		goto err_free;
++	if (components > 0) {
++		scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
++		if (!scomp)
++			goto err_free;
++	}
+ 
+ 	edev = enclosure_register(cdev->parent, dev_name(&sdev->sdev_gendev),
+ 				  components, &ses_enclosure_callbacks);
+-- 
+Jiri Kosina
+SUSE Labs
 
