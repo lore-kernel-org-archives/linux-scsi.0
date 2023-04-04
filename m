@@ -2,71 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D162C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:45:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 765F8C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:49:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235364AbjDDSpg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:45:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49002 "EHLO
+        id S235644AbjDDStC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:49:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229881AbjDDSpf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:45:35 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24A44CA;
-        Tue,  4 Apr 2023 11:45:31 -0700 (PDT)
+        with ESMTP id S229881AbjDDStC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:49:02 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C503359D;
+        Tue,  4 Apr 2023 11:49:00 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C8D7522A5E;
-        Tue,  4 Apr 2023 18:45:29 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 069611FDCA;
+        Tue,  4 Apr 2023 18:48:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1680633929; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1680634139; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=L2+BLfyX04cXsJfFa52442u6GnlmwYcaW/9sIJfLFl8=;
-        b=Q+178Bg1AtacSEswMQlgFo7ZyOWe1oadAxMZc6UEdkwjeaxAIU7/sLEljVYodTJ+ShcteH
-        XTIKVCj4pLcroILggsvtNLpWAiUIyYG/pF0dfCI3KdwK9NUDgzplL/hHzG9HOFx9cSm9YZ
-        81WUQ0jiaH1Ytr6pWn/yO7AgBTWNqA4=
+        bh=8peVY1P/REvyDSmPjBd6Uq7SBRI3/UQNQvcvUPnaQJU=;
+        b=iZthqA6CHjREsUmc6oxWDUZ5HWOrrM+2wukMgWQcyrOEbBfTwPNASKsVHTkvb0VPHu9iep
+        t0FU83aCGpvVY+leNSOA4An8/grcjuhcxOB3zKRzvFf7gRbbO7DfICU2eHrD8eJsunlHhs
+        r5GRoHZlGCO7TUSTAkD1Biw2qeT+t10=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1680633929;
+        s=susede2_ed25519; t=1680634139;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=L2+BLfyX04cXsJfFa52442u6GnlmwYcaW/9sIJfLFl8=;
-        b=H4xcSJyHZ5cW7aZV4/Y+5PsH5cpps07wKQI8TmRHS+ifWe4M+0AeaeBNF/NbyJiLuFAeKh
-        nynsB034nIXsV+AQ==
+        bh=8peVY1P/REvyDSmPjBd6Uq7SBRI3/UQNQvcvUPnaQJU=;
+        b=KxX9AGx3AIC2QLDfZI5MC/Qn45WfVRNSzepHx7y4Kku0WEyY0VbT6nnCoKzvgM0ARrQZ57
+        IstXMOjHPH2Z2XDA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 90FA81391A;
-        Tue,  4 Apr 2023 18:45:29 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AF5271391A;
+        Tue,  4 Apr 2023 18:48:58 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id SVfhIUlwLGRIZAAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 04 Apr 2023 18:45:29 +0000
-Message-ID: <18625db0-5b3c-000f-2d01-14350701d52c@suse.de>
-Date:   Tue, 4 Apr 2023 20:45:29 +0200
+        id miCkKRpxLGS7ZQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 04 Apr 2023 18:48:58 +0000
+Message-ID: <d55ac074-73df-eab3-f0b8-c70d8efb4b72@suse.de>
+Date:   Tue, 4 Apr 2023 20:48:58 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v5 02/19] block: introduce ioprio hints
+Subject: Re: [PATCH v5 08/19] scsi: detect support for command duration limits
 Content-Language: en-US
 To:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc:     Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
 References: <20230404182428.715140-1-nks@flawful.org>
- <20230404182428.715140-3-nks@flawful.org>
+ <20230404182428.715140-9-nks@flawful.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230404182428.715140-3-nks@flawful.org>
+In-Reply-To: <20230404182428.715140-9-nks@flawful.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -76,48 +76,205 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 4/4/23 20:24, Niklas Cassel wrote:
 > From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > 
-> IO priorities currently only use 6-bits of the 16-bits ioprio value: the
-> 3-upper bits are used to define up to 8 priority classes (4 of which are
-> valid) and the 3 lower bits of the value are used to define a priority
-> level for the real-time and best-effort class.
+> Introduce the function scsi_cdl_check() to detect if a device supports
+> command duration limits (CDL). Support for the READ 16, WRITE 16,
+> READ 32 and WRITE 32 commands are checked using the function
+> scsi_report_opcode() to probe the rwcdlp and cdlp bits as they indicate
+> the mode page defining the command duration limits descriptors that
+> apply to the command being tested.
 > 
-> The remaining 10-bits between the IO priority class and level are
-> unused, and in fact, cannot be used by the user as doing so would
-> either result in the value being completely ignored, or in an error
-> returned by ioprio_check_cap().
+> If any of these commands support CDL, the field cdl_supported of
+> struct scsi_device is set to 1 to indicate that the device supports CDL.
 > 
-> Use these 10-bits of an ioprio value to allow a user to specify IO
-> hints. An IO hint is defined as a 10-bits value, allowing up to 1023
-> different hints to be specified, with the value 0 being reserved as the
-> "no hint" case. An IO hint can apply to any IO that specifies a valid
-> priority class other than NONE, regardless of the IO priority level
-> specified.
-> 
-> To do so, the macros IOPRIO_PRIO_HINT() and IOPRIO_PRIO_VALUE_HINT() are
-> introduced in include/uapi/linux/ioprio.h to respectively allow a user
-> to get and set a hint in an ioprio value.
-> 
-> To support the ATA and SCSI command duration limits feature, 7 hints
-> are defined: IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
-> IOPRIO_HINT_DEV_DURATION_LIMIT_7, allowing a user to specify which
-> command duration limit descriptor should be applied to the commands
-> serving an IO. Specifying these hints has for now no effect whatsoever
-> if the target block devices do not support the command duration limits
-> feature. However, in the future, block IO schedulers can be modified to
-> optimize IO issuing order based on these hints, even for devices that
-> do not support the command duration limits feature.
-> 
-> Given that the 7 duration limits hints defined have no effect on any
-> block layer component, the actual definition of the duration limits
-> implied by these hints remains at the device level.
+> Support for CDL for a device is advertizes through sysfs using the new
+> cdl_supported device attribute. This attribute value is 1 for a device
+> supporting CDL and 0 otherwise.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 > Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 > ---
->   include/uapi/linux/ioprio.h | 49 +++++++++++++++++++++++++++++++++++++
->   1 file changed, 49 insertions(+)
+>   Documentation/ABI/testing/sysfs-block-device |  9 +++
+>   drivers/scsi/scsi.c                          | 81 ++++++++++++++++++++
+>   drivers/scsi/scsi_scan.c                     |  3 +
+>   drivers/scsi/scsi_sysfs.c                    |  2 +
+>   include/scsi/scsi_device.h                   |  3 +
+>   5 files changed, 98 insertions(+)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
+> index 7ac7b19b2f72..ee3610a25845 100644
+> --- a/Documentation/ABI/testing/sysfs-block-device
+> +++ b/Documentation/ABI/testing/sysfs-block-device
+> @@ -95,3 +95,12 @@ Description:
+>   		This file does not exist if the HBA driver does not implement
+>   		support for the SATA NCQ priority feature, regardless of the
+>   		device support for this feature.
+> +
+> +
+> +What:		/sys/block/*/device/cdl_supported
+> +Date:		Mar, 2023
+> +KernelVersion:	v6.4
+> +Contact:	linux-scsi@vger.kernel.org
+> +Description:
+> +		(RO) Indicates if the device supports the command duration
+> +		limits feature found in some ATA and SCSI devices.
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 62d9472e08e9..c03814ce23ca 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -570,6 +570,87 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
+>   }
+>   EXPORT_SYMBOL(scsi_report_opcode);
+>   
+> +#define SCSI_CDL_CHECK_BUF_LEN	64
+> +
+> +static bool scsi_cdl_check_cmd(struct scsi_device *sdev, u8 opcode, u16 sa,
+> +			       unsigned char *buf)
+> +{
+> +	int ret;
+> +	u8 cdlp;
+> +
+> +	/* Check operation code */
+> +	ret = scsi_report_opcode(sdev, buf, SCSI_CDL_CHECK_BUF_LEN, opcode, sa);
+> +	if (ret <= 0)
+> +		return false;
+> +
+> +	if ((buf[1] & 0x03) != 0x03)
+> +		return false;
+> +
+> +	/* See SPC-6, one command format of REPORT SUPPORTED OPERATION CODES */
+> +	cdlp = (buf[1] & 0x18) >> 3;
+> +	if (buf[0] & 0x01) {
+> +		/* rwcdlp == 1 */
+> +		switch (cdlp) {
+> +		case 0x01:
+> +			/* T2A page */
+> +			return true;
+> +		case 0x02:
+> +			/* T2B page */
+> +			return true;
+> +		}
+> +	} else {
+> +		/* rwcdlp == 0 */
+> +		switch (cdlp) {
+> +		case 0x01:
+> +			/* A page */
+> +			return true;
+> +		case 0x02:
+> +			/* B page */
+> +			return true;
+> +		}
+> +	}
+> +
+> +	return false;
+> +}
+> +
+Why do we need to check this when writing to sysfs? Shouldn't we detect 
+this during startup / revalidate?
+
+> +/**
+> + * scsi_cdl_check - Check if a SCSI device supports Command Duration Limits
+> + * @sdev: The device to check
+> + */
+> +void scsi_cdl_check(struct scsi_device *sdev)
+> +{
+> +	bool cdl_supported;
+> +	unsigned char *buf;
+> +
+> +	buf = kmalloc(SCSI_CDL_CHECK_BUF_LEN, GFP_KERNEL);
+> +	if (!buf) {
+> +		sdev->cdl_supported = 0;
+> +		return;
+> +	}
+> +
+> +	/* Check support for READ_16, WRITE_16, READ_32 and WRITE_32 commands */
+> +	cdl_supported =
+> +		scsi_cdl_check_cmd(sdev, READ_16, 0, buf) ||
+> +		scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf) ||
+> +		scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, READ_32, buf) ||
+> +		scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, WRITE_32, buf);
+> +	if (cdl_supported) {
+> +		/*
+> +		 * We have CDL support: force the use of READ16/WRITE16.
+> +		 * READ32 and WRITE32 will be used for devices that support
+> +		 * the T10_PI_TYPE2_PROTECTION protection type.
+> +		 */
+> +		sdev->use_16_for_rw = 1;
+> +		sdev->use_10_for_rw = 0;
+> +
+> +		sdev->cdl_supported = 1;
+> +	} else {
+> +		sdev->cdl_supported = 0;
+> +	}
+> +
+> +	kfree(buf);
+> +}
+> +
+>   /**
+>    * scsi_device_get  -  get an additional reference to a scsi_device
+>    * @sdev:	device to get a reference to
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index d217be323cc6..aa13feb17c62 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1087,6 +1087,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>   	if (sdev->scsi_level >= SCSI_3)
+>   		scsi_attach_vpd(sdev);
+>   
+> +	scsi_cdl_check(sdev);
+> +
+>   	sdev->max_queue_depth = sdev->queue_depth;
+>   	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
+>   	sdev->sdev_bflags = *bflags;
+> @@ -1624,6 +1626,7 @@ void scsi_rescan_device(struct device *dev)
+>   	device_lock(dev);
+>   
+>   	scsi_attach_vpd(sdev);
+> +	scsi_cdl_check(sdev);
+>   
+>   	if (sdev->handler && sdev->handler->rescan)
+>   		sdev->handler->rescan(sdev);
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index ee28f73af4d4..4994148e685b 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -670,6 +670,7 @@ sdev_rd_attr (scsi_level, "%d\n");
+>   sdev_rd_attr (vendor, "%.8s\n");
+>   sdev_rd_attr (model, "%.16s\n");
+>   sdev_rd_attr (rev, "%.4s\n");
+> +sdev_rd_attr (cdl_supported, "%d\n");
+>   
+>   static ssize_t
+>   sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
+> @@ -1300,6 +1301,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+>   	&dev_attr_preferred_path.attr,
+>   #endif
+>   	&dev_attr_queue_ramp_up_period.attr,
+> +	&dev_attr_cdl_supported.attr,
+>   	REF_EVT(media_change),
+>   	REF_EVT(inquiry_change_reported),
+>   	REF_EVT(capacity_change_reported),
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index c93c5aaf637e..6b8df9e253a0 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -218,6 +218,8 @@ struct scsi_device {
+>   	unsigned silence_suspend:1;	/* Do not print runtime PM related messages */
+>   	unsigned no_vpd_size:1;		/* No VPD size reported in header */
+>   
+> +	unsigned cdl_supported:1;	/* Command duration limits supported */
+> +
+>   	unsigned int queue_stopped;	/* request queue is quiesced */
+>   	bool offline_already;		/* Device offline message logged */
+>   
+> @@ -364,6 +366,7 @@ extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
+>   extern void scsi_remove_device(struct scsi_device *);
+>   extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+>   void scsi_attach_vpd(struct scsi_device *sdev);
+> +void scsi_cdl_check(struct scsi_device *sdev);
+>   
+>   extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
+>   extern int __must_check scsi_device_get(struct scsi_device *);
 
 Cheers,
 
