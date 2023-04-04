@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9E9C77B60
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:37:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E612BC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:38:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235197AbjDDShj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:37:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39638 "EHLO
+        id S235739AbjDDSiD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:38:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236265AbjDDShU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:37:20 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52AE310C1;
-        Tue,  4 Apr 2023 11:35:49 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id y15so43516632lfa.7;
-        Tue, 04 Apr 2023 11:35:49 -0700 (PDT)
+        with ESMTP id S231477AbjDDShd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:37:33 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 227447AB7;
+        Tue,  4 Apr 2023 11:36:15 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id h25so43531172lfv.6;
+        Tue, 04 Apr 2023 11:36:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680633347;
+        d=1e100.net; s=20210112; t=1680633373;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=d8GMCIG1ig7yyzNgpkXNi/ztMVZ3y8m5bHrT06ZPuJg=;
-        b=3ZNNsFqiAKizXCdeujkXICoSkAaZZp3ykGGbOh9R4mxjKSg4g7iXgVSZRgsbdPdfin
-         QekkenUD6Vm2nUVb8R54tgpL4crRY5IXacrU1/PIbA+XepPxqo8WmKeOM+is/ErVknbv
-         301kssqtgJfW9BURGaEh/rputaeNPd0Etk1l1aLsqTThA685AoL+91qCJEXDCPrq3jWL
-         BEiXuMYk8cgIYY0+2CCkN7lY1wcMzNrXf249nX5YGNq8+XiBAKc/coX9IbBc0LyaDDah
-         0aX8IJ6kfu7q+ccQgiaaTf3GmhwBHLcw7TS9GCCMIkwbxUIBIEtbvxlzohFlSpfnWzC0
-         ei4w==
-X-Gm-Message-State: AAQBX9extB/ejnMPH6trt5a2HHhK0EeHzqrq+qBrSs1k9wtOVpU++2j+
-        nFMJqfon4LTEEtzmErBrpmLSu1oxLyOCrQ==
-X-Google-Smtp-Source: AKy350aSfJjyhrs8cxrQl3ar/l65/CtLbJWsG7btwIwFuwjzN1VUjcgjDogjMl5jDONrnExHo8ninA==
-X-Received: by 2002:a05:6512:b0e:b0:4eb:1599:f3b7 with SMTP id w14-20020a0565120b0e00b004eb1599f3b7mr48544lfu.13.1680633347396;
-        Tue, 04 Apr 2023 11:35:47 -0700 (PDT)
+        bh=W/SwkKdRoNxVb2d2rk1vwXdhi8clxcOTg7uTJ+39OtY=;
+        b=MAiJJmjGzfBrSrtxXE3OBkR5HEXE2XC3zyFaRNOgrl4IYaLwiaUuc6kjlEe1xYRln5
+         XIw11cBVPE08D4xtIEmxqjeQ58JakLhVrLCIa10bde82A4ILbLQ6XZKT+Qwm771sQWsz
+         J0MsIRynQhGdqdvL15gWGGg6/waGqODBXPnS643wzRaBkY6JnqopOwnQl2PYTVwoltIl
+         ETGccPhNHLy06mq3fvWlZhkAr46DqE1E7tw0/AdkwlIvGcP4vyvo1uMCv8PxB0h3VPI8
+         EK5qNUUjG5ZMdAtr3Ax1SlBAE9lbGG1Sk3/k52f3mPc0vsju8Tz7rarJpjVRJp6BlgJz
+         js2A==
+X-Gm-Message-State: AAQBX9dM2tlPObKPpHDTjkUGYO+iKQFxJ1J1PH+8k7LXs0mQAziv1eXo
+        i2COI0Q1i1TOGbJHOQpcQ3e7hbhvEdliAA==
+X-Google-Smtp-Source: AKy350aPXMW3TfRYyAnxIwpMDqHjHzPUfdPPztvAVMXx0VrkXQRltHF7iWWUnLQtHmCGHZJxxJw0Qw==
+X-Received: by 2002:ac2:4838:0:b0:4e8:47cd:b4ba with SMTP id 24-20020ac24838000000b004e847cdb4bamr966088lft.13.1680633373249;
+        Tue, 04 Apr 2023 11:36:13 -0700 (PDT)
 Received: from flawful.org (c-a3f5e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.245.163])
-        by smtp.gmail.com with ESMTPSA id v2-20020ac25922000000b004e1b880ba20sm2440158lfi.292.2023.04.04.11.35.47
+        by smtp.gmail.com with ESMTPSA id e3-20020ac25463000000b004eb2f35045bsm2349200lfn.269.2023.04.04.11.36.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Apr 2023 11:35:47 -0700 (PDT)
+        Tue, 04 Apr 2023 11:36:12 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id 4BC7689C; Tue,  4 Apr 2023 20:35:46 +0200 (CEST)
+        id 0862C865; Tue,  4 Apr 2023 20:36:12 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680633346; bh=oZaWX6MpQtrvsJLoMpb056QV7Emk6jIZyNxj3swjrA0=;
+        t=1680633372; bh=EUU/zT1qGCY9K02epCW90BO/+ShxykgjORaxgXb+Zxw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZzBUZhPBIHTpxs2vjcJ8v5B9lna3EA3itVgO4xopDLNfl5X6D4WRrivR4fVLW+KUF
-         h5nY7nSjWanZaFF2USULYwg+kDNOvtSelIbujWDqQE6E2Im46lW595unyfiqFngFAi
-         HwbZsueFD6NrwNlyltj0AHSCgfXowBtw09/HEO3g=
+        b=AmTjJTnFq1BBWKSkKfSBZ+RoGaRz8B6oVq7TZDJJosXezZ+gJPPAgXG9NLSoQ5fE6
+         PyyRezEHooAmpWEi/ElZwhPXiR3TvPhQe30MTeK3qlXseuq1jbMf/jA7TDnNdweKJk
+         zVpUTg4v8cwZTDdjQiM8XR5t/QQVPol4y7eFJdUw=
 Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id 86496D7B;
-        Tue,  4 Apr 2023 20:25:54 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id DB03611C2;
+        Tue,  4 Apr 2023 20:25:56 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680632754; bh=oZaWX6MpQtrvsJLoMpb056QV7Emk6jIZyNxj3swjrA0=;
+        t=1680632757; bh=EUU/zT1qGCY9K02epCW90BO/+ShxykgjORaxgXb+Zxw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=n+CaZXe3AK4GKES7nTkZMjtP7/VpKsGR5/SdFLkHnrwUOzr+r3G0hei3zh04OQO2m
-         yUFVNcA0oGvTi/kKwm8VRTHnidMYlUF/XF8rOfWc3N/t0W1NAwgyVtLO4NXMSg1JnZ
-         QRUa6yES5ynBpqxJTlFIUE3pdvsJzi/9TASV1CvY=
+        b=CrnAfyxro0GxJbKBbtEJzXvJ9ATtfmLVxSTnW9tgvt2DVrKssN/RThASC0wxKSCyi
+         MC0lbFj9IQCku9RttsjUb3pne8WadzecfWO1B1up4ml5azF7FeZnYqQ4l2TqnYEQ5I
+         4NOblZ7E5qk3hbKUPSkEJVxCnN7+dO9NNbTw7Brc=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -65,9 +65,9 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v5 16/19] ata: libata-scsi: add support for CDL pages mode sense
-Date:   Tue,  4 Apr 2023 20:24:21 +0200
-Message-Id: <20230404182428.715140-17-nks@flawful.org>
+Subject: [PATCH v5 18/19] ata: libata: set read/write commands CDL index
+Date:   Tue,  4 Apr 2023 20:24:23 +0200
+Message-Id: <20230404182428.715140-19-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230404182428.715140-1-nks@flawful.org>
 References: <20230404182428.715140-1-nks@flawful.org>
@@ -79,247 +79,169 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Modify ata_scsiop_mode_sense() and ata_msense_control() to support mode
-sense access to the T2A and T2B sub-pages of the control mode page.
-ata_msense_control() is modified to support sub-pages. The T2A sub-page
-is generated using the read descriptors of the command duration limits
-log page 18h. The T2B sub-page is generated using the write descriptors
-of the same log page. With the addition of these sub-pages, getting all
-sub-pages of the control mode page is also supported by increasing the
-value of ATA_SCSI_RBUF_SIZE from 576B up to 2048B to ensure that all
-sub-pages fit in the fill buffer.
+For devices supporting the command duration limits feature, translate
+the dld field of read and write operation to set the command duration
+limit index field of the command task file when the duration limit
+feature is enabled.
+
+The function ata_set_tf_cdl() is introduced to do this. For unqueued
+(non NCQ) read and write operations, this function sets the command
+duration limit index set as the lower 2 bits of the feature field.
+For queued NCQ read/write commands, the index is set as the lower
+2 bits of the auxiliary field.
+
+The flag ATA_QCFLAG_HAS_CDL is introduced to indicate that a command
+taskfile has a non zero cdl field.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-scsi.c | 150 ++++++++++++++++++++++++++++++++------
- 1 file changed, 128 insertions(+), 22 deletions(-)
+ drivers/ata/libata-core.c | 32 +++++++++++++++++++++++++++++---
+ drivers/ata/libata-scsi.c | 16 +++++++++++++++-
+ drivers/ata/libata.h      |  2 +-
+ include/linux/libata.h    |  1 +
+ 4 files changed, 46 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 62e100fa90e2..c68e7b684a87 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -665,12 +665,29 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
+ 	return block;
+ }
+ 
++/*
++ * Set a taskfile command duration limit index.
++ */
++static inline void ata_set_tf_cdl(struct ata_queued_cmd *qc, int cdl)
++{
++	struct ata_taskfile *tf = &qc->tf;
++
++	if (tf->protocol == ATA_PROT_NCQ)
++		tf->auxiliary |= cdl;
++	else
++		tf->feature |= cdl;
++
++	/* Mark this command as having a CDL */
++	qc->flags |= ATA_QCFLAG_HAS_CDL;
++}
++
+ /**
+  *	ata_build_rw_tf - Build ATA taskfile for given read/write request
+  *	@qc: Metadata associated with the taskfile to build
+  *	@block: Block address
+  *	@n_block: Number of blocks
+  *	@tf_flags: RW/FUA etc...
++ *	@cdl: Command duration limit index
+  *	@class: IO priority class
+  *
+  *	LOCKING:
+@@ -685,7 +702,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
+  *	-EINVAL if the request is invalid.
+  */
+ int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
+-		    unsigned int tf_flags, int class)
++		    unsigned int tf_flags, int cdl, int class)
+ {
+ 	struct ata_taskfile *tf = &qc->tf;
+ 	struct ata_device *dev = qc->dev;
+@@ -724,11 +741,20 @@ int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
+ 		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED &&
+ 		    class == IOPRIO_CLASS_RT)
+ 			tf->hob_nsect |= ATA_PRIO_HIGH << ATA_SHIFT_PRIO;
++
++		if ((dev->flags & ATA_DFLAG_CDL_ENABLED) && cdl)
++			ata_set_tf_cdl(qc, cdl);
++
+ 	} else if (dev->flags & ATA_DFLAG_LBA) {
+ 		tf->flags |= ATA_TFLAG_LBA;
+ 
+-		/* We need LBA48 for FUA writes */
+-		if (!(tf->flags & ATA_TFLAG_FUA) && lba_28_ok(block, n_block)) {
++		if ((dev->flags & ATA_DFLAG_CDL_ENABLED) && cdl)
++			ata_set_tf_cdl(qc, cdl);
++
++		/* Both FUA writes and a CDL index require 48-bit commands */
++		if (!(tf->flags & ATA_TFLAG_FUA) &&
++		    !(qc->flags & ATA_QCFLAG_HAS_CDL) &&
++		    lba_28_ok(block, n_block)) {
+ 			/* use LBA28 */
+ 			tf->device |= (block >> 24) & 0xf;
+ 		} else if (lba_48_ok(block, n_block)) {
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2a0a04c9e658..9315a4c01276 100644
+index 8dde1cede5ca..05bde27947a2 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -37,7 +37,7 @@
- #include "libata.h"
- #include "libata-transport.h"
- 
--#define ATA_SCSI_RBUF_SIZE	576
-+#define ATA_SCSI_RBUF_SIZE	2048
- 
- static DEFINE_SPINLOCK(ata_scsi_rbuf_lock);
- static u8 ata_scsi_rbuf[ATA_SCSI_RBUF_SIZE];
-@@ -55,6 +55,9 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
- #define CONTROL_MPAGE_LEN		12
- #define ALL_MPAGES			0x3f
- #define ALL_SUB_MPAGES			0xff
-+#define CDL_T2A_SUB_MPAGE		0x07
-+#define CDL_T2B_SUB_MPAGE		0x08
-+#define CDL_T2_SUB_MPAGE_LEN		232
- 
- static const u8 def_rw_recovery_mpage[RW_RECOVERY_MPAGE_LEN] = {
- 	RW_RECOVERY_MPAGE,
-@@ -2196,10 +2199,98 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
- 	return sizeof(def_cache_mpage);
+@@ -1380,6 +1380,18 @@ static inline void scsi_16_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ 	*plen = get_unaligned_be32(&cdb[10]);
  }
  
-+/*
-+ * Simulate MODE SENSE control mode page, sub-page 0.
++/**
++ *	scsi_dld - Get duration limit descriptor index
++ *	@cdb: SCSI command to translate
++ *
++ *	Returns the dld bits indicating the index of a command duration limit
++ *	descriptor.
 + */
-+static unsigned int ata_msense_control_spg0(struct ata_device *dev, u8 *buf,
-+					    bool changeable)
++static inline int scsi_dld(const u8 *cdb)
 +{
-+	modecpy(buf, def_control_mpage,
-+		sizeof(def_control_mpage), changeable);
-+	if (changeable) {
-+		/* ata_mselect_control() */
-+		buf[2] |= (1 << 2);
-+	} else {
-+		bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
-+
-+		/* descriptor format sense data */
-+		buf[2] |= (d_sense << 2);
-+	}
-+
-+	return sizeof(def_control_mpage);
-+}
-+
-+/*
-+ * Translate an ATA duration limit in microseconds to a SCSI duration limit
-+ * using the t2cdlunits 0xa (10ms). Since the SCSI duration limits are 2-bytes
-+ * only, take care of overflows.
-+ */
-+static inline u16 ata_xlat_cdl_limit(u8 *buf)
-+{
-+	u32 limit = get_unaligned_le32(buf);
-+
-+	return min_t(u32, limit / 10000, 65535);
-+}
-+
-+/*
-+ * Simulate MODE SENSE control mode page, sub-pages 07h and 08h
-+ * (command duration limits T2A and T2B mode pages).
-+ */
-+static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
-+					     u8 spg)
-+{
-+	u8 *b, *cdl = dev->cdl, *desc;
-+	u32 policy;
-+	int i;
-+
-+	/*
-+	 * Fill the subpage. The first four bytes of the T2A/T2B mode pages
-+	 * are a header. The PAGE LENGTH field is the size of the page
-+	 * excluding the header.
-+	 */
-+	buf[0] = CONTROL_MPAGE;
-+	buf[1] = spg;
-+	put_unaligned_be16(CDL_T2_SUB_MPAGE_LEN - 4, &buf[2]);
-+	if (spg == CDL_T2A_SUB_MPAGE) {
-+		/*
-+		 * Read descriptors map to the T2A page:
-+		 * set perf_vs_duration_guidleine.
-+		 */
-+		buf[7] = (cdl[0] & 0x03) << 4;
-+		desc = cdl + 64;
-+	} else {
-+		/* Write descriptors map to the T2B page */
-+		desc = cdl + 288;
-+	}
-+
-+	/* Fill the T2 page descriptors */
-+	b = &buf[8];
-+	policy = get_unaligned_le32(&cdl[0]);
-+	for (i = 0; i < 7; i++, b += 32, desc += 32) {
-+		/* t2cdlunits: fixed to 10ms */
-+		b[0] = 0x0a;
-+
-+		/* Max inactive time and its policy */
-+		put_unaligned_be16(ata_xlat_cdl_limit(&desc[8]), &b[2]);
-+		b[6] = ((policy >> 8) & 0x0f) << 4;
-+
-+		/* Max active time and its policy */
-+		put_unaligned_be16(ata_xlat_cdl_limit(&desc[4]), &b[4]);
-+		b[6] |= (policy >> 4) & 0x0f;
-+
-+		/* Command duration guideline and its policy */
-+		put_unaligned_be16(ata_xlat_cdl_limit(&desc[16]), &b[10]);
-+		b[14] = policy & 0x0f;
-+	}
-+
-+	return CDL_T2_SUB_MPAGE_LEN;
++	return ((cdb[1] & 0x01) << 2) | ((cdb[14] >> 6) & 0x03);
 +}
 +
  /**
-  *	ata_msense_control - Simulate MODE SENSE control mode page
-  *	@dev: ATA device of interest
-  *	@buf: output buffer
-+ *	@spg: sub-page code
-  *	@changeable: whether changeable parameters are requested
-  *
-  *	Generate a generic MODE SENSE control mode page.
-@@ -2208,17 +2299,24 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
-  *	None.
-  */
- static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
--					bool changeable)
-+				       u8 spg, bool changeable)
- {
--	modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
--	if (changeable) {
--		buf[2] |= (1 << 2);	/* ata_mselect_control() */
--	} else {
--		bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
--
--		buf[2] |= (d_sense << 2);	/* descriptor format sense data */
-+	unsigned int n;
-+
-+	switch (spg) {
-+	case 0:
-+		return ata_msense_control_spg0(dev, buf, changeable);
-+	case CDL_T2A_SUB_MPAGE:
-+	case CDL_T2B_SUB_MPAGE:
-+		return ata_msense_control_spgt2(dev, buf, spg);
-+	case ALL_SUB_MPAGES:
-+		n = ata_msense_control_spg0(dev, buf, changeable);
-+		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
-+		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
-+		return n;
-+	default:
-+		return 0;
- 	}
--	return sizeof(def_control_mpage);
- }
- 
- /**
-@@ -2291,13 +2389,24 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 
- 	pg = scsicmd[2] & 0x3f;
- 	spg = scsicmd[3];
-+
- 	/*
--	 * No mode subpages supported (yet) but asking for _all_
--	 * subpages may be valid
-+	 * Supported subpages: all subpages and sub-pages 07h and 08h of
-+	 * the control page.
- 	 */
--	if (spg && (spg != ALL_SUB_MPAGES)) {
--		fp = 3;
--		goto invalid_fld;
-+	if (spg) {
-+		switch (spg) {
-+		case ALL_SUB_MPAGES:
-+			break;
-+		case CDL_T2A_SUB_MPAGE:
-+		case CDL_T2B_SUB_MPAGE:
-+			if (dev->flags & ATA_DFLAG_CDL && pg == CONTROL_MPAGE)
-+				break;
-+			fallthrough;
-+		default:
-+			fp = 3;
-+			goto invalid_fld;
-+		}
- 	}
- 
- 	switch(pg) {
-@@ -2310,13 +2419,13 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 		break;
- 
- 	case CONTROL_MPAGE:
--		p += ata_msense_control(args->dev, p, page_control == 1);
-+		p += ata_msense_control(args->dev, p, spg, page_control == 1);
- 		break;
- 
- 	case ALL_MPAGES:
- 		p += ata_msense_rw_recovery(p, page_control == 1);
- 		p += ata_msense_caching(args->id, p, page_control == 1);
--		p += ata_msense_control(args->dev, p, page_control == 1);
-+		p += ata_msense_control(args->dev, p, spg, page_control == 1);
- 		break;
- 
- 	default:		/* invalid page code */
-@@ -2335,10 +2444,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 			memcpy(rbuf + 4, sat_blk_desc, sizeof(sat_blk_desc));
+  *	ata_scsi_verify_xlat - Translate SCSI VERIFY command into an ATA one
+  *	@qc: Storage for translated ATA taskfile
+@@ -1548,6 +1560,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+ 	struct request *rq = scsi_cmd_to_rq(scmd);
+ 	int class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
+ 	unsigned int tf_flags = 0;
++	int dld = 0;
+ 	u64 block;
+ 	u32 n_block;
+ 	int rc;
+@@ -1598,6 +1611,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+ 			goto invalid_fld;
  		}
- 	} else {
--		unsigned int output_len = p - rbuf - 2;
--
--		rbuf[0] = output_len >> 8;
--		rbuf[1] = output_len;
-+		put_unaligned_be16(p - rbuf - 2, &rbuf[0]);
- 		rbuf[3] |= dpofua;
- 		if (ebd) {
- 			rbuf[7] = sizeof(sat_blk_desc);
-@@ -3637,7 +3743,7 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 	/*
- 	 * Check that read-only bits are not modified.
- 	 */
--	ata_msense_control(dev, mpage, false);
-+	ata_msense_control_spg0(dev, mpage, false);
- 	for (i = 0; i < CONTROL_MPAGE_LEN - 2; i++) {
- 		if (i == 0)
- 			continue;
+ 		scsi_16_lba_len(cdb, &block, &n_block);
++		dld = scsi_dld(cdb);
+ 		if (cdb[1] & (1 << 3))
+ 			tf_flags |= ATA_TFLAG_FUA;
+ 		if (!ata_check_nblocks(scmd, n_block))
+@@ -1622,7 +1636,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+ 	qc->flags |= ATA_QCFLAG_IO;
+ 	qc->nbytes = n_block * scmd->device->sector_size;
+ 
+-	rc = ata_build_rw_tf(qc, block, n_block, tf_flags, class);
++	rc = ata_build_rw_tf(qc, block, n_block, tf_flags, dld, class);
+ 	if (likely(rc == 0))
+ 		return 0;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 2cd6124a01e8..73dd2ebc277c 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -45,7 +45,7 @@ static inline void ata_force_cbl(struct ata_port *ap) { }
+ extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+ extern int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
+-			   unsigned int tf_flags, int class);
++			   unsigned int tf_flags, int dld, int class);
+ extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
+ 			     struct ata_device *dev);
+ extern unsigned ata_exec_internal(struct ata_device *dev,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d7fe735e6322..ab8b62036c12 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -209,6 +209,7 @@ enum {
+ 	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
+ 	ATA_QCFLAG_QUIET	= (1 << 6), /* don't report device error */
+ 	ATA_QCFLAG_RETRY	= (1 << 7), /* retry after failure */
++	ATA_QCFLAG_HAS_CDL	= (1 << 8), /* qc has CDL a descriptor set */
+ 
+ 	ATA_QCFLAG_EH		= (1 << 16), /* cmd aborted and owned by EH */
+ 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
 -- 
 2.39.2
 
