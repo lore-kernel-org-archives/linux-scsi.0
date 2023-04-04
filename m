@@ -2,73 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56B40C77B60
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E40C77B62
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 18:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236046AbjDDSfG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:35:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60586 "EHLO
+        id S236424AbjDDSgB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:36:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236495AbjDDSeq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:34:46 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38355618E;
-        Tue,  4 Apr 2023 11:32:37 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id q16so43498326lfe.10;
-        Tue, 04 Apr 2023 11:32:37 -0700 (PDT)
+        with ESMTP id S236402AbjDDSfl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 14:35:41 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE1D36582;
+        Tue,  4 Apr 2023 11:33:14 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id br6so43490147lfb.11;
+        Tue, 04 Apr 2023 11:33:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680633155;
+        d=1e100.net; s=20210112; t=1680633193;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SC3qFX3cppOOmIsochKPNMew46lgkTDShW84zGbqSAc=;
-        b=wWncxs7Mj1Ngr0Rzl2KzaOLdISDtRUcjxUquZt4ZCnDRlW+niAh9hYbZDuOlO2f0OK
-         pPYqXTygegEvjs+2Nki6Q6iTY0KX8K0ZXgJCXv1iFB2TLn6a6h2a7GEYDGCREOZBN41M
-         dy7LFQtIIKfoW+T8BU292xy63a7fZTxV020JZeu9GdG1F8g/xkRAmcYcAfFQwAXy9FRy
-         wBnRYenS6hY/Sb5FC1uAt0KNmp2VOD/qXHZE42eF21VsT9mSdRzNAxIaSMnrEpJMnPFc
-         6vj3G3fhBjBC1OeLx7X/syRepcg8TZYij3B42P29gmWTMH5Fjn9aRvbl08u4lEBEkyZC
-         QAzw==
-X-Gm-Message-State: AAQBX9cuXxm9W1ylowtCaFUhao3SUrHWF7MHfeXvAYml3LRdb50Iw2Ut
-        95t8Ypn2it9eRlEXVnxVi4OxKJhKXYIpmA==
-X-Google-Smtp-Source: AKy350Y6ujVPXi5ruA+9cYxiqUrnKVtzGE8CxDO04H8EfJQra/YCzI9RTpOXsWrQzbPO5o4uVvyTwg==
-X-Received: by 2002:ac2:561b:0:b0:4eb:2a26:babf with SMTP id v27-20020ac2561b000000b004eb2a26babfmr69262lfd.0.1680633155293;
-        Tue, 04 Apr 2023 11:32:35 -0700 (PDT)
+        bh=s8H2qIMz3Gty35NiNYKZYVBmBlGMd1so+hGxNCASCEY=;
+        b=IjxsZrGaUE0aYYVN3MWZaPwiFL+gtqk72QzhuVC+m02cpmK/W2kv6ESPaLF1eQaN7L
+         +BvDkVZxCOAv4SZ6YfwtwRs0len2kJ7c2YaRyG+0ISTSnUVZCkXGNwvyLkjX4v+9BJCc
+         6rxVLIME6lCH+bv4ZFPyKnmzmUXf1HInecLxadnBSHJjWKvRbOGisddJoDbmJhaHG24L
+         bEIevyiEj/80hKQYZrS9Ehe8P6bS2bm3CPPiDV1azgQEQonptiusrFC5caVr6OMOujH1
+         zB5Uw8OSctJTqHoTxFMVpfCmbdC8dcbtmjwAft6tOjU1++yJFkPipzUa4DDpkUAC9art
+         XSig==
+X-Gm-Message-State: AAQBX9cn/jSrkdXrcpJyJTeGFMoWNl4WrsZt/LzvN2QkDtGhTy36bM0R
+        9CEGP1jvg8H6bNClfKOtqNBdbem21brCGQ==
+X-Google-Smtp-Source: AKy350ZFt7lV1WRE8AnWhFZdWE3oAIje0MW5aj6+5d6FnhFD51oPReJH3kug7iGhTmXDx54sVjkkIA==
+X-Received: by 2002:a05:6512:147:b0:4eb:18d:91df with SMTP id m7-20020a056512014700b004eb018d91dfmr739642lfo.27.1680633193019;
+        Tue, 04 Apr 2023 11:33:13 -0700 (PDT)
 Received: from flawful.org (c-a3f5e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.245.163])
-        by smtp.gmail.com with ESMTPSA id q5-20020ac25145000000b004e95f1c9e7dsm2432666lfd.78.2023.04.04.11.32.34
+        by smtp.gmail.com with ESMTPSA id l25-20020a19c219000000b004eb258f73a9sm2426229lfc.163.2023.04.04.11.33.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Apr 2023 11:32:35 -0700 (PDT)
+        Tue, 04 Apr 2023 11:33:12 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id 25AF1865; Tue,  4 Apr 2023 20:32:34 +0200 (CEST)
+        id EEE2E2C0; Tue,  4 Apr 2023 20:33:11 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680633154; bh=8QygcPIx/4EeXbdRDR3kJ+DC5go+i6+mTczbxTeFKUE=;
+        t=1680633192; bh=EW5tWLpRWwKlaovMDrPHJz7vr86vu6Zk+592YnNpO6U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tYykk+GOg7RMVUW5xbrfVtp+SJvE6k9jUhmGnktkTzkXvguRF9+TK/9VQBZCFOTtl
-         f+cP5HGrjvnsF5lcLDgx0nhnTr50xdRF9oxW8ROxYIZ7lfcyZyvVlwHFcuHp+qYXhg
-         /ejN74tg6YqtHdA/t7Ml4Hm+go5QLtzAbuu4BVoo=
+        b=jUVxpf2UJZgXs0fQ2Rq7X3Ef77i/cUcFvsfNRoldU1Zvo7yl6AbsEKk0doh4e+w8K
+         ZxroN+RBWWiWxZjx8JQRArWwbflkLWgYnfON+dNUwV57pqCOazDZ9avyu2L6YQBrUj
+         DQ14dEY6nrcOZ1Zt/Ojy677fyjjp+w/1bERGeR/8=
 Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id DC1F8D26;
-        Tue,  4 Apr 2023 20:25:47 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id A19121110;
+        Tue,  4 Apr 2023 20:25:51 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680632748; bh=8QygcPIx/4EeXbdRDR3kJ+DC5go+i6+mTczbxTeFKUE=;
+        t=1680632751; bh=EW5tWLpRWwKlaovMDrPHJz7vr86vu6Zk+592YnNpO6U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q5HD4JN05uE4dcpiB76EFNGx+h9UVgH39ZtnKqngEPpk2eyMnFbwajZIoBoAb2QEu
-         rnarPvJIqgvXYTOjvjgzGEzGjO/1QwIbtOudDYQ3R+j7inwGZ0DVJ4ST5eTtc2R+H/
-         StJ+mh23sPjkl75x67ogPzGUr9YqHrYJQEvFoico=
+        b=UlQrLNLQVCD3GCKSKahHKH3U8uY5W3cSRBs2mrlY3+kdwvWmx9Gt1qlIibv5V6AO8
+         ub7Xc46v4PiQGYZ9NoiPlyH2XbYCGdY9rezoJPSovDO1LcXAdt/5LgBp1plDhFVALF
+         QWV88IoPAOLjmZMzFB2KCv3vWiOKmMFW7QR6U+mI=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v5 11/19] scsi: sd: handle read/write CDL timeout failures
-Date:   Tue,  4 Apr 2023 20:24:16 +0200
-Message-Id: <20230404182428.715140-12-nks@flawful.org>
+Subject: [PATCH v5 13/19] ata: libata: change ata_eh_request_sense() to not set CHECK_CONDITION
+Date:   Tue,  4 Apr 2023 20:24:18 +0200
+Message-Id: <20230404182428.715140-14-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230404182428.715140-1-nks@flawful.org>
 References: <20230404182428.715140-1-nks@flawful.org>
@@ -80,177 +79,110 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Niklas Cassel <niklas.cassel@wdc.com>
 
-Commands using a duration limit descriptor that has limit policies set
-to a value other than 0x0 may be failed by the device if one of the
-limits are exceeded. For such commands, since the failure is the result
-of the user duration limit configuration and workload, the commands
-should not be retried and terminated immediately. Furthermore, to allow
-the user to differentiate these "soft" failures from hard errors due to
-hardware problem, a different error code than EIO should be returned.
+Currently, ata_eh_request_sense() unconditionally sets the scsicmd->result
+to SAM_STAT_CHECK_CONDITION.
 
-There are 2 cases to consider:
-(1) The failure is due to a limit policy failing the command with a
-check condition sense key, that is, any limit policy other than 0xD.
-For this case, scsi_check_sense() is modified to detect failures with
-the ABORTED COMMAND sense key and the COMMAND TIMEOUT BEFORE PROCESSING
-or COMMAND TIMEOUT DURING PROCESSING or COMMAND TIMEOUT DURING
-PROCESSING DUE TO ERROR RECOVERY additional sense code. For these
-failures, a SUCCESS disposition is returned so that
-scsi_finish_command() is called to terminate the command.
+For Command Duration Limits policy 0xD:
+The device shall complete the command without error (SAM_STAT_GOOD)
+with the additional sense code set to DATA CURRENTLY UNAVAILABLE.
 
-(2) The failure is due to a limit policy set to 0xD, which result in the
-command being terminated with a GOOD status, COMPLETED sense key, and
-DATA CURRENTLY UNAVAILABLE additional sense code. To handle this case,
-the scsi_check_sense() is modified to return a SUCCESS disposition so
-that scsi_finish_command() is called to terminate the command.
-In addition, scsi_decide_disposition() has to be modified to see if a
-command being terminated with GOOD status has sense data.
-This is as defined in SCSI Primary Commands - 6 (SPC-6), so all
-according to spec, even if GOOD status commands were not checked before.
+It is perfectly fine to have sense data for a command that returned
+completion without error.
 
-If scsi_check_sense() detects sense data representing a duration limit,
-scsi_check_sense() will set the newly introduced SCSI ML byte
-SCSIML_STAT_DL_TIMEOUT. This SCSI ML byte is checked in
-scsi_noretry_cmd(), so that a command that failed because of a CDL
-timeout cannot be retried. The SCSI ML byte is also checked in
-scsi_result_to_blk_status() to complete the command request with the
-BLK_STS_DURATION_LIMIT status, which result in the user seeing ETIME
-errors for the failed commands.
+In order to support for CDL policy 0xD, we have to remove this
+assumption that having sense data means that the command failed
+(SAM_STAT_CHECK_CONDITION).
 
-Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Change ata_eh_request_sense() to not set SAM_STAT_CHECK_CONDITION,
+and instead move the setting of SAM_STAT_CHECK_CONDITION to the single
+caller that wants SAM_STAT_CHECK_CONDITION set, that way
+ata_eh_request_sense() can be reused in a follow-up patch that adds
+support for CDL policy 0xD.
+
+The only caller of ata_eh_request_sense() is protected by:
+if (!(qc->flags & ATA_QCFLAG_SENSE_VALID)), so we can remove this
+duplicated check from ata_eh_request_sense() itself.
+
+Additionally, ata_eh_request_sense() is only called from
+ata_eh_analyze_tf(), which is only called when iteratating the QCs using
+ata_qc_for_each_raw(), which does not include the internal tag,
+so cmd can never be NULL (all non-internal commands have qc->scsicmd set),
+so remove the !cmd check as well.
+
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 45 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c   |  4 ++++
- drivers/scsi/scsi_priv.h  |  1 +
- 3 files changed, 50 insertions(+)
+ drivers/ata/libata-eh.c | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index cf5ec5f5f4f6..dc85a75b33d9 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -536,6 +536,7 @@ static inline void set_scsi_ml_byte(struct scsi_cmnd *cmd, u8 status)
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index a6c901811802..598ae07195b6 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1401,8 +1401,11 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+  *
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	true if sense data could be fetched, false otherwise.
   */
- enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+-static void ata_eh_request_sense(struct ata_queued_cmd *qc)
++static bool ata_eh_request_sense(struct ata_queued_cmd *qc)
  {
-+	struct request *req = scsi_cmd_to_rq(scmd);
- 	struct scsi_device *sdev = scmd->device;
- 	struct scsi_sense_hdr sshdr;
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	struct ata_device *dev = qc->dev;
+@@ -1411,15 +1414,12 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc)
  
-@@ -595,6 +596,22 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (sshdr.asc == 0x10) /* DIF */
- 			return SUCCESS;
+ 	if (ata_port_is_frozen(qc->ap)) {
+ 		ata_dev_warn(dev, "sense data available but port frozen\n");
+-		return;
++		return false;
+ 	}
  
-+		/*
-+		 * Check aborts due to command duration limit policy:
-+		 * ABORTED COMMAND additional sense code with the
-+		 * COMMAND TIMEOUT BEFORE PROCESSING or
-+		 * COMMAND TIMEOUT DURING PROCESSING or
-+		 * COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY
-+		 * additional sense code qualifiers.
-+		 */
-+		if (sshdr.asc == 0x2e &&
-+		    sshdr.ascq >= 0x01 && sshdr.ascq <= 0x03) {
-+			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
-+			req->cmd_flags |= REQ_FAILFAST_DEV;
-+			req->rq_flags |= RQF_QUIET;
-+			return SUCCESS;
-+		}
-+
- 		if (sshdr.asc == 0x44 && sdev->sdev_bflags & BLIST_RETRY_ITF)
- 			return ADD_TO_MLQUEUE;
- 		if (sshdr.asc == 0xc1 && sshdr.ascq == 0x01 &&
-@@ -691,6 +708,14 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+-	if (!cmd || qc->flags & ATA_QCFLAG_SENSE_VALID)
+-		return;
+-
+ 	if (!ata_id_sense_reporting_enabled(dev->id)) {
+ 		ata_dev_warn(qc->dev, "sense data reporting disabled\n");
+-		return;
++		return false;
+ 	}
+ 
+ 	ata_tf_init(dev, &tf);
+@@ -1432,13 +1432,19 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc)
+ 	/* Ignore err_mask; ATA_ERR might be set */
+ 	if (tf.status & ATA_SENSE) {
+ 		if (ata_scsi_sense_is_valid(tf.lbah, tf.lbam, tf.lbal)) {
+-			ata_scsi_set_sense(dev, cmd, tf.lbah, tf.lbam, tf.lbal);
++			/* Set sense without also setting scsicmd->result */
++			scsi_build_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
++						cmd->sense_buffer, tf.lbah,
++						tf.lbam, tf.lbal);
+ 			qc->flags |= ATA_QCFLAG_SENSE_VALID;
++			return true;
  		}
- 		return SUCCESS;
- 
-+	case COMPLETED:
-+		if (sshdr.asc == 0x55 && sshdr.ascq == 0x0a) {
-+			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
-+			req->cmd_flags |= REQ_FAILFAST_DEV;
-+			req->rq_flags |= RQF_QUIET;
-+		}
-+		return SUCCESS;
+ 	} else {
+ 		ata_dev_warn(dev, "request sense failed stat %02x emask %x\n",
+ 			     tf.status, err_mask);
+ 	}
 +
- 	default:
- 		return SUCCESS;
- 	}
-@@ -785,6 +810,14 @@ static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	switch (get_status_byte(scmd)) {
- 	case SAM_STAT_GOOD:
- 		scsi_handle_queue_ramp_up(scmd->device);
-+		if (scmd->sense_buffer && SCSI_SENSE_VALID(scmd))
-+			/*
-+			 * If we have sense data, call scsi_check_sense() in
-+			 * order to set the correct SCSI ML byte (if any).
-+			 * No point in checking the return value, since the
-+			 * command has already completed successfully.
-+			 */
-+			scsi_check_sense(scmd);
- 		fallthrough;
- 	case SAM_STAT_COMMAND_TERMINATED:
- 		return SUCCESS;
-@@ -1807,6 +1840,10 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 		return !!(req->cmd_flags & REQ_FAILFAST_DRIVER);
- 	}
++	return false;
+ }
  
-+	/* Never retry commands aborted due to a duration limit timeout */
-+	if (scsi_ml_byte(scmd->result) == SCSIML_STAT_DL_TIMEOUT)
-+		return true;
-+
- 	if (!scsi_status_is_check_condition(scmd->result))
- 		return false;
- 
-@@ -1966,6 +2003,14 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		if (scmd->cmnd[0] == REPORT_LUNS)
- 			scmd->device->sdev_target->expecting_lun_change = 0;
- 		scsi_handle_queue_ramp_up(scmd->device);
-+		if (scmd->sense_buffer && SCSI_SENSE_VALID(scmd))
-+			/*
-+			 * If we have sense data, call scsi_check_sense() in
-+			 * order to set the correct SCSI ML byte (if any).
-+			 * No point in checking the return value, since the
-+			 * command has already completed successfully.
-+			 */
-+			scsi_check_sense(scmd);
- 		fallthrough;
- 	case SAM_STAT_COMMAND_TERMINATED:
- 		return SUCCESS;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 633c4e8af830..b894432ca0b9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -601,6 +601,8 @@ static blk_status_t scsi_result_to_blk_status(int result)
- 		return BLK_STS_MEDIUM;
- 	case SCSIML_STAT_TGT_FAILURE:
- 		return BLK_STS_TARGET;
-+	case SCSIML_STAT_DL_TIMEOUT:
-+		return BLK_STS_DURATION_LIMIT;
- 	}
- 
- 	switch (host_byte(result)) {
-@@ -798,6 +800,8 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 				blk_stat = BLK_STS_ZONE_OPEN_RESOURCE;
- 			}
- 			break;
-+		case COMPLETED:
-+			fallthrough;
- 		default:
- 			action = ACTION_FAIL;
- 			break;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 74324fba4281..f42388ecb024 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -27,6 +27,7 @@ enum scsi_ml_status {
- 	SCSIML_STAT_NOSPC		= 0x02,	/* Space allocation on the dev failed */
- 	SCSIML_STAT_MED_ERROR		= 0x03,	/* Medium error */
- 	SCSIML_STAT_TGT_FAILURE		= 0x04,	/* Permanent target failure */
-+	SCSIML_STAT_DL_TIMEOUT		= 0x05, /* Command Duration Limit timeout */
- };
- 
- static inline u8 scsi_ml_byte(int result)
+ /**
+@@ -1588,8 +1594,9 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc)
+ 		 *  was not included in the NCQ command error log
+ 		 *  (i.e. NCQ autosense is not supported by the device).
+ 		 */
+-		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID) && (stat & ATA_SENSE))
+-			ata_eh_request_sense(qc);
++		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID) &&
++		    (stat & ATA_SENSE) && ata_eh_request_sense(qc))
++			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
+ 		if (err & ATA_ICRC)
+ 			qc->err_mask |= AC_ERR_ATA_BUS;
+ 		if (err & (ATA_UNC | ATA_AMNF))
 -- 
 2.39.2
 
