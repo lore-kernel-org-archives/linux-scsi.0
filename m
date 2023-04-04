@@ -2,221 +2,125 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9173C76188
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 21:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3ECAC76188
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 23:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236274AbjDDVlu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 17:41:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49156 "EHLO
+        id S236450AbjDDXav (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 19:30:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234988AbjDDVlt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 17:41:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99753AB0;
-        Tue,  4 Apr 2023 14:41:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6456B639B3;
-        Tue,  4 Apr 2023 21:41:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12877C433D2;
-        Tue,  4 Apr 2023 21:41:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680644506;
-        bh=lMszXUPs3xmT4/L30IdHdQrLlqYnTYyFa1K84xFbLzU=;
-        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
-        b=suGmChBU3viKp/0FZp/PClBH3B/13p89RcgTbkDT3EsMOXC3oDkh6gYjPX2bapCZ/
-         aGs5TKU6V9bgcqh1+blinlxGO/YS49LgT+ZRsn9CSuZPUp3XhsRjKZLNJQERP6YH7n
-         SH0zxfrw3GYMpps3+hAiPGqPJhzv05asqqtUeUY3Xpu/X0hkpApOyLdZR3MDWmeS9l
-         bznh3G5HdNQLT0FjYySymJB7exOOe9Wsj+D0Gp1bOXwFubBCPhL4NtvoRFPcBS1Tka
-         gIFnl1bh9qp5+7QWCvUEVBHU7dlLZ+y16JCBSFBb75449My+VcOMpvtX1EiA9MhlVW
-         Y9JbxaO1APLFA==
-Date:   Tue, 4 Apr 2023 23:41:42 +0200 (CEST)
-From:   Jiri Kosina <jikos@kernel.org>
-To:     James Bottomley <jejb@linux.ibm.com>
-cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ding Hui <dinghui@sangfor.com.cn>,
-        Michal Kolar <mich.k@seznam.cz>
-Subject: [PATCH v2] scsi: ses: Handle enclosure with just a primary component
- gracefully
-In-Reply-To: <fa174980e5c9bdafae3426fffe45b97b37f69c84.camel@linux.ibm.com>
-Message-ID: <nycvar.YFH.7.76.2304042251560.29760@cbobk.fhfr.pm>
-References: <nycvar.YFH.7.76.2304042122270.29760@cbobk.fhfr.pm> <fa174980e5c9bdafae3426fffe45b97b37f69c84.camel@linux.ibm.com>
-User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
+        with ESMTP id S229973AbjDDXau (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 19:30:50 -0400
+X-Greylist: delayed 169 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 04 Apr 2023 16:30:50 PDT
+Received: from wnew2-smtp.messagingengine.com (wnew2-smtp.messagingengine.com [64.147.123.27])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06B60171A;
+        Tue,  4 Apr 2023 16:30:49 -0700 (PDT)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailnew.west.internal (Postfix) with ESMTP id 31FC02B06716;
+        Tue,  4 Apr 2023 19:18:41 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute2.internal (MEProxy); Tue, 04 Apr 2023 19:18:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
+        cc:cc:content-transfer-encoding:content-type:content-type:date
+        :date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+        :references:reply-to:sender:subject:subject:to:to; s=fm2; t=
+        1680650320; x=1680653920; bh=Dh/jNwxjYyR3YpziKbhDIW+cpNCUKNq7RU5
+        ux1R/gic=; b=q5V2S59rH5jkx5zlsSCfiUImJuQixSIsU7cedybja9ADMiLFtFV
+        ToS5U+4F2TygnB3tXBEmHcazEmsV6viFXUK/QmSWQG8U4AAXJwdaGgfVL9654u2m
+        WBA2iSxif7a3ztZXcy4diSv2ufdH9QXmuv0zY5LnsveYJx+LB8LwGfdJU4QerS8U
+        ozSWsfJr9Wu6eSUXq7IKP7VcKRvQcq9xlW3+NvHfzQKiu1SkUEZg24ma1eBG5sHR
+        zAWW8v/XZmaHkMpPYbVr2Tg9naW0TEDIY5PgRANbhchdJ+2L8NbRDvxzRIuLjzeG
+        JDBErgfQA5rCzWKrvBeY5Pt+XgmKlRe4sdw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-transfer-encoding
+        :content-type:content-type:date:date:feedback-id:feedback-id
+        :from:from:in-reply-to:in-reply-to:message-id:mime-version
+        :references:reply-to:sender:subject:subject:to:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=i3db14652.fm2;
+         t=1680650320; x=1680653920; bh=Dh/jNwxjYyR3YpziKbhDIW+cpNCUKNq7
+        RU5ux1R/gic=; b=DnpaVgehezZt6XRUm7fxSj+Yi74DH9MGh2041S2cXS/6dx2Y
+        qi5YyySk5SkiqnMEJKF3QxOUYZVlTGTSUIJzoqex04jyKw0WVxwWtzIqDAxqdHj4
+        WOWSRL/HQC3bnqYybZnhNXmMgswdlELbtaYwqo+W6EQL63NF1s2vwqeZYle8SewV
+        ce/joO5ME77vcSLbgW/vR7t6E/17RzTBZFVhXdjK5GIHdZJSvfRFnuQu6pcvU/OK
+        4+GVxqe6p4GazPlpaG8hQSuijghTeQunkrA6YsdBBeDepJje2IqbpDiRxqY++kSn
+        o1IXRvG2FtotAmmZNi3USo/4d0pBBHFU3seLHA==
+X-ME-Sender: <xms:T7AsZOhGqhftAi9KnSZ_t0aeV05JPij0hZwJRYlSlrtTekJ_e8Flpg>
+    <xme:T7AsZPC8CuXQ_8IHeEsVlq5niGmL2T5CUg47OaIcyCpenfdfFtPcbcVXOjVsQeatL
+    wh_pI7F1gx1RV8Dpv0>
+X-ME-Received: <xmr:T7AsZGFq8m-iWriWNrLUQbe6wnpo51z_S12pPSC-S-6DbMFkW9bcIfjtNvvTdn9SdTeuxhNQiGZ77V7Xc1uU9kp5LvU7JvCL>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrvdejtddgudejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtfeejnecuhfhrohhmpeffrghm
+    ihgvnhcunfgvucfoohgrlhcuoegulhgvmhhorghlsehfrghsthhmrghilhdrtghomheqne
+    cuggftrfgrthhtvghrnhepteefiefhieetgfevhfegfeehffetteduieetudfgleetvdff
+    udelveejfefhfeejnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
+    hfrhhomhepughlvghmohgrlhesfhgrshhtmhgrihhlrdgtohhm
+X-ME-Proxy: <xmx:T7AsZHTdGep7XbMvF9ciWoRW17Z_vfRc44HeTVo9iB1W6MQXf_qUqA>
+    <xmx:T7AsZLxGLeV35LWE9NoOB0nI0-YxRatB87c2yQAz4UIaOS02pe-_vQ>
+    <xmx:T7AsZF6iCgD2ziqnSVNG9nqM5gKWRNxgOKCb4PQyvm_jbJIvkZGUgg>
+    <xmx:ULAsZJ4IJiknPsjBzOd-7aJN2WYRsciV0liGW9fsVhyENRfK-T_OdiG8TgE>
+Feedback-ID: i3db14652:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 4 Apr 2023 19:18:36 -0400 (EDT)
+Message-ID: <83f26d2a-6577-50d9-9a76-0f95dfb05bca@fastmail.com>
+Date:   Wed, 5 Apr 2023 08:18:34 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH v5 09/19] scsi: allow enabling and disabling command
+ duration limits
+To:     Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <nks@flawful.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230404182428.715140-1-nks@flawful.org>
+ <20230404182428.715140-10-nks@flawful.org> <ZCx6dzyEfWYNaF6r@google.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@fastmail.com>
+In-Reply-To: <ZCx6dzyEfWYNaF6r@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 4 Apr 2023, James Bottomley wrote:
+On 4/5/23 04:28, Igor Pylypiv wrote:
+>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+>> index 4994148e685b..9a54b2c0fee7 100644
+>> --- a/drivers/scsi/scsi_sysfs.c
+>> +++ b/drivers/scsi/scsi_sysfs.c
+>> @@ -1222,6 +1222,36 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
+>>  		   sdev_show_queue_ramp_up_period,
+>>  		   sdev_store_queue_ramp_up_period);
+>>  
+>> +static ssize_t sdev_show_cdl_enable(struct device *dev,
+>> +				    struct device_attribute *attr, char *buf)
+>> +{
+>> +	struct scsi_device *sdev = to_scsi_device(dev);
+>> +
+>> +	return sysfs_emit(buf, "%d\n", (int)sdev->cdl_enable);
+>> +}
+>> +
+>> +static ssize_t sdev_store_cdl_enable(struct device *dev,
+>> +				     struct device_attribute *attr,
+>> +				     const char *buf, size_t count)
+>> +{
+>> +	int ret;
+>> +	bool v;
+>> +
+>> +	if (!capable(CAP_SYS_ADMIN))
+>> +		return -EACCES;
+> CAP_SYS_ADMIN seems be too restrictive. NCQ PRIO (ncq_prio_enable) does not 
+> require CAP_SYS_ADMIN. Since NCQ PRIO and CDL are mutually exclusive a user
+> should be able to toggle both features.
 
-> > This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has
-> > no components") and introduces proper handling of case where there
-> > are no detected secondary components, but primary component
-> > (enumerated in num_enclosures) does exist. That fix was originally
-> > proposed by Ding Hui <dinghui@sangfor.com.cn>.
-> 
-> I think everything in here looks fine except this:
-> 
-> > --- a/drivers/scsi/ses.c
-> > +++ b/drivers/scsi/ses.c
-> > @@ -509,9 +509,6 @@ static int ses_enclosure_find_by_addr(struct
-> > enclosure_device *edev,
-> >         int i;
-> >         struct ses_component *scomp;
-> >  
-> > -       if (!edev->component[0].scratch)
-> > -               return 0;
-> > -
-> >         for (i = 0; i < edev->components; i++) {
-> >                 scomp = edev->component[i].scratch;
-> >                 if (scomp->addr != efd->addr)
-> 
-> If you remove the check, then scomp could be NULL here and we'll oops
-> on scomp->addr.
+Indeed, we can have CDL be the same as NCQ prio. We can remove this
+SYS_CAP_ADMIN check.
 
-This hunk was taken from the original 2020 fix, but you are right, thanks 
-for spotting this.
-
-Please find v2 below, with this hunk removed, and Tested-by: added.
-
-
-
-
-
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: [PATCH] scsi: ses: Handle enclosure with just a primary component gracefully
-
-This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has no
-components") and introduces proper handling of case where there are no detected
-secondary components, but primary component (enumerated in num_enclosures)
-does exist. That fix was originally proposed by Ding Hui <dinghui@sangfor.com.cn>.
-
-Completely ignoring devices that have one primary enclosure and no secondary one
-results in ses_intf_add() bailing completely
-
-	scsi 2:0:0:254: enclosure has no enumerated components
-        scsi 2:0:0:254: Failed to bind enclosure -12ven in valid configurations such
-
-even on valid configurations with 1 primary and 0 secondary enclosures as below:
-
-	# sg_ses /dev/sg0
-	  3PARdata  SES               3321
-	Supported diagnostic pages:
-	  Supported Diagnostic Pages [sdp] [0x0]
-	  Configuration (SES) [cf] [0x1]
-	  Short Enclosure Status (SES) [ses] [0x8]
-	# sg_ses -p cf /dev/sg0
-	  3PARdata  SES               3321
-	Configuration diagnostic page:
-	  number of secondary subenclosures: 0
-	  generation code: 0x0
-	  enclosure descriptor list
-	    Subenclosure identifier: 0 [primary]
-	      relative ES process id: 0, number of ES processes: 1
-	      number of type descriptor headers: 1
-	      enclosure logical identifier (hex): 20000002ac02068d
-	      enclosure vendor: 3PARdata  product: VV                rev: 3321
-	  type descriptor header and text list
-	    Element type: Unspecified, subenclosure id: 0
-	      number of possible elements: 1
-
-The changelog for the original fix follows
-
-=====
-We can get a crash when disconnecting the iSCSI session,
-the call trace like this:
-
-  [ffff00002a00fb70] kfree at ffff00000830e224
-  [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
-  [ffff00002a00fbd0] device_del at ffff0000086b6a98
-  [ffff00002a00fc50] device_unregister at ffff0000086b6d58
-  [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
-  [ffff00002a00fca0] scsi_remove_device at ffff000008706134
-  [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
-  [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
-  [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
-  [ffff00002a00fdb0] process_one_work at ffff00000810f35c
-  [ffff00002a00fe00] worker_thread at ffff00000810f648
-  [ffff00002a00fe70] kthread at ffff000008116e98
-
-In ses_intf_add, components count could be 0, and kcalloc 0 size scomp,
-but not saved in edev->component[i].scratch
-
-In this situation, edev->component[0].scratch is an invalid pointer,
-when kfree it in ses_intf_remove_enclosure, a crash like above would happen
-The call trace also could be other random cases when kfree cannot catch
-the invalid pointer
-
-We should not use edev->component[] array when the components count is 0
-We also need check index when use edev->component[] array in
-ses_enclosure_data_process
-=====
-
-Reported-by: Michal Kolar <mich.k@seznam.cz>
-Tested-by: Michal Kolar <mich.k@seznam.cz>
-Originally-by: Ding Hui <dinghui@sangfor.com.cn>
-Cc: stable@vger.kernel.org
-Fixes: 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has no components")
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
----
-
-v1 -> v2:
-
-	- fix potential oops in ses_enclosure_find_by_addr() spotted by 
-	  James
-	- add Tested-by:
-
- drivers/scsi/ses.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index b11a9162e73a..f3fa92f493ec 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -602,8 +602,10 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 						components++,
- 						type_ptr[0],
- 						name);
--				else
-+				else if (components < edev->components)
- 					ecomp = &edev->component[components++];
-+				else
-+					ecomp = ERR_PTR(-EINVAL);
- 
- 				if (!IS_ERR(ecomp)) {
- 					if (addl_desc_ptr) {
-@@ -734,11 +736,6 @@ static int ses_intf_add(struct device *cdev,
- 			components += type_ptr[1];
- 	}
- 
--	if (components == 0) {
--		sdev_printk(KERN_WARNING, sdev, "enclosure has no enumerated components\n");
--		goto err_free;
--	}
--
- 	ses_dev->page1 = buf;
- 	ses_dev->page1_len = len;
- 	buf = NULL;
-@@ -780,9 +777,11 @@ static int ses_intf_add(struct device *cdev,
- 		buf = NULL;
- 	}
- page2_not_supported:
--	scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
--	if (!scomp)
--		goto err_free;
-+	if (components > 0) {
-+		scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
-+		if (!scomp)
-+			goto err_free;
-+	}
- 
- 	edev = enclosure_register(cdev->parent, dev_name(&sdev->sdev_gendev),
- 				  components, &ses_enclosure_callbacks);
--- 
-Jiri Kosina
-SUSE Labs
 
