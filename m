@@ -2,116 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D7AC761A6
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 09:30:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90412C761AF
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Apr 2023 10:12:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234179AbjDDJaJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Apr 2023 05:30:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60016 "EHLO
+        id S234413AbjDDKMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Apr 2023 06:12:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233200AbjDDJaH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 05:30:07 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B85AE1BF1
-        for <linux-scsi@vger.kernel.org>; Tue,  4 Apr 2023 02:29:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680600560;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=90t9qlvXCEkn6jRJkX8e3MPo0b4uyOK8JkGmrXtq0Eg=;
-        b=Qbk6UrTlucHGgs50ziEx+ImiILVftO4sW1eG7wTEoTeEFV0sigom9eyuOr/Cpf+0yUwS5o
-        SwlzVFVlW3O4CjTUE4keNwQtxdkGsBO80Htdm4jW+aj5mI0aH1PbdGo1lT4PnsM70gLhPk
-        QgwQp2aA0bmu5V30+JYb1cLEc8ED8nc=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-211-kq7XSDhZOG2IGMVKmpmeIQ-1; Tue, 04 Apr 2023 05:29:18 -0400
-X-MC-Unique: kq7XSDhZOG2IGMVKmpmeIQ-1
-Received: by mail-ed1-f72.google.com with SMTP id j21-20020a508a95000000b004fd82403c91so44867941edj.3
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Apr 2023 02:29:18 -0700 (PDT)
+        with ESMTP id S234317AbjDDKMU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2023 06:12:20 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13F8330EF
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Apr 2023 03:12:10 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id h8so128422321ede.8
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Apr 2023 03:12:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1680603128;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xTheVrrzZgI2UatHNgx/iTW24+oxWTi/GNFmjmsvjoQ=;
+        b=ao+ZBWMwwB/pLABUItwEupGXl8poQ6XMbDDiXZ0A7majfEF3uLeXu7lGivbuFdu9IK
+         1oMth/fUFT6Ky5hxR6rlbYWGlefSkRJ8bZevmF2xdkO4G86CP9On0eqSVAFE2mg2qF6N
+         oqxywNkgi9sS8by7ChDgBpS2u/8XeFV04cIGjhSRzAjGFWqtXf3/jVHUgQT8gD7IdMPB
+         OzfqH4qdG/b83IJEzNqEyKM8SKNcfXwxwEiTm704wcvZJAL+a/ai1M2MYjDDly39ulrW
+         mq0pTt2VDD6PJjrJ5Ct15h39hHw7NdlgJ006gZphGbRbuNFbWz6les2sAWXHUsYDQnoL
+         VPrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680600556;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20210112; t=1680603128;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=90t9qlvXCEkn6jRJkX8e3MPo0b4uyOK8JkGmrXtq0Eg=;
-        b=a97JJpnCCWj+0FRDRSQkmm8dPTpsqzxZjDZyKZ1LY9gLDDOAqbz17s1kBPraSjSU27
-         A07oCIiUCmn6wM3Cubtk5cZY+LGlqkR4wPlDF+ZjikTzPtIOqurOC/MRBteAX+S6Vy/y
-         IEO5uk5gz31KxtxC64yKHC7R+YEuiEQ2Rid5evCpM4pV5WcWGe6jn/G1hPRO7k+fYc3s
-         2IPdydCzg+ooO73MfzACEs4FzIdbvP+Au2O9xYPY+zymaIUndQ/jHmuN6ExMmYYDw7Q1
-         0jfNLDrzYUiXO38zaH375mJvC2d1ijhqpUacs2ty3agsbTtwhkuCEphm0URv9FLlrYpD
-         8FWw==
-X-Gm-Message-State: AAQBX9cj7gaRPmaduugpPeTv8T+Voa/5eRpADAGfMTIav72j9ePphh/H
-        J8H5H+8cZnDzGUhHxn+aED575fD1DNTn6NfdVZNQ6/Q3sxz48K37Wyg9zbTbqzq/vetguc9LxvP
-        o5oSS9e2GNYRYoe4YWGoRF/t5hJ59Dw==
-X-Received: by 2002:a17:906:44b:b0:93b:d1ee:5f41 with SMTP id e11-20020a170906044b00b0093bd1ee5f41mr1573540eja.31.1680600556723;
-        Tue, 04 Apr 2023 02:29:16 -0700 (PDT)
-X-Google-Smtp-Source: AKy350ZDlpAaiC+/MWG7nwi0HYuu4GQ3JuOdbn5jdofZ8TotqsNpShc+E3HKa35p6Iw9MMmt4HGUMQ==
-X-Received: by 2002:a17:906:44b:b0:93b:d1ee:5f41 with SMTP id e11-20020a170906044b00b0093bd1ee5f41mr1573523eja.31.1680600556414;
-        Tue, 04 Apr 2023 02:29:16 -0700 (PDT)
-Received: from [192.168.0.107] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
-        by smtp.gmail.com with ESMTPSA id cw16-20020a170906c79000b0093dce4e6257sm5642622ejb.201.2023.04.04.02.29.15
+        bh=xTheVrrzZgI2UatHNgx/iTW24+oxWTi/GNFmjmsvjoQ=;
+        b=Kf9m/gXFyvaJ0uFt2/dScGeHO7ecL7L9059HLa9TRsLCXuJqjYqtLVPMvZo5XIsKBT
+         lSuJOu9+xKtG0ZjeHkGDnghvccf7DkgFUJ0vI5IhTZ8Wt6xWpZGS9YDa/tRve0MhE0bO
+         vcfKD5HNVqYmiVe4KfjKHTWnIGl9Fg6G4gKjnv1wvy+ORp7glRlbnyLzQfgQ0usWhHNB
+         0hcx67f5SSb19efLzgvYI4zmlDeTw/0aLQRHZJ0ApquBywTxz427RnHHkW3tHcsUc+iS
+         hpwT1vx0QzPqRCuPQxxEOLDoBsvRLjJtRqQqVXF2hwBH3D6TLHTMri4SBd+TcFK2e2MP
+         wsHw==
+X-Gm-Message-State: AAQBX9euZQ4S2QddACxDpVQGBYhcXeBwO2OB1UXjQrnjXCVunWTXw0Rv
+        l3mKhv1AqOn6dK2S/EWePfqJCA==
+X-Google-Smtp-Source: AKy350bDKkBioiP7BMZu/6m8PZU3hw/V+yKQqTf4KCF46eRor84VbeJ0prTRJhc1ldSMylybV2yl/g==
+X-Received: by 2002:a05:6402:2788:b0:500:2cc6:36d5 with SMTP id b8-20020a056402278800b005002cc636d5mr21154431ede.8.1680603128556;
+        Tue, 04 Apr 2023 03:12:08 -0700 (PDT)
+Received: from ?IPV6:2a02:810d:15c0:828:99ed:4575:6001:8bda? ([2a02:810d:15c0:828:99ed:4575:6001:8bda])
+        by smtp.gmail.com with ESMTPSA id z21-20020a056402275500b00501d73cfc86sm5647456edd.9.2023.04.04.03.12.07
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Apr 2023 02:29:15 -0700 (PDT)
-Message-ID: <4112a14d-924a-e070-6687-33a30a4475a5@redhat.com>
-Date:   Tue, 4 Apr 2023 11:29:15 +0200
+        Tue, 04 Apr 2023 03:12:08 -0700 (PDT)
+Message-ID: <c816d432-26b8-2655-adf1-4b72b8645215@linaro.org>
+Date:   Tue, 4 Apr 2023 12:12:06 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
-Subject: Re: [PATCH] scsi: sd: mark the scsi device in shutdown as deleted
-To:     Bart Van Assche <bvanassche@acm.org>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20230330164943.11607-1-thenzl@redhat.com>
- <af17886b-5b18-f71f-9fe7-ea929f30b5a6@oracle.com>
- <e4dd3ea37807166820e3b3b7e5102e23ab6b3898.camel@HansenPartnership.com>
- <457808a0-1ec2-d846-075c-7f8812a7a416@redhat.com>
- <488bb066654104bc6b84fdc45595232305519597.camel@HansenPartnership.com>
- <33501374-2cc7-ba1c-9d42-0da2aeed4341@redhat.com>
- <0afc900c-2717-6751-de54-9f65bf127484@acm.org>
- <3b5cf6e6-9dec-880f-7807-6d0461cbf514@redhat.com>
- <eb5335bc-760d-4591-8a73-71f10dcd8155@acm.org>
+Subject: Re: [PATCH v5 2/6] dt-bindings: ufs: qcom: Add ICE phandle
 Content-Language: en-US
-From:   Tomas Henzl <thenzl@redhat.com>
-In-Reply-To: <eb5335bc-760d-4591-8a73-71f10dcd8155@acm.org>
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20230403200530.2103099-1-abel.vesa@linaro.org>
+ <20230403200530.2103099-3-abel.vesa@linaro.org>
+ <9fc90c8b-9234-84fa-7dab-fee9de2b9813@linaro.org>
+ <ZCvm3fzSh8owVDdc@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <ZCvm3fzSh8owVDdc@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/3/23 21:56, Bart Van Assche wrote:
-> On 4/2/23 14:49, Tomas Henzl wrote:
->> On 3/31/23 20:48, Bart Van Assche wrote:
->>> I'm interested in failing future I/O from inside sd_shutdown() because
->>> it would allow me to remove the I/O quiescing code from the UFS driver
->>> shutdown callback.
->> I'm aware of this, other drivers do have similar code and so it would
->> help elsewhere as well. The patch as it is doesn't however ensure that
->> there isn't for example an I/O started before sd.shutdown which may
->> arrive in a driver after his shutdown has been called. Because of that I
->> haven't used this as an argument in the discussion here.
+On 04/04/2023 10:59, Abel Vesa wrote:
+> On 23-04-04 07:41:55, Krzysztof Kozlowski wrote:
+>> On 03/04/2023 22:05, Abel Vesa wrote:
+>>> Starting with SM8550, the ICE will have its own devicetree node
+>>> so add the qcom,ice property to reference it.
+>>>
+>>> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+>>> ---
+>>>
+>>> The v4 is here:
+>>> https://lore.kernel.org/all/20230327134734.3256974-4-abel.vesa@linaro.org/
+>>>
+>>> Changes since v4:
+>>>  * Added check for sm8550 compatible w.r.t. qcom,ice in order to enforce
+>>>    it while making sure none of the other platforms are allowed to use it
+>>
+>> Why?
 > 
-> Has it been considered to call blk_mq_freeze_queue() and 
-> blk_mq_unfreeze_queue() to wait for I/O that started earlier?
-> 
-> Has it been considered to set QUEUE_FLAG_DYING to make future SCSI 
-> commands fail? See also blk_mq_destroy_queue().
+> SM8550 will be the first platform to use the new DT bindings w.r.t ICE.
 
-I haven't been considering anything from above. I just had noticed on a
-system timeouts when in kexec and wanted to have that fixed and for this
-case it is sufficient when the blocking is only close to 100% (and the
-patch is simple).
-I, like you, see the benefit of moving a bit of functionality from LLD
-to scsi layer but my patch wasn't accepted and I doubt that something
-more complex could be.
+This I understand, but why other platforms cannot use it?
 
 > 
-> Thanks,
+>>
+>> Also, this does not solve my previous question still.
 > 
-> Bart.
-> 
+> Well, the clocks are not added for the a few platforms (which include
+> SM8550). Same for 'ice' reg range.. So the only thing left is to
+> enforce the qcom,ice property availability only for SM8550. I believe
+> it solves the mutual exclusiveness of the "ice" reg range along with the
+> clocks versus the qcom,ice property, by enforcing at compatible level.
+
+Ah, I think I understand. That would work except I don't understand why
+enforcing qcom,qce only for specific, new SoCs. Assuming it is a correct
+hardware representation, we want it for everyone, don't we?
+
+Best regards,
+Krzysztof
 
