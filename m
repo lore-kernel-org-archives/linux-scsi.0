@@ -2,118 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93910C76188
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Apr 2023 08:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 511F3C76188
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Apr 2023 13:30:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237377AbjDEIgU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Apr 2023 04:36:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58438 "EHLO
+        id S238222AbjDEN37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Apr 2023 09:29:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237128AbjDEIgT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2023 04:36:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEA65271C;
-        Wed,  5 Apr 2023 01:36:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 41E90621F6;
-        Wed,  5 Apr 2023 08:36:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34A95C4339E;
-        Wed,  5 Apr 2023 08:36:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680683777;
-        bh=ImzeZUFNJhml8hQCobJLElzt2smrsWg3HmVJ1efYQPQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=RRzrlb4grcco6JMZ9hj9E0jLzPYBeGHOSy5nGU5wJ0BCNcmhkO7gL0eSp1+Pv3fc5
-         7dVTq19HHGbuUrQEtx8PpzK0JzPPkk5xJX9aDPSBBiOGwwWPC5vjKeyBMKiLUQ+Qga
-         fsOqMcthI4xiZEV7pcwc6kdEbBV/qnOkBqkk9Lw7UnNWz/e5VcM2xoZxAiXOdC7jte
-         dppIPlfq/MAwmKFl7W25PwvPNQRNKBqIqOJT9AuEp6SoNjSnNn06h4Xts8l1hmz0Ms
-         OxkXZX4CXveuWXtrXaxVTXSAmG4WQTWMqco/DR9D1wifQvNPwEPMuHE8G/Ag7tbmDU
-         U48TP0O3LOOmw==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Xiang Chen <chenxiang66@hisilicon.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Yihang Li <liyihang9@huawei.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, John Garry <john.garry@huawei.com>,
-        Xingui Yang <yangxingui@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: hisi_sas: work around build failure in suspend function
-Date:   Wed,  5 Apr 2023 10:36:04 +0200
-Message-Id: <20230405083611.3376739-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S238266AbjDEN36 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2023 09:29:58 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C290730F3;
+        Wed,  5 Apr 2023 06:29:57 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1pk3Cy-0006DQ-5p; Wed, 05 Apr 2023 15:29:52 +0200
+Message-ID: <065a556a-a4a1-cb94-7996-7c4eee373b2c@leemhuis.info>
+Date:   Wed, 5 Apr 2023 15:29:51 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: scsi: Recent kernels drop into emergency shell
+Content-Language: en-US, de-DE
+From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+To:     Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org, hare@suse.de, hch@lst.de, ming.lei@redhat.com,
+        sumanesh.samanta@broadcom.com, michael.christie@oracle.com,
+        john.garry@huawei.com, johannes.thumshirn@wdc.com, axboe@kernel.dk,
+        osandov@fb.com, kashyap.desai@broadcom.com,
+        gregkh@linuxfoundation.org,
+        Linux kernel regressions list <regressions@lists.linux.dev>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
+          Linux regressions mailing list 
+          <regressions@lists.linux.dev>
+References: <20230220061559.GJ159593@linux.vnet.ibm.com>
+ <8489afbb-2391-c22f-41fc-21726f09e444@leemhuis.info>
+In-Reply-To: <8489afbb-2391-c22f-41fc-21726f09e444@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1680701397;c77d0f59;
+X-HE-SMSGID: 1pk3Cy-0006DQ-5p
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+[TLDR: This mail in primarily relevant for Linux kernel regression
+tracking. See link in footer if these mails annoy you.]
 
-The suspend/resume functions in this driver seem to have multiple
-problems, the latest one just got introduced by a bugfix:
+On 20.02.23 08:40, Linux regression tracking (Thorsten Leemhuis) wrote:
 
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
- 5142 |         if (atomic_read(&device->power.usage_count)) {
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
- 5142 |         if (atomic_read(&device->power.usage_count)) {
+> On 20.02.23 07:15, Srikar Dronamraju wrote:
+>> On a freshly installed system, booting latest upstream kernels causes the
+>> system to drop into emergency shell. The reason for dropping into emergency
+>> shell is system is unable to mount /home partition.
+>
+> Thanks for the report. To be sure the issue doesn't fall through the
+> cracks unnoticed, I'm adding it to regzbot, the Linux kernel regression
+> tracking bot:
+> 
+> #regzbot ^introduced c92a6b5d63359dd
+> #regzbot title scsi: storage not properly detected
+> #regzbot ignore-activity
 
-As far as I can tell, the 'usage_count' is not meant to be accessed
-by device drivers at all, though I don't know what the driver is
-supposed to do instead.
+I had missed that a fix for this was applied, as it didn't contain a
+link to the reports for this issue, hence I have to specify it manually
+to resolve this:
 
-Another problem is the use of the deprecated UNIVERSAL_DEV_PM_OPS(),
-and marking functions as __maybe_unused to avoid warnings about
-unused functions.  This should probably be changed to using
-DEFINE_RUNTIME_DEV_PM_OPS().
+#regzbot fix: 4b1a2c2a8e0ddcb89c
+#regzbot ignore-activity
 
-Both changes require actually understanding what the driver needs to
-do, and being able to test this, so instead here is the simplest
-patch to make it pass the randconfig builds instead.
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
 
-Fixes: e368d38cb952 ("scsi: hisi_sas: Exit suspend state when usage count is greater than 0")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-Maintainers: If possible, please revisit this to do a proper fix.
-If that takes too much time, this patch can be applied as a
-workaround in the meantime, and might also help in case the
-e368d38cb952 patch gets backported to stable kernels.
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index d160b9b7479b..12d588454f5d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -5139,11 +5139,13 @@ static int _suspend_v3_hw(struct device *device)
- 	flush_workqueue(hisi_hba->wq);
- 	interrupt_disable_v3_hw(hisi_hba);
- 
-+#ifdef CONFIG_PM
- 	if (atomic_read(&device->power.usage_count)) {
- 		dev_err(dev, "PM suspend: host status cannot be suspended\n");
- 		rc = -EBUSY;
- 		goto err_out;
- 	}
-+#endif
- 
- 	rc = disable_host_v3_hw(hisi_hba);
- 	if (rc) {
-@@ -5162,7 +5164,9 @@ static int _suspend_v3_hw(struct device *device)
- 
- err_out_recover_host:
- 	enable_host_v3_hw(hisi_hba);
-+#ifdef CONFIG_PM
- err_out:
-+#endif
- 	interrupt_enable_v3_hw(hisi_hba);
- 	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 	clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
--- 
-2.39.2
 
