@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB838C761A6
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A7EC761A6
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238664AbjDFLnd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 07:43:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60300 "EHLO
+        id S238664AbjDFLpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:45:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238661AbjDFLnQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:43:16 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94557BDEB;
-        Thu,  6 Apr 2023 04:38:58 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id t14so40405042ljd.5;
-        Thu, 06 Apr 2023 04:38:58 -0700 (PDT)
+        with ESMTP id S239148AbjDFLp3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:45:29 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2534E049;
+        Thu,  6 Apr 2023 04:41:24 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id k37so50472950lfv.0;
+        Thu, 06 Apr 2023 04:41:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680781064;
+        d=1e100.net; s=20210112; t=1680781214;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JFCch4ACvmYufrbxJsh01vJ15Xj4AhHZaLEgl+aiNvg=;
-        b=P9PpSenmEdL5snjU1YqS2z7F5snwolLJEyLLkzfLeupEKJvXVm4JDq/pDcQ8ijNX8a
-         AFFl1iRDcYHLJ/YJF/gCGx0aWs9frHyHVdxpqwTo0UmbCd7jWcdDmnhHSpMKR18dCctr
-         IDw0qhZSqEiwlO1hwfZsJj9I5fBB/B8oNrQneFQGa5At8Gdr5Eo2/8xN1vLQm09C+s2S
-         RQZDPOvlB6US7cmltqDVvvaGiRBruF7sfnpdQ971P7ya9wJM22bEJXZ6HdbJPF4b7o+3
-         771S2Ql/d5PaQwICdRjap7L+yvlExw/3Tl8XHFpvS7uycNtGqfg/bkWGKIGY8+4vCGej
-         hESw==
-X-Gm-Message-State: AAQBX9cPH4HQLwlrbkGOe4iPECI65oyoYONZPRzdwyM8cjsLsr8afzE2
-        xP4oh+0K77fCTV7+b4Xvn7Njgc4yQkttPA==
-X-Google-Smtp-Source: AKy350aalDteLKmn/Iv+83alinZbhWA6sVOdYjaPwNBdVU8uvJxBYnHXOeHuwiOj4ZMKyZPhWZH7pA==
-X-Received: by 2002:a2e:8016:0:b0:2a6:15c7:1926 with SMTP id j22-20020a2e8016000000b002a615c71926mr2876729ljg.3.1680781063986;
-        Thu, 06 Apr 2023 04:37:43 -0700 (PDT)
+        bh=YOmBYhlHKavGamh83AreBloEjMraMOzlAtrB/N4emK4=;
+        b=ktjTr/vDZjf91H7Ii+OcVE4GXEkbvJ5BJdogoUXplDfDTlEatfpVBR5aaCef9Irh+g
+         hAtUXsWH1SRoIvpprJ4ZrcBbfjGns9BGUnvgxk8NXfwZaGQwM1lvrXp/JjjFi3bNxjjY
+         hRTLnzgqEZWQvNWtmhkDnDlx/N6GLu9GQbclBOlppN8NCLmfi5crmOZm62KP8RmzCcrG
+         SUtGocSYn/0LF9WB1hOREsAeeL4VtvqKOLh+kO32SbPOX0LXAw46KjGYNiwEBsDhefSY
+         TxkH9akHkjZrEwK0tqjTW2qS02kY4IK9jZQHaIBEAALtXXuaMWa2V3+HSZkJFqL9IB5j
+         tGtA==
+X-Gm-Message-State: AAQBX9dRq3+fkjE9IOqMxoMBtfo9N3VjoNf8GiZju0KQL3aosTjtb5OH
+        7cLy9PvWp5QKp/il6Wm4jT339W8ctpx0nQ==
+X-Google-Smtp-Source: AKy350Z6lV51qRwJreVW6dzfzPUW2xDcLUl3s3StOLPcOcQpSHwOxILRgKbshYM9tVPnuo/3u/Pgyw==
+X-Received: by 2002:ac2:44d9:0:b0:4e8:57b1:9498 with SMTP id d25-20020ac244d9000000b004e857b19498mr2430976lfm.5.1680781213797;
+        Thu, 06 Apr 2023 04:40:13 -0700 (PDT)
 Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
-        by smtp.gmail.com with ESMTPSA id l10-20020a2e868a000000b00295a33eda65sm250120lji.137.2023.04.06.04.37.43
+        by smtp.gmail.com with ESMTPSA id v25-20020a197419000000b004eb0c12df21sm228324lfe.128.2023.04.06.04.40.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Apr 2023 04:37:43 -0700 (PDT)
+        Thu, 06 Apr 2023 04:40:13 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id DB85167E; Thu,  6 Apr 2023 13:37:42 +0200 (CEST)
+        id D8FE767E; Thu,  6 Apr 2023 13:40:11 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680781063; bh=W4z5eI6b9aTx+DVYBLNhhpezti3ssBlCzK7GNiWkMHU=;
+        t=1680781212; bh=YW716/MVayNMgybxCgi8heRbDuTZ7zCwKD8x5cBf3as=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NZTu4likdDhO7MPUREMsXkUombUYI7swr01tj7qrOr3jGInwruM6K/yJuO2SWmkT/
-         FBjvRHMZoBievTAMIe6EhGhSTfiJL+hfmGLI2MRBFYnBRg/s3R4Er8A8/kX+VJ/6uQ
-         cvrcj4xZmN+v9fJFY5Z0Ul6P5ViOJCB4rLQxgm8Y=
+        b=XkdOtlYmxCPryh4tn1qipXVwFPmlH/MkXYn111pUDAELuhexxry0phUwMPSzbSOYW
+         2mVAXBANoxn/ZT30eWvudzBkLODTp8ukM3yxaIvuQrAIpkmbSPhhA/nxPC8GiReH4X
+         KroJd4MXEUORBYM3gihnL/hfpwxJo7iwM+9ynBx0=
 Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id 487D289C;
-        Thu,  6 Apr 2023 13:33:10 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id DD8BDAE0;
+        Thu,  6 Apr 2023 13:33:13 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680780790; bh=W4z5eI6b9aTx+DVYBLNhhpezti3ssBlCzK7GNiWkMHU=;
+        t=1680780794; bh=YW716/MVayNMgybxCgi8heRbDuTZ7zCwKD8x5cBf3as=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zj6aJCbxGw5vvCrRmd/HWvHLra2dnGTDpMwCVCQ9fAcTtLWOVMASB/zVRZ3Ag6b9M
-         ptrj7KFEeVyLkJfnl3m4jCGz9cL2lNmuC9j0aSYNVOb5J80LmM1967CsgXwf2ozoFc
-         LxtiNIUPBMdeB3ROyabekWkrktQSHIEaaBVwm91s=
+        b=t5dopKiq4elfrayEpVG1pyBIIgKsY9CmvXekggGzrEFkZhCWsix1Z5gYoLUUYm/jj
+         yihMTFa0gmWFmTvj2Q+dymdv+jCUSyaMU1lcypHW27LScvikCkQsC6kcbaQq2adVWA
+         yGfcn7w51tmKtlzBKWbKYqUPTfxQ5upYn1TwyQHE=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -67,9 +67,9 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Damien Le Moal <dlemoal@fastmail.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v6 06/19] scsi: support retrieving sub-pages of mode pages
-Date:   Thu,  6 Apr 2023 13:32:35 +0200
-Message-Id: <20230406113252.41211-7-nks@flawful.org>
+Subject: [PATCH v6 10/19] scsi: sd: set read/write commands CDL index
+Date:   Thu,  6 Apr 2023 13:32:39 +0200
+Message-Id: <20230406113252.41211-11-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230406113252.41211-1-nks@flawful.org>
 References: <20230406113252.41211-1-nks@flawful.org>
@@ -81,131 +81,124 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Allow scsi_mode_sense() to retrieve sub-pages of mode pages by adding
-the subpage argument. Change all the current caller sites to specify
-the subpage 0.
+Introduce the command duration limits helper function sd_cdl_dld() to
+set the DLD bits of READ/WRITE 16 and READ/WRITE 32 commands to
+indicate to the device the command duration limit descriptor to apply
+to the commands.
+
+When command duration limits are enabled, sd_cdl_dld() obtains the
+index of the descriptor to apply to the command using the hints field of
+the request IO priority value (hints IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
+IOPRIO_HINT_DEV_DURATION_LIMIT_7).
+
+If command duration limits is disabled (which is the default), the limit
+index "0" is always used to indicate "no limit" for a command.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c           | 4 +++-
- drivers/scsi/scsi_transport_sas.c | 2 +-
- drivers/scsi/sd.c                 | 9 ++++-----
- drivers/scsi/sr.c                 | 2 +-
- include/scsi/scsi_device.h        | 8 ++++----
- 5 files changed, 13 insertions(+), 12 deletions(-)
+ drivers/scsi/sd.c | 40 ++++++++++++++++++++++++++++++++++------
+ 1 file changed, 34 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fac9c31161d2..633c4e8af830 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2144,6 +2144,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
-  *	@sdev:	SCSI device to be queried
-  *	@dbd:	set to prevent mode sense from returning block descriptors
-  *	@modepage: mode page being requested
-+ *	@subpage: sub-page of the mode page being requested
-  *	@buffer: request buffer (may not be smaller than eight bytes)
-  *	@len:	length of request buffer.
-  *	@timeout: command timeout
-@@ -2155,7 +2156,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
-  *	Returns zero if successful, or a negative error number on failure
-  */
- int
--scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-+scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage, int subpage,
- 		  unsigned char *buffer, int len, int timeout, int retries,
- 		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
- {
-@@ -2175,6 +2176,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 	dbd = sdev->set_dbd_for_ms ? 8 : dbd;
- 	cmd[1] = dbd & 0x18;	/* allows DBD and LLBA bits */
- 	cmd[2] = modepage;
-+	cmd[3] = subpage;
- 
- 	sshdr = exec_args.sshdr;
- 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 74b99f2b0b74..d704c484a251 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1245,7 +1245,7 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
- 	if (!buffer)
- 		return -ENOMEM;
- 
--	error = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
-+	error = scsi_mode_sense(sdev, 1, 0x19, 0, buffer, BUF_SIZE, 30*HZ, 3,
- 				&mode_data, NULL);
- 
- 	if (error)
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4bb87043e6db..2de4b27cedc5 100644
+index 2dc4223a4c97..c265b8cf2890 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -183,7 +183,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 		return count;
- 	}
+@@ -1042,13 +1042,14 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
  
--	if (scsi_mode_sense(sdp, 0x08, 8, buffer, sizeof(buffer), SD_TIMEOUT,
-+	if (scsi_mode_sense(sdp, 0x08, 8, 0, buffer, sizeof(buffer), SD_TIMEOUT,
- 			    sdkp->max_retries, &data, NULL))
- 		return -EINVAL;
- 	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
-@@ -2610,9 +2610,8 @@ sd_do_mode_sense(struct scsi_disk *sdkp, int dbd, int modepage,
- 	if (sdkp->device->use_10_for_ms && len < 8)
- 		len = 8;
+ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+-				       unsigned char flags)
++				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len = SD_EXT_CDB_SIZE;
+ 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
+ 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
+ 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
+ 	cmd->cmnd[10] = flags;
++	cmd->cmnd[11] = dld & 0x07;
+ 	put_unaligned_be64(lba, &cmd->cmnd[12]);
+ 	put_unaligned_be32(lba, &cmd->cmnd[20]); /* Expected Indirect LBA */
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[28]);
+@@ -1058,12 +1059,12 @@ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
  
--	return scsi_mode_sense(sdkp->device, dbd, modepage, buffer, len,
--			       SD_TIMEOUT, sdkp->max_retries, data,
--			       sshdr);
-+	return scsi_mode_sense(sdkp->device, dbd, modepage, 0, buffer, len,
-+			       SD_TIMEOUT, sdkp->max_retries, data, sshdr);
+ static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+-				       unsigned char flags)
++				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len  = 16;
+ 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
+-	cmd->cmnd[1]  = flags;
+-	cmd->cmnd[14] = 0;
++	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
++	cmd->cmnd[14] = (dld & 0x03) << 6;
+ 	cmd->cmnd[15] = 0;
+ 	put_unaligned_be64(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
+@@ -1115,6 +1116,31 @@ static blk_status_t sd_setup_rw6_cmnd(struct scsi_cmnd *cmd, bool write,
+ 	return BLK_STS_OK;
  }
  
- /*
-@@ -2869,7 +2868,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	if (sdkp->protection_type == 0)
- 		return;
++/*
++ * Check if a command has a duration limit set. If it does, and the target
++ * device supports CDL and the feature is enabled, return the limit
++ * descriptor index to use. Return 0 (no limit) otherwise.
++ */
++static int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd)
++{
++	struct scsi_device *sdp = sdkp->device;
++	int hint;
++
++	if (!sdp->cdl_supported || !sdp->cdl_enable)
++		return 0;
++
++	/*
++	 * Use "no limit" if the request ioprio does not specify a duration
++	 * limit hint.
++	 */
++	hint = IOPRIO_PRIO_HINT(req_get_ioprio(scsi_cmd_to_rq(scmd)));
++	if (hint < IOPRIO_HINT_DEV_DURATION_LIMIT_1 ||
++	    hint > IOPRIO_HINT_DEV_DURATION_LIMIT_7)
++		return 0;
++
++	return (hint - IOPRIO_HINT_DEV_DURATION_LIMIT_1) + 1;
++}
++
+ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ {
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+@@ -1126,6 +1152,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+ 	bool write = rq_data_dir(rq) == WRITE;
+ 	unsigned char protect, fua;
++	unsigned int dld;
+ 	blk_status_t ret;
+ 	unsigned int dif;
+ 	bool dix;
+@@ -1175,6 +1202,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 	fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
+ 	dix = scsi_prot_sg_count(cmd);
+ 	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
++	dld = sd_cdl_dld(sdkp, cmd);
  
--	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
-+	res = scsi_mode_sense(sdp, 1, 0x0a, 0, buffer, 36, SD_TIMEOUT,
- 			      sdkp->max_retries, &data, &sshdr);
+ 	if (dif || dix)
+ 		protect = sd_setup_protect_cmnd(cmd, dix, dif);
+@@ -1183,10 +1211,10 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
  
- 	if (res < 0 || !data.header_length ||
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 9e51dcd30bfd..09fdb0e269d9 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -830,7 +830,7 @@ static int get_capabilities(struct scsi_cd *cd)
- 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
- 
- 	/* ask for mode page 0x2a */
--	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
-+	rc = scsi_mode_sense(cd->device, 0, 0x2a, 0, buffer, ms_len,
- 			     SR_TIMEOUT, 3, &data, NULL);
- 
- 	if (rc < 0 || data.length > ms_len ||
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f10a008e5bfa..c146cc807d44 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -421,10 +421,10 @@ extern int scsi_track_queue_full(struct scsi_device *, int);
- 
- extern int scsi_set_medium_removal(struct scsi_device *, char);
- 
--extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
--			   unsigned char *buffer, int len, int timeout,
--			   int retries, struct scsi_mode_data *data,
--			   struct scsi_sense_hdr *);
-+int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-+		    int subpage, unsigned char *buffer, int len, int timeout,
-+		    int retries, struct scsi_mode_data *data,
-+		    struct scsi_sense_hdr *);
- extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
- 			    unsigned char *buffer, int len, int timeout,
- 			    int retries, struct scsi_mode_data *data,
+ 	if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
+ 		ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
+-					 protect | fua);
++					 protect | fua, dld);
+ 	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
+ 		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+-					 protect | fua);
++					 protect | fua, dld);
+ 	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+ 		   sdp->use_10_for_rw || protect) {
+ 		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
 -- 
 2.39.2
 
