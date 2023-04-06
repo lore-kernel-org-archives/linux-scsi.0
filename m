@@ -2,85 +2,139 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B09C761A6
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49284C76196
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238480AbjDFLks (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 07:40:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48064 "EHLO
+        id S238741AbjDFLlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:41:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238562AbjDFLjc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:39:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F658CA01;
-        Thu,  6 Apr 2023 04:35:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 82B696458D;
-        Thu,  6 Apr 2023 11:34:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E04D6C433A0;
-        Thu,  6 Apr 2023 11:34:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680780872;
-        bh=Mkim9FDcw9ZkkgMeZP4bqkpWTtR0d4V/v47YXQecxEA=;
+        with ESMTP id S238447AbjDFLlE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:41:04 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF45186A7;
+        Thu,  6 Apr 2023 04:37:06 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id g29so533921lfj.4;
+        Thu, 06 Apr 2023 04:37:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680780957;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=dr2Hww8UkSMsbtWPl+uiEpvBEwJnNqlS9FIB4hVpH0g=;
+        b=KQ2/qZnNAGnBOyOS934Ob7aJpWH7Pz23j5Mqv+boLPIe94pB/JoDWooDsxJtso+0b6
+         FeflB6DlV30us/xPUOhm5aNvbJKPRDP0IP1IDlF6V0zOIRCgIg7O9sobC4Sq63mKTz1C
+         4Ab2ZCKxAZmV0HxzUPpt7ATCd8K6h5vyr+vyK3mqvD1Qzzoy2OKps0ju++i2+lXlOqzR
+         ehpGIxO1YEWyyxZG3i4lNUfbsIdDi3FycTJFQLk4Jq10QYhh3/cfJ4a5M9p7Z6tzkzZC
+         ovpnHhod465rPevhr45+Hu942Sgbx8RKYPr6j9BXGSG68VZVKvysgcbHRuAy8YgZ6Z9r
+         ZkoQ==
+X-Gm-Message-State: AAQBX9dFbOiNVcX0y74rAnZoV5EaxQ/Qxa+LkTzG+jcgaO52NeRb5sOf
+        5iCc9ex6VqCU9l5VIYpcGRHjIlhG7iI2zg==
+X-Google-Smtp-Source: AKy350ZctK27GN5EalBhlORsrxLbdDBl/BiheiEdoP9KfkEepVgZ11mXi/EEu7Vfnzet/kjYS3rr8w==
+X-Received: by 2002:ac2:46f6:0:b0:4e9:c6bc:601b with SMTP id q22-20020ac246f6000000b004e9c6bc601bmr2395097lfo.64.1680780957129;
+        Thu, 06 Apr 2023 04:35:57 -0700 (PDT)
+Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
+        by smtp.gmail.com with ESMTPSA id q12-20020ac2528c000000b004db39e80733sm226552lfm.155.2023.04.06.04.35.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Apr 2023 04:35:56 -0700 (PDT)
+Received: by flawful.org (Postfix, from userid 112)
+        id EA13369A; Thu,  6 Apr 2023 13:35:55 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1680780956; bh=Ml7y/jf7AIB69js3iH/Wxe2UpbdPAiIMGTLWNNw4CTk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mQjV7p6pH51SM9LTBqkc7r9VjHk2hWd8VRoJZdu6bjm5vYdbUHljmPVzOQcScqqwY
-         ttIf3/LBECm/Qse5YQi4gIpGi/XB0YwWBZ8GZnRnBRkjvWBV55oXJJcs4/ETDaRGiH
-         Dr9nisJzEMN6ke+Z60uQYeAu0GSORdu1xqlk0RFyB695dYzXxtQjNzO7R0xqmWbaNK
-         EFr3CXsBjFulFMqEQOuhee1oj3Kvj2Qr5AokFQoajveF3hwquSYDdYIJtolNZyNHZa
-         KjSlZxmqmLgDSF9FJuC1dd6WJYW/7WrGiPsBw+2GzUowymI4oUICC+Z/6W40QbrK4v
-         0uX9o06LI3l0A==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tomas Henzl <thenzl@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        jejb@linux.ibm.com, megaraidlinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 3/7] scsi: megaraid_sas: Fix fw_crash_buffer_show()
-Date:   Thu,  6 Apr 2023 07:34:17 -0400
-Message-Id: <20230406113421.649149-3-sashal@kernel.org>
+        b=LyvsX3M5Zoe3QR9zfczY4NwgS27ZqdVPV+NdvFxCtr3b+akOM+t+omOt/biLkPlCH
+         1PwBgaIPx0Y1qjkYJ/klXnmxnmHMh5pKTvZNG2/ZxpCKtoghpugYegVN3vPG+R897q
+         Gg1aPDZALapd78wo2L4vucRyOlgDP5MEOOhaTeCw=
+Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by flawful.org (Postfix) with ESMTPSA id CDC256D4;
+        Thu,  6 Apr 2023 13:33:07 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1680780788; bh=Ml7y/jf7AIB69js3iH/Wxe2UpbdPAiIMGTLWNNw4CTk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=iokZ8Ff14pXTPl9z/wTIeaMPtkBCylmJ2YQCeGlr51TT9hDoFtZTNGKh/M10Hb1Tw
+         PdHardtCiG7D/XLzUnm+v6X2Ph/T98Ua5VU4WHOhVaiug4EE47Md65rJVgObg16ARE
+         wOWwqCXja/eJ8FsRjOSODhGLqHaFLrSKgF8lBkgw=
+From:   Niklas Cassel <nks@flawful.org>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Damien Le Moal <dlemoal@fastmail.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH v6 03/19] block: introduce BLK_STS_DURATION_LIMIT
+Date:   Thu,  6 Apr 2023 13:32:32 +0200
+Message-Id: <20230406113252.41211-4-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230406113421.649149-1-sashal@kernel.org>
-References: <20230406113421.649149-1-sashal@kernel.org>
+In-Reply-To: <20230406113252.41211-1-nks@flawful.org>
+References: <20230406113252.41211-1-nks@flawful.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tomas Henzl <thenzl@redhat.com>
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-[ Upstream commit 0808ed6ebbc292222ca069d339744870f6d801da ]
+Introduce the new block IO status BLK_STS_DURATION_LIMIT for LLDDs to
+report command that failed due to a command duration limit being
+exceeded. This new status is mapped to the ETIME error code to allow
+users to differentiate "soft" duration limit failures from other more
+serious hardware related errors.
 
-If crash_dump_buf is not allocated then crash dump can't be available.
-Replace logical 'and' with 'or'.
+If we compare BLK_STS_DURATION_LIMIT with BLK_STS_TIMEOUT:
+-BLK_STS_DURATION_LIMIT means that the drive gave a reply indicating that
+the command duration limit was exceeded before the command could be
+completed. This IO status is mapped to ETIME for user space.
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Link: https://lore.kernel.org/r/20230324135249.9733-1-thenzl@redhat.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+-BLK_STS_TIMEOUT means that the drive never gave a reply at all.
+This IO status is mapped to ETIMEDOUT for user space.
+
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-core.c          | 3 +++
+ include/linux/blk_types.h | 6 ++++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 42d876034741c..bdd06b26e2de1 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2983,7 +2983,7 @@ megasas_fw_crash_buffer_show(struct device *cdev,
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 42926e6cb83c..be7facaa11a6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -170,6 +170,9 @@ static const struct {
+ 	[BLK_STS_ZONE_OPEN_RESOURCE]	= { -ETOOMANYREFS, "open zones exceeded" },
+ 	[BLK_STS_ZONE_ACTIVE_RESOURCE]	= { -EOVERFLOW, "active zones exceeded" },
  
- 	spin_lock_irqsave(&instance->crashdump_lock, flags);
- 	buff_offset = instance->fw_crash_buffer_offset;
--	if (!instance->crash_dump_buf &&
-+	if (!instance->crash_dump_buf ||
- 		!((instance->fw_crash_state == AVAILABLE) ||
- 		(instance->fw_crash_state == COPYING))) {
- 		dev_err(&instance->pdev->dev,
++	/* Command duration limit device-side timeout */
++	[BLK_STS_DURATION_LIMIT]	= { -ETIME, "duration limit exceeded" },
++
+ 	/* everything else not covered above: */
+ 	[BLK_STS_IOERR]		= { -EIO,	"I/O" },
+ };
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 99be590f952f..cde997590765 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -166,6 +166,12 @@ typedef u16 blk_short_t;
+  */
+ #define BLK_STS_OFFLINE		((__force blk_status_t)17)
+ 
++/*
++ * BLK_STS_DURATION_LIMIT is returned from the driver when the target device
++ * aborted the command because it exceeded one of its Command Duration Limits.
++ */
++#define BLK_STS_DURATION_LIMIT	((__force blk_status_t)18)
++
+ /**
+  * blk_path_error - returns true if error may be path related
+  * @error: status the request was completed with
 -- 
 2.39.2
 
