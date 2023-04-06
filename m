@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1AC9C77B6C
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E19CC77B6E
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:33:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233624AbjDFLcE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 07:32:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32922 "EHLO
+        id S237990AbjDFLdZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:33:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237770AbjDFLb4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:31:56 -0400
+        with ESMTP id S237091AbjDFLct (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:32:49 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D180A93CE;
-        Thu,  6 Apr 2023 04:31:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD1CCA25C;
+        Thu,  6 Apr 2023 04:32:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9551C64655;
-        Thu,  6 Apr 2023 11:31:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21976C433EF;
-        Thu,  6 Apr 2023 11:31:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AF1716466A;
+        Thu,  6 Apr 2023 11:32:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B21AC433D2;
+        Thu,  6 Apr 2023 11:32:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680780708;
-        bh=nJwGNaSROW25hnp+u+R6COthumhGppXIJtrJTzWyzCs=;
+        s=k20201202; t=1680780747;
+        bh=k0E3+Aoh1xXCBVISjQMRzD98fDvv0g1d+5zsDUJ8p48=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kmEDOD44413hjqGN5aa1HBvH0M6R7a7lz/FdlTYYHsdr0/Dgn2fyIcH/ez/iKASbP
-         c3sV7UaivfhkVvsuzLkB/FLulTcD9iLclBk0IpVcry9FdaVYjxdBqIshxS69IwrH8L
-         EJYX8ZAjeCB3Du02oPiI9j1YgqKULg+4EaFVdwayeuptPTJl92zPjCSZekyXW8AbME
-         LdmAR7hDQDEOZshvt4zGpC/eWnU7CmVlRXv6E535wp/coRIUu5h4HwYhkp2vQI5sPa
-         je/GNRL/Oex7SmuaC4P0I30lnnXKLQC0K9X9irFDa0Nbo/gtdt3qa9/iq0Eao4yvDb
-         QZYeV7ArD4Cmw==
+        b=VDOmZ5ffpsvo/het5mbfpui62MjsQafcJzZQGq6txJimM4PPLQE4jpXQ9mKVGe1iA
+         Pr3N8wHVEu8AUlqkJBEhoYRTf1arB04fqv8YPKalwB3upZ6ET4xlQ3nVwi9dhL0Q8h
+         9y1tsjxNjGXan4uXM0nJlzDJr7vqr8hzm5fDaY5hwmdSjElWXhE6o4jhVnMQucxXu0
+         lX+imP85lpcHOCU38Y3sQ1PJ23TkY8p1eOaFiKPbkUtFXiGO2lfxS0BrC4kcHKzxUm
+         zTFi2mHqMoHhgjOG6ZQ7Pp/9Gf3985GA57o6Q4YR3xhoNkY1BqPeElf/xIfC2/WqK9
+         0lQriULXZk/6g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
@@ -38,12 +38,12 @@ Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 06/17] scsi: core: Improve scsi_vpd_inquiry() checks
-Date:   Thu,  6 Apr 2023 07:31:20 -0400
-Message-Id: <20230406113131.648213-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 06/17] scsi: core: Improve scsi_vpd_inquiry() checks
+Date:   Thu,  6 Apr 2023 07:32:00 -0400
+Message-Id: <20230406113211.648424-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230406113131.648213-1-sashal@kernel.org>
-References: <20230406113131.648213-1-sashal@kernel.org>
+In-Reply-To: <20230406113211.648424-1-sashal@kernel.org>
+References: <20230406113211.648424-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -80,7 +80,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index dff1d692e756a..b1f9c86ed211f 100644
+index 24c4c92543599..3cda5d26b66ca 100644
 --- a/drivers/scsi/scsi.c
 +++ b/drivers/scsi/scsi.c
 @@ -314,11 +314,18 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
