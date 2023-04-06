@@ -2,73 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49284C76196
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1684C7618D
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238741AbjDFLlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 07:41:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48132 "EHLO
+        id S238706AbjDFLmC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:42:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238447AbjDFLlE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:41:04 -0400
+        with ESMTP id S238696AbjDFLlo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:41:44 -0400
 Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF45186A7;
-        Thu,  6 Apr 2023 04:37:06 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id g29so533921lfj.4;
-        Thu, 06 Apr 2023 04:37:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77C4DE1B1;
+        Thu,  6 Apr 2023 04:37:38 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id g29so538930lfj.4;
+        Thu, 06 Apr 2023 04:37:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680780957;
+        d=1e100.net; s=20210112; t=1680781058;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dr2Hww8UkSMsbtWPl+uiEpvBEwJnNqlS9FIB4hVpH0g=;
-        b=KQ2/qZnNAGnBOyOS934Ob7aJpWH7Pz23j5Mqv+boLPIe94pB/JoDWooDsxJtso+0b6
-         FeflB6DlV30us/xPUOhm5aNvbJKPRDP0IP1IDlF6V0zOIRCgIg7O9sobC4Sq63mKTz1C
-         4Ab2ZCKxAZmV0HxzUPpt7ATCd8K6h5vyr+vyK3mqvD1Qzzoy2OKps0ju++i2+lXlOqzR
-         ehpGIxO1YEWyyxZG3i4lNUfbsIdDi3FycTJFQLk4Jq10QYhh3/cfJ4a5M9p7Z6tzkzZC
-         ovpnHhod465rPevhr45+Hu942Sgbx8RKYPr6j9BXGSG68VZVKvysgcbHRuAy8YgZ6Z9r
-         ZkoQ==
-X-Gm-Message-State: AAQBX9dFbOiNVcX0y74rAnZoV5EaxQ/Qxa+LkTzG+jcgaO52NeRb5sOf
-        5iCc9ex6VqCU9l5VIYpcGRHjIlhG7iI2zg==
-X-Google-Smtp-Source: AKy350ZctK27GN5EalBhlORsrxLbdDBl/BiheiEdoP9KfkEepVgZ11mXi/EEu7Vfnzet/kjYS3rr8w==
-X-Received: by 2002:ac2:46f6:0:b0:4e9:c6bc:601b with SMTP id q22-20020ac246f6000000b004e9c6bc601bmr2395097lfo.64.1680780957129;
-        Thu, 06 Apr 2023 04:35:57 -0700 (PDT)
+        bh=iyOtHBCn/uWNrq/R7ZU6Qv+JF796mVDB+Rf4s24M8k8=;
+        b=rW6WZAucl0pWLA4v05m6K2h22WbaqCYIxiYu3ny1aRZYd7C8mrYeT3FUmZxJ/Pwidn
+         /8UZatgvnTJFrwnLCzRxuuMtvVvNOzu1ORBQeTbDiXfWXS+DOx0Dc8G3+YxsBReUj1Or
+         DK2t7oVtU2bd+5fde4G1LuAZrslUvBpg7M+UxoTyZ2cUKzn5nvR/KPB+cpKjGEe10i/l
+         gHExAB7L6RHoEN1CY4QoE09dalLvg4WIgUkwfR/MfITIGytkmyF3le7qhs6hQXkWyIjN
+         GD5WGyTFrp0SFVMmW8t9hywRVnO2PowTJMsgNAZp4gRz3e3+je5MbrWY+hBV0ibvCrNW
+         FGjg==
+X-Gm-Message-State: AAQBX9eIs5Mi1elqZGT3A0PgUe1AfvJj3Ny4XpV5FUsjKT5KNLnYNpgi
+        8DE1NB/FOdl2Xm4jK6/05kFdVlz3veq4aw==
+X-Google-Smtp-Source: AKy350ZrtcWegIux5GQ/St8Arf5Lv1nLioZ5LyYovAgoh8QRNRv5G8clmm2xG0DVeprez0037ORfXA==
+X-Received: by 2002:ac2:495c:0:b0:4ea:f526:5bea with SMTP id o28-20020ac2495c000000b004eaf5265beamr1455747lfi.27.1680781057618;
+        Thu, 06 Apr 2023 04:37:37 -0700 (PDT)
 Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
-        by smtp.gmail.com with ESMTPSA id q12-20020ac2528c000000b004db39e80733sm226552lfm.155.2023.04.06.04.35.56
+        by smtp.gmail.com with ESMTPSA id v30-20020a056512049e00b004e8508899basm227823lfq.86.2023.04.06.04.37.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Apr 2023 04:35:56 -0700 (PDT)
+        Thu, 06 Apr 2023 04:37:37 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id EA13369A; Thu,  6 Apr 2023 13:35:55 +0200 (CEST)
+        id 8089967E; Thu,  6 Apr 2023 13:37:35 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680780956; bh=Ml7y/jf7AIB69js3iH/Wxe2UpbdPAiIMGTLWNNw4CTk=;
+        t=1680781056; bh=rbfvsr3tquiM93ijFijrjR0bS0TPBVeknlwL0sNNs3w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LyvsX3M5Zoe3QR9zfczY4NwgS27ZqdVPV+NdvFxCtr3b+akOM+t+omOt/biLkPlCH
-         1PwBgaIPx0Y1qjkYJ/klXnmxnmHMh5pKTvZNG2/ZxpCKtoghpugYegVN3vPG+R897q
-         Gg1aPDZALapd78wo2L4vucRyOlgDP5MEOOhaTeCw=
+        b=M4BuHpR6Ea2a2olU54A59dsIX2/zleRNOa++nIXNJCK4X8ieuaNh6a7fPcMTvtvWm
+         ti7JW5Z6xHWLIFonJW/yJeOB6wtneLVNJd5obazMGoFLmjiDBSM0FogUMjvCejJ6uR
+         9JSF82/psIQaKyA7V0v/hfvin5PGG7rzKAVEwSeo=
 Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id CDC256D4;
-        Thu,  6 Apr 2023 13:33:07 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id 3C8097A7;
+        Thu,  6 Apr 2023 13:33:09 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1680780788; bh=Ml7y/jf7AIB69js3iH/Wxe2UpbdPAiIMGTLWNNw4CTk=;
+        t=1680780789; bh=rbfvsr3tquiM93ijFijrjR0bS0TPBVeknlwL0sNNs3w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iokZ8Ff14pXTPl9z/wTIeaMPtkBCylmJ2YQCeGlr51TT9hDoFtZTNGKh/M10Hb1Tw
-         PdHardtCiG7D/XLzUnm+v6X2Ph/T98Ua5VU4WHOhVaiug4EE47Md65rJVgObg16ARE
-         wOWwqCXja/eJ8FsRjOSODhGLqHaFLrSKgF8lBkgw=
+        b=tJhDAabzGV4ktJEmmQWeTXtDjgby0QszLrQ5jy4CQxmXlybziOPINZgrPj8tHqIwD
+         ROeknw29XF1cPbJeFy1hQp6Et1IFfO/gIRHI7X2uDVcHM3fqJBT8GjgE/GHA6DI672
+         hakw7MZnpNjTQ9vuQ/oAikkoH3Eo7a54ZgSb9EWU=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc:     Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Damien Le Moal <dlemoal@fastmail.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v6 03/19] block: introduce BLK_STS_DURATION_LIMIT
-Date:   Thu,  6 Apr 2023 13:32:32 +0200
-Message-Id: <20230406113252.41211-4-nks@flawful.org>
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
+        Mike Christie <michael.christie@oracle.com>
+Subject: [PATCH v6 05/19] scsi: rename and move get_scsi_ml_byte()
+Date:   Thu,  6 Apr 2023 13:32:34 +0200
+Message-Id: <20230406113252.41211-6-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230406113252.41211-1-nks@flawful.org>
 References: <20230406113252.41211-1-nks@flawful.org>
@@ -78,63 +80,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+From: Niklas Cassel <niklas.cassel@wdc.com>
 
-Introduce the new block IO status BLK_STS_DURATION_LIMIT for LLDDs to
-report command that failed due to a command duration limit being
-exceeded. This new status is mapped to the ETIME error code to allow
-users to differentiate "soft" duration limit failures from other more
-serious hardware related errors.
+SCSI has two different getters:
+- get_XXX_byte() (in scsi_cmnd.h) which takes a struct scsi_cmnd *, and
+- XXX_byte() (in scsi.h) which takes a scmd->result.
+The proper name for get_scsi_ml_byte() should thus be without the get_
+prefix, as it takes a scmd->result. Rename the function to rectify this.
+(This change was suggested by Mike Christie.)
 
-If we compare BLK_STS_DURATION_LIMIT with BLK_STS_TIMEOUT:
--BLK_STS_DURATION_LIMIT means that the drive gave a reply indicating that
-the command duration limit was exceeded before the command could be
-completed. This IO status is mapped to ETIME for user space.
+Additionally, move get_scsi_ml_byte() to scsi_priv.h since both scsi_lib.c
+and scsi_error.c will need to use this helper in a follow-up patch.
 
--BLK_STS_TIMEOUT means that the drive never gave a reply at all.
-This IO status is mapped to ETIMEDOUT for user space.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Cc: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-core.c          | 3 +++
- include/linux/blk_types.h | 6 ++++++
- 2 files changed, 9 insertions(+)
+ drivers/scsi/scsi_lib.c  | 7 +------
+ drivers/scsi/scsi_priv.h | 5 +++++
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 42926e6cb83c..be7facaa11a6 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -170,6 +170,9 @@ static const struct {
- 	[BLK_STS_ZONE_OPEN_RESOURCE]	= { -ETOOMANYREFS, "open zones exceeded" },
- 	[BLK_STS_ZONE_ACTIVE_RESOURCE]	= { -EOVERFLOW, "active zones exceeded" },
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b7c569a42aa4..fac9c31161d2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -578,11 +578,6 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 	return false;
+ }
  
-+	/* Command duration limit device-side timeout */
-+	[BLK_STS_DURATION_LIMIT]	= { -ETIME, "duration limit exceeded" },
-+
- 	/* everything else not covered above: */
- 	[BLK_STS_IOERR]		= { -EIO,	"I/O" },
- };
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 99be590f952f..cde997590765 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -166,6 +166,12 @@ typedef u16 blk_short_t;
-  */
- #define BLK_STS_OFFLINE		((__force blk_status_t)17)
- 
-+/*
-+ * BLK_STS_DURATION_LIMIT is returned from the driver when the target device
-+ * aborted the command because it exceeded one of its Command Duration Limits.
-+ */
-+#define BLK_STS_DURATION_LIMIT	((__force blk_status_t)18)
-+
+-static inline u8 get_scsi_ml_byte(int result)
+-{
+-	return (result >> 8) & 0xff;
+-}
+-
  /**
-  * blk_path_error - returns true if error may be path related
-  * @error: status the request was completed with
+  * scsi_result_to_blk_status - translate a SCSI result code into blk_status_t
+  * @result:	scsi error code
+@@ -595,7 +590,7 @@ static blk_status_t scsi_result_to_blk_status(int result)
+ 	 * Check the scsi-ml byte first in case we converted a host or status
+ 	 * byte.
+ 	 */
+-	switch (get_scsi_ml_byte(result)) {
++	switch (scsi_ml_byte(result)) {
+ 	case SCSIML_STAT_OK:
+ 		break;
+ 	case SCSIML_STAT_RESV_CONFLICT:
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 96284a0e13fe..74324fba4281 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -29,6 +29,11 @@ enum scsi_ml_status {
+ 	SCSIML_STAT_TGT_FAILURE		= 0x04,	/* Permanent target failure */
+ };
+ 
++static inline u8 scsi_ml_byte(int result)
++{
++	return (result >> 8) & 0xff;
++}
++
+ /*
+  * Scsi Error Handler Flags
+  */
 -- 
 2.39.2
 
