@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB0EC77B6C
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 19:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA9FC77B6C
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 19:47:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237880AbjDFTrV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:47:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51570 "EHLO
+        id S238149AbjDFTr0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:47:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237354AbjDFTrS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 15:47:18 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44FF39F
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Apr 2023 12:47:17 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id h17so40597138wrt.8
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Apr 2023 12:47:17 -0700 (PDT)
+        with ESMTP id S237745AbjDFTrU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 15:47:20 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D943C27
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Apr 2023 12:47:18 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id v1so40613011wrv.1
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Apr 2023 12:47:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20210112.gappssmtp.com; s=20210112; t=1680810436;
+        d=bgdev-pl.20210112.gappssmtp.com; s=20210112; t=1680810437;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=f5sfPGzO1STsPzlQrWslwAin54ULr2+T5tjHgZP/ZV4=;
-        b=B1Uvu4kNEzTZzr8QGACBcWsbST+cABawIcqZ8MAHy54OGWGLeRj39VR24chDaT53+n
-         7CYyaYyxx1PkNXSHFx7HA1rBERqsiZ8cb0zrTOoPXaW0pX6+rMWx+U3AzRQri9otK2ws
-         JAJqi1zRRmOn3upvufbPBGf/I9w17o7BxOC7Xe/JRqMcfAfiF60jNh25+UQ3kZD89qzy
-         A42Zz4Ktyrj8m9/h66fZJOsmdAUs0p+K6ID/F/iDVT7A9P9UmhO1IEUHZUVi7hPNmanN
-         2LwqQRL8qm22+1ypHLZaJ8SXfaWOt8yjjUGdI9vDZ7oc+kJheBXwBwQb6tCsEJUb9+Ba
-         WOWA==
+        bh=eibFHvIgf05QKZ/3r3/eY9NPHy7GReZl9L/HNNvsxXE=;
+        b=tUNDaGqs6SBx+PnwtkYghqfGdurrJZeNxnSHZWepcZsM0dyChH+KDbEMcZUCma+fpn
+         kob1eg9eo3aMMscDXxiHB4rqkmSvWdEo2MQH1AeWgPLyehgcvwSQN9qcpGSh2P/68+PT
+         2f+C9HgULwKhjlLYMjDARM54+H+d9lmjxWT626ZCnCEvQj3dVBW0AZtu1cBbjiHN5xhX
+         NLsFin8HtDuOQ4QWAgiO6ui76iwR/VmmZCCT00wFGGwABYUbjyNrkCVKjk3/Ss37FMAD
+         E8JJa3t/9yjCe7VRYv4DUdBnTlx1vQHBu6jkLgNQuRpDR0w4iIDlQMZwSF+uF8NwEWDC
+         +MTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680810436;
+        d=1e100.net; s=20210112; t=1680810437;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=f5sfPGzO1STsPzlQrWslwAin54ULr2+T5tjHgZP/ZV4=;
-        b=vBkk+uROcaoJoUXh+F+EgJf0Zp4Wz20WpVkc1puZxUTCpQeQd5/cda1r+cShWKcIWc
-         8Y/xz+5a9fmlA+25ayzFkHCFfJGWzBfKjbQUVT1az+2T37R9ojOOTGisHLTID++kM/YC
-         lCecrVQIXD2HtvetBdZImEfUcARKasWJjWlU+fkI9HTpBc3K2ynvP599ENBnO5OZspOm
-         yTyCKBtKCYzGGcJv+9lkl/4Oso470WqqSYJ1ayeNgOJM5Q07B1Qp+biNQxHfZ84XxLIR
-         BvBpCWBCYSQVRftqaYyILXqfTLvCKCAEEAuod0AIabelZ5eWUSg0/qEGoYdYhbEOANeT
-         Z/dQ==
-X-Gm-Message-State: AAQBX9en1K4wlkO7753WXgw3t5LU9P+TWygMoUaTMZ4WHbf/FTrp/mQ/
-        sZISu+oayBXvHy3sv91v7ichEg==
-X-Google-Smtp-Source: AKy350a7PMoisImA1feIeh8bMsC902JwVI3F6n4X2Vs+gqUuOBsqMi7TxwU2WibveU+6QsFju8IgWw==
-X-Received: by 2002:a05:6000:118c:b0:2e2:730a:c7de with SMTP id g12-20020a056000118c00b002e2730ac7demr7846317wrx.24.1680810435705;
-        Thu, 06 Apr 2023 12:47:15 -0700 (PDT)
+        bh=eibFHvIgf05QKZ/3r3/eY9NPHy7GReZl9L/HNNvsxXE=;
+        b=CL8cTvd7EG2ajXNRFiLojsLYr2lpHuR+VWFr1S4gM2Aw3HWo3RyY2wZHh3PAwqmHDs
+         QMNQ6sl0Uhm72jnaQldlZCRzGAMeViCvvzPxKtp2DwxOCtzJTNJDlzA1OPDaWTsMJ1nE
+         5bVUHVKPJOaEqTEqH778DohlAoQ/QC5O0LO3W/2dyuxzMLUaoEm37DeQyMir6Q6/x9Yb
+         qdcJAUC3eWOqXhIfxoPkpByBbn9OyUpLIWAR0RT36RK4vM+DdEpe509rc9+vHulgx31n
+         GMjNSrBJxOy7zayj/yacrw9wvCEHrcJ375kchQN0hdLkk2qS8ZvJwDobt6otLzFE3T8o
+         VXMw==
+X-Gm-Message-State: AAQBX9e9b9elh5AAZEVZiG1hk5mKsziZy14kCtNV0+tfP0FS44IXLHek
+        ckUS/9BKOUFjEIy/+U8dDzq7yg==
+X-Google-Smtp-Source: AKy350ZJuXhVqvPZs0WG6qinNmJqseB1dMFo7JPkdm82mqrtcUFu6CQwG7jgoDgVz68fpQTR5W83Ow==
+X-Received: by 2002:adf:ed51:0:b0:2ee:c582:a67d with SMTP id u17-20020adfed51000000b002eec582a67dmr2304031wro.31.1680810436791;
+        Thu, 06 Apr 2023 12:47:16 -0700 (PDT)
 Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:4793:cb9a:340b:2f72])
-        by smtp.gmail.com with ESMTPSA id k15-20020a056000004f00b002c71dd1109fsm2593323wrx.47.2023.04.06.12.47.14
+        by smtp.gmail.com with ESMTPSA id k15-20020a056000004f00b002c71dd1109fsm2593323wrx.47.2023.04.06.12.47.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Apr 2023 12:47:15 -0700 (PDT)
+        Thu, 06 Apr 2023 12:47:16 -0700 (PDT)
 From:   Bartosz Golaszewski <brgl@bgdev.pl>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
@@ -65,9 +65,9 @@ Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org,
         Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: [PATCH v2 2/5] dt-bindings: phy: qmp-ufs: describe the UFS PHY for sa8775p
-Date:   Thu,  6 Apr 2023 21:47:00 +0200
-Message-Id: <20230406194703.495836-3-brgl@bgdev.pl>
+Subject: [PATCH v2 3/5] phy: qualcomm: phy-qcom-qmp-ufs: add definitions for sa8775p
+Date:   Thu,  6 Apr 2023 21:47:01 +0200
+Message-Id: <20230406194703.495836-4-brgl@bgdev.pl>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20230406194703.495836-1-brgl@bgdev.pl>
 References: <20230406194703.495836-1-brgl@bgdev.pl>
@@ -79,70 +79,69 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
-Add a new compatible for the QMP UFS PHY found on sa8775p platforms and
-update the clocks property to accommodate three clocks.
+Add QMP PHY config for sa8775p and add support for the new compatible.
 
 Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 ---
- .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        | 26 ++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 38 +++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-index cd0fbbd3593d..5bc93acccbad 100644
---- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-@@ -16,6 +16,7 @@ description:
- properties:
-   compatible:
-     enum:
-+      - qcom,sa8775p-qmp-ufs-phy
-       - qcom,sc8280xp-qmp-ufs-phy
-       - qcom,sm6125-qmp-ufs-phy
-       - qcom,sm7150-qmp-ufs-phy
-@@ -25,12 +26,15 @@ properties:
-     maxItems: 1
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+index d58822049211..5612282eb378 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+@@ -853,6 +853,41 @@ static const struct qmp_phy_cfg msm8996_ufsphy_cfg = {
+ 	.no_pcs_sw_reset	= true,
+ };
  
-   clocks:
--    maxItems: 2
-+    minItems: 2
-+    maxItems: 3
- 
-   clock-names:
-+    minItems: 2
-     items:
-       - const: ref
-       - const: ref_aux
-+      - const: qref
- 
-   power-domains:
-     maxItems: 1
-@@ -52,6 +56,26 @@ properties:
-   "#phy-cells":
-     const: 0
- 
-+allOf:
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,sa8775p-qmp-ufs-phy
-+    then:
-+      properties:
-+        clocks:
-+          maxItems: 3
-+        clock-names:
-+          maxItems: 3
-+    else:
-+      properties:
-+        clocks:
-+          maxItems: 2
-+        clock-names:
-+          maxItems: 2
 +
- required:
-   - compatible
-   - reg
++static const struct qmp_phy_cfg sa8775p_ufsphy_cfg = {
++	.lanes			= 2,
++
++	.offsets		= &qmp_ufs_offsets,
++
++	.tbls = {
++		.serdes		= sm8350_ufsphy_serdes,
++		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_serdes),
++		.tx		= sm8350_ufsphy_tx,
++		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_tx),
++		.rx		= sm8350_ufsphy_rx,
++		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_rx),
++		.pcs		= sm8350_ufsphy_pcs,
++		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_pcs),
++	},
++	.tbls_hs_b = {
++		.serdes		= sm8350_ufsphy_hs_b_serdes,
++		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
++	},
++	.tbls_hs_g4 = {
++		.tx		= sm8350_ufsphy_g4_tx,
++		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
++		.rx		= sm8350_ufsphy_g4_rx,
++		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
++		.pcs		= sm8350_ufsphy_g4_pcs,
++		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
++	},
++	.clk_list		= sm8450_ufs_phy_clk_l,
++	.num_clks		= ARRAY_SIZE(sm8450_ufs_phy_clk_l),
++	.vreg_list		= qmp_phy_vreg_l,
++	.num_vregs		= ARRAY_SIZE(qmp_phy_vreg_l),
++	.regs			= ufsphy_v5_regs_layout,
++};
++
+ static const struct qmp_phy_cfg sc8280xp_ufsphy_cfg = {
+ 	.lanes			= 2,
+ 
+@@ -1600,6 +1635,9 @@ static const struct of_device_id qmp_ufs_of_match_table[] = {
+ 	}, {
+ 		.compatible = "qcom,msm8998-qmp-ufs-phy",
+ 		.data = &sdm845_ufsphy_cfg,
++	}, {
++		.compatible = "qcom,sa8775p-qmp-ufs-phy",
++		.data = &sa8775p_ufsphy_cfg,
+ 	}, {
+ 		.compatible = "qcom,sc8180x-qmp-ufs-phy",
+ 		.data = &sm8150_ufsphy_cfg,
 -- 
 2.37.2
 
