@@ -2,125 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF09C77B6E
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Apr 2023 22:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 188EFC76196
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 07:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230465AbjDEW3k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Apr 2023 18:29:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57832 "EHLO
+        id S235070AbjDFHqd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 03:46:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjDEW3j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2023 18:29:39 -0400
-Received: from new4-smtp.messagingengine.com (new4-smtp.messagingengine.com [66.111.4.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4334310C8;
-        Wed,  5 Apr 2023 15:29:38 -0700 (PDT)
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-        by mailnew.nyi.internal (Postfix) with ESMTP id D8E47582237;
-        Wed,  5 Apr 2023 18:29:34 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute2.internal (MEProxy); Wed, 05 Apr 2023 18:29:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
-        cc:cc:content-transfer-encoding:content-type:content-type:date
-        :date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-        :references:reply-to:sender:subject:subject:to:to; s=fm2; t=
-        1680733774; x=1680737374; bh=0hvdTrqnIesfwKwVq3biOhVWklyP7PuBB8v
-        wBclqcXE=; b=IPp+MnqRTTn2N3vo6dlles7qSJybzgJBtGedU7ArVmfm98PRps1
-        ysXZ3RJjjMsXtT+cIAhg5aSMTY+WXe+fIt616o4yicnIRSI/9Ld4wdlt5QUnfOlj
-        LsRrcbIeun2wHjykL/2UDc2MYH6v1u1pxWFH7cSdT8okDz9CmTKTeV5e6mf4yRd3
-        /x7nDB3n3DU0CQfnrQIkY5imJeUTj4lkuq6SrySmX70DyZGy6VBv5ocqBAfRMgEl
-        /rl4RRPX88V2Q6ZvvPIczhADDw5RaBe6yJFb3dhFEbRmwcwkJITlOgXbp3wwhexn
-        FndoTzGqo3NjiVRPgPxwY4wdKHL1yRtL5ig==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-transfer-encoding
-        :content-type:content-type:date:date:feedback-id:feedback-id
-        :from:from:in-reply-to:in-reply-to:message-id:mime-version
-        :references:reply-to:sender:subject:subject:to:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=i3db14652.fm2;
-         t=1680733774; x=1680737374; bh=0hvdTrqnIesfwKwVq3biOhVWklyP7PuB
-        B8vwBclqcXE=; b=JcCcM8Seu/Bh6214t3XI5cK0zyL7dg39sz8nnX1B1UPlCXoL
-        gdzUZNAJmpbmsdUvHmOTs99SqfIn4gjPjIPVkWu8ouLGnwGjiho1tXob7mpAE4rv
-        4F6sa53NCV4KDpWeXG0Ws0JBcRtFX0DaxiRNkxOL+wjeJg0mFe2k/22pZCD0o1XU
-        WpC0JOtcItxF8K7TX6x6pq9MNeK6Vg1w3yR/JCUbKhKIgCLoO8Ipm41eS+so6g1Z
-        p03R2uurm2OVJ6mfWa7WaZno9gsndIqfZid73nQmUlbtXhKXTieEJRLTCKoTzp2q
-        46spHIN0zCdtNag5s4LwFoKJ9fQHAX0UHN+QZg==
-X-ME-Sender: <xms:TfYtZHLAdghiXg-PzztIWq6FvuRpVXQ44Khif8DBv__firBZcOw-Zw>
-    <xme:TfYtZLJ4hNjC0q5fjPHb2Ocbr3F_qwbs1L0b5d4U7alWybB1pJb6yJkeD7uGYssX-
-    9NrKNPuVfNuOZ5jPjU>
-X-ME-Received: <xmr:TfYtZPunT8yMHXDDLF6TAQLFmVq2wVlcwhb_hX5tSuSpStl5D5h7_lRZ0bT3PBmva1hiFJfu-Os7wCpPe3sdqelLOaRkcrYQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrvdejvddgudduucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtfeejnecuhfhrohhmpeffrghm
-    ihgvnhcunfgvucfoohgrlhcuoegulhgvmhhorghlsehfrghsthhmrghilhdrtghomheqne
-    cuggftrfgrthhtvghrnhepteefiefhieetgfevhfegfeehffetteduieetudfgleetvdff
-    udelveejfefhfeejnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
-    hfrhhomhepughlvghmohgrlhesfhgrshhtmhgrihhlrdgtohhm
-X-ME-Proxy: <xmx:TfYtZAZ0HVncHW_8sn3-0_lMi9HLVzug-mragr37Q2RPjbB3xijvAw>
-    <xmx:TfYtZOaOk80OEjjPzUCCR3NG2LfrCWftqEDoCQSHzWEHwhhBXRxDeQ>
-    <xmx:TfYtZEAYJct45crcqaVI-X01Xp6JqTh_AQXeVMpOKbAXX2cjhlFPyw>
-    <xmx:TvYtZLSmM-oHr3AxtvQe2FtoYRhW_2BBEL4vq8Im_0ucS4dwEHTF6w>
-Feedback-ID: i3db14652:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 5 Apr 2023 18:29:30 -0400 (EDT)
-Message-ID: <e61cd958-2cea-a03e-2581-a8cea1940028@fastmail.com>
-Date:   Thu, 6 Apr 2023 07:29:28 +0900
+        with ESMTP id S234878AbjDFHqS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 03:46:18 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C701B0;
+        Thu,  6 Apr 2023 00:46:14 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3366wSKC013882;
+        Thu, 6 Apr 2023 07:46:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2022-7-12; bh=IyEmgHIUX6mQHOFxo3TU81FvsDpncR3Vt/+XHIZJcc0=;
+ b=jLyAe9fMXWMM45769fZXZ682Z+QRYXNNcFALPa/KaJumEYelxQ1UeoYi9NbMFhLRgHK5
+ npGF+5V/FJfshS4kP40xzkE6+mWhdQ1kxQuJsDP8S40QYCazTlw7kGfRDs1tZ/6pC5CH
+ SRIXV09yFfSPaudfrMWOQDpsUlrIvbmIGk6YzXEcViW0t+JRyivQUf35iV9LPTEwJBaE
+ pJ2qNVYcQ4/cG8afjA/2Qg8uIW8MaFy37D14VRYCgA1lkhCbkuhehIu9cROYdhawvyLo
+ rS0bMJzr8bmSwTdUdAPS+d9cgDmHvKHZXYXvQ/cD24Pnof3E6hC4B6rsmrvbHlTNaUXz Ow== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ppbd428fc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 06 Apr 2023 07:46:12 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3367jFkZ037592;
+        Thu, 6 Apr 2023 07:46:11 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pptjuugdk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 06 Apr 2023 07:46:11 +0000
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3367kBG6013933;
+        Thu, 6 Apr 2023 07:46:11 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pptjuugd0-1;
+        Thu, 06 Apr 2023 07:46:10 +0000
+From:   Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Cc:     error27@gmail.com, kernel-janitors@vger.kernel.org,
+        Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH next] scsi: scsi_debug: Fix missing error code in scsi_debug_init()
+Date:   Thu,  6 Apr 2023 00:46:07 -0700
+Message-Id: <20230406074607.3637097-1-harshit.m.mogalapalli@oracle.com>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v5 18/19] ata: libata: set read/write commands CDL index
-To:     Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <nks@flawful.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230404182428.715140-1-nks@flawful.org>
- <20230404182428.715140-19-nks@flawful.org> <ZC29XNMS9CnQZn74@google.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@fastmail.com>
-In-Reply-To: <ZC29XNMS9CnQZn74@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-06_02,2023-04-05_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
+ phishscore=0 bulkscore=0 mlxscore=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304060068
+X-Proofpoint-ORIG-GUID: RejnskUDGrw5vYzKs-DyvavE5uh8H8w5
+X-Proofpoint-GUID: RejnskUDGrw5vYzKs-DyvavE5uh8H8w5
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/6/23 03:26, Igor Pylypiv wrote:
-> On Tue, Apr 04, 2023 at 08:24:23PM +0200, Niklas Cassel wrote:
->> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>
->> For devices supporting the command duration limits feature, translate
->> the dld field of read and write operation to set the command duration
->> limit index field of the command task file when the duration limit
->> feature is enabled.
->>
->> The function ata_set_tf_cdl() is introduced to do this. For unqueued
->> (non NCQ) read and write operations, this function sets the command
->> duration limit index set as the lower 2 bits of the feature field.
->> For queued NCQ read/write commands, the index is set as the lower
->> 2 bits of the auxiliary field.
-> 
-> CDL index is lower 3 bits, not 2 bits.
+Smatch reports: drivers/scsi/scsi_debug.c:6996
+	scsi_debug_init() warn: missing error code 'ret'
 
-Yes, typo. We will correct that.
+Although it is unlikely that KMEM_CACHE might fail, but if
+it does then ret might be zero. So to fix this explicitly
+mark ret as "-ENOMEM" and then goto driver_unreg.
 
-> 
->>
->> The flag ATA_QCFLAG_HAS_CDL is introduced to indicate that a command
->> taskfile has a non zero cdl field.
->>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
->> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->> ---
->>  drivers/ata/libata-core.c | 32 +++++++++++++++++++++++++++++---
->>  drivers/ata/libata-scsi.c | 16 +++++++++++++++-
->>  drivers/ata/libata.h      |  2 +-
->>  include/linux/libata.h    |  1 +
->>  4 files changed, 46 insertions(+), 5 deletions(-)
-> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Fixes: 1107c7b24ee3 ("scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd")
+Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+---
+This is from static analysis, Only compile tested.
+---
+ drivers/scsi/scsi_debug.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Thanks.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index cf3f58e8f733..f4fa1035a191 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6992,8 +6992,10 @@ static int __init scsi_debug_init(void)
+ 	sdebug_add_host = 0;
+ 
+ 	queued_cmd_cache = KMEM_CACHE(sdebug_queued_cmd, SLAB_HWCACHE_ALIGN);
+-	if (!queued_cmd_cache)
++	if (!queued_cmd_cache) {
++		ret = -ENOMEM;
+ 		goto driver_unreg;
++	}
+ 
+ 	for (k = 0; k < hosts_to_add; k++) {
+ 		if (want_store && k == 0) {
+-- 
+2.38.1
 
