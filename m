@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89AFFC77B71
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:34:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B22BCC77B74
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:34:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237802AbjDFLe5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 07:34:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33250 "EHLO
+        id S236698AbjDFLe6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:34:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237919AbjDFLea (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:34:30 -0400
+        with ESMTP id S238117AbjDFLeG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:34:06 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD44A93DE;
-        Thu,  6 Apr 2023 04:33:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2BF29EC4;
+        Thu,  6 Apr 2023 04:33:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C2F260905;
-        Thu,  6 Apr 2023 11:33:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3DE2C4339E;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D33D464475;
         Thu,  6 Apr 2023 11:33:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E3BFC433A0;
+        Thu,  6 Apr 2023 11:33:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680780787;
-        bh=BhX8aFZNlLmTRTF+l3UNPof0eFjwX7T9kgq0qsBfOqo=;
+        s=k20201202; t=1680780786;
+        bh=fJRQV3yE7yF8O17lnEYSmwfFwU14JDGA6zck7lrmxoU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fLpYH2nqKCy1bBaXTqvtk5NGDBuosReKw0fMYllzpOf6AxNiDrEjhI6+YoOR+1PJu
-         EdRxiY4JIozL3tuaWe3xxQPeP/xxlB/xnjsGbuERYnyNjuN/bGYGCbyWxAhYY/LCOu
-         QeTY3n8/koLFOPGycOWKjGR773CX/qB+UizLItvhpJ+5JyajvNh2djFTt/WiwVnvQJ
-         oW4fIVgDGfcrm6v1t05vtHELcTnbi1RXsGJrv1eRUct7N7dxq4EediLn1lJo0S0QYm
-         B4M+vrnPh5CiEEOsoTTSNMHE1YB4ibQWtxgmGMPFYfpA+RuX+CiO4pfaZxFElbQZaL
-         Pqjf9xlNL0wdg==
+        b=kG7ngYHsFPf+/NYtWUfpSLBI7hPWpKROqFNb/64tgFk0nDRqmACkPQZbozvLK4N0X
+         knmIAX/Xkb4ViL+qmFUmbKZM6pqDLa6N2E3fz3dkGvPAps54DlNpEg3oBEb3e8I/Aw
+         eY1rfiqEzyZIkhI9UN/h/yvmRA2Apk1Ovppn1i/rKkk5cUFiy2PnTa6TrQe79Wy9RQ
+         3YRwWYRq+5mIHyjh2+EiT4pZ0eMBI9QuuYa9D+Qe8/YWz02DJzx46qRukS6SMHfUCF
+         Dggtx+wIUI9WKRKjb9ZalIukjLdRbjKJoL+5BYs5kgpcRiMjdH3rm7VZWR/1lYFjg3
+         mjSIjU7voRfag==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
+Cc:     Tomas Henzl <thenzl@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, megaraidlinux.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 06/11] scsi: core: Improve scsi_vpd_inquiry() checks
-Date:   Thu,  6 Apr 2023 07:32:45 -0400
-Message-Id: <20230406113250.648634-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 05/11] scsi: megaraid_sas: Fix fw_crash_buffer_show()
+Date:   Thu,  6 Apr 2023 07:32:44 -0400
+Message-Id: <20230406113250.648634-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230406113250.648634-1-sashal@kernel.org>
 References: <20230406113250.648634-1-sashal@kernel.org>
@@ -52,58 +53,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+From: Tomas Henzl <thenzl@redhat.com>
 
-[ Upstream commit f0aa59a33d2ac2267d260fe21eaf92500df8e7b4 ]
+[ Upstream commit 0808ed6ebbc292222ca069d339744870f6d801da ]
 
-Some USB-SATA adapters have broken behavior when an unsupported VPD page is
-probed: Depending on the VPD page number, a 4-byte header with a valid VPD
-page number but with a 0 length is returned. Currently, scsi_vpd_inquiry()
-only checks that the page number is valid to determine if the page is
-valid, which results in receiving only the 4-byte header for the
-non-existent page. This error manifests itself very often with page 0xb9
-for the Concurrent Positioning Ranges detection done by sd_read_cpr(),
-resulting in the following error message:
+If crash_dump_buf is not allocated then crash dump can't be available.
+Replace logical 'and' with 'or'.
 
-sd 0:0:0:0: [sda] Invalid Concurrent Positioning Ranges VPD page
-
-Prevent such misleading error message by adding a check in
-scsi_vpd_inquiry() to verify that the page length is not 0.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Link: https://lore.kernel.org/r/20230322022211.116327-1-damien.lemoal@opensource.wdc.com
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Link: https://lore.kernel.org/r/20230324135249.9733-1-thenzl@redhat.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 4fc9466d820a7..a499a57150720 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -323,11 +323,18 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
- 	if (result)
- 		return -EIO;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 88e164e3d2eac..f7da1876e7a38 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3302,7 +3302,7 @@ fw_crash_buffer_show(struct device *cdev,
  
--	/* Sanity check that we got the page back that we asked for */
-+	/*
-+	 * Sanity check that we got the page back that we asked for and that
-+	 * the page size is not 0.
-+	 */
- 	if (buffer[1] != page)
- 		return -EIO;
- 
--	return get_unaligned_be16(&buffer[2]) + 4;
-+	result = get_unaligned_be16(&buffer[2]);
-+	if (!result)
-+		return -EIO;
-+
-+	return result + 4;
- }
- 
- /**
+ 	spin_lock_irqsave(&instance->crashdump_lock, flags);
+ 	buff_offset = instance->fw_crash_buffer_offset;
+-	if (!instance->crash_dump_buf &&
++	if (!instance->crash_dump_buf ||
+ 		!((instance->fw_crash_state == AVAILABLE) ||
+ 		(instance->fw_crash_state == COPYING))) {
+ 		dev_err(&instance->pdev->dev,
 -- 
 2.39.2
 
