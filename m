@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA9FC77B6C
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 19:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA3FC77B71
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 19:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238149AbjDFTr0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:47:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51666 "EHLO
+        id S237926AbjDFTr2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:47:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237745AbjDFTrU (ORCPT
+        with ESMTP id S237787AbjDFTrU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 15:47:20 -0400
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D943C27
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Apr 2023 12:47:18 -0700 (PDT)
-Received: by mail-wr1-x436.google.com with SMTP id v1so40613011wrv.1
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Apr 2023 12:47:18 -0700 (PDT)
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66E4186B4
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Apr 2023 12:47:19 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id g5so667787wrb.5
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Apr 2023 12:47:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20210112.gappssmtp.com; s=20210112; t=1680810437;
+        d=bgdev-pl.20210112.gappssmtp.com; s=20210112; t=1680810439;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=eibFHvIgf05QKZ/3r3/eY9NPHy7GReZl9L/HNNvsxXE=;
-        b=tUNDaGqs6SBx+PnwtkYghqfGdurrJZeNxnSHZWepcZsM0dyChH+KDbEMcZUCma+fpn
-         kob1eg9eo3aMMscDXxiHB4rqkmSvWdEo2MQH1AeWgPLyehgcvwSQN9qcpGSh2P/68+PT
-         2f+C9HgULwKhjlLYMjDARM54+H+d9lmjxWT626ZCnCEvQj3dVBW0AZtu1cBbjiHN5xhX
-         NLsFin8HtDuOQ4QWAgiO6ui76iwR/VmmZCCT00wFGGwABYUbjyNrkCVKjk3/Ss37FMAD
-         E8JJa3t/9yjCe7VRYv4DUdBnTlx1vQHBu6jkLgNQuRpDR0w4iIDlQMZwSF+uF8NwEWDC
-         +MTQ==
+        bh=bXUDVofzbruFWvxInSCiMp68YTGp52NFTniah4vjDOg=;
+        b=Qv+otAu1UfAjM8GTfhZEGFrwdb/8qT2pvcgo690fxcFpH1NtoSCCLqrLCH+95AK3G5
+         dJ9eKBgEjSk78VYJTFtG5aL09U2/LBG2NT1RvXGLUqlmuLZTMmfa5deMmidpGId1PK0N
+         gDBUxbLgfuUCKS8/uiFL73C3JsW/hfKHDkSJj3wmKtsOPyF/hyZXppammwV3RaSzQkfN
+         KyKfIpMNCfEJ8uo448tqUTXAlL5VFaJ+L6DsDOIKIC3TUkSXx5uBI5j7fWRo20jfE6ZO
+         HBForh6qpZNiT8uAi2dvGJubQVTkiiVEZzPXYxeENYMz63JRe9gKEzIs3Cg4MuJybc/F
+         5HRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680810437;
+        d=1e100.net; s=20210112; t=1680810439;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=eibFHvIgf05QKZ/3r3/eY9NPHy7GReZl9L/HNNvsxXE=;
-        b=CL8cTvd7EG2ajXNRFiLojsLYr2lpHuR+VWFr1S4gM2Aw3HWo3RyY2wZHh3PAwqmHDs
-         QMNQ6sl0Uhm72jnaQldlZCRzGAMeViCvvzPxKtp2DwxOCtzJTNJDlzA1OPDaWTsMJ1nE
-         5bVUHVKPJOaEqTEqH778DohlAoQ/QC5O0LO3W/2dyuxzMLUaoEm37DeQyMir6Q6/x9Yb
-         qdcJAUC3eWOqXhIfxoPkpByBbn9OyUpLIWAR0RT36RK4vM+DdEpe509rc9+vHulgx31n
-         GMjNSrBJxOy7zayj/yacrw9wvCEHrcJ375kchQN0hdLkk2qS8ZvJwDobt6otLzFE3T8o
-         VXMw==
-X-Gm-Message-State: AAQBX9e9b9elh5AAZEVZiG1hk5mKsziZy14kCtNV0+tfP0FS44IXLHek
-        ckUS/9BKOUFjEIy/+U8dDzq7yg==
-X-Google-Smtp-Source: AKy350ZJuXhVqvPZs0WG6qinNmJqseB1dMFo7JPkdm82mqrtcUFu6CQwG7jgoDgVz68fpQTR5W83Ow==
-X-Received: by 2002:adf:ed51:0:b0:2ee:c582:a67d with SMTP id u17-20020adfed51000000b002eec582a67dmr2304031wro.31.1680810436791;
-        Thu, 06 Apr 2023 12:47:16 -0700 (PDT)
+        bh=bXUDVofzbruFWvxInSCiMp68YTGp52NFTniah4vjDOg=;
+        b=QYfj99+4o5z5U0Jo+fKgya6lrRvKKmeHyUVhcNV2JS18ZDrrcQUWGVnFEoqWNJnjwo
+         1mNCWFV8fIyIKKI16EFQik5eqSXjBiE4MKZ2HXuj1DBTYo8FyKVYcvD0PVi9AuoqAWQV
+         7RLbdojpfQKsEmxnHVr8jcwDSEUhN9k5GyY4QK3uMims+DuUYCUKwbAFyIp4Z29sGm7z
+         ULhbMoJs77fn5zu36qU+PvBN9ztaZP9zZpzwmd1ul+gKC3upVq0DTlykxwYEg0f9XmGT
+         WEOCYoMjc0H/6pMsFnpZ0VX0pK7LiTjUZ18YV7SL7FhC37eva6Fg+unzus/v4j5/1Z7P
+         CNbQ==
+X-Gm-Message-State: AAQBX9e4dQQgB3NT9elRpkjP2jabZv1vcVcmjV5aZlm2dYr2h42zrp7m
+        XAlixIzzFkKGH1/wA93eMWTndA==
+X-Google-Smtp-Source: AKy350YplvG0jP1fW81hi9f7EU3fuyxwRIfuj0elPEpyP0tkNZz4BYSplTmw7FvRhC7WQC6CNjZAWg==
+X-Received: by 2002:adf:fe03:0:b0:2e5:26eb:bd1b with SMTP id n3-20020adffe03000000b002e526ebbd1bmr7466331wrr.58.1680810438846;
+        Thu, 06 Apr 2023 12:47:18 -0700 (PDT)
 Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:4793:cb9a:340b:2f72])
-        by smtp.gmail.com with ESMTPSA id k15-20020a056000004f00b002c71dd1109fsm2593323wrx.47.2023.04.06.12.47.15
+        by smtp.gmail.com with ESMTPSA id k15-20020a056000004f00b002c71dd1109fsm2593323wrx.47.2023.04.06.12.47.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Apr 2023 12:47:16 -0700 (PDT)
+        Thu, 06 Apr 2023 12:47:18 -0700 (PDT)
 From:   Bartosz Golaszewski <brgl@bgdev.pl>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
@@ -65,9 +65,9 @@ Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org,
         Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: [PATCH v2 3/5] phy: qualcomm: phy-qcom-qmp-ufs: add definitions for sa8775p
-Date:   Thu,  6 Apr 2023 21:47:01 +0200
-Message-Id: <20230406194703.495836-4-brgl@bgdev.pl>
+Subject: [PATCH v2 5/5] arm64: dts: qcom: sa8775p-ride: enable UFS
+Date:   Thu,  6 Apr 2023 21:47:03 +0200
+Message-Id: <20230406194703.495836-6-brgl@bgdev.pl>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20230406194703.495836-1-brgl@bgdev.pl>
 References: <20230406194703.495836-1-brgl@bgdev.pl>
@@ -79,69 +79,58 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
-Add QMP PHY config for sa8775p and add support for the new compatible.
+Enable the UFS and its PHY on sa8775p-ride.
 
 Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 38 +++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ arch/arm64/boot/dts/qcom/sa8775p-ride.dts | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-index d58822049211..5612282eb378 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-@@ -853,6 +853,41 @@ static const struct qmp_phy_cfg msm8996_ufsphy_cfg = {
- 	.no_pcs_sw_reset	= true,
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p-ride.dts b/arch/arm64/boot/dts/qcom/sa8775p-ride.dts
+index f238a02a5448..2bb001a3ea55 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p-ride.dts
++++ b/arch/arm64/boot/dts/qcom/sa8775p-ride.dts
+@@ -5,6 +5,7 @@
+ 
+ /dts-v1/;
+ 
++#include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+ 
+ #include "sa8775p.dtsi"
+@@ -20,6 +21,7 @@ aliases {
+ 		serial2 = &uart17;
+ 		i2c18 = &i2c18;
+ 		spi16 = &spi16;
++		ufshc1 = &ufs_mem_hc;
+ 	};
+ 
+ 	chosen {
+@@ -426,6 +428,23 @@ &uart17 {
+ 	status = "okay";
  };
  
++&ufs_mem_hc {
++	reset-gpios = <&tlmm 149 GPIO_ACTIVE_LOW>;
++	vcc-supply = <&vreg_l8a>;
++	vcc-max-microamp = <1100000>;
++	vccq-supply = <&vreg_l4c>;
++	vccq-max-microamp = <1200000>;
 +
-+static const struct qmp_phy_cfg sa8775p_ufsphy_cfg = {
-+	.lanes			= 2,
-+
-+	.offsets		= &qmp_ufs_offsets,
-+
-+	.tbls = {
-+		.serdes		= sm8350_ufsphy_serdes,
-+		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_serdes),
-+		.tx		= sm8350_ufsphy_tx,
-+		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_tx),
-+		.rx		= sm8350_ufsphy_rx,
-+		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_rx),
-+		.pcs		= sm8350_ufsphy_pcs,
-+		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_pcs),
-+	},
-+	.tbls_hs_b = {
-+		.serdes		= sm8350_ufsphy_hs_b_serdes,
-+		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
-+	},
-+	.tbls_hs_g4 = {
-+		.tx		= sm8350_ufsphy_g4_tx,
-+		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
-+		.rx		= sm8350_ufsphy_g4_rx,
-+		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
-+		.pcs		= sm8350_ufsphy_g4_pcs,
-+		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
-+	},
-+	.clk_list		= sm8450_ufs_phy_clk_l,
-+	.num_clks		= ARRAY_SIZE(sm8450_ufs_phy_clk_l),
-+	.vreg_list		= qmp_phy_vreg_l,
-+	.num_vregs		= ARRAY_SIZE(qmp_phy_vreg_l),
-+	.regs			= ufsphy_v5_regs_layout,
++	status = "okay";
 +};
 +
- static const struct qmp_phy_cfg sc8280xp_ufsphy_cfg = {
- 	.lanes			= 2,
- 
-@@ -1600,6 +1635,9 @@ static const struct of_device_id qmp_ufs_of_match_table[] = {
- 	}, {
- 		.compatible = "qcom,msm8998-qmp-ufs-phy",
- 		.data = &sdm845_ufsphy_cfg,
-+	}, {
-+		.compatible = "qcom,sa8775p-qmp-ufs-phy",
-+		.data = &sa8775p_ufsphy_cfg,
- 	}, {
- 		.compatible = "qcom,sc8180x-qmp-ufs-phy",
- 		.data = &sm8150_ufsphy_cfg,
++&ufs_mem_phy {
++	vdda-phy-supply = <&vreg_l4a>;
++	vdda-pll-supply = <&vreg_l1c>;
++
++	status = "okay";
++};
++
+ &xo_board_clk {
+ 	clock-frequency = <38400000>;
+ };
 -- 
 2.37.2
 
