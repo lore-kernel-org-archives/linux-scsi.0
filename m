@@ -2,51 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB105C77B72
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:40:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD27FC7618D
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 11:40:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238228AbjDFLko (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 07:40:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48132 "EHLO
+        id S229678AbjDFLkn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:40:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238661AbjDFLjd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:39:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C80B4CA02;
-        Thu,  6 Apr 2023 04:35:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AFDC464694;
-        Thu,  6 Apr 2023 11:34:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D787C433EF;
-        Thu,  6 Apr 2023 11:34:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680780874;
-        bh=ILK+NzhMVgSrGP+yv3HNV1N6lVl0sHs5aiKMJfLxve0=;
+        with ESMTP id S238996AbjDFLkQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 07:40:16 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FD0CB47A;
+        Thu,  6 Apr 2023 04:36:32 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id g29so532751lfj.4;
+        Thu, 06 Apr 2023 04:36:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680780934;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hLe2BDpqjmup0y1LPiABk+LzHgKkTNIBWp76zDCcB+4=;
+        b=GIcASHLvXk58zNoEndxSyPxeJSduISNiRK7lWnyq86ivFMxH/4PAdrQOyVXnK3unfq
+         8tpWmJODQuW1eBuHeAF8JSlQXYfYI3LgIESyKi+U/lWEmv4RYoinzZKR5sdLoZoLzTCj
+         GNxuiTQr6Ly+nldPAK6lVvA4ZVHx39c7+3I63uwU8A7mwyTfLlXTj2bv/lRjo7yDfadh
+         P2Ki9a1ztaZyuPQIIPExrlHI5qLIbU5H5bdknMsMBmdEgxRYr6iFyNRK3ffKeYJbXR98
+         sU3eJLUo4SqYB8A88j1iC87kKWEGbtZ+Ej3ceYTa/NqpWBXzqi5C3oHgodLUSCY65kZ6
+         YR0w==
+X-Gm-Message-State: AAQBX9eIj5BOwlWUwXzhvVANVB94xqYmqYBsUg39LO9iKGOMIRbspEMH
+        5/3PJUgQKa451/SMmDVJewFDx/W2UbbVWw==
+X-Google-Smtp-Source: AKy350ZsR7wQELdu0Yp2Ev9AYrRg0/aCfTlocFrwPkX/J8DrIIB5UP0w8paVzkWrOdzVODIGeX3vqQ==
+X-Received: by 2002:ac2:48a1:0:b0:4eb:452d:5bbf with SMTP id u1-20020ac248a1000000b004eb452d5bbfmr2597917lfg.54.1680780934104;
+        Thu, 06 Apr 2023 04:35:34 -0700 (PDT)
+Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
+        by smtp.gmail.com with ESMTPSA id g13-20020ac2538d000000b004eb41d26d49sm229529lfh.28.2023.04.06.04.35.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Apr 2023 04:35:33 -0700 (PDT)
+Received: by flawful.org (Postfix, from userid 112)
+        id C2B7312A1; Thu,  6 Apr 2023 13:35:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1680780933; bh=preqedR2QZNTaOgvRKfmyWCCDHRysOKE6G/n/oQl2tk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r+0+X1hLoXGMuFzMN1Y0vAXG1WMkFCURn6OOoKWuMw2OkZYdO8mYg6YEbGVfMn8Ot
-         i45rHVHGYHhBhKechsMA6otJQKP6c8dI/G4Rs5zeQvBl+hPD9P9IyQydr7Hu4eavrg
-         Gu31x1gMKt1SrQzK76B8BCG5QYKX7J039G2LMDrgeFb9skMO/gTTrhK56glofAD5uk
-         aZfXBVJ/ADptGqz+SGNrLRfG4/mY7Avi8De97a27rBwv2IgklU98J9HIDd5Dew5scM
-         AqKk0myGuj6FJNOJuTmHvUAFhGAlhd4GpLOkxtRCk8ly9bkaJWLrQkNY6+NMe8Icak
-         mxcKqaoCBy4hQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 4/7] scsi: core: Improve scsi_vpd_inquiry() checks
-Date:   Thu,  6 Apr 2023 07:34:18 -0400
-Message-Id: <20230406113421.649149-4-sashal@kernel.org>
+        b=QXZONJlZ0GfO6y8sPyaChIJtM6fJDKJskV+SLPl/UexUPKvDrpbjOZ/jqyelNv28s
+         aAGIS5HV3hKHKkAmcQv/CKNvP2/24akemK/zi6nFBrKEvAFqv+MAnctGOgs7mbOWPL
+         jzcm8vGGgCXy3//izsq53tmSyW8qDOTRJSepm55E=
+Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by flawful.org (Postfix) with ESMTPSA id 1EA9E69A;
+        Thu,  6 Apr 2023 13:33:07 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1680780787; bh=preqedR2QZNTaOgvRKfmyWCCDHRysOKE6G/n/oQl2tk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=YEsZ+/Af/WlbT+HSw0N1YcUN7htnpOH4BXhKpCf8EcuZ/lLc0NbhnVOt+ckzdFEzs
+         6fY/gmaJfXrSiWMI9IfmIqrkmU9aUUtjiUncXShAn11iuqnC0vR0CeqHvfsLXW1jQI
+         o/HTg47o4TdishwfA7oGwd0g98YzBEEiM1A/F5qE=
+From:   Niklas Cassel <nks@flawful.org>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Damien Le Moal <dlemoal@fastmail.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH v6 02/19] block: introduce ioprio hints
+Date:   Thu,  6 Apr 2023 13:32:31 +0200
+Message-Id: <20230406113252.41211-3-nks@flawful.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230406113421.649149-1-sashal@kernel.org>
-References: <20230406113421.649149-1-sashal@kernel.org>
+In-Reply-To: <20230406113252.41211-1-nks@flawful.org>
+References: <20230406113252.41211-1-nks@flawful.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -54,56 +81,106 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-[ Upstream commit f0aa59a33d2ac2267d260fe21eaf92500df8e7b4 ]
+IO priorities currently only use 6-bits of the 16-bits ioprio value: the
+3-upper bits are used to define up to 8 priority classes (4 of which are
+valid) and the 3 lower bits of the value are used to define a priority
+level for the real-time and best-effort class.
 
-Some USB-SATA adapters have broken behavior when an unsupported VPD page is
-probed: Depending on the VPD page number, a 4-byte header with a valid VPD
-page number but with a 0 length is returned. Currently, scsi_vpd_inquiry()
-only checks that the page number is valid to determine if the page is
-valid, which results in receiving only the 4-byte header for the
-non-existent page. This error manifests itself very often with page 0xb9
-for the Concurrent Positioning Ranges detection done by sd_read_cpr(),
-resulting in the following error message:
+The remaining 10-bits between the IO priority class and level are
+unused, and in fact, cannot be used by the user as doing so would
+either result in the value being completely ignored, or in an error
+returned by ioprio_check_cap().
 
-sd 0:0:0:0: [sda] Invalid Concurrent Positioning Ranges VPD page
+Use these 10-bits of an ioprio value to allow a user to specify IO
+hints. An IO hint is defined as a 10-bits value, allowing up to 1023
+different hints to be specified, with the value 0 being reserved as the
+"no hint" case. An IO hint can apply to any IO that specifies a valid
+priority class other than NONE, regardless of the IO priority level
+specified.
 
-Prevent such misleading error message by adding a check in
-scsi_vpd_inquiry() to verify that the page length is not 0.
+To do so, the macros IOPRIO_PRIO_HINT() and IOPRIO_PRIO_VALUE_HINT() are
+introduced in include/uapi/linux/ioprio.h to respectively allow a user
+to get and set a hint in an ioprio value.
+
+To support the ATA and SCSI command duration limits feature, 7 hints
+are defined: IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
+IOPRIO_HINT_DEV_DURATION_LIMIT_7, allowing a user to specify which
+command duration limit descriptor should be applied to the commands
+serving an IO. Specifying these hints has for now no effect whatsoever
+if the target block devices do not support the command duration limits
+feature. However, in the future, block IO schedulers can be modified to
+optimize IO issuing order based on these hints, even for devices that
+do not support the command duration limits feature.
+
+Given that the 7 duration limits hints defined have no effect on any
+block layer component, the actual definition of the duration limits
+implied by these hints remains at the device level.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Link: https://lore.kernel.org/r/20230322022211.116327-1-damien.lemoal@opensource.wdc.com
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ include/uapi/linux/ioprio.h | 49 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 80ab7ef027247..5f18599b0e5fd 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -351,11 +351,18 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
- 	if (result)
- 		return -EIO;
+diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
+index 4444b4e4fdad..607c7617b9d2 100644
+--- a/include/uapi/linux/ioprio.h
++++ b/include/uapi/linux/ioprio.h
+@@ -58,4 +58,53 @@ enum {
+ #define IOPRIO_NORM	4
+ #define IOPRIO_BE_NORM	IOPRIO_NORM
  
--	/* Sanity check that we got the page back that we asked for */
-+	/*
-+	 * Sanity check that we got the page back that we asked for and that
-+	 * the page size is not 0.
-+	 */
- 	if (buffer[1] != page)
- 		return -EIO;
- 
--	return get_unaligned_be16(&buffer[2]) + 4;
-+	result = get_unaligned_be16(&buffer[2]);
-+	if (!result)
-+		return -EIO;
++/*
++ * The 10-bits between the priority class and the priority level are used to
++ * optionally define IO hints for any combination of IO priority class and
++ * level. Depending on the kernel configuration, IO scheduler being used and
++ * the target IO device being used, hints can influence how IOs are processed
++ * without affecting the IO scheduling ordering defined by the IO priority
++ * class and level.
++ */
++#define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
++#define IOPRIO_HINT_NR_BITS		10
++#define IOPRIO_NR_HINTS			(1 << IOPRIO_HINT_NR_BITS)
++#define IOPRIO_HINT_MASK		(IOPRIO_NR_HINTS - 1)
++#define IOPRIO_PRIO_HINT(ioprio)	\
++	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
 +
-+	return result + 4;
- }
- 
- /**
++/*
++ * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
++ * a class, level and hint.
++ */
++#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
++	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
++	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
++	 ((level) & IOPRIO_LEVEL_MASK))
++
++/*
++ * IO hints.
++ */
++enum {
++	/* No hint */
++	IOPRIO_HINT_NONE = 0,
++
++	/*
++	 * Device command duration limits: indicate to the device a desired
++	 * duration limit for the commands that will be used to process an IO.
++	 * These will currently only be effective for SCSI and ATA devices that
++	 * support the command duration limits feature. If this feature is
++	 * enabled, then the commands issued to the device to process an IO with
++	 * one of these hints set will have the duration limit index (dld field)
++	 * set to the value of the hint.
++	 */
++	IOPRIO_HINT_DEV_DURATION_LIMIT_1 = 1,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_2 = 2,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_3 = 3,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_4 = 4,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_5 = 5,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_6 = 6,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
++};
++
+ #endif /* _UAPI_LINUX_IOPRIO_H */
 -- 
 2.39.2
 
