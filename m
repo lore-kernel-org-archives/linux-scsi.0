@@ -2,134 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A19F3C77B72
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 07:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1085AC76196
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 07:56:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233753AbjDGHCo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 03:02:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43694 "EHLO
+        id S232222AbjDGH4T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 03:56:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238199AbjDGHCn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 03:02:43 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7421C7ED5
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 00:02:40 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id l10-20020a05600c1d0a00b003f04bd3691eso9856102wms.5
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Apr 2023 00:02:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1680850959; x=1683442959;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=yDRZJb+gw9WKl+q/YP3+9vfEWrdxXYb08xE3KjrncwY=;
-        b=TlUNuHXhE7dkX3ma2znO7zdAacJiO27ghArmpkXlH8c3ATv+KBTc8LUhyVrkypI+mP
-         0zQlggzvEemyf2P17MWTNYZVT5pEmY7G8l0KpU4b0QsyPvMfMJZshCs5c4HdBgpV6MQP
-         XN2grzseW68CfcpULpwxh3ynO/USV/6im6FxHW40/svQL+ApI5uK1eCRpcAHn1PqPRYE
-         iwww25egOIvVPfxbt4pMX674CTKLbiVEO/0Ip1e+6ahSlHwFQkQF7naCFmxlgJCIHPZU
-         6QypBjxTNvF8oRGQexdGN9PM2UNsP9cuq6GQxZBhFfnm80WY+czp/4FjLGOZC9ZJW9dw
-         8zbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680850959; x=1683442959;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yDRZJb+gw9WKl+q/YP3+9vfEWrdxXYb08xE3KjrncwY=;
-        b=x021yrkFW2oLiZeloGTmIbmeMk+vPr/jMeVUL4zBSE6Aa/J0wj7hnPXBiFNKJ1hpo6
-         hC5lX7D6BaFEieD2LS/Udb+9Muet8XpCC4gAhkwArTiVsCaZ8vYQXRHyghPAxOhxhIXJ
-         mVDv32xmhr/f9PUJIfSEglfFLF9FgAHfqcZhRxsMs+C+9DgOrLdYUp8gHqNV3C8l5VA+
-         VgrXWKpAkScvCVXF9E59yEaSMUwBV5OikmXFdX+WKhhHXtKeZeYsTAZv+1xYfv1HEB7m
-         K4HIsqf4gxrx97BbYPJViB602APP6BwwXHlWWGYtvxom29/iVhCi2UUXab0YEPD7dsWT
-         A5hg==
-X-Gm-Message-State: AAQBX9clflxbrjL9xQY29xY9MFg+h1VL7m5MTS6ZAEUCle2BTrsujxGC
-        s5FooNypK9zuYgbn3P1YV6fkVQ==
-X-Google-Smtp-Source: AKy350Yf7cZzWZgOSGchAXM9/7IoYqhc4Z0zpcrhQUgBsDYEyMpw3OS/oAAO8/EgLIduuLczRZdj6g==
-X-Received: by 2002:a05:600c:2202:b0:3ee:289a:3c3a with SMTP id z2-20020a05600c220200b003ee289a3c3amr566623wml.30.1680850958894;
-        Fri, 07 Apr 2023 00:02:38 -0700 (PDT)
-Received: from linaro.org ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id i42-20020a05600c4b2a00b003f0321c22basm7224793wmp.12.2023.04.07.00.02.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Apr 2023 00:02:38 -0700 (PDT)
-Date:   Fri, 7 Apr 2023 10:02:36 +0300
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v5 4/6] scsi: ufs: ufs-qcom: Switch to the new ICE API
-Message-ID: <ZC/ADOlol2XO7ACL@linaro.org>
-References: <20230403200530.2103099-1-abel.vesa@linaro.org>
- <20230403200530.2103099-5-abel.vesa@linaro.org>
- <20230406201634.GA20288@sol.localdomain>
+        with ESMTP id S230292AbjDGH4S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 03:56:18 -0400
+Received: from forwardcorp1b.mail.yandex.net (forwardcorp1b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:df01])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A37EA6E82;
+        Fri,  7 Apr 2023 00:56:15 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:1fa8:0:640:3b74:0])
+        by forwardcorp1b.mail.yandex.net (Yandex) with ESMTP id B289C60305;
+        Fri,  7 Apr 2023 10:56:13 +0300 (MSK)
+Received: from den-plotnikov-w.yandex-team.ru (unknown [2a02:6b8:b081:b507::1:25])
+        by mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net (smtpcorp/Yandex) with ESMTPSA id 4uLCdL0Od4Y0-uxaYAqh0;
+        Fri, 07 Apr 2023 10:56:12 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1680854172; bh=9IRxraDMMRQpsr1I0/AtgfXObZe/EMARKPhOMkXb224=;
+        h=Message-Id:Date:Cc:Subject:To:From;
+        b=AQ7A+3uOBUEd0Xyw+fiUlB71zePlD05ZZbCypGYm4x0vtYJabG9mSKChjUoKmq1hv
+         2WuOSSIkHlGl5eNRKV5EQ4AGMwLNqxLuHWaJHgNDJXshznZesMPIRy9YdrZLHw0sR0
+         bnhF+GKdsMNU3+NLCXHQUV8BXKLot1lldfKkPXoQ=
+Authentication-Results: mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+From:   Denis Plotnikov <den-plotnikov@yandex-team.ru>
+To:     linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        martin.petersen@oracle.com, nab@linux-iscsi.org, varun@chelsio.com,
+        den-plotnikov@yandex-team.ru
+Subject: [PATCH] cxgbit: check skb dequeue result in cxgbit_send_tx_flowc_wr()
+Date:   Fri,  7 Apr 2023 10:56:03 +0300
+Message-Id: <20230407075603.311230-1-den-plotnikov@yandex-team.ru>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230406201634.GA20288@sol.localdomain>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23-04-06 13:16:34, Eric Biggers wrote:
-> Hi Abel,
-> 
-> On Mon, Apr 03, 2023 at 11:05:28PM +0300, Abel Vesa wrote:
-> > Now that there is a new dedicated ICE driver, drop the ufs-qcom-ice and
-> > use the new ICE api provided by the Qualcomm soc driver ice. The platforms
-> > that already have ICE support will use the API as library since there will
-> > not be a devicetree node, but instead they have reg range. In this case,
-> > the of_qcom_ice_get will return an ICE instance created for the consumer's
-> > device. But if there are platforms that do not have ice reg in the
-> > consumer devicetree node and instead provide a dedicated ICE devicetree
-> > node, the of_qcom_ice_get will look up the device based on qcom,ice
-> > property and will get the ICE instance registered by the probe function
-> > of the ice driver.
-> > 
-> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> 
-> This is still silent about how the ICE clock behavior is being changed.
+Skb dequeuing may end up with returning NULL if a queue is empty,
+which, in turn, may end up with further null pointer dereference.
 
-Right, I'll add the some more info into the commit message about the
-clock being handled by the ICE driver.
+Fix it by checking the return value of skb dequeuing end returning
+before the pointer dereference.
 
-> 
-> I'm still trying to understand all this myself, so please bear with me, but my
-> understanding is that the UFS clocks can be disabled even while the host
-> controller is runtime-resumed.  This is called "clock gating" in the code.
+Found by Linux Verification Center(linuxtesting.org) with SVACE.
 
-The ICE clock is now being controlled by the new driver.
-> 
-> Before, the ICE clock was just listed as one of the UFS clocks.  So, it was just
-> managed like the other UFS clocks.
-> 
-> Now, it appears that the ICE clock is always enabled while the host controller
-> is runtime-resumed.  So, this patch removes support for gating of the ICE clock.
+Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
+Signed-off-by: Denis Plotnikov <den-plotnikov@yandex-team.ru>
+---
+ drivers/target/iscsi/cxgbit/cxgbit_cm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-I just tested this and it works as expected, which is:
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+index d9204c590d9ab..426a5c795fd93 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+@@ -1424,10 +1424,13 @@ u32 cxgbit_send_tx_flowc_wr(struct cxgbit_sock *csk)
+ #ifdef CONFIG_CHELSIO_T4_DCB
+ 	u16 vlan = ((struct l2t_entry *)csk->l2t)->vlan;
+ #endif
++	skb = __skb_dequeue(&csk->skbq);
++
++	if (!skb)
++		return 0;
+ 
+ 	flowclen16 = cxgbit_tx_flowc_wr_credits(csk, &nparams, &flowclen);
+ 
+-	skb = __skb_dequeue(&csk->skbq);
+ 	flowc = __skb_put_zero(skb, flowclen);
+ 
+ 	flowc->op_to_nparams = cpu_to_be32(FW_WR_OP_V(FW_FLOWC_WR) |
+-- 
+2.25.1
 
-ICE clock gets enable on qcom_ice_create (via *clk_get*_enabled) and
-then, on the runtime suspend of the UFS, the qcom_ice_suspend is called
-which will disable the clock. Then, every time UFS runtime
-resumes/suspends the clock gets enabled/disabled.
-
-Hope that makes sense.
-
-Let me know if you think I'm missing something here.
-
-> 
-> Is that intended?
-> 
-> - Eric
