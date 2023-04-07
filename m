@@ -2,177 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C095DC77B75
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 20:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A30E9C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 20:08:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229459AbjDGUIn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 16:08:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59648 "EHLO
+        id S229706AbjDGUIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 16:08:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229982AbjDGUI2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 16:08:28 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05D2110B;
-        Fri,  7 Apr 2023 13:08:26 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 337Fx1rb019789;
-        Fri, 7 Apr 2023 20:06:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2022-7-12;
- bh=UaXiRnUvbEv30He/YhYeD9ZGXyi65KZYZn9ZpQm4nCo=;
- b=pgv0cWnMB3cQPINgddDEkWg0aFVx4thK08FJLWxYWdGQr9rINn78k/H41KawhNmif/An
- pK77jaix1Dr50OQrGvv+Wpz55uKDlEMfoH1rQneRcFA1uvL36ebZUxwMKaoDq4MYilQH
- DYPxuImu9qUXblsN9kvXRnMVnIrOttVyDJHhkuO4fxDZmfi9J96hKEmwouV2/QZeAZQ1
- xswF1ugpsLx+xswi56GAn0Fl7TzSWIS1kw8KNRI/As2moaQk+JE1WPtZL2/YN1vos6vj
- z0XR8oTs0lkGjcGiKPmZTpvqGTtfmCG1zyuE2cArREysF6n0eq15GxIKLfaVn8XHCQD1 Gw== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ppbd45w5a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 07 Apr 2023 20:06:12 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 337Iw2C5034229;
-        Fri, 7 Apr 2023 20:06:12 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pptjxeeqn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 07 Apr 2023 20:06:11 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 337K5tr4010228;
-        Fri, 7 Apr 2023 20:06:11 GMT
-Received: from mnchrist-mac.us.oracle.com (dhcp-10-154-128-1.vpn.oracle.com [10.154.128.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pptjxeeam-7;
-        Fri, 07 Apr 2023 20:06:11 +0000
-From:   Mike Christie <michael.christie@oracle.com>
-To:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
+        with ESMTP id S230242AbjDGUIf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 16:08:35 -0400
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79D67BBA1;
+        Fri,  7 Apr 2023 13:08:34 -0700 (PDT)
+Received: by mail-pj1-f49.google.com with SMTP id nh20-20020a17090b365400b0024496d637e1so5091429pjb.5;
+        Fri, 07 Apr 2023 13:08:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680898114; x=1683490114;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CkZ9epVN8TkdRsJcbdQlduPOctGu1N9KX0JTrq0nz1g=;
+        b=OgRf+qISMweawhphd8MFRNmo5JOJPw44VchvqAxLmBe2CLvB8o8FT1vImOEYv6697R
+         Vab9MDpN6hhWE3q9baD8cmxAJmcPz1ldrQDeJluyATZOW7LoCDS/Bp1i9Y28OWiHRLsp
+         b1TZUoKHPDtaiXfEoM+l0UbJe2cP2ojfzewxmC043mrzONzj8wxZgsbEhVsrn7UFcGsb
+         jvfeJaCjLiD4NDOmq/KnyKUEwxo1k0nIejDyO6x4emtwmc0a7c/E3o0bp+r6Gg7RKoFn
+         ZqSkPD+Ho/YMjFxdh4MzK8OOo24hqyGwS2Vmtvj70PSkwqCBidCdxxwg6Hf1yyLhmBRD
+         Hz6A==
+X-Gm-Message-State: AAQBX9cjD3li3rR7frGhmbKUVsUwoDzMT9FWdlAeZJYC4+xoDqQza/D+
+        OkAzWgKl6rz5RmDKLWG7F3o=
+X-Google-Smtp-Source: AKy350bkZ/dbg++B75vxCCybX1JJjWE1bjDcXVcXGtkaYO/su68D56optz/DjfTQFNhiuhs1ZBvehA==
+X-Received: by 2002:a17:903:2309:b0:1a2:55c9:1808 with SMTP id d9-20020a170903230900b001a255c91808mr4182456plh.17.1680898113889;
+        Fri, 07 Apr 2023 13:08:33 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:f2c:4ac2:6000:5900? ([2620:15c:211:201:f2c:4ac2:6000:5900])
+        by smtp.gmail.com with ESMTPSA id ju20-20020a170903429400b0019aafc422fcsm3272871plb.240.2023.04.07.13.08.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Apr 2023 13:08:33 -0700 (PDT)
+Message-ID: <0d7d40a3-bd58-03f2-5bf2-706ed2e6155f@acm.org>
+Date:   Fri, 7 Apr 2023 13:08:31 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v6 04/18] scsi: Move sd_pr_type to scsi_common
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>, hch@lst.de,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org,
+        dm-devel@redhat.com, snitzer@kernel.org, axboe@kernel.dk,
         linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
         kbusch@kernel.org, target-devel@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v6 06/18] dm: Add support for block PR read keys/reservation
-Date:   Fri,  7 Apr 2023 15:05:39 -0500
-Message-Id: <20230407200551.12660-7-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230407200551.12660-1-michael.christie@oracle.com>
+Cc:     Chaitanya Kulkarni <kch@nvidia.com>
 References: <20230407200551.12660-1-michael.christie@oracle.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-07_12,2023-04-06_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- phishscore=0 bulkscore=0 mlxscore=0 suspectscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304070180
-X-Proofpoint-ORIG-GUID: h_W7aXW_dOPh0O53ByAJhOel7zPosL3m
-X-Proofpoint-GUID: h_W7aXW_dOPh0O53ByAJhOel7zPosL3m
+ <20230407200551.12660-5-michael.christie@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230407200551.12660-5-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This adds support in dm for the block PR read keys and read reservation
-callouts.
+On 4/7/23 13:05, Mike Christie wrote:
+> LIO is going to want to do the same block to/from SCSI pr types as sd.c
+> so this moves the sd_pr_type helper to scsi_common and renames it. The
+> next patch will then also add a helper to go from the SCSI value to the
+> block one for use with PERSISTENT_RESERVE_IN commands.
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
----
- drivers/md/dm.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
-
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index dfde0088147a..b4103cb6eb9a 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -3119,6 +3119,8 @@ struct dm_pr {
- 	bool	fail_early;
- 	int	ret;
- 	enum pr_type type;
-+	struct pr_keys *read_keys;
-+	struct pr_held_reservation *rsv;
- };
- 
- static int dm_call_pr(struct block_device *bdev, iterate_devices_callout_fn fn,
-@@ -3351,12 +3353,79 @@ static int dm_pr_clear(struct block_device *bdev, u64 key)
- 	return r;
- }
- 
-+static int __dm_pr_read_keys(struct dm_target *ti, struct dm_dev *dev,
-+			     sector_t start, sector_t len, void *data)
-+{
-+	struct dm_pr *pr = data;
-+	const struct pr_ops *ops = dev->bdev->bd_disk->fops->pr_ops;
-+
-+	if (!ops || !ops->pr_read_keys) {
-+		pr->ret = -EOPNOTSUPP;
-+		return -1;
-+	}
-+
-+	pr->ret = ops->pr_read_keys(dev->bdev, pr->read_keys);
-+	if (!pr->ret)
-+		return -1;
-+
-+	return 0;
-+}
-+
-+static int dm_pr_read_keys(struct block_device *bdev, struct pr_keys *keys)
-+{
-+	struct dm_pr pr = {
-+		.read_keys = keys,
-+	};
-+	int ret;
-+
-+	ret = dm_call_pr(bdev, __dm_pr_read_keys, &pr);
-+	if (ret)
-+		return ret;
-+
-+	return pr.ret;
-+}
-+
-+static int __dm_pr_read_reservation(struct dm_target *ti, struct dm_dev *dev,
-+				    sector_t start, sector_t len, void *data)
-+{
-+	struct dm_pr *pr = data;
-+	const struct pr_ops *ops = dev->bdev->bd_disk->fops->pr_ops;
-+
-+	if (!ops || !ops->pr_read_reservation) {
-+		pr->ret = -EOPNOTSUPP;
-+		return -1;
-+	}
-+
-+	pr->ret = ops->pr_read_reservation(dev->bdev, pr->rsv);
-+	if (!pr->ret)
-+		return -1;
-+
-+	return 0;
-+}
-+
-+static int dm_pr_read_reservation(struct block_device *bdev,
-+				  struct pr_held_reservation *rsv)
-+{
-+	struct dm_pr pr = {
-+		.rsv = rsv,
-+	};
-+	int ret;
-+
-+	ret = dm_call_pr(bdev, __dm_pr_read_reservation, &pr);
-+	if (ret)
-+		return ret;
-+
-+	return pr.ret;
-+}
-+
- static const struct pr_ops dm_pr_ops = {
- 	.pr_register	= dm_pr_register,
- 	.pr_reserve	= dm_pr_reserve,
- 	.pr_release	= dm_pr_release,
- 	.pr_preempt	= dm_pr_preempt,
- 	.pr_clear	= dm_pr_clear,
-+	.pr_read_keys	= dm_pr_read_keys,
-+	.pr_read_reservation = dm_pr_read_reservation,
- };
- 
- static const struct block_device_operations dm_blk_dops = {
--- 
-2.25.1
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
