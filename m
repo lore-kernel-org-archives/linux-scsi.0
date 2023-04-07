@@ -2,147 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0820AC6FD1D
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 08:17:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9100C76196
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 08:45:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240170AbjDGIRg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 04:17:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59298 "EHLO
+        id S239421AbjDGIpl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 04:45:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232253AbjDGIRR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 04:17:17 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5789EEA;
-        Fri,  7 Apr 2023 01:16:38 -0700 (PDT)
-Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4PtB0T2lfSz17RG4;
-        Fri,  7 Apr 2023 16:11:37 +0800 (CST)
-Received: from [10.40.193.166] (10.40.193.166) by
- kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Fri, 7 Apr 2023 16:15:04 +0800
-Subject: Re: [PATCH] scsi: hisi_sas: work around build failure in suspend
- function
-To:     Arnd Bergmann <arnd@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Yihang Li <liyihang9@huawei.com>
-References: <20230405083611.3376739-1-arnd@kernel.org>
-CC:     Arnd Bergmann <arnd@arndb.de>, John Garry <john.garry@huawei.com>,
-        Xingui Yang <yangxingui@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <ef58d36e-9b67-d2b6-5671-be27d739f928@hisilicon.com>
-Date:   Fri, 7 Apr 2023 16:15:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        with ESMTP id S233033AbjDGIpk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 04:45:40 -0400
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B7BC4EED
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 01:45:38 -0700 (PDT)
+Received: by mail-ej1-x62c.google.com with SMTP id g18so6978518ejj.5
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Apr 2023 01:45:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1680857137;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=EkzZhTvOzLRcCGpfrge05I6LlNCd0VLnVsi76p0/Q9Y=;
+        b=tidL1h228tOzQTBOUqn76zpPuR/cmWNKWhR2GufNT0+O1y7j3oF2OSRoqiUVqkC5qI
+         vY2BAyE2ubUgiRQ2Y/O6RRY9teFunLs7RVjucHn5es55NYCvw3LpQtTL9VsogpVwPWq4
+         xXrUU3p05SPEeWazhXCGVXFC5Q2AmP7aABD7xTd/FRcPSVoY904UT6oYaJHBglQaqG0K
+         5WBajTPFS/M+EtIoWUjcbVLVQpRJev7tEJwrrmHuJT0nmhKdJ+QVgMJ9TUDx1/yF9iVx
+         R/nDMN+yvJtQHUv0nltGy5t/JpoOdTa1RdJaAjbPTGZXVsiNlDx916SCzNqMW7Wzfqbp
+         bMhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680857137;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EkzZhTvOzLRcCGpfrge05I6LlNCd0VLnVsi76p0/Q9Y=;
+        b=w2SjCvnhmdmSxYMGwys5rTelKvTeY3ZV+JkV0yalkAWnbSTswGmfQg8iRp65PygfAh
+         HGSQmodOuUMsv5wFsYRCUAGrCdDy95c2UECet3z+Mzjg7WkOa1aTe9NvxtOprcCVL6BN
+         WtSr2TLJIWvmF1HCZQd14gOzIBrvif5kdemAH20c02mbbKkEH8JIr+lxyW4uGo7A9knB
+         me6a05Ywr0WxaVKyc3H8Z/eEGOAkvjosH/9j1x94JvhRgu5ByRufFBXKV/xHyG7jyXGu
+         xHTHXpzfc+isVK3cUrjo8Vp9MalZHXBgRY0ARN5sOwBIpMK2MZ12w3XEK3agdcmJYnBO
+         ZrGQ==
+X-Gm-Message-State: AAQBX9dyakoaRE0vMn8ybMTavFZs6OhrXNswczdBzKWbNyo1hzO1Xxs7
+        26fErPLM0LIznD6g8wqS2hyFMA==
+X-Google-Smtp-Source: AKy350brdfe8nxr1JYdpIW6N0eS4YwtysVwTUFW03OaK40Lq1FF//oAXxsoNoLZ77c3KBnpLWspb/g==
+X-Received: by 2002:a17:907:7608:b0:8b1:7ae9:647 with SMTP id jx8-20020a170907760800b008b17ae90647mr1063441ejc.76.1680857136910;
+        Fri, 07 Apr 2023 01:45:36 -0700 (PDT)
+Received: from ?IPV6:2a02:810d:15c0:828:14a3:366:3172:3c37? ([2a02:810d:15c0:828:14a3:366:3172:3c37])
+        by smtp.gmail.com with ESMTPSA id r13-20020a170906a20d00b008d044ede804sm1802700ejy.163.2023.04.07.01.45.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Apr 2023 01:45:36 -0700 (PDT)
+Message-ID: <0762cb76-a1cb-d25d-2a8f-8f9eda21cc81@linaro.org>
+Date:   Fri, 7 Apr 2023 10:45:35 +0200
 MIME-Version: 1.0
-In-Reply-To: <20230405083611.3376739-1-arnd@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.40.193.166]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemi500016.china.huawei.com (7.221.188.220)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH v2 1/5] dt-bindings: ufs: qcom: add compatible for sa8775p
+Content-Language: en-US
+To:     Bartosz Golaszewski <brgl@bgdev.pl>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+References: <20230406194703.495836-1-brgl@bgdev.pl>
+ <20230406194703.495836-2-brgl@bgdev.pl>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230406194703.495836-2-brgl@bgdev.pl>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arnd,
+On 06/04/2023 21:46, Bartosz Golaszewski wrote:
+> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> 
+> Add the compatible string for the UFS on sa8775p platforms.
+> 
+> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
 
-在 2023/4/5 16:36, Arnd Bergmann 写道:
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> The suspend/resume functions in this driver seem to have multiple
-> problems, the latest one just got introduced by a bugfix:
->
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
->   5142 |         if (atomic_read(&device->power.usage_count)) {
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
->   5142 |         if (atomic_read(&device->power.usage_count)) {
->
-> As far as I can tell, the 'usage_count' is not meant to be accessed
-> by device drivers at all, though I don't know what the driver is
-> supposed to do instead.
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Thank you for reporting the issue.
-There is a extreme situation that hisi_sas driver tries to resume 
-controller when it is in the process of suspend, which will cause a 
-deadlock.
-So we check usage_count of controller, and if usage_count > 0, failed to 
-suspend to avoid the issue. But there is no common function defined
-in pm_runtime.h which check the usage_count of device, so use it 
-directly (i saw the check also be used in other drivers).
-But i didn't realize that member usage_count is defined only under 
-CONFIG_PM=y.
-
-
->
-> Another problem is the use of the deprecated UNIVERSAL_DEV_PM_OPS(),
-> and marking functions as __maybe_unused to avoid warnings about
-> unused functions.  This should probably be changed to using
-> DEFINE_RUNTIME_DEV_PM_OPS().
-
-We use UNIVERSAL_DEV_PM_OPS() just because runtime callbacks 
-runtime_{suspend|resume} and system callbacks {suspend|resume} use the same
-operations in the driver, otherwise, we need to use 
-DEFINE_RUNTIME_DEV_PM_OPS() to define runtime callbacks and use 
-DEFINE_SIMPLE_DEV_PM_OPS()
-to define system callbacks.
-
->
-> Both changes require actually understanding what the driver needs to
-> do, and being able to test this, so instead here is the simplest
-> patch to make it pass the randconfig builds instead.
->
-> Fixes: e368d38cb952 ("scsi: hisi_sas: Exit suspend state when usage count is greater than 0")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> Maintainers: If possible, please revisit this to do a proper fix.
-> If that takes too much time, this patch can be applied as a
-> workaround in the meantime, and might also help in case the
-> e368d38cb952 patch gets backported to stable kernels.
-
-It is ok to apply the patch as a workaround as soon as possible.
-
-Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
-
-Thanks!
-
-> ---
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++++
->   1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> index d160b9b7479b..12d588454f5d 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -5139,11 +5139,13 @@ static int _suspend_v3_hw(struct device *device)
->   	flush_workqueue(hisi_hba->wq);
->   	interrupt_disable_v3_hw(hisi_hba);
->   
-> +#ifdef CONFIG_PM
->   	if (atomic_read(&device->power.usage_count)) {
->   		dev_err(dev, "PM suspend: host status cannot be suspended\n");
->   		rc = -EBUSY;
->   		goto err_out;
->   	}
-> +#endif
->   
->   	rc = disable_host_v3_hw(hisi_hba);
->   	if (rc) {
-> @@ -5162,7 +5164,9 @@ static int _suspend_v3_hw(struct device *device)
->   
->   err_out_recover_host:
->   	enable_host_v3_hw(hisi_hba);
-> +#ifdef CONFIG_PM
->   err_out:
-> +#endif
->   	interrupt_enable_v3_hw(hisi_hba);
->   	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
->   	clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
+Best regards,
+Krzysztof
 
