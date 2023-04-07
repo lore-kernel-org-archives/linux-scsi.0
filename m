@@ -2,52 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFAB8C76196
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 10:50:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D9AC77B6E
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 10:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240644AbjDGKus (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 06:50:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41714 "EHLO
+        id S240664AbjDGKvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 06:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240627AbjDGKun (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 06:50:43 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F8EA5CE
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 03:50:41 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id m6-20020a05600c3b0600b003ee6e324b19so25026424wms.1
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Apr 2023 03:50:41 -0700 (PDT)
+        with ESMTP id S240632AbjDGKup (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 06:50:45 -0400
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A4DA5F8
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 03:50:42 -0700 (PDT)
+Received: by mail-wr1-x431.google.com with SMTP id v1so41993375wrv.1
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Apr 2023 03:50:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1680864639; x=1683456639;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=06TnYBdo9T2x70dl6lUY38eRXb4b9fDtFg6W0E/jF9s=;
-        b=wYDrtmyCUeuPHoQ+a+L+bYIKD5tVHF0T4I7wDqd7k8R9pfkM+J9OhoQDyESXnzz1iz
-         k3ooh1VU2Q8gW2TSMLRlbtghkI19sy19ypdWoc+Omxxem6YZuXrgCPFr2LGsUITxWliE
-         +zBT3kCgH6wuumOU7JtR9EXz8g2jSMCePAMrqaI2lCCSey7kNVinVsK5dKZLfyxYqxVp
-         gySoNb8rDY/w1WGiu9q8a23DHmXgXkXf7veY050tTyaiF3nf+/mROPMw7MS6i60JLSEW
-         pbhVwVkWGBoCGj+2wJv+zy42hiGSIYRliEDZRZysa98BQX7OD7u+MFN7XB7Gr72FM0OU
-         A2QA==
+        d=linaro.org; s=google; t=1680864641; x=1683456641;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nU/yphFY/brnvT8pyeHTqL0FHqwuTdveAK5097Yxf5M=;
+        b=wkQaGNlivZjUxdi0Uvp81wH0UIN4Z7VmgY2cR4J3I4UdLSLeb9qXt5wi+IpMLpS45g
+         sYjZsoapnUQK0C6baq45oGHKLUPt3TEl1cnu4brLQBZ/kxsoRSfBGqadpvRYAUwjCVSu
+         cwybVpDgtiTtwt3LD7azzhYDozmITkk03bhJ9Egr7w1zIv3hUdiIuXmvL9GauqBjRaXI
+         rcRs3gib+dC2G2ZqaKSAfO2M9X5zsx7/Jl1adlAh7gZCcXqn+WK8XMcARn7V311V6iA0
+         94z0b+CAkXqkgWrAY9vzI10i3PNpHy+JWDCsHaWbvV+AJOVw3olMJfjJBabzcQIQM4Cn
+         18GA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680864639; x=1683456639;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=06TnYBdo9T2x70dl6lUY38eRXb4b9fDtFg6W0E/jF9s=;
-        b=LCIZx1qxFefTGYEtuJKIsIP1OnOefJb1s31d6i3STzdtkHOXMaMIZdPLiEzaxWp2j8
-         UQ9MbqEwN7XrjdEdGobcy5duLy9YuKO48Ot8nC/BWXO4U4zX89zCJ1dwHW8xz/2CS3RS
-         ZcTOODjchxGA3UPk/0lYSSTxnKIM7jjHKxHexfDfQ/pFAqs8CXc3HQqXSfH1DktsHvRM
-         B55xS9iwc2xgwZyNZufS2dUpXXCtjqEn6WnEfjj4cYtBPNU3wSDWwKVcQj6utq/jMyfE
-         cDnDHarxMem7mq2KA+Yo9BK8vgsEyN3EjWgBzAzzTK/tpKbjmWD3/8zKjORJwMxBweYU
-         e+nQ==
-X-Gm-Message-State: AAQBX9fPMYZWe1vuzUiUKxgUx7vtyuezBReFhUgpeFBmYfCiN6OXEYOA
-        Z5AW6uGLi/k/mek+y73itDH9CQ==
-X-Google-Smtp-Source: AKy350ZwCtSoQjiiwA1Djng0xz4M3/ZbNCZlAcTQ8nHuWoyebrI7lbwqlVuy6DqJem2lF9sXrcoJ7A==
-X-Received: by 2002:a05:600c:2285:b0:3ee:ed5:6115 with SMTP id 5-20020a05600c228500b003ee0ed56115mr1076006wmf.19.1680864639120;
-        Fri, 07 Apr 2023 03:50:39 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1680864641; x=1683456641;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=nU/yphFY/brnvT8pyeHTqL0FHqwuTdveAK5097Yxf5M=;
+        b=3WewIPLanCC/330aU/bdPhEbv11TfvmIwe8Ew0LR/Ifdk3pxcwCmjdqwuDrLmVfdM8
+         IQT78bbyUf0QuZMdzxGCDPI/RydtmJh3QViBhFxtJHHwctQ7zGLiAfhSAWuVW43smLkO
+         YRm27gC9J1BT8FHZ0CX2WRWnni/JxubdPNp9tz/nPMJnmGC7T2NNkqkE0u+rYeqiT++l
+         YcosuTGfjs3jN7em1eOVYs9B/qyIXiHnYselONOdRrh1lhugmoGyNTOPZCRibeUVIg9E
+         lCa9+uk9b0Wx/lkhfLqVN+1wJ8lZtnnyFjOCHsbCN7H86DWHK2j47GeyXADjF3Mg+6n0
+         qZrA==
+X-Gm-Message-State: AAQBX9f/r3Be+ufRzIN/wJpHQoT5g1SsIjAbUoq63SmSa+wV+4wz7Q7D
+        pq2VPAkcG5BNDQD43b0VZZc9xA==
+X-Google-Smtp-Source: AKy350aQWMU/oZEkCE3WmgisVy1qKBuHAqfk4gyyXdRSSkJRS1RihuemTI7nHUfKvB+PmDIUyAZtUA==
+X-Received: by 2002:a5d:6b02:0:b0:2c7:1d0d:7184 with SMTP id v2-20020a5d6b02000000b002c71d0d7184mr1111061wrw.11.1680864640867;
+        Fri, 07 Apr 2023 03:50:40 -0700 (PDT)
 Received: from localhost.localdomain ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id i16-20020a05600c355000b003ede6540190sm8131909wmq.0.2023.04.07.03.50.37
+        by smtp.gmail.com with ESMTPSA id i16-20020a05600c355000b003ede6540190sm8131909wmq.0.2023.04.07.03.50.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Apr 2023 03:50:38 -0700 (PDT)
+        Fri, 07 Apr 2023 03:50:40 -0700 (PDT)
 From:   Abel Vesa <abel.vesa@linaro.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -68,66 +69,98 @@ To:     Ulf Hansson <ulf.hansson@linaro.org>,
 Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH v6 0/6] Add dedicated Qcom ICE driver
-Date:   Fri,  7 Apr 2023 13:50:23 +0300
-Message-Id: <20230407105029.2274111-1-abel.vesa@linaro.org>
+        linux-scsi@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Eric Biggers <ebiggers@google.com>
+Subject: [PATCH v6 1/6] dt-bindings: crypto: Add Qualcomm Inline Crypto Engine
+Date:   Fri,  7 Apr 2023 13:50:24 +0300
+Message-Id: <20230407105029.2274111-2-abel.vesa@linaro.org>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230407105029.2274111-1-abel.vesa@linaro.org>
+References: <20230407105029.2274111-1-abel.vesa@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As both SDCC and UFS drivers use the ICE with duplicated implementation,
-while none of the currently supported platforms make use concomitantly
-of the same ICE IP block instance, the new SM8550 allows both UFS and
-SDCC to do so. In order to support such scenario, there is a need for
-a unified implementation and a devicetree node to be shared between
-both types of storage devices. So lets drop the duplicate implementation
-of the ICE from both SDCC and UFS and make it a dedicated (soc) driver.
+Add schema file for new Qualcomm Inline Crypto Engine driver.
 
-For now, only SM8550 has been added to support the new approach. This
-also involves adding support for HW version 4.x.
+Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Eric Biggers <ebiggers@google.com>
+---
 
 The v5 is here:
-https://lore.kernel.org/all/20230403200530.2103099-1-abel.vesa@linaro.org/
+https://lore.kernel.org/all/20230403200530.2103099-2-abel.vesa@linaro.org/
 
 Changes since v5:
- * See each individual patch for changelogs.
+ * none
 
 Changes since v4:
- * dropped the SDHCI dt-bindings patch as it will be added along
-   with the first use of qcom,ice property from an SDHCI DT node
+ * added Eric's R-b tag
 
-Abel Vesa (6):
-  dt-bindings: crypto: Add Qualcomm Inline Crypto Engine
-  dt-bindings: ufs: qcom: Add ICE phandle
-  soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
-  scsi: ufs: ufs-qcom: Switch to the new ICE API
-  mmc: sdhci-msm: Switch to the new ICE API
-  arm64: dts: qcom: sm8550: Add the Inline Crypto Engine node
+Changes since v3:
+ * added Krzysztof's R-b tag
 
- .../crypto/qcom,inline-crypto-engine.yaml     |  42 ++
- .../devicetree/bindings/ufs/qcom,ufs.yaml     |  26 ++
- arch/arm64/boot/dts/qcom/sm8550.dtsi          |   9 +
- drivers/mmc/host/Kconfig                      |   2 +-
- drivers/mmc/host/sdhci-msm.c                  | 223 +++--------
- drivers/soc/qcom/Kconfig                      |   4 +
- drivers/soc/qcom/Makefile                     |   1 +
- drivers/soc/qcom/ice.c                        | 366 ++++++++++++++++++
- drivers/ufs/host/Kconfig                      |   2 +-
- drivers/ufs/host/Makefile                     |   4 +-
- drivers/ufs/host/ufs-qcom-ice.c               | 244 ------------
- drivers/ufs/host/ufs-qcom.c                   |  99 ++++-
- drivers/ufs/host/ufs-qcom.h                   |  32 +-
- include/soc/qcom/ice.h                        |  37 ++
- 14 files changed, 637 insertions(+), 454 deletions(-)
+Changes since v2:
+ * moved the file to crypto dir
+ * added soc specific compatible
+ * dropped top level description
+ * renamed node to crypto and dropped label in example
+
+ .../crypto/qcom,inline-crypto-engine.yaml     | 42 +++++++++++++++++++
+ 1 file changed, 42 insertions(+)
  create mode 100644 Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
- create mode 100644 drivers/soc/qcom/ice.c
- delete mode 100644 drivers/ufs/host/ufs-qcom-ice.c
- create mode 100644 include/soc/qcom/ice.h
 
+diff --git a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+new file mode 100644
+index 000000000000..92e1d76e29ee
+--- /dev/null
++++ b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+@@ -0,0 +1,42 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/crypto/qcom,inline-crypto-engine.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm Technologies, Inc. (QTI) Inline Crypto Engine
++
++maintainers:
++  - Bjorn Andersson <andersson@kernel.org>
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - qcom,sm8550-inline-crypto-engine
++      - const: qcom,inline-crypto-engine
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - clocks
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/qcom,sm8550-gcc.h>
++
++    crypto@1d88000 {
++      compatible = "qcom,sm8550-inline-crypto-engine",
++                   "qcom,inline-crypto-engine";
++      reg = <0x01d88000 0x8000>;
++      clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
++    };
++...
 -- 
 2.34.1
 
