@@ -2,117 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B863C6FD1D
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 04:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19F3C77B72
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 07:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231223AbjDGEEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 00:04:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58370 "EHLO
+        id S233753AbjDGHCo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 03:02:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjDGEED (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 00:04:03 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6191C55AE;
-        Thu,  6 Apr 2023 21:04:01 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Pt4RM00GbzKx77;
-        Fri,  7 Apr 2023 12:01:02 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Fri, 7 Apr 2023 12:03:00 +0800
-From:   Xingui Yang <yangxingui@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.g.garry@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH] scsi: libsas: set tf to normal in sas_ata_device_link_abort()
-Date:   Fri, 7 Apr 2023 03:56:18 +0000
-Message-ID: <20230407035618.25123-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S238199AbjDGHCn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 03:02:43 -0400
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7421C7ED5
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 00:02:40 -0700 (PDT)
+Received: by mail-wm1-x32f.google.com with SMTP id l10-20020a05600c1d0a00b003f04bd3691eso9856102wms.5
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Apr 2023 00:02:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1680850959; x=1683442959;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=yDRZJb+gw9WKl+q/YP3+9vfEWrdxXYb08xE3KjrncwY=;
+        b=TlUNuHXhE7dkX3ma2znO7zdAacJiO27ghArmpkXlH8c3ATv+KBTc8LUhyVrkypI+mP
+         0zQlggzvEemyf2P17MWTNYZVT5pEmY7G8l0KpU4b0QsyPvMfMJZshCs5c4HdBgpV6MQP
+         XN2grzseW68CfcpULpwxh3ynO/USV/6im6FxHW40/svQL+ApI5uK1eCRpcAHn1PqPRYE
+         iwww25egOIvVPfxbt4pMX674CTKLbiVEO/0Ip1e+6ahSlHwFQkQF7naCFmxlgJCIHPZU
+         6QypBjxTNvF8oRGQexdGN9PM2UNsP9cuq6GQxZBhFfnm80WY+czp/4FjLGOZC9ZJW9dw
+         8zbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680850959; x=1683442959;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yDRZJb+gw9WKl+q/YP3+9vfEWrdxXYb08xE3KjrncwY=;
+        b=x021yrkFW2oLiZeloGTmIbmeMk+vPr/jMeVUL4zBSE6Aa/J0wj7hnPXBiFNKJ1hpo6
+         hC5lX7D6BaFEieD2LS/Udb+9Muet8XpCC4gAhkwArTiVsCaZ8vYQXRHyghPAxOhxhIXJ
+         mVDv32xmhr/f9PUJIfSEglfFLF9FgAHfqcZhRxsMs+C+9DgOrLdYUp8gHqNV3C8l5VA+
+         VgrXWKpAkScvCVXF9E59yEaSMUwBV5OikmXFdX+WKhhHXtKeZeYsTAZv+1xYfv1HEB7m
+         K4HIsqf4gxrx97BbYPJViB602APP6BwwXHlWWGYtvxom29/iVhCi2UUXab0YEPD7dsWT
+         A5hg==
+X-Gm-Message-State: AAQBX9clflxbrjL9xQY29xY9MFg+h1VL7m5MTS6ZAEUCle2BTrsujxGC
+        s5FooNypK9zuYgbn3P1YV6fkVQ==
+X-Google-Smtp-Source: AKy350Yf7cZzWZgOSGchAXM9/7IoYqhc4Z0zpcrhQUgBsDYEyMpw3OS/oAAO8/EgLIduuLczRZdj6g==
+X-Received: by 2002:a05:600c:2202:b0:3ee:289a:3c3a with SMTP id z2-20020a05600c220200b003ee289a3c3amr566623wml.30.1680850958894;
+        Fri, 07 Apr 2023 00:02:38 -0700 (PDT)
+Received: from linaro.org ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id i42-20020a05600c4b2a00b003f0321c22basm7224793wmp.12.2023.04.07.00.02.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Apr 2023 00:02:38 -0700 (PDT)
+Date:   Fri, 7 Apr 2023 10:02:36 +0300
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v5 4/6] scsi: ufs: ufs-qcom: Switch to the new ICE API
+Message-ID: <ZC/ADOlol2XO7ACL@linaro.org>
+References: <20230403200530.2103099-1-abel.vesa@linaro.org>
+ <20230403200530.2103099-5-abel.vesa@linaro.org>
+ <20230406201634.GA20288@sol.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230406201634.GA20288@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If the disk returns UNC for more than five times within a short period, the
-number of retry times for other I/Os may reach scmd->allowed, and the
-default error "Illegal Request" is returned for other I/Os, as follows:
+On 23-04-06 13:16:34, Eric Biggers wrote:
+> Hi Abel,
+> 
+> On Mon, Apr 03, 2023 at 11:05:28PM +0300, Abel Vesa wrote:
+> > Now that there is a new dedicated ICE driver, drop the ufs-qcom-ice and
+> > use the new ICE api provided by the Qualcomm soc driver ice. The platforms
+> > that already have ICE support will use the API as library since there will
+> > not be a devicetree node, but instead they have reg range. In this case,
+> > the of_qcom_ice_get will return an ICE instance created for the consumer's
+> > device. But if there are platforms that do not have ice reg in the
+> > consumer devicetree node and instead provide a dedicated ICE devicetree
+> > node, the of_qcom_ice_get will look up the device based on qcom,ice
+> > property and will get the ICE instance registered by the probe function
+> > of the ice driver.
+> > 
+> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> 
+> This is still silent about how the ICE clock behavior is being changed.
 
-[  273.801770] hisi_sas_v3_hw 0000:b4:02.0: erroneous completion disk err dev id=2 sas_addr=0x5000000000000605 CQ hdr: 0x400903 0x20103 0x0 0x80470000
-[  273.875286] sas: Enter sas_scsi_recover_host busy: 30 failed: 30
-[  273.879895] sas: trying to find task 0x00000000d9cfc893
-[  273.879896] sas: sas_scsi_find_task: aborting task 0x00000000d9cfc893
-[  273.880054] sas: sas_scsi_find_task: task 0x00000000d9cfc893 is done
-[  273.880055] sas: sas_eh_handle_sas_errors: task 0x00000000d9cfc893 is done
-[  273.880236] ata6.00: failed command: READ FPDMA QUEUED
-[  273.880238] ata6.00: cmd 60/08:00:59:27:00/00:00:00:00:00/40 tag 22 ncq dma 4096 in
-                        res 41/04:00:20:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
-[  273.880239] ata6.00: status: { DRDY ERR }
-[  273.880240] ata6.00: error: { ABRT }
-[  273.880241] ata6.00: failed command: READ FPDMA QUEUED
-[  273.880243] ata6.00: cmd 60/90:00:d1:26:00/00:00:00:00:00/40 tag 23 ncq dma 73728 in
-                        res 41/40:90:10:27:00/00:00:00:00:00/00 Emask 0x409 (media error) <F>
-[  273.880245] ata6.00: status: { DRDY ERR }
-[  273.880246] ata6.00: error: { UNC }
-[  273.880247] ata6.00: failed command: READ FPDMA QUEUED
-[  273.880249] ata6.00: cmd 60/08:00:19:27:00/00:00:00:00:00/40 tag 24 ncq dma 4096 in
-                        res 41/04:00:20:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
-[  273.880250] ata6.00: status: { DRDY ERR }
-[  273.880251] ata6.00: error: { ABRT }
-[  274.199477] scmd->retries: 3, scmd->allowed: 5
-[  274.199478] scmd->retries: 3, scmd->allowed: 5
-[  274.199479] scmd->retries: 3, scmd->allowed: 5
-[  274.199481] scmd->retries: 3, scmd->allowed: 5
-[  274.199482] scmd->retries: 3, scmd->allowed: 5
-[  274.199483] scmd->retries: 2, scmd->allowed: 5
-[  274.199484] scmd->retries: 3, scmd->allowed: 5
-[  274.199485] scmd->retries: 3, scmd->allowed: 5
-[  274.199486] scmd->retries: 5, scmd->allowed: 5
-[  274.199487] scmd->retries: 2, scmd->allowed: 5
-[  274.199488] scmd->retries: 2, scmd->allowed: 5
-[  274.199524] sd 6:0:1:0: [sdb] tag#258 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[  274.199527] sd 6:0:1:0: [sdb] tag#258 Sense Key : Illegal Request [current]
-[  274.199530] sd 6:0:1:0: [sdb] tag#258 Add. Sense: Unaligned write command
-[  274.199532] sd 6:0:1:0: [sdb] tag#258 CDB: Read(10) 28 00 00 00 27 59 00 00 08 00
-[  274.199535] print_req_error: I/O error, dev sdb, sector 10073
-[  274.199573] sd 6:0:1:0: [sdb] tag#259 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[  274.199574] sd 6:0:1:0: [sdb] tag#259 Sense Key : Medium Error [current]
-[  274.199576] sd 6:0:1:0: [sdb] tag#259 Add. Sense: Unrecovered read error - auto reallocate failed
-[  274.199578] sd 6:0:1:0: [sdb] tag#259 CDB: Read(10) 28 00 00 00 26 d1 00 00 90 00
-[  274.199579] print_req_error: I/O error, dev sdb, sector 10000
-[  274.199608] ata6: EH complete
-[  274.199615] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 30 tries: 1
+Right, I'll add the some more info into the commit message about the
+clock being handled by the ICE driver.
 
-As mentioned in ata_eh_qc_retry(), if qc->err_mask is zero then increment
-scmd->allowed. So set tf to normal may be better.
+> 
+> I'm still trying to understand all this myself, so please bear with me, but my
+> understanding is that the UFS clocks can be disabled even while the host
+> controller is runtime-resumed.  This is called "clock gating" in the code.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- drivers/scsi/libsas/sas_ata.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The ICE clock is now being controlled by the new driver.
+> 
+> Before, the ICE clock was just listed as one of the UFS clocks.  So, it was just
+> managed like the other UFS clocks.
+> 
+> Now, it appears that the ICE clock is always enabled while the host controller
+> is runtime-resumed.  So, this patch removes support for gating of the ICE clock.
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 77714a495cbb..f5047e8dcb59 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -949,8 +949,8 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(ap->lock, flags);
--	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
--	device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
-+	device->sata_dev.fis[2] = ATA_DRDY; /* tf status */
-+	device->sata_dev.fis[3] = 0;        /* tf error */
- 
- 	link->eh_info.err_mask |= AC_ERR_DEV;
- 	if (force_reset)
--- 
-2.17.1
+I just tested this and it works as expected, which is:
 
+ICE clock gets enable on qcom_ice_create (via *clk_get*_enabled) and
+then, on the runtime suspend of the UFS, the qcom_ice_suspend is called
+which will disable the clock. Then, every time UFS runtime
+resumes/suspends the clock gets enabled/disabled.
+
+Hope that makes sense.
+
+Let me know if you think I'm missing something here.
+
+> 
+> Is that intended?
+> 
+> - Eric
