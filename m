@@ -2,78 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9227FC76196
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 18:57:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C97DC77B6C
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 19:16:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234328AbjDGS5R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 14:57:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43824 "EHLO
+        id S229870AbjDGTQX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 15:16:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234122AbjDGS46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 14:56:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42B9CD510;
-        Fri,  7 Apr 2023 11:54:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0FD1D61219;
-        Fri,  7 Apr 2023 18:49:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D83AEC4339E;
-        Fri,  7 Apr 2023 18:49:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680893348;
-        bh=6yx3kBkzOOFOIXrZ5IlOXinROnMpeUBN2SLNMieLd0o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=G7UiPTGKJVLey1Y31us6wLu6kINwZhvkpdpBmbqsngHbe2RUmy5IyYmcw4w9n4mGz
-         JTIujWy4c9nO48ZPu1oB0DjRcj1WIs7a3PTSCRMdqzkOsR23424wOL8IJYxo1qe5LM
-         xKQCmZuuyAmHAps61p9IXqSpWMBd7nnjjnIiqTu3m1MHZmf0uJgw5ky2G3JNkeppYP
-         7jTOYLiPsg24b/EFWV98/bu42dwHYiRz9xRcFMMnp/ddNtNpP2BV7TTTESXM6UzF0z
-         mOKsgAgbPH+id1BL+3Cr72niYRjcO9GQqvMQxvov03i5DyQCpatBmRhlYY0hRiplWZ
-         L8ir50CiwOSuA==
-From:   Bjorn Andersson <andersson@kernel.org>
-To:     tony.luck@intel.com, kishon@kernel.org, keescook@chromium.org,
-        Lux Aliaga <they@mint.lgbt>, konrad.dybcio@linaro.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, vkoul@kernel.org,
-        agross@kernel.org, gpiccoli@igalia.com, bvanassche@acm.org,
-        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        phone-devel@vger.kernel.org, devicetree@vger.kernel.org,
-        martin.botka@somainline.org, linux-phy@lists.infradead.org,
-        linux-hardening@vger.kernel.org, marijn.suijten@somainline.org,
-        ~postmarketos/upstreaming@lists.sr.ht, linux-kernel@vger.kernel.org
-Subject: Re: (subset) [PATCH v7 0/6] arm64: dts: qcom: sm6125: UFS and xiaomi-laurel-sprout support
-Date:   Fri,  7 Apr 2023 11:51:55 -0700
-Message-Id: <168089350725.2675207.12664655613060591288.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230306170817.3806-1-they@mint.lgbt>
-References: <20230306170817.3806-1-they@mint.lgbt>
+        with ESMTP id S229524AbjDGTQW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 15:16:22 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8606265BD;
+        Fri,  7 Apr 2023 12:16:21 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id lj25so10363416ejb.11;
+        Fri, 07 Apr 2023 12:16:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680894980; x=1683486980;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mQANRCEJ/Wf9JpOF80HK0eIogvOrPbo6UURifCL0g24=;
+        b=C3Kn4pKyWyKvJQ1+mG7HHtGx1I9vYqZjna/jAR+ywqMX6yTxkrH+x4cpDq8uCR+bFo
+         HTv7o3v+PAhQ80bN/eM0VTlbogJvuFHIIL7ZO/u7iiUNBx0Es67PZwHD7w6Hd9dm1hO+
+         gllQtUUNUrmw01AEnGfmVbU5lS4fqb2fixq2eSURqslkYACWSi7vOTJBjkWZCSQEGUn8
+         ROtlZdM+IKuKspAcanaxSqiAEW+9t63HVKkNvJhoYf70x2aEldjPfeONVJnmJuzS55iG
+         3g6NLUdbBhijYnn6LllkBvgxDVXMBKFWIrAgXFnsT7d64llfzV2RbjQp8AVeC5X69Fmc
+         lLRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680894980; x=1683486980;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=mQANRCEJ/Wf9JpOF80HK0eIogvOrPbo6UURifCL0g24=;
+        b=eh7JK949kKoFhjodYhxzFoBvQM2EZeCx+jecx7YzeHellOO4nojpZyu0jp+UNO1SpR
+         gK8UVeK3c4zdofmHzLAUEjrSSeX0I9GmAC9/qYlXlGKkn3OSbgbSI710Yv4UFm6V5aJd
+         Dd/dcWeKCXX2kJoClLD/CsCG0RhQW6D4/Rua4E448pDx/fnaiXjMK7cBYXzUgbRPjQ2Y
+         jZLSbc7YXi+IBLNlmNdo50xCvdOBtpl91gwQxJiYWwoumdcMgmutAk94Dqu3nCHNTnim
+         9AbypogO6wSn8xdYPMbrhXCKPhc8AusCdcrSggAi33Ij+iwYKrFz7n5f9KyAtzpLCIEa
+         q7Ww==
+X-Gm-Message-State: AAQBX9fKWI5l0jPl++vP2hhTP8Xbp+770sXxsV5Uq0oS5IMZ/pgg3in5
+        l3P1htu1mMh1Q2pp1Ghvc/I=
+X-Google-Smtp-Source: AKy350brGvWNZE9Z6cc+Yg8UrPiyUm/ehRms/g4gOXmYbR/f+jduS7NvLvGJ84GMtMJymRq47OLoww==
+X-Received: by 2002:a17:906:ef90:b0:933:89a1:57e6 with SMTP id ze16-20020a170906ef9000b0093389a157e6mr460264ejb.26.1680894979725;
+        Fri, 07 Apr 2023 12:16:19 -0700 (PDT)
+Received: from [192.168.178.40] (ip5f5b4297.dynamic.kabel-deutschland.de. [95.91.66.151])
+        by smtp.gmail.com with ESMTPSA id f12-20020a170906494c00b00926b944676esm2297501ejt.131.2023.04.07.12.16.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Apr 2023 12:16:19 -0700 (PDT)
+Message-ID: <2170fe67-2e65-630b-22dc-a8f6d3f7966f@gmail.com>
+Date:   Fri, 7 Apr 2023 21:16:18 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH] scsi: target: cxgbit: check skb dequeue result
+To:     Denis Plotnikov <den-plotnikov@yandex-team.ru>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        varun@chelsio.com, nab@linux-iscsi.org, martin.petersen@oracle.com
+References: <20230406150405.300909-1-den-plotnikov@yandex-team.ru>
+Content-Language: en-US
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <20230406150405.300909-1-den-plotnikov@yandex-team.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 6 Mar 2023 14:08:10 -0300, Lux Aliaga wrote:
-> Introduce Universal Flash Storage support on SM6125 and add support for the Xiaomi Mi A3 based on the former platform.
+On 06.04.23 17:04, Denis Plotnikov wrote:
+> On a couple of abort packet paths skb dequeuing may end up with
+> returning NULL, which, in turn, may end up with further null
+> pointer dereference.
 > 
-> Changes since v6:
-> - Add struct for v3-660 UFS PHY offsets and replace the v5 offsets in sm6115 UFS PHY config to these
-> - Set ufs_mem_phy reg size to 0xdb8 in sm6125.dtsi
-> - Drop "#address-cells" and "#size-cells" properties on reserved-memory node in xiaomi-laurel-sprout dts
-> - Move "status" last on &pon_resin node in xiaomi-laurel-sprout dts
-> - Modify "&pm6125_gpio" pointer to "&pm6125_gpios" in xiaomi-laurel-sprout dts
+> Fix it by checking the return value of skb dequeuing.
 > 
-> [...]
+> Found by Linux Verification Center(linuxtesting.org) with SVACE.
+> 
+> Fixes: 9730ffcb8957 (cxgbit: add files for cxgbit.ko)
+> Signed-off-by: Denis Plotnikov <den-plotnikov@yandex-team.ru>
+> ---
+>   drivers/target/iscsi/cxgbit/cxgbit_cm.c | 10 +++++++---
+>   1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> index 518ded214e74..d43fd761c20a 100644
+> --- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> +++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> @@ -669,6 +669,9 @@ static int cxgbit_send_abort_req(struct cxgbit_sock *csk)
+>   		cxgbit_send_tx_flowc_wr(csk);
+>   
+>   	skb = __skb_dequeue(&csk->skbq);
+> +	if (!skb)
+> +		return 0;
+> +
+>   	cxgb_mk_abort_req(skb, len, csk->tid, csk->txq_idx,
+>   			  csk->com.cdev, cxgbit_abort_arp_failure);
+>   
+> @@ -1769,9 +1772,10 @@ static void cxgbit_abort_req_rss(struct cxgbit_sock *csk, struct sk_buff *skb)
+>   		cxgbit_send_tx_flowc_wr(csk);
+>   
+>   	rpl_skb = __skb_dequeue(&csk->skbq);
+> -
+> -	cxgb_mk_abort_rpl(rpl_skb, len, csk->tid, csk->txq_idx);
+> -	cxgbit_ofld_send(csk->com.cdev, rpl_skb);
+> +	if (!rpl_skb) {
 
-Applied, thanks!
+Honestly I have no clue about cxgbit, but to avoid null pointer
+dereference, shouldn't it be "if (rpl_skb) {"?
 
-[4/6] arm64: dts: qcom: sm6125: Add UFS nodes
-      commit: f8399e8a2f80adfac2e7f5dbe223eb428fdb6fe9
-[6/6] arm64: dts: qcom: sm6125: Initial support for xiaomi-laurel-sprout
-      commit: b76c8ceabe871470cee17990289e8dd39b96054e
+Bodo
 
-Best regards,
--- 
-Bjorn Andersson <andersson@kernel.org>
+
+> +		cxgb_mk_abort_rpl(rpl_skb, len, csk->tid, csk->txq_idx);
+> +		cxgbit_ofld_send(csk->com.cdev, rpl_skb);
+> +	}
+>   
+>   	if (wakeup_thread) {
+>   		cxgbit_queue_rx_skb(csk, skb);
