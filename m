@@ -2,438 +2,235 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B54C77B6E
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 20:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88F58C76196
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 21:42:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231315AbjDGUJx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 16:09:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33468 "EHLO
+        id S229600AbjDGVmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 17:42:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231414AbjDGUJi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 16:09:38 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE050C66C;
-        Fri,  7 Apr 2023 13:09:30 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 337Fx1H9018319;
-        Fri, 7 Apr 2023 20:06:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2022-7-12;
- bh=3BsdfYcLKOqKy7DkrgI4zi/SUbKic51UaoPDK/bqgtY=;
- b=wky1HJQysPAelAx4wkDHaAERffndYxAQoYvCFDoEexHygXBbAx9HgnsOkwf6v1t+yiMI
- NSNHS8rDPChFMu4X65R1+Iq8vuAvUl/L1LiI7PoxzeS5MQnp3DOeV2WcAIuxwVnirTtH
- H7SeNmtfVU2wi9do5BfDfYBHW0/goegL9YQf8kQrjoEa83tUHX+GAdouwC3I7AdDuVjg
- Sq5+2i48lsJfO2dT04YNH8W8S/r4RzldLkspy1UHltnJOB6y3qrHHxRTOfpFqH7HB76a
- ysGVtXR4qRIeGh96Nh9a8VoZ+cP4nhmk15dxPCNIjUVAVyKcQ51nOD8RbcHVTvCkAWm5 Cw== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ppb1dws0v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 07 Apr 2023 20:06:44 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 337IerJH034336;
-        Fri, 7 Apr 2023 20:06:43 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pptjxefe2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 07 Apr 2023 20:06:43 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 337K5trS010228;
-        Fri, 7 Apr 2023 20:06:42 GMT
-Received: from mnchrist-mac.us.oracle.com (dhcp-10-154-128-1.vpn.oracle.com [10.154.128.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pptjxeeam-19;
-        Fri, 07 Apr 2023 20:06:42 +0000
-From:   Mike Christie <michael.christie@oracle.com>
-To:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v6 18/18] scsi: target: Add block PR support to iblock
-Date:   Fri,  7 Apr 2023 15:05:51 -0500
-Message-Id: <20230407200551.12660-19-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230407200551.12660-1-michael.christie@oracle.com>
-References: <20230407200551.12660-1-michael.christie@oracle.com>
+        with ESMTP id S229567AbjDGVmK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 17:42:10 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 249587683
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 14:42:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1680903728;
+        bh=N11iNEj2chynP21eWZ21gOdewyzfyjq67gakjvMjDv4=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=so243AGbOwcjhsthxzo0bUPWCSAEwDTAL5ifG0rV5ya+ufpfSv0FuxXCJuBu8D5SA
+         1l2fIH1EilfXm6ZE+PkIJRm8N8vWay0bD8aJGn/lq6f7qkwjIn5XRT6l2i4+I/DxAd
+         /MHBnYEi6mvoSkP5uHI+rji2jfC3ND1qmWaXKOwY=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 6788612802D4;
+        Fri,  7 Apr 2023 17:42:08 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id 9w6ksplEjQaT; Fri,  7 Apr 2023 17:42:08 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1680903728;
+        bh=N11iNEj2chynP21eWZ21gOdewyzfyjq67gakjvMjDv4=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=so243AGbOwcjhsthxzo0bUPWCSAEwDTAL5ifG0rV5ya+ufpfSv0FuxXCJuBu8D5SA
+         1l2fIH1EilfXm6ZE+PkIJRm8N8vWay0bD8aJGn/lq6f7qkwjIn5XRT6l2i4+I/DxAd
+         /MHBnYEi6mvoSkP5uHI+rji2jfC3ND1qmWaXKOwY=
+Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id BE44512802AD;
+        Fri,  7 Apr 2023 17:42:07 -0400 (EDT)
+Message-ID: <255a80b21248110095a4e3a6c993183f1046a4b2.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.3-rc5
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 07 Apr 2023 17:42:04 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-07_12,2023-04-06_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- phishscore=0 bulkscore=0 mlxscore=0 suspectscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304070180
-X-Proofpoint-GUID: wgNPWn59kb7q0qv-O_WHxnVyZb7PNacf
-X-Proofpoint-ORIG-GUID: wgNPWn59kb7q0qv-O_WHxnVyZb7PNacf
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This adds support for the block PR callouts to target_core_iblock. This
-patch doesn't attempt to implement the entire spec because there's no way
-support it all like SPEC_I_PT and ALL_TG_PT. This only supports
-exporting the iblock device from one path on the local target.
+Four small fixes, all in drivers.  They're all one or two lines except
+for the ufs one, but that's a simple revert of a previous feature.
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Adrien Thierry (1):
+      scsi: Revert "scsi: ufs: core: Initialize devfreq synchronously"
+
+Li Zetao (1):
+      scsi: qla2xxx: Fix memory leak in qla2x00_probe_one()
+
+Ranjan Kumar (1):
+      scsi: mpi3mr: Handle soft reset in progress fault code (0xF002)
+
+Zhong Jinghua (1):
+      scsi: iscsi_tcp: Check that sock is valid before iscsi_set_param()
+
+And the diffstat:
+
+ drivers/scsi/iscsi_tcp.c        |  3 +--
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |  1 +
+ drivers/ufs/core/ufshcd.c       | 47 ++++++++++++++---------------------------
+ include/ufs/ufshcd.h            |  1 -
+ 5 files changed, 19 insertions(+), 35 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/target/target_core_iblock.c | 271 +++++++++++++++++++++++++++-
- 1 file changed, 266 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index d93f24f9687d..e6029ea87e2f 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -23,13 +23,16 @@
- #include <linux/file.h>
- #include <linux/module.h>
- #include <linux/scatterlist.h>
-+#include <linux/pr.h>
- #include <scsi/scsi_proto.h>
-+#include <scsi/scsi_common.h>
- #include <asm/unaligned.h>
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index c76f82fb8b63..15f452908926 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -771,13 +771,12 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+ 		iscsi_set_param(cls_conn, param, buf, buflen);
+ 		break;
+ 	case ISCSI_PARAM_DATADGST_EN:
+-		iscsi_set_param(cls_conn, param, buf, buflen);
+-
+ 		mutex_lock(&tcp_sw_conn->sock_lock);
+ 		if (!tcp_sw_conn->sock) {
+ 			mutex_unlock(&tcp_sw_conn->sock_lock);
+ 			return -ENOTCONN;
+ 		}
++		iscsi_set_param(cls_conn, param, buf, buflen);
+ 		tcp_sw_conn->sendpage = conn->datadgst_en ?
+ 			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
+ 		mutex_unlock(&tcp_sw_conn->sock_lock);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index a565817aa56d..d109a4ceb72b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2526,7 +2526,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 		mrioc->unrecoverable = 1;
+ 		goto schedule_work;
+ 	case MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS:
+-		return;
++		goto schedule_work;
+ 	case MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET:
+ 		reset_reason = MPI3MR_RESET_FROM_CIACTIV_FAULT;
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index bee1b8a82020..d0cdbfe771a9 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3617,6 +3617,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ probe_failed:
+ 	qla_enode_stop(base_vha);
+ 	qla_edb_stop(base_vha);
++	vfree(base_vha->scan.l);
+ 	if (base_vha->gnl.l) {
+ 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
+ 				base_vha->gnl.l, base_vha->gnl.ldma);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 37e178a9ac47..70b112038792 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1409,13 +1409,6 @@ static int ufshcd_devfreq_target(struct device *dev,
+ 	struct ufs_clk_info *clki;
+ 	unsigned long irq_flags;
  
- #include <target/target_core_base.h>
- #include <target/target_core_backend.h>
+-	/*
+-	 * Skip devfreq if UFS initialization is not finished.
+-	 * Otherwise ufs could be in a inconsistent state.
+-	 */
+-	if (!smp_load_acquire(&hba->logical_unit_scan_finished))
+-		return 0;
+-
+ 	if (!ufshcd_is_clkscaling_supported(hba))
+ 		return -EINVAL;
  
- #include "target_core_iblock.h"
-+#include "target_core_pr.h"
+@@ -8399,6 +8392,22 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
  
- #define IBLOCK_MAX_BIO_PER_TASK	 32	/* max # of bios to submit at a time */
- #define IBLOCK_BIO_POOL_SIZE	128
-@@ -310,7 +313,7 @@ static sector_t iblock_get_blocks(struct se_device *dev)
- 	return blocks_long;
++	/* Initialize devfreq after UFS device is detected */
++	if (ufshcd_is_clkscaling_supported(hba)) {
++		memcpy(&hba->clk_scaling.saved_pwr_info.info,
++			&hba->pwr_info,
++			sizeof(struct ufs_pa_layer_attr));
++		hba->clk_scaling.saved_pwr_info.is_valid = true;
++		hba->clk_scaling.is_allowed = true;
++
++		ret = ufshcd_devfreq_init(hba);
++		if (ret)
++			goto out;
++
++		hba->clk_scaling.is_enabled = true;
++		ufshcd_init_clk_scaling_sysfs(hba);
++	}
++
+ 	ufs_bsg_probe(hba);
+ 	ufshpb_init(hba);
+ 	scsi_scan_host(hba->host);
+@@ -8670,12 +8679,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	if (ret) {
+ 		pm_runtime_put_sync(hba->dev);
+ 		ufshcd_hba_exit(hba);
+-	} else {
+-		/*
+-		 * Make sure that when reader code sees UFS initialization has finished,
+-		 * all initialization steps have really been executed.
+-		 */
+-		smp_store_release(&hba->logical_unit_scan_finished, true);
+ 	}
  }
  
--static void iblock_complete_cmd(struct se_cmd *cmd)
-+static void iblock_complete_cmd(struct se_cmd *cmd, blk_status_t blk_status)
- {
- 	struct iblock_req *ibr = cmd->priv;
- 	u8 status;
-@@ -318,7 +321,9 @@ static void iblock_complete_cmd(struct se_cmd *cmd)
- 	if (!refcount_dec_and_test(&ibr->pending))
- 		return;
+@@ -10316,30 +10319,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	 */
+ 	ufshcd_set_ufs_dev_active(hba);
  
--	if (atomic_read(&ibr->ib_bio_err_cnt))
-+	if (blk_status == BLK_STS_RESV_CONFLICT)
-+		status = SAM_STAT_RESERVATION_CONFLICT;
-+	else if (atomic_read(&ibr->ib_bio_err_cnt))
- 		status = SAM_STAT_CHECK_CONDITION;
- 	else
- 		status = SAM_STAT_GOOD;
-@@ -331,6 +336,7 @@ static void iblock_bio_done(struct bio *bio)
- {
- 	struct se_cmd *cmd = bio->bi_private;
- 	struct iblock_req *ibr = cmd->priv;
-+	blk_status_t blk_status = bio->bi_status;
+-	/* Initialize devfreq */
+-	if (ufshcd_is_clkscaling_supported(hba)) {
+-		memcpy(&hba->clk_scaling.saved_pwr_info.info,
+-			&hba->pwr_info,
+-			sizeof(struct ufs_pa_layer_attr));
+-		hba->clk_scaling.saved_pwr_info.is_valid = true;
+-		hba->clk_scaling.is_allowed = true;
+-
+-		err = ufshcd_devfreq_init(hba);
+-		if (err)
+-			goto rpm_put_sync;
+-
+-		hba->clk_scaling.is_enabled = true;
+-		ufshcd_init_clk_scaling_sysfs(hba);
+-	}
+-
+ 	async_schedule(ufshcd_async_scan, hba);
+ 	ufs_sysfs_add_nodes(hba->dev);
  
- 	if (bio->bi_status) {
- 		pr_err("bio error: %p,  err: %d\n", bio, bio->bi_status);
-@@ -343,7 +349,7 @@ static void iblock_bio_done(struct bio *bio)
- 
- 	bio_put(bio);
- 
--	iblock_complete_cmd(cmd);
-+	iblock_complete_cmd(cmd, blk_status);
- }
- 
- static struct bio *iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num,
-@@ -759,7 +765,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 	if (!sgl_nents) {
- 		refcount_set(&ibr->pending, 1);
--		iblock_complete_cmd(cmd);
-+		iblock_complete_cmd(cmd, BLK_STS_OK);
- 		return 0;
- 	}
- 
-@@ -817,7 +823,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	}
- 
- 	iblock_submit_bios(&list);
--	iblock_complete_cmd(cmd);
-+	iblock_complete_cmd(cmd, BLK_STS_OK);
+ 	device_enable_async_suspend(dev);
  	return 0;
  
- fail_put_bios:
-@@ -829,6 +835,258 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- }
+-rpm_put_sync:
+-	pm_runtime_put_sync(dev);
+ free_tmf_queue:
+ 	blk_mq_destroy_queue(hba->tmf_queue);
+ 	blk_put_queue(hba->tmf_queue);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 25aab8ec4f86..431c3afb2ce0 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -979,7 +979,6 @@ struct ufs_hba {
+ 	struct completion *uic_async_done;
  
-+static sense_reason_t iblock_execute_pr_out(struct se_cmd *cmd, u8 sa, u64 key,
-+					    u64 sa_key, u8 type, bool aptpl)
-+{
-+	struct se_device *dev = cmd->se_dev;
-+	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-+	struct block_device *bdev = ib_dev->ibd_bd;
-+	const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
-+	int ret;
-+
-+	if (!ops) {
-+		pr_err("Block device does not support pr_ops but iblock device has been configured for PR passthrough.\n");
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	switch (sa) {
-+	case PRO_REGISTER:
-+	case PRO_REGISTER_AND_IGNORE_EXISTING_KEY:
-+		if (!ops->pr_register) {
-+			pr_err("block device does not support pr_register.\n");
-+			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		}
-+
-+		/* The block layer pr ops always enables aptpl */
-+		if (!aptpl)
-+			pr_info("APTPL not set by initiator, but will be used.\n");
-+
-+		ret = ops->pr_register(bdev, key, sa_key,
-+				sa == PRO_REGISTER ? 0 : PR_FL_IGNORE_KEY);
-+		break;
-+	case PRO_RESERVE:
-+		if (!ops->pr_reserve) {
-+			pr_err("block_device does not support pr_reserve.\n");
-+			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		}
-+
-+		ret = ops->pr_reserve(bdev, key, scsi_pr_type_to_block(type), 0);
-+		break;
-+	case PRO_CLEAR:
-+		if (!ops->pr_clear) {
-+			pr_err("block_device does not support pr_clear.\n");
-+			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		}
-+
-+		ret = ops->pr_clear(bdev, key);
-+		break;
-+	case PRO_PREEMPT:
-+	case PRO_PREEMPT_AND_ABORT:
-+		if (!ops->pr_clear) {
-+			pr_err("block_device does not support pr_preempt.\n");
-+			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		}
-+
-+		ret = ops->pr_preempt(bdev, key, sa_key,
-+				      scsi_pr_type_to_block(type),
-+				      sa == PRO_PREEMPT ? false : true);
-+		break;
-+	case PRO_RELEASE:
-+		if (!ops->pr_clear) {
-+			pr_err("block_device does not support pr_pclear.\n");
-+			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		}
-+
-+		ret = ops->pr_release(bdev, key, scsi_pr_type_to_block(type));
-+		break;
-+	default:
-+		pr_err("Unknown PERSISTENT_RESERVE_OUT SA: 0x%02x\n", sa);
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	if (!ret)
-+		return TCM_NO_SENSE;
-+	else if (ret == PR_STS_RESERVATION_CONFLICT)
-+		return TCM_RESERVATION_CONFLICT;
-+	else
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+}
-+
-+static void iblock_pr_report_caps(unsigned char *param_data)
-+{
-+	u16 len = 8;
-+
-+	put_unaligned_be16(len, &param_data[0]);
-+	/*
-+	 * When using the pr_ops passthrough method we only support exporting
-+	 * the device through one target port because from the backend module
-+	 * level we can't see the target port config. As a result we only
-+	 * support registration directly from the I_T nexus the cmd is sent
-+	 * through and do not set ATP_C here.
-+	 *
-+	 * The block layer pr_ops do not support passing in initiators so
-+	 * we don't set SIP_C here.
-+	 */
-+	/* PTPL_C: Persistence across Target Power Loss bit */
-+	param_data[2] |= 0x01;
-+	/*
-+	 * We are filling in the PERSISTENT RESERVATION TYPE MASK below, so
-+	 * set the TMV: Task Mask Valid bit.
-+	 */
-+	param_data[3] |= 0x80;
-+	/*
-+	 * Change ALLOW COMMANDs to 0x20 or 0x40 later from Table 166
-+	 */
-+	param_data[3] |= 0x10; /* ALLOW COMMANDs field 001b */
-+	/*
-+	 * PTPL_A: Persistence across Target Power Loss Active bit. The block
-+	 * layer pr ops always enables this so report it active.
-+	 */
-+	param_data[3] |= 0x01;
-+	/*
-+	 * Setup the PERSISTENT RESERVATION TYPE MASK from Table 212 spc4r37.
-+	 */
-+	param_data[4] |= 0x80; /* PR_TYPE_EXCLUSIVE_ACCESS_ALLREG */
-+	param_data[4] |= 0x40; /* PR_TYPE_EXCLUSIVE_ACCESS_REGONLY */
-+	param_data[4] |= 0x20; /* PR_TYPE_WRITE_EXCLUSIVE_REGONLY */
-+	param_data[4] |= 0x08; /* PR_TYPE_EXCLUSIVE_ACCESS */
-+	param_data[4] |= 0x02; /* PR_TYPE_WRITE_EXCLUSIVE */
-+	param_data[5] |= 0x01; /* PR_TYPE_EXCLUSIVE_ACCESS_ALLREG */
-+}
-+
-+static sense_reason_t iblock_pr_read_keys(struct se_cmd *cmd,
-+					  unsigned char *param_data)
-+{
-+	struct se_device *dev = cmd->se_dev;
-+	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-+	struct block_device *bdev = ib_dev->ibd_bd;
-+	const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
-+	int i, len, paths, data_offset;
-+	struct pr_keys *keys;
-+	sense_reason_t ret;
-+
-+	if (!ops) {
-+		pr_err("Block device does not support pr_ops but iblock device has been configured for PR passthrough.\n");
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	if (!ops->pr_read_keys) {
-+		pr_err("Block device does not support read_keys.\n");
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	/*
-+	 * We don't know what's under us, but dm-multipath will register every
-+	 * path with the same key, so start off with enough space for 16 paths.
-+	 * which is not a lot of memory and should normally be enough.
-+	 */
-+	paths = 16;
-+retry:
-+	len = 8 * paths;
-+	keys = kzalloc(sizeof(*keys) + len, GFP_KERNEL);
-+	if (!keys)
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+
-+	keys->num_keys = paths;
-+	if (!ops->pr_read_keys(bdev, keys)) {
-+		if (keys->num_keys > paths) {
-+			kfree(keys);
-+			paths *= 2;
-+			goto retry;
-+		}
-+	} else {
-+		ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+		goto free_keys;
-+	}
-+
-+	ret = TCM_NO_SENSE;
-+
-+	put_unaligned_be32(keys->generation, &param_data[0]);
-+	if (!keys->num_keys) {
-+		put_unaligned_be32(0, &param_data[4]);
-+		goto free_keys;
-+	}
-+
-+	put_unaligned_be32(8 * keys->num_keys, &param_data[4]);
-+
-+	data_offset = 8;
-+	for (i = 0; i < keys->num_keys; i++) {
-+		if (data_offset + 8 > cmd->data_length)
-+			break;
-+
-+		put_unaligned_be64(keys->keys[i], &param_data[data_offset]);
-+		data_offset += 8;
-+	}
-+
-+free_keys:
-+	kfree(keys);
-+	return ret;
-+}
-+
-+static sense_reason_t iblock_pr_read_reservation(struct se_cmd *cmd,
-+						 unsigned char *param_data)
-+{
-+	struct se_device *dev = cmd->se_dev;
-+	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-+	struct block_device *bdev = ib_dev->ibd_bd;
-+	const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
-+	struct pr_held_reservation rsv = { };
-+
-+	if (!ops) {
-+		pr_err("Block device does not support pr_ops but iblock device has been configured for PR passthrough.\n");
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	if (!ops->pr_read_reservation) {
-+		pr_err("Block device does not support read_keys.\n");
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	if (ops->pr_read_reservation(bdev, &rsv))
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+
-+	put_unaligned_be32(rsv.generation, &param_data[0]);
-+	if (!block_pr_type_to_scsi(rsv.type)) {
-+		put_unaligned_be32(0, &param_data[4]);
-+		return TCM_NO_SENSE;
-+	}
-+
-+	put_unaligned_be32(16, &param_data[4]);
-+
-+	if (cmd->data_length < 16)
-+		return TCM_NO_SENSE;
-+	put_unaligned_be64(rsv.key, &param_data[8]);
-+
-+	if (cmd->data_length < 22)
-+		return TCM_NO_SENSE;
-+	param_data[21] = block_pr_type_to_scsi(rsv.type);
-+
-+	return TCM_NO_SENSE;
-+}
-+
-+static sense_reason_t iblock_execute_pr_in(struct se_cmd *cmd, u8 sa,
-+					   unsigned char *param_data)
-+{
-+	sense_reason_t ret = TCM_NO_SENSE;
-+
-+	switch (sa) {
-+	case PRI_REPORT_CAPABILITIES:
-+		iblock_pr_report_caps(param_data);
-+		break;
-+	case PRI_READ_KEYS:
-+		ret = iblock_pr_read_keys(cmd, param_data);
-+		break;
-+	case PRI_READ_RESERVATION:
-+		ret = iblock_pr_read_reservation(cmd, param_data);
-+		break;
-+	default:
-+		pr_err("Unknown PERSISTENT_RESERVE_IN SA: 0x%02x\n", sa);
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
-+	}
-+
-+	return ret;
-+}
-+
- static sector_t iblock_get_alignment_offset_lbas(struct se_device *dev)
- {
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-@@ -874,6 +1132,8 @@ static struct exec_cmd_ops iblock_exec_cmd_ops = {
- 	.execute_sync_cache	= iblock_execute_sync_cache,
- 	.execute_write_same	= iblock_execute_write_same,
- 	.execute_unmap		= iblock_execute_unmap,
-+	.execute_pr_out		= iblock_execute_pr_out,
-+	.execute_pr_in		= iblock_execute_pr_in,
- };
- 
- static sense_reason_t
-@@ -890,6 +1150,7 @@ static bool iblock_get_write_cache(struct se_device *dev)
- static const struct target_backend_ops iblock_ops = {
- 	.name			= "iblock",
- 	.inquiry_prod		= "IBLOCK",
-+	.transport_flags_changeable = TRANSPORT_FLAG_PASSTHROUGH_PGR,
- 	.inquiry_rev		= IBLOCK_VERSION,
- 	.owner			= THIS_MODULE,
- 	.attach_hba		= iblock_attach_hba,
--- 
-2.25.1
+ 	enum ufshcd_state ufshcd_state;
+-	bool logical_unit_scan_finished;
+ 	u32 eh_flags;
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
 
