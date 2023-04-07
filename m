@@ -2,235 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88F58C76196
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 21:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6B4C77B70
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 23:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbjDGVmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 17:42:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41940 "EHLO
+        id S229684AbjDGXHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 19:07:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbjDGVmK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 17:42:10 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 249587683
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Apr 2023 14:42:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1680903728;
-        bh=N11iNEj2chynP21eWZ21gOdewyzfyjq67gakjvMjDv4=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=so243AGbOwcjhsthxzo0bUPWCSAEwDTAL5ifG0rV5ya+ufpfSv0FuxXCJuBu8D5SA
-         1l2fIH1EilfXm6ZE+PkIJRm8N8vWay0bD8aJGn/lq6f7qkwjIn5XRT6l2i4+I/DxAd
-         /MHBnYEi6mvoSkP5uHI+rji2jfC3ND1qmWaXKOwY=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 6788612802D4;
-        Fri,  7 Apr 2023 17:42:08 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id 9w6ksplEjQaT; Fri,  7 Apr 2023 17:42:08 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1680903728;
-        bh=N11iNEj2chynP21eWZ21gOdewyzfyjq67gakjvMjDv4=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=so243AGbOwcjhsthxzo0bUPWCSAEwDTAL5ifG0rV5ya+ufpfSv0FuxXCJuBu8D5SA
-         1l2fIH1EilfXm6ZE+PkIJRm8N8vWay0bD8aJGn/lq6f7qkwjIn5XRT6l2i4+I/DxAd
-         /MHBnYEi6mvoSkP5uHI+rji2jfC3ND1qmWaXKOwY=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id BE44512802AD;
-        Fri,  7 Apr 2023 17:42:07 -0400 (EDT)
-Message-ID: <255a80b21248110095a4e3a6c993183f1046a4b2.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.3-rc5
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 07 Apr 2023 17:42:04 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229682AbjDGXHO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 19:07:14 -0400
+Received: from mail-oa1-x35.google.com (mail-oa1-x35.google.com [IPv6:2001:4860:4864:20::35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE593E068;
+        Fri,  7 Apr 2023 16:07:00 -0700 (PDT)
+Received: by mail-oa1-x35.google.com with SMTP id 586e51a60fabf-1842cddca49so89035fac.1;
+        Fri, 07 Apr 2023 16:07:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680908820; x=1683500820;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=vMcypocImtzxV7/I2Ii8yYYnZJvG/LB86W8XaeGMbZM=;
+        b=lNtMX+r+lAJIRIONbfqfkdV6kfPHZTkpNge7zneGuDWyEbLDVDyOYoEZaDcZ9ROM7P
+         dSXA5E3eLn3PgNaHdGCSyLzHsfGfnIRtHi7CNQGP4NNZ0GCp0ZSHK7OuKILbqHgBUE2g
+         6tkdxkO/h4392GCiSryc3DXUNoRhqNviE+OcVPPjXYR5aXwKwYbJPvmliVm6bzqA6A2B
+         lYMsGQZeQa1anMDlUsDndgNTJBugCkilBMl4sgcstwoMJrDSmssGYGoixan9Gv1Rk/1A
+         jeTWKt2epVN1tMuqvnOAIj+1kpdFolWz8YMqi43AJiEzE9xMqklNTn/5ZBCQmJCM9bCZ
+         f8ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680908820; x=1683500820;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vMcypocImtzxV7/I2Ii8yYYnZJvG/LB86W8XaeGMbZM=;
+        b=y9MvvtsSc1wlVE3HHZuSdKqfdxHKKkvOG884erPSRT+voagGPV8QDQLjqeWbE5cVID
+         2Ja1AUiKbvZO09O1N0vAFOO2t2p/WwtgfYqSVY/n1QaXI7ABnyJXlrSdl6UzyeaCxalL
+         JUUgg3JXyhGGyGOC1wc/+JDYCGg0RobfpGCRSGedY+YkUBzJnROMLGReL3CvA+EN/bpu
+         y5Op7fQqpLzrKrwqJpaT1SRzTZjxNlg8LoxQKpf8IhPG2jmuQ4l+UnZWcV1JzZZMVD1X
+         cpu7xZlQkijPjIZpjqBBz8WCb7vFWVtpS9KFYuKmgz6JWzmx/fs/1LDtBItI3L7sXdG5
+         t+wA==
+X-Gm-Message-State: AAQBX9ffq7JTgVeRqBGDqtOkscxnxposkqqGZL/fMbtmBAdkU9xJdrLS
+        VWT5POInBsoPqr74a5imVZU=
+X-Google-Smtp-Source: AKy350ZgBrDZXUkcqk0CIhjDZHKhTFYqy3aPWIQ15+brMZvnFwl5rCmnj/wPY7aDg1O0jPsWUlX8bw==
+X-Received: by 2002:a05:6870:e38c:b0:17a:c141:ffdc with SMTP id x12-20020a056870e38c00b0017ac141ffdcmr2213638oad.58.1680908820130;
+        Fri, 07 Apr 2023 16:07:00 -0700 (PDT)
+Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id 5-20020a4a0d05000000b0053b543b027bsm2069448oob.42.2023.04.07.16.06.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Apr 2023 16:06:59 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <e356c168-5e60-70f9-9985-34a909d97b6b@roeck-us.net>
+Date:   Fri, 7 Apr 2023 16:06:57 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH] ufs: hwmon: constify pointers to hwmon_channel_info
+Content-Language: en-US
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Jean Delvare <jdelvare@suse.com>, linux-hwmon@vger.kernel.org
+References: <20230407150137.79947-1-krzysztof.kozlowski@linaro.org>
+From:   Guenter Roeck <linux@roeck-us.net>
+In-Reply-To: <20230407150137.79947-1-krzysztof.kozlowski@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Four small fixes, all in drivers.  They're all one or two lines except
-for the ufs one, but that's a simple revert of a previous feature.
+On 4/7/23 08:01, Krzysztof Kozlowski wrote:
+> Statically allocated array of pointed to hwmon_channel_info can be made
+> const for safety.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> 
+> ---
+> 
+> This depends on hwmon core patch:
+> https://lore.kernel.org/all/20230406203103.3011503-2-krzysztof.kozlowski@linaro.org/
+> 
+> Therefore I propose this should also go via hwmon tree.
+> 
 
-The patch is available here:
+I am not going to apply patches for 10+ subsystems through the hwmon tree.
+This can only result in chaos. The dependent patch is available at
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+git://git.kernel.org/pub/scm/linux/kernel/git/groeck/linux-staging.git hwmon-const
 
-The short changelog is:
+or wait until after the next commit window to apply this patch.
 
-Adrien Thierry (1):
-      scsi: Revert "scsi: ufs: core: Initialize devfreq synchronously"
+Thanks,
+Guenter
 
-Li Zetao (1):
-      scsi: qla2xxx: Fix memory leak in qla2x00_probe_one()
-
-Ranjan Kumar (1):
-      scsi: mpi3mr: Handle soft reset in progress fault code (0xF002)
-
-Zhong Jinghua (1):
-      scsi: iscsi_tcp: Check that sock is valid before iscsi_set_param()
-
-And the diffstat:
-
- drivers/scsi/iscsi_tcp.c        |  3 +--
- drivers/scsi/mpi3mr/mpi3mr_fw.c |  2 +-
- drivers/scsi/qla2xxx/qla_os.c   |  1 +
- drivers/ufs/core/ufshcd.c       | 47 ++++++++++++++---------------------------
- include/ufs/ufshcd.h            |  1 -
- 5 files changed, 19 insertions(+), 35 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index c76f82fb8b63..15f452908926 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -771,13 +771,12 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
- 		iscsi_set_param(cls_conn, param, buf, buflen);
- 		break;
- 	case ISCSI_PARAM_DATADGST_EN:
--		iscsi_set_param(cls_conn, param, buf, buflen);
--
- 		mutex_lock(&tcp_sw_conn->sock_lock);
- 		if (!tcp_sw_conn->sock) {
- 			mutex_unlock(&tcp_sw_conn->sock_lock);
- 			return -ENOTCONN;
- 		}
-+		iscsi_set_param(cls_conn, param, buf, buflen);
- 		tcp_sw_conn->sendpage = conn->datadgst_en ?
- 			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
- 		mutex_unlock(&tcp_sw_conn->sock_lock);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index a565817aa56d..d109a4ceb72b 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2526,7 +2526,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 		mrioc->unrecoverable = 1;
- 		goto schedule_work;
- 	case MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS:
--		return;
-+		goto schedule_work;
- 	case MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET:
- 		reset_reason = MPI3MR_RESET_FROM_CIACTIV_FAULT;
- 		break;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index bee1b8a82020..d0cdbfe771a9 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3617,6 +3617,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- probe_failed:
- 	qla_enode_stop(base_vha);
- 	qla_edb_stop(base_vha);
-+	vfree(base_vha->scan.l);
- 	if (base_vha->gnl.l) {
- 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
- 				base_vha->gnl.l, base_vha->gnl.ldma);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 37e178a9ac47..70b112038792 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1409,13 +1409,6 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	struct ufs_clk_info *clki;
- 	unsigned long irq_flags;
- 
--	/*
--	 * Skip devfreq if UFS initialization is not finished.
--	 * Otherwise ufs could be in a inconsistent state.
--	 */
--	if (!smp_load_acquire(&hba->logical_unit_scan_finished))
--		return 0;
--
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return -EINVAL;
- 
-@@ -8399,6 +8392,22 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 	if (ret)
- 		goto out;
- 
-+	/* Initialize devfreq after UFS device is detected */
-+	if (ufshcd_is_clkscaling_supported(hba)) {
-+		memcpy(&hba->clk_scaling.saved_pwr_info.info,
-+			&hba->pwr_info,
-+			sizeof(struct ufs_pa_layer_attr));
-+		hba->clk_scaling.saved_pwr_info.is_valid = true;
-+		hba->clk_scaling.is_allowed = true;
-+
-+		ret = ufshcd_devfreq_init(hba);
-+		if (ret)
-+			goto out;
-+
-+		hba->clk_scaling.is_enabled = true;
-+		ufshcd_init_clk_scaling_sysfs(hba);
-+	}
-+
- 	ufs_bsg_probe(hba);
- 	ufshpb_init(hba);
- 	scsi_scan_host(hba->host);
-@@ -8670,12 +8679,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	if (ret) {
- 		pm_runtime_put_sync(hba->dev);
- 		ufshcd_hba_exit(hba);
--	} else {
--		/*
--		 * Make sure that when reader code sees UFS initialization has finished,
--		 * all initialization steps have really been executed.
--		 */
--		smp_store_release(&hba->logical_unit_scan_finished, true);
- 	}
- }
- 
-@@ -10316,30 +10319,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	 */
- 	ufshcd_set_ufs_dev_active(hba);
- 
--	/* Initialize devfreq */
--	if (ufshcd_is_clkscaling_supported(hba)) {
--		memcpy(&hba->clk_scaling.saved_pwr_info.info,
--			&hba->pwr_info,
--			sizeof(struct ufs_pa_layer_attr));
--		hba->clk_scaling.saved_pwr_info.is_valid = true;
--		hba->clk_scaling.is_allowed = true;
--
--		err = ufshcd_devfreq_init(hba);
--		if (err)
--			goto rpm_put_sync;
--
--		hba->clk_scaling.is_enabled = true;
--		ufshcd_init_clk_scaling_sysfs(hba);
--	}
--
- 	async_schedule(ufshcd_async_scan, hba);
- 	ufs_sysfs_add_nodes(hba->dev);
- 
- 	device_enable_async_suspend(dev);
- 	return 0;
- 
--rpm_put_sync:
--	pm_runtime_put_sync(dev);
- free_tmf_queue:
- 	blk_mq_destroy_queue(hba->tmf_queue);
- 	blk_put_queue(hba->tmf_queue);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 25aab8ec4f86..431c3afb2ce0 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -979,7 +979,6 @@ struct ufs_hba {
- 	struct completion *uic_async_done;
- 
- 	enum ufshcd_state ufshcd_state;
--	bool logical_unit_scan_finished;
- 	u32 eh_flags;
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask;
+> Cc: Jean Delvare <jdelvare@suse.com>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: linux-hwmon@vger.kernel.org
+> ---
+>   drivers/ufs/core/ufs-hwmon.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-hwmon.c b/drivers/ufs/core/ufs-hwmon.c
+> index 4c6a872b7a7c..229e2ad70903 100644
+> --- a/drivers/ufs/core/ufs-hwmon.c
+> +++ b/drivers/ufs/core/ufs-hwmon.c
+> @@ -146,7 +146,7 @@ static umode_t ufs_hwmon_is_visible(const void *_data, enum hwmon_sensor_types t
+>   	return 0;
+>   }
+>   
+> -static const struct hwmon_channel_info *ufs_hwmon_info[] = {
+> +static const struct hwmon_channel_info * const ufs_hwmon_info[] = {
+>   	HWMON_CHANNEL_INFO(temp, HWMON_T_ENABLE | HWMON_T_INPUT | HWMON_T_CRIT | HWMON_T_LCRIT),
+>   	NULL
+>   };
 
