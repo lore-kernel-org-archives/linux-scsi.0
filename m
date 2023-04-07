@@ -2,69 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 448D5C77B70
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 19:18:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7698FC77B74
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 19:21:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230357AbjDGTSN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 15:18:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45764 "EHLO
+        id S231278AbjDGTVC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 15:21:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230347AbjDGTSK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 15:18:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A477BBB9A;
-        Fri,  7 Apr 2023 12:18:09 -0700 (PDT)
+        with ESMTP id S231183AbjDGTVA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 15:21:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03704976F;
+        Fri,  7 Apr 2023 12:20:59 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F7AF64D51;
-        Fri,  7 Apr 2023 19:18:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 316F4C433EF;
-        Fri,  7 Apr 2023 19:18:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9607464FE8;
+        Fri,  7 Apr 2023 19:20:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80A16C4339C;
+        Fri,  7 Apr 2023 19:20:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680895088;
-        bh=v36g2BJAp9VAUH4Pa6BbAM86j6+La0PhFyT56lBz4qk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MiTiaY4nNrXh2Blyn4YPwEYHeW1ZRvk7gDlluFVq7g0F5of484SqgjKjTogpg7PYY
-         U7nFq0OuSg4f3cJ0Slb0/ECgFq1IOCt5bj3lc6EI7yCutpMlbHLZu/5rb9fIhh/xZ7
-         KZOlhNoAXKw1XOGLEyQH3W4olv3S9pdTRU6y72XxZ1aN/F6sbHsefCN1YokjDYYGfQ
-         XewjP5Wog4DHU8Up85MynErWjvvYhzNr2z80wyNFovvWpxQpOwBUT0u2XQA0fkJdxY
-         j6lBo/q9pJ5y0fcOXnyjYsEaYmAv1Yn0j+DFGJpnzRQcoDBjZqkIyfaEQ1O6F9jAXA
-         xstivBMt6PjzQ==
-Date:   Fri, 7 Apr 2023 12:20:57 -0700
+        s=k20201202; t=1680895258;
+        bh=pySzrUVLgH2rgQjZMYipTzrfWw3I4woWaqG1zm9Rj14=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Z+3YNvXiMLSUWUXNTjK4K+u5FBo6c3AhnkfZmX9/D+Ct8cWUQBI/v4TMkQLtMMJmU
+         FDzZTtv4J7rBjrLJxZQQS9/xXSPsTJMSOaMkU3KLrjLtYoZ/z4OwW7PPQBfl6vEUgy
+         0eqC3bR7TTBHtKITB4a3DsADjzbHJiXaXYiDNGTRKos+zmm3X/YJuI/FjttNuFSCtq
+         0R3+nRke11eiueiWG9gUcl13s16s52sD4JuFuSfNODMkj0zarJnqxjNjBuIO1IDzph
+         Uc7hEl63DcK9ZiQDGc2f3oSBStRlQs7pqyy9v353teIvIaYgxUvuwl4u1QyNMJdzKP
+         oXx70ps2RRkIg==
 From:   Bjorn Andersson <andersson@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
+To:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
+        Rob Herring <robh+dt@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         "David S . Miller" <davem@davemloft.net>,
-        Eric Biggers <ebiggers@kernel.org>, linux-mmc@vger.kernel.org,
-        devicetree@vger.kernel.org,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Andy Gross <agross@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Eric Biggers <ebiggers@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Abel Vesa <abel.vesa@linaro.org>
+Cc:     linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-crypto@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v6 0/6] Add dedicated Qcom ICE driver
-Message-ID: <20230407192057.pgccwiie3mriuklp@ripper>
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: (subset) [PATCH v6 0/6] Add dedicated Qcom ICE driver
+Date:   Fri,  7 Apr 2023 12:23:46 -0700
+Message-Id: <168089531816.2739604.14046921843203355234.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230407105029.2274111-1-abel.vesa@linaro.org>
 References: <20230407105029.2274111-1-abel.vesa@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230407105029.2274111-1-abel.vesa@linaro.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 07, 2023 at 01:50:23PM +0300, Abel Vesa wrote:
+On Fri, 7 Apr 2023 13:50:23 +0300, Abel Vesa wrote:
 > As both SDCC and UFS drivers use the ICE with duplicated implementation,
 > while none of the currently supported platforms make use concomitantly
 > of the same ICE IP block instance, the new SM8550 allows both UFS and
@@ -73,56 +74,18 @@ On Fri, Apr 07, 2023 at 01:50:23PM +0300, Abel Vesa wrote:
 > both types of storage devices. So lets drop the duplicate implementation
 > of the ICE from both SDCC and UFS and make it a dedicated (soc) driver.
 > 
-> For now, only SM8550 has been added to support the new approach. This
-> also involves adding support for HW version 4.x.
-> 
+> [...]
 
-I picked the ICE driver and pushed it out to make it possible to pick up
-the mmc and ufs patches independently.
+Applied, thanks!
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git tags/20230407105029.2274111-4-abel.vesa@linaro.org
+[1/6] dt-bindings: crypto: Add Qualcomm Inline Crypto Engine
+      commit: f6ff91a47ac57cb1118d94020302617b6b22c0d1
+[3/6] soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
+      commit: 2afbf43a4aec6e31dac7835e65d52c867f2be400
+[6/6] arm64: dts: qcom: sm8550: Add the Inline Crypto Engine node
+      commit: b8630c48b43fcf77039c04a1d30153e283cf41b4
 
-Regards,
-Bjorn
 
-> The v5 is here:
-> https://lore.kernel.org/all/20230403200530.2103099-1-abel.vesa@linaro.org/
-> 
-> Changes since v5:
->  * See each individual patch for changelogs.
-> 
-> Changes since v4:
->  * dropped the SDHCI dt-bindings patch as it will be added along
->    with the first use of qcom,ice property from an SDHCI DT node
-> 
-> Abel Vesa (6):
->   dt-bindings: crypto: Add Qualcomm Inline Crypto Engine
->   dt-bindings: ufs: qcom: Add ICE phandle
->   soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver
->   scsi: ufs: ufs-qcom: Switch to the new ICE API
->   mmc: sdhci-msm: Switch to the new ICE API
->   arm64: dts: qcom: sm8550: Add the Inline Crypto Engine node
-> 
->  .../crypto/qcom,inline-crypto-engine.yaml     |  42 ++
->  .../devicetree/bindings/ufs/qcom,ufs.yaml     |  26 ++
->  arch/arm64/boot/dts/qcom/sm8550.dtsi          |   9 +
->  drivers/mmc/host/Kconfig                      |   2 +-
->  drivers/mmc/host/sdhci-msm.c                  | 223 +++--------
->  drivers/soc/qcom/Kconfig                      |   4 +
->  drivers/soc/qcom/Makefile                     |   1 +
->  drivers/soc/qcom/ice.c                        | 366 ++++++++++++++++++
->  drivers/ufs/host/Kconfig                      |   2 +-
->  drivers/ufs/host/Makefile                     |   4 +-
->  drivers/ufs/host/ufs-qcom-ice.c               | 244 ------------
->  drivers/ufs/host/ufs-qcom.c                   |  99 ++++-
->  drivers/ufs/host/ufs-qcom.h                   |  32 +-
->  include/soc/qcom/ice.h                        |  37 ++
->  14 files changed, 637 insertions(+), 454 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
->  create mode 100644 drivers/soc/qcom/ice.c
->  delete mode 100644 drivers/ufs/host/ufs-qcom-ice.c
->  create mode 100644 include/soc/qcom/ice.h
-> 
-> -- 
-> 2.34.1
-> 
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
