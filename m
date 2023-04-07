@@ -2,80 +2,147 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1085AC76196
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 07:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0820AC6FD1D
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 08:17:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232222AbjDGH4T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 03:56:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43044 "EHLO
+        id S240170AbjDGIRg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 04:17:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230292AbjDGH4S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 03:56:18 -0400
-Received: from forwardcorp1b.mail.yandex.net (forwardcorp1b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:df01])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A37EA6E82;
-        Fri,  7 Apr 2023 00:56:15 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:1fa8:0:640:3b74:0])
-        by forwardcorp1b.mail.yandex.net (Yandex) with ESMTP id B289C60305;
-        Fri,  7 Apr 2023 10:56:13 +0300 (MSK)
-Received: from den-plotnikov-w.yandex-team.ru (unknown [2a02:6b8:b081:b507::1:25])
-        by mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net (smtpcorp/Yandex) with ESMTPSA id 4uLCdL0Od4Y0-uxaYAqh0;
-        Fri, 07 Apr 2023 10:56:12 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1680854172; bh=9IRxraDMMRQpsr1I0/AtgfXObZe/EMARKPhOMkXb224=;
-        h=Message-Id:Date:Cc:Subject:To:From;
-        b=AQ7A+3uOBUEd0Xyw+fiUlB71zePlD05ZZbCypGYm4x0vtYJabG9mSKChjUoKmq1hv
-         2WuOSSIkHlGl5eNRKV5EQ4AGMwLNqxLuHWaJHgNDJXshznZesMPIRy9YdrZLHw0sR0
-         bnhF+GKdsMNU3+NLCXHQUV8BXKLot1lldfKkPXoQ=
-Authentication-Results: mail-nwsmtp-smtp-corp-main-26.myt.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
-From:   Denis Plotnikov <den-plotnikov@yandex-team.ru>
-To:     linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        martin.petersen@oracle.com, nab@linux-iscsi.org, varun@chelsio.com,
-        den-plotnikov@yandex-team.ru
-Subject: [PATCH] cxgbit: check skb dequeue result in cxgbit_send_tx_flowc_wr()
-Date:   Fri,  7 Apr 2023 10:56:03 +0300
-Message-Id: <20230407075603.311230-1-den-plotnikov@yandex-team.ru>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S232253AbjDGIRR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 04:17:17 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5789EEA;
+        Fri,  7 Apr 2023 01:16:38 -0700 (PDT)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4PtB0T2lfSz17RG4;
+        Fri,  7 Apr 2023 16:11:37 +0800 (CST)
+Received: from [10.40.193.166] (10.40.193.166) by
+ kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Fri, 7 Apr 2023 16:15:04 +0800
+Subject: Re: [PATCH] scsi: hisi_sas: work around build failure in suspend
+ function
+To:     Arnd Bergmann <arnd@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Yihang Li <liyihang9@huawei.com>
+References: <20230405083611.3376739-1-arnd@kernel.org>
+CC:     Arnd Bergmann <arnd@arndb.de>, John Garry <john.garry@huawei.com>,
+        Xingui Yang <yangxingui@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <ef58d36e-9b67-d2b6-5671-be27d739f928@hisilicon.com>
+Date:   Fri, 7 Apr 2023 16:15:03 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
+In-Reply-To: <20230405083611.3376739-1-arnd@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.40.193.166]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Skb dequeuing may end up with returning NULL if a queue is empty,
-which, in turn, may end up with further null pointer dereference.
+Hi Arnd,
 
-Fix it by checking the return value of skb dequeuing end returning
-before the pointer dereference.
 
-Found by Linux Verification Center(linuxtesting.org) with SVACE.
+在 2023/4/5 16:36, Arnd Bergmann 写道:
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> The suspend/resume functions in this driver seem to have multiple
+> problems, the latest one just got introduced by a bugfix:
+>
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
+>   5142 |         if (atomic_read(&device->power.usage_count)) {
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
+>   5142 |         if (atomic_read(&device->power.usage_count)) {
+>
+> As far as I can tell, the 'usage_count' is not meant to be accessed
+> by device drivers at all, though I don't know what the driver is
+> supposed to do instead.
 
-Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
-Signed-off-by: Denis Plotnikov <den-plotnikov@yandex-team.ru>
----
- drivers/target/iscsi/cxgbit/cxgbit_cm.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Thank you for reporting the issue.
+There is a extreme situation that hisi_sas driver tries to resume 
+controller when it is in the process of suspend, which will cause a 
+deadlock.
+So we check usage_count of controller, and if usage_count > 0, failed to 
+suspend to avoid the issue. But there is no common function defined
+in pm_runtime.h which check the usage_count of device, so use it 
+directly (i saw the check also be used in other drivers).
+But i didn't realize that member usage_count is defined only under 
+CONFIG_PM=y.
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-index d9204c590d9ab..426a5c795fd93 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-@@ -1424,10 +1424,13 @@ u32 cxgbit_send_tx_flowc_wr(struct cxgbit_sock *csk)
- #ifdef CONFIG_CHELSIO_T4_DCB
- 	u16 vlan = ((struct l2t_entry *)csk->l2t)->vlan;
- #endif
-+	skb = __skb_dequeue(&csk->skbq);
-+
-+	if (!skb)
-+		return 0;
- 
- 	flowclen16 = cxgbit_tx_flowc_wr_credits(csk, &nparams, &flowclen);
- 
--	skb = __skb_dequeue(&csk->skbq);
- 	flowc = __skb_put_zero(skb, flowclen);
- 
- 	flowc->op_to_nparams = cpu_to_be32(FW_WR_OP_V(FW_FLOWC_WR) |
--- 
-2.25.1
+
+>
+> Another problem is the use of the deprecated UNIVERSAL_DEV_PM_OPS(),
+> and marking functions as __maybe_unused to avoid warnings about
+> unused functions.  This should probably be changed to using
+> DEFINE_RUNTIME_DEV_PM_OPS().
+
+We use UNIVERSAL_DEV_PM_OPS() just because runtime callbacks 
+runtime_{suspend|resume} and system callbacks {suspend|resume} use the same
+operations in the driver, otherwise, we need to use 
+DEFINE_RUNTIME_DEV_PM_OPS() to define runtime callbacks and use 
+DEFINE_SIMPLE_DEV_PM_OPS()
+to define system callbacks.
+
+>
+> Both changes require actually understanding what the driver needs to
+> do, and being able to test this, so instead here is the simplest
+> patch to make it pass the randconfig builds instead.
+>
+> Fixes: e368d38cb952 ("scsi: hisi_sas: Exit suspend state when usage count is greater than 0")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> Maintainers: If possible, please revisit this to do a proper fix.
+> If that takes too much time, this patch can be applied as a
+> workaround in the meantime, and might also help in case the
+> e368d38cb952 patch gets backported to stable kernels.
+
+It is ok to apply the patch as a workaround as soon as possible.
+
+Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+
+Thanks!
+
+> ---
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index d160b9b7479b..12d588454f5d 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -5139,11 +5139,13 @@ static int _suspend_v3_hw(struct device *device)
+>   	flush_workqueue(hisi_hba->wq);
+>   	interrupt_disable_v3_hw(hisi_hba);
+>   
+> +#ifdef CONFIG_PM
+>   	if (atomic_read(&device->power.usage_count)) {
+>   		dev_err(dev, "PM suspend: host status cannot be suspended\n");
+>   		rc = -EBUSY;
+>   		goto err_out;
+>   	}
+> +#endif
+>   
+>   	rc = disable_host_v3_hw(hisi_hba);
+>   	if (rc) {
+> @@ -5162,7 +5164,9 @@ static int _suspend_v3_hw(struct device *device)
+>   
+>   err_out_recover_host:
+>   	enable_host_v3_hw(hisi_hba);
+> +#ifdef CONFIG_PM
+>   err_out:
+> +#endif
+>   	interrupt_enable_v3_hw(hisi_hba);
+>   	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
+>   	clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
 
