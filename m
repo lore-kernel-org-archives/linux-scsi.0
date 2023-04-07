@@ -2,110 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33682C77B6F
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Apr 2023 20:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B863C6FD1D
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 04:04:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240298AbjDFUih (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Apr 2023 16:38:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54380 "EHLO
+        id S231223AbjDGEEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 00:04:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240257AbjDFUiW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2023 16:38:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A807FB47B;
-        Thu,  6 Apr 2023 13:34:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E014C6471F;
-        Thu,  6 Apr 2023 20:34:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95E7CC433D2;
-        Thu,  6 Apr 2023 20:34:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680813275;
-        bh=piwLBENh4irhNGFJSxnTnkgU+tz4S7Qx3VDC5mBsLow=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eKmaeMCgUMeITeDCNa33PhQDb7Ra//T9u6ZrmomOXgtwhrr6fphYxLIU4OQN4QXGe
-         KYEDTQUr+Ag83EPbtj7/mOs71LKexZ8aUpqf/3Ds8OM+NRZiCV7Yz9fVJEHG0I5pXG
-         4d5T45oQeqHxxxN9mfQT6g+a7MHaryvDunWV91pt9w3XTHSR8o0XjuQKZtRhdepfal
-         BJy2EVQTh0hqfLeKXaHaHjRRU1giIX/KarfNTuF3poLm/C5EzASATDPHZOWyphetxl
-         QRq7rFce1sH2MOhvQNmVa7pc8pLJBrwbrcpIyun52nycMADa89n+aCJkePKpTxkduL
-         mADB0NIRV4Izw==
-Date:   Thu, 6 Apr 2023 13:34:32 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v5 3/6] soc: qcom: Make the Qualcomm UFS/SDCC ICE a
- dedicated driver
-Message-ID: <20230406203432.GC20288@sol.localdomain>
-References: <20230403200530.2103099-1-abel.vesa@linaro.org>
- <20230403200530.2103099-4-abel.vesa@linaro.org>
+        with ESMTP id S229455AbjDGEED (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 00:04:03 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6191C55AE;
+        Thu,  6 Apr 2023 21:04:01 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Pt4RM00GbzKx77;
+        Fri,  7 Apr 2023 12:01:02 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Fri, 7 Apr 2023 12:03:00 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
+Subject: [PATCH] scsi: libsas: set tf to normal in sas_ata_device_link_abort()
+Date:   Fri, 7 Apr 2023 03:56:18 +0000
+Message-ID: <20230407035618.25123-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230403200530.2103099-4-abel.vesa@linaro.org>
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 03, 2023 at 11:05:27PM +0300, Abel Vesa wrote:
-> This takes the already existing duplicated support in both ufs-qcom
-> and sdhci-msm drivers and makes it a dedicated driver that can be used
-> by both mentioned drivers. The reason for this is because, staring with
-> SM8550, the ICE IP block is shared between UFS and SDCC, which means we
-> need to probe a dedicated device and share it between those two
-> consumers. So let's add the ICE dedicated driver as a soc driver.
-> Platforms that already have ICE supported, will use it as a library
-> as the of_qcom_ice_get will return an ICE instance created for the
-> consumer device. This allows the backwards compatibility with old-style
-> devicetree approach. Also, add support to HW version 4.x since it
-> works out-of-the-box with the current driver. The 4.x HW version is
-> found on SM8550 platform.
+If the disk returns UNC for more than five times within a short period, the
+number of retry times for other I/Os may reach scmd->allowed, and the
+default error "Illegal Request" is returned for other I/Os, as follows:
 
-Can you please split up long paragraphs like this into multiple paragraphs?
+[  273.801770] hisi_sas_v3_hw 0000:b4:02.0: erroneous completion disk err dev id=2 sas_addr=0x5000000000000605 CQ hdr: 0x400903 0x20103 0x0 0x80470000
+[  273.875286] sas: Enter sas_scsi_recover_host busy: 30 failed: 30
+[  273.879895] sas: trying to find task 0x00000000d9cfc893
+[  273.879896] sas: sas_scsi_find_task: aborting task 0x00000000d9cfc893
+[  273.880054] sas: sas_scsi_find_task: task 0x00000000d9cfc893 is done
+[  273.880055] sas: sas_eh_handle_sas_errors: task 0x00000000d9cfc893 is done
+[  273.880236] ata6.00: failed command: READ FPDMA QUEUED
+[  273.880238] ata6.00: cmd 60/08:00:59:27:00/00:00:00:00:00/40 tag 22 ncq dma 4096 in
+                        res 41/04:00:20:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
+[  273.880239] ata6.00: status: { DRDY ERR }
+[  273.880240] ata6.00: error: { ABRT }
+[  273.880241] ata6.00: failed command: READ FPDMA QUEUED
+[  273.880243] ata6.00: cmd 60/90:00:d1:26:00/00:00:00:00:00/40 tag 23 ncq dma 73728 in
+                        res 41/40:90:10:27:00/00:00:00:00:00/00 Emask 0x409 (media error) <F>
+[  273.880245] ata6.00: status: { DRDY ERR }
+[  273.880246] ata6.00: error: { UNC }
+[  273.880247] ata6.00: failed command: READ FPDMA QUEUED
+[  273.880249] ata6.00: cmd 60/08:00:19:27:00/00:00:00:00:00/40 tag 24 ncq dma 4096 in
+                        res 41/04:00:20:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
+[  273.880250] ata6.00: status: { DRDY ERR }
+[  273.880251] ata6.00: error: { ABRT }
+[  274.199477] scmd->retries: 3, scmd->allowed: 5
+[  274.199478] scmd->retries: 3, scmd->allowed: 5
+[  274.199479] scmd->retries: 3, scmd->allowed: 5
+[  274.199481] scmd->retries: 3, scmd->allowed: 5
+[  274.199482] scmd->retries: 3, scmd->allowed: 5
+[  274.199483] scmd->retries: 2, scmd->allowed: 5
+[  274.199484] scmd->retries: 3, scmd->allowed: 5
+[  274.199485] scmd->retries: 3, scmd->allowed: 5
+[  274.199486] scmd->retries: 5, scmd->allowed: 5
+[  274.199487] scmd->retries: 2, scmd->allowed: 5
+[  274.199488] scmd->retries: 2, scmd->allowed: 5
+[  274.199524] sd 6:0:1:0: [sdb] tag#258 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[  274.199527] sd 6:0:1:0: [sdb] tag#258 Sense Key : Illegal Request [current]
+[  274.199530] sd 6:0:1:0: [sdb] tag#258 Add. Sense: Unaligned write command
+[  274.199532] sd 6:0:1:0: [sdb] tag#258 CDB: Read(10) 28 00 00 00 27 59 00 00 08 00
+[  274.199535] print_req_error: I/O error, dev sdb, sector 10073
+[  274.199573] sd 6:0:1:0: [sdb] tag#259 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[  274.199574] sd 6:0:1:0: [sdb] tag#259 Sense Key : Medium Error [current]
+[  274.199576] sd 6:0:1:0: [sdb] tag#259 Add. Sense: Unrecovered read error - auto reallocate failed
+[  274.199578] sd 6:0:1:0: [sdb] tag#259 CDB: Read(10) 28 00 00 00 26 d1 00 00 90 00
+[  274.199579] print_req_error: I/O error, dev sdb, sector 10000
+[  274.199608] ata6: EH complete
+[  274.199615] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 30 tries: 1
 
-> +	pdev = of_find_device_by_node(node);
-> +	if (!pdev) {
-> +		dev_err(dev, "Cannot find device node %s\n", node->name);
-> +		ice = ERR_PTR(-EPROBE_DEFER);
-> +		goto out;
-> +	}
-> +
-> +	ice = platform_get_drvdata(pdev);
-> +	if (!ice) {
-> +		dev_err(dev, "Cannot get ice instance from %s\n",
-> +			dev_name(&pdev->dev));
-> +		platform_device_put(pdev);
-> +		ice = ERR_PTR(-EPROBE_DEFER);
-> +		goto out;
-> +	}
-> +
-> +	ice->link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
-> +	if (!ice->link) {
-> +		dev_err(&pdev->dev,
-> +			"Failed to create device link to consumer %s\n",
-> +			dev_name(dev));
-> +		ice = ERR_PTR(-EINVAL);
-> +	}
+As mentioned in ata_eh_qc_retry(), if qc->err_mask is zero then increment
+scmd->allowed. So set tf to normal may be better.
 
-Is a call to platform_device_put() missing above?
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/libsas/sas_ata.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-- Eric
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 77714a495cbb..f5047e8dcb59 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -949,8 +949,8 @@ void sas_ata_device_link_abort(struct domain_device *device, bool force_reset)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+-	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
+-	device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
++	device->sata_dev.fis[2] = ATA_DRDY; /* tf status */
++	device->sata_dev.fis[3] = 0;        /* tf error */
+ 
+ 	link->eh_info.err_mask |= AC_ERR_DEV;
+ 	if (force_reset)
+-- 
+2.17.1
+
