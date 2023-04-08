@@ -2,137 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB605C7619A
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Apr 2023 23:50:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB5EAC77B71
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Apr 2023 23:56:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbjDHXuo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Apr 2023 19:50:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39320 "EHLO
+        id S229521AbjDHX41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Apr 2023 19:56:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjDHXun (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2023 19:50:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7268A7D9F
-        for <linux-scsi@vger.kernel.org>; Sat,  8 Apr 2023 16:49:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680997794;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+b4CPK/d/63dBociVbqVxZl8Ud7NtT4rqI0mMs6Hxtk=;
-        b=DnNzppWNsd6MX+p4Bi67QFf1WxVdkp1tdjejic//3eeSJ7GFPo6mvK3+HdNeYmKhMBxR5U
-        ZyrHMSg/MCFCTvLJlAQCMS0uLGYB5aqDdzJv1pRmniW2iRuH+ueyA2jdmATXTVqiogApnq
-        XBypQ9iS0xrr22a8bnBzvsY/VyP6R+U=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-348-zIXIocZEN5uSs2XqcX9MvQ-1; Sat, 08 Apr 2023 19:49:52 -0400
-X-MC-Unique: zIXIocZEN5uSs2XqcX9MvQ-1
-Received: by mail-qt1-f197.google.com with SMTP id 13-20020ac8570d000000b003e37d3e6de2so1644337qtw.16
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Apr 2023 16:49:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680997792; x=1683589792;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+b4CPK/d/63dBociVbqVxZl8Ud7NtT4rqI0mMs6Hxtk=;
-        b=qGUYaMtj/oUPLAj/dK5LfjEzPis15fMEKilUz2tWjQMWeE/gUYIPD19dD+Pe33/pCy
-         hoApjzAM21+EnXa3ScA6UEcK9sTlYXydE2R2hAxccEGZUkrtAz8kVRmtXUfpS3uoJZ+A
-         SeVCrOl4UdbQYia0bFi4IocxRXqXrKPyP50/nd9/IelucdnOBrtDXTZfyM5p5QcrDXV/
-         0Z20mvs6VIYq2Gl88b1cAQQ2snEeyMcoldrIUs+VhOw/Gx4PJlRLv3PfVE8sG4g9SuJ+
-         Ux2FFdcS9hneGu1xdBtBnbiMegMCpaxzOEjXIOfPGqgCaFMn21KThHobUrdPDNnpiMSL
-         5ZLg==
-X-Gm-Message-State: AAQBX9e4N4y8Gym67MhL9t381wzwPNbyr8KFMILAeaEcnQ2pPHuhT0j/
-        IqL/ciMdH43vvENyft273iswlGzy7kZZGjGVyvRvGWftugapZVe1vaIPGILISoOQ2K1pJ6au/tl
-        71HwMeLmynnNqHNdiHPuP4Q==
-X-Received: by 2002:a05:6214:5186:b0:56e:bd59:40f1 with SMTP id kl6-20020a056214518600b0056ebd5940f1mr10078621qvb.48.1680997792522;
-        Sat, 08 Apr 2023 16:49:52 -0700 (PDT)
-X-Google-Smtp-Source: AKy350b9s+Hn8oRc0vE2U8KfoKsbxZieFmgtqG234h8LuJIMlXuXejttqZ3UaUVb6KZSrvnW4iKEoA==
-X-Received: by 2002:a05:6214:5186:b0:56e:bd59:40f1 with SMTP id kl6-20020a056214518600b0056ebd5940f1mr10078605qvb.48.1680997792302;
-        Sat, 08 Apr 2023 16:49:52 -0700 (PDT)
-Received: from localhost (ip98-179-76-75.ph.ph.cox.net. [98.179.76.75])
-        by smtp.gmail.com with ESMTPSA id 206-20020a370ad7000000b0074589d41342sm2311955qkk.17.2023.04.08.16.49.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 08 Apr 2023 16:49:51 -0700 (PDT)
-Date:   Sat, 8 Apr 2023 16:49:50 -0700
-From:   Jerry Snitselaar <jsnitsel@redhat.com>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        with ESMTP id S229379AbjDHX4Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2023 19:56:25 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 392157DA9;
+        Sat,  8 Apr 2023 16:56:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680998184; x=1712534184;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=SBjWLCDduqazACPY0rYViNrxuDYPCkxNDiJwaPS7Jjg=;
+  b=O3LmloptMUd9ILc5yPsjWbQHq46Q0V6KmZ8zpGF4sHeNHJGPBcIWSgos
+   +rrYz1jRkC1Itl1j1Ic4y86iI67yKF+FpO0olhOgJ+Bc5uJcYW2IXPPDT
+   S4KvP7iqC5tcW9tuy1NMiH3V5px1dcwaSWcw/JKHdhTgKKH/u4fdVqbh3
+   vK98YxkpoDP9filzIy+W1oc6C+KcGCbh9hPTI+JkuHeU4pqzUPKocRs7E
+   01SsdNV3M08p85NK1ng52SYtShOlnkoVp5gDWGvcpbqIPSop1cs0YooHZ
+   bXiPnlO8PlwCno1rIra7VUb3Oi4wHGqHS/V6Enm4KXGooH5ov9Tr9kM62
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10674"; a="345833281"
+X-IronPort-AV: E=Sophos;i="5.98,330,1673942400"; 
+   d="scan'208";a="345833281"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2023 16:56:23 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10674"; a="933943627"
+X-IronPort-AV: E=Sophos;i="5.98,330,1673942400"; 
+   d="scan'208";a="933943627"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 08 Apr 2023 16:56:18 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1plIPp-000UDp-1X;
+        Sat, 08 Apr 2023 23:56:17 +0000
+Date:   Sun, 9 Apr 2023 07:55:49 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Abel Vesa <abel.vesa@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     oe-kbuild-all@lists.linux.dev, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: Re: question about mpt3sas commit fae21608c31c
-Message-ID: <7ome37kxwh3jrq65vgare4n2ft6jxr5tb6opkadajacdmks7kf@bpw3ig2wmmjm>
-References: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
- <hwlhzyqc42lnkifu6izsrx4lpqgjltjnrrcyzxhxmawgx3emeg@qxadku6yknpa>
+Subject: Re: [PATCH v7 3/3] mmc: sdhci-msm: Switch to the new ICE API
+Message-ID: <202304090709.QHt43PE6-lkp@intel.com>
+References: <20230408214041.533749-4-abel.vesa@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <hwlhzyqc42lnkifu6izsrx4lpqgjltjnrrcyzxhxmawgx3emeg@qxadku6yknpa>
+In-Reply-To: <20230408214041.533749-4-abel.vesa@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 08, 2023 at 01:59:21PM -0700, Jerry Snitselaar wrote:
-> On Sat, Apr 08, 2023 at 12:18:29PM -0700, Jerry Snitselaar wrote:
-> > We've had some people trying to track a problem for months revolving
-> > around a system hanging at shutdown, and last thing they see being a
-> > message from mpt3sas about a reset. They quickly bisected down to the
-> > commit below, and reverted it made the problem go away for the
-> > customer.
-> > 
-> > b424eaa1b51c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
-> > 
-> 
-> That should be (grabbed the wrong commit id):
-> 
-> fae21608c31c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
->
-> > I got asked to look at something since I recently at another issue
-> > that involved mpt3sas at shutdown, so I was looking through the
-> > history, saw this commit being mentined. Looking at it, I'm not sure
-> > why it is doing what is doing.
-> > 
-> > It says it is to perform a soft reset, but that was already happening before this commit via:
-> > 
-> > scsih_shutdown -> mpt3sas_base_detach -> mpt3sas_base_free_resources -> _base_make_ioc_ready(ioc, SOFT_RESET);
-> > 
-> > The original submission [1] had the following commit message:
-> > 
-> > "During shutdown just move the IOC state to Ready state
-> > by issuing MUR. No need to free any IOC memory pools."
-> > 
-> > But is now skipping more than not freeing the memory pools. It no
-> > longer frees memory that was kalloc'd, it doesn't unmap something that
-> > was iomapped, it no longer cleans up the fault reset workqueue, and no
-> > longer calls the pci cleanup code. It also no longer does the things
-> > it moved to scsih_shutdown under the pci access mutex, nor uses the if
-> > condition that was in mpt3sas_base_free_resources.
-> > 
-> > [1] https://lore.kernel.org/r/20210705145951.32258-1-sreekanth.reddy@broadcom.com
-> > 
-> > 
-> > Am I missing something, and what the commit does here is really okay?
-> > 
+Hi Abel,
+
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next robh/for-next linus/master v6.3-rc5 next-20230405]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Abel-Vesa/dt-bindings-ufs-qcom-Add-ICE-phandle/20230409-054151
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230408214041.533749-4-abel.vesa%40linaro.org
+patch subject: [PATCH v7 3/3] mmc: sdhci-msm: Switch to the new ICE API
+config: ia64-allmodconfig (https://download.01.org/0day-ci/archive/20230409/202304090709.QHt43PE6-lkp@intel.com/config)
+compiler: ia64-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/ec033fe93e3a653b68ee5c28699b7cbe180ff625
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Abel-Vesa/dt-bindings-ufs-qcom-Add-ICE-phandle/20230409-054151
+        git checkout ec033fe93e3a653b68ee5c28699b7cbe180ff625
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=ia64 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=ia64 SHELL=/bin/bash drivers/mmc/host/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304090709.QHt43PE6-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/mmc/host/sdhci-msm.c:21:10: fatal error: soc/qcom/ice.h: No such file or directory
+      21 | #include <soc/qcom/ice.h>
+         |          ^~~~~~~~~~~~~~~~
+   compilation terminated.
 
 
-It looks like this deals with the fault reset workqueue no longer being cleaned up:
+vim +21 drivers/mmc/host/sdhci-msm.c
 
-0fde22c5420e ("scsi: mpt3sas: Stop fw fault watchdog work item during system shutdown")
+    20	
+  > 21	#include <soc/qcom/ice.h>
+    22	
 
-I still have questions about the other stuff that is skipped, or what
-problem was actually being solved by skipping the dma pool
-cleanup. Doesn't skipping that leave mappings behind in the iommu?
-
-Is any of this memory a location that the firmware was trying to write
-to before that is mentioned in the commit message?
-
-Regards,
-Jerry
-
-> > 
-> > Regards,
-> > Jerry
-> > 
-> 
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
