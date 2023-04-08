@@ -2,118 +2,160 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89DF3C7619A
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Apr 2023 21:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34388C77B6C
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Apr 2023 21:40:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229451AbjDHVAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Apr 2023 17:00:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59116 "EHLO
+        id S229521AbjDHVkw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Apr 2023 17:40:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjDHVAQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2023 17:00:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4C1A49C6
-        for <linux-scsi@vger.kernel.org>; Sat,  8 Apr 2023 13:59:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680987568;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=JB083fTTSxcCs2UaKyWljOb6rAwe9wu+A7E1B77ylxo=;
-        b=XoghHeQlKKXcfLnw60R9bVwO6GCbUKZx9M/njBXe0uVeUKI8iDB5nHkbcR/jUzuO1bmF3n
-        UnGjlIOMkzJhSC50y2ZJxgaONopD2KAAdxoHNBr7RILeQhjAqLLwR+85gO+bBgpY2A17HA
-        f57NSpM0muzBd785g2w+GxTG16dQb7k=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-81-O8DAQJdINgmmn0p8VIhx0g-1; Sat, 08 Apr 2023 16:59:24 -0400
-X-MC-Unique: O8DAQJdINgmmn0p8VIhx0g-1
-Received: by mail-qv1-f72.google.com with SMTP id l15-20020a0cd6cf000000b005df451a51ddso16689375qvi.9
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Apr 2023 13:59:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680987564; x=1683579564;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        with ESMTP id S229494AbjDHVkv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2023 17:40:51 -0400
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0814E9EE3
+        for <linux-scsi@vger.kernel.org>; Sat,  8 Apr 2023 14:40:50 -0700 (PDT)
+Received: by mail-wr1-x432.google.com with SMTP id v6so1519382wrv.8
+        for <linux-scsi@vger.kernel.org>; Sat, 08 Apr 2023 14:40:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1680990048; x=1683582048;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JB083fTTSxcCs2UaKyWljOb6rAwe9wu+A7E1B77ylxo=;
-        b=CGDPZQn5j19C9Kdaa3NeTf6adKoSoExhyNIfZLmpTI0Fb92tyBhD8PnMnSRovijy7w
-         ePBD1nZg1h7mEgb+fU8lwSA8s8famFhW23wxqRiRWAN/0XwczIS9betSQrYMdsxWAuy6
-         6Hp5xO88wwwW1g0oa3k3uP811ZKnCnvUDeya+mXnlz2f1Ipr24yXFaWRGBpMdWKmNcoQ
-         ZfOw17IFGA0Aoe2FZmIQr+uLyAVIBe7s777Ka2YEPvoDAGknjijCXLwDDYF7WKRBhoNA
-         L4uBGcRGzQe2VuSXaCQ49OZqRQV+0EEE5S1BmzxFuWL7g4ETSEMPjkjIXNgiXu0K9pD6
-         zABA==
-X-Gm-Message-State: AAQBX9cxsfdYCwIJsN/pvFGga8FEEkn+cKuJyjlKQ1zBsvHrP8bmHDYi
-        qENpoXxXNi5aL+j7Q8BeDVY4o+EB7kelobZiRy4xokPtlgIrWdIbyrZ4RvkfzcgXcI1MZEBB5Lo
-        EgnlydmoFY/TRnFZfWbf2cQ==
-X-Received: by 2002:a05:622a:1c8:b0:3b6:323d:bcac with SMTP id t8-20020a05622a01c800b003b6323dbcacmr11453639qtw.32.1680987564322;
-        Sat, 08 Apr 2023 13:59:24 -0700 (PDT)
-X-Google-Smtp-Source: AKy350aYUbzmXXNfn+2D5TYwhbESQknNyeaqwFmbX9EPTvGd9HoI3tRYmadT5MvPqFYYQ/X3JjklCA==
-X-Received: by 2002:a05:622a:1c8:b0:3b6:323d:bcac with SMTP id t8-20020a05622a01c800b003b6323dbcacmr11453628qtw.32.1680987564102;
-        Sat, 08 Apr 2023 13:59:24 -0700 (PDT)
-Received: from localhost (ip98-179-76-75.ph.ph.cox.net. [98.179.76.75])
-        by smtp.gmail.com with ESMTPSA id q75-20020a37434e000000b007485a383921sm2205619qka.116.2023.04.08.13.59.23
+        bh=G/ds8fvt8IhNIUkcMPcB2187U+f/tO5X7bx8/qa8ONM=;
+        b=m0SLzn1iqfD6YsYtHojGNxnFSimTvg28gxXYWGvhbeFi3ywBXyW2aKpPKcOOnk81GA
+         pLcEC/zzrZ2ZJakFH4GZvs1NXYVS8Q5ZATw+aSem6W2Z4reoZoq35ICKnVa68eA/Po/7
+         BFDtRtkmaD6WxD4wCiLae4gl/1Q2r4k3JeKUpjo012rA+ctcgAR0df1Cf5XPDm4XLmRV
+         YMWY1CvCaELFO2/x7NQzHDQWbhzCpl7SOTToN6mh4//P9fwC7b1iIqg+NZ8ZIVkIWySc
+         Pi2SUMiMC5Z6faMkDkzq3p3ZxBXZ2Nq+Es4E+Y0cqnd3Kht+YjeQRGlh9xH60wew+601
+         brew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680990048; x=1683582048;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=G/ds8fvt8IhNIUkcMPcB2187U+f/tO5X7bx8/qa8ONM=;
+        b=wx4DgxwaxQ5KIyUEu36zrDmbA1hsBV1C+SP96U5hbak3NfqoBVCVFaN15dzlnkALf8
+         iICm2aA4PHRj7qUOoX5QI3aBYMwd1FjxRnOvskApaZTKYtaXAaQkxgQriduouGQRZQor
+         V/nP1Oy0zQ79+4YbWwpHowleFVu6EWj8dfWxXUBXOxsprzQeQ5lx8p/x8g9JSaYqnwfV
+         vjoKiUN0uuTmPcd22pMhuQTqF+sLNg2NxH+32BxwSwXUFvV5ho8/c2mTV8/gwkccCWlF
+         ibKusJQQKjyUFDJfh8Lp8b+CQxeTJXSzciffG5w0BFvOQgSMcC79BjsawseUVINTGRIJ
+         n6BA==
+X-Gm-Message-State: AAQBX9d2IcZRMmWmayTAxWBW1FmqCI4I0VQlJ4le/PQka99BsoWTKooX
+        2WP8MQTnoz8s9lUCSRFuRnqqeA==
+X-Google-Smtp-Source: AKy350ZoIOX+1ULO+/6nI4Sk6F63spIEVpgG402AEJu/jOF7CaFaEsl7we9f/uNDu20eJD4ZJ49o7A==
+X-Received: by 2002:adf:dc07:0:b0:2e2:730a:c7de with SMTP id t7-20020adfdc07000000b002e2730ac7demr1863136wri.24.1680990048420;
+        Sat, 08 Apr 2023 14:40:48 -0700 (PDT)
+Received: from localhost.localdomain ([188.25.26.161])
+        by smtp.gmail.com with ESMTPSA id s6-20020a5d4ec6000000b002efb6e0c495sm3061377wrv.91.2023.04.08.14.40.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 08 Apr 2023 13:59:23 -0700 (PDT)
-Date:   Sat, 8 Apr 2023 13:59:21 -0700
-From:   Jerry Snitselaar <jsnitsel@redhat.com>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Sat, 08 Apr 2023 14:40:48 -0700 (PDT)
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: Re: question about mpt3sas commit fae21608c31c
-Message-ID: <hwlhzyqc42lnkifu6izsrx4lpqgjltjnrrcyzxhxmawgx3emeg@qxadku6yknpa>
-References: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
+Subject: [PATCH v7 1/3] dt-bindings: ufs: qcom: Add ICE phandle
+Date:   Sun,  9 Apr 2023 00:40:39 +0300
+Message-Id: <20230408214041.533749-2-abel.vesa@linaro.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230408214041.533749-1-abel.vesa@linaro.org>
+References: <20230408214041.533749-1-abel.vesa@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 08, 2023 at 12:18:29PM -0700, Jerry Snitselaar wrote:
-> We've had some people trying to track a problem for months revolving
-> around a system hanging at shutdown, and last thing they see being a
-> message from mpt3sas about a reset. They quickly bisected down to the
-> commit below, and reverted it made the problem go away for the
-> customer.
-> 
-> b424eaa1b51c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
-> 
+Starting with SM8550, the ICE will have its own devicetree node
+so add the qcom,ice property to reference it.
 
-That should be (grabbed the wrong commit id):
+Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+---
 
-fae21608c31c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
+The v6 is here:
+https://lore.kernel.org/all/20230407105029.2274111-3-abel.vesa@linaro.org/
 
-> I got asked to look at something since I recently at another issue
-> that involved mpt3sas at shutdown, so I was looking through the
-> history, saw this commit being mentined. Looking at it, I'm not sure
-> why it is doing what is doing.
-> 
-> It says it is to perform a soft reset, but that was already happening before this commit via:
-> 
-> scsih_shutdown -> mpt3sas_base_detach -> mpt3sas_base_free_resources -> _base_make_ioc_ready(ioc, SOFT_RESET);
-> 
-> The original submission [1] had the following commit message:
-> 
-> "During shutdown just move the IOC state to Ready state
-> by issuing MUR. No need to free any IOC memory pools."
-> 
-> But is now skipping more than not freeing the memory pools. It no
-> longer frees memory that was kalloc'd, it doesn't unmap something that
-> was iomapped, it no longer cleans up the fault reset workqueue, and no
-> longer calls the pci cleanup code. It also no longer does the things
-> it moved to scsih_shutdown under the pci access mutex, nor uses the if
-> condition that was in mpt3sas_base_free_resources.
-> 
-> [1] https://lore.kernel.org/r/20210705145951.32258-1-sreekanth.reddy@broadcom.com
-> 
-> 
-> Am I missing something, and what the commit does here is really okay?
-> 
-> 
-> Regards,
-> Jerry
-> 
+Changes since v6:
+ * Dropped the minItems for both the qcom,ice and the reg in the
+   qcom,ice compatile subschema, like Krzysztof suggested
+
+Changes since v5:
+ * dropped the sm8550 specific subschema and replaced it with one that
+   mutually excludes the qcom,ice vs both the ICE specific reg range
+   and the ICE clock
+
+Changes since v4:
+ * Added check for sm8550 compatible w.r.t. qcom,ice in order to enforce
+   it while making sure none of the other platforms are allowed to use it
+
+Changes since v3:
+ * dropped the "and drop core clock" part from subject line
+
+Changes since v2:
+ * dropped all changes except the qcom,ice property
+
+
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index c5a06c048389..10d426ba1959 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -70,6 +70,10 @@ properties:
+   power-domains:
+     maxItems: 1
+ 
++  qcom,ice:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the Inline Crypto Engine node
++
+   reg:
+     minItems: 1
+     maxItems: 2
+@@ -187,6 +191,26 @@ allOf:
+ 
+     # TODO: define clock bindings for qcom,msm8994-ufshc
+ 
++  - if:
++      properties:
++        qcom,ice:
++          maxItems: 1
++    then:
++      properties:
++        reg:
++          maxItems: 1
++        clocks:
++          minItems: 8
++          maxItems: 8
++    else:
++      properties:
++        reg:
++          minItems: 2
++          maxItems: 2
++        clocks:
++          minItems: 9
++          maxItems: 11
++
+ unevaluatedProperties: false
+ 
+ examples:
+-- 
+2.34.1
 
