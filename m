@@ -2,121 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6B4C77B70
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Apr 2023 23:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DC89C76196
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Apr 2023 00:10:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbjDGXHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Apr 2023 19:07:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33170 "EHLO
+        id S229643AbjDHAKU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Apr 2023 20:10:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229682AbjDGXHO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 19:07:14 -0400
-Received: from mail-oa1-x35.google.com (mail-oa1-x35.google.com [IPv6:2001:4860:4864:20::35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE593E068;
-        Fri,  7 Apr 2023 16:07:00 -0700 (PDT)
-Received: by mail-oa1-x35.google.com with SMTP id 586e51a60fabf-1842cddca49so89035fac.1;
-        Fri, 07 Apr 2023 16:07:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680908820; x=1683500820;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=vMcypocImtzxV7/I2Ii8yYYnZJvG/LB86W8XaeGMbZM=;
-        b=lNtMX+r+lAJIRIONbfqfkdV6kfPHZTkpNge7zneGuDWyEbLDVDyOYoEZaDcZ9ROM7P
-         dSXA5E3eLn3PgNaHdGCSyLzHsfGfnIRtHi7CNQGP4NNZ0GCp0ZSHK7OuKILbqHgBUE2g
-         6tkdxkO/h4392GCiSryc3DXUNoRhqNviE+OcVPPjXYR5aXwKwYbJPvmliVm6bzqA6A2B
-         lYMsGQZeQa1anMDlUsDndgNTJBugCkilBMl4sgcstwoMJrDSmssGYGoixan9Gv1Rk/1A
-         jeTWKt2epVN1tMuqvnOAIj+1kpdFolWz8YMqi43AJiEzE9xMqklNTn/5ZBCQmJCM9bCZ
-         f8ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680908820; x=1683500820;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vMcypocImtzxV7/I2Ii8yYYnZJvG/LB86W8XaeGMbZM=;
-        b=y9MvvtsSc1wlVE3HHZuSdKqfdxHKKkvOG884erPSRT+voagGPV8QDQLjqeWbE5cVID
-         2Ja1AUiKbvZO09O1N0vAFOO2t2p/WwtgfYqSVY/n1QaXI7ABnyJXlrSdl6UzyeaCxalL
-         JUUgg3JXyhGGyGOC1wc/+JDYCGg0RobfpGCRSGedY+YkUBzJnROMLGReL3CvA+EN/bpu
-         y5Op7fQqpLzrKrwqJpaT1SRzTZjxNlg8LoxQKpf8IhPG2jmuQ4l+UnZWcV1JzZZMVD1X
-         cpu7xZlQkijPjIZpjqBBz8WCb7vFWVtpS9KFYuKmgz6JWzmx/fs/1LDtBItI3L7sXdG5
-         t+wA==
-X-Gm-Message-State: AAQBX9ffq7JTgVeRqBGDqtOkscxnxposkqqGZL/fMbtmBAdkU9xJdrLS
-        VWT5POInBsoPqr74a5imVZU=
-X-Google-Smtp-Source: AKy350ZgBrDZXUkcqk0CIhjDZHKhTFYqy3aPWIQ15+brMZvnFwl5rCmnj/wPY7aDg1O0jPsWUlX8bw==
-X-Received: by 2002:a05:6870:e38c:b0:17a:c141:ffdc with SMTP id x12-20020a056870e38c00b0017ac141ffdcmr2213638oad.58.1680908820130;
-        Fri, 07 Apr 2023 16:07:00 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id 5-20020a4a0d05000000b0053b543b027bsm2069448oob.42.2023.04.07.16.06.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Apr 2023 16:06:59 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <e356c168-5e60-70f9-9985-34a909d97b6b@roeck-us.net>
-Date:   Fri, 7 Apr 2023 16:06:57 -0700
+        with ESMTP id S229454AbjDHAKT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2023 20:10:19 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B97A1206D;
+        Fri,  7 Apr 2023 17:10:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F50965470;
+        Sat,  8 Apr 2023 00:10:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33220C433EF;
+        Sat,  8 Apr 2023 00:10:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680912617;
+        bh=okAm7dvPQI8Xmx3ABwPMyvuvipeW06J4NsWZJZRNLAU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=BRBTZBtUo5UTZ02rCI45m2XEEEwvBingYjZrSIRu/KUIvqAhwbdZRTg2iKRa3aF7e
+         yv1cLpzMY1bDnV7E5jPaYhI/BHJE1RtMWX8Znm3bLI68x14HfmYizxFg7tsekWWoYL
+         oCg2QD6GuS2L5O3X2zyiAkrkBzCuFrHIXPdPoBwRMA7nsmZhOaL5vpfjPHIGNwLSsS
+         0ip1OzD6MnRNyK8bXZiqQkCHGB0h2q5jJddi1ZTyHFo88laV/rZt5ELMV4iVlSq+US
+         2GaI/jhstL12ha7ecAULffpAUtI6WVGtBz5mw9YsLDASmOhackAmmVqJ9dsExT/XJX
+         fTf7BZYZVH+Ew==
+From:   Josh Poimboeuf <jpoimboe@kernel.org>
+To:     x86@kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        Miroslav Benes <mbenes@suse.cz>, linux-btrfs@vger.kernel.org,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        "Guilherme G . Piccoli" <gpiccoli@igalia.com>,
+        Michael Kelley <mikelley@microsoft.com>
+Subject: [PATCH 00/12] Sprinkle more __noreturn
+Date:   Fri,  7 Apr 2023 17:09:53 -0700
+Message-Id: <cover.1680912057.git.jpoimboe@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH] ufs: hwmon: constify pointers to hwmon_channel_info
-Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Jean Delvare <jdelvare@suse.com>, linux-hwmon@vger.kernel.org
-References: <20230407150137.79947-1-krzysztof.kozlowski@linaro.org>
-From:   Guenter Roeck <linux@roeck-us.net>
-In-Reply-To: <20230407150137.79947-1-krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/23 08:01, Krzysztof Kozlowski wrote:
-> Statically allocated array of pointed to hwmon_channel_info can be made
-> const for safety.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> 
-> ---
-> 
-> This depends on hwmon core patch:
-> https://lore.kernel.org/all/20230406203103.3011503-2-krzysztof.kozlowski@linaro.org/
-> 
-> Therefore I propose this should also go via hwmon tree.
-> 
+Add some more __noreturn annotations.
 
-I am not going to apply patches for 10+ subsystems through the hwmon tree.
-This can only result in chaos. The dependent patch is available at
+Many of these have been flushed out by kernel IBT support which made
+objtool vmlinux validation much more common.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/groeck/linux-staging.git hwmon-const
+These annotations are generally a good thing as they improve readability
+and code generation.
 
-or wait until after the next commit window to apply this patch.
 
-Thanks,
-Guenter
+Guilherme G. Piccoli (1):
+  x86/hyperv: Mark hv_ghcb_terminate() as noreturn
 
-> Cc: Jean Delvare <jdelvare@suse.com>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: linux-hwmon@vger.kernel.org
-> ---
->   drivers/ufs/core/ufs-hwmon.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-hwmon.c b/drivers/ufs/core/ufs-hwmon.c
-> index 4c6a872b7a7c..229e2ad70903 100644
-> --- a/drivers/ufs/core/ufs-hwmon.c
-> +++ b/drivers/ufs/core/ufs-hwmon.c
-> @@ -146,7 +146,7 @@ static umode_t ufs_hwmon_is_visible(const void *_data, enum hwmon_sensor_types t
->   	return 0;
->   }
->   
-> -static const struct hwmon_channel_info *ufs_hwmon_info[] = {
-> +static const struct hwmon_channel_info * const ufs_hwmon_info[] = {
->   	HWMON_CHANNEL_INFO(temp, HWMON_T_ENABLE | HWMON_T_INPUT | HWMON_T_CRIT | HWMON_T_LCRIT),
->   	NULL
->   };
+Josh Poimboeuf (10):
+  init: Mark [arch_call_]rest_init() __noreturn
+  init: Mark start_kernel() __noreturn
+  x86/head: Mark *_start_kernel() __noreturn
+  btrfs: Mark btrfs_assertfail() __noreturn
+  arm64/cpu: Mark cpu_park_loop() and friends __noreturn
+  cpu: Mark panic_smp_self_stop() __noreturn
+  cpu: Mark nmi_panic_self_stop() __noreturn
+  x86/cpu: Mark {hlt,resume}_play_dead() __noreturn
+  objtool: Include weak functions in global_noreturns check
+  scsi: message: fusion: Mark mpt_halt_firmware() __noreturn
+
+ arch/arm/kernel/smp.c              |  2 +-
+ arch/arm64/include/asm/exception.h |  2 +-
+ arch/arm64/include/asm/smp.h       |  7 +++----
+ arch/arm64/kernel/entry-common.c   |  2 +-
+ arch/arm64/kernel/smp.c            | 10 ++++++----
+ arch/arm64/kernel/traps.c          |  3 +--
+ arch/powerpc/kernel/setup_64.c     |  2 +-
+ arch/s390/kernel/setup.c           |  2 +-
+ arch/x86/hyperv/ivm.c              |  2 +-
+ arch/x86/include/asm/mshyperv.h    |  2 +-
+ arch/x86/include/asm/reboot.h      |  1 -
+ arch/x86/include/asm/setup.h       |  6 +++---
+ arch/x86/include/asm/smp.h         |  2 +-
+ arch/x86/kernel/head32.c           |  2 +-
+ arch/x86/kernel/head64.c           |  4 ++--
+ arch/x86/kernel/reboot.c           |  2 +-
+ arch/x86/kernel/smpboot.c          |  2 +-
+ arch/x86/power/cpu.c               |  2 +-
+ drivers/message/fusion/mptbase.c   |  2 +-
+ drivers/message/fusion/mptbase.h   |  2 +-
+ fs/btrfs/messages.c                |  2 +-
+ fs/btrfs/messages.h                |  2 +-
+ include/linux/smp.h                |  4 ++--
+ include/linux/start_kernel.h       |  6 +++---
+ init/main.c                        |  6 +++---
+ kernel/panic.c                     |  4 ++--
+ tools/objtool/check.c              | 20 ++++++++++++++++----
+ 27 files changed, 57 insertions(+), 46 deletions(-)
+
+-- 
+2.39.2
 
