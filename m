@@ -2,95 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 721C8C77B61
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Apr 2023 08:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F20AFC77B6E
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Apr 2023 22:38:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229452AbjDII7i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Apr 2023 04:59:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58356 "EHLO
+        id S229570AbjDIWin (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Apr 2023 18:38:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjDII7h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Apr 2023 04:59:37 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 111F44C1B
-        for <linux-scsi@vger.kernel.org>; Sun,  9 Apr 2023 01:59:36 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1plQtY-0002nQ-Ou; Sun, 09 Apr 2023 10:59:32 +0200
-Message-ID: <2e585944-b34f-5df0-54e3-fba1205c4c1f@leemhuis.info>
-Date:   Sun, 9 Apr 2023 10:59:32 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: question about mpt3sas commit b424eaa1b51c
-Content-Language: en-US, de-DE
-To:     Jerry Snitselaar <jsnitsel@redhat.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S229445AbjDIWim (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Apr 2023 18:38:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE793581;
+        Sun,  9 Apr 2023 15:38:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 75EAD60C91;
+        Sun,  9 Apr 2023 22:38:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FEABC433D2;
+        Sun,  9 Apr 2023 22:38:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681079920;
+        bh=bp+Z9WwA1xQfPySpTfK4b9+Tcx6sde4HaYQ4IZhMPeY=;
+        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
+        b=l5yIOOA3piwHRGWc//od5DUAHgpW1oajA167D3mf0/8woNUW5gnpKxbLgyJq1YIZH
+         c+uq3Sx28cSv09v796o5Jij6lMcC9q7TuB3PLNMXErkSFwU4WZHbwI+jxgplzn5q1O
+         hoGuOWWYuECWTcebdVRJoI9FsCyaSBYSUSi6Cl8dak1fks4NdXX9rXf834Kkgne5r5
+         ql/c1eTqpnPQPdu+rPryv55QzeQWEhFjh9YX4Sc11tB32KKbf1bvMFmEBa/Dcj7Bb8
+         Ox3SMka22GZ4oMPknzd7+IdckgG9RXQwZQyV/JFiPPkIFjXM87ltPycfgNSCFYiu7y
+         Cd8NMaSjyMbrw==
+Date:   Mon, 10 Apr 2023 00:38:36 +0200 (CEST)
+From:   Jiri Kosina <jikos@kernel.org>
+To:     Ding Hui <dinghui@sangfor.com.cn>
+cc:     jejb@linux.ibm.com,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Linux kernel regressions list <regressions@lists.linux.dev>
-References: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
-From:   "Linux regression tracking #adding (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1681030776;87ca2929;
-X-HE-SMSGID: 1plQtY-0002nQ-Ou
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Michal Kolar <mich.k@seznam.cz>
+Subject: Re: [PATCH] scsi: ses: Handle enclosure with just a primary component
+ gracefully
+In-Reply-To: <b71bca20-401f-c877-168c-c26ca1c282d1@sangfor.com.cn>
+Message-ID: <nycvar.YFH.7.76.2304100037190.29760@cbobk.fhfr.pm>
+References: <nycvar.YFH.7.76.2304042122270.29760@cbobk.fhfr.pm> <fa174980e5c9bdafae3426fffe45b97b37f69c84.camel@linux.ibm.com> <b71bca20-401f-c877-168c-c26ca1c282d1@sangfor.com.cn>
+User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[CCing the regression list, as it should be in the loop for regressions:
-https://docs.kernel.org/admin-guide/reporting-regressions.html]
+On Wed, 5 Apr 2023, Ding Hui wrote:
 
-[TLDR: I'm adding this report to the list of tracked Linux kernel
-regressions; the text you find below is based on a few templates
-paragraphs you might have encountered already in similar form.
-See link in footer if these mails annoy you.]
-
-On 08.04.23 21:18, Jerry Snitselaar wrote:
-> We've had some people trying to track a problem for months revolving
-> around a system hanging at shutdown, and last thing they see being a
-> message from mpt3sas about a reset. They quickly bisected down to the
-> commit below, and reverted it made the problem go away for the
-> customer.
+> >> This reverts 3fe97ff3d9493 ("scsi: ses: Don't attach if enclosure has
+> >> no components") and introduces proper handling of case where there
+> >> are no detected secondary components, but primary component
+> >> (enumerated in num_enclosures) does exist. That fix was originally
+> >> proposed by Ding Hui <dinghui@sangfor.com.cn>.
+> > 
+> > I think everything in here looks fine except this:
+> > 
+> >> --- a/drivers/scsi/ses.c
+> >> +++ b/drivers/scsi/ses.c
+> >> @@ -509,9 +509,6 @@ static int ses_enclosure_find_by_addr(struct
+> >> enclosure_device *edev,
+> >>          int i;
+> >>          struct ses_component *scomp;
+> >>   -       if (!edev->component[0].scratch)
+> >> -               return 0;
+> >> -
+> >>          for (i = 0; i < edev->components; i++) {
+> >>                  scomp = edev->component[i].scratch;
+> >>                  if (scomp->addr != efd->addr)
+> > 
+> > If you remove the check, then scomp could be NULL here and we'll oops
+> > on scomp->addr.
 > 
-> b424eaa1b51c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
+> I think we should remove the check, because the edev->components 
+> represented the effectiveness of array pointers, so we need check 
+> edev->components firstly instead of checking edev->component[0].scratch, 
+> if edev->components is 0, we won't enter the for loop, don't worry about 
+> dereference scomp.
 
-FWIW, that should have been fae21608c31c ("scsi: mpt3sas: Transition IOC
-to Ready state during shutdown") (see reply-to-self from Jerry)
+Right you are. So v1 is actually more correct.
 
-> I got asked to look at something since I recently at another issue
-> that involved mpt3sas at shutdown, so I was looking through the
-> history, saw this commit being mentined. Looking at it, I'm not sure
-> why it is doing what is doing.
-> [...]
+Martin, could you please consider adding
 
-Thanks for the report. To be sure the issue doesn't fall through the
-cracks unnoticed, I'm adding it to regzbot, the Linux kernel regression
-tracking bot:
+	Tested-by: Michal Kolar <mich.k@seznam.cz>
 
-#regzbot ^introduced fae21608c31c
-#regzbot title scsi: mpt3sas: systems hang at shutdown
-#regzbot ignore-activity
+to v1 and applying? Thanks,
 
-This isn't a regression? This issue or a fix for it are already
-discussed somewhere else? It was fixed already? You want to clarify when
-the regression started to happen? Or point out I got the title or
-something else totally wrong? Then just reply and tell me -- ideally
-while also telling regzbot about it, as explained by the page listed in
-the footer of this mail.
+-- 
+Jiri Kosina
+SUSE Labs
 
-Developers: When fixing the issue, remember to add 'Link:' tags pointing
-to the report (the parent of this mail). See page linked in footer for
-details.
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-That page also explains what to do if mails like this annoy you.
