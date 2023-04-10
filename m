@@ -2,101 +2,182 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC5BC77B61
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Apr 2023 19:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6DC4C77B61
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Apr 2023 20:02:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229754AbjDJTMP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Apr 2023 15:12:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43898 "EHLO
+        id S229841AbjDJUCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Apr 2023 16:02:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229746AbjDJTMK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2023 15:12:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FA25171B
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2023 12:11:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681153883;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=FhYtLENcNtcLyj9Yw2HJ5wz9v0cgAEwMxc8s0tHjoZA=;
-        b=dxuXOJz8urF0yodPJeTGMdXMo9bpb6PD8gHJCXX8OQIPkKhqeDb9ssQj9xzG4yAVj7reSa
-        JW1QHAdPeuvvHXGOY/2AhtUm2bOZ0j9/F+0Q7OAiUr0etjYjo/NzfLfJ4/kqbdjl7IIsrZ
-        33TpIjUTAoq6Bb1ZlBYVL65YdRlo4wE=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-339-g0sfIhgJOKebvqPo2cb-6w-1; Mon, 10 Apr 2023 15:11:13 -0400
-X-MC-Unique: g0sfIhgJOKebvqPo2cb-6w-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 9B7DD185A78B;
-        Mon, 10 Apr 2023 19:11:12 +0000 (UTC)
-Received: from localhost.redhat.com (unknown [10.2.16.6])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F2BED40C20FA;
-        Mon, 10 Apr 2023 19:11:11 +0000 (UTC)
-From:   Chris Leech <cleech@redhat.com>
-To:     linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        Hannes Reinecke <hare@suse.de>,
-        Lee Duncan <leeman.duncan@gmail.com>, netdev@vger.kernel.org
-Cc:     Chris Leech <cleech@redhat.com>
-Subject: [PATCH 11/11] iscsi: force destroy sesions when a network namespace exits
-Date:   Mon, 10 Apr 2023 12:10:33 -0700
-Message-Id: <20230410191033.1069293-3-cleech@redhat.com>
-In-Reply-To: <83de4002-6846-2f90-7848-ef477f0b0fe5@suse.de>
-References: <83de4002-6846-2f90-7848-ef477f0b0fe5@suse.de>
+        with ESMTP id S229804AbjDJUCv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2023 16:02:51 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA641FD7
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2023 13:02:48 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id ik20so5494992plb.3
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2023 13:02:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1681156968; x=1683748968;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=HpioAPXxW+v4Q4xUafxth5Qioe7sUCWQU1eCRcCSF4E=;
+        b=OpSVB2xGYnoW5ZPOAmBnJFAuzcl4KWcOCssIXXoleg7BMgFiMKR6onztmHu2iPTwqV
+         nlirkxgXvfjkEPyH+/Rw9CqIAFpt6o0d5KXy01HdZ4VSxoR8Cdr5bJ+/wtCvtRInRhlp
+         Du9/tQ0WN8TytZHVtzCSsUEzJdQ4lnRPIeo8cTdnVr9SKRvHR4szvHAHahSq7IipAsLL
+         l3fiTUSzkx8hBk08XSdL2o0DNbEAqNUDwG56S6yWXYvoXxal+x23wrDXYtE7d3NAUMLw
+         Co11Qx7Q8VwF5wDNnGhH4ztFDGFLUNRgyq4wkQ2HewgSRwUVhVPkscfkT420mVaj04Ub
+         ejqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1681156968; x=1683748968;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HpioAPXxW+v4Q4xUafxth5Qioe7sUCWQU1eCRcCSF4E=;
+        b=Yc/UJs1gxDKTvcJ25X8WOGn3P5YuCgaQLgEjJgZrkl7QQLyg84myRf6y7O8o90aWcf
+         pzK2FKKAvgyhukyJgAao4Qs7LylN1mBlvZL44qNzQW4cXK1AfBN1tfyH/kTeINlYJJ9U
+         yOy4CgVF8rjjTTuniq4tDaR8jV1upYdKXB11LqJLJLc9bkF5HCdlvmy8BHwvTV1tfFhV
+         Nytswbpa7+d1murNY8hQQXVa1xnOtOFWI/GRHD1M0pEcIX0kjsCDqRZQnrGgGkMkCX26
+         lJ895dStLl7MFkSr9e4xhK6haiQaNfxeLADhjVejAxHNiZfTXduAA2GolMgHkSX8kuPd
+         g4kA==
+X-Gm-Message-State: AAQBX9fLOFgbC4EVnhAE60vOY0nrAn1ygu/q6t4qz26gpciktTMJbPYn
+        lxh1rEhEYZfQn/MSY66iyQsqgg==
+X-Google-Smtp-Source: AKy350b82capCtNuSEsvxElVHvbtJETNgyp2B+atrv+RlVkQiQyDeGAflx7JoQTMQzRsKIJ+MsvcRg==
+X-Received: by 2002:a17:902:c404:b0:1a2:7356:1ecd with SMTP id k4-20020a170902c40400b001a273561ecdmr17301528plk.5.1681156967766;
+        Mon, 10 Apr 2023 13:02:47 -0700 (PDT)
+Received: from google.com ([2620:15c:2d1:203:8e63:90de:efab:9bf6])
+        by smtp.gmail.com with ESMTPSA id r19-20020a170902be1300b001a072aedec7sm8201345pls.75.2023.04.10.13.02.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Apr 2023 13:02:47 -0700 (PDT)
+Date:   Mon, 10 Apr 2023 13:02:35 -0700
+From:   Nick Desaulniers <ndesaulniers@google.com>
+To:     Josh Poimboeuf <jpoimboe@kernel.org>
+Cc:     x86@kernel.org, linux-kernel@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        Miroslav Benes <mbenes@suse.cz>, linux-btrfs@vger.kernel.org,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        "Guilherme G . Piccoli" <gpiccoli@igalia.com>,
+        Michael Kelley <mikelley@microsoft.com>, nathan@kernel.org,
+        llvm@lists.linux.dev
+Subject: Re: [PATCH 01/11] init: Mark [arch_call_]rest_init() __noreturn
+Message-ID: <ZDRrW9+FrGxgw6Ok@google.com>
+References: <cover.1680912057.git.jpoimboe@kernel.org>
+ <b24a972397061a67d46ff5a98657e352040f427a.1680912057.git.jpoimboe@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b24a972397061a67d46ff5a98657e352040f427a.1680912057.git.jpoimboe@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The namespace is gone, so there is no userspace to clean up.
-Force close all the sessions.
+On Fri, Apr 07, 2023 at 05:09:54PM -0700, Josh Poimboeuf wrote:
+> Fixes the following warning:
+> 
+>   init/main.o: warning: objtool: start_kernel+0x4ad: unreachable instruction
+> 
+> Signed-off-by: Josh Poimboeuf <jpoimboe@kernel.org>
 
-This should be enough for software transports, there's no implementation
-of migrating physical iSCSI hosts between network namespaces currently.
+Ha! I was just looking into this, by coincidence.
+https://github.com/ClangBuiltLinux/linux/issues/1815#issuecomment-1489113303
 
-Signed-off-by: Chris Leech <cleech@redhat.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+Generally, the compiler can infer when a function does not return, but
+it's not safe to do so when the definition is weak, since the strong
+definition may not be, so the caller must not make optimizations based
+on such an assumption.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 3a068d8eca2d..8fafa8f0e0df 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -5200,9 +5200,27 @@ static int __net_init iscsi_net_init(struct net *net)
- 
- static void __net_exit iscsi_net_exit(struct net *net)
- {
-+	struct iscsi_cls_session *session, *tmp;
-+	struct iscsi_transport *transport;
- 	struct iscsi_net *isn;
-+	unsigned long flags;
-+	LIST_HEAD(sessions);
- 
- 	isn = net_generic(net, iscsi_net_id);
-+
-+	/* force session destruction, there is no userspace anymore */
-+	spin_lock_irqsave(&isn->sesslock, flags);
-+	list_for_each_entry_safe(session, tmp, &isn->sesslist, sess_list) {
-+		list_move_tail(&session->sess_list, &sessions);
-+	}
-+	spin_unlock_irqrestore(&isn->sesslock, flags);
-+	list_for_each_entry_safe(session, tmp, &sessions, sess_list) {
-+		device_for_each_child(&session->dev, NULL,
-+				      iscsi_iter_force_destroy_conn_fn);
-+		transport = session->transport;
-+		transport->destroy_session(session);
-+	}
-+
- 	netlink_kernel_release(isn->nls);
- 	isn->nls = NULL;
- }
--- 
-2.39.2
+https://reviews.llvm.org/D147177 (abandoned, but has more info)
 
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+
+(I agree with the first two patches, since those are ones I was just
+looking at.  Unfortunately, some security embargo just lifted on
+https://bugs.chromium.org/p/llvm/issues/detail?id=30 which a clang-16
+change is causing the stack canaries to be set+checked again in
+start_kernel. I'm about to meet with LLVM folks at Intel in 30 minutes
+to discuss walking back some of the changes since I strongly disagree
+with them.  But merging this series will cause boot failures with
+clang-16, and I would appreciate some time to sort this out before this
+series is merged. It's my top priority.)
+
+> ---
+>  arch/s390/kernel/setup.c     | 2 +-
+>  include/linux/start_kernel.h | 4 ++--
+>  init/main.c                  | 4 ++--
+>  tools/objtool/check.c        | 2 ++
+>  4 files changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/arch/s390/kernel/setup.c b/arch/s390/kernel/setup.c
+> index 8ec5cdf9dadc..4259b6c50516 100644
+> --- a/arch/s390/kernel/setup.c
+> +++ b/arch/s390/kernel/setup.c
+> @@ -396,7 +396,7 @@ int __init arch_early_irq_init(void)
+>  	return 0;
+>  }
+>  
+> -void __init arch_call_rest_init(void)
+> +void __init __noreturn arch_call_rest_init(void)
+>  {
+>  	unsigned long stack;
+>  
+> diff --git a/include/linux/start_kernel.h b/include/linux/start_kernel.h
+> index 8b369a41c03c..864921e54c92 100644
+> --- a/include/linux/start_kernel.h
+> +++ b/include/linux/start_kernel.h
+> @@ -9,7 +9,7 @@
+>     up something else. */
+>  
+>  extern asmlinkage void __init start_kernel(void);
+> -extern void __init arch_call_rest_init(void);
+> -extern void __ref rest_init(void);
+> +extern void __init __noreturn arch_call_rest_init(void);
+> +extern void __ref __noreturn rest_init(void);
+>  
+>  #endif /* _LINUX_START_KERNEL_H */
+> diff --git a/init/main.c b/init/main.c
+> index 4425d1783d5c..161ed956d738 100644
+> --- a/init/main.c
+> +++ b/init/main.c
+> @@ -683,7 +683,7 @@ static void __init setup_command_line(char *command_line)
+>  
+>  static __initdata DECLARE_COMPLETION(kthreadd_done);
+>  
+> -noinline void __ref rest_init(void)
+> +noinline void __ref __noreturn rest_init(void)
+>  {
+>  	struct task_struct *tsk;
+>  	int pid;
+> @@ -889,7 +889,7 @@ static int __init early_randomize_kstack_offset(char *buf)
+>  early_param("randomize_kstack_offset", early_randomize_kstack_offset);
+>  #endif
+>  
+> -void __init __weak arch_call_rest_init(void)
+> +void __init __weak __noreturn arch_call_rest_init(void)
+>  {
+>  	rest_init();
+>  }
+> diff --git a/tools/objtool/check.c b/tools/objtool/check.c
+> index cae6ac6ff246..e7442e7ad676 100644
+> --- a/tools/objtool/check.c
+> +++ b/tools/objtool/check.c
+> @@ -202,6 +202,7 @@ static bool __dead_end_function(struct objtool_file *file, struct symbol *func,
+>  		"__reiserfs_panic",
+>  		"__stack_chk_fail",
+>  		"__ubsan_handle_builtin_unreachable",
+> +		"arch_call_rest_init",
+>  		"arch_cpu_idle_dead",
+>  		"cpu_bringup_and_idle",
+>  		"cpu_startup_entry",
+> @@ -217,6 +218,7 @@ static bool __dead_end_function(struct objtool_file *file, struct symbol *func,
+>  		"machine_real_restart",
+>  		"make_task_dead",
+>  		"panic",
+> +		"rest_init",
+>  		"rewind_stack_and_make_dead",
+>  		"sev_es_terminate",
+>  		"snp_abort",
+> -- 
+> 2.39.2
+> 
+> 
