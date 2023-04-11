@@ -2,158 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23441C77B6F
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 15:44:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C53A1C77B6F
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 17:31:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229704AbjDKPoe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 11:44:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33258 "EHLO
+        id S229683AbjDKRbZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 13:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229477AbjDKPod (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 11:44:33 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65EA5173A
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 08:43:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681227828;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e+9zXyi8zdboRFVIHdeXsgxqr04iK6BIwTRIv6+bBdk=;
-        b=Io0UGuXHX+v1jwF8Y4NHI5EVbVNYk6p0XEF74st/DBwcInGFWpl/IuV9XdxAYfwhakrl2m
-        PJOY3DWkS7Bih6eVIavGLvhmNnNleUAVJUCZWL65Q+uCJbom9gKmwY3Y7u5h1v6UN1NEgh
-        v0LyrY43q4VGg7rbOjrqzT4BekBisYs=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-81-Q-RgbHVNMUWA6YjaGyb4Gw-1; Tue, 11 Apr 2023 11:43:38 -0400
-X-MC-Unique: Q-RgbHVNMUWA6YjaGyb4Gw-1
-Received: by mail-qk1-f200.google.com with SMTP id n129-20020a374087000000b0074a2ff16363so13030849qka.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 08:43:38 -0700 (PDT)
+        with ESMTP id S229498AbjDKRbY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 13:31:24 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6855B81
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 10:31:22 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id j8so7127084pjy.4
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 10:31:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681227817; x=1683819817;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=e+9zXyi8zdboRFVIHdeXsgxqr04iK6BIwTRIv6+bBdk=;
-        b=BkFw069GEMm/rmOeCBEs5qPh5FuX6M+NkBpZxp0vqhqQL1M0oHoT6TSB8uSw3Lx8uV
-         /M58YEw+8ZXNscRp/GMhucT7MY1nKts+AkUNSt5SLbAUOhmaZd4HiSpwA1BHBsAZWJZa
-         gWkUGIjS4nOSL9DDttogNk+F1iznZBBML9EJ+8Z03TW2WSLt87Nbn8fzyCBf7rfq7+L+
-         uuyxn9XLpBSY0mzD0O+DmjByblp9KBV8QBVTwDhU1opp/GJpK2w8yV6xgtO5XruDr6ja
-         KgJncM/2bBABjPap45TuJwt/y17ogZPX8RcXRgOgPUmSTVCWLmYvTyFw+bURdH5ZzG2H
-         MJRw==
-X-Gm-Message-State: AAQBX9e+8Em+EkOavdJIOaKSZivWeY8ZpA7+jgIdYBMdkKkzm/woqP6L
-        XBe+JMJQgHfqdbapZHypPgLW1K2uZXVFZXzdMOHrDLGaAEyD/Y/Ps8oapFmTKiOfdQgCrKSK4pO
-        m8biduJlxYGNxa+o5SUjbciaICWauGQ==
-X-Received: by 2002:a05:622a:11c7:b0:3bf:d196:5e27 with SMTP id n7-20020a05622a11c700b003bfd1965e27mr23696796qtk.20.1681227817707;
-        Tue, 11 Apr 2023 08:43:37 -0700 (PDT)
-X-Google-Smtp-Source: AKy350bLPgq16DQg/CiDMoGUc4XZJGdfXNeHdDerjD4rh2UaoizJ/23PqeE7Kl1NIxklYcYZbWJ8oA==
-X-Received: by 2002:a05:622a:11c7:b0:3bf:d196:5e27 with SMTP id n7-20020a05622a11c700b003bfd1965e27mr23696777qtk.20.1681227817480;
-        Tue, 11 Apr 2023 08:43:37 -0700 (PDT)
-Received: from [192.168.1.52] (ip98-179-76-75.ph.ph.cox.net. [98.179.76.75])
-        by smtp.gmail.com with ESMTPSA id n9-20020a374009000000b00742bc037f29sm4026759qka.120.2023.04.11.08.43.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 08:43:36 -0700 (PDT)
-Message-ID: <4b16b673ba4d38417353970628e494714fcc1937.camel@redhat.com>
-Subject: Re: question about mpt3sas commit b424eaa1b51c
-From:   Jerry Snitselaar <jsnitsel@redhat.com>
-To:     Tomas Henzl <thenzl@redhat.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Date:   Tue, 11 Apr 2023 08:43:34 -0700
-In-Reply-To: <3b2829ee-93f1-feb1-d113-cbc084d23149@redhat.com>
-References: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
-         <3b2829ee-93f1-feb1-d113-cbc084d23149@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+        d=1e100.net; s=20210112; t=1681234282; x=1683826282;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DoMemKZVopLmI/OLnpELfMdf6JqXuCRfYsTdsuU7oqM=;
+        b=tXd77jQ7sJT4tF35r9Sz3t1b/FLyzpLlCREVxKLjoE7+E8O/BhmivToWZ5mvLHC5Z0
+         6RxlmqqciyZNOvo1u21PgrYvUktupYTncrCfwKOG+HIfM2YWDIsXkZ9aXJb6YiEax8hM
+         51LUneg2aHQW3t4jrI+9itkdYXv+cbWPwEPGwQdIHIv8mllPdYFcXcXHUjPGnp6vpGBX
+         BkG1Xd8tIIUzjs4U7THQ8Jtro13fx8GIIsqKsoZYJ1j9Q2iEufSI0FcVoQYdMLoTdayg
+         /8XDIVHUsPJUtqA5GSWY3DEzSxYoIyjNMmyK4+VdiIzt3GgYqinP25pV+XZHNXndhxjI
+         D48Q==
+X-Gm-Message-State: AAQBX9dYi5CUK0HQvs22W3MMBbWck/jqPWSB0H2ZLfAX4qyx/yxdk1y8
+        wbIyruSZc96x2x10z2M9EPY=
+X-Google-Smtp-Source: AKy350YzCX091sROMhMFEuXLZsBLUp93UCcB0DEaN2/7oGF2eMfsVgCx52J9MndHZr+mRSMhvEjfNQ==
+X-Received: by 2002:a17:90b:4b0a:b0:23f:10ee:feef with SMTP id lx10-20020a17090b4b0a00b0023f10eefeefmr19635106pjb.19.1681234282333;
+        Tue, 11 Apr 2023 10:31:22 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:646f:c9f7:828a:8b03? ([2620:15c:211:201:646f:c9f7:828a:8b03])
+        by smtp.gmail.com with ESMTPSA id jd2-20020a170903260200b001a527761c31sm6653440plb.79.2023.04.11.10.31.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 11 Apr 2023 10:31:21 -0700 (PDT)
+Message-ID: <0c8b4904-31f4-d21a-7554-6525a264293b@acm.org>
+Date:   Tue, 11 Apr 2023 10:31:19 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH] scsi: ufs: Increase the START STOP UNIT timeout from 1 s
+ to 10 s
+Content-Language: en-US
+To:     Adrian Hunter <adrian.hunter@intel.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230411001132.1239225-1-bvanassche@acm.org>
+ <17217146-9c07-3963-fd32-02704632330d@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <17217146-9c07-3963-fd32-02704632330d@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2023-04-11 at 15:09 +0200, Tomas Henzl wrote:
-> On 4/8/23 21:18, Jerry Snitselaar wrote:
-> > We've had some people trying to track a problem for months
-> > revolving
-> > around a system hanging at shutdown, and last thing they see being
-> > a
-> > message from mpt3sas about a reset. They quickly bisected down to
-> > the
-> > commit below, and reverted it made the problem go away for the
-> > customer.
-> >=20
-> > b424eaa1b51c ("scsi: mpt3sas: Transition IOC to Ready state during
-> > shutdown")
-> >=20
-> > I got asked to look at something since I recently at another issue
-> > that involved mpt3sas at shutdown, so I was looking through the
-> > history, saw this commit being mentined. Looking at it, I'm not
-> > sure
-> > why it is doing what is doing.
-> >=20
-> > It says it is to perform a soft reset, but that was already
-> > happening before this commit via:
-> >=20
-> > scsih_shutdown -> mpt3sas_base_detach ->
-> > mpt3sas_base_free_resources -> _base_make_ioc_ready(ioc,
-> > SOFT_RESET);
-> >=20
-> > The original submission [1] had the following commit message:
-> >=20
-> > "During shutdown just move the IOC state to Ready state
-> > by issuing MUR. No need to free any IOC memory pools."
-> >=20
-> > But is now skipping more than not freeing the memory pools. It no
-> > longer frees memory that was kalloc'd, it doesn't unmap something
-> > that
-> > was iomapped, it no longer cleans up the fault reset workqueue, and
-> > no
-> > longer calls the pci cleanup code. It also no longer does the
-> > things
-> > it moved to scsih_shutdown under the pci access mutex, nor uses the
-> > if
-> > condition that was in mpt3sas_base_free_resources.
-> >=20
-> > [1]
-> > https://lore.kernel.org/r/20210705145951.32258-1-sreekanth.reddy@broadc=
-om.com
-> >=20
-> >=20
-> > Am I missing something, and what the commit does here is really
-> > okay?
->=20
-> When a driver's shutdown method is called it may be still processing
-> in
-> parallel I/Os (that may also happen any time later) so not releasing
-> the
-> resources the driver has allocated is correct. A next step is then a
-> power off or a boot of a new kernel anyway.
-> A driver should stop DMA transfers and IRQ's, silence itself and when
-> needed inform the attached hw to flush memory or whatever else.
->=20
+On 4/11/23 01:39, Adrian Hunter wrote:
+> On 11/04/23 03:11, Bart Van Assche wrote:
+>> One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
+>> Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
+>> Hence this patch that increases the UFS timeout to 10 s. This patch can
+>> cause the total timeout to exceed 20 s, the Android shutdown timeout.
+>> This is fine since the loop around ufshcd_execute_start_stop() exists to
+>> deal with unit attentions and because unit attentions are reported
+>> quickly.
+>>
+>> Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
+> 
+> Did that commit (shown below) actually increase the timeout
+> because the previous commit (8f2c96420c6e) had put
+> "remaining / HZ" when it should have been just "remaining"?
+> Or am I misreading?
+> 
+> So maybe it also needs a fixes tag for 8f2c96420c6e.
 
-Should it clean up dma mappings then? All of that memory pool stuff is
-still mapped.
+Commit 8f2c96420c6e ("scsi: ufs: core: Reduce the power mode change 
+timeout") changed the START STOP UNIT timeout from START_STOP_TIMEOUT 
+into "remaining / HZ" (should have been "remaining") and hence passed a 
+smaller value than intended to scsi_execute(). Commit dcd5b7637c6d 
+changed the timeout from remaining / HZ into one second. Both values are 
+too small. I'm not sure a second Fixes: tag would help since the above 
+Fixes: tag should be sufficient to make this patch land in all relevant 
+stable trees.
 
-Thanks for the info.
+Thanks,
 
-Regards,
-Jerry
-
-> (The fix I've posted for the DMA issue in shutdown has this subject
-> 'mpt3sas: fix an issue when driver's being removed')
->=20
-> Regards,
-> Tomas
->=20
-> >=20
-> > Regards,
-> > Jerry
-> >=20
->=20
-
+Bart.
