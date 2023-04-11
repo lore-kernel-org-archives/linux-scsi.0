@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4784DC77B6F
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 07:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35D22C77B74
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 07:31:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230032AbjDKHbH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 03:31:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47086 "EHLO
+        id S230158AbjDKHbm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 03:31:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230147AbjDKHan (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 03:30:43 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A784D3AAB;
-        Tue, 11 Apr 2023 00:30:37 -0700 (PDT)
+        with ESMTP id S230131AbjDKHbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 03:31:20 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE6B130D3;
+        Tue, 11 Apr 2023 00:31:19 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 5B5A421A4F;
-        Tue, 11 Apr 2023 07:30:36 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 593CE1FE00;
+        Tue, 11 Apr 2023 07:31:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1681198236; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+        t=1681198278; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WQxRTzrMKqSON3EvIhCwW2gyksjvr/oR+pPMFwHDT1E=;
-        b=JwJ/WkxwVuKtT5Q+kimpbGaODJKKKAv4OFi0LZOHnrwR9jcTBtFMDLo66znOHDKy2PxTBc
-        UFGUbGP8t/08YPEJL9fDKJOMRRFJbzeMXERrfv7fAlQ3S2vVZIQ5pULXs5s1uABQbfDVdc
-        zJxH8ALFjEUeMuUjabu3Z8hrmkU/+nk=
+        bh=zrKJwUKKQqPwV2GMYE3vvKipc0Y4/zBPoyFnBRMPE5Y=;
+        b=Q7qTB94wj3Gg/3rFS/TyqOMweHV6DVNY8f9a/7PDxK74NEJADGNmvOG3RLGuKJW7mhCP4Y
+        A4szjiTISxfspLyeqN9VAYRSn0ky2pDJIssd5vF9K8TOg9FtGJFQK/r81vIlPBqNs+J/qh
+        jV7EEWs6zdGRtusRQYNwY160B7FVLvE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1681198236;
+        s=susede2_ed25519; t=1681198278;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WQxRTzrMKqSON3EvIhCwW2gyksjvr/oR+pPMFwHDT1E=;
-        b=+NiSZ4j2wSSNQFmzbgUvS6L4hSy+wz7KIBXop/FHmMhMqCnyq277tXGJfjo7pnuxod53+x
-        DpsbBScHRQxgRtDg==
+        bh=zrKJwUKKQqPwV2GMYE3vvKipc0Y4/zBPoyFnBRMPE5Y=;
+        b=JyQyzgRWSbw63ZHATm4TNpQfkxooqhNaR5VOVlFibWtHFYugP8dOZ85ZUQhu15it8YKX4r
+        vb/3/FkJKatR9/AA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0A55C13638;
-        Tue, 11 Apr 2023 07:30:36 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id F3B2E13638;
+        Tue, 11 Apr 2023 07:31:17 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id ETXYAJwMNWQUZgAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 11 Apr 2023 07:30:36 +0000
-Message-ID: <2803b786-2573-699b-9f71-46854d0958b5@suse.de>
-Date:   Tue, 11 Apr 2023 09:30:35 +0200
+        id 71B0OsUMNWRiZgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 11 Apr 2023 07:31:17 +0000
+Message-ID: <a78916e3-16f1-3928-8245-bb54532bcb58@suse.de>
+Date:   Tue, 11 Apr 2023 09:31:17 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v6 14/18] scsi: target: Rename sbc_ops to exec_cmd_ops
+Subject: Re: [PATCH v6 15/18] scsi: target: Allow backends to hook into PR
+ handling
 Content-Language: en-US
 To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
         hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
@@ -62,9 +63,9 @@ To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
         linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
         kbusch@kernel.org, target-devel@vger.kernel.org
 References: <20230407200551.12660-1-michael.christie@oracle.com>
- <20230407200551.12660-15-michael.christie@oracle.com>
+ <20230407200551.12660-16-michael.christie@oracle.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230407200551.12660-15-michael.christie@oracle.com>
+In-Reply-To: <20230407200551.12660-16-michael.christie@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -72,23 +73,28 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/7/23 22:05, Mike Christie wrote:
-> The next patches allow us to call the block layer's pr_ops from the
-> backends. This will require allowing the backends to hook into the cmd
-> processing for SPC commands, so this renames sbc_ops to a more generic
-> exec_cmd_ops.
+> For the cases where you want to export a device to a VM via a single
+> I_T nexus and want to passthrough the PR handling to the physical/real
+> device you have to use pscsi or tcmu. Both are good for specific uses
+> however for the case where you want good performance, and are not using
+> SCSI devices directly (using DM/MD RAID or multipath devices) then we are
+> out of luck.
+> 
+> The following patches allow iblock to mimimally hook into the LIO PR code
+> and then pass the PR handling to the physical device. Note that like with
+> the tcmu an pscsi cases it's only supported when you export the device via
+> one I_T nexus.
+> 
+> This patch adds the initial LIO callouts. The next patch will modify
+> iblock.
 > 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/target/target_core_file.c    |  4 ++--
->   drivers/target/target_core_iblock.c  |  4 ++--
->   drivers/target/target_core_rd.c      |  4 ++--
->   drivers/target/target_core_sbc.c     | 13 +++++++------
->   drivers/target/target_core_spc.c     |  4 ++--
->   include/target/target_core_backend.h |  4 ++--
->   6 files changed, 17 insertions(+), 16 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>   drivers/target/target_core_pr.c      | 62 +++++++++++++++++++++++++++-
+>   include/target/target_core_backend.h |  4 ++
+>   2 files changed, 65 insertions(+), 1 deletion(-)
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
