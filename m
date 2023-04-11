@@ -2,95 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C53A1C77B6F
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 17:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7B31C76196
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 18:06:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbjDKRbZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 13:31:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57392 "EHLO
+        id S230310AbjDKSGN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 14:06:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbjDKRbY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 13:31:24 -0400
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6855B81
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 10:31:22 -0700 (PDT)
-Received: by mail-pj1-f51.google.com with SMTP id j8so7127084pjy.4
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 10:31:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681234282; x=1683826282;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DoMemKZVopLmI/OLnpELfMdf6JqXuCRfYsTdsuU7oqM=;
-        b=tXd77jQ7sJT4tF35r9Sz3t1b/FLyzpLlCREVxKLjoE7+E8O/BhmivToWZ5mvLHC5Z0
-         6RxlmqqciyZNOvo1u21PgrYvUktupYTncrCfwKOG+HIfM2YWDIsXkZ9aXJb6YiEax8hM
-         51LUneg2aHQW3t4jrI+9itkdYXv+cbWPwEPGwQdIHIv8mllPdYFcXcXHUjPGnp6vpGBX
-         BkG1Xd8tIIUzjs4U7THQ8Jtro13fx8GIIsqKsoZYJ1j9Q2iEufSI0FcVoQYdMLoTdayg
-         /8XDIVHUsPJUtqA5GSWY3DEzSxYoIyjNMmyK4+VdiIzt3GgYqinP25pV+XZHNXndhxjI
-         D48Q==
-X-Gm-Message-State: AAQBX9dYi5CUK0HQvs22W3MMBbWck/jqPWSB0H2ZLfAX4qyx/yxdk1y8
-        wbIyruSZc96x2x10z2M9EPY=
-X-Google-Smtp-Source: AKy350YzCX091sROMhMFEuXLZsBLUp93UCcB0DEaN2/7oGF2eMfsVgCx52J9MndHZr+mRSMhvEjfNQ==
-X-Received: by 2002:a17:90b:4b0a:b0:23f:10ee:feef with SMTP id lx10-20020a17090b4b0a00b0023f10eefeefmr19635106pjb.19.1681234282333;
-        Tue, 11 Apr 2023 10:31:22 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:646f:c9f7:828a:8b03? ([2620:15c:211:201:646f:c9f7:828a:8b03])
-        by smtp.gmail.com with ESMTPSA id jd2-20020a170903260200b001a527761c31sm6653440plb.79.2023.04.11.10.31.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Apr 2023 10:31:21 -0700 (PDT)
-Message-ID: <0c8b4904-31f4-d21a-7554-6525a264293b@acm.org>
-Date:   Tue, 11 Apr 2023 10:31:19 -0700
+        with ESMTP id S230299AbjDKSGM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 14:06:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9521749C2
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 11:04:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681236226;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B3FiBjdgWlBkkLUpYsHnBiWcE8rxx2EUpI7csz5XeCw=;
+        b=ZEAiLyLFcLe+VWB8qo34oxnyWdK3OQwxU1qkv0bw9OXADD0mpu6N/5U2LfHLHqq/6YVIue
+        hht2SzUt0rLsP9nXx+2IQECiNnXnFTRc0AD53L6jzxrmgxlVkS7KiAmgKdIZqw9plXPHcf
+        rntha5tTXrOCpTN+uVMuVfdSWqq/43k=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-551-5mtcnPw4Pdm_SWKoi2-NRw-1; Tue, 11 Apr 2023 14:03:40 -0400
+X-MC-Unique: 5mtcnPw4Pdm_SWKoi2-NRw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 89E8C884EC3;
+        Tue, 11 Apr 2023 18:03:39 +0000 (UTC)
+Received: from localhost (unknown [10.2.16.6])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DD3772166B31;
+        Tue, 11 Apr 2023 18:03:38 +0000 (UTC)
+Date:   Tue, 11 Apr 2023 11:03:37 -0700
+From:   Chris Leech <cleech@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, netdev@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>
+Subject: Re: [RFC PATCH 5/9] iscsi: set netns for iscsi_tcp hosts
+Message-ID: <20230411180337.GA1234639@localhost>
+Mail-Followup-To: Hannes Reinecke <hare@suse.de>,
+        Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, netdev@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>
+References: <cover.1675876731.git.lduncan@suse.com>
+ <566c527d12f6ed56eeb40952fef7431a0ccdc78f.1675876735.git.lduncan@suse.com>
+ <82eb95ac-2dca-7a7a-116a-2771c4551bab@suse.de>
+ <ZDSoH193jm2jOZKA@localhost>
+ <b3cad686-fa03-b7a4-01c3-9293a7421582@suse.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH] scsi: ufs: Increase the START STOP UNIT timeout from 1 s
- to 10 s
-Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20230411001132.1239225-1-bvanassche@acm.org>
- <17217146-9c07-3963-fd32-02704632330d@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <17217146-9c07-3963-fd32-02704632330d@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b3cad686-fa03-b7a4-01c3-9293a7421582@suse.de>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/11/23 01:39, Adrian Hunter wrote:
-> On 11/04/23 03:11, Bart Van Assche wrote:
->> One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
->> Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
->> Hence this patch that increases the UFS timeout to 10 s. This patch can
->> cause the total timeout to exceed 20 s, the Android shutdown timeout.
->> This is fine since the loop around ufshcd_execute_start_stop() exists to
->> deal with unit attentions and because unit attentions are reported
->> quickly.
->>
->> Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
+On Tue, Apr 11, 2023 at 08:58:54AM +0200, Hannes Reinecke wrote:
+> On 4/11/23 02:21, Chris Leech wrote:
+> > diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> > index 0c3fd690ecf8..4d8a3d770bed 100644
+> > --- a/include/scsi/scsi_transport_iscsi.h
+> > +++ b/include/scsi/scsi_transport_iscsi.h
+> > @@ -79,6 +79,9 @@ struct iscsi_transport {
+> >   	struct iscsi_cls_session *(*create_session) (struct iscsi_endpoint *ep,
+> >   					uint16_t cmds_max, uint16_t qdepth,
+> >   					uint32_t sn);
+> > +	struct iscsi_cls_session *(*create_unbound_session) (struct net *net,
+> > +					uint16_t cmds_max, uint16_t qdepth,
+> > +					uint32_t sn);
+> >   	void (*destroy_session) (struct iscsi_cls_session *session);
+> >   	struct iscsi_cls_conn *(*create_conn) (struct iscsi_cls_session *sess,
+> >   				uint32_t cid);
 > 
-> Did that commit (shown below) actually increase the timeout
-> because the previous commit (8f2c96420c6e) had put
-> "remaining / HZ" when it should have been just "remaining"?
-> Or am I misreading?
-> 
-> So maybe it also needs a fixes tag for 8f2c96420c6e.
+> I'm not _that_ happy with these two functions; but can't really see a way
+> around it.
+> Can't we rename the 'unbound' version to
+> 'create_session_ns' or something?
 
-Commit 8f2c96420c6e ("scsi: ufs: core: Reduce the power mode change 
-timeout") changed the START STOP UNIT timeout from START_STOP_TIMEOUT 
-into "remaining / HZ" (should have been "remaining") and hence passed a 
-smaller value than intended to scsi_execute(). Commit dcd5b7637c6d 
-changed the timeout from remaining / HZ into one second. Both values are 
-too small. I'm not sure a second Fixes: tag would help since the above 
-Fixes: tag should be sufficient to make this patch land in all relevant 
-stable trees.
+Yes, in my mind I was matching the netlink commands, but those are
+create_session and create_bound_session. I got it exactly backwards
+with which one had the additional text.
+
+I'm OK with changing to a shorter name, like the one you suggested.
 
 Thanks,
+- Chris
 
-Bart.
