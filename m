@@ -2,99 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8344FC7619A
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 07:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57669C77B6F
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 07:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229749AbjDKHJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 03:09:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57462 "EHLO
+        id S229963AbjDKHJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 03:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229840AbjDKHJK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 03:09:10 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9561E7C;
-        Tue, 11 Apr 2023 00:09:08 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229697AbjDKHJk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 03:09:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 972A0212F;
+        Tue, 11 Apr 2023 00:09:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6ABD621A4E;
-        Tue, 11 Apr 2023 07:09:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1681196947; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HbEiFGxABzwtOOxjdThsb8h5Rz5c4PthXvz5G6lPS14=;
-        b=XH+8m0EpM26JtSVz3fozH5VALaQsySBmFB3GsOMdaWmJaeIm7OSnA+cy1EV0nTfs++a3hq
-        I3j24aMluCreFQ261dFUE5r8a34wsgBajQmb0Vqo4ePDmFQN23/F1FqPlMoWoSkRks4Nwb
-        IoToPVXrF8rRrpVf67nkDGs2HTsVZGA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1681196947;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HbEiFGxABzwtOOxjdThsb8h5Rz5c4PthXvz5G6lPS14=;
-        b=qTAib8oKRykXTMVi+JkcOsYqJQZCwjavxj5iA0MuAJ/grQ2qDEhXbXS/RutEzL3Z9MhT9R
-        YDcWmSrt0lcii2Dg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2374F13519;
-        Tue, 11 Apr 2023 07:09:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id RuOSB5MHNWQlWwAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 11 Apr 2023 07:09:07 +0000
-Message-ID: <8ad8c64c-3b8c-0699-6eae-acdb8a109303@suse.de>
-Date:   Tue, 11 Apr 2023 09:09:06 +0200
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F8836222F;
+        Tue, 11 Apr 2023 07:09:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E634C433EF;
+        Tue, 11 Apr 2023 07:09:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681196977;
+        bh=NYgZ6zuxde82GQHKz3xIojLYA6xo8YNrc2uMkoQx8dI=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=sVl2AXWYQML9nx+tHYScRwBtKN/jhh7c8V4P/HduNgKjraPWMs5WMJFGhzJ3V4f5m
+         kh+O9imUidQnze9zuZmzNpoQyjkX9CE+M7ZAe066GsE5yugum8gR2g87Ap7ZA2Uwcm
+         Znq1D0bqNVoVbcZTO7Pq0V2WcdwaqzxNTRc6E9ZZ/ebokZ0NzrmOzqVjdyoGH184ah
+         IBjoyBqIeZukl0egdN4uYIRFziC+SP+hiLYpGxH/UzyDIIudgTD3lfzeBmAc/0n0/c
+         dYVTKr6+oSqsRS0q/CgkDcajPkJtD+yDrBkSSWDKI+T50SLIOJAJFGCfC3air4wPfS
+         Oi6kA5ugKa5Yg==
+Message-ID: <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org>
+Date:   Tue, 11 Apr 2023 16:09:34 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v6 01/18] block: Add PR callouts for read keys and
- reservation
+Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
+ duration limits
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
-        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-Cc:     Chaitanya Kulkarni <kch@nvidia.com>
-References: <20230407200551.12660-1-michael.christie@oracle.com>
- <20230407200551.12660-2-michael.christie@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230407200551.12660-2-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     Christoph Hellwig <hch@lst.de>, Niklas Cassel <nks@flawful.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
+References: <20230406113252.41211-1-nks@flawful.org>
+ <20230406113252.41211-10-nks@flawful.org> <20230411061648.GD18719@lst.de>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230411061648.GD18719@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/23 22:05, Mike Christie wrote:
-> Add callouts for reading keys and reservations. This allows LIO to support
-> the READ_KEYS and READ_RESERVATION commands so it can export devices to
-> VMs for software like windows clustering.
+On 4/11/23 15:16, Christoph Hellwig wrote:
+> On Thu, Apr 06, 2023 at 01:32:38PM +0200, Niklas Cassel wrote:
+>> +	/*
+>> +	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
+>> +	 */
+>> +	if (is_ata) {
 > 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   include/linux/pr.h | 25 +++++++++++++++++++++++++
->   1 file changed, 25 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> I don't think these hacks have any business in the SCSI layer.  We should
+> probbaly just do this unconditionally for CDL enabled ATA devices at
+> probe time.
 
-Cheers,
+Yes, this is not pretty, but this has the advantage of not requiring a lot of
+special code for ata, especially the sysfs attribute does not have to be defined
+in both scsi and ata.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+But yes, I guess we could just unconditionally enable CDL for ATA on device scan
+to be on par with scsi, which has CDL always enabled.
