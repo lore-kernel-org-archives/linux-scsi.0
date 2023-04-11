@@ -2,144 +2,149 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B496BC77B70
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 12:22:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88BDAC77B74
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 13:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229678AbjDKMWI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 08:22:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40844 "EHLO
+        id S230296AbjDKNFK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 09:05:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbjDKMWH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 08:22:07 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C429940C6;
-        Tue, 11 Apr 2023 05:22:05 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id o1so10171282lfc.2;
-        Tue, 11 Apr 2023 05:22:05 -0700 (PDT)
+        with ESMTP id S230429AbjDKNFF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 09:05:05 -0400
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D339549F3
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 06:04:52 -0700 (PDT)
+Received: by mail-wm1-x333.google.com with SMTP id i8-20020a05600c354800b003ee93d2c914so5724531wmq.2
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 06:04:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20210112.gappssmtp.com; s=20210112; t=1681218291;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=f1aypPmfAnBqSLxgE6m9YHvqGlsjygFysWM20Vfgyf8=;
+        b=DT9yf3naHRAfyL/nu6ysE6kqTihLShfR1RUQTT313WkPvXfRa8lYFMqM03xJIpJGlA
+         6H7L178PQ7Iovla534HiOJrt9ZvS43q56G54O+7F3xH9SHHrvcSPke6R10pDQALcaUEz
+         3f6ulz2WQsKJZnuxmrBenmO1kHni/+uK0Ql7dTUpW9PbVn48xJem8cgTpvVmyhGKidZe
+         /i6r+Oo6JZjnzGsP6/aKAMawvIzLxId8QMTqBtYR5UaeXVPthzUQJKA8CJJc0bzAsd4t
+         7izM9zZdl42ao81xw8CvNTul5pNkapaMOiZ0PkniMR3W5SD8SVYLicvqbF2+cwAuhDvP
+         wo7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681215724;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:dkim-signature:dkim-signature
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=P0CfEwwxRtpT41g8a6YsRRGMNfYTxceqIiIsFCToW5o=;
-        b=Qlm39oo1uwN2R1XrnH6TujBBGRSvw8Usk4/CKvF2HqgylgMCZsYoebFcm2L/94I6dj
-         q6VLaY81ZZteQKy+IrrSxgrsB1hAFXyYgL2p4Pi/HBFR1KBl5A2t9U1qt6f8ieTcur3w
-         N1A2IJ0SPAvsYsh0dfw2710Ql/q3572B+IVjaHURrdYaDlKebeohHZt21aILQT8N0tJC
-         0lzljxfWSli/nkxrmuOKPObWX+66bAKRdNW0jqaq2dZhlzyoMFCAOSN9ZSXmEuNj+Ssk
-         UkFiTaALvteVcijXgr9h7aJyog0KON0edIDtz5SO0Hd1q6vY6ChkR6Bo2i+IavoMT7Ni
-         tlJg==
-X-Gm-Message-State: AAQBX9eA0A1i6H4kKV23JwGO4QwYsWMGqPkV/Dn+4sASpyMtvKeP/eQ2
-        2GhM3vPwu5psE2jKoW/HkcLmnJbJdyhPmzH/
-X-Google-Smtp-Source: AKy350YcsRFNTafYFBVxlq7IsxWLdwjZmewy5xDiKmI45ffHR99wywc33ew9+03mdnSDkYfhIFcdJQ==
-X-Received: by 2002:ac2:5307:0:b0:4eb:3b4c:50a3 with SMTP id c7-20020ac25307000000b004eb3b4c50a3mr2615918lfh.29.1681215724128;
-        Tue, 11 Apr 2023 05:22:04 -0700 (PDT)
-Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
-        by smtp.gmail.com with ESMTPSA id r6-20020a056512102600b004e843d6244csm2540278lfr.99.2023.04.11.05.22.03
+        d=1e100.net; s=20210112; t=1681218291;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=f1aypPmfAnBqSLxgE6m9YHvqGlsjygFysWM20Vfgyf8=;
+        b=tJF2RvXE8o8lWvS4O44NP5XB8djbxW5YBf6eSgbsgA5KLRCG/yxZ+/7YI2H5Pq8kj5
+         hrn0jIVM0LZIgWq4gMnM/1QZl4xh6EaghyTGnUEM1qyeqivP4d/a6IKR16EAlO7PaV4C
+         46b1mZXftOIKCEsL0fVTUFYlNdBl1dMRUR7mIIB4TbrrpC906FEFn6WEjtWT+WyWXZHl
+         928lRTrXl6TvQE6MYSKTxygQlBq1P5Y6AUpCGezjMxRXT6ojT8bUrtE3udVL/ClNDNB9
+         BaBnXOVeNRjjdak9qE/bNe8loH9uUew8prFg5hyMO5csM9qS3Ad+tkpBdGfh3zjv3O8c
+         E+8w==
+X-Gm-Message-State: AAQBX9ejQsVHZYaqYSHo75y639BEioDLXLbqcheSaXBXux0vu+kQf0bX
+        RAptvgohYIEok7GGUlmwve+3mg==
+X-Google-Smtp-Source: AKy350btH3vdbLazcsWZ/ZxE6u95m/QLQJ+rNdyThrse0GWcw0VSBctgLxvyxIIvsNbBj1piCjxiyg==
+X-Received: by 2002:a1c:cc11:0:b0:3f0:3377:c15f with SMTP id h17-20020a1ccc11000000b003f03377c15fmr9669781wmb.12.1681218291426;
+        Tue, 11 Apr 2023 06:04:51 -0700 (PDT)
+Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:a099:fc1d:c99a:bfc3])
+        by smtp.gmail.com with ESMTPSA id t6-20020a7bc3c6000000b003f04646838esm16921301wmj.39.2023.04.11.06.04.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 05:22:03 -0700 (PDT)
-Received: by flawful.org (Postfix, from userid 112)
-        id 24541458; Tue, 11 Apr 2023 14:22:02 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1681215723; bh=/LguqkW2Bx5Nx7Nq830RqXMFmLCkG4fHgOSjgc/o8hk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=phJQywzKolyrZmvjPFQHlKnTkNKjK6N9V5T/BxzvhN0fNxLi7gRiR9NVr8kcLnKak
-         dG2vI+aXuo67idi9p9b+F1E+IS/9nuOyvMgFoUxZJz/SUoHGa87Dx29nxcJGnU/7bm
-         ECMENityREAkt4ABxj3hZkgMrh5Sb+aGQPCqaPfs=
-Received: from x1-carbon (unknown [87.116.37.42])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id F40CE458;
-        Tue, 11 Apr 2023 14:21:35 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1681215696; bh=/LguqkW2Bx5Nx7Nq830RqXMFmLCkG4fHgOSjgc/o8hk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mW7y5YiX6yqgycGI4V5C3rc93lrUvbbVuOGxTetRdzZ0rNEVnjr1lNXuLCPu1qL21
-         Yv8KIw29kxjbr6Ii8q4NSjSdXK/pU82tEZl3g0kjsp/WPG8R6rVLkKn6l57k37n5uA
-         Ui1jKrfwJg4z3s9+rDT2fGyBqgVQ60mfFAyvBwms=
-Date:   Tue, 11 Apr 2023 14:20:41 +0200
-From:   Niklas Cassel <nks@flawful.org>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
- duration limits
-Message-ID: <ZDVQmX2bYoRBYR1Y@x1-carbon>
-References: <20230406113252.41211-1-nks@flawful.org>
- <20230406113252.41211-10-nks@flawful.org>
- <20230411061648.GD18719@lst.de>
- <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org>
- <20230411072317.GA22683@lst.de>
- <15ad7cf9-e385-9cea-964a-4a2eac35385c@kernel.org>
- <ZDVLsIi/OhkxNcGb@x1-carbon>
+        Tue, 11 Apr 2023 06:04:51 -0700 (PDT)
+From:   Bartosz Golaszewski <brgl@bgdev.pl>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v3 2/5] dt-bindings: phy: qmp-ufs: describe the UFS PHY for sa8775p
+Date:   Tue, 11 Apr 2023 15:04:43 +0200
+Message-Id: <20230411130446.401440-3-brgl@bgdev.pl>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20230411130446.401440-1-brgl@bgdev.pl>
+References: <20230411130446.401440-1-brgl@bgdev.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZDVLsIi/OhkxNcGb@x1-carbon>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 01:59:44PM +0200, Niklas Cassel wrote:
-> On Tue, Apr 11, 2023 at 04:38:48PM +0900, Damien Le Moal wrote:
-> > On 4/11/23 16:23, Christoph Hellwig wrote:
-> > > On Tue, Apr 11, 2023 at 04:09:34PM +0900, Damien Le Moal wrote:
-> > >> But yes, I guess we could just unconditionally enable CDL for ATA on device scan
-> > >> to be on par with scsi, which has CDL always enabled.
-> > > 
-> > > I'd prefer that.  With a module option to not enable it just to be
-> > > safe.
-> > 
-> > Then it may be better to move the cdl_enable attribute store definition for ATA
-> > devices to libata. That would be less messy that way. Let me see if that can be
-> > done cleanly.
-> 
-> I don't think that the SCSI mode select can just be replaced with simple
-> SET FEATURES in libata.
-> 
-> If we move the SET FEATURES call to a function in libata, and then use a
-> function pointer in the scsi_host_template, and let only libata set this
-> function pointer (similar to e.g. how the queue_depth sysfs attribute works),
-> then the code will no longer work for SATA devices connected to a SAS HBA.
-> 
-> 
-> 
-> The current code simply checks if VPD page89 (the ATA Information VPD
-> page - which is defined in the SCSI to ATA Translation (SAT) standard)
-> exists. This page (and thus the sdev->vpd_pg89 pointer) will only exist
-> if either:
-> 1) An ATA device is connected to a SATA controller. This page will then
-> be implemented by libata.
-> 2) An ATA device is connected to a SAS HBA. The SAS HB will then provide
-> this page. (The page will not exist for SCSI devices connected to the
-> same SAS HBA.)
-> 
-> For case 1) with the current code, scsi.c will call scsi_mode_select()
-> which will be translated by libata before being sent down to the device.
-> 
-> For case 2) with the current code, scsi.c will send down a SCSI mode
-> select to the SAS HBA, and the SAS HBA will be responsible for translating
-> the command before sending it to the device.
-> 
-> So I actually think that the current way to check if vpd page89 exists
-> is probably the "cleanest" solution that I can think of.
-> 
-> If you have a better suggestion that will work for both case 1) and
-> case 2), I will be happy to change the code accordingly.
+From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
+Add a new compatible for the QMP UFS PHY found on sa8775p platforms and
+update the clocks property to accommodate three clocks.
 
-In addition to:
-https://github.com/torvalds/linux/blame/v6.3-rc6/drivers/scsi/sd.c#L3066-L3074
+Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        | 26 ++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
 
-checking for the existence of VPD page89 is also currently done by e.g.:
-https://github.com/torvalds/linux/blob/v6.3-rc6/drivers/scsi/mpt3sas/mpt3sas_scsih.c#L12607
-and
-https://github.com/torvalds/linux/blob/v6.3-rc6/drivers/hwmon/drivetemp.c#L340
+diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
+index cd0fbbd3593d..94c0fab065a8 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
+@@ -16,6 +16,7 @@ description:
+ properties:
+   compatible:
+     enum:
++      - qcom,sa8775p-qmp-ufs-phy
+       - qcom,sc8280xp-qmp-ufs-phy
+       - qcom,sm6125-qmp-ufs-phy
+       - qcom,sm7150-qmp-ufs-phy
+@@ -25,12 +26,15 @@ properties:
+     maxItems: 1
+ 
+   clocks:
+-    maxItems: 2
++    minItems: 2
++    maxItems: 3
+ 
+   clock-names:
++    minItems: 2
+     items:
+       - const: ref
+       - const: ref_aux
++      - const: qref
+ 
+   power-domains:
+     maxItems: 1
+@@ -64,6 +68,26 @@ required:
+   - vdda-pll-supply
+   - "#phy-cells"
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,sa8775p-qmp-ufs-phy
++    then:
++      properties:
++        clocks:
++          maxItems: 3
++        clock-names:
++          maxItems: 3
++    else:
++      properties:
++        clocks:
++          maxItems: 2
++        clock-names:
++          maxItems: 2
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.37.2
 
-
-Kind regards,
-Niklas
