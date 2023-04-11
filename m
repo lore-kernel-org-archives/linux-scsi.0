@@ -2,92 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 889E7C76196
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 18:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1A3C76196
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 18:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229720AbjDKSUo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 14:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41016 "EHLO
+        id S229490AbjDKSb5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 14:31:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjDKSUm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 14:20:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D58AA4EDA
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 11:19:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681237191;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mAc9R2NlOKWjR2PE+m5zaGvaSX1lOZHMdVV04kPoutU=;
-        b=DE8cWQTbA1ABF8qpFbvXVULNjvL+jYlcYFXQAgHH4rVUZ3PU989618iVPSIf9g5eeuEVVJ
-        W7m52rx97xz6TZ2DMMThHtjTLToqu3ho3mXX+Ur792/BikCPaAXXBAuzh3O4ePuSdHK4VE
-        L3ZOCPo3drkHaD2usQYnn8/LTp8mI9Q=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-91-Jhv8xwOrMcuRFBV00TV5Dw-1; Tue, 11 Apr 2023 14:19:47 -0400
-X-MC-Unique: Jhv8xwOrMcuRFBV00TV5Dw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 727961C08960;
-        Tue, 11 Apr 2023 18:19:47 +0000 (UTC)
-Received: from localhost (unknown [10.2.16.6])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DFEFF2166B30;
-        Tue, 11 Apr 2023 18:19:46 +0000 (UTC)
-Date:   Tue, 11 Apr 2023 11:19:45 -0700
-From:   Chris Leech <cleech@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        Lee Duncan <leeman.duncan@gmail.com>, netdev@vger.kernel.org
-Subject: Re: [PATCH 11/11] iscsi: force destroy sesions when a network
- namespace exits
-Message-ID: <20230411181945.GB1234639@localhost>
-Mail-Followup-To: Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        Lee Duncan <leeman.duncan@gmail.com>, netdev@vger.kernel.org
-References: <83de4002-6846-2f90-7848-ef477f0b0fe5@suse.de>
- <20230410191033.1069293-3-cleech@redhat.com>
- <85458436-702f-2e38-c7cc-ff7329731eda@suse.de>
+        with ESMTP id S229450AbjDKSb4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 14:31:56 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B7D3BD
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 11:31:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681237915; x=1712773915;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=UHwmQ79Oqpg7oz32BZdFtPLYPd+ql/+zIfHuydrVszo=;
+  b=C9yr8A+rb2TjsLyBbSOMpmTGi1KMZ+kNpgmAT3/T+ddUW8Ik7KyUVJLX
+   2obacZakepUS66cjlu2nEgLi8HTE9cmdDzB+gYAmc667GyXTNLZcoI5O/
+   /PP92Syvd1ka9Ep5Aq638BIvzSA+n1eXTLl4niqBjORxjk/Zg9mPvQAND
+   UmNL0qVhQCd22kOChZzxRx+0TGgV0QQcH+q0LUCMaqCGn8wn4/KoLgDC9
+   rT2kiF6x6G6X+/iyXYYZysKloSUC7IyWrYEqv3DDgVc9CeMusZs9QSGrg
+   fNvU2VmbEAT5iqvIQuWfk4fq1AcAqDoLLTflt9PzTj3HIj60rXPzvHNXA
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10677"; a="341192244"
+X-IronPort-AV: E=Sophos;i="5.98,336,1673942400"; 
+   d="scan'208";a="341192244"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2023 11:31:55 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10677"; a="753241820"
+X-IronPort-AV: E=Sophos;i="5.98,336,1673942400"; 
+   d="scan'208";a="753241820"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.44.57])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2023 11:31:52 -0700
+Message-ID: <a71dc651-a306-eebe-968e-0d9e56f44a76@intel.com>
+Date:   Tue, 11 Apr 2023 21:31:50 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <85458436-702f-2e38-c7cc-ff7329731eda@suse.de>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.9.1
+Subject: Re: [PATCH] scsi: ufs: Increase the START STOP UNIT timeout from 1 s
+ to 10 s
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230411001132.1239225-1-bvanassche@acm.org>
+ <17217146-9c07-3963-fd32-02704632330d@intel.com>
+ <0c8b4904-31f4-d21a-7554-6525a264293b@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <0c8b4904-31f4-d21a-7554-6525a264293b@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 08:21:22AM +0200, Hannes Reinecke wrote:
-> On 4/10/23 21:10, Chris Leech wrote:
-> > The namespace is gone, so there is no userspace to clean up.
-> > Force close all the sessions.
-> > 
-> > This should be enough for software transports, there's no implementation
-> > of migrating physical iSCSI hosts between network namespaces currently.
-> > 
-> Ah, you shouldn't have mentioned that.
-> (Not quite sure how being namespace-aware relates to migration, though.)
-> We should be checking/modifying the iSCSI offload drivers, too.
-> But maybe with a later patch.
+On 11/04/23 20:31, Bart Van Assche wrote:
+> On 4/11/23 01:39, Adrian Hunter wrote:
+>> On 11/04/23 03:11, Bart Van Assche wrote:
+>>> One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
+>>> Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
+>>> Hence this patch that increases the UFS timeout to 10 s. This patch can
+>>> cause the total timeout to exceed 20 s, the Android shutdown timeout.
+>>> This is fine since the loop around ufshcd_execute_start_stop() exists to
+>>> deal with unit attentions and because unit attentions are reported
+>>> quickly.
+>>>
+>>> Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
+>>
+>> Did that commit (shown below) actually increase the timeout
+>> because the previous commit (8f2c96420c6e) had put
+>> "remaining / HZ" when it should have been just "remaining"?
+>> Or am I misreading?
+>>
+>> So maybe it also needs a fixes tag for 8f2c96420c6e.
+> 
+> Commit 8f2c96420c6e ("scsi: ufs: core: Reduce the power mode change timeout") changed the START STOP UNIT timeout from START_STOP_TIMEOUT into "remaining / HZ" (should have been "remaining") and hence passed a smaller value than intended to scsi_execute(). Commit dcd5b7637c6d changed the timeout from remaining / HZ into one second. Both values are too small. I'm not sure a second Fixes: tag would help since the above Fixes: tag should be sufficient to make this patch land in all relevant stable trees.
 
-I shouldn't have left that opening ;-)
-
-The idea with this design is to keep everything rooted on the
-iscsi_host, and for physical HBAs those stay assigned to init_net.
-With this patch set, offload drivers remain unusable in a net namespace
-other than init_net. They simply are not visible.
-
-By migration, I was implying the possibilty of assigment of an HBA
-iscsi_host into a namespace like you can do with a network interface.
-Such an iscsi_host would then need to be migrated back to init_net on
-namespace exit.
-
-I don't think it works to try and share an iscsi_host across namespaces,
-and manage different sessions. The iSCSI HBAs have a limited number of
-network configurations, exposed as iscsi_iface objects, and I don't want
-to go down the road of figuring out how to share those.
-
-- Chris
+It would be better not to assume current stable trees are the only consumers of fixes.  Presumably adding the extra Fixes tag does no harm.
 
