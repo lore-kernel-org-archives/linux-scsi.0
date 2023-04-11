@@ -2,108 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE6AEC77B77
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 13:05:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E56C76196
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 13:10:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230429AbjDKNFR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 09:05:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37314 "EHLO
+        id S230226AbjDKNKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 09:10:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230412AbjDKNFD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 09:05:03 -0400
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 931714228
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 06:04:50 -0700 (PDT)
-Received: by mail-wm1-x32c.google.com with SMTP id o6-20020a05600c4fc600b003ef6e6754c5so2156962wmq.5
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 06:04:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20210112.gappssmtp.com; s=20210112; t=1681218289;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=qYe+MGPT9BvgNTQao8r5YoHx9jSImbM+Yzl5JdLRqIc=;
-        b=hVZ3SwYl0OMmYsZaktA4PBdt9FadcHLKLFYV9Y3oM0OwQMDSvu0iLQvhsEk273pBFz
-         xMjYDP0n7IEjOWvg0jISH4vr2oIC/LyzfkTZe4at0Vr/uAALu81PnqpyLw+wnzfZTkOu
-         TmmYK/UpBhgsP/7GQxJnjCUe2pBPAKV/CQTAmMGl8sZ1EImT7qlINWkY4JXfZ/GrWP4R
-         kNx5eTCgbw5jeQ3dd40Zt6Xm+q2a3SxD5X8uzYor6aZ6NYE+DFGibBhxxrQmDPt07nNo
-         UO/oZCVEaKDxUGsMoWQdcNXYTyk7IivtZey9/F1/u1rsT/Wp5oauw87Dn7CTk390xBgT
-         EPuA==
+        with ESMTP id S230196AbjDKNKa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 09:10:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D14A944A3
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 06:09:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681218582;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=A3A3R77QZ++3XaMR8dl2QnKnilDtweVc9Y+y5AYwQ1g=;
+        b=Y7E/zWTTCa18xNCjjKhJ4qN0KEqw8GPoBE52bUWBBGlQ7BCc7AilEM+AIFEkpbJ/UUB1Eo
+        Zl16N+Ke0YjT7q8o4JiryZMwOxPBmoShtKMPp2KkaC2ecrCCljZyZaZIi+FkI8Fc9LUwhg
+        5vjYhQc/wyD3+un33w7zs+WWYPd96/M=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-292-aKboxxDDOQqof0comk-6Ng-1; Tue, 11 Apr 2023 09:09:41 -0400
+X-MC-Unique: aKboxxDDOQqof0comk-6Ng-1
+Received: by mail-wm1-f70.google.com with SMTP id h22-20020a05600c351600b003ef739416c3so17138650wmq.4
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 06:09:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681218289;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=qYe+MGPT9BvgNTQao8r5YoHx9jSImbM+Yzl5JdLRqIc=;
-        b=PFHYrwtOKrrkPE82rqqvHqml1qjXunBB+t6lH/55INYZP5ijD0R7rvP0SI3O7Z5Y+q
-         WdPetYHmoRGxCUMUwInyMZgHCM7p01iYR2vM++8Eoo+a4fzMD3v+oMBToG5Bdr34AvaH
-         /8RR+5L9XSqO/Nhh86W4Xoj0gokfhoH7Fp09ztXNonbMWfqNkJqZT8hLNS0+CMB9/4px
-         KVskzYBMIURYQz1oDmVaWp/riP+P7bi0sF7tZHUhNxJx8UUcoEzq6m/y/wwWlqmXq27J
-         i4Afa50E5ioBGJRSACfuA2vL8KWdAjRducItuHrwtKMIL0Ho59KgeRfg6Nodhi+s3X4X
-         l/rQ==
-X-Gm-Message-State: AAQBX9fU9nPty5vN8Lo/dYg7BhKeLDme/CLS/P/BJg/Rjg4Lzjg1apMP
-        GTaA8R4QNQWcTRMoAtacJGQVyg==
-X-Google-Smtp-Source: AKy350ZfLdAiU/iKV0HLRk3Wy+S1F1keCNjX+IH2eaUg8QZgScVfnsLzAoOiiBKsX+Op60vdlbkezw==
-X-Received: by 2002:a05:600c:2294:b0:3ef:f26b:a173 with SMTP id 20-20020a05600c229400b003eff26ba173mr1910380wmf.14.1681218288917;
-        Tue, 11 Apr 2023 06:04:48 -0700 (PDT)
-Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:a099:fc1d:c99a:bfc3])
-        by smtp.gmail.com with ESMTPSA id t6-20020a7bc3c6000000b003f04646838esm16921301wmj.39.2023.04.11.06.04.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 06:04:48 -0700 (PDT)
-From:   Bartosz Golaszewski <brgl@bgdev.pl>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: [PATCH v3 0/5] arm64: qcom: sa8775p: add support for UFS
-Date:   Tue, 11 Apr 2023 15:04:41 +0200
-Message-Id: <20230411130446.401440-1-brgl@bgdev.pl>
-X-Mailer: git-send-email 2.37.2
+        d=1e100.net; s=20210112; t=1681218580; x=1683810580;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=A3A3R77QZ++3XaMR8dl2QnKnilDtweVc9Y+y5AYwQ1g=;
+        b=ZDiysXw1x/5v9werdF3bGfhjJElXBs+1pgrW6BQwpJ7UryDkz2w+NGHS8pGUtMT27n
+         fizq+rc/KdVZDlIOi1ATLyVwe2dr6td2KoVRy+0bcCu/FD66m2Xk5MjzwnOJ9ixTKcWB
+         d4Lupbb50z1+nx7I71DrADgoamFeZjhUIQ35NQZ9H91i5Io0MCzTNTIu2K+I6Q0Zy3FE
+         MbB9HXL3Fd9o4PvdQ4wq5A5nkcBEb/wMXwCGlPg4jqmcFB02iUUTMX2rYFun+HidzLkw
+         lnEDWLe3VvvtGx/lfMAaPBKyoU3noyJtgshthGeMi8xW5BFRbF7/5kisfiBps4ULeopa
+         ClHA==
+X-Gm-Message-State: AAQBX9cBn3g8corJuMJT+v1/JMm9PcWHpbgqiElvBsB7Ee9srfFm1kPe
+        s/tcO6aIVdlInyqv8cvW1zp7O5QWo5aCTEThLkzc9APADrf/u317gKS+YL9Do1kpcz2Bel9frYk
+        BiajC5VVoYH1fjgjmB51j8w==
+X-Received: by 2002:a05:600c:2294:b0:3ef:f26b:a173 with SMTP id 20-20020a05600c229400b003eff26ba173mr1922468wmf.14.1681218579956;
+        Tue, 11 Apr 2023 06:09:39 -0700 (PDT)
+X-Google-Smtp-Source: AKy350Y+G8fHm5KIqpnQIvGEeucSsttPSYQTuadQhFguxu8j0VBW9g0AE4iNUT//MmnnCF6H1v1TsA==
+X-Received: by 2002:a05:600c:2294:b0:3ef:f26b:a173 with SMTP id 20-20020a05600c229400b003eff26ba173mr1922452wmf.14.1681218579655;
+        Tue, 11 Apr 2023 06:09:39 -0700 (PDT)
+Received: from [192.168.0.107] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
+        by smtp.gmail.com with ESMTPSA id q5-20020a7bce85000000b003ede3e54ed7sm16967535wmj.6.2023.04.11.06.09.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 11 Apr 2023 06:09:39 -0700 (PDT)
+Message-ID: <3b2829ee-93f1-feb1-d113-cbc084d23149@redhat.com>
+Date:   Tue, 11 Apr 2023 15:09:38 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: question about mpt3sas commit b424eaa1b51c
+To:     Jerry Snitselaar <jsnitsel@redhat.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
+Content-Language: en-US
+From:   Tomas Henzl <thenzl@redhat.com>
+In-Reply-To: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+On 4/8/23 21:18, Jerry Snitselaar wrote:
+> We've had some people trying to track a problem for months revolving
+> around a system hanging at shutdown, and last thing they see being a
+> message from mpt3sas about a reset. They quickly bisected down to the
+> commit below, and reverted it made the problem go away for the
+> customer.
+> 
+> b424eaa1b51c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
+> 
+> I got asked to look at something since I recently at another issue
+> that involved mpt3sas at shutdown, so I was looking through the
+> history, saw this commit being mentined. Looking at it, I'm not sure
+> why it is doing what is doing.
+> 
+> It says it is to perform a soft reset, but that was already happening before this commit via:
+> 
+> scsih_shutdown -> mpt3sas_base_detach -> mpt3sas_base_free_resources -> _base_make_ioc_ready(ioc, SOFT_RESET);
+> 
+> The original submission [1] had the following commit message:
+> 
+> "During shutdown just move the IOC state to Ready state
+> by issuing MUR. No need to free any IOC memory pools."
+> 
+> But is now skipping more than not freeing the memory pools. It no
+> longer frees memory that was kalloc'd, it doesn't unmap something that
+> was iomapped, it no longer cleans up the fault reset workqueue, and no
+> longer calls the pci cleanup code. It also no longer does the things
+> it moved to scsih_shutdown under the pci access mutex, nor uses the if
+> condition that was in mpt3sas_base_free_resources.
+> 
+> [1] https://lore.kernel.org/r/20210705145951.32258-1-sreekanth.reddy@broadcom.com
+> 
+> 
+> Am I missing something, and what the commit does here is really okay?
 
-Update relevant DT bindings, add new config to the driver and add UFS
-and PHY nodes to the .dtsi and enable them in the board .dts for
-sa8775p-ride.
+When a driver's shutdown method is called it may be still processing in
+parallel I/Os (that may also happen any time later) so not releasing the
+resources the driver has allocated is correct. A next step is then a
+power off or a boot of a new kernel anyway.
+A driver should stop DMA transfers and IRQ's, silence itself and when
+needed inform the attached hw to flush memory or whatever else.
 
-v2 -> v3:
-- fix DT bindings: move allOf: below required:
-- collect review tags
+(The fix I've posted for the DMA issue in shutdown has this subject
+'mpt3sas: fix an issue when driver's being removed')
 
-v1 -> v2:
-- order new compatibles alphabetically
-- rework the UFS PHY bindings to accomodate more clocks
-- add a comment in the .dts regarding a non-standard clock used
-  by the UFS PHY
+Regards,
+Tomas
 
-Bartosz Golaszewski (5):
-  dt-bindings: ufs: qcom: add compatible for sa8775p
-  dt-bindings: phy: qmp-ufs: describe the UFS PHY for sa8775p
-  phy: qualcomm: phy-qcom-qmp-ufs: add definitions for sa8775p
-  arm64: dts: qcom: sa8775p: add UFS nodes
-  arm64: dts: qcom: sa8775p-ride: enable UFS
-
- .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        | 26 ++++++++-
- .../devicetree/bindings/ufs/qcom,ufs.yaml     |  2 +
- arch/arm64/boot/dts/qcom/sa8775p-ride.dts     | 19 ++++++
- arch/arm64/boot/dts/qcom/sa8775p.dtsi         | 58 +++++++++++++++++++
- drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       | 38 ++++++++++++
- 5 files changed, 142 insertions(+), 1 deletion(-)
-
--- 
-2.37.2
+> 
+> 
+> Regards,
+> Jerry
+> 
 
