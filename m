@@ -2,36 +2,39 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EEFDC76196
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 05:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B32FC77B71
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 06:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229976AbjDKFg6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 01:36:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48422 "EHLO
+        id S230047AbjDKGOY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 02:14:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229960AbjDKFg4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 01:36:56 -0400
+        with ESMTP id S229721AbjDKGOW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 02:14:22 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 897F92722;
-        Mon, 10 Apr 2023 22:36:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3BBD171A;
+        Mon, 10 Apr 2023 23:14:21 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id E126168BFE; Tue, 11 Apr 2023 07:36:48 +0200 (CEST)
-Date:   Tue, 11 Apr 2023 07:36:48 +0200
+        id 9055868BFE; Tue, 11 Apr 2023 08:14:17 +0200 (CEST)
+Date:   Tue, 11 Apr 2023 08:14:17 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH v6 18/18] scsi: target: Add block PR support to iblock
-Message-ID: <20230411053648.GH17645@lst.de>
-References: <20230407200551.12660-1-michael.christie@oracle.com> <20230407200551.12660-19-michael.christie@oracle.com>
+To:     Niklas Cassel <nks@flawful.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Damien Le Moal <dlemoal@fastmail.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: Re: [PATCH v6 01/19] ioprio: cleanup interface definition
+Message-ID: <20230411061417.GA18719@lst.de>
+References: <20230406113252.41211-1-nks@flawful.org> <20230406113252.41211-2-nks@flawful.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230407200551.12660-19-michael.christie@oracle.com>
+In-Reply-To: <20230406113252.41211-2-nks@flawful.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
