@@ -2,74 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 814AFC76196
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 08:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0120C7619A
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 10:18:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230090AbjDKIkw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 04:40:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33904 "EHLO
+        id S229752AbjDKKSf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 06:18:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229641AbjDKIkv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 04:40:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E3CD121;
-        Tue, 11 Apr 2023 01:40:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BDE4461DBF;
-        Tue, 11 Apr 2023 08:40:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADA6BC433EF;
-        Tue, 11 Apr 2023 08:40:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681202450;
-        bh=DH/Wedy/FTrfpXYGKKLe6o9ML0Q1OWiJXYZnr0antg8=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=PUXVQnqJSKryWkvozhGn4QqamCWMYaY+He/OL/BaJPoR2KinnaWVxvr3GxBh2MIpw
-         tBGb+4CfThl50aqOVPBWQeSsAWEE+h5RIKGqz9YHXTGFxDSwdoABaiOFpUlOAWbI5N
-         b03AHMyRgcsoGC19M2qro5yuwpDZJ79FFVRLYnliZVd2Q8mishG2qsKtZAeAg3YIAo
-         8SZpzWrV+g7BZHe7CYsxfahwDp9qqyqhMhxtJA2FPsF/HGv4WzR80lS1i8i0/eq3eH
-         WAYqfL/4h0SSrHEGmtHBB9HKrwbyLo+LIO4Auhe2+OOC/Ns1sb2s5nadVAS3eln2Fx
-         JtIv0MYA6slRg==
-Message-ID: <16dbe246-873f-2f89-6bfa-585b29b735d0@kernel.org>
-Date:   Tue, 11 Apr 2023 17:40:47 +0900
+        with ESMTP id S229643AbjDKKSd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 06:18:33 -0400
+Received: from michel.telenet-ops.be (michel.telenet-ops.be [IPv6:2a02:1800:110:4::f00:18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2958DE44
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 03:18:23 -0700 (PDT)
+Received: from ramsan.of.borg ([84.195.187.55])
+        by michel.telenet-ops.be with bizsmtp
+        id jNJM2900K1C8whw06NJMu1; Tue, 11 Apr 2023 12:18:22 +0200
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan.of.borg with esmtp (Exim 4.95)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1pmB46-00GaZK-Oy;
+        Tue, 11 Apr 2023 12:18:21 +0200
+Received: from geert by rox.of.borg with local (Exim 4.95)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1pmB4v-00EHAB-Qp;
+        Tue, 11 Apr 2023 12:18:21 +0200
+From:   Geert Uytterhoeven <geert+renesas@glider.be>
+To:     "Manoj N . Kumar" <manoj@linux.ibm.com>,
+        "Matthew R . Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] scsi: Spelling s/semahpore/semaphore/
+Date:   Tue, 11 Apr 2023 12:18:20 +0200
+Message-Id: <d7d04004b818d7ab5d62002f286b0a1b0b493193.1681208251.git.geert+renesas@glider.be>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
- duration limits
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
-References: <20230406113252.41211-1-nks@flawful.org>
- <20230406113252.41211-10-nks@flawful.org> <20230411061648.GD18719@lst.de>
- <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org>
- <20230411072317.GA22683@lst.de>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230411072317.GA22683@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/11/23 16:23, Christoph Hellwig wrote:
-> On Tue, Apr 11, 2023 at 04:09:34PM +0900, Damien Le Moal wrote:
->> But yes, I guess we could just unconditionally enable CDL for ATA on device scan
->> to be on par with scsi, which has CDL always enabled.
-> 
-> I'd prefer that.  With a module option to not enable it just to be
-> safe.
+Fix misspellings of "semaphore".
 
-Thinking more about this, we cannot unconditionally enable CDL. The reason is
-that CDL and NCQ priority are mutually exclusive: if CDL is enabled, NCQ
-priority cannot be used. So with CDL unconditionally enabled, we cannot have NCQ
-priority enabled, preventing the user from choosing its preferred IO latency
-control method.
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/scsi/cxlflash/superpipe.c | 2 +-
+ drivers/scsi/cxlflash/vlun.c      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 22cfc2e1dfb938d4..e1b55b03e81243b4 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -358,7 +358,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 	dev_dbg(dev, "%s: %ssending cmd(%02x)\n", __func__,
+ 		retry_cnt ? "re" : "", scsi_cmd[0]);
+ 
+-	/* Drop the ioctl read semahpore across lengthy call */
++	/* Drop the ioctl read semaphore across lengthy call */
+ 	up_read(&cfg->ioctl_rwsem);
+ 	result = scsi_execute_cmd(sdev, scsi_cmd, REQ_OP_DRV_IN, cmd_buf,
+ 				  CMD_BUFSIZE, to, CMD_RETRIES, &exec_args);
+diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
+index 9caabf5504362cb2..cbd5a648a131be64 100644
+--- a/drivers/scsi/cxlflash/vlun.c
++++ b/drivers/scsi/cxlflash/vlun.c
+@@ -448,7 +448,7 @@ static int write_same16(struct scsi_device *sdev,
+ 		put_unaligned_be32(ws_limit < left ? ws_limit : left,
+ 				   &scsi_cmd[10]);
+ 
+-		/* Drop the ioctl read semahpore across lengthy call */
++		/* Drop the ioctl read semaphore across lengthy call */
+ 		up_read(&cfg->ioctl_rwsem);
+ 		result = scsi_execute_cmd(sdev, scsi_cmd, REQ_OP_DRV_OUT,
+ 					  cmd_buf, CMD_BUFSIZE, to,
+-- 
+2.34.1
 
