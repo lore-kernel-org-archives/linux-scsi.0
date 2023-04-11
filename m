@@ -2,110 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07283C7619A
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 08:17:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 794BFC7619A
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 08:39:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230322AbjDKIRV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 04:17:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51872 "EHLO
+        id S230090AbjDKIjf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 04:39:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229946AbjDKIQ7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 04:16:59 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6F8240DD;
-        Tue, 11 Apr 2023 01:16:24 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id r27so9375617lfe.0;
-        Tue, 11 Apr 2023 01:16:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681200983;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:dkim-signature:dkim-signature
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sJS8zBMIa4yGBM2pgCprY9MksHdmJSvWOQj5E2cptIA=;
-        b=YU81fhc+WGDqA6vOmGunfX4wlX0aWpvJfjNP2HLqlHL0v/g/5iUm/RouVRjGLji7Rv
-         wd2d6ao9fhevKhdS70pbgQV/vN7rrn1X4zyFDdv5LeksBSImIgvzLv5ClSL6Injduk6s
-         +itWkhz7StLKQel+CkAF0Pxs5xFHZraozkJzIt6pxZPkOyjbrAfsSCsGmm5x/6uF+6cZ
-         bRIk7EEMcIDhI6saDXvo+dtzWw7IgUNbJd1QNbIO4TOfGP4SS/6Wsb0aJUP3u9CzMI/0
-         557rYNr4R5BmCw/OpJjxPOcbxm8POKplhyolcURPzUkGK+HVysy1YSPpoZ3IE+W2swzm
-         xFlQ==
-X-Gm-Message-State: AAQBX9eZl+XBPYLl78C5bU7YitwG4tGWTuKDNknUxR4rK6SLCwAKVfWz
-        a5Ry92bgti1WZF5lgJLPEU/OBEA74vj2ySme
-X-Google-Smtp-Source: AKy350a7UaZAMSCzn65xlOqJYW/R9qLP7XhnRL4cIMZYtWbJHPPiE2f0rGK8HWRza1gugcKQzoaSaA==
-X-Received: by 2002:a19:700b:0:b0:4e9:cb57:8fdc with SMTP id h11-20020a19700b000000b004e9cb578fdcmr3820604lfc.46.1681200982963;
-        Tue, 11 Apr 2023 01:16:22 -0700 (PDT)
-Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
-        by smtp.gmail.com with ESMTPSA id v24-20020a197418000000b004dc48d91061sm2444436lfe.304.2023.04.11.01.16.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 01:16:22 -0700 (PDT)
-Received: by flawful.org (Postfix, from userid 112)
-        id 6D7DD4B7; Tue, 11 Apr 2023 10:16:18 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1681200980; bh=+xFiDUCypiXlTexCbmMF+XAWO9WmzRa1fOW09nLMocM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ibq7d9dddBbkfabWeP8xXgGdCACgJrRqmAAMVmrY6y3XPDt3qRtaD9zilG8fuwWe5
-         A1f6ldQ/Jw/1SaZXl098GsFQYYUrGNUKEjsXt6Xrb769EalKkCJ4LjK1M9C+KgJ1Vw
-         jhKmMlA/Zx52gk6HWVPIS+XC1xBrCWTkq4uuLyeQ=
-Received: from x1-carbon (unknown [87.116.37.42])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id CDB263D7;
-        Tue, 11 Apr 2023 10:15:53 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1681200953; bh=+xFiDUCypiXlTexCbmMF+XAWO9WmzRa1fOW09nLMocM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OH0YopyPaCiccsKR+08v3dLYx744pK6HLeF7kcGGtfX+JafgLIGeMYZKEJv3enXGC
-         btOhP7SnWyE8z+9NU8+W/cNc4maQIsc0JR9d+qrquiIHVQQGFa0LVzlUBVy0P6PQD8
-         xRWsBZTZf66yT0rmqK8/LNxECy6Ahilf9A3rO9kk=
-Date:   Tue, 11 Apr 2023 10:15:46 +0200
-From:   Niklas Cassel <nks@flawful.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Damien Le Moal <dlemoal@fastmail.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
- duration limits
-Message-ID: <ZDUXMl7HO8hEcMDv@x1-carbon>
-References: <20230406113252.41211-1-nks@flawful.org>
- <20230406113252.41211-10-nks@flawful.org>
- <20230411061648.GD18719@lst.de>
+        with ESMTP id S229641AbjDKIje (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 04:39:34 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E500EAB
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 01:39:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681202373; x=1712738373;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=V5mA0UyCuzFlVyTia1rig5Ax2S4EC8JD0/fN+Cjw65s=;
+  b=W2ir4z5yk0mBo9mWRzEUJDyu26mEdIVT0CkmaiDH/4T/Pq/3lC4vbUZY
+   uYHMis2YUH3VuX1AKs8fQBw+6hxGQMrBVa6phuvXdCa6o+cc/EQcd3hW9
+   AAj02u3wJj8Vqz/PkL6Z2iHK+NrhWKFhnjsqC4gUA6ES1xcFL5wDVjqvO
+   RaUba6EEaE3i3QyGcHsMPPaPG1fvqhaxtncSBLgsav/uP9zgqo5o/6OEK
+   jw2sirh3lsS6VZv7CNCMviVo0/vOVusZAA67YsxHtbYK10S3Nz/NleoJI
+   yxCWcijf3pCo9xYwiC/yJORLzOPV/5H5v2bYUqeUgHNEZDvzEgO+hshjK
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10676"; a="341048453"
+X-IronPort-AV: E=Sophos;i="5.98,336,1673942400"; 
+   d="scan'208";a="341048453"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2023 01:39:32 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10676"; a="638735461"
+X-IronPort-AV: E=Sophos;i="5.98,336,1673942400"; 
+   d="scan'208";a="638735461"
+Received: from bwerner1-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.44.57])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2023 01:39:27 -0700
+Message-ID: <17217146-9c07-3963-fd32-02704632330d@intel.com>
+Date:   Tue, 11 Apr 2023 11:39:27 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230411061648.GD18719@lst.de>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.9.1
+Subject: Re: [PATCH] scsi: ufs: Increase the START STOP UNIT timeout from 1 s
+ to 10 s
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230411001132.1239225-1-bvanassche@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20230411001132.1239225-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 08:16:48AM +0200, Christoph Hellwig wrote:
-> On Thu, Apr 06, 2023 at 01:32:38PM +0200, Niklas Cassel wrote:
-> > +	/*
-> > +	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
-> > +	 */
-> > +	if (is_ata) {
+On 11/04/23 03:11, Bart Van Assche wrote:
+> One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
+> Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
+> Hence this patch that increases the UFS timeout to 10 s. This patch can
+> cause the total timeout to exceed 20 s, the Android shutdown timeout.
+> This is fine since the loop around ufshcd_execute_start_stop() exists to
+> deal with unit attentions and because unit attentions are reported
+> quickly.
 > 
-> I don't think these hacks have any business in the SCSI layer.  We should
-> probbaly just do this unconditionally for CDL enabled ATA devices at
-> probe time.
+> Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
 
-Hello Christoph,
+Did that commit (shown below) actually increase the timeout
+because the previous commit (8f2c96420c6e) had put
+"remaining / HZ" when it should have been just "remaining"?
+Or am I misreading?
 
-While I agree that the pattern isn't especially beautiful,
-the pattern is used in the SCSI layer already,
-authored by none other than one of the SCSI maintainers themselves:
-https://github.com/torvalds/linux/blame/v6.3-rc6/drivers/scsi/sd.c#L3066-L3074
+So maybe it also needs a fixes tag for 8f2c96420c6e.
 
-I guess we could try to clean up all the occurrences of this pattern,
-but considering that the pattern has existed in the SCSI layer for
-10 years already, is it something that has to be addressed before this
-series can be accepted?
+commit dcd5b7637c6d442d957f73780a03047413ed3a10
+Author: Bart Van Assche <bvanassche@acm.org>
+Date:   Tue Oct 18 13:29:54 2022 -0700
+
+    scsi: ufs: Reduce the START STOP UNIT timeout
+    
+    Reduce the START STOP UNIT command timeout to one second since on Android
+    devices a kernel panic is triggered if an attempt to suspend the system
+    takes more than 20 seconds. One second should be enough for the START STOP
+    UNIT command since this command completes in less than a millisecond for
+    the UFS devices I have access to.
+    
+    Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+    Link: https://lore.kernel.org/r/20221018202958.1902564-7-bvanassche@acm.org
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index db1997e99da2..f83a0045a129 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8746,8 +8746,6 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	struct scsi_device *sdp;
+ 	unsigned long flags;
+ 	int ret, retries;
+-	unsigned long deadline;
+-	int32_t remaining;
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	sdp = hba->ufs_device_wlun;
+@@ -8775,14 +8773,9 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+ 	 * already suspended childs.
+ 	 */
+-	deadline = jiffies + 10 * HZ;
+ 	for (retries = 3; retries > 0; --retries) {
+-		ret = -ETIMEDOUT;
+-		remaining = deadline - jiffies;
+-		if (remaining <= 0)
+-			break;
+ 		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+-				   remaining / HZ, 0, 0, RQF_PM, NULL);
++				   HZ, 0, 0, RQF_PM, NULL);
+ 		if (!scsi_status_is_check_condition(ret) ||
+ 				!scsi_sense_valid(&sshdr) ||
+ 				sshdr.sense_key != UNIT_ATTENTION)
 
 
-Kind regards,
-Niklas
+
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/ufs/core/ufshcd.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 03c47f9a2750..8363a1667feb 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -9181,7 +9181,8 @@ static int ufshcd_execute_start_stop(struct scsi_device *sdev,
+>  	};
+>  
+>  	return scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, /*buffer=*/NULL,
+> -			/*bufflen=*/0, /*timeout=*/HZ, /*retries=*/0, &args);
+> +			/*bufflen=*/0, /*timeout=*/10 * HZ, /*retries=*/0,
+> +			&args);
+>  }
+>  
+>  /**
+
