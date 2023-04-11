@@ -2,21 +2,21 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3456FC7619A
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 06:16:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7CEC76196
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 06:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbjDKGQ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 02:16:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58954 "EHLO
+        id S230125AbjDKGRK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 02:17:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230184AbjDKGQ4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 02:16:56 -0400
+        with ESMTP id S229844AbjDKGRJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 02:17:09 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 630E9199D;
-        Mon, 10 Apr 2023 23:16:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30FB7198C;
+        Mon, 10 Apr 2023 23:17:08 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id AA54B68BFE; Tue, 11 Apr 2023 08:16:48 +0200 (CEST)
-Date:   Tue, 11 Apr 2023 08:16:48 +0200
+        id 87E5368BFE; Tue, 11 Apr 2023 08:17:05 +0200 (CEST)
+Date:   Tue, 11 Apr 2023 08:17:04 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Niklas Cassel <nks@flawful.org>
 Cc:     Jens Axboe <axboe@kernel.dk>,
@@ -28,25 +28,18 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         Damien Le Moal <dlemoal@fastmail.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
- duration limits
-Message-ID: <20230411061648.GD18719@lst.de>
-References: <20230406113252.41211-1-nks@flawful.org> <20230406113252.41211-10-nks@flawful.org>
+Subject: Re: [PATCH v6 10/19] scsi: sd: set read/write commands CDL index
+Message-ID: <20230411061704.GE18719@lst.de>
+References: <20230406113252.41211-1-nks@flawful.org> <20230406113252.41211-11-nks@flawful.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230406113252.41211-10-nks@flawful.org>
+In-Reply-To: <20230406113252.41211-11-nks@flawful.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 06, 2023 at 01:32:38PM +0200, Niklas Cassel wrote:
-> +	/*
-> +	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
-> +	 */
-> +	if (is_ata) {
+Looks good:
 
-I don't think these hacks have any business in the SCSI layer.  We should
-probbaly just do this unconditionally for CDL enabled ATA devices at
-probe time.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
