@@ -2,47 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1C1C77B70
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 13:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA661C76196
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 14:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230412AbjDKNRp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 09:17:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56836 "EHLO
+        id S230007AbjDKOXC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 10:23:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230407AbjDKNRo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 09:17:44 -0400
-Received: from mail-oa1-f50.google.com (mail-oa1-f50.google.com [209.85.160.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A43740C5;
-        Tue, 11 Apr 2023 06:17:43 -0700 (PDT)
-Received: by mail-oa1-f50.google.com with SMTP id 586e51a60fabf-1845f865452so4452753fac.12;
-        Tue, 11 Apr 2023 06:17:43 -0700 (PDT)
+        with ESMTP id S229944AbjDKOXB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 10:23:01 -0400
+Received: from mail-yw1-x112b.google.com (mail-yw1-x112b.google.com [IPv6:2607:f8b0:4864:20::112b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 703771703
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 07:23:00 -0700 (PDT)
+Received: by mail-yw1-x112b.google.com with SMTP id 00721157ae682-54bfa5e698eso314393647b3.13
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 07:23:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1681222979;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=YfaEeNuJ+Hdp1nHSVtR8YcRxyh5te0e8PseTVlzu67k=;
+        b=ovm4+NgZ+Ec4ZjIgJf/sOKoaRV3p0V8E1syXJvvmN7tSDnoHRfDV7X+TM/TuJJb98k
+         V/zWcS1oqVkkB/Ccede5GHn7AATYAMDz5q/j3HxM/7/rUH3P4zamX2P+ZO6xwIlmPYFl
+         vf2NJBm9RLfBZ84LmTcitMTQgIdhBxMUZx/7/GQMfUxAT1l+cQ18O0zzWRW+i6YQD+xJ
+         vWqSACuOk5Mq4HwpVsg89Zq5ScenA1NUtQgmNBwbg0qHO8J1jrXplwxR1lKuo7qhch9O
+         zCVkvUg2NWx+OYuPsDxmbTc52BqlEOtfwM8INvs570K/ZJjaAOR6QYWVdH90JBhpPbZF
+         rgrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681219062; x=1683811062;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TMLSRWyO7youDUneN+C7njAPNFs3dU8flMJ2s0JdZA0=;
-        b=DFYLCQ2dAwIP15nfgTkurS5lmSAJqs33lkONFJ8+VFpKc7BYwZk9w3qGbB1wiUPSxB
-         AJj67DCr1ZN4h5G+Asthu+kY4ZKgLb20d6oDuwdkrhuKx7tZczW+qPuLiHZUveEOxNuu
-         HxvhDFHgxuQ0J7qtbtrSzCouKumi4zqlM6SQkzuEPk+8GIqdR11PISOl/IngOuUg7sXg
-         P9as961j06SzHyDKLtZgDV/nHB/j5g3jOFkX6tqu6JCH5WMG+ffIcFeXgJpR3hd9tPzQ
-         CJCgHJHJKsiTfFE5PlQYrMZ1PE+y+T7f+MBqWrXEcoBReLowW20mB+rJibWzgOliigK0
-         pTFA==
-X-Gm-Message-State: AAQBX9ccDY4dzTSxm/baewm5brz+awsqtCFpCg2YLaSXLNPDrGd0CrF7
-        V6eZ1EbFALTbJqjymc0oJg==
-X-Google-Smtp-Source: AKy350YA//UYYJ8sXvuwCAQ8mbEa46N6fYC1rhOajj2sQmniVNMtERZmWIhA2Bf01C2K7AO7TFp7lQ==
-X-Received: by 2002:a05:6870:8a1e:b0:17a:c83d:8f9d with SMTP id p30-20020a0568708a1e00b0017ac83d8f9dmr6442101oaq.19.1681219061723;
-        Tue, 11 Apr 2023 06:17:41 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id zp2-20020a0568718e0200b0017ae909afe8sm5024441oab.34.2023.04.11.06.17.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 06:17:41 -0700 (PDT)
-Received: (nullmailer pid 2915066 invoked by uid 1000);
-        Tue, 11 Apr 2023 13:17:40 -0000
-Date:   Tue, 11 Apr 2023 08:17:40 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Bartosz Golaszewski <brgl@bgdev.pl>
-Cc:     Andy Gross <agross@kernel.org>,
+        d=1e100.net; s=20210112; t=1681222979;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YfaEeNuJ+Hdp1nHSVtR8YcRxyh5te0e8PseTVlzu67k=;
+        b=B9uX3JZ98Nylp/j+zcP6do1mXKBJGN+/FStlEYewGHgzGPzXX5nEat6PeEkqJOMk4S
+         /+wqQRQdadkwGe+EzqKOHkCBiLRemqn4XPKwvydpoRQ8LoEDzv0uvwQEmFy2VoKONmA7
+         8lx0f6dPiy7Rxx3wJwrLPL/dRAdT/MSvOED7VwKE8piAdW6K8kSIahVtnYpLR6RhTQCy
+         KOncyE/VceTF86BhVLNf1S1mNFCTa4Q9R8Ny+ednbmyGiSljdeB9Ntf5aoUmoAKTjl9a
+         Nlg+uYkG23jq6Fw1FZKx8ppOFMDC5+uxNGD6eISmoY7ssqyOp9LJjUshMcWrP6sqxxbM
+         XK7w==
+X-Gm-Message-State: AAQBX9eiWziZoCLg367dDGy6vOPChgdinW/OM0vbC/8eQ4PnakgiquOH
+        3uPt8HSTYpYkFZiQHJGO+k4b+ibLow7PWlYz2OwcPg==
+X-Google-Smtp-Source: AKy350b19zupv5UWGi6PzMtlcoyVqeyNRUYz0VDgkCWSi6ZkEx0abL/8b9KOQQdtuLoLndmVPQJJ0YjEaKzB5J3gCXc=
+X-Received: by 2002:a81:b149:0:b0:549:18b4:e94d with SMTP id
+ p70-20020a81b149000000b0054918b4e94dmr7819496ywh.7.1681222979591; Tue, 11 Apr
+ 2023 07:22:59 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230406194703.495836-1-brgl@bgdev.pl> <20230406194703.495836-3-brgl@bgdev.pl>
+ <20230411131740.GA2913234-robh@kernel.org>
+In-Reply-To: <20230411131740.GA2913234-robh@kernel.org>
+From:   Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Date:   Tue, 11 Apr 2023 16:22:48 +0200
+Message-ID: <CACMJSevSygrwzKdYNGKCgtdjuAQcVyqL3LvKonyat=EHCaNPzg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] dt-bindings: phy: qmp-ufs: describe the UFS PHY
+ for sa8775p
+To:     Rob Herring <robh@kernel.org>
+Cc:     Bartosz Golaszewski <brgl@bgdev.pl>,
+        Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Vinod Koul <vkoul@kernel.org>,
@@ -54,92 +68,91 @@ Cc:     Andy Gross <agross@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v2 2/5] dt-bindings: phy: qmp-ufs: describe the UFS PHY
- for sa8775p
-Message-ID: <20230411131740.GA2913234-robh@kernel.org>
-References: <20230406194703.495836-1-brgl@bgdev.pl>
- <20230406194703.495836-3-brgl@bgdev.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230406194703.495836-3-brgl@bgdev.pl>
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 06, 2023 at 09:47:00PM +0200, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> 
-> Add a new compatible for the QMP UFS PHY found on sa8775p platforms and
-> update the clocks property to accommodate three clocks.
-> 
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> ---
->  .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        | 26 ++++++++++++++++++-
->  1 file changed, 25 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-> index cd0fbbd3593d..5bc93acccbad 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-> +++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-> @@ -16,6 +16,7 @@ description:
->  properties:
->    compatible:
->      enum:
-> +      - qcom,sa8775p-qmp-ufs-phy
->        - qcom,sc8280xp-qmp-ufs-phy
->        - qcom,sm6125-qmp-ufs-phy
->        - qcom,sm7150-qmp-ufs-phy
-> @@ -25,12 +26,15 @@ properties:
->      maxItems: 1
->  
->    clocks:
-> -    maxItems: 2
-> +    minItems: 2
-> +    maxItems: 3
->  
->    clock-names:
-> +    minItems: 2
->      items:
->        - const: ref
->        - const: ref_aux
-> +      - const: qref
->  
->    power-domains:
->      maxItems: 1
-> @@ -52,6 +56,26 @@ properties:
->    "#phy-cells":
->      const: 0
->  
-> +allOf:
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - qcom,sa8775p-qmp-ufs-phy
-> +    then:
-> +      properties:
-> +        clocks:
-> +          maxItems: 3
-> +        clock-names:
-> +          maxItems: 3
+On Tue, 11 Apr 2023 at 15:17, Rob Herring <robh@kernel.org> wrote:
+>
+> On Thu, Apr 06, 2023 at 09:47:00PM +0200, Bartosz Golaszewski wrote:
+> > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> >
+> > Add a new compatible for the QMP UFS PHY found on sa8775p platforms and
+> > update the clocks property to accommodate three clocks.
+> >
+> > Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> > ---
+> >  .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        | 26 ++++++++++++++++++-
+> >  1 file changed, 25 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
+> > index cd0fbbd3593d..5bc93acccbad 100644
+> > --- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
+> > +++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
+> > @@ -16,6 +16,7 @@ description:
+> >  properties:
+> >    compatible:
+> >      enum:
+> > +      - qcom,sa8775p-qmp-ufs-phy
+> >        - qcom,sc8280xp-qmp-ufs-phy
+> >        - qcom,sm6125-qmp-ufs-phy
+> >        - qcom,sm7150-qmp-ufs-phy
+> > @@ -25,12 +26,15 @@ properties:
+> >      maxItems: 1
+> >
+> >    clocks:
+> > -    maxItems: 2
+> > +    minItems: 2
+> > +    maxItems: 3
+> >
+> >    clock-names:
+> > +    minItems: 2
+> >      items:
+> >        - const: ref
+> >        - const: ref_aux
+> > +      - const: qref
+> >
+> >    power-domains:
+> >      maxItems: 1
+> > @@ -52,6 +56,26 @@ properties:
+> >    "#phy-cells":
+> >      const: 0
+> >
+> > +allOf:
+> > +  - if:
+> > +      properties:
+> > +        compatible:
+> > +          contains:
+> > +            enum:
+> > +              - qcom,sa8775p-qmp-ufs-phy
+> > +    then:
+> > +      properties:
+> > +        clocks:
+> > +          maxItems: 3
+> > +        clock-names:
+> > +          maxItems: 3
+>
+> The max is already 3. Did you mean 'minItems: 3' or 2 or 3 clocks are
+> valid?
+>
 
-The max is already 3. Did you mean 'minItems: 3' or 2 or 3 clocks are 
-valid?
+For this compatible only 3 clocks are valid so it should have been
+minItems indeed.
 
-> +    else:
-> +      properties:
-> +        clocks:
-> +          maxItems: 2
-> +        clock-names:
-> +          maxItems: 2
-> +
->  required:
->    - compatible
->    - reg
-> -- 
-> 2.37.2
-> 
+Bartosz
+
+> > +    else:
+> > +      properties:
+> > +        clocks:
+> > +          maxItems: 2
+> > +        clock-names:
+> > +          maxItems: 2
+> > +
+> >  required:
+> >    - compatible
+> >    - reg
+> > --
+> > 2.37.2
+> >
