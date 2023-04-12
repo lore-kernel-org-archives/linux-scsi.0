@@ -2,139 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB62C77B72
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 16:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E9E6C7619A
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 16:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbjDLQPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Apr 2023 12:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43588 "EHLO
+        id S229660AbjDLQeW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Apr 2023 12:34:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229683AbjDLQPL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 12:15:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 044371993;
-        Wed, 12 Apr 2023 09:15:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 93E76636DB;
-        Wed, 12 Apr 2023 16:15:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47877C433EF;
-        Wed, 12 Apr 2023 16:15:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681316103;
-        bh=1PY7+OsGBN+uCgRUYtBU8jXFz852lXmdaStSRrPi68o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bDDdDbgMIwY2ntwzM2O1KIrFMCN78ube1lhT9aPdwSVOjJDN4h3EF3Dh0h78su7gH
-         GSjafhtiYaeEDKi43zNOEkJOTmHsSrQ0pFRHORK8UmEE3WrQztxAB4jmNEaEMKdfZz
-         3LUb8tJzkhMiUoFdSoibSSc1Puu/W7HJxZd2sa46/NO8YypOiTvzik6Ety/QV5kpDB
-         pdCmF+WZory6u5bHriS3UXxQaMfaFEwZMnpLIbjOVSKJttMczq/7af8W+A4ceBhJXW
-         hekeuiqX3w14iwLreNQ/ZlcZXL4vzPMfdYJ63ISpWHqKlhj4eoxJ2BUt9OWYZ7uXbW
-         olDwBLDUJjD1A==
-Date:   Wed, 12 Apr 2023 21:44:59 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Bartosz Golaszewski <brgl@bgdev.pl>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v3 3/5] phy: qualcomm: phy-qcom-qmp-ufs: add definitions
- for sa8775p
-Message-ID: <ZDbZA3AnbTTylFdb@matsya>
-References: <20230411130446.401440-1-brgl@bgdev.pl>
- <20230411130446.401440-4-brgl@bgdev.pl>
+        with ESMTP id S229492AbjDLQeV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 12:34:21 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 699B59C
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 09:34:20 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id n14so37084150plc.8
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 09:34:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681317260; x=1683909260;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0kuX9ghFwn+9vsXN9PFGDUnwPFN5ulaaY6hCJ60HPw0=;
+        b=AQZ1ncbg+PgWXihBDhR0eZQoCCLw1BC7JolQJgiCVTMGXKw+Eta+Jo8YYkVJkPblde
+         z2wiFAqK8gePuKc9eNEdwjCLKBPd6Sf6Q80LKbc7TpR8gEoPsCoaNSiO6zXh9jBkd3Ty
+         FnB1a7yFE1rjluU+TDGWyuYqlUtDJvL7fAjz9HiDOAGSGX65lh9xEt+S+KLrylCcdLGb
+         WHuaILQJPY1zV/9tAxb4PdPYi8tc0vK+91L2nCcieiKKEyTOXo5zL46+Ex4qgIni+k0a
+         UpD7OsZyP2pzNN0d7bd9YWKU47QgK6oV4g9Uo7WZXuCoNALeBStAqdxGkaGeG2D6H/6J
+         RDaA==
+X-Gm-Message-State: AAQBX9fvWYhppObJdPpy4X0GmVskP5rQfJVfQRHVk27sDxO4HjfGmiaH
+        V8InfDPBAP9vI/xqU5T7uxs=
+X-Google-Smtp-Source: AKy350a3HU37lkxbQrzJ2jEf/GGy++XRLld6rYrxubcSuN0tiTV56IEJNcdoiT1r8tfcZG/iDTpDIw==
+X-Received: by 2002:a17:902:cf52:b0:1a6:5263:47f2 with SMTP id e18-20020a170902cf5200b001a6526347f2mr8141731plg.65.1681317259604;
+        Wed, 12 Apr 2023 09:34:19 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:d89d:35dd:5938:1993? ([2620:15c:211:201:d89d:35dd:5938:1993])
+        by smtp.gmail.com with ESMTPSA id s7-20020a170902988700b0019f1027f88bsm11743834plp.307.2023.04.12.09.34.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 12 Apr 2023 09:34:19 -0700 (PDT)
+Message-ID: <ce0794e1-45d5-c76a-9835-7285353e786c@acm.org>
+Date:   Wed, 12 Apr 2023 09:34:17 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230411130446.401440-4-brgl@bgdev.pl>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH] scsi: ufs: Increase the START STOP UNIT timeout from 1 s
+ to 10 s
+Content-Language: en-US
+To:     Adrian Hunter <adrian.hunter@intel.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230411001132.1239225-1-bvanassche@acm.org>
+ <17217146-9c07-3963-fd32-02704632330d@intel.com>
+ <0c8b4904-31f4-d21a-7554-6525a264293b@acm.org>
+ <a71dc651-a306-eebe-968e-0d9e56f44a76@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <a71dc651-a306-eebe-968e-0d9e56f44a76@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11-04-23, 15:04, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> 
-> Add QMP PHY config for sa8775p and add support for the new compatible.
-> 
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> ---
->  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 38 +++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> index d58822049211..5612282eb378 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> @@ -853,6 +853,41 @@ static const struct qmp_phy_cfg msm8996_ufsphy_cfg = {
->  	.no_pcs_sw_reset	= true,
->  };
->  
-> +
+On 4/11/23 11:31, Adrian Hunter wrote:
+> It would be better not to assume current stable trees are the only
+> consumers of fixes.  Presumably adding the extra Fixes tag does no
+> harm.
 
-There was already an empty line, this didnt make sense. Please run
-checkpatch to avoid missing these style issues
+Hi Adrian,
 
-I have fixed it up and applied
+The convention is to add a reference to the most recent patch that got 
+fixed in the patch description. Anyone who backports fixes is assumed to 
+follow the chain of patches transitively that is created by Fixes: tags.
 
-> +static const struct qmp_phy_cfg sa8775p_ufsphy_cfg = {
-> +	.lanes			= 2,
-> +
-> +	.offsets		= &qmp_ufs_offsets,
-> +
-> +	.tbls = {
-> +		.serdes		= sm8350_ufsphy_serdes,
-> +		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_serdes),
-> +		.tx		= sm8350_ufsphy_tx,
-> +		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_tx),
-> +		.rx		= sm8350_ufsphy_rx,
-> +		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_rx),
-> +		.pcs		= sm8350_ufsphy_pcs,
-> +		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_pcs),
-> +	},
-> +	.tbls_hs_b = {
-> +		.serdes		= sm8350_ufsphy_hs_b_serdes,
-> +		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
-> +	},
-> +	.tbls_hs_g4 = {
-> +		.tx		= sm8350_ufsphy_g4_tx,
-> +		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
-> +		.rx		= sm8350_ufsphy_g4_rx,
-> +		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
-> +		.pcs		= sm8350_ufsphy_g4_pcs,
-> +		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
-> +	},
-> +	.clk_list		= sm8450_ufs_phy_clk_l,
-> +	.num_clks		= ARRAY_SIZE(sm8450_ufs_phy_clk_l),
-> +	.vreg_list		= qmp_phy_vreg_l,
-> +	.num_vregs		= ARRAY_SIZE(qmp_phy_vreg_l),
-> +	.regs			= ufsphy_v5_regs_layout,
-> +};
-> +
->  static const struct qmp_phy_cfg sc8280xp_ufsphy_cfg = {
->  	.lanes			= 2,
->  
-> @@ -1600,6 +1635,9 @@ static const struct of_device_id qmp_ufs_of_match_table[] = {
->  	}, {
->  		.compatible = "qcom,msm8998-qmp-ufs-phy",
->  		.data = &sdm845_ufsphy_cfg,
-> +	}, {
-> +		.compatible = "qcom,sa8775p-qmp-ufs-phy",
-> +		.data = &sa8775p_ufsphy_cfg,
->  	}, {
->  		.compatible = "qcom,sc8180x-qmp-ufs-phy",
->  		.data = &sm8150_ufsphy_cfg,
-> -- 
-> 2.37.2
+Thanks,
 
--- 
-~Vinod
+Bart.
+
+
