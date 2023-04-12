@@ -2,134 +2,202 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63058C77B6E
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 23:50:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F81C77B6C
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 23:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229628AbjDLXuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Apr 2023 19:50:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45636 "EHLO
+        id S229526AbjDLX5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Apr 2023 19:57:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229897AbjDLXuF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 19:50:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E9726A47;
-        Wed, 12 Apr 2023 16:50:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3C2C263A3A;
-        Wed, 12 Apr 2023 23:50:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D5F3C433A0;
-        Wed, 12 Apr 2023 23:50:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681343403;
-        bh=iZ5lUm1A5LpIA61E8JammGz5l3tFmx4jgPYIuFkcqac=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GAqSd4xnkXdo1AGfTwyObxtOaaHvtIUcM8i8W30SvuILvPWF7zWyNy8Y/mp/fU11i
-         XI1yzw7Dxyh2PrADTJOzC7K1pgQYF/5yWjaqC/CeKhXoUOWG45vqhpxQqYzFnP+FMV
-         aa2U3PcqCl9ZKxK4Hcz7/8SSUofyIlDykIYPILkBN9KpxiJZJQ1ZLNncjBWLr3UrN0
-         DpI4aGjrhWhLLVbotT3v+CaXDOJeXx8JSbFqnyvAK8cGGKJzDp/Zm6wTdYlqoSXT0h
-         Lxsw1XTGkT38/nLkvAzhi0w77Dw8AXOJsU1L20c0C2moKT2bOJd1uvctXbcO8fDjIC
-         und7bHiiucFBA==
-From:   Josh Poimboeuf <jpoimboe@kernel.org>
-To:     x86@kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Miroslav Benes <mbenes@suse.cz>, linux-btrfs@vger.kernel.org,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        "Guilherme G . Piccoli" <gpiccoli@igalia.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH v2 09/11] x86/cpu: Mark {hlt,resume}_play_dead() __noreturn
-Date:   Wed, 12 Apr 2023 16:49:39 -0700
-Message-Id: <ce1407c4bf88b1334fe40413126343792a77ca50.1681342859.git.jpoimboe@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <cover.1681342859.git.jpoimboe@kernel.org>
-References: <cover.1681342859.git.jpoimboe@kernel.org>
+        with ESMTP id S229451AbjDLX5c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 19:57:32 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70963C21
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 16:57:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681343850; x=1712879850;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=hZ/qy646b2HJYtuwtWFSkmOTLwonPMg4gKPysNTmLZ0=;
+  b=LQSvrDeCdXS4KgxIxvRHKDjB1+1Imvi1NAK4DPT8Muh9bgSGNfZzKhNS
+   Z76EDEhxEaz7On1iw3A74jdzVpciQ1tjdg3CD31fzu5TJi5EFo2Fi48zJ
+   Rh8GlUN9geHXlGH+IRdPkv/cLYqS3byLzTOyH9pQxJ6F+7T5Nsmc7K1Te
+   OV7YPlo8IIeM7dKSmJFi7O/9Rn50ZdR3hR/OMOQ2jTlsOvn9rQ5ct7IZQ
+   7fYRtiSe7o+W7IR97OIOHIUu1AAmtksyjZ+Vh2j60+qfh2J0mgXl0oI1g
+   6V/JwV5Ru7dNI/7N/XltZbHeD5qKa847bXzy9ZoKNpzNPZptqMuyb2CIG
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10678"; a="346731895"
+X-IronPort-AV: E=Sophos;i="5.98,339,1673942400"; 
+   d="scan'208";a="346731895"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Apr 2023 16:57:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10678"; a="639421872"
+X-IronPort-AV: E=Sophos;i="5.98,339,1673942400"; 
+   d="scan'208";a="639421872"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 12 Apr 2023 16:57:27 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pmkL8-000Y9R-2K;
+        Wed, 12 Apr 2023 23:57:26 +0000
+Date:   Thu, 13 Apr 2023 07:56:53 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Brian King <brking@linux.vnet.ibm.com>, martin.petersen@oracle.com
+Cc:     oe-kbuild-all@lists.linux.dev, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org, damien.lemoal@opensource.wdc.com,
+        john.g.garry@oracle.com, wenxiong@linux.ibm.com,
+        Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ipr: Remove SATA support
+Message-ID: <202304130720.QuKga8rs-lkp@intel.com>
+References: <20230412174015.114764-1-brking@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-type: text/plain
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230412174015.114764-1-brking@linux.vnet.ibm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fixes the following warning:
+Hi Brian,
 
-  vmlinux.o: warning: objtool: resume_play_dead+0x21: unreachable instruction
+kernel test robot noticed the following build warnings:
 
-Reported-by: kernel test robot <lkp@intel.com>
-Link: https://lore.kernel.org/oe-kbuild-all/202301071838.6MpuHVQP-lkp@intel.com/
-Signed-off-by: Josh Poimboeuf <jpoimboe@kernel.org>
----
- arch/x86/include/asm/smp.h | 2 +-
- arch/x86/kernel/smpboot.c  | 2 +-
- arch/x86/power/cpu.c       | 2 +-
- tools/objtool/check.c      | 2 ++
- 4 files changed, 5 insertions(+), 3 deletions(-)
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.3-rc6 next-20230412]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/arch/x86/include/asm/smp.h b/arch/x86/include/asm/smp.h
-index e6d1d2810e38..47ce4c79a3b0 100644
---- a/arch/x86/include/asm/smp.h
-+++ b/arch/x86/include/asm/smp.h
-@@ -125,7 +125,7 @@ int native_cpu_up(unsigned int cpunum, struct task_struct *tidle);
- int native_cpu_disable(void);
- int common_cpu_die(unsigned int cpu);
- void native_cpu_die(unsigned int cpu);
--void hlt_play_dead(void);
-+void __noreturn hlt_play_dead(void);
- void native_play_dead(void);
- void play_dead_common(void);
- void wbinvd_on_cpu(int cpu);
-diff --git a/arch/x86/kernel/smpboot.c b/arch/x86/kernel/smpboot.c
-index 9013bb28255a..a6da3f94b7b6 100644
---- a/arch/x86/kernel/smpboot.c
-+++ b/arch/x86/kernel/smpboot.c
-@@ -1816,7 +1816,7 @@ static inline void mwait_play_dead(void)
- 	}
- }
- 
--void hlt_play_dead(void)
-+void __noreturn hlt_play_dead(void)
- {
- 	if (__this_cpu_read(cpu_info.x86) >= 4)
- 		wbinvd();
-diff --git a/arch/x86/power/cpu.c b/arch/x86/power/cpu.c
-index 236447ee9beb..7a4d5e911415 100644
---- a/arch/x86/power/cpu.c
-+++ b/arch/x86/power/cpu.c
-@@ -288,7 +288,7 @@ EXPORT_SYMBOL(restore_processor_state);
- #endif
- 
- #if defined(CONFIG_HIBERNATION) && defined(CONFIG_HOTPLUG_CPU)
--static void resume_play_dead(void)
-+static void __noreturn resume_play_dead(void)
- {
- 	play_dead_common();
- 	tboot_shutdown(TB_SHUTDOWN_WFS);
-diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-index 0b3522d66ddf..a42a2af99ea2 100644
---- a/tools/objtool/check.c
-+++ b/tools/objtool/check.c
-@@ -212,6 +212,7 @@ static bool __dead_end_function(struct objtool_file *file, struct symbol *func,
- 		"do_task_dead",
- 		"ex_handler_msr_mce",
- 		"fortify_panic",
-+		"hlt_play_dead",
- 		"kthread_complete_and_exit",
- 		"kthread_exit",
- 		"kunit_try_catch_throw",
-@@ -222,6 +223,7 @@ static bool __dead_end_function(struct objtool_file *file, struct symbol *func,
- 		"panic",
- 		"panic_smp_self_stop",
- 		"rest_init",
-+		"resume_play_dead",
- 		"rewind_stack_and_make_dead",
- 		"sev_es_terminate",
- 		"snp_abort",
+url:    https://github.com/intel-lab-lkp/linux/commits/Brian-King/ipr-Remove-SATA-support/20230413-014213
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230412174015.114764-1-brking%40linux.vnet.ibm.com
+patch subject: [PATCH] ipr: Remove SATA support
+config: riscv-allmodconfig (https://download.01.org/0day-ci/archive/20230413/202304130720.QuKga8rs-lkp@intel.com/config)
+compiler: riscv64-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/3562ad7d350c7c5b3f13508ef3323b1239de71e2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Brian-King/ipr-Remove-SATA-support/20230413-014213
+        git checkout 3562ad7d350c7c5b3f13508ef3323b1239de71e2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=riscv olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304130720.QuKga8rs-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/scsi/ipr.c: In function 'ipr_init_res_entry':
+>> drivers/scsi/ipr.c:1104:22: warning: variable 'proto' set but not used [-Wunused-but-set-variable]
+    1104 |         unsigned int proto;
+         |                      ^~~~~
+   drivers/scsi/ipr.c: In function 'ipr_update_res_entry':
+   drivers/scsi/ipr.c:1261:22: warning: variable 'proto' set but not used [-Wunused-but-set-variable]
+    1261 |         unsigned int proto;
+         |                      ^~~~~
+   drivers/scsi/ipr.c: In function 'ipr_change_queue_depth':
+>> drivers/scsi/ipr.c:4417:36: warning: variable 'res' set but not used [-Wunused-but-set-variable]
+    4417 |         struct ipr_resource_entry *res;
+         |                                    ^~~
+
+
+vim +/proto +1104 drivers/scsi/ipr.c
+
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1091  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1092  /**
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1093   * ipr_init_res_entry - Initialize a resource entry struct.
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1094   * @res:	resource entry struct
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1095   * @cfgtew:	config table entry wrapper struct
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1096   *
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1097   * Return value:
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1098   * 	none
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1099   **/
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1100  static void ipr_init_res_entry(struct ipr_resource_entry *res,
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1101  			       struct ipr_config_table_entry_wrapper *cfgtew)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1102  {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1103  	int found = 0;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19 @1104  	unsigned int proto;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1105  	struct ipr_ioa_cfg *ioa_cfg = res->ioa_cfg;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1106  	struct ipr_resource_entry *gscsi_res = NULL;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1107  
+ee0a90fa3efffc Brian King     2005-11-01  1108  	res->needs_sync_complete = 0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1109  	res->in_erp = 0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1110  	res->add_to_ml = 0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1111  	res->del_from_ml = 0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1112  	res->resetting_device = 0;
+0b1f8d445b8cc5 Wendy Xiong    2014-01-21  1113  	res->reset_occurred = 0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  1114  	res->sdev = NULL;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1115  
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1116  	if (ioa_cfg->sis64) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1117  		proto = cfgtew->u.cfgte64->proto;
+359d96e73cea0e Brian King     2015-06-11  1118  		res->flags = be16_to_cpu(cfgtew->u.cfgte64->flags);
+359d96e73cea0e Brian King     2015-06-11  1119  		res->res_flags = be16_to_cpu(cfgtew->u.cfgte64->res_flags);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1120  		res->qmodel = IPR_QUEUEING_MODEL64(res);
+438b03311108b0 Wayne Boyer    2010-05-10  1121  		res->type = cfgtew->u.cfgte64->res_type;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1122  
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1123  		memcpy(res->res_path, &cfgtew->u.cfgte64->res_path,
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1124  			sizeof(res->res_path));
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1125  
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1126  		res->bus = 0;
+0cb992eda1f7e7 Wayne Boyer    2010-11-04  1127  		memcpy(&res->dev_lun.scsi_lun, &cfgtew->u.cfgte64->lun,
+0cb992eda1f7e7 Wayne Boyer    2010-11-04  1128  			sizeof(res->dev_lun.scsi_lun));
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1129  		res->lun = scsilun_to_int(&res->dev_lun);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1130  
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1131  		if (res->type == IPR_RES_TYPE_GENERIC_SCSI) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1132  			list_for_each_entry(gscsi_res, &ioa_cfg->used_res_q, queue) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1133  				if (gscsi_res->dev_id == cfgtew->u.cfgte64->dev_id) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1134  					found = 1;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1135  					res->target = gscsi_res->target;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1136  					break;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1137  				}
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1138  			}
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1139  			if (!found) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1140  				res->target = find_first_zero_bit(ioa_cfg->target_ids,
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1141  								  ioa_cfg->max_devs_supported);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1142  				set_bit(res->target, ioa_cfg->target_ids);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1143  			}
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1144  		} else if (res->type == IPR_RES_TYPE_IOAFP) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1145  			res->bus = IPR_IOAFP_VIRTUAL_BUS;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1146  			res->target = 0;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1147  		} else if (res->type == IPR_RES_TYPE_ARRAY) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1148  			res->bus = IPR_ARRAY_VIRTUAL_BUS;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1149  			res->target = find_first_zero_bit(ioa_cfg->array_ids,
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1150  							  ioa_cfg->max_devs_supported);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1151  			set_bit(res->target, ioa_cfg->array_ids);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1152  		} else if (res->type == IPR_RES_TYPE_VOLUME_SET) {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1153  			res->bus = IPR_VSET_VIRTUAL_BUS;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1154  			res->target = find_first_zero_bit(ioa_cfg->vset_ids,
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1155  							  ioa_cfg->max_devs_supported);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1156  			set_bit(res->target, ioa_cfg->vset_ids);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1157  		} else {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1158  			res->target = find_first_zero_bit(ioa_cfg->target_ids,
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1159  							  ioa_cfg->max_devs_supported);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1160  			set_bit(res->target, ioa_cfg->target_ids);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1161  		}
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1162  	} else {
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1163  		proto = cfgtew->u.cfgte->proto;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1164  		res->qmodel = IPR_QUEUEING_MODEL(res);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1165  		res->flags = cfgtew->u.cfgte->flags;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1166  		if (res->flags & IPR_IS_IOA_RESOURCE)
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1167  			res->type = IPR_RES_TYPE_IOAFP;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1168  		else
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1169  			res->type = cfgtew->u.cfgte->rsvd_subtype & 0x0f;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1170  
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1171  		res->bus = cfgtew->u.cfgte->res_addr.bus;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1172  		res->target = cfgtew->u.cfgte->res_addr.target;
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1173  		res->lun = cfgtew->u.cfgte->res_addr.lun;
+46d7456324766c Wayne Boyer    2010-08-11  1174  		res->lun_wwn = get_unaligned_be64(cfgtew->u.cfgte->lun_wwn);
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1175  	}
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1176  }
+3e7ebdfa58ddae Wayne Boyer    2010-02-19  1177  
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
