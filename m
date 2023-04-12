@@ -2,102 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C39D5C76196
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Apr 2023 23:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 029E5C77B73
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 00:59:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229530AbjDKXJb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 19:09:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53112 "EHLO
+        id S229621AbjDLA7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Apr 2023 20:59:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbjDKXJa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 19:09:30 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1391C1FD2
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 16:09:30 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id e199-20020a2550d0000000b00b8db8a4530dso12574194ybb.5
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 16:09:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681254569; x=1683846569;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=vOZGDB1tEns0ICitKu53mE4nvsxHCRDQzBuBh0aiQXo=;
-        b=lgZi8uglWKHWhlXre4/ek2jQLOH6P1XWQav0/oTO33kn6oS/pGGIErN4evvKuwF0Vd
-         Hr1TwkJDwSytn+K0vjw44D9QWqzU1QsWosxJXsWRy06T3WWUhm90RUJL0Fdn6D07Z8hQ
-         1F5FTm7ycHRinDKxnMKO6SaaXE2OrXtRgSZKTQV4gxphwvJoHMqqf8+nAKv0IJQ3UaIG
-         FLPoCUSCT4Y03iYtS237wvRS1kv3Z9w2BG8jiiPFop/H3VSr73ElY+MNbVIDflvxweby
-         JKt7hpqChemH9QHLcVFo8EV5hEufC+Z2cUVQ4bMAezsoomraxAm++s22xFy9mZfZ8v7+
-         XF5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681254569; x=1683846569;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=vOZGDB1tEns0ICitKu53mE4nvsxHCRDQzBuBh0aiQXo=;
-        b=sS/DEF4UuZu+HC0DfzzAtB3LZLcqMHwaSzvaQZM8zHDTWsq2vUqThsSuH34fQ6fDpl
-         TuRNqYmEwrkvMjvID/5qwc04HiJAw40/0OCGSrGcfNkyceFhGyPlWxbNjCt6ykKTYcbT
-         2yCDzsQwgqZ82lrQKlEuHVHhGNY+/hmBU6eo6jtZjyS1mZCMqMIlnDg3rROd3d7iGeBu
-         bDqISIhgzaT/dg7nzmpKPh1AbrUDCYsEVi4nl5iQIT3ViUreB5IZI0X522R/R43dGRJT
-         ir8EVWfJYZP8TYDd3MaBHcNJDTfjLsn/zf65S9822AsqquwaiC5BqcLBVc36dCedT2dd
-         ufxQ==
-X-Gm-Message-State: AAQBX9cPMJ9xq/QE4Y/+twrslNi497MxdrpnR3+bQW2+cvuQVCRLpGAt
-        Om4pACt1aoNU0nuXyTv0+T5JcA2y92a/iA==
-X-Google-Smtp-Source: AKy350YIK1EZL1Y0TVSqyu3cdqYhqXtb6pb5aYRyZU8d6A+nXo20/b2ezoiZVi5EQq4vABuq7+bkN6hQ3uUEvw==
-X-Received: from pranav-first.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:390b])
- (user=pranavpp job=sendgmr) by 2002:a25:6c41:0:b0:b75:3fd4:1b31 with SMTP id
- h62-20020a256c41000000b00b753fd41b31mr384659ybc.1.1681254569324; Tue, 11 Apr
- 2023 16:09:29 -0700 (PDT)
-Date:   Tue, 11 Apr 2023 23:06:50 +0000
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.40.0.577.gac1e443424-goog
-Message-ID: <20230411230650.1760757-1-pranavpp@google.com>
-Subject: [PATCH] scsi: pm80xx: Log device registration
-From:   Pranav Prasad <pranavpp@google.com>
-To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Akshat Jain <akshatzen@google.com>,
-        Pranav Prasad <pranavpp@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S229611AbjDLA7f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 20:59:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF6F73C0D;
+        Tue, 11 Apr 2023 17:59:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5A10E62883;
+        Wed, 12 Apr 2023 00:59:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44FFEC433D2;
+        Wed, 12 Apr 2023 00:59:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681261173;
+        bh=21X7G3ujtwPj1BsO2o9DbkG+h4dix6yYEdsKo2U3vak=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=C5c1EjPJnpgMVWPGANVK6LJh/SL1io4hnzRhHLLmUjrXZXwkekJjHomj3ri2hTqsr
+         4/xsjNCwRbY7ET0jWgMQr5IBbCwIq7rsLwMVBn8Y5IBrqj+ZwaPw/1UAbjr7QrwGNv
+         Exbkz+R3AadRZsqQ8gURY7+2fb3ZhpW8gnOFgo7vJh3tOCeSfalCQ5YAuwHFs1oUIk
+         M3BRA2CIEY4KxuHlG8RSrOaPx+arav7SArZ6AS7XUvIvtmLktHpiHAaeBplAhES3eu
+         ZiljESdElPUnMtOuUyVPvtrTXMm5TQL4mHkhsiRgB2qVSmMyS5syPtu0mqpcKB0yNd
+         qjFuwKM6WumJQ==
+Message-ID: <85d6ea79-eda1-de58-6ce4-1fab90335ac8@kernel.org>
+Date:   Wed, 12 Apr 2023 09:59:30 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
+ duration limits
+To:     Niklas Cassel <nks@flawful.org>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
+References: <20230406113252.41211-1-nks@flawful.org>
+ <20230406113252.41211-10-nks@flawful.org> <20230411061648.GD18719@lst.de>
+ <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org>
+ <20230411072317.GA22683@lst.de>
+ <15ad7cf9-e385-9cea-964a-4a2eac35385c@kernel.org>
+ <ZDVLsIi/OhkxNcGb@x1-carbon>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZDVLsIi/OhkxNcGb@x1-carbon>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Akshat Jain <akshatzen@google.com>
+On 4/11/23 20:59, Niklas Cassel wrote:
+> On Tue, Apr 11, 2023 at 04:38:48PM +0900, Damien Le Moal wrote:
+>> On 4/11/23 16:23, Christoph Hellwig wrote:
+>>> On Tue, Apr 11, 2023 at 04:09:34PM +0900, Damien Le Moal wrote:
+>>>> But yes, I guess we could just unconditionally enable CDL for ATA on device scan
+>>>> to be on par with scsi, which has CDL always enabled.
+>>>
+>>> I'd prefer that.  With a module option to not enable it just to be
+>>> safe.
+>>
+>> Then it may be better to move the cdl_enable attribute store definition for ATA
+>> devices to libata. That would be less messy that way. Let me see if that can be
+>> done cleanly.
+> 
+> I don't think that the SCSI mode select can just be replaced with simple
+> SET FEATURES in libata.
+> 
+> If we move the SET FEATURES call to a function in libata, and then use a
+> function pointer in the scsi_host_template, and let only libata set this
+> function pointer (similar to e.g. how the queue_depth sysfs attribute works),
+> then the code will no longer work for SATA devices connected to a SAS HBA.
+> 
+> 
+> 
+> The current code simply checks if VPD page89 (the ATA Information VPD
+> page - which is defined in the SCSI to ATA Translation (SAT) standard)
+> exists. This page (and thus the sdev->vpd_pg89 pointer) will only exist
+> if either:
+> 1) An ATA device is connected to a SATA controller. This page will then
+> be implemented by libata.
+> 2) An ATA device is connected to a SAS HBA. The SAS HB will then provide
+> this page. (The page will not exist for SCSI devices connected to the
+> same SAS HBA.)
+> 
+> For case 1) with the current code, scsi.c will call scsi_mode_select()
+> which will be translated by libata before being sent down to the device.
+> 
+> For case 2) with the current code, scsi.c will send down a SCSI mode
+> select to the SAS HBA, and the SAS HBA will be responsible for translating
+> the command before sending it to the device.
+> 
+> So I actually think that the current way to check if vpd page89 exists
+> is probably the "cleanest" solution that I can think of.
+> 
+> If you have a better suggestion that will work for both case 1) and
+> case 2), I will be happy to change the code accordingly.
 
-Log combination of phy_id and device_id in device registration
-response.
+Good point. If we move the code for cdl_enable to libata, then we will not be
+covering the SAS HBA cases.
 
-Signed-off-by: Akshat Jain <akshatzen@google.com>
-Signed-off-by: Pranav Prasad <pranavpp@google.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Christoph,
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index ec1a9ab61814..73cd25f30ca5 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3362,8 +3362,9 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	pm8001_dev = ccb->device;
- 	status = le32_to_cpu(registerRespPayload->status);
- 	device_id = le32_to_cpu(registerRespPayload->device_id);
--	pm8001_dbg(pm8001_ha, MSG, " register device is status = %d\n",
--		   status);
-+	pm8001_dbg(pm8001_ha, INIT,
-+		   "register device status %d phy_id 0x%x device_id %d\n",
-+		   status, pm8001_dev->attached_phy, device_id);
- 	switch (status) {
- 	case DEVREG_SUCCESS:
- 		pm8001_dbg(pm8001_ha, MSG, "DEVREG_SUCCESS\n");
-@@ -4278,7 +4279,7 @@ int pm8001_chip_dereg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 	memset(&payload, 0, sizeof(payload));
- 	payload.tag = cpu_to_le32(1);
- 	payload.device_id = cpu_to_le32(device_id);
--	pm8001_dbg(pm8001_ha, MSG, "unregister device device_id = %d\n",
-+	pm8001_dbg(pm8001_ha, INIT, "unregister device device_id %d\n",
- 		   device_id);
- 
- 	return pm8001_mpi_build_cmd(pm8001_ha, 0, opc, &payload,
--- 
-2.40.0.577.gac1e443424-goog
+I do not see a cleaner solution... Can we keep this patch as is ? Any other idea ?
 
