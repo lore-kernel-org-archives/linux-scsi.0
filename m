@@ -2,110 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B63CC77B6E
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 20:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AC02C7619A
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 20:40:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230231AbjDLUaJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Apr 2023 16:30:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44734 "EHLO
+        id S229872AbjDLUki (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Apr 2023 16:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230215AbjDLUaD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 16:30:03 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DB0576B0
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 13:29:55 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id jx2-20020a17090b46c200b002469a9ff94aso11082359pjb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 13:29:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681331395; x=1683923395;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MPIZuP0MZByRyC+/nU9qhHjtfr1zaG8eGgVe3FKVcpE=;
-        b=4i1ZGWC7T0vcawyANuqheZxC4oYpBwN5406UaN8TmvzhIkKY1UYMwB5AqBeg95Q6GM
-         S1UvZvmMB505K6ozQ2XtKaplTM/0klq52c430fSTqKBOONVXzpVOEIxiGPbl5DHCjzzp
-         Mg1TO0DaLWiULgIhhPHBLXpfTquxUtgxOjikd1FpVrUYwAmdTEt1xE+CEY/HqwDybLZV
-         kj01pGMvuC3zgWQ3FW9tjp1woTn24MteocGWzJkZb+4hp6ViZo1mSMOwhq3HD1Dict86
-         MzwjpBrVWBojdTL2ZHnpXY4RDOFRTYh2/IhZGgvyNDiljfX7psrugiJxafIzLMYucoeA
-         mgaw==
+        with ESMTP id S229499AbjDLUki (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 16:40:38 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A5A44EC5
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 13:40:37 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id mn5-20020a17090b188500b00246eddf34f6so5197745pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2023 13:40:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681331395; x=1683923395;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MPIZuP0MZByRyC+/nU9qhHjtfr1zaG8eGgVe3FKVcpE=;
-        b=NWk0qexPV5mwsblM5MwDCskeZUIJcb3KcjTDSnZraAyiwTHYugqo7FKzEWHvbhpHfD
-         YE5FoEpQrKOUQg+NVUNBHU+q5NGR7ZyClOjkHDhxYC2yY2CN5mTjrWKBOQOPA1Far5HB
-         84ZLtvJ3dMJiJWhTTx49o1iCx/24erdpcDdECLyC4Fe7K3JlFO064hj/2mxj0djfHPwu
-         KLb+nBQutCDiAaTRB2k/iqbmKm+maMxo4hdB1llcOgcjj/V7IeJ6a1ZNtbRO5Yfu4+4u
-         857WEvdc4fuRhl6HCynR3CN0If0aN9aqOjsPjUHAjtWkOb6K+NyJ78C1ooasRW4TjeRC
-         Thlw==
-X-Gm-Message-State: AAQBX9detcoN+YMHqxri5DsGy9++VKspuZJvw5YBwywIiW/kUifowQaA
-        XGUjiXbPJQqz6KjxbuiUoI87YA==
-X-Google-Smtp-Source: AKy350YrZ02ScWTgT8jhEbD53S2CWz6oXdOXMzAXXLbV3fv9KVIYZsKPbbGjmkiIUKkubXaaP3P2VQ==
-X-Received: by 2002:a17:902:e749:b0:1a6:6b9c:48ae with SMTP id p9-20020a170902e74900b001a66b9c48aemr67912plf.52.1681331395062;
-        Wed, 12 Apr 2023 13:29:55 -0700 (PDT)
-Received: from google.com ([2620:15c:2d1:203:4a4a:51a1:19b:61ab])
-        by smtp.gmail.com with ESMTPSA id g24-20020a63e618000000b00502f20aa4desm4115pgh.70.2023.04.12.13.29.53
+        d=1e100.net; s=20221208; t=1681332036; x=1683924036;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=H9HN99QwsksXCBCaVQ2bJ/Ic4jm/KkGkP0u89WLoXno=;
+        b=i9LTYru/cOV8Rp+nAgJSX+nzEx2Nfy+XgQgoXwl4hZiFYsHhw5F52ffceJ/BDqJ4Hf
+         hz1dR4hg2Iqp2h+Htzr763DSkoYEtWyOT7yae5DyWSLpr7L5n42V1DvAT9LRePjGAHSp
+         JFqh/TM/cTzioTveQxIufoIIGrvY8KnRzSYaXAjJaq7RfJXTVEFrGqcgRcSmLSBiwWDS
+         JbRSovGUUFmG6B3Vqsby6gDXeSq+9TKfTU7uJbex9QOSov9j1FIHaoPy0n+iGrlJK+r7
+         F1PX2od6mxv+Ax/Oo8118K7N7aXDsFVdjdOsMrT5sydBWzjG6oebdad9ZsdzCrw+6pOB
+         QTQw==
+X-Gm-Message-State: AAQBX9fqQ5sQJFuVedi1AmqyfIVHhJPc/+svZgJ3JBYMeIKJbhzx+rlX
+        PnVNuuSZuh7IZW3Yg20qh+Y=
+X-Google-Smtp-Source: AKy350akZ6NqSoEzlzqbm3jNEMe38GwVYuOBXZggYJoN8pjjhMjhJD+ujMc9wGC5WDx8oBT3/NokTA==
+X-Received: by 2002:a17:902:b28b:b0:1a5:898:37a8 with SMTP id u11-20020a170902b28b00b001a5089837a8mr199789plr.18.1681332036300;
+        Wed, 12 Apr 2023 13:40:36 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d89d:35dd:5938:1993])
+        by smtp.gmail.com with ESMTPSA id t4-20020a170902b20400b001a4fecf79e4sm25114plr.49.2023.04.12.13.40.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Apr 2023 13:29:54 -0700 (PDT)
-Date:   Wed, 12 Apr 2023 13:29:49 -0700
-From:   Nick Desaulniers <ndesaulniers@google.com>
-To:     Josh Poimboeuf <jpoimboe@kernel.org>,
-        "Borislav Petkov (AMD)" <bp@alien8.de>
-Cc:     x86@kernel.org, linux-kernel@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Miroslav Benes <mbenes@suse.cz>, linux-btrfs@vger.kernel.org,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        "Guilherme G . Piccoli" <gpiccoli@igalia.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH 02/11] init: Mark start_kernel() __noreturn
-Message-ID: <ZDcUvWuqv2VevITe@google.com>
-References: <cover.1680912057.git.jpoimboe@kernel.org>
- <cb5dab6038dfe5156f5d68424cf372f7eed1b934.1680912057.git.jpoimboe@kernel.org>
+        Wed, 12 Apr 2023 13:40:35 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Tomas Henzl <thenzl@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>
+Subject: [PATCH 2/3] scsi: ufs: Simplify ufshcd_wl_shutdown()
+Date:   Wed, 12 Apr 2023 13:40:19 -0700
+Message-Id: <20230412204029.3222134-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.0.577.gac1e443424-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cb5dab6038dfe5156f5d68424cf372f7eed1b934.1680912057.git.jpoimboe@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 07, 2023 at 05:09:55PM -0700, Josh Poimboeuf wrote:
-> Fixes the following warning:
-> 
->   vmlinux.o: warning: objtool: x86_64_start_reservations+0x28: unreachable instruction
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Link: https://lore.kernel.org/r/202302161142.K3ziREaj-lkp@intel.com/
-> Signed-off-by: Josh Poimboeuf <jpoimboe@kernel.org>
+Now that sd_shutdown() fails future I/O the code for quiescing LUNs in
+ufshcd_wl_shutdown() is superfluous. Remove the code for quiescing LUNs.
+Also remove the ufshcd_rpm_get_sync() call because it is not necessary
+to resume a UFS device before submitting a START STOP UNIT command.
 
-Ah, I just realized that my series will conflict with this.
-https://lore.kernel.org/llvm/20230412-no_stackp-v1-1-46a69b507a4b@google.com/
-Perhaps if my series gets positive feedback; I can rebase it on top of
-this and it can become part of your series?
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
-For this patch,
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
-
-Though I'm curious, it does look like it's necessary because of 01/11 in
-the series? Any idea how the 0day bot report happened before 1/11
-existed?
-
-(Surely gcc isn't assuming a weak function is implicitly noreturn and
-make optimizations based on that (that's one hazard I'm worried about)?)
-
-It looks like perhaps the link to
-https://lore.kernel.org/all/202302161142.K3ziREaj-lkp@intel.com/
-on 2/11 was 0day testing the arch-cpu-idle-dead-noreturn branch of your
-kernel tree
-https://git.kernel.org/pub/scm/linux/kernel/git/jpoimboe/linux.git/log/?h=arch-cpu-idle-dead-noreturn
-, which had 1/11 in it, IIUC?  Perhaps this link should go on 1/11
-rather than 2/11?
-
-Looking back at 1/11, 3/11, 8/11 I noticed not all patches have links to 0day
-reports.  Are you able to flesh out more info how/what/when such objtool
-warnings are observed?  Are the warnings ever results of patches earlier
-in the series?
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9434328ba323..784787cf08c3 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9768,22 +9768,12 @@ static int ufshcd_wl_resume(struct device *dev)
+ static void ufshcd_wl_shutdown(struct device *dev)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct ufs_hba *hba;
+-
+-	hba = shost_priv(sdev->host);
++	struct ufs_hba *hba = shost_priv(sdev->host);
+ 
+ 	down(&hba->host_sem);
+ 	hba->shutting_down = true;
+ 	up(&hba->host_sem);
+ 
+-	/* Turn on everything while shutting down */
+-	ufshcd_rpm_get_sync(hba);
+-	scsi_device_quiesce(sdev);
+-	shost_for_each_device(sdev, hba->host) {
+-		if (sdev == hba->ufs_device_wlun)
+-			continue;
+-		scsi_device_quiesce(sdev);
+-	}
+ 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+ }
+ 
