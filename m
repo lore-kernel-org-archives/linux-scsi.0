@@ -2,47 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE8FC77B73
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 05:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA9C1C77B6E
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 06:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229604AbjDLFej (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Apr 2023 01:34:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48708 "EHLO
+        id S229611AbjDLGCu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Apr 2023 02:02:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjDLFei (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 01:34:38 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB31CB9;
-        Tue, 11 Apr 2023 22:34:37 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id F2F3868BFE; Wed, 12 Apr 2023 07:34:32 +0200 (CEST)
-Date:   Wed, 12 Apr 2023 07:34:32 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Niklas Cassel <nks@flawful.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
- duration limits
-Message-ID: <20230412053432.GA18941@lst.de>
-References: <20230406113252.41211-1-nks@flawful.org> <20230406113252.41211-10-nks@flawful.org> <20230411061648.GD18719@lst.de> <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org> <20230411072317.GA22683@lst.de> <15ad7cf9-e385-9cea-964a-4a2eac35385c@kernel.org> <ZDVLsIi/OhkxNcGb@x1-carbon> <85d6ea79-eda1-de58-6ce4-1fab90335ac8@kernel.org> <20230412044348.GA17806@lst.de> <3ac7f4a1-eaa6-d1db-3056-b0ed6681ef36@kernel.org>
+        with ESMTP id S229451AbjDLGCt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 02:02:49 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FA5B3A98;
+        Tue, 11 Apr 2023 23:02:48 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0B88121940;
+        Wed, 12 Apr 2023 06:02:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1681279367; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2jv6U/y14eRDx1QvxhnepcCCOP5Pg57H1mqamrdIt/s=;
+        b=GUG5Y9eycnzhJMcYuE+SWH3QXzOIx/08kORfa7fBhRI9Nbkz0tHUq/LzZ3bhaihwCsC3eL
+        R2VRPRb+zSxMVWjgenEO8T5Y4s/UIyqy7koTBsOB6Vd8Df0I5f/ow0er4a/i502TzDHqk+
+        eqngERR5ZFd0srHeAoorsapliAp2T6E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1681279367;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2jv6U/y14eRDx1QvxhnepcCCOP5Pg57H1mqamrdIt/s=;
+        b=fldrXYHH4IYycwrzOAGS/EXNvzk1THQOiDQrBKkznlfg6ObrLrQKNQq3mhjZmUFTIeX2DQ
+        yyoeTVxZqNktKOCw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B0B96132C7;
+        Wed, 12 Apr 2023 06:02:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id RqxpIoZJNmT5DgAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 12 Apr 2023 06:02:46 +0000
+Message-ID: <e7b55e2d-4bd1-eabe-43b6-ef00da69935a@suse.de>
+Date:   Wed, 12 Apr 2023 08:02:45 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3ac7f4a1-eaa6-d1db-3056-b0ed6681ef36@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH 11/11] iscsi: force destroy sesions when a network
+ namespace exits
+Content-Language: en-US
+To:     linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
+        Lee Duncan <leeman.duncan@gmail.com>, netdev@vger.kernel.org
+References: <83de4002-6846-2f90-7848-ef477f0b0fe5@suse.de>
+ <20230410191033.1069293-3-cleech@redhat.com>
+ <85458436-702f-2e38-c7cc-ff7329731eda@suse.de>
+ <20230411181945.GB1234639@localhost>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230411181945.GB1234639@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 12, 2023 at 02:32:30PM +0900, Damien Le Moal wrote:
-> It is T10 rather than T13 that screwed up: if SPC also defined a CDL feature
-> on/off through mode sense/select, we would not need any "if (is_ata)"...
-> For ATA/T13, the on/off makes sense because of the mutual exclusion with NCQ
-> priority.
+On 4/11/23 20:19, Chris Leech wrote:
+> On Tue, Apr 11, 2023 at 08:21:22AM +0200, Hannes Reinecke wrote:
+>> On 4/10/23 21:10, Chris Leech wrote:
+>>> The namespace is gone, so there is no userspace to clean up.
+>>> Force close all the sessions.
+>>>
+>>> This should be enough for software transports, there's no implementation
+>>> of migrating physical iSCSI hosts between network namespaces currently.
+>>>
+>> Ah, you shouldn't have mentioned that.
+>> (Not quite sure how being namespace-aware relates to migration, though.)
+>> We should be checking/modifying the iSCSI offload drivers, too.
+>> But maybe with a later patch.
+> 
+> I shouldn't have left that opening ;-)
+> 
+> The idea with this design is to keep everything rooted on the
+> iscsi_host, and for physical HBAs those stay assigned to init_net.
+> With this patch set, offload drivers remain unusable in a net namespace
+> other than init_net. They simply are not visible.
+> 
+> By migration, I was implying the possibilty of assigment of an HBA
+> iscsi_host into a namespace like you can do with a network interface.
+> Such an iscsi_host would then need to be migrated back to init_net on
+> namespace exit.
+> 
+> I don't think it works to try and share an iscsi_host across namespaces,
+> and manage different sessions. The iSCSI HBAs have a limited number of
+> network configurations, exposed as iscsi_iface objects, and I don't want
+> to go down the road of figuring out how to share those.
+> 
+Ah, yes, indeed.
 
-Same persons really, so they should know better..
+Quite some iSCSI offloads create the network session internally (or 
+don't even have one), so making them namespace aware will be tricky.
+
+But then I guess we should avoid creating offload sessions from other 
+namespaces; preferably by a patch for the kernel such that userspace can 
+run unmodified.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
