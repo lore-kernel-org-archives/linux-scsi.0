@@ -2,86 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E06EC7619A
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 02:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19334C7619A
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Apr 2023 04:43:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229611AbjDLCcT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Apr 2023 22:32:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40374 "EHLO
+        id S229531AbjDLEnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Apr 2023 00:43:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbjDLCcR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2023 22:32:17 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E071E421E
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2023 19:31:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681266694;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jAS+m9m5VyUpKBchdiVlMAfxL5Qd4dYwrUH64TL4UNI=;
-        b=PoGj8UGrALpQKfB7VeJEYfwU4Sh3H2iwJfsE/SswHZhD8VdiYniacAcKaOaGIY8vteN3kn
-        M/8W6eZ9LnvMKFrkkU4FYOXQlmmjfVNRpp5dxO7bpev/PDqfh58i+TaoB3yH1eTVRbCvf5
-        8qeZjbqPI7FXpNug2ZnsQnjE/1xF2Mg=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-122-qBO12-npNsy5sbt7pmMEiA-1; Tue, 11 Apr 2023 22:31:28 -0400
-X-MC-Unique: qBO12-npNsy5sbt7pmMEiA-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 72C5438041C2;
-        Wed, 12 Apr 2023 02:31:28 +0000 (UTC)
-Received: from localhost (unknown [10.2.16.6])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CAE1F492B00;
-        Wed, 12 Apr 2023 02:31:27 +0000 (UTC)
-Date:   Tue, 11 Apr 2023 19:31:25 -0700
-From:   Chris Leech <cleech@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, netdev@vger.kernel.org,
-        Lee Duncan <lduncan@suse.com>
-Subject: Re: [RFC PATCH 2/9] iscsi: associate endpoints with a host
-Message-ID: <20230412023125.GA1777710@localhost>
-Mail-Followup-To: Hannes Reinecke <hare@suse.de>,
-        Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, netdev@vger.kernel.org,
-        Lee Duncan <lduncan@suse.com>
-References: <cover.1675876731.git.lduncan@suse.com>
- <154c7602b3cc59f8af44439249ea5e5eb75f92d3.1675876734.git.lduncan@suse.com>
- <a9f8cc4f-5d60-be5e-d294-c4a9baa16ec4@suse.de>
+        with ESMTP id S229492AbjDLEny (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 00:43:54 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 383FA2D57;
+        Tue, 11 Apr 2023 21:43:53 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 224E568BFE; Wed, 12 Apr 2023 06:43:49 +0200 (CEST)
+Date:   Wed, 12 Apr 2023 06:43:48 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Niklas Cassel <nks@flawful.org>, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
+ duration limits
+Message-ID: <20230412044348.GA17806@lst.de>
+References: <20230406113252.41211-1-nks@flawful.org> <20230406113252.41211-10-nks@flawful.org> <20230411061648.GD18719@lst.de> <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org> <20230411072317.GA22683@lst.de> <15ad7cf9-e385-9cea-964a-4a2eac35385c@kernel.org> <ZDVLsIi/OhkxNcGb@x1-carbon> <85d6ea79-eda1-de58-6ce4-1fab90335ac8@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a9f8cc4f-5d60-be5e-d294-c4a9baa16ec4@suse.de>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+In-Reply-To: <85d6ea79-eda1-de58-6ce4-1fab90335ac8@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 05:23:26PM +0100, Hannes Reinecke wrote:
-> On 2/8/23 18:40, Lee Duncan wrote:
-> > From: Lee Duncan <lduncan@suse.com>
-> > @@ -230,6 +230,7 @@ iscsi_create_endpoint(int dd_size)
-> >   	ep->id = id;
-> >   	ep->dev.class = &iscsi_endpoint_class;
-> > +	ep->dev.parent = &shost->shost_gendev;
-> >   	dev_set_name(&ep->dev, "ep-%d", id);
-> >   	err = device_register(&ep->dev);
-> >           if (err)
+On Wed, Apr 12, 2023 at 09:59:30AM +0900, Damien Le Moal wrote:
+> Good point. If we move the code for cdl_enable to libata, then we will not be
+> covering the SAS HBA cases.
 > 
-> Umm... doesn't this change the sysfs layout?
-> IE won't the endpoint node be moved under the Scsi_Host directory?
+> Christoph,
 > 
-> But even if it does: do we care?
+> I do not see a cleaner solution... Can we keep this patch as is ? Any other idea ?
 
-It does, but it shouldn't matter. The Open-iSCSI tools look under the
-subsystem, not the device path. Being a child of the host makes more
-sense then being a floating virtual device.
-
-I just re-tested with bnx2i to make sure moving an endpoint devpath in
-sysfs didn't break anything.
-
-- Chris
-
+I guess we have to.  But it's really ugly and someone in T13 really needs
+to be slapped..
