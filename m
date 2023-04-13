@@ -2,79 +2,126 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8076C77B61
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Apr 2023 07:50:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 646E6C77B6C
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Apr 2023 09:51:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230236AbjDMHt7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Apr 2023 03:49:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33850 "EHLO
+        id S230060AbjDMJvX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Apr 2023 05:51:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230323AbjDMHtv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2023 03:49:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EC649752
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Apr 2023 00:49:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B210C63C22
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Apr 2023 07:49:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FF85C4339B;
-        Thu, 13 Apr 2023 07:49:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681372163;
-        bh=VRMaZtbAhiyqbRhRW0/8AxhfoS98Xb+4pypSA2l7Sao=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=bdV1vlrrsECmDKuft0kfCUk2yEZjaLM+pZ5ZJI6kPLmr+Pk84i7HqM8Q1FqBRYdN8
-         gnMYDp+VUI5Tz1GZ5YgKsz2CXPlGBv2TC/veinGln+2CDeqIpczo5kB/IyIlC4mrCw
-         pr65qytwgCdhVQnO/Ijw5WkM1p80QimOgTR1NVTCR9vtovJMSrQTHkKWvtMMsVO24w
-         YfhNnlOsnWIgluzQa3psm3bjdN86EAlidl33YM8Vs2yiJw8fA1tSDLN10MezLhrFB6
-         SavrGNsdnUielZPkTuAIOaJDidQjIwaLA/u8ObHYKEoDrF0uzZdffFUSKaJ7ahB9fW
-         IMkIOxusa+41w==
-Message-ID: <91517007-5a82-4f66-219a-5f1cbedad22f@kernel.org>
-Date:   Thu, 13 Apr 2023 16:49:21 +0900
+        with ESMTP id S229893AbjDMJvP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2023 05:51:15 -0400
+Received: from mail-vs1-xe36.google.com (mail-vs1-xe36.google.com [IPv6:2607:f8b0:4864:20::e36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9106D903D
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Apr 2023 02:51:05 -0700 (PDT)
+Received: by mail-vs1-xe36.google.com with SMTP id a9so13312260vsh.3
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Apr 2023 02:51:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1681379464; x=1683971464;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=5/1cCA7ARMmBDMVmrz4hr0FRe4hg+/OHyteC+tHS04g=;
+        b=EfKmzk5B4ODNxPx+xdp/ob3uZ7O1n47kiT0o7olkIk4CX7pZ5HBZSimgUzFf/HquBA
+         3g628x3Rpp3Am+SaHS1LLbJ4Jhlarvi6nhGllSOqMelnC2/IMpnO0NLSzTKeqbq04bJp
+         IVLxRIo/ERVcNW6mFiR+uuHEtD0oH702xr7OP69Cxkj6r5mvBubaamcEkFaDJIeNmNnf
+         QdU+uFnxgLWR6c1ni9FnDE9/yDVQLTxJIBH30fA1PmEoxT8eOUW1HZ8hyVFRiLS9pFNS
+         N//oEsgAvv38iZ8j0rYHU1tQHJy/PNxy13MdVLEy+Kwzm2tmmNupdOJRjyGeyKeU7g8Y
+         KDGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681379464; x=1683971464;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=5/1cCA7ARMmBDMVmrz4hr0FRe4hg+/OHyteC+tHS04g=;
+        b=D4HWOaJ34sab5c4cDbc+xj52yCuniJi3vJlmZRjX1XIsiNkEHLbDYW2mjnslvrM91j
+         TMRgZrF+pqrk+XjnTR+T5w5bagoRKqHa6kYkCzD+2sxL0NUpXCZHbGgXGPHiCObOgrsG
+         jupP0zD0KCSRhSCsPykujCn6kCoJCXEapVshJVLAPJgknMfflOqS02Lyh2AcPxbqZP3h
+         QxQYvFkYF5T8QbuHF7flsKD5o7e1TGicDVrguKm4VCtOaUe0mg2xsjT1daiRKSDOjLzf
+         M60UV0hxZHT6yMenOzdJ82X/HqVw/JNJSTJZNUAHECCplQ2Y7viwXyTj8LipEO+Bvfxw
+         1MKA==
+X-Gm-Message-State: AAQBX9ff4sHMJuOpc4EgNeOSLaGv6Q/vG3G6z41vh5QLaYIynfXKMhN4
+        n8038x9D4+lkm12QIiq8ym7vB8fLafCIrOYa4Z0eNw==
+X-Google-Smtp-Source: AKy350aPWg8QPSOy/2PHkhrh6sAkwuh8+NOSRnErraPKD6xHUPGtdIg/0oa13IGXGEwruNWS6Z0XHf1YhCtKpgAgMbc=
+X-Received: by 2002:a67:c30c:0:b0:42c:9c6e:a5d2 with SMTP id
+ r12-20020a67c30c000000b0042c9c6ea5d2mr913874vsj.1.1681379464384; Thu, 13 Apr
+ 2023 02:51:04 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH] ipr: Remove SATA support
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        martin.petersen@oracle.com
-Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        wenxiong@linux.ibm.com
-References: <20230412174015.114764-1-brking@linux.vnet.ibm.com>
- <a4f2f204-d14f-ddd4-eeb9-9d132e090de6@oracle.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <a4f2f204-d14f-ddd4-eeb9-9d132e090de6@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20230407200551.12660-1-michael.christie@oracle.com>
+ <20230412093617.285177-1-naresh.kamboju@linaro.org> <CA+G9fYv2nEBe=kJK4veunkvXD9GvqyaPFQ7rUbMD1S4+0nUS3Q@mail.gmail.com>
+ <e85746b2-9736-9041-9327-1ad1299aa155@oracle.com>
+In-Reply-To: <e85746b2-9736-9041-9327-1ad1299aa155@oracle.com>
+From:   Naresh Kamboju <naresh.kamboju@linaro.org>
+Date:   Thu, 13 Apr 2023 15:20:53 +0530
+Message-ID: <CA+G9fYu5T3HwXzcU4ouNhYY0zOZhJgbc6AXFS0q1wHgV65AEDA@mail.gmail.com>
+Subject: Re: [PATCH v6 00/18] Use block pr_ops in LIO
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     axboe@kernel.dk, bvanassche@acm.org, chaitanyak@nvidia.com,
+        dm-devel@redhat.com, hch@lst.de,
+        james.bottomley@hansenpartnership.com, kbusch@kernel.org,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        snitzer@kernel.org, target-devel@vger.kernel.org, vbabka@suse.cz,
+        mgorman@techsingularity.net, halbuer@sra.uni-hannover.de,
+        keescook@chromium.org, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, willy@infradead.org,
+        mkoutny@suse.com, roman.gushchin@linux.dev, ryan.roberts@arm.com,
+        shy828301@gmail.com, yuzhao@google.com, zokeefe@google.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/13/23 16:35, John Garry wrote:
-> On 12/04/2023 18:40, Brian King wrote:
->> Linux SATA support in ipr has always been limited to SATA DVDs. The last
->> systems that had the option of including a SATA DVD was Power 8,
->> which have been withdrawn for sometime now, so this support can
->> be removed.
->>
->> Signed-off-by: Brian King<brking@linux.vnet.ibm.com>
->> ---
-> 
-> Thanks,
-> 
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> 
->> -#endif
->>   	.queuecommand = ipr_queuecommand,
->> -	.dma_need_drain = ata_scsi_dma_need_drain,
-> 
-> This would only be used by libsas now - maybe we should relocate it 
-> there (from libata), but prob better not.
+On Wed, 12 Apr 2023 at 23:59, Mike Christie <michael.christie@oracle.com> wrote:
+>
+> On 4/12/23 5:25 AM, Naresh Kamboju wrote:
+> > On Wed, 12 Apr 2023 at 15:06, Naresh Kamboju <naresh.kamboju@linaro.org> wrote:
+> >>
+> >> [sorry for the adding you in CC]
+> >>
+> >> While running LTP controllers test suite on this patch set applied on top of
+> >> the next-20230406 and the following kernel panic noticed on qemu-i386.
+> >
+> > Also noticed on qemu-x86_64.
+> >
+> > Crash log link,
+> > ------------------
+> > - https://qa-reports.linaro.org/~anders.roxell/linux-mainline-patches/build/lore_kernel_org_linux-block_20230404140835_25166-1-sergei_shtepa_veeam_com/testrun/16171908/suite/log-parser-test/test/check-kernel-panic/log
+> > - https://qa-reports.linaro.org/~anders.roxell/linux-mainline-patches/build/lore_kernel_org_linux-block_20230404140835_25166-1-sergei_shtepa_veeam_com/testrun/16171908/suite/log-parser-test/tests/
+>
+> Can you point me to the original report? I don't think my patches are the cause of
+> the failure, or if they are there is a crazy bug.
+>
+> Above, I think you pointed me to the wrong link above because it looks like that's
+> for a different patchset. Or did I misunderstand the testing and that link has my
+> patches included?
+>
+> I did see my patches tested:
+>
+> https://qa-reports.linaro.org/~anders.roxell/linux-mainline-patches/
+>
+> but they seem to fail in similar places as other failures that day, and the
+> failures don't seem related to my patches. It doesn't look like you are doing
+> anything nvme or block pr ioctl related and just failing on forks and OOM.
+> It looks like you are booting from a scsi device but I only touched the scsi
+> layer's code for persistent reservations and the tests don't seem to be
+> using that code.
 
-Given that with this patch, all ATA drivers will use ->error_handler, there are
-lots of cleanups we can do. Let's work on that once this patch is queued !
+Thanks for the analysis on these reports.
+Since it is based on top of Linux next-20230306, I will re-validate the base
+and get back to you with my findings.
 
+- Naresh
+
+
+>
+>
+>
+> >
+> > lore link,
+> > https://lore.kernel.org/linux-block/20230407200551.12660-1-michael.christie@oracle.com/
+> >
+> >
+> > --
+> > Linaro LKFT
+> > https://lkft.linaro.org
+>
