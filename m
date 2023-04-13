@@ -2,91 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3C62C77B71
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Apr 2023 02:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D13DC77B61
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Apr 2023 03:35:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230240AbjDMCij (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Apr 2023 22:38:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34534 "EHLO
+        id S229724AbjDMDfA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Apr 2023 23:35:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230235AbjDMChu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 22:37:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0A377AB2;
-        Wed, 12 Apr 2023 19:37:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D31C063A94;
-        Thu, 13 Apr 2023 02:37:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D177C433EF;
-        Thu, 13 Apr 2023 02:37:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681353435;
-        bh=bu8vS+mCAOz4URE9Wdvm46xUj8MlgItfn6idQuIEVNg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FRaq7zeQN0r0+DMjWgmMXdpRqZzb2KumMycjbLx08tKOuNjofDX0DMkSVaL13/Sn2
-         lT6ltCCGmy03sjC3nGdbCBdON+QSKZSYFNIYZofyEGimdwFiowQcU1no/YPjXsoTE5
-         VEerBDHU0OjbIjQWBxAfj1d7Ibc5OwG1QJbOOnaV12//kCW7Egm2alCuhOYG0mQ8J2
-         P5KwEknCGdgTgt78DcQaYoSHxteSCiRT1Hw5UHRPqI+fht9x+nZXhuuaCNHq3Gj2Z/
-         MKz2HTJg1Bo4qMBUGyzoEzz8t+r82Qy+Ag0/OtENhSrIu4RCK0LcnSIo400eLNTd7o
-         KwJpYlY8opHMw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        sreekanth.reddy@broadcom.com, jejb@linux.ibm.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 11/17] scsi: mpi3mr: Handle soft reset in progress fault code (0xF002)
-Date:   Wed, 12 Apr 2023 22:36:39 -0400
-Message-Id: <20230413023647.74661-11-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230413023647.74661-1-sashal@kernel.org>
-References: <20230413023647.74661-1-sashal@kernel.org>
+        with ESMTP id S229870AbjDMDeh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2023 23:34:37 -0400
+Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.216])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9510772BB;
+        Wed, 12 Apr 2023 20:34:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=lIcVf
+        dDOG5loBmiWhCLSBqSRWz3dIU8sdeChu5hTPJE=; b=Z4NDFiWAEX/oY3sAbcKf8
+        f/uZQI44HOhZ+dKeMudg4EHiU4h8+fBE9LtBSVGtKEQjZpcQyUjLXLS9bvo0nsqZ
+        p2I1uIfe7I++JOkWrWfRjj4aXt5GRC51tcJ3b/e/uK5rW+axmzlGOUd2UsiQqxPI
+        v43chJJnWtRddW+1vkA4ik=
+Received: from leanderwang-LC2.localdomain (unknown [111.206.145.21])
+        by zwqz-smtp-mta-g2-4 (Coremail) with SMTP id _____wBXFM0_eDdkjKocBQ--.60991S2;
+        Thu, 13 Apr 2023 11:34:23 +0800 (CST)
+From:   Zheng Wang <zyytlz.wz@163.com>
+To:     njavali@marvell.com
+Cc:     mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hackerzheng666@gmail.com, 1395428693sheep@gmail.com,
+        alex000young@gmail.com, Zheng Wang <zyytlz.wz@163.com>
+Subject: [PATCH v2] scsi: qedi: Fix use after free bug in qedi_remove due to race  condition
+Date:   Thu, 13 Apr 2023 11:34:22 +0800
+Message-Id: <20230413033422.28003-1-zyytlz.wz@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _____wBXFM0_eDdkjKocBQ--.60991S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Kw17Gry3WFWUtFWUWr4UArb_yoW8Wr48pr
+        ZxGa4Fkw45KFyrXFn8JF10qFy0kayDtFW0ga97W3y7X3Wa93ykZFySka4jgFyUJFs2va17
+        tF1kXFy3W3WDGaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zimFAAUUUUU=
+X-Originating-IP: [111.206.145.21]
+X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiQgRPU1aEE9wfvgACsk
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+In qedi_probe, it calls __qedi_probe, which bound &qedi->recovery_work
+with qedi_recovery_handler and bound &qedi->board_disable_work
+with qedi_board_disable_work.
 
-[ Upstream commit a3d27dfdcfc27ac3f46de5391bb6d24f04af7941 ]
+When it calls qedi_schedule_recovery_handler, it will finally
+call schedule_delayed_work to start the work.
 
-The driver is exiting from the fault watchdog thread if it sees the 0xF002
-(Soft reset in progress) fault code.
+When we call qedi_remove to remove the driver, there
+may be a sequence as follows:
 
-If the driver initiates the soft reset, then the driver restarts the
-watchdog at the end of the soft reset completion.  However, if the soft
-reset is initiated by the firmware asynchronously, then the driver will
-never restart the watchdog and never re-initialize the controller after the
-asynchronous soft reset completion.
+Fix it by finishing the work before cleanup in qedi_remove.
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Link: https://lore.kernel.org/r/20230331122317.11391-1-ranjan.kumar@broadcom.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+CPU0                  CPU1
+
+                     |qedi_recovery_handler
+qedi_remove          |
+  __qedi_remove      |
+iscsi_host_free      |
+scsi_host_put        |
+//free shost         |
+                     |iscsi_host_for_each_session
+                     |//use qedi->shost
+
+Fixes: 4b1068f5d74b ("scsi: qedi: Add MFW error recovery process")
+Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2:
+- remove unnecessary comment suggested by Mike Christie and cancel the work
+after qedi_ops->stop and qedi_ops->ll2->stop which ensure there is no more
+work suggested by Manish Rangankar
+---
+ drivers/scsi/qedi/qedi_main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index ea9e69fb62826..64355d0baa5fb 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2526,7 +2526,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 		mrioc->unrecoverable = 1;
- 		goto schedule_work;
- 	case MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS:
--		return;
-+		goto schedule_work;
- 	case MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET:
- 		reset_reason = MPI3MR_RESET_FROM_CIACTIV_FAULT;
- 		break;
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index f2ee49756df8..45d359554182 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2450,6 +2450,9 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
+ 		qedi_ops->ll2->stop(qedi->cdev);
+ 	}
+ 
++	cancel_delayed_work_sync(&qedi->recovery_work);
++	cancel_delayed_work_sync(&qedi->board_disable_work);
++
+ 	qedi_free_iscsi_pf_param(qedi);
+ 
+ 	rval = qedi_ops->common->update_drv_state(qedi->cdev, false);
 -- 
-2.39.2
+2.25.1
 
