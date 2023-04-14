@@ -2,116 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F08C77B70
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Apr 2023 08:58:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97427C77B6E
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Apr 2023 14:32:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229534AbjDNI6P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Apr 2023 04:58:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36020 "EHLO
+        id S230403AbjDNOck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Apr 2023 10:32:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229673AbjDNI6O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Apr 2023 04:58:14 -0400
-Received: from new3-smtp.messagingengine.com (new3-smtp.messagingengine.com [66.111.4.229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 566631984;
-        Fri, 14 Apr 2023 01:58:13 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id BA0C95821D1;
-        Fri, 14 Apr 2023 04:58:12 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute3.internal (MEProxy); Fri, 14 Apr 2023 04:58:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
-        cc:cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1681462692; x=1681463292; bh=z9
-        fI6flsniMESwlS/oyoGAx8Z8tukxDoFa/ouV9jXT0=; b=BeVr8Z+4QK1IHwzzSq
-        BYZLsxTPjd41nQ7NZkp6mpn+bAxIkjXNcm1HslKC0zEWmhPRIMb/1wac8lA5KS39
-        Gl3vnqJgkz+Zl47lyPMYN9ukaVe/V1FoLy8hG6Ol4A+ECpO5+jADfUZ8S8TOVkMn
-        bh9dxWKip2K/XgzMZcJStmSrUIjCtGP1N/s9bCKMqNwGvADm17AVu6yYXGEdAJHC
-        +PivNo5YqZJrF5100Rnuv3dmX/mPb21V38W6dloXv9ktFfPmY7G4D7fcrOWEYjBX
-        VzI+mU76HY9X5u5WAC8bVOqFbo2LV2/hjzJq0Qn9fPpaDRWDwuBUeHRRdc5qS1Ap
-        aWcQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=ie1e949a3.fm3; t=1681462692; x=1681463292; bh=z9f
-        I6flsniMESwlS/oyoGAx8Z8tukxDoFa/ouV9jXT0=; b=XVPMjLQio2rI+ZPhD3r
-        emkvelZ+489Gu3W4rfuHhQhatNUDXw+I+Kw4Bv9kFAkG3BXBNcd0U59ykz40sZ5l
-        aidsEaepSvd/EoK8OFXVbp8TTCCYyhsbArDG93qzXjZnKifgi3rKrVXGnlwBcWAv
-        AY+CeZvdhlS9OayMydaKFbB8JLkrVFrnZV74sax8ZwbRoc2JiiBtIeD0SC34QAzi
-        rn6i5mx5w0yKqU2QNYhpybHffvcErbE7rEYlGkcLtUmyw/MfSeHLDfia7Z4oxwQz
-        I1ioidEnptkQhfhab69xY4SDPlP/t5mLBdTdm7jpL/WAYMPNmxve2/E0499b2G8t
-        Q/w==
-X-ME-Sender: <xms:pBU5ZH0B0qWvYH2vNYQlZp7reW2MJxlSrqJ4DjOP7L28x0s6J9ttQA>
-    <xme:pBU5ZGEM81TLrq_6EDUVSICpEvlHL4wMoY3iQqLhyuaeCqviXTsKiUvLWZDiKV4Of
-    yDv8fgHfO6qB_uC5KI>
-X-ME-Received: <xmr:pBU5ZH7DZwfnBr_QR3Jv_NqsEm0-HpAIjF-be1V4C25PG3P49YrLqj9cbWosjGu0rJ15ARIb9QvnCd3Oa7VnMw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrvdeltddguddtucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomhepufhhihhn
-    kdhitghhihhrohcumfgrfigrshgrkhhiuceoshhhihhnihgthhhirhhosehfrghsthhmrg
-    hilhdrtghomheqnecuggftrfgrthhtvghrnhepffehffetgfdugeffffelvdfgjefgkedv
-    hfehgeefveffgfffvedtueekgeevvefhnecuffhomhgrihhnpehkvghrnhgvlhdrohhrgh
-    enucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehshhhi
-    nhhitghhihhrohesfhgrshhtmhgrihhlrdgtohhm
-X-ME-Proxy: <xmx:pBU5ZM3c3CHSc3q2z_XVOys11LAg8cQ0OaMTmBhBMFUKnLzzuerk1A>
-    <xmx:pBU5ZKH1qWiNQl-qodiv2rNnPAvjkH8siNlNJ846R__4OJ2kdEt3FA>
-    <xmx:pBU5ZN_XXtLh-Uqq0kV8Fp1Igkwc_rfN2kgcTM88358O6UL3cea68w>
-    <xmx:pBU5ZPS1h0l08-HoQSauXcwiutGMacVxsPVeNvMG622lnV67XG34i3MTWgM>
-Feedback-ID: ie1e949a3:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 14 Apr 2023 04:58:11 -0400 (EDT)
-Date:   Fri, 14 Apr 2023 17:58:09 +0900
-From:   Shin'ichiro Kawasaki <shinichiro@fastmail.com>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: Re: blktests scsi/007 failure
-Message-ID: <3xwglpdpmit2obtf5p475gojdoqe42rmteki5hvoavzwle6kqr@bl7xginwaeli>
-References: <725nkvuvvbf4qwiylarw5r56tjt3r6nrvy5sijk6affzqv2s3e@6xapeviellsp>
- <5ebd61e0-0835-94cd-b55b-942a9c72b5b5@oracle.com>
+        with ESMTP id S230366AbjDNOci (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Apr 2023 10:32:38 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D56B1BC;
+        Fri, 14 Apr 2023 07:32:33 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 87B181FD9F;
+        Fri, 14 Apr 2023 14:32:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1681482751; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+2bJ2CDuzKgRDleC5QFa89hSVX8wMNuFKrzbNXKA+J0=;
+        b=KpggDlsCb8TvDf5jIHfQV87cGQJbmVXRVuaeUhIwsYxPqDVDB+MmMOiZiD2Kd9WPcN6vCN
+        J4o6vwen0NUZuruK+WC3Fj1llq7KqPZQ9/v6TeKJ46OU2msIe1p0iD3pe+iE8b0aaHLo4J
+        yifoN87zLsUcPCX1cYvU6xbILcxaycI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1681482751;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+2bJ2CDuzKgRDleC5QFa89hSVX8wMNuFKrzbNXKA+J0=;
+        b=VsOY+QudtAh46N4cxi61iAktwoWceCn0R0HL2afVTWHB2Ei1BFIx2OOULLlyb6Y9UKDize
+        /oZJM52bhJqqMyAg==
+Received: from pobox.suse.cz (pobox.suse.cz [10.100.2.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id C5D1D2C15A;
+        Fri, 14 Apr 2023 14:32:30 +0000 (UTC)
+Date:   Fri, 14 Apr 2023 16:32:30 +0200 (CEST)
+From:   Miroslav Benes <mbenes@suse.cz>
+To:     Josh Poimboeuf <jpoimboe@kernel.org>
+cc:     x86@kernel.org, linux-kernel@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-btrfs@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
+        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        "Guilherme G . Piccoli" <gpiccoli@igalia.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2 07/11] objtool: Include weak functions in global_noreturns
+ check
+In-Reply-To: <ede3460d63f4a65d282c86f1175bd2662c2286ba.1681342859.git.jpoimboe@kernel.org>
+Message-ID: <alpine.LSU.2.21.2304141631490.4426@pobox.suse.cz>
+References: <cover.1681342859.git.jpoimboe@kernel.org> <ede3460d63f4a65d282c86f1175bd2662c2286ba.1681342859.git.jpoimboe@kernel.org>
+User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5ebd61e0-0835-94cd-b55b-942a9c72b5b5@oracle.com>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Apr 14, 2023 / 09:33, John Garry wrote:
-> On 14/04/2023 08:36, Shin'ichiro Kawasaki wrote:
-> > Hello Bart,
-> > 
-> > Recently, I built a new blktests trial environment on QEMU. With this
-> > environment, I observe scsi/007 failure. FYI, let me share blktests output [1]
-> > and kernel message [2].
-> > 
-> 
-> I did not notice which kernel you are using - did you mention it somewhere?
+On Wed, 12 Apr 2023, Josh Poimboeuf wrote:
 
-I forgot to mention it. Sorry. I observe the failure with kernel versions 6.2
-and 6.3-rcX.
-
+> If a global function doesn't return, and its prototype has the
+> __noreturn attribute, its weak counterpart must also not return so that
+> it matches the prototype and meets call site expectations.
 > 
-> > I found the failure depends on kernel configs for debug such as KASAN. When I
-> > enable KASAN, the test case fails. When I disable KASAN, the test case passes.
-> > It looks that the failure depends on the slow kernel (and/or slow machine).
-> > 
-> > The test case sets 1 second to the block layer timeout to trigger the SCSI error
-> > handler. It also sets 3 seconds to scsi_debug delay assuming the error handler
-> > completes before the 3 seconds. From the kernel message, it looks that the error
-> > handler takes longer than the 3 seconds delay, so I/O completes as success
-> > before the error handler completion. This I/O success is not expected then the
-> > test case fails. As a trial, I extended the scsi_debug delay time to 10 seconds,
-> > then I observed the test case passes.
-> > 
-> > Do you expect the I/O success by slow SCSI error handler? If so, the test case
-> > needs improvement by extending the scsi_debug delay time.
+> To properly follow the compiled control flow at the call sites, change
+> the global_noreturns check to include both global and weak functions.
 > 
-> The failure may be due to one of my changes. Please see
-> https://lore.kernel.org/lkml/5bdbfbbc-bac1-84a1-5f50-33a443e3292a@oracle.com/
+> On the other hand, if a weak function isn't in global_noreturns, assume
+> the prototype doesn't have __noreturn.  Even if the weak function
+> doesn't return, call sites treat it like a returnable function.
+> 
+> Fixes the following warning:
+> 
+>   kernel/sched/build_policy.o: warning: objtool: do_idle() falls through to next function play_idle_precise()
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Link: https://lore.kernel.org/oe-kbuild-all/202304090346.erhqxnlt-lkp@intel.com/
+> Signed-off-by: Josh Poimboeuf <jpoimboe@kernel.org>
 
-Thanks for the notice. I think your changes were applied to 6.4/scsi-queue,
-which I've not yet tried. Then it should not be related to your changes.
+Reviewed-by: Miroslav Benes <mbenes@suse.cz>
+
+The rest of the patch set looks good to me too.
+
+M
