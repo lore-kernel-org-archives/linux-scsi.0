@@ -2,134 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 271A3C77B70
-	for <linux-scsi@archiver.kernel.org>; Sat, 15 Apr 2023 14:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4929AC77B70
+	for <linux-scsi@archiver.kernel.org>; Sat, 15 Apr 2023 18:11:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbjDOOm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 15 Apr 2023 10:42:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49724 "EHLO
+        id S229796AbjDOSLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 15 Apr 2023 14:11:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229546AbjDOOm4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Apr 2023 10:42:56 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41B462D56;
-        Sat, 15 Apr 2023 07:42:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1681569765;
-        bh=JnyT8+dt75oOzt5U0jdm6k2Z5jJt9+vYzsqgY6mtjOA=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=I1HO4cW41wg5Pp0TMy2M5N74aVUpJivGXHPwcSAV+1mnlm97zgmKcdTu7aY75BXIH
-         qsNNXoFt1jow1d+dtVzrtQqj1zBaw9Cfi/cE5ItQCiI61soz6sxuE4eUjelO8jRtE2
-         MgtBb+r4jFPeSTk6E17aqY0CqK8gNZWPvoAZEvh0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id E73191281076;
-        Sat, 15 Apr 2023 10:42:45 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id lOMc3HZQ3Sxy; Sat, 15 Apr 2023 10:42:45 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1681569765;
-        bh=JnyT8+dt75oOzt5U0jdm6k2Z5jJt9+vYzsqgY6mtjOA=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=I1HO4cW41wg5Pp0TMy2M5N74aVUpJivGXHPwcSAV+1mnlm97zgmKcdTu7aY75BXIH
-         qsNNXoFt1jow1d+dtVzrtQqj1zBaw9Cfi/cE5ItQCiI61soz6sxuE4eUjelO8jRtE2
-         MgtBb+r4jFPeSTk6E17aqY0CqK8gNZWPvoAZEvh0=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 413041280DCB;
-        Sat, 15 Apr 2023 10:42:45 -0400 (EDT)
-Message-ID: <ff2bbe531bf390edf7715809f654374905ef2297.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.3-rc6
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        with ESMTP id S229907AbjDOSLa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Apr 2023 14:11:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41AA92107;
+        Sat, 15 Apr 2023 11:11:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D0B3860B8B;
+        Sat, 15 Apr 2023 18:11:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 453A2C433EF;
+        Sat, 15 Apr 2023 18:11:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681582288;
+        bh=Cu3Ss7aZ+xv3hvSYFJcdipZvm+kDtkCKbkQCc0HdIaM=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=LG0BGqU5bcioMQpA5SXTXvT+qKaEUahQG77xFuxk0afQnuWEj4USjE3LBh/Azkdtm
+         u070p4SMkCfvm3XGCiFfk8z9AhheBeB7iafey3vmZpskIuOSwOeu62GSj1DsGSY29X
+         0FtsJiHAO7b+lol8h9Bbc4ewX1/wO5Bh/cTeZKkQZzwZt2INE6hkXE7i0SLHs8GNHD
+         yepSDQe6FqxokFDnKbszHyJSlnOiY6vyWRkFzlnCC3WaylC1UfXS8q5kJcV2yaVBwv
+         S9oF/ReABPImD8WGEw3rHDZjxRPCjUbNEOD4cfSKPAKr+O6DaT0rffzDYmGcmqYcGJ
+         4rwBqs9k9UshA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 24204E5244F;
+        Sat, 15 Apr 2023 18:11:28 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.3-rc6
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <ff2bbe531bf390edf7715809f654374905ef2297.camel@HansenPartnership.com>
+References: <ff2bbe531bf390edf7715809f654374905ef2297.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <ff2bbe531bf390edf7715809f654374905ef2297.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: c8e22b7a1694bb8d025ea636816472739d859145
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 9772f14f557de9d4056212c84a0a4f64b7b09f31
+Message-Id: <168158228814.18559.5754812983833626596.pr-tracker-bot@kernel.org>
+Date:   Sat, 15 Apr 2023 18:11:28 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 15 Apr 2023 10:42:43 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-One small fix to SCSI Enclosure Services to fix a regression caused by
-another recent fix.
+The pull request you sent on Sat, 15 Apr 2023 10:42:43 -0400:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/9772f14f557de9d4056212c84a0a4f64b7b09f31
 
-The short changelog is:
+Thank you!
 
-Jiri Kosina (1):
-      scsi: ses: Handle enclosure with just a primary component gracefully
-
-And the diffstat:
-
- drivers/scsi/ses.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index b11a9162e73a..b54f2c6c08c3 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -509,9 +509,6 @@ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
- 	int i;
- 	struct ses_component *scomp;
- 
--	if (!edev->component[0].scratch)
--		return 0;
--
- 	for (i = 0; i < edev->components; i++) {
- 		scomp = edev->component[i].scratch;
- 		if (scomp->addr != efd->addr)
-@@ -602,8 +599,10 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 						components++,
- 						type_ptr[0],
- 						name);
--				else
-+				else if (components < edev->components)
- 					ecomp = &edev->component[components++];
-+				else
-+					ecomp = ERR_PTR(-EINVAL);
- 
- 				if (!IS_ERR(ecomp)) {
- 					if (addl_desc_ptr) {
-@@ -734,11 +733,6 @@ static int ses_intf_add(struct device *cdev,
- 			components += type_ptr[1];
- 	}
- 
--	if (components == 0) {
--		sdev_printk(KERN_WARNING, sdev, "enclosure has no enumerated components\n");
--		goto err_free;
--	}
--
- 	ses_dev->page1 = buf;
- 	ses_dev->page1_len = len;
- 	buf = NULL;
-@@ -780,9 +774,11 @@ static int ses_intf_add(struct device *cdev,
- 		buf = NULL;
- 	}
- page2_not_supported:
--	scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
--	if (!scomp)
--		goto err_free;
-+	if (components > 0) {
-+		scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
-+		if (!scomp)
-+			goto err_free;
-+	}
- 
- 	edev = enclosure_register(cdev->parent, dev_name(&sdev->sdev_gendev),
- 				  components, &ses_enclosure_callbacks);
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
