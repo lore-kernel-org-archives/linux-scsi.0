@@ -2,129 +2,357 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB2DBC77B71
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Apr 2023 22:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 493A8C77B71
+	for <linux-scsi@archiver.kernel.org>; Sat, 15 Apr 2023 00:37:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229784AbjDNW5D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Apr 2023 18:57:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36420 "EHLO
+        id S229841AbjDOAhB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Apr 2023 20:37:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229689AbjDNW5A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Apr 2023 18:57:00 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 096C36A5A
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Apr 2023 15:56:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681512973;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2+UGGOoI5bsc+nB4tnCayKybMsORMXbIfA49EDMN67c=;
-        b=cBGQVXWTCmz6jYCymasY4sE1s5aTimWxaqP7CMe2DsdmJ4SE4xtZTSSLW6H03WYmViDLqR
-        t/cQridSSycihyq3e5i9g4rUc6T48c3PEOwiBQ7WDB7tbC78vJmIqMSL0azptrMmaDmjlS
-        V2a8Ckyjaxwrae519FEoLdd82FA0aIY=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-22-ZB8LdylNN4-czT0hd2rJ9g-1; Fri, 14 Apr 2023 18:56:11 -0400
-X-MC-Unique: ZB8LdylNN4-czT0hd2rJ9g-1
-Received: by mail-qt1-f199.google.com with SMTP id t12-20020a05622a180c00b003ec47d5ec39so1045332qtc.10
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Apr 2023 15:56:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681512971; x=1684104971;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2+UGGOoI5bsc+nB4tnCayKybMsORMXbIfA49EDMN67c=;
-        b=BNezRtDcYtSmiPI60KYkwijnR+jrqnYut7LnAyM2GsZV0fd6YlsUGHPfjcUTRxz9DC
-         8lZFmPWZQ1E9p50yQjznPmex6gJw5xWqsCHDIH1D5KaCsTjxQjDw8+6XlUCtjobFqkFh
-         qP2sIDCQtEtjnN1vfK+NHeXsrUYkNUKpVxJwajvtpTO3G+GBklhvbAX1o3WXg6r6HrwL
-         qz1ufVTGbDtMpbxyJ/Bk+cYw5dcV9fqCvXxI8kV57Al8XdbBdu9N4cYGyuIeSeMmLkS2
-         G1OaNgRZP0wce0F39jQSTo1mOGXL8WUc27iLC9E45q53ILiAY7MsWtoda6h/f5cptksN
-         bvMQ==
-X-Gm-Message-State: AAQBX9eUKgIwkNre26ktNj8sLSaZmNaEe7MMnRIHXhdtzbWaujSjZJkL
-        SFl4HlHfl3olBia9ecmcIPpT0t4byAjutR3ONzksZK3CqWZsCbxcBTLxG3U9isdsGmOpCEeix6h
-        FMW8ZulXGHP0sNucGRZSkQA==
-X-Received: by 2002:a05:622a:1cd:b0:3e9:94d5:529 with SMTP id t13-20020a05622a01cd00b003e994d50529mr10940932qtw.17.1681512971202;
-        Fri, 14 Apr 2023 15:56:11 -0700 (PDT)
-X-Google-Smtp-Source: AKy350aaCmhnY4mwLfnaOO12Koejt0E7U7uMfVJMRWgL0W68Kzwtvs7mukfGyZUJPxHUEm2/GkzQxQ==
-X-Received: by 2002:a05:622a:1cd:b0:3e9:94d5:529 with SMTP id t13-20020a05622a01cd00b003e994d50529mr10940920qtw.17.1681512970904;
-        Fri, 14 Apr 2023 15:56:10 -0700 (PDT)
-Received: from localhost (ip98-179-76-75.ph.ph.cox.net. [98.179.76.75])
-        by smtp.gmail.com with ESMTPSA id dp8-20020a05620a2b4800b0074ad1698959sm1546679qkb.40.2023.04.14.15.56.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Apr 2023 15:56:10 -0700 (PDT)
-Date:   Fri, 14 Apr 2023 15:56:08 -0700
-From:   Jerry Snitselaar <jsnitsel@redhat.com>
-To:     Linux regressions mailing list <regressions@lists.linux.dev>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: question about mpt3sas commit b424eaa1b51c
-Message-ID: <mntv2b4lkp44gicraijquuyjqob3dhmxbmdyec7zmv6jgjihnd@t5vpa35dkeal>
-References: <gn42g3poxa4aqgttt3ck6cb5jwhpwovm3l7hay5z65d5tlfec3@kfs5mtqb2rlh>
- <2e585944-b34f-5df0-54e3-fba1205c4c1f@leemhuis.info>
+        with ESMTP id S229457AbjDOAhA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Apr 2023 20:37:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 068DB49F0;
+        Fri, 14 Apr 2023 17:36:59 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8190A60F7D;
+        Sat, 15 Apr 2023 00:36:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D894DC433EF;
+        Sat, 15 Apr 2023 00:36:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681519017;
+        bh=/FvunurOUXjKA1bZtALkwzMRkXzUOWo4NOiLECjObgE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=IBRhM0OGouexVSlXuuNEfrRtYXsAcZ49RsAW/2qVjyfavR4wLgGijDU2l4uHHZ2AE
+         BsRX3zQUcusJhxOztjcRL9o82BhZRDmHJKUbrCOS4s8TGUqDrAd7KsQ21AWbGU39TI
+         39YNIUX7P0Vu9tTeqIJ78+B/XKLNqFnwM3DEUHi/P2rMCEJw2W2YjmMKPZg2Zs6F/Y
+         ISJJY9rR0aLGrJz1CFOpJyQiE1TSFxyXEOUiPeqoJWmbTkRgPruT/SVi+FruzdRwoZ
+         fU2I5/ZCkXZXLY5jZKPxiaD/lcdU2+d2ZSIlHK5YMbvohiF8eF9f8kDK/hk0WPbo+U
+         Yqlw4Y2bB2oZA==
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: [PATCH] scsi: ufs: remove ufshcd_hold asynchronously
+Date:   Fri, 14 Apr 2023 17:36:54 -0700
+Message-ID: <20230415003654.3832806-1-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.40.0.634.g4ca3ef3211-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2e585944-b34f-5df0-54e3-fba1205c4c1f@leemhuis.info>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Apr 09, 2023 at 10:59:32AM +0200, Linux regression tracking #adding (Thorsten Leemhuis) wrote:
-> [CCing the regression list, as it should be in the loop for regressions:
-> https://docs.kernel.org/admin-guide/reporting-regressions.html]
-> 
-> [TLDR: I'm adding this report to the list of tracked Linux kernel
-> regressions; the text you find below is based on a few templates
-> paragraphs you might have encountered already in similar form.
-> See link in footer if these mails annoy you.]
-> 
-> On 08.04.23 21:18, Jerry Snitselaar wrote:
-> > We've had some people trying to track a problem for months revolving
-> > around a system hanging at shutdown, and last thing they see being a
-> > message from mpt3sas about a reset. They quickly bisected down to the
-> > commit below, and reverted it made the problem go away for the
-> > customer.
-> > 
-> > b424eaa1b51c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
-> 
-> FWIW, that should have been fae21608c31c ("scsi: mpt3sas: Transition IOC
-> to Ready state during shutdown") (see reply-to-self from Jerry)
-> 
-> > I got asked to look at something since I recently at another issue
-> > that involved mpt3sas at shutdown, so I was looking through the
-> > history, saw this commit being mentined. Looking at it, I'm not sure
-> > why it is doing what is doing.
-> > [...]
-> 
-> Thanks for the report. To be sure the issue doesn't fall through the
-> cracks unnoticed, I'm adding it to regzbot, the Linux kernel regression
-> tracking bot:
-> 
-> #regzbot ^introduced fae21608c31c
-> #regzbot title scsi: mpt3sas: systems hang at shutdown
-> #regzbot ignore-activity
-> 
-> This isn't a regression? This issue or a fix for it are already
-> discussed somewhere else? It was fixed already? You want to clarify when
-> the regression started to happen? Or point out I got the title or
-> something else totally wrong? Then just reply and tell me -- ideally
-> while also telling regzbot about it, as explained by the page listed in
-> the footer of this mail.
-> 
-> Developers: When fixing the issue, remember to add 'Link:' tags pointing
-> to the report (the parent of this mail). See page linked in footer for
-> details.
-> 
-> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-> --
-> Everything you wanna know about Linux kernel regression tracking:
-> https://linux-regtracking.leemhuis.info/about/#tldr
-> That page also explains what to do if mails like this annoy you.
+If ufshcd_hold() returns EAGAIN during queuecommand, scsi will get an error and
+resubmit the request along with other commands. This can increase the chance of
+reording write IOs, even it's sequential.
 
-#regzbot resolve: had them boot a kernel with mpt3sas disabled in the config, and they reproduced the hang.
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ drivers/ufs/core/ufs-sysfs.c     |  2 +-
+ drivers/ufs/core/ufshcd-crypto.c |  2 +-
+ drivers/ufs/core/ufshcd-priv.h   |  2 +-
+ drivers/ufs/core/ufshcd.c        | 63 +++++++++++---------------------
+ include/ufs/ufshcd.h             |  2 +-
+ 5 files changed, 26 insertions(+), 45 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 883f0e44b54e..cdf3d5f2b77b 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -168,7 +168,7 @@ static ssize_t auto_hibern8_show(struct device *dev,
+ 	}
+ 
+ 	pm_runtime_get_sync(hba->dev);
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+ 	ufshcd_release(hba);
+ 	pm_runtime_put_sync(hba->dev);
+diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
+index 198360fe5e8e..f2c4422cab86 100644
+--- a/drivers/ufs/core/ufshcd-crypto.c
++++ b/drivers/ufs/core/ufshcd-crypto.c
+@@ -24,7 +24,7 @@ static int ufshcd_program_key(struct ufs_hba *hba,
+ 	u32 slot_offset = hba->crypto_cfg_register + slot * sizeof(*cfg);
+ 	int err = 0;
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 
+ 	if (hba->vops && hba->vops->program_key) {
+ 		err = hba->vops->program_key(hba, cfg, slot);
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index 529f8507a5e4..73c5d98f4387 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -84,7 +84,7 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+ 			    u8 **buf, bool ascii);
+ 
+-int ufshcd_hold(struct ufs_hba *hba, bool async);
++void ufshcd_hold(struct ufs_hba *hba);
+ void ufshcd_release(struct ufs_hba *hba);
+ 
+ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 37e178a9ac47..8ae29cf5be3e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1178,7 +1178,7 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 	bool timeout = false, do_last_check = false;
+ 	ktime_t start;
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	/*
+ 	 * Wait for all the outstanding tasks/transfer requests.
+@@ -1299,7 +1299,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
+ 	}
+ 
+ 	/* let's not get into low power until clock scaling is completed */
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 
+ out:
+ 	return ret;
+@@ -1636,7 +1636,7 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+ 		goto out;
+ 
+ 	ufshcd_rpm_get_sync(hba);
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 
+ 	hba->clk_scaling.is_enabled = value;
+ 
+@@ -1750,17 +1750,15 @@ static void ufshcd_ungate_work(struct work_struct *work)
+  * ufshcd_hold - Enable clocks that were gated earlier due to ufshcd_release.
+  * Also, exit from hibern8 mode and set the link as active.
+  * @hba: per adapter instance
+- * @async: This indicates whether caller should ungate clocks asynchronously.
+  */
+-int ufshcd_hold(struct ufs_hba *hba, bool async)
++void ufshcd_hold(struct ufs_hba *hba)
+ {
+-	int rc = 0;
+ 	bool flush_result;
+ 	unsigned long flags;
+ 
+ 	if (!ufshcd_is_clkgating_allowed(hba) ||
+ 	    !hba->clk_gating.is_initialized)
+-		goto out;
++		return;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->clk_gating.active_reqs++;
+ 
+@@ -1777,15 +1775,10 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		if (ufshcd_can_hibern8_during_gating(hba) &&
+ 		    ufshcd_is_link_hibern8(hba)) {
+-			if (async) {
+-				rc = -EAGAIN;
+-				hba->clk_gating.active_reqs--;
+-				break;
+-			}
+ 			spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 			flush_result = flush_work(&hba->clk_gating.ungate_work);
+ 			if (hba->clk_gating.is_suspended && !flush_result)
+-				goto out;
++				return;
+ 			spin_lock_irqsave(hba->host->host_lock, flags);
+ 			goto start;
+ 		}
+@@ -1816,12 +1809,6 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		fallthrough;
+ 	case REQ_CLKS_ON:
+-		if (async) {
+-			rc = -EAGAIN;
+-			hba->clk_gating.active_reqs--;
+-			break;
+-		}
+-
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 		flush_work(&hba->clk_gating.ungate_work);
+ 		/* Make sure state is CLKS_ON before returning */
+@@ -1833,8 +1820,6 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		break;
+ 	}
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-out:
+-	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_hold);
+ 
+@@ -2066,7 +2051,7 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+ 	ufshcd_remove_clk_gating_sysfs(hba);
+ 
+ 	/* Ungate the clock if necessary. */
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	hba->clk_gating.is_initialized = false;
+ 	ufshcd_release(hba);
+ 
+@@ -2461,7 +2446,7 @@ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 	if (hba->quirks & UFSHCD_QUIRK_BROKEN_UIC_CMD)
+ 		return 0;
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	mutex_lock(&hba->uic_cmd_mutex);
+ 	ufshcd_add_delay_before_dme_cmd(hba);
+ 
+@@ -2915,11 +2900,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	hba->req_abort_count = 0;
+ 
+-	err = ufshcd_hold(hba, true);
+-	if (err) {
+-		err = SCSI_MLQUEUE_HOST_BUSY;
+-		goto out;
+-	}
++	ufshcd_hold(hba);
+ 	WARN_ON(ufshcd_is_clkgating_allowed(hba) &&
+ 		(hba->clk_gating.state != CLKS_ON));
+ 
+@@ -3246,7 +3227,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 
+ 	BUG_ON(!hba);
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
+ 			selector);
+@@ -3320,7 +3301,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ 		return -EINVAL;
+ 	}
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
+@@ -3416,7 +3397,7 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
+ 		return -EINVAL;
+ 	}
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
+@@ -4234,7 +4215,7 @@ int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
+ 	uic_cmd.command = UIC_CMD_DME_SET;
+ 	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
+ 	uic_cmd.argument3 = mode;
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+ 	ufshcd_release(hba);
+ 
+@@ -4341,7 +4322,7 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+ 	if (update &&
+ 	    !pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
+ 		ufshcd_rpm_get_sync(hba);
+-		ufshcd_hold(hba, false);
++		ufshcd_hold(hba);
+ 		ufshcd_auto_hibern8_enable(hba);
+ 		ufshcd_release(hba);
+ 		ufshcd_rpm_put_sync(hba);
+@@ -4934,7 +4915,7 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
+ 	int err = 0;
+ 	int retries;
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	for (retries = NOP_OUT_RETRIES; retries > 0; retries--) {
+ 		err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_NOP,
+@@ -6217,14 +6198,14 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ 		ufshcd_setup_vreg(hba, true);
+ 		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
+ 		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq2);
+-		ufshcd_hold(hba, false);
++		ufshcd_hold(hba);
+ 		if (!ufshcd_is_clkgating_allowed(hba))
+ 			ufshcd_setup_clocks(hba, true);
+ 		ufshcd_release(hba);
+ 		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
+ 		ufshcd_vops_resume(hba, pm_op);
+ 	} else {
+-		ufshcd_hold(hba, false);
++		ufshcd_hold(hba);
+ 		if (ufshcd_is_clkscaling_supported(hba) &&
+ 		    hba->clk_scaling.is_enabled)
+ 			ufshcd_suspend_clkscaling(hba);
+@@ -6877,7 +6858,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 		return PTR_ERR(req);
+ 
+ 	req->end_io_data = &wait;
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 
+ 	spin_lock_irqsave(host->host_lock, flags);
+ 
+@@ -7114,7 +7095,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 		cmd_type = DEV_CMD_TYPE_NOP;
+ 		fallthrough;
+ 	case UPIU_TRANSACTION_QUERY_REQ:
+-		ufshcd_hold(hba, false);
++		ufshcd_hold(hba);
+ 		mutex_lock(&hba->dev_cmd.lock);
+ 		err = ufshcd_issue_devman_upiu_cmd(hba, req_upiu, rsp_upiu,
+ 						   desc_buff, buff_len,
+@@ -7180,7 +7161,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
+ 	u16 ehs_len;
+ 
+ 	/* Protects use of hba->reserved_slot. */
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	down_read(&hba->clk_scaling_lock);
+ 
+@@ -7415,7 +7396,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 
+ 	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+ 
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	/* If command is already aborted/completed, return FAILED. */
+ 	if (!(test_bit(tag, &hba->outstanding_reqs))) {
+@@ -9396,7 +9377,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	 * If we can't transition into any of the low power modes
+ 	 * just gate the clocks.
+ 	 */
+-	ufshcd_hold(hba, false);
++	ufshcd_hold(hba);
+ 	hba->clk_gating.is_suspended = true;
+ 
+ 	if (ufshcd_is_clkscaling_supported(hba))
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 25aab8ec4f86..673729cf5697 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1364,7 +1364,7 @@ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+ 			    u8 **buf, bool ascii);
+ 
+-int ufshcd_hold(struct ufs_hba *hba, bool async);
++void ufshcd_hold(struct ufs_hba *hba);
+ void ufshcd_release(struct ufs_hba *hba);
+ 
+ void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value);
+-- 
+2.40.0.634.g4ca3ef3211-goog
 
