@@ -2,85 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D51C77B61
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 Apr 2023 21:29:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EAEDC77B77
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 06:52:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229602AbjDPV3F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 16 Apr 2023 17:29:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55612 "EHLO
+        id S230318AbjDQGwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 02:52:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjDPV3E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Apr 2023 17:29:04 -0400
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5384D2102;
-        Sun, 16 Apr 2023 14:29:03 -0700 (PDT)
-Received: by mail-pj1-f41.google.com with SMTP id v21-20020a17090a459500b0024776162815so2593829pjg.2;
-        Sun, 16 Apr 2023 14:29:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681680543; x=1684272543;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=chhq8HLCYDXYSGAyei6zPDQ2eD5pJGIc6Oj3Q1YOILY=;
-        b=bTP1wt/vFdEora33yVVi0D5QfOKi26wbmyFRB7c6793pXsG357I/cIz/GLlgsjIMdW
-         maMdzpAHCsLM2z351eygG5YVCWEICbBkFwA6hL5608N3Vcs5mZGGwWOzwKw2NWWsp08B
-         sktLASrw3Qe4BESLkn642dAfvPlA4Y7YBf3+enKryotGuFamHEJQTpryRg4PC5hajTYG
-         T5w0ZX5gEXVatAbYdBXZ5kBsfqc7YxBt3bn1o2pAGbPsXaOfxmgBrtYM6v8Fg6o5Ycoj
-         NpsWD9CQc8cr1gRGaSI/v6NZZr3dtdd/GyVjic5xkElyqLjMXxIVnKfTrmVgG6DIDvk+
-         s2jQ==
-X-Gm-Message-State: AAQBX9cD6CZxkUpATfqPcbuXfzD3/m4cjBo12e9UxUi17p1cUa3zeExW
-        7PxIdyn2eLV0w1rVqf292+vsYVBiUkA=
-X-Google-Smtp-Source: AKy350bfDWbqMJEqizLVc1dWFEUewShV1vsSnA6UEhKkSSOeEoBEGX3uOVJMyOHVaMNmBp/6vz/smQ==
-X-Received: by 2002:a05:6a20:a015:b0:ee:b828:e971 with SMTP id p21-20020a056a20a01500b000eeb828e971mr7981226pzj.15.1681680542688;
-        Sun, 16 Apr 2023 14:29:02 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id t16-20020a656090000000b005143d3fa0e0sm5893181pgu.2.2023.04.16.14.29.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 16 Apr 2023 14:29:02 -0700 (PDT)
-Message-ID: <e081cc6b-65a5-6d95-9a4c-da1ca454d754@acm.org>
-Date:   Sun, 16 Apr 2023 14:29:01 -0700
+        with ESMTP id S230308AbjDQGwO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 02:52:14 -0400
+X-Greylist: delayed 326 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 16 Apr 2023 23:52:05 PDT
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 703401BEE
+        for <linux-scsi@vger.kernel.org>; Sun, 16 Apr 2023 23:52:04 -0700 (PDT)
+Received: from localhost.localdomain (unknown [124.16.138.125])
+        by APP-03 (Coremail) with SMTP id rQCowABnb2dI6zxkpKH0Ag--.5355S2;
+        Mon, 17 Apr 2023 14:46:32 +0800 (CST)
+From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com, yanaijie@huawei.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Subject: [PATCH] scsi: aic94xx: Add missing check for dma_map_sg()
+Date:   Mon, 17 Apr 2023 14:46:31 +0800
+Message-Id: <20230417064631.1939-1-jiasheng@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] scsi: scsi_debug: Abort commands from
- scsi_debug_device_reset()
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dgilbert@interlog.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel test robot <yujie.liu@intel.com>
-References: <20230416175654.159163-1-john.g.garry@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230416175654.159163-1-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: rQCowABnb2dI6zxkpKH0Ag--.5355S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZFyUJw17Cw17WFWrJw47Arb_yoW8Gr1fpF
+        WrJasI9rsrtF109wsrJFWDWF15WFn3KFW7WFWDtasIkwsxX3savrW5J3W7WFykCFWxGF47
+        Ar1rA3ySgFyUt37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkq14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+        1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+        6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkIecxEwVAFwVW8
+        AwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
+        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij
+        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
+        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
+        0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUj0zuJUUUUU==
+X-Originating-IP: [124.16.138.125]
+X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/16/23 10:56, John Garry wrote:
-> Currently scsi_debug_device_reset() does not do much apart from setting
-> the SDEBUG_UA_POR ("Power on, reset, or bus device reset") flag, which is
-> eventually passed back to the SCSI midlayer later for a "unit attention"
-> command.
-> 
-> There is a report that blktest scsi/007 test fails due to commit
-> 1107c7b24ee3 ("scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd").
-> The problem there is that there are dangling scsi_debug queued commands
-> when we attempt to remove the driver.
-> 
-> scsi/007 test triggers SCSI EH and attempts to abort a timed-out command.
-> Function scsi_debug_device_reset() is called as part of the EH, but does
-> not deal with outstanding erroneous command. Prior to the named commit,
-> removing the driver caused all dangling queued commands to be stopped -
-> this should have not been necessary.
-> 
-> Fix by aborting outstanding commands on a scsi_device basis from
-> scsi_debug_device_reset().
-> 
-> Fixes: 1107c7b24ee3 ("scsi: scsi_debug: Dynamically allocate sdebug_queued_cmd")
-> Reported-by: kernel test robot <yujie.liu@intel.com>
-> Link: https://lore.kernel.org/oe-lkp/202304071111.e762fcbd-yujie.liu@intel.com
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+Add check for dma_map_sg() and return error if it fails.
+Moreover, unmap the first buffer when the second dma_map_sg() fails.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
+---
+ drivers/scsi/aic94xx/aic94xx_task.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+index 7f0208300110..0ff7aac0bb29 100644
+--- a/drivers/scsi/aic94xx/aic94xx_task.c
++++ b/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -419,11 +419,20 @@ static int asd_build_smp_ascb(struct asd_ascb *ascb, struct sas_task *task,
+ 	struct asd_ha_struct *asd_ha = ascb->ha;
+ 	struct domain_device *dev = task->dev;
+ 	struct scb *scb;
++	int num;
+ 
+-	dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_req, 1,
++	num = dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_req, 1,
+ 		   DMA_TO_DEVICE);
+-	dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_resp, 1,
++	if (num == 0)
++		return -ENOMEM;
++
++	num = dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_resp, 1,
+ 		   DMA_FROM_DEVICE);
++	if (num == 0) {
++		dma_unmap_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_req, 1,
++			     DMA_TO_DEVICE);
++		return -ENOMEM;
++	}
+ 
+ 	scb = ascb->scb;
+ 
+-- 
+2.25.1
+
