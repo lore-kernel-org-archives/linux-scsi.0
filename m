@@ -2,57 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 505E6C77B76
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 23:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D64EC77B76
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 23:07:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbjDQXHP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Apr 2023 19:07:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45168 "EHLO
+        id S230168AbjDQXHZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 19:07:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbjDQXHO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 19:07:14 -0400
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 999F12D60
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 16:07:13 -0700 (PDT)
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-63b5312bd4fso6255708b3a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 16:07:13 -0700 (PDT)
+        with ESMTP id S229830AbjDQXHY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 19:07:24 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF892D60
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 16:07:22 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2472740a0dbso1101472a91.3
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 16:07:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681772833; x=1684364833;
+        d=1e100.net; s=20221208; t=1681772842; x=1684364842;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=H9HN99QwsksXCBCaVQ2bJ/Ic4jm/KkGkP0u89WLoXno=;
-        b=acUg7ih28MAGEZ48i94sR7gD+v3UOxRbefZ0gAdGSbUCD1RHsAnY0ff1duxIEcQ4+y
-         +hjzCJkyiI4LXS2JyJqk3zUcZKzwMDMzj/v+YcDoXFF1kNlpGEVa3v/zJDiwmdOHQX0C
-         pNfT4Z9UmDHTrkgpmKTBCZOuo1B24xzlMgZVqg38gjk6/vRJEu3gEXT48/EtjYJH1Yro
-         zMj1aN6pHN2rXFYLad4pY1RtXVwHIKPdix0g8EpCiBQKU+JyuFHmYb5ts8grWZ/rmVvU
-         DSLOOkymbJZOggCWYDr4vSVRh7OsUYufmKycBjrMnOxfBYsbU75JYUF0CT9+2ogLoQBg
-         +BUg==
-X-Gm-Message-State: AAQBX9cgOUgbhke1xvFIBgdJ3OqzTDADhbw//aNFb/R0VTm7Oqx7227V
-        zD/d9hgjl0SrAADTekPeXwI=
-X-Google-Smtp-Source: AKy350bWIZsqi1QgUMQySBAS0TOn9YInEX6VM8a1Fq128x1L3hRVd4B3vHXyvpYe8Ua8aEhNfg+ngA==
-X-Received: by 2002:a17:90b:1007:b0:247:5c00:10 with SMTP id gm7-20020a17090b100700b002475c000010mr190338pjb.2.1681772833094;
-        Mon, 17 Apr 2023 16:07:13 -0700 (PDT)
+        bh=iE3M16v/3jVwdoM92bNIaScesnw7812ie0MPO/4++BY=;
+        b=HwLUAlT9CiVuQ7SaA4PD7JPyEx8BnKjWSJxrodH7SfIyzrQf35Yzb9hLzeYcUkc1Gf
+         h7gguS3vXKB9l68NcQ79qR9csg+DXB6p2trvyk84Ij4TFXaEDlCD8gPdvv7TzpdaNlrt
+         9747MbOG6JL/tjTQQUYIzcBoq7TTVQd7i2BngcMahhrBrARLswPqgFJGuxdnxKtOfZEL
+         MhUXkxMeKzwGx6So+dcGsr3YPNY/pdryCHJKIDqOu2L2BNO2E/xLHtocZ+WWYVIPs8TM
+         aSESCRdVqI/zNXNrgFsCxhscqMaaxYB6DcHDFtmY0mQIH+W8baCOsXNOWrn40qlKK0Hq
+         BYBg==
+X-Gm-Message-State: AAQBX9coiNoYZGCerc0tbFDr+SXg/363sfPGJL7Swhz3/+JYbNoLuMbA
+        qJFgPbGiMA0uDqSpkdLi+Hk=
+X-Google-Smtp-Source: AKy350YyY9S5u36qb3JTJhKy5dJwKaLMI9Aa8IbO1xc78VxYmQnX6Su9a/zOBp5iHMK7EebKwv67sQ==
+X-Received: by 2002:a17:90b:4d82:b0:247:26da:5de2 with SMTP id oj2-20020a17090b4d8200b0024726da5de2mr136107pjb.20.1681772842248;
+        Mon, 17 Apr 2023 16:07:22 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:2cdd:e77:b589:1518])
-        by smtp.gmail.com with ESMTPSA id t4-20020a17090ad14400b002478d21de2bsm2539576pjw.36.2023.04.17.16.07.11
+        by smtp.gmail.com with ESMTPSA id t4-20020a17090ad14400b002478d21de2bsm2539576pjw.36.2023.04.17.16.07.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Apr 2023 16:07:12 -0700 (PDT)
+        Mon, 17 Apr 2023 16:07:21 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Tomas Henzl <thenzl@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Bart Van Assche <bvanassche@google.com>,
         Bean Huo <beanhuo@micron.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Asutosh Das <quic_asutoshd@quicinc.com>
-Subject: [PATCH v2 2/4] scsi: ufs: Simplify ufshcd_wl_shutdown()
-Date:   Mon, 17 Apr 2023 16:06:54 -0700
-Message-ID: <20230417230656.523826-3-bvanassche@acm.org>
+Subject: [PATCH v2 3/4] scsi: ufs: Increase the START STOP UNIT timeout from one to ten seconds
+Date:   Mon, 17 Apr 2023 16:06:55 -0700
+Message-ID: <20230417230656.523826-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.0.634.g4ca3ef3211-goog
 In-Reply-To: <20230417230656.523826-1-bvanassche@acm.org>
 References: <20230417230656.523826-1-bvanassche@acm.org>
@@ -62,43 +60,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that sd_shutdown() fails future I/O the code for quiescing LUNs in
-ufshcd_wl_shutdown() is superfluous. Remove the code for quiescing LUNs.
-Also remove the ufshcd_rpm_get_sync() call because it is not necessary
-to resume a UFS device before submitting a START STOP UNIT command.
+One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
+Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
+Hence this patch that increases the UFS timeout to 10 s. This patch can
+cause the total timeout to exceed 20 s, the Android shutdown timeout.
+This is fine since the loop around ufshcd_execute_start_stop() exists to
+deal with unit attentions and because unit attentions are reported
+quickly.
 
-Cc: Asutosh Das <asutoshd@codeaurora.org>
-Cc: Tomas Henzl <thenzl@redhat.com>
+Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
+Fixes: 8f2c96420c6e ("scsi: ufs: core: Reduce the power mode change timeout")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+ drivers/ufs/core/ufshcd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9434328ba323..784787cf08c3 100644
+index 784787cf08c3..6831eb1afc30 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -9768,22 +9768,12 @@ static int ufshcd_wl_resume(struct device *dev)
- static void ufshcd_wl_shutdown(struct device *dev)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	struct ufs_hba *hba;
--
--	hba = shost_priv(sdev->host);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
+@@ -9182,7 +9182,8 @@ static int ufshcd_execute_start_stop(struct scsi_device *sdev,
+ 	};
  
- 	down(&hba->host_sem);
- 	hba->shutting_down = true;
- 	up(&hba->host_sem);
- 
--	/* Turn on everything while shutting down */
--	ufshcd_rpm_get_sync(hba);
--	scsi_device_quiesce(sdev);
--	shost_for_each_device(sdev, hba->host) {
--		if (sdev == hba->ufs_device_wlun)
--			continue;
--		scsi_device_quiesce(sdev);
--	}
- 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+ 	return scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, /*buffer=*/NULL,
+-			/*bufflen=*/0, /*timeout=*/HZ, /*retries=*/0, &args);
++			/*bufflen=*/0, /*timeout=*/10 * HZ, /*retries=*/0,
++			&args);
  }
  
+ /**
