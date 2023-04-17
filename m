@@ -2,90 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EAEDC77B77
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 06:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 779FDC77B72
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 08:04:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230318AbjDQGwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Apr 2023 02:52:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45744 "EHLO
+        id S230393AbjDQIEc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 04:04:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230308AbjDQGwO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 02:52:14 -0400
-X-Greylist: delayed 326 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 16 Apr 2023 23:52:05 PDT
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 703401BEE
-        for <linux-scsi@vger.kernel.org>; Sun, 16 Apr 2023 23:52:04 -0700 (PDT)
-Received: from localhost.localdomain (unknown [124.16.138.125])
-        by APP-03 (Coremail) with SMTP id rQCowABnb2dI6zxkpKH0Ag--.5355S2;
-        Mon, 17 Apr 2023 14:46:32 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com, yanaijie@huawei.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] scsi: aic94xx: Add missing check for dma_map_sg()
-Date:   Mon, 17 Apr 2023 14:46:31 +0800
-Message-Id: <20230417064631.1939-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230392AbjDQIE2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 04:04:28 -0400
+Received: from mail.feshiecree.pl (mail.feshiecree.pl [89.40.114.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8860B3C3B
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 01:04:26 -0700 (PDT)
+Received: by mail.feshiecree.pl (Postfix, from userid 1001)
+        id E2C3A88280; Mon, 17 Apr 2023 09:01:16 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=feshiecree.pl;
+        s=mail; t=1681718490;
+        bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
+        h=Date:From:To:Subject:From;
+        b=ZfXvkfwS2FSXgCMh1/C6bqLhhwij9krc8JolDjN5QA1ZZTDWLMj5bGze0Z1/CCK39
+         mlWm83kVbvNvTZUhyudUgv9RU5yj33EEWVPrw0Mocn0pLZFhpsoYY/Ymd74Y3hYTRO
+         uwo1N+4gxG7/l1UFIsVonaxIrVp5w60eYudDSxypW1ut25fdY8tx5tbHx9toBXIvbo
+         GWYZ+aTyN7iRnHTfnk92AsuQRgtc9qFvhHgFDkaOUESrSCcPS2Br7ul5dKay6fVeEh
+         41dS/97D9ecFvV7YiemX5zlqgB4FGcOBsHvEDvI69WUS2QUQUbliLwkkUqMo9edeZ9
+         o8n3juGYnXhsQ==
+Received: by mail.feshiecree.pl for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 08:00:56 GMT
+Message-ID: <20230417074502-0.1.22.b691.0.qqg0n6mi25@feshiecree.pl>
+Date:   Mon, 17 Apr 2023 08:00:56 GMT
+From:   "Krystian Wieczorek" <krystian.wieczorek@feshiecree.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: W sprawie samochodu
+X-Mailer: mail.feshiecree.pl
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: rQCowABnb2dI6zxkpKH0Ag--.5355S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZFyUJw17Cw17WFWrJw47Arb_yoW8Gr1fpF
-        WrJasI9rsrtF109wsrJFWDWF15WFn3KFW7WFWDtasIkwsxX3savrW5J3W7WFykCFWxGF47
-        Ar1rA3ySgFyUt37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkq14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-        1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-        6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkIecxEwVAFwVW8
-        AwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
-        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij
-        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
-        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
-        0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUj0zuJUUUUU==
-X-Originating-IP: [124.16.138.125]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add check for dma_map_sg() and return error if it fails.
-Moreover, unmap the first buffer when the second dma_map_sg() fails.
+Dzie=C5=84 dobry,
 
-Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
-Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
----
- drivers/scsi/aic94xx/aic94xx_task.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
+, je=C5=9Bli chodzi o system monitoringu GPS.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index 7f0208300110..0ff7aac0bb29 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -419,11 +419,20 @@ static int asd_build_smp_ascb(struct asd_ascb *ascb, struct sas_task *task,
- 	struct asd_ha_struct *asd_ha = ascb->ha;
- 	struct domain_device *dev = task->dev;
- 	struct scb *scb;
-+	int num;
- 
--	dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_req, 1,
-+	num = dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_req, 1,
- 		   DMA_TO_DEVICE);
--	dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_resp, 1,
-+	if (num == 0)
-+		return -ENOMEM;
-+
-+	num = dma_map_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_resp, 1,
- 		   DMA_FROM_DEVICE);
-+	if (num == 0) {
-+		dma_unmap_sg(&asd_ha->pcidev->dev, &task->smp_task.smp_req, 1,
-+			     DMA_TO_DEVICE);
-+		return -ENOMEM;
-+	}
- 
- 	scb = ascb->scb;
- 
--- 
-2.25.1
+Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
+e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
+a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
 
+Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
+dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
+szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
+mne znaczenie.
+
+Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
+b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+
+
+Pozdrawiam
+Krystian Wieczorek
