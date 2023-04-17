@@ -2,215 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B091C7EE20
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 21:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65333C77B72
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 23:07:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230401AbjDQVIp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Apr 2023 17:08:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53532 "EHLO
+        id S229690AbjDQXHF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 19:07:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230476AbjDQVIL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 17:08:11 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2B2B40C8;
-        Mon, 17 Apr 2023 14:07:52 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33HKwDtP032685;
-        Mon, 17 Apr 2023 21:07:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=M6UdeRRKL/zUjp3x6XS53zx8lDXujOFd2N4mnA5FkGk=;
- b=QavaQpyY/mVgD9D6ho7gSmi4j2tghDl1je8QQsszmSwq64/nsyoAQgHlrYZiuuEUa8bm
- qLow4H3go54LKk9+ZdWOeuoXsxDnfXwg8dpbDTlMDDRDBPmuIwtqAUeqznHRmurOExn5
- V/6oFA1ViMSyi4CM8TmChxyT6gBSE1QtwWUtZtsa7+P053mBMrHaEwDsPHB4eKpZpG5P
- lGGElSdvkeJkofQ3IIBVrgZhFIVhu2q77ogN52FlOaH3iH3CHa3xXE92HcqAcF1gRRzT
- 40enZoQbFEH5cyl+Gby1a8FFZYaXGG4ALwITPgvgFT2DbTOmwR2dzMsxJ9AO4U52f3tH cA== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3q14gk9eqx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Apr 2023 21:07:38 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33HL7a8p020797
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Apr 2023 21:07:36 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Mon, 17 Apr 2023 14:07:36 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>, <Powen.Kao@mediatek.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 5/5] ufs: core: Add error handling for MCQ mode
-Date:   Mon, 17 Apr 2023 14:05:49 -0700
-Message-ID: <5a52b255001e994d0a65be9b1d61fe69f2a12f6c.1681764704.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1681764704.git.quic_nguyenb@quicinc.com>
-References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
+        with ESMTP id S229461AbjDQXHD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 19:07:03 -0400
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 059FB1BDB
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 16:07:03 -0700 (PDT)
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-51b514a8424so963273a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 16:07:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681772822; x=1684364822;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vA4e18aquMybyEkWsxVok/UY7EJJQDgUnTje9R3MTrg=;
+        b=hHHGd3U9OuLXbNYKG4jCTRky+yWRWTfYzSbKAcnT1r88NdZv7kZHRSYGt4oWEo2kxT
+         Ewrljtfe/iDKtHqAHdvbDFpPjZe9JYoga4iPOyBfKuSSTH/k1XdhhZCTa7GVI6BWLgha
+         smFHJcrNXVrYWjh11YeNw+FAYM6BDsH0/Zha/DxpVToPeJ/k3/fhf1Ro0J9NhKpM965Q
+         2TXZaC+E1cwfiaEL7enpzJl2WkeAID0tnGSHiJtnhoqwavHNxMD+Zim4I+Wb4QySx4oP
+         m778H+n540ldCHHDBFXdaOF884ht9JUKB2exxOgSFRXDKTBObVYXQtGLp8+LTi32yXnt
+         omnw==
+X-Gm-Message-State: AAQBX9cdRs31nPr1Cs99NB6rbQ3Ke1twmCROUMRH+mo3fnBtGLGibO0G
+        V6C3cniMPBCR1/t7ZW0a9VjRx7IF/p0=
+X-Google-Smtp-Source: AKy350Zp5dsPPzIGTLI2Dba+Nj1l43MBnQGg5R9recUuJZ8X9fbrT0fHtO3hYRSPLSInkByb+XmJ/Q==
+X-Received: by 2002:a17:90a:7e11:b0:246:9932:18a2 with SMTP id i17-20020a17090a7e1100b00246993218a2mr77578pjl.31.1681772822394;
+        Mon, 17 Apr 2023 16:07:02 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:2cdd:e77:b589:1518])
+        by smtp.gmail.com with ESMTPSA id t4-20020a17090ad14400b002478d21de2bsm2539576pjw.36.2023.04.17.16.07.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Apr 2023 16:07:01 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/4] SCSI core and UFS patches for kernel v6.4
+Date:   Mon, 17 Apr 2023 16:06:52 -0700
+Message-ID: <20230417230656.523826-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.0.634.g4ca3ef3211-goog
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Ewg-GAgy_A3Vt8icZX8cHyUjNCOmNlmg
-X-Proofpoint-GUID: Ewg-GAgy_A3Vt8icZX8cHyUjNCOmNlmg
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-17_14,2023-04-17_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- mlxlogscore=999 mlxscore=0 priorityscore=1501 phishscore=0 suspectscore=0
- bulkscore=0 impostorscore=0 clxscore=1015 lowpriorityscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2304170186
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add support for error handling for MCQ mode.
+Hi Martin,
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 80 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 69 insertions(+), 11 deletions(-)
+This patch series includes a patch for making sd_shutdown() fail future I/O
+and also two UFS patches.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index fef1907..e947f7f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3127,6 +3127,12 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		err = -ETIMEDOUT;
- 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
- 			__func__, lrbp->task_tag);
-+
-+		/* MCQ mode */
-+		if (is_mcq_enabled(hba))
-+			return ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag);
-+
-+		/* SDB mode */
- 		if (ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag) == 0) {
- 			/* successfully cleared the command, retry if needed */
- 			err = -EAGAIN;
-@@ -5562,6 +5568,10 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
-  */
- static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- {
-+	struct ufshcd_lrb *lrbp;
-+	u32 hwq_num, utag;
-+	int tag;
-+
- 	/* Resetting interrupt aggregation counters first and reading the
- 	 * DOOR_BELL afterward allows us to handle all the completed requests.
- 	 * In order to prevent other interrupts starvation the DB is read once
-@@ -5580,7 +5590,22 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
- 	 * do not want polling to trigger spurious interrupt complaints.
- 	 */
--	ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-+	if (!is_mcq_enabled(hba)) {
-+		ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-+		goto out;
-+	}
-+
-+	/* MCQ mode */
-+	for (tag = 0; tag < hba->nutrs; tag++) {
-+		lrbp = &hba->lrb[tag];
-+		if (lrbp->cmd) {
-+			utag = blk_mq_unique_tag(scsi_cmd_to_rq(lrbp->cmd));
-+			hwq_num = blk_mq_unique_tag_to_hwq(utag);
-+			ufshcd_poll(hba->host, hwq_num);
-+		}
-+	}
-+
-+out:
- 
- 	return IRQ_HANDLED;
- }
-@@ -6359,18 +6384,36 @@ static bool ufshcd_abort_all(struct ufs_hba *hba)
- 	bool needs_reset = false;
- 	int tag, ret;
- 
--	/* Clear pending transfer requests */
--	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
--		ret = ufshcd_try_to_abort_task(hba, tag);
--		dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
--			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
--			ret ? "failed" : "succeeded");
--		if (ret) {
--			needs_reset = true;
--			goto out;
-+	if (is_mcq_enabled(hba)) {
-+		struct ufshcd_lrb *lrbp;
-+		int tag;
-+
-+		for (tag = 0; tag < hba->nutrs; tag++) {
-+			lrbp = &hba->lrb[tag];
-+			if (lrbp->cmd) {
-+				ret = ufshcd_try_to_abort_task(hba, tag);
-+				dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-+					hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-+					ret ? "failed" : "succeeded");
-+			}
-+			if (ret) {
-+				needs_reset = true;
-+				goto out;
-+			}
-+		}
-+	} else {
-+		/* Clear pending transfer requests */
-+		for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-+			ret = ufshcd_try_to_abort_task(hba, tag);
-+			dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-+				hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-+				ret ? "failed" : "succeeded");
-+			if (ret) {
-+				needs_reset = true;
-+				goto out;
-+			}
- 		}
- 	}
--
- 	/* Clear pending task management requests */
- 	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
- 		if (ufshcd_clear_tm_cmd(hba, tag)) {
-@@ -7302,6 +7345,8 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 	unsigned long flags, pending_reqs = 0, not_cleared = 0;
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
-+	struct ufs_hw_queue *hwq;
-+	struct ufshcd_lrb *lrbp;
- 	u32 pos;
- 	int err;
- 	u8 resp = 0xF, lun;
-@@ -7317,6 +7362,19 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 		goto out;
- 	}
- 
-+	if (is_mcq_enabled(hba)) {
-+		for (pos = 0; pos < hba->nutrs; pos++) {
-+			lrbp = &hba->lrb[pos];
-+			if (lrbp->cmd && lrbp->lun == lun) {
-+				ufshcd_clear_cmds(hba, 1UL << pos);
-+				hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
-+				ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+			}
-+		}
-+		err = 0;
-+		goto out;
-+	}
-+
- 	/* clear the commands that were pending for corresponding LUN */
- 	spin_lock_irqsave(&hba->outstanding_lock, flags);
- 	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
--- 
-2.7.4
+Patch 3/3 of this series has been posted earlier. Compared to the previous
+version of that patch, a Fixes: tag has been added.
+
+Please consider this patch series for the next merge window. 
+
+Thanks,
+
+Bart.
+
+Changes compared to v1:
+- Slightly changed the description of patch "scsi: sd: Let sd_shutdown() fail
+  future I/O".
+- Included patch "scsi: ufs: Fix handling of lrbp->cmd"
+
+Bart Van Assche (4):
+  scsi: sd: Let sd_shutdown() fail future I/O
+  scsi: ufs: Simplify ufshcd_wl_shutdown()
+  scsi: ufs: Increase the START STOP UNIT timeout from one to ten
+    seconds
+  scsi: ufs: Fix handling of lrbp->cmd
+
+ drivers/scsi/sd.c         | 11 ++++++++++-
+ drivers/ufs/core/ufshcd.c | 20 +++-----------------
+ 2 files changed, 13 insertions(+), 18 deletions(-)
 
