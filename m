@@ -2,101 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A9B6C77B7A
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 13:08:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63583C7EE20
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 13:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231383AbjDQNIM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Apr 2023 09:08:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33140 "EHLO
+        id S230052AbjDQNMX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 09:12:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231371AbjDQNH6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 09:07:58 -0400
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEC40BBA4
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 06:06:03 -0700 (PDT)
-Received: by mail-wr1-x432.google.com with SMTP id ffacd0b85a97d-2efbaad7a2eso889611f8f.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 06:06:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20221208.gappssmtp.com; s=20221208; t=1681736725; x=1684328725;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=+pN7CHTmhcpk+kvQFe2Qj4nSZeBGIjHXqqKasTb6lhk=;
-        b=Bgg3k2q1I4LWyoS114Sz0KymTKA2sEwO4Aef31BG8tNohuz0BdZB2B6nEsGZrY1GEo
-         wOL+m/NcuDjyrWBSVrXOiH+20/n5djMM3Dj1qAOIbHSAXzClWaMolmUBcuAsxBtLFHk4
-         HfxfOH2gCCClo5PVsp5KjDQEOY9g6s6MYLKtYEtkXErOp5Hxzh7wj5jce0B1LY4YewB+
-         eE2pEIyZuyiVlWF7hMpadTMqa+h7dYLiQ/adwFBbZdTwXXm+6wt4KdRNMGo4T8XyxzPG
-         gk8CmhFlPuxt4gFWkzqSI0ID94xRb4AU70e6df5XjkEEnTizT1/rtIICx00xrshMzWfP
-         0ySQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681736725; x=1684328725;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+pN7CHTmhcpk+kvQFe2Qj4nSZeBGIjHXqqKasTb6lhk=;
-        b=BxeD/DG2Oj0vTN5qfA8tun6mgl0rEHsHQx7SWc9FNQ0Mz4n6fh6HWQEvA0xafEE9iE
-         Z7K6MxwXV01WcfOg+UXerI0K2CUwU0+emCQd/ezgN5KelYevEeeVsWtRmUT6x7Q5BcBu
-         i5fn43QvM4fVIoFwuSQCXnOK2mNSHgbisO196RZACCh36iFCvdrTvkrcZDjziH7kkyER
-         gc7xTSoP1LQFYI4+f/gV32Vi68U4hPnZaInwlPD/om6VdlsYRFgrn1sAYmsk/vLw9alq
-         DJVyP0MebhBpcnpYfbDDziaGNitEXLZA8rv9gu6Ylsqs5XxIYYIcL+TRpl2tDh7vCSzm
-         F3eQ==
-X-Gm-Message-State: AAQBX9c4LD8X0y+NUOT4e3zBvEos+kmHHJLRFY2KJJXPA33SR9ylDFXZ
-        60C1oLNzv8AnsaHKdP6hB7mqqg==
-X-Google-Smtp-Source: AKy350Ya7/njYFXhgTJTc7VF5jmgWE3WlJqHe1HiKD8ysBAxGWWzpzzvX4+3LSjuaxGp4l/qwi72Uw==
-X-Received: by 2002:a5d:4576:0:b0:2f2:501b:bca6 with SMTP id a22-20020a5d4576000000b002f2501bbca6mr6649069wrc.17.1681736725582;
-        Mon, 17 Apr 2023 06:05:25 -0700 (PDT)
-Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:374a:ffae:fd26:4893])
-        by smtp.gmail.com with ESMTPSA id q14-20020a05600000ce00b002f0075ccf7bsm10509938wrx.71.2023.04.17.06.05.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Apr 2023 06:05:25 -0700 (PDT)
-From:   Bartosz Golaszewski <brgl@bgdev.pl>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: [PATCH] dt-bindings: phy: qmp-ufs: fix clock and clock-names for sa8775p
-Date:   Mon, 17 Apr 2023 15:05:22 +0200
-Message-Id: <20230417130522.401605-1-brgl@bgdev.pl>
-X-Mailer: git-send-email 2.37.2
+        with ESMTP id S230489AbjDQNLn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 09:11:43 -0400
+Received: from wnew3-smtp.messagingengine.com (wnew3-smtp.messagingengine.com [64.147.123.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC0185BB6;
+        Mon, 17 Apr 2023 06:11:06 -0700 (PDT)
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailnew.west.internal (Postfix) with ESMTP id 8AEB32B06737;
+        Mon, 17 Apr 2023 08:59:27 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Mon, 17 Apr 2023 08:59:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
+        cc:cc:content-transfer-encoding:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to; s=fm3; t=1681736367; x=
+        1681736967; bh=F5pvrPFkViYfQ8iLbFVuREU31vxnXU/CgJoVzwvbI4g=; b=g
+        End5n9DIPkPPY5gCCpCaJCqkJeBwxBPuYH4TQXpmLzobuwm0HTmNmuVSVVGTz5LO
+        CFpMgobiVfvZVsXh1q9irl+nbarXwIzFneJztf638eVNTVsOtgH9MmStdgLkto3c
+        Gxgw8+i5DgUa0yptHUdtITmco2kVCK4996fnaWdDfsAIiUDu6JgMy2jinGCo1Oiu
+        zmznR0ktN3vtU4ECBRg+2o4ePdaWdtAlX2+5tHgricf/Iam/EktdGVsae+LLbqo4
+        jR//IGmklhAdGd7SuaWe0XOk9eCm0TVGME/7zcU1bTyYuKRvH7fhwlxBx9RsJBrg
+        cPILCVNPfjr8LV5HwhOKQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-transfer-encoding
+        :content-type:date:date:feedback-id:feedback-id:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=ie1e949a3.fm3; t=
+        1681736367; x=1681736967; bh=F5pvrPFkViYfQ8iLbFVuREU31vxnXU/CgJo
+        VzwvbI4g=; b=jiizKRIqGyaNp+PZCq7a+pskTqNyhB27RbhVq7vm4nwf+1LJktU
+        4EUHiOWVNnbe4O3+Y7Ie7LOXQxfh5lcdjTEh2Eq26CnNA/Qj8XZEIAq69ZR/hZhj
+        B00mssy/PB0OY5YC49fxa/3CHwzQ/p/PCypoJP1oaNizuy5GJZ7/NDrbjn7VmlCS
+        ve3CFaTEwgVLoFxK/C+dq8TczHk1Q9Kni5/EaVHTR1sjEUyFaKvd7ndjwVUOlqtk
+        ikeZcPL3TkKzgcpv6DE+rXGhnnMHSYRSSwiXAkJnwKAZvVld71RC4a7HyTkTEU6D
+        xXHyQ543V6a7AgkXCG5oVhrHCAHcZXT0xww==
+X-ME-Sender: <xms:rkI9ZNCS4cothP85PnmxNWbY-iL42huYJEBpB1LBgq7CS6Z6gAh0Wg>
+    <xme:rkI9ZLh-qAvZ_zy0jg6M8QbBrDJHtdpJLk2V1UCyV7rVZUjB4nyOvPDwtogsqAU5A
+    hcZdXGd_sqqwH8vC_Q>
+X-ME-Received: <xmr:rkI9ZImcl7EDAJO1I1e2wL6Z0ztO5ftfkvUWAcg_ZBpbeRLfw499S2DPWjiARf73QYTaIDJHN_phX6qOWHmxPbpHvxTCpbCh5VEN-M5y>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrvdeliedgheejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucenucfjughrpefhvfevufffkffojghfggfgsedtke
+    ertdertddtnecuhfhrohhmpefuhhhinhdkihgthhhirhhoucfmrgifrghsrghkihcuoehs
+    hhhinhhitghhihhrohesfhgrshhtmhgrihhlrdgtohhmqeenucggtffrrghtthgvrhhnpe
+    fggfegffejgeefueetgeeukedvhfeludfhhefftdeitdfhteelieefiefhueekgeenucev
+    lhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehshhhinhhitg
+    hhihhrohesfhgrshhtmhgrihhlrdgtohhm
+X-ME-Proxy: <xmx:r0I9ZHwoYDXqtdbV99ypeqenRUcs74xBSXpS5J4bjipURPEFsPsiWw>
+    <xmx:r0I9ZCRp5DRJzvLw7HA4N3fgFRAUzze8G2K8OObikQEnQ2MJuZ0hHQ>
+    <xmx:r0I9ZKa4zWGp-zdsf0IheqDErl3mLBvn5stTebFVIH31w0njMKs-dg>
+    <xmx:r0I9ZNf2vfmmY5OyZ4i0MLGIlNFC6hz_XcCN4dE6Fiow37S3xBjrOVGTF5YBlxfg>
+Feedback-ID: ie1e949a3:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 17 Apr 2023 08:59:25 -0400 (EDT)
+From:   Shin'ichiro Kawasaki <shinichiro@fastmail.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Shin'ichiro Kawasaki <shinichiro@fastmail.com>,
+        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: [PATCH blktests 8/9] block/002: allow to run with built-in scsi_debug
+Date:   Mon, 17 Apr 2023 21:59:12 +0900
+Message-Id: <20230417125913.458726-4-shinichiro@fastmail.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230417125913.458726-1-shinichiro@fastmail.com>
+References: <20230417125913.458726-1-shinichiro@fastmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 
-We must set *minItems* to 3, not maxItems as this platform requires
-exactly three clocks and maxItems is already set to 3 globally.
+To allow the test case run with build-in scsi_debug, replace
+'_have_module scsi_debug' with _have_scsi_debug, and replace
+_init_scsi_debug with _configure_scsi_debug.
 
-Fixes: e5796a9cdf73 ("dt-bindings: phy: qmp-ufs: describe the UFS PHY for sa8775p")
-Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 ---
- .../devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml    | 4 ++--
+ tests/block/002 | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-index 94c0fab065a8..a1897a7606df 100644
---- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml
-@@ -78,9 +78,9 @@ allOf:
-     then:
-       properties:
-         clocks:
--          maxItems: 3
-+          minItems: 3
-         clock-names:
--          maxItems: 3
-+          minItems: 3
-     else:
-       properties:
-         clocks:
+diff --git a/tests/block/002 b/tests/block/002
+index a5f3ee5..b16d014 100755
+--- a/tests/block/002
++++ b/tests/block/002
+@@ -13,13 +13,13 @@ QUICK=1
+ 
+ requires() {
+ 	_have_blktrace
+-	_have_module scsi_debug
++	_have_scsi_debug
+ }
+ 
+ test() {
+ 	echo "Running ${TEST_NAME}"
+ 
+-	if ! _init_scsi_debug delay=0; then
++	if ! _configure_scsi_debug delay=0; then
+ 		return 1
+ 	fi
+ 
 -- 
-2.37.2
+2.39.2
 
