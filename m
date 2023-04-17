@@ -2,98 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89680C77B7A
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 19:05:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39E9DC77B76
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 19:05:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230330AbjDQTFt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Apr 2023 15:05:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60582 "EHLO
+        id S230228AbjDQTFu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 15:05:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229972AbjDQTFq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 15:05:46 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02FBE5BB3
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 12:05:30 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-63b875d0027so587539b3a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 12:05:29 -0700 (PDT)
+        with ESMTP id S229595AbjDQTFs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 15:05:48 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E796C7682
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 12:05:41 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-63b7b18a336so572500b3a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Apr 2023 12:05:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681758329; x=1684350329;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=nu0FgEWXnpBhPGUc+h6nHpwsNCiBBQeBvwietVqpOCY=;
-        b=rs8LRKi2T7r1Q8sfy/jTMRmPs5+tHvVONgNZHTCYj+654MQOLFlBQgG0zcN445LGzw
-         Sq/a1JwYgIKv4uqdWR9lu1ZVqCM5jVIlH64pQ1C2E9Ba/9ykAC8kQbpC2M+YUq25NJip
-         A1DukqA6LvWhp3uyBjaZoE3Iu56vz/xJXKe2OS0D2m8fHOYA/s1+7uMwjhcYKOvYrKGY
-         xJcfLQ0b90M0RtXECvlK+DhnDCdZ/lZyBuZ/8r2rq5XQKf612Cd0E6oDmF7hGbj6iJ5l
-         Cgc7PjSsbK1eSd+RuwUUKufWBppg2fHVMKKgSVy7+TcZSMiKGlruUZd1yfTGiZ4DkGAM
-         jPxQ==
+        d=gmail.com; s=20221208; t=1681758341; x=1684350341;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OdJwpaLu2tZb3jZIZvv4q18r0V9tzBrb6V2n0Dk1YgU=;
+        b=giL8wGQ5LZhssEUnSjWN4Jno2n0/IHVqbQxQh9QpRJqBXNCYFfu+l6xt5i33120URw
+         yyzE1AofeK+hueZLlabq0BOrSntgGoPxmKiYMhIR7ta0RecmVnQ3e0VO6efVvCvrN9wr
+         yjmRcgyVs0/yI7ntrzR9W4zH3q3XJz+sm4tu8M/GosubbM2c0wfiWG/lJcKPOgEzrnwh
+         CSLBvWV+9HxO+ju9fjuyfj18giqvFvRVNsNASEASaDLQW8Wdqe7l28ntQp4itNolSAra
+         AHO53Ei7mRtZNUkTXlyAof1/iNLfUlz41gr0UaWReEbpvSFHg30eg5998uXoP0I3606s
+         QgpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681758329; x=1684350329;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nu0FgEWXnpBhPGUc+h6nHpwsNCiBBQeBvwietVqpOCY=;
-        b=JSClSZdR2Nsbx/0VicbrcbFA/3VQ9TGJNENKNZLhuPEZi2+I/x0vSq8WQnCStq/c4t
-         7KYlF7a1ODyH+UfQeeC9MR7Jcd3tKaBqCD9dmE8alKEGdMg1j6iM1vilbLKFkLsos55E
-         H5GXBeA98/A9Z20BRkdFQkv+YArk4EE644y47pEQafTb+QRM46Fnr6vOO1IgT+TRhgVi
-         sHRHUZJlsTlAxBrs8HG6JbgeULSbi7ajo6E7mAiNwkeWtapdkZNdjHyPgu1UQweZDha+
-         dDq8jRg1a2tyu/8RnQkSRXHQAD3LTL6Lo4pAFMoxCXBWKIaJ1i3QkJNKz1m1SaP6sLmx
-         ntjQ==
-X-Gm-Message-State: AAQBX9d31/AHLm0ttDQYJ3JmyRgbIdA/QZcBlhSSDA8Jr6ouoijopj1S
-        STHQutuf8EPEq1caq+2mvdIRk/vq9pc=
-X-Google-Smtp-Source: AKy350bErss/wYLzRjwFW08nzvmt9D1Oy3JAWIiV1kGr0dpMinxiPDEpYx6p3WqwkPJSiJEkuSna8w==
-X-Received: by 2002:a05:6a00:1c9e:b0:63d:344c:f123 with SMTP id y30-20020a056a001c9e00b0063d344cf123mr703466pfw.1.1681758329237;
-        Mon, 17 Apr 2023 12:05:29 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1681758341; x=1684350341;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OdJwpaLu2tZb3jZIZvv4q18r0V9tzBrb6V2n0Dk1YgU=;
+        b=jX9qzMsXEoSYdu+VRc3pEagKMy7b+SE77z5OrrHl2GAaJ0mniOrs5zTsfJ/xjXgWJt
+         OwCLQXOnI53877Bx9PY8JzCEMo1h4e+brGMIowz7EQCN5E54gSOdZZSG4yocdvpwI61E
+         n7KkwvvhJbGcw0y2omMz+rtjVvu0iQE+67DMcUuRt2nAITVAuhzX47hX3ifmd7kOMp+P
+         P3G2xIpCgqr6ywbaAUXveHVGEmyv3cLBU4nENTu4x9SDAJvebzF70bnQSbI5ht3y6OAn
+         x4AbSBME3QWrnUnsAHoHmK/r0PqUq6O9KPdzYT7yo5FFOAY+x3zAzIsNUghuK1G+a7v+
+         xXRQ==
+X-Gm-Message-State: AAQBX9eTF4y60PZZ/oBZGGNizPmlNORHqAglU90dngH5DpOH2TL8y9rV
+        nNgAI9o8/KW1FmGqKy5hqcdh2LgZ3bg=
+X-Google-Smtp-Source: AKy350YJhWjxoJAdLEY5Jo5XEVNHic/FPjkjSQmfgFmqQN2Tb0VLTAsXNLPeMYbXpHXT0rz87elgmg==
+X-Received: by 2002:a05:6a00:a06:b0:63d:2d6a:47be with SMTP id p6-20020a056a000a0600b0063d2d6a47bemr2204872pfh.2.1681758341088;
+        Mon, 17 Apr 2023 12:05:41 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id x18-20020aa793b2000000b0063b7c42a070sm4291439pff.68.2023.04.17.12.05.28
+        by smtp.gmail.com with ESMTPSA id x18-20020aa793b2000000b0063b7c42a070sm4291439pff.68.2023.04.17.12.05.40
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 17 Apr 2023 12:05:28 -0700 (PDT)
+        Mon, 17 Apr 2023 12:05:40 -0700 (PDT)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
         Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 0/7] lpfc: Update lpfc to revision 14.2.0.12
-Date:   Mon, 17 Apr 2023 12:15:51 -0700
-Message-Id: <20230417191558.83100-1-justintee8345@gmail.com>
+Subject: [PATCH 1/7] lpfc: Fix verbose logging for scsi commands issued to SES devices
+Date:   Mon, 17 Apr 2023 12:15:52 -0700
+Message-Id: <20230417191558.83100-2-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20230417191558.83100-1-justintee8345@gmail.com>
+References: <20230417191558.83100-1-justintee8345@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update lpfc to revision 14.2.0.12
+For SES LUNs with scsi_device sector_size member set to zero, there is no
+point to log an LBA.  When verbose FCP driver logging is enabled, sanity
+check sector_size before calling scsi_get_lba on a scsi_cmnd.
 
-This patch set contains fixes flagged by code analyzer tools, introduces a
-new CQE status to handle DMA errors, and replaces the usage of blk
-interrupts with threaded interrupts.
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The patches were cut against Martin's 6.4/scsi-queue tree.
-
-Justin Tee (7):
-  lpfc: Fix verbose logging for scsi commands issued to SES devices
-  lpfc: Fix double free in lpfc_cmpl_els_logo_acc caused by
-    lpfc_nlp_not_used
-  lpfc: Match lock ordering of lpfc_cmd->buf_lock and hbalock for abort
-    paths
-  lpfc: Update congestion warning notification period
-  lpfc: Add new RCQE status for handling DMA failures
-  lpfc: Replace blk_irq_poll intr handler with threaded irq
-  lpfc: Update lpfc version to 14.2.0.12
-
- drivers/scsi/lpfc/lpfc_attr.c    |   4 +-
- drivers/scsi/lpfc/lpfc_crtn.h    |   4 +-
- drivers/scsi/lpfc/lpfc_els.c     |  30 +--
- drivers/scsi/lpfc/lpfc_hbadisc.c |  24 +-
- drivers/scsi/lpfc/lpfc_hw4.h     |  11 +-
- drivers/scsi/lpfc/lpfc_init.c    |  26 +-
- drivers/scsi/lpfc/lpfc_nvme.c    |  44 ++--
- drivers/scsi/lpfc/lpfc_scsi.c    |   3 +-
- drivers/scsi/lpfc/lpfc_sli.c     | 392 +++++++++++++++++++------------
- drivers/scsi/lpfc/lpfc_sli4.h    |   4 +-
- drivers/scsi/lpfc/lpfc_version.h |   2 +-
- 11 files changed, 309 insertions(+), 235 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index e989f130434e..49aa86c477c6 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4273,7 +4273,8 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 				 "x%x SNS x%x x%x LBA x%llx Data: x%x x%x\n",
+ 				 cmd->device->id, cmd->device->lun, cmd,
+ 				 cmd->result, *lp, *(lp + 3),
+-				 (u64)scsi_get_lba(cmd),
++				 (cmd->device->sector_size) ?
++				 (u64)scsi_get_lba(cmd) : 0,
+ 				 cmd->retries, scsi_get_resid(cmd));
+ 	}
+ 
 -- 
 2.38.0
 
