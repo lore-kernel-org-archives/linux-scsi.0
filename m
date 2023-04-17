@@ -2,75 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42ED8C77B76
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 13:56:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25672C77B76
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Apr 2023 15:43:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbjDQN4w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Apr 2023 09:56:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47608 "EHLO
+        id S230455AbjDQPnf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Apr 2023 11:43:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229504AbjDQN4v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 09:56:51 -0400
-Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F9C546BF;
-        Mon, 17 Apr 2023 06:56:49 -0700 (PDT)
-Received: from user-virtual-machine.. ([10.12.182.5])
-        (user=jinhongzhu@hust.edu.cn mech=LOGIN bits=0)
-        by mx1.hust.edu.cn  with ESMTP id 33HDtc6o016109-33HDtc6p016109
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Mon, 17 Apr 2023 21:55:43 +0800
-From:   Jinhong Zhu <jinhongzhu@hust.edu.cn>
-To:     Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S230493AbjDQPne (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2023 11:43:34 -0400
+X-Greylist: delayed 1788 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 17 Apr 2023 08:43:27 PDT
+Received: from gw.red-soft.ru (red-soft.ru [188.246.186.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E60DD184;
+        Mon, 17 Apr 2023 08:43:27 -0700 (PDT)
+Received: from arch.red-soft.biz (unknown [10.81.81.211])
+        by gw.red-soft.ru (Postfix) with ESMTPA id 0C4803E10E2;
+        Mon, 17 Apr 2023 18:08:03 +0300 (MSK)
+From:   Artem Chernyshev <artem.chernyshev@red-soft.ru>
+To:     Don Brace <don.brace@microchip.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     Artem Chernyshev <artem.chernyshev@red-soft.ru>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jinhong Zhu <jinhongzhu@hust.edu.cn>
-Cc:     Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] qedf: Fix NULL dereference in error handling
-Date:   Mon, 17 Apr 2023 21:55:18 +0800
-Message-Id: <20230417135518.184595-1-jinhongzhu@hust.edu.cn>
-X-Mailer: git-send-email 2.34.1
+        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org
+Subject: [PATCH] scsi: hpsa: Remove unreachable code
+Date:   Mon, 17 Apr 2023 18:07:57 +0300
+Message-Id: <20230417150757.62902-1-artem.chernyshev@red-soft.ru>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-FEAS-AUTH-USER: jinhongzhu@hust.edu.cn
+X-KLMS-Rule-ID: 1
+X-KLMS-Message-Action: clean
+X-KLMS-AntiSpam-Lua-Profiles: 176767 [Apr 17 2023]
+X-KLMS-AntiSpam-Version: 5.9.59.0
+X-KLMS-AntiSpam-Envelope-From: artem.chernyshev@red-soft.ru
+X-KLMS-AntiSpam-Rate: 0
+X-KLMS-AntiSpam-Status: not_detected
+X-KLMS-AntiSpam-Method: none
+X-KLMS-AntiSpam-Auth: dkim=none
+X-KLMS-AntiSpam-Info: LuaCore: 509 509 b12bcaa7ba85624b485f2b6b92324b70964a1c65, {Tracking_from_domain_doesnt_match_to}, red-soft.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;arch.red-soft.biz:7.1.1
+X-MS-Exchange-Organization-SCL: -1
+X-KLMS-AntiSpam-Interceptor-Info: scan successful
+X-KLMS-AntiPhishing: Clean, bases: 2023/04/17 13:10:00
+X-KLMS-AntiVirus: Kaspersky Security for Linux Mail Server, version 8.0.3.30, bases: 2023/04/17 09:07:00 #21118574
+X-KLMS-AntiVirus-Status: Clean, skipped
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Smatch reported:
+hpsa_lookup_board_id() can't return negative value, so we can
+remove redundant if-statement
 
-drivers/scsi/qedf/qedf_main.c:3056 qedf_alloc_global_queues()
-warn: missing unwind goto?
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-At this point in the function, nothing has been allocated so we can
-return directly. In particular the "qedf->global_queues" have not been
-allocated so calling qedf_free_global_queues() will lead to a NULL
-dereference when we check if (!gl[i]) and "gl" is NULL.
-
-Fixes: 09e062ce83cb ("qedf: Fix NULL dereference in error handling")
-Signed-off-by: Jinhong Zhu <jinhongzhu@hust.edu.cn>
-Reviewed-by: Dan Carpenter <error27@gmail.com>
+Fixes: c8cd71f1f32a ("scsi: hpsa: Remove 'hpsa_allow_any' module option")
+Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
 ---
- drivers/scsi/qedf/qedf_main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/hpsa.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 35e16600fc63..f2c7dd4db9c6 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3043,9 +3043,8 @@ static int qedf_alloc_global_queues(struct qedf_ctx *qedf)
- 	 * addresses of our queues
- 	 */
- 	if (!qedf->p_cpuq) {
--		status = -EINVAL;
- 		QEDF_ERR(&qedf->dbg_ctx, "p_cpuq is NULL.\n");
--		goto mem_alloc_failure;
-+		return -EINVAL;
- 	}
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index f6da34850af9..caf04295efac 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -7871,8 +7871,6 @@ static int hpsa_pci_init(struct ctlr_info *h)
+ 	bool legacy_board;
  
- 	qedf->global_queues = kzalloc((sizeof(struct global_queue *)
+ 	prod_index = hpsa_lookup_board_id(h->pdev, &h->board_id, &legacy_board);
+-	if (prod_index < 0)
+-		return prod_index;
+ 	h->product_name = products[prod_index].product_name;
+ 	h->access = *(products[prod_index].access);
+ 	h->legacy_board = legacy_board;
+@@ -8670,12 +8668,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (number_of_controllers == 0)
+ 		printk(KERN_INFO DRIVER_NAME "\n");
+ 
+-	rc = hpsa_lookup_board_id(pdev, &board_id, NULL);
+-	if (rc < 0) {
+-		dev_warn(&pdev->dev, "Board ID not found\n");
+-		return rc;
+-	}
+-
++	hpsa_lookup_board_id(pdev, &board_id, NULL);
+ 	rc = hpsa_init_reset_devices(pdev, board_id);
+ 	if (rc) {
+ 		if (rc != -ENOTSUPP)
 -- 
-2.34.1
+2.40.0
 
