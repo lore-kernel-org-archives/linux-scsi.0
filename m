@@ -2,102 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26365C77B7C
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Apr 2023 07:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 405A6C77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Apr 2023 07:57:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230519AbjDRHap (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Apr 2023 03:30:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42820 "EHLO
+        id S230327AbjDRH5v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Apr 2023 03:57:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230408AbjDRHan (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 03:30:43 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 603374234
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 00:30:41 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id 4fb4d7f45d1cf-5052caa1e32so4788431a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 00:30:41 -0700 (PDT)
+        with ESMTP id S230401AbjDRH5t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 03:57:49 -0400
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F0C4201
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 00:57:48 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4ec816d64afso9281921e87.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 00:57:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1681803040; x=1684395040;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rVgNSlQei7ClLmAXgHdLYMij5O05eDXWOobwGEh17DQ=;
-        b=vR0c1V6fHjkOyv3+jlpqY5zM6LZj07DmVTLUWBjOaBOnR6s/0Baom+vEKaqJuhxeZ/
-         Xc2D6F3qbZCYol/JMWRydydPtMlGMn5e+nfsLiGcOe5rc+35obwyzfmNe1GgK97zBtTt
-         1Koogst0alt2YUOp73Y6GIQGW4PtGqo+3GIbQ5sYJDaUBLFX+vSBPMZa8Z6RiFe+5SP9
-         yt3weQk73jK4zbBsH2P4E87ne3NJ2xeH/QFqzjwYBdS26g7e7C44okeVj6RGWC5JQhu+
-         im64hz/ErmPn7+rNBHTtTkWqnC+09/Ynd1k5kWaNwVHcekfYvFmrb29OqVqmTdj8tHfQ
-         sdLw==
+        d=gmail.com; s=20221208; t=1681804666; x=1684396666;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kAKYIorvlE6NwFtMndb+APlIQ20b/T2io24+lSh7W/c=;
+        b=eqct0YMt0aJpb5ImyuFOiyyHfe3teqw3hat9lEI+AmxmAxSW4sn2PHcLMrr3HIVfsT
+         PlT0VtBi5Y0QAWy1eddwGtFZgTkz+xx32e9T1n57sONUF7J9BPegVXjX8Gsus5q7XZ6j
+         3S6zZ/iZfLx8QQ1efH4cJhyGzEtj4OQh8F4VzEvQsXpTiI2//0Bw5g+d8BuO+lDtSGDx
+         S0f3He/54HffHhQSGyhUmX8wyIJ0E+3IETiVLdbfJJaTGxUdc8z+z7ebMUpkKRO//yEw
+         AuPZKym5ez0gPA5nZuwCsYrannrqF37QKMu9atgRY7RIbAhOR/KLeu1lsb0R/VwBAtHw
+         L1iQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681803040; x=1684395040;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rVgNSlQei7ClLmAXgHdLYMij5O05eDXWOobwGEh17DQ=;
-        b=LQYjwi4IKfVxb6ZkVh40/rsQjoUP/BYTRlnte+EF+cUWg6GDxaj8Zoy9LluhIz0JX/
-         YNU5n9TlZ3+Mu0tdOYxQ/acbgBuXDbCpwmxQA/qvDZQ6f5wrV9WDhiKjm35Gfs2IUQap
-         w0tz9PJVhyNbcCpMNXcCurcBYDq0P8hR4A60UqQneJVdvVsVX9f93wyQRZTxar6CX58+
-         Edbv4vgHWyh1rRwBinRbRp5EhSczzJNA9uTS6Ds5J5DarYvMS7vaoviszUIMaOdS0zkR
-         nMe6bXkcHLfsPFXlwcSkH/J1ghHk8tepa1fp7xHv9oGMzWTqZeK+hneLoPKLm9CzQU3K
-         QQyw==
-X-Gm-Message-State: AAQBX9d3BP9e2GyhB6VwuLIO/oonO12FQ2H0fGSZF0hqxm3hA9cAEDle
-        fO5xs3UQDmcRIncUOYmhgKgKfQ==
-X-Google-Smtp-Source: AKy350Zoyxpwx+/pSMVZgdFa6Mkl6usfBX3ptXBL+sCtn0/rIgDyyeOnSAiaOQ8GnTcResGJW+JT7A==
-X-Received: by 2002:a50:fb17:0:b0:502:70e9:2c14 with SMTP id d23-20020a50fb17000000b0050270e92c14mr1498794edq.29.1681803039878;
-        Tue, 18 Apr 2023 00:30:39 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:a276:7d35:5226:1c77? ([2a02:810d:15c0:828:a276:7d35:5226:1c77])
-        by smtp.gmail.com with ESMTPSA id m21-20020a509995000000b0050684020babsm5369235edb.27.2023.04.18.00.30.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Apr 2023 00:30:39 -0700 (PDT)
-Message-ID: <b28e6e12-6eb3-582a-25e2-34fa2f3544f8@linaro.org>
-Date:   Tue, 18 Apr 2023 09:30:38 +0200
+        d=1e100.net; s=20221208; t=1681804666; x=1684396666;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=kAKYIorvlE6NwFtMndb+APlIQ20b/T2io24+lSh7W/c=;
+        b=hTq70d1TBjsvGDrdvpZUYdaSmDLeDHwb6Iw1oR9wpAJ2vnWhtWA3rxniXSLn5Dk7FC
+         KWf2PTBAH9udPequ9YywBuNxkgsf9CbfM+lZuPF3EhTS6bjsGaHvdRkQ42SLfb4obZRa
+         JwKBZI7oHvqD5SrzP4iKDSevNNF0f5+nQ1bwsR7kHT9926ARB/Z86u1OHYguhEYbD8bx
+         biLJZY76KiR1ghzRLT9o4ltFnBQX3nnnD4ynxjoNzTkg4bLasj1DMKMZ7DlQ1+qXR2UQ
+         gLly0hirwIzWh0/j2VInX4AiEG+bC2p8nMGzZVRWBSSAD4gK/VvOYP+bM6GYXnfXgCfn
+         2k9Q==
+X-Gm-Message-State: AAQBX9eQnNZD2Ivm+/Os+MUWghJ8JtlUVumczzSom6AAbqvSj1Bs+d/Q
+        a1/yB6fHBWbyw2I56/94t+cPUV7lEwzvm36vng==
+X-Google-Smtp-Source: AKy350ay3GAmkMZ1sibDS9+iGjOnBoBc/giXmFgdt3pSLe7jX13IiBSe/KPgjN/gMddfL4JBLfVM1VhMhHVcd9wMFPA=
+X-Received: by 2002:ac2:562d:0:b0:4db:b4:c8d7 with SMTP id b13-20020ac2562d000000b004db00b4c8d7mr3151943lff.2.1681804666149;
+ Tue, 18 Apr 2023 00:57:46 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] dt-bindings: phy: qmp-ufs: fix clock and clock-names for
- sa8775p
-Content-Language: en-US
-To:     Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+References: <20230417230656.523826-1-bvanassche@acm.org> <20230417230656.523826-4-bvanassche@acm.org>
+In-Reply-To: <20230417230656.523826-4-bvanassche@acm.org>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Tue, 18 Apr 2023 15:57:34 +0800
+Message-ID: <CAGaU9a9btBMn5yX-kWf-QRbc=HGfbz2WqtU0H=Jv08AapiigeQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/4] scsi: ufs: Increase the START STOP UNIT timeout
+ from one to ten seconds
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-References: <20230417130522.401605-1-brgl@bgdev.pl>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230417130522.401605-1-brgl@bgdev.pl>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@google.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/04/2023 15:05, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> 
-> We must set *minItems* to 3, not maxItems as this platform requires
-> exactly three clocks and maxItems is already set to 3 globally.
-> 
-> Fixes: e5796a9cdf73 ("dt-bindings: phy: qmp-ufs: describe the UFS PHY for sa8775p")
+Bart Van Assche <bvanassche@acm.org> =E6=96=BC 2023=E5=B9=B44=E6=9C=8818=E6=
+=97=A5 =E9=80=B1=E4=BA=8C =E4=B8=8A=E5=8D=887:17=E5=AF=AB=E9=81=93=EF=BC=9A
+>
+> One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
+> Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
+> Hence this patch that increases the UFS timeout to 10 s. This patch can
+> cause the total timeout to exceed 20 s, the Android shutdown timeout.
+> This is fine since the loop around ufshcd_execute_start_stop() exists to
+> deal with unit attentions and because unit attentions are reported
+> quickly.
+>
+> Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
+> Fixes: 8f2c96420c6e ("scsi: ufs: core: Reduce the power mode change timeo=
+ut")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Your change makes the code easier to read (more obvious), so I am okay
-with the change, but I am not okay with commit msg and Fixes tag. Issue
-is described inaccurately. There is nothing to fix here, because
-original code was correct.
-
-maxItems:3 in implies minItems:3, thus everything worked as should.
-
-Feel free to re-phrase the commit msg and remove the Fixes tag.
-
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> ---
-
-Best regards,
-Krzysztof
-
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
