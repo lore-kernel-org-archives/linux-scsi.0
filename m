@@ -2,50 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 529B7C77B75
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Apr 2023 13:46:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D6FC77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Apr 2023 14:06:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230033AbjDRNqS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Apr 2023 09:46:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60746 "EHLO
+        id S230465AbjDROGc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Apr 2023 10:06:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230463AbjDRNqR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 09:46:17 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C27A15626
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 06:45:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681825548; x=1713361548;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=b75VZW+YGGQs3M1Jzsf6Hbj+0jqDTN0BBk9+OnQHhcc=;
-  b=EAc+DjHPjAwPVpLAs7fbyjAfuSrXGJMIFDLNKyyewFUpSnJgEWk3JCeB
-   71HBiNEO//oVrW0aeZHkQVKeWzwZTLB/G5Sz4B1jsOqAfwx5873zWSdZX
-   XGt8vJwxnuIi3Z9nnCu29beXZY4daD2ofldyRQc0NxBowvyifXtfddmw3
-   6u+exXFH6kSBt0SIzaqyfXKxxUpFaQ98YlmwNPKuuXVMG50rPWhqHmG+h
-   V5Ul8jXoS1Zum3ZKh5GUIHhzh/u00Q/ELZaqNXdCIbyn+ULqqHM5K8tKB
-   9WVvqgTz9v1Mc+9weHcev8qg8DzhGHmUm25LX7AvrTpfpWx+ljXH1PLcF
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10684"; a="345172270"
-X-IronPort-AV: E=Sophos;i="5.99,207,1677571200"; 
-   d="scan'208";a="345172270"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2023 06:45:37 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10684"; a="815210034"
-X-IronPort-AV: E=Sophos;i="5.99,207,1677571200"; 
-   d="scan'208";a="815210034"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.32.90])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2023 06:45:33 -0700
-Message-ID: <74088d26-ac26-15ba-86a0-65d74a426a9c@intel.com>
-Date:   Tue, 18 Apr 2023 16:45:28 +0300
+        with ESMTP id S230435AbjDROGb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 10:06:31 -0400
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68E1283D4
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 07:06:29 -0700 (PDT)
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-63b5c48ea09so1820435b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 07:06:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681826789; x=1684418789;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HjrbNtSUKqBsWa4QNihfMJxcXMU+qB3++F4sWPCgfTQ=;
+        b=hmh/L7jOtmadqBLpzMJaL7KoGxwXpyeS3RGMbw5wwkkYMRcpBC4x9UiR3EljF1ZAVr
+         IMCyiFq/FWM9KPXYFJD2mnhHdJ2VlVwm5IejfL+AyfTl+s1tqkUFFP2spzzsD3bluguR
+         9lpvhe+1LxKPLaFw39OQ5RopVEAwO1eEA+k3O7jbUdo0FXKo+m1fGmv8+DIsfwAMu3qk
+         sog+FMI6ureJ0y0KHMLKXO1Ot/92zSFp/DVp4rbLu+Hu5YGY+I5SgYEiGIBEjFqIqY/9
+         X/l4gQjbG7K1daIKTO2g1VotMq5cfLLZSGj0o77SEdagRfAIeKTqZMXWnz5qx9m/Hw7U
+         Xmkw==
+X-Gm-Message-State: AAQBX9ct1HOccaWD1jUttJdmj3MNdOeSx7ZQMBvqITCRuqxZn5TXDKSh
+        4qj/cDQGdfDLuy4CFscNy5dMWD6XHWU=
+X-Google-Smtp-Source: AKy350bPf8lPor58zviwd5kBfkaDOQo678PpjCPpZnF2leC+z+IjY428dVtuMGokuyT1gKnhEw7K3A==
+X-Received: by 2002:a17:90b:2382:b0:247:af63:483 with SMTP id mr2-20020a17090b238200b00247af630483mr1996515pjb.46.1681826788795;
+        Tue, 18 Apr 2023 07:06:28 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id j27-20020a63fc1b000000b0050f9b7e64fasm8898293pgi.77.2023.04.18.07.06.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 18 Apr 2023 07:06:28 -0700 (PDT)
+Message-ID: <0a2af553-9b37-d7b4-2fc2-6185c64e8663@acm.org>
+Date:   Tue, 18 Apr 2023 07:06:25 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.10.0
+ Thunderbird/102.9.1
 Subject: Re: [PATCH v2 2/4] scsi: ufs: Simplify ufshcd_wl_shutdown()
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
+To:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
@@ -58,58 +57,25 @@ Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Asutosh Das <quic_asutoshd@quicinc.com>
 References: <20230417230656.523826-1-bvanassche@acm.org>
  <20230417230656.523826-3-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20230417230656.523826-3-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
+ <74088d26-ac26-15ba-86a0-65d74a426a9c@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <74088d26-ac26-15ba-86a0-65d74a426a9c@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 18/04/23 02:06, Bart Van Assche wrote:
-> Now that sd_shutdown() fails future I/O the code for quiescing LUNs in
-> ufshcd_wl_shutdown() is superfluous. Remove the code for quiescing LUNs.
-> Also remove the ufshcd_rpm_get_sync() call because it is not necessary
-> to resume a UFS device before submitting a START STOP UNIT command.
-
-What about the host controller hba->dev?
-
+On 4/18/23 06:45, Adrian Hunter wrote:
+> On 18/04/23 02:06, Bart Van Assche wrote:
+>> Now that sd_shutdown() fails future I/O the code for quiescing LUNs in
+>> ufshcd_wl_shutdown() is superfluous. Remove the code for quiescing LUNs.
+>> Also remove the ufshcd_rpm_get_sync() call because it is not necessary
+>> to resume a UFS device before submitting a START STOP UNIT command.
 > 
-> Cc: Asutosh Das <asutoshd@codeaurora.org>
-> Cc: Tomas Henzl <thenzl@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/ufs/core/ufshcd.c | 12 +-----------
->  1 file changed, 1 insertion(+), 11 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9434328ba323..784787cf08c3 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -9768,22 +9768,12 @@ static int ufshcd_wl_resume(struct device *dev)
->  static void ufshcd_wl_shutdown(struct device *dev)
->  {
->  	struct scsi_device *sdev = to_scsi_device(dev);
-> -	struct ufs_hba *hba;
-> -
-> -	hba = shost_priv(sdev->host);
-> +	struct ufs_hba *hba = shost_priv(sdev->host);
->  
->  	down(&hba->host_sem);
->  	hba->shutting_down = true;
->  	up(&hba->host_sem);
->  
-> -	/* Turn on everything while shutting down */
-> -	ufshcd_rpm_get_sync(hba);
-> -	scsi_device_quiesce(sdev);
-> -	shost_for_each_device(sdev, hba->host) {
-> -		if (sdev == hba->ufs_device_wlun)
-> -			continue;
-> -		scsi_device_quiesce(sdev);
-> -	}
->  	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
->  }
->  
+> What about the host controller hba->dev?
+
+The above question is not clear to me. Please elaborate.
+
+Bart.
 
