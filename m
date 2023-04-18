@@ -2,139 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E73FEC77B78
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Apr 2023 19:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D3BEC6FD18
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Apr 2023 20:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232756AbjDRTCY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Apr 2023 15:02:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45844 "EHLO
+        id S232279AbjDRUJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Apr 2023 16:09:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232647AbjDRTCG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 15:02:06 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C967ABBA8
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 12:01:57 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id t66-20020a254645000000b00b74680a7904so27420100yba.15
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 12:01:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681844516; x=1684436516;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qpvX6zUZ3jJSuVnzz4zMHHsJJxYIrejED2Kgcd4VmHE=;
-        b=lrLE+nDGD3TZMrxvhsLtTXo+MNZ85rg5PEI9Nq6nxIGe6cjQJsYwtEVVtXsZvhPACp
-         I+clHOcIZHU3sn0gZwgImhOcecFYUu2CF3TDngh8xKkpf839M9bc5GGFLd72Bhb0TvMc
-         qz+OBU8XG1j8DkyljpLzjQh8qHIm8UpTufz0UUz7eEjof9zws82ra68q99kqYl8kMP/r
-         uII2BDiN1wlpPZzd5POZ6XwzrbF1n3XYQZza6YnLSHtFX95okvT1Wpo07CrT5DzU0Fos
-         QxTT/dNYmSHv1mQVBqX32MQ0+ebXb5Hq04VriTzYf+nyGMgXHDF15TEk2wKSiWl7Pi1J
-         hUbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681844516; x=1684436516;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qpvX6zUZ3jJSuVnzz4zMHHsJJxYIrejED2Kgcd4VmHE=;
-        b=QHnsTrPmyvCZBDj3iUr7L7BHCDCESa2eUarbVjkoEtkK1UA9jydW1tndN0waVGa48r
-         EPRrQqYRjhCZtUBQVHIu+u57jP+zCWf0IF22IrXO75gHy5XUPoNFeGcpRkohCw8GEVlQ
-         qYP8KMI4vwQElQQ7fqcbb45n4bsx2vTmMiptwfRR0UCwx7MTGTrHJs3jP41T+ZvVNTzL
-         P2o1dTyDgkX/mMzSkhA7NuGATDNQPKVHFjvbx6rI4OsXXv6JYGqTN0UKLc0lehXMJjIc
-         5Tw5XmdmiQAdK0huarTeAT0hwVUDQsKk6NxT/RVvXYoDpobh/nc//pEgxZbJa1MLfcfB
-         Dmbg==
-X-Gm-Message-State: AAQBX9cLvz0TqaOsznG8qksGgjnt/WmyZiLJv9aqAaTjTP9sn6FX8uxU
-        +As5dHoOr3b7KwZL9E1IgkIY49NjQ2w9dg==
-X-Google-Smtp-Source: AKy350bXiQoDmPFoIvILcrY2f0FNpLfWJ8niTeLDqT0R6Tk4Kel0fOd1zG2mwdLPANkMv7K8WZNnBU3DE4e+1A==
-X-Received: from pranav-first.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:390b])
- (user=pranavpp job=sendgmr) by 2002:a25:df41:0:b0:b8b:eea7:525e with SMTP id
- w62-20020a25df41000000b00b8beea7525emr12896039ybg.5.1681844516750; Tue, 18
- Apr 2023 12:01:56 -0700 (PDT)
-Date:   Tue, 18 Apr 2023 19:01:01 +0000
-In-Reply-To: <20230418190101.696345-1-pranavpp@google.com>
-Mime-Version: 1.0
-References: <20230418190101.696345-1-pranavpp@google.com>
-X-Mailer: git-send-email 2.40.0.634.g4ca3ef3211-goog
-Message-ID: <20230418190101.696345-7-pranavpp@google.com>
-Subject: [PATCH 6/6] scsi: pm80xx: Update PHY state after hard reset
-From:   Pranav Prasad <pranavpp@google.com>
-To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Changyuan Lyu <changyuanl@google.com>,
-        Pranav Prasad <pranavpp@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S229838AbjDRUJN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 16:09:13 -0400
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2079.outbound.protection.outlook.com [40.107.94.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 358C34205;
+        Tue, 18 Apr 2023 13:09:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=PXZTPQ4+AceNvsknskoz1EAm3ro+Bt0fjdPk9/BRwALnfWtRna4Jn5mo43aM9EZ3ZGuc/tq5+a4So7oaaDo4jH7J+HoA4wSKr2XTCACadJLOehiMvDG3hvfii+9iH/6BfACj1vb4DYaobIgwXuVvi6HeGi0N8et6RzCYmOYDvldnpBK3Irj1s3bK8ikIE0cN0rRgfn2NwXu30hckMnhkmHs01H+yWESLGgpC3ELGg3xtisdhejN5LQYa4m4wbiee4cpj0C3Xf7OfTZN+dnCMoBoceekkmX6s2QEDPqiVmHNae7KUG2huRjlye/olDcJzhPZHz6HZRQA3j5VOTEKiGw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hWC25cKLtj3LiZuuzC5eBd3d62alnRkZ9mjswf0e2eQ=;
+ b=jAT/KirtnDBUWGrPHXSr8ZxZxnx4493D7rWkEoD7T76cTUscQr7MuEIkvi/xDA91iLTjbp9OBReFn/cfitQCEizP4Vhh5GvDbUamXxTlBskEHv1bLAp/JggsU1qcwrCl0WTaOEv3I5JJ3VOyqu4AQ3Qk46/Hw8jtHk5KUcJVf82qgw2yL1n0j8OSNDEtKJK+gU+6TB5Mal1nuEtNXxlEWZdhbneF0rB3EE8wHRxN0u0OapUlmzV8cwv7WjmBwRxZWAB6v6fwhIMD7x2eUN/g2i/8UjpLMbn/3m+h1vWINn7AxmRdiGFXYPk1Y1xgo52lYqyd2sjF0eXVNoXuSuWsJQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hWC25cKLtj3LiZuuzC5eBd3d62alnRkZ9mjswf0e2eQ=;
+ b=i4/yZehXmKzh3CgNK/QAXQ20RQ4dTvft8mveFJI/rmSQhCJMKpS8z3VK8VTf9hdPgY//+NneFQimdklR+LKcuimQYpVhLNyhwgSXiBtpTVmKKr0D7ZEDP6o3Ig7AViVGn9ZFS34uD8q44uBbCbFMt/M7n3gKaKsjUczfdhABHRkor54bHOeG8JrL9EaSgZgWqWe6dhJ11v9RMjAYdQ1cpnq9TKCWeNHKD/8et1sJWmBG9YN85MhG/Q+Kykq+Mt081I7/Ko5ELBakKYgH+tnyUJ8Vwu8AgSAHFutRrwGqbCSJqB6y8b1ocXxGRrWxRwcmopV6lXQ0cALYsivSVuRl0Q==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by CY8PR12MB8337.namprd12.prod.outlook.com (2603:10b6:930:7d::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6298.30; Tue, 18 Apr
+ 2023 20:09:07 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::6b01:9498:e881:8fb3]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::6b01:9498:e881:8fb3%4]) with mapi id 15.20.6298.045; Tue, 18 Apr 2023
+ 20:09:07 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     Shin'ichiro Kawasaki <shinichiro@fastmail.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: Re: [PATCH blktests 1/9] common/rc: skip module file check if modules
+ path does not exist
+Thread-Topic: [PATCH blktests 1/9] common/rc: skip module file check if
+ modules path does not exist
+Thread-Index: AQHZcSrj1d6axPqPb0qzWILuy2yJyq8xgOsA
+Date:   Tue, 18 Apr 2023 20:09:07 +0000
+Message-ID: <657ad089-c3b1-dd86-a51e-69985292231a@nvidia.com>
+References: <20230417124728.458630-1-shinichiro@fastmail.com>
+ <20230417124728.458630-2-shinichiro@fastmail.com>
+In-Reply-To: <20230417124728.458630-2-shinichiro@fastmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|CY8PR12MB8337:EE_
+x-ms-office365-filtering-correlation-id: 8ccf0d6a-e2b3-4708-7fdb-08db4048c3e1
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: IfK+TTd29kLYoJKPwKwq2JjQPnA5/2ezV/1pzl+mVY3AEsdNFEnX9rQeDSWb1xsZUVZKv9lDILgnSQdMU6LEW8Z4X9q+3zkrCx0IkxyxsozykrsB0s6EyTLqVa8iCmesyaNCTZsZxIT5T1eaMHAjXz2/7nRNxlWXQR9LiOxdRwjGuBtCcBlADV+9YkttfrapQ4n2INtZjJkn6g4nexYvATHLEqEDoTIamhiegD0RG5q7WmJjdp/hI8kKyvFPFQfR/Z2Nru5sqYQy/OW+BzviRXRBGbm/0kYFQmUbHbhE1nm4ImW7ApKDWJ2OUKr8TChi7RYOqVbrsJqFB4mvZrGKnH3OMKeiYc7+cWk1wrw47/idjtqf60/5S1RYvzVxHcYxOC6Tyj0IHoRu2Cm/C2vubvuJhHes7K5Ko4lf9AdU+aQapjEo59nyo0AA0sdI8SypfqrCn1+WaQKwkTEDY7YkdpVISzLGePbqgBJ6Fgn3qrhKfd5+dDdTZTwYw/y6VUxJ8Ihx6iVzTyg+z514QCIwnWjYhXbdWwxgvnqNbpZ7c+ZS9DYSJP3/udYbqkqxPZnGtmUaiRQSAPtDbKsb0O/IH7THh/8FQCiSeZ6lifFR/1OKRn98OojK3z3RqUcQf803eCNhrWvMu6cKGxciB1ETQS0WDUDtXIXhQvVyo0+lrjitAADYWXXxLvigobzl1vxl
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(136003)(396003)(366004)(376002)(346002)(39860400002)(451199021)(86362001)(186003)(31696002)(2616005)(31686004)(6512007)(6506007)(53546011)(38070700005)(36756003)(2906002)(4744005)(6486002)(71200400001)(83380400001)(5660300002)(478600001)(8936002)(4326008)(316002)(110136005)(66946007)(8676002)(76116006)(66476007)(122000001)(66446008)(64756008)(66556008)(38100700002)(41300700001)(91956017)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?dXphNmxUY2cyOWdaYkFKK1M2U1c5RVJPQ2JIWWJyTnZvTmlBb042NzlOVlJQ?=
+ =?utf-8?B?MzlPNVRXRFFjN2VIL2RUcEg0YjBQQyt5akFNaVhhYjlDTzNoT1h1eWFZQ2x0?=
+ =?utf-8?B?bmNwTXJJcXVjKzF6NGZ5Snc1UDAyQTl6a0tqN3NidzQ3djVjVUJCZk5ycE43?=
+ =?utf-8?B?cGJTMENvL043OFBBUUFpMXlhZ2xqVm9NUzVtNnpRZ2dzKzFndkZ0Y2NSQmhl?=
+ =?utf-8?B?MmpOUUlJOGtvVWhUWjVsN3ZiamEydE02eWdkcUlFczNQcC9WKzltck5MNGky?=
+ =?utf-8?B?eWZtVXN1QnlFUmQ1TmRzQStWSVJmUE11czVOQUlqTTJaaWo3Ty9OQ0dpa24z?=
+ =?utf-8?B?S0xNMXg4cTB1MW53UkxqcS82K2ZuOU9DemZtd0d1NmU2TkNRS3l3Tzg4TjBQ?=
+ =?utf-8?B?U0QrTXRqTDRFdEQzVG8xUjVkY0IrcjFTZWFBWDR6UDdDU29ETCsvUHdOTFBn?=
+ =?utf-8?B?bzZDMmEvbkUxOUE3NnRxOTlFSGE0UmVhSVpZa2xtSEs1b3krVHNhc1pUSFp6?=
+ =?utf-8?B?U3MwNmJtM3lkTUV2YnVEOThtbVZQajFBVkNBcDAzV2VSNXNUcWx0a0FESkhL?=
+ =?utf-8?B?R1Q0T1RocjlNbVZOdzBEQS84SU1ucGs1d1N5QWtLVnFFM0g1WDBYcTd0Wmho?=
+ =?utf-8?B?eHpaS3NISENYREp5SXMzblJjbzd3QVFvbWlPOWxmY0k5UjlLaTQvTkxWSWs2?=
+ =?utf-8?B?MlpGVDZuU2diTFVsVkxhVFpjTlo0bHJiVmdmOHp5MzZvcTV1SWJVbXdTMFNk?=
+ =?utf-8?B?d1NHWEFqV0VwZVB6VzNyaWp4emNPZkNlYnNER2dpZTFxaW1hMmVQZmNMZDJH?=
+ =?utf-8?B?K1oxaXBDVWlqbEdleERVN2IyNkQyRVRPcHJsQjlEME91bmRCVEl2VlJlRGRD?=
+ =?utf-8?B?WDhON2ZxVEc4c0hFclBIUXR3aGNqMmNPQjRubzA1alVpWEFlVVdzbzVSOUtE?=
+ =?utf-8?B?TVN3MDAwNmdSK0N6T0psMDJYeGgxK0FYUzEvMnp4Tnh4TEtSVHU4cmFVT2Fh?=
+ =?utf-8?B?Q2ZxU2hMQ2FxdC9STVNwSXR2VnNEUjdoRGxFdVlNRlNvOHF6bkRyUmxTK0RS?=
+ =?utf-8?B?dy9lakdsajVjMyt2L3N6c2VzT05WZkFyaGtWNWFvblc3ZXdtdTZRY0RxNHhF?=
+ =?utf-8?B?K1RFNVY1d0IwanNKM1plWEtIVm1US0l0WitNaEZ4dkNiRHd5UnBQV3NSbm5n?=
+ =?utf-8?B?b0h5a3N6cGRKUDQzSXZaM0Nna2NvTFlPWWRaUlRmWjM4R29oc1JGYk52T0NT?=
+ =?utf-8?B?MTJnL1RyWGdITldQYXZyNklQaTN6QWtvM2poT1hDdFQzS2lEZURXSUZiL1A0?=
+ =?utf-8?B?OVpmRURhSy8vbDh4SFBmMVQwZmtqK3ZoVi9HVy9GT1dtblZ3eEMveThLai83?=
+ =?utf-8?B?RnRsSFk5RHRwSUlDZGt3ZTlrSmx6YVZ5YS9CbVRzb0RwUy83VzFvaGFnOXdh?=
+ =?utf-8?B?YWM0dk80WE1sQ1NodUNkQm9WZDVNSXVhbDQzOCt6K1VBcEVwUlQ1MHdRNm5m?=
+ =?utf-8?B?dTk5NUpTZmFPN2szKzk0STZudDdYZXdBWkxMZnZPdExsYldCVU5UMS8ya1ZU?=
+ =?utf-8?B?SlZteUIwbmpVM1RmWW5JY25Wclk4Ujl0MXM1OUFHb1hzelc1dk5ZSDF3WHF5?=
+ =?utf-8?B?UWlaRk5VdDNsMEJ5emJjeXY5dHB3OE1JaXBkTW83K2hEUUNVU0ZDVDljWi9m?=
+ =?utf-8?B?NVpCT1B3SVNlK0hZOURJUDdZMVlQL0VJcHVSZkFFTFpUMEdsTVd0Q3UvSHNa?=
+ =?utf-8?B?S2dWb2FoK3EvUG9JSHRibUdXbHFxeXpXWUlIY2t2cDFVcUd5Rzg5a2U2bHRt?=
+ =?utf-8?B?MWZ5a1RxWThOcStKQi9pSkM4SEJvbWd5Z2Q5Y2pQdDluWXBnaFJITjdyRjIv?=
+ =?utf-8?B?MGlOczJEakU2cVhuY21VN0FxNnJBYUkyZ0dyck5rMy9RblFvaHB4VnY5OTdZ?=
+ =?utf-8?B?ajVpSm9Pa2VCUzFoaHZrMmNxMnljWEo2MmdIZndVZVc4cDlibWFyNGQ0Y3Zx?=
+ =?utf-8?B?ZlYrQlp5d2tsaTVYM09RWFBsckIrYWVaTlEvZGpQeTgzMlUzOVBJTXZJVVln?=
+ =?utf-8?B?TFNUVGdZVWN1M0lmcjRid05pMHFiRjlTdnBJQWJTdGg2OVFTSGN3S0hSUytw?=
+ =?utf-8?B?eXZRbEVBUE5LNjNxd2h4WVJHa1paZ0wwenNjTnVvZU1ZSmM1bmx3K0NBRCtE?=
+ =?utf-8?Q?XPqdW4brwp2ry6WNDh3jc/DA+k8IrGr15AEDXhMFPGVD?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <2730C7BC5997C14598236DEE0B3C594D@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8ccf0d6a-e2b3-4708-7fdb-08db4048c3e1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Apr 2023 20:09:07.0826
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ih9QIzeHfuNZONR8ClAtuSJCdmMfhYc+opL1HZJXlWfKe8XLqan/g2ChfXkcOmgkOOsm3qUjOvykrzQMDFZK4g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB8337
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Changyuan Lyu <changyuanl@google.com>
-
-Update phy_attached, phy_state, and port_state to correct values
-after a hard rest. Without this patch, after a successful hard reset,
-phy_attached is still 0, as a result, any following hard reset will
-cause a PHY START to be issued first.
-
-Signed-off-by: Changyuan Lyu <changyuanl@google.com>
-Signed-off-by: Pranav Prasad <pranavpp@google.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 85908068b8d7..39a12ee94a72 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3417,6 +3417,7 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	u8 port_id = (u8)(lr_status_evt_portid & 0x000000FF);
- 	u8 phy_id =
- 		(u8)((phyid_npip_portstate & 0xFF0000) >> 16);
-+	u8 portstate = (u8)(phyid_npip_portstate & 0x0000000F);
- 	u16 eventType =
- 		(u16)((lr_status_evt_portid & 0x00FFFF00) >> 8);
- 	u8 status =
-@@ -3449,7 +3450,6 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		break;
- 	case HW_EVENT_PHY_DOWN:
- 		hw_event_phy_down(pm8001_ha, piomb);
--		phy->phy_attached = 0;
- 		phy->phy_state = PHY_LINK_DISABLE;
- 		break;
- 	case HW_EVENT_PORT_INVALID:
-@@ -3567,14 +3567,15 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		break;
- 	case HW_EVENT_PORT_RESET_TIMER_TMO:
- 		pm8001_dbg(pm8001_ha, EVENT,
--			   "HW_EVENT_PORT_RESET_TIMER_TMO phyid:%#x port_id:%#x\n",
--			   phy_id, port_id);
-+			   "HW_EVENT_PORT_RESET_TIMER_TMO phyid:%#x port_id:%#x portstate:%#x\n",
-+			   phy_id, port_id, portstate);
- 		if (!pm8001_ha->phy[phy_id].reset_completion) {
- 			pm80xx_hw_event_ack_req(pm8001_ha, 0, HW_EVENT_PHY_DOWN,
- 				port_id, phy_id, 0, 0);
- 		}
- 		sas_phy_disconnected(sas_phy);
- 		phy->phy_attached = 0;
-+		port->port_state = portstate;
- 		sas_notify_port_event(sas_phy, PORTE_LINK_RESET_ERR,
- 			GFP_ATOMIC);
- 		if (pm8001_ha->phy[phy_id].reset_completion) {
-@@ -3608,14 +3609,17 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		break;
- 	case HW_EVENT_PORT_RESET_COMPLETE:
- 		pm8001_dbg(pm8001_ha, EVENT,
--			   "HW_EVENT_PORT_RESET_COMPLETE phyid:%#x port_id:%#x\n",
--			   phy_id, port_id);
-+			   "HW_EVENT_PORT_RESET_COMPLETE phyid:%#x port_id:%#x portstate:%#x\n",
-+			   phy_id, port_id, portstate);
- 		if (pm8001_ha->phy[phy_id].reset_completion) {
- 			pm8001_ha->phy[phy_id].port_reset_status =
- 					PORT_RESET_SUCCESS;
- 			complete(pm8001_ha->phy[phy_id].reset_completion);
- 			pm8001_ha->phy[phy_id].reset_completion = NULL;
- 		}
-+		phy->phy_attached = 1;
-+		phy->phy_state = PHY_STATE_LINK_UP_SPCV;
-+		port->port_state = portstate;
- 		break;
- 	case EVENT_BROADCAST_ASYNCH_EVENT:
- 		pm8001_dbg(pm8001_ha, MSG, "EVENT_BROADCAST_ASYNCH_EVENT\n");
--- 
-2.40.0.634.g4ca3ef3211-goog
-
+T24gNC8xNy8yMyAwNTo0NywgU2hpbidpY2hpcm8gS2F3YXNha2kgd3JvdGU6DQo+IEZyb206IFNo
+aW4naWNoaXJvIEthd2FzYWtpIDxzaGluaWNoaXJvLmthd2FzYWtpQHdkYy5jb20+DQo+DQo+IFdo
+ZW4gYWxsIG9mIHRoZSBrZXJuZWwgbW9kdWxlcyBhcmUgYnVpbHQtaW4sIC9saWIvbW9kdWxlcy8q
+L2tlcm5lbCBwYXRoDQo+IG1heSBub3QgZXhpc3QuIEluIHRoaXMgY2FzZSwgY2hlY2sgZm9yIHRo
+ZSBwYXRoIHJlc3VsdHMgaW4gZmFpbHVyZS4gU2tpcA0KPiB0aGUgY2hlY2sgd2hlbiB0aGUgcGF0
+aCBkb2VzIG5vdCBleGlzdC4NCj4NCj4gU2lnbmVkLW9mZi1ieTogU2hpbidpY2hpcm8gS2F3YXNh
+a2kgPHNoaW5pY2hpcm8ua2F3YXNha2lAd2RjLmNvbT4NCj4gLS0tDQo+DQoNCkxvb2tzIGdvb2Qu
+DQoNClJldmlld2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2FybmkgPGtjaEBudmlkaWEuY29tPg0KDQot
+Y2sNCg0KDQo=
