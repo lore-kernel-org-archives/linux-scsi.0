@@ -2,98 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50272C77B76
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 03:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5FDCC77B73
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 05:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232021AbjDSDV6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Apr 2023 23:21:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48900 "EHLO
+        id S231128AbjDSFXi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Apr 2023 01:23:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232019AbjDSDVm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 23:21:42 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99695901C;
-        Tue, 18 Apr 2023 20:20:53 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33IM3dAK006913;
-        Wed, 19 Apr 2023 03:20:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=8xIN/BO/NVYgyZOjXSs5ZwdhmdJSG3UevPiURnOtt5k=;
- b=nkp+RiYX42oqShadTetzRH/HKUHOMhEVzzby0XfmgWgORhyszSFLMgowtVnn5qwu6JmY
- Yf57l61ru1XFkl5/qBXDthL8ZwX2OGm7hYXmtSUpHL9D6ZFy72qHIVr1DtTOnAS7QzxG
- N39ZuSEVZf15hUtyAWVVXBk1GRD76GNh4s7vd5KZNc+cQYmrhVRDsxoO2LI4kUqADkPj
- QY3EEiZs+oaTivOJzqV7V2wrMMsiYUwicf6yEXbvB2m2vxFc7Q4RFQFV3VuyfgSz+9LE
- trM8t4sAzadukKErr2Iw2uNDExHQqPonybbO0Xti+UyZUZSh8Ip6jiYMKMij5io3MVRm vA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q0768x882-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Apr 2023 03:20:23 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33J2RXh5037160;
-        Wed, 19 Apr 2023 03:20:22 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pyjcccvu7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Apr 2023 03:20:22 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33J3KLp7012748;
-        Wed, 19 Apr 2023 03:20:22 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pyjcccvts-1;
-        Wed, 19 Apr 2023 03:20:21 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Xiang Chen <chenxiang66@hisilicon.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Yihang Li <liyihang9@huawei.com>,
-        Arnd Bergmann <arnd@kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        John Garry <john.garry@huawei.com>,
-        Xingui Yang <yangxingui@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: hisi_sas: work around build failure in suspend function
-Date:   Tue, 18 Apr 2023 23:20:10 -0400
-Message-Id: <168187437335.702980.6139661216307211988.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230405083611.3376739-1-arnd@kernel.org>
-References: <20230405083611.3376739-1-arnd@kernel.org>
+        with ESMTP id S230027AbjDSFXh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 01:23:37 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B3F64697
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2023 22:23:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681881816; x=1713417816;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=J5H7IFGnCR0kozaUYwP5FGySFMAAB2iNX0WRFa92Eco=;
+  b=emtZs1xVwukPcDIgNFmLn32evcrKUdDt59xIdtqB/xsqKWS8YaYczPH8
+   XL4+2YDqJZUiTEDqfFV8eyKOEGJqh2JiH+lGIjhYUaGw5o3LGBYACHJis
+   8eaQcfSXXBadif/8IaDtO7jFd9kNNYEF31jElrODt0bf3ugAHKy0VL9uF
+   VAoERwhUpBA1BK+s1NKc5szOLY9KNL5VTwFFBZ+BAuqJQeupAArRDPc7W
+   YK9d+Ql/ah/MrQ8lxLjtHiW/L1hY6sw6ZDtgi75DO1CW+gUbh8TF+HVWC
+   zglPlQcZFdHZd8wEEzPrxIFSq/uBUypjkxsCLEA2QhrEqhnM3RKFEvWCf
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10684"; a="334163253"
+X-IronPort-AV: E=Sophos;i="5.99,208,1677571200"; 
+   d="scan'208";a="334163253"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2023 22:23:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10684"; a="835144249"
+X-IronPort-AV: E=Sophos;i="5.99,208,1677571200"; 
+   d="scan'208";a="835144249"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.58.77])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2023 22:23:31 -0700
+Message-ID: <de72eb42-f0f9-99c3-2e14-e8ab00d3f39a@intel.com>
+Date:   Wed, 19 Apr 2023 08:23:29 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-18_17,2023-04-18_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 bulkscore=0
- mlxscore=0 mlxlogscore=750 adultscore=0 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2304190029
-X-Proofpoint-ORIG-GUID: 9nvouzzDWVfbCmmXaxdhChN9giGPqCBq
-X-Proofpoint-GUID: 9nvouzzDWVfbCmmXaxdhChN9giGPqCBq
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.10.0
+Subject: Re: [PATCH v2 2/4] scsi: ufs: Simplify ufshcd_wl_shutdown()
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Tomas Henzl <thenzl@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@google.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>
+References: <20230417230656.523826-1-bvanassche@acm.org>
+ <20230417230656.523826-3-bvanassche@acm.org>
+ <74088d26-ac26-15ba-86a0-65d74a426a9c@intel.com>
+ <0a2af553-9b37-d7b4-2fc2-6185c64e8663@acm.org>
+ <4568ba8b-2dd8-b88c-fbfb-1b0a561e0b15@intel.com>
+ <be06f246-a69e-ade7-0318-5a99d2d36216@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <be06f246-a69e-ade7-0318-5a99d2d36216@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 05 Apr 2023 10:36:04 +0200, Arnd Bergmann wrote:
-
-> The suspend/resume functions in this driver seem to have multiple
-> problems, the latest one just got introduced by a bugfix:
+On 18/04/23 23:14, Bart Van Assche wrote:
+> On 4/18/23 07:13, Adrian Hunter wrote:
+>> On 18/04/23 17:06, Bart Van Assche wrote:
+>>> On 4/18/23 06:45, Adrian Hunter wrote:
+>>>> On 18/04/23 02:06, Bart Van Assche wrote:
+>>>>> Now that sd_shutdown() fails future I/O the code for quiescing LUNs in
+>>>>> ufshcd_wl_shutdown() is superfluous. Remove the code for quiescing LUNs.
+>>>>> Also remove the ufshcd_rpm_get_sync() call because it is not necessary
+>>>>> to resume a UFS device before submitting a START STOP UNIT command.
+>>>>
+>>>> What about the host controller hba->dev?
+>>>
+>>> The above question is not clear to me. Please elaborate.
+>>
+>> Does hba->dev need to be runtime resumed?
 > 
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
->  5142 |         if (atomic_read(&device->power.usage_count)) {
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
-> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
->  5142 |         if (atomic_read(&device->power.usage_count)) {
+> Hi Adrian,
 > 
-> [...]
+> I don't think so. Shutdown callback functions are expected to quiesce hardware activity. To me runtime resuming a device seems to contradict the goal of quiescing hardware activity.
 
-Applied to 6.4/scsi-queue, thanks!
+I don't think the host controller can be used to submit a START STOP UNIT command if the host controller is runtime suspended.
 
-[1/1] scsi: hisi_sas: work around build failure in suspend function
-      https://git.kernel.org/mkp/scsi/c/e01e2290f094
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
