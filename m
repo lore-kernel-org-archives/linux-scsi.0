@@ -2,279 +2,221 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FC7AC77B73
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 07:28:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 585B3C77B73
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 07:43:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232265AbjDSH17 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Apr 2023 03:27:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51896 "EHLO
+        id S232563AbjDSHnx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Apr 2023 03:43:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231927AbjDSH14 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 03:27:56 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60BCF7A8F
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 00:27:49 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230419072747epoutp012299b8972697a92754393c8951f33a51~XRWC36q-00461904619epoutp01a
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 07:27:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230419072747epoutp012299b8972697a92754393c8951f33a51~XRWC36q-00461904619epoutp01a
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1681889267;
-        bh=cYZEsz5d+K8VWp4jrREfx47yVwh4hAAGfFBIuF7iU9M=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Whc62kGiTVE/w35VO3YHUHipDlS7/2nevbbSIXLg3FP/EGlGXIaFMWBhr04WZTK/N
-         lFEI9+8zMhjtmE3Q9LfpnKd9YMXYwf8gubj1T8zaWn2WlFdLuN0eguKoOizpEFHxmP
-         odQ19Ubvh42RiATD7ZGTqyTNpfM9VtJhR0479Z9Y=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20230419072746epcas2p273e27039e5015c6a8f7b45c57b17cd6b~XRWCKojL41716517165epcas2p2x;
-        Wed, 19 Apr 2023 07:27:46 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4Q1XSL1mK0z4x9QG; Wed, 19 Apr
-        2023 07:27:46 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C1.24.10686.2F79F346; Wed, 19 Apr 2023 16:27:46 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-        20230419072745epcas2p47b29940fe7e50d947a29546a8e79abb9~XRWBC_UZV0803208032epcas2p4v;
-        Wed, 19 Apr 2023 07:27:45 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230419072745epsmtrp2bd3917b0212ee835240ae7a2c75fe91d~XRWA9WYuq0414604146epsmtrp2W;
-        Wed, 19 Apr 2023 07:27:45 +0000 (GMT)
-X-AuditID: b6c32a46-ed1f8700000029be-1d-643f97f2a2f9
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D7.39.08609.1F79F346; Wed, 19 Apr 2023 16:27:45 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230419072745epsmtip19f143d5480c8ccdb0d379064040b3b0b~XRWAtWdzy2103721037epsmtip1b;
-        Wed, 19 Apr 2023 07:27:45 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
-        kwangwon.min@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [RFC PATCH v1] ufs: poll pmc until another pa request is completed
-Date:   Wed, 19 Apr 2023 16:19:29 +0900
-Message-Id: <1681888769-36587-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cpgsproxy5@samsung.com; stanley.chu@mediatek.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpnk+LIzCtJLcpLzFFi42LZdljTVPfTdPsUgwV/uCxOPlnDZvFg3jY2
-        i5c/r7JZHHzYyWLxdekzVovVix+wWCy6sY3JYuuNnSwWN7ccZbG4vGsOm0X39R1sFsuP/2Oy
-        6Lp7g9Fi6b+3LA58Hov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MAexR2TYZ
-        qYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QDcrKZQl5pQC
-        hQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJSS6wMDQyMTIEKE7Iznt35
-        yVTQp1/RveImWwPjDbUuRg4OCQETiUeHqroYuTiEBHYwSrQu3cIE4XxilLh4+gU7hPOZUeLP
-        pRPMXYycYB3LLnxhgUjsYpToft0O5fxglLhx+yYLSBWbgKbE05tTwWaJCBxmkrh1o5cRJMEs
-        oC6xa8IJJhBbWMBbouP+FjYQm0VAVaL70TU2kKN4BVwl9jyTh9gmJ3HzXCfYZk4Be4mPb6Yw
-        g8yUEOjlkLh5Zg8LRJGLxMOJm6DOE5Z4dXwLO4QtJfH53V42iEezJfYsFIMIV0gsnvYWqtVY
-        YtazdkaQEmagm9fv0oeoVpY4cosF4mA+iY7Df9khwrwSHW1CEI3KEr8mTWaEsCUlZt68A7XT
-        Q+LOvDfMkBCZxCjxtP0A0wRGuVkICxYwMq5iFEstKM5NTy02KjCCx1dyfu4mRnCK1HLbwTjl
-        7Qe9Q4xMHIyHGCU4mJVEeM+4WqUI8aYkVlalFuXHF5XmpBYfYjQFhtxEZinR5Hxgks4riTc0
-        sTQwMTMzNDcyNTBXEueVtj2ZLCSQnliSmp2aWpBaBNPHxMEp1cBU0JB3r0FOKedp23v3/rT9
-        X/c/StB912d6u03vjNZdo2kf5leKLTc75eC3cs695TeX8l/vDlyTwG9yNu9t/rPZK7NsUjwz
-        4npdgyTf2nzh8pi8ct5czj6Rr39rfs2avP28lp57zizWCD7XND12t06uvq9sIUeC847pbVrK
-        HWA/wWCDjvDMuf2tGbYp8mpzZ87XYfWawFjzYK1zgKh1p/xbfh+P+PoEFttDkjIt9haKlw4F
-        OTn+Oqbb5zdLOm5XLpPgCyvNzO9P+qp6bDZVXFi+QC6T7YFzUH60b+eGe4eqVpS5puzNCt2c
-        VJby2LV4adgk//uRW7eHXZqRzblnk+2C4+XcfC/l2rhKLmtdVmIpzkg01GIuKk4EADymFYUa
-        BAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrELMWRmVeSWpSXmKPExsWy7bCSnO7H6fYpBsc6xS1OPlnDZvFg3jY2
-        i5c/r7JZHHzYyWLxdekzVovVix+wWCy6sY3JYuuNnSwWN7ccZbG4vGsOm0X39R1sFsuP/2Oy
-        6Lp7g9Fi6b+3LA58Hov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MAexRXDYp
-        qTmZZalF+nYJXBnP7vxkKujTr+hecZOtgfGGWhcjJ4eEgInEsgtfWEBsIYEdjBIPL7tCxCUl
-        Tux8zghhC0vcbznC2sXIBVTzjVFi68ObYA1sApoST29OZQKxRQQuM0k0H5cCsZkF1CV2TTgB
-        FhcW8JbouL+FDcRmEVCV6H50Dcjm4OAVcJXY80weYr6cxM1zncwgNqeAvcTHN1OYIe6xk3g8
-        sY9tAiPfAkaGVYySqQXFuem5xYYFRnmp5XrFibnFpXnpesn5uZsYwcGspbWDcc+qD3qHGJk4
-        GA8xSnAwK4nwnnG1ShHiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6HrZLyQQHpiSWp2ampBahFM
-        lomDU6qBia9xx7mJ7//OOLomXNVq+5ewgI+Sv9pzzf9qXzzzc8eMiaJdx4JOv/V1+dlx6wF/
-        FKPQ5q9cW7dcST6yYXJDxkeh2dymni2HRfWvG/Ml6D4Sl5wmP3v5Yb/VRrwrOsqFv3EEKNzX
-        EZ0eLC1tkFBp8XPpx8gTDc+KPl0/ePH2PosbDxNF08uF6iWZfdS/Bp77+n2GVOTNBTo7+g5M
-        Z3/y+5DUlt2y8Vq38/NVdt6+c1i8nOk5I69q1PeM0Cr3oM3cK2aeKblx6rThhcRFd2Nurr0b
-        Ub2X7Y4yb9U56fJlbU6LLMPuSvY388uLfH3g8uVHzdXetX+mxhg9O3M2IVXprNGFqRf0H6ue
-        Uz0fznZ6O4MSS3FGoqEWc1FxIgAVqxzi1QIAAA==
-X-CMS-MailID: 20230419072745epcas2p47b29940fe7e50d947a29546a8e79abb9
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230419072745epcas2p47b29940fe7e50d947a29546a8e79abb9
-References: <cpgsproxy5@samsung.com; stanley.chu@mediatek.com>
-        <CGME20230419072745epcas2p47b29940fe7e50d947a29546a8e79abb9@epcas2p4.samsung.com>
+        with ESMTP id S232046AbjDSHnO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 03:43:14 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 968D99EF6;
+        Wed, 19 Apr 2023 00:42:54 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33IM64oE002249;
+        Wed, 19 Apr 2023 07:42:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=zu+Ur7itMQYWuOF9VyOJfr2/Uyqk9exAHjEZYgOdab0=;
+ b=2j1mqwpvUIY3oviNqOfJGg7HjOgUW+aUt2/+gR7J7puJV6yPlJjzTyvPqmojI2EyVmMc
+ qMTsHlbl8p943AnykZghMJjUdEDPWhfdXSdWypOR0ckphPKAkz3U4c2bf+gFMjtL5bIu
+ vHKj1Gg56Ej6NkHJG9LB9z5pHXNLkMEj+8rHnYohJhqbOgvErMxuaIJqmlgo7bNxk4g5
+ oXP/mN4czoh7EoUFL4h/Pb82xU13yez5bW25vkxuDCIFsRzi1NnbUoPwumgBRQdpHlJ8
+ VF6zu1TsmQdlgEC+t2cbN0/1SmCupX7Vu03n7RSTULSWtlbm4VtjMeRvsCP1j7f2Fhqs qg== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pykhtyjk9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Apr 2023 07:42:49 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33J5gX1k026348;
+        Wed, 19 Apr 2023 07:42:49 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pyjccumdp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Apr 2023 07:42:48 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=FQeQ2wsvlHe1eSKZy8pNVPmuej3EYGFzCiBLNYbvKaFH8dHfHcL4iqrOFKfaQRO5RhS0aJkFmLS+6zj9yxTixrJmdJBx9GX+dSQIcc3b0vLaZPOu6cRYimNE+tWKS/YB7Ar3kDTGrFjRLwl1wh/QDn2hhASWbquUJzsce98LCjVTdM7/M6N0MlL/GBy1UVDbI62iUfhbeluQnoQEN9Ib72KYo1F0T5YyU2A6XiyhqX5rOdFgiu2/MPC/1uPs9Ikc7stv3aUP3weH3H7t8p/oIOUk4Yun2PeLzrU0VFMUYH0xexAVTuVguRwYMmrGhDYwU0oR6AsG5I69iJnNid55WA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=zu+Ur7itMQYWuOF9VyOJfr2/Uyqk9exAHjEZYgOdab0=;
+ b=f7VaAkX5+mik51D3zYZ9KUrS+TiBgXmFSRKhdyL8JlB7rRE9Nw8LQm98upYqdpCFtZS0KSA3cwOIJT8jQCDEHf7PDSpOEBYuOzI7k+wy6yzh7T2KU+AmEsJW9V0gxmCMcCmhnwQR1H2rrqjfNhvidC2yIM6UuYdZLoxTsq+UBo8mwSn5bmWlWlcJIBEXVXnjCemQC6q1JbloIx+a8IQaY16A0fKp9s/1qhOpSWF8LVnimwNAfu2lAU2Z0JLaCYaVnjOMhqG2WGAdwJg/tHYEfCcN1RndZ2KKkROoskQqcgb5AK73wWBHiTcCqOo7QlzLN1sr2ceoEOio4/qqqvkfcg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zu+Ur7itMQYWuOF9VyOJfr2/Uyqk9exAHjEZYgOdab0=;
+ b=Q6TyEa1kMCZKxuvyGDBPbvqT6h/azVYXjadz4dsm8cAK2ON+QqAhWthbF1mmto2lXiAJ7ek9gPCCB++k/BG/lFPTEZ0vZL8lKqVMWyIJ6TxTNXxH3GnYMwLecUO9Eimi8ZLcGk5Pif3UylKcihGnpAhcIsTVPF1SxyIupxGh928=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CH2PR10MB4343.namprd10.prod.outlook.com (2603:10b6:610:a9::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6319.21; Wed, 19 Apr
+ 2023 07:42:46 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::8456:ba59:80ec:d804]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::8456:ba59:80ec:d804%6]) with mapi id 15.20.6298.045; Wed, 19 Apr 2023
+ 07:42:46 +0000
+Message-ID: <67baaecb-984d-cf2f-03c8-c4d8d7a650f7@oracle.com>
+Date:   Wed, 19 Apr 2023 08:42:33 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH] aacraid: reply queue mapping to CPUs based of IRQ
+ affinity
+To:     Sagar.Biradar@microchip.com, jejb@linux.ibm.com,
+        Don.Brace@microchip.com, Gilbert.Wu@microchip.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        brking@linux.vnet.ibm.com, stable@vger.kernel.org,
+        Tom.White@microchip.com
+References: <20230328214124.26419-1-sagar.biradar@microchip.com>
+ <3bce4faf-e843-914c-4822-784188e3436e@oracle.com>
+ <BYAPR11MB3606BFE903D1BBE56C89D31BFA959@BYAPR11MB3606.namprd11.prod.outlook.com>
+ <c5405999615929ba304988ebe18faf3853cc9a95.camel@linux.ibm.com>
+ <BYAPR11MB36062386E7B3DBE1FA69CEB4FA9D9@BYAPR11MB3606.namprd11.prod.outlook.com>
+Content-Language: en-US
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <BYAPR11MB36062386E7B3DBE1FA69CEB4FA9D9@BYAPR11MB3606.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SI2PR01CA0039.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::16) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH2PR10MB4343:EE_
+X-MS-Office365-Filtering-Correlation-Id: 99c796dd-896a-4b84-3808-08db40a9aa95
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: arJ4MrlZU1HPzdFGRHfU+RfRGCUKGo4CMtBJov7Ydxvy1Sj/fLLIU8x/ZuEF4r6z+itUrUHLFYfByt9bX8gxUAuwvK7x/YAmi2Y8479/od0nRu4HzLtt/4hwsRhknVXkzIMe0eFBwAizr4B+RiMgai1A/BS4OsKyXB80OfDm7n12QAY+ggYW0Ru2FP2aZ0qW2vR3vcqGexAHGajLe18NBHPyeYHedXteKG5HiqI6FMEcOF8Ob2X/dCwOnrpIkdY4hbcpg65yBP4XCz0HjumktcJePvTVwSGjfH8ekzE44+r5K1Nna1T/Wr8b0x97nCy8TfaQvXZrJhRTVDoxj7hAfNeBCXBxuVDJtfMuYFV+CGOexFjZBa0Krb+0T5TPPTqvEduw8K2ITiARbOzv7xyOt+px/oWg6PRWNgfKoqDHvIJi3kdMdnIWPARFIQONje1g8H8aPvHYn2jVFyYBr9EwGEH02JrRYd2FmzIwyp82gTtQWDMgXjho/yPXpfFZgOOOej900tm5jbLV5ReiIQfOBtqvNcFa7znjU+/YLd2wQI8lZXyom0gqN1FDyks96cMsaGSZc49znIW37ivH9dLoL3AQdLhXf251XxpQm/OzNixuTrBPQfuQYJ5NydAcyD/oRgBrTtO2lWDH7am70y/TRflmTXa2aBdUt4q2fzdZDWM2Jb3dUzp2F1Na88vdlPou
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(376002)(39860400002)(346002)(396003)(366004)(136003)(451199021)(36756003)(2616005)(83380400001)(5660300002)(31686004)(38100700002)(53546011)(8936002)(8676002)(2906002)(478600001)(6666004)(36916002)(6486002)(316002)(26005)(6506007)(6512007)(41300700001)(66946007)(66556008)(66476007)(86362001)(31696002)(186003)(966005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UkFIaC9JUzUxOXVtdkhzOGxFaW53QjhoWnN1SnVTY0ZLY0dWUDVVS2U2c1FH?=
+ =?utf-8?B?S0FOZ3FieWE5QkdqdyticlYzZm4vODg4ZnhIM29ETlIwUFNxeUUwR1lkRlBy?=
+ =?utf-8?B?Zi9GdXZ0YXpTVDBKQnhJTFkzWm5PclBKUUNaRUxkYitrTjBsbWE3N2hwVm9x?=
+ =?utf-8?B?Q0ptRU5xVjd4dGZyQWZERUtrUDRGM1FaTG1MUkpmSi9KZVRUaHJCYnFKSEFL?=
+ =?utf-8?B?djhTWDNHT3FhNVpxQm9wcC9RV0VrUU9Dd3kyaUNTNUdtTUZaN2hPcmVxaTZr?=
+ =?utf-8?B?dUdVemxlTkZRT2h5Q0JCL1JoYWVKbWpGTHFOSU8rL0U1YzF3WjNRU1NiNEZU?=
+ =?utf-8?B?cmJqTkx0QTMvU1RtMWlCWHBZamdZQS8yTGwrMndmbXo5c0dHMjdsRDIwWlJQ?=
+ =?utf-8?B?d1pjYmNjOVVhb1VRajAzZmdRWFowdm9kZFlFTTBaUjJQV0lzYkE4eXdoaWxx?=
+ =?utf-8?B?T1RVNDB5WXc1NHA2aWcvb3V1QXJyZUJDMGpEMnEyb05SdFNiSWc5U1hsRDEv?=
+ =?utf-8?B?STNMZkVsbjM2amF3UDd1S2V6QkRxU3NWWDdTUGFoM1BOUDdIbEdlbzdDU0dj?=
+ =?utf-8?B?Q0RiWDgxUnpKVjFzNW5xUUVLSTdGa3BWQ3UrWnJtYUVrQzZYUU5jeUNDRzdH?=
+ =?utf-8?B?WDIxYTNZQjFBSm9RakRBaE9qTHZrK0hWNkwwK3llWENEMUU2Y1lybjBnUWh4?=
+ =?utf-8?B?MUh1WUE2SzV0NEVhRldSMFAvV1VCZG5qSlMzZFNNRzZMVlh2dC9PcUVteGsz?=
+ =?utf-8?B?d2Qxck5EUHM5WXJiS0YxcDhseHRDZTZhYitSa2sycDB3VXY3dWJzeVQxNU5i?=
+ =?utf-8?B?ODNqSmNDUUUybHNybXArVXRRbVNLZ2p6dVRmQkFzekc4OVhIR1dpQjA4Q2hB?=
+ =?utf-8?B?QVNhT20wa0JhL3JBN1NGaTltMlRXdTFtVFExazhETHFHL25wbEVud1RvREZq?=
+ =?utf-8?B?Mkw2MDlCNXA3aUhFWEVDUE55LzQrb1ZlOE9sQ3JaSWI3SnZvbkRKWmlkY3Rt?=
+ =?utf-8?B?WCtKWGVTRE5RYnR2YzFSLzFHS0t4STNDMkNRRVErWGhTQXh4OU5TWGplUkhy?=
+ =?utf-8?B?MjFtM3VOYVRJdzNaUVg3bXlNc3luSDFrcXpjakFaT1BoK0w5VGdUU0ZWZi94?=
+ =?utf-8?B?aTAreW1ZUXd5YVh3S3k3aktyZW9qT3pnSUhzc25nSjlqaCtGeUNaMHhIY0N4?=
+ =?utf-8?B?S2FzbEpubVNYcWxOc3NJWmsyVzkwV1dzLzBuRm1OT1NlbVRVdDBOSGFsTHFo?=
+ =?utf-8?B?amREckt1VjhwanBkVlBtR3NRZEZKNXdkZ2xTSUpESXk4OGxvL01NcTM5ZFB2?=
+ =?utf-8?B?L01BZVgzSzR5NDAza2pSMG1MZUhtOVg3VTI3VnFiTFdrYWdtMGxHbElSQk5z?=
+ =?utf-8?B?c3d0cnU4WjVFM1pWVFZlVlI3dkhLZ01vNTU0NDFGK2pPc2hweCt4TlF4N0di?=
+ =?utf-8?B?d2pIaGZNUE5uSjVaa0MxSUpobmpLejR2T2l2YXdlYkNJemtNKzcrbjY0VXRx?=
+ =?utf-8?B?cjB1aEpJVzBmMHlGUkt4ZVZjbmJqaW9qbE5BM2ZwNkpoVjBNNlRIcUZqaHZp?=
+ =?utf-8?B?ekNEcWRkbmdQVnhOWFh2aFpFaG4yR2E4VDBkTWlRWDhQajhNMVVxYjQ2WHo3?=
+ =?utf-8?B?ZUdCekZtbXR1ZUZhb2tZVmVER0NIRmZkYmd2MFpIN1E1c0dNUXJmUnM0N294?=
+ =?utf-8?B?ZjJmdTIrQng5RGhCeDRzbEJFT2FvQnNjWE5rYndtanFQSnBiNk5HbDJSMU13?=
+ =?utf-8?B?K2pMZ2h0Q2RxNFBUb2JiMlNiMVBPWE9rcFhXakxZSzZ2RFVySnZPWHcrL1py?=
+ =?utf-8?B?dVYrRkRiQzhaMGh5Zk15WmVVeUdUVm5MOWN2U1o3TkhNcjA0cWt4UnU0WFJz?=
+ =?utf-8?B?YTlhWjArQzVBaDAwVHA2emtRWEVOalhkU0hYLzNQc3hLSGtXOFg3SHlIMnZm?=
+ =?utf-8?B?cjYvMEpFemUwK2tibE53T0NlVlZnRi84ODhheXdsVzIrSWprRi9JZUdjUUcy?=
+ =?utf-8?B?cDVzYS9WYkppb1g3TmxlTmxHM1JUY2NRTStVbUJOWGVpSkxZV2IrRUdoL3Iv?=
+ =?utf-8?B?OVEvRjFjVnZzRVpOVURtU1phRUc2TmFaZnJla0ZIYXZwS1VmWU83NzlEczhj?=
+ =?utf-8?Q?/aot8V6nud6F5iwB6xe+FZT3a?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 1mtXRGweu5POMrCHdOGQeLkr8dI4e5NC1FXR22Sk2y8gjaHO1hJ+a3VoZjY+EVrSn2HuqJp/ZoGnB2f7lDcEQ7nbQCSdIYE2/ZK2N2Pv5CcnoZMsBliZcIsr6ErzvRGR785Lf+b089uzMUpScxsgIaS5E0eZT5XH0HpFST5tAXCjbQ59F7VAzc9rASBJefYpne0H5IzeelihjuJwGKCGxGe6FGWp9FXz2AAYGsM5qAIdu9Tjvyo52i8C0ex+kbQ6dRoaRdRp2BTs5ll7wkXS/FuRj0bOmrA9Z8bMEOxJOVd6d63gCm87/gx1a1mUtnhk5OEjN4trJLuEMHfUoOD6Ry4kdAHxdbP4JqRGG3Js0hPcu1vLTR9Yw23jkbl5iQl1XQwaMLG+D4Xd0JVom89e5En8x/GyBrKlvjnewmFgURDYohDMEj4YW3RFKLmz17VsEr1p7yue94tO1J2lchhKtWb5RCOtH0ovEzOeZGO8NTuv/PMaC5TEOHwd5VNtUjcsKpDYJSuiP4Kq0ufQ+QFW5o8XeE8Dfd4DG9nDchSEsav78C64NxQ/aXEv4dDL9ZSC2gRpaA5MOjGesyqAKa4l6980aBBHQLR1EYYEOX9luaaWyzacIxUQLaOjV772utiSrkaBlHTSaxD6aDFq/3mn3DoT71s2ZrWrtK3MUWNhK9ZRZwJiK108oxUJrp9XBXnS1QodGLqdb6MMNLH4bdt9XKTAIawayHa+Y9fTFu4DNVf1axqMnwWacShAMG6yKiSR/JeLnt486lnGcKP96PzcVx9Lp7ZCG0f0ddH2++XAbciuN/sgl2koXayT01qXR6HRHOIsPFIhsvwtMksS5Wsi7KbH6jfVD5I/+EQ9gpCWX7s5I+nbS+Kcb3krqk4Ml6y5
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 99c796dd-896a-4b84-3808-08db40a9aa95
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Apr 2023 07:42:46.1869
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QBxlGNd9/8qbnOK29ABy4sFA9F7kO7/VO8W8wLmpPV4zePpihsXp6sDwQQB06z1rqALkQLSG7CNMhcTSInXjBw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4343
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-19_04,2023-04-18_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
+ adultscore=0 suspectscore=0 phishscore=0 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2304190069
+X-Proofpoint-GUID: VBptDgjEFEpXeLTnetddxcj8YA-ynNr_
+X-Proofpoint-ORIG-GUID: VBptDgjEFEpXeLTnetddxcj8YA-ynNr_
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Regarding 5.7.12.11 in Unipro v1.8, PA rejects sebsequent
-requests following the first request from upper layer or remote.
-In this situation, PA responds w/ BUSY in cases
-when they come from upper layer and does nothing for
-the requests. So HCI doesn't receive ind, a.k.a. indicator
-for its requests and an interrupt, IS.UPMS isn't generated.
+On 19/04/2023 00:55, Sagar.Biradar@microchip.com wrote:
+> [I'm with Jon: your email style makes digging information out of the emails very hard, which is why I only quote this section] On Mon, 2023-04-10 at 21:17 +0000,Sagar.Biradar@microchip.com  wrote:
 
-When LINERESET occurs, the error handler issues PMC which is
-recognized as a request for PA. If a host's PA gets or raises
-LINERESET, and a request for PMC, this could be a concurrent
-situation mentioned above. And I found that situation w/ my
-environment.
+I stopped replying as this wasn't fixed... and still isn't :((
 
-[  222.929539]I[0:DefaultDispatch:20410] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecdl : 0x80000002
-[  222.999009]I[0: arch_disk_io_1:20413] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
-[  222.999200] [6:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufs_pwr_mode_restore_needed : mode = 0x15, pwr_rx = 1, pwr_tx = 1
-[  223.002876]I[0: arch_disk_io_3:20422] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
-[  223.501050] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: pwr ctrl cmd 0x2 with mode 0x11 completion timeout
-[  223.502305] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_change_power_mode: power mode change failed -110
-[  223.502312] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_err_handler: Failed to restore power mode, err = -110
-[  223.502392] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_is_pwr_mode_restore_needed : mode = 0x11, pwr_rx = 1, pwr_tx = 1
+>> ***blk-mq already does what you want here, including handling for the
+>> case I mention above. It maintains a CPU -> HW queue mapping, and
+>> using a reply map in the LLD is the old way of doing this.
+>>
+>> We also tried implementing the blk-mq mechanism in the driver and we
+>> saw command timeouts.
+>> The firmware has limitation of fixed number of queues per vector and
+>> the blk-mq changes would saturate that limit.
+>> That answers the possible command timeout.
+> Could we have more details on this, please?  The problem is that this is a very fragile area of the kernel, so you rolling your own special snowflake implementation in the driver is going to be an ongoing maintenance problem (and the fact that you need this at all indicates you have long tail customers who will be around for a while yet).  If the only issue is limiting the number of queues per vector, we can look at getting the block layer to do that.  Although I was under the impression that you can do it yourself with the ->map_queues() callback.  Can you say a bit about why this didn't work?
+> 
+> [Sagar Biradar]
+> Thank you for your response.
+> We did venture trying into something like what you pointed to.
+> We mapped the hardware queues, and we still see command timeout. This change doesn’t work for us at this stage.
+> Also, we observed that the load is not balanced across all the CPUs.
+> I am pasting the code snippets for better understanding.
+> 
+> 
+> During the probe, we assigned the hardware queues.
+> shost->nr_hw_queues = shost->can_queue; //inside aac_probe_one().
 
-This patch is to poll PMC's result w/o checking its ind until
-the result is not busy, i.e. 09h, to avoid the rejection.
+That is wrong - .can_queue is the number of IOs which the scsi host may 
+be sent at any given time, while .nr_hw_queues should be the number of 
+MSI(X) vectors returned from pci_alloc_vectors()
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 92 ++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 67 insertions(+), 25 deletions(-)
+You should also set shost->host_tagset = 1.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9434328..3fa58d9 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -98,6 +98,9 @@
- /* Polling time to wait for fDeviceInit */
- #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
- 
-+/* Polling time to wait until PA is ready */
-+#define UIC_PA_RDY_TIMEOUT	30	/* millisecs */
-+
- /* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
- static bool use_mcq_mode = true;
- 
-@@ -4138,6 +4141,64 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- }
- EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
- 
-+static int __ufshcd_poll_uic_pwr(struct ufs_hba *hba, struct uic_command *cmd,
-+		struct completion *cnf)
-+{
-+	unsigned long flags;
-+	int ret;
-+	ktime_t timeout;
-+	u32 mode = cmd->argument3;
-+
-+	timeout = ktime_add_ms(ktime_get(), UIC_PA_RDY_TIMEOUT);
-+	do {
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		hba->active_uic_cmd = NULL;
-+		if (ufshcd_is_link_broken(hba)) {
-+			spin_unlock_irqrestore(hba->host->host_lock, flags);
-+			ret = -ENOLINK;
-+			goto out;
-+		}
-+		hba->uic_async_done = cnf;
-+		cmd->argument2 = 0;
-+		cmd->argument3 = mode;
-+		ret = __ufshcd_send_uic_cmd(hba, cmd, true);
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		if (ret) {
-+			dev_err(hba->dev,
-+				"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
-+				cmd->command, cmd->argument3, ret);
-+			goto out;
-+		}
-+
-+		/* This value is heuristic */
-+		if (!wait_for_completion_timeout(&cmd->done,
-+		    msecs_to_jiffies(5))) {
-+			ret = -ETIMEDOUT;
-+			dev_err(hba->dev,
-+				"pwr ctrl cmd 0x%x with mode 0x%x timeout\n",
-+				cmd->command, cmd->argument3);
-+			if (cmd->cmd_active)
-+				goto out;
-+
-+			dev_info(hba->dev, "%s: pwr ctrl cmd has already been completed\n", __func__);
-+		}
-+
-+		/* retry for only busy cases */
-+		ret = cmd->argument2 & MASK_UIC_COMMAND_RESULT;
-+		if (ret != UIC_CMD_RESULT_BUSY)
-+			break;
-+
-+		dev_info(hba->dev, "%s: PA is busy and can't handle a requeest\n", __func__);
-+
-+	} while (ktime_before(ktime_get(), timeout));
-+out:
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->active_uic_cmd = NULL;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	return ret;
-+}
-+
- /**
-  * ufshcd_uic_pwr_ctrl - executes UIC commands (which affects the link power
-  * state) and waits for it to take effect.
-@@ -4160,33 +4221,16 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	unsigned long flags;
- 	u8 status;
- 	int ret;
--	bool reenable_intr = false;
- 
- 	mutex_lock(&hba->uic_cmd_mutex);
- 	ufshcd_add_delay_before_dme_cmd(hba);
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (ufshcd_is_link_broken(hba)) {
--		ret = -ENOLINK;
--		goto out_unlock;
--	}
--	hba->uic_async_done = &uic_async_done;
--	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
--		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
--		/*
--		 * Make sure UIC command completion interrupt is disabled before
--		 * issuing UIC command.
--		 */
--		wmb();
--		reenable_intr = true;
--	}
--	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	ret = __ufshcd_poll_uic_pwr(hba, cmd, &uic_async_done);
- 	if (ret) {
--		dev_err(hba->dev,
--			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
--			cmd->command, cmd->argument3, ret);
--		goto out;
-+		if (ret == -ENOLINK)
-+			goto out_unlock;
-+		else
-+			goto out;
- 	}
- 
- 	if (!wait_for_completion_timeout(hba->uic_async_done,
-@@ -4223,14 +4267,12 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->active_uic_cmd = NULL;
- 	hba->uic_async_done = NULL;
--	if (reenable_intr)
--		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
- 	if (ret) {
- 		ufshcd_set_link_broken(hba);
- 		ufshcd_schedule_eh_work(hba);
- 	}
--out_unlock:
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out_unlock:
- 	mutex_unlock(&hba->uic_cmd_mutex);
- 
- 	return ret;
--- 
-2.7.4
+Since the driver has reserved commands, the .can_queue should be reduced 
+by the amount of reserved commands and the driver needs to manually 
+choose which HW queue to send those reserved commands on - see example 
+in other driver here: 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/hisi_sas/hisi_sas_main.c?h=v6.3-rc7#n523
+
+JFYI, We have tried to add reserved command support to SCSI ML, but it 
+still has not been finished - see 
+https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
+
+> 
+> We also wrote a new routine "blk_mq_pci_map_queues" (mapped to .map_queues in scsi_host_template).
+> static void aac_map_queues(struct Scsi_Host *shost)
+> {
+>                  struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+>                  blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+>                                                        aac->pdev, 0);
+> }
+
+This looks ok.
+
+> 
+> With the above changes, we see command timeouts in the firmware space and the commands never return to the driver.
+> This may need some changes in the firmware, but the firmware changes are restricted (since this is EOL product).
+> Also, we saw that the load was entirely upon one CPU and it was not balanced across other CPUs.
+> 
+> We have had this reply_queue mechanism (patch) in our Out Of Box driver (OOB) for more than three years.
+> We(vendors/customers included) have not observed any issues.
 
