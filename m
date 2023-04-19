@@ -2,122 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D381C6FD18
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 19:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D62FAC77B73
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 21:58:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbjDSTaC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Apr 2023 15:30:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44374 "EHLO
+        id S229978AbjDSV6M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Apr 2023 17:58:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbjDSTaB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 15:30:01 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 682A4192
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 12:30:00 -0700 (PDT)
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33JJQUbm008523;
-        Wed, 19 Apr 2023 19:29:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=Tn/w2IBzxd0qGZrp0F6GohgYGy1wvUG2Kugce1sfdcU=;
- b=HS2eHg/MJqpKEEyQ5DLo6Z/37khNp2HmgRBRMq1r2iAIloh6G+AWaEbCJyjal21WNSAy
- 5qsB14YRsKjpoU++HbGekkkkZEuMX3muEMN1QYVYQC/TdPh32twBFdIAEXKguMRspv1Z
- eajP6Ny4KtXffIBPO3F26YstKNGh8aDi8bX1+/CVXVFofbQTGa6PiyVzyzpw19rQ4fG6
- krv7+I4nVuN07JM16qiSKA5A/x1TGztbWk2MyRgDq3efOWKb+RRWL5iJy3Rbe0cssVVD
- MbyO2t05gQIJHLevAxZnQGQ4cv4Dr7sez/znUdt6f5qV6tEFHx5J9q7GM4b4xsyb+5pS 1w== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3q1ntvk0gv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 19 Apr 2023 19:29:34 +0000
-Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33JIZV32010941;
-        Wed, 19 Apr 2023 19:29:34 GMT
-Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3q1ntvk0gh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 19 Apr 2023 19:29:34 +0000
-Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 33JI1JC0024249;
-        Wed, 19 Apr 2023 19:29:33 GMT
-Received: from smtprelay03.wdc07v.mail.ibm.com ([9.208.129.113])
-        by ppma02wdc.us.ibm.com (PPS) with ESMTPS id 3pykj7r796-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 19 Apr 2023 19:29:33 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-        by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 33JJTWSR28967512
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Apr 2023 19:29:32 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1F6C258059;
-        Wed, 19 Apr 2023 19:29:32 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BB6E858057;
-        Wed, 19 Apr 2023 19:29:30 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.163.32.220])
-        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-        Wed, 19 Apr 2023 19:29:30 +0000 (GMT)
-Message-ID: <e035791d5d06d21068d94a0228ada207ee0d96b7.camel@linux.ibm.com>
-Subject: Re: [PATCH v2 1/4] scsi: sd: Let sd_shutdown() fail future I/O
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Tomas Henzl <thenzl@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        Mike Christie <michael.christie@oracle.com>
-Date:   Wed, 19 Apr 2023 15:29:29 -0400
-In-Reply-To: <257074db-72c7-a04f-bdf3-f5b90ea2781e@acm.org>
-References: <20230417230656.523826-1-bvanassche@acm.org>
-         <20230417230656.523826-2-bvanassche@acm.org>
-         <cdd6b413085dc606c351f3c10ea82774498171e1.camel@linux.ibm.com>
-         <4f59864e-d5cb-2590-99a3-2314873216f4@acm.org>
-         <2ecb60b5a17bd15a90d0a4a1718c202f3a1374e4.camel@linux.ibm.com>
-         <a2195da6-5d41-789f-091c-6d38c9d7d7b0@redhat.com>
-         <392c0fc3412bd39d37a6b87ba58b505095c56f7e.camel@linux.ibm.com>
-         <5429f579-1512-b6b5-771a-70f3d27959b2@acm.org>
-         <3f1cb05d70ea9a060951b8b2cd4ce84d8fb62174.camel@linux.ibm.com>
-         <257074db-72c7-a04f-bdf3-f5b90ea2781e@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229583AbjDSV6K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 17:58:10 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FF3546A9
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 14:58:06 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230419215803epoutp03e7ee0d731b4b7ec5cb1182d06a157361~XdN4gitIj1647816478epoutp03m
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 21:58:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230419215803epoutp03e7ee0d731b4b7ec5cb1182d06a157361~XdN4gitIj1647816478epoutp03m
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1681941483;
+        bh=yt++lBPYxJZl/2m/djRlrQi/agI4oNkeYuJ5gJkK4iM=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=FWoTxLOENEB0dvTi1OsJHyaBPYjD58H8O7lwaJeBGG91A6nn2hkSDBBcnJxTkoxCH
+         Vvr3pUrjvmOpN4xCHZgPss9pBPFm/r9ir2M+dypJxQVPtKiiOQBifGEb8wKiaVs6PX
+         tydf+QNqB32cm94Bh3LcVdvSXAyi4jF7O7emUb5o=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20230419215802epcas2p43dddf00a54d2920d38adbfaebec795bf~XdN3hKGPA0563005630epcas2p4y;
+        Wed, 19 Apr 2023 21:58:02 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp2.localdomain
+        (Postfix) with ESMTP id 4Q1vmV0mkkz4x9Pt; Wed, 19 Apr 2023 21:58:02 +0000
+        (GMT)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20230419111500epcas2p1ec2140d9a51198d4d30d159df39afd40~XUcbxas0u1846818468epcas2p1V;
+        Wed, 19 Apr 2023 11:15:00 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230419111500epsmtrp141be6b82106055c9bb7ec30dee488385~XUcbwbr5H3108331083epsmtrp1s;
+        Wed, 19 Apr 2023 11:15:00 +0000 (GMT)
+X-AuditID: b6c32a29-a95fd70000002057-06-643fcd3439cb
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        92.B5.08279.43DCF346; Wed, 19 Apr 2023 20:15:00 +0900 (KST)
+Received: from KORCO118546 (unknown [10.229.38.108]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230419111500epsmtip26af345214300035772e0ead3b49fb413~XUcbfvBOx1334313343epsmtip2I;
+        Wed, 19 Apr 2023 11:15:00 +0000 (GMT)
+From:   "hoyoung seo" <hy50.seo@samsung.com>
+To:     "'Stanley Chu'" <chu.stanley@gmail.com>
+Cc:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <bvanassche@acm.org>,
+        <bhoon95.kim@samsung.com>, <kwmad.kim@samsung.com>,
+        <sc.suh@samsung.com>, <quic_nguyenb@quicinc.com>,
+        "'Po-Wen Kao'" <powen.kao@mediatek.com>, <peter.wang@mediatek.com>,
+        <cpgs@samsung.com>
+In-Reply-To: <CAGaU9a-k9iDUNeT0s85o0GEeXSWsi98_QC+nK=jT9Yb1V=-SZA@mail.gmail.com>
+Subject: RE: [PATCH v1] scsi: ufs: mcq: add 1 to the max Queues value
+Date:   Wed, 19 Apr 2023 20:15:00 +0900
+Message-ID: <664457955.21681941482096.JavaMail.epsvc@epcpadp4>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: TDZ237_bDvNmIGw8YHrLOwt1adlLrWbO
-X-Proofpoint-ORIG-GUID: dvwetjyrXwtkqJoRa2RksJbuCD5OHMfG
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-19_13,2023-04-18_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 bulkscore=0
- suspectscore=0 mlxscore=0 impostorscore=0 spamscore=0 priorityscore=1501
- phishscore=0 lowpriorityscore=0 adultscore=0 clxscore=1015 mlxlogscore=620
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2304190167
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJsRHWp5BydKzgtb0jjt1yJbuiCjwJWOIV5AeRP6Zmt6wLh0A==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRmVeSWpSXmKPExsWy7bCSvK7JWfsUg/l/lC0ezNvGZvHy51U2
+        i4MPO1ksvi59xmox7cNPZosvF/czW7w8pGmx6MY2JoubW46yWFzeNYfNovv6DjaL5cf/MVls
+        /fSb1eLt3f8sFlNfHGe36Lp7g9FBwOPyFW+PnbPusntMWHSA0aPl5H4Wj+/rO9g8Pj69xeIx
+        cU+dR9+WVYwenzfJebQf6GYK4IrisklJzcksSy3St0vgymg9tJK14IxIxeu5D1gaGM8KdDFy
+        ckgImEg82vGXsYuRi0NIYDejxJLHe9kgEhIS/xc3MUHYwhL3W46wQhQ9Z5T4c+AaM0iCTUBL
+        ov/tFrAGEQFtiSXbJoEVMQusYZa4+fQHO0THRUaJq9MfsYJUcQoESpz7fh3MFhZwlTi8G6SI
+        k4NFQFXi1vnDYFN5BSwl+r7vgLIFJU7OfMICYjMDbeh92MoIYy9b+JoZ4jwFiZ9Pl7FCXOEk
+        8fX2TKh6EYnZnW3MExiFZyEZNQvJqFlIRs1C0rKAkWUVo2RqQXFuem6xYYFhXmq5XnFibnFp
+        Xrpecn7uJkZwZGtp7mDcvuqD3iFGJg7GQ4wSHMxKIrzuNnYpQrwpiZVVqUX58UWlOanFhxil
+        OViUxHkvdJ2MFxJITyxJzU5NLUgtgskycXBKNTD57HDpqI0ocd4bFxzj/NU2oJfhoMxE5kib
+        IzcXdTZoh75NPr/t/evFy+zMjm/ea8F7r6Ho97zF9rZTN9u2P/3BsFx04fvPTinCT624Lxfc
+        urpNttKg+oc4z+J/STwbFhs/zV/A82bJZ4dil75r90Wd1l+zV1OZo2ym45zq9Onuys+LhLuD
+        5IwXT5Su/fVOcob3i+mKKbvFZRelT9rfXbv9MsvuDQ1vTqc1hdxW3/NeutIuUilE5+Ikt1Ui
+        9iLtUn92vrJZ63qIycLl5ZSLZdaBr9/wLFS/O3vp1X47UYvPvC4H3z7gemU1U1TVajpfsXWa
+        ktZie968jvuXTmyT2Vbpvd88u8FtQ8ux6ysunL2uxFKckWioxVxUnAgAxIOoX1sDAAA=
+X-CMS-MailID: 20230419111500epcas2p1ec2140d9a51198d4d30d159df39afd40
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20230419094754epcas2p3901ad6f3171a2be1a144d957c2e0d8ad
+References: <CGME20230419094754epcas2p3901ad6f3171a2be1a144d957c2e0d8ad@epcas2p3.samsung.com>
+        <20230419094838.136349-1-hy50.seo@samsung.com>
+        <CAGaU9a-k9iDUNeT0s85o0GEeXSWsi98_QC+nK=jT9Yb1V=-SZA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2023-04-19 at 12:24 -0700, Bart Van Assche wrote:
-> On 4/19/23 11:33, James Bottomley wrote:
-> > So if we can't reliably get it right, let's not do it at all.  The
-> > previous argument you made was about problems with I/O to shutdown
-> > PCI devices.  That's not SCSI specific, so either we fix it for
-> > everything or decide it's not really a problem for anything.
-> 
-> The reference to PCI devices was an example only. As mentioned
-> elsewhere in this email thread, sd_shutdown() does not do what it
-> should do, namely to quiesce I/O. From include/linux/bus.h:
-> 
->   * @shutdown:  Called at shut-down time to quiesce the device.
 
-Shutdown seems to be one of the most ill documented device hooks.  I
-really don't think we should be declaring existing code to be buggy
-based on this single comment.  But the fact remains that if you want to
-act on it, block is the correct place to shut down the queues.
 
-James
+> -----Original Message-----
+> From: Stanley Chu <chu.stanley@gmail.com>
+> Sent: Wednesday, April 19, 2023 7:33 PM
+> To: SEO HOYOUNG <hy50.seo@samsung.com>
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> alim.akhtar@samsung.com; avri.altman@wdc.com; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; beanhuo@micron.com; bvanassche@acm.org;
+> bhoon95.kim@samsung.com; kwmad.kim@samsung.com; sc.suh@samsung.com;
+> quic_nguyenb@quicinc.com; Po-Wen Kao <powen.kao@mediatek.com>;
+> peter.wang@mediatek.com
+> Subject: Re: [PATCH v1] scsi: ufs: mcq: add 1 to the max Queues value
+>=20
+> Hi,
+>=20
+> SEO HOYOUNG <hy50.seo@samsung.com> =E6=96=BC 2023=E5=B9=B44=E6=9C=8819=E6=
+=97=A5 =E9=80=B1=E4=B8=89 =E4=B8=8B=E5=8D=885:56=E5=AF=AB=E9=81=93=EF=BC=9A
+> >
+> > If read the MAXQ field value verbatim, can use a value that is one
+> > less than the supported Queue.
+> > So read the MAXQ field value and incremented it by one
+> >
+> > below is the specification
+> > Maximum number of Queues (MAXQ):
+> > Maximum number of Queues this controller can support.
+> > In this version of specification, maximum value is 31.
+> >
+> > NOTE To support 1:1 topology, the Host HW controller must support HW
+> > resources for MAXQ number of Completion Queues too.
+> > Host SW may use less number of completion queues for N:1 topology..:1
+> > Queue
+> > 0: 1 Queue
+> > 1: 2 Queues
+> > =E2=80=A6
+> > 31: 32 Queues
+> > 32-255 : reserved
+> >
+> > Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+> > ---
+> >  drivers/ufs/core/ufs-mcq.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> > index 31df052fbc41..a1ee3318c605 100644
+> > --- a/drivers/ufs/core/ufs-mcq.c
+> > +++ b/drivers/ufs/core/ufs-mcq.c
+> > @@ -150,7 +150,7 @@ static int ufshcd_mcq_config_nr_queues(struct
+> ufs_hba *hba)
+> >         u32 hba_maxq, rem, tot_queues;
+> >         struct Scsi_Host *host =3D hba->host;
+> >
+> > -       hba_maxq =3D FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
+> > +       hba_maxq =3D FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) +
+> > + 1;
+> >
+> >         tot_queues =3D UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues +
+> poll_queues +
+> >                         rw_queues;
+> > --
+> > 2.26.0
+> >
+>=20
+> This seems to be the same patch uploaded by Powen:
+> https://patchwork.kernel.org/project/linux-
+> scsi/patch/20230307065448.15279-4-powen.kao@mediatek.com/
+
+Hi,
+Thanks for checking patch.
+I didn't realize there was already a patch.
+So I have to wait for that patchset to be merged?
+
 
