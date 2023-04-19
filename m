@@ -2,61 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB588C6FD18
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 03:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50272C77B76
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 03:22:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231748AbjDSDUi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Apr 2023 23:20:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48306 "EHLO
+        id S232021AbjDSDV6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Apr 2023 23:21:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231537AbjDSDUb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 23:20:31 -0400
+        with ESMTP id S232019AbjDSDVm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2023 23:21:42 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78B9BD2;
-        Tue, 18 Apr 2023 20:20:29 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33IMSUv7002245;
-        Wed, 19 Apr 2023 03:20:24 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99695901C;
+        Tue, 18 Apr 2023 20:20:53 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33IM3dAK006913;
+        Wed, 19 Apr 2023 03:20:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=5f4VMJbHham+n1RQ4WUie8jH3PnxHTUMwq7L57skQkU=;
- b=JaOI+mDZmqiiT0rBwofdDsUNRYJCto/TBswth5HWhbToxbt4JdRAdqzJ7G0XJikPPVc6
- 27x1TDWWIVphxKpoh6mWJ+vevpK5F6iTmrvIGFLP491TiMN0z5Ay1riYIORW8IYi/1fY
- oDuqFJWaDq7jZNkfRnKVlqcgharXGV2xEI3hRpNcZ5aGk0YwWRjCi+gdx7z3JKdmsWLM
- e8ZLiaMn0JdAXjcis8lGiQI6nMcHL1+98BheTnXqajY5Sb4SC0Nh4J2Qwb3JWZN6MNt7
- mZZ9/6PdeI1R5OcDBLtDC+m+Rs9gG7fq4Tq5tQeM1bP8vnZsbi11Nw+O1TxW6Ob6IkHr ow== 
+ bh=8xIN/BO/NVYgyZOjXSs5ZwdhmdJSG3UevPiURnOtt5k=;
+ b=nkp+RiYX42oqShadTetzRH/HKUHOMhEVzzby0XfmgWgORhyszSFLMgowtVnn5qwu6JmY
+ Yf57l61ru1XFkl5/qBXDthL8ZwX2OGm7hYXmtSUpHL9D6ZFy72qHIVr1DtTOnAS7QzxG
+ N39ZuSEVZf15hUtyAWVVXBk1GRD76GNh4s7vd5KZNc+cQYmrhVRDsxoO2LI4kUqADkPj
+ QY3EEiZs+oaTivOJzqV7V2wrMMsiYUwicf6yEXbvB2m2vxFc7Q4RFQFV3VuyfgSz+9LE
+ trM8t4sAzadukKErr2Iw2uNDExHQqPonybbO0Xti+UyZUZSh8Ip6jiYMKMij5io3MVRm vA== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pykhty6du-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q0768x882-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 19 Apr 2023 03:20:23 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33J26AHk037233;
-        Wed, 19 Apr 2023 03:20:23 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33J2RXh5037160;
+        Wed, 19 Apr 2023 03:20:22 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pyjcccvv1-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pyjcccvu7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Apr 2023 03:20:23 +0000
+        Wed, 19 Apr 2023 03:20:22 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33J3KLpB012748;
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33J3KLp7012748;
         Wed, 19 Apr 2023 03:20:22 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pyjcccvts-3;
-        Wed, 19 Apr 2023 03:20:22 +0000
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3pyjcccvts-1;
+        Wed, 19 Apr 2023 03:20:21 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     "Manoj N . Kumar" <manoj@linux.ibm.com>,
-        "Matthew R . Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>
+To:     Xiang Chen <chenxiang66@hisilicon.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Yihang Li <liyihang9@huawei.com>,
+        Arnd Bergmann <arnd@kernel.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        John Garry <john.garry@huawei.com>,
+        Xingui Yang <yangxingui@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: Spelling s/semahpore/semaphore/
-Date:   Tue, 18 Apr 2023 23:20:12 -0400
-Message-Id: <168187437339.702980.4296817245335455183.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: hisi_sas: work around build failure in suspend function
+Date:   Tue, 18 Apr 2023 23:20:10 -0400
+Message-Id: <168187437335.702980.6139661216307211988.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.0
-In-Reply-To: <d7d04004b818d7ab5d62002f286b0a1b0b493193.1681208251.git.geert+renesas@glider.be>
-References: <d7d04004b818d7ab5d62002f286b0a1b0b493193.1681208251.git.geert+renesas@glider.be>
+In-Reply-To: <20230405083611.3376739-1-arnd@kernel.org>
+References: <20230405083611.3376739-1-arnd@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -64,25 +67,33 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-18_17,2023-04-18_01,2023-02-09_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 bulkscore=0
- mlxscore=0 mlxlogscore=762 adultscore=0 phishscore=0 malwarescore=0
+ mlxscore=0 mlxlogscore=750 adultscore=0 phishscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
  definitions=main-2304190029
-X-Proofpoint-GUID: LpXc5J00gNIvyg0m8VqPb4BVC-XB5ijq
-X-Proofpoint-ORIG-GUID: LpXc5J00gNIvyg0m8VqPb4BVC-XB5ijq
+X-Proofpoint-ORIG-GUID: 9nvouzzDWVfbCmmXaxdhChN9giGPqCBq
+X-Proofpoint-GUID: 9nvouzzDWVfbCmmXaxdhChN9giGPqCBq
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 11 Apr 2023 12:18:20 +0200, Geert Uytterhoeven wrote:
+On Wed, 05 Apr 2023 10:36:04 +0200, Arnd Bergmann wrote:
 
-> Fix misspellings of "semaphore".
+> The suspend/resume functions in this driver seem to have multiple
+> problems, the latest one just got introduced by a bugfix:
 > 
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
+>  5142 |         if (atomic_read(&device->power.usage_count)) {
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function '_suspend_v3_hw':
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:5142:39: error: 'struct dev_pm_info' has no member named 'usage_count'
+>  5142 |         if (atomic_read(&device->power.usage_count)) {
 > 
+> [...]
 
 Applied to 6.4/scsi-queue, thanks!
 
-[1/1] scsi: Spelling s/semahpore/semaphore/
-      https://git.kernel.org/mkp/scsi/c/cabb63746511
+[1/1] scsi: hisi_sas: work around build failure in suspend function
+      https://git.kernel.org/mkp/scsi/c/e01e2290f094
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
