@@ -2,79 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BBC0C77B78
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 05:45:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9128C77B73
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 06:43:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231262AbjDSFmJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Apr 2023 01:42:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43648 "EHLO
+        id S232172AbjDSGnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Apr 2023 02:43:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229633AbjDSFmH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 01:42:07 -0400
-Received: from smtp-relay-canonical-1.canonical.com (smtp-relay-canonical-1.canonical.com [185.125.188.121])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1352E5BBA;
-        Tue, 18 Apr 2023 22:42:06 -0700 (PDT)
-Received: from localhost.localdomain (unknown [10.101.196.174])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id BA56A3F558;
-        Wed, 19 Apr 2023 05:41:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1681882924;
-        bh=PHWY28RNZSnXh8z/q/7yzDlNLTSA9IeiJKkegwI+W08=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=MdKGfLFOnFVyo/Dj7l9ISKdYE/IimL4e4v6AYgRbqyu01AbRoZzBapHGYYQMyfubT
-         HnFihMEnWwp9vYdULWi31OupXtV6jzhOonYY+mqvtU1doz9eIky3jSpAE147n/MJVA
-         56dCnxSsS4giqNbC9aYIGameWLlseO6E5UrIZMWmsustB3OTB7ol7idK379crbnd5R
-         P/iPmBZXWn74+X6589ncL4pp6efw3Vjshw0gTtBDlx9SnzHc82PqmbNVjYndcYCNoa
-         y9ch3jl09QudmRXWX8yYo9DFaTXSBtLxqEuBvLEtykfmlQ/dXJwX58dbcuJX3Fx55q
-         UhTQOBZoKdS0A==
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     acelan.kao@canonical.com,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: core: Avoid doing rescan on suspended device
-Date:   Wed, 19 Apr 2023 13:41:12 +0800
-Message-Id: <20230419054112.269734-1-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229821AbjDSGnx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 02:43:53 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 797EE4EDC;
+        Tue, 18 Apr 2023 23:43:52 -0700 (PDT)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33IM7K6S031642;
+        Wed, 19 Apr 2023 06:43:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2023-03-30; bh=lBTeLt7LT0x/iBEEIHBs4tFbuRchxfp3k+pqmGKU+Pw=;
+ b=wToHpURwOR4OXKxZrS9xK7hUj37n2tgeBq59T0hYtG8MDV0WM2IQC3lMhjiv9yocD0Nn
+ FjVVWhRYOnAqLFWYoEIXS88uxHMgdtyWFIlebvWlR6PqRcDMmUS5BSGxI1eEPTPOpsnq
+ LWttBOT48IEL7fCO+zPpqnlW4X2l5Yx5JFqglI5of6TvWZB7JnDI09NrmPGELnqsIFKA
+ w38VT4FZYxosfJlNcelUSC3qEVv4eZjieKSexRWQGDdIVWnLn93eec8RzS3en9ygKK7F
+ XgvEsEqAaUaLwZjCKbddyuccsNu44LgPlpjEhabLXnwo2tW8Ifvni0pXGIIJ21tfD9K8 aA== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pykycyhs2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Apr 2023 06:43:40 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33J5oTGe037808;
+        Wed, 19 Apr 2023 06:43:39 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3pyjc6gqkb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Apr 2023 06:43:39 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33J6hcqG034995;
+        Wed, 19 Apr 2023 06:43:38 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3pyjc6gq69-1;
+        Wed, 19 Apr 2023 06:43:38 +0000
+From:   Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Cc:     harshit.m.mogalapalli@oracle.com, error27@gmail.com,
+        kernel test robot <lkp@intel.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: mpi3mr: Use -ENOMEM instead of -1 in mpi3mr_expander_add()
+Date:   Tue, 18 Apr 2023 23:42:56 -0700
+Message-Id: <20230419064256.2532069-1-harshit.m.mogalapalli@oracle.com>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-19_03,2023-04-18_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ spamscore=0 malwarescore=0 suspectscore=0 mlxscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304190061
+X-Proofpoint-GUID: ad7DWTn37xQImdXzdCNln8r3hbAjGhGn
+X-Proofpoint-ORIG-GUID: ad7DWTn37xQImdXzdCNln8r3hbAjGhGn
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During system resume, if an EH is schduled after ATA host is resumed
-(i.e. ATA_PFLAG_PM_PENDING cleared), but before the disk device is
-resumed, the device_lock hold by scsi_rescan_device() is never released
-so the dpm_resume() of the disk is blocked forerver.
+smatch warnings:
+drivers/scsi/mpi3mr/mpi3mr_transport.c:1449 mpi3mr_expander_add() warn:
+	returning -1 instead of -ENOMEM is sloppy
 
-That's because scsi_attach_vpd() is expecting the disk device is in
-operational state, as it doesn't work on suspended device.
+No functional change.
 
-To avoid such deadlock, avoid doing rescan if the disk is still
-suspended so the resume process of the disk device can proceed.
-
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Link: https://lore.kernel.org/r/202303202027.ZeDQE5Ug-lkp@intel.com/
+Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
 ---
- drivers/scsi/scsi_scan.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index d217be323cc6..36680cb1535b 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1621,6 +1621,9 @@ void scsi_rescan_device(struct device *dev)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index 4d84d5bd173f..82b55e955730 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -2058,7 +2058,7 @@ int mpi3mr_expander_add(struct mpi3mr_ioc *mrioc, u16 handle)
+ 	sas_expander = kzalloc(sizeof(struct mpi3mr_sas_node),
+ 	    GFP_KERNEL);
+ 	if (!sas_expander)
+-		return -1;
++		return -ENOMEM;
  
-+	if (dev->power.is_prepared)
-+		return;
-+
- 	device_lock(dev);
- 
- 	scsi_attach_vpd(sdev);
+ 	sas_expander->handle = handle;
+ 	sas_expander->num_phys = expander_pg0.num_phys;
 -- 
-2.34.1
+2.38.1
 
