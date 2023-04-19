@@ -2,221 +2,150 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 585B3C77B73
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 07:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B6AAC6FD18
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Apr 2023 09:48:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232563AbjDSHnx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Apr 2023 03:43:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59384 "EHLO
+        id S232525AbjDSJsC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Apr 2023 05:48:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232046AbjDSHnO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 03:43:14 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 968D99EF6;
-        Wed, 19 Apr 2023 00:42:54 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33IM64oE002249;
-        Wed, 19 Apr 2023 07:42:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=zu+Ur7itMQYWuOF9VyOJfr2/Uyqk9exAHjEZYgOdab0=;
- b=2j1mqwpvUIY3oviNqOfJGg7HjOgUW+aUt2/+gR7J7puJV6yPlJjzTyvPqmojI2EyVmMc
- qMTsHlbl8p943AnykZghMJjUdEDPWhfdXSdWypOR0ckphPKAkz3U4c2bf+gFMjtL5bIu
- vHKj1Gg56Ej6NkHJG9LB9z5pHXNLkMEj+8rHnYohJhqbOgvErMxuaIJqmlgo7bNxk4g5
- oXP/mN4czoh7EoUFL4h/Pb82xU13yez5bW25vkxuDCIFsRzi1NnbUoPwumgBRQdpHlJ8
- VF6zu1TsmQdlgEC+t2cbN0/1SmCupX7Vu03n7RSTULSWtlbm4VtjMeRvsCP1j7f2Fhqs qg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pykhtyjk9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Apr 2023 07:42:49 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33J5gX1k026348;
-        Wed, 19 Apr 2023 07:42:49 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3pyjccumdp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Apr 2023 07:42:48 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FQeQ2wsvlHe1eSKZy8pNVPmuej3EYGFzCiBLNYbvKaFH8dHfHcL4iqrOFKfaQRO5RhS0aJkFmLS+6zj9yxTixrJmdJBx9GX+dSQIcc3b0vLaZPOu6cRYimNE+tWKS/YB7Ar3kDTGrFjRLwl1wh/QDn2hhASWbquUJzsce98LCjVTdM7/M6N0MlL/GBy1UVDbI62iUfhbeluQnoQEN9Ib72KYo1F0T5YyU2A6XiyhqX5rOdFgiu2/MPC/1uPs9Ikc7stv3aUP3weH3H7t8p/oIOUk4Yun2PeLzrU0VFMUYH0xexAVTuVguRwYMmrGhDYwU0oR6AsG5I69iJnNid55WA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zu+Ur7itMQYWuOF9VyOJfr2/Uyqk9exAHjEZYgOdab0=;
- b=f7VaAkX5+mik51D3zYZ9KUrS+TiBgXmFSRKhdyL8JlB7rRE9Nw8LQm98upYqdpCFtZS0KSA3cwOIJT8jQCDEHf7PDSpOEBYuOzI7k+wy6yzh7T2KU+AmEsJW9V0gxmCMcCmhnwQR1H2rrqjfNhvidC2yIM6UuYdZLoxTsq+UBo8mwSn5bmWlWlcJIBEXVXnjCemQC6q1JbloIx+a8IQaY16A0fKp9s/1qhOpSWF8LVnimwNAfu2lAU2Z0JLaCYaVnjOMhqG2WGAdwJg/tHYEfCcN1RndZ2KKkROoskQqcgb5AK73wWBHiTcCqOo7QlzLN1sr2ceoEOio4/qqqvkfcg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zu+Ur7itMQYWuOF9VyOJfr2/Uyqk9exAHjEZYgOdab0=;
- b=Q6TyEa1kMCZKxuvyGDBPbvqT6h/azVYXjadz4dsm8cAK2ON+QqAhWthbF1mmto2lXiAJ7ek9gPCCB++k/BG/lFPTEZ0vZL8lKqVMWyIJ6TxTNXxH3GnYMwLecUO9Eimi8ZLcGk5Pif3UylKcihGnpAhcIsTVPF1SxyIupxGh928=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by CH2PR10MB4343.namprd10.prod.outlook.com (2603:10b6:610:a9::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6319.21; Wed, 19 Apr
- 2023 07:42:46 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::8456:ba59:80ec:d804]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::8456:ba59:80ec:d804%6]) with mapi id 15.20.6298.045; Wed, 19 Apr 2023
- 07:42:46 +0000
-Message-ID: <67baaecb-984d-cf2f-03c8-c4d8d7a650f7@oracle.com>
-Date:   Wed, 19 Apr 2023 08:42:33 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] aacraid: reply queue mapping to CPUs based of IRQ
- affinity
-To:     Sagar.Biradar@microchip.com, jejb@linux.ibm.com,
-        Don.Brace@microchip.com, Gilbert.Wu@microchip.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        brking@linux.vnet.ibm.com, stable@vger.kernel.org,
-        Tom.White@microchip.com
-References: <20230328214124.26419-1-sagar.biradar@microchip.com>
- <3bce4faf-e843-914c-4822-784188e3436e@oracle.com>
- <BYAPR11MB3606BFE903D1BBE56C89D31BFA959@BYAPR11MB3606.namprd11.prod.outlook.com>
- <c5405999615929ba304988ebe18faf3853cc9a95.camel@linux.ibm.com>
- <BYAPR11MB36062386E7B3DBE1FA69CEB4FA9D9@BYAPR11MB3606.namprd11.prod.outlook.com>
-Content-Language: en-US
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <BYAPR11MB36062386E7B3DBE1FA69CEB4FA9D9@BYAPR11MB3606.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SI2PR01CA0039.apcprd01.prod.exchangelabs.com
- (2603:1096:4:193::16) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S232405AbjDSJsC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2023 05:48:02 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 027A95589
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 02:47:59 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230419094757epoutp02f972be1149395c2b821a7b7c23ef04d3~XTQbQLaGL2100921009epoutp028
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2023 09:47:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230419094757epoutp02f972be1149395c2b821a7b7c23ef04d3~XTQbQLaGL2100921009epoutp028
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1681897677;
+        bh=VFJuBEof/y38eZrTiAe8AhvGQtXPCzTDUesnipszi3w=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=DTfzV1onWOHBmY3ri5DScGAtMknhlqt3WyeWEbZzbHNiGQpQPCMxYw7xx7OmCfXgV
+         arAxxpHPdf6Gekkfbck3bXtt4MMpXAp3SFVIOczOeacDxdd5r+UcK3wLZ4IcDyIaaN
+         Rx/HYo9uK172grc9jhONrmlgzVajwkQRD31RBFRI=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230419094756epcas2p33b2148ddef3dc030b19019039677c621~XTQaeVgz61652816528epcas2p3F;
+        Wed, 19 Apr 2023 09:47:56 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.97]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Q1bZ36dZKz4x9Py; Wed, 19 Apr
+        2023 09:47:55 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        0D.40.09650.BC8BF346; Wed, 19 Apr 2023 18:47:55 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230419094754epcas2p3901ad6f3171a2be1a144d957c2e0d8ad~XTQYmj7t_0901709017epcas2p3x;
+        Wed, 19 Apr 2023 09:47:54 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230419094754epsmtrp2d61a439e51d695b92ac277ecdba8adc8~XTQYlYn4f2251822518epsmtrp2s;
+        Wed, 19 Apr 2023 09:47:54 +0000 (GMT)
+X-AuditID: b6c32a48-dc7ff700000025b2-83-643fb8cba246
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C3.EA.08609.AC8BF346; Wed, 19 Apr 2023 18:47:54 +0900 (KST)
+Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20230419094754epsmtip1c90a028ae5921eda98715c5e5d8c3afd~XTQYWSC8H1590715907epsmtip11;
+        Wed, 19 Apr 2023 09:47:54 +0000 (GMT)
+From:   SEO HOYOUNG <hy50.seo@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+        bhoon95.kim@samsung.com, kwmad.kim@samsung.com, sc.suh@samsung.com,
+        quic_nguyenb@quicinc.com
+Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
+Subject: [PATCH v1] scsi: ufs: mcq: add 1 to the max Queues value
+Date:   Wed, 19 Apr 2023 18:48:38 +0900
+Message-Id: <20230419094838.136349-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH2PR10MB4343:EE_
-X-MS-Office365-Filtering-Correlation-Id: 99c796dd-896a-4b84-3808-08db40a9aa95
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: arJ4MrlZU1HPzdFGRHfU+RfRGCUKGo4CMtBJov7Ydxvy1Sj/fLLIU8x/ZuEF4r6z+itUrUHLFYfByt9bX8gxUAuwvK7x/YAmi2Y8479/od0nRu4HzLtt/4hwsRhknVXkzIMe0eFBwAizr4B+RiMgai1A/BS4OsKyXB80OfDm7n12QAY+ggYW0Ru2FP2aZ0qW2vR3vcqGexAHGajLe18NBHPyeYHedXteKG5HiqI6FMEcOF8Ob2X/dCwOnrpIkdY4hbcpg65yBP4XCz0HjumktcJePvTVwSGjfH8ekzE44+r5K1Nna1T/Wr8b0x97nCy8TfaQvXZrJhRTVDoxj7hAfNeBCXBxuVDJtfMuYFV+CGOexFjZBa0Krb+0T5TPPTqvEduw8K2ITiARbOzv7xyOt+px/oWg6PRWNgfKoqDHvIJi3kdMdnIWPARFIQONje1g8H8aPvHYn2jVFyYBr9EwGEH02JrRYd2FmzIwyp82gTtQWDMgXjho/yPXpfFZgOOOej900tm5jbLV5ReiIQfOBtqvNcFa7znjU+/YLd2wQI8lZXyom0gqN1FDyks96cMsaGSZc49znIW37ivH9dLoL3AQdLhXf251XxpQm/OzNixuTrBPQfuQYJ5NydAcyD/oRgBrTtO2lWDH7am70y/TRflmTXa2aBdUt4q2fzdZDWM2Jb3dUzp2F1Na88vdlPou
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(376002)(39860400002)(346002)(396003)(366004)(136003)(451199021)(36756003)(2616005)(83380400001)(5660300002)(31686004)(38100700002)(53546011)(8936002)(8676002)(2906002)(478600001)(6666004)(36916002)(6486002)(316002)(26005)(6506007)(6512007)(41300700001)(66946007)(66556008)(66476007)(86362001)(31696002)(186003)(966005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UkFIaC9JUzUxOXVtdkhzOGxFaW53QjhoWnN1SnVTY0ZLY0dWUDVVS2U2c1FH?=
- =?utf-8?B?S0FOZ3FieWE5QkdqdyticlYzZm4vODg4ZnhIM29ETlIwUFNxeUUwR1lkRlBy?=
- =?utf-8?B?Zi9GdXZ0YXpTVDBKQnhJTFkzWm5PclBKUUNaRUxkYitrTjBsbWE3N2hwVm9x?=
- =?utf-8?B?Q0ptRU5xVjd4dGZyQWZERUtrUDRGM1FaTG1MUkpmSi9KZVRUaHJCYnFKSEFL?=
- =?utf-8?B?djhTWDNHT3FhNVpxQm9wcC9RV0VrUU9Dd3kyaUNTNUdtTUZaN2hPcmVxaTZr?=
- =?utf-8?B?dUdVemxlTkZRT2h5Q0JCL1JoYWVKbWpGTHFOSU8rL0U1YzF3WjNRU1NiNEZU?=
- =?utf-8?B?cmJqTkx0QTMvU1RtMWlCWHBZamdZQS8yTGwrMndmbXo5c0dHMjdsRDIwWlJQ?=
- =?utf-8?B?d1pjYmNjOVVhb1VRajAzZmdRWFowdm9kZFlFTTBaUjJQV0lzYkE4eXdoaWxx?=
- =?utf-8?B?T1RVNDB5WXc1NHA2aWcvb3V1QXJyZUJDMGpEMnEyb05SdFNiSWc5U1hsRDEv?=
- =?utf-8?B?STNMZkVsbjM2amF3UDd1S2V6QkRxU3NWWDdTUGFoM1BOUDdIbEdlbzdDU0dj?=
- =?utf-8?B?Q0RiWDgxUnpKVjFzNW5xUUVLSTdGa3BWQ3UrWnJtYUVrQzZYUU5jeUNDRzdH?=
- =?utf-8?B?WDIxYTNZQjFBSm9RakRBaE9qTHZrK0hWNkwwK3llWENEMUU2Y1lybjBnUWh4?=
- =?utf-8?B?MUh1WUE2SzV0NEVhRldSMFAvV1VCZG5qSlMzZFNNRzZMVlh2dC9PcUVteGsz?=
- =?utf-8?B?d2Qxck5EUHM5WXJiS0YxcDhseHRDZTZhYitSa2sycDB3VXY3dWJzeVQxNU5i?=
- =?utf-8?B?ODNqSmNDUUUybHNybXArVXRRbVNLZ2p6dVRmQkFzekc4OVhIR1dpQjA4Q2hB?=
- =?utf-8?B?QVNhT20wa0JhL3JBN1NGaTltMlRXdTFtVFExazhETHFHL25wbEVud1RvREZq?=
- =?utf-8?B?Mkw2MDlCNXA3aUhFWEVDUE55LzQrb1ZlOE9sQ3JaSWI3SnZvbkRKWmlkY3Rt?=
- =?utf-8?B?WCtKWGVTRE5RYnR2YzFSLzFHS0t4STNDMkNRRVErWGhTQXh4OU5TWGplUkhy?=
- =?utf-8?B?MjFtM3VOYVRJdzNaUVg3bXlNc3luSDFrcXpjakFaT1BoK0w5VGdUU0ZWZi94?=
- =?utf-8?B?aTAreW1ZUXd5YVh3S3k3aktyZW9qT3pnSUhzc25nSjlqaCtGeUNaMHhIY0N4?=
- =?utf-8?B?S2FzbEpubVNYcWxOc3NJWmsyVzkwV1dzLzBuRm1OT1NlbVRVdDBOSGFsTHFo?=
- =?utf-8?B?amREckt1VjhwanBkVlBtR3NRZEZKNXdkZ2xTSUpESXk4OGxvL01NcTM5ZFB2?=
- =?utf-8?B?L01BZVgzSzR5NDAza2pSMG1MZUhtOVg3VTI3VnFiTFdrYWdtMGxHbElSQk5z?=
- =?utf-8?B?c3d0cnU4WjVFM1pWVFZlVlI3dkhLZ01vNTU0NDFGK2pPc2hweCt4TlF4N0di?=
- =?utf-8?B?d2pIaGZNUE5uSjVaa0MxSUpobmpLejR2T2l2YXdlYkNJemtNKzcrbjY0VXRx?=
- =?utf-8?B?cjB1aEpJVzBmMHlGUkt4ZVZjbmJqaW9qbE5BM2ZwNkpoVjBNNlRIcUZqaHZp?=
- =?utf-8?B?ekNEcWRkbmdQVnhOWFh2aFpFaG4yR2E4VDBkTWlRWDhQajhNMVVxYjQ2WHo3?=
- =?utf-8?B?ZUdCekZtbXR1ZUZhb2tZVmVER0NIRmZkYmd2MFpIN1E1c0dNUXJmUnM0N294?=
- =?utf-8?B?ZjJmdTIrQng5RGhCeDRzbEJFT2FvQnNjWE5rYndtanFQSnBiNk5HbDJSMU13?=
- =?utf-8?B?K2pMZ2h0Q2RxNFBUb2JiMlNiMVBPWE9rcFhXakxZSzZ2RFVySnZPWHcrL1py?=
- =?utf-8?B?dVYrRkRiQzhaMGh5Zk15WmVVeUdUVm5MOWN2U1o3TkhNcjA0cWt4UnU0WFJz?=
- =?utf-8?B?YTlhWjArQzVBaDAwVHA2emtRWEVOalhkU0hYLzNQc3hLSGtXOFg3SHlIMnZm?=
- =?utf-8?B?cjYvMEpFemUwK2tibE53T0NlVlZnRi84ODhheXdsVzIrSWprRi9JZUdjUUcy?=
- =?utf-8?B?cDVzYS9WYkppb1g3TmxlTmxHM1JUY2NRTStVbUJOWGVpSkxZV2IrRUdoL3Iv?=
- =?utf-8?B?OVEvRjFjVnZzRVpOVURtU1phRUc2TmFaZnJla0ZIYXZwS1VmWU83NzlEczhj?=
- =?utf-8?Q?/aot8V6nud6F5iwB6xe+FZT3a?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 1mtXRGweu5POMrCHdOGQeLkr8dI4e5NC1FXR22Sk2y8gjaHO1hJ+a3VoZjY+EVrSn2HuqJp/ZoGnB2f7lDcEQ7nbQCSdIYE2/ZK2N2Pv5CcnoZMsBliZcIsr6ErzvRGR785Lf+b089uzMUpScxsgIaS5E0eZT5XH0HpFST5tAXCjbQ59F7VAzc9rASBJefYpne0H5IzeelihjuJwGKCGxGe6FGWp9FXz2AAYGsM5qAIdu9Tjvyo52i8C0ex+kbQ6dRoaRdRp2BTs5ll7wkXS/FuRj0bOmrA9Z8bMEOxJOVd6d63gCm87/gx1a1mUtnhk5OEjN4trJLuEMHfUoOD6Ry4kdAHxdbP4JqRGG3Js0hPcu1vLTR9Yw23jkbl5iQl1XQwaMLG+D4Xd0JVom89e5En8x/GyBrKlvjnewmFgURDYohDMEj4YW3RFKLmz17VsEr1p7yue94tO1J2lchhKtWb5RCOtH0ovEzOeZGO8NTuv/PMaC5TEOHwd5VNtUjcsKpDYJSuiP4Kq0ufQ+QFW5o8XeE8Dfd4DG9nDchSEsav78C64NxQ/aXEv4dDL9ZSC2gRpaA5MOjGesyqAKa4l6980aBBHQLR1EYYEOX9luaaWyzacIxUQLaOjV772utiSrkaBlHTSaxD6aDFq/3mn3DoT71s2ZrWrtK3MUWNhK9ZRZwJiK108oxUJrp9XBXnS1QodGLqdb6MMNLH4bdt9XKTAIawayHa+Y9fTFu4DNVf1axqMnwWacShAMG6yKiSR/JeLnt486lnGcKP96PzcVx9Lp7ZCG0f0ddH2++XAbciuN/sgl2koXayT01qXR6HRHOIsPFIhsvwtMksS5Wsi7KbH6jfVD5I/+EQ9gpCWX7s5I+nbS+Kcb3krqk4Ml6y5
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 99c796dd-896a-4b84-3808-08db40a9aa95
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Apr 2023 07:42:46.1869
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QBxlGNd9/8qbnOK29ABy4sFA9F7kO7/VO8W8wLmpPV4zePpihsXp6sDwQQB06z1rqALkQLSG7CNMhcTSInXjBw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4343
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-19_04,2023-04-18_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- adultscore=0 suspectscore=0 phishscore=0 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2304190069
-X-Proofpoint-GUID: VBptDgjEFEpXeLTnetddxcj8YA-ynNr_
-X-Proofpoint-ORIG-GUID: VBptDgjEFEpXeLTnetddxcj8YA-ynNr_
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBJsWRmVeSWpSXmKPExsWy7bCmme7pHfYpBmvmGFk8mLeNzeLlz6ts
+        FgcfdrJYfF36jNVi2oefzBarFz9gsVh0YxuTxc0tR1ksLu+aw2bRfX0Hm8Xy4/+YLKa+OM5u
+        0XX3BqMDr8flK94eExYdYPT4vr6DzePj01ssHhP31Hn0bVnF6PF5k5xH+4FupgCOqGybjNTE
+        lNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58AXbfMHKCLlRTKEnNKgUIB
+        icXFSvp2NkX5pSWpChn5xSW2SqkFKTkF5gV6xYm5xaV56Xp5qSVWhgYGRqZAhQnZGRcfvWEv
+        WMRVcatvB2MD426OLkZODgkBE4lNu/eyg9hCAjsYJeYuz+1i5AKyPzFKvJx6hQnC+cwoMWXH
+        ZTaYjqMLrjNCJHYxSmzo7GSBcH4wShz/+RtsFpuAhsSaY4fA2kUEVjBJnL97mxUkwSygJvH5
+        7jIWEFtYwFFiwsblYGNZBFQlfpx9CGbzClhJPGr8xgqxTl5iUcNvJoi4oMTJmU9YIObISzRv
+        nc0MUbOQQ+Li8mgI20Vi25p9TBC2sMSr41vYIWwpic/v9kK9kC3RuGctVLxCYu7myYwQtrHE
+        rGftQDYH0HxNifW79EFMCQFliSO3oLbySXQc/ssOEeaV6GgTgmhUkjgz9zZUWELi4OwciLCH
+        xLz325gggRsrceHAZNYJjPKzkLwyC8krsxDWLmBkXsUollpQnJueWmxUYAKP0uT83E2M4CSr
+        5bGDcfbbD3qHGJk4GA8xSnAwK4nwnnG1ShHiTUmsrEotyo8vKs1JLT7EaAoM3InMUqLJ+cA0
+        n1cSb2hiaWBiZmZobmRqYK4kzvuxQzlFSCA9sSQ1OzW1ILUIpo+Jg1Oqgcl/V5nu+Qqmg12a
+        szauKeUz3lU9p6nwnug2uaKkXccnHPjJ/YH/x9037/Ucco03KXh+PTx7b8GG683Fm6b9Wcay
+        d5KIFkdlQdob/7gQ1uPv21S/5sqtCinTYdpmqak36Z9uw0EhhZorJh1feWS17hwVPtgtnHzO
+        RjDFY4/269b0huyVsQve7Lfje3OmpkGsslJ5awwH39GNj+avdDo97W9D15u+yQcWfFoQJ3p3
+        5eTTPbc1Vz+S+BQhPnVHzYPGWRrHYnaYPtjgvf2GNBdb9f19apMDy3e+mmX7cWHIykOPPrVw
+        6qzg/aSkxf9xyx2N9IvC293zDk+IWPAm+uiJu2x9s1R2zS5eoSag9lhkvdRRJZbijERDLeai
+        4kQA73D9YjsEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrILMWRmVeSWpSXmKPExsWy7bCSnO6pHfYpBt/mKVo8mLeNzeLlz6ts
+        FgcfdrJYfF36jNVi2oefzBarFz9gsVh0YxuTxc0tR1ksLu+aw2bRfX0Hm8Xy4/+YLKa+OM5u
+        0XX3BqMDr8flK94eExYdYPT4vr6DzePj01ssHhP31Hn0bVnF6PF5k5xH+4FupgCOKC6blNSc
+        zLLUIn27BK6Mi4/esBcs4qq41beDsYFxN0cXIyeHhICJxNEF1xm7GLk4hAR2MErcvfeLFSIh
+        IfF/cRMThC0scb/lCCtE0TdGiTV3J7CDJNgENCTWHDvEBJIQEdjGJHF/+SKwbmYBNYnPd5ex
+        gNjCAo4SEzYuZwOxWQRUJX6cfQhm8wpYSTxq/Aa1TV5iUcNvJoi4oMTJmU+AejmA5qhLrJ8n
+        BDFSXqJ562zmCYz8s5BUzUKomoWkagEj8ypGydSC4tz03GLDAqO81HK94sTc4tK8dL3k/NxN
+        jOBY0dLawbhn1Qe9Q4xMHIyHGCU4mJVEeM+4WqUI8aYkVlalFuXHF5XmpBYfYpTmYFES573Q
+        dTJeSCA9sSQ1OzW1ILUIJsvEwSnVwOSbNetrweYPRucW/bbpjSoRsjxxVFfjBrv7jQj5ZZeP
+        zV7wWb1xAe9r9ZPfr9Vz5BmwS/Fm3Qx8YfvgkUQe//d0p3+s5YrTnMWWtxdUnvhitvadNJui
+        nn3Bg8q6uctXHGd6v+aVlnzNzPmb5KpuZ1wLnj/Txu3kuT/8zBuffSuVazzrdqhkjuJfueva
+        a5pXrL3Kz5bAfzfvxw6lFbl/HRXFt/+1kroxTb+V6zTbne+bZ/26t3mH9YKjLDtyvd6lR07b
+        u7xiek7Ey5mzz8+2khDn4HcVmNBTpGrAKbiVUeGm/H4OX3NruQbbpQtjTzzo2bf9pvyvGVF3
+        2M24f2xbvOmpTo1WT+NhM1PPSw3+rZlKLMUZiYZazEXFiQAtXRRIBAMAAA==
+X-CMS-MailID: 20230419094754epcas2p3901ad6f3171a2be1a144d957c2e0d8ad
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230419094754epcas2p3901ad6f3171a2be1a144d957c2e0d8ad
+References: <CGME20230419094754epcas2p3901ad6f3171a2be1a144d957c2e0d8ad@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/04/2023 00:55, Sagar.Biradar@microchip.com wrote:
-> [I'm with Jon: your email style makes digging information out of the emails very hard, which is why I only quote this section] On Mon, 2023-04-10 at 21:17 +0000,Sagar.Biradar@microchip.com  wrote:
+If read the MAXQ field value verbatim, can use a value
+that is one less than the supported Queue.
+So read the MAXQ field value and incremented it by one
 
-I stopped replying as this wasn't fixed... and still isn't :((
+below is the specification
+Maximum number of Queues (MAXQ):
+Maximum number of Queues this controller can support.
+In this version of specification, maximum value is 31.
 
->> ***blk-mq already does what you want here, including handling for the
->> case I mention above. It maintains a CPU -> HW queue mapping, and
->> using a reply map in the LLD is the old way of doing this.
->>
->> We also tried implementing the blk-mq mechanism in the driver and we
->> saw command timeouts.
->> The firmware has limitation of fixed number of queues per vector and
->> the blk-mq changes would saturate that limit.
->> That answers the possible command timeout.
-> Could we have more details on this, please?  The problem is that this is a very fragile area of the kernel, so you rolling your own special snowflake implementation in the driver is going to be an ongoing maintenance problem (and the fact that you need this at all indicates you have long tail customers who will be around for a while yet).  If the only issue is limiting the number of queues per vector, we can look at getting the block layer to do that.  Although I was under the impression that you can do it yourself with the ->map_queues() callback.  Can you say a bit about why this didn't work?
-> 
-> [Sagar Biradar]
-> Thank you for your response.
-> We did venture trying into something like what you pointed to.
-> We mapped the hardware queues, and we still see command timeout. This change doesn’t work for us at this stage.
-> Also, we observed that the load is not balanced across all the CPUs.
-> I am pasting the code snippets for better understanding.
-> 
-> 
-> During the probe, we assigned the hardware queues.
-> shost->nr_hw_queues = shost->can_queue; //inside aac_probe_one().
+NOTE To support 1:1 topology, the Host HW controller must support
+HW resources for MAXQ number of Completion Queues too.
+Host SW may use less number of completion queues for N:1 topology..:1 Queue
+0: 1 Queue
+1: 2 Queues
+…
+31: 32 Queues
+32-255 : reserved
 
-That is wrong - .can_queue is the number of IOs which the scsi host may 
-be sent at any given time, while .nr_hw_queues should be the number of 
-MSI(X) vectors returned from pci_alloc_vectors()
+Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+---
+ drivers/ufs/core/ufs-mcq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-You should also set shost->host_tagset = 1.
-
-Since the driver has reserved commands, the .can_queue should be reduced 
-by the amount of reserved commands and the driver needs to manually 
-choose which HW queue to send those reserved commands on - see example 
-in other driver here: 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/hisi_sas/hisi_sas_main.c?h=v6.3-rc7#n523
-
-JFYI, We have tried to add reserved command support to SCSI ML, but it 
-still has not been finished - see 
-https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
-
-> 
-> We also wrote a new routine "blk_mq_pci_map_queues" (mapped to .map_queues in scsi_host_template).
-> static void aac_map_queues(struct Scsi_Host *shost)
-> {
->                  struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
->                  blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
->                                                        aac->pdev, 0);
-> }
-
-This looks ok.
-
-> 
-> With the above changes, we see command timeouts in the firmware space and the commands never return to the driver.
-> This may need some changes in the firmware, but the firmware changes are restricted (since this is EOL product).
-> Also, we saw that the load was entirely upon one CPU and it was not balanced across other CPUs.
-> 
-> We have had this reply_queue mechanism (patch) in our Out Of Box driver (OOB) for more than three years.
-> We(vendors/customers included) have not observed any issues.
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 31df052fbc41..a1ee3318c605 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -150,7 +150,7 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+ 	u32 hba_maxq, rem, tot_queues;
+ 	struct Scsi_Host *host = hba->host;
+ 
+-	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
++	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1;
+ 
+ 	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
+ 			rw_queues;
+-- 
+2.26.0
 
