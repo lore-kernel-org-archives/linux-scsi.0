@@ -2,131 +2,168 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED2EC77B73
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 12:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97440C77B72
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 12:51:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231534AbjDTMgG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Apr 2023 08:36:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57270 "EHLO
+        id S230408AbjDTMvg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Apr 2023 08:51:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231785AbjDTMgA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 08:36:00 -0400
-X-Greylist: delayed 541 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 20 Apr 2023 05:35:53 PDT
-Received: from wnew2-smtp.messagingengine.com (wnew2-smtp.messagingengine.com [64.147.123.27])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D12E65B2;
-        Thu, 20 Apr 2023 05:35:53 -0700 (PDT)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailnew.west.internal (Postfix) with ESMTP id A2BE02B06749;
-        Thu, 20 Apr 2023 08:26:49 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Thu, 20 Apr 2023 08:26:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
-        cc:cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1681993608; x=1681994208; bh=3k
-        qM7vX2DJRzHASlFHsZJyyE3jOWWWXPGfOIoDUnoG0=; b=fT9TchauBy11NjStx+
-        quzttsF6w437Bya2IEHwY703MFIH370JBxCZ8y7L/J/9//+O3OMdCZFRXOCuZDOo
-        ZGdGSzs41FtOT350hCAMnMb//PDdY2aPFdHbLCrhjZDAAYcyrM8wCtwLNGkUhmDP
-        izk/enrakBKP1MLtmnjeBb4nb8WeBz8wme2yTkwq/CmiEXcqMQ5JJTjjREbb9e0Z
-        gkmUJ2Kwk238v7XTtsGJeLxf4hi2OfEOZ5Dx6SDIrByjhjza/hZJknK0SR7MszWO
-        WwVWjgp7xwR4lq6Y+YnJsU55OBe4iAKbtlc+edEE0nkigQ2CbV7gBJiU+XuyRV+R
-        V3iQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=ie1e949a3.fm3; t=1681993608; x=1681994208; bh=3kq
-        M7vX2DJRzHASlFHsZJyyE3jOWWWXPGfOIoDUnoG0=; b=EKTBeYbvL6nLO5VaAmE
-        SXtMLFvnE37S0DUTQ8b5Gl2xWa8XkMEKBr4nKZXawlu3KIItFU1WT+U0f5jDscjd
-        gF2rVtsSJLmGixPqCEwlHM8lsGin5TDVDtOUESSiMEfGVWhaFB5yDTIBuGxx9q7v
-        3H49gRdLXSy+fMNYRNrJpof23r/GySnpfbvyla69w8tHXTDsmBHAK5E4YPpAt7kh
-        +CjYJbxqgxIgr1MCPLPeQAnAIEimngh0O6gAX9NaI+kGp58XgdRidIToHGjKLEYE
-        f3U+9fZNs+SkIffz2XMq9FMclQKcvh/9ikxAaZ/uN0KFeScOjs5ajSYjRx3X1exv
-        /Jg==
-X-ME-Sender: <xms:iC9BZJBngizTYhmtcVpqGgIbRRQXo9JCvJsI93ouDJhi4BekItYteQ>
-    <xme:iC9BZHiUR73gc9m1xqQ0YpWEpNw6dD_daabvwQlj1Zb4C47e1lC2s1PNpfGS7_Up5
-    EmcsgtUa5lvKw8kXDU>
-X-ME-Received: <xmr:iC9BZElf3swDdMS_J7-KOCo7tCWvBc493072a8kL-LtJK72R3tzEcd1RdsaX8nSsb22cbpThVfIkWg56j0rJhA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfedtvddgheduucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomhepufhhihhn
-    kdhitghhihhrohcumfgrfigrshgrkhhiuceoshhhihhnihgthhhirhhosehfrghsthhmrg
-    hilhdrtghomheqnecuggftrfgrthhtvghrnhepffehffetgfdugeffffelvdfgjefgkedv
-    hfehgeefveffgfffvedtueekgeevvefhnecuffhomhgrihhnpehkvghrnhgvlhdrohhrgh
-    enucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehshhhi
-    nhhitghhihhrohesfhgrshhtmhgrihhlrdgtohhm
-X-ME-Proxy: <xmx:iC9BZDyUeW7-kQzWP-pR6XoCJq3VmXltYlCMj3q6_Z554X7vFHr8nw>
-    <xmx:iC9BZOTJhTCNyuiaAxVjlrCMbato0LqdicRFt-zpH-wPJ6N8CMSI4w>
-    <xmx:iC9BZGZqcDOSH9H3W0i5P1bP3eXDA4aZBb8q7dilwQhuNeqSH6dLvw>
-    <xmx:iC9BZJevYuCKfzpYmazJ_pC4fxGBF3d98f6LOZ2_7xAhcO2f7-VLau62vqRIeLjR>
-Feedback-ID: ie1e949a3:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 20 Apr 2023 08:26:47 -0400 (EDT)
-Date:   Thu, 20 Apr 2023 21:26:43 +0900
-From:   Shin'ichiro Kawasaki <shinichiro@fastmail.com>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: Re: blktests scsi/007 failure
-Message-ID: <yqe6sjp6ukfoafaoetwacddkpo2y5mk4hsnxgw377iwholxo52@psw2zzelcmig>
-References: <725nkvuvvbf4qwiylarw5r56tjt3r6nrvy5sijk6affzqv2s3e@6xapeviellsp>
- <5ebd61e0-0835-94cd-b55b-942a9c72b5b5@oracle.com>
- <3xwglpdpmit2obtf5p475gojdoqe42rmteki5hvoavzwle6kqr@bl7xginwaeli>
+        with ESMTP id S229515AbjDTMve (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 08:51:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B683BD
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2023 05:50:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681995045;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=xsQvRozmWeIRuvplx2jp/MlGECW+YgJPFwvCRk8nfu8=;
+        b=NFhKj0axLm9cUTttTu+n4hwa2zr9cj9X2Yc1NlTuA2H1rzHU7K5ecKLqd5ceoGYqOtl8iq
+        ALFn3FskuQH8Cq7IDrGQFx+1flVmioPhnwNzQzIIQOFmlygs/cuyD7tqPAX2+VIshSO/77
+        wmOxlSZTn/NGo9OmAtRYVxyhO4trkyU=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-416-K9tKc-lDORa0T_etZk7HGg-1; Thu, 20 Apr 2023 08:50:44 -0400
+X-MC-Unique: K9tKc-lDORa0T_etZk7HGg-1
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-74e0b7fe88eso92694685a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2023 05:50:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681995044; x=1684587044;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xsQvRozmWeIRuvplx2jp/MlGECW+YgJPFwvCRk8nfu8=;
+        b=iPVa/dM9JVn2u/FrQUsKEMGFho1N4cPBM3djgynRzjvQd5NfVuLDfwPLsSc84xyV0O
+         G41VEICXXy4Dpf1PA7G2IyjS4WGCiPwuZG9y8Q1G6CPfhxtKEJxraub+/T9kzAjxRmvC
+         skHFXcfomyKC48YhaVjdTJG4yIiJHNIdiQov2kq6a+VeMaDMhqfWwAXLhj620bDzMnIw
+         f0s3AMUBQG6wHr2iyAb6Vd8jpL/yIfVAUDkNZowYyfpxcs+JVIihXsXjg5p9jkOuCB20
+         3o8ixN7Cw6VY36kTxBwKrpv4xXHJX/j8xycoIpYBRN4KYEN+oSeC2E3Me8oQ7/9VQ8qZ
+         TN/A==
+X-Gm-Message-State: AAQBX9eNJ5Mooyk7mVkbbKAyqeicqCN1jaEuRSw9qRC8AS9n04UJdxjG
+        qLtFLLyzUp8LjjZaO/A1oDq5HwerKqmGtIMalVjK5+2OwxGA36DN0EMH6RzQCREY8dhnlmWZfDb
+        BQXXqCZXfH+uVhfmdZO07Aw==
+X-Received: by 2002:ac8:5f49:0:b0:3e4:903:4edf with SMTP id y9-20020ac85f49000000b003e409034edfmr2115979qta.28.1681995044041;
+        Thu, 20 Apr 2023 05:50:44 -0700 (PDT)
+X-Google-Smtp-Source: AKy350Zn5JjxfeNmN+oopT6R4QxoWNRkSkOdM8ztyXAXN/ssVJaVH1kKT7/bxxMUsLpD6hBvIPWCMQ==
+X-Received: by 2002:ac8:5f49:0:b0:3e4:903:4edf with SMTP id y9-20020ac85f49000000b003e409034edfmr2115947qta.28.1681995043783;
+        Thu, 20 Apr 2023 05:50:43 -0700 (PDT)
+Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id z26-20020ac87cba000000b003eb136bec50sm453716qtv.66.2023.04.20.05.50.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Apr 2023 05:50:43 -0700 (PDT)
+From:   Tom Rix <trix@redhat.com>
+To:     brking@us.ibm.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        john.g.garry@oracle.com, dlemoal@kernel.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Tom Rix <trix@redhat.com>
+Subject: [PATCH] scsi: ipr: remove several unused variables
+Date:   Thu, 20 Apr 2023 08:50:35 -0400
+Message-Id: <20230420125035.3888188-1-trix@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3xwglpdpmit2obtf5p475gojdoqe42rmteki5hvoavzwle6kqr@bl7xginwaeli>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Apr 14, 2023 / 17:58, Shin'ichiro Kawasaki wrote:
-> On Apr 14, 2023 / 09:33, John Garry wrote:
+gcc with W=1 reports
+drivers/scsi/ipr.c: In function ‘ipr_init_res_entry’:
+drivers/scsi/ipr.c:1104:22: error: variable ‘proto’
+  set but not used [-Werror=unused-but-set-variable]
+ 1104 |         unsigned int proto;
+      |                      ^~~~~
+drivers/scsi/ipr.c: In function ‘ipr_update_res_entry’:
+drivers/scsi/ipr.c:1261:22: error: variable ‘proto’
+  set but not used [-Werror=unused-but-set-variable]
+ 1261 |         unsigned int proto;
+      |                      ^~~~~
+drivers/scsi/ipr.c: In function ‘ipr_change_queue_depth’:
+drivers/scsi/ipr.c:4417:36: error: variable ‘res’
+  set but not used [-Werror=unused-but-set-variable]
+ 4417 |         struct ipr_resource_entry *res;
+      |                                    ^~~
 
-[...]
+These variables are not used, so remove them.
+The lock around res is not needed so remove that.
+Which makes ioa_cfg and lock_flags unneeded so remove them.
 
-> > The failure may be due to one of my changes. Please see
-> > https://lore.kernel.org/lkml/5bdbfbbc-bac1-84a1-5f50-33a443e3292a@oracle.com/
-> 
-> Thanks for the notice. I think your changes were applied to 6.4/scsi-queue,
-> which I've not yet tried. Then it should not be related to your changes.
+Fixes: 65a15d6560df ("scsi: ipr: Remove SATA support")
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ drivers/scsi/ipr.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-I took a closer look in your changes for kernel v6.4, and noticed that it might
-affect the scsi/007 failure I observed with kernel v6.3-rcX. I did some trials
-and found these:
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index d81189ba8773..4e13797b2a4a 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -1101,7 +1101,6 @@ static void ipr_init_res_entry(struct ipr_resource_entry *res,
+ 			       struct ipr_config_table_entry_wrapper *cfgtew)
+ {
+ 	int found = 0;
+-	unsigned int proto;
+ 	struct ipr_ioa_cfg *ioa_cfg = res->ioa_cfg;
+ 	struct ipr_resource_entry *gscsi_res = NULL;
+ 
+@@ -1114,7 +1113,6 @@ static void ipr_init_res_entry(struct ipr_resource_entry *res,
+ 	res->sdev = NULL;
+ 
+ 	if (ioa_cfg->sis64) {
+-		proto = cfgtew->u.cfgte64->proto;
+ 		res->flags = be16_to_cpu(cfgtew->u.cfgte64->flags);
+ 		res->res_flags = be16_to_cpu(cfgtew->u.cfgte64->res_flags);
+ 		res->qmodel = IPR_QUEUEING_MODEL64(res);
+@@ -1160,7 +1158,6 @@ static void ipr_init_res_entry(struct ipr_resource_entry *res,
+ 			set_bit(res->target, ioa_cfg->target_ids);
+ 		}
+ 	} else {
+-		proto = cfgtew->u.cfgte->proto;
+ 		res->qmodel = IPR_QUEUEING_MODEL(res);
+ 		res->flags = cfgtew->u.cfgte->flags;
+ 		if (res->flags & IPR_IS_IOA_RESOURCE)
+@@ -1258,7 +1255,6 @@ static void ipr_update_res_entry(struct ipr_resource_entry *res,
+ 				 struct ipr_config_table_entry_wrapper *cfgtew)
+ {
+ 	char buffer[IPR_MAX_RES_PATH_LENGTH];
+-	unsigned int proto;
+ 	int new_path = 0;
+ 
+ 	if (res->ioa_cfg->sis64) {
+@@ -1270,7 +1266,6 @@ static void ipr_update_res_entry(struct ipr_resource_entry *res,
+ 			sizeof(struct ipr_std_inq_data));
+ 
+ 		res->qmodel = IPR_QUEUEING_MODEL64(res);
+-		proto = cfgtew->u.cfgte64->proto;
+ 		res->res_handle = cfgtew->u.cfgte64->res_handle;
+ 		res->dev_id = cfgtew->u.cfgte64->dev_id;
+ 
+@@ -1299,7 +1294,6 @@ static void ipr_update_res_entry(struct ipr_resource_entry *res,
+ 			sizeof(struct ipr_std_inq_data));
+ 
+ 		res->qmodel = IPR_QUEUEING_MODEL(res);
+-		proto = cfgtew->u.cfgte->proto;
+ 		res->res_handle = cfgtew->u.cfgte->res_handle;
+ 	}
+ }
+@@ -4413,14 +4407,6 @@ static int ipr_free_dump(struct ipr_ioa_cfg *ioa_cfg) { return 0; };
+  **/
+ static int ipr_change_queue_depth(struct scsi_device *sdev, int qdepth)
+ {
+-	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
+-	struct ipr_resource_entry *res;
+-	unsigned long lock_flags = 0;
+-
+-	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+-	res = (struct ipr_resource_entry *)sdev->hostdata;
+-	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+-
+ 	scsi_change_queue_depth(sdev, qdepth);
+ 	return sdev->queue_depth;
+ }
+-- 
+2.27.0
 
-- On kernel v6.3-rc7 without your changes, the test case scsi/007 fails with
-  unexpected read command success (The failure I found and reported).
-- On kernel v6.3-rc7 with your changes until "scsi: scsi_debug: Dynamically
-  allocate sdebug_queued_cmd" [1], scsi/007 fails and causes system hang.
-  Kernel reported "BUG sdebug_queued_cmd". When I reverte [1] from the kernel,
-  the failure symptom is same as v6.3-rc7 (no hang, no BUG).
-- On kernel v6.3-rc7 with your changes including [1] and "scsi: scsi_debug:
-  Abort commands from scsi_debug_device_reset()" [2], scsi/007 passes.
-
-[1] https://lore.kernel.org/lkml/20230327074310.1862889-7-john.g.garry@oracle.com/
-[2] https://lore.kernel.org/linux-scsi/20230416175654.159163-1-john.g.garry@oracle.com/
-
-Your fix [2] intended to fix the BUG that [1] caused, but it also fixed the
-scsi/007 failure I found :)
-
-
-To understand the failure deeper, I added debug prints in scsi_debug, using
-kernel v6.3-rc7 with your changes just before [1]. This kernel does not have the
-fix [2], then it does not abort commands at device reset. When scsi error
-handler does BDR, bus device reset, scsi_debug does not cancel the hrtimer for
-the commands issued to the scsi_debug. This hrtimer is alive across the reset.
-When that hrtimer expires, scsi_debug completes the command that issued _after_
-BDR. The hrtimer for the command before BDR completes the command after BDR
-since those two commands use the same scsi_cmnd and rq objects reused. Then the
-command issued after BDR completes earlier than expected, and results in the
-unexpected read command success and scsi/007 failure.
-
-After applying the fix [2], scsi_debug cancels hrtimers at reset. Then, the
-hrtimers started before reset do not affect the commands issued after reset.
-
-These findings mean that the scsi/007 failure I found with kernel v6.3-rc7
-indicated the bug in scsi_debug, and the commit [2] fixed it. Now I don't think
-blktests side fix for scsi/007 is required. Good :)
