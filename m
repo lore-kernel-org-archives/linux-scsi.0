@@ -2,114 +2,63 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0611C77B73
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 14:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0E2C77B72
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 14:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232006AbjDTO0P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Apr 2023 10:26:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50064 "EHLO
+        id S231406AbjDTOel (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Apr 2023 10:34:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229849AbjDTO0O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 10:26:14 -0400
-Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53F891FD0;
-        Thu, 20 Apr 2023 07:26:13 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.nyi.internal (Postfix) with ESMTP id AFE315C00DE;
-        Thu, 20 Apr 2023 10:26:12 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Thu, 20 Apr 2023 10:26:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm2; t=1682000772; x=1682087172; bh=mQ
-        MFG0c8DAo/RaI8mHS62KbgdsQozN7xXYYhGzQ/q44=; b=VQGlz5x44r+cG4n2QK
-        45eKffadkggJwKvTzrOSpOA9NyCH3W30E0uAQtfkl8qHtdGl39XLAViPgvAc3l11
-        97hUtSfGt2/nOMSkOrnZF3Pi6MMeLjhSFhr31zEERtA6TtY6q7dn6MzsA/N9E0sz
-        ZpLpm2Utfk2AWsfrPqXfggnH7+eUAEvR96SP4F08rcVwna2hjlymyhfvrqCMds6I
-        ozEIk88dPKPVQEthZ5pzObprOOP5+Hc5MaE6G5CcvRSpb5nLWt2/0oxAhJXEL5j9
-        bocxpiuZARqIlD3tin+A6m2Yzr1eGi/A5jPdUa/DS5REFOHLG054kYpdvx3cgkwO
-        frFw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1682000772; x=1682087172; bh=mQMFG0c8DAo/R
-        aI8mHS62KbgdsQozN7xXYYhGzQ/q44=; b=VnA7SH4nt1xoIB2KVpR6bayxirc2s
-        h/We/A4EGbeuQ75Y93BtNY2LPnBonJ+DQSrqXq41KhQlVD004yASrgPLBYE81k0K
-        KCiNxD1CXDeQWoH9hdr8RoZe9a9mkS8iNoAdj1TBXzgEIX6Kp0DdnT1GsSBG/QMY
-        wC+36Zl5e3Sd7tAVJmFmCfLH7m/jY3DLJXV1ATUSb8SuVFbf/22qE553JZaBtkyX
-        Dm4XTcGdBdD9B6xc3KKhQP1KFlhDEugd8qOsS3lbt8kGhhBWEFx6HRzOTNRtSmO8
-        c/mjN27h3oeAng4fFfVu9LOgr233lynKjBcbbG21s2wsgrJnpx3m/aC4w==
-X-ME-Sender: <xms:hEtBZILL1Uj_kPK9eJWigI80_plZifdJezksTYILdedi5IKnkXWFqg>
-    <xme:hEtBZIKOrLdW3uJlUpkFiA4WAmiU0IQftdvWJdz_2mnwvpzG-5iApQ9s54aLHOGrp
-    Qu88Uyi4VM_aYQgOwY>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfedtvddgjeehucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepvefhffeltdegheeffffhtdegvdehjedtgfekueevgfduffettedtkeekueef
-    hedunecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpe
-    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrhhnugesrghrnhgusgdruggv
-X-ME-Proxy: <xmx:hEtBZIvRuU_UCw2-porzXC5-QRnNc1xU1KO7YX1oF-f9WhinwWN17g>
-    <xmx:hEtBZFaGaN8iV8I5hqQyJPojtlVYfhMU2CCbjo7JohLNdJAbRB9zkg>
-    <xmx:hEtBZPY6vq8KdkWLl1qKKAUHOvyxfIMmRiIHsat7nro_kXDEV5sslw>
-    <xmx:hEtBZOlwfdo3vMlRR8hKB_w2SYgu2DOHnEZtJ7b3a8qcqBbU7z2VEA>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 1A74DB60086; Thu, 20 Apr 2023 10:26:12 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-372-g43825cb665-fm-20230411.003-g43825cb6
-Mime-Version: 1.0
-Message-Id: <d018f78d-13d0-4d13-90c5-9b33bd121f51@app.fastmail.com>
-In-Reply-To: <e6958e2e-47bc-685b-f585-a88d29173f58@plouf.fr.eu.org>
-References: <5b30b2b2-c47a-da1e-8106-025c914faebd@plouf.fr.eu.org>
- <e6958e2e-47bc-685b-f585-a88d29173f58@plouf.fr.eu.org>
-Date:   Thu, 20 Apr 2023 16:25:50 +0200
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Pascal Hambourg" <pascal@plouf.fr.eu.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: [PATCH] scsi: advansys: disallow ISA-only build
-Content-Type: text/plain
+        with ESMTP id S230200AbjDTOek (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 10:34:40 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BF31A7
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2023 07:34:32 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Q2Kq845rHzKxTj;
+        Thu, 20 Apr 2023 22:31:48 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by canpemm100004.china.huawei.com
+ (7.192.105.92) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Thu, 20 Apr
+ 2023 22:34:29 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>,
+        <bvanassche@acm.org>, <jinpu.wang@cloud.ionos.com>,
+        <damien.lemoal@opensource.wdc.com>, <john.g.garry@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v2 0/3] scsi: libsas: remove empty branches and code simplification
+Date:   Thu, 20 Apr 2023 22:33:36 +0800
+Message-ID: <20230420143339.2769414-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ canpemm100004.china.huawei.com (7.192.105.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 20, 2023, at 14:40, Pascal Hambourg wrote:
-> Hello Arnd, Peter,
->
-> Arnd Bergmann wrote:
->> The ISA support for this driver was removed a while ago,
->> but the Kconfig dependencies still need an update to require
->> EISA or PCI.
->
-> A month ago I posted to linux-scsi about the module failing to to init 
-> if ISA support is disabled in the kernel config (copy attached), but 
-> have not received any answer so far. Any thoughts ?
-> Attachments:
-> * [Bug report] scsi: advansys: module init fails if ISA_BUS_API is not set.eml
-[https://lore.kernel.org/all/5b30b2b2-c47a-da1e-8106-025c914faebd@plouf.fr.eu.org]
+Three patches to remove two empty branches and a little code
+simplification.
 
-Thanks for getting back to me on that. It looks like my patch
-was incorrect after all, and only the ISA_DMA_API should have
-been removed, as it's now impossible to build a VLB-only version
-of the driver.
+v1->v2:
+  1. Add blank line after declaration in sas_eeds_valid().
+  2. Drop the inner-most and outter-most parenthesis in sas_eeds_valid().
+  3. Break the long line in the declaration of sas_check_phy_topology().
+  4. Move "else if" to the same line after "}".
 
-I think the two ways we can address this are:
+Jason Yan (3):
+  scsi: libsas: Simplify sas_check_eeds()
+  scsi: libsas: Remove an empty branch in sas_check_parent_topology()
+  scsi: libsas: Simplify sas_check_parent_topology()
 
-- your approach c), which makes it behave the same as the aha1542.c and
-  g_NCR5380.c drivers, plus a Kconfig fix to add back ISA_BUS_API
-  as a possible alternative to PCI and EISA (thus fixing my patch).
+ drivers/scsi/libsas/sas_expander.c | 135 ++++++++++++++++-------------
+ 1 file changed, 73 insertions(+), 62 deletions(-)
 
-- your approach d), removing VLB support for this driver. I tried to
-  find other VLB drivers and the only ones I see remaining in linux-6.3
-  are drivers/ata/pata_legacy and drivers/net/ethernet/amd/pcnet32.c.
-  Bartlomiej Zolnierkiewicz (added to Cc) is the only one that I can
-  see having actually touched VLB drivers at all in over a decade, he
-  might know more.
+-- 
+2.31.1
 
-      Arnd
