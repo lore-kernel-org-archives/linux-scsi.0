@@ -2,105 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EFE9C77B73
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 16:43:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE82EC77B73
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 17:44:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232798AbjDTQn2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Apr 2023 12:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55560 "EHLO
+        id S231773AbjDTRoM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Apr 2023 13:44:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232421AbjDTQnZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 12:43:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 390172D63
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2023 09:42:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1682008960;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=I6fTE8uyJF5qu0Pi8nEHi/Tjr/m72N2RiPgDazf02xk=;
-        b=BELXoQPacRJGb+VSKO6eNwAu2O6PsWBF/70bIbUXB0YB+xK6D5Vtq0+nKnefFzfspzLDpE
-        v+9ganqgTtWTbQ72wfzv9xytSDMMW5YT4zff1+H2aZI8Vp1mb3oy9inlee0LuLxoTb40N0
-        VGXReiB2GuOiMlGgSIrFLLrxaDkElvk=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-375-CJwRyV7GMX6wC-bShp44cQ-1; Thu, 20 Apr 2023 12:42:35 -0400
-X-MC-Unique: CJwRyV7GMX6wC-bShp44cQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7E4B6185A78F;
-        Thu, 20 Apr 2023 16:42:34 +0000 (UTC)
-Received: from localhost (unknown [10.2.16.204])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EB19B2026D16;
-        Thu, 20 Apr 2023 16:42:33 +0000 (UTC)
-Date:   Thu, 20 Apr 2023 09:42:32 -0700
-From:   Chris Leech <cleech@redhat.com>
-To:     Lee Duncan <leeman.duncan@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        netdev@vger.kernel.org, Lee Duncan <lduncan@suse.com>
-Subject: Re: [RFC PATCH 2/9] iscsi: associate endpoints with a host
-Message-ID: <20230420164232.GA27885@localhost>
-Mail-Followup-To: Lee Duncan <leeman.duncan@gmail.com>,
-        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        netdev@vger.kernel.org, Lee Duncan <lduncan@suse.com>
-References: <cover.1675876731.git.lduncan@suse.com>
- <154c7602b3cc59f8af44439249ea5e5eb75f92d3.1675876734.git.lduncan@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        with ESMTP id S231712AbjDTRn7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 13:43:59 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A017D4ED2;
+        Thu, 20 Apr 2023 10:43:38 -0700 (PDT)
+Received: from pps.filterd (m0353724.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33KHY3AJ013300;
+        Thu, 20 Apr 2023 17:43:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=ohRA5xQp84/7gj+nbFshkI9cTNC4RTACQM3OzbAEp9c=;
+ b=Fg4/YPDPBOfxG+kvhkJClgRThWL6dI71nSBt7+dUYctIdBwwqR0z4+O9OWJyfFsaTc86
+ CWuN4sx4g44oIB0dw/Kb8wo7vuWRYCmLgBFe/U/BAYdyKNski/IN4PpExHH1QUURf1Mg
+ yhmJjDPlUSE1rR8Q0yXFzm/5AOpe+fz1qHxXxzFsRym9k9wDSbgVE/6KHWI9ubWoxSQm
+ wZOpfcFPz18MZabh+Zr1QLBARvkdNxgm73bj0njFkpRCRgBN8UDSoW5iN+gbLrVs0w9N
+ e8cUfjMih7mvoKaH8TQflaLQEz3Z5cD6TpInUpzy8RCQOfHKeB5Y230k0YJg3hADMgde Tg== 
+Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3q39wfrj8n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 20 Apr 2023 17:43:27 +0000
+Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
+        by ppma02fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 33K1MQVd017940;
+        Thu, 20 Apr 2023 17:43:26 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+        by ppma02fra.de.ibm.com (PPS) with ESMTPS id 3pykj6jxym-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 20 Apr 2023 17:43:25 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 33KHhMjl66191780
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 20 Apr 2023 17:43:22 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1A80A2004D;
+        Thu, 20 Apr 2023 17:43:22 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0638020043;
+        Thu, 20 Apr 2023 17:43:22 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.171.85.7])
+        by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Thu, 20 Apr 2023 17:43:21 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1ppYJV-004RkS-1g;
+        Thu, 20 Apr 2023 19:43:21 +0200
+Date:   Thu, 20 Apr 2023 17:43:21 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        acelan.kao@canonical.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: core: Avoid doing rescan on suspended device
+Message-ID: <20230420174321.GA123094@t480-pf1aa2c2>
+References: <20230419054112.269734-1-kai.heng.feng@canonical.com>
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <154c7602b3cc59f8af44439249ea5e5eb75f92d3.1675876734.git.lduncan@suse.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
+In-Reply-To: <20230419054112.269734-1-kai.heng.feng@canonical.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: FiuplC5Y8z5W0DKhabnZidjDFNIZ9op2
+X-Proofpoint-ORIG-GUID: FiuplC5Y8z5W0DKhabnZidjDFNIZ9op2
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-20_13,2023-04-20_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
+ impostorscore=0 clxscore=1011 malwarescore=0 lowpriorityscore=0
+ bulkscore=0 mlxscore=0 phishscore=0 priorityscore=1501 adultscore=0
+ mlxlogscore=737 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304200147
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 08, 2023 at 09:40:50AM -0800, Lee Duncan wrote:
-> Right now the iscsi_endpoint is only linked to a connection once that
-> connection has been established.  For net namespace filtering of the
-> sysfs objects, associate an endpoint with the host that it was
-> allocated for when it is created.
+On Wed, Apr 19, 2023 at 01:41:12PM +0800, Kai-Heng Feng wrote:
+> During system resume, if an EH is schduled after ATA host is resumed
+> (i.e. ATA_PFLAG_PM_PENDING cleared), but before the disk device is
+> resumed, the device_lock hold by scsi_rescan_device() is never released
+> so the dpm_resume() of the disk is blocked forerver.
 > 
-> Signed-off-by: Chris Leech <cleech@redhat.com>
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> That's because scsi_attach_vpd() is expecting the disk device is in
+> operational state, as it doesn't work on suspended device.
+> 
+> To avoid such deadlock, avoid doing rescan if the disk is still
+> suspended so the resume process of the disk device can proceed.
+
+I'm no expert on suspend/resume, but wouldn't you then potentially miss
+changes that have been done to the LUN during suspend?
+
+What takes care of updating the VPDs, scsi-disk re-evaluation and such
+in this case, when you block it initially during wakeup?
+
+> 
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 > ---
+>  drivers/scsi/scsi_scan.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> index 6b7603765383..212fa7aa9810 100644
-> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> @@ -802,7 +802,7 @@ static struct iscsi_endpoint *iscsi_iser_ep_connect(struct Scsi_Host *shost,
->  	struct iser_conn *iser_conn;
->  	struct iscsi_endpoint *ep;
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index d217be323cc6..36680cb1535b 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1621,6 +1621,9 @@ void scsi_rescan_device(struct device *dev)
+>  {
+>  	struct scsi_device *sdev = to_scsi_device(dev);
 >  
-> -	ep = iscsi_create_endpoint(0);
-> +	ep = iscsi_create_endpoint(shost, 0);
->  	if (!ep)
->  		return ERR_PTR(-ENOMEM);
+> +	if (dev->power.is_prepared)
+> +		return;
+> +
+>  	device_lock(dev);
+>  
+>  	scsi_attach_vpd(sdev);
+> -- 
+> 2.34.1
+> 
 
-I started trying[1] to look at iSER, and I think this is a problem.
-iSER is the only iSCSI driver that uses endpoint objects, but does not
-require then to be bound to a host.  That means that
-iscsi_iser_ep_connect can be called with a null shost.
-
-So this fails, and not in a new namespace.
-It just breaks iSER entirely.
-
-I think we need to preserve support for the iscsi_endpoint device
-having a virtual device path for iSER.
-
-Also, enabling net namespace support for iSER might require the ability
-to create an endpoint directly in a namespace instead of on a host.
-Kind of like the create_session discussion for iscsi_tcp.
-
-- Chris
-
-[1] I say trying, becuase before going and borrowing an RDMA setup I
-thought I'd give the kernel target and either siw or rxe a try. The
-isert module seems to have issues with siw, and I think maybe any iWARP,
-where setting enable_iser on a port will try and re-use the TCP port
-number and fail due to it being in use.  With rxe my host failed, but
-that's becuase of this create_endpoint issue.
-
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
