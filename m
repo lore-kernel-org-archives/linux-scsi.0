@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 828F6C77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 11:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC34C77B76
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Apr 2023 11:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235193AbjDTLFX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Apr 2023 07:05:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55386 "EHLO
+        id S235106AbjDTLHQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Apr 2023 07:07:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233782AbjDTLEd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 07:04:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79A9C7689;
-        Thu, 20 Apr 2023 04:03:14 -0700 (PDT)
+        with ESMTP id S235516AbjDTLFO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2023 07:05:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44DB9A243;
+        Thu, 20 Apr 2023 04:03:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 86B16647D0;
-        Thu, 20 Apr 2023 11:02:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D280C433A0;
-        Thu, 20 Apr 2023 11:02:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B6C4363EA6;
+        Thu, 20 Apr 2023 11:03:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04C67C433A7;
+        Thu, 20 Apr 2023 11:02:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681988543;
-        bh=8XlNvxFe8J9MElTonJQu/vF4gtbvlLAZtiQOh98u3T4=;
+        s=k20201202; t=1681988580;
+        bh=bu8vS+mCAOz4URE9Wdvm46xUj8MlgItfn6idQuIEVNg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h29duO9p0Z7pviXmpEzgXyrEJfjcql7wU7lQKvXKtSZ/GNwLpEkor2URoTQsZACLA
-         9yfFXgNrsPpG55KK5VHOScPdwMhhax9WDv0SOFbBMo4xu4qfQUWTPZDjh0mK1xw82H
-         s+urbbHWhn/XqYpj49pC6+mCocoIpIAdqddY3p4IsZ6qddDayiqBlHo+BZWm47ocQL
-         8ziXqhGASXN6LM1VeImsmnaanuE+Ro3XhHdjzJUZGbPCdgPphiIAaz1wnr+dv9pQhS
-         5+BdvPKsqNDGrNWoSe4nyrEq9+9LukirdOqbC/3I6d2VPqkzAajyTLhqPFGyAAYJTH
-         RNsICZziAbctw==
+        b=YiYDEiN/ZrkNsno/vB5fyh0UDxDRVcXV0GrmDZ2uYjaFGHS1aKwp2sTH2J/KeH0jf
+         Iy9DjHHsLrd2YTGVUdJesS8L8xTmYHPB560OZUpxn0ntfXyrQ2qJL1LT4+pzoVhP2f
+         CFLur97IRxFFQ6Efb6YIeBfw3cKboYeKp1Pge8sh2TwRfBnemhFMGRWCOsnWot7LTG
+         ZqsjfFSCMKV7Zu6CjAba8m2R+nDyUhKZXvd2AkUcMpqf/667L64bKExReAJCp9oBZX
+         fYmPeBzm8smRjoWyv/4fn5Jhsfxl8FgA/9TvpFYLBtQTKopapZzZnDMlLYD5Vc1SAZ
+         49e62Lh90RGRA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
@@ -39,12 +39,12 @@ Cc:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
         kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         sreekanth.reddy@broadcom.com, jejb@linux.ibm.com,
         mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 13/17] scsi: mpi3mr: Handle soft reset in progress fault code (0xF002)
-Date:   Thu, 20 Apr 2023 07:01:42 -0400
-Message-Id: <20230420110148.505779-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 11/15] scsi: mpi3mr: Handle soft reset in progress fault code (0xF002)
+Date:   Thu, 20 Apr 2023 07:02:25 -0400
+Message-Id: <20230420110231.505992-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230420110148.505779-1-sashal@kernel.org>
-References: <20230420110148.505779-1-sashal@kernel.org>
+In-Reply-To: <20230420110231.505992-1-sashal@kernel.org>
+References: <20230420110231.505992-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -75,7 +75,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index a565817aa56d4..d109a4ceb72b1 100644
+index ea9e69fb62826..64355d0baa5fb 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
 @@ -2526,7 +2526,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
