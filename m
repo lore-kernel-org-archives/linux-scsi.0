@@ -2,118 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5CBC7618E
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Apr 2023 11:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89C51C7618E
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Apr 2023 12:35:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231365AbjDULNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Apr 2023 07:13:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49522 "EHLO
+        id S231182AbjDUMfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Apr 2023 08:35:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229657AbjDULNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2023 07:13:11 -0400
-Received: from new2-smtp.messagingengine.com (new2-smtp.messagingengine.com [66.111.4.224])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C09F8A257;
-        Fri, 21 Apr 2023 04:13:09 -0700 (PDT)
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 6BF5F582152;
-        Fri, 21 Apr 2023 07:13:07 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Fri, 21 Apr 2023 07:13:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
-        cc:cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1682075587; x=1682076187; bh=0t
-        2qq+tQTWqA4ZpWihOO91zumC8XpczzQjvKGW1H0LE=; b=B6yYwcD4IOXkq7c+14
-        fs0gD5K2A0OeZzLjcbgF6Xun91hwQzVIqO6Xa/JaBCPoh5eMdcuuFe4TFQP7VKST
-        g6/LQQ7epWd41yphBcrfCdPOxRT/4I9iBmZlwlFsc4xAVJ00JHbf951eMKf4OAZF
-        RxAKL1212bUp+vQd35Z6wTyYX2n0X42PzR4teQ3beOuceYQQUF5BoKoLJ9EILxyj
-        ASZbAMhVnXA04AP1T6H4d3plsTm6C+SV9wgTOasrTeqG0Ynn0JOu9fsUpIttm4/F
-        XXN1/0TCCo1DIfb5PVWBbVAavQJhygB+s3aXSEi6pAW6VBgBp9vLeEd8dmSt1oss
-        RO7g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=ie1e949a3.fm3; t=1682075587; x=1682076187; bh=0t2
-        qq+tQTWqA4ZpWihOO91zumC8XpczzQjvKGW1H0LE=; b=QPnvv6pfRl/7Ei7ANn0
-        Xj236EDf7U5my6lgbtn1NAavbK3/lDVZ6QWnk71wp9GfJUzjXSc+ecvPCwcEA4q/
-        dh7hPwMsI5viGFzSzn5v8I7ZZwpP8ItWAMp4V6LJvACg6hye/SYlx3kKtOByzbiH
-        oYCafvedYPzQX355k+lYuFAw89dys5yLpjpIDFa9FwN01LskbMajwiMYFpD5+yMg
-        NkW21vFUxZ7Bvarpq29cEIguA8m9K5Az1ssQjjs6xvnBdh/CFrXZzSYMMBWZ2ikX
-        Ea4OvCV1PC5OMTNwZEUXrM6ljlTzEfFdDRdSXu1me89W1di3RgH6E/BFGCBDSEzx
-        LcA==
-X-ME-Sender: <xms:w29CZL236wP8bmLmnSG9BL-oOfeCW1MpxP91CFmzdbxT5YkwblUsfA>
-    <xme:w29CZKElowL7pjG7iyK8vxMnVAzelLA7wkx1WvGxgOPTSf5CAzOXPU2X2bROQXS9c
-    reSb0bJTof4hpRnZlk>
-X-ME-Received: <xmr:w29CZL4DEvk7qvWyHD-JyUChI6Sh66hIzILJYXWxAgAziqaRRvV7ZH0s9P4x7f1JzYCYW9bN2hSpZpmtNf1cUw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfedtgedgfeeiucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomhepufhhihhn
-    kdhitghhihhrohcumfgrfigrshgrkhhiuceoshhhihhnihgthhhirhhosehfrghsthhmrg
-    hilhdrtghomheqnecuggftrfgrthhtvghrnhepvdegtdfgvdfhgfekvdektdfgfeeljeel
-    gefgkedujeeiteehgefhgeethffgheehnecuvehluhhsthgvrhfuihiivgeptdenucfrrg
-    hrrghmpehmrghilhhfrhhomhepshhhihhnihgthhhirhhosehfrghsthhmrghilhdrtgho
-    mh
-X-ME-Proxy: <xmx:w29CZA24E7gcTexPJ8fwIsEm67fKCD_aZd_lDZLuuMUTGVwoyxA9Gg>
-    <xmx:w29CZOHPAEbbggBQXvLcurL1aEJ8wiUJWPNxhheYEFDsOVow4Rpnlw>
-    <xmx:w29CZB9Fb8t5pCr_-ePdJICNIFwsNldz9TT7UY5_A4MnClAmIjZVHw>
-    <xmx:w29CZDSYhw4Cfzzh0c-EZ2z8Ssf4FpTVvDxYvv-i7y-U2gXd9-keOiqT4fI>
-Feedback-ID: ie1e949a3:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 21 Apr 2023 07:13:05 -0400 (EDT)
-Date:   Fri, 21 Apr 2023 20:13:02 +0900
-From:   Shin'ichiro Kawasaki <shinichiro@fastmail.com>
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: Re: [PATCH blktests 5/9] scsi/004: allow to run with built-in
- scsi_debug
-Message-ID: <4mab5xvql3xl6saolhvnbggeehovhdp3y4glz2ccfxvkqj34ur@wpnku3bybtrv>
-References: <20230417125913.458726-1-shinichiro@fastmail.com>
- <f4997765-6ea5-52ad-e329-73b9e5eedde5@nvidia.com>
+        with ESMTP id S229464AbjDUMfO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2023 08:35:14 -0400
+X-Greylist: delayed 903 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 21 Apr 2023 05:35:11 PDT
+Received: from m13123.mail.163.com (m13123.mail.163.com [220.181.13.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 49FECE53
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2023 05:35:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=Date:From:Subject:Content-Type:MIME-Version:
+        Message-ID; bh=nvdgBl4lNnEeq6fDfKYOEpQmnBbGMNRN1Lql4VI6rss=; b=e
+        Ta+BFVGIj0EcLt87Zq/sfEae4rj2qoZjuoySLrvLVVvca1HO6s1ceANbUtnzRtjZ
+        lWwGJkZAoynhmI0TzT7GI0kxThem3js+fYFwfLphtM/5bwJeXRG0NkoNj58d9FZQ
+        uqoaZPBn3cvF3GMquTCyPeTa3kpTUQS47aZMAZv5VU=
+Received: from yxj790222$163.com ( [60.247.76.79] ) by ajax-webmail-wmsvr123
+ (Coremail) ; Fri, 21 Apr 2023 20:19:26 +0800 (CST)
+X-Originating-IP: [60.247.76.79]
+Date:   Fri, 21 Apr 2023 20:19:26 +0800 (CST)
+From:   =?GBK?B?08jP/r3c?= <yxj790222@163.com>
+To:     linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: qlogic_cs: fix irqf_shared, share same irq with
+ pcmcia  controller
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.14 build 20230109(dcb5de15)
+ Copyright (c) 2002-2023 www.mailtech.cn 163com
+X-NTES-SC: AL_QuyTAPyctk0t4CGYbekXnUoag+s4XsC5u/sk2YFSPZE0niv8/AshU3JxJVLI0vOCACqPvRWJXDtE0tpZV5FlfKPedqTpvq758CDkrt50flx9
+Content-Type: multipart/mixed; 
+        boundary="----=_Part_91127_13238127.1682079566112"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f4997765-6ea5-52ad-e329-73b9e5eedde5@nvidia.com>
+Message-ID: <7a7202f1.609a.187a3c14920.Coremail.yxj790222@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: e8GowACX1TxOf0Jky7sLAA--.33754W
+X-CM-SenderInfo: 510mlmaqssjqqrwthudrp/1tbiMhxYvFWB3db1hAADsn
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Apr 18, 2023 / 20:18, Chaitanya Kulkarni wrote:
-> On 4/17/23 05:59, Shin'ichiro Kawasaki wrote:
-> > From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> >
-> > To allow the test case run with build-in scsi_debug, replace
-> > '_have_module scsi_debug' with _have_scsi_debug, and replace
-> > _init_scsi_debug with _configure_scsi_debug.
-> >
-> > Also, save and restore the values of scsi_debug parameters 'opts' and
-> > 'ndelay'. The test case modifies the parameters and do not restore their
-> > original values. It is fine when scsi_debug is loadable since scsi_debug
-> > is unloaded after the test case run. However, when scsi_debug is built-
-> > in, the modified parameters may affect following test cases. To avoid
-> > potential impact on following test cases, save original values of the
-> > parameters and restore them at the end of the test case.
-> >
-> > Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> > ---
-> >
-> 
-> Perhaps we should look into a helper to record other default
-> parameters before the testcase and restore it after when
-> it is built in ?
+------=_Part_91127_13238127.1682079566112
+Content-Type: text/plain; charset=GBK
+Content-Transfer-Encoding: base64
 
-Hi Chaitanya, thanks for the review comments. Your idea sounds good. I will try
-to implement it.
+RnJvbSA4MmMxZDBmODgyNDNmOGVkMWZmYWVlYTk4ZDc3NWFiZDU4ODY2YjFiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBZb3UgWGlhb2ppZSA8eXhqNzkwMjIyQDE2My5jb20+CkRhdGU6
+IEZyaSwgMjEgQXByIDIwMjMgMTk6MDI6MTUgKzA4MDAKU3ViamVjdDogW1BBVENIXSBxbG9naWNf
+Y3M6IGZpeCBpcnFmX3NoYXJlZCwgc2hhcmUgc2FtZSBpcnEgd2l0aCBwY21jaWEKIGNvbnRyb2xs
+ZXIKClNpZ25lZC1vZmYtYnk6IFlvdSBYaWFvamllIDx5eGo3OTAyMjJAMTYzLmNvbT4KLS0tCiBk
+cml2ZXJzL3Njc2kvcGNtY2lhL3Fsb2dpY19zdHViLmMgfCAyICstCiAxIGZpbGUgY2hhbmdlZCwg
+MSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
+cGNtY2lhL3Fsb2dpY19zdHViLmMgYi9kcml2ZXJzL3Njc2kvcGNtY2lhL3Fsb2dpY19zdHViLmMK
+aW5kZXggMzEwZDBiNjU4NmE2Li40ZGJiOTM4NzkwYzIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2Nz
+aS9wY21jaWEvcWxvZ2ljX3N0dWIuYworKysgYi9kcml2ZXJzL3Njc2kvcGNtY2lhL3Fsb2dpY19z
+dHViLmMKQEAgLTEyMiw3ICsxMjIsNyBAQCBzdGF0aWMgc3RydWN0IFNjc2lfSG9zdCAqcWxvZ2lj
+X2RldGVjdChzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlICpob3N0LAogCXByaXYtPnNob3N0ID0g
+c2hvc3Q7CiAJcHJpdi0+aW50X3R5cGUgPSBJTlRfVFlQRTsJCQkJCQogCi0JaWYgKHJlcXVlc3Rf
+aXJxKHFsaXJxLCBxbG9naWNmYXM0MDhfaWhhbmRsLCAwLCBxbG9naWNfbmFtZSwgc2hvc3QpKQor
+CWlmIChyZXF1ZXN0X2lycShxbGlycSwgcWxvZ2ljZmFzNDA4X2loYW5kbCwgSVJRRl9TSEFSRUQs
+IHFsb2dpY19uYW1lLCBzaG9zdCkpCiAJCWdvdG8gZnJlZV9zY3NpX2hvc3Q7CiAKIAlzcHJpbnRm
+KHByaXYtPnFpbmZvLAotLSAKCgo=
+------=_Part_91127_13238127.1682079566112
+Content-Type: application/octet-stream; 
+	name=0001-qlogic_cs-fix-irqf_shared-share-same-irq-with-pcmcia.patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0001-qlogic_cs-fix-irqf_shared-share-same-irq-with-pcmcia.patch"
 
-> 
-> Irrespective of that, looks good.
-> 
-> Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-> 
-> -ck
-> 
-> 
+RnJvbSA4MmMxZDBmODgyNDNmOGVkMWZmYWVlYTk4ZDc3NWFiZDU4ODY2YjFiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBZb3UgWGlhb2ppZSA8eXhqNzkwMjIyQDE2My5jb20+CkRhdGU6
+IEZyaSwgMjEgQXByIDIwMjMgMTk6MDI6MTUgKzA4MDAKU3ViamVjdDogW1BBVENIXSBxbG9naWNf
+Y3M6IGZpeCBpcnFmX3NoYXJlZCwgc2hhcmUgc2FtZSBpcnEgd2l0aCBwY21jaWEKIGNvbnRyb2xs
+ZXIKClNpZ25lZC1vZmYtYnk6IFlvdSBYaWFvamllIDx5eGo3OTAyMjJAMTYzLmNvbT4KLS0tCiBk
+cml2ZXJzL3Njc2kvcGNtY2lhL3Fsb2dpY19zdHViLmMgfCAyICstCiAxIGZpbGUgY2hhbmdlZCwg
+MSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
+cGNtY2lhL3Fsb2dpY19zdHViLmMgYi9kcml2ZXJzL3Njc2kvcGNtY2lhL3Fsb2dpY19zdHViLmMK
+aW5kZXggMzEwZDBiNjU4NmE2Li40ZGJiOTM4NzkwYzIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2Nz
+aS9wY21jaWEvcWxvZ2ljX3N0dWIuYworKysgYi9kcml2ZXJzL3Njc2kvcGNtY2lhL3Fsb2dpY19z
+dHViLmMKQEAgLTEyMiw3ICsxMjIsNyBAQCBzdGF0aWMgc3RydWN0IFNjc2lfSG9zdCAqcWxvZ2lj
+X2RldGVjdChzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlICpob3N0LAogCXByaXYtPnNob3N0ID0g
+c2hvc3Q7CiAJcHJpdi0+aW50X3R5cGUgPSBJTlRfVFlQRTsJCQkJCQogCi0JaWYgKHJlcXVlc3Rf
+aXJxKHFsaXJxLCBxbG9naWNmYXM0MDhfaWhhbmRsLCAwLCBxbG9naWNfbmFtZSwgc2hvc3QpKQor
+CWlmIChyZXF1ZXN0X2lycShxbGlycSwgcWxvZ2ljZmFzNDA4X2loYW5kbCwgSVJRRl9TSEFSRUQs
+IHFsb2dpY19uYW1lLCBzaG9zdCkpCiAJCWdvdG8gZnJlZV9zY3NpX2hvc3Q7CiAKIAlzcHJpbnRm
+KHByaXYtPnFpbmZvLAotLSAKMi40MC4wCgo=
+------=_Part_91127_13238127.1682079566112--
+
