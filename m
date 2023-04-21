@@ -2,85 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 742B8C7EE21
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Apr 2023 19:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B826C7618E
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Apr 2023 20:06:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233614AbjDUTtC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Apr 2023 15:49:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54940 "EHLO
+        id S233701AbjDUUGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Apr 2023 16:06:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233668AbjDUTsx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2023 15:48:53 -0400
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1450B1FC7;
-        Fri, 21 Apr 2023 12:48:40 -0700 (PDT)
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-546de76c23eso1250343eaf.0;
-        Fri, 21 Apr 2023 12:48:40 -0700 (PDT)
+        with ESMTP id S232177AbjDUUGx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2023 16:06:53 -0400
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7D602702;
+        Fri, 21 Apr 2023 13:06:46 -0700 (PDT)
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-63b62d2f729so2208218b3a.1;
+        Fri, 21 Apr 2023 13:06:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682106519; x=1684698519;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TkPnOUh0neb4MVTUrbit7nLJd4t84y5z0PgNA0afTZ4=;
-        b=c/kjEyOnHOqo3rEBVjjToIgV+ouYAhM0PkZlNNt/oPFiteUIMD5BpA/PUC1rewt5q+
-         z6zu4Dlk3mjrxc1+z5dasYyTjO3QWH9MhOnRzoKi6+a4sl3Nk/ViisYntPAcjrRgLrgO
-         FMlqzMZBrhe6hEz98KFXatJ8oa0tF2vOg11ZjxPWDD43G4dM0xsHGQO8WEeUFLQ4X6oJ
-         PUhdZm/0jUq/Szb/EgmrgV4xrfwn2gp3Bcxp+EQTg4c5fS5J0/k6mKRccHrQxQ3J1GzF
-         Dpr/eJbjnjTpNPy+MaUcfsA7fC1KippOtiWwIT50Wwvkqg189LEZBu4jtvHDZ8nnq89T
-         f08A==
-X-Gm-Message-State: AAQBX9eBqAkZVOvul/sNYXo/9KIbGv+LXFdsxNr9Nedj6zuYV66Ou7d+
-        ctLjbpVz6T9ZXfHOvlFSMw==
-X-Google-Smtp-Source: AKy350aejOyl8OwPSFtGuW/8nDsydNRzme6iufoYXCm5IQo1b7EplyTp4nb/p6Zpes8WUkyN1b9qaA==
-X-Received: by 2002:a05:6820:1b89:b0:547:6a79:18cb with SMTP id cb9-20020a0568201b8900b005476a7918cbmr321342oob.9.1682106519367;
-        Fri, 21 Apr 2023 12:48:39 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id m41-20020a4a952c000000b005251e3f92ecsm2045502ooi.47.2023.04.21.12.48.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Apr 2023 12:48:39 -0700 (PDT)
-Received: (nullmailer pid 1673608 invoked by uid 1000);
-        Fri, 21 Apr 2023 19:48:38 -0000
-Date:   Fri, 21 Apr 2023 14:48:38 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Bartosz Golaszewski <brgl@bgdev.pl>
-Cc:     Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2] dt-bindings: phy: qmp-ufs: tweak clock and
- clock-names for sa8775p
-Message-ID: <168210651750.1673545.13199192508532033264.robh@kernel.org>
-References: <20230419120914.173715-1-brgl@bgdev.pl>
+        d=1e100.net; s=20221208; t=1682107606; x=1684699606;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Dfyv5FN7xF6QzY/YKdeFbK9UZIryP5DcTEQcPzQtdzY=;
+        b=AmHLZFnFgmuuJWoEkw91S44UBgXCSjD+Qw7TmX4o1f+ciiKZHzk5XcUKedkC4NBiqS
+         3Ha+qC+YWMaNvleXgeH+GdM8b4dQ3qhqZIGudHJXi3tHXbjbR237EJi1bve7PxaSPUi1
+         1wo9Vf8tdui9AKOdb1WWkYicltqvqhytspQH9AoNI0aergwkfCU4wfGn7UcKTSpE/vSM
+         QtTl5ETDT2G/gHNsfD3TyB6llAybAsctN/0G1oyaluvb9CRdr6NX6B4ydRlzflAofo+D
+         fvXx8AjYHqLeSmad1rueDVkIu/1UsOiYklet2YkiRkBxUfZJfLega5L0+6UhDmo9SrFZ
+         TXvQ==
+X-Gm-Message-State: AAQBX9d6tv1Ng+0UATux4Oe4cLpFiOUri/iUml0NgJi0itCHoETmPbxJ
+        GNI3WY0KBgHoRWCJcp5XIjE=
+X-Google-Smtp-Source: AKy350ZXdc4qGBNAbdHsNqr7fR3Yeo/NPEkEskreo/KMkEW84H+StzQOr19IbrV3KCX8h/loRQwoLw==
+X-Received: by 2002:a05:6a00:2e8f:b0:626:1523:b10d with SMTP id fd15-20020a056a002e8f00b006261523b10dmr7418054pfb.4.1682107606102;
+        Fri, 21 Apr 2023 13:06:46 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id l6-20020a656806000000b0051b71e8f633sm2956011pgt.92.2023.04.21.13.06.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 21 Apr 2023 13:06:45 -0700 (PDT)
+Message-ID: <fd67589e-58a4-3f5a-cc49-528bb70fd4e7@acm.org>
+Date:   Fri, 21 Apr 2023 13:06:43 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230419120914.173715-1-brgl@bgdev.pl>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v4 3/5] scsi: ufs: core: Fix mcq nr_hw_queues
+Content-Language: en-US
+To:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com,
+        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com
+References: <20230307065448.15279-1-powen.kao@mediatek.com>
+ <20230307065448.15279-4-powen.kao@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230307065448.15279-4-powen.kao@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On Wed, 19 Apr 2023 14:09:14 +0200, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+On 3/6/23 22:54, Po-Wen Kao wrote:
+> Since MAXQ is 0 based value, add one to obtain number of hardware queue.
 > 
-> maxItems is already globally set to 3. To make the binding easier to read
-> and remove redundancy, set minItems to 3 for sa8775p as this platform
-> requires exactly three clocks.
-> 
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
 > ---
-> v1 -> v2:
-> - rephrased the commit message as this is not a fix but rather
->   a readability improvement
+>   drivers/ufs/core/ufs-mcq.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
 > 
->  .../devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml    | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index a39746b2a8be..c7b807f58dca 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -150,7 +150,8 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+>   	u32 hba_maxq, rem, tot_queues;
+>   	struct Scsi_Host *host = hba->host;
+>   
+> -	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
+> +	/* maxq is 0 based value */
+> +	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1;
+>   
+>   	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
+>   			rw_queues;
 
-Acked-by: Rob Herring <robh@kernel.org>
+Please resend this patch.
 
+Thanks,
+
+Bart.
