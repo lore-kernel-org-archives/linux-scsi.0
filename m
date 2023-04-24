@@ -2,149 +2,147 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A24BCC7618E
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 08:07:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C266BC77B7E
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 09:30:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231465AbjDXIHW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Apr 2023 04:07:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45966 "EHLO
+        id S230228AbjDXJau (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Apr 2023 05:30:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231394AbjDXIHU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2023 04:07:20 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68229E4F;
-        Mon, 24 Apr 2023 01:07:13 -0700 (PDT)
-Received: from [IPV6:2001:b07:2ed:14ed:c5f8:7372:f042:90a2] (unknown [IPv6:2001:b07:2ed:14ed:c5f8:7372:f042:90a2])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (No client certificate requested)
-        (Authenticated sender: kholk11)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id BF3F066031C8;
-        Mon, 24 Apr 2023 09:07:09 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1682323631;
-        bh=fk2JF4cqUutVFMf5ReNQ5Z96Nq9fCMd68NIqprhYP4I=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=MnGUwRkrnSGoo5I2HpQ1KCjotEMOiHWLBKexRH7q759Dy2mH4gixRn5awN7Gi/NZu
-         dD6TwzsjthF4hzHgSj2Y3IjJ6qT7th+XS4dCDBJHzFjX26vEOdpi48GcGSGQzU7GOy
-         keTScAocTMzmC7GznLLAcu+31IA5HZ+FxSkS4XFUslc1ZE6CjaHV5hdWvRWzHRcXkH
-         o3KdMzNRNiKVkICdhKOX/zTVmQZcU7DR2j0gk8riSVQde61lz+TgJYY8ytdxSQ/fGf
-         BDfVSjES2saNVdhBQKoiienboJ8tM0eDhKUvd4PSPmeqFdCXbRKaACkzWr6+GW598X
-         JxqlYseu52+lA==
-Message-ID: <da2e268a-b209-f16e-7257-336fee2aad52@collabora.com>
-Date:   Mon, 24 Apr 2023 10:07:07 +0200
+        with ESMTP id S229507AbjDXJar (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2023 05:30:47 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F3C1B9
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Apr 2023 02:30:45 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230424093040epoutp0328ad40aa8ba74bcc2952d0b69e73955d~Y1PxAg7h-0432704327epoutp03W
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Apr 2023 09:30:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230424093040epoutp0328ad40aa8ba74bcc2952d0b69e73955d~Y1PxAg7h-0432704327epoutp03W
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1682328640;
+        bh=5FBqK6KqrQlHJa+cIoHnvXCxj8PXUigt+MYbM0kM3/E=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=XJhjyZeVPARf+CVdmYmaf1M1QzKl1ivg/7RO59pT8pAdY0hAabcRuUfmLuhVMvvWh
+         Rq2SQBsA7vb8vqLnXOyh8FzmT2TqdBk6vr3+I4noyX+TeNoYmBg2oLKKTTLsQCIhVT
+         vqday939uArlbShwKInuZux1Xho9BKTecIMa5vBs=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230424093040epcas2p31651c23b998d6d989d0cda7085af32e6~Y1Pw0VnoI2945329453epcas2p3k;
+        Mon, 24 Apr 2023 09:30:40 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.68]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Q4fxq5MvJz4x9Q5; Mon, 24 Apr
+        2023 09:30:39 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D6.4A.22936.F3C46446; Mon, 24 Apr 2023 18:30:39 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20230424093039epcas2p2c34cdd6eb7105405d5d8d2a1a0f8c8e4~Y1Pvo6VDG0674606746epcas2p2A;
+        Mon, 24 Apr 2023 09:30:39 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230424093039epsmtrp26c7eb12ee103b487ff33967643d99306~Y1PvoXQ3_2241822418epsmtrp2j;
+        Mon, 24 Apr 2023 09:30:39 +0000 (GMT)
+X-AuditID: b6c32a48-6d3fa70000005998-00-64464c3fceb5
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        BB.82.28392.A3C46446; Mon, 24 Apr 2023 18:30:34 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.38.105]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230424093034epsmtip1bef02f30877165ad1d83176737b949a7~Y1PrOtA361010810108epsmtip1S;
+        Mon, 24 Apr 2023 09:30:34 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Avri Altman'" <Avri.Altman@wdc.com>, <linux-scsi@vger.kernel.org>
+In-Reply-To: <DM6PR04MB6575372C3F82509E9AE69466FC679@DM6PR04MB6575.namprd04.prod.outlook.com>
+Subject: RE: [RFC PATCH v1] ufs: poll pmc until another pa request is
+ completed
+Date:   Mon, 24 Apr 2023 18:30:34 +0900
+Message-ID: <003501d9768f$6bd06280$43712780$@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v3 1/1] scsi: ufs: core: Fix &hwq->cq_lock deadlock issue
-Content-Language: en-US
-To:     Alice Chao <alice.chao@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Cc:     peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, tun-yu.yu@mediatek.com,
-        eddie.huang@mediatek.com, wsd_upstream@mediatek.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-References: <20230424080400.8955-1-alice.chao@mediatek.com>
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20230424080400.8955-1-alice.chao@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJP9gJUoCjR96O/MrSEsAj5GtwPhAHiSdtdAqjpsnYCxZ6HCwKaINhtAXRO82mt8jePMA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrLKsWRmVeSWpSXmKPExsWy7bCmqa69j1uKwdyzGhYvf15ls+i+voPN
+        gcnj8yY5j/YD3UwBTFHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2
+        Si4+AbpumTlA45UUyhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BeYFesWJucWleel6
+        eaklVoYGBkamQIUJ2RndN40LPghU9Oy+wNbA+IGvi5GTQ0LAROLqlkPsXYxcHEICOxglWm78
+        g3I+MUosO3OfEcL5zCix8OULZpiWYzdPMEMkdjFKnL26hgXCecko8WPrOVaQKjYBbYlpD3eD
+        2SIC7hL/vl4F6+YUiJXY8OoHG4gtLBAo8e3lI3YQm0VAVeLWn3tgNq+ApcTy7V+ZIWxBiZMz
+        n7CA2MxAM5ctfA11hYLEz6fLoOaHSbz7eYYJokZEYnZnG9h1EgKn2CX2PpzDAtHgIjF55X52
+        CFtY4tXxLVC2lMTnd3uBDuIAsrMl9iwUgwhXSCye9haq1Vhi1rN2RpASZgFNifW79CGqlSWO
+        3IK6jE+i4/Bfdogwr0RHmxBEo7LEr0mTGSFsSYmZN+9A7fSQuDPvDfMERsVZSH6cheTHWUh+
+        mYWwdwEjyypGsdSC4tz01GKjAhN4VCfn525iBKc7LY8djLPfftA7xMjEwXiIUYKDWUmE16PU
+        KUWINyWxsiq1KD++qDQntfgQoykw1CcyS4km5wMTbl5JvKGJpYGJmZmhuZGpgbmSOO/HDuUU
+        IYH0xJLU7NTUgtQimD4mDk6pBqa5y9eKKTxU3vh7vqDx3cYIKTnTJdo5y7o1F9Tffnd+d+TT
+        TKFn71zrf/xzZ38e7e7XsnxaHU+jRM2F2RobWfQvxzq2nH5t9PPkuR1vCkoXd8RNd7yw7frX
+        qXcMeX9/Oebl8HjqMeaUYwU8uj6mU/40HJ70mlf4cc9O9rWtJydO0xK2bg+7leUQ2Tg1fp7/
+        plmh5yNu2W+wWnmGb+vSsku5sk0lb46UK2mz7C1uUgkpvRy77FDIfV6Wvb80dzY8ebq3ppnf
+        9uPbnx9uGsaxRbarzy/gOMj5YKvPz/1i3Y066zMtUx9wu8T7Kd70a/t0J3i5xKItK3LTv9z5
+        7tmw0cNHO2ja4me21XGWzhcM//MosRRnJBpqMRcVJwIAKnuTWQAEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrPLMWRmVeSWpSXmKPExsWy7bCSnK69j1uKweTVzBYvf15ls+i+voPN
+        gcnj8yY5j/YD3UwBTFFcNimpOZllqUX6dglcGZtebmYsmMRXsfXoffYGxv9cXYycHBICJhLH
+        bp5g7mLk4hAS2MEosX/7RxaIhKTEiZ3PGSFsYYn7LUdYIYqeM0qc6+5hA0mwCWhLTHu4mxXE
+        FhHwlHiwaBcLRNEsZomHqy6AdXMKxEpsePUDqIGDQ1jAX+Le0iqQMIuAqsStP/fYQWxeAUuJ
+        5du/MkPYghInZz4BO4IZaH7vw1ZGGHvZwtfMEAcpSPx8ugxqb5jEu59nmCBqRCRmd7YxT2AU
+        moVk1Cwko2YhGTULScsCRpZVjJKpBcW56bnFhgVGeanlesWJucWleel6yfm5mxjBYa6ltYNx
+        z6oPeocYmTgYDzFKcDArifB6lDqlCPGmJFZWpRblxxeV5qQWH2KU5mBREue90HUyXkggPbEk
+        NTs1tSC1CCbLxMEp1cB0IXpG428ZvsvrjV8lftScGp6guONPZ9OvZvF1e66KxB3zF2v52381
+        RTjD8vJ9IYNfS4t6JgmZNDteYu8yPrCt+kb/kY6vnOxvD+u6Hs17ZqfaHpLyJdNivQvPyqrK
+        GEHnFYn6qlG1+p+tNtxec165kEPQ6MHdCfcfrc2rj68/pdPhYm2ZrNpc3vRJ8bZnpVflp9em
+        V18mLFP9t3T6/m+fioovdDZ0dOYpX1/XxPMhmXtax5EIvaQZxbLclTZXl36f8/92ss7RyWry
+        nzoPM/97Z8TP4nl5asq5W7naR54Ft9Uy2Prsd9yVbqt1Vz/2Zvraixb8L32ffv6iMyNcsYPH
+        4ucJriiL35f2Mwl5nVdiKc5INNRiLipOBABI/X2D4gIAAA==
+X-CMS-MailID: 20230424093039epcas2p2c34cdd6eb7105405d5d8d2a1a0f8c8e4
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230419072745epcas2p47b29940fe7e50d947a29546a8e79abb9
+References: <cpgsproxy5@samsung.com; stanley.chu@mediatek.com>
+        <CGME20230419072745epcas2p47b29940fe7e50d947a29546a8e79abb9@epcas2p4.samsung.com>
+        <1681888769-36587-1-git-send-email-kwmad.kim@samsung.com>
+        <DM6PR04MB65758403CC6D31654A98BB43FC669@DM6PR04MB6575.namprd04.prod.outlook.com>
+        <004101d97669$97c787e0$c75697a0$@samsung.com>
+        <DM6PR04MB6575372C3F82509E9AE69466FC679@DM6PR04MB6575.namprd04.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il 24/04/23 10:03, Alice Chao ha scritto:
-> [name:lockdep&]WARNING: inconsistent lock state
-> [name:lockdep&]--------------------------------
-> [name:lockdep&]inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
-> [name:lockdep&]kworker/u16:4/260 [HC0[0]:SC0[0]:HE1:SE1] takes:
->    ffffff8028444600 (&hwq->cq_lock){?.-.}-{2:2}, at:
-> ufshcd_mcq_poll_cqe_lock+0x30/0xe0
-> [name:lockdep&]{IN-HARDIRQ-W} state was registered at:
->    lock_acquire+0x17c/0x33c
->    _raw_spin_lock+0x5c/0x7c
->    ufshcd_mcq_poll_cqe_lock+0x30/0xe0
->    ufs_mtk_mcq_intr+0x60/0x1bc [ufs_mediatek_mod]
->    __handle_irq_event_percpu+0x140/0x3ec
->    handle_irq_event+0x50/0xd8
->    handle_fasteoi_irq+0x148/0x2b0
->    generic_handle_domain_irq+0x4c/0x6c
->    gic_handle_irq+0x58/0x134
->    call_on_irq_stack+0x40/0x74
->    do_interrupt_handler+0x84/0xe4
->    el1_interrupt+0x3c/0x78
-> <snip>
-> 
-> Possible unsafe locking scenario:
->         CPU0
->         ----
->    lock(&hwq->cq_lock);
->    <Interrupt>
->      lock(&hwq->cq_lock);
->    *** DEADLOCK ***
-> 2 locks held by kworker/u16:4/260:
-> 
-> [name:lockdep&]
->   stack backtrace:
-> CPU: 7 PID: 260 Comm: kworker/u16:4 Tainted: G S      W  OE
-> 6.1.17-mainline-android14-2-g277223301adb #1
-> Workqueue: ufs_eh_wq_0 ufshcd_err_handler
-> 
->   Call trace:
->    dump_backtrace+0x10c/0x160
->    show_stack+0x20/0x30
->    dump_stack_lvl+0x98/0xd8
->    dump_stack+0x20/0x60
->    print_usage_bug+0x584/0x76c
->    mark_lock_irq+0x488/0x510
->    mark_lock+0x1ec/0x25c
->    __lock_acquire+0x4d8/0xffc
->    lock_acquire+0x17c/0x33c
->    _raw_spin_lock+0x5c/0x7c
->    ufshcd_mcq_poll_cqe_lock+0x30/0xe0
->    ufshcd_poll+0x68/0x1b0
->    ufshcd_transfer_req_compl+0x9c/0xc8
->    ufshcd_err_handler+0x3bc/0xea0
->    process_one_work+0x2f4/0x7e8
->    worker_thread+0x234/0x450
->    kthread+0x110/0x134
->    ret_from_fork+0x10/0x20
-> 
-> ufs_mtk_mcq_intr() could refer to
-> https://lore.kernel.org/all/20230328103423.10970-3-powen.kao@mediatek.com/
-> 
-> When ufshcd_err_handler() is executed, CQ event interrupt can enter
-> waiting for the same lock. It could happened in upstream code path
-> ufshcd_handle_mcq_cq_events() and also in ufs_mtk_mcq_intr(). This
-> warning message will be generated when &hwq->cq_lock is used in IRQ
-> context with IRQ enabled. Use ufshcd_mcq_poll_cqe_lock() with
-> spin_lock_irqsave instead of spin_lock to resolve the deadlock issue.
-> 
-> Fixes: ed975065c31c ("scsi: ufs: core: mcq: Add completion support in poll")
-> Reviewed-by: Can Guo <quic_cang@quicinc.com>
-> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-> Signed-off-by: Alice Chao <alice.chao@mediatek.com>
-
-
-For readability purposes only - next time please put the actual description at
-the beginning and the log at the end.
-
-Anyway,
-
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-
-
+> > > > Regarding 5.7.12.11 in Unipro v1.8, PA rejects sebsequent requests
+> > > > following the first request from upper layer or remote.
+> > > > In this situation, PA responds w/ BUSY in cases when they come
+> > > > from upper layer and does nothing for the requests. So HCI doesn't
+> > > > receive ind, a.k.a. indicator for its requests and an interrupt,
+> > > > IS.UPMS isn't generated.
+> > > >
+> > > > When LINERESET occurs, the error handler issues PMC which is
+> > > > recognized as a request for PA. If a host's PA gets or raises
+> > > > LINERESET, and a request for PMC, this could be a concurrent
+> > > > situation mentioned above. And I found that situation w/ my
+> > environment.
+> > > Can you please elaborate on how this concurrency can happen?
+> > > My understanding is that both line reset indication and uic command
+> > > are protected by host_lock?
+> >
+> > Yes and one thing I have to correct on the clause: 5.7.12.11 ->
+> > 5.7.12.1.1
+> >
+> > And I=E2=80=99m=20talking=20about=20the=20situation=20w/=20some=20reque=
+sts=20w/=20PACP.=0D=0A>=20OK.=20Thanks.=0D=0A>=20=0D=0A>=20However,=20Pleas=
+e=20note=20that=20Clause=205.7.12.1.1=20=22Concurrency=20Resolution=22=20of=
+=0D=0A>=20the=20unipro=20spec,=20is=20dealing=20with=20local-peer=20concurr=
+ency.=20Not=202=20concurrent=0D=0A>=20local=20requests.=0D=0A>=20As=20such,=
+=20I=20think=20you=20need=20to=20explain=20that=20this=20is=20not=20a=20hos=
+t=20issue.=0D=0A>=20=0D=0A>=20Thanks,=0D=0A>=20Avri=0D=0A=0D=0AI=20talked=
+=20with=20the=20experts=20on=20this=20again.=20They=20said=20the=20situatio=
+n=20also=20includes=20'two=20local=20requests=20case'=0D=0Abecause=20they=
+=20see=20'a=20local=20request'=20mentioned=20in=20the=20spec=20could=20be=
+=20also=20PA_INIT.req=20form=20the=20local's=20upper=20layer.=0D=0A--=0D=0A=
+=22A=20local=20request=20shall=20be=20rejected=20when=20the=20PA=20Layer=20=
+is=20processing=20a=20local=20request=20or=20a=20peer=20request=202679=20fr=
+om=20the=20peer=20Device.=22=0D=0A=0D=0ACould=20you=20explain=20more=20why=
+=20you=20don't=20think=20it's=20the=20case?=0D=0A=0D=0AThanks.=0D=0AKiwoong=
+=20Kim=0D=0A=0D=0A
