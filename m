@@ -2,73 +2,151 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7124BC77B73
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Apr 2023 12:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B037C6FD18
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 01:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbjDWM1O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Apr 2023 08:27:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52870 "EHLO
+        id S230342AbjDXBgV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Apr 2023 21:36:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjDWM1N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2023 08:27:13 -0400
-Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BC55107;
-        Sun, 23 Apr 2023 05:27:12 -0700 (PDT)
-Received: from dd-virtual-machine.localdomain ([60.247.94.10])
-        (user=U202112064@hust.edu.cn mech=LOGIN bits=0)
-        by mx1.hust.edu.cn  with ESMTP id 33NCPgrJ015487-33NCPgrK015487
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
-        Sun, 23 Apr 2023 20:25:49 +0800
-From:   Jing Xu <U202112064@hust.edu.cn>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     hust-os-kernel-patches@googlegroups.com,
-        Jing Xu <U202112064@hust.edu.cn>,
-        Dongliang Mu <dzm91@hust.edu.cn>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers: mpt3sas: mpt3sas_debugfs: return value check of `mpt3sas_debugfs_root`
-Date:   Sun, 23 Apr 2023 20:25:35 +0800
-Message-Id: <20230423122535.31019-1-U202112064@hust.edu.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229458AbjDXBgS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2023 21:36:18 -0400
+Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D8A10CE;
+        Sun, 23 Apr 2023 18:36:17 -0700 (PDT)
+Received: by mail-lj1-x22b.google.com with SMTP id 38308e7fff4ca-2a8dc00ade2so36639281fa.0;
+        Sun, 23 Apr 2023 18:36:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1682300174; x=1684892174;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=x6aqoC9dPFtpf3SM23IBF/5iiAH7dEsrwMZeoRqWySc=;
+        b=h7dURazMP4F2Nh70Sh6/I/wMOfK4H5Aof0Bwsai9k0WhGXGYdh9RCDrNnje1Sy8CyL
+         epfkNZFljEa38NoF6otxhl+GYI+NZHNU6bYPK+LH8v5zDUFdPsXb9cQkBsPllruXBua/
+         e0AA9APX4lTV4wZdyO7WkJHv0OjE3Xmp2BtkKOU5zrOJz7aEK7fT1+TBDzrLW3hE0rIT
+         PKgz8/BS+geIHyLYIFH0iiCgX6FnIZycUhlS2i57CpAsKshTho5YF56T2hT17T7KFfI1
+         OF+hwg7D4L/jZXciE44vUQ+nrbsYe0t/SgN1l/bBM3MQPUqgRpQPo+FYdYtdz+WvVBAa
+         iC0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682300174; x=1684892174;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=x6aqoC9dPFtpf3SM23IBF/5iiAH7dEsrwMZeoRqWySc=;
+        b=O90iezcdbjLGvB0KY0U6yQ6/TgBuOoKXdoq+9Fo3xh+DPR9DOq1KrsuhPVPznwovPM
+         Y2vYQSrmXWSJwEcTfiQyybYRlcoLIWjRkoxVbKdjgMMtOlJrgrH+gUrnHLCmTng/1uSY
+         RBsFgqH4aI5ml2jTCpYK7jqnLOk2BeEfxCT3L60lgssVjgDeZJ8pYN7Wpr6/r2l3jCdX
+         P0N2X/c5f6jvcRxudZNXAUbp7JpxodOK+JlchdRd8gQaMCufnODgIzsx/cNMTHRkdDlo
+         LJEACTKkeYcNRdOKZQ4KvGg1tKAqkss32emRk2pf998eUS1jAABA9yGa9wDGPbuIuO7F
+         W6Wg==
+X-Gm-Message-State: AAQBX9dMrpVcfRc9DvJ07/x67jHFesfUZ0VkDdUhA6ngyzOdya70gICt
+        Q+s9EWpJ8Tycqnyw5elH3mRSvPgPRLUEjNoPwg==
+X-Google-Smtp-Source: AKy350bgD/CUSWWCOBwCf63h+PjnZokihstmsZMZBSNM1B/NhgpICayXhu+ukCYsQYF0/iBspyFHjJHMi/ggotOwTUI=
+X-Received: by 2002:a2e:8187:0:b0:2a8:bb4b:fd94 with SMTP id
+ e7-20020a2e8187000000b002a8bb4bfd94mr2460334ljg.0.1682300174012; Sun, 23 Apr
+ 2023 18:36:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-FEAS-AUTH-USER: U202112064@hust.edu.cn
+References: <20230421075636.24946-1-alice.chao@mediatek.com>
+In-Reply-To: <20230421075636.24946-1-alice.chao@mediatek.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Mon, 24 Apr 2023 09:36:02 +0800
+Message-ID: <CAGaU9a-zQTz8hTxkLk-OT6QXqbkMQqYN5svqkJDPpZmiJrzSsw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] ufs: core: fix &hwq->cq_lock deadlock issue
+To:     Alice Chao <alice.chao@mediatek.com>
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, stanley.chu@mediatek.com,
+        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        powen.kao@mediatek.com, naomi.chu@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, tun-yu.yu@mediatek.com,
+        eddie.huang@mediatek.com, wsd_upstream@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Smatch complains that:
-mpt3sas_init_debugfs() warn: 'mpt3sas_debugfs_root' is an error 
-pointer or valid
+Hi Alice,
 
-There is no need to check the return value of the debugfs_create_dir() 
-function, just delete the dead code.
+Alice Chao <alice.chao@mediatek.com> =E6=96=BC 2023=E5=B9=B44=E6=9C=8821=E6=
+=97=A5 =E9=80=B1=E4=BA=94 =E4=B8=8B=E5=8D=883:58=E5=AF=AB=E9=81=93=EF=BC=9A
+>
+> [name:lockdep&]WARNING: inconsistent lock state
+> [name:lockdep&]--------------------------------
+> [name:lockdep&]inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
+> [name:lockdep&]kworker/u16:4/260 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>   ffffff8028444600 (&hwq->cq_lock){?.-.}-{2:2}, at:
+> ufshcd_mcq_poll_cqe_lock+0x30/0xe0
+> [name:lockdep&]{IN-HARDIRQ-W} state was registered at:
+>   lock_acquire+0x17c/0x33c
+>   _raw_spin_lock+0x5c/0x7c
+>   ufshcd_mcq_poll_cqe_lock+0x30/0xe0
+>   ufs_mtk_mcq_intr+0x60/0x1bc [ufs_mediatek_mod]
+>   __handle_irq_event_percpu+0x140/0x3ec
+>   handle_irq_event+0x50/0xd8
+>   handle_fasteoi_irq+0x148/0x2b0
+>   generic_handle_domain_irq+0x4c/0x6c
+>   gic_handle_irq+0x58/0x134
+>   call_on_irq_stack+0x40/0x74
+>   do_interrupt_handler+0x84/0xe4
+>   el1_interrupt+0x3c/0x78
+> <snip>
+>
+> Possible unsafe locking scenario:
+>        CPU0
+>        ----
+>   lock(&hwq->cq_lock);
+>   <Interrupt>
+>     lock(&hwq->cq_lock);
+>   *** DEADLOCK ***
+> 2 locks held by kworker/u16:4/260:
+>
+> [name:lockdep&]
+>  stack backtrace:
+> CPU: 7 PID: 260 Comm: kworker/u16:4 Tainted: G S      W  OE
+> 6.1.17-mainline-android14-2-g277223301adb #1
+> Workqueue: ufs_eh_wq_0 ufshcd_err_handler
+>
+>  Call trace:
+>   dump_backtrace+0x10c/0x160
+>   show_stack+0x20/0x30
+>   dump_stack_lvl+0x98/0xd8
+>   dump_stack+0x20/0x60
+>   print_usage_bug+0x584/0x76c
+>   mark_lock_irq+0x488/0x510
+>   mark_lock+0x1ec/0x25c
+>   __lock_acquire+0x4d8/0xffc
+>   lock_acquire+0x17c/0x33c
+>   _raw_spin_lock+0x5c/0x7c
+>   ufshcd_mcq_poll_cqe_lock+0x30/0xe0
+>   ufshcd_poll+0x68/0x1b0
+>   ufshcd_transfer_req_compl+0x9c/0xc8
+>   ufshcd_err_handler+0x3bc/0xea0
+>   process_one_work+0x2f4/0x7e8
+>   worker_thread+0x234/0x450
+>   kthread+0x110/0x134
+>   ret_from_fork+0x10/0x20
+>
+> ufs_mtk_mcq_intr() could refer to
+> https://lore.kernel.org/all/20230328103423.10970-3-powen.kao@mediatek.com=
+/
+>
+> When ufshcd_err_handler() is executed, CQ event interrupt can enter
+> waiting for the same lock. It could happened in upstream code path
+> ufshcd_handle_mcq_cq_events() and also in ufs_mtk_mcq_intr(). This
+> warning message will be generated when &hwq->cq_lock is used in IRQ
+> context with IRQ enabled. Use ufshcd_mcq_poll_cqe_lock() with
+> spin_lock_irqsave instead of spin_lock to resolve the deadlock issue.
+>
+> Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+> ---
 
-Fixes: 2b01b293f359 ("scsi: mpt3sas: Capture IOC data for debugging purposes")
-Signed-off-by: Jing Xu <U202112064@hust.edu.cn>
-Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
----
- drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 2 --
- 1 file changed, 2 deletions(-)
+After adding a Fixes: tag, feel free to add,
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-index a6ab1db81167..c92e08c130b9 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-@@ -99,8 +99,6 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
- void mpt3sas_init_debugfs(void)
- {
- 	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
--	if (!mpt3sas_debugfs_root)
--		pr_info("mpt3sas: Cannot create debugfs root\n");
- }
- 
- /*
--- 
-2.25.1
-
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
