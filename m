@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05CEDC77B61
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 03:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 377E0C77B61
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 03:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230364AbjDXDi4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Apr 2023 23:38:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34688 "EHLO
+        id S230179AbjDXD4J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Apr 2023 23:56:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230361AbjDXDiw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2023 23:38:52 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87CA2270B;
-        Sun, 23 Apr 2023 20:38:50 -0700 (PDT)
-X-UUID: 8333b5d4e25111eda9a90f0bb45854f4-20230424
+        with ESMTP id S230095AbjDXD4H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2023 23:56:07 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 861622688;
+        Sun, 23 Apr 2023 20:56:03 -0700 (PDT)
+X-UUID: d027c6e6e25111edb6b9f13eb10bd0fe-20230424
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=cJjSUzYBS7tQHc7k1Nb/PjaSB03OxKluK5vLuchdEOM=;
-        b=Gnbdezs3Dbpc9uMkiPeGsDZgwSwjb84otZ9fR7T+jLjfos37cbQ7aP+83y97ycn+l9VsbznkfCHCNUt4RYCU6GbQm9Tc3Ie3VSmbeV/6ptkFbOsoBO++58lDMAX8pHFjiRgquH4M28Hbk7lsv5pPaYMhZ7FjhCGesjGYrRTz+2Q=;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=rufuQJCAOdKnUGjIUY2GYqY80xE/3+D5NJdIz0DZjaA=;
+        b=j6hKZXgVSWa0XJrXRpm5HJ0bJo7dnnvdrNrmMwjs/pnv2NhmF++oiNzO6XpilGDDNZGy7QAOku5Tl2rW6hOJgx0pzs0ejHSdvfjIxMdiCEuJAI+s3UdPcdqZ2nOY/o1130LQPyjH2/5BlEbWrWoaDDV/NScjx1StqcA7IZWgLpw=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.22,REQID:a06d9000-2a07-4410-9143-83f8e8c1f3c3,IP:0,U
+X-CID-O-INFO: VERSION:1.1.22,REQID:6c4f33aa-64ec-4f15-8ba7-8541485566d1,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
         release,TS:0
-X-CID-META: VersionHash:120426c,CLOUDID:25bb0085-cd9c-45f5-8134-710979e3df0e,B
+X-CID-META: VersionHash:120426c,CLOUDID:3c9c45a2-8fcb-430b-954a-ba3f00fa94a5,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
         RL:1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
 X-CID-BVR: 0,NGT
 X-CID-BAS: 0,NGT,0,_
-X-UUID: 8333b5d4e25111eda9a90f0bb45854f4-20230424
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+X-UUID: d027c6e6e25111edb6b9f13eb10bd0fe-20230424
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
         (envelope-from <alice.chao@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1268910123; Mon, 24 Apr 2023 11:38:43 +0800
+        with ESMTP id 442587166; Mon, 24 Apr 2023 11:40:53 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Mon, 24 Apr 2023 11:38:42 +0800
+ 15.2.1118.26; Mon, 24 Apr 2023 11:40:52 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.25 via Frontend Transport; Mon, 24 Apr 2023 11:38:42 +0800
+ 15.2.1118.25 via Frontend Transport; Mon, 24 Apr 2023 11:40:52 +0800
 From:   Alice Chao <alice.chao@mediatek.com>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
@@ -48,22 +48,22 @@ To:     Alim Akhtar <alim.akhtar@samsung.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         AngeloGioacchino Del Regno 
         <angelogioacchino.delregno@collabora.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
-        Can Guo <quic_cang@quicinc.com>
+        Can Guo <quic_cang@quicinc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
 CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
         <alice.chao@mediatek.com>, <powen.kao@mediatek.com>,
         <naomi.chu@mediatek.com>, <cc.chou@mediatek.com>,
         <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
         <tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-        <wsd_upstream@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
+        <wsd_upstream@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 1/1] scsi: ufs: core: Fix &hwq->cq_lock deadlock issue
-Date:   Mon, 24 Apr 2023 11:38:35 +0800
-Message-ID: <20230424033839.20410-1-alice.chao@mediatek.com>
+Subject: [PATCH v2 1/1] scsi: ufs: core: Fix &hwq->cq_lock deadlock issue
+Date:   Mon, 24 Apr 2023 11:40:35 +0800
+Message-ID: <20230424034039.20529-2-alice.chao@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -140,10 +140,7 @@ spin_lock_irqsave instead of spin_lock to resolve the deadlock issue.
 
 Fixes: ed975065c31c ("scsi: ufs: core: mcq: Add completion support in poll")
 Signed-off-by: Alice Chao <alice.chao@mediatek.com>
----
-Change since v1
--Change commit: Fix title
--Add commit: Add Fixes: tag
+Change-Id: Iaff190c061c8e1308b893bff059a8bb556e5b888
 ---
  drivers/ufs/core/ufs-mcq.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
