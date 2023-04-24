@@ -2,151 +2,137 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B037C6FD18
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 01:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ABDBC77B61
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Apr 2023 03:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230342AbjDXBgV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Apr 2023 21:36:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35464 "EHLO
+        id S230253AbjDXDaU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Apr 2023 23:30:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjDXBgS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2023 21:36:18 -0400
-Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D8A10CE;
-        Sun, 23 Apr 2023 18:36:17 -0700 (PDT)
-Received: by mail-lj1-x22b.google.com with SMTP id 38308e7fff4ca-2a8dc00ade2so36639281fa.0;
-        Sun, 23 Apr 2023 18:36:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1682300174; x=1684892174;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=x6aqoC9dPFtpf3SM23IBF/5iiAH7dEsrwMZeoRqWySc=;
-        b=h7dURazMP4F2Nh70Sh6/I/wMOfK4H5Aof0Bwsai9k0WhGXGYdh9RCDrNnje1Sy8CyL
-         epfkNZFljEa38NoF6otxhl+GYI+NZHNU6bYPK+LH8v5zDUFdPsXb9cQkBsPllruXBua/
-         e0AA9APX4lTV4wZdyO7WkJHv0OjE3Xmp2BtkKOU5zrOJz7aEK7fT1+TBDzrLW3hE0rIT
-         PKgz8/BS+geIHyLYIFH0iiCgX6FnIZycUhlS2i57CpAsKshTho5YF56T2hT17T7KFfI1
-         OF+hwg7D4L/jZXciE44vUQ+nrbsYe0t/SgN1l/bBM3MQPUqgRpQPo+FYdYtdz+WvVBAa
-         iC0Q==
+        with ESMTP id S230185AbjDXDaS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2023 23:30:18 -0400
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 066D72132
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Apr 2023 20:30:16 -0700 (PDT)
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 683A53F18A
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Apr 2023 03:30:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1682307014;
+        bh=WC+th9q1qyucqdCNULRu9PzbE/3NOazpAVoskMrOCMo=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=Dl6RJiPu+iGamiCdC7B/0RxMdWt2kxVpkTERV6MfLntFkuRD/8ONWFX8LUih68ScA
+         pxeoSMIp1mkRIhCkKM9zd18xrqlLhRpJ3+tIK/UwK4XXVMM3TR5p3b2y04L6rcUhq3
+         jzU/7hNIvoHOgJLKXRa1CsFld5gUlgz8IZeZ3EbGU2Ue/hVmoY8A5PSJw9hqBj3gr4
+         VZG8glX9jCUYqCzcfplAn6TV4Gw59peycfYngOKOJ5igGv2ZCk8EoeoPDv+0dokqWS
+         RtljBJ5lKPYcmUqonnazcasGUCkFq/MWq4xbtEgAccegxhbWc+/fQ1PTVDZvGRk6q+
+         p/ZRes+6eLjIQ==
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2474877cc18so2298670a91.3
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Apr 2023 20:30:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682300174; x=1684892174;
+        d=1e100.net; s=20221208; t=1682307013; x=1684899013;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=x6aqoC9dPFtpf3SM23IBF/5iiAH7dEsrwMZeoRqWySc=;
-        b=O90iezcdbjLGvB0KY0U6yQ6/TgBuOoKXdoq+9Fo3xh+DPR9DOq1KrsuhPVPznwovPM
-         Y2vYQSrmXWSJwEcTfiQyybYRlcoLIWjRkoxVbKdjgMMtOlJrgrH+gUrnHLCmTng/1uSY
-         RBsFgqH4aI5ml2jTCpYK7jqnLOk2BeEfxCT3L60lgssVjgDeZJ8pYN7Wpr6/r2l3jCdX
-         P0N2X/c5f6jvcRxudZNXAUbp7JpxodOK+JlchdRd8gQaMCufnODgIzsx/cNMTHRkdDlo
-         LJEACTKkeYcNRdOKZQ4KvGg1tKAqkss32emRk2pf998eUS1jAABA9yGa9wDGPbuIuO7F
-         W6Wg==
-X-Gm-Message-State: AAQBX9dMrpVcfRc9DvJ07/x67jHFesfUZ0VkDdUhA6ngyzOdya70gICt
-        Q+s9EWpJ8Tycqnyw5elH3mRSvPgPRLUEjNoPwg==
-X-Google-Smtp-Source: AKy350bgD/CUSWWCOBwCf63h+PjnZokihstmsZMZBSNM1B/NhgpICayXhu+ukCYsQYF0/iBspyFHjJHMi/ggotOwTUI=
-X-Received: by 2002:a2e:8187:0:b0:2a8:bb4b:fd94 with SMTP id
- e7-20020a2e8187000000b002a8bb4bfd94mr2460334ljg.0.1682300174012; Sun, 23 Apr
- 2023 18:36:14 -0700 (PDT)
+        bh=WC+th9q1qyucqdCNULRu9PzbE/3NOazpAVoskMrOCMo=;
+        b=k3/kg1ArYgCRq5KiqGsQYPd/QIcrlfNYbw6qNRtwomBFsFAW7z1Y97A59ovetxqZfE
+         CRTgktxLV8zDk5UrZmyL5yXTylPJIJnnGnIXgq2xZFNAWCNo0aZwjOZqQ60UiidQaLr0
+         v0EWRpUXEoeKJ+rgoIOHXAvKRmotV5fv8L5xSpMqIrtfch+a99yv6U3P7lj9kO9xH/qG
+         ZQ1wA/4dgUzMhMfh5t5UQLyHwdzWFmCRQ75cVQccsBM1weF6gXbWca80PWjStliH8weY
+         U39+K2sqc6A/e2ks/NjBQWIggO7W/BwjNjd8gnk2nty0Za8AMGfYyCwUsT8lhav7K99r
+         JU3w==
+X-Gm-Message-State: AAQBX9f8FTNDy2AJ+qdzJSBMLxLn8YQsSsttW4oPOPhR1rLuxfMQPEo9
+        APb+8fjZoxm7V93j5fyNowfD+8kH9QvuIPzATT4EtqkXNyEwLDGcrqerW6AvQ+foMgUzKl8Bmvq
+        T8Vb6cXhzOJj8mPPETFCEM7jbnBeCMA2yNqC90tJwoMUOm8vTeQStY8cDl2sCWsk=
+X-Received: by 2002:a17:90a:b38c:b0:247:af63:483 with SMTP id e12-20020a17090ab38c00b00247af630483mr12772618pjr.46.1682307013112;
+        Sun, 23 Apr 2023 20:30:13 -0700 (PDT)
+X-Google-Smtp-Source: AKy350YPFNl2sw980xfSiaLkuusJtUDH8Vy2niQImnLC5y6fXjtaKvfBAZfSLb2n2lE+iD3LAaPsmJAM0uhQfag4djk=
+X-Received: by 2002:a17:90a:b38c:b0:247:af63:483 with SMTP id
+ e12-20020a17090ab38c00b00247af630483mr12772606pjr.46.1682307012756; Sun, 23
+ Apr 2023 20:30:12 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230421075636.24946-1-alice.chao@mediatek.com>
-In-Reply-To: <20230421075636.24946-1-alice.chao@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Mon, 24 Apr 2023 09:36:02 +0800
-Message-ID: <CAGaU9a-zQTz8hTxkLk-OT6QXqbkMQqYN5svqkJDPpZmiJrzSsw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] ufs: core: fix &hwq->cq_lock deadlock issue
-To:     Alice Chao <alice.chao@mediatek.com>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, stanley.chu@mediatek.com,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, tun-yu.yu@mediatek.com,
-        eddie.huang@mediatek.com, wsd_upstream@mediatek.com
+References: <20230419054112.269734-1-kai.heng.feng@canonical.com> <20230420174321.GA123094@t480-pf1aa2c2>
+In-Reply-To: <20230420174321.GA123094@t480-pf1aa2c2>
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Mon, 24 Apr 2023 11:30:01 +0800
+Message-ID: <CAAd53p4+7npE=Q1eWeNZp01F0BukKHj8inx95_ektv_zkvtjqw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: core: Avoid doing rescan on suspended device
+To:     Benjamin Block <bblock@linux.ibm.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        acelan.kao@canonical.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Alice,
+On Fri, Apr 21, 2023 at 1:43=E2=80=AFAM Benjamin Block <bblock@linux.ibm.co=
+m> wrote:
+>
+> On Wed, Apr 19, 2023 at 01:41:12PM +0800, Kai-Heng Feng wrote:
+> > During system resume, if an EH is schduled after ATA host is resumed
+> > (i.e. ATA_PFLAG_PM_PENDING cleared), but before the disk device is
+> > resumed, the device_lock hold by scsi_rescan_device() is never released
+> > so the dpm_resume() of the disk is blocked forerver.
+> >
+> > That's because scsi_attach_vpd() is expecting the disk device is in
+> > operational state, as it doesn't work on suspended device.
+> >
+> > To avoid such deadlock, avoid doing rescan if the disk is still
+> > suspended so the resume process of the disk device can proceed.
+>
+> I'm no expert on suspend/resume, but wouldn't you then potentially miss
+> changes that have been done to the LUN during suspend?
 
-Alice Chao <alice.chao@mediatek.com> =E6=96=BC 2023=E5=B9=B44=E6=9C=8821=E6=
-=97=A5 =E9=80=B1=E4=BA=94 =E4=B8=8B=E5=8D=883:58=E5=AF=AB=E9=81=93=EF=BC=9A
->
-> [name:lockdep&]WARNING: inconsistent lock state
-> [name:lockdep&]--------------------------------
-> [name:lockdep&]inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
-> [name:lockdep&]kworker/u16:4/260 [HC0[0]:SC0[0]:HE1:SE1] takes:
->   ffffff8028444600 (&hwq->cq_lock){?.-.}-{2:2}, at:
-> ufshcd_mcq_poll_cqe_lock+0x30/0xe0
-> [name:lockdep&]{IN-HARDIRQ-W} state was registered at:
->   lock_acquire+0x17c/0x33c
->   _raw_spin_lock+0x5c/0x7c
->   ufshcd_mcq_poll_cqe_lock+0x30/0xe0
->   ufs_mtk_mcq_intr+0x60/0x1bc [ufs_mediatek_mod]
->   __handle_irq_event_percpu+0x140/0x3ec
->   handle_irq_event+0x50/0xd8
->   handle_fasteoi_irq+0x148/0x2b0
->   generic_handle_domain_irq+0x4c/0x6c
->   gic_handle_irq+0x58/0x134
->   call_on_irq_stack+0x40/0x74
->   do_interrupt_handler+0x84/0xe4
->   el1_interrupt+0x3c/0x78
-> <snip>
->
-> Possible unsafe locking scenario:
->        CPU0
->        ----
->   lock(&hwq->cq_lock);
->   <Interrupt>
->     lock(&hwq->cq_lock);
->   *** DEADLOCK ***
-> 2 locks held by kworker/u16:4/260:
->
-> [name:lockdep&]
->  stack backtrace:
-> CPU: 7 PID: 260 Comm: kworker/u16:4 Tainted: G S      W  OE
-> 6.1.17-mainline-android14-2-g277223301adb #1
-> Workqueue: ufs_eh_wq_0 ufshcd_err_handler
->
->  Call trace:
->   dump_backtrace+0x10c/0x160
->   show_stack+0x20/0x30
->   dump_stack_lvl+0x98/0xd8
->   dump_stack+0x20/0x60
->   print_usage_bug+0x584/0x76c
->   mark_lock_irq+0x488/0x510
->   mark_lock+0x1ec/0x25c
->   __lock_acquire+0x4d8/0xffc
->   lock_acquire+0x17c/0x33c
->   _raw_spin_lock+0x5c/0x7c
->   ufshcd_mcq_poll_cqe_lock+0x30/0xe0
->   ufshcd_poll+0x68/0x1b0
->   ufshcd_transfer_req_compl+0x9c/0xc8
->   ufshcd_err_handler+0x3bc/0xea0
->   process_one_work+0x2f4/0x7e8
->   worker_thread+0x234/0x450
->   kthread+0x110/0x134
->   ret_from_fork+0x10/0x20
->
-> ufs_mtk_mcq_intr() could refer to
-> https://lore.kernel.org/all/20230328103423.10970-3-powen.kao@mediatek.com=
-/
->
-> When ufshcd_err_handler() is executed, CQ event interrupt can enter
-> waiting for the same lock. It could happened in upstream code path
-> ufshcd_handle_mcq_cq_events() and also in ufs_mtk_mcq_intr(). This
-> warning message will be generated when &hwq->cq_lock is used in IRQ
-> context with IRQ enabled. Use ufshcd_mcq_poll_cqe_lock() with
-> spin_lock_irqsave instead of spin_lock to resolve the deadlock issue.
->
-> Signed-off-by: Alice Chao <alice.chao@mediatek.com>
-> ---
+This is a valid concern.
 
-After adding a Fixes: tag, feel free to add,
+>
+> What takes care of updating the VPDs, scsi-disk re-evaluation and such
+> in this case, when you block it initially during wakeup?
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+The other approach is to perform the re-evaluation when the system
+resume is about to be completed.
+Let me send v2 to address that.
+
+
+Kai-Heng
+
+>
+> >
+> > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > ---
+> >  drivers/scsi/scsi_scan.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> > index d217be323cc6..36680cb1535b 100644
+> > --- a/drivers/scsi/scsi_scan.c
+> > +++ b/drivers/scsi/scsi_scan.c
+> > @@ -1621,6 +1621,9 @@ void scsi_rescan_device(struct device *dev)
+> >  {
+> >       struct scsi_device *sdev =3D to_scsi_device(dev);
+> >
+> > +     if (dev->power.is_prepared)
+> > +             return;
+> > +
+> >       device_lock(dev);
+> >
+> >       scsi_attach_vpd(sdev);
+> > --
+> > 2.34.1
+> >
+>
+> --
+> Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Develo=
+pment
+> IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/pr=
+ivacy
+> Vors. Aufs.-R.: Gregor Pillen         /         Gesch=C3=A4ftsf=C3=BChrun=
+g: David Faller
+> Sitz der Ges.: B=C3=B6blingen     /    Registergericht: AmtsG Stuttgart, =
+HRB 243294
