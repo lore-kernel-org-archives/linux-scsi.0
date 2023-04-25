@@ -2,173 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CEB7C77B7C
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 13:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40134C77B7C
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 23:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234094AbjDYNNk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 09:13:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41928 "EHLO
+        id S236456AbjDYXaE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 19:30:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234080AbjDYNNj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 09:13:39 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01BD32D54;
-        Tue, 25 Apr 2023 06:13:38 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-3f19c473b9eso81762685e9.0;
-        Tue, 25 Apr 2023 06:13:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1682428416; x=1685020416;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Fw45IBooJRHvDJP+m4fpf4zEkBLCSMIA1zdZRImyULk=;
-        b=ZFeQwY+mbxyNnRrEcmbP0LbvvvP/dsWeQIgdx1wq33ZQUes3ma9nFUCuBK4hm9D8t9
-         2vSSeOMEyQ0LiP9Ea/aEulIGGvevMxeLnyX30c2Z5/j52tRL1eu/G6MO48aSwKCZDfpC
-         M0NVlp9ax8nlQDdqPDKR/yoGIZCdMkr6QVhAm8ZAcoC5L6Yij/fAwxda3Z4Rxsvayym3
-         ZIS0XIf5s1yauv4Dgt35c/+032/XoKewUsehNTRpykyaCw6+7fnF3R558UUePAloGEGs
-         PwcryNMTI0ukCsjuIH+CmyQDVcehbv3oFZAOXlwjAyW81xxSy/RdsbbTFIF30oHWwQ0e
-         mFpA==
+        with ESMTP id S231391AbjDYXaD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 19:30:03 -0400
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02BD8B454
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2023 16:30:02 -0700 (PDT)
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-63d4595d60fso39185981b3a.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2023 16:30:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682428416; x=1685020416;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Fw45IBooJRHvDJP+m4fpf4zEkBLCSMIA1zdZRImyULk=;
-        b=RyoJgrdyvOvZVONejWGV16t0bYoRNJ5BgrK9dfF44ZMliyPtASmNeLiYsG4M5HyMJI
-         wY+2JT3zgBMR9WVd9RJdoO05smisnaelV6lY9+hYscvXl5qAnym1TeGzVlll7LIdUPEv
-         XaQPXs4jz/VFvUGQl8AaVNVK+t4+t7FT5+reFcYMG37rc4QwqIp6CQ6kdzh6K8V0aaKZ
-         xEmU91GTreTGCWPYPywFDTjGJ0ipr+TemPLJvapKW4jFsiqFbT1Dvh89C/1ZNgmc8loE
-         5E7k/5XeJvSv5Ylx2ked7JmZipkgt5SjaIBjRO2+2AQj8qx6dPgFIM1pfPha+u58xHBv
-         zbqw==
-X-Gm-Message-State: AAQBX9fNaIiMCEk2oiRK/VoavQ3c05raDbq1wDvItdNfp8eh7LxWdGwX
-        Ivp8zOJsApAZWgaUQb8SZD9h9y4JsdY=
-X-Google-Smtp-Source: AKy350Z8ytvRYve3cZYjp0OE8W8Wzr1SScE5AHXMmPrw8AtAgr1i/+uLqhz9f/CdQgqVBDusJJLr4Q==
-X-Received: by 2002:a7b:cc15:0:b0:3f1:65cb:8156 with SMTP id f21-20020a7bcc15000000b003f165cb8156mr10532957wmh.0.1682428416163;
-        Tue, 25 Apr 2023 06:13:36 -0700 (PDT)
-Received: from suse.localnet (host-95-245-6-24.retail.telecomitalia.it. [95.245.6.24])
-        by smtp.gmail.com with ESMTPSA id d3-20020a05600c3ac300b003f19b3d89e9sm8697700wms.33.2023.04.25.06.13.33
+        d=1e100.net; s=20221208; t=1682465401; x=1685057401;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=BE/Y2d5AW7sureX5KIoOJq/Tq6851JgIdbwqKtpjbGM=;
+        b=OnjB0SfHDYpLJgV8wBGFxJrd6892yPcpj2fnXHhuSLwccW8PZg0KPq2H9CFlv1UhLz
+         k7ptGI7cNsvPNre1ZKBKTrcXAmn2YoURGT+YcWpe67oP4FL5D9P2LDbLJjTO+8Ghb3mV
+         pmO3oDKODydNazuIJFig/neZEl0wjsnT2ZTV97TYRB3jas31iMi+1zjYQCj96H/+gV1J
+         f1RPYNPRPEeRYsBESTQooFMi+s5wr/igWMAU2+xhrV84RoCvd56fMzTXEwehMnT6VAJO
+         53ap+0I6Xer1bviqrGnO52uOYhQYcU7fkrh5HKIOAsyUeJTwmGr4BBHyBXFTP/myIblw
+         uQKA==
+X-Gm-Message-State: AC+VfDwYOXzWYvE3aGKXMkeWnVJh9yJQeCYvWD0MFRE6k1FPhRJ8d2e/
+        LQt51rc5G/HnpqYGXAoc5HI=
+X-Google-Smtp-Source: ACHHUZ6AOp+6cgKpyReiKruSnIB4/sn3avPqe7A9d7yL16hJpCm7+225uUS5xYWfqQ2NDijDAUGgtQ==
+X-Received: by 2002:a05:6a20:4417:b0:f2:4c39:8028 with SMTP id ce23-20020a056a20441700b000f24c398028mr553362pzb.21.1682465401240;
+        Tue, 25 Apr 2023 16:30:01 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5099:ad7c:6c1:9570])
+        by smtp.gmail.com with ESMTPSA id b20-20020a056a0002d400b006348cb791f4sm9829941pft.192.2023.04.25.16.30.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Apr 2023 06:13:35 -0700 (PDT)
-From:   "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-To:     David Howells <dhowells@redhat.com>
-Cc:     dhowells@redhat.com, Matthew Wilcox <willy@infradead.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Chuck Lever III <chuck.lever@oracle.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH v3 41/55] iscsi: Assume "sendpage" is okay in
- iscsi_tcp_segment_map()
-Date:   Tue, 25 Apr 2023 15:13:33 +0200
-Message-ID: <16526634.geO5KgaWL5@suse>
-In-Reply-To: <494037.1682411430@warthog.procyon.org.uk>
-References: <1957131.PYKUYFuaPT@suse> <20230331160914.1608208-42-dhowells@redhat.com>
- <494037.1682411430@warthog.procyon.org.uk>
+        Tue, 25 Apr 2023 16:30:00 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/4] UFS host controller driver patches
+Date:   Tue, 25 Apr 2023 16:29:50 -0700
+Message-ID: <20230425232954.1229916-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.0.634.g4ca3ef3211-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On marted=EC 25 aprile 2023 10:30:30 CEST David Howells wrote:
-> Fabio M. De Francesco <fmdefrancesco@gmail.com> wrote:
-> > > -	if (recv) {
-> > > -		segment->atomic_mapped =3D true;
-> > > -		segment->sg_mapped =3D kmap_atomic(sg_page(sg));
-> > > -	} else {
-> > > -		segment->atomic_mapped =3D false;
-> > > -		/* the xmit path can sleep with the page mapped so use
-> >=20
-> > kmap */
-> >=20
-> > > -		segment->sg_mapped =3D kmap(sg_page(sg));
-> > > -	}
-> > > -
-> > > +	segment->atomic_mapped =3D true;
-> > > +	segment->sg_mapped =3D kmap_atomic(sg_page(sg));
-> >=20
-> > As you probably know, kmap_atomic() is deprecated.
-> >=20
-> > I must admit that I'm not an expert of this code, however, it looks lik=
-e=20
-the
-> > mapping has no need to rely on the side effects of kmap_atomic() (i.e.,
-> > pagefault_disable() and preempt_disable() - but I'm not entirely sure=20
-about
-> > the possibility that preemption should be explicitly disabled along wit=
-h=20
-the
-> > replacement with kmap_local_page()).
-> >=20
-> > Last year I've been working on several conversions from kmap{,_atomic}(=
-)=20
-to
-> > kmap_local_page(), however I'm still not sure to understand what's=20
-happening
-> > here...
-> >=20
-> > Am I missing any important details? Can you please explain why we still=
-=20
-need
-> > that kmap_atomic() instead of kmap_local_page()?
->=20
-> Actually, it might be worth dropping segment->sg_mapped and segment->data=
-=20
-and
-> only doing the kmap_local when necessary.
->=20
-> And this:
->=20
-> 			struct msghdr msg =3D { .msg_flags =3D flags };
-> 			struct kvec iov =3D {
-> 				.iov_base =3D segment->data + offset,
-> 				.iov_len =3D copy
-> 			};
->=20
-> 			r =3D kernel_sendmsg(sk, &msg, &iov, 1, copy);
->=20
-> should really be using struct bvec, not struct kvec - then the mapping is=
-n't
-> necessary.
+Hi Martin,
 
-=46WIW, struct bvec looks better suited (despite I have very little knowled=
-ge of=20
-this code).
+Please consider these four UFS host controller driver patches for the next
+merge window. Patches 1/4 and 2/4 have been posted before while the other two
+patches are new.
 
-I assume that you noticed that we also have the unmapping counterpart=20
-(iscsi_tcp_segment_unmap()) which should also be addressed accordingly.
+Thanks,
 
-> It looks like this might be the only place the mapping is used,
-> but I'm not 100% certain.
+Bart.
 
-It seems that kmap_atomic() (as well as kmap(), which you deleted) is only=
-=20
-called by iscsi_tcp_segment_map(), which in turn is called only by =20
-iscsi_tcp_segment_done(). I can't see any other places where the mapping is=
-=20
-used.
+Bart Van Assche (4):
+  scsi: ufs: Increase the START STOP UNIT timeout from one to ten
+    seconds
+  scsi: ufs: Fix handling of lrbp->cmd
+  scsi: ufs: Move ufshcd_wl_shutdown()
+  scsi: ufs: Simplify driver shutdown
 
-I hope that this dialogue may help you somehow to choose the best suited wa=
-y=20
-to get rid of that deprecated kmap_atomic().
-
-Thanks for taking time to address questions from newcomers :-)=20
-
-=46abio
-
->=20
-> David
-
-
-
+ drivers/ufs/core/ufshcd.c             | 63 ++++++++++-----------------
+ drivers/ufs/host/cdns-pltfrm.c        |  1 -
+ drivers/ufs/host/tc-dwc-g210-pci.c    | 10 -----
+ drivers/ufs/host/tc-dwc-g210-pltfrm.c |  1 -
+ drivers/ufs/host/ufs-exynos.c         |  1 -
+ drivers/ufs/host/ufs-hisi.c           |  1 -
+ drivers/ufs/host/ufs-mediatek.c       |  1 -
+ drivers/ufs/host/ufs-qcom.c           |  1 -
+ drivers/ufs/host/ufs-sprd.c           |  1 -
+ drivers/ufs/host/ufshcd-pci.c         | 10 -----
+ drivers/ufs/host/ufshcd-pltfrm.c      |  6 ---
+ drivers/ufs/host/ufshcd-pltfrm.h      |  1 -
+ include/ufs/ufshcd.h                  |  1 -
+ 13 files changed, 22 insertions(+), 76 deletions(-)
 
