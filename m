@@ -2,75 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C0DC77B76
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 11:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4176EC77B61
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 11:48:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233879AbjDYLs3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 07:48:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49692 "EHLO
+        id S233980AbjDYLsa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 07:48:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233942AbjDYLsZ (ORCPT
+        with ESMTP id S233944AbjDYLsZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 07:48:25 -0400
 Received: from wnew1-smtp.messagingengine.com (wnew1-smtp.messagingengine.com [64.147.123.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF3C54EF1;
-        Tue, 25 Apr 2023 04:48:12 -0700 (PDT)
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailnew.west.internal (Postfix) with ESMTP id 11CA42B066FB;
-        Tue, 25 Apr 2023 07:48:12 -0400 (EDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D3659CD;
+        Tue, 25 Apr 2023 04:48:18 -0700 (PDT)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailnew.west.internal (Postfix) with ESMTP id ECF172B066FC;
+        Tue, 25 Apr 2023 07:48:14 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Tue, 25 Apr 2023 07:48:12 -0400
+  by compute4.internal (MEProxy); Tue, 25 Apr 2023 07:48:15 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
         cc:cc:content-transfer-encoding:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm3; t=1682423291; x=
-        1682423891; bh=3o57Vu+6cMoSzzSV06r+8NKcwF7Yj7YTR1aMvfIynN0=; b=L
-        HV0Ab1C/A26Sp/b7iTkvrPEmChQs6oWfcD5R5Ynptc5++Wj3/g8m63w96iqmn9LP
-        befD0eoRZn6mH6SxzgsXlI+vKAUdiDx+A/khwnQ2JOL1A5zJvSPUsDAsh2R64LFR
-        8nXdKn7VPtRS71ct/xnEHBQ7xDJvlGTekoyUdeyG4a1H0UC17awoiquSWa0khid9
-        JJVwxNvviGNb2CjIZnf/nu1SO+lYGjMQYbQWgPixtmGJ8FiSemVW1lFRzGjm3NsG
-        gEPhRFEESAwgCp7rbdD8Tk/YkGImPIaa/jmLLgjn6L2dwE8FCzJqjKXnEs9ppTSO
-        NKHdlkC+mY3Fd00KLYNYA==
+        :reply-to:sender:subject:subject:to:to; s=fm3; t=1682423294; x=
+        1682423894; bh=mj3LqWfjihVWv+zbTeME8/Bh8GDHTxC6knqcFWrBxrk=; b=O
+        BrQQtArUh8bcWroB35Hb/hN7xXBjc46Ym6YALi5Gt2G4X5u32B5q3f4v51JSw9go
+        Rz/eRpa6EGvVdrQ0eEPme3cMvPswC9pNz+DVXAGwQ4gRsCAVFZ5q91nSZSZTG1VT
+        4c92T92PidnpoaPNfIA6g8tFip7w7tbNuXMiAhPGXxAAme+phe518UyCCF+LEDdm
+        ItUZoBrwConzfvRljUiBEkd6hmdgVlfXeubOzxhWzxbZn4JyfJquJnO7SH/8kO8f
+        2E8w+YLSv9JbhxmK3CtqAp1CtydXkHyZt4CXC/32/2/W0WU6struYZC2+6K/fQRt
+        ZBPf3qsv/t9dgO/d27qeA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-transfer-encoding
         :content-type:date:date:feedback-id:feedback-id:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
         :x-me-sender:x-me-sender:x-sasl-enc; s=ie1e949a3.fm3; t=
-        1682423291; x=1682423891; bh=3o57Vu+6cMoSzzSV06r+8NKcwF7Yj7YTR1a
-        MvfIynN0=; b=RvXDoIhGq5LyCC9C1F67F+1gp8GMwZp+VxZeqsRDIOvDpaO1Qjn
-        if36CI2R3CsxwpXO84ivMf+RncvtOABKirBxcMUvB6v4XdZoeo5FR/WPtOWsevBJ
-        2wf2hnI+ss3+LPmsEvCK5OsRhkHv2IOuOf9H2DBUQadZI0nhqjT/OJjjk7gtZGD2
-        uWYYJc90XilqHOjYRX4ZuXxUJ4WCzQrjdawx6FWZ5YgMje78IzyhyTlKabRA5TTE
-        qQeZQMYfpoTrVnHjq0zl/lhat5DplVOHwb1P1OcAya5Cf3cF3BtwL5kr9WDCbUvI
-        33BslNlfMteJvq7bBv4EPtC1cTOeMrdxAnw==
-X-ME-Sender: <xms:-71HZC6xJxFUmFZP2si5tmXMmdDt_P6wpYPQsbsBV7RExj2dTox7WQ>
-    <xme:-71HZL7gc3mTrupor2vNovy26wcQH4uJ71zXwAe1DJSM2BjgFto6I_ifCbcMKHQj6
-    zTNm-KVgVN-1WG_3wA>
-X-ME-Received: <xmr:-71HZBe9ybx8O9LYFZVVehYSYQRFuYsMxB14q5rphLaBg0KUKQNAa93NvJBP6VnoiRzK97HZSDGu5A17ZadTgB6buU-0Czw_4vQh6omR>
+        1682423294; x=1682423894; bh=mj3LqWfjihVWv+zbTeME8/Bh8GDHTxC6knq
+        cFWrBxrk=; b=alYLqy36Bkk8GFp/B6jHO8K5IhclpVkO14NLYLEV8QnXGLCJENc
+        z3tPf1xFZc6sK8ZcVZbKNJ4rh86HRk/v+hh23o/fEf3JbuaiPAJwpgdwzmLXDsn6
+        Sr1Wdv4B6mhjPUUvtTDQXrU7fkKAnOb5VLiM3Nuc2EPgqwPAG5kqWzq1owCFj00W
+        93q3V6x0k/dmW/beHjh3uGwKhfu0wSN1b9Zf/1x3pOdU2YZcfOkL3rsiSQ/9HLhO
+        JuiEe3LrerRNINgu8e4NklvF+6zoeKXxVcQheUh/mLv9c2RtH/JE92z7VX0UyeBI
+        tCyjJHRLY4IX3QXKYQ5/hk+lskyC+6rB1YQ==
+X-ME-Sender: <xms:_r1HZLkAEvu-eTyOuUTmwhIE-RTObLTDo62Lc8XRm5KqLxPqPc391A>
+    <xme:_r1HZO2g0nO9V1-Bp_Ax0SJsk93M945J0kjY4SNw1OpYPipxX6_4_wIhNR_J28E15
+    2nlVL-dOIz8nrcT1QM>
+X-ME-Received: <xmr:_r1HZBrLH2X0kd1pf9o_LzGK3Twosb0cU_eoIQEfcsWzJ5FSyJgzoq3Cac4xO5_qPDDvH0fyJTud_WnZClp79WyDzAUyfl5EO1oAikAq>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeduvddggeegucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
     cujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomhepufhhihhn
     kdhitghhihhrohcumfgrfigrshgrkhhiuceoshhhihhnihgthhhirhhosehfrghsthhmrg
     hilhdrtghomheqnecuggftrfgrthhtvghrnhepgffggeffjeegfeeuteegueekvdfhledu
-    hfehffdtiedthfetleeifeeihfeukeegnecuvehluhhsthgvrhfuihiivgeptdenucfrrg
+    hfehffdtiedthfetleeifeeihfeukeegnecuvehluhhsthgvrhfuihiivgepudenucfrrg
     hrrghmpehmrghilhhfrhhomhepshhhihhnihgthhhirhhosehfrghsthhmrghilhdrtgho
     mh
-X-ME-Proxy: <xmx:-71HZPKY3ykwcQ_CAywSAESLA6oQpNx9x-s3ZHYANTBYl1N33AyAzA>
-    <xmx:-71HZGJP-c57Q8AqmZW0VxzM_BYv3n41Ihg6ZMVxEGrgYS-gGxeA3w>
-    <xmx:-71HZAx1t8jIpJHnTMMbHV2m4dY8M3sctmGwfnovls4nTk9q8FG7dg>
-    <xmx:-71HZC3wvBWxvYNVHv5s2PSq5_ccaia4WGB_wRK-YtAY3KK8t3HATuANnVjp2wNJ>
+X-ME-Proxy: <xmx:_r1HZDlC3qvBVkxYEyCrkFTfP9XNaGNIvwmfExdS54CduvtqPkZqGg>
+    <xmx:_r1HZJ0s8ZO0M5xEMafznKiDObzyMTQ3HW_LpsrbiDYdLT-mOXIqmw>
+    <xmx:_r1HZCupZ3PzzbCOOjUuLsQf0YjcYykZlCa2SNzIcxG3rL2BHFH86A>
+    <xmx:_r1HZCzpTVCeigBcdmlySlnvplY0rN-TEUkSHYW5R2svXCr0vwZ0K3_9WBO-cH1E>
 Feedback-ID: ie1e949a3:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 25 Apr 2023 07:48:09 -0400 (EDT)
+ 25 Apr 2023 07:48:12 -0400 (EDT)
 From:   Shin'ichiro Kawasaki <shinichiro@fastmail.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc:     Chaitanya Kulkarni <kch@nvidia.com>,
         Shin'ichiro Kawasaki <shinichiro@fastmail.com>,
         Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH blktests v2 4/6] common/scsi_debug: introduce _configure_scsi_debug
-Date:   Tue, 25 Apr 2023 20:47:43 +0900
-Message-Id: <20230425114745.376322-5-shinichiro@fastmail.com>
+Subject: [PATCH blktests v2 5/6] scsi/{004,005}: allow to run with built-in scsi_debug
+Date:   Tue, 25 Apr 2023 20:47:44 +0900
+Message-Id: <20230425114745.376322-6-shinichiro@fastmail.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230425114745.376322-1-shinichiro@fastmail.com>
 References: <20230425114745.376322-1-shinichiro@fastmail.com>
@@ -82,179 +82,59 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 
-To set up scsi_debug devices with built-in scsi_debug module, introduce
-a new helper function _configure_scsi_debug. It works in similar manner
-as _init_scsi_debug which sets up scsi_debug devices with loadable
-scsi_debug module.
-
-_configure_scsi_debug takes parameters of scsi_debug devices in format
-of 'key=value' as its arguments. It calls another new helper function
-_scsi_debug_key_path to find sysfs files corresponding to the keys in
-/sys/bus/pseudo/drivers/scsi_debug or /sys/module/scsi_debug/parameters.
-When the file is found, write the value to the file.
-
-Before setting the parameters through sysfs files, save current values
-of scsi_debug parameters in ORIG_SCSI_DEBUG_PARAMS. Use the saved values
-to restore parameters in _exit_scsi_debug. Do this value restore not
-only for the parameters modified in _configure_scsi_debug but also for
-the parameters modified by test cases.
-
-Among the parameters, 'add_host' has special meaning to add new hosts.
-Then handle it separately so that it is set at last in
-_configure_scsi_debug, and restored at first in _exit_scsi_debug.
-
-Also record the hosts which exist before _configure_scsi_debug in the
-array ORIG_SCSI_DEBUG_HOSTS. Those hosts should not be used for testing,
-then do not add them to SCSI_DEBUG_HOSTS.
+To allow the test case run with build-in scsi_debug, replace
+'_have_module scsi_debug' with _have_scsi_debug, and replace
+_init_scsi_debug with _configure_scsi_debug.
 
 Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- common/scsi_debug | 112 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 111 insertions(+), 1 deletion(-)
+ tests/scsi/004 | 4 ++--
+ tests/scsi/005 | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/common/scsi_debug b/common/scsi_debug
-index 0bf768a..3d83d8a 100644
---- a/common/scsi_debug
-+++ b/common/scsi_debug
-@@ -8,16 +8,51 @@ _have_scsi_debug() {
- 	_have_driver scsi_debug
+diff --git a/tests/scsi/004 b/tests/scsi/004
+index f0845c1..7d0af54 100755
+--- a/tests/scsi/004
++++ b/tests/scsi/004
+@@ -18,13 +18,13 @@ DESCRIPTION="ensure repeated TASK SET FULL results in EIO on timing out command"
+ CAN_BE_ZONED=1
+ 
+ requires() {
+-	_have_module scsi_debug
++	_have_scsi_debug
  }
  
-+SD_PSEUDO_PATH=/sys/bus/pseudo/drivers/scsi_debug
-+SD_PARAM_PATH=/sys/module/scsi_debug/parameters
-+
-+_scsi_debug_key_path() {
-+	local key=${1}
-+
-+	path="${SD_PSEUDO_PATH}/$key"
-+	if [[ ! -e $path ]]; then
-+		path="${SD_PARAM_PATH}/$key"
-+	fi
-+	if [[ ! -w $path ]]; then
-+		return 1
-+	fi
-+
-+	echo "$path"
-+}
-+
-+declare -a SCSI_DEBUG_HOSTS
-+declare -a SCSI_DEBUG_TARGETS
-+declare -a SCSI_DEBUG_DEVICES
-+declare -a ORIG_SCSI_DEBUG_HOSTS
-+declare -A ORIG_SCSI_DEBUG_PARAMS
-+declare SCSI_DEBUG_ADD_HOST_RESTORE_VALUE
-+
- _setup_scsi_debug_vars() {
- 	local host_sysfs host target_sysfs target
-+	local -i i
-+
- 	SCSI_DEBUG_HOSTS=()
- 	SCSI_DEBUG_TARGETS=()
- 	SCSI_DEBUG_DEVICES=()
-+
- 	for host_sysfs in /sys/class/scsi_host/*; do
- 		if [[ "$(cat "${host_sysfs}/proc_name")" = scsi_debug ]]; then
- 			host="${host_sysfs#/sys/class/scsi_host/host}"
-+			local orig_host=0
-+			for ((i=0;i<${#ORIG_SCSI_DEBUG_HOSTS[@]};i++)); do
-+				if (( host == ORIG_SCSI_DEBUG_HOSTS[i])); then
-+					orig_host=1
-+				fi
-+			done
-+			((orig_host)) && continue
- 			SCSI_DEBUG_HOSTS+=("$host")
- 			for target_sysfs in /sys/class/scsi_device/"$host":*; do
-+				[[ ! -e $target_sysfs ]] && break
- 				target="${target_sysfs#/sys/class/scsi_device/}"
- 				SCSI_DEBUG_TARGETS+=("$target")
- 				SCSI_DEBUG_DEVICES+=("$(ls "$target_sysfs/device/block")")
-@@ -59,10 +94,85 @@ _init_scsi_debug() {
- 	_setup_scsi_debug_vars
+ test() {
+ 	echo "Running ${TEST_NAME}"
+ 
+-	if ! _init_scsi_debug add_host=1 max_luns=1 statistics=1 every_nth=1; then
++	if ! _configure_scsi_debug max_luns=1 statistics=1 every_nth=1; then
+ 	    return 1
+ 	fi
+ 	echo 5 > "/sys/block/${SCSI_DEBUG_DEVICES[0]}/device/timeout"
+diff --git a/tests/scsi/005 b/tests/scsi/005
+index efd3d82..bfa1014 100755
+--- a/tests/scsi/005
++++ b/tests/scsi/005
+@@ -11,7 +11,7 @@ DESCRIPTION="test SCSI device blacklisting"
+ QUICK=1
+ 
+ requires() {
+-	_have_module scsi_debug
++	_have_scsi_debug
+ 	_have_module_param scsi_debug inq_vendor
  }
  
-+_configure_scsi_debug() {
-+	local -a args=("$@")
-+	local -a values
-+	local key value path add_host_value=1
-+	local -i i
-+
-+	udevadm settle
-+
-+	# fall back to _init_scsi_debug because scsi_debug is loadable
-+	if _module_file_exists scsi_debug; then
-+		_init_scsi_debug "${args[@]}"
-+		return
-+	fi
-+
-+	# zoned device is not yet configurable due to read-only zbc parameter
-+	if (( RUN_FOR_ZONED )) && ! _have_module scsi_debug; then
-+		return 1
-+	fi
-+
-+	# List SCSI_DEBUG_HOSTS before configuration
-+	ORIG_SCSI_DEBUG_HOSTS=()
-+	_setup_scsi_debug_vars >& /dev/null
-+	ORIG_SCSI_DEBUG_HOSTS=("${SCSI_DEBUG_HOSTS[@]}")
-+
-+	# Save current values of all scsi_debug parameters except add_host
-+	ORIG_SCSI_DEBUG_PARAMS=()
-+	for path in "$SD_PSEUDO_PATH"/* "$SD_PARAM_PATH"/*; do
-+		if [[ -f $path && ! $path =~ add_host ]] &&
-+			   [[ $(stat -c "%A" "$path") =~ rw ]]; then
-+			ORIG_SCSI_DEBUG_PARAMS["$path"]="$(<"$path")"
-+		fi
-+	done
-+
-+	# Modify parameters specifeid with key=value arguments
-+	for o in "$@"; do
-+		key=${o%=*}
-+		value=${o#*=}
-+		values+=("${value}")
-+		if ! path=$(_scsi_debug_key_path "$key"); then
-+			echo "sysfs to write $key is not avaialbe"
-+			return 1
-+		fi
-+		if [[ $key == add_host ]]; then
-+			add_host_value=${value}
-+		else
-+			echo "restore $path" >> /tmp/debug
-+			echo -n "$value" > "$path"
-+		fi
-+	done
-+
-+	echo "${add_host_value}" > ${SD_PSEUDO_PATH}/add_host
-+	SCSI_DEBUG_ADD_HOST_RESTORE_VALUE="-${add_host_value}"
-+
-+	udevadm settle
-+
-+	_setup_scsi_debug_vars
-+}
-+
- _exit_scsi_debug() {
-+	local path value
-+
- 	unset SCSI_DEBUG_HOSTS
- 	unset SCSI_DEBUG_TARGETS
- 	unset SCSI_DEBUG_DEVICES
- 	udevadm settle
--	modprobe -r scsi_debug
-+
-+	if _module_file_exists scsi_debug; then
-+		modprobe -r scsi_debug
-+		return
-+	fi
-+
-+	echo "${SCSI_DEBUG_ADD_HOST_RESTORE_VALUE}" > ${SD_PSEUDO_PATH}/add_host
-+
-+	# Restore parameters modified in _configure_scsi_debug or during test
-+	for path in "${!ORIG_SCSI_DEBUG_PARAMS[@]}"; do
-+		value=${ORIG_SCSI_DEBUG_PARAMS[$path]}
-+		if [[ "$value" != $(<"$path") ]]; then
-+			echo -n "$value" > "$path"
-+		fi
-+	done
-+	unset ORIG_SCSI_DEBUG_PARAMS
- }
+@@ -33,7 +33,7 @@ test() {
+ 	for inq in "${inqs[@]}"; do
+ 		vendor="${inq:0:8}"
+ 		model="${inq:8:16}"
+-		if ! _init_scsi_debug inq_vendor="$vendor" inq_product="$model"; then
++		if ! _configure_scsi_debug inq_vendor="$vendor" inq_product="$model"; then
+ 			continue
+ 		fi
+ 		vendor="$(cat "/sys/block/${SCSI_DEBUG_DEVICES[0]}/device/vendor")"
 -- 
 2.40.0
 
