@@ -2,67 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35219C77B61
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 09:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4558C77B61
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 11:48:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233641AbjDYJJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 05:09:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53234 "EHLO
+        id S233737AbjDYLsT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 07:48:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233470AbjDYJJI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 05:09:08 -0400
-X-Greylist: delayed 2964 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 25 Apr 2023 02:09:07 PDT
-Received: from mail.camacfoy.pl (mail.camacfoy.pl [195.231.80.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B13E524B
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2023 02:09:07 -0700 (PDT)
-Received: by mail.camacfoy.pl (Postfix, from userid 1001)
-        id 4F411A474B; Tue, 25 Apr 2023 08:36:21 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=camacfoy.pl; s=mail;
-        t=1682408192; bh=0DnDcjJl846YrSvLcp0W7cMkWp4Lfhp/OZAq4oBoaY8=;
-        h=Date:From:To:Subject:From;
-        b=YRmkg9EVlS1F910AoC4AxcNpjXUeRr1tcCRQm0oPK11AAOVpeslmNoEGh/iKq3ol2
-         2kAtR/CCr3D7wOF+Aa404m5h4n3dDgGLEePjrr4MWae5KXwiESYhLOdhl1CDqN4I7g
-         BNKtrQhjaFoQX2vHIOyV1oSiYlptWnuLbD59U56+6UOmfhHH2panuhjBeqSVTpfLgy
-         9Vy/W0NrtggS5FRTKyhsg7IwFA9Y1BQn4pltkgBAR4Dx5k7i15XMafZlagMV4qmM3V
-         PPDAACEO3R9CdkvmzTOn/eUKwIX6CZFXmBNu/tmc1UdewY01yMqr8iT6MvcWpKTWF5
-         opJvsvTqYfT6Q==
-Received: by mail.camacfoy.pl for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2023 07:36:05 GMT
-Message-ID: <20230425074502-0.1.83.bzkv.0.c54ipqat75@camacfoy.pl>
-Date:   Tue, 25 Apr 2023 07:36:05 GMT
-From:   "Krzysztof Maj" <krzysztof.maj@camacfoy.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: biznesowy angielski 
-X-Mailer: mail.camacfoy.pl
+        with ESMTP id S233539AbjDYLsS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 07:48:18 -0400
+Received: from wnew1-smtp.messagingengine.com (wnew1-smtp.messagingengine.com [64.147.123.26])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC28413C2C;
+        Tue, 25 Apr 2023 04:48:03 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.west.internal (Postfix) with ESMTP id 2C8F52B066F9;
+        Tue, 25 Apr 2023 07:48:03 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute3.internal (MEProxy); Tue, 25 Apr 2023 07:48:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
+        cc:cc:content-transfer-encoding:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to; s=fm3; t=1682423282; x=
+        1682423882; bh=8g6EvhdGCq2wC/q3XFsQYHoYVIEBXGvDsLbPrkyIUkQ=; b=k
+        XBn7XL/In3YgAEuibI+1IYbwkaJULRx+diZaeSf4vVNwkGl8ZJB5fE0B9jaU52fV
+        f7eIDWnClKRcvCqOQsxOn0UUTN8AY4qurqKHUVXbYece0xjpZydf+e/rm6Aq9TaQ
+        ov1/MmzbhlwSJG7ez906KC3GrtdwcwLMakwqzJgnEiWH+pAF+9g55iC/ZjpRpBwx
+        2NqanMLYcecsfs0MHDOubUgSzEvV9lhWFNgMqme/ab+okOVuzKpQmxfkd9cLIi12
+        +qy0cpln7yCTYN15FHu9kAOJ5X2aaJsv8L61IWTcZ/BIjrFVqw397KPzQQUAm27l
+        ymMHn9faqZumvRXuj7RtQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-transfer-encoding
+        :content-type:date:date:feedback-id:feedback-id:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=ie1e949a3.fm3; t=
+        1682423282; x=1682423882; bh=8g6EvhdGCq2wC/q3XFsQYHoYVIEBXGvDsLb
+        PrkyIUkQ=; b=a4siOPpH/tpxgIo5/8DUQ2XEznd2FpbRksvChb9Uz15o7SC9sRq
+        QzBR/Clv/amqutN96drOrloiRhAa7Au9LIdUR4utsRcpeHlRxq0O2spCNsrO1Z9m
+        i+jz+CvhU4wkr5qQFIwIzVuBwleio6avHJ1Qgr4DuKS00k9jSJU5w8j6NjnPEEot
+        aNyPhQzsM4xmdgClpsRXcmYlgffS6HJSedpPv0E2Ul9fIzsOI7pDRR6LvF6nlWBp
+        rrIE5lDzGjboDGdiZpfEQBtfr7NAZgO+5wy7cwXaHYdzfWNlxCPIw3A3M2zDFV89
+        XulN92g1Rw5NHb9ZbHtx/GL/bPIliY49y2A==
+X-ME-Sender: <xms:8r1HZHZZhVV14PqxwKp8A1a1wrvm2W0sl-j1fIzOJILAWqxzVgu22Q>
+    <xme:8r1HZGY35Uyx4mhR48qFX2MHyk4ENNcdJwG5uSdCREu2-H17D0B_tEN0Shfsv_M3T
+    LNDHr0pz1NeHXFPZqk>
+X-ME-Received: <xmr:8r1HZJ-Sxir3xv_S6ZlRCJKFu55bZKMyhKXQuf9QzaEXVCwfZC3kSYUD13fYSTIs2kZ2QXK21BxASVJhqBwk2sgv5dZxq-3mzjynTJHV>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeduvddggeegucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomhepufhhihhn
+    kdhitghhihhrohcumfgrfigrshgrkhhiuceoshhhihhnihgthhhirhhosehfrghsthhmrg
+    hilhdrtghomheqnecuggftrfgrthhtvghrnhepgffggeffjeegfeeuteegueekvdfhledu
+    hfehffdtiedthfetleeifeeihfeukeegnecuvehluhhsthgvrhfuihiivgeptdenucfrrg
+    hrrghmpehmrghilhhfrhhomhepshhhihhnihgthhhirhhosehfrghsthhmrghilhdrtgho
+    mh
+X-ME-Proxy: <xmx:8r1HZNqzvu-agKDZKjQXvkhEBpZFWTcE5s-rEsSUyOZHkwYoaQ6FQA>
+    <xmx:8r1HZCo0BH_V1KxXiRvT26MBAQLZv_9qUsm5PpwBfbGZmOi3HS7J4Q>
+    <xmx:8r1HZDSORt_WOqbtGNB9iMhEsdnwn3tpHQDGJrQXSiSDkfKnDitagQ>
+    <xmx:8r1HZFUGl1lp4maia1rY8U1OVUQ-QUd6Bs3xqXK-XeHb7vSZB_xEH5DfJ-Tbji2s>
+Feedback-ID: ie1e949a3:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 25 Apr 2023 07:48:00 -0400 (EDT)
+From:   Shin'ichiro Kawasaki <shinichiro@fastmail.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Chaitanya Kulkarni <kch@nvidia.com>,
+        Shin'ichiro Kawasaki <shinichiro@fastmail.com>,
+        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: [PATCH blktests v2 1/6] common/rc: skip module file check if modules path does not exist
+Date:   Tue, 25 Apr 2023 20:47:40 +0900
+Message-Id: <20230425114745.376322-2-shinichiro@fastmail.com>
+X-Mailer: git-send-email 2.40.0
+In-Reply-To: <20230425114745.376322-1-shinichiro@fastmail.com>
+References: <20230425114745.376322-1-shinichiro@fastmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,=20
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 
-czy rozwa=C5=BCali Pa=C5=84stwo rozw=C3=B3j kwalifikacji j=C4=99zykowych =
-swoich pracownik=C3=B3w?
+When all of the kernel modules are built-in, /lib/modules/*/kernel path
+may not exist. In this case, check for the path results in failure. Skip
+the check when the path does not exist.
 
-Opracowali=C5=9Bmy kursy j=C4=99zykowe dla r=C3=B3=C5=BCnych bran=C5=BC, =
-w kt=C3=B3rych koncentrujemy si=C4=99 na podniesieniu poziomu s=C5=82owni=
-ctwa i jako=C5=9Bci komunikacji wykorzystuj=C4=85c autorsk=C4=85 metod=C4=
-=99, stworzon=C4=85 specjalnie dla wymagaj=C4=85cego biznesu.=20
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+---
+ common/rc | 1 +
+ 1 file changed, 1 insertion(+)
 
-Niestandardowy kurs on-line, dopasowany do profilu firmy i obszar=C3=B3w =
-=C5=9Bwiadczonych us=C5=82ug, w szybkim czasie przyniesie efekty, kt=C3=B3=
-re zwi=C4=99ksz=C4=85 komfort i jako=C5=9B=C4=87 pracy, rozwijaj=C4=85c m=
-o=C5=BCliwo=C5=9Bci biznesowe.=20
+diff --git a/common/rc b/common/rc
+index af4c0b1..f67b434 100644
+--- a/common/rc
++++ b/common/rc
+@@ -36,6 +36,7 @@ _module_file_exists()
+ 	local -i count
+ 
+ 	libpath="/lib/modules/$(uname -r)/kernel"
++	[[ ! -d $libpath ]] && return 1
+ 	count=$(find "$libpath" -name "$ko_underscore*" -o \
+ 		     -name "$ko_hyphen*" | wc -l)
+ 	((count)) && return 0
+-- 
+2.40.0
 
-Zdalne szkolenie j=C4=99zykowe to m.in. zaj=C4=99cia z native speakerami,=
- kt=C3=B3re w szybkim czasie naucz=C4=85 pracownik=C3=B3w rozmawia=C4=87 =
-za pomoc=C4=85 jasnego i zwi=C4=99z=C5=82ego j=C4=99zyka Business English=
-=2E
-
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 wi=C4=99cej szczeg=C3=B3=C5=82=C3=B3=
-w i opowiedzie=C4=87 jak dzia=C5=82amy?
-
-
-Pozdrawiam
-Krzysztof Maj
