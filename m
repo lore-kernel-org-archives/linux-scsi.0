@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6DC8C7EE21
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 00:08:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 804ABC77B61
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 00:12:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238354AbjDZAIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 20:08:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39346 "EHLO
+        id S238367AbjDZAMs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 20:12:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238349AbjDZAIs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 20:08:48 -0400
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9711210E9;
-        Tue, 25 Apr 2023 17:08:47 -0700 (PDT)
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-51b33c72686so4796947a12.1;
-        Tue, 25 Apr 2023 17:08:47 -0700 (PDT)
+        with ESMTP id S238364AbjDZAMr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 20:12:47 -0400
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F24E08699;
+        Tue, 25 Apr 2023 17:12:46 -0700 (PDT)
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1a677dffb37so54779605ad.2;
+        Tue, 25 Apr 2023 17:12:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682467727; x=1685059727;
+        d=1e100.net; s=20221208; t=1682467966; x=1685059966;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=T9i5U0weApSgOp8j05lUu9QIcnw9fLdi0tpcAkmgkXs=;
-        b=HUhCeJdBhL2iGscRY0Vwa+al3UX8v+PwcFQLePyKyYEjtCwNisjrGYxC3jPRKsA1dB
-         zJcnfar12P2GykPlHVu1lt6wjJ61TmIigJaLTjibE7qFzubEeslk7OoaGeduFkq5aSrr
-         /iqJtblJT6UqGSTdlHk5vApTh7mXcRydS3eEHn77VXjt1DkvFkJmE7mcVqJHtknHFs7l
-         KCQD+oIa9eI9BqN+FNBEflFj7RyR84umxmcTPM+GjPntiaJzaYvYiHSDXlmwSDkhEmTS
-         pGg7Jxj52qzvtxBKFKxSzYsa62NRcIIY7ceR7F9GKjvuwDJcA0uoRMkoUPG7Ue+wFhem
-         4M0Q==
-X-Gm-Message-State: AAQBX9ezvi+HAzAHmAc7V9I+hh+r26Fjn7A1EStVAOeLFM2MfW5t/DcU
-        gm62nxnhsDbXq7NBfnlw1m3uC0lYmw8=
-X-Google-Smtp-Source: AKy350Y0W4Vkr5i4JFFpgZiGbCaiQeEFH2DdBwmJymAsP4/8qMBAvt3jl/BqPZ6yJhAWP/v9oC3H1w==
-X-Received: by 2002:a17:90a:4b8f:b0:234:31f3:e00f with SMTP id i15-20020a17090a4b8f00b0023431f3e00fmr19830807pjh.43.1682467726992;
-        Tue, 25 Apr 2023 17:08:46 -0700 (PDT)
+        bh=+zA306h9QbtrRdY8f3QEhHfV8lSk2LBCg5jIZCjYsU0=;
+        b=HWFiu6ptD4J6UVLN5qMtCacrNzz/8+RiM9YkDapTNre/nQQEnFfWGOBU8uzpdwFI5M
+         5aGpFo8p9NXed73/As/FIIv/hfLWM7PxipTPfYj7PpG5k0+v96Vxxs8jwwgZQTsR1bGr
+         U8iprJQl3xIGp/Ymg1IuwVEDGjVB8R/1EB2dFqoxlWObNRsO2oGaxmfiSoVzF9OoUxc7
+         jWHxo5z05DQCqmo+DQd1jrqiXy7ikQreumjTDtCzc9+LSQeuI3Z81WKdaCQGOL0Q7GHZ
+         lSS4HfaivvL0Db4cFeEfBcVM76pDLOs6wJu1Ngifghp6xyoaiFoT5Sblngth30LSvojg
+         5hEg==
+X-Gm-Message-State: AAQBX9dXkcqLWYU/lYzuEELofrjv2OGUqnxMGiD8VolWGjhRHzIDPs16
+        ZKNWwO7CJKoOEPf2Uc0iTv8=
+X-Google-Smtp-Source: AKy350axe1uxbKF98wD8SMU+rPJOuRCYssquJZ7bORUPI7pnWiTeGvFS5PBqtNKVob3MgTNClAGhVg==
+X-Received: by 2002:a17:902:bd94:b0:1a6:ef75:3c53 with SMTP id q20-20020a170902bd9400b001a6ef753c53mr17971950pls.11.1682467966290;
+        Tue, 25 Apr 2023 17:12:46 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:5099:ad7c:6c1:9570? ([2620:15c:211:201:5099:ad7c:6c1:9570])
-        by smtp.gmail.com with ESMTPSA id c24-20020a17090ad91800b0023d0d50edf2sm10241320pjv.42.2023.04.25.17.08.45
+        by smtp.gmail.com with ESMTPSA id 17-20020a170902c15100b0019928ce257dsm8760731plj.99.2023.04.25.17.12.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Apr 2023 17:08:46 -0700 (PDT)
-Message-ID: <12308ca3-f824-596e-078f-bc00fa674aef@acm.org>
-Date:   Tue, 25 Apr 2023 17:08:44 -0700
+        Tue, 25 Apr 2023 17:12:45 -0700 (PDT)
+Message-ID: <53f22b81-a738-8f94-8e08-2395133d0249@acm.org>
+Date:   Tue, 25 Apr 2023 17:12:43 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v2 2/5] ufs: mcq: Add support for clean up mcq resources
+Subject: Re: [PATCH v2 3/5] ufs: mcq: Added ufshcd_mcq_abort()
 Content-Language: en-US
 To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
@@ -51,11 +51,12 @@ To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
- <5e662692bc0ad5108ce91ae3d1ec2b575c34d4ae.1681764704.git.quic_nguyenb@quicinc.com>
+ <349ea681e56578191da834250cebfbd7859e9216.1681764704.git.quic_nguyenb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5e662692bc0ad5108ce91ae3d1ec2b575c34d4ae.1681764704.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <349ea681e56578191da834250cebfbd7859e9216.1681764704.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -63,58 +64,40 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/17/23 14:05, Bao D. Nguyen wrote:
-> @@ -3110,7 +3128,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
->   		err = -ETIMEDOUT;
->   		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
->   			__func__, lrbp->task_tag);
-> -		if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
-> +		if (ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag) == 0) {
->   			/* successfully cleared the command, retry if needed */
->   			err = -EAGAIN;
->   			/*
+> +	if (!lrbp->cmd) {
+> +		dev_err(hba->dev,
+> +			"%s: skip abort. cmd at tag %d already completed.\n",
+> +			__func__, tag);
+> +		goto out;
+> +	}
 
-Is this change necessary?
+Please do not use lrbp->cmd to check whether or not a command has completed.
 
-> @@ -7379,6 +7397,20 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
->   			 */
->   			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
->   				__func__, tag);
-> +			if (is_mcq_enabled(hba)) {
-> +				/* MCQ mode */
-> +				if (lrbp->cmd) {
-> +					/* sleep for max. 200us to stabilize */
+> +	if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
+> +		/*
+> +		 * Failure. The command should not be "stuck" in SQ for
+> +		 * a long time which resulted in command being aborted.
+> +		 */
+> +		dev_err(hba->dev, "%s: cmd found in sq. hwq=%d, tag=%d\n",
+> +				__func__, hwq->id, tag);
+> +		/* Set the Command Type to 0xF per the spec */
+> +		ufshcd_mcq_nullify_cmd(hba, hwq);
 
-What is being stabilized here? Please make this comment more clear.
+The above looks wrong to me. How can ufshcd_mcq_nullify_cmd() identify a 
+command if the 'tag' argument is not passed to that function?
 
-> +					usleep_range(100, 200);
-> +					continue;
-> +				}
-> +				/* command completed already */
-> +				dev_err(hba->dev, "%s: cmd at tag=%d is cleared.\n",
-> +					__func__, tag);
-> +				goto out;
-> +			}
+> +	/*
+> +	 * The command is not in the Submission Queue, and it is not
+> +	 * in the Completion Queue either. Query the device to see if
+> +	 * the command is being processed in the device.
+> +	 */
 
-Please do not use lrbp->cmd to check whether or not a command has 
-completed. See also my patch "scsi: ufs: Fix handling of lrbp->cmd".
+Please only use capitals if these are required.
 
-> @@ -7415,7 +7447,7 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
->   		goto out;
->   	}
->   
-> -	err = ufshcd_clear_cmds(hba, 1U << tag);
-> +	err = ufshcd_clear_cmds(hba, 1UL << tag);
->   	if (err)
->   		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
->   			__func__, tag, err);
+> +	if (lrbp->cmd)
+> +		ufshcd_release_scsi_cmd(hba, lrbp);
 
-Is this change necessary?
-
-> -	if (!(test_bit(tag, &hba->outstanding_reqs))) {
-> +	if (!is_mcq_enabled(hba) && !(test_bit(tag, &hba->outstanding_reqs))) {
-
-Please leave out one pair of superfluous parentheses from the above 
-expression.
+Same comment here - do not use lrbp->cmd to check for completion.
 
 Thanks,
 
