@@ -2,154 +2,198 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91DD7C77B61
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Apr 2023 23:53:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B65C77B61
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 00:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237297AbjDYXxA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 19:53:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33274 "EHLO
+        id S238096AbjDZAET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 20:04:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237296AbjDYXw7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 19:52:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA33AB230
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2023 16:52:57 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 64D7362A21
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2023 23:52:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34CA4C433D2;
-        Tue, 25 Apr 2023 23:52:55 +0000 (UTC)
-Date:   Tue, 25 Apr 2023 19:52:53 -0400
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.g.garry@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Vishakha Channapattan <vishakhavc@google.com>,
-        Jolly Shah <jollys@google.com>,
-        Changyuan Lyu <changyuanl@google.com>
-Subject: Re: [PATCH 4/4] scsi: Trace SCSI sense data
-Message-ID: <20230425195253.2f3a45a4@gandalf.local.home>
-In-Reply-To: <20230425233446.1231000-5-bvanassche@acm.org>
-References: <20230425233446.1231000-1-bvanassche@acm.org>
-        <20230425233446.1231000-5-bvanassche@acm.org>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        with ESMTP id S238089AbjDZAER (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 20:04:17 -0400
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5ABF8699;
+        Tue, 25 Apr 2023 17:04:16 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-24781e23c27so5765050a91.0;
+        Tue, 25 Apr 2023 17:04:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682467456; x=1685059456;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=e/sJthLrl54U2rVtGZJF6Leb82y2ZRoj9yPDjTZn71Y=;
+        b=GSRKs0GR2dFvbpjRnywxwxOGPoRjk8f2lQsySNCrY+ciyqSbxWrfT3kI7yliOvlePE
+         A9n48HLKNT/TbRzBRb/f0BLbH8wQOATmK6KIC6OjpNzrEPb7lHfXulyghtizdbtREa9U
+         8hYUo22XaTD7Gi93kzDQRO5M2e6dYZYv3c9Fd6wyabHQh8BkI8P9A3a8ufdU66KoWYmy
+         v4h60F+kEhdJ/NkcfVGaCt61hA45e0I1L1eRrF1VkWVR62DNa4ZCNG5TA9vZCsTDaGn9
+         izEzEdWtM7HLFlVs3OM29guBJ/8e0YB8Wv5bP5TW/zvo9c16VmdSiZp0T4Tl24n3ggfC
+         wxvg==
+X-Gm-Message-State: AAQBX9fUl6nUPjeTiffJ4Dmk6oAn+jLYBaztX1z7i7PdOIZu0HUX+Kag
+        rTYCYhoI+ozc4BpmY0/SJfE=
+X-Google-Smtp-Source: AKy350aHyentLgQXo+Z2M1ojsWwhUSXYrG2wkE+9Q6xIlmti8kTjceJPc1cLp3s68HIi2zfLqTPFqw==
+X-Received: by 2002:a17:90b:30d4:b0:24b:2f97:9208 with SMTP id hi20-20020a17090b30d400b0024b2f979208mr18766468pjb.0.1682467456275;
+        Tue, 25 Apr 2023 17:04:16 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:5099:ad7c:6c1:9570? ([2620:15c:211:201:5099:ad7c:6c1:9570])
+        by smtp.gmail.com with ESMTPSA id p8-20020a1709026b8800b001a04ff0e2eesm8757180plk.58.2023.04.25.17.04.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Apr 2023 17:04:15 -0700 (PDT)
+Message-ID: <19a823d9-d4b0-3c62-38a0-b54dc3937ab3@acm.org>
+Date:   Tue, 25 Apr 2023 17:04:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH v2 1/5] ufs: mcq: Add supporting functions for mcq abort
+Content-Language: en-US
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        Powen.Kao@mediatek.com, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Eric Biggers <ebiggers@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
+ <382670235be85aaa7b7dc407bcf378483ac03562.1681764704.git.quic_nguyenb@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <382670235be85aaa7b7dc407bcf378483ac03562.1681764704.git.quic_nguyenb@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 25 Apr 2023 16:34:46 -0700
-Bart Van Assche <bvanassche@acm.org> wrote:
+On 4/17/23 14:05, Bao D. Nguyen wrote:
+> +/* Max mcq register polling time in milisecond unit */
 
-> If a command fails, SCSI sense data is essential to determine why it
-> failed. Hence make the SCSI sense data available in the ftrace output.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.g.garry@oracle.com>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  include/trace/events/scsi.h | 17 +++++++++++++++--
->  1 file changed, 15 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-> index a2c7befd451a..bb5f31504fbb 100644
-> --- a/include/trace/events/scsi.h
-> +++ b/include/trace/events/scsi.h
-> @@ -269,6 +269,7 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->  		__field( unsigned int,	prot_sglen )
->  		__field( unsigned char,	prot_op )
->  		__dynamic_array(unsigned char,	cmnd, cmd->cmd_len)
-> +		__array(unsigned char,  sense_data, SCSI_SENSE_BUFFERSIZE)
->  	),
->  
->  	TP_fast_assign(
-> @@ -285,11 +286,13 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->  		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
->  		__entry->prot_op	= scsi_get_prot_op(cmd);
->  		memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
-> +		memcpy(__entry->sense_data, cmd->sense_buffer,
-> +		       SCSI_SENSE_BUFFERSIZE);
->  	),
->  
->  	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u " \
->  		  "prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s) " \
-> -		  "result=(driver=%s host=%s message=%s status=%s)",
-> +		  "result=(driver=%s host=%s message=%s status=%s%s%s)",
->  		  __entry->host_no, __entry->channel, __entry->id,
->  		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
->  		  show_prot_op_name(__entry->prot_op), __entry->driver_tag,
-> @@ -299,7 +302,17 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->  		  "DRIVER_OK",
->  		  show_hostbyte_name(((__entry->result) >> 16) & 0xff),
->  		  "COMMAND_COMPLETE",
-> -		  show_statusbyte_name(__entry->result & 0xff))
-> +		  show_statusbyte_name(__entry->result & 0xff),
-> +		  __entry->result & 0xff ? " sense_data=" : "",
-> +		  __entry->result & 0xff ?
-> +		  ({
-> +			  unsigned int len = SCSI_SENSE_BUFFERSIZE;
+A nit: please change "millisecond unit" into "milliseconds".
+
+> +static int ufshcd_mcq_poll_register(void __iomem *reg, u32 mask,
+> +				u32 val, unsigned long timeout_ms)
+> +{
+> +	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+> +	int err = 0;
 > +
-> +			  while (len && __entry->sense_data[len - 1] == 0)
-> +				  len--;
-> +			  __print_hex(__entry->sense_data, len);
-> +		  })
+> +	/* ignore bits that we don't intend to wait on */
+> +	val = val & mask;
+> +
+> +	while ((readl(reg) & mask) != val) {
 
-The above will absolutely break user space parsing.
+& has a higher precedence than != so one pair of parentheses can be left 
+out.
 
-The TP_printk() isn't supposed to be too complex, as user space uses it to
-figure out how to parse the data.
+> +		udelay(20);
+> +		if (time_after(jiffies, timeout)) {
 
-If you are doing the above, I'm guessing that most of the time the
-sense_data doesn't use the 96 bytes (defined by SCSI_SENSE_BUFFERSIZE).
+Please use time_is_before_jiffies() instead of time_after(jiffies, ...).
 
-Perhaps instead, you should make result a dynamic array, and save writing
-a large amount of zeros into the precious ring buffer?
+> +			err = -ETIMEDOUT;
+> +			break;
+> +		}
+> +	}
+> +
+> +	return err;
+> +}
 
-static int sense_data_size(unsigned char *array)
-{
-	int len = SCSI_SENSE_BUFFERSIZE;
+Please remove the variable 'err' and return the return value directly.
 
-	for (len && array[len - 1] == 0)
-		len--;
+> +
+> +static int ufshcd_mcq_sq_stop(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
+> +{
+> +	void __iomem *reg;
+> +	u32 i = hwq->id;
 
-	return len;
-}
+Please use another variable name than 'i' for a hardware queue ID ('id'?).
 
-		__dynamic_array(unsigned char, sense_data, result_size(cmd->sense_data)
+> +	u32 i = hwq->id;
 
-	[..]
+Same comment here.
 
+> +/**
+> + * ufshcd_mcq_sq_cleanup - Clean up Submission Queue resources
 
-		memcpy(__get_dynamic_array(sense_data), cmd->sense_data, result_size(cmd->sense_data));
+A nit: please use lower case text for "submission queue" and also in the 
+comments below ("Clean up" -> "clean up").
 
-// Yes, I need a way to pass the "result_size" from the initialization to
-// the allocation.
+> +	spin_lock(&hwq->sq_lock);
+> +
+> +	/* stop the SQ fetching before working on it */
+> +	err = ufshcd_mcq_sq_stop(hba, hwq);
+> +	if (err)
+> +		goto unlock;
 
+No spin locks around delay loops please. Is there anything that prevents 
+to change sq_lock from a spin lock into a mutex?
 
-	[..]
+> +static u64 ufshcd_mcq_get_cmd_desc_addr(struct ufs_hba *hba,
+> +					int task_tag)
+> +{
+> +	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+> +	__le32 hi = lrbp->utr_descriptor_ptr->command_desc_base_addr_hi;
+> +	__le32 lo = lrbp->utr_descriptor_ptr->command_desc_base_addr_lo;
+> +
+> +	return le64_to_cpu((__le64)hi << 32 | lo);
+> +}
 
+Please add a new patch at the head of this series that modifies struct 
+utp_transfer_req_desc such that command_desc_base_addr_lo and 
+command_desc_base_addr_hi are combined into a single __le64 variable.
 
-		__print_hex(__get_dynamic_array(sense_data),
-			    __get_dynamic_array_len(sense_data))
+> +/**
+> + * ufshcd_mcq_nullify_cmd - Nullify utrd. Host controller does not fetch
+> + * transfer with Command Type = 0xF. post the Completion Queue with OCS=ABORTED.
+> + * @hba - per adapter instance.
+> + * @hwq - Hardware Queue of the nullified utrd.
+> + */
+> +static void ufshcd_mcq_nullify_cmd(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
+> +{
+> +	struct utp_transfer_req_desc *utrd;
+> +	u32 dword_0;
+> +
+> +	utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
+> +			hwq->id * sizeof(struct utp_transfer_req_desc));
 
-Or something like that.
+Please double check this function. It has "cmd" in the function name but 
+none of the arguments passed to this function allows to uniquely 
+identify a command. Is an argument perhaps missing from this function?
 
--- Steve
+Additionally, hwq->sqe_base_addr points to an array of SQE entries. I do 
+not understand why hwq->id * sizeof(struct utp_transfer_req_desc) is 
+added to that base address. Please clarify.
 
+> +		utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
+> +				sq_head_slot * sizeof(struct utp_transfer_req_desc));
 
-> +		  : "")
->  );
->  
->  DEFINE_EVENT(scsi_cmd_done_timeout_template, scsi_dispatch_cmd_done,
+hwq->sqe_base_addr already has type struct utp_transfer_req_desc * so 
+the " * sizeof(struct utp_transfer_req_desc)" part looks wrong to me.
+
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 35a3bd9..808387c 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -56,7 +56,6 @@
+>   #define NOP_OUT_RETRIES    10
+>   /* Timeout after 50 msecs if NOP OUT hangs without response */
+>   #define NOP_OUT_TIMEOUT    50 /* msecs */
+> -
+>   /* Query request retries */
+>   #define QUERY_REQ_RETRIES 3
+>   /* Query request timeout */
+
+Is the above change really necessary?
+
+> @@ -173,7 +172,6 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
+>   enum {
+>   	UFSHCD_MAX_CHANNEL	= 0,
+>   	UFSHCD_MAX_ID		= 1,
+> -	UFSHCD_NUM_RESERVED	= 1,
+>   	UFSHCD_CMD_PER_LUN	= 32 - UFSHCD_NUM_RESERVED,
+>   	UFSHCD_CAN_QUEUE	= 32 - UFSHCD_NUM_RESERVED,
+>   };
+
+Same question here - is this change really necessary?
+
+Thanks,
+
+Bart.
