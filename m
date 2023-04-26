@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B65C77B61
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 00:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6DC8C7EE21
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 00:08:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238096AbjDZAET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 20:04:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37406 "EHLO
+        id S238354AbjDZAIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 20:08:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238089AbjDZAER (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 20:04:17 -0400
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5ABF8699;
-        Tue, 25 Apr 2023 17:04:16 -0700 (PDT)
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-24781e23c27so5765050a91.0;
-        Tue, 25 Apr 2023 17:04:16 -0700 (PDT)
+        with ESMTP id S238349AbjDZAIs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 20:08:48 -0400
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9711210E9;
+        Tue, 25 Apr 2023 17:08:47 -0700 (PDT)
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-51b33c72686so4796947a12.1;
+        Tue, 25 Apr 2023 17:08:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682467456; x=1685059456;
+        d=1e100.net; s=20221208; t=1682467727; x=1685059727;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=e/sJthLrl54U2rVtGZJF6Leb82y2ZRoj9yPDjTZn71Y=;
-        b=GSRKs0GR2dFvbpjRnywxwxOGPoRjk8f2lQsySNCrY+ciyqSbxWrfT3kI7yliOvlePE
-         A9n48HLKNT/TbRzBRb/f0BLbH8wQOATmK6KIC6OjpNzrEPb7lHfXulyghtizdbtREa9U
-         8hYUo22XaTD7Gi93kzDQRO5M2e6dYZYv3c9Fd6wyabHQh8BkI8P9A3a8ufdU66KoWYmy
-         v4h60F+kEhdJ/NkcfVGaCt61hA45e0I1L1eRrF1VkWVR62DNa4ZCNG5TA9vZCsTDaGn9
-         izEzEdWtM7HLFlVs3OM29guBJ/8e0YB8Wv5bP5TW/zvo9c16VmdSiZp0T4Tl24n3ggfC
-         wxvg==
-X-Gm-Message-State: AAQBX9fUl6nUPjeTiffJ4Dmk6oAn+jLYBaztX1z7i7PdOIZu0HUX+Kag
-        rTYCYhoI+ozc4BpmY0/SJfE=
-X-Google-Smtp-Source: AKy350aHyentLgQXo+Z2M1ojsWwhUSXYrG2wkE+9Q6xIlmti8kTjceJPc1cLp3s68HIi2zfLqTPFqw==
-X-Received: by 2002:a17:90b:30d4:b0:24b:2f97:9208 with SMTP id hi20-20020a17090b30d400b0024b2f979208mr18766468pjb.0.1682467456275;
-        Tue, 25 Apr 2023 17:04:16 -0700 (PDT)
+        bh=T9i5U0weApSgOp8j05lUu9QIcnw9fLdi0tpcAkmgkXs=;
+        b=HUhCeJdBhL2iGscRY0Vwa+al3UX8v+PwcFQLePyKyYEjtCwNisjrGYxC3jPRKsA1dB
+         zJcnfar12P2GykPlHVu1lt6wjJ61TmIigJaLTjibE7qFzubEeslk7OoaGeduFkq5aSrr
+         /iqJtblJT6UqGSTdlHk5vApTh7mXcRydS3eEHn77VXjt1DkvFkJmE7mcVqJHtknHFs7l
+         KCQD+oIa9eI9BqN+FNBEflFj7RyR84umxmcTPM+GjPntiaJzaYvYiHSDXlmwSDkhEmTS
+         pGg7Jxj52qzvtxBKFKxSzYsa62NRcIIY7ceR7F9GKjvuwDJcA0uoRMkoUPG7Ue+wFhem
+         4M0Q==
+X-Gm-Message-State: AAQBX9ezvi+HAzAHmAc7V9I+hh+r26Fjn7A1EStVAOeLFM2MfW5t/DcU
+        gm62nxnhsDbXq7NBfnlw1m3uC0lYmw8=
+X-Google-Smtp-Source: AKy350Y0W4Vkr5i4JFFpgZiGbCaiQeEFH2DdBwmJymAsP4/8qMBAvt3jl/BqPZ6yJhAWP/v9oC3H1w==
+X-Received: by 2002:a17:90a:4b8f:b0:234:31f3:e00f with SMTP id i15-20020a17090a4b8f00b0023431f3e00fmr19830807pjh.43.1682467726992;
+        Tue, 25 Apr 2023 17:08:46 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:5099:ad7c:6c1:9570? ([2620:15c:211:201:5099:ad7c:6c1:9570])
-        by smtp.gmail.com with ESMTPSA id p8-20020a1709026b8800b001a04ff0e2eesm8757180plk.58.2023.04.25.17.04.14
+        by smtp.gmail.com with ESMTPSA id c24-20020a17090ad91800b0023d0d50edf2sm10241320pjv.42.2023.04.25.17.08.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Apr 2023 17:04:15 -0700 (PDT)
-Message-ID: <19a823d9-d4b0-3c62-38a0-b54dc3937ab3@acm.org>
-Date:   Tue, 25 Apr 2023 17:04:13 -0700
+        Tue, 25 Apr 2023 17:08:46 -0700 (PDT)
+Message-ID: <12308ca3-f824-596e-078f-bc00fa674aef@acm.org>
+Date:   Tue, 25 Apr 2023 17:08:44 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v2 1/5] ufs: mcq: Add supporting functions for mcq abort
+Subject: Re: [PATCH v2 2/5] ufs: mcq: Add support for clean up mcq resources
 Content-Language: en-US
 To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
@@ -51,13 +51,11 @@ To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Eric Biggers <ebiggers@google.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
- <382670235be85aaa7b7dc407bcf378483ac03562.1681764704.git.quic_nguyenb@quicinc.com>
+ <5e662692bc0ad5108ce91ae3d1ec2b575c34d4ae.1681764704.git.quic_nguyenb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <382670235be85aaa7b7dc407bcf378483ac03562.1681764704.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <5e662692bc0ad5108ce91ae3d1ec2b575c34d4ae.1681764704.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -65,134 +63,58 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/17/23 14:05, Bao D. Nguyen wrote:
-> +/* Max mcq register polling time in milisecond unit */
+> @@ -3110,7 +3128,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+>   		err = -ETIMEDOUT;
+>   		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
+>   			__func__, lrbp->task_tag);
+> -		if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
+> +		if (ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag) == 0) {
+>   			/* successfully cleared the command, retry if needed */
+>   			err = -EAGAIN;
+>   			/*
 
-A nit: please change "millisecond unit" into "milliseconds".
+Is this change necessary?
 
-> +static int ufshcd_mcq_poll_register(void __iomem *reg, u32 mask,
-> +				u32 val, unsigned long timeout_ms)
-> +{
-> +	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
-> +	int err = 0;
-> +
-> +	/* ignore bits that we don't intend to wait on */
-> +	val = val & mask;
-> +
-> +	while ((readl(reg) & mask) != val) {
+> @@ -7379,6 +7397,20 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+>   			 */
+>   			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
+>   				__func__, tag);
+> +			if (is_mcq_enabled(hba)) {
+> +				/* MCQ mode */
+> +				if (lrbp->cmd) {
+> +					/* sleep for max. 200us to stabilize */
 
-& has a higher precedence than != so one pair of parentheses can be left 
-out.
+What is being stabilized here? Please make this comment more clear.
 
-> +		udelay(20);
-> +		if (time_after(jiffies, timeout)) {
+> +					usleep_range(100, 200);
+> +					continue;
+> +				}
+> +				/* command completed already */
+> +				dev_err(hba->dev, "%s: cmd at tag=%d is cleared.\n",
+> +					__func__, tag);
+> +				goto out;
+> +			}
 
-Please use time_is_before_jiffies() instead of time_after(jiffies, ...).
+Please do not use lrbp->cmd to check whether or not a command has 
+completed. See also my patch "scsi: ufs: Fix handling of lrbp->cmd".
 
-> +			err = -ETIMEDOUT;
-> +			break;
-> +		}
-> +	}
-> +
-> +	return err;
-> +}
+> @@ -7415,7 +7447,7 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+>   		goto out;
+>   	}
+>   
+> -	err = ufshcd_clear_cmds(hba, 1U << tag);
+> +	err = ufshcd_clear_cmds(hba, 1UL << tag);
+>   	if (err)
+>   		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
+>   			__func__, tag, err);
 
-Please remove the variable 'err' and return the return value directly.
+Is this change necessary?
 
-> +
-> +static int ufshcd_mcq_sq_stop(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
-> +{
-> +	void __iomem *reg;
-> +	u32 i = hwq->id;
+> -	if (!(test_bit(tag, &hba->outstanding_reqs))) {
+> +	if (!is_mcq_enabled(hba) && !(test_bit(tag, &hba->outstanding_reqs))) {
 
-Please use another variable name than 'i' for a hardware queue ID ('id'?).
-
-> +	u32 i = hwq->id;
-
-Same comment here.
-
-> +/**
-> + * ufshcd_mcq_sq_cleanup - Clean up Submission Queue resources
-
-A nit: please use lower case text for "submission queue" and also in the 
-comments below ("Clean up" -> "clean up").
-
-> +	spin_lock(&hwq->sq_lock);
-> +
-> +	/* stop the SQ fetching before working on it */
-> +	err = ufshcd_mcq_sq_stop(hba, hwq);
-> +	if (err)
-> +		goto unlock;
-
-No spin locks around delay loops please. Is there anything that prevents 
-to change sq_lock from a spin lock into a mutex?
-
-> +static u64 ufshcd_mcq_get_cmd_desc_addr(struct ufs_hba *hba,
-> +					int task_tag)
-> +{
-> +	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
-> +	__le32 hi = lrbp->utr_descriptor_ptr->command_desc_base_addr_hi;
-> +	__le32 lo = lrbp->utr_descriptor_ptr->command_desc_base_addr_lo;
-> +
-> +	return le64_to_cpu((__le64)hi << 32 | lo);
-> +}
-
-Please add a new patch at the head of this series that modifies struct 
-utp_transfer_req_desc such that command_desc_base_addr_lo and 
-command_desc_base_addr_hi are combined into a single __le64 variable.
-
-> +/**
-> + * ufshcd_mcq_nullify_cmd - Nullify utrd. Host controller does not fetch
-> + * transfer with Command Type = 0xF. post the Completion Queue with OCS=ABORTED.
-> + * @hba - per adapter instance.
-> + * @hwq - Hardware Queue of the nullified utrd.
-> + */
-> +static void ufshcd_mcq_nullify_cmd(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
-> +{
-> +	struct utp_transfer_req_desc *utrd;
-> +	u32 dword_0;
-> +
-> +	utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
-> +			hwq->id * sizeof(struct utp_transfer_req_desc));
-
-Please double check this function. It has "cmd" in the function name but 
-none of the arguments passed to this function allows to uniquely 
-identify a command. Is an argument perhaps missing from this function?
-
-Additionally, hwq->sqe_base_addr points to an array of SQE entries. I do 
-not understand why hwq->id * sizeof(struct utp_transfer_req_desc) is 
-added to that base address. Please clarify.
-
-> +		utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
-> +				sq_head_slot * sizeof(struct utp_transfer_req_desc));
-
-hwq->sqe_base_addr already has type struct utp_transfer_req_desc * so 
-the " * sizeof(struct utp_transfer_req_desc)" part looks wrong to me.
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 35a3bd9..808387c 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -56,7 +56,6 @@
->   #define NOP_OUT_RETRIES    10
->   /* Timeout after 50 msecs if NOP OUT hangs without response */
->   #define NOP_OUT_TIMEOUT    50 /* msecs */
-> -
->   /* Query request retries */
->   #define QUERY_REQ_RETRIES 3
->   /* Query request timeout */
-
-Is the above change really necessary?
-
-> @@ -173,7 +172,6 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
->   enum {
->   	UFSHCD_MAX_CHANNEL	= 0,
->   	UFSHCD_MAX_ID		= 1,
-> -	UFSHCD_NUM_RESERVED	= 1,
->   	UFSHCD_CMD_PER_LUN	= 32 - UFSHCD_NUM_RESERVED,
->   	UFSHCD_CAN_QUEUE	= 32 - UFSHCD_NUM_RESERVED,
->   };
-
-Same question here - is this change really necessary?
+Please leave out one pair of superfluous parentheses from the above 
+expression.
 
 Thanks,
 
