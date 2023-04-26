@@ -2,142 +2,184 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2783EC77B61
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 00:21:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21634C77B61
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 01:41:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238029AbjDZAVt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Apr 2023 20:21:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43884 "EHLO
+        id S238464AbjDZBlS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Apr 2023 21:41:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236412AbjDZAVs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 20:21:48 -0400
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AD95CC12;
-        Tue, 25 Apr 2023 17:21:47 -0700 (PDT)
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1a677dffb37so54828175ad.2;
-        Tue, 25 Apr 2023 17:21:47 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682468506; x=1685060506;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZFqlWu228df0FTCydNSQGPhP2bvBx2rXqvnLi/w4M1M=;
-        b=NZeleoKExR40ohRMQh+SlXO9G06ooVRYuxl4SsAH+S6wHxjQHpCpbGmlxMEKlasVn0
-         a0bTj2GbOtEmBbfczPPkkPk4hF3MZMoGka9S+v62Qpq7wtkd+5heYopKD+DpIo3aus2x
-         8Tw7g39l4XN9tm3VhKAYlesE9AhkVGfz3znPUIgYs3ZImFMniVnBUHAIdXmyTwEjsuHJ
-         uck8gBfsR8MOsz/kNNY+xINuLVgBejBwylvtIxBjIdtcUDGW1ll9OTLgS1e54I2vRUGU
-         xJa+utwMDN6AHo8me1IlAOWi5185KsEbiz1aQPMC9/Pxehx4MHNYV2Ugyw4BdY+ICr5K
-         wvRw==
-X-Gm-Message-State: AAQBX9eFkdhBbkyaPBdWfk3FBYr/Wl9Ack8YdldACrC6ejODXTQJukTD
-        mxD0Ry9anp9MLtpo0Ez7yYI=
-X-Google-Smtp-Source: AKy350bP7JGxOrcIgjoIVCAIgFna6LZ4/5/GTx9Qjx0rb3tIYblBwQlRfR9R9e1zWxNLbjanY7b7bA==
-X-Received: by 2002:a17:903:18d:b0:1a9:6bd4:236a with SMTP id z13-20020a170903018d00b001a96bd4236amr13867817plg.69.1682468506374;
-        Tue, 25 Apr 2023 17:21:46 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:5099:ad7c:6c1:9570? ([2620:15c:211:201:5099:ad7c:6c1:9570])
-        by smtp.gmail.com with ESMTPSA id c10-20020a170902848a00b001a95f632340sm5598686plo.46.2023.04.25.17.21.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Apr 2023 17:21:45 -0700 (PDT)
-Message-ID: <c3297d67-ac6f-e8b5-9167-648302319812@acm.org>
-Date:   Tue, 25 Apr 2023 17:21:44 -0700
+        with ESMTP id S238177AbjDZBlR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2023 21:41:17 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87FABB21E;
+        Tue, 25 Apr 2023 18:41:14 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Q5hN40W2YzLnjb;
+        Wed, 26 Apr 2023 09:38:28 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Wed, 26 Apr 2023 09:41:11 +0800
+Subject: Re: [PATCH] scsi: libsas: set tf to normal in
+ sas_ata_device_link_abort()
+To:     yangxingui <yangxingui@huawei.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>
+References: <20230407035618.25123-1-yangxingui@huawei.com>
+ <d00b38ce-99a8-208b-cdad-714bb3dbf60b@huawei.com>
+ <d873df36-44d3-b98e-7e34-db6446292f32@huawei.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <1b39acd7-2028-a080-13be-660ed5c0bfb0@huawei.com>
+Date:   Wed, 26 Apr 2023 09:41:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v2 5/5] ufs: core: Add error handling for MCQ mode
+In-Reply-To: <d873df36-44d3-b98e-7e34-db6446292f32@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
-        Powen.Kao@mediatek.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
- <5a52b255001e994d0a65be9b1d61fe69f2a12f6c.1681764704.git.quic_nguyenb@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5a52b255001e994d0a65be9b1d61fe69f2a12f6c.1681764704.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm100004.china.huawei.com (7.192.105.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/17/23 14:05, Bao D. Nguyen wrote:
-> +		/* MCQ mode */
-> +		if (is_mcq_enabled(hba))
-> +			return ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag);
+On 2023/4/17 16:18, yangxingui wrote:
+> Hi Jason
+> 
+> On 2023/4/14 15:36, Jason Yan wrote:
+>> On 2023/4/7 11:56, Xingui Yang wrote:
+>>> If the disk returns UNC for more than five times within a short 
+>>> period, the
+>>> number of retry times for other I/Os may reach scmd->allowed, and the
+>>> default error "Illegal Request" is returned for other I/Os, as follows:
+>>>
+>>> [  273.801770] hisi_sas_v3_hw 0000:b4:02.0: erroneous completion disk 
+>>> err dev id=2 sas_addr=0x5000000000000605 CQ hdr: 0x400903 0x20103 0x0 
+>>> 0x80470000
+>>> [  273.875286] sas: Enter sas_scsi_recover_host busy: 30 failed: 30
+>>> [  273.879895] sas: trying to find task 0x00000000d9cfc893
+>>> [  273.879896] sas: sas_scsi_find_task: aborting task 0x00000000d9cfc893
+>>> [  273.880054] sas: sas_scsi_find_task: task 0x00000000d9cfc893 is done
+>>> [  273.880055] sas: sas_eh_handle_sas_errors: task 0x00000000d9cfc893 
+>>> is done
+>>> [  273.880236] ata6.00: failed command: READ FPDMA QUEUED
+>>> [  273.880238] ata6.00: cmd 60/08:00:59:27:00/00:00:00:00:00/40 tag 
+>>> 22 ncq dma 4096 in
+>>>                          res 41/04:00:20:00:00/00:00:00:00:00/00 
+>>> Emask 0x1 (device error)
+>>> [  273.880239] ata6.00: status: { DRDY ERR }
+>>> [  273.880240] ata6.00: error: { ABRT }
+>>> [  273.880241] ata6.00: failed command: READ FPDMA QUEUED
+>>> [  273.880243] ata6.00: cmd 60/90:00:d1:26:00/00:00:00:00:00/40 tag 
+>>> 23 ncq dma 73728 in
+>>>                          res 41/40:90:10:27:00/00:00:00:00:00/00 
+>>> Emask 0x409 (media error) <F>
+>>> [  273.880245] ata6.00: status: { DRDY ERR }
+>>> [  273.880246] ata6.00: error: { UNC }
+>>> [  273.880247] ata6.00: failed command: READ FPDMA QUEUED
+>>> [  273.880249] ata6.00: cmd 60/08:00:19:27:00/00:00:00:00:00/40 tag 
+>>> 24 ncq dma 4096 in
+>>>                          res 41/04:00:20:00:00/00:00:00:00:00/00 
+>>> Emask 0x1 (device error)
+>>> [  273.880250] ata6.00: status: { DRDY ERR }
+>>> [  273.880251] ata6.00: error: { ABRT }
+>>> [  274.199477] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199478] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199479] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199481] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199482] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199483] scmd->retries: 2, scmd->allowed: 5
+>>> [  274.199484] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199485] scmd->retries: 3, scmd->allowed: 5
+>>> [  274.199486] scmd->retries: 5, scmd->allowed: 5
+>>> [  274.199487] scmd->retries: 2, scmd->allowed: 5
+>>> [  274.199488] scmd->retries: 2, scmd->allowed: 5
+>>> [  274.199524] sd 6:0:1:0: [sdb] tag#258 FAILED Result: 
+>>> hostbyte=DID_OK driverbyte=DRIVER_SENSE
+>>> [  274.199527] sd 6:0:1:0: [sdb] tag#258 Sense Key : Illegal Request 
+>>> [current]
+>>> [  274.199530] sd 6:0:1:0: [sdb] tag#258 Add. Sense: Unaligned write 
+>>> command
+>>> [  274.199532] sd 6:0:1:0: [sdb] tag#258 CDB: Read(10) 28 00 00 00 27 
+>>> 59 00 00 08 00
+>>> [  274.199535] print_req_error: I/O error, dev sdb, sector 10073
+>>> [  274.199573] sd 6:0:1:0: [sdb] tag#259 FAILED Result: 
+>>> hostbyte=DID_OK driverbyte=DRIVER_SENSE
+>>> [  274.199574] sd 6:0:1:0: [sdb] tag#259 Sense Key : Medium Error 
+>>> [current]
+>>> [  274.199576] sd 6:0:1:0: [sdb] tag#259 Add. Sense: Unrecovered read 
+>>> error - auto reallocate failed
+>>> [  274.199578] sd 6:0:1:0: [sdb] tag#259 CDB: Read(10) 28 00 00 00 26 
+>>> d1 00 00 90 00
+>>> [  274.199579] print_req_error: I/O error, dev sdb, sector 10000
+>>> [  274.199608] ata6: EH complete
+>>> [  274.199615] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 
+>>> 30 tries: 1
+>>>
+>>> As mentioned in ata_eh_qc_retry(), if qc->err_mask is zero then 
+>>> increment
+>>> scmd->allowed. So set tf to normal may be better.
+>>
+>> Hi Xingui,
+>>
+>> If we increase scmd->allowed every time, and the device returns UNC 
+>> for too many times, will the other IO pending for too long and cause 
+>> hungtask? And also the runtime check in scsi_cmd_runtime_exceeced() 
+>> will not trigger since cmd->allowed is extended.
+>>
+> Thank you for your reply. In scenarios similar to UNC error, where a 
+> disk returns an error through D2H or SDB, no error is reported for other 
+> I/Os in the disk. In this case, AHCI will increase the number of retry 
+> times for other I/Os, and AHCI may face similar problems you say, but 
+> default failures may not be very good for users.
 
-The above code will trigger an overflow if lrbp->task_tag >= 8 * 
-sizeof(unsigned long). That's not acceptable.
-
->   static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   {
-> +	struct ufshcd_lrb *lrbp;
-> +	u32 hwq_num, utag;
-> +	int tag;
-> +
->   	/* Resetting interrupt aggregation counters first and reading the
->   	 * DOOR_BELL afterward allows us to handle all the completed requests.
->   	 * In order to prevent other interrupts starvation the DB is read once
-> @@ -5580,7 +5590,22 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   	 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
->   	 * do not want polling to trigger spurious interrupt complaints.
->   	 */
-> -	ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-> +	if (!is_mcq_enabled(hba)) {
-> +		ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-> +		goto out;
-> +	}
-> +
-> +	/* MCQ mode */
-> +	for (tag = 0; tag < hba->nutrs; tag++) {
-> +		lrbp = &hba->lrb[tag];
-> +		if (lrbp->cmd) {
-> +			utag = blk_mq_unique_tag(scsi_cmd_to_rq(lrbp->cmd));
-> +			hwq_num = blk_mq_unique_tag_to_hwq(utag);
-> +			ufshcd_poll(hba->host, hwq_num);
-> +		}
-> +	}
-
-Is my understanding correct that ufshcd_transfer_req_compl() is only 
-called from single doorbell code paths and hence that the above change 
-is not necessary?
-
-
-> +	if (is_mcq_enabled(hba)) {
-> +		struct ufshcd_lrb *lrbp;
-> +		int tag;
-> +
-> +		for (tag = 0; tag < hba->nutrs; tag++) {
-> +			lrbp = &hba->lrb[tag];
-> +			if (lrbp->cmd) {
-> +				ret = ufshcd_try_to_abort_task(hba, tag);
-> +				dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-> +					hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-> +					ret ? "failed" : "succeeded");
-> +			}
-> +			if (ret) {
-> +				needs_reset = true;
-> +				goto out;
-> +			}
-> +		}
-> +	} else {
-> +		/* Clear pending transfer requests */
-> +		for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-> +			ret = ufshcd_try_to_abort_task(hba, tag);
-> +			dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-> +				hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-> +				ret ? "failed" : "succeeded");
-> +			if (ret) {
-> +				needs_reset = true;
-> +				goto out;
-> +			}
->   		}
->   	}
-
-Please introduce helper functions for the MCQ and SDB code paths such 
-that the nesting level of the above code is reduced.
+I think at least we cannot always retry unconditionally. Failure is 
+better than hung becuase users can deal with failures. They can retry 
+from the userspace. But if the process stuck in kernel, it is a disaster 
+for the userspace and they can do nothing. Is there a way to limit the 
+times of retry?
 
 Thanks,
+Jason
 
-Bart.
+> 
+> In addition, for commands with pass through type, other I/Os are 
+> immediately returned with default errors and are not retried, but AHCI 
+> only report one single error I/O.
+> 
+> Thanks,
+> Xingui
+> 
+>> Thanks,
+>> Jason
+>>
+>>>
+>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>> ---
+>>>   drivers/scsi/libsas/sas_ata.c | 4 ++--
+>>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_ata.c 
+>>> b/drivers/scsi/libsas/sas_ata.c
+>>> index 77714a495cbb..f5047e8dcb59 100644
+>>> --- a/drivers/scsi/libsas/sas_ata.c
+>>> +++ b/drivers/scsi/libsas/sas_ata.c
+>>> @@ -949,8 +949,8 @@ void sas_ata_device_link_abort(struct 
+>>> domain_device *device, bool force_reset)
+>>>       unsigned long flags;
+>>>       spin_lock_irqsave(ap->lock, flags);
+>>> -    device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
+>>> -    device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
+>>> +    device->sata_dev.fis[2] = ATA_DRDY; /* tf status */
+>>> +    device->sata_dev.fis[3] = 0;        /* tf error */
+>>>       link->eh_info.err_mask |= AC_ERR_DEV;
+>>>       if (force_reset)
+>>>
+>> .
+> .
