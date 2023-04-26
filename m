@@ -2,140 +2,164 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEE3C7618E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 16:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CBF4C77B7C
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 19:20:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233263AbjDZQok (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Apr 2023 12:44:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48040 "EHLO
+        id S239436AbjDZTUL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Apr 2023 15:20:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229915AbjDZQoj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2023 12:44:39 -0400
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CE722727;
-        Wed, 26 Apr 2023 09:44:38 -0700 (PDT)
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-246f856d751so5170838a91.0;
-        Wed, 26 Apr 2023 09:44:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682527477; x=1685119477;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HiIQGs9lDJpO3uMuMZoURiKGm77nW3DUPJPQrXJs0uE=;
-        b=JvrDF0PeUeEQJSy+xkhTY9ExgPmzgvRQHjNzAFk5MN7LjIqH7CIYZtykBsZa8gEkjR
-         l2yty5JFlbtpFgaMqRHWnniwa9JYyqAuA4HEwPWaaz8PboNzCqPsLedHul31HhgIdfoP
-         x96z7aEVZsgEFRfmIMYbTv8/H/jCUY6fpE9hu/2cEligjc+qRs5erUETZM0usNp5I2o9
-         C6aO3XJyYQFymVxuBQ3NBUBgLR+0EMOesgOXPfK2RLPWRPdnx/0H6PMBufuiJK0qR3wn
-         YYs2qqvRgMS5n5zuUIAuBvCw+W0oxtK0bizD81thmE1V2ia5aHhbEVUnR4guSh2Ma8iA
-         5rnw==
-X-Gm-Message-State: AAQBX9dWYXVCLccOm3IuIf/94mqswyo0tf7eFOC1kJ0x4wVQ2il5xIBT
-        w8pCARDpi8AsTZw9lL2uyIo=
-X-Google-Smtp-Source: AKy350bezpvgAWRLrM2q/DENDgYO0DYazMzv1x9T95SCFX76a5Z9wHp1cxtzqH6l/ORWyiTP6b/47g==
-X-Received: by 2002:a17:90a:4812:b0:23b:4439:4179 with SMTP id a18-20020a17090a481200b0023b44394179mr21143122pjh.28.1682527477185;
-        Wed, 26 Apr 2023 09:44:37 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:5099:ad7c:6c1:9570? ([2620:15c:211:201:5099:ad7c:6c1:9570])
-        by smtp.gmail.com with ESMTPSA id g2-20020a17090adb0200b00246f9725ffcsm9858549pjv.33.2023.04.26.09.44.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Apr 2023 09:44:36 -0700 (PDT)
-Message-ID: <ceaaf07b-d684-e88d-cfda-257cef32305a@acm.org>
-Date:   Wed, 26 Apr 2023 09:44:34 -0700
+        with ESMTP id S236122AbjDZTUK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2023 15:20:10 -0400
+Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 16219188
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Apr 2023 12:20:07 -0700 (PDT)
+Received: (qmail 133613 invoked by uid 1000); 26 Apr 2023 15:20:07 -0400
+Date:   Wed, 26 Apr 2023 15:20:07 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Maxime Bizon <mbizon@freebox.fr>
+Cc:     linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        linux-scsi@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Reproducible deadlock when usb-storage scsi command timeouts
+ twice
+Message-ID: <34a2e50b-e899-45ee-ac14-31fa0bb1616b@rowland.harvard.edu>
+References: <ZEllnjMKT8ulZbJh@sakura>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi: ufs: core: Simplify param_set_mcq_mode()
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20230426052153epcms2p27d64a865f15bfd452d564f77d63605db@epcms2p2>
- <20230426052153epcms2p27d64a865f15bfd452d564f77d63605db@epcms2p2>
-Content-Language: en-US
-In-Reply-To: <20230426052153epcms2p27d64a865f15bfd452d564f77d63605db@epcms2p2>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZEllnjMKT8ulZbJh@sakura>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/25/23 22:21, Keoseong Park wrote:
-> This function does not require the "ret" variable because it returns
-> only the result of param_set_bool().
+[Adding linux-scsi and Martin to the CC: list, since this looks like it 
+might be a problem in the SCSI core]
+
+On Wed, Apr 26, 2023 at 07:55:42PM +0200, Maxime Bizon wrote:
 > 
-> Remove unnecessary "ret" variable and simplify the code.
+> Hello,
 > 
-> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 8 +-------
->   1 file changed, 1 insertion(+), 7 deletions(-)
+> I have a faulty 128MB USB stick that happens to randomly timeout when
+> reading a specific block.
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9434328ba323..46c4ed478ad0 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -108,13 +108,7 @@ static bool is_mcq_supported(struct ufs_hba *hba)
->   
->   static int param_set_mcq_mode(const char *val, const struct kernel_param *kp)
->   {
-> -	int ret;
-> -
-> -	ret = param_set_bool(val, kp);
-> -	if (ret)
-> -		return ret;
-> -
-> -	return 0;
-> +	return param_set_bool(val, kp);
->   }
->   
->   static const struct kernel_param_ops mcq_mode_ops = {
+> After the first timeout, the scsi layer retries the command. If that
+> retry work, then everything goes well. But if the retried command
+> timeouts as well, then I get a deadlock.
 
-Why do we even have the param_set_mcq_mode() callback? Has it been considered
-to remove mcq_mode_ops as in the untested patch below?
+What version of the kernel are you using?
 
-Thanks,
+> To reproduce fast & reliable, I'm using these settings:
+> 
+> # echo 10 >/proc/sys/kernel/hung_task_timeout_secs
+> # echo 0x3f > /proc/sys/dev/scsi/logging_level
+> # cd /sys/block/sda/queue/
+> # echo none > scheduler
+> # echo 1 > nr_requests
+> # echo 1 > nomerges
+> # echo 4 > max_sectors_kb
+> # echo 5000 > io_timeout
+> # cat /dev/sda > /dev/null
+> 
+> 
+> dmesg with timestamps so it's easy to spot the timeouts:
 
-Bart.
+> [  211.733162] *** thread awakened
+> [  211.733174] Command READ_10 (10 bytes)
+> [  211.733183] bytes: 28 00 00 02 02 00 00 00 08 00
+> [  211.733192] Bulk Command S 0x43425355 T 0xb8cb L 4096 F 128 Trg 0 LUN 0 CL 10
+> [  211.733204] xfer 31 bytes
+> [  211.733288] Status code 0; transferred 31/31
+> [  211.733300] -- transfer complete
+> [  211.733306] Bulk command transfer result=0
+> [  211.733313] xfer 4096 bytes, 1 entries
+> [  218.089304] sd 0:0:0:0: [sda] tag#0 abort scheduled
+> [  218.109297] sd 0:0:0:0: [sda] tag#0 aborting command
+> [  218.109315] command_abort called
+> [  218.109324] -- cancelling sg request
+> [  218.112380] Status code -104; transferred 3072/4096
+> [  218.112393] -- transfer cancelled
+> [  218.112400] Bulk data transfer result 0x4
+> [  218.112407] -- command was aborted
+> [  218.209278] usb 1-1.2: reset high-speed USB device number 3 using orion-ehci
+> [  218.359923] usb_reset_device returns 0
+> [  218.359936] scsi command aborted
+> [  218.359947] *** thread sleeping
+> [  218.359964] sd 0:0:0:0: [sda] tag#0 retry aborted command
+> [  218.399298] *** thread awakened
+> [  218.399311] Command READ_10 (10 bytes)
+> [  218.399320] bytes: 28 00 00 02 02 00 00 00 08 00
+> [  218.399330] Bulk Command S 0x43425355 T 0xb8cc L 4096 F 128 Trg 0 LUN 0 CL 10
+> [  218.399342] xfer 31 bytes
+> [  218.399544] Status code 0; transferred 31/31
+> [  218.399556] -- transfer complete
+> [  218.399562] Bulk command transfer result=0
+> [  218.399570] xfer 4096 bytes, 1 entries
+> [  225.129297] sd 0:0:0:0: [sda] tag#0 previous abort failed
+> [  225.129337] scsi host0: Waking error handler thread
+> [  225.129358] scsi host0: scsi_eh_0: waking up 0/1/1
+> [  225.129375] scsi host0: scsi_eh_prt_fail_stats: cmds failed: 0, cancel: 1
+> [  225.129387] scsi host0: Total of 1 commands on 1 devices require eh work
+> [  225.129402] sd 0:0:0:0: scsi_eh_0: Sending BDR
+> [  225.129414] device_reset called
+> [  235.369290] INFO: task scsi_eh_0:173 blocked for more than 10 seconds.
+> [  235.369311]       Not tainted 6.3.0-00615-gffe64935a4a2 #9
+> [  235.369320] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  235.369327] task:scsi_eh_0       state:D stack:0     pid:173   ppid:2      flags:0x00000000
+> [  235.369350]  __schedule from schedule+0x70/0xac
+> [  235.369374]  schedule from schedule_preempt_disabled+0x24/0x34
+> [  235.369393]  schedule_preempt_disabled from __mutex_lock.constprop.0+0x14c/0x280
+> [  235.369412]  __mutex_lock.constprop.0 from device_reset+0x28/0x64
+> [  235.369433]  device_reset from scsi_try_bus_device_reset+0x24/0x58
+> [  235.369452]  scsi_try_bus_device_reset from scsi_eh_ready_devs+0x2f0/0x97c
+> [  235.369470]  scsi_eh_ready_devs from scsi_error_handler+0x238/0x49c
+> [  235.369488]  scsi_error_handler from kthread+0xc4/0xdc
+> [  235.369507]  kthread from ret_from_fork+0x14/0x3c
+> [  235.369567] INFO: task usb-storage:176 blocked for more than 10 seconds.
+> [  235.369576]       Not tainted 6.3.0-00615-gffe64935a4a2 #9
+> [  235.369583] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  235.369590] task:usb-storage     state:D stack:0     pid:176   ppid:2      flags:0x00000000
+> [  235.369606]  __schedule from schedule+0x70/0xac
+> [  235.369622]  schedule from schedule_timeout+0x18/0xd0
+> [  235.369641]  schedule_timeout from __wait_for_common+0xc0/0x13c
+> [  235.369660]  __wait_for_common from usb_sg_wait+0x10c/0x118
+> [  235.369677]  usb_sg_wait from usb_stor_bulk_transfer_sglist+0xc4/0x118
+> [  235.369695]  usb_stor_bulk_transfer_sglist from usb_stor_bulk_srb+0x24/0x3c
+> [  235.369713]  usb_stor_bulk_srb from usb_stor_Bulk_transport+0x164/0x44c
+> [  235.369731]  usb_stor_Bulk_transport from usb_stor_invoke_transport+0x20/0x5c4
+> [  235.369750]  usb_stor_invoke_transport from usb_stor_control_thread+0x1a4/0x2bc
+> [  235.369769]  usb_stor_control_thread from kthread+0xc4/0xdc
+> [  235.369786]  kthread from ret_from_fork+0x14/0x3c
+> 
+> 
+> Turns out eh_device_reset_handler() is called with a pending command
+> (srb == us->srb), and I don't know if the usb code was expecting
+> eh_abort_handler() to be called first.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7b1e7d7091ff..2b8c2613f7d7 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -98,7 +98,7 @@
-  /* Polling time to wait for fDeviceInit */
-  #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+usb-storage definitely expects any pending command to be aborted before 
+a reset is attempted.
 
--/* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
-+/* UFSHC 4.0 compliant HC support this mode. */
-  static bool use_mcq_mode = true;
+> This patch fixes the issue, not sure if it's correct:
+> 
+> --- a/drivers/usb/storage/scsiglue.c
+> +++ b/drivers/usb/storage/scsiglue.c
+> @@ -455,6 +455,9 @@ static int device_reset(struct scsi_cmnd *srb)
+>  
+>         usb_stor_dbg(us, "%s called\n", __func__);
+>  
+> +       if (us->srb == srb)
+> +               command_abort(srb);
+> +
+>         /* lock the device pointers and do the reset */
+>         mutex_lock(&(us->dev_mutex));
+>         result = us->transport_reset(us);
 
-  static bool is_mcq_supported(struct ufs_hba *hba)
-@@ -106,23 +106,7 @@ static bool is_mcq_supported(struct ufs_hba *hba)
-  	return hba->mcq_sup && use_mcq_mode;
-  }
+Maybe...  But it would be better to check first whether the SCSI core is 
+supposed to be reusing an active srb in this way.
 
--static int param_set_mcq_mode(const char *val, const struct kernel_param *kp)
--{
--	int ret;
--
--	ret = param_set_bool(val, kp);
--	if (ret)
--		return ret;
--
--	return 0;
--}
--
--static const struct kernel_param_ops mcq_mode_ops = {
--	.set = param_set_mcq_mode,
--	.get = param_get_bool,
--};
--
--module_param_cb(use_mcq_mode, &mcq_mode_ops, &use_mcq_mode, 0644);
-+module_param(use_mcq_mode, bool, 0644);
-  MODULE_PARM_DESC(use_mcq_mode, "Control MCQ mode for controllers starting from UFSHCI 4.0. 1 - enable MCQ, 0 - disable MCQ. MCQ is enabled by default");
+Martin, can tell us what is supposed to happen here?  Is the 
+eh_device_reset_handler routine supposed to be called with a scsi_cmnd 
+for a currently active command?
 
-  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+Alan Stern
