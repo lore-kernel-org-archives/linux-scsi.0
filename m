@@ -2,69 +2,54 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25444C7618E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 22:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9660C77B60
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Apr 2023 23:07:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240486AbjDZWrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Apr 2023 18:47:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57614 "EHLO
+        id S233392AbjDZXHB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Apr 2023 19:07:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240442AbjDZWrN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2023 18:47:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4E4F40FF;
-        Wed, 26 Apr 2023 15:47:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229582AbjDZXHA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2023 19:07:00 -0400
+Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 242D12694;
+        Wed, 26 Apr 2023 16:06:58 -0700 (PDT)
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 3735A203F1;
+        Thu, 27 Apr 2023 01:06:56 +0200 (CEST)
+Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (3072 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B6E9D63460;
-        Wed, 26 Apr 2023 22:46:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 27D38C433D2;
-        Wed, 26 Apr 2023 22:46:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682549215;
-        bh=fbKfipdEQ8bK3eYnIAg4c3idNCO+dfoD+hOVqvHJ0VU=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=fz/InOMRFE84y+P+uMy+8GQ62SgwhcdJlHM1VHY7KOK57E7OWboWN64fz5EdtvBq8
-         3vGzizPX4djmDHKxysUtIGvM8OphFXfnrYpJKVCc8maLTzzAJDii0TLslJpmHvsbff
-         HFZbIdkuMgGfkly4mN2ICVsPCexaS6lgSEzEhEj32Mv1RJBwzZJgPxkxbyw8cSDidR
-         gDs2t2vZVA/WEtaUivIuZzqrMowI/puuaPvEMl7s/+7JKGdB2xqOWlgodv1avnnUEa
-         xj9s49VkJUnV8j6QvPdFawhA4IJsTHpdPXAolIpKCJgP1ETwoECndpSmfC3AKtpoO9
-         mHw57Uv6L3CSg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 16C47E5FFC8;
-        Wed, 26 Apr 2023 22:46:55 +0000 (UTC)
-Subject: Re: [GIT PULL] first round of SCSI updates for the 6.3+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <8f12f4923557bccfe40aa50c01b1154946b82669.camel@HansenPartnership.com>
-References: <8f12f4923557bccfe40aa50c01b1154946b82669.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <8f12f4923557bccfe40aa50c01b1154946b82669.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 3c85f087faeca3ca9ec9e7b085e1eff370e3f0db
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: b68ee1c6131c540a62ecd443be89c406401df091
-Message-Id: <168254921508.9139.7696619340716947740.pr-tracker-bot@kernel.org>
-Date:   Wed, 26 Apr 2023 22:46:55 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        by ns.iliad.fr (Postfix) with ESMTPS id 1D04C2029C;
+        Thu, 27 Apr 2023 01:06:56 +0200 (CEST)
+Date:   Thu, 27 Apr 2023 01:06:55 +0200
+From:   Maxime Bizon <mbizon@freebox.fr>
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        linux-scsi@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Reproducible deadlock when usb-storage scsi command timeouts
+ twice
+Message-ID: <ZEmujxtkwV8wEhYh@sakura>
+References: <ZEllnjMKT8ulZbJh@sakura>
+ <34a2e50b-e899-45ee-ac14-31fa0bb1616b@rowland.harvard.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <34a2e50b-e899-45ee-ac14-31fa0bb1616b@rowland.harvard.edu>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Wed, 26 Apr 2023 16:35:59 -0400:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+On Wednesday 26 Apr 2023 à 15:20:07 (-0400), Alan Stern wrote:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/b68ee1c6131c540a62ecd443be89c406401df091
+> What version of the kernel are you using?
 
-Thank you!
+6.3
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Maxime
