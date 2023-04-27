@@ -2,124 +2,249 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E00EBC77B61
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Apr 2023 06:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19341C77B61
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Apr 2023 07:20:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242825AbjD0GBD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Apr 2023 02:01:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57256 "EHLO
+        id S243103AbjD0HUp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Apr 2023 03:20:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242693AbjD0GBB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2023 02:01:01 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CE291FEF;
-        Wed, 26 Apr 2023 23:01:00 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33R5jd8H019935;
-        Thu, 27 Apr 2023 06:00:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=vN0o6Qy8i7AvnSzuzZtY3HpAEYkElnyWEyBF4fVyl5k=;
- b=nOdTsTLKdQQ8qWOUbUUI6O6+2XA839iYzOvWWbYO8shuZi9+zRgjP7I0IeD4OjzHvf+Q
- hu6sF1+dpdkGZgvNWSS4cCqLUVc4c8VxoX5NQ1Lz1laji7YuNzXDGwF/mZaB/hi6U92B
- iMrhkUZKIaYdbgl7odfY2/t0jTJTyj5XZgBQ7chMOw+XR/xEt7l6MWzt0ThiwFuEeKbw
- a8Fid4AkiR03VwDPxNBdacTmCWSF03eixCivYF0pb9AcImkX4frwxnWkZ3yZS/NnfVmI
- hCMD6CP3cSVlrrV7F5dfaAE8TclmlQ7YkMSp6AhAS6XRSlKPkAht6ozcPAbp+7Mw3LuY YA== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3q72jfa5c2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 27 Apr 2023 06:00:31 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33R60V0R014751
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 27 Apr 2023 06:00:31 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Wed, 26 Apr 2023 23:00:30 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        with ESMTP id S243201AbjD0HTo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2023 03:19:44 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DD4355B7;
+        Thu, 27 Apr 2023 00:18:55 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-4efec123b28so6125706e87.1;
+        Thu, 27 Apr 2023 00:18:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1682579882; x=1685171882;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Gf2k/tWWnz3zZRH7LzlPM+0OmYCFMnQ1Cd9RSWhky9o=;
+        b=b4L3+D+iGRsHHP/qc0hjCEf6iBrXOxTP0EvCSs8J9CciIdPZrvW86jZd3wudSvOYvF
+         0sp0CkMI4rBxh+PGWdhqygI7VSrmVr8YepdcTrPHzcSeqZo8ISYDxRZ2j7AjIq3OntyA
+         tvC7szGRu67JDU0PwOpitCPL2Ewh3T3zWsgKeTTR80vbs4+tChgJz6PwPmUIoq/qAR5i
+         9yiJZFuxifiAo36FWW3v+JpOjrjNkjCR8oyc7y1OAp/9ALJd1Pi7d0xcYNh25p0Y3/w4
+         MsET8nY2+KODWsj6/xbxWWKQHyv1XAhfvaGnycZRN3+Y6oaSlk99S+yev4j2EogVTu/C
+         sS6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682579882; x=1685171882;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Gf2k/tWWnz3zZRH7LzlPM+0OmYCFMnQ1Cd9RSWhky9o=;
+        b=I8weV68CRrWjq4IU54cIYdKM1/IBHQJ1vA7xp55EeCnOMtTgqv7iE5G+Mto/vvW6Gj
+         uBCc0YrbQgcZwn1RjWL/3TprPUHl6hupNgsIyOzGGrrQ9h1f0rXSFSdHy6oZ52OyxW/t
+         QtVOdfWO7uXf1KtlHczPJI6+ruLZ0WQGmyeYNX+gTTd4KEn3FvGV5J0Jx7XSqAXpHsyR
+         wSm/mCtsOoRYXnnd/Ovzc5koPvKZ87v4FMFgR78URipONpwict+E8VK4TxlHKyhueR7D
+         tO21OTfOEeLzKNZ9BgQjpDq1VWeHPuqoNosI3x5U4COesMN+VtYNhAiaqAfsAFaBdjKZ
+         B2uw==
+X-Gm-Message-State: AC+VfDwthpmviAU8l94WbXkqIDXp29/4JXeu34Qdeq8aiZU323riZFsy
+        /EqTo446dHhs8wM15ihHLQ/ijFcQBtv/lKU0+Q==
+X-Google-Smtp-Source: ACHHUZ56wpukJCKWGYD6esmxs8PrAGKvKOBhWwv8HUk1zBd1N3MBIj+/O8yHIi6ndUPlcu2ZXIZcI3DDF0Dx6e/1jJ8=
+X-Received: by 2002:a19:7618:0:b0:4ef:ed49:fcc2 with SMTP id
+ c24-20020a197618000000b004efed49fcc2mr240725lff.26.1682579882115; Thu, 27 Apr
+ 2023 00:18:02 -0700 (PDT)
+MIME-Version: 1.0
+References: <cover.1680083571.git.quic_nguyenb@quicinc.com> <56ff07e08dbaa6ca3db265c41fa8922a63797905.1680083571.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <56ff07e08dbaa6ca3db265c41fa8922a63797905.1680083571.git.quic_nguyenb@quicinc.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Thu, 27 Apr 2023 15:17:50 +0800
+Message-ID: <CAGaU9a9BUaWoKPk-7L6cE7D5c4dNuFbnG1jSaq8zR=P0m8z3Tw@mail.gmail.com>
+Subject: Re: [PATCH v1 5/5] ufs: core: Add error handling for MCQ mode
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alice Chao <alice.chao@mediatek.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 1/1] scsi: ufs: core: correct utp_transfer_cmd_desc size
-Date:   Wed, 26 Apr 2023 22:59:41 -0700
-Message-ID: <4b778dbcfd1fc40140292166834f13e8d5b8e4d2.1682575115.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 8OUEKGPbBBS1PxHznBnaa10TH2FEZqZZ
-X-Proofpoint-ORIG-GUID: 8OUEKGPbBBS1PxHznBnaa10TH2FEZqZZ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-27_03,2023-04-26_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 bulkscore=0
- malwarescore=0 lowpriorityscore=0 adultscore=0 priorityscore=1501
- suspectscore=0 mlxscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304270054
+        open list <linux-kernel@vger.kernel.org>,
+        Po-Wen Kao <powen.kao@mediatek.com>, peter.wang@mediatek.com,
+        Alice Chao <alice.chao@mediatek.com>, naomi.chu@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When allocating memory for the UTP Command Descriptor
-hba->ucdl_base_addr in ufshcd_memory_alloc(), the macro
-sizeof_utp_transfer_cmd_desc() is used to calculate the size
-of the memory allocation. This macro includes the prd_table as
-part of the UTP Command Descriptor memory. However, when freeing
-this memory in the ufshcd_release_sdb_queue(), the
-sizeof(struct utp_transfer_cmd_desc) is used, and it does not
-include the prd_table size for the memory to be freed.
-This results in a mismatch of memory size allocated/freed.
+Hi Bao,
 
-Similarly, the ufshcd_mcq_get_tag() incorrectly uses the
-sizeof(struct utp_transfer_cmd_desc) to find the tag number.
-This results in failing to probe.
+Bao D. Nguyen <quic_nguyenb@quicinc.com> =E6=96=BC 2023=E5=B9=B43=E6=9C=882=
+9=E6=97=A5 =E9=80=B1=E4=B8=89 =E4=B8=8B=E5=8D=886:14=E5=AF=AB=E9=81=93=EF=
+=BC=9A
+>
+> Add support for error handling for MCQ mode.
+>
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 80 ++++++++++++++++++++++++++++++++++++++++-=
+------
+>  1 file changed, 69 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index fef1907..e947f7f 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -3127,6 +3127,12 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba =
+*hba,
+>                 err =3D -ETIMEDOUT;
+>                 dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n=
+",
+>                         __func__, lrbp->task_tag);
+> +
+> +               /* MCQ mode */
+> +               if (is_mcq_enabled(hba))
+> +                       return ufshcd_clear_cmds(hba, 1UL << lrbp->task_t=
+ag);
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
----
- drivers/ufs/core/ufs-mcq.c | 2 +-
- drivers/ufs/core/ufshcd.c  | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+When a time-out occurs during the command-clearing process, it appears
+that the MCQ path does not properly clear 'hba->dev_cmd.complete'.
+This could result in a null pointer reference if the device command
+interrupt arrives at a later time.
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 202ff71..b7c5f39 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
- 	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
- 		hba->ucdl_dma_addr;
- 
--	return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
-+	return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
- }
- 
- static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9434328..b009e55 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8444,7 +8444,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
+Could you please help check this?
+
+Thanks,
+Stanley Chu
+
+> +
+> +               /* SDB mode */
+>                 if (ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag) =3D=3D =
+0) {
+>                         /* successfully cleared the command, retry if nee=
+ded */
+>                         err =3D -EAGAIN;
+> @@ -5562,6 +5568,10 @@ static int ufshcd_poll(struct Scsi_Host *shost, un=
+signed int queue_num)
+>   */
+>  static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>  {
+> +       struct ufshcd_lrb *lrbp;
+> +       u32 hwq_num, utag;
+> +       int tag;
+> +
+>         /* Resetting interrupt aggregation counters first and reading the
+>          * DOOR_BELL afterward allows us to handle all the completed requ=
+ests.
+>          * In order to prevent other interrupts starvation the DB is read=
+ once
+> @@ -5580,7 +5590,22 @@ static irqreturn_t ufshcd_transfer_req_compl(struc=
+t ufs_hba *hba)
+>          * Ignore the ufshcd_poll() return value and return IRQ_HANDLED s=
+ince we
+>          * do not want polling to trigger spurious interrupt complaints.
+>          */
+> -       ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
+> +       if (!is_mcq_enabled(hba)) {
+> +               ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT=
+);
+> +               goto out;
+> +       }
+> +
+> +       /* MCQ mode */
+> +       for (tag =3D 0; tag < hba->nutrs; tag++) {
+> +               lrbp =3D &hba->lrb[tag];
+> +               if (lrbp->cmd) {
+> +                       utag =3D blk_mq_unique_tag(scsi_cmd_to_rq(lrbp->c=
+md));
+> +                       hwq_num =3D blk_mq_unique_tag_to_hwq(utag);
+> +                       ufshcd_poll(hba->host, hwq_num);
+> +               }
+> +       }
+> +
+> +out:
+>
+>         return IRQ_HANDLED;
+>  }
+> @@ -6359,18 +6384,36 @@ static bool ufshcd_abort_all(struct ufs_hba *hba)
+>         bool needs_reset =3D false;
+>         int tag, ret;
+>
+> -       /* Clear pending transfer requests */
+> -       for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
+> -               ret =3D ufshcd_try_to_abort_task(hba, tag);
+> -               dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag=
+,
+> -                       hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : =
+-1,
+> -                       ret ? "failed" : "succeeded");
+> -               if (ret) {
+> -                       needs_reset =3D true;
+> -                       goto out;
+> +       if (is_mcq_enabled(hba)) {
+> +               struct ufshcd_lrb *lrbp;
+> +               int tag;
+> +
+> +               for (tag =3D 0; tag < hba->nutrs; tag++) {
+> +                       lrbp =3D &hba->lrb[tag];
+> +                       if (lrbp->cmd) {
+> +                               ret =3D ufshcd_try_to_abort_task(hba, tag=
+);
+> +                               dev_err(hba->dev, "Aborting tag %d / CDB =
+%#02x %s\n", tag,
+> +                                       hba->lrb[tag].cmd ? hba->lrb[tag]=
+.cmd->cmnd[0] : -1,
+> +                                       ret ? "failed" : "succeeded");
+> +                       }
+> +                       if (ret) {
+> +                               needs_reset =3D true;
+> +                               goto out;
+> +                       }
+> +               }
+> +       } else {
+> +               /* Clear pending transfer requests */
+> +               for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)=
  {
- 	size_t ucdl_size, utrdl_size;
- 
--	ucdl_size = sizeof(struct utp_transfer_cmd_desc) * nutrs;
-+	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * nutrs;
- 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
- 			   hba->ucdl_dma_addr);
- 
--- 
-2.7.4
-
+> +                       ret =3D ufshcd_try_to_abort_task(hba, tag);
+> +                       dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s=
+\n", tag,
+> +                               hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cm=
+nd[0] : -1,
+> +                               ret ? "failed" : "succeeded");
+> +                       if (ret) {
+> +                               needs_reset =3D true;
+> +                               goto out;
+> +                       }
+>                 }
+>         }
+> -
+>         /* Clear pending task management requests */
+>         for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
+>                 if (ufshcd_clear_tm_cmd(hba, tag)) {
+> @@ -7302,6 +7345,8 @@ static int ufshcd_eh_device_reset_handler(struct sc=
+si_cmnd *cmd)
+>         unsigned long flags, pending_reqs =3D 0, not_cleared =3D 0;
+>         struct Scsi_Host *host;
+>         struct ufs_hba *hba;
+> +       struct ufs_hw_queue *hwq;
+> +       struct ufshcd_lrb *lrbp;
+>         u32 pos;
+>         int err;
+>         u8 resp =3D 0xF, lun;
+> @@ -7317,6 +7362,19 @@ static int ufshcd_eh_device_reset_handler(struct s=
+csi_cmnd *cmd)
+>                 goto out;
+>         }
+>
+> +       if (is_mcq_enabled(hba)) {
+> +               for (pos =3D 0; pos < hba->nutrs; pos++) {
+> +                       lrbp =3D &hba->lrb[pos];
+> +                       if (lrbp->cmd && lrbp->lun =3D=3D lun) {
+> +                               ufshcd_clear_cmds(hba, 1UL << pos);
+> +                               hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_c=
+md_to_rq(lrbp->cmd));
+> +                               ufshcd_mcq_poll_cqe_lock(hba, hwq);
+> +                       }
+> +               }
+> +               err =3D 0;
+> +               goto out;
+> +       }
+> +
+>         /* clear the commands that were pending for corresponding LUN */
+>         spin_lock_irqsave(&hba->outstanding_lock, flags);
+>         for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
+> --
+> 2.7.4
+>
