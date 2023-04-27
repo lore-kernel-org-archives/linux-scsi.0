@@ -2,218 +2,166 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8ADDC77B73
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Apr 2023 09:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95375C77B61
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Apr 2023 10:05:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243423AbjD0J5i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Apr 2023 05:57:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41730 "EHLO
+        id S243249AbjD0KFZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Apr 2023 06:05:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243426AbjD0J5f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2023 05:57:35 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F1DB449D;
-        Thu, 27 Apr 2023 02:57:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1682589452; x=1714125452;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=Tm5tpPS17TeMfZCSXa+0YvpsqjGengTaylKND034Yp8=;
-  b=m8eKBvYUyAYYBY2l13Y5LwqQvUs3DzJDAbc35Ya9Nj1W6MUS0UGNdwql
-   JuNgYcvipkM7TiUuWR0/dvhr5WbbwvggIQ1QjodDuSNt8RYlkHYcbuqBo
-   3ZKhzyavY8AMyMizVAX8jFQU3oqryHl0WMOB7mZIcFJkxkyeu3lrH0Czj
-   VSDNXjF/EeVRTu1btkvUlWoKArFH3CLqZdQGdXJCSeIHjdPqxkBfOtlkV
-   6Xc0TNKTAVE7ccHAkIthESZDNrarDa3bClrhTg5iikF8SO/Q3asQzVd6A
-   mgliAmJpn6Cmb/JjDkCoaDzvfaTIuum2JnVE58z3tu6puelZ1QO/zdlAi
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.99,230,1677513600"; 
-   d="scan'208";a="227624103"
-Received: from mail-bn8nam04lp2041.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.41])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Apr 2023 17:57:30 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hFuPIAV2WONTGqW2W20hf82vcj80tcVKxlYA2Aav+1UyVh/Lq/Y6otV4y310XYPcL06IuvoD8hCyv/ZEjXa3PvMue4eJS+qEp0AYSdc+onnjkH6IXp/rsL2VXJ2UsSWFbVHD4fS6QLbbUzQJhfsuZ4uPjJh8VNd1x6qZ4dNo80f+lbk1DJS17pT03IpNYKAkvRwFF/X3HUnNWL2PMnW9ofzmp51GLn8iJ3uvNxpa1sbZFDGkwMQTfL8ABo8/sXcS+4v71FNPHJ7fGlShJY5k/D6K5lU/YfmsSlx6XSZbwZ9xffWkDORtEpNfm1YnVKclm2TxL+jPX+PtKUjJYjA62Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xwgIiVJqTqk3f/agkNNBtF3yunuToeJ+nk2D/bRLMP8=;
- b=e4P5VVFx1Yw8gJ50Q3RwqPmCn9rwf9uDtJSEBAyPdOzSFYzXftq+AzRe0+KgUOt916IJePHX3aKqdaK+gdpaBlqKtHj/+d8waG0Qfn/S0BcxiQkHbf47BuQsJoDeROf96GuNG/cEHb9DBIfdumrDJyajZIhy4hyos8IznPaZ/IdMwPTiKw/3SKU2ovOSRFSZaoWTvbxlZ/Vmfoxmp0NU0lNyVu46/zSAUdEnT04znjcoGhRXeEOsu6F9RrLEKX8tffXgW/d51GVM/+pvTgCDj3pPs3Nl+okkHxEeJtZXq2lbheKcUVPgSA3rt/219bzZvkhJ8eaT0xRFoLAy32HAJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xwgIiVJqTqk3f/agkNNBtF3yunuToeJ+nk2D/bRLMP8=;
- b=sGXrbePHeHiamTCqOOdws5Qeb3NJzo+BlUDrXQcreVgEd20xRAlWG0KKPPnWkzUkQiuxVOaGwWU0jYMI1JOSk2wJsUd+HGy/c38EIH/ry09eYDAg2Jo6jQFlsfWKcP2RjABjCSSM7h9P3YS3EcNJmwZ4MTbQR92z4QOWFyXWlDU=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- BL3PR04MB7996.namprd04.prod.outlook.com (2603:10b6:208:347::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6319.34; Thu, 27 Apr
- 2023 09:57:28 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::188b:9005:b09b:81e2]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::188b:9005:b09b:81e2%6]) with mapi id 15.20.6340.021; Thu, 27 Apr 2023
- 09:57:27 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alice Chao <alice.chao@mediatek.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1 1/1] scsi: ufs: core: correct utp_transfer_cmd_desc
- size
-Thread-Topic: [PATCH v1 1/1] scsi: ufs: core: correct utp_transfer_cmd_desc
- size
-Thread-Index: AQHZeM2t/+gGXd+zuEe0BzdD7MDVNa8+600A
-Date:   Thu, 27 Apr 2023 09:57:27 +0000
-Message-ID: <DM6PR04MB65750D13F7417242DB51E98CFC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <4b778dbcfd1fc40140292166834f13e8d5b8e4d2.1682575115.git.quic_nguyenb@quicinc.com>
-In-Reply-To: <4b778dbcfd1fc40140292166834f13e8d5b8e4d2.1682575115.git.quic_nguyenb@quicinc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|BL3PR04MB7996:EE_
-x-ms-office365-filtering-correlation-id: f927cfa2-9999-49f3-5c39-08db4705cf17
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: B9KxqTIuJqFf3CXpLMAsP9j45eGsMRK46/QtjUEu24VVBgMTGkCC305LPmngflCX7hrRhuZi6sRXlVs/RPdqadlkXpN+GfejvqHutQKwQxXCMIZFiyKveB/oblDrqRkYvhuf/24aebNfrmrriNM5QPbpPu96+dUNh//ESAdPqaEIxHbpYdOMd8bAXzytKEIglhV8nm1JB9/27EoLafGjyEhS5ycl+wPrtk38mhJeKU1EGYeiEAPBJhIAnf5lIn9eoP+2cIZnlsE6wAS7xjCEQJ6Ve48esrxCQUGKQZvAGPT3l/z0583VEkHytyxjfm2LTFlVjR0MRi+3sdbnUIruVy5M/yzuueG/ENQlwT4jb3n2zNQ8AS5VZlVIdakrItnlhFVv0DYTf+4K4fi0LCl3KUsCGcfRRP7gdRJa1SK0ZHyrpXtQLmZzMi1Acw5DTr8cX6HF989lMKDWKPMwerVcNlWQhz4t8Autq2DwZGlCNQpRjTEKjWhNjmxEvUEswGtNBtEDke3P3p1VAZ80rDBgKVGOb9mW2XPnJxxwEQjYXcAi/1LLBTpDehbpPINxJnwvbvn8zwBUL1w8zgk2/fS6d9td+g0z5+SyeQxl+yRX+dw=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(366004)(376002)(346002)(39860400002)(136003)(396003)(451199021)(9686003)(6506007)(54906003)(5660300002)(26005)(41300700001)(186003)(82960400001)(52536014)(7696005)(122000001)(8676002)(8936002)(86362001)(33656002)(38100700002)(55016003)(316002)(66946007)(66476007)(76116006)(66556008)(64756008)(66446008)(110136005)(71200400001)(4326008)(7416002)(83380400001)(38070700005)(2906002)(966005)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?f2JzcUhmb+5Da3HipIeOCm/DV6RsWMgmZur9P1H/I61zkD0txQzz7cTn0jDx?=
- =?us-ascii?Q?MczzwETnMAmbJX0cou7LsaBp16t5ErVyAyVfO7dAh49eOk8ZydX1uvgD9F/i?=
- =?us-ascii?Q?oHsEW/2jEaibXJ4Ms+8Bo9b5I3p1u0DV3/BWArpFtgTZ1MpAvDhRfeKTvNlI?=
- =?us-ascii?Q?4fy9RIRn6jaEcGx3g2XXWV7UIqLIRWdWgO8HHfKJIFZG7tVQTjd1BQiKAmLq?=
- =?us-ascii?Q?E2/4ok6GRFqet29DnfuelUQmDIBsz6AEetrQ9mDvyBGqDyQMpqOHGPXxXt4E?=
- =?us-ascii?Q?XsJnoPfO+7F/S9N4sREifUA6faHSJsQaRu6QBC1ZnmgXcWSKHfAd1odVKmvq?=
- =?us-ascii?Q?VQcNDwn1XSmYK8s80iquBGEnsmiZRaHtFq6cpl3sk09/mOpXccusqQSEefqv?=
- =?us-ascii?Q?P9tIGNSL17t0mzd1hnOZi/a/bFT2SVqjTnjsgTGlhlpeLoTKbIO6pm7vKnwu?=
- =?us-ascii?Q?4l1JvA2PQQHHV6h+g/KGzPV7EYtdixtyIdN+Z9dc/xtuc9ofdoOEiz2iZ+MN?=
- =?us-ascii?Q?E01mZvLIfquYjgt/MoZGZ87UKhSPco188Tga2aEJ8QVWDseTDznssUBkg0eJ?=
- =?us-ascii?Q?UXxZp3LLORK+zDi51qGb9Ss/DVcC1q4L2EKHzqHluCZfT9tg0r7P01642c9v?=
- =?us-ascii?Q?+FnMdJC7b4iN8tBjZBri3mpPxfn2kEY/vmekju3Rwdbd1yiFdg/6u7uq34kq?=
- =?us-ascii?Q?ui5RgpsZhQXV7wA1NVmtDQbRJRCdrQwAivIfUWOahpSoCTPPHfWg5S6LslUJ?=
- =?us-ascii?Q?P4PrzfLfTiaRdncZdRetedYDDwJQ1EwDXI8+9FjRcqVJj4A9NFDndtMFs+XQ?=
- =?us-ascii?Q?vnQERDHBUtoGeYyvVpKGc44IQ88SVyTSzWB7wFXukHURbKGx+c7/1iQEBeZD?=
- =?us-ascii?Q?7mVB9y6D8jWbOtxnTpfj8WzoiVoCGfgBUcU3XAlFUr37YyhLWQCAimzktOuz?=
- =?us-ascii?Q?SdrODgBvDSgy3a84bVKoIf1ddSiJSu7fGyi6WUoPZNKW4xqFUg3zpd1rdqTg?=
- =?us-ascii?Q?4z7Lj00JhzbObSaG/qSh2Q2jNDGEOl5CD2DIdQTP3y6BB4slqcjQfnu2AW2T?=
- =?us-ascii?Q?4df3JmpB7Yt4lg4vmnRedkR+/8YW+SZZiHA5A209H/XFXo4KybyfGMP9ErSC?=
- =?us-ascii?Q?QhKvchb/2FtxqMUUuaL7GxhKP18Wk/V2NigXqNFEqdFTe0ro6rDToxjAZuIO?=
- =?us-ascii?Q?GYes+R+eNCoQuG4DDMmVyLExIzJb04VM+N0thS0Jg//QGZUZMGDJtez0mkyj?=
- =?us-ascii?Q?QP/1IgwCvQaxoMy14eUAZUjtXhKp+VuYOrNuQOnLiXpgvLoVltC5zYicf2Yz?=
- =?us-ascii?Q?UyK0HNarfzy4Q44r5KoD1jyETcP7kugw1Vc0Khr9WSyC9DdeCT8e4blc3FrT?=
- =?us-ascii?Q?pYM5jjpkcgPiEGU4mr3fBo03gaBVSa5Dwsbk0IHcgHR00IL4DxfFm54UGbZo?=
- =?us-ascii?Q?E5yCqqJCZJtjOruOkCw4jPH+lYTbudxX+QxLL083dHqeALS+V6XaYDWVvQwu?=
- =?us-ascii?Q?PtO3Rqz9lXWadS2RhpJ6sBlUVIbbVpCrKrit+xmCpNNNyc6hl8hq4qdxP51A?=
- =?us-ascii?Q?SPQ+f4vVG1oLwgxllP7hwqfa54NiGZefsJ7vnmL9?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S243471AbjD0KFY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2023 06:05:24 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C8D04C06
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Apr 2023 03:05:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682589922; x=1714125922;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qNt6DNKR89NUnLNN49LUGqNaFj/jmQfUPGoOjATOVek=;
+  b=WBqTRGGngclav8pEv8KcE58h5cY0sycCGjQRk4FbPvjkXYU4AxSAdgZx
+   VmhmIfIJAuTX1F66E3Vce7M9z8XQPOwvKro8w3zhpdhT18GVcuyABSxE5
+   5bnZcmguHuIqbFCl3URKsRiJLbMbk5rU5lhRoWwGBBgyLkvuWst7i0iFU
+   +uZ/B/Ly9B2/9bkFzIYB5FcJHypzC5uqJrAzK1V6Ez+NCrkl4wdoNBmEs
+   6OrdyijIDRwJUtA1FZA9SLD3qY8PAQIOm11lis+KbPCf00w2ka2A6ghhQ
+   ApirFGtE/H5rU9Yctt0yKWukYwAWA2hcNrp5ZbHrsevxhABfv+/7DC2Cz
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="344838354"
+X-IronPort-AV: E=Sophos;i="5.99,230,1677571200"; 
+   d="scan'208";a="344838354"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2023 03:05:21 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="671722563"
+X-IronPort-AV: E=Sophos;i="5.99,230,1677571200"; 
+   d="scan'208";a="671722563"
+Received: from lkp-server01.sh.intel.com (HELO 1e0e07564161) ([10.239.97.150])
+  by orsmga006.jf.intel.com with ESMTP; 27 Apr 2023 03:05:19 -0700
+Received: from kbuild by 1e0e07564161 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pryV4-00009v-1B;
+        Thu, 27 Apr 2023 10:05:18 +0000
+Date:   Thu, 27 Apr 2023 18:04:35 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com, bhazarika@marvell.com,
+        agurumurthy@marvell.com, sdeodhar@marvell.com
+Subject: Re: [PATCH 1/7] qla2xxx: Multi-que support for TMF
+Message-ID: <202304271702.GpIL391S-lkp@intel.com>
+References: <20230427080351.9889-2-njavali@marvell.com>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?jvZAl5N3rZ2TDSKo1cDWWsuuOi+lHjjd6OiuXmEpqdgZttyPs2WQjtu/gumW?=
- =?us-ascii?Q?utkcmvmuZjEu6kbIsW3Sgx2cibw6ojPouMz5EbAANmPDIu7mZoC1fKFeSCi8?=
- =?us-ascii?Q?cvaTW1W85MeC6jWGaxHwEpTk9Zoud213n4MgRBgw8/8FZzLdngBLjxVEhhhx?=
- =?us-ascii?Q?GlLkS8A3in2KdcHlVsDkoG0ElcuEmIgp5xba86g3XF3Iwe+OAHH49Q5Ei5vB?=
- =?us-ascii?Q?nS/gxqxP/ciSFVHTXeYsx2PS2EwhU7YqU3XShD1TOiODI9MXwBCJeyVizLmr?=
- =?us-ascii?Q?XdgFnlKWMu1FejJZA2Aem4zCj0GmJAvESGwRr+LTId1dV+skd75+n7wLZXjT?=
- =?us-ascii?Q?aIK0SKK4YGqY7dCDoM2ehuEid9MLTS7tST3Z6FjWhb7bgPiQBlv3d6WnoyAw?=
- =?us-ascii?Q?OyyVF4LuwhdCClVaBs6tecgCizNCNS/6tlHLh4sTBLLGaqiN+RYOoKODID9F?=
- =?us-ascii?Q?XMd1dcafJduwPHlNxCv0rOFFRZbDPhkB6i5EkBRWeENlqaGSDLLh94KU0d5c?=
- =?us-ascii?Q?toqWutpW+vObb1fQVbQiTSgtmYKjTnQismV1mGVas7qgNLJhwEoC/jcmTUMe?=
- =?us-ascii?Q?c2JrOdfjwWNDqYNfbgPt9pgFBGcIo154u7t72uTRaEPXNxaIY3TM070JPxq4?=
- =?us-ascii?Q?9oiAUOij5WqHtKHmVN1tGaJqrHJEu4aq3CB4wD5TdIsZwmP/Ta1o3igrTwif?=
- =?us-ascii?Q?JL8zHxXKWXueoVY5M2DnZqK7VvUQ9DAgE7by50HPDr6439dQfgUd6ZmDpRa3?=
- =?us-ascii?Q?cqfeWpMl5KBqExP/VwPK7Ci+8rWOu6RvJF3Qwb5fTm2rekjXMcbxPKk90jC5?=
- =?us-ascii?Q?yubk+LfvFmD4fzzZYHxcYrt6Zi1+TdGtaEg1OmOur/fRM1huY/xqiRhO//3o?=
- =?us-ascii?Q?ozgBpsE358nyHYbKhry07H78OUBzebnyRwNRnpmVZH5ZbiWhq8ffB3+9doCK?=
- =?us-ascii?Q?1eG0/5iuAPii/f3M8Z7/eQZz5UudD8PAtAwzgZxy/c54fZmzr0WlE2GdtcLp?=
- =?us-ascii?Q?ODf/s+jeRd2vDMTarTZqN5igMjp3IqVH5mlK7O3/xIi36dU=3D?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f927cfa2-9999-49f3-5c39-08db4705cf17
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Apr 2023 09:57:27.7564
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: X727XTaRVX3NfZGS0NouEcL/+KLGcfkDCcwoXrpYvkczE/3RmEiEn1oryrz1fwcX6fG9AHhGy3HTchzXLUzsLQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR04MB7996
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230427080351.9889-2-njavali@marvell.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> When allocating memory for the UTP Command Descriptor
-> hba->ucdl_base_addr in ufshcd_memory_alloc(), the macro
-> sizeof_utp_transfer_cmd_desc() is used to calculate the size of the memor=
-y
-> allocation. This macro includes the prd_table as part of the UTP Command
-> Descriptor memory. However, when freeing this memory in the
-> ufshcd_release_sdb_queue(), the sizeof(struct utp_transfer_cmd_desc) is
-> used, and it does not include the prd_table size for the memory to be fre=
-ed.
-> This results in a mismatch of memory size allocated/freed.
->=20
-> Similarly, the ufshcd_mcq_get_tag() incorrectly uses the sizeof(struct
-> utp_transfer_cmd_desc) to find the tag number.
-> This results in failing to probe.
->=20
-> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Looks like this fix is suggested here as well -
-https://www.spinics.net/lists/linux-scsi/msg184092.html
+Hi Nilesh,
 
-Thanks,
-Avri
+kernel test robot noticed the following build warnings:
 
-> ---
->  drivers/ufs/core/ufs-mcq.c | 2 +-
->  drivers/ufs/core/ufshcd.c  | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c inde=
-x
-> 202ff71..b7c5f39 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
->         addr =3D (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) =
--
->                 hba->ucdl_dma_addr;
->=20
-> -       return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
-> +       return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
->  }
->=20
->  static void ufshcd_mcq_process_cqe(struct ufs_hba *hba, diff --git
-> a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
-> 9434328..b009e55 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8444,7 +8444,7 @@ static void ufshcd_release_sdb_queue(struct
-> ufs_hba *hba, int nutrs)  {
->         size_t ucdl_size, utrdl_size;
->=20
-> -       ucdl_size =3D sizeof(struct utp_transfer_cmd_desc) * nutrs;
-> +       ucdl_size =3D sizeof_utp_transfer_cmd_desc(hba) * nutrs;
->         dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
->                            hba->ucdl_dma_addr);
->=20
-> --
-> 2.7.4
+[auto build test WARNING on c8e22b7a1694bb8d025ea636816472739d859145]
 
+url:    https://github.com/intel-lab-lkp/linux/commits/Nilesh-Javali/qla2xxx-Multi-que-support-for-TMF/20230427-160555
+base:   c8e22b7a1694bb8d025ea636816472739d859145
+patch link:    https://lore.kernel.org/r/20230427080351.9889-2-njavali%40marvell.com
+patch subject: [PATCH 1/7] qla2xxx: Multi-que support for TMF
+config: ia64-allyesconfig (https://download.01.org/0day-ci/archive/20230427/202304271702.GpIL391S-lkp@intel.com/config)
+compiler: ia64-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/b9e8bdc4cd77acae5886c7c447d34d898bd1d821
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Nilesh-Javali/qla2xxx-Multi-que-support-for-TMF/20230427-160555
+        git checkout b9e8bdc4cd77acae5886c7c447d34d898bd1d821
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=ia64 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=ia64 SHELL=/bin/bash drivers/scsi/qla2xxx/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304271702.GpIL391S-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/qla2xxx/qla_init.c:2024:1: warning: no previous prototype for '__qla2x00_async_tm_cmd' [-Wmissing-prototypes]
+    2024 | __qla2x00_async_tm_cmd(struct tmf_arg *arg)
+         | ^~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +/__qla2x00_async_tm_cmd +2024 drivers/scsi/qla2xxx/qla_init.c
+
+  2022	
+  2023	int
+> 2024	__qla2x00_async_tm_cmd(struct tmf_arg *arg)
+  2025	{
+  2026		struct scsi_qla_host *vha = arg->vha;
+  2027		struct srb_iocb *tm_iocb;
+  2028		srb_t *sp;
+  2029		unsigned long flags;
+  2030		int rval = QLA_FUNCTION_FAILED;
+  2031	
+  2032		fc_port_t *fcport = arg->fcport;
+  2033	
+  2034		/* ref: INIT */
+  2035		sp = qla2xxx_get_qpair_sp(vha, arg->qpair, fcport, GFP_KERNEL);
+  2036		if (!sp)
+  2037			goto done;
+  2038	
+  2039		qla_vha_mark_busy(vha);
+  2040		sp->type = SRB_TM_CMD;
+  2041		sp->name = "tmf";
+  2042		qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha),
+  2043				      qla2x00_tmf_sp_done);
+  2044		sp->u.iocb_cmd.timeout = qla2x00_tmf_iocb_timeout;
+  2045	
+  2046		tm_iocb = &sp->u.iocb_cmd;
+  2047		init_completion(&tm_iocb->u.tmf.comp);
+  2048		tm_iocb->u.tmf.flags = arg->flags;
+  2049		tm_iocb->u.tmf.lun = arg->lun;
+  2050	
+  2051		rval = qla2x00_start_sp(sp);
+  2052		ql_dbg(ql_dbg_taskm, vha, 0x802f,
+  2053		    "Async-tmf hdl=%x loop-id=%x portid=%02x%02x%02x ctrl=%x.\n",
+  2054		    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
+  2055		    fcport->d_id.b.area, fcport->d_id.b.al_pa, arg->flags);
+  2056	
+  2057		if (rval != QLA_SUCCESS)
+  2058			goto done_free_sp;
+  2059		wait_for_completion(&tm_iocb->u.tmf.comp);
+  2060	
+  2061		rval = tm_iocb->u.tmf.data;
+  2062	
+  2063		if (rval != QLA_SUCCESS) {
+  2064			ql_log(ql_log_warn, vha, 0x8030,
+  2065			    "TM IOCB failed (%x).\n", rval);
+  2066		}
+  2067	
+  2068		if (!test_bit(UNLOADING, &vha->dpc_flags) && !IS_QLAFX00(vha->hw)) {
+  2069			flags = tm_iocb->u.tmf.flags;
+  2070			if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET|
+  2071				TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA))
+  2072				flags = MK_SYNC_ID_LUN;
+  2073			else
+  2074				flags = MK_SYNC_ID;
+  2075	
+  2076			qla2x00_marker(vha, sp->qpair,
+  2077			    sp->fcport->loop_id, arg->lun, flags);
+  2078		}
+  2079	
+  2080	done_free_sp:
+  2081		/* ref: INIT */
+  2082		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+  2083	done:
+  2084		return rval;
+  2085	}
+  2086	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
