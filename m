@@ -2,126 +2,196 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FC27C77B7E
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 07:54:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A99C77B60
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 08:01:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345645AbjD1Hyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Apr 2023 03:54:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36280 "EHLO
+        id S230187AbjD1IBw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Apr 2023 04:01:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345679AbjD1HyX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 03:54:23 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2D574233
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:51 -0700 (PDT)
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33S4FLok032403
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:48 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=OzQ5pz75Xvys3YHsBXksbbJMT7fUh1Rc3WWR+nYLcjQ=;
- b=eggyz6vmPeaCUmXxnbIvY7G1PceFtIFz7KYWfXgSa+e9HH0EGqF+lB6Y9J/amRPcw2MR
- c3xyNdMFEZ2F7dR6hcwmEE3FKBr5gMD22JUzYxIGT55f8oLa6QUb0hsd6KWuqjxWSDjh
- uTFOtn0iK5+ZiDIY2W5IDPn7AdyaFLBRhi004ETEbbBsbCyWEKdDx2iqxfDGe4PdY303
- AxzCQSMSpnKesMgkePYoOGy4ENSCSfr7SPMSx0Kqnn3h9iREX5+acG+67yNJfCoNUG4w
- IwHkT6kUZm1P+Kiq2PMNlMPaBz0Dbs7U/xBoByQVALDaFJmkVqTRThfRA1SbOSH21IQE Vg== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3q85x60va8-4
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:48 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Fri, 28 Apr
- 2023 00:53:46 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
- Transport; Fri, 28 Apr 2023 00:53:46 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 9F82D5B693A;
-        Fri, 28 Apr 2023 00:53:45 -0700 (PDT)
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
-        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
-Subject: [PATCH v2 6/7] qla2xxx: Wait for io return on terminate rport
-Date:   Fri, 28 Apr 2023 00:53:38 -0700
-Message-ID: <20230428075339.32551-7-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20230428075339.32551-1-njavali@marvell.com>
-References: <20230428075339.32551-1-njavali@marvell.com>
+        with ESMTP id S230025AbjD1IBv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 04:01:51 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E845B6;
+        Fri, 28 Apr 2023 01:01:49 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.54])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Q74mF2cccz8xDH;
+        Fri, 28 Apr 2023 16:00:45 +0800 (CST)
+Received: from [10.67.101.126] (10.67.101.126) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Fri, 28 Apr 2023 16:01:45 +0800
+Message-ID: <d7935560-fc81-15b6-8433-e81893850399@huawei.com>
+Date:   Fri, 28 Apr 2023 16:01:45 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: UBMmGyM9SHCrz_7ZklCJVN4iKd4QySnn
-X-Proofpoint-ORIG-GUID: UBMmGyM9SHCrz_7ZklCJVN4iKd4QySnn
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-28_02,2023-04-27_01,2023-02-09_01
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: libsas: set tf to normal in
+ sas_ata_device_link_abort()
+Content-Language: en-CA
+To:     Jason Yan <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <john.g.garry@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>
+References: <20230407035618.25123-1-yangxingui@huawei.com>
+ <d00b38ce-99a8-208b-cdad-714bb3dbf60b@huawei.com>
+ <d873df36-44d3-b98e-7e34-db6446292f32@huawei.com>
+ <1b39acd7-2028-a080-13be-660ed5c0bfb0@huawei.com>
+From:   yangxingui <yangxingui@huawei.com>
+In-Reply-To: <1b39acd7-2028-a080-13be-660ed5c0bfb0@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.67.101.126]
+X-ClientProxiedBy: dggpemm100021.china.huawei.com (7.185.36.105) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
 
-System crash due to use after free.
-Current code allows terminate_rport_io to exit before making
-sure all IOs has returned. For FCP-2 device, IO's can hang
-on in HW because driver has not tear down the session in FW at
-first sign of cable pull. When dev_loss_tmo timer pops,
-terminate_rport_io is called and upper layer is about to
-free various resources. Terminate_rport_io trigger qla to do
-the final cleanup, but the cleanup might not be fast enough where it
-leave qla still holding on to the same resource.
 
-Wait for IO's to return to upper layer before resources are freed.
+On 2023/4/26 9:41, Jason Yan wrote:
+> On 2023/4/17 16:18, yangxingui wrote:
+>> Hi Jason
+>>
+>> On 2023/4/14 15:36, Jason Yan wrote:
+>>> On 2023/4/7 11:56, Xingui Yang wrote:
+>>>> If the disk returns UNC for more than five times within a short 
+>>>> period, the
+>>>> number of retry times for other I/Os may reach scmd->allowed, and the
+>>>> default error "Illegal Request" is returned for other I/Os, as follows:
+>>>>
+>>>> [  273.801770] hisi_sas_v3_hw 0000:b4:02.0: erroneous completion 
+>>>> disk err dev id=2 sas_addr=0x5000000000000605 CQ hdr: 0x400903 
+>>>> 0x20103 0x0 0x80470000
+>>>> [  273.875286] sas: Enter sas_scsi_recover_host busy: 30 failed: 30
+>>>> [  273.879895] sas: trying to find task 0x00000000d9cfc893
+>>>> [  273.879896] sas: sas_scsi_find_task: aborting task 
+>>>> 0x00000000d9cfc893
+>>>> [  273.880054] sas: sas_scsi_find_task: task 0x00000000d9cfc893 is done
+>>>> [  273.880055] sas: sas_eh_handle_sas_errors: task 
+>>>> 0x00000000d9cfc893 is done
+>>>> [  273.880236] ata6.00: failed command: READ FPDMA QUEUED
+>>>> [  273.880238] ata6.00: cmd 60/08:00:59:27:00/00:00:00:00:00/40 tag 
+>>>> 22 ncq dma 4096 in
+>>>>                          res 41/04:00:20:00:00/00:00:00:00:00/00 
+>>>> Emask 0x1 (device error)
+>>>> [  273.880239] ata6.00: status: { DRDY ERR }
+>>>> [  273.880240] ata6.00: error: { ABRT }
+>>>> [  273.880241] ata6.00: failed command: READ FPDMA QUEUED
+>>>> [  273.880243] ata6.00: cmd 60/90:00:d1:26:00/00:00:00:00:00/40 tag 
+>>>> 23 ncq dma 73728 in
+>>>>                          res 41/40:90:10:27:00/00:00:00:00:00/00 
+>>>> Emask 0x409 (media error) <F>
+>>>> [  273.880245] ata6.00: status: { DRDY ERR }
+>>>> [  273.880246] ata6.00: error: { UNC }
+>>>> [  273.880247] ata6.00: failed command: READ FPDMA QUEUED
+>>>> [  273.880249] ata6.00: cmd 60/08:00:19:27:00/00:00:00:00:00/40 tag 
+>>>> 24 ncq dma 4096 in
+>>>>                          res 41/04:00:20:00:00/00:00:00:00:00/00 
+>>>> Emask 0x1 (device error)
+>>>> [  273.880250] ata6.00: status: { DRDY ERR }
+>>>> [  273.880251] ata6.00: error: { ABRT }
+>>>> [  274.199477] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199478] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199479] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199481] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199482] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199483] scmd->retries: 2, scmd->allowed: 5
+>>>> [  274.199484] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199485] scmd->retries: 3, scmd->allowed: 5
+>>>> [  274.199486] scmd->retries: 5, scmd->allowed: 5
+>>>> [  274.199487] scmd->retries: 2, scmd->allowed: 5
+>>>> [  274.199488] scmd->retries: 2, scmd->allowed: 5
+>>>> [  274.199524] sd 6:0:1:0: [sdb] tag#258 FAILED Result: 
+>>>> hostbyte=DID_OK driverbyte=DRIVER_SENSE
+>>>> [  274.199527] sd 6:0:1:0: [sdb] tag#258 Sense Key : Illegal Request 
+>>>> [current]
+>>>> [  274.199530] sd 6:0:1:0: [sdb] tag#258 Add. Sense: Unaligned write 
+>>>> command
+>>>> [  274.199532] sd 6:0:1:0: [sdb] tag#258 CDB: Read(10) 28 00 00 00 
+>>>> 27 59 00 00 08 00
+>>>> [  274.199535] print_req_error: I/O error, dev sdb, sector 10073
+>>>> [  274.199573] sd 6:0:1:0: [sdb] tag#259 FAILED Result: 
+>>>> hostbyte=DID_OK driverbyte=DRIVER_SENSE
+>>>> [  274.199574] sd 6:0:1:0: [sdb] tag#259 Sense Key : Medium Error 
+>>>> [current]
+>>>> [  274.199576] sd 6:0:1:0: [sdb] tag#259 Add. Sense: Unrecovered 
+>>>> read error - auto reallocate failed
+>>>> [  274.199578] sd 6:0:1:0: [sdb] tag#259 CDB: Read(10) 28 00 00 00 
+>>>> 26 d1 00 00 90 00
+>>>> [  274.199579] print_req_error: I/O error, dev sdb, sector 10000
+>>>> [  274.199608] ata6: EH complete
+>>>> [  274.199615] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 
+>>>> 30 tries: 1
+>>>>
+>>>> As mentioned in ata_eh_qc_retry(), if qc->err_mask is zero then 
+>>>> increment
+>>>> scmd->allowed. So set tf to normal may be better.
+>>>
+>>> Hi Xingui,
+>>>
+>>> If we increase scmd->allowed every time, and the device returns UNC 
+>>> for too many times, will the other IO pending for too long and cause 
+>>> hungtask? And also the runtime check in scsi_cmd_runtime_exceeced() 
+>>> will not trigger since cmd->allowed is extended.
+>>>
+>> Thank you for your reply. In scenarios similar to UNC error, where a 
+>> disk returns an error through D2H or SDB, no error is reported for 
+>> other I/Os in the disk. In this case, AHCI will increase the number of 
+>> retry times for other I/Os, and AHCI may face similar problems you 
+>> say, but default failures may not be very good for users.
+> 
+Hi Jason
+> I think at least we cannot always retry unconditionally. Failure is 
+> better than hung becuase users can deal with failures. They can retry 
+> from the userspace. But if the process stuck in kernel, it is a disaster 
+> for the userspace and they can do nothing. Is there a way to limit the 
+> times of retry
+During this period, the user will receive the I/O error of UNC all the 
+time unless the user stops accessing the disk.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_attr.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 70cfc94c3d43..b00222459607 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2750,6 +2750,7 @@ static void
- qla2x00_terminate_rport_io(struct fc_rport *rport)
- {
- 	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
-+	scsi_qla_host_t *vha;
- 
- 	if (!fcport)
- 		return;
-@@ -2759,9 +2760,12 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
- 
- 	if (test_bit(ABORT_ISP_ACTIVE, &fcport->vha->dpc_flags))
- 		return;
-+	vha = fcport->vha;
- 
- 	if (unlikely(pci_channel_offline(fcport->vha->hw->pdev))) {
- 		qla2x00_abort_all_cmds(fcport->vha, DID_NO_CONNECT << 16);
-+		qla2x00_eh_wait_for_pending_commands(fcport->vha, fcport->d_id.b24,
-+			0, WAIT_TARGET);
- 		return;
- 	}
- 	/*
-@@ -2786,6 +2790,15 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
- 			qla2x00_port_logout(fcport->vha, fcport);
- 		}
- 	}
-+
-+	/* check for any straggling io left behind */
-+	if (qla2x00_eh_wait_for_pending_commands(fcport->vha, fcport->d_id.b24, 0, WAIT_TARGET)) {
-+		ql_log(ql_log_warn, vha, 0x300b,
-+		       "IO not return.  Resetting. \n");
-+		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
-+		qla2xxx_wake_dpc(vha);
-+		qla2x00_wait_for_chip_reset(vha);
-+	}
- }
- 
- static int
--- 
-2.23.1
-
+Thanks,
+Xingui
+> 
+> Thanks,
+> Jason
+> 
+>>
+>> In addition, for commands with pass through type, other I/Os are 
+>> immediately returned with default errors and are not retried, but AHCI 
+>> only report one single error I/O.
+>>
+>> Thanks,
+>> Xingui
+>>
+>>> Thanks,
+>>> Jason
+>>>
+>>>>
+>>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>>> ---
+>>>>   drivers/scsi/libsas/sas_ata.c | 4 ++--
+>>>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/libsas/sas_ata.c 
+>>>> b/drivers/scsi/libsas/sas_ata.c
+>>>> index 77714a495cbb..f5047e8dcb59 100644
+>>>> --- a/drivers/scsi/libsas/sas_ata.c
+>>>> +++ b/drivers/scsi/libsas/sas_ata.c
+>>>> @@ -949,8 +949,8 @@ void sas_ata_device_link_abort(struct 
+>>>> domain_device *device, bool force_reset)
+>>>>       unsigned long flags;
+>>>>       spin_lock_irqsave(ap->lock, flags);
+>>>> -    device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY; /* tf status */
+>>>> -    device->sata_dev.fis[3] = ATA_ABORTED; /* tf error */
+>>>> +    device->sata_dev.fis[2] = ATA_DRDY; /* tf status */
+>>>> +    device->sata_dev.fis[3] = 0;        /* tf error */
+>>>>       link->eh_info.err_mask |= AC_ERR_DEV;
+>>>>       if (force_reset)
+>>>>
+>>> .
+>> .
+> .
