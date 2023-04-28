@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9E5BC77B7E
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 15:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B632FC77B60
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 15:38:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346477AbjD1PiX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Apr 2023 11:38:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53146 "EHLO
+        id S1346484AbjD1PiY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Apr 2023 11:38:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346351AbjD1PiC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 11:38:02 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A468F2109
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 08:37:44 -0700 (PDT)
+        with ESMTP id S229851AbjD1PiG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 11:38:06 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12D8C1FFB
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 08:37:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1682696264; x=1714232264;
+  t=1682696268; x=1714232268;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=C3hHDJkr7G7T2bxN0isLxFSOObjeLS5EGCZeIIrjawo=;
-  b=fK0LCmHCFvWWfnGsCKU2wf0xxqQAm/IpTuJgkWeZXLr6eRHpkIXK6g8Y
-   zkHBxLzEGSxMtijWCNvWpeFBUHyHyHuCkZHMJst41VJISRIiR4HmuregX
-   klKoTdV5gdkipbtfEajEXCbwaQZQ2jwbQbWwb6M56XWkgQd/fsDJIaHsx
-   i86ZL7PE9+lkDDxLEwnHGxJlimXDI23NzejgICKAqpdsDPKkf9G840opQ
-   87g7/aEcK9x+S3VwYouAxoH8c8HZSVW0x0EcY0sWEm5ClMBceHOJE49xJ
-   B62TBflVnsUYQnxDqjInDEGSSUI4tfk+zVtp8DkgcwX2Nh44P+Qe3P0O8
-   w==;
+  bh=zsbmEiKjVEtmwafFll/j0inDMfzvsnh/8ANvZnHKc94=;
+  b=SuE5UJ0txjObPmuDseHiLvt2Ot1rY/hqgLUJH0IvZCCwtAMKjorzBGN2
+   kkxC4DdFqCq/b7TXbfMtCn19fh6rGcCR1UPvcDVMrpi8rQGrtDPJj0qB4
+   MH++x+E1MSZUAZHlqV+j2zodC6WmBPPpCcJkUyI6Oz5oE4gxFNS4IHtwj
+   2QEBi8GlpFwshs/eyJ4fjCSsnIFTYq+BDELc5VXiolk7PUPMLKj+T4Vlm
+   td84PdyvK+Kj99iW3cxiBUpG/uhGy0BjHJHqiamFq7unGRRa8jV5T8y+8
+   JM0vR5fYmI4ejdST9eRQ1qR9uv5HCa/fJ6tQC/O8OJQ03PdDVsUjLyU+z
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.99,234,1677567600"; 
-   d="scan'208";a="223049417"
+   d="scan'208";a="208806416"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Apr 2023 08:36:59 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Apr 2023 08:37:03 -0700
 Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 28 Apr 2023 08:36:57 -0700
+ 15.1.2507.21; Fri, 28 Apr 2023 08:37:02 -0700
 Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex03.mchp-main.com
  (10.10.85.151) with Microsoft SMTP Server id 15.1.2507.21 via Frontend
- Transport; Fri, 28 Apr 2023 08:36:56 -0700
+ Transport; Fri, 28 Apr 2023 08:37:01 -0700
 From:   Don Brace <don.brace@microchip.com>
 To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
         <scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
@@ -49,9 +49,9 @@ To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH 02/12] smartpqi: Add new controller PCI IDs
-Date:   Fri, 28 Apr 2023 10:37:02 -0500
-Message-ID: <20230428153712.297638-3-don.brace@microchip.com>
+Subject: [PATCH 06/12] smartpqi: validate block layer host tag
+Date:   Fri, 28 Apr 2023 10:37:06 -0500
+Message-ID: <20230428153712.297638-7-don.brace@microchip.com>
 X-Mailer: git-send-email 2.40.1.375.g9ce9dea4e1
 In-Reply-To: <20230428153712.297638-1-don.brace@microchip.com>
 References: <20230428153712.297638-1-don.brace@microchip.com>
@@ -62,158 +62,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: David Strahan <David.Strahan@microchip.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-All PCI ID entries in Hex.
+Prevent OS crashes when a drive is hot removed during IO stress test.
 
-Add PCI IDs for ZTE controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    ZTE SmartROC3200 RS344-16i 4G           9005 / 028f / 1cf2 / 0804
-    ZTE SmartROC3200 RS345-16i 8G           9005 / 028f / 1cf2 / 0805
-    ZTE SmartIOC2200 RS346-16i              9005 / 028f / 1cf2 / 0806
-    ZTE SmartROC3200 RM344-16i 4G           9005 / 028f / 1cf2 / 54da
-    ZTE SmartROC3200 RM345-16i 8G           9005 / 028f / 1cf2 / 54db
-    ZTE SmartIOC2200 RM346-16i              9005 / 028f / 1cf2 / 54dc
-
-Add PCI IDs for ByteDance controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    ByteHBA JGH43014-8                      9005 / 028f / 1e93 / 1005
-
-Add PCI IDs for IBM controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    IBM 4-Port 24G SAS                      9005 / 028f / 1014 / 0718
-
-Add PCI IDs for Cloudnine controllers:
-                                            VID  / DID  / SVID / SDID
-                                            ----   ----   ----   ----
-    SmartHBA P6600-8i                       9005 / 028f / 1f51 / 1001
-    SmartRAID P7604-8i                      9005 / 028f / 1f51 / 1002
-    SmartHBA P6600-8e                       9005 / 028f / 1f51 / 1003
-    SmartRAID P7604-8e                      9005 / 028f / 1f51 / 1004
-    SmartHBA P6600-16i                      9005 / 028f / 1f51 / 1005
-    SmartRAID P7608-16i                     9005 / 028f / 1f51 / 1006
-    SmartHBA P6600-8i8e                     9005 / 028f / 1f51 / 1007
-    SmartRAID P7608-8i8e                    9005 / 028f / 1f51 / 1008
-    SmartHBA P6600-16e                      9005 / 028f / 1f51 / 1009
-    SmartRAID P7608-16e                     9005 / 028f / 1f51 / 100a
+IO request pointer can be invalid if block layer provides incorrect
+multi-queue host tag. This can lead to invalid IO request
+pointer dereference.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
 Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: David Strahan <David.Strahan@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 72 +++++++++++++++++++++++++++
- 1 file changed, 72 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 29370757b07b..3daad878bafa 100644
+index 7fe80bef1a15..f76b5a3e0fd1 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9927,6 +9927,18 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1f0c, 0x3161)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1cf2, 0x0804)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1cf2, 0x0805)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1cf2, 0x0806)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1cf2, 0x5445)
-@@ -9963,6 +9975,18 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1cf2, 0x544f)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1cf2, 0x54da)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1cf2, 0x54db)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1cf2, 0x54dc)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1cf2, 0x0b27)
-@@ -10015,6 +10039,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0623)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1014, 0x0718)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 				0x1e93, 0x1000)
-@@ -10027,6 +10055,50 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 				0x1e93, 0x1002)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1e93, 0x1005)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1001)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1002)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1003)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1004)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1005)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1006)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1007)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1008)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x1009)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x100a)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_ANY_ID, PCI_ANY_ID)
+@@ -708,7 +708,8 @@ static inline struct pqi_io_request *pqi_alloc_io_request(struct pqi_ctrl_info *
+ 		}
+ 	}
+ 
+-	pqi_reinit_io_request(io_request);
++	if (io_request)
++		pqi_reinit_io_request(io_request);
+ 
+ 	return io_request;
+ }
 -- 
 2.40.1.375.g9ce9dea4e1
 
