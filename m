@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D38CC77B60
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 07:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFB1AC77B61
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 07:54:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345452AbjD1Hy0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Apr 2023 03:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36262 "EHLO
+        id S1345691AbjD1Hy2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Apr 2023 03:54:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229981AbjD1HyV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 03:54:21 -0400
+        with ESMTP id S1345525AbjD1HyW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 03:54:22 -0400
 Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 840FC26B3
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B3A826BC
         for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:50 -0700 (PDT)
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33S4FLoi032403
+        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33S4F4ir030886
         for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:48 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=L1kI2lklFC5zMuBa38fYmSZf0J2mwnBVpxElhlQf3uo=;
- b=EPZRnxzOm2gTJVVEzWEKj8n7X5A2bVP9p7q1CfjluEz1h4WAP8U9mVkB/LiY5zYSzzi3
- sPEF5AY/1VppJkSFX7Jn3ERdJOVdcRkYcFafhPjhVr9sTVXyw5HaUbqtLND7/xtXwwXP
- h7iCzOBOVoVmV6WuFLKN5iMFNrdbqhxLqw8/0HW1A2t+UethpS8aWUKwkVxZsIvi2pDK
- G3yaHuC5c89EhjMEydlu7fjDGylsl06/ylJT5kU9Z3xecMepU496mvCC7raXW3vf2/Ki
- vbgiYjthdDqxRrwYEAVl+0rvSxHam4oovb8ba9FsI5zVDYhButxE+FXa3jTx1KwSZAjc qw== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3q85x60va8-2
+ content-type; s=pfpt0220; bh=oftvcTa22reZOZKbvCO0q6WQxOEKqZeY00WhNt7Ft5w=;
+ b=J+i95YuyUlpiu3t7YbdcbqKMIM3jBwHEGwDFp1DQ6Jz2FNnXK2ZTaZYAZYXJ9xPcLJaN
+ 0C91wKvxHbqWCMP49XYtD4bLnOL/U6VtN8ECw7PT3QRdd9pJY8sfhoyl2iJxInKCLEDw
+ SNpiBvwuwTGNUE9DCv0aa4Fl/dyANQfcSXMd9SkNimLY5tuOH+OjLoASRtXscDRDlrBH
+ aKSAvqwREf7xlOlBzzyAq/XO1ooWdviX+uEoxOYN5SmyntdpkJdMQNepRcMZyJMXr8us
+ eAnufcCLTuItw+z8FMP/d/TzSE7Tiig9SgDixNXgiCv401ccolDm+OMtrkCCfseDb3U2 MA== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3q85x60vaa-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:47 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Fri, 28 Apr
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 00:53:48 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Fri, 28 Apr
  2023 00:53:46 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
- Transport; Fri, 28 Apr 2023 00:53:46 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Fri, 28 Apr 2023 00:53:45 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 6133D5B6936;
+        by maili.marvell.com (Postfix) with ESMTP id 4B0EE5B6935;
         Fri, 28 Apr 2023 00:53:45 -0700 (PDT)
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
-Subject: [PATCH v2 3/7] qla2xxx: Fix task management cmd fail due to unavailable resource
-Date:   Fri, 28 Apr 2023 00:53:35 -0700
-Message-ID: <20230428075339.32551-4-njavali@marvell.com>
+Subject: [PATCH v2 2/7] qla2xxx: Fix task management cmd failure
+Date:   Fri, 28 Apr 2023 00:53:34 -0700
+Message-ID: <20230428075339.32551-3-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20230428075339.32551-1-njavali@marvell.com>
 References: <20230428075339.32551-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-GUID: 4MBJXrlOC76Lu44qHhloScJeclguKewR
-X-Proofpoint-ORIG-GUID: 4MBJXrlOC76Lu44qHhloScJeclguKewR
+X-Proofpoint-GUID: c0mzqBtZTl9vk-e65HbPDNkWKeMiX31j
+X-Proofpoint-ORIG-GUID: c0mzqBtZTl9vk-e65HbPDNkWKeMiX31j
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-28_02,2023-04-27_01,2023-02-09_01
@@ -62,13 +62,13 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-Task management command failed with status 2Ch which is
-a result of too many task management commands sent
-to the same target. Hence limit task management commands
-to 8 per target.
+Task management cmd failed with status 30h which means
+FW is not able to finish processing one task management
+before another task management for the same lun.
+Hence add wait for completion of marker to space it out.
 
 Reported-by: kernel test robot <lkp@intel.com>
-Link: https://lore.kernel.org/oe-kbuild-all/202304271952.NKNmoFzv-lkp@intel.com/
+Link: https://lore.kernel.org/oe-kbuild-all/202304271802.uCZfwQC1-lkp@intel.com/
 Cc: stable@vger.kernel.org
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
@@ -76,133 +76,303 @@ Signed-off-by: Nilesh Javali <njavali@marvell.com>
 v2:
 - Fix warning reported by kernel robot.
 
- drivers/scsi/qla2xxx/qla_def.h  |  3 ++
- drivers/scsi/qla2xxx/qla_init.c | 63 ++++++++++++++++++++++++++++++---
- 2 files changed, 61 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |   6 ++
+ drivers/scsi/qla2xxx/qla_init.c | 102 +++++++++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_iocb.c |  28 +++++++--
+ drivers/scsi/qla2xxx/qla_isr.c  |  26 +++++++-
+ 4 files changed, 139 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 0437e0150a50..0971150953a9 100644
+index d59e94ae0db4..0437e0150a50 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2543,6 +2543,7 @@ enum rscn_addr_format {
- typedef struct fc_port {
- 	struct list_head list;
+@@ -472,6 +472,7 @@ struct tmf_arg {
  	struct scsi_qla_host *vha;
-+	struct list_head tmf_pending;
+ 	u64 lun;
+ 	u32 flags;
++	uint8_t modifier;
+ };
  
- 	unsigned int conf_compl_supported:1;
- 	unsigned int deleted:2;
-@@ -2563,6 +2564,8 @@ typedef struct fc_port {
- 	unsigned int do_prli_nvme:1;
+ struct els_logo_payload {
+@@ -553,6 +554,10 @@ struct srb_iocb {
+ 			uint32_t data;
+ 			struct completion comp;
+ 			__le16 comp_status;
++
++			uint8_t modifier;
++			uint8_t vp_index;
++			uint16_t loop_id;
+ 		} tmf;
+ 		struct {
+ #define SRB_FXDISC_REQ_DMA_VALID	BIT_0
+@@ -656,6 +661,7 @@ struct srb_iocb {
+ #define SRB_SA_UPDATE	25
+ #define SRB_ELS_CMD_HST_NOLOGIN 26
+ #define SRB_SA_REPLACE	27
++#define SRB_MARKER	28
  
- 	uint8_t nvme_flag;
-+	uint8_t active_tmf;
-+#define MAX_ACTIVE_TMF 8
- 
- 	uint8_t node_name[WWN_SIZE];
- 	uint8_t port_name[WWN_SIZE];
+ struct qla_els_pt_arg {
+ 	u8 els_opcode;
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 2402b1402e0d..17649cf9c39d 100644
+index 035d1984e2bd..2402b1402e0d 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2149,6 +2149,54 @@ __qla2x00_async_tm_cmd(struct tmf_arg *arg)
- 	return rval;
+@@ -2013,6 +2013,80 @@ qla2x00_tmf_iocb_timeout(void *data)
+ 	}
  }
  
-+static void qla_put_tmf(fc_port_t *fcport)
++static void qla_marker_sp_done(srb_t *sp, int res)
 +{
-+	struct scsi_qla_host *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags;
++	struct srb_iocb *tmf = &sp->u.iocb_cmd;
 +
-+	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-+	fcport->active_tmf--;
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
++	if (res != QLA_SUCCESS)
++		ql_dbg(ql_dbg_taskm, sp->vha, 0x8004,
++		    "Async-marker fail hdl=%x portid=%06x ctrl=%x lun=%lld qp=%d.\n",
++		    sp->handle, sp->fcport->d_id.b24, sp->u.iocb_cmd.u.tmf.flags,
++		    sp->u.iocb_cmd.u.tmf.lun, sp->qpair->id);
++
++	complete(&tmf->u.tmf.comp);
 +}
 +
-+static
-+int qla_get_tmf(fc_port_t *fcport)
++#define  START_SP_W_RETRIES(_sp, _rval) \
++{\
++	int cnt = 5; \
++	do { \
++		_rval = qla2x00_start_sp(_sp); \
++		if (_rval == EAGAIN) \
++			msleep(1); \
++		else \
++			break; \
++		cnt--; \
++	} while (cnt); \
++}
++
++static int
++qla26xx_marker(struct tmf_arg *arg)
 +{
-+	struct scsi_qla_host *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags;
-+	int rc = 0;
-+	LIST_HEAD(tmf_elem);
++	struct scsi_qla_host *vha = arg->vha;
++	struct srb_iocb *tm_iocb;
++	srb_t *sp;
++	int rval = QLA_FUNCTION_FAILED;
++	fc_port_t *fcport = arg->fcport;
 +
-+	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-+	list_add_tail(&tmf_elem, &fcport->tmf_pending);
++	/* ref: INIT */
++	sp = qla2xxx_get_qpair_sp(vha, arg->qpair, fcport, GFP_KERNEL);
++	if (!sp)
++		goto done;
 +
-+	while (fcport->active_tmf >= MAX_ACTIVE_TMF) {
-+		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
++	sp->type = SRB_MARKER;
++	sp->name = "marker";
++	qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha), qla_marker_sp_done);
++	sp->u.iocb_cmd.timeout = qla2x00_tmf_iocb_timeout;
 +
-+		msleep(1);
++	tm_iocb = &sp->u.iocb_cmd;
++	init_completion(&tm_iocb->u.tmf.comp);
++	tm_iocb->u.tmf.modifier = arg->modifier;
++	tm_iocb->u.tmf.lun = arg->lun;
++	tm_iocb->u.tmf.loop_id = fcport->loop_id;
++	tm_iocb->u.tmf.vp_index = vha->vp_idx;
 +
-+		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-+		if (fcport->deleted) {
-+			rc = EIO;
-+			break;
-+		}
-+		if (fcport->active_tmf < MAX_ACTIVE_TMF &&
-+		    list_is_first(&tmf_elem, &fcport->tmf_pending))
-+			break;
++	START_SP_W_RETRIES(sp, rval);
++
++	ql_dbg(ql_dbg_taskm, vha, 0x8006,
++	    "Async-marker hdl=%x loop-id=%x portid=%06x modifier=%x lun=%lld qp=%d rval %d.\n",
++	    sp->handle, fcport->loop_id, fcport->d_id.b24,
++	    arg->modifier, arg->lun, sp->qpair->id, rval);
++
++	if (rval != QLA_SUCCESS) {
++		ql_log(ql_log_warn, vha, 0x8031,
++		    "Marker IOCB failed (%x).\n", rval);
++		goto done_free_sp;
 +	}
 +
-+	list_del(&tmf_elem);
++	wait_for_completion(&tm_iocb->u.tmf.comp);
 +
-+	if (!rc)
-+		fcport->active_tmf++;
++done_free_sp:
++	/* ref: INIT */
++	kref_put(&sp->cmd_kref, qla2x00_sp_release);
++done:
++	return rval;
++}
 +
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ static void qla2x00_tmf_sp_done(srb_t *sp, int res)
+ {
+ 	struct srb_iocb *tmf = &sp->u.iocb_cmd;
+@@ -2026,7 +2100,6 @@ __qla2x00_async_tm_cmd(struct tmf_arg *arg)
+ 	struct scsi_qla_host *vha = arg->vha;
+ 	struct srb_iocb *tm_iocb;
+ 	srb_t *sp;
+-	unsigned long flags;
+ 	int rval = QLA_FUNCTION_FAILED;
+ 
+ 	fc_port_t *fcport = arg->fcport;
+@@ -2048,11 +2121,12 @@ __qla2x00_async_tm_cmd(struct tmf_arg *arg)
+ 	tm_iocb->u.tmf.flags = arg->flags;
+ 	tm_iocb->u.tmf.lun = arg->lun;
+ 
+-	rval = qla2x00_start_sp(sp);
++	START_SP_W_RETRIES(sp, rval);
 +
-+	return rc;
+ 	ql_dbg(ql_dbg_taskm, vha, 0x802f,
+-	    "Async-tmf hdl=%x loop-id=%x portid=%02x%02x%02x ctrl=%x.\n",
+-	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
+-	    fcport->d_id.b.area, fcport->d_id.b.al_pa, arg->flags);
++	    "Async-tmf hdl=%x loop-id=%x portid=%06x ctrl=%x lun=%lld qp=%d rval=%x.\n",
++	    sp->handle, fcport->loop_id, fcport->d_id.b24,
++	    arg->flags, arg->lun, sp->qpair->id, rval);
+ 
+ 	if (rval != QLA_SUCCESS)
+ 		goto done_free_sp;
+@@ -2065,17 +2139,8 @@ __qla2x00_async_tm_cmd(struct tmf_arg *arg)
+ 		    "TM IOCB failed (%x).\n", rval);
+ 	}
+ 
+-	if (!test_bit(UNLOADING, &vha->dpc_flags) && !IS_QLAFX00(vha->hw)) {
+-		flags = tm_iocb->u.tmf.flags;
+-		if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET|
+-			TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA))
+-			flags = MK_SYNC_ID_LUN;
+-		else
+-			flags = MK_SYNC_ID;
+-
+-		qla2x00_marker(vha, sp->qpair,
+-		    sp->fcport->loop_id, arg->lun, flags);
+-	}
++	if (!test_bit(UNLOADING, &vha->dpc_flags) && !IS_QLAFX00(vha->hw))
++		rval = qla26xx_marker(arg);
+ 
+ done_free_sp:
+ 	/* ref: INIT */
+@@ -2099,6 +2164,11 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
+ 	a.fcport = fcport;
+ 	a.lun = lun;
+ 
++	if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET| TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA))
++		a.modifier = MK_SYNC_ID_LUN;
++	else
++		a.modifier = MK_SYNC_ID;
++
+ 	if (vha->hw->mqenable) {
+ 		for (i = 0; i < vha->hw->num_qpairs; i++) {
+ 			qpair = vha->hw->queue_pair_map[i];
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index b02039601cc0..6acfdcc48b16 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -522,21 +522,25 @@ __qla2x00_marker(struct scsi_qla_host *vha, struct qla_qpair *qpair,
+ 		return (QLA_FUNCTION_FAILED);
+ 	}
+ 
++	mrk24 = (struct mrk_entry_24xx *)mrk;
++
+ 	mrk->entry_type = MARKER_TYPE;
+ 	mrk->modifier = type;
+ 	if (type != MK_SYNC_ALL) {
+ 		if (IS_FWI2_CAPABLE(ha)) {
+-			mrk24 = (struct mrk_entry_24xx *) mrk;
+ 			mrk24->nport_handle = cpu_to_le16(loop_id);
+ 			int_to_scsilun(lun, (struct scsi_lun *)&mrk24->lun);
+ 			host_to_fcp_swap(mrk24->lun, sizeof(mrk24->lun));
+ 			mrk24->vp_index = vha->vp_idx;
+-			mrk24->handle = make_handle(req->id, mrk24->handle);
+ 		} else {
+ 			SET_TARGET_ID(ha, mrk->target, loop_id);
+ 			mrk->lun = cpu_to_le16((uint16_t)lun);
+ 		}
+ 	}
++
++	if (IS_FWI2_CAPABLE(ha))
++		mrk24->handle = QLA_SKIP_HANDLE;
++
+ 	wmb();
+ 
+ 	qla2x00_start_iocbs(vha, req);
+@@ -3853,9 +3857,9 @@ static int qla_get_iocbs_resource(struct srb *sp)
+ 	case SRB_NACK_LOGO:
+ 	case SRB_LOGOUT_CMD:
+ 	case SRB_CTRL_VP:
+-		push_it_through = true;
+-		fallthrough;
++	case SRB_MARKER:
+ 	default:
++		push_it_through = true;
+ 		get_exch = false;
+ 	}
+ 
+@@ -3871,6 +3875,19 @@ static int qla_get_iocbs_resource(struct srb *sp)
+ 	return qla_get_fw_resources(sp->qpair, &sp->iores);
+ }
+ 
++static void
++qla_marker_iocb(srb_t *sp, struct mrk_entry_24xx *mrk)
++{
++	mrk->entry_type = MARKER_TYPE;
++	mrk->modifier = sp->u.iocb_cmd.u.tmf.modifier;
++	if (sp->u.iocb_cmd.u.tmf.modifier != MK_SYNC_ALL) {
++		mrk->nport_handle = cpu_to_le16(sp->u.iocb_cmd.u.tmf.loop_id);
++		int_to_scsilun(sp->u.iocb_cmd.u.tmf.lun, (struct scsi_lun *)&mrk->lun);
++		host_to_fcp_swap(mrk->lun, sizeof(mrk->lun));
++		mrk->vp_index = sp->u.iocb_cmd.u.tmf.vp_index;
++	}
 +}
 +
  int
- qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
- 		     uint32_t tag)
-@@ -2156,18 +2204,19 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
- 	struct scsi_qla_host *vha = fcport->vha;
- 	struct qla_qpair *qpair;
- 	struct tmf_arg a;
--	struct completion comp;
- 	int i, rval;
- 
--	init_completion(&comp);
- 	a.vha = fcport->vha;
- 	a.fcport = fcport;
- 	a.lun = lun;
--
--	if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET| TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA))
-+	if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET| TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA)) {
- 		a.modifier = MK_SYNC_ID_LUN;
--	else
-+
-+		if (qla_get_tmf(fcport))
-+			return QLA_FUNCTION_FAILED;
-+	} else {
- 		a.modifier = MK_SYNC_ID;
-+	}
- 
- 	if (vha->hw->mqenable) {
- 		for (i = 0; i < vha->hw->num_qpairs; i++) {
-@@ -2186,6 +2235,9 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
- 	a.flags = flags;
- 	rval = __qla2x00_async_tm_cmd(&a);
- 
-+	if (a.modifier == MK_SYNC_ID_LUN)
-+		qla_put_tmf(fcport);
-+
- 	return rval;
+ qla2x00_start_sp(srb_t *sp)
+ {
+@@ -3974,6 +3991,9 @@ qla2x00_start_sp(srb_t *sp)
+ 	case SRB_SA_REPLACE:
+ 		qla24xx_sa_replace_iocb(sp, pkt);
+ 		break;
++	case SRB_MARKER:
++		qla_marker_iocb(sp, pkt);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 71feda2cdb63..f3107508cf12 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3750,6 +3750,28 @@ static int qla_chk_cont_iocb_avail(struct scsi_qla_host *vha,
+ 	return rc;
  }
  
-@@ -5400,6 +5452,7 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
- 	INIT_WORK(&fcport->reg_work, qla_register_fcport_fn);
- 	INIT_LIST_HEAD(&fcport->gnl_entry);
- 	INIT_LIST_HEAD(&fcport->list);
-+	INIT_LIST_HEAD(&fcport->tmf_pending);
- 
- 	INIT_LIST_HEAD(&fcport->sess_cmd_list);
- 	spin_lock_init(&fcport->sess_cmd_lock);
++static void qla_marker_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
++	struct mrk_entry_24xx *pkt)
++{
++	const char func[] = "MRK-IOCB";
++	srb_t *sp;
++	int res = QLA_SUCCESS;
++
++	if (!IS_FWI2_CAPABLE(vha->hw))
++		return;
++
++	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
++	if (!sp)
++		return;
++
++	if (pkt->entry_status) {
++		ql_dbg(ql_dbg_taskm, vha, 0x8025, "marker failure.\n");
++		res = QLA_COMMAND_ERROR;
++	}
++	sp->u.iocb_cmd.u.tmf.data = res;
++	sp->done(sp, res);
++}
++
+ /**
+  * qla24xx_process_response_queue() - Process response queue entries.
+  * @vha: SCSI driver HA context
+@@ -3863,9 +3885,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 					(struct nack_to_isp *)pkt);
+ 			break;
+ 		case MARKER_TYPE:
+-			/* Do nothing in this case, this check is to prevent it
+-			 * from falling into default case
+-			 */
++			qla_marker_iocb_entry(vha, rsp->req, (struct mrk_entry_24xx *)pkt);
+ 			break;
+ 		case ABORT_IOCB_TYPE:
+ 			qla24xx_abort_iocb_entry(vha, rsp->req,
 -- 
 2.23.1
 
