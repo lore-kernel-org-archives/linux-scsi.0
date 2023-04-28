@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AFBFC77B61
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 15:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 754C2C77B7E
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Apr 2023 15:37:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230420AbjD1Ph5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Apr 2023 11:37:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52644 "EHLO
+        id S1345900AbjD1Ph6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Apr 2023 11:37:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230366AbjD1Phs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 11:37:48 -0400
+        with ESMTP id S1346087AbjD1Pht (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2023 11:37:49 -0400
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32DF8559D
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 08:37:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EAB35BBB
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2023 08:37:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1682696248; x=1714232248;
+  t=1682696250; x=1714232250;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=MMuzKRWqImG+2wNI5yo9Prq+Ly1D5t+cWzO9bCOb0Kc=;
-  b=pajZezbHX1Q8mNZqh23w3AOlCZI01xIgohV0k0dqUbhGDLsmzLN3LJAm
-   RWOa5omfCh1YWDKcjuFk8f7gky614FMppfYn1FkLzUsNhYGXWoKjCznXN
-   52FIVM5WgxkchLpHogRQv3genpzWkpH5HZW+aXxIAdCUHnqdpdsiDYJr/
-   PUsiwOJXRwZMggiNIp+FCNfLAgvXCLTwfHmYoTCTveycKuZw8AtFR8Msy
-   EnCHz8xPaU7L2+LsfW4Cs1L/bqyXzvnH0xDc7p1bt2V0WayTbar+7KXDh
-   cObMYNsla9+5hqtqiO0aId57qJuVWpt47RGyR5I04AMCxe3chxxo79JdZ
+  bh=tIk/kN1rKS7uD/9eFw9SLa1rIEKyHQ+5g1LuMG2AJxg=;
+  b=fHe6Ck5viVD0Zr5oNf7U5ZjF2T7cHNus7PNSxjkSF2cwZO2UrCyMTsgt
+   8XsiV2rZF1JQ3Iuex9+tY+tybaNlUAup331K/CKeN7cgsOZDx9pcMmwhm
+   TY1AlTLlPAiE/KJGmHz98r6z6CQ3Grce610Kx33F0mCgWsEyF+0Akrhwi
+   bDHVl7j7pp02sHW0ZUL+umiE1PZys4DFMqzJhRdqWQG+3b+4z5fKvsil4
+   pgEcvY5Y5iGr1Llxhz/HflOEq99QcVpuxkJws6d29oH+pb3Fy8yZMQyye
+   HI79lagnYSIEprCpqvHu8crkplRti8pbJNHenN5MLuoEcQ2UpJqR4b/Tr
    g==;
 X-IronPort-AV: E=Sophos;i="5.99,234,1677567600"; 
-   d="scan'208";a="208806408"
+   d="scan'208";a="149474296"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Apr 2023 08:37:02 -0700
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Apr 2023 08:37:06 -0700
 Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 28 Apr 2023 08:37:01 -0700
+ 15.1.2507.21; Fri, 28 Apr 2023 08:37:05 -0700
 Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex03.mchp-main.com
  (10.10.85.151) with Microsoft SMTP Server id 15.1.2507.21 via Frontend
- Transport; Fri, 28 Apr 2023 08:37:00 -0700
+ Transport; Fri, 28 Apr 2023 08:37:04 -0700
 From:   Don Brace <don.brace@microchip.com>
 To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
         <scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
@@ -49,9 +49,9 @@ To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH 05/12] smartpqi: Remove contention for raid_bypass_cnt
-Date:   Fri, 28 Apr 2023 10:37:05 -0500
-Message-ID: <20230428153712.297638-6-don.brace@microchip.com>
+Subject: [PATCH 09/12] smartpqi: stop sending driver initiated TURs
+Date:   Fri, 28 Apr 2023 10:37:09 -0500
+Message-ID: <20230428153712.297638-10-don.brace@microchip.com>
 X-Mailer: git-send-email 2.40.1.375.g9ce9dea4e1
 In-Reply-To: <20230428153712.297638-1-don.brace@microchip.com>
 References: <20230428153712.297638-1-don.brace@microchip.com>
@@ -62,69 +62,181 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <mike.mcgowen@microchip.com>
+From: Kevin Barnett <Kevin.Barnett@microchip.com>
 
-Reduce CPU contention when incrementing variable raid_bypass_cnt.
+Stop sending driver initiated TURs to physical devices during driver
+load/rescan.
 
-Remove the atomic operations for this variable by changing
-the atomic to an unsigned int and replace atomic operations with
-standard operations. The value is only checked that it is increasing
-and accuracy is not required.
+Note: Patch does not affect SML initiated TURs.
+
+Some Linux kernels can cause lengthy delays in OS boot if the
+kernel detects that a drive is being sanitized/erased. We were using
+TURs to detect if a sanitize/erase was in progress.
+
+Some devices do not return the TUR in a timely manner, causing driver
+load/rescan stalls.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      | 2 +-
- drivers/scsi/smartpqi/smartpqi_init.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |  1 +
+ drivers/scsi/smartpqi/smartpqi_init.c | 85 ++++-----------------------
+ 2 files changed, 11 insertions(+), 75 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 228838eb3686..659a087a0e52 100644
+index 659a087a0e52..6883526db93c 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1147,7 +1147,7 @@ struct pqi_scsi_dev {
- 
- 	struct pqi_stream_data stream_data[NUM_STREAMS_PER_LUN];
- 	atomic_t scsi_cmds_outstanding[PQI_MAX_LUNS_PER_DEVICE];
--	atomic_t raid_bypass_cnt;
-+	unsigned int raid_bypass_cnt;
- };
- 
- /* VPD inquiry pages */
+@@ -1108,6 +1108,7 @@ struct pqi_scsi_dev {
+ 	u8	volume_offline : 1;
+ 	u8	rescan : 1;
+ 	u8	ignore_device : 1;
++	u8	erase_in_progress : 1;
+ 	bool	aio_enabled;		/* only valid for physical disks */
+ 	bool	in_remove;
+ 	bool	device_offline;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 3daad878bafa..7fe80bef1a15 100644
+index d3d4fc90dcae..324870477bae 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6052,7 +6052,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 			rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device, scmd, queue_group);
- 			if (rc == 0 || rc == SCSI_MLQUEUE_HOST_BUSY) {
- 				raid_bypassed = true;
--				atomic_inc(&device->raid_bypass_cnt);
-+				device->raid_bypass_cnt++;
- 			}
+@@ -608,10 +608,6 @@ static int pqi_build_raid_path_request(struct pqi_ctrl_info *ctrl_info,
+ 	cdb = request->cdb;
+ 
+ 	switch (cmd) {
+-	case TEST_UNIT_READY:
+-		request->data_direction = SOP_READ_FLAG;
+-		cdb[0] = TEST_UNIT_READY;
+-		break;
+ 	case INQUIRY:
+ 		request->data_direction = SOP_READ_FLAG;
+ 		cdb[0] = INQUIRY;
+@@ -1619,6 +1615,7 @@ static void pqi_get_volume_status(struct pqi_ctrl_info *ctrl_info,
+ 
+ #define PQI_DEVICE_NCQ_PRIO_SUPPORTED	0x01
+ #define PQI_DEVICE_PHY_MAP_SUPPORTED	0x10
++#define PQI_DEVICE_ERASE_IN_PROGRESS	0x10
+ 
+ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device,
+@@ -1667,6 +1664,8 @@ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 		((get_unaligned_le32(&id_phys->misc_drive_flags) >> 16) &
+ 		PQI_DEVICE_NCQ_PRIO_SUPPORTED);
+ 
++	device->erase_in_progress = !!(get_unaligned_le16(&id_phys->extra_physical_drive_flags) & PQI_DEVICE_ERASE_IN_PROGRESS);
++
+ 	return 0;
+ }
+ 
+@@ -1712,7 +1711,7 @@ static int pqi_get_logical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 
+ /*
+  * Prevent adding drive to OS for some corner cases such as a drive
+- * undergoing a sanitize operation. Some OSes will continue to poll
++ * undergoing a sanitize (erase) operation. Some OSes will continue to poll
+  * the drive until the sanitize completes, which can take hours,
+  * resulting in long bootup delays. Commands such as TUR, READ_CAP
+  * are allowed, but READ/WRITE cause check condition. So the OS
+@@ -1720,73 +1719,9 @@ static int pqi_get_logical_device_info(struct pqi_ctrl_info *ctrl_info,
+  * Note: devices that have completed sanitize must be re-enabled
+  *       using the management utility.
+  */
+-static bool pqi_keep_device_offline(struct pqi_ctrl_info *ctrl_info,
+-	struct pqi_scsi_dev *device)
++static inline bool pqi_keep_device_offline(struct pqi_scsi_dev *device)
+ {
+-	u8 scsi_status;
+-	int rc;
+-	enum dma_data_direction dir;
+-	char *buffer;
+-	int buffer_length = 64;
+-	size_t sense_data_length;
+-	struct scsi_sense_hdr sshdr;
+-	struct pqi_raid_path_request request;
+-	struct pqi_raid_error_info error_info;
+-	bool offline = false; /* Assume keep online */
+-
+-	/* Do not check controllers. */
+-	if (pqi_is_hba_lunid(device->scsi3addr))
+-		return false;
+-
+-	/* Do not check LVs. */
+-	if (pqi_is_logical_device(device))
+-		return false;
+-
+-	buffer = kmalloc(buffer_length, GFP_KERNEL);
+-	if (!buffer)
+-		return false; /* Assume not offline */
+-
+-	/* Check for SANITIZE in progress using TUR */
+-	rc = pqi_build_raid_path_request(ctrl_info, &request,
+-		TEST_UNIT_READY, RAID_CTLR_LUNID, buffer,
+-		buffer_length, 0, &dir);
+-	if (rc)
+-		goto out; /* Assume not offline */
+-
+-	memcpy(request.lun_number, device->scsi3addr, sizeof(request.lun_number));
+-
+-	rc = pqi_submit_raid_request_synchronous(ctrl_info, &request.header, 0, &error_info);
+-
+-	if (rc)
+-		goto out; /* Assume not offline */
+-
+-	scsi_status = error_info.status;
+-	sense_data_length = get_unaligned_le16(&error_info.sense_data_length);
+-	if (sense_data_length == 0)
+-		sense_data_length =
+-			get_unaligned_le16(&error_info.response_data_length);
+-	if (sense_data_length) {
+-		if (sense_data_length > sizeof(error_info.data))
+-			sense_data_length = sizeof(error_info.data);
+-
+-		/*
+-		 * Check for sanitize in progress: asc:0x04, ascq: 0x1b
+-		 */
+-		if (scsi_status == SAM_STAT_CHECK_CONDITION &&
+-			scsi_normalize_sense(error_info.data,
+-				sense_data_length, &sshdr) &&
+-				sshdr.sense_key == NOT_READY &&
+-				sshdr.asc == 0x04 &&
+-				sshdr.ascq == 0x1b) {
+-			device->device_offline = true;
+-			offline = true;
+-			goto out; /* Keep device offline */
+-		}
+-	}
+-
+-out:
+-	kfree(buffer);
+-	return offline;
++	return device->erase_in_progress;
+ }
+ 
+ static int pqi_get_device_info_phys_logical(struct pqi_ctrl_info *ctrl_info,
+@@ -2530,10 +2465,6 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
+ 		if (!pqi_is_supported_device(device))
+ 			continue;
+ 
+-		/* Do not present disks that the OS cannot fully probe */
+-		if (pqi_keep_device_offline(ctrl_info, device))
+-			continue;
+-
+ 		/* Gather information about the device. */
+ 		rc = pqi_get_device_info(ctrl_info, device, id_phys);
+ 		if (rc == -ENOMEM) {
+@@ -2556,6 +2487,10 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
+ 			continue;
  		}
- 		if (!raid_bypassed)
-@@ -7288,7 +7288,7 @@ static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
- 	struct scsi_device *sdev;
- 	struct pqi_scsi_dev *device;
- 	unsigned long flags;
--	int raid_bypass_cnt;
-+	unsigned int raid_bypass_cnt;
  
- 	sdev = to_scsi_device(dev);
- 	ctrl_info = shost_to_hba(sdev->host);
-@@ -7304,7 +7304,7 @@ static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
- 		return -ENODEV;
- 	}
++		/* Do not present disks that the OS cannot fully probe. */
++		if (pqi_keep_device_offline(device))
++			continue;
++
+ 		pqi_assign_bus_target_lun(device);
  
--	raid_bypass_cnt = atomic_read(&device->raid_bypass_cnt);
-+	raid_bypass_cnt = device->raid_bypass_cnt;
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
+ 		if (device->is_physical_device) {
 -- 
 2.40.1.375.g9ce9dea4e1
 
