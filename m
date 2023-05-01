@@ -2,511 +2,368 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C91C7EE25
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 May 2023 08:40:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CACAC77B61
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 May 2023 15:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232238AbjEAIkQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 May 2023 04:40:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47128 "EHLO
+        id S232281AbjEAPGa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 May 2023 11:06:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232202AbjEAIkO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 May 2023 04:40:14 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D221B10C4;
-        Mon,  1 May 2023 01:40:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1682930411; x=1714466411;
-  h=from:to:subject:date:message-id:content-id:
-   content-transfer-encoding:mime-version;
-  bh=L2wBVPvSKWr0sDdNZtHuZr/hB3JyqpsuDc5WLE9un5Q=;
-  b=dIkNMfIVR2RhN4cWX6rmikrl5UOBRzoG3EAsPPnAU5DWRWm2ZNOYbg5V
-   JP8WBZdZa/E2fZZMEsd0vcOuobnJZso4PRaMCus1VNLtV6rtCljSkf+4V
-   fq/6R8mwa20erHiqxuQOuAUuphW2y7go5SDZIAQFilmBje8FOcTeeTII9
-   jPNwobs9DVAl1lggt/fp1q744m8yCL+ofm+2za57nFEYSRQ9INqs5dAOp
-   xixs5NwhiENSJRBDff/vRxmPkIH9XTxO2ktRcS8mGJtPJ7FDMyRk1o1Ml
-   YeasjU37CCyHkkifxhJwpVUKB+ik6zfAUNYrPidvb8D7W1/dMovXOAuZe
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.99,239,1677513600"; 
-   d="scan'208";a="334056354"
-Received: from mail-co1nam11lp2175.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.175])
-  by ob1.hgst.iphmx.com with ESMTP; 01 May 2023 16:40:10 +0800
+        with ESMTP id S232169AbjEAPG3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 May 2023 11:06:29 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5251100
+        for <linux-scsi@vger.kernel.org>; Mon,  1 May 2023 08:06:27 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 341EItnQ012491;
+        Mon, 1 May 2023 15:06:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=wvwbATWVqWon6bbRC3rGq9bX6iFKtnHD5pYLwQvjzaE=;
+ b=p1YzTJ9wmmv7Yw6QuGSny4u71oXSsVO+WVcJ1mXZuFAvvtBHxFpJaA268dlSEk9dzRB4
+ o+rt/5xzFHs3mgQtHSuX8OjuLjnU3Cy76e0f3a4vvZsflQ/OQ2fUDGOdf8ARnvAkznZm
+ xGrIlKprg4tKKQbvSenX0m7705pEzEe+bzSUAu1/2OH6k1FAE0gaKtrwMjH2qWoOGiMH
+ p08FTLgrwcNpssg/zow7L0DsKxJQJ8SnihDyK1wUbo4JFxWjF8yv3+YnjYCb4+VCSk9m
+ l+R4lvIdQvurkx7wDmXCI4YMum9Z8v4Nyg6rCL2D1PKNfB+fHYzevHUGhd84DG+0Vn7x mQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q8tuu2hj9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 01 May 2023 15:06:24 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 341EdPUk002423;
+        Mon, 1 May 2023 15:06:24 GMT
+Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02lp2044.outbound.protection.outlook.com [104.47.57.44])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3q8spat7p1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 01 May 2023 15:06:24 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=j++Z4t7r8K5ggmSPK+GxlZ/68jPECFsKJyzpGpbHgp5XvK6idPVLY7s0WMwd4BJyqk7v0fL9Hi7mAHmNvL/CyEIyoNgeP5hr6RUEG4aaX4Z/FHkgMLY2vNEuBZuagD4yQ+hxKdcwYJNiwFZvFcYVT1Jg3xJ8r0wBNXCXbqWPjfSKco7Z1lrr5X4Bn9o+mdSnxBBhE77eEKEazt7lm7pynzb5/JXYsrOFOx2BoB1FRMeMhHDN6N+jdOFqkjShG4hKdkr+LlfsNt+9xpcZAijNNHyMm5lgzI8Gpp3CDdmgoaPmMxPM6oyjif2vE+QxtFJtT+S1eud+v5JkF+f+JK2Abg==
+ b=KdLPQAEHMWjDFYBjNbP9E8UO9oCewJTY3DGAiWbw9nfxTWpr5iCHgTLRi7fC6gnxvUZ4RPi0oaxVCWA5nDI6F9tpx1fBxNS1fl/Rd/CpjbLLEYo9OmONOYzI+5joiqMtBRNmJWil4eTlGpUePWReCU+pXFe5DHpEtmMXSO75SUXtplCfHwQmwrwjbzDtAVvKeaAg1xdRI/FW7QZHvC3I7mIn6cTEEE9nK3mTvFK9uDRyp0/lXxXcsBQhgoOhGTlDd0II/14pVfPc5XKvph7aBSyft6YMrqwcQy1Lo+EEq221Jh0QJyD+nyMHRXeZQuwjeQdO37vKmmxPhCFQsLVLAg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SQCW/D3X+EPaVaAP5gKbNU5yk5+ESLW1VL8y124W6lY=;
- b=ToUCWWxUuQwnbNEgv4imlisbs+K68J0zd5eFWr2TPNSKkR+Q0AXP7VgMxaYbDdLw8L0LLowq9gJ49fwaBIAx81GqWH5bixth1pDreSnALg+UqCmAH2AIxtSasDrxg5zOgTV/jY6yvw7bYusUfPJ439h13tPF6mzrdkFcsnUvjy7cbSML8engEZUk8rMfBkeN/wIIMkNNkppKRcJpysBaHA9uvxKckadqp8WJxOq5e34KZ0fHxwsWd56eHrCxHMp8t2OQjQY/qQ4CnA308t+NQyXTlns/oZAcQj7ME/DoidwSdWsELzZeHr5vRaA9tx2iEicG5mIlx68g+iaegFgEIQ==
+ bh=wvwbATWVqWon6bbRC3rGq9bX6iFKtnHD5pYLwQvjzaE=;
+ b=Y0B5fuXrxyKeCElWYp968m3EJWZ2vCISyZqqMDfWuTWq5DRzpgdJG3AbcKat4zbokE0ADq9GXUdizlY4hZ1p7Vq7iV71riawVywjJS3Wn945MDbsHd9buVi++qnkUlMhX6tqiMUbrvYGuML/1jtcO3ZPPTNIJ2Sd1iMWbCRNhG9pd3TpBKw7if50pXtmDspgOdT6CmkzZ9Bvuu0Db34s2dmD6fFrucobhEL4HnAelzeTfTBNmwQcG487oGD4Bx4fSR3BwvzbEC9I0nJJMOQTVfVbna+ZGdVKKuJuCHg2EyVV7XrlaKzIG+D/lP4DptBzbwQYKNkAQJpMYwjlVWoJ4A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SQCW/D3X+EPaVaAP5gKbNU5yk5+ESLW1VL8y124W6lY=;
- b=u+4FfFRZlbwvHM+Bg35Qz40Kg0H6l4qFQP7pmXI0wUbLu7JiVPYGbzqAAFvi59FkHY0jXMhvL6PhxEqvN5/8zg26bRCpWi45XDk1j/JqoJZWOT+v8oXzEJbTjw9SR4b0S/qSA4eh6k6G1ZqoEkLcnyxQ1utWP/0uNHAFbUc2Zb4=
-Received: from DM8PR04MB8037.namprd04.prod.outlook.com (2603:10b6:8:f::6) by
- BL3PR04MB8026.namprd04.prod.outlook.com (2603:10b6:208:345::17) with
+ bh=wvwbATWVqWon6bbRC3rGq9bX6iFKtnHD5pYLwQvjzaE=;
+ b=wEQJZIhfcrBpqN8iFnKwxcz8rNdJ7LJ3/8/Owad1HezeBknH4+719WPMgAy3Q2R6OkLa09S7f0UYTEg8Q4zJ5njoBmRLQUyOyc5dYYpQB+lD43fU5+OEgHhlmDt81XK/0aHc83sjlloxPzdKfn2SaqLU5Q8YISEKRGvm+qgSomA=
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by BY5PR10MB4340.namprd10.prod.outlook.com (2603:10b6:a03:210::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6340.30; Mon, 1 May
- 2023 08:40:07 +0000
-Received: from DM8PR04MB8037.namprd04.prod.outlook.com
- ([fe80::eb0e:1bef:f266:eceb]) by DM8PR04MB8037.namprd04.prod.outlook.com
- ([fe80::eb0e:1bef:f266:eceb%9]) with mapi id 15.20.6340.030; Mon, 1 May 2023
- 08:40:06 +0000
-From:   Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: blktests failures with v6.3
-Thread-Topic: blktests failures with v6.3
-Thread-Index: AQHZfAiHSemkPgZRAESAMETNKTrXBA==
-Date:   Mon, 1 May 2023 08:40:06 +0000
-Message-ID: <rsmmxrchy6voi5qhl4irss5sprna3f5owkqtvybxglcv2pnylm@xmrnpfu3tfpe>
+ 2023 15:06:21 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::195a:41b1:6434:af74]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::195a:41b1:6434:af74%7]) with mapi id 15.20.6340.030; Mon, 1 May 2023
+ 15:06:20 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Nilesh Javali <njavali@marvell.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        Bikash Hazarika <bhazarika@marvell.com>,
+        Anil Gurumurthy <agurumurthy@marvell.com>,
+        "sdeodhar@marvell.com" <sdeodhar@marvell.com>
+Subject: Re: [PATCH v2 1/7] qla2xxx: Multi-que support for TMF
+Thread-Topic: [PATCH v2 1/7] qla2xxx: Multi-que support for TMF
+Thread-Index: AQHZeaaqFh6z1303HkSuz/gW7zSu5q9FiZ6A
+Date:   Mon, 1 May 2023 15:06:20 +0000
+Message-ID: <FAE1C50C-BE2B-4AD4-9B96-DB9CC33C113C@oracle.com>
+References: <20230428075339.32551-1-njavali@marvell.com>
+ <20230428075339.32551-2-njavali@marvell.com>
+In-Reply-To: <20230428075339.32551-2-njavali@marvell.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
+x-mailer: Apple Mail (2.3731.500.231)
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM8PR04MB8037:EE_|BL3PR04MB8026:EE_
-x-ms-office365-filtering-correlation-id: 5856d4bc-7821-4f50-82b5-08db4a1faa31
-wdcipoutbound: EOP-TRUE
+x-ms-traffictypediagnostic: SN6PR10MB2943:EE_|BY5PR10MB4340:EE_
+x-ms-office365-filtering-correlation-id: dc3e240f-90dc-4afc-e3e1-08db4a559f0a
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: UO+ngFovhAo/J+q//pUDf4Slv3gUNcl6pN5VFwxpYAqr3CNh+P12rTjVYD5kLo9CzKBYq4boQRJSWHzylBqDUqb573sUEIHzMGAs7g+1bNjrQI4OOivTYnVzGUkMHlWYk8cVvFrAv9fH17cg/WPiRAjE4iEDW/OmliTGjdGisYXMsQwCNghj2yjyT1mz/f0TfJIp7YyCK9DxuHz0lcnPwlXhPsyXStdNtIql8Zzprgfy0phDcCA8AGK5wDaQY6+dCxao9m4q5wN5xFgLUOxymF12cK26nYvgSxVIdob2Uem4U8ETC91bV3BjA+pxoCzjWkZKFMdUMJpF6I6kYUoyZHWNhzOzapYdP375OLNZXtjgHo8nm/oP8/DMo44rn2wtvX3wiMN0pRFDX8sLCA4ytV9FQxczaWPxQyOHqRs9qCwXkL3Lmtc09BVLrcLcWZmg2o4+RVSZ7xggDEYITGpSu4saxZ4L7Y9xvPt0HgtMt4ten2P970M3lA2qri0aDwqhtDese7Huiyr2hYcmWHtdBHio5gKXfMnzebAxTFYraRH7WalCVAvxlBJSaU+yJH5s0NWjUqyBMb2DWDLMz7l/OWZ2xNQWNkfOTBZOD+kUHU9AhQRlrkeoL0/MGnrmrPeYlbeURPSxdMV8Ij/dftF7AQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM8PR04MB8037.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(4636009)(346002)(366004)(136003)(39860400002)(396003)(376002)(451199021)(9686003)(6512007)(186003)(6506007)(26005)(2906002)(83380400001)(30864003)(44832011)(966005)(33716001)(6486002)(5660300002)(71200400001)(478600001)(38100700002)(82960400001)(8676002)(316002)(8936002)(122000001)(38070700005)(66446008)(66476007)(91956017)(76116006)(66946007)(86362001)(66556008)(41300700001)(64756008)(110136005);DIR:OUT;SFP:1102;
+x-microsoft-antispam-message-info: ZFWf/tcmxL3hok5JXbOc3JUcq6wjo/AQksjoE5sY9RFp7obDLLZBtEamu5YRFfs4fViDMOS8dX6v8iML0omD1fg5azR8z9CDXZGf5EThnzRFmFsNSB5Z1w8UWCXxJeocykBEUe8kGX0oQML2jZwknewEw//7y6pktfsdr2LloTkFiE08a+r1DNhWNxdsz9Qfts2Lp9HxnDAqMFjiT2V6rzYPaRpTpN7vCb/dGibztmv7eMb+zB9gnT2udxAowIRAID8qjuTsqHGqsMTz5GmfsbZrCt2eHTkhnuXllqG6WROM0EUMNdv+yyPNYQxAGglMu6sbEuStmcFohBCjrNlaTKMbEnC6zrZX2HtckZAAoy2i2JILvahfBt2WUcg6KXpQwnBgLqCVBPaYYkAZLXMzGZtmdZbSPPyDgEtoeaX6VZC5zAGY9EAtQYYxcTIQqe4504snCUt8PBJgBPHaE/jUMpSiM7+v/Oo6VTt3EgHbBm1jUC+fzgN889TVjLIa4NpptYNVym07WkyBFwM+6qzchm2X/NEejuPIDUC5WgVSgjL+/zSWeY3BVVsJY3njxtLMj8txzLeaMnMpTz1mmEwhm5yZrO4N5k1d10FgSe6V8B5d8i6rhXzekYylbbGFb+o4Q49VJKoAb2Fc1Qvx96Jztg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(136003)(376002)(366004)(346002)(396003)(39860400002)(451199021)(54906003)(478600001)(316002)(36756003)(4326008)(64756008)(66446008)(66476007)(76116006)(6916009)(66556008)(966005)(66946007)(6512007)(6506007)(26005)(2616005)(71200400001)(6486002)(186003)(53546011)(2906002)(8676002)(8936002)(5660300002)(44832011)(41300700001)(86362001)(38070700005)(38100700002)(122000001)(33656002)(83380400001)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?8jKcuw57x1HmkF72huyZzwKn64E9wrMgPxoDdD95Oqo28tDUOVocKVdYEdXp?=
- =?us-ascii?Q?m555+zZg5YU6FeAaOh9bMMzgIyaAx31cirihWnUhHWR/CDw41YR5hY45tlYs?=
- =?us-ascii?Q?NZd923pIQ73Hbqdu/lyvNxYVOnAuCubDzrNekmWJm+sbWhCYQE+kYLUmj7HQ?=
- =?us-ascii?Q?bQtEUnK/nEhyuZz/dhefJ/PZNEQ5xhn97mQ8YmUJxRIk79+lv9Hb1EgOBfmb?=
- =?us-ascii?Q?pxW6SQ8ieUlOCP6YLVWwwMHwVvel/wh2LklYKQl7n4Dkd8wPCFwbG05gSKc+?=
- =?us-ascii?Q?f1YF2X+k/AOZlM5qMABjk3lEaYnM6jg9EmgRL20FsI3EWE4gJOcNMMGwv1Nu?=
- =?us-ascii?Q?5g3/G+RLn/h2RCUgu4gqloO5d08aid9Gy6mL8mN8Frd8zdh37MTbDYZD5HER?=
- =?us-ascii?Q?FmzV79lb/oOxTCL1W0L2k6I7Z4WWtIToy+GjOqfLGGTl0fwOjjnSE/gsiQ8y?=
- =?us-ascii?Q?P7muomIDo7lHVEdKea7FcYKuHNhjQYjAsFrDAWitmj+QloSSCyY8Fc50NHss?=
- =?us-ascii?Q?FXjUWce10+YscY4CsIUdR6F26sfnHzpEHg341QT2u/MSTN7JfmXze6liaqHL?=
- =?us-ascii?Q?rj/e6rb7Nk8yRLb30eIpwPsPk7upQghI0t7s/kqLb3q4PJVadTgP6GkSmJiV?=
- =?us-ascii?Q?3c92QW18qBV5x9wMsUtaEh/xlf1xqtHNpE7ux+xMYwqjNG8O7MstSh5x765x?=
- =?us-ascii?Q?WJONNkzMNfpzj3Q8NCY56es5qhqzIX4JFugEZSrBPMuRqBobETrtvSLbCO7n?=
- =?us-ascii?Q?2fdyG7IfWEpTGhoWBANvRHk2YDrxPGfKUDSdHw4wXECTgejmn+QfdqpXzaFh?=
- =?us-ascii?Q?BFj4chaNxeoFgsSMJ/Q2qGEo5ymsAEameZyY4LfyphIWnUDcKRp3DAsOKesM?=
- =?us-ascii?Q?63lyVCHvpl6yqEPC3jWny3lnl7HmAQxpfPHbWJ7Jz7tb89tli4umfF1ACDVp?=
- =?us-ascii?Q?V5ME/uyR2CK+d6kH4sEy19mbpbyRisHFs8wi07kEwssth0WSrVI+M7gVtSjN?=
- =?us-ascii?Q?98nVQGNuxkjt1bx8LOeLSAROZwclmUp9iQaSnpNMRKas99hOJKrHXbpu+tOs?=
- =?us-ascii?Q?JsJECDsNcZdna44D/ZXviwHE+xSd2oJeO5BRtiztWUvVzMNCzpEijxFyCgpz?=
- =?us-ascii?Q?+a8rsFt4BhdGt7bHZOhoxJRo0Y8M5Wnquef+0Erf0ql/4Pur4S4YDQbAhsCi?=
- =?us-ascii?Q?y+xdAc6liJu9HQPiX4FrZbi1AoQKIEoCujm+15tffq4JNCqCXJLtno2SSv+o?=
- =?us-ascii?Q?PoDCV/bAkDFvQBTXuucwlwVxGY1rvfdMZnmeJtDzylNHZcCocrmfxMRuQ9gO?=
- =?us-ascii?Q?mTBaryu/2m4An3+EuNpLWV4inbikFnHBUH3kDB99SO7E3HD2RxCnOc7ognkJ?=
- =?us-ascii?Q?XxI1//PI2njzc6wz2OHXahQAK0tseYbEjtqPyiSIIZb4nxvDDSF6iKJ2XpZ0?=
- =?us-ascii?Q?Gz15P+5Y+dbRgDkpJ9GgC2nSYpCke7QSTrzHvyS+S7y3Wz2ga8U9sTM6P9tD?=
- =?us-ascii?Q?x9FNV07FXzlMbQMaLiRM4DNj3mNWR0hKpQ/4VQOTCwQqszh/LuLwwnx/pVkw?=
- =?us-ascii?Q?VC7XZUVUb8j2Kt77at3x81+kIrR2ZiF1Os70s8OJWFE8zSrBPBVETSQRrRdh?=
- =?us-ascii?Q?UkDF/B6+XUCeqfGxZPTzOVA=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?nn/oa+p5GHOldElAo3UsArE2grutdGmGBweXMqrzJ3Pzgis5Vu87Co2FozSl?=
+ =?us-ascii?Q?p4SFps/M7iqiiQH4ozKKE6Jayw4uVFWx4t3oUg6z2yq4JpKhVCODUJa0DCQX?=
+ =?us-ascii?Q?F8Q2K7hbSeOsuNOTaOoT6nJMzNitdq1WrUt6ll1zy2zUMAJBkSaTzuPSrkno?=
+ =?us-ascii?Q?OkacGSE09/v9yPyKeqF9lVBO+Wc3MTxJa664SV4MYYWPG8zlcYG8UFGBQDW/?=
+ =?us-ascii?Q?gQ5hgbjlTVGKHb7smW7OBShbBSO7aTmIBgNvQ/0wuX4fNrgN59ckqFYlRG4i?=
+ =?us-ascii?Q?Os1/qU9aHSxbW8oKc41dcnfJdS6+eUHY/NO82kRNjApcnaxtbwLCAf6mRGHZ?=
+ =?us-ascii?Q?9JJezSo1rVEl7Cwz4RBtWjjtjOcpL0Xz5HqMcy93TnswUSclVBNtLirf5tah?=
+ =?us-ascii?Q?U8pWHiLcOu59FhOIEuxI+0sZndCmw2aFYOU327L9TT4BpMw52/SKx5pC0K40?=
+ =?us-ascii?Q?f6tlbUsVTqpJrY9ALuUYBKCp1eoeh+HMIRbCpBrEAUzynJqdh79I7nIBYjpv?=
+ =?us-ascii?Q?mlNWsCP1qcIpAGQyWYvvethIMl+vMGNRfl9MuQp4Y7f7n6rbiHo29yW7zrv4?=
+ =?us-ascii?Q?Qo/RXHVR+VdEyjExuLGMExsnO8QT8UgiuHY5YUihf5xB93WJn5i7lx4T24UH?=
+ =?us-ascii?Q?7hW4J97RW5l4BgcKU0kRWfrh5klpicaUTTE4bVxeDcgpcBvsMME044oAkpRU?=
+ =?us-ascii?Q?k07yNChpV9ecD48DRffK7cGYo3oySKwl/I/3eRqeSXeNKwKv8iab8duLC6xl?=
+ =?us-ascii?Q?7xL1nYFIEXRQU166tzNVjuMYf8a8x02HdL668xcYK8jotemGu0ac7haDfkbI?=
+ =?us-ascii?Q?EWV+SoSdWurVvOyc6W1ib+jHJUcWh+MxQQVqe/8Nmi69phPWq0soo3m1v8yA?=
+ =?us-ascii?Q?kFU4Oz2PudRTeqvdHuYBZgbJNa7ldGMZGqDhKvYjMS8dU7vhaoJMoSwji+kk?=
+ =?us-ascii?Q?HIUTrtRO48KU8YXPGgF0lDSxtYRm1LKqalXtw8hWDaCCrwyBDyKnZH8XjiUW?=
+ =?us-ascii?Q?dj2drPUejE4GfIkwSrvsv0mlHsE5mUteQxPltNhCPpec6P/0Q8VLw+vVSWBr?=
+ =?us-ascii?Q?/vvMh+MD9CD/FnMxMEaz80WEA0gu3LpDaERuoemcG63hGOhAmlU22nu1FaNw?=
+ =?us-ascii?Q?OCFdX7x9R+bN+R3X0PgKEPgz5b39gKUGKLdbFo1nSPw7Vl6J+k6FQVzDRt9M?=
+ =?us-ascii?Q?Vhr22o+smog0PKJUe5ga6CAc+tmWmrVHdcJ6NFWgvSzQUR9S9C/AcxT7KXDZ?=
+ =?us-ascii?Q?68o5bdpK84juKxKvKs+CFMg026mGpen5M/yhWibfMFx2PfqhH0s8V+VgzRPZ?=
+ =?us-ascii?Q?YmtA8adiEMMPDh55lIxh53TUQBrkrVogc+mDdRJFxZesxheYhra4I+bldXLy?=
+ =?us-ascii?Q?EV+vAfDLvYRxoliOljvNklsVzzQogmdtEZZxW7jSCoBoVbuLJkdtzml9/mqf?=
+ =?us-ascii?Q?IQCoPHzf5JGOqyM6rmpBEAozUXXo5SCRfv4JEIr/KRlvcVO/rUhTmd0lnzdd?=
+ =?us-ascii?Q?Exj/51U0VnhnQA9bjXtqKMo7emscCBdQQ9RXvL9eelKx2k+Uq/ZpL92FhoYf?=
+ =?us-ascii?Q?DjWTHfA8G7EUrZQUvjuxryKJJRZdfRMaO9WqEi3WSlp5lnUN+fG9AylUD9bK?=
+ =?us-ascii?Q?VA=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <703E19E2B75C8D4BA788035A9C390AEC@namprd04.prod.outlook.com>
+Content-ID: <2C3197B780F7824DA060AF4C5E6100B5@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: Kr6PxEVPBtp1fSN1j4Yv2eawjFUvKlHSuXuPsi34hsl25ro2xeSKXWiiJgW6B4fVC/XL8O16Nr8tAQS/yQWZfZ5Zsi01f2X6hhuED0wI+evTDjz/gs+on2mxytQDZCVnKeF77/dAGDXucPSlL68i5bl+lw3eUw24M7mQyskbKZ4SmTX+lNT1bQAU4TKtwxr8aCrYeMBo+Pxgn7k4Idox1p2LJ4lF2ln++DMVKc6KQTxDoqJiu4DQU4G6jmfnVvIxeAu+wUTePxnBokONOR5Lwo1lmY+IrhB7wTuJYPa2w5cvnQZU8xm0MtD1bfCc8+FlYfsKu9tuT9U4aGdWyojDiYX4Vc3EMmaGGNdKVqn4JrOBf8B4wexyzq+RQDs4mnxbxVKxge/71YtzuXOsrxY5hhNoTS6HktJ8CgT+bp7QSv6PqS73zxgC3eTkH5nG56f0VRyoLUcbqov9HmNo/7ZFeJI+vUXAFM+Ra3BwYbG3bCPVGhRXWflaKGGDkDZfSFCoNaZclVXFx+DfUDXVp8O6ZJ2glxYzLJdkbU+kesNy/VvAKwRyxw3Y6BvgZyKPy8n5pDrvAAcgn2xY9ZaY5HNfEkpbqSTdeQIHH1vAuV3ewm4RCecw3PWQxeuO4n6mRDRCeVBHAXkqEy6/XgdV9dRSISK+GvWB3dwVmpjqtgDyxfTfRycCfAebj+U6EpAVJwovTaOtn8KbBkzZZIQJwHnXvsqyRSo9nQN8mpy/sn11c21psvpjkMUVf5YMej4bWiJ0zQx/JaG69hUbjbezCaW5g5sgvL31fPTuriEobRhb2yC20mfKIHy5yuGgINJgwExRDdWVZOARequ7VI9phOEq3Q==
-X-OriginatorOrg: wdc.com
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: JMdS95q1c1vPn1y3q2qcX7ugsTTinhHEH6nmz+jBY+sasIviKCh/jN+EROz1Njdj6QKdUIyH8oAuBlOEs6/B73jk+r2UbaBhjFxkpnlslKFRAQGQcn6Nr1ZnfaAOQVYeBmSwQLAyRaGp/g9PVHjnetqqwalq6Wito6F/M01b28aGCQFbjzdLAp7K1unnY8OP/ouID++O/IgeD7WmQ1CHhwYpmQkcW8vRBH0toNos1uL11STDvUHFCl75QAjHCS85FWlTUw4mH/JoWiv75k4bEEQTlrfUGV52Q4zut9tCfBxplp31q95YZexnf9uF892ZBFxmI0VZmS7rsIMxznqqR3y8b0Z7AGaKmJmq8BBoh6y/Ny2omiheFJ8Y//NsbWAHJ5SGvRP9/QGoY8Hd1Irw8KGhCj9h2lvq8MEes6Cmqe7Hky0TTKvPi7g8Px1EKtZ8tPE+aswOxiSuhDv/PYFJdko2e1DmmBDm1T7JjVtOlkE3lb1evFhlh5820iKFmXx3oUmoqaaCNI9lNWgtxnTKelNKbxgaJDk01rcdrVwzcDzbESiA64jyMW1Lc1ADtwRxWfTsyD0R8oHl3+jJwdX650/6fLXt7wS1+eKPO9IJFhr73KZdYpP1jwYZArJxzj8Ts5aC/MpcKHR6V+mCdDuKnJjbqS5eAtloKHJxqtVpYSRof9Ai07WCqG67rQ/52DtdY67PyuFVx8FH3eCOmOEKry/e1udvPXzTG7nGRug0CCjsRYtUoW3mvGpjSpP2vLjKFBEiBlpr6KV8BinqzCeQpgEcoexNHghH1cqkLZDXV98=
+X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM8PR04MB8037.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5856d4bc-7821-4f50-82b5-08db4a1faa31
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 May 2023 08:40:06.2645
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dc3e240f-90dc-4afc-e3e1-08db4a559f0a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 May 2023 15:06:20.3550
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 1fgTdwWZosnycxljsY6wdj3xnmI3LvdVMaOzKx6xtY14jhlxi8/TsvK76tcGfPx3iYqu9z50HTpFpUwfqSydFXYI2ft3yOd1ZFOrky1sUvs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR04MB8026
+X-MS-Exchange-CrossTenant-userprincipalname: lfZBIQTOGUsD353ghPcciKY9EcH7Oym8GhqtOF4OdtY5y5rq2p8BC870ECmv/pbxXlqbEDatvPtW3gdtOxH6L8ZPW9m33GTYSwVPzlV0h8o=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4340
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-01_08,2023-04-27_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 spamscore=0
+ mlxlogscore=981 mlxscore=0 adultscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2305010122
+X-Proofpoint-GUID: zg7WXXmR8IhH6gKQL8g8jDnzvsklVx20
+X-Proofpoint-ORIG-GUID: zg7WXXmR8IhH6gKQL8g8jDnzvsklVx20
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
-
-I ran the latest blktests (git hash: c1da4a225273) with v6.3 kernel and obs=
-erved
-test case failures. I call for support to fix them. (I myself is now workin=
-g on
-some of the block/011 failure symptoms.)
-
-List of failures
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#1: block/011
-#2: block/024
-#3: nvme/003 (fabrics transport)
-#4: nvme/030 or nvme/031 (rdma transport with siw)
-#5: nvme/* (fc transport)
-
-This list excludes failures already resovled: scsi/007 and nvme/{044,045}.
-
-Failure description
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-#1: block/011
-
-   This test case shows three failure symptoms.
-
-   Symptom A:
-
-     The test case fails with NVME devices due to lockdep WARNING "possible
-     circular locking dependency detected". Reported in Sep/2022 [1] and
-     solution was discussed. Waiting a fix.
-
-     [1] https://lore.kernel.org/linux-block/20220930001943.zdbvolc3gkekfmc=
-v@shindev/
-
-   Symptom B:
-
-     When this test case passes for a NVME device, the device is left with
-     zero capacity occasionally. It causes following test cases fail. The d=
-evice
-     capacity change happens due to ENODEV during the test. I'm preparing a=
- fix
-     patch for blktests [2].
-
-     [2] https://github.com/kawasaki/blktests/commit/f78ceec0cb95b9b2a9dcbf=
-44999e350b740722e8
-
-   Symptom C:
-
-     When system disk and the test device belong to same PCI device, the sy=
-stem
-     disk disappears during the test case run (e.g. a system with two SSDs =
-on
-     same AHCI controller or HBA). This results in test system hang. I'm
-     preparing patches for blktests to avoid this failure [3].
-
-     [3] https://github.com/kawasaki/blktests/commit/662c33048ba1e949348dc2=
-fca8b4778f940b7cc5
-
-#2: block/024
-
-   Fails on slow machines. Reported in Dec/2022. Test case side issue is
-   suspected. Still need further investigation.
-
-   block/024 (do I/O faster than a jiffy and check iostats times) [failed]
-    runtime    ...  4.347s
-    --- tests/block/024.out     2022-12-06 20:51:41.525066605 +0900
-    +++ /home/shin/kts/kernel-test-suite/sets/blktests/log/runlog/nodev/blo=
-ck/024.out.bad       2022-12-07 12:51:03.610924521 +0900
-    @@ -6,5 +6,5 @@
-     read 1 s
-     write 1 s
-     read 2 s
-    -write 3 s
-    +write 4 s
-     Test complete
-
-#3: nvme/003 (fabrics transport)
-
-   When nvme test group is run with trtype=3Drdma, tcp or fc, the test case=
- fails
-   due to lockdep WARNING "possible circular locking dependency detected".
-   Detailed kernel message is attached [4].
-
-#4: nvme/030 or nvme/031 (rdma transport with siw)
-
-   When nvme test group is run with trtype=3Drdma and use_siw=3D1 configura=
-tions,
-   a failure is observed at nvme/030 or nvme/031 occasionally. The failure
-   cause is "BUG: KASAN: slab-use-after-free in __mutex_lock". Detailed
-   kernel message is attached [5]
-
-#5: nvme/* (fc transport)
-
-   With trtype=3Dfc configuration, many of test cases in nvme test group fa=
-il or
-   hang. Daniel Wagner is driving fix work [6].
-
-   [6] https://lore.kernel.org/linux-nvme/20230418130159.11075-1-dwagner@su=
-se.de/
 
 
-[4]
+> On Apr 28, 2023, at 12:53 AM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> From: Quinn Tran <qutran@marvell.com>
+>=20
+> Add queue flush for task management command, before
+> placing it on the wire.
+> Do IO flush for all Request Q's.
+>=20
+> Reported-by: kernel test robot <lkp@intel.com>
+> Link: https://lore.kernel.org/oe-kbuild-all/202304271702.GpIL391S-lkp@int=
+el.com/
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Quinn Tran <qutran@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+> v2:
+> - Fix warning reported by kernel robot.
+>=20
+> drivers/scsi/qla2xxx/qla_def.h  |  8 ++++
+> drivers/scsi/qla2xxx/qla_gbl.h  |  2 +-
+> drivers/scsi/qla2xxx/qla_init.c | 69 ++++++++++++++++++++++++++-------
+> drivers/scsi/qla2xxx/qla_iocb.c |  5 ++-
+> 4 files changed, 66 insertions(+), 18 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> index ec0e987b71fa..d59e94ae0db4 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -466,6 +466,14 @@ static inline be_id_t port_id_to_be_id(port_id_t por=
+t_id)
+> return res;
+> }
+>=20
+> +struct tmf_arg {
+> + struct qla_qpair *qpair;
+> + struct fc_port *fcport;
+> + struct scsi_qla_host *vha;
+> + u64 lun;
+> + u32 flags;
+> +};
+> +
+> struct els_logo_payload {
+> uint8_t opcode;
+> uint8_t rsvd[3];
+> diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gb=
+l.h
+> index 9aba07c7bde4..ef11ce46381d 100644
+> --- a/drivers/scsi/qla2xxx/qla_gbl.h
+> +++ b/drivers/scsi/qla2xxx/qla_gbl.h
+> @@ -69,7 +69,7 @@ extern int qla2x00_async_logout(struct scsi_qla_host *,=
+ fc_port_t *);
+> extern int qla2x00_async_prlo(struct scsi_qla_host *, fc_port_t *);
+> extern int qla2x00_async_adisc(struct scsi_qla_host *, fc_port_t *,
+>     uint16_t *);
+> -extern int qla2x00_async_tm_cmd(fc_port_t *, uint32_t, uint32_t, uint32_=
+t);
+> +extern int qla2x00_async_tm_cmd(fc_port_t *, uint32_t, uint64_t, uint32_=
+t);
+> struct qla_work_evt *qla2x00_alloc_work(struct scsi_qla_host *,
+>     enum qla_work_type);
+> extern int qla24xx_async_gnl(struct scsi_qla_host *, fc_port_t *);
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index ec0423ec6681..035d1984e2bd 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -2020,17 +2020,19 @@ static void qla2x00_tmf_sp_done(srb_t *sp, int re=
+s)
+> complete(&tmf->u.tmf.comp);
+> }
+>=20
+> -int
+> -qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
+> - uint32_t tag)
+> +static int
+> +__qla2x00_async_tm_cmd(struct tmf_arg *arg)
+> {
+> - struct scsi_qla_host *vha =3D fcport->vha;
+> + struct scsi_qla_host *vha =3D arg->vha;
+> struct srb_iocb *tm_iocb;
+> srb_t *sp;
+> + unsigned long flags;
+> int rval =3D QLA_FUNCTION_FAILED;
+>=20
+> + fc_port_t *fcport =3D arg->fcport;
+> +
+> /* ref: INIT */
+> - sp =3D qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+> + sp =3D qla2xxx_get_qpair_sp(vha, arg->qpair, fcport, GFP_KERNEL);
+> if (!sp)
+> goto done;
+>=20
+> @@ -2043,15 +2045,15 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t =
+flags, uint32_t lun,
+>=20
+> tm_iocb =3D &sp->u.iocb_cmd;
+> init_completion(&tm_iocb->u.tmf.comp);
+> - tm_iocb->u.tmf.flags =3D flags;
+> - tm_iocb->u.tmf.lun =3D lun;
+> + tm_iocb->u.tmf.flags =3D arg->flags;
+> + tm_iocb->u.tmf.lun =3D arg->lun;
+>=20
+> + rval =3D qla2x00_start_sp(sp);
+> ql_dbg(ql_dbg_taskm, vha, 0x802f,
+> -    "Async-tmf hdl=3D%x loop-id=3D%x portid=3D%02x%02x%02x.\n",
+> +    "Async-tmf hdl=3D%x loop-id=3D%x portid=3D%02x%02x%02x ctrl=3D%x.\n"=
+,
+>    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
+> -    fcport->d_id.b.area, fcport->d_id.b.al_pa);
+> +    fcport->d_id.b.area, fcport->d_id.b.al_pa, arg->flags);
+>=20
+> - rval =3D qla2x00_start_sp(sp);
+> if (rval !=3D QLA_SUCCESS)
+> goto done_free_sp;
+> wait_for_completion(&tm_iocb->u.tmf.comp);
+> @@ -2065,12 +2067,14 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t =
+flags, uint32_t lun,
+>=20
+> if (!test_bit(UNLOADING, &vha->dpc_flags) && !IS_QLAFX00(vha->hw)) {
+> flags =3D tm_iocb->u.tmf.flags;
+> - lun =3D (uint16_t)tm_iocb->u.tmf.lun;
+> + if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET|
+> + TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA))
+> + flags =3D MK_SYNC_ID_LUN;
+> + else
+> + flags =3D MK_SYNC_ID;
+>=20
+> - /* Issue Marker IOCB */
+> - qla2x00_marker(vha, vha->hw->base_qpair,
+> -    fcport->loop_id, lun,
+> -    flags =3D=3D TCF_LUN_RESET ? MK_SYNC_ID_LUN : MK_SYNC_ID);
+> + qla2x00_marker(vha, sp->qpair,
+> +    sp->fcport->loop_id, arg->lun, flags);
+> }
+>=20
+> done_free_sp:
+> @@ -2080,6 +2084,41 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t f=
+lags, uint32_t lun,
+> return rval;
+> }
+>=20
+> +int
+> +qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
+> +     uint32_t tag)
+> +{
+> + struct scsi_qla_host *vha =3D fcport->vha;
+> + struct qla_qpair *qpair;
+> + struct tmf_arg a;
+> + struct completion comp;
+> + int i, rval;
+> +
+> + init_completion(&comp);
+> + a.vha =3D fcport->vha;
+> + a.fcport =3D fcport;
+> + a.lun =3D lun;
+> +
+> + if (vha->hw->mqenable) {
+> + for (i =3D 0; i < vha->hw->num_qpairs; i++) {
+> + qpair =3D vha->hw->queue_pair_map[i];
+> + if (!qpair)
+> + continue;
+> + a.qpair =3D qpair;
+> + a.flags =3D flags|TCF_NOTMCMD_TO_TARGET;
+> + rval =3D __qla2x00_async_tm_cmd(&a);
+> + if (rval)
+> + break;
+> + }
+> + }
+> +
+> + a.qpair =3D vha->hw->base_qpair;
+> + a.flags =3D flags;
+> + rval =3D __qla2x00_async_tm_cmd(&a);
+> +
+> + return rval;
+> +}
+> +
+> int
+> qla24xx_async_abort_command(srb_t *sp)
+> {
+> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
+ocb.c
+> index b9b3e6f80ea9..b02039601cc0 100644
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+> @@ -2541,7 +2541,7 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *t=
+sk)
+> scsi_qla_host_t *vha =3D fcport->vha;
+> struct qla_hw_data *ha =3D vha->hw;
+> struct srb_iocb *iocb =3D &sp->u.iocb_cmd;
+> - struct req_que *req =3D vha->req;
+> + struct req_que *req =3D sp->qpair->req;
+>=20
+> flags =3D iocb->u.tmf.flags;
+> lun =3D iocb->u.tmf.lun;
+> @@ -2557,7 +2557,8 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *t=
+sk)
+> tsk->port_id[2] =3D fcport->d_id.b.domain;
+> tsk->vp_index =3D fcport->vha->vp_idx;
+>=20
+> - if (flags =3D=3D TCF_LUN_RESET) {
+> + if (flags & (TCF_LUN_RESET | TCF_ABORT_TASK_SET|
+> +    TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA)) {
+> int_to_scsilun(lun, &tsk->lun);
+> host_to_fcp_swap((uint8_t *)&tsk->lun,
+> sizeof(tsk->lun));
+> --=20
+> 2.23.1
+>=20
 
-[  134.432456] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D
-[  134.433289] WARNING: possible circular locking dependency detected
-[  134.433806] 6.3.0 #62 Not tainted
-[  134.434149] ------------------------------------------------------
-[  134.434709] kworker/1:3/455 is trying to acquire lock:
-[  134.435141] ffff88813bfd9420 (&id_priv->handler_mutex){+.+.}-{3:3}, at: =
-rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.435986]=20
-               but task is already holding lock:
-[  134.436554] ffff888131327db0 ((work_completion)(&queue->release_work)){+=
-.+.}-{0:0}, at: process_one_work+0x793/0x1350
-[  134.437459]=20
-               which lock already depends on the new lock.
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com <mailto:himanshu=
+.madhani@oracle.com>>
 
-[  134.438235]=20
-               the existing dependency chain (in reverse order) is:
-[  134.438914]=20
-               -> #3 ((work_completion)(&queue->release_work)){+.+.}-{0:0}:
-[  134.439688]        process_one_work+0x7dc/0x1350
-[  134.440084]        worker_thread+0xfc/0x1260
-[  134.440489]        kthread+0x29e/0x340
-[  134.440857]        ret_from_fork+0x2c/0x50
-[  134.441251]=20
-               -> #2 ((wq_completion)nvmet-wq){+.+.}-{0:0}:
-[  134.441885]        __flush_workqueue+0x130/0x12f0
-[  134.442328]        nvmet_rdma_cm_handler+0x961/0x39c0 [nvmet_rdma]
-[  134.442900]        cma_cm_event_handler+0xb2/0x2f0 [rdma_cm]
-[  134.443412]        cma_ib_req_handler+0x1096/0x4a50 [rdma_cm]
-[  134.443925]        cm_process_work+0x46/0x3b0 [ib_cm]
-[  134.444399]        cm_req_handler+0x20e2/0x61d0 [ib_cm]
-[  134.444880]        cm_work_handler+0xc15/0x6ce0 [ib_cm]
-[  134.445365]        process_one_work+0x843/0x1350
-[  134.445794]        worker_thread+0xfc/0x1260
-[  134.446165]        kthread+0x29e/0x340
-[  134.447271]        ret_from_fork+0x2c/0x50
-[  134.448373]=20
-               -> #1 (&id_priv->handler_mutex/1){+.+.}-{3:3}:
-[  134.450542]        __mutex_lock+0x186/0x18f0
-[  134.451682]        cma_ib_req_handler+0xc3c/0x4a50 [rdma_cm]
-[  134.452921]        cm_process_work+0x46/0x3b0 [ib_cm]
-[  134.454150]        cm_req_handler+0x20e2/0x61d0 [ib_cm]
-[  134.455423]        cm_work_handler+0xc15/0x6ce0 [ib_cm]
-[  134.456680]        process_one_work+0x843/0x1350
-[  134.457865]        worker_thread+0xfc/0x1260
-[  134.458985]        kthread+0x29e/0x340
-[  134.460097]        ret_from_fork+0x2c/0x50
-[  134.461294]=20
-               -> #0 (&id_priv->handler_mutex){+.+.}-{3:3}:
-[  134.463349]        __lock_acquire+0x2fc0/0x60f0
-[  134.464430]        lock_acquire+0x1a7/0x4e0
-[  134.465448]        __mutex_lock+0x186/0x18f0
-[  134.466461]        rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.467569]        nvmet_rdma_free_queue+0x7a/0x380 [nvmet_rdma]
-[  134.468735]        nvmet_rdma_release_queue_work+0x3e/0x90 [nvmet_rdma]
-[  134.469904]        process_one_work+0x843/0x1350
-[  134.470923]        worker_thread+0xfc/0x1260
-[  134.471918]        kthread+0x29e/0x340
-[  134.472902]        ret_from_fork+0x2c/0x50
-[  134.473884]=20
-               other info that might help us debug this:
+--=20
+Himanshu Madhani Oracle Linux Engineering
 
-[  134.476264] Chain exists of:
-                 &id_priv->handler_mutex --> (wq_completion)nvmet-wq --> (w=
-ork_completion)(&queue->release_work)
-
-[  134.479201]  Possible unsafe locking scenario:
-
-[  134.480949]        CPU0                    CPU1
-[  134.481941]        ----                    ----
-[  134.482871]   lock((work_completion)(&queue->release_work));
-[  134.483938]                                lock((wq_completion)nvmet-wq)=
-;
-[  134.485094]                                lock((work_completion)(&queue=
-->release_work));
-[  134.486391]   lock(&id_priv->handler_mutex);
-[  134.487384]=20
-                *** DEADLOCK ***
-
-[  134.489712] 2 locks held by kworker/1:3/455:
-[  134.490728]  #0: ffff888127b28538 ((wq_completion)nvmet-wq){+.+.}-{0:0},=
- at: process_one_work+0x766/0x1350
-[  134.492084]  #1: ffff888131327db0 ((work_completion)(&queue->release_wor=
-k)){+.+.}-{0:0}, at: process_one_work+0x793/0x1350
-[  134.493538]=20
-               stack backtrace:
-[  134.495147] CPU: 1 PID: 455 Comm: kworker/1:3 Not tainted 6.3.0 #62
-[  134.496262] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS =
-1.16.2-1.fc38 04/01/2014
-[  134.497573] Workqueue: nvmet-wq nvmet_rdma_release_queue_work [nvmet_rdm=
-a]
-[  134.498769] Call Trace:
-[  134.499649]  <TASK>
-[  134.500494]  dump_stack_lvl+0x57/0x90
-[  134.501455]  check_noncircular+0x27b/0x310
-[  134.502444]  ? __pfx_mark_lock+0x10/0x10
-[  134.503413]  ? __pfx_check_noncircular+0x10/0x10
-[  134.504431]  ? find_held_lock+0x2d/0x110
-[  134.505399]  ? lockdep_lock+0xca/0x1c0
-[  134.506351]  ? __pfx_lockdep_lock+0x10/0x10
-[  134.507333]  ? mark_held_locks+0x9e/0xe0
-[  134.508299]  __lock_acquire+0x2fc0/0x60f0
-[  134.509272]  ? __pfx___wait_for_common+0x10/0x10
-[  134.510292]  ? __pfx___lock_acquire+0x10/0x10
-[  134.511296]  ? rxe_sched_task+0x50/0x70 [rdma_rxe]
-[  134.512328]  ? rxe_post_recv+0x1d9/0x250 [rdma_rxe]
-[  134.513366]  lock_acquire+0x1a7/0x4e0
-[  134.514314]  ? rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.515353]  ? __pfx_lock_acquire+0x10/0x10
-[  134.516345]  ? __pfx_ib_drain_qp_done+0x10/0x10 [ib_core]
-[  134.517447]  ? __pfx___might_resched+0x10/0x10
-[  134.518455]  __mutex_lock+0x186/0x18f0
-[  134.519405]  ? rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.520436]  ? rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.521463]  ? __pfx___mutex_lock+0x10/0x10
-[  134.522447]  ? rcu_is_watching+0x11/0xb0
-[  134.523408]  ? rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.524434]  rdma_destroy_id+0x17/0x20 [rdma_cm]
-[  134.525451]  nvmet_rdma_free_queue+0x7a/0x380 [nvmet_rdma]
-[  134.526528]  nvmet_rdma_release_queue_work+0x3e/0x90 [nvmet_rdma]
-[  134.527643]  process_one_work+0x843/0x1350
-[  134.528600]  ? __pfx_lock_acquire+0x10/0x10
-[  134.529562]  ? __pfx_process_one_work+0x10/0x10
-[  134.530551]  ? __pfx_do_raw_spin_lock+0x10/0x10
-[  134.531537]  worker_thread+0xfc/0x1260
-[  134.532471]  ? __kthread_parkme+0xc1/0x1f0
-[  134.533428]  ? __pfx_worker_thread+0x10/0x10
-[  134.534385]  kthread+0x29e/0x340
-[  134.535264]  ? __pfx_kthread+0x10/0x10
-[  134.536164]  ret_from_fork+0x2c/0x50
-[  134.537058]  </TASK>
-
-
-[5]
-
-May 01 11:19:44 testnode1 kernel: =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D
-May 01 11:19:44 testnode1 kernel: BUG: KASAN: slab-use-after-free in __mute=
-x_lock+0x1324/0x18f0
-May 01 11:19:44 testnode1 kernel: Read of size 8 at addr ffff888197b37418 b=
-y task kworker/u8:0/9
-May 01 11:19:44 testnode1 kernel:=20
-May 01 11:19:44 testnode1 kernel: CPU: 0 PID: 9 Comm: kworker/u8:0 Not tain=
-ted 6.3.0 #62
-May 01 11:19:44 testnode1 kernel: Hardware name: QEMU Standard PC (i440FX +=
- PIIX, 1996), BIOS 1.16.2-1.fc38 04/01/2014
-May 01 11:19:44 testnode1 kernel: Workqueue: iw_cm_wq cm_work_handler [iw_c=
-m]
-May 01 11:19:44 testnode1 kernel: Call Trace:
-May 01 11:19:44 testnode1 kernel:  <TASK>
-May 01 11:19:44 testnode1 kernel:  dump_stack_lvl+0x57/0x90
-May 01 11:19:44 testnode1 kernel:  print_report+0xcf/0x660
-May 01 11:19:44 testnode1 kernel:  ? __mutex_lock+0x1324/0x18f0
-May 01 11:19:44 testnode1 kernel:  kasan_report+0xa4/0xe0
-May 01 11:19:44 testnode1 kernel:  ? __mutex_lock+0x1324/0x18f0
-May 01 11:19:44 testnode1 kernel:  __mutex_lock+0x1324/0x18f0
-May 01 11:19:44 testnode1 kernel:  ? cma_iw_handler+0xac/0x4f0 [rdma_cm]
-May 01 11:19:44 testnode1 kernel:  ? _raw_spin_unlock_irqrestore+0x30/0x60
-May 01 11:19:44 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
-May 01 11:19:44 testnode1 kernel:  ? _raw_spin_unlock_irqrestore+0x30/0x60
-May 01 11:19:44 testnode1 kernel:  ? trace_hardirqs_on+0x12/0x100
-May 01 11:19:44 testnode1 kernel:  ? __pfx___mutex_lock+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ? __percpu_counter_sum+0x147/0x1e0
-May 01 11:19:44 testnode1 kernel:  ? domain_dirty_limits+0x246/0x390
-May 01 11:19:44 testnode1 kernel:  ? wb_over_bg_thresh+0x4d5/0x610
-May 01 11:19:44 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
-May 01 11:19:44 testnode1 kernel:  ? cma_iw_handler+0xac/0x4f0 [rdma_cm]
-May 01 11:19:44 testnode1 kernel:  cma_iw_handler+0xac/0x4f0 [rdma_cm]
-May 01 11:19:44 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
-May 01 11:19:44 testnode1 kernel:  ? __pfx_cma_iw_handler+0x10/0x10 [rdma_c=
-m]
-May 01 11:19:44 testnode1 kernel:  ? attach_entity_load_avg+0x4e2/0x920
-May 01 11:19:44 testnode1 kernel:  ? _raw_spin_unlock_irqrestore+0x30/0x60
-May 01 11:19:44 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
-May 01 11:19:44 testnode1 kernel:  cm_work_handler+0x139e/0x1c50 [iw_cm]
-May 01 11:19:44 testnode1 kernel:  ? __pfx_cm_work_handler+0x10/0x10 [iw_cm=
-]
-May 01 11:19:44 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
-May 01 11:19:44 testnode1 kernel:  ? __pfx_try_to_wake_up+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ? __pfx_do_raw_spin_lock+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ? __pfx___might_resched+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ? _raw_spin_unlock_irq+0x24/0x50
-May 01 11:19:44 testnode1 kernel:  process_one_work+0x843/0x1350
-May 01 11:19:44 testnode1 kernel:  ? __pfx_lock_acquire+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ? __pfx_process_one_work+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ? __pfx_do_raw_spin_lock+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  worker_thread+0xfc/0x1260
-May 01 11:19:44 testnode1 kernel:  ? __pfx_worker_thread+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  kthread+0x29e/0x340
-May 01 11:19:44 testnode1 kernel:  ? __pfx_kthread+0x10/0x10
-May 01 11:19:44 testnode1 kernel:  ret_from_fork+0x2c/0x50
-May 01 11:19:44 testnode1 kernel:  </TASK>
-May 01 11:19:44 testnode1 kernel:=20
-May 01 11:19:44 testnode1 kernel: Allocated by task 4225:
-May 01 11:19:44 testnode1 kernel:  kasan_save_stack+0x2f/0x50
-May 01 11:19:44 testnode1 kernel:  kasan_set_track+0x21/0x30
-May 01 11:19:44 testnode1 kernel:  __kasan_kmalloc+0xa6/0xb0
-May 01 11:19:44 testnode1 kernel:  __rdma_create_id+0x5b/0x5d0 [rdma_cm]
-May 01 11:19:44 testnode1 kernel:  __rdma_create_kernel_id+0x12/0x40 [rdma_=
-cm]
-May 01 11:19:44 testnode1 kernel:  nvme_rdma_alloc_queue+0x26a/0x5f0 [nvme_=
-rdma]
-May 01 11:19:44 testnode1 kernel:  nvme_rdma_setup_ctrl+0xb84/0x1d90 [nvme_=
-rdma]
-May 01 11:19:44 testnode1 kernel:  nvme_rdma_create_ctrl+0x7b5/0xd20 [nvme_=
-rdma]
-May 01 11:19:44 testnode1 kernel:  nvmf_dev_write+0xddd/0x22b0 [nvme_fabric=
-s]
-May 01 11:19:44 testnode1 kernel:  vfs_write+0x211/0xd50
-May 01 11:19:44 testnode1 kernel:  ksys_write+0x100/0x1e0
-May 01 11:19:44 testnode1 kernel:  do_syscall_64+0x5b/0x80
-May 01 11:19:44 testnode1 kernel:  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-May 01 11:19:44 testnode1 kernel:=20
-May 01 11:19:44 testnode1 kernel: Freed by task 4227:
-May 01 11:19:44 testnode1 kernel:  kasan_save_stack+0x2f/0x50
-May 01 11:19:44 testnode1 kernel:  kasan_set_track+0x21/0x30
-May 01 11:19:44 testnode1 kernel:  kasan_save_free_info+0x2a/0x50
-May 01 11:19:44 testnode1 kernel:  ____kasan_slab_free+0x169/0x1c0
-May 01 11:19:44 testnode1 kernel:  slab_free_freelist_hook+0xdb/0x1b0
-May 01 11:19:44 testnode1 kernel:  __kmem_cache_free+0xb8/0x2e0
-May 01 11:19:44 testnode1 kernel:  nvme_rdma_free_queue+0x4a/0x70 [nvme_rdm=
-a]
-May 01 11:19:44 testnode1 kernel:  nvme_rdma_teardown_io_queues.part.0+0x14=
-a/0x1e0 [nvme_rdma]
-May 01 11:19:44 testnode1 kernel:  nvme_rdma_delete_ctrl+0x4f/0x100 [nvme_r=
-dma]
-May 01 11:19:44 testnode1 kernel:  nvme_do_delete_ctrl+0x14e/0x240 [nvme_co=
-re]
-May 01 11:19:44 testnode1 kernel:  nvme_sysfs_delete+0xcb/0x100 [nvme_core]
-May 01 11:19:44 testnode1 kernel:  kernfs_fop_write_iter+0x359/0x530
-May 01 11:19:44 testnode1 kernel:  vfs_write+0x58f/0xd50
-May 01 11:19:44 testnode1 kernel:  ksys_write+0x100/0x1e0
-May 01 11:19:44 testnode1 kernel:  do_syscall_64+0x5b/0x80
-May 01 11:19:44 testnode1 kernel:  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-May 01 11:19:44 testnode1 kernel:=20
-May 01 11:19:44 testnode1 kernel: The buggy address belongs to the object a=
-t ffff888197b37000
-                                   which belongs to the cache kmalloc-2k of=
- size 2048
-May 01 11:19:44 testnode1 kernel: The buggy address is located 1048 bytes i=
-nside of
-                                   freed 2048-byte region [ffff888197b37000=
-, ffff888197b37800)
-May 01 11:19:44 testnode1 kernel:=20
-May 01 11:19:44 testnode1 kernel: The buggy address belongs to the physical=
- page:
-May 01 11:19:44 testnode1 kernel: page:00000000fbe33a6e refcount:1 mapcount=
-:0 mapping:0000000000000000 index:0x0 pfn:0x197b30
-May 01 11:19:44 testnode1 kernel: head:00000000fbe33a6e order:3 entire_mapc=
-ount:0 nr_pages_mapped:0 pincount:0
-May 01 11:19:44 testnode1 kernel: anon flags: 0x17ffffc0010200(slab|head|no=
-de=3D0|zone=3D2|lastcpupid=3D0x1fffff)
-May 01 11:19:44 testnode1 kernel: raw: 0017ffffc0010200 ffff888100042f00 00=
-00000000000000 dead000000000001
-May 01 11:19:44 testnode1 kernel: raw: 0000000000000000 0000000000080008 00=
-000001ffffffff 0000000000000000
-May 01 11:19:44 testnode1 kernel: page dumped because: kasan: bad access de=
-tected
-May 01 11:19:44 testnode1 kernel:=20
-May 01 11:19:44 testnode1 kernel: Memory state around the buggy address:
-May 01 11:19:44 testnode1 kernel:  ffff888197b37300: fb fb fb fb fb fb fb f=
-b fb fb fb fb fb fb fb fb
-May 01 11:19:44 testnode1 kernel:  ffff888197b37380: fb fb fb fb fb fb fb f=
-b fb fb fb fb fb fb fb fb
-May 01 11:19:44 testnode1 kernel: >ffff888197b37400: fb fb fb fb fb fb fb f=
-b fb fb fb fb fb fb fb fb
-May 01 11:19:44 testnode1 kernel:                             ^
-May 01 11:19:44 testnode1 kernel:  ffff888197b37480: fb fb fb fb fb fb fb f=
-b fb fb fb fb fb fb fb fb
-May 01 11:19:44 testnode1 kernel:  ffff888197b37500: fb fb fb fb fb fb fb f=
-b fb fb fb fb fb fb fb fb
-May 01 11:19:44 testnode1 kernel: =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=
