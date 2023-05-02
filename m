@@ -2,113 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D556C7EE21
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 May 2023 20:28:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 022A4C77B78
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 May 2023 20:31:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229935AbjEBU2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 May 2023 16:28:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56202 "EHLO
+        id S229824AbjEBUbU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 May 2023 16:31:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229797AbjEBU2u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2023 16:28:50 -0400
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 057521996;
-        Tue,  2 May 2023 13:28:49 -0700 (PDT)
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-63b51fd2972so3084754b3a.3;
-        Tue, 02 May 2023 13:28:48 -0700 (PDT)
+        with ESMTP id S230026AbjEBUbS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2023 16:31:18 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 687E519A2
+        for <linux-scsi@vger.kernel.org>; Tue,  2 May 2023 13:31:14 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-63b70f0b320so4902465b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 02 May 2023 13:31:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683059328; x=1685651328;
-        h=content-transfer-encoding:in-reply-to:from:references:to
+        d=1e100.net; s=20221208; t=1683059474; x=1685651474;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XbDeJmwqlhx/Uc/BoBY+MH9m48arvcLqRsgyaqRFpYo=;
-        b=BENuPsWF9gUgg/2bCvwBIXdNUzVy07DMsDRxpWNu2mbLuZssbY3lB2QtUDhgNqoynN
-         f+oQwRCeWJoKGrwqaa7IFjakJvl9Bb4iSCnrtynGy/77guJ46aTnNsX2IJct+Tv+Kw2t
-         rU8+Djnpzj2w3BXH40XMZvj4wQc+rvjEbT46NMWvfRs7tx2KUpDJ3lzUY6KL+1r0ZtPp
-         Gz3tWpNW0+PTQBEOWrvrbSdx7mNcSS+J0QQfAPL1MHiFFiSWBQdlSg1QeFokgL+Gmq7R
-         g3QVVSU/pSgPSnbPYxtych4Mb3q/8IlyXaSdOs1VkUPcJ1vwMvzc6iJ8RAoZ9z+WxjxV
-         Q4bQ==
-X-Gm-Message-State: AC+VfDzWfAEHnQNMgebyY06Wvw2TTQj6FLZxx3OZhe11HlzApBQbY7nI
-        aEdm7ACsxibFujNim7JT+V4=
-X-Google-Smtp-Source: ACHHUZ7ju2RgE6ExuoCnUXJCR3+ngQ3XGa0VOc0I0/8HlKzKRgZ7xBJbT/Odu3V55q3Z3hcDcc7bhg==
-X-Received: by 2002:a05:6a20:958d:b0:ef:e240:b559 with SMTP id iu13-20020a056a20958d00b000efe240b559mr20943594pzb.46.1683059328249;
-        Tue, 02 May 2023 13:28:48 -0700 (PDT)
+        bh=DXYc+YdblicNXxtNH1u9tm7GDIcl/ZLGdJ/6NHS6pRM=;
+        b=V4GbEN3K2YqEH4S65i5FLinfksLbZrVAKglXfblym9FKtU7PhRmT2CIKijwJN9rDf2
+         JKy+2+RWimcRqW8vq4y1HrfPMUtufnGULL63QDNTBM9fmmkRuPXeEqnPcKGQwbD1wbYo
+         hcPm6CRdmgpy+qf+VVtgGfpcz/B9OjR2kzxV/r5CdJRvAEivEd6+dFXDCTTfZoaW/qFX
+         aFmpXRT5Kh6zv5fHy+PvAn2WCwKZepXZjRKG9MjSYm6E2wa1wIqJbmUqVMZY9Vj2b/gO
+         JpCN9M7CjKqkCS8TtNF+EDgLoRWSAdaANG6BsVX3ql0K+nKdkwjZiVllAKdMTrsYPMeR
+         bgiA==
+X-Gm-Message-State: AC+VfDxXIHXLJEEYO7STnCbdP90F7TOybkZXg1Ik1XEQYUleYbpi+2BD
+        9hUkpIeCubn5oN5jKMRE/ms=
+X-Google-Smtp-Source: ACHHUZ521twYhZjjRGLfJnDJxkGkA11uUe6VTKmV2sD7TSIWc2a9U8GC0NA0RTt2FWqCIue7BGTZVw==
+X-Received: by 2002:a05:6a00:14ca:b0:63b:599b:a2e6 with SMTP id w10-20020a056a0014ca00b0063b599ba2e6mr26789744pfu.27.1683059473740;
+        Tue, 02 May 2023 13:31:13 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:c683:a90b:5f41:5878? ([2620:15c:211:201:c683:a90b:5f41:5878])
-        by smtp.gmail.com with ESMTPSA id v13-20020a17090a0c8d00b00246b1b4a3ffsm8200159pja.0.2023.05.02.13.28.46
+        by smtp.gmail.com with ESMTPSA id 8-20020aa79248000000b00625b9e625fdsm22737502pfp.179.2023.05.02.13.31.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 May 2023 13:28:47 -0700 (PDT)
-Message-ID: <28ea2183-d1ce-f42d-1765-9d07d7481eda@acm.org>
-Date:   Tue, 2 May 2023 13:28:45 -0700
+        Tue, 02 May 2023 13:31:13 -0700 (PDT)
+Message-ID: <1232c27c-4da6-a738-c138-b0e65fa74467@acm.org>
+Date:   Tue, 2 May 2023 13:31:10 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH] scsi: ufs: core: Use readable 'return 0' in
- ufshcd_hba_capabilities()
+Subject: Re: [PATCH 4/4] scsi: Trace SCSI sense data
 Content-Language: en-US
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
- <20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.g.garry@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Vishakha Channapattan <vishakhavc@google.com>,
+        Jolly Shah <jollys@google.com>,
+        Changyuan Lyu <changyuanl@google.com>,
+        Damien Le Moal <dlemoal@kernel.org>
+References: <20230425233446.1231000-1-bvanassche@acm.org>
+ <20230425233446.1231000-5-bvanassche@acm.org> <ZEt/SD/GiqIo5aIm@x1-carbon>
+ <e859baeb-f7e7-9d58-bcfd-9b11115bdf0d@acm.org> <ZFDdWY7LqLQL0nb6@x1-carbon>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
+In-Reply-To: <ZFDdWY7LqLQL0nb6@x1-carbon>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/2/23 04:31, Keoseong Park wrote:
-> The 'err' variable is the result of ufshcd_hba_init_crypto_capabilities()
-> regardless of MCQ capabilities. Return 'err' immediately when the function
-> error occurs. And if it is not an error, explicitly return 0.
+On 5/2/23 02:52, Niklas Cassel wrote:
+> i.e., something like:
+> 	if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
+> 	    scsi_command_normalize_sense(cmd, &sshdr)) {
 > 
-> Anyway, if ufshcd_hba_init_crypto_capabilities() returns error, MCQ
-> capabilities is not used because it fails to initialize UFS driver.
-> 
-> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 8 +++++---
->   1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9434328ba323..44328eb4158d 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2343,18 +2343,20 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
->   
->   	/* Read crypto capabilities */
->   	err = ufshcd_hba_init_crypto_capabilities(hba);
-> -	if (err)
-> +	if (err) {
->   		dev_err(hba->dev, "crypto setup failed\n");
-> +		return err;
-> +	}
->   
->   	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
->   	if (!hba->mcq_sup)
-> -		return err;
-> +		return 0;
->   
->   	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
->   	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
->   				     hba->mcq_capabilities);
->   
-> -	return err;
-> +	return 0;
->   }
+> instead of cmd->result & 0xff.
 
-The most important change in this patch is that ufshcd_hba_capabilities()
-returns earlier if ufshcd_hba_init_crypto_capabilities() fails. Please
-change the patch title such that it reflects this change instead of the
-other less important change.
+Hmm ... doesn't the SCSI_SENSE_VALID() check above duplicate the
+scsi_sense_valid() check inside scsi_command_normalize_sense()?
 
 Thanks,
 
