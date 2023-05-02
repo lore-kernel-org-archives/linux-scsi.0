@@ -2,71 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E24D8C77B61
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 May 2023 17:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB64C77B73
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 May 2023 07:35:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232158AbjEAR3V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 May 2023 13:29:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59990 "EHLO
+        id S233612AbjEBHfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 May 2023 03:35:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229861AbjEAR3U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 May 2023 13:29:20 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42FE4AF;
-        Mon,  1 May 2023 10:29:19 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1ab032d9266so4825045ad.0;
-        Mon, 01 May 2023 10:29:19 -0700 (PDT)
+        with ESMTP id S233421AbjEBHfk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2023 03:35:40 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9DF7A7;
+        Tue,  2 May 2023 00:35:39 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id 2adb3069b0e04-4ec8133c59eso4080309e87.0;
+        Tue, 02 May 2023 00:35:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683012938; x=1685604938;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Wvv/hBwHmGpvqxO3rQDcjva4ryRFVTLpzb5zW5Sqmx8=;
+        b=FGYEylr802NA6MTpdomm9Hftyvl+iDvM04PAu5BCQ59yI97GUTmORAQmdcMDeCDxTS
+         o6eURyXC9cHCn+zwsP2nBJjGuhFiJGDN8knAiOPN+luqD25+z+8DEimQCE0PwzpZ2Oup
+         7130IR5wx+Evw9fABnCWM+tIiPshztoqCHBn544aoYVsOD6k7F1/TE4UUjdIj/IGk/N2
+         EyYwHliO/jkqQRw3w9Ov+LqUDPhI894BvHxK1aKeySBdigVtA0m48r5+swd5rBWsxGbR
+         en61vC7TxKgBGNcLYKehjNKqlduG5UsygK1WyCA8JmFnnKgQ4CStiEgHb9NbMZIZObTc
+         S3Fw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682962159; x=1685554159;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=WWsKDfZ9DhyKjlEN9i9uZZa656LlSQHxwvUUbjCDUoo=;
-        b=j//qM7YOWE1lL1zlViiwict6aRSieY4voYe+aovPgxt8dutgTvYFn4gdl/Q7/DdKNq
-         Ip3rt1MQ9OHmVX3aPvmg2u5uj77ENysS//6QHmMuop5Dzbl3T3/YF6WfTPaRX5BfhQaH
-         T7IJMEQw30euAT92jg2PNWJzZpCKZSi/Wv55KSTUbTizAyr+AU/LqC5CD5bFj8zI8oBe
-         qAM+1DQ//oRiEDG3ZxkPCEqmnvOvlbBX+I1hg6JVIVxK5OPhupoxaG3d7AuE8gn58XGb
-         vXkekX8BF/9XsGvD+hA9B9KL7EeDvVIPq2l60zgrr+5inFkd8gwtpOscsHRO8o0UHxDa
-         7tmA==
-X-Gm-Message-State: AC+VfDzk4hTOn4Aqa4hOcajmOF8RPRvQzFZCWXcikrFQWaEPNSKiGDeh
-        pSwjfS5SGCQC8IVqpjMdbn0=
-X-Google-Smtp-Source: ACHHUZ7exqEKOU58Z3etuBG+Bq1RB/laict4/LvWmqHGfBFqATOlJp9iFQAiPQqbkML28YnLnb8F6w==
-X-Received: by 2002:a17:903:1210:b0:1aa:cddd:57d8 with SMTP id l16-20020a170903121000b001aacddd57d8mr10863482plh.30.1682962158619;
-        Mon, 01 May 2023 10:29:18 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:eba5:79b2:92dd:67e? ([2620:15c:211:201:eba5:79b2:92dd:67e])
-        by smtp.gmail.com with ESMTPSA id jj22-20020a170903049600b001aafe4f9b8esm1458414plb.180.2023.05.01.10.29.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 May 2023 10:29:17 -0700 (PDT)
-Message-ID: <f3cef43e-0afb-95b3-bd29-21afa2331a26@acm.org>
-Date:   Mon, 1 May 2023 10:29:14 -0700
+        d=1e100.net; s=20221208; t=1683012938; x=1685604938;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Wvv/hBwHmGpvqxO3rQDcjva4ryRFVTLpzb5zW5Sqmx8=;
+        b=T5NMeS81OqvKqperuXEx/gi1iYtoNHHY/KFpO75yH4fy7jzcRcw1fPvjfBhwXMBjKS
+         BZ7MaPiUDIBQ8vQ2EUiGok50pQyBsmwTQ4+X9k0gSPBMhINHuTeHZRE691o+KVE/Q1LF
+         QQsez9WAzPGdFeIQzi070i57zwCcq9XyzL8NNdmX7vS0Q31DTgInANAwzkvIK35V3XlG
+         UmbOT/evFOMMGOJiqGGDadthKx+5RAIBlm7YBEdT3LreWzyAtgqnvStN3BEimvtjRcCV
+         m+uJCODaSoV2j78AT5c9OrRAUxfd+f7KfZ/NmF7BKS8vD2iiQUsm/+1cuoxbsJCr4Omf
+         gJCg==
+X-Gm-Message-State: AC+VfDxp70qg440ywAau0yhjkns7gpwQ2xLUS5f8UUgeN+3MupHh7WIc
+        7OeKHtjwK1qTFNvwvgZ9rRvcF7l4iJNb8N0otw==
+X-Google-Smtp-Source: ACHHUZ754sEATk1u8vUKBryFLLWAYu4arHBctSmd0C0Y352aDzqYtnJ0KlDtB2OPQuyahMtxy6awD4KLzSZtG6KW6eo=
+X-Received: by 2002:ac2:52aa:0:b0:4ef:f088:f0e6 with SMTP id
+ r10-20020ac252aa000000b004eff088f0e6mr4850445lfm.57.1683012937578; Tue, 02
+ May 2023 00:35:37 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH] scsi: ufs: core: Change the module parameter macro of
- use_mcq_mode
-Content-Language: en-US
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
- <20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20230424140839.22358-1-powen.kao@mediatek.com> <20230424140839.22358-2-powen.kao@mediatek.com>
+In-Reply-To: <20230424140839.22358-2-powen.kao@mediatek.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Tue, 2 May 2023 15:35:25 +0800
+Message-ID: <CAGaU9a8mSx1Da5rnXDm9pc-yc8BQOrjc5KMXjotcaDdKDTXwuQ@mail.gmail.com>
+Subject: Re: [PATCH v5 1/3] scsi: ufs: core: Fix mcq tag calcualtion
+To:     Po-Wen Kao <powen.kao@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com,
+        mason.zhang@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/27/23 02:44, Keoseong Park wrote:
-> mcq_mode_ops uses only param_{set,get}_bool(). Therefore, convert
-> module_param_cb() to module_param() and remove the mcq_mode_ops.
+Hi Po-Wen,
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Po-Wen Kao <powen.kao@mediatek.com> =E6=96=BC 2023=E5=B9=B44=E6=9C=8824=E6=
+=97=A5 =E9=80=B1=E4=B8=80 =E4=B8=8B=E5=8D=8810:13=E5=AF=AB=E9=81=93=EF=BC=
+=9A
+>
+> Transfer command descriptor is allocated in ufshcd_memory_alloc()
+> and referenced by transfer request descriptor with stride size
+> sizeof_utp_transfer_cmd_desc()
+> instead of
+> sizeof(struct utp_transfer_cmd_desc).
+>
+> Consequently, computing tag by address offset should also refer to the
+> same stride.
+>
+> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+> Reviewed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> ---
+>  drivers/ufs/core/ufs-mcq.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 31df052fbc41..3a27fa4b0024 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
+>         addr =3D (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) =
+-
+>                 hba->ucdl_dma_addr;
+>
+> -       return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
+> +       return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
+
+Would you also need to consider the ufshcd_release_sdb_queue() case?
+
+Thanks.
+Stanley Chu
