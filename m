@@ -2,116 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C4F1C77B73
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 May 2023 17:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D556C7EE21
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 May 2023 20:28:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234380AbjEBRG4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 May 2023 13:06:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48396 "EHLO
+        id S229935AbjEBU2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 May 2023 16:28:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234253AbjEBRGx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2023 13:06:53 -0400
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78062D68
-        for <linux-scsi@vger.kernel.org>; Tue,  2 May 2023 10:06:45 -0700 (PDT)
-Received: by mail-wm1-x32c.google.com with SMTP id 5b1f17b1804b1-3f315712406so178695585e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 02 May 2023 10:06:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1683047204; x=1685639204;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gx8zKXoy8nZxQ0bzeuH4TsYA2xK19EtfTbcluKj4zzM=;
-        b=etFLY0pfQT0Ff197Gvb1sk+TadBVcR6BXPJJ5hkZnWkuf0FGh9rc0SYx6sr6qoYttC
-         CAeDoylwsgUecBnKj6yKJbwZd/ZGsYkOxffgglvQwLYTK/zl0bwzZtKjTB+8XNM5DI9N
-         cGenD+QL2afDl2bbpPqjuSsamnz6B1IuvHAMc1uWJVXOb0+7Wt5ZKv5NwWNp03wn8nlH
-         ATVYuJHbjF2/YSse+15avozsWzFnXS5ckXOI36uBR2GAz8LTK06pn2WTZY8UizmqKD2/
-         1Y0wffiC/1mG0VuHk+XJKoutqGBUhqgcPNqE2r78DHr6ZgGk6fDJ9JWjeiZRvtOLi5bv
-         CYDA==
+        with ESMTP id S229797AbjEBU2u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2023 16:28:50 -0400
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 057521996;
+        Tue,  2 May 2023 13:28:49 -0700 (PDT)
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-63b51fd2972so3084754b3a.3;
+        Tue, 02 May 2023 13:28:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683047204; x=1685639204;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gx8zKXoy8nZxQ0bzeuH4TsYA2xK19EtfTbcluKj4zzM=;
-        b=BGWD04GBaX42bBx9bb1zNQSsXNWTEajZfwlsIglN7zY2QnYK043cJ216JMwVQmloZj
-         UoDQeHYYDk7Zysb9zqKiOx6Pj5amODuRF6ada/cByzKiSRM0536AlyzNWYP3MlIxyv8I
-         XaFty78HNwl7gLwRraFampLdsJRmd18BqKeDENy+FPEmZY76ODX2eU6JmF7h8xajp3cK
-         XNW78Y2t/QE06WRaU/2sap3XwEW4tEghnLT8g1MAhbjBfrRXxRz66cxDWxNr+g/HzPaU
-         1U5okiCl9RrC8zvNqFS6dU3sYn+Pi9UJCafBANV26Y6MSxLH/OtXML2KL2RvqEt1l5Fs
-         j51A==
-X-Gm-Message-State: AC+VfDxrIc2Omb6ejiZsw7p53BKDyrIE0a4EXFcjhOoRByhM/I9g9oa3
-        p4+JbQMZYmrvLQqb/TtVKPGhiw==
-X-Google-Smtp-Source: ACHHUZ70mZGKbzAf13zjiuRRq8zx0iCo/1yfJzwrOZFSDtXSDO6GDq/owc2yPeIrjJmN4c1UdU3LAQ==
-X-Received: by 2002:a5d:6704:0:b0:2ef:afe0:727a with SMTP id o4-20020a5d6704000000b002efafe0727amr12793931wru.12.1683047204088;
-        Tue, 02 May 2023 10:06:44 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id j17-20020adfe511000000b003063ec828a4sm179954wrm.117.2023.05.02.10.06.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 May 2023 10:06:42 -0700 (PDT)
-Date:   Tue, 2 May 2023 20:06:34 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Tomas Henzl <thenzl@redhat.com>
-Cc:     Jing Xu <U202112064@hust.edu.cn>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        hust-os-kernel-patches@googlegroups.com,
-        Dongliang Mu <dzm91@hust.edu.cn>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: mpt3sas: mpt3sas_debugfs: return value check of
- `mpt3sas_debugfs_root`
-Message-ID: <1484408f-f68e-4354-ab59-56af9cd1ef14@kili.mountain>
-References: <20230423122535.31019-1-U202112064@hust.edu.cn>
- <6e69b57c-80ae-8b6e-cb5f-9e05da46ecd6@redhat.com>
+        d=1e100.net; s=20221208; t=1683059328; x=1685651328;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XbDeJmwqlhx/Uc/BoBY+MH9m48arvcLqRsgyaqRFpYo=;
+        b=BENuPsWF9gUgg/2bCvwBIXdNUzVy07DMsDRxpWNu2mbLuZssbY3lB2QtUDhgNqoynN
+         f+oQwRCeWJoKGrwqaa7IFjakJvl9Bb4iSCnrtynGy/77guJ46aTnNsX2IJct+Tv+Kw2t
+         rU8+Djnpzj2w3BXH40XMZvj4wQc+rvjEbT46NMWvfRs7tx2KUpDJ3lzUY6KL+1r0ZtPp
+         Gz3tWpNW0+PTQBEOWrvrbSdx7mNcSS+J0QQfAPL1MHiFFiSWBQdlSg1QeFokgL+Gmq7R
+         g3QVVSU/pSgPSnbPYxtych4Mb3q/8IlyXaSdOs1VkUPcJ1vwMvzc6iJ8RAoZ9z+WxjxV
+         Q4bQ==
+X-Gm-Message-State: AC+VfDzWfAEHnQNMgebyY06Wvw2TTQj6FLZxx3OZhe11HlzApBQbY7nI
+        aEdm7ACsxibFujNim7JT+V4=
+X-Google-Smtp-Source: ACHHUZ7ju2RgE6ExuoCnUXJCR3+ngQ3XGa0VOc0I0/8HlKzKRgZ7xBJbT/Odu3V55q3Z3hcDcc7bhg==
+X-Received: by 2002:a05:6a20:958d:b0:ef:e240:b559 with SMTP id iu13-20020a056a20958d00b000efe240b559mr20943594pzb.46.1683059328249;
+        Tue, 02 May 2023 13:28:48 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:c683:a90b:5f41:5878? ([2620:15c:211:201:c683:a90b:5f41:5878])
+        by smtp.gmail.com with ESMTPSA id v13-20020a17090a0c8d00b00246b1b4a3ffsm8200159pja.0.2023.05.02.13.28.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 May 2023 13:28:47 -0700 (PDT)
+Message-ID: <28ea2183-d1ce-f42d-1765-9d07d7481eda@acm.org>
+Date:   Tue, 2 May 2023 13:28:45 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6e69b57c-80ae-8b6e-cb5f-9e05da46ecd6@redhat.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH] scsi: ufs: core: Use readable 'return 0' in
+ ufshcd_hba_capabilities()
+Content-Language: en-US
+To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CGME20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
+ <20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 02, 2023 at 05:53:10PM +0200, Tomas Henzl wrote:
-> On 4/23/23 14:25, Jing Xu wrote:
-> > Smatch complains that:
-> > mpt3sas_init_debugfs() warn: 'mpt3sas_debugfs_root' is an error 
-> > pointer or valid
-> > 
-> > There is no need to check the return value of the debugfs_create_dir() 
-> > function, just delete the dead code.
-> > 
-> > Fixes: 2b01b293f359 ("scsi: mpt3sas: Capture IOC data for debugging purposes")
-> > Signed-off-by: Jing Xu <U202112064@hust.edu.cn>
-> > Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
-> > ---
-> >  drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 2 --
-> >  1 file changed, 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-> > index a6ab1db81167..c92e08c130b9 100644
-> > --- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-> > +++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-> > @@ -99,8 +99,6 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
-> >  void mpt3sas_init_debugfs(void)
-> >  {
-> >  	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
-> > -	if (!mpt3sas_debugfs_root)
-> > -		pr_info("mpt3sas: Cannot create debugfs root\n");
-> Hi Jing,
-> most drivers just ignore the return value but here the author wanted to
-> have the information logged.
-> Can you instead of removing the message modify the 'if' condition so it
-> suits the author's intention?
+On 5/2/23 04:31, Keoseong Park wrote:
+> The 'err' variable is the result of ufshcd_hba_init_crypto_capabilities()
+> regardless of MCQ capabilities. Return 'err' immediately when the function
+> error occurs. And if it is not an error, explicitly return 0.
+> 
+> Anyway, if ufshcd_hba_init_crypto_capabilities() returns error, MCQ
+> capabilities is not used because it fails to initialize UFS driver.
+> 
+> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 8 +++++---
+>   1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 9434328ba323..44328eb4158d 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2343,18 +2343,20 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>   
+>   	/* Read crypto capabilities */
+>   	err = ufshcd_hba_init_crypto_capabilities(hba);
+> -	if (err)
+> +	if (err) {
+>   		dev_err(hba->dev, "crypto setup failed\n");
+> +		return err;
+> +	}
+>   
+>   	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
+>   	if (!hba->mcq_sup)
+> -		return err;
+> +		return 0;
+>   
+>   	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+>   	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
+>   				     hba->mcq_capabilities);
+>   
+> -	return err;
+> +	return 0;
+>   }
 
-This code was always just wrong.
+The most important change in this patch is that ufshcd_hba_capabilities()
+returns earlier if ufshcd_hba_init_crypto_capabilities() fails. Please
+change the patch title such that it reflects this change instead of the
+other less important change.
 
-The history of this is slightly complicated and boring.  These days it's
-harmless dead code so I guess it's less bad than before.
+Thanks,
 
+Bart.
 
-regards,
-dan carpenter
