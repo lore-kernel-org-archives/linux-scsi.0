@@ -2,109 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47601C77B78
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 May 2023 23:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B030C77B7F
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 05:10:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230019AbjEBXwQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 May 2023 19:52:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39748 "EHLO
+        id S229491AbjECFKa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 01:10:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbjEBXwP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2023 19:52:15 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB85030E4;
-        Tue,  2 May 2023 16:52:13 -0700 (PDT)
-Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 7630B75874;
-        Tue,  2 May 2023 23:52:12 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 641F63364A;
-        Tue,  2 May 2023 23:52:12 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id nH8Ha2tdXozh; Tue,  2 May 2023 23:52:12 +0000 (UTC)
-Received: from [192.168.48.17] (host-192.252-165-26.dyn.295.ca [192.252.165.26])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 6F18D33649;
-        Tue,  2 May 2023 23:52:11 +0000 (UTC)
-Message-ID: <585941de-3e17-d5aa-311b-17773c6fbf1f@interlog.com>
-Date:   Tue, 2 May 2023 19:52:10 -0400
+        with ESMTP id S229441AbjECFK3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 01:10:29 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560F5198C;
+        Tue,  2 May 2023 22:10:28 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id 2adb3069b0e04-4f137dbaa4fso366065e87.2;
+        Tue, 02 May 2023 22:10:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683090626; x=1685682626;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/gUMcAb9p0mtdNtbUOeVy8zAV4NOHZstBj8s8GNLqlo=;
+        b=rXbyC8wiohAIZnaCzgut2ymBY5J5zPwmSUhFhzl9ol/JU4Sy2uQwvsnu1NbXM1LMHd
+         kLe6iUxw1O2vUz6cY8rvR2d3JOcgFPnDmMUOdQtgY1VXK8LUMsfCkTJ1AG6MNqk/q5bK
+         kaRel+B/SFxikNOV64r3HIVJeq9ZJl1A5VlU0ANcugWa4WVbSSt5l+kxniIvkTD4/ZhE
+         eI57ZB+tFb4Sct1jA7UChoyLxFZVZBgMYQe7WZZ34CxeOICI86FzQ3mkXSUaqJRHHld2
+         XNNIFISSRqRhwPSGIo7u5UgPESeKIzJiaUncBqeKqT6VbKkFJDqLqO7kEpqsen3wS1JY
+         u1KQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683090626; x=1685682626;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/gUMcAb9p0mtdNtbUOeVy8zAV4NOHZstBj8s8GNLqlo=;
+        b=ltgAE4F5Me5/OH3tMye41UnNqUJJgySqw24jIT4hAA9pffFtoV2R89aB+PbIe2XTOl
+         kdgi/c9onm67vMjcA3GTkbeq4LaC5zTKrBi8NeyyHpza19+/Nbml2p5iiKQjOIvxxz9D
+         ZuX5bL+pjTnV/9TX62NnR9BVPKECafxMFcg88euVkRCSODDGKifKDwW5OGagg1cHJdzN
+         hiWvB26OWXRkoGGlhdnGfNhXPgY208UYzZ3LZRmjCGqO+GuyYj+CYuyvFgIIcau51RhT
+         B0BwqJfVAV80C7Vo3Y1q7xSBXdzvubBpguqKdn+7+vyviw/SpCUPfFRvwWdO45KgjCSg
+         3U3w==
+X-Gm-Message-State: AC+VfDzr8Tzd453vgWDOZTNetxKwSgKX4ZWs/DBg8sMrM6Ck0bxj0J0t
+        +PQni4D3K9OcEKkUxRA3rXMyt/WSMLf/sR1y1A==
+X-Google-Smtp-Source: ACHHUZ6HugMTcvUOsV69lbdyeCpg3dHGRyKco7GUIMPTz/WpvdDDFDxbuGmiiy/fYUIOfBPvyKlzjJqDW4B/nm4tK2c=
+X-Received: by 2002:ac2:5d6a:0:b0:4dc:4b92:dbc4 with SMTP id
+ h10-20020ac25d6a000000b004dc4b92dbc4mr445424lft.14.1683090626163; Tue, 02 May
+ 2023 22:10:26 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v2 0/6] scsi:scsi_debug: Add error injection for single
- device
-To:     Wenchao Hao <haowenchao2@huawei.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     linfeilong@huawei.com, louhongxiang@huawei.com
-References: <20230428013320.347050-1-haowenchao2@huawei.com>
-Content-Language: en-CA
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <20230428013320.347050-1-haowenchao2@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <CGME20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
+ <20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
+In-Reply-To: <20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Wed, 3 May 2023 13:10:13 +0800
+Message-ID: <CAGaU9a9B7gAfJk8F_4_v3OAYuGA2MAAOEbq09aJrbhCZqo7CaA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Change the module parameter macro of use_mcq_mode
+To:     keosung.park@samsung.com
+Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-04-27 21:33, Wenchao Hao wrote:
-> The original error injection mechanism was based on scsi_host which
-> could not inject fault for a single SCSI device.
-> 
-> This patchset provides the ability to inject errors for a single
-> SCSI device. Now we supports inject timeout errors, queuecommand
-> errors, and hostbyte, driverbyte, statusbyte, and sense data for
-> specific SCSI Command.
-> 
-> The first two patch add an debugfs interface to add and inquiry single
-> device's error injection info; the third patch defined how to remove
-> an injection which has been added. The following 3 patches use the
-> injection info and generate the related error type.
-> 
-> V2:
->    - Using debugfs rather than sysfs attribute interface to manage error
-> 
-> Wenchao Hao (6):
->    scsi:scsi_debug: create scsi_debug directory in the debugfs filesystem
->    scsi:scsi_debug: Add interface to manage single device's error inject
->    scsi:scsi_debug: Define grammar to remove added error injection
->    scsi:scsi_debug: timeout command if the error is injected
->    scsi:scsi_debug: Return failed value if the error is injected
->    scsi:scsi_debug: set command's result and sense data if the error is
->      injected
-> 
->   drivers/scsi/scsi_debug.c | 318 ++++++++++++++++++++++++++++++++++++++
->   1 file changed, 318 insertions(+)
+Keoseong Park <keosung.park@samsung.com> =E6=96=BC 2023=E5=B9=B44=E6=9C=882=
+7=E6=97=A5 =E9=80=B1=E5=9B=9B =E4=B8=8B=E5=8D=885:48=E5=AF=AB=E9=81=93=EF=
+=BC=9A
+>
+> mcq_mode_ops uses only param_{set,get}_bool(). Therefore, convert
+> module_param_cb() to module_param() and remove the mcq_mode_ops.
+>
 
-Been playing around with this patchset and it seems to work as expected. Took me
-a while to work my way through interface description at the beginning of
-   [PATCH v2 2/6] scsi:scsi_debug: Add interface to manage single device's error 
-inject
-
-so I cut and paste it into my scsi_debug.html page and did some work on it, see:
-    https://doug-gilbert.github.io/scsi_debug.html
-
-There is a new chapter titled: Per device error injection
-Kept the ASCII art so it could be ported back to [PATCH v2 2/6]'s description
-if Wenchao is agreeable.
-
-So for the whole series:
-   Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-
-
-One suggestion for later work: perhaps the Command opcode field could be
-expanded to: x8[,x16] so optionally a Service Action (in hex) could be
-given (e.g. '9e,10' for the READ CAPACITY (16) command).
-
-Doug Gilbert
-
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
