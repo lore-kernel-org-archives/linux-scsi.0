@@ -2,85 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 885FDC77B75
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 14:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0FE7C77B75
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 14:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbjECOZP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 May 2023 10:25:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47392 "EHLO
+        id S230042AbjECOrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 10:47:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229585AbjECOZN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 10:25:13 -0400
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id C38AB4491
-        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 07:25:11 -0700 (PDT)
-Received: (qmail 379363 invoked by uid 1000); 3 May 2023 10:25:10 -0400
-Date:   Wed, 3 May 2023 10:25:10 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Oliver Neukum <oneukum@suse.com>
-Cc:     Benjamin Block <bblock@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Maxime Bizon <mbizon@freebox.fr>, linux-usb@vger.kernel.org,
-        usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Reproducible deadlock when usb-storage scsi command timeouts
- twice
-Message-ID: <97a67f78-4888-4fe7-9bfc-87d0bb6cc8b2@rowland.harvard.edu>
-References: <ZEllnjMKT8ulZbJh@sakura>
- <34a2e50b-e899-45ee-ac14-31fa0bb1616b@rowland.harvard.edu>
- <20230503102440.GL18384@t480-pf1aa2c2.fritz.box>
- <941e8420-f99f-5832-2ea9-3ba5eca545ad@suse.com>
- <20230503125137.GA1032383@t480-pf1aa2c2.fritz.box>
- <d25bfa50-b5a0-bd0e-fd14-94967e374033@suse.com>
+        with ESMTP id S229490AbjECOrW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 10:47:22 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 380CA5263;
+        Wed,  3 May 2023 07:47:20 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id 2adb3069b0e04-4eff4ea8e39so6041993e87.1;
+        Wed, 03 May 2023 07:47:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683125238; x=1685717238;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=C3xAax5UMMKBBrbDbSmOKKPeFKZ83BBHuKP/eeSu5p4=;
+        b=rkCbtRN1t07+/Mm/qp9LWT08mpQB23zqZwKxH/Jugd/NMBBtfp3x2iR88DiiT4MTau
+         0hLjGt4gooDQzdKm/zMhrQOZmt3kYs5BJh/OpiH8gfeO9ZedFFpE6IQckWfdbSWH+MJf
+         fa35lSUFY1CHzRfoZFZmGVxHsgF24HRkm69VfOYsOdnRxmJikPHeCfRHhZhTr+rHTGAd
+         IrCrDkqqi/kFC+V4GhkpIEIMJiUr5KyQfTDoWnd4ATqB/+XK5Xf6u3dHkgW5FBnD2IDc
+         FvfBa9HEGeJDQ1eu+X6q3cPFg1J0JDh1Jl85QNVwKUlnyJQl03KGvLy6eGElL8xrC0nD
+         jvwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683125238; x=1685717238;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=C3xAax5UMMKBBrbDbSmOKKPeFKZ83BBHuKP/eeSu5p4=;
+        b=J/dJjCD3h/BLw2MRnmNbWQrl2+sF9dgs/0Utvgdz0di2BwF0eaaDsJb60kJHb0xpqb
+         OrRKG/LSY9XG1E7GN/ZkZ1fNT+fLYw79euX1hqQPVlskGWpGpmepqfgsW7iEuQSNwa9/
+         0JywSuAxsCayIE2YJBWnapgvkn49VF8dF+SfiaTWZl6zo5WOum3N7+eUmAXztCbJVGq4
+         rGnTRf6s2rxePC9O1Hr44j73Yu0CYAxQGDhoqlLADyqvgj1M4ZV9A4EbgG6UqmRDe2iI
+         9ESkeIi437xSB7lLa/AkV3VTnljmy639kKV1LsVILBi5VN5OzlDVT+iqXRqS9MuaD1PU
+         ypCA==
+X-Gm-Message-State: AC+VfDwsOJXO9+ql1E8Xb8MWMxmySuX5wH1yExVdr6K9W9IjlegeCscS
+        XUHrjgLenMCUiDWCJwx/y4uLbL8hb3xs9KWgag==
+X-Google-Smtp-Source: ACHHUZ4wJk4FWZJ47z3eWowcIPsdV23tHhs0Q+a5X+3y6nD0P4oucFwMYwXky460hcvVU2vX04y8rfMGBaSfdbr64fM=
+X-Received: by 2002:ac2:414a:0:b0:4ef:d41d:637 with SMTP id
+ c10-20020ac2414a000000b004efd41d0637mr957607lfi.39.1683125238146; Wed, 03 May
+ 2023 07:47:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d25bfa50-b5a0-bd0e-fd14-94967e374033@suse.com>
+References: <68fce64f-4970-45f1-807e-6c0eecdfcdc2@kili.mountain>
+In-Reply-To: <68fce64f-4970-45f1-807e-6c0eecdfcdc2@kili.mountain>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Wed, 3 May 2023 22:47:06 +0800
+Message-ID: <CAGaU9a8eRPyMo9hUekiVL9ppZQspwsqk9RQTtmqHsTPBD7mcjA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: delete some dead code
+To:     Dan Carpenter <dan.carpenter@linaro.org>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        Andy Teng <andy.teng@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 03, 2023 at 03:54:45PM +0200, Oliver Neukum wrote:
-> On 03.05.23 14:51, Benjamin Block wrote:
-> 
-> > > usb-storage can do a reset only on the USB device level,
-> > > which translates to a bus reset on the SCSI level.
-> > > 
-> > > And we are supposed to cancel any communication with the device
-> > > before that.
-> > 
-> > Is that a limitation of the devices or drivers? Because then you don't
-> > match SCSI semantics for LU reset - which aborts all running commands
-> 
-> We do not support a LUN reset. That's a limitation of the protocol.
-> If something goes wrong you need to reset the whole USB device, which
-> corresponds to a host adaptor on the SCSI level.
+Dan Carpenter <dan.carpenter@linaro.org> =E6=96=BC 2023=E5=B9=B45=E6=9C=883=
+=E6=97=A5 =E9=80=B1=E4=B8=89 =E4=B8=8B=E5=8D=886:41=E5=AF=AB=E9=81=93=EF=BC=
+=9A
+>
+> There is already a test for "if (val =3D=3D state)" earlier so it's not
+> possible here.  Delete the dead code.
+>
+> Fixes: 9006e3986f66 ("scsi: ufs-mediatek: Do not gate clocks if auto-hibe=
+rn8 is not entered yet")
+> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
 
-There is the Bulk-Only Mass Storage Reset request, which is what 
-usb-storage issues when asked to perform a device reset.  But few 
-devices implement it correctly.
-
-> > on that scope among things. Which might explain the reason/choice behind
-> > this unexpected behavior for you.
-> 
-> For the device a reset presumably does wipe out the command currently
-> under execution. The problem is within the driver. It thinks that
-> a command is still active. And we are limited to one command at a time
-> (on the whole bus - again protocol limitation)
-> 
-> > On random thought I had: in theory you could implement your own EH
-> > strategy handler if the default one doesn't work for you. ATA and SAS do so.
-> > [drivers/scsi/scsi_error.c:2285 `shost->transportt->eh_strategy_handler()`]
-> > This can re-use parts/all of the existing escalation sequence in
-> > `scsi_eh_ready_devs()`.
-> > 
-> > But that's no short-term fix.
-> 
-> That looks like using a sledge hammer.
-
-I think the best answer is to accept the patch that started this email 
-thread, perhaps with a minor change.  The driver can easily abort the 
-currently running command (if any) on its own before starting a reset.
-
-Alan Stern
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
