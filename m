@@ -2,84 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB67BC77B7F
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 10:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC64C77B7F
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 10:46:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbjECKoi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 May 2023 06:44:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50262 "EHLO
+        id S229902AbjECKqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 06:46:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229587AbjECKoh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 06:44:37 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0960049DF;
-        Wed,  3 May 2023 03:44:29 -0700 (PDT)
-X-UUID: 789233e4e99f11ed9cb5633481061a41-20230503
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=B69u6GgKXQW5Qza7AExVGf0B1LAE9LgcAatktBTLJRQ=;
-        b=PrdV+vF+QcY/ZKXFaKzlvIGgAx1iobh6cdYMxNi7pJNWW34qgv55qnV9jABou+x0ICUNL/Rcxv1tUL6ftNONUafx1a72gNkLLnBp0UdK/ZyE1wpMV3ddPgYm0YNjVUkvJUT8FFxkCxn6K8xjI+Im6vXe/+/LDAlZgKk0qSaEXDA=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.23,REQID:9e999a90-3018-4857-b097-eb89450a94d3,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:697ab71,CLOUDID:008eaabf-e32c-4c97-918d-fbb3fc224d4e,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-UUID: 789233e4e99f11ed9cb5633481061a41-20230503
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 452633527; Wed, 03 May 2023 18:44:25 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 3 May 2023 18:44:24 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.25 via Frontend Transport; Wed, 3 May 2023 18:44:24 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <catalin.marinas@arm.com>, <will@kernel.org>,
-        <matthias.bgg@gmail.com>,
-        <angelogioacchino.delregno@collabora.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <bvanassche@acm.org>
-CC:     <stanley.chu@mediatek.com>
-Subject: [PATCH v1] arm64: defconfig: Enable UFS support for MediaTek platforms
-Date:   Wed, 3 May 2023 18:44:23 +0800
-Message-ID: <20230503104423.21702-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        with ESMTP id S229587AbjECKqi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 06:46:38 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CB3F35A6
+        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 03:46:34 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230503104632epoutp031ad7a66a67e2ca4a57337f7cbfd9ec11~bnFkl7RLN0186101861epoutp03O
+        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 10:46:32 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230503104632epoutp031ad7a66a67e2ca4a57337f7cbfd9ec11~bnFkl7RLN0186101861epoutp03O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1683110792;
+        bh=WBo+Gtt5+fa6g5qjUIPdBB+ssnPfrBNghApCsFJRoCo=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=Ac3IemXeKwlZZUNIk93boTjrocnyFS8/ogaVnqdpWLm3yA9sKdC+Q+OxiNEh79/i+
+         mafHH06nICsPX+btFDA//YftVcdjTyP7AOCwSbpluPlro6+0hQvmmFtXTeOOOiOatF
+         tG4TC9ltqCylQP/y8XyPQcIKmEwl+9xJeYCRrEEU=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20230503104631epcas2p4a09cc4d1324f05d21c1451160058db17~bnFjfm2LO1511615116epcas2p4k;
+        Wed,  3 May 2023 10:46:31 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4QBDCB3L80z4x9Pv; Wed,  3 May
+        2023 10:46:30 +0000 (GMT)
+X-AuditID: b6c32a45-465ff70000020cc1-13-64523b86678c
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        8F.87.03265.68B32546; Wed,  3 May 2023 19:46:30 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: core: Return earlier if
+ ufshcd_hba_init_crypto_capabilities() fails
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230503104630epcms2p8b82734102ffb920531e9264604086372@epcms2p8>
+Date:   Wed, 03 May 2023 19:46:30 +0900
+X-CMS-MailID: 20230503104630epcms2p8b82734102ffb920531e9264604086372
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDJsWRmVeSWpSXmKPExsWy7bCmmW6bdVCKwYmNkhYP5m1js3j58yqb
+        xcGHnSwW0z78ZLZ4eUjTYtGNbUwWl3fNYbPovr6DzWL58X9MFgs75rJYLN16k9GB2+PyFW+P
+        CYsOMHq0nNzP4vF9fQebx8ent1g8Ju6p8+jbsorR4/MmOY/2A91MAZxR2TYZqYkpqUUKqXnJ
+        +SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QLcqKZQl5pQChQISi4uV9O1s
+        ivJLS1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJSS6wMDQyMTIEKE7Izrl5bylpwlaPi1Zp3
+        rA2MXexdjJwcEgImEquv72ftYuTiEBLYwSix4PApli5GDg5eAUGJvzuEQWqEBRIl1i+YwwZi
+        CwkoSXQt3MoMETeQWDd9D5jNJqAnMeX3HUaQOSICPcwSHbeWsYIkmAXqJHbP+cMGsYxXYkb7
+        UxYIW1pi+/KtjBC2hsSPZb3MELaoxM3Vb9lh7PfH5kPViEi03jsLVSMo8eDnbqi4pETrma1Q
+        8+slWt+fYgc5QkJgAqNE47E/UIP0Ja51bARbzCvgK7H842ywOIuAqsTJ2z+gml0kDs88yQxx
+        tLzE9rdzmEEBwSygKbF+lz6IKSGgLHHkFgtEBZ9Ex+G/7DBvNWz8jZW9Y94TJghbTeLRgi2s
+        ELaMxMU555gnMCrNQoT0LCR7ZyHsXcDIvIpRLLWgODc9tdiowBAeucn5uZsYwclWy3UH4+S3
+        H/QOMTJxMB5ilOBgVhLh/VDolyLEm5JYWZValB9fVJqTWnyI0RTo44nMUqLJ+cB0n1cSb2hi
+        aWBiZmZobmRqYK4kzittezJZSCA9sSQ1OzW1ILUIpo+Jg1OqgUl88u7gwt/TeR/2RQr++PDj
+        zhx3yyXyN/32FCz228Ox5dRs5SfXivX4Qs9s9giaZjDZRV/s7KSYzDkKFcFbZsrm7TlimFd3
+        3k/G9JYBp3vG3N613VuPmlxObHt1n+VMwRcHj1cF4vLLTZYcYX1T/NW4un7RlekSk6L61K8H
+        7/f1+SHNLP+D4cn8K+YrtpoVclXutJupoLxk4Y9a5k0PXs2R9udU9chIvHFPvGjhgz3W2f+y
+        Tku4nGtI2xCVtumnq4jBth7m0Ie9NkFnfwUklPvvOqt44MaE6bp/o1/criph1Fz/KU/O747s
+        7UdnbX2vrRI8U939YJLFRX63Q0yivrmvvmwL1ZhREXtc43/b5XdKLMUZiYZazEXFiQCbR6a4
+        PwQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230503104630epcms2p8b82734102ffb920531e9264604086372
+References: <CGME20230503104630epcms2p8b82734102ffb920531e9264604086372@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Increase build and test coverage by enabling support for more
-hardware present on MediaTek SoCs and boards:
-  - MediaTek Universal Flash Storage Controller
+The 'err' variable is used only as the result of
+ufshcd_hba_init_crypto_capabilities(), so return 'err' immediately when
+failed. If it is not an error, explicitly return 0.
 
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
 ---
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/core/ufshcd.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index a24609e14d50..5fc33aea296d 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -1027,6 +1027,7 @@ CONFIG_SCSI_UFSHCD=y
- CONFIG_SCSI_UFSHCD_PLATFORM=y
- CONFIG_SCSI_UFS_QCOM=m
- CONFIG_SCSI_UFS_HISI=y
-+CONFIG_SCSI_UFS_MEDIATEK=m
- CONFIG_SCSI_UFS_RENESAS=m
- CONFIG_SCSI_UFS_EXYNOS=y
- CONFIG_NEW_LEDS=y
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9434328ba323..44328eb4158d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2343,18 +2343,20 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+ 
+ 	/* Read crypto capabilities */
+ 	err = ufshcd_hba_init_crypto_capabilities(hba);
+-	if (err)
++	if (err) {
+ 		dev_err(hba->dev, "crypto setup failed\n");
++		return err;
++	}
+ 
+ 	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
+ 	if (!hba->mcq_sup)
+-		return err;
++		return 0;
+ 
+ 	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+ 	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
+ 				     hba->mcq_capabilities);
+ 
+-	return err;
++	return 0;
+ }
+ 
+ /**
 -- 
-2.18.0
+2.17.1
 
