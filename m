@@ -2,62 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B030C77B7F
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 05:10:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4776C77B78
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 06:50:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229491AbjECFKa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 May 2023 01:10:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51418 "EHLO
+        id S229706AbjECGuY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 02:50:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbjECFK3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 01:10:29 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560F5198C;
-        Tue,  2 May 2023 22:10:28 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id 2adb3069b0e04-4f137dbaa4fso366065e87.2;
-        Tue, 02 May 2023 22:10:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683090626; x=1685682626;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/gUMcAb9p0mtdNtbUOeVy8zAV4NOHZstBj8s8GNLqlo=;
-        b=rXbyC8wiohAIZnaCzgut2ymBY5J5zPwmSUhFhzl9ol/JU4Sy2uQwvsnu1NbXM1LMHd
-         kLe6iUxw1O2vUz6cY8rvR2d3JOcgFPnDmMUOdQtgY1VXK8LUMsfCkTJ1AG6MNqk/q5bK
-         kaRel+B/SFxikNOV64r3HIVJeq9ZJl1A5VlU0ANcugWa4WVbSSt5l+kxniIvkTD4/ZhE
-         eI57ZB+tFb4Sct1jA7UChoyLxFZVZBgMYQe7WZZ34CxeOICI86FzQ3mkXSUaqJRHHld2
-         XNNIFISSRqRhwPSGIo7u5UgPESeKIzJiaUncBqeKqT6VbKkFJDqLqO7kEpqsen3wS1JY
-         u1KQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683090626; x=1685682626;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/gUMcAb9p0mtdNtbUOeVy8zAV4NOHZstBj8s8GNLqlo=;
-        b=ltgAE4F5Me5/OH3tMye41UnNqUJJgySqw24jIT4hAA9pffFtoV2R89aB+PbIe2XTOl
-         kdgi/c9onm67vMjcA3GTkbeq4LaC5zTKrBi8NeyyHpza19+/Nbml2p5iiKQjOIvxxz9D
-         ZuX5bL+pjTnV/9TX62NnR9BVPKECafxMFcg88euVkRCSODDGKifKDwW5OGagg1cHJdzN
-         hiWvB26OWXRkoGGlhdnGfNhXPgY208UYzZ3LZRmjCGqO+GuyYj+CYuyvFgIIcau51RhT
-         B0BwqJfVAV80C7Vo3Y1q7xSBXdzvubBpguqKdn+7+vyviw/SpCUPfFRvwWdO45KgjCSg
-         3U3w==
-X-Gm-Message-State: AC+VfDzr8Tzd453vgWDOZTNetxKwSgKX4ZWs/DBg8sMrM6Ck0bxj0J0t
-        +PQni4D3K9OcEKkUxRA3rXMyt/WSMLf/sR1y1A==
-X-Google-Smtp-Source: ACHHUZ6HugMTcvUOsV69lbdyeCpg3dHGRyKco7GUIMPTz/WpvdDDFDxbuGmiiy/fYUIOfBPvyKlzjJqDW4B/nm4tK2c=
-X-Received: by 2002:ac2:5d6a:0:b0:4dc:4b92:dbc4 with SMTP id
- h10-20020ac25d6a000000b004dc4b92dbc4mr445424lft.14.1683090626163; Tue, 02 May
- 2023 22:10:26 -0700 (PDT)
-MIME-Version: 1.0
-References: <CGME20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
- <20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
-In-Reply-To: <20230427094420epcms2p1043333a3e0c0cf58e66164e0b83b3b02@epcms2p1>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 3 May 2023 13:10:13 +0800
-Message-ID: <CAGaU9a9B7gAfJk8F_4_v3OAYuGA2MAAOEbq09aJrbhCZqo7CaA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Change the module parameter macro of use_mcq_mode
-To:     keosung.park@samsung.com
-Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        with ESMTP id S229692AbjECGuW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 02:50:22 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E8A6272A
+        for <linux-scsi@vger.kernel.org>; Tue,  2 May 2023 23:50:15 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230503065003epoutp01d4dc28c1559555098fd27541d9b0432e~bj3GMJgmH2694626946epoutp01a
+        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 06:50:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230503065003epoutp01d4dc28c1559555098fd27541d9b0432e~bj3GMJgmH2694626946epoutp01a
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1683096603;
+        bh=CM+8mMQP2iq+VCp4c684wdumP+wzl9e8MEJfoEWqXDI=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=o0NMDxX6PyNlAvMh6mMIKdIXzA52+uIgyfnTp1Q/esM406ft09ZJAh2HME98OM3Ip
+         cIiD+bK+ejavG8f6SeBtQUFKrGz9ElmVQt6CZuU39Tyr9U6At1ObljfA44LiQqflYP
+         XrQyKSLaVfCEPPdFfRqfL6R7AoVSyl/38ENLk/JU=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230503065003epcas2p38a30ebb96e1684d4c852825b0d0d9e7a~bj3Fsuu4D0342503425epcas2p3r;
+        Wed,  3 May 2023 06:50:03 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.97]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4QB6yL2Cnzz4x9Q0; Wed,  3 May
+        2023 06:50:02 +0000 (GMT)
+X-AuditID: b6c32a45-6d1fd70000020cc1-8c-6452041a1bc4
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3F.78.03265.A1402546; Wed,  3 May 2023 15:50:02 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH] scsi: ufs: core: Use readable 'return 0' in
+ ufshcd_hba_capabilities()
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Keoseong Park <keosung.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
@@ -66,18 +54,103 @@ Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
         "beanhuo@micron.com" <beanhuo@micron.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <28ea2183-d1ce-f42d-1765-9d07d7481eda@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230503065001epcms2p55114ae8c2d6dc6bbae680af747177454@epcms2p5>
+Date:   Wed, 03 May 2023 15:50:01 +0900
+X-CMS-MailID: 20230503065001epcms2p55114ae8c2d6dc6bbae680af747177454
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrFJsWRmVeSWpSXmKPExsWy7bCmma4US1CKwcrHvBYP5m1js3j58yqb
+        xcGHnSwW0z78ZLZ4eUjTYtGNbUwWx0++Y7S4vGsOm0X39R1sFgc+rGK0WH78H5PFwo65LBZL
+        t95kdOD1uHzF22PTqk42jwmLDjB6tJzcz+LxfX0Hm8fHp7dYPCbuqfPo27KK0ePzJjmP9gPd
+        TAFcUdk2GamJKalFCql5yfkpmXnptkrewfHO8aZmBoa6hpYW5koKeYm5qbZKLj4Bum6ZOUCn
+        KymUJeaUAoUCEouLlfTtbIryS0tSFTLyi0tslVILUnIKzAv0ihNzi0vz0vXyUkusDA0MjEyB
+        ChOyM5afvcVW8Jy34uGsbsYGxincXYycHBICJhLXbl5n7GLk4hAS2MEoMXFmB0sXIwcHr4Cg
+        xN8dwiCmsEC8xLzXwSDlQgJKEl0LtzKD2MICBhLrpu8Bs9kE9CSm/L4DNkZE4AaLROPhDlaI
+        +bwSM9qfskDY0hLbl29lBLE5Bawl1v+6yQQR15D4sayXGcIWlbi5+i07jP3+2HxGCFtEovXe
+        WagaQYkHP3dDxSUlWs9sZYOw6yVa359iBzlCQmACo0TjsT9Qg/QlrnVsBDuCV8BXYvazo2AN
+        LAKqElvun4c6wkVizZSrYHFmAXmJ7W/nMIM8zyygKbF+lz6IKSGgLHHkFgtEBZ9Ex+G/7DAv
+        Nmz8jZW9Y94TqOlqEo8WbIEGiYzExTnnmCcwKs1CBPQsJHtnIexdwMi8ilEstaA4Nz212KjA
+        EB63yfm5mxjBiVjLdQfj5Lcf9A4xMnEwHmKU4GBWEuH9UOiXIsSbklhZlVqUH19UmpNafIjR
+        FOjjicxSosn5wFyQVxJvaGJpYGJmZmhuZGpgriTOK217MllIID2xJDU7NbUgtQimj4mDU6qB
+        yVp9joJn2/WIDo6da5q+V60O78/S++atJOli5P/jt8ZV2ZKcBxNFLcISdxvtN6ooX1XM4tO4
+        1da33/i+14yMn4cTT9YJ3JnAxB+V4yAbmORxdO4OAbE7Sfv3XO76sltZIGXnrZSfKR0Gs167
+        Cji7mfTyeeguXybRHCkjWWzTd+LVVakixj9pLMxbgsXXHOyOf9Cb++bbYr/k050vr8pyJR1P
+        sGfmKjS5FK3oxGz3R2lGx4775We9LC25pSae/cDCtsnPprT0tWIPq8D3af82LUldafiSUy3J
+        UOOmVdNGQa1F7pM+n3y78VCYRwHrjIhtqxXZv929ppWwrOdKiJimaeUD0Zybu7snv6970q3E
+        UpyRaKjFXFScCADt+7QjTQQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230502113116epcms2p7b83da0d683e29f667c38f5430b985388
+References: <28ea2183-d1ce-f42d-1765-9d07d7481eda@acm.org>
+        <20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p7>
+        <CGME20230502113116epcms2p7b83da0d683e29f667c38f5430b985388@epcms2p5>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Keoseong Park <keosung.park@samsung.com> =E6=96=BC 2023=E5=B9=B44=E6=9C=882=
-7=E6=97=A5 =E9=80=B1=E5=9B=9B =E4=B8=8B=E5=8D=885:48=E5=AF=AB=E9=81=93=EF=
-=BC=9A
+>On 5/2/23 04:31, Keoseong Park wrote:
+>> The 'err' variable is the result of ufshcd_hba_init_crypto_capabilities()
+>> regardless of MCQ capabilities. Return 'err' immediately when the function
+>> error occurs. And if it is not an error, explicitly return 0.
+>> 
+>> Anyway, if ufshcd_hba_init_crypto_capabilities() returns error, MCQ
+>> capabilities is not used because it fails to initialize UFS driver.
+>> 
+>> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+>> ---
+>>   drivers/ufs/core/ufshcd.c | 8 +++++---
+>>   1 file changed, 5 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 9434328ba323..44328eb4158d 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -2343,18 +2343,20 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>>   
+>>   	/* Read crypto capabilities */
+>>   	err = ufshcd_hba_init_crypto_capabilities(hba);
+>> -	if (err)
+>> +	if (err) {
+>>   		dev_err(hba->dev, "crypto setup failed\n");
+>> +		return err;
+>> +	}
+>>   
+>>   	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
+>>   	if (!hba->mcq_sup)
+>> -		return err;
+>> +		return 0;
+>>   
+>>   	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+>>   	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
+>>   				     hba->mcq_capabilities);
+>>   
+>> -	return err;
+>> +	return 0;
+>>   }
 >
-> mcq_mode_ops uses only param_{set,get}_bool(). Therefore, convert
-> module_param_cb() to module_param() and remove the mcq_mode_ops.
->
+>The most important change in this patch is that ufshcd_hba_capabilities()
+>returns earlier if ufshcd_hba_init_crypto_capabilities() fails. Please
+>change the patch title such that it reflects this change instead of the
+>other less important change.
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+OK, I will change it.
+
+Best Regards,
+Keoseong
+
+>
+>Thanks,
+>
+>Bart.
