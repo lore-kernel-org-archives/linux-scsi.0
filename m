@@ -2,96 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A546FC77B78
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 10:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB67BC77B7F
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 10:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229894AbjECKlL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 May 2023 06:41:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48532 "EHLO
+        id S229693AbjECKoi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 06:44:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229686AbjECKlK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 06:41:10 -0400
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31B5C44A1
-        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 03:41:08 -0700 (PDT)
-Received: by mail-wr1-x435.google.com with SMTP id ffacd0b85a97d-305f0491e62so4435947f8f.3
-        for <linux-scsi@vger.kernel.org>; Wed, 03 May 2023 03:41:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1683110466; x=1685702466;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=18+zD8zJYi3/Cfjv44S8LZuiPVGNRYG6CxrA5L7f37c=;
-        b=pJJ5gpIVOdGJhMps7tKZauJYNEF32/NT8iGK0CuyrDEMVE/+NBU3KOqSMTj9UrNyxH
-         yh/mmvEsDhCerh0pN6S2YvvP317oQzB7NpLlxLEMd8exJoQ3WtTLvenIe8rrvw5tksJI
-         9bMdxotUdgPuRgbPr53Q0DIRKEwizOkOpgz4WPR2SaYSgLLJQAqJCT/fXY1dYluBqQr5
-         sL7lU3SPvBjKCj5N5RDsALucCOjJ9LZg9edK22h+/i+33pi/ryAYptI8g2Ye0C4pmGy1
-         IIrZkCMo02AhdeWs9zNglu94SXjxtdSx5EY0EvurVmzqaZ4gdLFAnnM9FlXJ7iZmTjlr
-         VgBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683110466; x=1685702466;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=18+zD8zJYi3/Cfjv44S8LZuiPVGNRYG6CxrA5L7f37c=;
-        b=F8kG8uEjcoshotbRfaYbacexnT+Kw+GPngbuQtalCYhTMol/JChLHovHvRWsK/ILRv
-         0Gx7dU5SZ+xhkP0vxbQGSb9iDQPIVn+xB4rkS5TdoISZMf9iDWVMGYkTbr7ThC2bQSkf
-         jlG/J/VvDsbPckf1dZ6ODIHs2KvdpIp0pVnReSWhcpbMMPW7OZbs4Rq1qWVTLuwxcvqi
-         Sro/vAiuPz6+VqCJW7YjoqskJWChQz845nP4L9+1lyECcfW4uMuyncj3kZtCCN2HmyMT
-         +PiEd+EQoXfjrygxJaSP2/kawE5KqFu5XSfhQhTY23bJeNfHJWYS8KrEdb12SCYiWyqL
-         KXjQ==
-X-Gm-Message-State: AC+VfDzoQXAc4PF07D/bitsmYzRXHBaS2gVLTQ9jZbzP5uUEWeStmlLg
-        VE/qdmTJ9X8xGDdNCZBYei0tRA==
-X-Google-Smtp-Source: ACHHUZ5WMJai/7lvt00NBo93bMqGBV8AwVXXrIpyWqT8UcwT9B2mcylhVQ9xuSDVl+13JhaF2VwWsQ==
-X-Received: by 2002:a5d:448a:0:b0:306:459b:f575 with SMTP id j10-20020a5d448a000000b00306459bf575mr554124wrq.12.1683110466641;
-        Wed, 03 May 2023 03:41:06 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id h13-20020adffd4d000000b0030631dcbea6sm6450573wrs.77.2023.05.03.03.41.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 May 2023 03:41:04 -0700 (PDT)
-Date:   Wed, 3 May 2023 13:40:59 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
+        with ESMTP id S229587AbjECKoh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 06:44:37 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0960049DF;
+        Wed,  3 May 2023 03:44:29 -0700 (PDT)
+X-UUID: 789233e4e99f11ed9cb5633481061a41-20230503
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=B69u6GgKXQW5Qza7AExVGf0B1LAE9LgcAatktBTLJRQ=;
+        b=PrdV+vF+QcY/ZKXFaKzlvIGgAx1iobh6cdYMxNi7pJNWW34qgv55qnV9jABou+x0ICUNL/Rcxv1tUL6ftNONUafx1a72gNkLLnBp0UdK/ZyE1wpMV3ddPgYm0YNjVUkvJUT8FFxkCxn6K8xjI+Im6vXe/+/LDAlZgKk0qSaEXDA=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.23,REQID:9e999a90-3018-4857-b097-eb89450a94d3,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:697ab71,CLOUDID:008eaabf-e32c-4c97-918d-fbb3fc224d4e,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-UUID: 789233e4e99f11ed9cb5633481061a41-20230503
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 452633527; Wed, 03 May 2023 18:44:25 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Wed, 3 May 2023 18:44:24 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.25 via Frontend Transport; Wed, 3 May 2023 18:44:24 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <catalin.marinas@arm.com>, <will@kernel.org>,
+        <matthias.bgg@gmail.com>,
         <angelogioacchino.delregno@collabora.com>,
-        Andy Teng <andy.teng@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: ufs: ufs-mediatek: delete some dead code
-Message-ID: <68fce64f-4970-45f1-807e-6c0eecdfcdc2@kili.mountain>
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
+        <bvanassche@acm.org>
+CC:     <stanley.chu@mediatek.com>
+Subject: [PATCH v1] arm64: defconfig: Enable UFS support for MediaTek platforms
+Date:   Wed, 3 May 2023 18:44:23 +0800
+Message-ID: <20230503104423.21702-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is already a test for "if (val == state)" earlier so it's not
-possible here.  Delete the dead code.
+Increase build and test coverage by enabling support for more
+hardware present on MediaTek SoCs and boards:
+  - MediaTek Universal Flash Storage Controller
 
-Fixes: 9006e3986f66 ("scsi: ufs-mediatek: Do not gate clocks if auto-hibern8 is not entered yet")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 3 ---
- 1 file changed, 3 deletions(-)
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 73e217260390..a054810e321d 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -410,9 +410,6 @@ static int ufs_mtk_wait_link_state(struct ufs_hba *hba, u32 state,
- 		usleep_range(100, 200);
- 	} while (ktime_before(time_checked, timeout));
- 
--	if (val == state)
--		return 0;
--
- 	return -ETIMEDOUT;
- }
- 
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index a24609e14d50..5fc33aea296d 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1027,6 +1027,7 @@ CONFIG_SCSI_UFSHCD=y
+ CONFIG_SCSI_UFSHCD_PLATFORM=y
+ CONFIG_SCSI_UFS_QCOM=m
+ CONFIG_SCSI_UFS_HISI=y
++CONFIG_SCSI_UFS_MEDIATEK=m
+ CONFIG_SCSI_UFS_RENESAS=m
+ CONFIG_SCSI_UFS_EXYNOS=y
+ CONFIG_NEW_LEDS=y
 -- 
-2.39.2
+2.18.0
 
