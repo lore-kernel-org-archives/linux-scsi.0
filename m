@@ -2,144 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B212C77B78
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 22:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3426FC77B7F
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 23:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbjECWR4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 May 2023 18:17:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33800 "EHLO
+        id S229670AbjECXHD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 19:07:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbjECWRz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 18:17:55 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AA4A83FE
-        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 15:17:53 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1ab13da70a3so22415175ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 May 2023 15:17:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683152273; x=1685744273;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=SZlTdG04TqTF7+/hzp5sSJRuB5EmsmvAFGgc3K+3F0Y=;
-        b=39WVkULqHXRDJ4WUYe73OzFA/R2wak2Byvue6BmOkCk/OUZ7TIFexiujMgqDtXjhoJ
-         vY8UhclcPr7rl4Zv2wbm/zdzS0ni41dpAUltS0ZIuTMSWKNEFldMe8omTChgh7JjGHw9
-         rVsx1Yw28FjKmAmsO5frsdqvSKA4ZJrGU5Gp+Q9w3fCsWnJVySoTDQBrKpXRB+VVwMsd
-         2mP535YsEeeVtqm0f04weAqu0Ix/cKqOgjAhn6wHaEI53Xkx+scS9ruET4oev/lz/RR9
-         HuYeHautziBafZRfpxfmTZFWObUFN65QoOJpAc8Hd0Mv9bIad3zclXTZRNBKp80hSzAf
-         fzBg==
+        with ESMTP id S229545AbjECXHB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 19:07:01 -0400
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 099CF5FD3
+        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 16:07:01 -0700 (PDT)
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-64115e652eeso8613229b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 03 May 2023 16:07:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683152273; x=1685744273;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SZlTdG04TqTF7+/hzp5sSJRuB5EmsmvAFGgc3K+3F0Y=;
-        b=HEfgfaHZE93gunN23a+DIr8PCuQh0aqCHoT0IjmTD+IGUtdNVGF40B5VqXgdOdT6E4
-         wD8V2OWyvzRdl5wOp44Im3IknknoYTTCHAO1gTgGGGsgEZDuHzBzmw2yB2rpQDysGpiS
-         3orcTBiYuwqhJFfTPDh5jkdro8BR4070RCtQtIuEItZI72YccU3WoM35CFluInBQzCXF
-         vcYwswGKPBhk2yjgfTITUT8bW3zPRlo1lBBadn9vNcuKjUH0ECJ7B50eH04AAeZOC4ee
-         L2AGpaZNkO4e41rhnoVb7MXTILC8yljW7c4bMsH3BFY5xCzMuorKC91YRssoc3OHLnbR
-         ls+A==
-X-Gm-Message-State: AC+VfDxQT1R5sBobsU0Zhz/Jx2Rq4k5ysn6RR6IQlI4MWAKFUN+HJDyh
-        r7jdEp1HAFgG0jWKhfeSvx7clg==
-X-Google-Smtp-Source: ACHHUZ6w6FNkuZBKWIHG+izk4/mp1lXBQ8ap+jb9gyt4ryTRiawSHwELQjohp4JJfay700Tr/2IfyQ==
-X-Received: by 2002:a17:902:be08:b0:1a6:d8a3:3346 with SMTP id r8-20020a170902be0800b001a6d8a33346mr1422648pls.31.1683152272764;
-        Wed, 03 May 2023 15:17:52 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id q7-20020a170902bd8700b001a6ff7bd4d9sm22112696pls.15.2023.05.03.15.17.51
+        d=1e100.net; s=20221208; t=1683155220; x=1685747220;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VMfiM7dupaW5I9oVMpJh7DtIUJd7HSVONDAUdPpRN68=;
+        b=ehVmSK3KuSiCzhc8N5gdBXHFWZsXD0imRh3o1cAV4tocBiKpj8n3zLqRV4PQ73iVdU
+         6Ze0Ixh6p/Se980h6QCnjlCDjcjcGlICfNR6WquOHgr9tIu6fWczbFJKY2H2MruuCoek
+         gUd6IW9O2hXc/EgaeMalnUgfOmpwyOU8lUuiEXc51Ka+8gNLFiKaX0uEiWqnvRs9nzmt
+         gzbzCpJ7JlH5mlL/TU8ZwZZg0RzxvvrrtpJHtXm7uPxKsn5l0o3GSJFLrR4aQ+l432BF
+         GXE4k//j69vHDvBXqSRRcNBEMfuojvRJ2J7ia/vNInJ99tgxlYIbQGlPqnh/TLGt3tvZ
+         lg9w==
+X-Gm-Message-State: AC+VfDyx/Y6sHzeSi4cBR9/NXnuWOQ28LIcIyHOu5KXflWYOhr6y/Bu3
+        KdcbQJUPZqZIllNVWfaWuA+cDqkArgU=
+X-Google-Smtp-Source: ACHHUZ5FQJaf5B7YT9obGDIQc4vWB6nxFDt3gXZPnCpbU+D4HmODTeneuehLci49KqGtHSDmaMrSUQ==
+X-Received: by 2002:a05:6a20:7da0:b0:f3:3ea5:5185 with SMTP id v32-20020a056a207da000b000f33ea55185mr71136pzj.10.1683155220385;
+        Wed, 03 May 2023 16:07:00 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:2c3b:81e:ce21:2437])
+        by smtp.gmail.com with ESMTPSA id u3-20020a056a00158300b0063f3aac78b9sm19531603pfk.79.2023.05.03.16.06.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 May 2023 15:17:51 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1puKnF-00B0ur-4U; Thu, 04 May 2023 08:17:49 +1000
-Date:   Thu, 4 May 2023 08:17:49 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jejb@linux.ibm.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-security-module@vger.kernel.org, paul@paul-moore.com,
-        jmorris@namei.org, serge@hallyn.com
-Subject: Re: [PATCH RFC 03/16] xfs: Support atomic write for statx
-Message-ID: <20230503221749.GF3223426@dread.disaster.area>
-References: <20230503183821.1473305-1-john.g.garry@oracle.com>
- <20230503183821.1473305-4-john.g.garry@oracle.com>
+        Wed, 03 May 2023 16:06:59 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/5] SCSI core patches
+Date:   Wed,  3 May 2023 16:06:49 -0700
+Message-ID: <20230503230654.2441121-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.1.495.gc816e09b53d-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230503183821.1473305-4-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 03, 2023 at 06:38:08PM +0000, John Garry wrote:
-> Support providing info on atomic write unit min and max.
-> 
-> Darrick Wong originally authored this change.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/xfs/xfs_iops.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 24718adb3c16..e542077704aa 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -614,6 +614,16 @@ xfs_vn_getattr(
->  			stat->dio_mem_align = bdev_dma_alignment(bdev) + 1;
->  			stat->dio_offset_align = bdev_logical_block_size(bdev);
->  		}
-> +		if (request_mask & STATX_WRITE_ATOMIC) {
-> +			struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
-> +			struct block_device	*bdev = target->bt_bdev;
-> +
-> +			stat->atomic_write_unit_min = queue_atomic_write_unit_min(bdev->bd_queue);
-> +			stat->atomic_write_unit_max = queue_atomic_write_unit_max(bdev->bd_queue);
+Hi Martin,
 
-I'm not sure this is right.
+Please consider these SCSI core patches for the next merge window.
 
-Given that we may have a 4kB physical sector device, XFS will not
-allow IOs smaller than physical sector size. The initial values of
-queue_atomic_write_unit_min/max() will be (1 << SECTOR_SIZE) which
-is 512 bytes. IOs done with 4kB sector size devices will fail in
-this case.
+Thanks,
 
-Further, XFS has a software sector size - it can define the sector
-size for the filesystem to be 4KB on a 512 byte sector device. And
-in that case, the filesystem will reject 512 byte sized/aligned IOs
-as they are smaller than the filesystem sector size (i.e. a config
-that prevents sub-physical sector IO for 512 logical/4kB physical
-devices).
+Bart.
 
-There may other filesystem constraints - realtime devices have fixed
-minimum allocation sizes which may be larger than atomic write
-limits, which means that IO completion needs to split extents into
-multiple unwritten/written extents, extent size hints might be in
-use meaning we have different allocation alignment constraints to
-atomic write constraints, stripe alignment of extent allocation may
-through out atomic write alignment, etc.
+Changes compared to v1:
+- Improved the SCSI tracing patch as requested by Steven Rostedt and
+  Niklas Cassel.
+- Added patch "scsi: core: Delay running the queue if the host is blocked"
 
-These are all solvable, but we need to make sure here that the
-filesystem constraints are taken into account here, not just the
-block device limits.
+Bart Van Assche (5):
+  scsi: core: Use min() instead of open-coding it
+  scsi: core: Update a source code comment
+  scsi: core: Trace SCSI sense data
+  scsi: core: Only kick the requeue list if necessary
+  scsi: core: Delay running the queue if the host is blocked
 
-As such, it is probably better to query these limits at filesystem
-mount time and add them to the xfs buftarg (same as we do for
-logical and physical sector sizes) and then use the xfs buftarg
-values rather than having to go all the way to the device queue
-here. That way we can ensure at mount time that atomic write limits
-don't conflict with logical/physical IO limits, and we can further
-constrain atomic limits during mount without always having to
-recalculate those limits from first principles on every stat()
-call...
+ drivers/scsi/scsi_common.c  |  3 +--
+ drivers/scsi/scsi_lib.c     | 20 ++++++++++++++------
+ include/scsi/scsi_host.h    |  2 +-
+ include/trace/events/scsi.h | 21 +++++++++++++++++++--
+ 4 files changed, 35 insertions(+), 11 deletions(-)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
