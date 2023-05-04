@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD32C7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:02:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52DC2C7EE21
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:04:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232542AbjEDUC0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 16:02:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51186 "EHLO
+        id S232469AbjEDUEX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 16:04:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232374AbjEDUBV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:01:21 -0400
+        with ESMTP id S231965AbjEDUDa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:03:30 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9578A18938;
-        Thu,  4 May 2023 12:51:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 530E34202;
+        Thu,  4 May 2023 12:52:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 876C5637E9;
-        Thu,  4 May 2023 19:50:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E452CC4339B;
-        Thu,  4 May 2023 19:50:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EB50F63861;
+        Thu,  4 May 2023 19:50:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77263C4339B;
+        Thu,  4 May 2023 19:50:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229810;
-        bh=PaySR+IcfpaE5N0jkD8YbTnZXbuJ2KSN18di+I/QHSo=;
+        s=k20201202; t=1683229849;
+        bh=4LF0XKj7irR7X2JXIKKtAhKxZntiSv1je4UdTmZXwD0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Nctzev5/+9v/7kGnLVgDVPX98PYODuad5d2wGNebCsjLG19HsCUifo+JSsnwxZTfi
-         wLVaJcY9YD9EA6sFjdDZob49IeSB2oXbRw/3bRYh+PM8szl78Jp+B7jQzucDCiN8ux
-         Jc0aGnSiRUDKdqibESU4d5FzWTPLWhIa8BVWJVAft+ElUSdtbOa18cD7+Q8rW4cLeL
-         GQ0Uzila98Nya06r7yN5BFykem9RL7iJmu/kWlhC9k6Y6iI+c0pFsnExlUmXu2xilI
-         ib/d2zSmc2hkVarb9A0KDhAEuoAmIqh1nkNKgAziBsb86ykbmmu/1+E81WnJy39RSF
-         F998/xS0MTnWg==
+        b=eMS8aRJfXok4WU3z+Ly8zd0sH3448IK9AzW5jfaIKx6YZk4qVI/JgoSEPKfMQO7Yb
+         vBM4kGMzyQfe/EOWcWZJu7qnl0Tl2ZUsxBG5C33ClS51/hIwEFSfWzHI2ubtmBevBQ
+         jLeFInAD4r5Acj77qvZuYeJpqO0r5QYgSGwx8HmoKRpdg6NBKEyjpqV+Kn/1mYdG6L
+         YBOWy6FZLj9rMSJWi4EdVpYtLR5arVak7Q+1hlz4Kn9e3GJTED50zDkzZ42ujfoVPq
+         GUMhtKTZyVDXgs+tyhCybAu34n767Nb40iZBJ0bugmW+nWr2yI+PIs2/iiEVrGlRpG
+         CHPovMYtIlk/g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zheng Wang <zyytlz.wz@163.com>,
+Cc:     Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 11/24] scsi: message: mptlan: Fix use after free bug in mptlan_remove() due to race condition
-Date:   Thu,  4 May 2023 15:49:24 -0400
-Message-Id: <20230504194937.3808414-11-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 03/18] scsi: lpfc: Prevent lpfc_debugfs_lockstat_write() buffer overflow
+Date:   Thu,  4 May 2023 15:50:25 -0400
+Message-Id: <20230504195042.3808716-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194937.3808414-1-sashal@kernel.org>
-References: <20230504194937.3808414-1-sashal@kernel.org>
+In-Reply-To: <20230504195042.3808716-1-sashal@kernel.org>
+References: <20230504195042.3808716-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,52 +52,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Zheng Wang <zyytlz.wz@163.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit f486893288f3e9b171b836f43853a6426515d800 ]
+[ Upstream commit c6087b82a9146826564a55c5ca0164cac40348f5 ]
 
-mptlan_probe() calls mpt_register_lan_device() which initializes the
-&priv->post_buckets_task workqueue. A call to
-mpt_lan_wake_post_buckets_task() will subsequently start the work.
+A static code analysis tool flagged the possibility of buffer overflow when
+using copy_from_user() for a debugfs entry.
 
-During driver unload in mptlan_remove() the following race may occur:
+Currently, it is possible that copy_from_user() copies more bytes than what
+would fit in the mybuf char array.  Add a min() restriction check between
+sizeof(mybuf) - 1 and nbytes passed from the userspace buffer to protect
+against buffer overflow.
 
-CPU0                  CPU1
-
-                    |mpt_lan_post_receive_buckets_work()
-mptlan_remove()     |
-  free_netdev()     |
-    kfree(dev);     |
-                    |
-                    | dev->mtu
-                    |   //use
-
-Fix this by finishing the work prior to cleaning up in mptlan_remove().
-
-[mkp: we really should remove mptlan instead of attempting to fix it]
-
-Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
-Link: https://lore.kernel.org/r/20230318081635.796479-1-zyytlz.wz@163.com
+Link: https://lore.kernel.org/r/20230301231626.9621-2-justintee8345@gmail.com
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/message/fusion/mptlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 7d3784aa20e58..90cc3cd49a5ee 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -1430,7 +1430,9 @@ mptlan_remove(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
- 	struct net_device	*dev = ioc->netdev;
-+	struct mpt_lan_priv *priv = netdev_priv(dev);
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 69551132f304c..291fccf02d453 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2046,6 +2046,7 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+ 	char mybuf[64];
+ 	char *pbuf;
+ 	int i;
++	size_t bsize;
  
-+	cancel_delayed_work_sync(&priv->post_buckets_task);
- 	if(dev != NULL) {
- 		unregister_netdev(dev);
- 		free_netdev(dev);
+ 	/* Protect copy from user */
+ 	if (!access_ok(buf, nbytes))
+@@ -2053,7 +2054,9 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+-	if (copy_from_user(mybuf, buf, nbytes))
++	bsize = min(nbytes, (sizeof(mybuf) - 1));
++
++	if (copy_from_user(mybuf, buf, bsize))
+ 		return -EFAULT;
+ 	pbuf = &mybuf[0];
+ 
+@@ -2074,7 +2077,7 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+ 			qp->lock_conflict.wq_access = 0;
+ 		}
+ 	}
+-	return nbytes;
++	return bsize;
+ }
+ #endif
+ 
 -- 
 2.39.2
 
