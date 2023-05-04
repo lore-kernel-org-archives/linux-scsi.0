@@ -2,210 +2,255 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EF52C7EE2A
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 May 2023 23:26:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26E47C77B78
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 03:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229651AbjECX0g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 May 2023 19:26:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34546 "EHLO
+        id S229617AbjEDDyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 May 2023 23:54:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229745AbjECX0e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 19:26:34 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64210902D
-        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 16:26:22 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6433c243287so895852b3a.3
-        for <linux-scsi@vger.kernel.org>; Wed, 03 May 2023 16:26:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683156382; x=1685748382;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hLF/XohEcFNqvnvCqaB5Hm1eLX3Ize1KonQ+CQXKJVw=;
-        b=v9zPd7ZSzrmH/Z4pdXJn4iiTbRR4V72z8ItrQELaVnaXm47NYtVdQ46I7/Qk5prqEc
-         SvmsN6cg+UQ4XtgAwtt+OiO7S91zyGgFjC/aDEM9LHSH4Q5dQ4Ty4kRvbsb+itqGhm4g
-         1sCraGR1Ddlhtj0eX3OGftB0gMwadfkndLGTxbdhHzCpG6hw8CoiGKrZDqUnixDniOqf
-         z8qUvRiqVU17m8TdkaQsjz8bL5sPpOO3h7xY5NmMWB+aQueIRrI73TJwdgDpDP0RvRuq
-         iwdFlRlW0SegH/SfaNLK/EevvpWaahLVTD7fI90l1hFc7N0r0kfqEOAjRAktTc+MxF2Z
-         L3rg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683156382; x=1685748382;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hLF/XohEcFNqvnvCqaB5Hm1eLX3Ize1KonQ+CQXKJVw=;
-        b=RG039Hhgfs2SeXNhm4Ct2rL3lOcaqylZnNl+H6MYAVN+IvIhLIUtdw2l5c3sk0V0DM
-         WNBPbYTSNoJICk2z7gZBXWqaklqJphk8+PzrYq+V8NF6dhsrURnrjwayMY9f/UFO9ulC
-         fsCv6He1Dg4RS2W5jzGqa+MUvKSPvDkXksxRkTaxq2ZfgrQEvqP0ZJh6p2QXr/BqDvR4
-         BsNgyAUDa/exuDPS7xMg3GOU3NqwE3H7dGpaZP7Hta4GydhJu8LtPmQhHYinfr5PClVD
-         v+fkUg0ph3693J66ydsQ3jqLN5arZ4y6yDKK0+ZxFWBY3k2PGhmDcA03TRv49MmU8x9e
-         LE0A==
-X-Gm-Message-State: AC+VfDyu1+p+Gtgk5DX+xlGowILhbWDiqcsCcp3MZn4N28Y8TjZv0tuu
-        WT8AmHAtvyYVl9bAALY5J7cbow==
-X-Google-Smtp-Source: ACHHUZ5diKOfcpQ90loaTCwsAsNfI6e6FAnNwsQgCdTnnAlLLXDPm/yrGxfBJffrbIMoxrXjvtw2Gg==
-X-Received: by 2002:a05:6a20:938a:b0:f2:1a72:2a8d with SMTP id x10-20020a056a20938a00b000f21a722a8dmr362232pzh.14.1683156381837;
-        Wed, 03 May 2023 16:26:21 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id lx11-20020a17090b4b0b00b00246cc751c6bsm1886965pjb.46.2023.05.03.16.26.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 May 2023 16:26:21 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1puLrU-00B2Ad-T8; Thu, 04 May 2023 09:26:16 +1000
-Date:   Thu, 4 May 2023 09:26:16 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jejb@linux.ibm.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-security-module@vger.kernel.org, paul@paul-moore.com,
-        jmorris@namei.org, serge@hallyn.com,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>
-Subject: Re: [PATCH RFC 12/16] xfs: Add support for fallocate2
-Message-ID: <20230503232616.GG3223426@dread.disaster.area>
-References: <20230503183821.1473305-1-john.g.garry@oracle.com>
- <20230503183821.1473305-13-john.g.garry@oracle.com>
+        with ESMTP id S229498AbjEDDye (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2023 23:54:34 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5261E77;
+        Wed,  3 May 2023 20:54:32 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3443k4xM032149;
+        Thu, 4 May 2023 03:53:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=rWnRs6caAFnPoAXVFONMmd19SUyveSsytUGzvc8lnnU=;
+ b=YipYstZ9llTyzwv2F9LjKlVCfP11J4TPkoTdYr6tBVurClTAQBOYCb3hnhn/B98ip3AW
+ w6iHlbpik6g4NuTcdLMteS+c1s4t0/btWLJcO0Xd4wYPpVpcAJP7MTM0rU/qmT0SAiRj
+ pz+gyNFNJUSrsE2ColzoKZ1Q+K0Mfxn/ySCOljBzH91podPcf+cblQpsH6eJkcxW57rQ
+ BouCu1r7/cJPrwAXx61kjRkq7fw2EFxV1T4PAtlnB6YUKQmQ5Lzlam7O7uCLLx5WKZKU
+ XAb+Ewt4zN2ylcEqQMm/AOxuQC7DJlUTSowPBRK33AEzNYnNTkvL19MIQpJEa7OW/HKZ Zw== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qc2aj08wh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 04 May 2023 03:53:40 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3443rc4X025709
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 4 May 2023 03:53:39 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 3 May 2023
+ 20:53:38 -0700
+Message-ID: <4c3648fb-f41c-d097-cd38-f2efcee9ec71@quicinc.com>
+Date:   Wed, 3 May 2023 20:53:38 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230503183821.1473305-13-john.g.garry@oracle.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v2 1/5] ufs: mcq: Add supporting functions for mcq abort
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <mani@kernel.org>,
+        <Powen.Kao@mediatek.com>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Eric Biggers <ebiggers@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
+ <382670235be85aaa7b7dc407bcf378483ac03562.1681764704.git.quic_nguyenb@quicinc.com>
+ <19a823d9-d4b0-3c62-38a0-b54dc3937ab3@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <19a823d9-d4b0-3c62-38a0-b54dc3937ab3@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 6xyAcAowx9G6NBMNkZrCYicmjgBuGYvn
+X-Proofpoint-GUID: 6xyAcAowx9G6NBMNkZrCYicmjgBuGYvn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-04_01,2023-05-03_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
+ adultscore=0 mlxlogscore=999 impostorscore=0 mlxscore=0 clxscore=1015
+ lowpriorityscore=0 bulkscore=0 priorityscore=1501 phishscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2305040031
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 03, 2023 at 06:38:17PM +0000, John Garry wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
+Hi Bart,
+Thank you so much for a detailed code review.
+
+On 4/25/2023 5:04 PM, Bart Van Assche wrote:
+> On 4/17/23 14:05, Bao D. Nguyen wrote:
+>> +/* Max mcq register polling time in milisecond unit */
 > 
-> Add support for fallocate2 ioctl, which is xfs' own version of fallocate.
-> Struct xfs_fallocate2 is passed in the ioctl, and xfs_fallocate2.alignment
-> allows the user to specify required extent alignment. This is key for
-> atomic write support, as we expect extents to be aligned on
-> atomic_write_unit_max boundaries.
+> A nit: please change "millisecond unit" into "milliseconds".
+Yes I will change.
 
-This approach of adding filesystem specific ioctls for minor behavioural
-modifiers to existing syscalls is not a sustainable development
-model.
+> 
+>> +static int ufshcd_mcq_poll_register(void __iomem *reg, u32 mask,
+>> +                u32 val, unsigned long timeout_ms)
+>> +{
+>> +    unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+>> +    int err = 0;
+>> +
+>> +    /* ignore bits that we don't intend to wait on */
+>> +    val = val & mask;
+>> +
+>> +    while ((readl(reg) & mask) != val) {
+> 
+> & has a higher precedence than != so one pair of parentheses can be left 
+> out.
+I think it is is actually the other way. & has lower precedence than !=.
+Please correct me if I am wrong.
 
-If we want fallocate() operations to apply filesystem atomic write
-constraints to operations, then add a new modifier flag to
-fallocate(), say FALLOC_FL_ATOMIC. The filesystem can then
-look up it's atomic write alignment constraints and apply them to
-the operation being performed appropriately.
+> 
+>> +        udelay(20);
+>> +        if (time_after(jiffies, timeout)) {
+> 
+> Please use time_is_before_jiffies() instead of time_after(jiffies, ...).
+time_is_before_jiffies() seems to be defined as time_after(). Could you 
+please explain the benefits to choose one over the other?
 
-> The alignment flag is not sticky, so further extent mutation will not
-> obey this original alignment request.
+> 
+>> +            err = -ETIMEDOUT;
+>> +            break;
+>> +        }
+>> +    }
+>> +
+>> +    return err;
+>> +}
+> 
+> Please remove the variable 'err' and return the return value directly.
+Yes I will change.
 
-IOWs, you want the specific allocation to behave exactly as if an
-extent size hint of the given alignment had been set on that inode.
-Which could be done with:
+>> +
+>> +static int ufshcd_mcq_sq_stop(struct ufs_hba *hba, struct 
+>> ufs_hw_queue *hwq)
+>> +{
+>> +    void __iomem *reg;
+>> +    u32 i = hwq->id;
+> 
+> Please use another variable name than 'i' for a hardware queue ID ('id'?).
+Yes I will change.
 
-	ioctl(FS_IOC_FSGETXATTR, &fsx)
-	old_extsize = fsx.fsx_extsize;
-	fsx.fsx_extsize = atomic_align_size;
-	ioctl(FS_IOC_FSSETXATTR, &fsx)
-	fallocate(....)
-	fsx.fsx_extsize = old_extsize;
-	ioctl(FS_IOC_FSSETXATTR, &fsx)
+> 
+>> +    u32 i = hwq->id;
+> 
+> Same comment here.
+Yes I will change.
 
-Yeah, messy, but if an application is going to use atomic writes,
-then setting an extent size hint of the atomic write granularity the
-application will use at file create time makes a whole lot of sense.
-This will largely guarantee that any allocation will be aligned to
-atomic IO constraints even when non atomic IO operations are
-performed on that inode. Hence when the application needs to do an
-atomic IO, it's not going to fail because previous allocation was
-not correctly aligned.
+> 
+>> +/**
+>> + * ufshcd_mcq_sq_cleanup - Clean up Submission Queue resources
+> 
+> A nit: please use lower case text for "submission queue" and also in the 
+> comments below ("Clean up" -> "clean up").
+The UFS Host Controller specification uses upper case for the Submission 
+Queue and Completion Queue, so I tried to follow the the spec language. 
+I don't have a preference. I will make the change.
 
-All that we'd then need to do for atomic IO is ensure that we fail
-the allocation early if we can't allocate fully sized and aligned
-extents rather than falling back to unaligned extents when there are
-no large enough contiguous free spaces for aligned extents to be
-allocated. i.e. when RWF_ATOMIC or FALLOC_FL_ATOMIC are set by the
-application...
+> 
+>> +    spin_lock(&hwq->sq_lock);
+>> +
+>> +    /* stop the SQ fetching before working on it */
+>> +    err = ufshcd_mcq_sq_stop(hba, hwq);
+>> +    if (err)
+>> +        goto unlock;
+> 
+> No spin locks around delay loops please. Is there anything that prevents 
+> to change sq_lock from a spin lock into a mutex?
+This function can be called from multiple non-interrupt contexts. I 
+needed to prevent concurrent accesses to the sq hw, so yes mutex would 
+work better. I will change.
 
-> In addition, extent lengths should
-> always be a multiple of atomic_write_unit_max,
+> 
+>> +static u64 ufshcd_mcq_get_cmd_desc_addr(struct ufs_hba *hba,
+>> +                    int task_tag)
+>> +{
+>> +    struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+>> +    __le32 hi = lrbp->utr_descriptor_ptr->command_desc_base_addr_hi;
+>> +    __le32 lo = lrbp->utr_descriptor_ptr->command_desc_base_addr_lo;
+>> +
+>> +    return le64_to_cpu((__le64)hi << 32 | lo);
+>> +}
+> 
+> Please add a new patch at the head of this series that modifies struct 
+> utp_transfer_req_desc such that command_desc_base_addr_lo and 
+> command_desc_base_addr_hi are combined into a single __le64 variable.
+Yes, I will add this as a separate patch.
 
-Yup, that's what extent size hint based allocation does - it rounds
-both down and up to hint alignment...
+> 
+>> +/**
+>> + * ufshcd_mcq_nullify_cmd - Nullify utrd. Host controller does not fetch
+>> + * transfer with Command Type = 0xF. post the Completion Queue with 
+>> OCS=ABORTED.
+>> + * @hba - per adapter instance.
+>> + * @hwq - Hardware Queue of the nullified utrd.
+>> + */
+>> +static void ufshcd_mcq_nullify_cmd(struct ufs_hba *hba, struct 
+>> ufs_hw_queue *hwq)
+>> +{
+>> +    struct utp_transfer_req_desc *utrd;
+>> +    u32 dword_0;
+>> +
+>> +    utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
+>> +            hwq->id * sizeof(struct utp_transfer_req_desc));
+> 
+> Please double check this function. It has "cmd" in the function name but 
+> none of the arguments passed to this function allows to uniquely 
+> identify a command. Is an argument perhaps missing from this function?
+Yes, I will make the correction to this function and rename it to 
+ufshcd_mcq_nullify_sqe()
 
-....
+> 
+> Additionally, hwq->sqe_base_addr points to an array of SQE entries. I do 
+> not understand why hwq->id * sizeof(struct utp_transfer_req_desc) is 
+> added to that base address. Please clarify. >
+>> +        utrd = (struct utp_transfer_req_desc *)(hwq->sqe_base_addr +
+>> +                sq_head_slot * sizeof(struct utp_transfer_req_desc));
+> 
+> hwq->sqe_base_addr already has type struct utp_transfer_req_desc * so 
+> the " * sizeof(struct utp_transfer_req_desc)" part looks wrong to me.
+Yes, I will correct this.
 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 34de6e6898c4..52a6e2b61228 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3275,7 +3275,9 @@ xfs_bmap_compute_alignments(
->  	struct xfs_alloc_arg	*args)
->  {
->  	struct xfs_mount	*mp = args->mp;
-> -	xfs_extlen_t		align = 0; /* minimum allocation alignment */
-> +
-> +	/* minimum allocation alignment */
-> +	xfs_extlen_t		align = args->alignment;
->  	int			stripe_align = 0;
+> 
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 35a3bd9..808387c 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -56,7 +56,6 @@
+>>   #define NOP_OUT_RETRIES    10
+>>   /* Timeout after 50 msecs if NOP OUT hangs without response */
+>>   #define NOP_OUT_TIMEOUT    50 /* msecs */
+>> -
+>>   /* Query request retries */
+>>   #define QUERY_REQ_RETRIES 3
+>>   /* Query request timeout */
+> 
+> Is the above change really necessary?
+The blank line was removed by mistake. I will put it back.
 
-
-This doesn't do what you think it should. For one, it will get
-overwritten by extent size hints that are set, hence the user will
-not get the alignment they expected in that case.
-
-Secondly, args->alignment is an internal alignment control for
-stripe alignment used later in the allocator when doing file
-extenstion allocations.  Overloading it to pass a user alignment
-here means that initial data allocations will have alignments set
-without actually having set up the allocator parameters for aligned
-allocation correctly.
-
-This will lead to unexpected allocation failure as the filesystem
-fills as the reservations needed for allocation to succeed won't
-match what is actually required for allocation to succeed. It will
-also cause problematic behaviour for fallback allocation algorithms
-that expect only to be called with args->alignment = 1...
-
->  	/* stripe alignment for allocation is determined by mount parameters */
-> @@ -3652,6 +3654,7 @@ xfs_bmap_btalloc(
->  		.datatype	= ap->datatype,
->  		.alignment	= 1,
->  		.minalignslop	= 0,
-> +		.alignment	= ap->align,
->  	};
->  	xfs_fileoff_t		orig_offset;
->  	xfs_extlen_t		orig_length;
-
-> @@ -4279,12 +4282,14 @@ xfs_bmapi_write(
->  	uint32_t		flags,		/* XFS_BMAPI_... */
->  	xfs_extlen_t		total,		/* total blocks needed */
->  	struct xfs_bmbt_irec	*mval,		/* output: map values */
-> -	int			*nmap)		/* i/o: mval size/count */
-> +	int			*nmap,
-> +	xfs_extlen_t		align)		/* i/o: mval size/count */
+>> @@ -173,7 +172,6 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
+>>   enum {
+>>       UFSHCD_MAX_CHANNEL    = 0,
+>>       UFSHCD_MAX_ID        = 1,
+>> -    UFSHCD_NUM_RESERVED    = 1,
+>>       UFSHCD_CMD_PER_LUN    = 32 - UFSHCD_NUM_RESERVED,
+>>       UFSHCD_CAN_QUEUE    = 32 - UFSHCD_NUM_RESERVED,
+>>   };
+> 
+> Same question here - is this change really necessary?
+I am moving the definition of UFSHCD_NUM_RESERVED to 
+include/ufs/ufshci.h file so that I can access it from /core/ufs-mcq.c
 
 
-As per above - IMO this is not the right way to specify aligment for
-atomic IO. A XFS_BMAPI_ATOMIC flag is probably the right thing to
-add from the caller - this also communicates the specific allocation
-failure behaviour required, too.
+> Thanks,
+> 
+> Bart.
 
-Then xfs_bmap_compute_alignments() can pull the alignment
-from the relevant buftarg similar to how it already pulls preset
-alignments for extent size hints and/or realtime devices. And then
-the allocator can attempt exact aligned allocation for maxlen, then
-if that fails an exact aligned allocation for minlen, and if both of
-those fail then we return ENOSPC without attempting any unaligned
-allocations...
-
-This also gets rid of the need to pass another parameter to
-xfs_bmapi_write(), and it's trivial to plumb into the XFS iomap and
-fallocate code paths....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
