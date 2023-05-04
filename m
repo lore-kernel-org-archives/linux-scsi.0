@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE566C7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 19:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7CAC7EE21
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 19:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231682AbjEDTx1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 15:53:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60042 "EHLO
+        id S231823AbjEDT4h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 15:56:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231495AbjEDTw2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 15:52:28 -0400
+        with ESMTP id S232433AbjEDT4D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 15:56:03 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D6FBAD32;
-        Thu,  4 May 2023 12:47:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED4411606;
+        Thu,  4 May 2023 12:49:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D4CE637B8;
-        Thu,  4 May 2023 19:47:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3AFCC4339B;
-        Thu,  4 May 2023 19:47:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 300806380E;
+        Thu,  4 May 2023 19:49:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F620C4339B;
+        Thu,  4 May 2023 19:49:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229638;
-        bh=JIQfiJRR8Qc+Y36j36yjNp/OGMv0j8pwpjokVNFvSkA=;
+        s=k20201202; t=1683229742;
+        bh=/TGR4uKvgJibnKmgX0SbV59BKNwneOqpzqjWdmtOygY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AjXhcppRu7mhs+b7G+0aRJ8uR2wMKqdTVupeqN8godDrjtNfJCEDoFJ0xKSPzfQ10
-         UjCiFA5KyaPXWv1EfKmuwF9mO+G4ucNJ3QPKZQiOGKsTV6ltLAxOpyG2Jp7gqWGCHV
-         9MapZgSBQzqJ2CusJUvchz6vpoBqSXEnoM6UYr02SlnwDUcSd21x61l6qER3kmxp7q
-         fxnRGCOGkDrAZz/kI54ewImgKlMKTqAllHeTHVcxFDIbrA5pUiyAS/GwrB8ioB7XbQ
-         tXC4HwEePUPSfKk6C8+d/HhT0F5RiKXWw67YwdSgLt8+a+1k817qzdJC3+0MjZhW7z
-         pd1Rtih+ZpCow==
+        b=YzyW9+pMwHn8u04EvEO/P6Z8oxkKwkmGngUx15lJy1+YeZH1Kk+nnWiFvFUrR3+1q
+         c6pB+9doUNqCtLGFuTpE4XVdvA9y2Rpd7STjegFo0JzcF8mGofzw6BC/CJycOdLfip
+         e9e0J9pILkYpHf3/hCtze5XFluZJohRlFQeYeye626MDEUc2w4I7Aq8PT8psorrO6k
+         El/j9YHMO91rOdliQUHkAsEtAOqKJUsxb56hziyAUJyqhEkuz5wbCL81uELiVx6F/g
+         x1PTel2vYFaHs8NLbQ2YLWgY4cIUZczCgeyTZeazV+f50Oof84lYAfmcXZWw99x4YO
+         zhxtCIu+xUtLg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        dlunev@chromium.org, beanhuo@micron.com, bvanassche@acm.org,
+        avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 18/49] scsi: ufs: ufs-pci: Add support for Intel Lunar Lake
-Date:   Thu,  4 May 2023 15:45:55 -0400
-Message-Id: <20230504194626.3807438-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 14/30] scsi: ufs: ufs-pci: Add support for Intel Lunar Lake
+Date:   Thu,  4 May 2023 15:48:07 -0400
+Message-Id: <20230504194824.3808028-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194626.3807438-1-sashal@kernel.org>
-References: <20230504194626.3807438-1-sashal@kernel.org>
+In-Reply-To: <20230504194824.3808028-1-sashal@kernel.org>
+References: <20230504194824.3808028-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -63,14 +63,14 @@ Link: https://lore.kernel.org/r/20230328105832.3495-1-adrian.hunter@intel.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/host/ufshcd-pci.c | 1 +
+ drivers/scsi/ufs/ufshcd-pci.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 1c91f43e15c8e..9c911787f84c6 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -607,6 +607,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index e892b9feffb11..0920530a72d28 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -596,6 +596,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
  	{ PCI_VDEVICE(INTEL, 0x51FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
  	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
  	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
