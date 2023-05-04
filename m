@@ -2,109 +2,131 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BEA4C7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:45:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75CB3C77B7C
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 21:16:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229622AbjEDUpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 16:45:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59634 "EHLO
+        id S229733AbjEDVQ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 17:16:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229609AbjEDUpa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:45:30 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55C73156A1
-        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 13:42:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683232905;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9W1Zsoz6z+YP+cxJPViag88+eoCge/nILvYxACPZGtQ=;
-        b=Dqh6I4kh3Q8cN/F8706uipH1J94iYlhnRLyPWq4pKP33uApcLRgKshCEtR06t8+kUoP86y
-        vZmIwUi36l85Wpc7wFklTHIfl3D7qwmnIYE0eUbJHzk8kmrZ6yty/MCXD3fzmoh7E1nV5e
-        Q302BoVrU35mHDGUjoc4k3EYi/uD2hg=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-78-2x0AigkQMr-UQHSy4Sjf9w-1; Thu, 04 May 2023 16:41:44 -0400
-X-MC-Unique: 2x0AigkQMr-UQHSy4Sjf9w-1
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-3ef6decfabeso5758321cf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 May 2023 13:41:44 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683232903; x=1685824903;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9W1Zsoz6z+YP+cxJPViag88+eoCge/nILvYxACPZGtQ=;
-        b=gUH5MQJsKuUAyvWKCXjJefFdxjN+y/UXm2zr+aV34+HaDPzqwwMkcQpF0v527XCoch
-         d9oLwpPhXWVmbxmY4ZRbJVxsgdkePENSk3PKSnOw5Acb/DiJcM810PXpSEbEEYLdwneR
-         rCZ+E0CAO6PAv5wbQZ3emOMJrZG1pkTz/4SjGkAmxH1CWGxdCQmirM5UX3Q9TP52Dn5v
-         xl0PrPkgxjvUnSfTpGuOTFCXOF21XyH8o/PeEUYj4m7QvXvBF+Uc9W5f0J4iTZpi/+0l
-         cot4yBJi8fBxiwW35XI6nsQGYuULcSWTI1BvLxV12JPDF2miJRMFv08KbpAiHT8EAguE
-         rDZg==
-X-Gm-Message-State: AC+VfDwwpjbHJp1LhVHepj5uoda7kKmS23bEtChg2Oi7cTvK2E062gkq
-        RP9v/irsk7ibshdiuDogW3ly9LEbNwQiUv5XwRx1h8HsIDryNrzoqqkPt2WevxLxOUzz5XiT2gH
-        tVAHpb7a7l8yTxUG4FhYQFw==
-X-Received: by 2002:a05:622a:1482:b0:3ef:3fd8:9209 with SMTP id t2-20020a05622a148200b003ef3fd89209mr7860892qtx.48.1683232903716;
-        Thu, 04 May 2023 13:41:43 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5sqBUtFrSM46EgamHSslz3Cly3hy0Rw75yEGIIJQVlsyTywTwm9SVP9oXHM1gIGTBv65ZIbA==
-X-Received: by 2002:a05:622a:1482:b0:3ef:3fd8:9209 with SMTP id t2-20020a05622a148200b003ef3fd89209mr7860870qtx.48.1683232903430;
-        Thu, 04 May 2023 13:41:43 -0700 (PDT)
-Received: from fedora (modemcable181.5-202-24.mc.videotron.ca. [24.202.5.181])
-        by smtp.gmail.com with ESMTPSA id fd9-20020a05622a4d0900b003d65e257f10sm9150872qtb.79.2023.05.04.13.41.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 May 2023 13:41:42 -0700 (PDT)
-Date:   Thu, 4 May 2023 16:41:40 -0400
-From:   Adrien Thierry <athierry@redhat.com>
-To:     Stanley Chu <chu.stanley@gmail.com>, peter.wang@mediatek.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S229463AbjEDVQ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 17:16:28 -0400
+Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 0DDAF9EE6
+        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 14:16:23 -0700 (PDT)
+Received: (qmail 427485 invoked by uid 1000); 4 May 2023 16:25:57 -0400
+Date:   Thu, 4 May 2023 16:25:57 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Maxime Bizon <mbizon@freebox.fr>
+Cc:     Benjamin Block <bblock@linux.ibm.com>,
+        Oliver Neukum <oneukum@suse.com>,
+        Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] Revert "scsi: ufs: core: Initialize devfreq
- synchronously"
-Message-ID: <ZFQYhHwlc+UnbKWc@fedora>
-References: <20230329205426.46393-1-athierry@redhat.com>
+Subject: Re: Reproducible deadlock when usb-storage scsi command timeouts
+ twice
+Message-ID: <a5a78513-58f2-4d74-a8c2-a48558345fda@rowland.harvard.edu>
+References: <ZEllnjMKT8ulZbJh@sakura>
+ <34a2e50b-e899-45ee-ac14-31fa0bb1616b@rowland.harvard.edu>
+ <20230503102440.GL18384@t480-pf1aa2c2.fritz.box>
+ <941e8420-f99f-5832-2ea9-3ba5eca545ad@suse.com>
+ <20230503125137.GA1032383@t480-pf1aa2c2.fritz.box>
+ <d25bfa50-b5a0-bd0e-fd14-94967e374033@suse.com>
+ <97a67f78-4888-4fe7-9bfc-87d0bb6cc8b2@rowland.harvard.edu>
+ <20230504085226.GC1032383@t480-pf1aa2c2.fritz.box>
+ <83fac55c-4005-416d-aad7-04bcb3fcaea2@rowland.harvard.edu>
+ <ZFPEB3lbEV90OJ91@sakura>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20230329205426.46393-1-athierry@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZFPEB3lbEV90OJ91@sakura>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-
-On Wed, Mar 29, 2023 at 04:54:25PM -0400, Adrien Thierry wrote:
-> This reverts commit 7dafc3e007918384c8693ff8d70381b5c1e9c247.
+On Thu, May 04, 2023 at 04:41:11PM +0200, Maxime Bizon wrote:
 > 
-> This patch introduced a regression [1] where hba->pwr_info is used
-> before being initialized, which could create issues in
-> ufshcd_scale_gear(). Revert it until a better solution is found.
+> On Thursday 04 May 2023 à 10:05:38 (-0400), Alan Stern wrote:
 > 
-> [1] https://lore.kernel.org/all/CAGaU9a_PMZhqv+YJ0r3w-hJMsR922oxW6Kg59vw+oen-NZ6Otw@mail.gmail.com
+> > Maxime, would you like to submit a revised version of your patch?  The 
+> > key difference is that it should abort the currently executing command 
+> > (if there is one), regardless of whether the srb value matches.
 > 
-> Signed-off-by: Adrien Thierry <athierry@redhat.com>
-> ---
->  drivers/ufs/core/ufshcd.c | 47 +++++++++++++--------------------------
->  include/ufs/ufshcd.h      |  1 -
->  2 files changed, 16 insertions(+), 32 deletions(-)
->
+> Yes
+> 
+> before I do a format submission, is this what you have in mind ?
 
-I've been working on a fixed version, and realized the original issue [1]
-has been fixed by [2]. Thanks to the softdep, whenever the ufs core and
-the simple ondemand governor are built as modules, the governor module
-will be loaded before the ufs core module. Thus, the ufs core doesn't end
-up calling request_module because the governor is already loaded.
+Yes, except that I would not make command_abort_any() a separate 
+routine.  Just put it inline in device_reset().
 
-So, it looks like there's now no need to submit a fixed version.
+Alan Stern
 
-[1] https://lore.kernel.org/all/20230217194423.42553-1-athierry@redhat.com/
-[2] https://lore.kernel.org/all/20230220140740.14379-1-athierry@redhat.com/
-
-Best,
-
-Adrien
-
+> 
+> diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+> index 8931df5a85fd..380b04273969 100644
+> --- a/drivers/usb/storage/scsiglue.c
+> +++ b/drivers/usb/storage/scsiglue.c
+> @@ -406,10 +406,8 @@ static DEF_SCSI_QCMD(queuecommand)
+>   ***********************************************************************/
+>  
+>  /* Command timeout and abort */
+> -static int command_abort(struct scsi_cmnd *srb)
+> +static int command_abort_matching(struct us_data *us, struct scsi_cmnd *srb_match)
+>  {
+> -	struct us_data *us = host_to_us(srb->device->host);
+> -
+>  	usb_stor_dbg(us, "%s called\n", __func__);
+>  
+>  	/*
+> @@ -418,10 +416,17 @@ static int command_abort(struct scsi_cmnd *srb)
+>  	 */
+>  	scsi_lock(us_to_host(us));
+>  
+> -	/* Is this command still active? */
+> -	if (us->srb != srb) {
+> +	/* is there any active pending command to abort ? */
+> +	if (!us->srb) {
+>  		scsi_unlock(us_to_host(us));
+>  		usb_stor_dbg(us, "-- nothing to abort\n");
+> +		return SUCCESS;
+> +	}
+> +
+> +	/* Does the command match the passed srb if any ? */
+> +	if (srb_match && us->srb != srb_match) {
+> +		scsi_unlock(us_to_host(us));
+> +		usb_stor_dbg(us, "-- pending command mismatch\n");
+>  		return FAILED;
+>  	}
+>  
+> @@ -444,6 +449,16 @@ static int command_abort(struct scsi_cmnd *srb)
+>  	return SUCCESS;
+>  }
+>  
+> +static int command_abort_any(struct us_data *us)
+> +{
+> +	return command_abort_matching(us, NULL);
+> +}
+> +
+> +static int command_abort(struct scsi_cmnd *srb)
+> +{
+> +	return command_abort_matching(host_to_us(srb->device->host), srb);
+> +}
+> +
+>  /*
+>   * This invokes the transport reset mechanism to reset the state of the
+>   * device
+> @@ -455,6 +470,8 @@ static int device_reset(struct scsi_cmnd *srb)
+>  
+>  	usb_stor_dbg(us, "%s called\n", __func__);
+>  
+> +	command_abort_any(us);
+> +
+>  	/* lock the device pointers and do the reset */
+>  	mutex_lock(&(us->dev_mutex));
+>  	result = us->transport_reset(us);
+> 
+> 
+> -- 
+> Maxime
