@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FE77C77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 17:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B4CC77B78
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 18:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbjEDRxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 13:53:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46980 "EHLO
+        id S229606AbjEDSFE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 14:05:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229733AbjEDRxM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 13:53:12 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A96C1BFA;
-        Thu,  4 May 2023 10:53:12 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1aaec6f189cso5471925ad.3;
-        Thu, 04 May 2023 10:53:12 -0700 (PDT)
+        with ESMTP id S229449AbjEDSFC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 14:05:02 -0400
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A241BCC;
+        Thu,  4 May 2023 11:05:01 -0700 (PDT)
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-64115e652eeso14431594b3a.0;
+        Thu, 04 May 2023 11:05:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683222791; x=1685814791;
+        d=1e100.net; s=20221208; t=1683223501; x=1685815501;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QhzG9QLeT/AdwEJ8Xk3sMDacDxvGCe+E8Bp6ZVi59ME=;
-        b=LHml+uR/ZhwNW9M2o200+o91wZ/+L31CZDo3b0g2MswycgXeh9wLm49qcqqyUqZ+YB
-         zdEKsoEECmlPVTgPZ4IgWsYMCjuwlm2AglcyuD1jAxX7iFN5yHbUOJZnYfq8QfNfdZmV
-         XjCINQawt6ZpSgQXGeLQIIqg3O7kgm3M46kzDPELWrDTYLoe/HghXu49ahQUfwnEfMwu
-         CcOfrQgINAMbnYR4wJGS3sR1sVNG71W4PH1NjfLAeJk9caABanmvwdEBT5iHMlR7zr1a
-         OyHoU0XahPWsMqGDiCZWx85ZFd6nGWgXNwVmd16zL+bXb5jaElxfLEYfN6RKkQ4bV5rN
-         PSYA==
-X-Gm-Message-State: AC+VfDynSE3e+9Nj9bcjpqAK+KQVKm//5K85ctBzujxI4s5ow5pXMVw3
-        LGdlbP8jzC8hR7aykiJdIzzMMMzLyS8=
-X-Google-Smtp-Source: ACHHUZ4C7y9zvavNMATZM/yIXk7L6sPqM0mTK5ArKCWEGmDnByeHoWYcbAjZkDsrbRvUKy40xiR8hA==
-X-Received: by 2002:a17:902:c40b:b0:1ab:28ec:bf10 with SMTP id k11-20020a170902c40b00b001ab28ecbf10mr5757457plk.51.1683222791313;
-        Thu, 04 May 2023 10:53:11 -0700 (PDT)
+        bh=9ndDW36eTz2fNZR0ZWJLQqH5VttvJf9F4pFDzFwOuQQ=;
+        b=QxUlpeKpAWrOcXqiMPRsxjRyuMkM/OZXmRIBqkfAtXkYOV8ovtCVCQ7spxtMKG3dIv
+         TN6anzOv1CDJWqFV4aeMYbj+iySPyuR/AhyrfwPXrYX3NCvFaedzEcyaY6/mobiEhS6o
+         TdVV5QgNCjS/g5VLsUW+vEOM44/vY0DVRb0M+Ss5sJsk7DoNTjCf8d/p4duQv3xljTz6
+         UYfdAd/W4tnAEKW1qAkDbXSRttTrErzWPzssvh3mdNG/GiGgA4lTpt6c4aGTIwEIsvn7
+         AU9Ufjv/vlDSQUfw/8Y0fS5CZlLI7jvWVevLeh4Swqe7GpBMtmoFmWpMYjZ3tby1QYdz
+         ZuoQ==
+X-Gm-Message-State: AC+VfDzRlMtdfHDAnHXNGqEXN6qTbeS3OYo5aaD3prJBNXPM6RALQXSb
+        GIB4UV2wBOSnumBdyrqd6As=
+X-Google-Smtp-Source: ACHHUZ58KH8p6W6BVL9E0BUnKgDpgwJ68lJQZBtDXziRHGwUExYMsoix/tRyd7IdpSv1Na2fQZF9gA==
+X-Received: by 2002:a05:6a20:3d19:b0:f0:93d9:9c03 with SMTP id y25-20020a056a203d1900b000f093d99c03mr3746657pzi.15.1683223500955;
+        Thu, 04 May 2023 11:05:00 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:2c3b:81e:ce21:2437? ([2620:15c:211:201:2c3b:81e:ce21:2437])
-        by smtp.gmail.com with ESMTPSA id n4-20020a170902d2c400b001a5260a6e6csm9985629plc.206.2023.05.04.10.53.09
+        by smtp.gmail.com with ESMTPSA id i13-20020aa787cd000000b0062dd8809d6esm1463809pfo.150.2023.05.04.11.04.59
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 04 May 2023 10:53:10 -0700 (PDT)
-Message-ID: <14b9ca4a-26f8-e033-3bda-50c339635c56@acm.org>
-Date:   Thu, 4 May 2023 10:53:08 -0700
+        Thu, 04 May 2023 11:05:00 -0700 (PDT)
+Message-ID: <0bb28ed3-8b4f-77f3-5648-adb42604f37e@acm.org>
+Date:   Thu, 4 May 2023 11:04:58 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v2 2/5] ufs: mcq: Add support for clean up mcq resources
+Subject: Re: [PATCH v2 5/5] ufs: core: Add error handling for MCQ mode
 Content-Language: en-US
 To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
@@ -53,43 +53,73 @@ Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
- <5e662692bc0ad5108ce91ae3d1ec2b575c34d4ae.1681764704.git.quic_nguyenb@quicinc.com>
- <12308ca3-f824-596e-078f-bc00fa674aef@acm.org>
- <b1af6459-43b7-d193-c6e7-37f24d7349e6@quicinc.com>
+ <5a52b255001e994d0a65be9b1d61fe69f2a12f6c.1681764704.git.quic_nguyenb@quicinc.com>
+ <c3297d67-ac6f-e8b5-9167-648302319812@acm.org>
+ <b35c2e61-6fb1-37d5-886e-0fb67ee0d0a2@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <b1af6459-43b7-d193-c6e7-37f24d7349e6@quicinc.com>
+In-Reply-To: <b35c2e61-6fb1-37d5-886e-0fb67ee0d0a2@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/3/23 21:01, Bao D. Nguyen wrote:
-> On 4/25/2023 5:08 PM, Bart Van Assche wrote:
+On 5/3/23 21:18, Bao D. Nguyen wrote:
+> On 4/25/2023 5:21 PM, Bart Van Assche wrote:
 >> On 4/17/23 14:05, Bao D. Nguyen wrote:
->>> @@ -3110,7 +3128,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
->>>           err = -ETIMEDOUT;
->>>           dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
->>>               __func__, lrbp->task_tag);
->>> -        if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
->>> +        if (ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag) == 0) {
->>>               /* successfully cleared the command, retry if needed */
->>>               err = -EAGAIN;
->>>               /*
+>>> +        /* MCQ mode */
+>>> +        if (is_mcq_enabled(hba))
+>>> +            return ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag);
 >>
->> Is this change necessary?
-> My intention was to support tag greater than 31 and less than 64.
-> The 1U << only works up to 32 bits.
+>> The above code will trigger an overflow if lrbp->task_tag >= 8 * sizeof(unsigned long). That's not acceptable.
+> This ufshcd_clear_cmds() uses a bit map. There are multiple places in the UFS code have this limitation if the queue depth grows to be greater than 64. I am thinking:
+> 1. Current ufs controllers in the market probably support queue depth 64 or less, so it may not be a problem today if host controller cap is set to 64 queue depth, but can be a problem in multiple places in the code later.
+> 2. In mcq mode, we can pass a tag number into this api ufshcd_clear_cmds(); while in SDB mode, pass the tag's bit mask as before.
+> 3. Use sbitmask() to support large queue depth? Thanks for any suggestions.
 
-The UFSHCI 4.0 standard and also the Linux kernel UFS driver support more than
-64 outstanding commands so the above change is not sufficient.
+The UFS driver is the only block driver I know that tracks which commands
+are pending in a bitmap. Please pass the lrbp pointer or the task_tag directly
+to ufshcd_clear_cmds() instead of passing a bitmap to that function. Please
+also introduce a loop in ufshcd_eh_device_reset_handler() around the
+ufshcd_clear_cmds() call instead of passing a bitmap to ufshcd_clear_cmds().
 
->> Please do not use lrbp->cmd to check whether or not a command has completed. See also my patch "scsi: ufs: Fix handling of lrbp->cmd".
-> I have been thinking how to replace lrbp->cmd, but could not find a good solution. Throughout this patch series, I am using lrbp->cmd as a way to find the pending command that is being aborted and clean up the resources associated with it. Any suggestions to achieve it? 
+>>>   static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>>>   {
+>>> +    struct ufshcd_lrb *lrbp;
+>>> +    u32 hwq_num, utag;
+>>> +    int tag;
+>>> +
+>>>       /* Resetting interrupt aggregation counters first and reading the
+>>>        * DOOR_BELL afterward allows us to handle all the completed requests.
+>>>        * In order to prevent other interrupts starvation the DB is read once
+>>> @@ -5580,7 +5590,22 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>>>        * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
+>>>        * do not want polling to trigger spurious interrupt complaints.
+>>>        */
+>>> -    ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
+>>> +    if (!is_mcq_enabled(hba)) {
+>>> +        ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
+>>> +        goto out;
+>>> +    }
+>>> +
+>>> +    /* MCQ mode */
+>>> +    for (tag = 0; tag < hba->nutrs; tag++) {
+>>> +        lrbp = &hba->lrb[tag];
+>>> +        if (lrbp->cmd) {
+>>> +            utag = blk_mq_unique_tag(scsi_cmd_to_rq(lrbp->cmd));
+>>> +            hwq_num = blk_mq_unique_tag_to_hwq(utag);
+>>> +            ufshcd_poll(hba->host, hwq_num);
+>>> +        }
+>>> +    }
+>>
+>> Is my understanding correct that ufshcd_transfer_req_compl() is only called from single doorbell code paths and hence that the above change is not necessary?
+> ufshcd_transfer_req_compl() can be invoked from MCQ mode such as the ufshcd_err_handler() as below:
+> ufshcd_err_handler()-->ufshcd_complete_requests()-->ufshcd_transfer_req_compl()
 
-Using lrbp->cmd is fine but checking whether or not it is NULL is not OK. How
-about using blk_mq_request_started() to check whether or not a request is still
-pending?
+Since there are multiple statements in ufshcd_transfer_req_compl() that assume
+SDB mode (resetting SDB interrupt aggregation and calling ufshcd_poll()), please
+move the is_mcq_enabled() test from ufshcd_transfer_req_compl() into the
+callers of that function.
 
 Thanks,
 
