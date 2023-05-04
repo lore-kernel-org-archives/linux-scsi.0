@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE497C7EE21
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 19:56:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2689AC7EE22
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:02:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231944AbjEDT4m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 15:56:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42824 "EHLO
+        id S232300AbjEDUCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 16:02:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232130AbjEDTzU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 15:55:20 -0400
+        with ESMTP id S232297AbjEDUBN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:01:13 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34A21C0C5;
-        Thu,  4 May 2023 12:48:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C570A1890B;
+        Thu,  4 May 2023 12:51:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 277B563805;
-        Thu,  4 May 2023 19:48:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D618C433D2;
-        Thu,  4 May 2023 19:48:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 38CB863846;
+        Thu,  4 May 2023 19:49:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A68A9C433EF;
+        Thu,  4 May 2023 19:49:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229716;
-        bh=MV/x/iw4HDAbTilfMmdL2F2zieP8iLxO0BvZvAixEWc=;
+        s=k20201202; t=1683229789;
+        bh=izABLxX+9a8wiRgDI3zSiWIjNG9o+UA2j3BELE3awTQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JaGETg+ipqgSpwbfARQNn4OpfrAR7EbUMPyScHhg90AH8oELix68go9TJUEYX1WV3
-         2PImpPQJiOdKLlj3eyQq8mV1RUJi+khzaelTDUdGV9UpH6F9m4GGiQo0uXA/Z491U0
-         ofyShvw+17ef8btUZ0+ZsCyqi2T+y1V0n8uNEAgPxIcx+ePWZEQt9sD5oqQyXU11CB
-         Uv5RNV+E4PgEfmpZh6im4ZkyvK9LUImloNy5njr0w2sBLFDUeE0TMPhXL4ZhgM0TtB
-         QKt77jL7PznYrbBqX0A8daBnJFiM21XLsgKnq6t2D8Ddi8QzK/fqR8e0dnwYkEG3E7
-         3RIM98Us+jT8w==
+        b=ZmuJZnQRgaLkdSF+Z5kfWIqDK/kqXmJXpHEBXm4Pfz7AJHZkHJ00W5XxP6kO4mrMb
+         53sm1CVjYcNq/K4dkpLYpde7BMzKNiV2B2hYHSTCq1LkJmsGiYytL2BiQN4/CDJiYc
+         niQqICbHxsFms3nx0hhdrxXAt8N4kgiPIDZ5pTORKo2kfFttTt39AO08ZJIL+wMQyU
+         yBkLWsZn5mmhnOEtfWbs6oSYcSrtJbtMDMh4u+DctkRgxlovoOn5iDCnc1p790eoPg
+         j1lqynNbOP/kF7LH3PHL+Rz2GXstIGWKOrX8A4bDrvso6hPztmv33aVpR4Pz3g11em
+         vpVTT6q4ki4Uw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Justin Tee <justin.tee@broadcom.com>,
@@ -38,12 +38,12 @@ Cc:     Justin Tee <justin.tee@broadcom.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 05/30] scsi: lpfc: Prevent lpfc_debugfs_lockstat_write() buffer overflow
-Date:   Thu,  4 May 2023 15:47:58 -0400
-Message-Id: <20230504194824.3808028-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 05/24] scsi: lpfc: Prevent lpfc_debugfs_lockstat_write() buffer overflow
+Date:   Thu,  4 May 2023 15:49:18 -0400
+Message-Id: <20230504194937.3808414-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194824.3808028-1-sashal@kernel.org>
-References: <20230504194824.3808028-1-sashal@kernel.org>
+In-Reply-To: <20230504194937.3808414-1-sashal@kernel.org>
+References: <20230504194937.3808414-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 8e8bbe734e875..560b2504e674d 100644
+index fbc76d69ea0b4..2b77cbbcdccb6 100644
 --- a/drivers/scsi/lpfc/lpfc_debugfs.c
 +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2157,10 +2157,13 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+@@ -2159,10 +2159,13 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
  	char mybuf[64];
  	char *pbuf;
  	int i;
@@ -91,7 +91,7 @@ index 8e8bbe734e875..560b2504e674d 100644
  		return -EFAULT;
  	pbuf = &mybuf[0];
  
-@@ -2181,7 +2184,7 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+@@ -2183,7 +2186,7 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
  			qp->lock_conflict.wq_access = 0;
  		}
  	}
