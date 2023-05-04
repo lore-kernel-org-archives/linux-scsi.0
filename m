@@ -2,117 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ED59C7EE2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 22:40:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A685C77B7C
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 23:51:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229797AbjEDWkl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 18:40:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36850 "EHLO
+        id S229901AbjEDXvP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 19:51:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229746AbjEDWkj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 18:40:39 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6385E9ED5
-        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 15:40:38 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1aaea43def7so7345255ad.2
-        for <linux-scsi@vger.kernel.org>; Thu, 04 May 2023 15:40:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683240038; x=1685832038;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bSBn9yOinBU8m0yQLrSvbl7PKYZlBg3YhOgvbxEMud0=;
-        b=V2OWoWuBY9/BxFN6ZMrayZSPn34VUIMFwLKD1syjt3URVOHsk6eRCzBjJxyS/sTaxh
-         0ODMUc6Lrrs3v8zH3Sx/5e/PKEpsPzqFVGY4QckBPaQkZZfaM7pnBgEofNkOYx2I3eMh
-         /CUnaPOJFUPSRWZdnUNxTe8x2snVD8PtGIxSGOLogmkrfrhkWite1HB1ZWG+3fFJST9O
-         CMCv7TFFrBn2cKtBOmOLW8XQUBS/fB7r1lrmQ3GM1O5nbWEdOmtFcfUJmeIAnUxIbWpn
-         3ror2ojs9ATMDgL9RR5K3X4TvFjtnscejsS+p0QkHUHUt2WEuhfGkKNuQs/O+d5WTYRo
-         HM2w==
+        with ESMTP id S229878AbjEDXvP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 19:51:15 -0400
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF0E212E81
+        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 16:51:12 -0700 (PDT)
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1ab1ce53ca6so8257825ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 04 May 2023 16:51:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683240038; x=1685832038;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bSBn9yOinBU8m0yQLrSvbl7PKYZlBg3YhOgvbxEMud0=;
-        b=lrRv5mSI+5pOXF5OAZ21Zh9ABz0inX+7M9ljZZHjErj8b2glwRpG7mj9MYrE9ZZB1w
-         0AT8Ds++djbp5b3PTVsVC7Ovn7p41+zOdsaHaAVoNcSfFreydhpJE99ndYMjPu+vER4U
-         s5hwWmbqRraa5l0JpqlHzbsvXcTQhO5gnY0Lzik7eSutAfGgRJ2RYijUbbHaL98SQEu2
-         VcF8JwzIJJig1rnDH5rGho4WmVk7WCuFlfZdQk22XVxuxHkL3iijmaN97VYS270DI2Ev
-         ZZiQ4hbh2gY6c3TGbC9U0H9kklQFqG0km2aHPUUeDke2qQKJNpMmzFhQ7FT1b4GIhW87
-         q9NQ==
-X-Gm-Message-State: AC+VfDzYOzUFurO/8UlKoN1sN8q627ipyPotiUbIGTXk764biFI27BE2
-        XqWkmM0dLUPCX1SaJvzmim19iQ==
-X-Google-Smtp-Source: ACHHUZ4sldKILzM05M5JtvE1zkTm8BdFnY+an0qc3+Zw6AS4jJ2XEp42XVgNkYwu+sP102Df03J4uQ==
-X-Received: by 2002:a17:903:48e:b0:1a6:cb66:681f with SMTP id jj14-20020a170903048e00b001a6cb66681fmr4825434plb.46.1683240037873;
-        Thu, 04 May 2023 15:40:37 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id ix10-20020a170902f80a00b001ab0159b9edsm27390plb.250.2023.05.04.15.40.36
+        d=1e100.net; s=20221208; t=1683244272; x=1685836272;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=V8Uxvj/wTD2T5ak8fwHtVdBHmpOAUkbVV/O+znsathM=;
+        b=b4niL1GuuFEFYj6HkV0ie1jy+g0PhoUmfWznpai9/cviriaHNNduGeSl19HTN3HW2j
+         jatjy5eg0PKVUrIpDvhpC09UtNKjlu44NSui/OkLHse5UsUirCDSNKBS8ei5+jt/XAGL
+         JpwQ4X9XAIsTeyFRhuh0SPlGI5z1CYGQplkOTl3JkKlMKDfjcQw7i9C/dZAikkVBDCJw
+         2RgueWUk3tu8IjVwrUEe/0dxkiC88OUzsP0yfSbKt5euMTD8+CaeQJDFZisjIkmIuVdG
+         NgWKUejzF26Tr0h95PwHHbfVc9ejH9zBQpWwQcCXLfWN+XRcZE1/xlk8E4D3lRcBveO2
+         JoAA==
+X-Gm-Message-State: AC+VfDzBPmFIy6ksfcTHtdd6lngZ8BNbCGyprC/0NZ+A/n8YSaclexa8
+        Tp6z3C+EjXLnK740/8W8Q30=
+X-Google-Smtp-Source: ACHHUZ6pPlUuHVI27nuAMDRIGBfjH9rnyOy4cOKZnD9oZM1Ngsk75fYwzwqL44tx+Wg73m5X3Zr+Yw==
+X-Received: by 2002:a17:902:cece:b0:1a6:413c:4a3e with SMTP id d14-20020a170902cece00b001a6413c4a3emr6487631plg.5.1683244271844;
+        Thu, 04 May 2023 16:51:11 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id j13-20020a170902758d00b001aad4be4503sm143169pll.2.2023.05.04.16.51.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 May 2023 15:40:36 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1puhcn-00BPr0-UX; Fri, 05 May 2023 08:40:33 +1000
-Date:   Fri, 5 May 2023 08:40:33 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jejb@linux.ibm.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-security-module@vger.kernel.org, paul@paul-moore.com,
-        jmorris@namei.org, serge@hallyn.com,
-        Prasad Singamsetty <prasad.singamsetty@oracle.com>
-Subject: Re: [PATCH RFC 02/16] fs/bdev: Add atomic write support info to statx
-Message-ID: <20230504224033.GJ3223426@dread.disaster.area>
-References: <20230503183821.1473305-1-john.g.garry@oracle.com>
- <20230503183821.1473305-3-john.g.garry@oracle.com>
- <20230503215846.GE3223426@dread.disaster.area>
- <96a2f875-7f99-cd36-e9c3-abbadeb9833b@oracle.com>
+        Thu, 04 May 2023 16:51:11 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/5] ufs: Do not requeue while ungating the clock
+Date:   Thu,  4 May 2023 16:50:47 -0700
+Message-Id: <20230504235052.4423-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <96a2f875-7f99-cd36-e9c3-abbadeb9833b@oracle.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 04, 2023 at 09:45:50AM +0100, John Garry wrote:
-> On 03/05/2023 22:58, Dave Chinner wrote:
-> > Is there a statx() man
-> > page update for this addition?
-> 
-> No, not yet. Is it normally expected to provide a proposed man page update
-> in parallel? Or somewhat later, when the kernel API change has some
-> appreciable level of agreement?
+Hi Martin,
 
-Normally we ask for man page updates to be presented at the same
-time, as the man page defines the user interface that is being
-implemented. In this case, we need updates for the pwritev2() man
-page to document RWF_ATOMIC semantics, and the statx() man page to
-document what the variables being exposed mean w.r.t. RWF_ATOMIC.
+In the traces we recorded while testing zoned storage we noticed that UFS
+commands are requeued while the clock is being ungated. Command requeueing
+makes it harder than necessary to preserve the command order. Hence this
+patch series that modifies the SCSI core and also the UFS driver such that
+clock ungating does not trigger command requeueing.
 
-The pwritev2() man page is probably the most important one right now
-- it needs to explain the guarantees that RWF_ATOMIC is supposed to
-provide w.r.t. data integrity, IO ordering, persistence, etc.
-Indeed, it will need to explain exactly how this "multi-atomic-unit
-mulit-bio non-atomic RWF_ATOMIC" IO thing can be used safely and
-reliably, especially w.r.t. IO ordering and persistence guarantees
-in the face of crashes and power failures. Not to mention
-documenting error conditions specific to RWF_ATOMIC...
+Please consider this patch series for the next merge window.
 
-It's all well and good to have some implementation, but without
-actually defining and documenting the *guarantees* that RWF_ATOMIC
-provides userspace it is completely useless for application
-developers. And from the perspective of a reviewer, without the
-documentation stating what the infrastructure actually guarantees
-applications, we can't determine if the implementation being
-presented is fit for purpose....
+Thanks,
 
-Cheers,
+Bart.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Bart Van Assche (5):
+  scsi: core: Rework scsi_host_block()
+  scsi: core: Support setting BLK_MQ_F_BLOCKING
+  scsi: ufs: Enable the BLK_MQ_F_BLOCKING flag
+  scsi: ufs: core: Unexport ufshcd_hold() and ufshcd_release()
+  scsi: ufs: Ungate the clock synchronously
+
+ drivers/scsi/scsi_lib.c          | 26 ++++++-----
+ drivers/ufs/core/ufs-sysfs.c     |  2 +-
+ drivers/ufs/core/ufshcd-crypto.c |  2 +-
+ drivers/ufs/core/ufshcd-priv.h   |  2 +-
+ drivers/ufs/core/ufshcd.c        | 78 ++++++++++----------------------
+ include/scsi/scsi_host.h         |  3 ++
+ include/ufs/ufshcd.h             |  3 --
+ 7 files changed, 45 insertions(+), 71 deletions(-)
+
