@@ -2,88 +2,151 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC8F2C77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 09:06:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6228FC7EE21
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 10:08:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229983AbjEDJGV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 05:06:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60776 "EHLO
+        id S229962AbjEDKIH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 06:08:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229717AbjEDJGT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 05:06:19 -0400
-Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D552B8F;
-        Thu,  4 May 2023 02:06:16 -0700 (PDT)
-X-QQ-mid: bizesmtpipv601t1683191150t556
-Received: from localhost ( [255.251.132.4])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 04 May 2023 17:05:48 +0800 (CST)
-X-QQ-SSF: 0140000000000090C000000A0000000
-X-QQ-FEAT: Il1yX1zTS2AaZvPkKIPsBCyi9J+kgPbMSU9zxIwHbRESjPeDW66BEmAxvuIw/
-        g9FNdAbWN7JLpZebEqTnhavGofkzOh1pAQwEi+qC5ZMtmqJto58tkXjRPAkbMarL9v6xcLR
-        GsdYenz1+mGguE1pwLFPjs1JiU7QN2ntChWUlRpEvp5nlKrPVj2/1UbzhfayhsTFTkdq6Wm
-        TQP4sCFm5c09TgvmE4zXRSeRpanoz5BrDBwxXH3dYnb9PiySrvRwadTzU8jVzmoqr6Zb5qR
-        mmg2QjWqQh3ftugT3dFxJZCSiZxdtZomgK5MwcpvfdXFiM0lQurQ0fCGqdlD/fl40WDNvVX
-        nn/djQwR9gS1fgSFe5cCgWPfX7AlOWv/dj79A54YGILeT/9IVI=
-X-QQ-GoodBg: 2
-X-BIZMAIL-ID: 9945072676502930506
-Date:   Thu, 4 May 2023 17:05:51 +0800
-From:   Wang Honghui <honghui.wang@ucas.com.cn>
-To:     Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+        with ESMTP id S229577AbjEDKIG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 06:08:06 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B02EE49C6;
+        Thu,  4 May 2023 03:08:03 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1aafa03f541so2351445ad.0;
+        Thu, 04 May 2023 03:08:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683194883; x=1685786883;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2EvC0i2ubAm+sy441fyjK/wvLan+Q24d8vT0SBFBHw8=;
+        b=sQQ34i4f0ZsdWrR7buWlwZEDegKaGTeUqv6DiRctqwB195ofWFFa2PEl+Zm7Q1wMlr
+         J6Hoka5NxO6u6G+8vZnSn3hAuGRgdQS9d39xLZtCCaXHQedSS3MCvZvXuRgXIhTyQZXp
+         qraR8TT3IpUatauHej8OdzdHXrlsKpP3GsPYobE3YsXha1oJJct25a4Cm7rceK44YOzX
+         GFa9EiGqdWE3mcLJ9vU/GX4zQddl7rjBY/IKovF0YGW0S0rmfoPr7QVWit9RRjYRBV9H
+         b5uKvOsLkZEi/Pjkro3WN2S8T1m6B/FHGZxgcTc6IXUBdvVPx3J24FFgHCm693aKYAmy
+         +kOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683194883; x=1685786883;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2EvC0i2ubAm+sy441fyjK/wvLan+Q24d8vT0SBFBHw8=;
+        b=ORA8bs82bg5siYgy6rk23r2pJExuBLpcZ2xtDzk25h/xWZXzGE7gXqVZ6YRqV1R1sQ
+         hz8n1vnQ7/WbNLkhrA0V6xp+pBCltdik+r0BO52i5Yujz6Nq48xYGPlpmKAPcz0LJEjV
+         GWId/mIMuQQz6zaVETsnVqWXrylyOZfRUAxsJXFCFZatTWNZ2TqWbA9yrY7jur0HLByR
+         Sci0S4EYLqfQfn6lTc68t4sogBzVjNsQVcKAqktPxUSE4U0L0UMaIgD1Sz8Ce0I558J0
+         81HBcXmw4avnLdWaPmQ1NlDV7KmvHTQpAYmYSFXWmFBiLDJF9P/EuLXwYOiTj0KT3p1w
+         Nn7A==
+X-Gm-Message-State: AC+VfDz+OtIBiUDFBGjSZFAEmGSoZYLi2zLO86GnfGaiM4ZGtxMp+F+8
+        aeHSiXpe8TIkRPFoh3Tqjck=
+X-Google-Smtp-Source: ACHHUZ5ZqDIKpKUsZVpo2OZogmebe0h5XLPpAAUxCzK8FOBRhjpARLbB3sfGP8Nj1NSLPCuPN9ojSQ==
+X-Received: by 2002:a17:903:2341:b0:1ab:289f:65cf with SMTP id c1-20020a170903234100b001ab289f65cfmr4082515plh.54.1683194883120;
+        Thu, 04 May 2023 03:08:03 -0700 (PDT)
+Received: from debian.me (subs28-116-206-12-58.three.co.id. [116.206.12.58])
+        by smtp.gmail.com with ESMTPSA id y17-20020a170902b49100b001aae1eefc8dsm8752453plr.109.2023.05.04.03.08.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 May 2023 03:08:02 -0700 (PDT)
+Received: by debian.me (Postfix, from userid 1000)
+        id 91F2E106262; Thu,  4 May 2023 17:07:59 +0700 (WIB)
+Date:   Thu, 4 May 2023 17:07:59 +0700
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+To:     Wang Honghui <honghui.wang@ucas.com.cn>,
+        Oliver Neukum <oliver@neukum.org>,
+        Ali Akcaagac <aliakc@web.de>,
         Jamie Lenehan <lenehan@twibble.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         dc395x@twibble.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] strcuture: Correct spelling mistakes in comments
-Message-ID: <262EBDA8BEEA7619+ZFN1b1D66/Lp8hzh@TP-P15V>
+Subject: Re: [PATCH] strcuture: Correct spelling mistakes in comments
+Message-ID: <ZFOD/6rT36evHXNz@debian.me>
+References: <262EBDA8BEEA7619+ZFN1b1D66/Lp8hzh@TP-P15V>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="rm9y031/RW5E+/n9"
 Content-Disposition: inline
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtpipv:ucas.com.cn:qybglogicsvrgz:qybglogicsvrgz5a-2
+In-Reply-To: <262EBDA8BEEA7619+ZFN1b1D66/Lp8hzh@TP-P15V>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Subject: [PATCH] strcuture: Correct spelling mistakes in comments
 
-Signed-off-by: Wang Honghui <honghui.wang@ucas.com.cn>
----
- drivers/scsi/dc395x.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+--rm9y031/RW5E+/n9
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index c8e86f8a631e..a3f00e6e3296 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3641,7 +3641,7 @@ static void adapter_add_device(struct AdapterCtlBlk *acb,
-  * adapter_remove_device - Removes the device instance from the adaptor
-  * instance. The device instance is not check in any way or freed by this. 
-  * The caller is expected to take care of that. This will simply remove the
-- * device from the adapters data strcutures.
-+ * device from the adapters data structures.
-  *
-  * @acb: The adapter device to be updated
-  * @dcb: A device that has previously been added to the adapter.
-@@ -3980,7 +3980,7 @@ static void trms1040_read_all(struct NvRamType *eeprom, unsigned long io_port)
-  * Checks the checksum and if it's not correct it uses a set of default
-  * values.
-  *
-- * @eeprom:	caller allocated strcuture to read the eeprom data into
-+ * @eeprom:	caller allocated structure to read the eeprom data into
-  * @io_port:	io port to read from
-  **/
- static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
-@@ -4578,7 +4578,7 @@ static void banner_display(void)
-  * dc395x_init_one - Initialise a single instance of the adapter.
-  *
-  * The PCI layer will call this once for each instance of the adapter
-- * that it finds in the system. The pci_dev strcuture indicates which
-+ * that it finds in the system. The pci_dev structure indicates which
-  * instance we are being called from.
-  * 
-  * @dev: The PCI device to initialize.
--- 
-2.34.1
+On Thu, May 04, 2023 at 05:05:51PM +0800, Wang Honghui wrote:
+> Subject: [PATCH] strcuture: Correct spelling mistakes in comments
 
+The patch subject should have been "scsi: dc395x: Correct 'structures'
+spelling mistakes". For the description, though, I'd like to write
+as 'As title', since the subject is self-explanatory.
+
+Care to reroll?
+
+>=20
+> Signed-off-by: Wang Honghui <honghui.wang@ucas.com.cn>
+> ---
+>  drivers/scsi/dc395x.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+> index c8e86f8a631e..a3f00e6e3296 100644
+> --- a/drivers/scsi/dc395x.c
+> +++ b/drivers/scsi/dc395x.c
+> @@ -3641,7 +3641,7 @@ static void adapter_add_device(struct AdapterCtlBlk=
+ *acb,
+>   * adapter_remove_device - Removes the device instance from the adaptor
+>   * instance. The device instance is not check in any way or freed by thi=
+s.=20
+>   * The caller is expected to take care of that. This will simply remove =
+the
+> - * device from the adapters data strcutures.
+> + * device from the adapters data structures.
+>   *
+>   * @acb: The adapter device to be updated
+>   * @dcb: A device that has previously been added to the adapter.
+> @@ -3980,7 +3980,7 @@ static void trms1040_read_all(struct NvRamType *eep=
+rom, unsigned long io_port)
+>   * Checks the checksum and if it's not correct it uses a set of default
+>   * values.
+>   *
+> - * @eeprom:	caller allocated strcuture to read the eeprom data into
+> + * @eeprom:	caller allocated structure to read the eeprom data into
+>   * @io_port:	io port to read from
+>   **/
+>  static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
+> @@ -4578,7 +4578,7 @@ static void banner_display(void)
+>   * dc395x_init_one - Initialise a single instance of the adapter.
+>   *
+>   * The PCI layer will call this once for each instance of the adapter
+> - * that it finds in the system. The pci_dev strcuture indicates which
+> + * that it finds in the system. The pci_dev structure indicates which
+>   * instance we are being called from.
+>   *=20
+>   * @dev: The PCI device to initialize.
+
+The diff LGTM, thanks!
+
+For the diff only,
+
+Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
+
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--rm9y031/RW5E+/n9
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZFOD+wAKCRD2uYlJVVFO
+o3C2AP9Ls79SA755CeuI452Xk0CDmTjqKp1PmRcH71vHUOa3hwD/Swz2AG6FlUMn
+/c9zWW28M+kUiv7Yp7ln7YQ7olQjowQ=
+=43qK
+-----END PGP SIGNATURE-----
+
+--rm9y031/RW5E+/n9--
