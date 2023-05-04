@@ -2,46 +2,45 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C1A7C7EE21
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 19:43:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF360C7EE21
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 19:43:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230100AbjEDTnj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 15:43:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48512 "EHLO
+        id S230162AbjEDTnr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 15:43:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229707AbjEDTnS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 15:43:18 -0400
+        with ESMTP id S230030AbjEDTnY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 15:43:24 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA03983C9;
-        Thu,  4 May 2023 12:42:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFE9B9EF3;
+        Thu,  4 May 2023 12:43:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A0FC62EB8;
-        Thu,  4 May 2023 19:42:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B40E1C433D2;
-        Thu,  4 May 2023 19:42:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A921E63722;
+        Thu,  4 May 2023 19:42:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 223F2C433EF;
+        Thu,  4 May 2023 19:42:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229365;
-        bh=jKJQM7Amchlo/TIBhIhoRm4akaWOf6RtKsRisaHbqM8=;
+        s=k20201202; t=1683229376;
+        bh=JIQfiJRR8Qc+Y36j36yjNp/OGMv0j8pwpjokVNFvSkA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VRl4QQIPolaCjJH2s2kXK2ImQDR709+tnAhUVXaVSuNcNaCx1wvr1Jr1dQb2RL/Hy
-         TXJ5bMguVLCItNXWqjPU8ILXqRdt1CiSMA1EemlxCECVfnxiAdyOMqV+hwM1xr1HUF
-         t029i70kqoCG2/xqY1M5hPmG/Lewo7c02mT/4YqsFIQpaUQOOo1ILs+N/ytKa8iPRm
-         H+4ujsyv0EkIjCWVqlf1CTAzC6xZJpJNqjbTTxvQXx745lziKSOAtvcupKfo6oMYsC
-         liLf4K1JPJnlar4eVrmGYC9MFpxSBynwndjLhlVHNep1u4QGoQUEbWUTU1w/f0hKNv
-         ubux6h7KquiKg==
+        b=p5UE0fSCpWdPcqLotM1K97ItbojJYKGB3rk5mnYOGTJ0bZOH0YxK8Dyz1u28tKFup
+         esfyut+VhMF373QfG0jFRwM1qchEC7o88FU/j5MmqN1OEJVqkr/8SNKdAt3ZHVewMN
+         jJm4KWyZVk7B7uOgF2NWgAdBW+RvfcM5KANRgA/UIiB3K72PGzsZAWFBAQ7uI06TCb
+         8E4iA7hdTESRglxpeFBf8yH3j5bP82CKspxuoD56CPWwkkM7Mg0WP2z+PnTRcIKMzY
+         3LMAQ4ol/jTolxeRdOp85Ure973UOyGTLcZzLa/5Y0N88ignQTiPjloMLuxq008oRn
+         ittcQLMOo+XGQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zheng Wang <zyytlz.wz@163.com>,
+Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 21/59] scsi: message: mptlan: Fix use after free bug in mptlan_remove() due to race condition
-Date:   Thu,  4 May 2023 15:41:04 -0400
-Message-Id: <20230504194142.3805425-21-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        dlunev@chromium.org, beanhuo@micron.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.3 23/59] scsi: ufs: ufs-pci: Add support for Intel Lunar Lake
+Date:   Thu,  4 May 2023 15:41:06 -0400
+Message-Id: <20230504194142.3805425-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230504194142.3805425-1-sashal@kernel.org>
 References: <20230504194142.3805425-1-sashal@kernel.org>
@@ -53,52 +52,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Zheng Wang <zyytlz.wz@163.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
 
-[ Upstream commit f486893288f3e9b171b836f43853a6426515d800 ]
+[ Upstream commit 0a07d3c7a1d205b47d9f3608ff4e9d1065d63b6d ]
 
-mptlan_probe() calls mpt_register_lan_device() which initializes the
-&priv->post_buckets_task workqueue. A call to
-mpt_lan_wake_post_buckets_task() will subsequently start the work.
+Add PCI ID to support Intel Lunar Lake, same as MTL.
 
-During driver unload in mptlan_remove() the following race may occur:
-
-CPU0                  CPU1
-
-                    |mpt_lan_post_receive_buckets_work()
-mptlan_remove()     |
-  free_netdev()     |
-    kfree(dev);     |
-                    |
-                    | dev->mtu
-                    |   //use
-
-Fix this by finishing the work prior to cleaning up in mptlan_remove().
-
-[mkp: we really should remove mptlan instead of attempting to fix it]
-
-Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
-Link: https://lore.kernel.org/r/20230318081635.796479-1-zyytlz.wz@163.com
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Link: https://lore.kernel.org/r/20230328105832.3495-1-adrian.hunter@intel.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/message/fusion/mptlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ufs/host/ufshcd-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 142eb5d5d9df6..de2e7bcf47847 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -1433,7 +1433,9 @@ mptlan_remove(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
- 	struct net_device	*dev = ioc->netdev;
-+	struct mpt_lan_priv *priv = netdev_priv(dev);
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 1c91f43e15c8e..9c911787f84c6 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -607,6 +607,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x51FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0xA847), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ }	/* terminate list */
+ };
  
-+	cancel_delayed_work_sync(&priv->post_buckets_task);
- 	if(dev != NULL) {
- 		unregister_netdev(dev);
- 		free_netdev(dev);
 -- 
 2.39.2
 
