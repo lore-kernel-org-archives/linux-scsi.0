@@ -2,45 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2689AC7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72B77C77B78
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232300AbjEDUCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 16:02:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51514 "EHLO
+        id S232514AbjEDUCQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 16:02:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232297AbjEDUBN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:01:13 -0400
+        with ESMTP id S232365AbjEDUBS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:01:18 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C570A1890B;
-        Thu,  4 May 2023 12:51:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 977EF18927;
+        Thu,  4 May 2023 12:51:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 38CB863846;
-        Thu,  4 May 2023 19:49:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A68A9C433EF;
-        Thu,  4 May 2023 19:49:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5054263813;
+        Thu,  4 May 2023 19:50:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66F80C433EF;
+        Thu,  4 May 2023 19:50:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229789;
-        bh=izABLxX+9a8wiRgDI3zSiWIjNG9o+UA2j3BELE3awTQ=;
+        s=k20201202; t=1683229805;
+        bh=XtMwGhUtzmU83GmP7IJKPYrUasFticOYNjkGGIwu6Eo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZmuJZnQRgaLkdSF+Z5kfWIqDK/kqXmJXpHEBXm4Pfz7AJHZkHJ00W5XxP6kO4mrMb
-         53sm1CVjYcNq/K4dkpLYpde7BMzKNiV2B2hYHSTCq1LkJmsGiYytL2BiQN4/CDJiYc
-         niQqICbHxsFms3nx0hhdrxXAt8N4kgiPIDZ5pTORKo2kfFttTt39AO08ZJIL+wMQyU
-         yBkLWsZn5mmhnOEtfWbs6oSYcSrtJbtMDMh4u+DctkRgxlovoOn5iDCnc1p790eoPg
-         j1lqynNbOP/kF7LH3PHL+Rz2GXstIGWKOrX8A4bDrvso6hPztmv33aVpR4Pz3g11em
-         vpVTT6q4ki4Uw==
+        b=LJ1PB1V3ytonevfrJQQl13wpfgFdQeZMjyewsOxHN00aXWgkStCrCa1VHONqlLWQm
+         XXGE56guQ9XkGGwrXy8KSw+07j8wdypGCPDKbcIqM1udnsRPBASkadQtLNNywKG1Rr
+         bwU754P6TaUQofq5xcXx/bECIW4kkkpwdIOVkut+MytnydHebrmSEXz/bxqymCovOc
+         mP3SRNyPopL/aT3Vu6eCzvG8V9EyR8zYhLIFel3H3IXtxEcGFsqoiufl/v3tXDUtO2
+         3PJuIiH30NS07R9K3y+oMU8tGPZv2OxsRsdlH3Gh1sw2hTyxKVbAPiBf+0UHloXprC
+         trzKvZkV6aT+Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justin.tee@broadcom.com>,
+Cc:     Dmitry Bogdanov <d.bogdanov@yadro.com>, Forza <forza@tnonline.net>,
+        Mike Christie <michael.christie@oracle.com>,
+        Maurizio Lombardi <mlombard@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 05/24] scsi: lpfc: Prevent lpfc_debugfs_lockstat_write() buffer overflow
-Date:   Thu,  4 May 2023 15:49:18 -0400
-Message-Id: <20230504194937.3808414-5-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, mgurtovoy@nvidia.com,
+        mingzhe.zou@easystack.cn, justinstitt@google.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 09/24] scsi: target: iscsit: Free cmds before session free
+Date:   Thu,  4 May 2023 15:49:22 -0400
+Message-Id: <20230504194937.3808414-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230504194937.3808414-1-sashal@kernel.org>
 References: <20230504194937.3808414-1-sashal@kernel.org>
@@ -52,54 +54,62 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
-[ Upstream commit c6087b82a9146826564a55c5ca0164cac40348f5 ]
+[ Upstream commit d8990b5a4d065f38f35d69bcd627ec5a7f8330ca ]
 
-A static code analysis tool flagged the possibility of buffer overflow when
-using copy_from_user() for a debugfs entry.
+Commands from recovery entries are freed after session has been closed.
+That leads to use-after-free at command free or NPE with such call trace:
 
-Currently, it is possible that copy_from_user() copies more bytes than what
-would fit in the mybuf char array.  Add a min() restriction check between
-sizeof(mybuf) - 1 and nbytes passed from the userspace buffer to protect
-against buffer overflow.
+Time2Retain timer expired for SID: 1, cleaning up iSCSI session.
+BUG: kernel NULL pointer dereference, address: 0000000000000140
+RIP: 0010:sbitmap_queue_clear+0x3a/0xa0
+Call Trace:
+ target_release_cmd_kref+0xd1/0x1f0 [target_core_mod]
+ transport_generic_free_cmd+0xd1/0x180 [target_core_mod]
+ iscsit_free_cmd+0x53/0xd0 [iscsi_target_mod]
+ iscsit_free_connection_recovery_entries+0x29d/0x320 [iscsi_target_mod]
+ iscsit_close_session+0x13a/0x140 [iscsi_target_mod]
+ iscsit_check_post_dataout+0x440/0x440 [iscsi_target_mod]
+ call_timer_fn+0x24/0x140
 
-Link: https://lore.kernel.org/r/20230301231626.9621-2-justintee8345@gmail.com
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Move cleanup of recovery enrties to before session freeing.
+
+Reported-by: Forza <forza@tnonline.net>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20230319015620.96006-7-michael.christie@oracle.com
+Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/target/iscsi/iscsi_target.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index fbc76d69ea0b4..2b77cbbcdccb6 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2159,10 +2159,13 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
- 	char mybuf[64];
- 	char *pbuf;
- 	int i;
-+	size_t bsize;
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index a237f1cf9bd60..7ad290577320e 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4383,6 +4383,9 @@ int iscsit_close_session(struct iscsi_session *sess)
+ 	iscsit_stop_time2retain_timer(sess);
+ 	spin_unlock_bh(&se_tpg->session_lock);
  
- 	memset(mybuf, 0, sizeof(mybuf));
- 
--	if (copy_from_user(mybuf, buf, nbytes))
-+	bsize = min(nbytes, (sizeof(mybuf) - 1));
++	if (sess->sess_ops->ErrorRecoveryLevel == 2)
++		iscsit_free_connection_recovery_entries(sess);
 +
-+	if (copy_from_user(mybuf, buf, bsize))
- 		return -EFAULT;
- 	pbuf = &mybuf[0];
+ 	/*
+ 	 * transport_deregister_session_configfs() will clear the
+ 	 * struct se_node_acl->nacl_sess pointer now as a iscsi_np process context
+@@ -4410,9 +4413,6 @@ int iscsit_close_session(struct iscsi_session *sess)
  
-@@ -2183,7 +2186,7 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
- 			qp->lock_conflict.wq_access = 0;
- 		}
- 	}
--	return nbytes;
-+	return bsize;
- }
- #endif
+ 	transport_deregister_session(sess->se_sess);
  
+-	if (sess->sess_ops->ErrorRecoveryLevel == 2)
+-		iscsit_free_connection_recovery_entries(sess);
+-
+ 	iscsit_free_all_ooo_cmdsns(sess);
+ 
+ 	spin_lock_bh(&se_tpg->session_lock);
 -- 
 2.39.2
 
