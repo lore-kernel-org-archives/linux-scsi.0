@@ -2,157 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6593CC77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 15:45:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FE77C77B7C
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 17:53:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231501AbjEDPpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 11:45:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55974 "EHLO
+        id S229693AbjEDRxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 13:53:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231503AbjEDPpn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 11:45:43 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0093F4EE2;
-        Thu,  4 May 2023 08:45:14 -0700 (PDT)
-X-UUID: a0b12ea4ea9211edb20a276fd37b9834-20230504
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=EMolWppIxSDsvuReLyYrwGonSoAuCBkkM1bAynDTv60=;
-        b=aUNT2L5bEx1xPpK5iNl/8CnG/9izxITV37xqdzNwIDVvRgvAV2vI4E9wpciBz1h9oLeIQDFrBh0j3zhLNc7hg5oIIeJsCyBCR/1pGfd4vDshH9pqY7KLnnG9VEjK57+p6aMf5FYARN8QxP2M+OTZj9GHFn+JvBGmJezw04LLqa0=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.23,REQID:9126046f-6e43-4bfd-ac40-3de7498566b3,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:-5
-X-CID-META: VersionHash:697ab71,CLOUDID:8d83c130-6935-4eab-a959-f84f8da15543,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-UUID: a0b12ea4ea9211edb20a276fd37b9834-20230504
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
-        (envelope-from <powen.kao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1364203358; Thu, 04 May 2023 23:45:00 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 4 May 2023 23:44:58 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 4 May 2023 23:44:58 +0800
-From:   Po-Wen Kao <powen.kao@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
-        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
-        <alice.chao@mediatek.com>, <naomi.chu@mediatek.com>,
-        <chun-hung.wu@mediatek.com>, <cc.chou@mediatek.com>,
-        <eddie.huang@mediatek.com>
-Subject: [PATCH v6 2/3] scsi: ufs: core: Rename symbol sizeof_utp_transfer_cmd_desc()
-Date:   Thu, 4 May 2023 23:44:50 +0800
-Message-ID: <20230504154454.26654-3-powen.kao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230504154454.26654-1-powen.kao@mediatek.com>
-References: <20230504154454.26654-1-powen.kao@mediatek.com>
+        with ESMTP id S229733AbjEDRxM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 13:53:12 -0400
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A96C1BFA;
+        Thu,  4 May 2023 10:53:12 -0700 (PDT)
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1aaec6f189cso5471925ad.3;
+        Thu, 04 May 2023 10:53:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683222791; x=1685814791;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QhzG9QLeT/AdwEJ8Xk3sMDacDxvGCe+E8Bp6ZVi59ME=;
+        b=LHml+uR/ZhwNW9M2o200+o91wZ/+L31CZDo3b0g2MswycgXeh9wLm49qcqqyUqZ+YB
+         zdEKsoEECmlPVTgPZ4IgWsYMCjuwlm2AglcyuD1jAxX7iFN5yHbUOJZnYfq8QfNfdZmV
+         XjCINQawt6ZpSgQXGeLQIIqg3O7kgm3M46kzDPELWrDTYLoe/HghXu49ahQUfwnEfMwu
+         CcOfrQgINAMbnYR4wJGS3sR1sVNG71W4PH1NjfLAeJk9caABanmvwdEBT5iHMlR7zr1a
+         OyHoU0XahPWsMqGDiCZWx85ZFd6nGWgXNwVmd16zL+bXb5jaElxfLEYfN6RKkQ4bV5rN
+         PSYA==
+X-Gm-Message-State: AC+VfDynSE3e+9Nj9bcjpqAK+KQVKm//5K85ctBzujxI4s5ow5pXMVw3
+        LGdlbP8jzC8hR7aykiJdIzzMMMzLyS8=
+X-Google-Smtp-Source: ACHHUZ4C7y9zvavNMATZM/yIXk7L6sPqM0mTK5ArKCWEGmDnByeHoWYcbAjZkDsrbRvUKy40xiR8hA==
+X-Received: by 2002:a17:902:c40b:b0:1ab:28ec:bf10 with SMTP id k11-20020a170902c40b00b001ab28ecbf10mr5757457plk.51.1683222791313;
+        Thu, 04 May 2023 10:53:11 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:2c3b:81e:ce21:2437? ([2620:15c:211:201:2c3b:81e:ce21:2437])
+        by smtp.gmail.com with ESMTPSA id n4-20020a170902d2c400b001a5260a6e6csm9985629plc.206.2023.05.04.10.53.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 04 May 2023 10:53:10 -0700 (PDT)
+Message-ID: <14b9ca4a-26f8-e033-3bda-50c339635c56@acm.org>
+Date:   Thu, 4 May 2023 10:53:08 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH v2 2/5] ufs: mcq: Add support for clean up mcq resources
+Content-Language: en-US
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        Powen.Kao@mediatek.com, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
+ <5e662692bc0ad5108ce91ae3d1ec2b575c34d4ae.1681764704.git.quic_nguyenb@quicinc.com>
+ <12308ca3-f824-596e-078f-bc00fa674aef@acm.org>
+ <b1af6459-43b7-d193-c6e7-37f24d7349e6@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <b1af6459-43b7-d193-c6e7-37f24d7349e6@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Naming the functions after standard operators like sizeof may cause
-confusion. So let's rename it to ufshcd_get_ucd_size().
+On 5/3/23 21:01, Bao D. Nguyen wrote:
+> On 4/25/2023 5:08 PM, Bart Van Assche wrote:
+>> On 4/17/23 14:05, Bao D. Nguyen wrote:
+>>> @@ -3110,7 +3128,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+>>>           err = -ETIMEDOUT;
+>>>           dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
+>>>               __func__, lrbp->task_tag);
+>>> -        if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
+>>> +        if (ufshcd_clear_cmds(hba, 1UL << lrbp->task_tag) == 0) {
+>>>               /* successfully cleared the command, retry if needed */
+>>>               err = -EAGAIN;
+>>>               /*
+>>
+>> Is this change necessary?
+> My intention was to support tag greater than 31 and less than 64.
+> The 1U << only works up to 32 bits.
 
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-mcq.c |  2 +-
- drivers/ufs/core/ufshcd.c  | 10 +++++-----
- include/ufs/ufshcd.h       |  2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+The UFSHCI 4.0 standard and also the Linux kernel UFS driver support more than
+64 outstanding commands so the above change is not sufficient.
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index b7c5f39b50e6..937933d3f77c 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
- 	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
- 		hba->ucdl_dma_addr;
- 
--	return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
-+	return div_u64(addr, ufshcd_get_ucd_size(hba));
- }
- 
- static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 6c4ae32a1c49..3ef650317357 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2849,10 +2849,10 @@ static void ufshcd_map_queues(struct Scsi_Host *shost)
- static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
- {
- 	struct utp_transfer_cmd_desc *cmd_descp = (void *)hba->ucdl_base_addr +
--		i * sizeof_utp_transfer_cmd_desc(hba);
-+		i * ufshcd_get_ucd_size(hba);
- 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
- 	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
--		i * sizeof_utp_transfer_cmd_desc(hba);
-+		i * ufshcd_get_ucd_size(hba);
- 	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
- 				       response_upiu);
- 	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
-@@ -3761,7 +3761,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	size_t utmrdl_size, utrdl_size, ucdl_size;
- 
- 	/* Allocate memory for UTP command descriptors */
--	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * hba->nutrs;
-+	ucdl_size = ufshcd_get_ucd_size(hba) * hba->nutrs;
- 	hba->ucdl_base_addr = dmam_alloc_coherent(hba->dev,
- 						  ucdl_size,
- 						  &hba->ucdl_dma_addr,
-@@ -3861,7 +3861,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 	prdt_offset =
- 		offsetof(struct utp_transfer_cmd_desc, prd_table);
- 
--	cmd_desc_size = sizeof_utp_transfer_cmd_desc(hba);
-+	cmd_desc_size = ufshcd_get_ucd_size(hba);
- 	cmd_desc_dma_addr = hba->ucdl_dma_addr;
- 
- 	for (i = 0; i < hba->nutrs; i++) {
-@@ -8452,7 +8452,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
- {
- 	size_t ucdl_size, utrdl_size;
- 
--	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * nutrs;
-+	ucdl_size = ufshcd_get_ucd_size(hba) * nutrs;
- 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
- 			   hba->ucdl_dma_addr);
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index f7553293ba98..df1d04f7a542 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1133,7 +1133,7 @@ static inline size_t ufshcd_sg_entry_size(const struct ufs_hba *hba)
- 	({ (void)(hba); BUILD_BUG_ON(sg_entry_size != sizeof(struct ufshcd_sg_entry)); })
- #endif
- 
--static inline size_t sizeof_utp_transfer_cmd_desc(const struct ufs_hba *hba)
-+static inline size_t ufshcd_get_ucd_size(const struct ufs_hba *hba)
- {
- 	return sizeof(struct utp_transfer_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
- }
--- 
-2.18.0
+>> Please do not use lrbp->cmd to check whether or not a command has completed. See also my patch "scsi: ufs: Fix handling of lrbp->cmd".
+> I have been thinking how to replace lrbp->cmd, but could not find a good solution. Throughout this patch series, I am using lrbp->cmd as a way to find the pending command that is being aborted and clean up the resources associated with it. Any suggestions to achieve it? 
 
+Using lrbp->cmd is fine but checking whether or not it is NULL is not OK. How
+about using blk_mq_request_started() to check whether or not a request is still
+pending?
+
+Thanks,
+
+Bart.
