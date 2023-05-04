@@ -2,161 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DEA1C7EE21
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 13:23:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00BEFC77B78
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 14:05:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbjEDNXC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 09:23:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54638 "EHLO
+        id S231243AbjEDOFm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 10:05:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230116AbjEDNXB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 09:23:01 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 396786EA1;
-        Thu,  4 May 2023 06:22:52 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QBvWw4KrczTk3c;
-        Thu,  4 May 2023 21:18:20 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Thu, 4 May 2023 21:22:49 +0800
-From:   Xingui Yang <yangxingui@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH] ata: libata-scsi: Fix get identity data failed
-Date:   Thu, 4 May 2023 13:15:45 +0000
-Message-ID: <20230504131545.3409-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S231138AbjEDOFk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 10:05:40 -0400
+Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 1F8AD83D9
+        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 07:05:38 -0700 (PDT)
+Received: (qmail 414210 invoked by uid 1000); 4 May 2023 10:05:38 -0400
+Date:   Thu, 4 May 2023 10:05:38 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Benjamin Block <bblock@linux.ibm.com>
+Cc:     Oliver Neukum <oneukum@suse.com>, Hannes Reinecke <hare@suse.de>,
+        Maxime Bizon <mbizon@freebox.fr>, linux-usb@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Reproducible deadlock when usb-storage scsi command timeouts
+ twice
+Message-ID: <83fac55c-4005-416d-aad7-04bcb3fcaea2@rowland.harvard.edu>
+References: <ZEllnjMKT8ulZbJh@sakura>
+ <34a2e50b-e899-45ee-ac14-31fa0bb1616b@rowland.harvard.edu>
+ <20230503102440.GL18384@t480-pf1aa2c2.fritz.box>
+ <941e8420-f99f-5832-2ea9-3ba5eca545ad@suse.com>
+ <20230503125137.GA1032383@t480-pf1aa2c2.fritz.box>
+ <d25bfa50-b5a0-bd0e-fd14-94967e374033@suse.com>
+ <97a67f78-4888-4fe7-9bfc-87d0bb6cc8b2@rowland.harvard.edu>
+ <20230504085226.GC1032383@t480-pf1aa2c2.fritz.box>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230504085226.GC1032383@t480-pf1aa2c2.fritz.box>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function ata_get_identity() uses the helper ata_scsi_find_dev() to get
-the ata_device structure of a scsi device.  However, when the ata device
-is managed by libsas, ata_scsi_find_dev() returns NULL, turning
-ata_get_identity() into a nop and always returns -ENOMSG.
+On Thu, May 04, 2023 at 08:52:26AM +0000, Benjamin Block wrote:
+> On Wed, May 03, 2023 at 10:25:10AM -0400, Alan Stern wrote:
+> > I think the best answer is to accept the patch that started this email 
+> > thread, perhaps with a minor change.  The driver can easily abort the 
+> > currently running command (if any) on its own before starting a reset.
+> 
+> I don't think we would add an other layer of aborts in front of
+> device/LUN reset for all SCSI targets. That's just overkill for - it
+> seems - everything but USB storage, and would slow down error recovery
+> considerable in some cases.
 
-Fix this by replacing the pointer to the scsi_device struct argument with a
-pointer to the ata_device struct in ata_sas_scsi_ioctl() and
-ata_get_identity(). This pointer is provided by ata_scsi_ioctl() using
-ata_scsi_find_dev() in the case of a libata managed device and by
-sas_ioctl() using sas_to_ata_dev() in the case of a libsas managed ata
-device.
+This is consistent with what I wrote.  The patch that started this email 
+thread made a change to the usb-storage driver; it did not touch any 
+part of the SCSI core.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- drivers/ata/libata-scsi.c           | 22 +++++++++++-----------
- drivers/scsi/libsas/sas_scsi_host.c |  3 ++-
- include/linux/libata.h              |  2 +-
- 3 files changed, 14 insertions(+), 13 deletions(-)
+Maxime, would you like to submit a revised version of your patch?  The 
+key difference is that it should abort the currently executing command 
+(if there is one), regardless of whether the srb value matches.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7bb12deab70c..68f2404e61d0 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -327,8 +327,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_unlock_native_capacity);
- 
- /**
-  *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
-- *	@ap: target port
-- *	@sdev: SCSI device to get identify data for
-+ *	@dev: ATA device to get identify data for
-  *	@arg: User buffer area for identify data
-  *
-  *	LOCKING:
-@@ -337,10 +336,8 @@ EXPORT_SYMBOL_GPL(ata_scsi_unlock_native_capacity);
-  *	RETURNS:
-  *	Zero on success, negative errno on error.
-  */
--static int ata_get_identity(struct ata_port *ap, struct scsi_device *sdev,
--			    void __user *arg)
-+static int ata_get_identity(struct ata_device *dev, void __user *arg)
- {
--	struct ata_device *dev = ata_scsi_find_dev(ap, sdev);
- 	u16 __user *dst = arg;
- 	char buf[40];
- 
-@@ -573,7 +570,7 @@ static bool ata_ioc32(struct ata_port *ap)
-  * This handles both native and compat commands, so anything added
-  * here must have a compatible argument, or check in_compat_syscall()
-  */
--int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
-+int ata_sas_scsi_ioctl(struct ata_port *ap, struct ata_device *dev,
- 		     unsigned int cmd, void __user *arg)
- {
- 	unsigned long val;
-@@ -608,17 +605,17 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
- 		return rc;
- 
- 	case HDIO_GET_IDENTITY:
--		return ata_get_identity(ap, scsidev, arg);
-+		return ata_get_identity(dev, arg);
- 
- 	case HDIO_DRIVE_CMD:
- 		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 			return -EACCES;
--		return ata_cmd_ioctl(scsidev, arg);
-+		return ata_cmd_ioctl(dev->sdev, arg);
- 
- 	case HDIO_DRIVE_TASK:
- 		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 			return -EACCES;
--		return ata_task_ioctl(scsidev, arg);
-+		return ata_task_ioctl(dev->sdev, arg);
- 
- 	default:
- 		rc = -ENOTTY;
-@@ -632,8 +629,11 @@ EXPORT_SYMBOL_GPL(ata_sas_scsi_ioctl);
- int ata_scsi_ioctl(struct scsi_device *scsidev, unsigned int cmd,
- 		   void __user *arg)
- {
--	return ata_sas_scsi_ioctl(ata_shost_to_port(scsidev->host),
--				scsidev, cmd, arg);
-+	struct ata_port *ap = ata_shost_to_port(scsidev->host);
-+
-+	return ata_sas_scsi_ioctl(ap,
-+			ata_scsi_find_dev(ap, scsidev),
-+			cmd, arg);
- }
- EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
- 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index a36fa1c128a8..c7a44ce7b2e2 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -789,7 +789,8 @@ int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
- 	struct domain_device *dev = sdev_to_domain_dev(sdev);
- 
- 	if (dev_is_sata(dev))
--		return ata_sas_scsi_ioctl(dev->sata_dev.ap, sdev, cmd, arg);
-+		return ata_sas_scsi_ioctl(dev->sata_dev.ap,
-+				sas_to_ata_dev(dev), cmd, arg);
- 
- 	return -EINVAL;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 311cd93377c7..d5dd60530a24 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1085,7 +1085,7 @@ bool ata_scsi_dma_need_drain(struct request *rq);
- #else
- #define ata_scsi_dma_need_drain NULL
- #endif
--extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
-+extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct ata_device *dev,
- 			    unsigned int cmd, void __user *arg);
- extern bool ata_link_online(struct ata_link *link);
- extern bool ata_link_offline(struct ata_link *link);
--- 
-2.17.1
+Alan Stern
 
+> If this is supposed to be done in the SCSI ML, it would have to be a
+> quirk/option IMO.
+> 
+> -- 
+> Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+> IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+> Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+> Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
