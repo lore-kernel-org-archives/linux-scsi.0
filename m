@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C60BDC7EE2A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE11C77B78
 	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 20:06:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232549AbjEDUGH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 16:06:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34406 "EHLO
+        id S232634AbjEDUGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 16:06:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232992AbjEDUFj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:05:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C70D918DDF;
-        Thu,  4 May 2023 12:53:32 -0700 (PDT)
+        with ESMTP id S232806AbjEDUFP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 16:05:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0C7111B67;
+        Thu,  4 May 2023 12:53:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4928A63898;
-        Thu,  4 May 2023 19:52:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B259AC4339B;
-        Thu,  4 May 2023 19:52:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4409D6380C;
+        Thu,  4 May 2023 19:51:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B394BC4339C;
+        Thu,  4 May 2023 19:51:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229948;
-        bh=3ZM+S5ZLa6liQWKlVaUeIUBP8rK1Yupb0pYlfSdbCSA=;
+        s=k20201202; t=1683229913;
+        bh=dIBSv6BQn5wXPVuWTTB9InkBaS9YH0P4WpoYGgcnqrw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gyt4ibw8kNz9K169DuIsdqjSIsBekqNwYSB31oDCepxlXolcZzISdrweZThfq0swA
-         tNoL4llPBZbvAxsm2WrdPZlPARrN9bwt5mWnFsj3Zxw7b7cHAC1U+t4UHCg9GXidi5
-         BOSLu2wIdKkt9aLGteEIioPfRc5OFyjIKKFzOulny8rPV4X1WFpk21OrT+k0KEIuZL
-         XpHYZxRLpa2BD9g0CaIkuBYc9fzcnWUj02wI6Mk0WOU1m+ZZvoF+u0Ox03+7Yuik+H
-         ifeCITIxnXP41p1HrWH/1dicYub4k6jlTcHr7UiFH3RkrKB1w3BR5EWEuz6SxvksMg
-         QzE0KiffriXhQ==
+        b=Y8a5W7L/4fbZGa1hqXXQM53YuhlsxwgTIB9UjibXl8IOG9td1p87v3ID4OC/LoEWR
+         d7THmGZKBhfcVXs3vluJIoMQfsp33NRG/t1UhT+peNV/5mu/SBORAw9dPL7vrqdCCX
+         IliZj3o81DS+SXPCVAFVKGDGHWuwc2Mw2MjgDjSwxrKmRVO+lNUKA3Ui6iTy1MJy7f
+         ZXQJ9rpoE1IqDCmSMeK5CagFVErK2B4EO+iRz6GF4Zz+DVuvsel4frbRTcx7zaZ01b
+         jTe528AOg8gcOC0bInAZcUlK8IRU7kLQDIjf+XS3/IOBR237/JOMc4J9CboPXHw1VQ
+         io/sxORppVcJg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zheng Wang <zyytlz.wz@163.com>,
@@ -39,12 +39,12 @@ Cc:     Zheng Wang <zyytlz.wz@163.com>,
         sreekanth.reddy@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 07/13] scsi: message: mptlan: Fix use after free bug in mptlan_remove() due to race condition
-Date:   Thu,  4 May 2023 15:51:59 -0400
-Message-Id: <20230504195207.3809116-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 07/13] scsi: message: mptlan: Fix use after free bug in mptlan_remove() due to race condition
+Date:   Thu,  4 May 2023 15:51:24 -0400
+Message-Id: <20230504195132.3808946-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504195207.3809116-1-sashal@kernel.org>
-References: <20230504195207.3809116-1-sashal@kernel.org>
+In-Reply-To: <20230504195132.3808946-1-sashal@kernel.org>
+References: <20230504195132.3808946-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 55dd71bbdc2aa..74d0ae00b0827 100644
+index ebc00d47abf52..624803a887d8f 100644
 --- a/drivers/message/fusion/mptlan.c
 +++ b/drivers/message/fusion/mptlan.c
-@@ -1429,7 +1429,9 @@ mptlan_remove(struct pci_dev *pdev)
+@@ -1430,7 +1430,9 @@ mptlan_remove(struct pci_dev *pdev)
  {
  	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
  	struct net_device	*dev = ioc->netdev;
