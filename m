@@ -2,131 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 821E4C77B78
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 04:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49475C7EE21
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 May 2023 04:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229585AbjEDEJ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 00:09:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33444 "EHLO
+        id S229751AbjEDERE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 00:17:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjEDEJz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 00:09:55 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FC6D19A8;
-        Wed,  3 May 2023 21:09:52 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3443iRd3014311;
-        Thu, 4 May 2023 04:04:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=O3rCoIUVOuMd/J6NZAZDJjYENECHYw2yvu3cGgy6tA0=;
- b=i4Ll03Qks6DVsj6iJy6Uux9UB5nWIRQCP1vQ3swNuVALcFi4lA8Fo84mnnX5aXrnOiOf
- 9SoDJ/kCWAZOGe/fM2JsIfzGTdkxDGB/NAPN3RItCiC51kYKikjD+/+PBeit4ABb8cw/
- 6d2u7cl9YWKic7Rge7fOzqHGd2ZrPLG56Ln3U1ygudUZ5Ye32IG9vUoZLgmdGrzzafWj
- FMAT0+Xvimp0QCszd1JXk2vVjfXD922QpFRN+DhT9bi6F5WUXsp/q52eEaLplZ6jnbBF
- edkVFTPvDDefFYxoYWR5N5YbAiG52NDzRgfDghA/3d1SXrR3g9/9eqV62OoTQ2JkdW0x +A== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qc1eurcq3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 04 May 2023 04:04:10 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 344448J9011603
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 4 May 2023 04:04:08 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 3 May 2023
- 21:04:08 -0700
-Message-ID: <c4b58912-d22e-9c35-3861-377cc78e7694@quicinc.com>
-Date:   Wed, 3 May 2023 21:04:08 -0700
+        with ESMTP id S229588AbjEDERC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 00:17:02 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 740821BDB
+        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2023 21:16:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1683173770;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ojRi+KkCe+lGNgq5N6eipHnh7i2KiUTOfy9rUX1zuew=;
+        b=an1MSuF3ZO97ZCmjiuxG2BPg597Z9AAaYL6fuUiBucc8AKLZKG/XFrr+Oyb/QgtVwLZMgO
+        x8GxGUaKPF68y3hZQLMj/joh5Ueii6WTg4qdrR5biczlponGBkL18FsL61kql14zFtBeNR
+        XoKgXJWASh3fRqG4R2QyUfNBC4FmaqI=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-468-YX2JEFvJPwSyPlyBP2A1jw-1; Thu, 04 May 2023 00:16:06 -0400
+X-MC-Unique: YX2JEFvJPwSyPlyBP2A1jw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id EA09885A588;
+        Thu,  4 May 2023 04:16:05 +0000 (UTC)
+Received: from ovpn-8-16.pek2.redhat.com (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B754C40C2064;
+        Thu,  4 May 2023 04:16:00 +0000 (UTC)
+Date:   Thu, 4 May 2023 12:15:55 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.g.garry@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>, ming.lei@redhat.com
+Subject: Re: [PATCH v2 4/5] scsi: core: Only kick the requeue list if
+ necessary
+Message-ID: <ZFMxe20b6RsSYBGP@ovpn-8-16.pek2.redhat.com>
+References: <20230503230654.2441121-1-bvanassche@acm.org>
+ <20230503230654.2441121-5-bvanassche@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v2 3/5] ufs: mcq: Added ufshcd_mcq_abort()
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
-        <quic_cang@quicinc.com>, <mani@kernel.org>,
-        <Powen.Kao@mediatek.com>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1681764704.git.quic_nguyenb@quicinc.com>
- <349ea681e56578191da834250cebfbd7859e9216.1681764704.git.quic_nguyenb@quicinc.com>
- <53f22b81-a738-8f94-8e08-2395133d0249@acm.org>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <53f22b81-a738-8f94-8e08-2395133d0249@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 0fevYLIal4BHIgJtudMy7tQPiVl_BHy2
-X-Proofpoint-GUID: 0fevYLIal4BHIgJtudMy7tQPiVl_BHy2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-03_16,2023-05-03_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 adultscore=0 malwarescore=0 phishscore=0 mlxscore=0
- suspectscore=0 clxscore=1015 mlxlogscore=999 priorityscore=1501
- impostorscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2303200000 definitions=main-2305040032
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230503230654.2441121-5-bvanassche@acm.org>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/25/2023 5:12 PM, Bart Van Assche wrote:
-> On 4/17/23 14:05, Bao D. Nguyen wrote:
->> +    if (!lrbp->cmd) {
->> +        dev_err(hba->dev,
->> +            "%s: skip abort. cmd at tag %d already completed.\n",
->> +            __func__, tag);
->> +        goto out;
->> +    }
+On Wed, May 03, 2023 at 04:06:53PM -0700, Bart Van Assche wrote:
+> Instead of running the request queue of each device associated with a
+> host every 3 ms (BLK_MQ_RESOURCE_DELAY) while host error handling is in
+> progress, run the request queue after error handling has finished.
 > 
-> Please do not use lrbp->cmd to check whether or not a command has 
-> completed.
-Yes. Same comment as in patch #2.
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.g.garry@oracle.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/scsi_lib.c | 18 +++++++++++++-----
+>  1 file changed, 13 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index e59eb0cbfc83..a34390d35f1d 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -122,11 +122,9 @@ static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd, unsigned long msecs)
+>  		WARN_ON_ONCE(true);
+>  	}
+>  
+> -	if (msecs) {
+> -		blk_mq_requeue_request(rq, false);
+> +	blk_mq_requeue_request(rq, false);
+> +	if (!scsi_host_in_recovery(cmd->device->host))
+>  		blk_mq_delay_kick_requeue_list(rq->q, msecs);
+> -	} else
+> -		blk_mq_requeue_request(rq, true);
+>  }
+>  
+>  /**
+> @@ -165,7 +163,8 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+>  	 */
+>  	cmd->result = 0;
+>  
+> -	blk_mq_requeue_request(scsi_cmd_to_rq(cmd), true);
+> +	blk_mq_requeue_request(scsi_cmd_to_rq(cmd),
+> +			       !scsi_host_in_recovery(cmd->device->host));
+>  }
+>  
+>  /**
+> @@ -462,10 +461,16 @@ void scsi_requeue_run_queue(struct work_struct *work)
+>  	scsi_run_queue(q);
+>  }
+>  
+> +/*
+> + * Transfer requests from the requeue_list to from where these can be dispatched
+> + * and run the request queues.
+> + */
+>  void scsi_run_host_queues(struct Scsi_Host *shost)
+>  {
+>  	struct scsi_device *sdev;
+>  
+> +	shost_for_each_device(sdev, shost)
+> +		blk_mq_kick_requeue_list(sdev->request_queue);
+>  	shost_for_each_device(sdev, shost)
+>  		scsi_run_queue(sdev->request_queue);
 
-> 
->> +    if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
->> +        /*
->> +         * Failure. The command should not be "stuck" in SQ for
->> +         * a long time which resulted in command being aborted.
->> +         */
->> +        dev_err(hba->dev, "%s: cmd found in sq. hwq=%d, tag=%d\n",
->> +                __func__, hwq->id, tag);
->> +        /* Set the Command Type to 0xF per the spec */
->> +        ufshcd_mcq_nullify_cmd(hba, hwq);
-> 
-> The above looks wrong to me. How can ufshcd_mcq_nullify_cmd() identify a 
-> command if the 'tag' argument is not passed to that function?
-Same comment as in patch #1. I will change this function.
+You may move blk_mq_kick_requeue_list() to the following loop, or even
+inside scsi_run_queue(), which isn't called in fast patch.
 
->  >> +    /*
->> +     * The command is not in the Submission Queue, and it is not
->> +     * in the Completion Queue either. Query the device to see if
->> +     * the command is being processed in the device.
->> +     */
-> 
-> Please only use capitals if these are required.
-Yes, I will change.
-
-> 
->> +    if (lrbp->cmd)
->> +        ufshcd_release_scsi_cmd(hba, lrbp);
-> 
-> Same comment here - do not use lrbp->cmd to check for completion.
-Yes.
-
-> 
-> Thanks,
-> 
-> Bart.
+Thanks,
+Ming
 
