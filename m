@@ -2,94 +2,218 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF708C7EE33
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 08:28:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C77BC7EE32
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 08:28:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231147AbjEEI2u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 May 2023 04:28:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53120 "EHLO
+        id S231364AbjEEI2t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 May 2023 04:28:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231465AbjEEI2Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 04:28:24 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84DA51A11E;
-        Fri,  5 May 2023 01:27:18 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1aaea43def7so9908115ad.2;
-        Fri, 05 May 2023 01:27:18 -0700 (PDT)
+        with ESMTP id S231297AbjEEI2U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 04:28:20 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A55019D4F;
+        Fri,  5 May 2023 01:27:10 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3456XkcQ015245;
+        Fri, 5 May 2023 08:25:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=VCit5VPexSlnJILBgl14Fe4l+3XFF7fl6/NiFWPIPmA=;
+ b=U6lGQU3ZcfpJpNsM0PLbqp0dxoAGasiXhnWexNQzp4G0DiZMRNuQcjXN6f9/VomuaLao
+ 23a+pmGOPVFlbp0vM+FA07GBsEgvskvfCqo+iZRi207MVdJW9aKLwRVOxlnT9FMfvmDC
+ BGr9W1i9CqjJKDsWuzkT4p/qg7HtgMI21sR4/cCwOa5DDpnIg3PSf64eeZWZR2tOV7ad
+ zz/TKuyUXYJL6dDF5K8f74I0Qr6UT17vrAKNrilQIxIxnJLbeO98TcAg+39Z8O2H7MM7
+ ULv+rIXUdjTl84qb7SaLkjckYFFSy6mAigQaX8VDgSJ5ZTDfCfN4oPLWWpftKj9JjMQ1 qQ== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q8snec4wq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 05 May 2023 08:25:55 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3457juGd009841;
+        Fri, 5 May 2023 08:25:54 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2103.outbound.protection.outlook.com [104.47.55.103])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3q8spa3dwu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 05 May 2023 08:25:54 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NfEUyk/kK2rlrvQXsoqmX4mR/usdXwGHb1P87Vu8lURuwBM40Iv2qJUhfVHMLsJaMc10QTfhHfUUTCCXQw9TxNbZAgY4fvVWkCXH4LSVQnGmqGbt5pb2Mh0KiPO8CzQ5XfTpQC3o0MsvCLfp9MMCqW2H6O4yoeJiAEn51r9FDhvW9DkXuOHbYt0syomwflxD4vwQat7mHqRTISewlCFGnfXjBs2qbk15oCzeQbMZ1izJy6eAj/XeytRncPFe2EOwvuNoChHiTBZfu+iFfvh9aAJXCwrA7bDOeU7GH82oSVMP7IlnH9FdBV81XsqjfapZb1l8vp7rx1cu0m72XKdwyw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=VCit5VPexSlnJILBgl14Fe4l+3XFF7fl6/NiFWPIPmA=;
+ b=lcYz2KcBtajY2RfgdugAf0SQSVf0hj5Etih+ZBHQ49F91CDWH0ji1FYzSD8AA6AteJaukGm0xwYi3eATp9qFVlYEwq9iqLhzdGRPg6rfJGpVnwLCEIhdp8Jf4462YXgwxSw1XSD26mltHwcvvj5M5mD5RVNwqxUq3h5Ql1LHHUuBJOFNO6MPgZyJt0tPQGbVyhNyjflMl0Ky4pi5SFJ/1c6NOMkSd37eMBJwSRwOWGQV3aNmIaXPtGSi7agDRVAbtQhbVcyZMHfJOvhPEt8tR1SHjGGQFzGSfkYvS4OoX8i3mloNWaNhA+s3ulmLgVLoyGK32E4KHtj9NPFTS4F3YA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683275237; x=1685867237;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=daqFidHLvKa/EcNnn6OBcwR+180fuSXQS9LXhy9xsZE=;
-        b=WR/RC8IpDtjd/NQVXhatZTxqlcONLslMPx2A33Snt09Dg+S8/l/k2aKnhl/9LcdOJG
-         luh0303zIr9AsikC6RqyuYlhZmqgq7eyWIe4OK8QmBR4iNsIk43tOj8HwGnIcGca7fSK
-         oT4kO+xvYp88oWVlXlantYPLFLYVCCz63Ej2oGBMMzSSb35tGf1NfhCyLtdFlYBeBwwy
-         dsg1D8Nn/s9oJy/BH03tmyDYdUJnQkldtUPQHCIDCX2e3uoj/2oN0V81DG+JLCo7aYKF
-         aOGZT/3PwyJpvnpUSsPMn3akaiDTUbo1Wel530/4vGh+9HkfHSz+rKJpPnAg1yjSO5Md
-         Vk/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683275237; x=1685867237;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=daqFidHLvKa/EcNnn6OBcwR+180fuSXQS9LXhy9xsZE=;
-        b=ECw2DcrDjYhYk2vGujI2dK1zI+f/ROmag+Y5dVy6+HkBc184vYizj698cuT3Q5jhP9
-         YJ80DbkuGXvhrEInrcQbMVX1G8q4ha1D1t20/0OU6UcNfTVAC8AxueKsxsmsbDB2YlxS
-         1//FOcW8dNEyrPbuJTMmjEFQ2ksw68mNRs0Dor1/VdMs8hTNa0iEJyxeA/HErLMRXY78
-         gC/BzLk/4oTM38xjCmsbUEkwyDTnzyuXFczuvMIaU8dPQw1zbHQgNe/WKZYSg8OSJ4z8
-         juT1efRJE2a2ZkBuv5mFw0YzSzLyq2rL48uSfKsQgjYkHSOUJgIm80aDpvr4IAtJKwLB
-         GWTg==
-X-Gm-Message-State: AC+VfDxvvHwgh0PVAcjnkG4ifoiu81mpbrteuweIZG3gA4R9GAeBaCjr
-        EeILYpk5cdJKAI6/UDM77fE=
-X-Google-Smtp-Source: ACHHUZ4xlU+dfD28ynCDzQnJY3sURDPnzL2Yqfn+zjuCWf/WVV9XAqCe9SbKgNUxiGl5W7eTFmogJg==
-X-Received: by 2002:a17:902:ba82:b0:1a6:46f2:4365 with SMTP id k2-20020a170902ba8200b001a646f24365mr637903pls.30.1683275237292;
-        Fri, 05 May 2023 01:27:17 -0700 (PDT)
-Received: from debian.me (subs32-116-206-28-14.three.co.id. [116.206.28.14])
-        by smtp.gmail.com with ESMTPSA id g24-20020a17090a579800b0024dee5cbe29sm9230054pji.27.2023.05.05.01.27.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 May 2023 01:27:16 -0700 (PDT)
-Received: by debian.me (Postfix, from userid 1000)
-        id CB925106282; Fri,  5 May 2023 15:27:12 +0700 (WIB)
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-To:     Linux SCSI <linux-scsi@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Kernel Janitors <kernel-janitors@vger.kernel.org>
-Cc:     Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
-        Jamie Lenehan <lenehan@twibble.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: [PATCH 0/3] dc395x stale reference cleanup
-Date:   Fri,  5 May 2023 15:27:01 +0700
-Message-Id: <20230505082704.16228-1-bagasdotme@gmail.com>
-X-Mailer: git-send-email 2.40.1
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VCit5VPexSlnJILBgl14Fe4l+3XFF7fl6/NiFWPIPmA=;
+ b=MlgAcayCzf2Hfq5/AAAiJnLJROzKgw+UHhV3qoideZ6GHXIAAVu3I1IC5KTwLmwTnPPnXSzRJsu+uRiabZ1bBCEDRuDjOcYLmEjo9wKUFKrBUEbi4OJ9NilRMv5CumlSKBJYS5aq9I0sIaVMUFehYoco4QTovYdO/db8SFj5ROA=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by BLAPR10MB5188.namprd10.prod.outlook.com (2603:10b6:208:30d::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.27; Fri, 5 May
+ 2023 08:25:52 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::8456:ba59:80ec:d804]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::8456:ba59:80ec:d804%7]) with mapi id 15.20.6363.026; Fri, 5 May 2023
+ 08:25:52 +0000
+Message-ID: <b13c9445-39c5-f207-d5d0-d6c86eee54ae@oracle.com>
+Date:   Fri, 5 May 2023 09:25:48 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Xingui Yang <yangxingui@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, damien.lemoal@opensource.wdc.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, prime.zeng@hisilicon.com,
+        kangfenglong@huawei.com
+References: <20230505025712.19438-1-yangxingui@huawei.com>
+ <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0544.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:319::9) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=663; i=bagasdotme@gmail.com; h=from:subject; bh=kwka9U8hThh6aSXKOLT8PUVaTWTF4XwLc0xe/vryNDs=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDCkhey9LrL119GZFQ4bFLfaF5xe8vHepoO7Si/nOMS0Sn +wYRL0TOkpZGMS4GGTFFFkmJfI1nd5lJHKhfa0jzBxWJpAhDFycAjCRdQ6MDBfX5ZcuOnTdUPXs 2n/i5txHoyZlHzrmGu11U21dnOSFzL+MDDuWX9q/h7+okGn7xJn9cZ/WzPE63PD2uL6ik1D4O/3 94iwA
-X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BLAPR10MB5188:EE_
+X-MS-Office365-Filtering-Correlation-Id: f0e88806-fb63-4015-53a2-08db4d4256ba
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 8nZMvX/xt2LQR+3tKA+fnWrST8MWSq/J2OljvqnzAA79iSwIqW3m2vcnVFOhdxVYzA9gYrEz4em/0RLto4M4ZS6Ri7OXaXtSgag5DbFoQ/JYII8SP1GdR6I0ZdA4A7ndiVd8OM0gvE46Mfg3Pg+5hU00KggvRBVVWC4lMdoAExmAdqY5pwmC08Dw3yqKii0AXj1c0cBnTfxTRGkioJJHK7jsHFtjV9TFPI6iB1w7YG+4bmks7u7J8ejsfXw8OxiZBholRm/w7y6f1nQkQ6IT3hZLLHT8CVlb+w1TPdu5YhpRrqo5CX0vy1CmPkUyEkhVwYOvaTO7cg3nEt2AlQohI4JmA8tCvBBfnme8ETj+mR+Ay6CG/z+u0unsk87a5FDWlga4uyz7i6niertg8EpBrtVkxq5uzh9mHk3vSlZgs0I7Y4bh9KuZkeDvHOxvM66sPVIyoZ1WEkX9meVSf5B3sBiZLtoVedaM/Wt6Ulg91/5MPv9+2aYsW9FBjAFpNBGRj0+PDjsj3xVIrC89lZSGvuLRWCPxzYLfwCmuXRt5X8iyDYJbk3lnuUhgPa+1RXIC2X69odurfrXckwR6Ieynisdxtj+mW+opHiimfWeJoeQ1iaVpEHzABm9rW0H4+oiOjbKu1zutSzlXAXdt2foFhA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(39860400002)(346002)(136003)(396003)(366004)(376002)(451199021)(31696002)(86362001)(36756003)(110136005)(316002)(4326008)(66476007)(66946007)(36916002)(66556008)(6486002)(478600001)(6666004)(41300700001)(5660300002)(8676002)(8936002)(2906002)(38100700002)(186003)(2616005)(53546011)(6506007)(6512007)(26005)(83380400001)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?c2gxUjJMZlF4ZjZnU2E2Y01jb2pta2J0ZmphWkJNSTZVSEFZOUhWdExNV0ZT?=
+ =?utf-8?B?d1RxOHJheVQwRGdUVy9pZWtLR0RkMDdObGpaOTNuc29RMUFwa2V5Z2xZK1p5?=
+ =?utf-8?B?MVhTQ3JqenVLekcrYVlCVE1wZkNGTlpVbnZ1Q25ya2lFK2ZCT1dwSjFwYkVZ?=
+ =?utf-8?B?T3pINDVXdWcrc3hwT1I4VXBJSnpVUS9mcHNWWnFRNTU4QWlKb2xhRGF4TW9R?=
+ =?utf-8?B?czgya1R2WWdVOXZLd3lsTlRvVGt4TmU0aWJQMWMwN1lJaWFoa3ZUMFlXQnUy?=
+ =?utf-8?B?Z1FQY3Z2TWJIakdhcWgza2RSQjRBL0trSUFISENGVlFXcTYrbDVPV21SY08v?=
+ =?utf-8?B?Q1FKN3JsVll1MXZmNjJEcm5oTTlySjBRRDZFU3dVbUVUa0N6cnJwbmJzWCtl?=
+ =?utf-8?B?NUMyUkxXcmUvdzVQOFdJUWR0djByMUhIcWkwYVdtVUFXT3FmMjRPWDhDTHJs?=
+ =?utf-8?B?RE14YlgwWjFuTUtjSkQrZ3BCMHdUa040RjlpUmtlVk45K1BwZlBJb29LYWpD?=
+ =?utf-8?B?aDJDSTlJL2kyVWFLNGNZcUtsbmdCb3pZanB3cjNwRUFpVlV1MUpKTUtLVWlB?=
+ =?utf-8?B?Qk0ya3dNNHFTSno5ZFNHTW5nS2Q2eS8zUkVpbXBpVlhmZWFpRXZ3WHAyK1A5?=
+ =?utf-8?B?RXFnQVJvR3ZVMnVwcXNmcjl6Vms0VnZQc2xGQXNhaUZ0eW9IeVpjWmxDVGZz?=
+ =?utf-8?B?YTBYNTRJbC9JOHpuTDVEQWgzOHdDVnV4bm13ejROMllOSXlYVDlRTGpQWnp4?=
+ =?utf-8?B?NTJJaDZiZm9LS3BRKzdlNzlnbzdMNU1ndUdUR0ZjZTJNekNOUTNzUjEzWjZY?=
+ =?utf-8?B?dGZlUkVmRWN0bGJQV2tGTDIrS2kvVjRhMHVxVzdJNTg1czlHRjFUYml3a3Qr?=
+ =?utf-8?B?aGU5YkVQblI5RFVxbldWVjhjandFeDkzLzNLZGNnV2tPeE5UaGZPQTRxYVdZ?=
+ =?utf-8?B?T2ZZeXZXdUh0bEJFZ3RlMHhKNkxnUlpPS21BNWp2RmdDMTBGRmVUcHNmTysy?=
+ =?utf-8?B?aTcwVW9LNkV4bWJwNUh5bWRMS28yTFMzdDZIZzVCVi80Z0MvSktEVkNMWmg4?=
+ =?utf-8?B?a2Rwd0pacHI4M0VPNm1hV3ZNSnFXUVFoUGN6M1FpMWtWQWY4eDlqUmpTQjVv?=
+ =?utf-8?B?UFFLdndWK0FvUGlRWHJsZkFJVTN2U0JMcENFT3E1dDQ3SDNUeUNNQWRYUGhK?=
+ =?utf-8?B?RjRHaUFpc2lEMFdTMFErekR0ektxUzBrcUQ3Q01CeDFhRHhPMEZEZFp5T0Nm?=
+ =?utf-8?B?a3o3cjRuM0tPbVJMTUpHaGpUZWo2MVYxRHYybEcyRmczRG1ING9OVk9mWlhZ?=
+ =?utf-8?B?NjFHN2w5OFp6Z2xWL0s4aHRKTGFPaklYWWE3U3FabGhzMUI2ckRNWjh3N0hy?=
+ =?utf-8?B?YUwzZklkb3VjNVczc0NNU21JUTh3Y0MxTnpyckR1dkVuWHNUL2JSbXNQeEpX?=
+ =?utf-8?B?eE9jRm9iRnQxWElzaTlnUWV1RXVEc0NnK2RiUkoxRDY5ZFRnb2UyN05GMXc4?=
+ =?utf-8?B?UkJ0QjIrWmYwcEpKNzdQemp5dVI2SVlNSFJVdElOeTVoOHlDN1pIb2N2bEUz?=
+ =?utf-8?B?K3cwWWdQUStvK0E1YWRaSlBBSEhsTU9RaW9oU0s3cUU4R3RBaFl0N1h5SHFF?=
+ =?utf-8?B?dVpRZi93ckN2aysySnBRbmlpNklRejYvUkNoUkltcFBQS3o4RGJFUVd0bTJD?=
+ =?utf-8?B?bVBwaG9JL0w1dVhGaStTZUVQZnl6RlN5TjFlR09QNCtmNTRYbk5rL2NjcW9V?=
+ =?utf-8?B?djF2ZWhtZEVuKzZwbTdGVlpvSVFCQnB5NnBJRzBkWWFQSEdneU43WWZvRlYx?=
+ =?utf-8?B?YU4zTmZFaUlTNU1BZjI0OEhidDhCb1VGNkN4MjcvWDNsWVJNQ3d2WDM1a2Jw?=
+ =?utf-8?B?c1RaUGdHTERYVHdyWTJSSDlYcExzUHVsU0xhM0JaZXJabVVuWEI3Q2tmME9w?=
+ =?utf-8?B?YjRLMlVLbXBadEVxSlhIWTgzVFlKQmZ4LzR4MlhWRzFVdTNrMVRLeUlTY2kx?=
+ =?utf-8?B?cjk5Q0F6bmFFNk1rcmlyZjdXSmg0VXhIZWdtUndBeC8ydmNySWY5V3VUSFJC?=
+ =?utf-8?B?cThNMTYyd0IzQ3cvQi92U2N2NmxEVW94dFBFdzQ0WEk4TTM1Y3FBNTQ2TUhC?=
+ =?utf-8?Q?eOfxtAndFNZTvdBQ8pLk8tdjS?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?bnZDWHBkOWlBdEk4ZnBSb2k5OUl2T0l0UnNYeVNYS1N0TW55ZVJnSURwb2JH?=
+ =?utf-8?B?S0ozRWNvWmdFMXFzVnd1dHc5YWZlMDRua1ZreXB1WDZHYk1KWjd2WWZleUw3?=
+ =?utf-8?B?a25hRW16TVJ4N28vaTBzNFpJUnpqZzZDaDlCMkpZSXlUOGxycElEVUUvbUZC?=
+ =?utf-8?B?eURYQURjWWtMMVkzUGxSYU13cjlUNVdzNzBBTTdSYTlKY0NkQnZnQ1lRc2Ji?=
+ =?utf-8?B?Vlc3NDl1dEtkL1VjSkFLaVlNVkZkOFNFWDY5V0Z5dFhxbjY5QVRkSklna01l?=
+ =?utf-8?B?Ky82V1FyVkVJcVkzZ2c2SE8vVUFDMmttU2Rwa3lCWWJ5cTJQcmFKTEIydkVS?=
+ =?utf-8?B?eU5ZUWhCZGlkK2k5MkIzSjN3blhXSFhVKzVYYWtsMDQ4SDBxa1NuVHZqRXls?=
+ =?utf-8?B?VlI4R084Q2dBYmhlQUlsZXpZdllJZ0FFa3FST1AzK1dCUjZRSk9YTVZWbnA3?=
+ =?utf-8?B?WGRWSkdrdE8zemp3TXNLY2szZStLcXlMQWhybTJOeXVQWHZHeVE3TDJ2emxW?=
+ =?utf-8?B?M1IyWXh1b0dyUm9tZ1RjWU8wVS9na21qUFNjUHRibTVRMjFudVVBU0RnZE5L?=
+ =?utf-8?B?QVdYRG11MGJpYjBoSkdsYndycEtsTTd3Qmg5MzgzS05uMnhZbVhTVUNERXVC?=
+ =?utf-8?B?MWQzYkJ4T0VDQzgwY3FuWlJaWE43TW9FRVFTRGtuQ3p2NUtib1V0aTVkSkFT?=
+ =?utf-8?B?dDA3RVppWHJMRlVGTXd4N1pQZEJRUUVnNDAvaG5Vd1g3Ty96MUxrNlQvK2pa?=
+ =?utf-8?B?VmE0ZWJKRVZ3ampsbGFIOUF5cVZDV0Nvem93RmlwMVNaS0JVbFhNRzVWc3Rl?=
+ =?utf-8?B?MmFabm4ycmJOckkzMVlOeVp1MERwbHRuSXF5TnZORUdWUkdmRDJ2KzV0KzIz?=
+ =?utf-8?B?TldIa0JJWkdiMm9JdCtmcWtHRzYyNFFhajAwdjZNM0FpMTNDTUFDNVlRTlp5?=
+ =?utf-8?B?L2oyUnVaS2NHcXlVWjliMVdLZjh4L1pZNEYyMGRESXp3TmJNY09ESGRkSllh?=
+ =?utf-8?B?Z25kZXZ2QWhTSituMFJoYTFxNERxeTQwYzJhR05FRzZZcWxDR25FY2JJY2o2?=
+ =?utf-8?B?VDRLOEhHZDNlemlRS1pOejluUVByKzNKc00xTGpPTWtrYW5jb2Y4cllsV0FK?=
+ =?utf-8?B?WEpCT1JvdS9yem5JMDhlMlIvUFJhTUdJQS9Ga0cxWXRLOU94aHpsbklIMUdK?=
+ =?utf-8?B?RW43SHQ0K2tMUFVRdVBLbmhDditua3hZM0FFMWY4S0NUS0l2MFZXYXNiaDQr?=
+ =?utf-8?Q?dOXdbuxszrX8TgF?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f0e88806-fb63-4015-53a2-08db4d4256ba
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2023 08:25:52.3199
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: LSzFb4LUAFS1dTWd3QEfOF0PiHfDE7oskLlGFeGMgfRJONZ7n0G1MDmua70NPKfADivnDjMqI21s33WGOd2MHA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB5188
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-04_15,2023-05-04_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ mlxlogscore=999 bulkscore=0 suspectscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2305050070
+X-Proofpoint-GUID: Of7D4JrgPKLtwFV-OXhJGyStE7NLKqRJ
+X-Proofpoint-ORIG-GUID: Of7D4JrgPKLtwFV-OXhJGyStE7NLKqRJ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A small stale reference cleanup series for DC395x driver. The shortlog
-below should be self-explanatory.
+On 05/05/2023 09:17, Damien Le Moal wrote:
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -26,6 +26,7 @@
+>>   #include <scsi/scsi_device.h>
+>>   #include <scsi/scsi_tcq.h>
+>>   #include <scsi/scsi_transport.h>
+>> +#include <scsi/libsas.h>
 
-This series is based on for-next branch of scsi tree, but can be applied
-to fixes if needed.
+hmmm... is it really acceptable that libata is referencing libsas? I 
+didn't think that it would be. libsas uses libata, not the other way around.
 
-Bagas Sanjaya (3):
-  MAINTAINERS: Drop DC395x list and site
-  Documentation: scsi: dc395x: Replace non-functional twibble.org list
-  Documentation: scsi: dc395x: Remove reference to 2.4 driver
+>>   #include <linux/libata.h>
+>>   #include <linux/hdreg.h>
+>>   #include <linux/uaccess.h>
+>> @@ -2745,10 +2746,17 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
+>>    *	Associated ATA device, or %NULL if not found.
+>>    */
+>>   struct ata_device *
+>> -ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
+> Why drop the const ?
+> 
+>> +ata_scsi_find_dev(struct ata_port *ap, struct scsi_device *scsidev)
+>>   {
+>> -	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
+>> +	struct ata_device *dev;
+>> +
+>> +	if (ap->flags & ATA_FLAG_SAS_HOST) {
 
- Documentation/scsi/dc395x.rst | 9 ++-------
- MAINTAINERS                   | 4 +---
- 2 files changed, 3 insertions(+), 10 deletions(-)
+And this is SAS host. Not necessarily libsas (even though with ipr 
+libata usage gone, it would be the only user).
 
-
-base-commit: d1316c7b9ec3683c4ca531234998c0e5b9e9447c
--- 
-An old man doll... just what I always wanted! - Clara
-
+>> +		struct domain_device *ddev = sdev_to_domain_dev(scsidev);
+>> +
+>> +		return sas_to_ata_dev(ddev);
+> Do you really need the ddev variable ? Also, this really should be a libsas
+> helper. I beleive this pattern is repeated in several places in libsas, so that
+> would nicely clean things up.
+>
+Thanks,
+John
