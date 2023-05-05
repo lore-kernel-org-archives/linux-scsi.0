@@ -2,175 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B04C77B7C
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 00:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DB6BC77B7C
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 01:42:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229900AbjEEAJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 20:09:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34878 "EHLO
+        id S229758AbjEEBmH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 May 2023 21:42:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229684AbjEEAJO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 20:09:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 893AC11DA2
-        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 17:08:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683245306;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type;
-        bh=HJY/+1JnMiLlEkq2AgTedma+exuZfk/CXW/dTd1p/CU=;
-        b=fabERFKNQo15sDLB9hqAKUPjW6MJN4f+sf8itqa98O9A7CfG3LR/eS85LCoMqihIGD0Hv6
-        8LgXG+NF/yUDWFS6G5xPle/0QGcehImjFVAO2k39qFJIrVUoB1rAfuo3S172KRYlcMLlHU
-        RnnciWeNIleHNA0v8MX7U6illQARAlk=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-389-6nkh06sSOUO7SpsRMOrqXA-1; Thu, 04 May 2023 20:08:25 -0400
-X-MC-Unique: 6nkh06sSOUO7SpsRMOrqXA-1
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-64115e69e1eso10994259b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 May 2023 17:08:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683245304; x=1685837304;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=HJY/+1JnMiLlEkq2AgTedma+exuZfk/CXW/dTd1p/CU=;
-        b=f8zxCgoMEChZJCA5bqhje8tvp3lNNo+P+qNl0LPs4F4c6Gh+BgmtZWLxnXkzetckSr
-         Cv7cropOXx/9f4z7ZqkL99Zo7jQmf/E5Jh0IVRAqKjFvOOhgQQdXlUX4lX7XenTt6u2m
-         vhmrbnNKnHtO13WVnwKHruc9hf7Ble0ssVQIEQTdlx0/+wRi/9F1rINbcamncHtoqH/g
-         VWQG7B/nvbQlNc6TtTglEs3bnmQaCiFWFrqJ48JMysq5MeG2MlZfbgAZmxmk9ENonsTP
-         SaoNm5rHUaq4+XVnf7ayJv13dC3pJHS+hlt1CW7ueybBeoB1LQ5IbBQ8PA1s97gKA2OD
-         lHDw==
-X-Gm-Message-State: AC+VfDzb8Bjk+Rz6GOHxwT/2vk6z/gvjv9eRgHG+iQ32gAmP2VXlXgPE
-        PA/6lChx5QjvTUBv7aM5KLalkfgq8SblQUTFGqHuUdbN4Pq98EAKymX/PxfPDIND1E7DsS8pTz9
-        /KpQG4FOZeQQ2SQqkINgbKqakcb7YBzIvYg/b/K/E5tQDJ2nQn3HoCw==
-X-Received: by 2002:a17:903:187:b0:1ab:11d5:4f07 with SMTP id z7-20020a170903018700b001ab11d54f07mr5943174plg.18.1683245304102;
-        Thu, 04 May 2023 17:08:24 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5pia5jzktcY9DJ3FiTjR62zcaa5OFwm3fL4RAbURwTghhmq5tClspk9pc5xmrXA3xEsNZQEXdO68OtnEdgOkw=
-X-Received: by 2002:a17:903:187:b0:1ab:11d5:4f07 with SMTP id
- z7-20020a170903018700b001ab11d54f07mr5943146plg.18.1683245303744; Thu, 04 May
- 2023 17:08:23 -0700 (PDT)
+        with ESMTP id S229524AbjEEBmG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 21:42:06 -0400
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B923900D;
+        Thu,  4 May 2023 18:42:02 -0700 (PDT)
+X-QQ-mid: bizesmtpipv602t1683250900tk1o
+Received: from localhost ( [255.182.231.6])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Fri, 05 May 2023 09:41:38 +0800 (CST)
+X-QQ-SSF: 0140000000000090C000000A0000000
+X-QQ-FEAT: v5d6m16HONU7LAjIfgPa2Q3d/fS5zK/DqxOzftP5hUR3wSELEAOXzE8Cf+j+b
+        y4lzgvU/ihMtIDQ0+Olo7La4n7cwCvPubixZWDee1e/QHyc0BsBXmor2cBwPAd/xVHw7wZn
+        bDSpe/TJ4licbkddoa9k88Vigm9uZ23QX8Uja6M5xzoPzWWujsDuVrjL72xMII27r4cWrf0
+        YNwF861thfiUxvaYtvy/9FMDrSq5jFuuozxj5aghA69dIw9g6BaSMpEM+RFNMPDHwv93REA
+        O7NjpbOOdxZcbI1qjkc5H+DBiwzRPOliXKLJLSuPPJUK9BGPvoolTVWSQkvo/1CxNWoROQn
+        Fs5BlQqtB6oKP8h+4s=
+X-QQ-GoodBg: 2
+X-BIZMAIL-ID: 14027049164739534201
+Date:   Fri, 5 May 2023 17:41:40 +0800
+From:   Wang Honghui <honghui.wang@ucas.com.cn>
+To:     Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dc395x@twibble.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi:dc395x: Correct "structures" spelling mistakes
+Message-ID: <9721BDA46BD84475+ZFTPVLLFKTMn4lSE@TP-P15V>
 MIME-Version: 1.0
-From:   Guangwu Zhang <guazhang@redhat.com>
-Date:   Fri, 5 May 2023 08:09:28 +0800
-Message-ID: <CAGS2=Yrv_pXweGN7hsX1A0kc7a9WjYUg2G+swD5eiK4sqURsXg@mail.gmail.com>
-Subject: [bug report] BUG libfc_em (Not tainted): Objects remaining in
- libfc_em on __kmem_cache_shutdown()
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        John Meneghini <jmeneghi@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtpipv:ucas.com.cn:qybglogicsvrgz:qybglogicsvrgz5a-2
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-I found kernel panic issue with latest linux-block/for-next.
-repo : https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-Merge branch 'for-6.4/block' into for-next
+Signed-off-by: Wang Honghui <honghui.wang@ucas.com.cn>
 
-Reproducer:
-1. found qedf HBA host
-2. create npiv port
-3. remove some modules
-modprobe -r qedf
-modprobe -r libfcoe
-modprobe -r libfc
-4. remove npiv port
+As title.
 
-=============================================================================
-[  218.400452] BUG libfc_em (Not tainted): Objects remaining in
-libfc_em on __kmem_cache_shutdown()
-[  218.410255] -----------------------------------------------------------------------------
-[  218.410255]
-[  218.421028] Slab 0xffffda6cc4444f00 objects=36 used=4
-fp=0xffff92381113ea40
-flags=0x17ffffc0010200(slab|head|node=0|zone=2|lastcpupid=0x1fffff)
-[  218.435392] CPU: 22 PID: 3794 Comm: modprobe Kdump: loaded Not
-tainted 6.3.0+ #1
-[  218.443645] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS
-2.16.0 07/20/2022
-[  218.452091] Call Trace:
-[  218.454817]  <TASK>
-[  218.457154]  dump_stack_lvl+0x33/0x50
-[  218.461240]  slab_err+0xc3/0x130
-[  218.464842]  ? pick_next_task+0x57/0x9b0
-[  218.469219]  ? check_preempt_curr+0x5d/0x70
-[  218.473883]  ? ttwu_do_activate+0x6b/0x220
-[  218.478453]  ? __switch_to_asm+0x3a/0x80
-[  218.482831]  __kmem_cache_shutdown+0x159/0x310
-[  218.487789]  kmem_cache_destroy+0x51/0x160
-[  218.492361]  libfc_exit+0xa/0x280 [libfc]
-[  218.496848]  __do_sys_delete_module.constprop.0+0x17a/0x2f0
-[  218.503067]  ? syscall_trace_enter.constprop.0+0x126/0x1a0
-[  218.509188]  do_syscall_64+0x5c/0x90
-[  218.513177]  ? exit_to_user_mode_prepare+0xc4/0xd0
-[  218.518522]  ? syscall_exit_to_user_mode+0x12/0x30
-[  218.523866]  ? do_syscall_64+0x69/0x90
-[  218.528046]  ? exc_page_fault+0x65/0x150
-[  218.532420]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-[  218.538058] RIP: 0033:0x7f9fafa3f5ab
-[  218.542046] Code: 73 01 c3 48 8b 0d 75 a8 1b 00 f7 d8 64 89 01 48
-83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 b0 00 00
-00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 45 a8 1b 00 f7 d8 64 89
-01 48
-[  218.563001] RSP: 002b:00007fff16e560c8 EFLAGS: 00000206 ORIG_RAX:
-00000000000000b0
-[  218.571448] RAX: ffffffffffffffda RBX: 000055631b3dc510 RCX: 00007f9fafa3f5ab
-[  218.579407] RDX: 0000000000000000 RSI: 0000000000000800 RDI: 000055631b3dc578
-[  218.587367] RBP: 000055631b3dc510 R08: 0000000000000000 R09: 0000000000000000
-[  218.595328] R10: 00007f9fafb9eac0 R11: 0000000000000206 R12: 000055631b3dc578
-[  218.603287] R13: 0000000000000000 R14: 000055631b3dbda8 R15: 00007fff16e58458
-[  218.611248]  </TASK>
-[  218.613683] Disabling lock debugging due to kernel taint
-[  218.619610] Object 0xffff92381113c740 @offset=1856
-[  218.624953] Allocated in mempool_init_node+0x92/0xd0 age=205368 cpu=0 pid=391
-[  218.632917]  mempool_init_node+0x92/0xd0
-[  218.637291]  mempool_create+0x56/0x80
-[  218.641374]  fc_exch_mgr_alloc+0xd4/0x220 [libfc]
-[  218.646631]  0xffffffffc0a10cbf
-[  218.650133]  0xffffffffc0a12ce1
-[  218.653633]  local_pci_probe+0x46/0xa0
-[  218.657813]  work_for_cpu_fn+0x16/0x20
-[  218.661994]  process_one_work+0x1e5/0x3f0
-[  218.666467]  worker_thread+0x1c4/0x3a0
-[  218.670647]  kthread+0xe2/0x110
-[  218.674150]  ret_from_fork+0x2c/0x50
-[  218.678138] Object 0xffff92381113d8c0 @offset=6336
-[  218.683481] Allocated in mempool_init_node+0x92/0xd0 age=205133 cpu=0 pid=391
-[  218.691442]  mempool_init_node+0x92/0xd0
-[  218.695816]  mempool_create+0x56/0x80
-[  218.699898]  fc_exch_mgr_alloc+0xd4/0x220 [libfc]
-[  218.705155]  0xffffffffc0a10cbf
-[  218.708655]  0xffffffffc0a12ce1
-[  218.712156]  local_pci_probe+0x46/0xa0
-[  218.716334]  work_for_cpu_fn+0x16/0x20
-[  218.720515]  process_one_work+0x1e5/0x3f0
-[  218.724986]  worker_thread+0x1c4/0x3a0
-[  218.729167]  kthread+0xe2/0x110
-[  218.732668]  ret_from_fork+0x2c/0x50
-[  218.736656] Object 0xffff92381113da80 @offset=6784
-[  218.741998] Allocated in mempool_init_node+0x92/0xd0 age=205192 cpu=0 pid=391
-[  218.749959]  mempool_init_node+0x92/0xd0
-[  218.754333]  mempool_create+0x56/0x80
-[  218.758416]  fc_exch_mgr_alloc+0xd4/0x220 [libfc]
-[  218.763673]  0xffffffffc0a10cbf
-[  218.767173]  0xffffffffc0a12ce1
-[  218.770674]  local_pci_probe+0x46/0xa0
-[  218.774852]  work_for_cpu_fn+0x16/0x20
-[  218.779031]  process_one_work+0x1e5/0x3f0
-[  218.783504]  worker_thread+0x1c4/0x3a0
-[  218.787683]  kthread+0xe2/0x110
-[  218.791184]  ret_from_fork+0x2c/0x50
-[  218.795172] Object 0xffff92381113dfc0 @offset=8128
-[  218.800514] Allocated in mempool_init_node+0x92/0xd0 age=205544 cpu=0 pid=391
-[  218.808477]  mempool_init_node+0x92/0xd0
-[  218.812851]  mempool_create+0x56/0x80
-[  218.816933]  fc_exch_mgr_alloc+0xd4/0x220 [libfc]
-[  218.822187]  0xffffffffc0a10cbf
-[  218.825688]  0xffffffffc0a12ce1
-[  218.829188]  local_pci_probe+0x46/0xa0
-[  218.833367]  work_for_cpu_fn+0x16/0x20
-[  218.837547]  process_one_work+0x1e5/0x3f0
-[  218.842018]  worker_thread+0x1c4/0x3a0
-[  218.846197]  kthread+0xe2/0x110
-[  218.849698]  ret_from_fork+0x2c/0x50
+---
+ drivers/scsi/dc395x.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index c8e86f8a631e..a3f00e6e3296 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -3641,7 +3641,7 @@ static void adapter_add_device(struct AdapterCtlBlk *acb,
+  * adapter_remove_device - Removes the device instance from the adaptor
+  * instance. The device instance is not check in any way or freed by this. 
+  * The caller is expected to take care of that. This will simply remove the
+- * device from the adapters data strcutures.
++ * device from the adapters data structures.
+  *
+  * @acb: The adapter device to be updated
+  * @dcb: A device that has previously been added to the adapter.
+@@ -3980,7 +3980,7 @@ static void trms1040_read_all(struct NvRamType *eeprom, unsigned long io_port)
+  * Checks the checksum and if it's not correct it uses a set of default
+  * values.
+  *
+- * @eeprom:	caller allocated strcuture to read the eeprom data into
++ * @eeprom:	caller allocated structure to read the eeprom data into
+  * @io_port:	io port to read from
+  **/
+ static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
+@@ -4578,7 +4578,7 @@ static void banner_display(void)
+  * dc395x_init_one - Initialise a single instance of the adapter.
+  *
+  * The PCI layer will call this once for each instance of the adapter
+- * that it finds in the system. The pci_dev strcuture indicates which
++ * that it finds in the system. The pci_dev structure indicates which
+  * instance we are being called from.
+  * 
+  * @dev: The PCI device to initialize.
+-- 
+2.34.1
 
