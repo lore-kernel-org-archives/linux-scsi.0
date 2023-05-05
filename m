@@ -2,124 +2,169 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4042C77B7C
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 20:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED8EC77B75
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 20:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230352AbjEEUgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 May 2023 16:36:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35728 "EHLO
+        id S233372AbjEEUuk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 May 2023 16:50:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232203AbjEEUgI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 16:36:08 -0400
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9725349D2
-        for <linux-scsi@vger.kernel.org>; Fri,  5 May 2023 13:36:03 -0700 (PDT)
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-24e4e23f378so1637736a91.3
-        for <linux-scsi@vger.kernel.org>; Fri, 05 May 2023 13:36:03 -0700 (PDT)
+        with ESMTP id S233343AbjEEUug (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 16:50:36 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A830426B8
+        for <linux-scsi@vger.kernel.org>; Fri,  5 May 2023 13:50:32 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1aae46e62e9so16183105ad.2
+        for <linux-scsi@vger.kernel.org>; Fri, 05 May 2023 13:50:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1683319832; x=1685911832;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=+hhlS5Zkngeg/eliQcVzvtVmVkGGHow6adCr97U1D0c=;
+        b=MW3xK7xE6sMfY0cMScB6wmcIVaVOq/uPO9q7b4kfNqx58PHaro2afC+5iS6tH4DMYL
+         UsNsWsT7AkY/2QsCpGdrcXZVWaDBudPOPZVFKmXWYgl97bqE79e5yRP+MSHUD/lor1M7
+         DW/1ChmvA+a7Uv+XM9e7Jw/gDKcEtzwUur0Aaer7y1G1Sat8dYkz/T0wxmlIgQouAQEX
+         LjgDUfvZK6aBxoeHqUgWGbPKxg2pA8rIY1TVVR7oE3VNilOjgbO29D0lJ2at5D0qvC7u
+         CalhIXERqZ+xBL2Cg8vWNKEtnZ3wrdhsC/xrVM8rkHiZ+FvTnaVmKpCRbqWrEQPNb+PG
+         QdnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683318963; x=1685910963;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7GAG14JDBz5OS3xBcFkRIfMhJwMwOZg74Hsq79gcl8A=;
-        b=fTOpw0SDOWggy/iHZSG5icIZxiQ71ypZZtD108L+/IgHeINoBf2eqicDLMfBCABmN1
-         d8ja1+8Ge8dWX3eIjRUYlgaeV4pgHk8aCFxtGhyku17NhDRdP5XVc9/t1T+2njnqCLaa
-         SXdt9lrD2l7RiqBp3Y64vWC880hoSWEs1BA/MYgJ4E5YLr8TlGJSgT1qIq48h2RkoSOL
-         VCMO5rTBtC+lkdXxdMWEneA0HFRXKJSE5zocSOD4T51Dw7AZKw03fcR0UAWHY8nhrrub
-         NTWZqcBScUI6Uu5D33EGWn5ChPWKmuhM9QY/J/1+Mr0ZgcRp1C1IiqJcp9ik8WTncSCj
-         HJKQ==
-X-Gm-Message-State: AC+VfDyXMXKTNII7rtXvCaWGaofyREGBiR3cULS0gRa0oXUY+HnW3D+3
-        ZR1aB4gaae8BnFSP8m/9idU=
-X-Google-Smtp-Source: ACHHUZ5Mviic0liFhqeQ8HyeO2pQzPilPWRpMhyTvdO5+URXPmNX+GqzB5vJqH7G+HvYXmAVX0KbmA==
-X-Received: by 2002:a17:90a:ca08:b0:24e:bb9:e4e6 with SMTP id x8-20020a17090aca0800b0024e0bb9e4e6mr2773218pjt.28.1683318962944;
-        Fri, 05 May 2023 13:36:02 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:127d:5561:7469:3abc? ([2620:15c:211:201:127d:5561:7469:3abc])
-        by smtp.gmail.com with ESMTPSA id o3-20020a17090ad24300b00246be20e216sm5415829pjw.34.2023.05.05.13.36.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 May 2023 13:36:02 -0700 (PDT)
-Message-ID: <3e19851c-34c1-88fd-119a-e5a4da3f2dbf@acm.org>
-Date:   Fri, 5 May 2023 13:36:00 -0700
+        d=1e100.net; s=20221208; t=1683319832; x=1685911832;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+hhlS5Zkngeg/eliQcVzvtVmVkGGHow6adCr97U1D0c=;
+        b=X/ts2aRS2bHp3+XObnLuGJsXIEIHEpJ7oQDahFyEfIg1WPKlqY+OgWwlecWro+Q9im
+         GYvywJsII1FKZvxRHRRkyWVy0rkyMyNeczb6wfCW2i7t528FxwwcfJyEwDcqh4GdDcTU
+         e6S+SzuZt+7R+uwTtiVH0gJOySb6qN1VQ1ZyjxaTIccbXUXcD3FgwIdlsE4r7KlJoi93
+         QKSNG2HzYUxFA6KjH63wCCI0kuPNPN33JgZUYtIinBQdet4OdoxwdYj+hXd9+msz74gz
+         AL6wTDOs+3bpkZXP/5ohsY7z5cnWezagg9GKf4e6Yw8G8bCx8J69rbGoSxGEXQi86vNi
+         k64w==
+X-Gm-Message-State: AC+VfDxyhVvj9T35JzktTiMncGJaAvSUdoRaRGkFMfDu6mXDZhAy4axO
+        9BJo2VSbKMpODDDrnRsdGpuUEgOcd8lXNCCjPQTD4OmivfETG31AHC5+LwC2mSsED4G6KnMjVxx
+        9xUPUJl/TQfaFS+Jv8Z4UGhT3o+ZHx/FqxJrsR9B3uO6H00TDGmkQKLfy2kKcnOfgli+x+jLyDa
+        XuLDs8LA==
+X-Google-Smtp-Source: ACHHUZ5L/eQKT4Ojwa6iMRVHelylBHF/W/YEz8BTV9H9FoGYVgtL7JEZ4+1UP8og54dDl2UPGPxZPA==
+X-Received: by 2002:a17:902:d902:b0:1ac:482e:ed4d with SMTP id c2-20020a170902d90200b001ac482eed4dmr1996389plz.18.1683319831506;
+        Fri, 05 May 2023 13:50:31 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([2600:1700:6970:bea0:a8bb:edca:20e:21be])
+        by smtp.gmail.com with ESMTPSA id q6-20020a170902dac600b00198d7b52eefsm2188568plx.257.2023.05.05.13.50.30
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 05 May 2023 13:50:30 -0700 (PDT)
+From:   Brian Bunker <brian@purestorage.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Brian Bunker <brian@purestorage.com>,
+        Seamus Connor <sconnor@purestorage.com>,
+        Krishna Kant <krishna.kant@purestorage.com>
+Subject: [PATCH] scsi: sd: Avoid sending an INQUIRY if the page is not supported
+Date:   Fri,  5 May 2023 13:49:50 -0700
+Message-Id: <20230505204950.21645-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v2 1/2] scsi: core: Introduce the BLIST_BROKEN_FUA flag
-Content-Language: en-US
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20230202220041.560919-1-bvanassche@acm.org>
- <20230202220041.560919-2-bvanassche@acm.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230202220041.560919-2-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/2/23 14:00, Bart Van Assche wrote:
-> UFS devices perform better when using SYNCHRONIZE CACHE command instead of
-> the FUA flag. Introduce the BLIST_BROKEN_FUA flag for using SYNCHRONIZE
-> CACHE instead of FUA.
-> 
-> The BLIST_BROKEN_FUA flag can be set by using one of the following
-> approaches:
-> * From user space, by writing into /proc/scsi/device_info.
-> * From the kernel, by setting sdev_bflags from the slave_alloc callback.
-> 
-> For a prior version of this patch, see also
-> https://lore.kernel.org/lkml/YpecaXfIxZBHIcfj@google.com/T/
-> 
-> Cc: Jaegeuk Kim <jaegeuk@kernel.org>
-> Cc: Asutosh Das <quic_asutoshd@quicinc.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/scsi_scan.c    | 3 +++
->   include/scsi/scsi_devinfo.h | 4 +++-
->   2 files changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index a62925355c2c..c1eb6bfe7ed2 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1020,6 +1020,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->   	if (*bflags & BLIST_NO_RSOC)
->   		sdev->no_report_opcodes = 1;
->   
-> +	if (*bflags & BLIST_BROKEN_FUA)
-> +		sdev->broken_fua = 1;
-> +
->   	/* set the device running here so that slave configure
->   	 * may do I/O */
->   	mutex_lock(&sdev->state_mutex);
-> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-> index 5d14adae21c7..783451dfa46e 100644
-> --- a/include/scsi/scsi_devinfo.h
-> +++ b/include/scsi/scsi_devinfo.h
-> @@ -68,8 +68,10 @@
->   #define BLIST_RETRY_ITF		((__force blist_flags_t)(1ULL << 32))
->   /* Always retry ABORTED_COMMAND with ASC 0xc1 */
->   #define BLIST_RETRY_ASC_C1	((__force blist_flags_t)(1ULL << 33))
-> +/* Use SYNCHRONIZE CACHE instead of FUA */
-> +#define BLIST_BROKEN_FUA	((__force blist_flags_t)(1ULL << 34))
->   
-> -#define __BLIST_LAST_USED BLIST_RETRY_ASC_C1
-> +#define __BLIST_LAST_USED BLIST_BROKEN_FUA
->   
->   #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
->   			       (__force blist_flags_t) \
+When SCSI devices are discovered the function sd_read_cpr gets called.
+This call results in an INQUIRY to page 0xb9. This VPD page is called
+regardless of whether the target has advertised this page as supported.
 
-(replying to an email from two months ago)
+Instead of just sending this INQUIRY page, first check to see if that
+page is in the supported pages. This will avoid sending requests to
+targets which do not support the page. The error is unexpected on the
+target and leads to questions. I am not sure what percentage of SCSI
+devices support this page, but this will eliminate at least one
+request to the target in the discovery phase for all that do not. The
+function added could also have potential users besides this specific
+one.
 
-I plan to repost the above patch because this patch will allow us to set the
-broken_fua flag from user space. Please let me know if there are any objections
-or concerns.
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Reviewed-by: Seamus Connor <sconnor@purestorage.com>
+Reviewed-by: Krishna Kant <krishna.kant@purestorage.com>
+---
+ drivers/scsi/scsi.c        | 40 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c          |  4 +++-
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 44 insertions(+), 1 deletion(-)
 
-Thanks,
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 09ef0b31dfc0..9265b3d6a18f 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -356,6 +356,46 @@ static int scsi_get_vpd_size(struct scsi_device *sdev, u8 page)
+ 	return result;
+ }
+ 
++/**
++ * scsi_vpd_page_supported - Check if a VPD page is supported on a SCSI device
++ * @sdev: The device to ask
++ * @page: Check existence of this Vital Product Data page
++ *
++ * Functions which explicitly request a given VPD page
++ * should first check whether that page is among the
++ * supported VPD pages. This will avoid targets returning
++ * unnecessary errors which can cause confusion. -EINVAL is
++ * returned if the page is not supported and 0 if it is.
++ */
++int scsi_vpd_page_supported(struct scsi_device *sdev, u8 page)
++{
++	const struct scsi_vpd *vpd;
++	uint16_t page_len;
++	int ret = -EINVAL;
++	int pos = 0;
++
++	rcu_read_lock();
++	vpd = rcu_dereference(sdev->vpd_pg0);
++	if (!vpd)
++		goto out;
++
++	page_len = get_unaligned_be16(&vpd->data[2]);
++
++	/*
++	 * The first supported page starts at byte 4 in the buffer.
++	 * Read from that byte to the last dictated by page_len above.
++	 */
++	for (pos = 4; pos < page_len + 4; ++pos) {
++		if (vpd->data[pos] == page)
++			ret = 0;
++	}
++
++out:
++	rcu_read_unlock();
++	return ret;
++}
++EXPORT_SYMBOL_GPL(scsi_vpd_page_supported);
++
+ /**
+  * scsi_get_vpd_page - Get Vital Product Data from a SCSI device
+  * @sdev: The device to ask
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1624d528aa1f..0304b7d60747 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3127,7 +3127,9 @@ static void sd_read_cpr(struct scsi_disk *sdkp)
+ 	 */
+ 	buf_len = 64 + 256*32;
+ 	buffer = kmalloc(buf_len, GFP_KERNEL);
+-	if (!buffer || scsi_get_vpd_page(sdkp->device, 0xb9, buffer, buf_len))
++	if (!buffer ||
++	    scsi_vpd_page_supported(sdkp->device, 0xb9) ||
++	    scsi_get_vpd_page(sdkp->device, 0xb9, buffer, buf_len))
+ 		goto out;
+ 
+ 	/* We must have at least a 64B header and one 32B range descriptor */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f10a008e5bfa..359cd8b94312 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -431,6 +431,7 @@ extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
+ 			    struct scsi_sense_hdr *);
+ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
+ 				int retries, struct scsi_sense_hdr *sshdr);
++extern int scsi_vpd_page_supported(struct scsi_device *sdev, u8 page);
+ extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
+ 			     int buf_len);
+ extern int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
+-- 
+2.40.1
 
-Bart.
