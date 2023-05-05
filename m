@@ -2,82 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 347CDC7EE2E
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 19:00:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F4042C77B7C
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 20:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233427AbjEETAj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 May 2023 15:00:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37906 "EHLO
+        id S230352AbjEEUgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 May 2023 16:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233428AbjEETAi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 15:00:38 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12FC41C0EC
-        for <linux-scsi@vger.kernel.org>; Fri,  5 May 2023 12:00:32 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1aaea3909d1so19640595ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 05 May 2023 12:00:32 -0700 (PDT)
+        with ESMTP id S232203AbjEEUgI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 16:36:08 -0400
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9725349D2
+        for <linux-scsi@vger.kernel.org>; Fri,  5 May 2023 13:36:03 -0700 (PDT)
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-24e4e23f378so1637736a91.3
+        for <linux-scsi@vger.kernel.org>; Fri, 05 May 2023 13:36:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683313231; x=1685905231;
+        d=1e100.net; s=20221208; t=1683318963; x=1685910963;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AcJeSVm1C3g0ndIbyxgYi31N59Y86J4o4CNr3SUsqM4=;
-        b=gd7bJMGZgxBvqD5SlE22Ityrw2NPoL8osX1wl/WYrWAP17bddWEi9lg1zTKZb8tBBu
-         4uu/NQuD4lYZXtIQ9VF/7lKOZBtprLcw3JXYNNoDXg54FVTauu+aHmEjCiEU6fDgiga7
-         MgoEb5N1zhbST9fISa5OWzUdKZoAdGhSMFz9RbBLTAOdokgwZObhh/dhX+1bLxiQei3m
-         ++6RooJKnRq/2/l/lTIFEd92Ed/fVvJLlshozn3RkkYpRKmKyZDPBE5cWBK/W9QxMfLX
-         LW6Lrf1I7qmy/NMj6Hjv+PPJlxz9Ruh0rIgLGrVDbfFKiNxnzcIjvnKQ2Kr8iVUsy5qi
-         ruNQ==
-X-Gm-Message-State: AC+VfDxgi8aThijZw8wZlJVpGYOkZi3H96fqzfNoAIaqut2GmcIWfKzr
-        5oDkCCFkFnMkaId6BhrnvkM=
-X-Google-Smtp-Source: ACHHUZ6Ta7XO7KlAZWNKTJj8vwI6F3ftStaAvc5nT4jCrX0npix1AF9MyeKlpjHH8QJbq33j4i1exQ==
-X-Received: by 2002:a17:902:9342:b0:19c:d309:4612 with SMTP id g2-20020a170902934200b0019cd3094612mr2545296plp.6.1683313231047;
-        Fri, 05 May 2023 12:00:31 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:da29:1cb6:1b86:9a77? ([2620:15c:211:201:da29:1cb6:1b86:9a77])
-        by smtp.gmail.com with ESMTPSA id n14-20020a170902d2ce00b001ab13f1fa82sm2109047plc.85.2023.05.05.12.00.29
+        bh=7GAG14JDBz5OS3xBcFkRIfMhJwMwOZg74Hsq79gcl8A=;
+        b=fTOpw0SDOWggy/iHZSG5icIZxiQ71ypZZtD108L+/IgHeINoBf2eqicDLMfBCABmN1
+         d8ja1+8Ge8dWX3eIjRUYlgaeV4pgHk8aCFxtGhyku17NhDRdP5XVc9/t1T+2njnqCLaa
+         SXdt9lrD2l7RiqBp3Y64vWC880hoSWEs1BA/MYgJ4E5YLr8TlGJSgT1qIq48h2RkoSOL
+         VCMO5rTBtC+lkdXxdMWEneA0HFRXKJSE5zocSOD4T51Dw7AZKw03fcR0UAWHY8nhrrub
+         NTWZqcBScUI6Uu5D33EGWn5ChPWKmuhM9QY/J/1+Mr0ZgcRp1C1IiqJcp9ik8WTncSCj
+         HJKQ==
+X-Gm-Message-State: AC+VfDyXMXKTNII7rtXvCaWGaofyREGBiR3cULS0gRa0oXUY+HnW3D+3
+        ZR1aB4gaae8BnFSP8m/9idU=
+X-Google-Smtp-Source: ACHHUZ5Mviic0liFhqeQ8HyeO2pQzPilPWRpMhyTvdO5+URXPmNX+GqzB5vJqH7G+HvYXmAVX0KbmA==
+X-Received: by 2002:a17:90a:ca08:b0:24e:bb9:e4e6 with SMTP id x8-20020a17090aca0800b0024e0bb9e4e6mr2773218pjt.28.1683318962944;
+        Fri, 05 May 2023 13:36:02 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:127d:5561:7469:3abc? ([2620:15c:211:201:127d:5561:7469:3abc])
+        by smtp.gmail.com with ESMTPSA id o3-20020a17090ad24300b00246be20e216sm5415829pjw.34.2023.05.05.13.36.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 May 2023 12:00:30 -0700 (PDT)
-Message-ID: <01d01fa0-9a11-bdad-af82-b1ad9b07ad7b@acm.org>
-Date:   Fri, 5 May 2023 12:00:28 -0700
+        Fri, 05 May 2023 13:36:02 -0700 (PDT)
+Message-ID: <3e19851c-34c1-88fd-119a-e5a4da3f2dbf@acm.org>
+Date:   Fri, 5 May 2023 13:36:00 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH 4/5] scsi: ufs: core: Unexport ufshcd_hold() and
- ufshcd_release()
+Subject: Re: [PATCH v2 1/2] scsi: core: Introduce the BLIST_BROKEN_FUA flag
 Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
         Asutosh Das <quic_asutoshd@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <quic_cang@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-References: <20230504235052.4423-1-bvanassche@acm.org>
- <20230504235052.4423-5-bvanassche@acm.org>
- <990e73a9-b42f-6d13-59a4-ac84edadd602@quicinc.com>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20230202220041.560919-1-bvanassche@acm.org>
+ <20230202220041.560919-2-bvanassche@acm.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <990e73a9-b42f-6d13-59a4-ac84edadd602@quicinc.com>
+In-Reply-To: <20230202220041.560919-2-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/5/23 11:40, Bao D. Nguyen wrote:
-> On 5/4/2023 4:50 PM, Bart Van Assche wrote:
->> Unexport these functions since these are only used by the UFS core.
->
-> Qualcomm uses these ufshcd_hold() and ufshcd_release() functions in ufs-qcom.c. I am going to post Qualcomm's change soon.
+On 2/2/23 14:00, Bart Van Assche wrote:
+> UFS devices perform better when using SYNCHRONIZE CACHE command instead of
+> the FUA flag. Introduce the BLIST_BROKEN_FUA flag for using SYNCHRONIZE
+> CACHE instead of FUA.
+> 
+> The BLIST_BROKEN_FUA flag can be set by using one of the following
+> approaches:
+> * From user space, by writing into /proc/scsi/device_info.
+> * From the kernel, by setting sdev_bflags from the slave_alloc callback.
+> 
+> For a prior version of this patch, see also
+> https://lore.kernel.org/lkml/YpecaXfIxZBHIcfj@google.com/T/
+> 
+> Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+> Cc: Asutosh Das <quic_asutoshd@quicinc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/scsi_scan.c    | 3 +++
+>   include/scsi/scsi_devinfo.h | 4 +++-
+>   2 files changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index a62925355c2c..c1eb6bfe7ed2 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1020,6 +1020,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>   	if (*bflags & BLIST_NO_RSOC)
+>   		sdev->no_report_opcodes = 1;
+>   
+> +	if (*bflags & BLIST_BROKEN_FUA)
+> +		sdev->broken_fua = 1;
+> +
+>   	/* set the device running here so that slave configure
+>   	 * may do I/O */
+>   	mutex_lock(&sdev->state_mutex);
+> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+> index 5d14adae21c7..783451dfa46e 100644
+> --- a/include/scsi/scsi_devinfo.h
+> +++ b/include/scsi/scsi_devinfo.h
+> @@ -68,8 +68,10 @@
+>   #define BLIST_RETRY_ITF		((__force blist_flags_t)(1ULL << 32))
+>   /* Always retry ABORTED_COMMAND with ASC 0xc1 */
+>   #define BLIST_RETRY_ASC_C1	((__force blist_flags_t)(1ULL << 33))
+> +/* Use SYNCHRONIZE CACHE instead of FUA */
+> +#define BLIST_BROKEN_FUA	((__force blist_flags_t)(1ULL << 34))
+>   
+> -#define __BLIST_LAST_USED BLIST_RETRY_ASC_C1
+> +#define __BLIST_LAST_USED BLIST_BROKEN_FUA
+>   
+>   #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
+>   			       (__force blist_flags_t) \
 
-Hi Bao,
+(replying to an email from two months ago)
 
-I will drop this patch.
-
-Does the code that you plan to post pass 'false' or 'true' as second
-argument to ufshcd_hold()?
+I plan to repost the above patch because this patch will allow us to set the
+broken_fua flag from user space. Please let me know if there are any objections
+or concerns.
 
 Thanks,
 
