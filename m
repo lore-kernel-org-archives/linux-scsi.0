@@ -2,110 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E48C77B7C
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 03:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E1D1C77B75
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 May 2023 06:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229697AbjEEDEm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 May 2023 23:04:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46450 "EHLO
+        id S230299AbjEEGAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 May 2023 02:00:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229768AbjEEDEV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2023 23:04:21 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BEBB11B7C;
-        Thu,  4 May 2023 20:04:20 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QCFmD5JbfzpV4b;
-        Fri,  5 May 2023 11:00:12 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Fri, 5 May 2023 11:04:17 +0800
-From:   Xingui Yang <yangxingui@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v2] ata: libata-scsi: Fix get identity data failed
-Date:   Fri, 5 May 2023 02:57:12 +0000
-Message-ID: <20230505025712.19438-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S229601AbjEEGAs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 02:00:48 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C551B11D89
+        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2023 23:00:46 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 69E8468AA6; Fri,  5 May 2023 08:00:38 +0200 (CEST)
+Date:   Fri, 5 May 2023 08:00:37 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v2 1/5] scsi: core: Use min() instead of open-coding it
+Message-ID: <20230505060037.GA11897@lst.de>
+References: <20230503230654.2441121-1-bvanassche@acm.org> <20230503230654.2441121-2-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230503230654.2441121-2-bvanassche@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function ata_get_identity() uses the helper ata_scsi_find_dev() to get
-the ata_device structure of a scsi device. However, when the ata device is
-managed by libsas, ata_scsi_find_dev() returns NULL, turning
-ata_get_identity() into a nop and always returns -ENOMSG.
+Looks good:
 
-Fix this by checking whether ATA_FLAG_SAS_HOST is set for ap->flags in
-ata_scsi_find_dev(), as the flag is only used in libsas. If
-ATA_FLAG_SAS_HOST is set, use sas_to_ata_dev() to find associated ATA
-device.
-
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
-Changes to v1 
-- Let ata_scsi_find_dev() return the correct value and don't keep replacing
-calls to ata_scsi_find_dev().
-
- drivers/ata/libata-scsi.c | 12 ++++++++++--
- drivers/ata/libata.h      |  2 +-
- 2 files changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7bb12deab70c..aa580ea341fa 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/libsas.h>
- #include <linux/libata.h>
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
-@@ -2745,10 +2746,17 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
-  *	Associated ATA device, or %NULL if not found.
-  */
- struct ata_device *
--ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
-+ata_scsi_find_dev(struct ata_port *ap, struct scsi_device *scsidev)
- {
--	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
-+	struct ata_device *dev;
-+
-+	if (ap->flags & ATA_FLAG_SAS_HOST) {
-+		struct domain_device *ddev = sdev_to_domain_dev(scsidev);
-+
-+		return sas_to_ata_dev(ddev);
-+	}
- 
-+	dev = __ata_scsi_find_dev(ap, scsidev);
- 	if (unlikely(!dev || !ata_dev_enabled(dev)))
- 		return NULL;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 926d0d33cd29..6d66f46da064 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -109,7 +109,7 @@ static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
- 
- /* libata-scsi.c */
- extern struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
--					    const struct scsi_device *scsidev);
-+					    struct scsi_device *scsidev);
- extern int ata_scsi_add_hosts(struct ata_host *host,
- 			      const struct scsi_host_template *sht);
- extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
--- 
-2.17.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
