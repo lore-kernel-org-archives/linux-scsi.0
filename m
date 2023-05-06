@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3072C7EE22
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 23:31:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A55A8C77B73
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 23:31:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229994AbjEFXbh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 May 2023 19:31:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42102 "EHLO
+        id S230049AbjEFXbj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 6 May 2023 19:31:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229653AbjEFXbe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 May 2023 19:31:34 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2D6586BF
+        with ESMTP id S230034AbjEFXbh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 May 2023 19:31:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33481A5CC
         for <linux-scsi@vger.kernel.org>; Sat,  6 May 2023 16:30:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683415804;
+        s=mimecast20190719; t=1683415803;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7Eyqpr1+E0beJnnwrXpnHbMZS+jSyb2Xwsmumuaw4/E=;
-        b=RBMhZSlW8IaNh63oTH1kje6qO+Q8ZsSe8NxuOZ4cjWLCtkW4hnCbZiWGcZcw4ZDrzUQADe
-        8ZFyIdfAoea+ZTk7EGc4WDSfwHbtzRGT32Iq6q9rrORXKEZ8YPQMxnvBkiGxfh1/rYYPMI
-        LxDjB9VU+5iaou7MXzIBut4uzKKVH/Q=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=vDpom2RztN/03ErGZSbI4RmJgyW3xZZd2IBq9VSMG1g=;
+        b=CPKRS3qdCPuKlZ3/sQRZlDOgQKHCTTmjHQtPVwP/XTF2P1lBil2/qHk6b4eBPqVxmWxRY0
+        80uI6rHp9sIM8KAXaWfwO2ekvDAh6uybiLNXys9AE4KpLdM5jTmXaGKbe4WWyss2t/68Kf
+        j865EwfWOsisCbIfriK5derUYugNB7M=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-402-Jsse6P-SMYWEE2cGwOxiOg-1; Sat, 06 May 2023 19:30:00 -0400
-X-MC-Unique: Jsse6P-SMYWEE2cGwOxiOg-1
+ us-mta-203-KjmGpJ7KO0S6tdkt50H7SA-1; Sat, 06 May 2023 19:29:59 -0400
+X-MC-Unique: KjmGpJ7KO0S6tdkt50H7SA-1
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 69DCE38123A0;
-        Sat,  6 May 2023 23:30:00 +0000 (UTC)
-Received: from toolbox.redhat.com (unknown [10.2.16.10])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D56AC440BC;
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 054E8101A531;
         Sat,  6 May 2023 23:29:59 +0000 (UTC)
+Received: from toolbox.redhat.com (unknown [10.2.16.10])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 71A3635443;
+        Sat,  6 May 2023 23:29:58 +0000 (UTC)
 From:   Chris Leech <cleech@redhat.com>
 To:     Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org,
         open-iscsi@googlegroups.com, netdev@vger.kernel.org
 Cc:     Chris Leech <cleech@redhat.com>
-Subject: [PATCH 10/11] iscsi: make session and connection lists per-net
-Date:   Sat,  6 May 2023 16:29:29 -0700
-Message-Id: <20230506232930.195451-11-cleech@redhat.com>
+Subject: [PATCH 08/11] iscsi: rename iscsi_bus_flash_* to iscsi_flash_*
+Date:   Sat,  6 May 2023 16:29:27 -0700
+Message-Id: <20230506232930.195451-9-cleech@redhat.com>
 In-Reply-To: <20230506232930.195451-1-cleech@redhat.com>
 References: <20230506232930.195451-1-cleech@redhat.com>
 MIME-Version: 1.0
@@ -53,273 +53,574 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Eliminate the comparisions on list lookups, and it will make it easier
-to shut down session on net namespace exit in the next patch.
+From: Lee Duncan <lduncan@suse.com>
 
+These are cleanups after the bus to class conversion
+for flashnode devices.
+
+Signed-off-by: Lee Duncan <lduncan@suse.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Chris Leech <cleech@redhat.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 104 ++++++++++++++++------------
- 1 file changed, 61 insertions(+), 43 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c       |  52 +++++++-------
+ drivers/scsi/scsi_transport_iscsi.c | 102 ++++++++++++++--------------
+ include/scsi/scsi_transport_iscsi.h |  48 ++++++-------
+ 3 files changed, 102 insertions(+), 100 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index bc06020565e4..bf5e2b3ce8ce 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -168,20 +168,20 @@ static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type);
+  * iSCSI Flash DDB sysfs entry points
+  */
+ static int
+-qla4xxx_sysfs_ddb_set_param(struct iscsi_bus_flash_session *fnode_sess,
+-			    struct iscsi_bus_flash_conn *fnode_conn,
++qla4xxx_sysfs_ddb_set_param(struct iscsi_flash_session *fnode_sess,
++			    struct iscsi_flash_conn *fnode_conn,
+ 			    void *data, int len);
+ static int
+-qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
++qla4xxx_sysfs_ddb_get_param(struct iscsi_flash_session *fnode_sess,
+ 			    int param, char *buf);
+ static int qla4xxx_sysfs_ddb_add(struct Scsi_Host *shost, const char *buf,
+ 				 int len);
+ static int
+-qla4xxx_sysfs_ddb_delete(struct iscsi_bus_flash_session *fnode_sess);
+-static int qla4xxx_sysfs_ddb_login(struct iscsi_bus_flash_session *fnode_sess,
+-				   struct iscsi_bus_flash_conn *fnode_conn);
+-static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
+-				    struct iscsi_bus_flash_conn *fnode_conn);
++qla4xxx_sysfs_ddb_delete(struct iscsi_flash_session *fnode_sess);
++static int qla4xxx_sysfs_ddb_login(struct iscsi_flash_session *fnode_sess,
++				   struct iscsi_flash_conn *fnode_conn);
++static int qla4xxx_sysfs_ddb_logout(struct iscsi_flash_session *fnode_sess,
++				    struct iscsi_flash_conn *fnode_conn);
+ static int qla4xxx_sysfs_ddb_logout_sid(struct iscsi_cls_session *cls_sess);
+ 
+ static struct qla4_8xxx_legacy_intr_set legacy_intr[] =
+@@ -3494,8 +3494,8 @@ static int qla4xxx_task_xmit(struct iscsi_task *task)
+ 	return -ENOSYS;
+ }
+ 
+-static int qla4xxx_copy_from_fwddb_param(struct iscsi_bus_flash_session *sess,
+-					 struct iscsi_bus_flash_conn *conn,
++static int qla4xxx_copy_from_fwddb_param(struct iscsi_flash_session *sess,
++					 struct iscsi_flash_conn *conn,
+ 					 struct dev_db_entry *fw_ddb_entry)
+ {
+ 	unsigned long options = 0;
+@@ -3636,8 +3636,8 @@ static int qla4xxx_copy_from_fwddb_param(struct iscsi_bus_flash_session *sess,
+ 	return rc;
+ }
+ 
+-static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
+-				       struct iscsi_bus_flash_conn *conn,
++static int qla4xxx_copy_to_fwddb_param(struct iscsi_flash_session *sess,
++				       struct iscsi_flash_conn *conn,
+ 				       struct dev_db_entry *fw_ddb_entry)
+ {
+ 	uint16_t options;
+@@ -7183,7 +7183,7 @@ static void qla4xxx_build_new_nt_list(struct scsi_qla_host *ha,
+  **/
+ static int qla4xxx_sysfs_ddb_is_non_persistent(struct device *dev, void *data)
+ {
+-	struct iscsi_bus_flash_session *fnode_sess;
++	struct iscsi_flash_session *fnode_sess;
+ 
+ 	if (!iscsi_is_flashnode_session_dev(dev))
+ 		return 0;
+@@ -7213,8 +7213,8 @@ static int qla4xxx_sysfs_ddb_tgt_create(struct scsi_qla_host *ha,
+ 					struct dev_db_entry *fw_ddb_entry,
+ 					uint16_t *idx, int user)
+ {
+-	struct iscsi_bus_flash_session *fnode_sess = NULL;
+-	struct iscsi_bus_flash_conn *fnode_conn = NULL;
++	struct iscsi_flash_session *fnode_sess = NULL;
++	struct iscsi_flash_conn *fnode_conn = NULL;
+ 	int rc = QLA_ERROR;
+ 
+ 	fnode_sess = iscsi_create_flashnode_sess(ha->host, *idx,
+@@ -7353,8 +7353,8 @@ static int qla4xxx_sysfs_ddb_add(struct Scsi_Host *shost, const char *buf,
+  * This writes the contents of target ddb buffer to Flash with a valid cookie
+  * value in order to make the ddb entry persistent.
+  **/
+-static int  qla4xxx_sysfs_ddb_apply(struct iscsi_bus_flash_session *fnode_sess,
+-				    struct iscsi_bus_flash_conn *fnode_conn)
++static int  qla4xxx_sysfs_ddb_apply(struct iscsi_flash_session *fnode_sess,
++				    struct iscsi_flash_conn *fnode_conn)
+ {
+ 	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+@@ -7543,8 +7543,8 @@ static int qla4xxx_ddb_login_nt(struct scsi_qla_host *ha,
+  *
+  * This logs in to the specified target
+  **/
+-static int qla4xxx_sysfs_ddb_login(struct iscsi_bus_flash_session *fnode_sess,
+-				   struct iscsi_bus_flash_conn *fnode_conn)
++static int qla4xxx_sysfs_ddb_login(struct iscsi_flash_session *fnode_sess,
++				   struct iscsi_flash_conn *fnode_conn)
+ {
+ 	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+@@ -7727,8 +7727,8 @@ static int qla4xxx_sysfs_ddb_logout_sid(struct iscsi_cls_session *cls_sess)
+  *
+  * This performs log out from the specified target
+  **/
+-static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
+-				    struct iscsi_bus_flash_conn *fnode_conn)
++static int qla4xxx_sysfs_ddb_logout(struct iscsi_flash_session *fnode_sess,
++				    struct iscsi_flash_conn *fnode_conn)
+ {
+ 	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+@@ -7837,12 +7837,12 @@ static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
+ }
+ 
+ static int
+-qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
++qla4xxx_sysfs_ddb_get_param(struct iscsi_flash_session *fnode_sess,
+ 			    int param, char *buf)
+ {
+ 	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+-	struct iscsi_bus_flash_conn *fnode_conn;
++	struct iscsi_flash_conn *fnode_conn;
+ 	struct ql4_chap_table chap_tbl;
+ 	struct device *dev;
+ 	int parent_type;
+@@ -8091,8 +8091,8 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
+  * This sets the parameter of flash ddb entry and writes them to flash
+  **/
+ static int
+-qla4xxx_sysfs_ddb_set_param(struct iscsi_bus_flash_session *fnode_sess,
+-			    struct iscsi_bus_flash_conn *fnode_conn,
++qla4xxx_sysfs_ddb_set_param(struct iscsi_flash_session *fnode_sess,
++			    struct iscsi_flash_conn *fnode_conn,
+ 			    void *data, int len)
+ {
+ 	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
+@@ -8319,7 +8319,7 @@ qla4xxx_sysfs_ddb_set_param(struct iscsi_bus_flash_session *fnode_sess,
+  *
+  * This invalidates the flash ddb entry at the given index
+  **/
+-static int qla4xxx_sysfs_ddb_delete(struct iscsi_bus_flash_session *fnode_sess)
++static int qla4xxx_sysfs_ddb_delete(struct iscsi_flash_session *fnode_sess)
+ {
+ 	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index cd3228293a64..15d28186996d 100644
+index 2fae14aa291e..26b3d479b6ac 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1755,17 +1755,16 @@ static DECLARE_TRANSPORT_CLASS_NS(iscsi_connection_class,
+@@ -875,7 +875,7 @@ static ssize_t								\
+ show_##type##_##name(struct device *dev, struct device_attribute *attr,	\
+ 		     char *buf)						\
+ {									\
+-	struct iscsi_bus_flash_session *fnode_sess =			\
++	struct iscsi_flash_session *fnode_sess =			\
+ 					iscsi_dev_to_flash_session(dev);\
+ 	struct iscsi_transport *t = fnode_sess->transport;		\
+ 	return t->get_flashnode_param(fnode_sess, param, buf);		\
+@@ -975,7 +975,7 @@ static umode_t iscsi_flashnode_sess_attr_is_visible(struct kobject *kobj,
+ 						    int i)
+ {
+ 	struct device *dev = container_of(kobj, struct device, kobj);
+-	struct iscsi_bus_flash_session *fnode_sess =
++	struct iscsi_flash_session *fnode_sess =
+ 						iscsi_dev_to_flash_session(dev);
+ 	struct iscsi_transport *t = fnode_sess->transport;
+ 	int param;
+@@ -1066,7 +1066,7 @@ static const struct attribute_group *iscsi_flashnode_sess_attr_groups[] = {
  
- struct iscsi_net {
- 	struct sock *nls;
-+	spinlock_t sesslock;
-+	struct list_head sesslist;
-+	spinlock_t connlock;
-+	struct list_head connlist;
-+	struct list_head connlist_err;
+ static void iscsi_flashnode_sess_release(struct device *dev)
+ {
+-	struct iscsi_bus_flash_session *fnode_sess =
++	struct iscsi_flash_session *fnode_sess =
+ 						iscsi_dev_to_flash_session(dev);
+ 
+ 	kfree(fnode_sess->targetname);
+@@ -1076,7 +1076,7 @@ static void iscsi_flashnode_sess_release(struct device *dev)
+ }
+ 
+ static const struct device_type iscsi_flashnode_sess_dev_type = {
+-	.name = "iscsi_flashnode_sess_dev_type",
++	.name = "iscsi_flashnode_sess",
+ 	.groups = iscsi_flashnode_sess_attr_groups,
+ 	.release = iscsi_flashnode_sess_release,
+ };
+@@ -1093,8 +1093,8 @@ static ssize_t								\
+ show_##type##_##name(struct device *dev, struct device_attribute *attr,	\
+ 		     char *buf)						\
+ {									\
+-	struct iscsi_bus_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);\
+-	struct iscsi_bus_flash_session *fnode_sess =			\
++	struct iscsi_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);\
++	struct iscsi_flash_session *fnode_sess =			\
+ 				iscsi_flash_conn_to_flash_session(fnode_conn);\
+ 	struct iscsi_transport *t = fnode_conn->transport;		\
+ 	return t->get_flashnode_param(fnode_sess, param, buf);		\
+@@ -1183,7 +1183,7 @@ static umode_t iscsi_flashnode_conn_attr_is_visible(struct kobject *kobj,
+ 						    int i)
+ {
+ 	struct device *dev = container_of(kobj, struct device, kobj);
+-	struct iscsi_bus_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);
++	struct iscsi_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);
+ 	struct iscsi_transport *t = fnode_conn->transport;
+ 	int param;
+ 
+@@ -1259,7 +1259,7 @@ static const struct attribute_group *iscsi_flashnode_conn_attr_groups[] = {
+ 
+ static void iscsi_flashnode_conn_release(struct device *dev)
+ {
+-	struct iscsi_bus_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);
++	struct iscsi_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);
+ 
+ 	kfree(fnode_conn->ipaddress);
+ 	kfree(fnode_conn->redirect_ipaddr);
+@@ -1268,12 +1268,28 @@ static void iscsi_flashnode_conn_release(struct device *dev)
+ }
+ 
+ static const struct device_type iscsi_flashnode_conn_dev_type = {
+-	.name = "iscsi_flashnode_conn_dev_type",
++	.name = "iscsi_flashnode_conn",
+ 	.groups = iscsi_flashnode_conn_attr_groups,
+ 	.release = iscsi_flashnode_conn_release,
  };
  
- static int iscsi_net_id __read_mostly;
- static DEFINE_MUTEX(rx_queue_mutex);
- 
--static LIST_HEAD(sesslist);
--static DEFINE_SPINLOCK(sesslock);
--static LIST_HEAD(connlist);
--static LIST_HEAD(connlist_err);
--static DEFINE_SPINLOCK(connlock);
--
- static uint32_t iscsi_conn_get_sid(struct iscsi_cls_conn *conn)
- {
- 	struct iscsi_cls_session *sess = iscsi_dev_to_session(conn->dev.parent);
-@@ -1780,19 +1779,18 @@ static struct iscsi_cls_session *iscsi_session_lookup(struct net *net,
- {
- 	unsigned long flags;
- 	struct iscsi_cls_session *sess;
--	struct net *ns;
-+	struct iscsi_net *isn;
- 
--	spin_lock_irqsave(&sesslock, flags);
--	list_for_each_entry(sess, &sesslist, sess_list) {
-+	isn = net_generic(net, iscsi_net_id);
+-static struct class iscsi_flashnode_bus = {
++/**
++ * iscsi_is_flashnode_conn_dev - verify passed device is to be flashnode conn
++ * @dev: device to verify
++ * @data: pointer to data containing value to use for verification
++ *
++ * Verifies if the passed device is flashnode conn device
++ *
++ * Returns:
++ *  1 on success
++ *  0 on failure
++ */
++static int iscsi_is_flashnode_conn_dev(struct device *dev, void *data)
++{
++	return dev->type == &iscsi_flashnode_conn_dev_type;
++}
 +
-+	spin_lock_irqsave(&isn->sesslock, flags);
-+	list_for_each_entry(sess, &isn->sesslist, sess_list) {
- 		if (sess->sid == sid) {
--			ns = iscsi_sess_net(sess);
--			if (ns != net)
--				continue;
--			spin_unlock_irqrestore(&sesslock, flags);
-+			spin_unlock_irqrestore(&isn->sesslock, flags);
- 			return sess;
- 		}
- 	}
--	spin_unlock_irqrestore(&sesslock, flags);
-+	spin_unlock_irqrestore(&isn->sesslock, flags);
- 	return NULL;
- }
++static struct class iscsi_flashnode = {
+ 	.name = "iscsi_flashnode",
+ };
  
-@@ -1804,19 +1802,18 @@ static struct iscsi_cls_conn *iscsi_conn_lookup(struct net *net, uint32_t sid,
- {
- 	unsigned long flags;
- 	struct iscsi_cls_conn *conn;
--	struct net *ns;
-+	struct iscsi_net *isn;
- 
--	spin_lock_irqsave(&connlock, flags);
--	list_for_each_entry(conn, &connlist, conn_list) {
-+	isn = net_generic(net, iscsi_net_id);
-+
-+	spin_lock_irqsave(&isn->connlock, flags);
-+	list_for_each_entry(conn, &isn->connlist, conn_list) {
- 		if ((conn->cid == cid) && (iscsi_conn_get_sid(conn) == sid)) {
--			ns = iscsi_conn_net(conn);
--			if (ns != net)
--				continue;
--			spin_unlock_irqrestore(&connlock, flags);
-+			spin_unlock_irqrestore(&isn->connlock, flags);
- 			return conn;
- 		}
- 	}
--	spin_unlock_irqrestore(&connlock, flags);
-+	spin_unlock_irqrestore(&isn->connlock, flags);
- 	return NULL;
- }
- 
-@@ -2228,6 +2225,9 @@ EXPORT_SYMBOL_GPL(iscsi_alloc_session);
- int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
- {
- 	struct Scsi_Host *shost = iscsi_session_to_shost(session);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
-+	struct net *net = iscsi_host_net(ihost);
-+	struct iscsi_net *isn = net_generic(net, iscsi_net_id);
- 	unsigned long flags;
- 	int id = 0;
- 	int err;
-@@ -2271,9 +2271,9 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
- 		goto release_dev;
- 	}
- 
--	spin_lock_irqsave(&sesslock, flags);
--	list_add(&session->sess_list, &sesslist);
--	spin_unlock_irqrestore(&sesslock, flags);
-+	spin_lock_irqsave(&isn->sesslock, flags);
-+	list_add(&session->sess_list, &isn->sesslist);
-+	spin_unlock_irqrestore(&isn->sesslock, flags);
- 
- 	iscsi_session_event(session, ISCSI_KEVENT_CREATE_SESSION);
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed session adding\n");
-@@ -2343,15 +2343,17 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
- 
- void iscsi_remove_session(struct iscsi_cls_session *session)
- {
-+	struct net *net = iscsi_sess_net(session);
-+	struct iscsi_net *isn = net_generic(net, iscsi_net_id);
- 	unsigned long flags;
- 	int err;
- 
- 	ISCSI_DBG_TRANS_SESSION(session, "Removing session\n");
- 
--	spin_lock_irqsave(&sesslock, flags);
-+	spin_lock_irqsave(&isn->sesslock, flags);
- 	if (!list_empty(&session->sess_list))
- 		list_del(&session->sess_list);
--	spin_unlock_irqrestore(&sesslock, flags);
-+	spin_unlock_irqrestore(&isn->sesslock, flags);
- 
- 	if (!cancel_work_sync(&session->block_work))
- 		cancel_delayed_work_sync(&session->recovery_work);
-@@ -2562,20 +2564,22 @@ static int iscsi_iter_force_destroy_conn_fn(struct device *dev, void *data)
- void iscsi_force_destroy_session(struct iscsi_cls_session *session)
- {
- 	struct iscsi_transport *transport = session->transport;
-+	struct net *net = iscsi_sess_net(session);
-+	struct iscsi_net *isn = net_generic(net, iscsi_net_id);
- 	unsigned long flags;
- 
- 	WARN_ON_ONCE(system_state == SYSTEM_RUNNING);
- 
--	spin_lock_irqsave(&sesslock, flags);
-+	spin_lock_irqsave(&isn->sesslock, flags);
- 	if (list_empty(&session->sess_list)) {
--		spin_unlock_irqrestore(&sesslock, flags);
-+		spin_unlock_irqrestore(&isn->sesslock, flags);
- 		/*
- 		 * Conn/ep is already freed. Session is being torn down via
- 		 * async path. For shutdown we don't care about it so return.
- 		 */
- 		return;
- 	}
--	spin_unlock_irqrestore(&sesslock, flags);
-+	spin_unlock_irqrestore(&isn->sesslock, flags);
- 
- 	device_for_each_child(&session->dev, NULL,
- 			      iscsi_iter_force_destroy_conn_fn);
-@@ -2646,6 +2650,8 @@ int iscsi_add_conn(struct iscsi_cls_conn *conn)
- 	int err;
- 	unsigned long flags;
- 	struct iscsi_cls_session *session = iscsi_dev_to_session(conn->dev.parent);
-+	struct net *net = iscsi_sess_net(session);
-+	struct iscsi_net *isn = net_generic(net, iscsi_net_id);
- 
- 	err = device_add(&conn->dev);
- 	if (err) {
-@@ -2661,9 +2667,9 @@ int iscsi_add_conn(struct iscsi_cls_conn *conn)
- 		return err;
- 	}
- 
--	spin_lock_irqsave(&connlock, flags);
--	list_add(&conn->conn_list, &connlist);
--	spin_unlock_irqrestore(&connlock, flags);
-+	spin_lock_irqsave(&isn->connlock, flags);
-+	list_add(&conn->conn_list, &isn->connlist);
-+	spin_unlock_irqrestore(&isn->connlock, flags);
- 
- 	return 0;
- }
-@@ -2678,11 +2684,14 @@ EXPORT_SYMBOL_GPL(iscsi_add_conn);
+@@ -1290,12 +1306,12 @@ static struct class iscsi_flashnode_bus = {
+  *  pointer to allocated flashnode sess on success
+  *  %NULL on failure
   */
- void iscsi_remove_conn(struct iscsi_cls_conn *conn)
+-struct iscsi_bus_flash_session *
++struct iscsi_flash_session *
+ iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
+ 			    struct iscsi_transport *transport,
+ 			    int dd_size)
  {
-+	struct net *net = iscsi_conn_net(conn);
-+	struct iscsi_net *isn = net_generic(net, iscsi_net_id);
-+
- 	unsigned long flags;
+-	struct iscsi_bus_flash_session *fnode_sess;
++	struct iscsi_flash_session *fnode_sess;
+ 	int err;
  
--	spin_lock_irqsave(&connlock, flags);
-+	spin_lock_irqsave(&isn->connlock, flags);
- 	list_del(&conn->conn_list);
--	spin_unlock_irqrestore(&connlock, flags);
-+	spin_unlock_irqrestore(&isn->connlock, flags);
- 
- 	transport_unregister_device(&conn->dev);
- 	device_del(&conn->dev);
-@@ -3466,20 +3475,21 @@ iscsi_set_path(struct net *net, struct iscsi_transport *transport,
- 	return err;
- }
- 
--static int iscsi_session_has_conns(int sid)
-+static int iscsi_session_has_conns(struct net *net, int sid)
+ 	fnode_sess = kzalloc(sizeof(*fnode_sess) + dd_size, GFP_KERNEL);
+@@ -1305,7 +1321,7 @@ iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
+ 	fnode_sess->transport = transport;
+ 	fnode_sess->target_id = index;
+ 	fnode_sess->dev.type = &iscsi_flashnode_sess_dev_type;
+-	fnode_sess->dev.class = &iscsi_flashnode_bus;
++	fnode_sess->dev.class = &iscsi_flashnode;
+ 	fnode_sess->dev.parent = &shost->shost_gendev;
+ 	dev_set_name(&fnode_sess->dev, "flashnode_sess-%u:%u",
+ 		     shost->host_no, index);
+@@ -1338,13 +1354,13 @@ EXPORT_SYMBOL_GPL(iscsi_create_flashnode_sess);
+  *  pointer to allocated flashnode conn on success
+  *  %NULL on failure
+  */
+-struct iscsi_bus_flash_conn *
++struct iscsi_flash_conn *
+ iscsi_create_flashnode_conn(struct Scsi_Host *shost,
+-			    struct iscsi_bus_flash_session *fnode_sess,
++			    struct iscsi_flash_session *fnode_sess,
+ 			    struct iscsi_transport *transport,
+ 			    int dd_size)
  {
-+	struct iscsi_net *isn = net_generic(net, iscsi_net_id);
- 	struct iscsi_cls_conn *conn;
- 	unsigned long flags;
- 	int found = 0;
+-	struct iscsi_bus_flash_conn *fnode_conn;
++	struct iscsi_flash_conn *fnode_conn;
+ 	int err;
  
--	spin_lock_irqsave(&connlock, flags);
--	list_for_each_entry(conn, &connlist, conn_list) {
-+	spin_lock_irqsave(&isn->connlock, flags);
-+	list_for_each_entry(conn, &isn->connlist, conn_list) {
- 		if (iscsi_conn_get_sid(conn) == sid) {
- 			found = 1;
- 			break;
- 		}
- 	}
--	spin_unlock_irqrestore(&connlock, flags);
-+	spin_unlock_irqrestore(&isn->connlock, flags);
+ 	fnode_conn = kzalloc(sizeof(*fnode_conn) + dd_size, GFP_KERNEL);
+@@ -1353,7 +1369,7 @@ iscsi_create_flashnode_conn(struct Scsi_Host *shost,
  
- 	return found;
+ 	fnode_conn->transport = transport;
+ 	fnode_conn->dev.type = &iscsi_flashnode_conn_dev_type;
+-	fnode_conn->dev.class = &iscsi_flashnode_bus;
++	fnode_conn->dev.class = &iscsi_flashnode;
+ 	fnode_conn->dev.parent = &fnode_sess->dev;
+ 	dev_set_name(&fnode_conn->dev, "flashnode_conn-%u:%u:0",
+ 		     shost->host_no, fnode_sess->target_id);
+@@ -1373,23 +1389,7 @@ iscsi_create_flashnode_conn(struct Scsi_Host *shost,
  }
-@@ -4192,7 +4202,7 @@ iscsi_if_recv_msg(struct net *net, struct sk_buff *skb,
- 		session = iscsi_session_lookup(net, ev->u.d_session.sid);
- 		if (!session)
- 			err = -EINVAL;
--		else if (iscsi_session_has_conns(ev->u.d_session.sid))
-+		else if (iscsi_session_has_conns(net, ev->u.d_session.sid))
- 			err = -EBUSY;
- 		else
- 			transport->destroy_session(session);
-@@ -4201,15 +4211,16 @@ iscsi_if_recv_msg(struct net *net, struct sk_buff *skb,
- 		session = iscsi_session_lookup(net, ev->u.d_session.sid);
- 		if (!session)
- 			err = -EINVAL;
--		else if (iscsi_session_has_conns(ev->u.d_session.sid))
-+		else if (iscsi_session_has_conns(net, ev->u.d_session.sid))
- 			err = -EBUSY;
- 		else {
-+			struct iscsi_net *isn = net_generic(net, iscsi_net_id);
- 			unsigned long flags;
+ EXPORT_SYMBOL_GPL(iscsi_create_flashnode_conn);
  
- 			/* Prevent this session from being found again */
--			spin_lock_irqsave(&sesslock, flags);
-+			spin_lock_irqsave(&isn->sesslock, flags);
- 			list_del_init(&session->sess_list);
--			spin_unlock_irqrestore(&sesslock, flags);
-+			spin_unlock_irqrestore(&isn->sesslock, flags);
- 
- 			queue_work(system_unbound_wq, &session->destroy_work);
- 		}
-@@ -5211,6 +5222,13 @@ static int __net_init iscsi_net_init(struct net *net)
- 	if (!nls)
- 		return -ENOMEM;
- 	isn = net_generic(net, iscsi_net_id);
-+
-+	INIT_LIST_HEAD(&isn->sesslist);
-+	spin_lock_init(&isn->sesslock);
-+	INIT_LIST_HEAD(&isn->connlist);
-+	INIT_LIST_HEAD(&isn->connlist_err);
-+	spin_lock_init(&isn->connlock);
-+
- 	isn->nls = nls;
+-/**
+- * iscsi_is_flashnode_conn_dev - verify passed device is to be flashnode conn
+- * @dev: device to verify
+- * @data: pointer to data containing value to use for verification
+- *
+- * Verifies if the passed device is flashnode conn device
+- *
+- * Returns:
+- *  1 on success
+- *  0 on failure
+- */
+-static int iscsi_is_flashnode_conn_dev(struct device *dev, void *data)
+-{
+-	return dev->type == &iscsi_flashnode_conn_dev_type;
+-}
+-
+-static int iscsi_destroy_flashnode_conn(struct iscsi_bus_flash_conn *fnode_conn)
++static int iscsi_destroy_flashnode_conn(struct iscsi_flash_conn *fnode_conn)
+ {
+ 	device_unregister(&fnode_conn->dev);
  	return 0;
- }
+@@ -1397,10 +1397,10 @@ static int iscsi_destroy_flashnode_conn(struct iscsi_bus_flash_conn *fnode_conn)
+ 
+ static int flashnode_match_index(struct device *dev, void *data)
+ {
+-	struct iscsi_bus_flash_session *fnode_sess = NULL;
++	struct iscsi_flash_session *fnode_sess = NULL;
+ 	int ret = 0;
+ 
+-	if (dev->type != &iscsi_flashnode_sess_dev_type)
++	if (!iscsi_is_flashnode_session_dev(dev))
+ 		goto exit_match_index;
+ 
+ 	fnode_sess = iscsi_dev_to_flash_session(dev);
+@@ -1421,10 +1421,10 @@ static int flashnode_match_index(struct device *dev, void *data)
+  *  pointer to found flashnode session object on success
+  *  %NULL on failure
+  */
+-static struct iscsi_bus_flash_session *
++static struct iscsi_flash_session *
+ iscsi_get_flashnode_by_index(struct Scsi_Host *shost, uint32_t idx)
+ {
+-	struct iscsi_bus_flash_session *fnode_sess = NULL;
++	struct iscsi_flash_session *fnode_sess = NULL;
+ 	struct device *dev;
+ 
+ 	dev = device_find_child(&shost->shost_gendev, &idx,
+@@ -1468,7 +1468,7 @@ EXPORT_SYMBOL_GPL(iscsi_find_flashnode_sess);
+  *  %NULL on failure
+  */
+ struct device *
+-iscsi_find_flashnode_conn(struct iscsi_bus_flash_session *fnode_sess)
++iscsi_find_flashnode_conn(struct iscsi_flash_session *fnode_sess)
+ {
+ 	return device_find_child(&fnode_sess->dev, NULL,
+ 				 iscsi_is_flashnode_conn_dev);
+@@ -1490,7 +1490,7 @@ static int iscsi_iter_destroy_flashnode_conn_fn(struct device *dev, void *data)
+  * Deletes the flashnode session entry and all children flashnode connection
+  * entries from sysfs
+  */
+-void iscsi_destroy_flashnode_sess(struct iscsi_bus_flash_session *fnode_sess)
++void iscsi_destroy_flashnode_sess(struct iscsi_flash_session *fnode_sess)
+ {
+ 	int err;
+ 
+@@ -1506,7 +1506,7 @@ EXPORT_SYMBOL_GPL(iscsi_destroy_flashnode_sess);
+ 
+ static int iscsi_iter_destroy_flashnode_fn(struct device *dev, void *data)
+ {
+-	if (dev->type != &iscsi_flashnode_sess_dev_type)
++	if (!iscsi_is_flashnode_session_dev(dev))
+ 		return 0;
+ 
+ 	iscsi_destroy_flashnode_sess(iscsi_dev_to_flash_session(dev));
+@@ -3644,8 +3644,8 @@ static int iscsi_set_flashnode_param(struct net *net,
+ {
+ 	char *data = (char *)ev + sizeof(*ev);
+ 	struct Scsi_Host *shost;
+-	struct iscsi_bus_flash_session *fnode_sess;
+-	struct iscsi_bus_flash_conn *fnode_conn;
++	struct iscsi_flash_session *fnode_sess;
++	struct iscsi_flash_conn *fnode_conn;
+ 	struct device *dev;
+ 	uint32_t idx;
+ 	int err = 0;
+@@ -3733,7 +3733,7 @@ static int iscsi_del_flashnode(struct net *net,
+ 			       struct iscsi_uevent *ev)
+ {
+ 	struct Scsi_Host *shost;
+-	struct iscsi_bus_flash_session *fnode_sess;
++	struct iscsi_flash_session *fnode_sess;
+ 	uint32_t idx;
+ 	int err = 0;
+ 
+@@ -3774,8 +3774,8 @@ static int iscsi_login_flashnode(struct net *net,
+ 				 struct iscsi_uevent *ev)
+ {
+ 	struct Scsi_Host *shost;
+-	struct iscsi_bus_flash_session *fnode_sess;
+-	struct iscsi_bus_flash_conn *fnode_conn;
++	struct iscsi_flash_session *fnode_sess;
++	struct iscsi_flash_conn *fnode_conn;
+ 	struct device *dev;
+ 	uint32_t idx;
+ 	int err = 0;
+@@ -3827,8 +3827,8 @@ static int iscsi_logout_flashnode(struct net *net,
+ 				  struct iscsi_uevent *ev)
+ {
+ 	struct Scsi_Host *shost;
+-	struct iscsi_bus_flash_session *fnode_sess;
+-	struct iscsi_bus_flash_conn *fnode_conn;
++	struct iscsi_flash_session *fnode_sess;
++	struct iscsi_flash_conn *fnode_conn;
+ 	struct device *dev;
+ 	uint32_t idx;
+ 	int err = 0;
+@@ -5229,7 +5229,7 @@ static __init int iscsi_transport_init(void)
+ 	if (err)
+ 		goto unregister_conn_class;
+ 
+-	err = class_register(&iscsi_flashnode_bus);
++	err = class_register(&iscsi_flashnode);
+ 	if (err)
+ 		goto unregister_session_class;
+ 
+@@ -5252,7 +5252,7 @@ static __init int iscsi_transport_init(void)
+ unregister_pernet_subsys:
+ 	unregister_pernet_subsys(&iscsi_net_ops);
+ unregister_flashnode_bus:
+-	class_unregister(&iscsi_flashnode_bus);
++	class_unregister(&iscsi_flashnode);
+ unregister_session_class:
+ 	transport_class_unregister(&iscsi_session_class);
+ unregister_conn_class:
+@@ -5272,7 +5272,7 @@ static void __exit iscsi_transport_exit(void)
+ {
+ 	destroy_workqueue(iscsi_conn_cleanup_workq);
+ 	unregister_pernet_subsys(&iscsi_net_ops);
+-	class_unregister(&iscsi_flashnode_bus);
++	class_unregister(&iscsi_flashnode);
+ 	transport_class_unregister(&iscsi_connection_class);
+ 	transport_class_unregister(&iscsi_session_class);
+ 	transport_class_unregister(&iscsi_host_class);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index f9d003753f11..a23b511b6f53 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -26,8 +26,8 @@ struct iscsi_task;
+ struct sockaddr;
+ struct iscsi_iface;
+ struct bsg_job;
+-struct iscsi_bus_flash_session;
+-struct iscsi_bus_flash_conn;
++struct iscsi_flash_session;
++struct iscsi_flash_conn;
+ 
+ /**
+  * struct iscsi_transport - iSCSI Transport template
+@@ -149,18 +149,18 @@ struct iscsi_transport {
+ 			 uint32_t *num_entries, char *buf);
+ 	int (*delete_chap) (struct Scsi_Host *shost, uint16_t chap_tbl_idx);
+ 	int (*set_chap) (struct Scsi_Host *shost, void *data, int len);
+-	int (*get_flashnode_param) (struct iscsi_bus_flash_session *fnode_sess,
+-				    int param, char *buf);
+-	int (*set_flashnode_param) (struct iscsi_bus_flash_session *fnode_sess,
+-				    struct iscsi_bus_flash_conn *fnode_conn,
+-				    void *data, int len);
+-	int (*new_flashnode) (struct Scsi_Host *shost, const char *buf,
+-			      int len);
+-	int (*del_flashnode) (struct iscsi_bus_flash_session *fnode_sess);
+-	int (*login_flashnode) (struct iscsi_bus_flash_session *fnode_sess,
+-				struct iscsi_bus_flash_conn *fnode_conn);
+-	int (*logout_flashnode) (struct iscsi_bus_flash_session *fnode_sess,
+-				 struct iscsi_bus_flash_conn *fnode_conn);
++	int (*get_flashnode_param)(struct iscsi_flash_session *fnode_sess,
++				   int param, char *buf);
++	int (*set_flashnode_param)(struct iscsi_flash_session *fnode_sess,
++				   struct iscsi_flash_conn *fnode_conn,
++				   void *data, int len);
++	int (*new_flashnode)(struct Scsi_Host *shost, const char *buf,
++			     int len);
++	int (*del_flashnode)(struct iscsi_flash_session *fnode_sess);
++	int (*login_flashnode)(struct iscsi_flash_session *fnode_sess,
++			       struct iscsi_flash_conn *fnode_conn);
++	int (*logout_flashnode)(struct iscsi_flash_session *fnode_sess,
++				struct iscsi_flash_conn *fnode_conn);
+ 	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
+ 	int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
+ 	u8 (*check_protection)(struct iscsi_task *task, sector_t *sector);
+@@ -342,7 +342,7 @@ struct iscsi_iface {
+ 	dev_to_shost(_iface->dev.parent)
+ 
+ 
+-struct iscsi_bus_flash_conn {
++struct iscsi_flash_conn {
+ 	struct list_head conn_list;	/* item in connlist */
+ 	void *dd_data;			/* LLD private data */
+ 	struct iscsi_transport *transport;
+@@ -380,14 +380,14 @@ struct iscsi_bus_flash_conn {
+ };
+ 
+ #define iscsi_dev_to_flash_conn(_dev) \
+-	container_of(_dev, struct iscsi_bus_flash_conn, dev)
++	container_of(_dev, struct iscsi_flash_conn, dev)
+ 
+ #define iscsi_flash_conn_to_flash_session(_conn) \
+ 	iscsi_dev_to_flash_session(_conn->dev.parent)
+ 
+ #define ISID_SIZE 6
+ 
+-struct iscsi_bus_flash_session {
++struct iscsi_flash_session {
+ 	struct list_head sess_list;		/* item in session_list */
+ 	struct iscsi_transport *transport;
+ 	unsigned int target_id;
+@@ -442,7 +442,7 @@ struct iscsi_bus_flash_session {
+ };
+ 
+ #define iscsi_dev_to_flash_session(_dev) \
+-	container_of(_dev, struct iscsi_bus_flash_session, dev)
++	container_of(_dev, struct iscsi_flash_session, dev)
+ 
+ #define iscsi_flash_session_to_shost(_session) \
+ 	dev_to_shost(_session->dev.parent)
+@@ -503,17 +503,17 @@ extern struct device *
+ iscsi_find_flashnode(struct Scsi_Host *shost, void *data,
+ 		     int (*fn)(struct device *dev, void *data));
+ 
+-extern struct iscsi_bus_flash_session *
++extern struct iscsi_flash_session *
+ iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
+ 			    struct iscsi_transport *transport, int dd_size);
+ 
+-extern struct iscsi_bus_flash_conn *
++extern struct iscsi_flash_conn *
+ iscsi_create_flashnode_conn(struct Scsi_Host *shost,
+-			    struct iscsi_bus_flash_session *fnode_sess,
++			    struct iscsi_flash_session *fnode_sess,
+ 			    struct iscsi_transport *transport, int dd_size);
+ 
+ extern void
+-iscsi_destroy_flashnode_sess(struct iscsi_bus_flash_session *fnode_sess);
++iscsi_destroy_flashnode_sess(struct iscsi_flash_session *fnode_sess);
+ 
+ extern void iscsi_destroy_all_flashnode(struct Scsi_Host *shost);
+ extern int iscsi_flashnode_bus_match(struct device *dev,
+@@ -522,7 +522,9 @@ extern struct device *
+ iscsi_find_flashnode_sess(struct Scsi_Host *shost, void *data,
+ 			  int (*fn)(struct device *dev, void *data));
+ extern struct device *
+-iscsi_find_flashnode_conn(struct iscsi_bus_flash_session *fnode_sess);
++iscsi_find_flashnode_conn(struct iscsi_flash_session *fnode_sess);
++
++extern bool iscsi_is_flashnode_session_dev(struct device *dev);
+ 
+ extern bool iscsi_is_flashnode_session_dev(struct device *dev);
+ 
 -- 
 2.39.2
 
