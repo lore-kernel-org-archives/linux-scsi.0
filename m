@@ -2,83 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E32C77B7C
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 02:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAAFBC77B7C
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 02:22:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbjEFCLH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 May 2023 22:11:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42396 "EHLO
+        id S231278AbjEFCWC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 May 2023 22:22:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjEFCLG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 22:11:06 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BE9A59C3;
-        Fri,  5 May 2023 19:11:05 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QCrXK3msXzZfqM;
-        Sat,  6 May 2023 10:06:57 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Sat, 6 May 2023 10:11:02 +0800
-Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
-To:     yangxingui <yangxingui@huawei.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Damien Le Moal <dlemoal@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>
-References: <20230505025712.19438-1-yangxingui@huawei.com>
- <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
- <b13c9445-39c5-f207-d5d0-d6c86eee54ae@oracle.com>
- <1b703656-e966-63f8-19dd-33e4e9914676@huawei.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <4364409d-e63c-f87f-0484-f170e92d44c5@huawei.com>
-Date:   Sat, 6 May 2023 10:11:02 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S229649AbjEFCWB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 22:22:01 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 693645BBF;
+        Fri,  5 May 2023 19:22:00 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1aae5c2423dso23935245ad.3;
+        Fri, 05 May 2023 19:22:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683339720; x=1685931720;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=+FxmBS7vEJe0OVAA86LRv6d0E9ry7bbdeZBgxQdXBzQ=;
+        b=a/mMHM6bkbRka4DJw8dmRS67IB4IYDi9APMMCfUbNLTVHPJxts6AyKMB0KPil1+pPQ
+         BLLQCOYVf2AlrPRxYBX/Mi/Cc6A5chFuacfqZv1qtCJPCdnWwiy0xrbp1cz6Wf4EC8T6
+         eHgQjlI/ZeK16qLQbEajbThyBXZFqX/PnkHb01Ctr0XMqL46u9XPQQP7j0jwnGmI51XD
+         bkILdJQmyzNZVV8w/tWamUrnigpFlackGhEGabuV4uOvHcuHaFU8EKkh5uSlk8F8O009
+         uTnYchGFcPFsv0GYnEzyO/rucJO1pgbvN0iH7PQa7Nx4YyDkHRoiKS2b4pEej0SRRz3E
+         T87g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683339720; x=1685931720;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+FxmBS7vEJe0OVAA86LRv6d0E9ry7bbdeZBgxQdXBzQ=;
+        b=CJmRdARuMTEhO4LeVVauPvt7j562hZWGW2I7b2gNI3ArwbMTdovNs3c68wKM3mtumR
+         Vvl5AjZKAwAItDzuOwS0MBHjqZthJy7azPiD5Pa9OUWmcRkainZTTi6AU3BkIDNvu+Tp
+         342MFogNfytyTLChK5ooF/p9eka/2v1JEhJ3wE20fOuwoS49X6Kl1yrHWICUQOdOTV/2
+         zE0KMdbRTXzpPM7r4n8weRhIICk9EgyEIfNSKtJkRGoOHmydD8IHEoe9X7YrQRE2IIX+
+         m02eYqWwVdlfAsRgVv6uqkW8ZWulZYB6iJtlipiHEDd/tcwWy11r35XrbdhId94OE2cz
+         KOHA==
+X-Gm-Message-State: AC+VfDzjqyuA4VhUcnmpGzmCKYdN863IBW2hLMs/CZUpe0VcA15teGFF
+        BnlhTuy482nZIHLkSICNBC4gCkp/IZoZ8w==
+X-Google-Smtp-Source: ACHHUZ44ar1a/lCGZfPX03Vc9Q5AlYWOIMXh+tJx1xkSRn6+Q37HVXsuWb2aXf7zP1UH8PcxZm4eTg==
+X-Received: by 2002:a17:902:d4c1:b0:1a5:167f:620f with SMTP id o1-20020a170902d4c100b001a5167f620fmr2714178plg.15.1683339719750;
+        Fri, 05 May 2023 19:21:59 -0700 (PDT)
+Received: from [192.168.43.80] (subs02-180-214-232-14.three.co.id. [180.214.232.14])
+        by smtp.gmail.com with ESMTPSA id x15-20020a170902820f00b001aaefe48b93sm2372304pln.295.2023.05.05.19.21.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 May 2023 19:21:59 -0700 (PDT)
+Message-ID: <8f5aee17-510c-ed1b-c854-e6dc00c7095a@gmail.com>
+Date:   Sat, 6 May 2023 09:21:49 +0700
 MIME-Version: 1.0
-In-Reply-To: <1b703656-e966-63f8-19dd-33e4e9914676@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH 1/3] MAINTAINERS: Drop DC395x list and site
+To:     Dan Carpenter <dan.carpenter@linaro.org>
+Cc:     Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Kernel Janitors <kernel-janitors@vger.kernel.org>,
+        Oliver Neukum <oliver@neukum.org>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20230505082704.16228-1-bagasdotme@gmail.com>
+ <20230505082704.16228-2-bagasdotme@gmail.com>
+ <b86a4837-3c31-4bf4-aff3-67abd7a4f5f2@kili.mountain>
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm100004.china.huawei.com (7.192.105.92)
-X-CFilter-Loop: Reflected
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <b86a4837-3c31-4bf4-aff3-67abd7a4f5f2@kili.mountain>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/5/5 17:14, yangxingui wrote:
+On 5/5/23 16:16, Dan Carpenter wrote:
+> Other people do this too, but is there really any reason to include
+> the linux-scsi@vger.kernel.org list?  drivers/scsi/ will already
+> include it.
 > 
-> 
-> On 2023/5/5 16:25, John Garry wrote:
->> On 05/05/2023 09:17, Damien Le Moal wrote:
->>>> --- a/drivers/ata/libata-scsi.c
->>>> +++ b/drivers/ata/libata-scsi.c
->>>> @@ -26,6 +26,7 @@
->>>>   #include <scsi/scsi_device.h>
->>>>   #include <scsi/scsi_tcq.h>
->>>>   #include <scsi/scsi_transport.h>
->>>> +#include <scsi/libsas.h>
->>
->> hmmm... is it really acceptable that libata is referencing libsas? I 
->> didn't think that it would be. libsas uses libata, not the other way 
->> around.
-> Yeah, I didn't expect that either. Is there any other way? If so, is 
-> patch v1 OK?
 
-Hi Xingui,
+I prefer to be explicit in this case.
 
-Libsas should follow the standard way of libata to manage the ata 
-structures. Not the opposite way. So what you should do is to find a way 
-for libsas to behave as a normal ata driver. It's not good to make 
-libata aware of libsas or referencing libsas.
+-- 
+An old man doll... just what I always wanted! - Clara
 
-If you have detailed questions you can ask me internally(which will be 
-faster) or publicly through the maillist(which may have some delay).
-
-Thanks,
-Jason
