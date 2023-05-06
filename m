@@ -2,118 +2,76 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F10DDC77B75
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 09:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B33AC77B7F
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 12:22:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230475AbjEFJ5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 May 2023 05:57:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59792 "EHLO
+        id S231899AbjEFMWh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 6 May 2023 08:22:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230000AbjEFJ5S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 May 2023 05:57:18 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EFD946AA;
-        Sat,  6 May 2023 02:57:16 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QD2ws0ZtNzsRBP;
-        Sat,  6 May 2023 17:55:25 +0800 (CST)
-Received: from [10.67.101.126] (10.67.101.126) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Sat, 6 May 2023 17:57:13 +0800
-Message-ID: <c4f4bc15-09b7-ffee-8e56-c857fc1431a1@huawei.com>
-Date:   Sat, 6 May 2023 17:57:13 +0800
+        with ESMTP id S231576AbjEFMWg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 May 2023 08:22:36 -0400
+Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0412114921;
+        Sat,  6 May 2023 05:22:33 -0700 (PDT)
+Received: from joe-virtual-machine.localdomain ([10.12.176.104])
+        (user=U201911841@hust.edu.cn mech=LOGIN bits=0)
+        by mx1.hust.edu.cn  with ESMTP id 346CLPj1014147-346CLPj2014147
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Sat, 6 May 2023 20:21:31 +0800
+From:   Zhong Yong <U201911841@hust.edu.cn>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     hust-os-kernel-patches@googlegroups.com,
+        Zhong Yong <U201911841@hust.edu.cn>,
+        Dongliang Mu <dzm91@hust.edu.cn>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: mpt3sas: Fix missing unwind goto in mpt3sas_config_update_driver_trigger_pg3()
+Date:   Sat,  6 May 2023 20:20:30 +0800
+Message-Id: <20230506122032.2090153-1-U201911841@hust.edu.cn>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
-Content-Language: en-CA
-To:     John Garry <john.g.garry@oracle.com>,
-        Damien Le Moal <dlemoal@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>
-References: <20230505025712.19438-1-yangxingui@huawei.com>
- <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
- <b13c9445-39c5-f207-d5d0-d6c86eee54ae@oracle.com>
- <1b703656-e966-63f8-19dd-33e4e9914676@huawei.com>
- <cae0ac63-f391-08c0-c646-23037485c189@oracle.com>
-From:   yangxingui <yangxingui@huawei.com>
-In-Reply-To: <cae0ac63-f391-08c0-c646-23037485c189@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.101.126]
-X-ClientProxiedBy: dggpemm100015.china.huawei.com (7.185.36.61) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+X-FEAS-AUTH-USER: U201911841@hust.edu.cn
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Smatch warns:
+drivers/scsi/mpt3sas/mpt3sas_config.c:2478
+mpt3sas_config_update_driver_trigger_pg3() warn: missing unwind goto?
 
+Fix this by assigning '-EFAULT' to 'rc' and
+changing the direct return to a goto 'out'.
 
-On 2023/5/5 17:51, John Garry wrote:
-> On 05/05/2023 10:14, yangxingui wrote:
->>> hmmm... is it really acceptable that libata is referencing libsas? I 
->>> didn't think that it would be. libsas uses libata, not the other way 
->>> around.
->> Yeah, I didn't expect that either. Is there any other way? If so, is 
->> patch v1 OK?
-> 
-> I still think that we can do better than v1.
-OK
-> 
->>>
->>>>>   #include <linux/libata.h>
->>>>>   #include <linux/hdreg.h>
->>>>>   #include <linux/uaccess.h>
->>>>> @@ -2745,10 +2746,17 @@ static struct ata_device 
->>>>> *__ata_scsi_find_dev(struct ata_port *ap,
->>>>>    *    Associated ATA device, or %NULL if not found.
->>>>>    */
->>>>>   struct ata_device *
->>>>> -ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device 
->>>>> *scsidev)
->>>> Why drop the const ?
->>>>
->>>>> +ata_scsi_find_dev(struct ata_port *ap, struct scsi_device *scsidev)
->>>>>   {
->>>>> -    struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
->>>>> +    struct ata_device *dev;
->>>>> +
->>>>> +    if (ap->flags & ATA_FLAG_SAS_HOST) {
->>>
->>> And this is SAS host. Not necessarily libsas (even though with ipr 
->>> libata usage gone, it would be the only user).
->> Add a new flag only for libsas?
-> 
-> No, because of previous reason.
-> 
-> Please remind me - at what point do we error within ata_scsi_find_dev() 
-> and return NULL for a libsas host?
-The scsi_host_template filled by libsas and call ata_scsi_find_dev() has 
-this problem. After sas_change_queue_depth() is fixed, only sas_ioctl() 
-has this problem now.
-> 
-> Note: it would be good to include that commit message for future reference.
-> 
-> Maybe we could add a method to ata_port_operations to do this lookup. I 
-> assume that is abusing ata_port_operations purpose, since it's mostly 
-> for HW methods.
-> 
-> Or do we actually use sdev->hostdata for libata or libsas? If not, maybe 
-> we could store the struct ata_device pointer there.
-Well, it might be a way.
+Fixes: 2a5c3a35c156 ("scsi: mpt3sas: Add persistent SCSI sense trigger page")
+Signed-off-by: Zhong Yong <U201911841@hust.edu.cn>
+Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
+---
+The issue is found by static analysis and the patch remains untested.
+---
+ drivers/scsi/mpt3sas/mpt3sas_config.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Thanks,
-Xingui
-.
-> 
-> I'm just thinking out loud now...
-> 
-> Thanks,
-> John
-> 
-> 
-> .
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index d114ef381c44..a426d086044a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -2475,7 +2475,8 @@ mpt3sas_config_update_driver_trigger_pg3(struct MPT3SAS_ADAPTER *ioc,
+ 		    ioc_err(ioc,
+ 		    "%s: Failed to get trigger pg3, ioc_status(0x%04x)\n",
+ 		    __func__, ioc_status));
+-		return -EFAULT;
++		rc = -EFAULT;
++		goto out;
+ 	}
+ 
+ 	if (set) {
+-- 
+2.34.1
+
