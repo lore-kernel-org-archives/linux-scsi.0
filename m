@@ -2,99 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B3A4C77B7D
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 00:14:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E32C77B7C
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 May 2023 02:11:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231744AbjEFAN5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 May 2023 20:13:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55958 "EHLO
+        id S229943AbjEFCLH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 May 2023 22:11:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229990AbjEFANv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 20:13:51 -0400
-Received: from wout3-smtp.messagingengine.com (wout3-smtp.messagingengine.com [64.147.123.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A58E56E86;
-        Fri,  5 May 2023 17:13:50 -0700 (PDT)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.west.internal (Postfix) with ESMTP id 6E1B232009C0;
-        Fri,  5 May 2023 20:13:49 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Fri, 05 May 2023 20:13:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1683332029; x=1683418429; bh=gDkdPLFGHEgwB
-        a8neDNDtTbJzRE+q/3RtYLzD+Pf+P8=; b=Q8XG2AWQgyCMi09ZyMm+KsQ0hhprv
-        mpooklDQKeung+QWuBSAj/oCp/IpivM2K7XnXh3Qvn8lhOiJOYAxClS/rU1xwfwl
-        9dGWxnIg16hEvLdtmI/FetfUGGPZpda4XCQrrmaOZPxJfuDg9NuFQq3OY3pYceFb
-        nSdkV0WKCNuVg1u7V5B8bZok6hBXsOVjmSxeze5cGpq0tN+o78IZzjqnxwqf04uy
-        8EBcx3yLS09+94+6vwFIdokFBhtS+BY3E4hh2mxo7dOWvNWUOpIkEyXYg4VeQ46X
-        auuC21N7RCmqsHgckHBJyd0kMyFOJaOhquTZCyFSFOXRUdQR9l9YL9Sjw==
-X-ME-Sender: <xms:vJtVZBVPnIqEOgCqg_3spi5O9XaYxlINvSVNPFF-6wMKYr8Tw6NYvQ>
-    <xme:vJtVZBmm7NgizshS73-0dCWFNwuHp4CDeHi5diuKl0O-TnpNZWTzKGPczmba8BN6G
-    MGl9-c1RHZf7B1UFCY>
-X-ME-Received: <xmr:vJtVZNaGab57ZUrcx3TfzKo09FoQAHfp3DD3zs27ubhW4Gei8IZbs_IOq3mhtMYPDq5FYqzPW1yyGuMo1U0xnqZ_K_yr-n0wzgE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeeffedgfedvucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeu
-    heeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:vJtVZEUZPgiEpg2x6w3Azv88oWdLHzeSPodKg674KG6mwKHRCi23mA>
-    <xmx:vJtVZLmEBKuMujz-5ZtXZOhtAcSnvFTfGlAeINZX6f1jUJCmS2fvdw>
-    <xmx:vJtVZBdVnSljclkUTxiHxNm_nvOyJbxx-vRCuoAgJM7aubXmZK3AKQ>
-    <xmx:vZtVZN7Qf7xlD-4-tjP1jkpQMKvw0AMBmVdG21SE5EYlSVA1Qa-i4w>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 5 May 2023 20:13:45 -0400 (EDT)
-Date:   Sat, 6 May 2023 10:17:44 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Jonathan Corbet <corbet@lwn.net>
-cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Kernel Janitors <kernel-janitors@vger.kernel.org>,
-        Oliver Neukum <oliver@neukum.org>,
-        Ali Akcaagac <aliakc@web.de>,
-        Jamie Lenehan <lenehan@twibble.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] Documentation: scsi: dc395x: Remove reference to
- 2.4 driver
-In-Reply-To: <87pm7enbpo.fsf@meer.lwn.net>
-Message-ID: <3ad2962e-ff1f-4fe6-76e9-21c3936578a9@linux-m68k.org>
-References: <20230505082704.16228-1-bagasdotme@gmail.com> <20230505082704.16228-4-bagasdotme@gmail.com> <d919a2e1-5749-13f8-7867-1f17277190f4@linux-m68k.org> <87pm7enbpo.fsf@meer.lwn.net>
+        with ESMTP id S229460AbjEFCLG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2023 22:11:06 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BE9A59C3;
+        Fri,  5 May 2023 19:11:05 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QCrXK3msXzZfqM;
+        Sat,  6 May 2023 10:06:57 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Sat, 6 May 2023 10:11:02 +0800
+Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
+To:     yangxingui <yangxingui@huawei.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>
+References: <20230505025712.19438-1-yangxingui@huawei.com>
+ <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
+ <b13c9445-39c5-f207-d5d0-d6c86eee54ae@oracle.com>
+ <1b703656-e966-63f8-19dd-33e4e9914676@huawei.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <4364409d-e63c-f87f-0484-f170e92d44c5@huawei.com>
+Date:   Sat, 6 May 2023 10:11:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1b703656-e966-63f8-19dd-33e4e9914676@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ canpemm100004.china.huawei.com (7.192.105.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 5 May 2023, Jonathan Corbet wrote:
-
+On 2023/5/5 17:14, yangxingui wrote:
 > 
-> Most of the 2.4 code has indeed been deleted *from current kernels*. 
-
-Is it okay to delete old code from -stable kernels?
-
-> It's not clear to me why 2.4 documentation should be immune to that same 
-> process.
-
-My message argued for removing 2.5 documentation and retaining the link 
-that gives credit to prior contributions.
-
-> If we keep every 20-year-old reference, our docs will be even cruftier 
-> and less useful than they are now.
 > 
+> On 2023/5/5 16:25, John Garry wrote:
+>> On 05/05/2023 09:17, Damien Le Moal wrote:
+>>>> --- a/drivers/ata/libata-scsi.c
+>>>> +++ b/drivers/ata/libata-scsi.c
+>>>> @@ -26,6 +26,7 @@
+>>>>   #include <scsi/scsi_device.h>
+>>>>   #include <scsi/scsi_tcq.h>
+>>>>   #include <scsi/scsi_transport.h>
+>>>> +#include <scsi/libsas.h>
+>>
+>> hmmm... is it really acceptable that libata is referencing libsas? I 
+>> didn't think that it would be. libsas uses libata, not the other way 
+>> around.
+> Yeah, I didn't expect that either. Is there any other way? If so, is 
+> patch v1 OK?
 
-Since you're obviously being facetious, it's tempting to respond that 
-"churn is good because it reduces the average age of the code". But that 
-kind of exchange gets us nowhere.
+Hi Xingui,
 
-I'd be curious to see an age histogram of the commentary in the source 
-code in the mainline kernel repository (or any other long-lived project). 
-I wonder if that has ever been measured.
+Libsas should follow the standard way of libata to manage the ata 
+structures. Not the opposite way. So what you should do is to find a way 
+for libsas to behave as a normal ata driver. It's not good to make 
+libata aware of libsas or referencing libsas.
+
+If you have detailed questions you can ask me internally(which will be 
+faster) or publicly through the maillist(which may have some delay).
+
+Thanks,
+Jason
