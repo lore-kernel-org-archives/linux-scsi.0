@@ -2,145 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FA8C77B75
-	for <linux-scsi@archiver.kernel.org>; Sun,  7 May 2023 07:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE9C4C77B7C
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 May 2023 14:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230383AbjEGHw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 May 2023 03:52:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47814 "EHLO
+        id S229986AbjEGOvu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 May 2023 10:51:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229619AbjEGHw2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 May 2023 03:52:28 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E50209008;
-        Sun,  7 May 2023 00:52:26 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id 41be03b00d2f7-52c30fbccd4so3045946a12.0;
-        Sun, 07 May 2023 00:52:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683445946; x=1686037946;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=cRfrrqx50vxG99XcLjNcRWo5z2zDSYMRqUZuG5jBIKY=;
-        b=jaecR1OGwoXjjVTs+NKSvVFbeszPfjN+tLv/5l8vwUfQ7vVFuLIRdKn2w747nJ6H/w
-         atFTxveoqIlG9h1FBOHyApFscKv/6YQAVa1RumtGUH0xcdRGIQKefDtMgtVF0K4L0iZE
-         OFwmoX1tAD0dXcrPoB2urTJHVXOcwCMwIaMhp8bww4DJE3zpAN+kLzBfAHUX++0bNBqH
-         V+5Dp9uxlbKc0i0+oH0XfzApOcef+spYJnIMuiLY44i+SRBZoc5orLhMYMfxcmtZPvia
-         Ef1gsKeOt+q1txp1AQejxblXDU9NKi5JcPXh9XIQPm5D4/10fp+GAQ2MhRjfx5fQEEIa
-         4sng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683445946; x=1686037946;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cRfrrqx50vxG99XcLjNcRWo5z2zDSYMRqUZuG5jBIKY=;
-        b=jpuDTsysBGr4b/DQO4OkM+aiBvFD7G1TMqUB4O8iaS/D3KHjFfH/R9DpwXI1mOkt2y
-         cxXiqDk9EpmiNLn815VLST3S0ALhW00SCK6twfQ4jligYazONmf0mrrraScRXlcYaYWR
-         RN/bPTpl9GDZv/6ZKoKj0hFhawDoTplqrpwSO5T/wgNsAtK4IuU/+tsKtPkqCDuCdBmt
-         WOiAONl2O2YzF/2EXodGnsVVetzgCfRvK/R21vQdOuaSbLxAM9EtD4KM3GrfZxCMA70y
-         JlpLloy+4CVTLd77Y4rB42qwXDGNovdJHENz/rYJhIzSBa06sU30Lf7PAyyaMmLPb2xm
-         iDvw==
-X-Gm-Message-State: AC+VfDx9ekyygslYMIOHwT7MKwP7pa+D6co3bCFfFuTbF1TC5XfEXDCA
-        RdVWvMNbiM3a/Etz3v6oMDDoMSPDrNkY2t4y
-X-Google-Smtp-Source: ACHHUZ6n2q2Ih1X8tUu22B7REItZVx5TmnaDIb/HEDPxtiLHUddtxsFMYP8x7Lbr8SxZi9py9GRH4g==
-X-Received: by 2002:a17:902:7782:b0:1aa:fdef:2a93 with SMTP id o2-20020a170902778200b001aafdef2a93mr6391203pll.7.1683445945979;
-        Sun, 07 May 2023 00:52:25 -0700 (PDT)
-Received: from yoga ([202.131.133.188])
-        by smtp.gmail.com with ESMTPSA id t11-20020a170902a5cb00b001a043e84bf0sm4675147plq.209.2023.05.07.00.52.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 May 2023 00:52:25 -0700 (PDT)
-Date:   Sun, 7 May 2023 13:22:19 +0530
-From:   Anup Sharma <anupnewsmail@gmail.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: megaraid: Use sysfs_emit in show function callsbacks
-Message-ID: <ZFdYszGYVRQQA7LP@yoga>
+        with ESMTP id S229518AbjEGOvs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 May 2023 10:51:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CB505B8B;
+        Sun,  7 May 2023 07:51:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8DD3A60EA8;
+        Sun,  7 May 2023 14:51:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF7EDC433D2;
+        Sun,  7 May 2023 14:51:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683471106;
+        bh=6Uz2eGplQeLWHfzSTBT1n6hG4hAqwi661BYrpEeRNGA=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=r1RM+995JVQuFTyIWjf/iW2TSPddyJpJmvdFZ3n1bhJhAy5fC/8h0mWu5KBB9+aBh
+         Nr/AzCNMftFUvehr0EgA27DyczWlCWmW48igY+uze6/rXtVoB856+iHMDZyZ1DEIz6
+         niA59lNU1e3ougA8KMj5g400nP47u08AqtqFoZUYNRpEYuu396+NJz8ZPwZTndsfML
+         jw71KMA7JR9OmotYgBbl/L3uaMNm14K/7/4taNhoyHxA6tgD8hD8vDYwBn4DAG3xfs
+         Zf8xwAijacW2P92E99EQZO1Vb/Y78I05aCAi3lRFN2IrXDoCQ7eGUTPn+kqJayuBoo
+         GhoV9h6uQkJ6w==
+Message-ID: <f4ba7a92-1f00-c254-d196-7d21fe14dee2@kernel.org>
+Date:   Sun, 7 May 2023 23:51:42 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.10.0
+Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
+To:     yangxingui <yangxingui@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, john.g.garry@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, prime.zeng@hisilicon.com,
+        kangfenglong@huawei.com
+References: <20230505025712.19438-1-yangxingui@huawei.com>
+ <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
+ <02d36ee9-cdad-454d-d822-95442d7bd67b@huawei.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <02d36ee9-cdad-454d-d822-95442d7bd67b@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As stated in the Documentation/filesystems/sysfs.rst file, it
-is recommended that the show() callback function for kobject
-attributes strictly utilizes sysfs_emit instead of the sprintf
-family of functions.
-Issue identified using the coccinelle device_attr_show.cocci script.
+On 2023/05/05 18:06, yangxingui wrote:
+> 
+> 
+> On 2023/5/5 16:17, Damien Le Moal wrote:
+>> On 2023/05/05 11:57, Xingui Yang wrote:
+>>> The function ata_get_identity() uses the helper ata_scsi_find_dev() to get
+>>> the ata_device structure of a scsi device. However, when the ata device is
+>>> managed by libsas, ata_scsi_find_dev() returns NULL, turning
+>>> ata_get_identity() into a nop and always returns -ENOMSG.
+>>
+>> What do you do to hit the issue ? A while back for me it was the queue depth
+>> setting causing problems. As Garry mentioned, this led to patch 141f3d6256e5
+>> ("ata: libata-sata: Fix device queue depth control").
+> Attempt to return the correct value at ata_scsi_find_dev() instead of 
+> NULL, when the ata device is managed by libsas?
 
-Signed-off-by: Anup Sharma <anupnewsmail@gmail.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+That I understand. My question is *what* user operation/command triggers this ?
+Because on my test setup, under normal use, I do not see this issue (beside what
+was already corrected with the queue depth control). Is the issue showing up
+when using passthrough commands only ?
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 317c944c68e3..44e8d39b9b76 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3335,7 +3335,7 @@ fw_crash_buffer_size_show(struct device *cdev,
- 	struct megasas_instance *instance =
- 		(struct megasas_instance *) shost->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%ld\n", (unsigned long)
-+	return sysfs_emit(buf, "%ld\n", (unsigned long)
- 		((instance->fw_crash_buffer_size) * 1024 * 1024)/PAGE_SIZE);
- }
- 
-@@ -3382,14 +3382,14 @@ fw_crash_state_show(struct device *cdev,
- 	struct megasas_instance *instance =
- 		(struct megasas_instance *) shost->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", instance->fw_crash_state);
-+	return sysfs_emit(buf, "%d\n", instance->fw_crash_state);
- }
- 
- static ssize_t
- page_size_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%ld\n", (unsigned long)PAGE_SIZE - 1);
-+	return sysfs_emit(buf, "%ld\n", (unsigned long)PAGE_SIZE - 1);
- }
- 
- static ssize_t
-@@ -3399,7 +3399,7 @@ ldio_outstanding_show(struct device *cdev, struct device_attribute *attr,
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct megasas_instance *instance = (struct megasas_instance *)shost->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", atomic_read(&instance->ldio_outstanding));
-+	return sysfs_emit(buf, "%d\n", atomic_read(&instance->ldio_outstanding));
- }
- 
- static ssize_t
-@@ -3409,7 +3409,7 @@ fw_cmds_outstanding_show(struct device *cdev,
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct megasas_instance *instance = (struct megasas_instance *)shost->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", atomic_read(&instance->fw_outstanding));
-+	return sysfs_emit(buf, "%d\n", atomic_read(&instance->fw_outstanding));
- }
- 
- static ssize_t
-@@ -3419,7 +3419,8 @@ enable_sdev_max_qd_show(struct device *cdev,
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct megasas_instance *instance = (struct megasas_instance *)shost->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", instance->enable_sdev_max_qd);
-+	return sysfs_emit(buf, "%d\n",
-+			instance->enable_sdev_max_qd);
- }
- 
- static ssize_t
-@@ -3473,7 +3474,7 @@ raid_map_id_show(struct device *cdev, struct device_attribute *attr,
- 	struct megasas_instance *instance =
- 			(struct megasas_instance *)shost->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%ld\n",
-+	return sysfs_emit(buf, "%ld\n",
- 			(unsigned long)instance->map_id);
- }
- 
+
 -- 
-2.34.1
+Damien Le Moal
+Western Digital Research
 
