@@ -2,90 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C939AC77B75
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 12:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0013C77B73
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 13:44:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232212AbjEHM3G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 May 2023 08:29:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58162 "EHLO
+        id S233746AbjEHNo6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 May 2023 09:44:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233921AbjEHM27 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 08:28:59 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A22A348B9;
-        Mon,  8 May 2023 05:28:32 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 348BIuRE023878;
-        Mon, 8 May 2023 12:28:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=xX7OkT3Wy1v+v8Bd6b9U2qjd+1LkoLd1Tej/Y8WV88A=;
- b=Z4pcEAIv5s3a9ykGOASrNUoUz04N2gClgtqPAIht/559WLfVbxkgM8jOGnuqvvxdPN/v
- F+mcRbBSLQp6V3TJhadJYKKT0LSBaG1/rYdVJ7LhiGDR2VX3zmx26TnGQBwzA+RN7r2u
- mVxln5TrtpaO2xk8r2HBmrLVCuNZ/NTQTTbak2CGUOp2fDb2nxOgSQMBSGYjGwplFGNT
- +LrhZrB+FcJ6NiSJ3G6uKcBif9LCrpFFeFVfdsIeR9DZUvV/MIQDeoffFf8a44WwVXbM
- ywbrfBoe4uNUC/NNRof7T2bzWEF4rwXNRPj9ciQERaf+43OnlfMaRWa/hkAMlOZI5HYt 7g== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qddae36v3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 08 May 2023 12:28:00 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 348C3pF1037151;
-        Mon, 8 May 2023 12:27:59 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3qddbawf61-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 08 May 2023 12:27:59 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 348CRxdA005826;
-        Mon, 8 May 2023 12:27:59 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3qddbawf5r-1;
-        Mon, 08 May 2023 12:27:59 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        bvanassche@acm.org, jejb@linux.ibm.com, beanhuo@micron.com,
-        stanley.chu@mediatek.com, quic_asutoshd@quicinc.com,
-        adrian.hunter@intel.com, quic_cang@quicinc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keoseong Park <keosung.park@samsung.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: core: Fix IO hang that occurs when BKOPS fails in W-LUN suspend
-Date:   Mon,  8 May 2023 08:27:53 -0400
-Message-Id: <168354877576.1978546.983925828646920853.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230425031721epcms2p5d4de65616478c967d466626e20c42a3a@epcms2p5>
-References: <CGME20230425031721epcms2p5d4de65616478c967d466626e20c42a3a@epcms2p5> <20230425031721epcms2p5d4de65616478c967d466626e20c42a3a@epcms2p5>
+        with ESMTP id S232748AbjEHNo4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 09:44:56 -0400
+Received: from hust.edu.cn (unknown [202.114.0.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB95C25276;
+        Mon,  8 May 2023 06:44:54 -0700 (PDT)
+Received: from [IPV6:2001:250:4000:5122:23cb:1d84:8ee4:cdb3] ([172.16.0.254])
+        (user=dzm91@hust.edu.cn mech=PLAIN bits=0)
+        by mx1.hust.edu.cn  with ESMTP id 348DheMI007261-348DheMJ007261
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
+        Mon, 8 May 2023 21:43:40 +0800
+Message-ID: <b7154e2c-0438-87d1-9edc-7eb1aad40cd1@hust.edu.cn>
+Date:   Mon, 8 May 2023 21:40:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-08_08,2023-05-05_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 spamscore=0
- mlxlogscore=999 mlxscore=0 phishscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2305080085
-X-Proofpoint-GUID: FcABskfox0u87KDbkPCXSi53Brq-mqVM
-X-Proofpoint-ORIG-GUID: FcABskfox0u87KDbkPCXSi53Brq-mqVM
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH] drivers: mpt3sas: mpt3sas_debugfs: return value check of
+ `mpt3sas_debugfs_root`
+Content-Language: en-US
+To:     Dan Carpenter <dan.carpenter@linaro.org>,
+        Tomas Henzl <thenzl@redhat.com>
+Cc:     Jing Xu <U202112064@hust.edu.cn>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        hust-os-kernel-patches@googlegroups.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230423122535.31019-1-U202112064@hust.edu.cn>
+ <6e69b57c-80ae-8b6e-cb5f-9e05da46ecd6@redhat.com>
+ <1484408f-f68e-4354-ab59-56af9cd1ef14@kili.mountain>
+From:   Dongliang Mu <dzm91@hust.edu.cn>
+In-Reply-To: <1484408f-f68e-4354-ab59-56af9cd1ef14@kili.mountain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-FEAS-AUTH-USER: dzm91@hust.edu.cn
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 25 Apr 2023 12:17:21 +0900, Keoseong Park wrote:
 
-> Even when urgent BKOPS fails, the consumer will get stuck in runtime
-> suspend status. Like commit 1a5665fc8d7a ("scsi: ufs: core: WLUN suspend
-> SSU/enter hibern8 fail recovery"), trigger the error handler and return
-> -EBUSY to break the suspend.
+
+On 5/3/23 01:06, Dan Carpenter wrote:
+> On Tue, May 02, 2023 at 05:53:10PM +0200, Tomas Henzl wrote:
+>> On 4/23/23 14:25, Jing Xu wrote:
+>>> Smatch complains that:
+>>> mpt3sas_init_debugfs() warn: 'mpt3sas_debugfs_root' is an error
+>>> pointer or valid
+>>>
+>>> There is no need to check the return value of the debugfs_create_dir()
+>>> function, just delete the dead code.
+>>>
+>>> Fixes: 2b01b293f359 ("scsi: mpt3sas: Capture IOC data for debugging purposes")
+>>> Signed-off-by: Jing Xu <U202112064@hust.edu.cn>
+>>> Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
+>>> ---
+>>>   drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 2 --
+>>>   1 file changed, 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+>>> index a6ab1db81167..c92e08c130b9 100644
+>>> --- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+>>> +++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+>>> @@ -99,8 +99,6 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
+>>>   void mpt3sas_init_debugfs(void)
+>>>   {
+>>>   	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
+>>> -	if (!mpt3sas_debugfs_root)
+>>> -		pr_info("mpt3sas: Cannot create debugfs root\n");
+>> Hi Jing,
+>> most drivers just ignore the return value but here the author wanted to
+>> have the information logged.
+>> Can you instead of removing the message modify the 'if' condition so it
+>> suits the author's intention?
+> 
+> This code was always just wrong.
+> 
+> The history of this is slightly complicated and boring.  These days it's
+> harmless dead code so I guess it's less bad than before.
+
+Hi Dan and Tomas,
+
+Any conclusion about this patch? The student Jing Xu is not sure about 
+how to revise this patch.
+
 > 
 > 
-
-Applied to 6.4/scsi-fixes, thanks!
-
-[1/1] scsi: ufs: core: Fix IO hang that occurs when BKOPS fails in W-LUN suspend
-      https://git.kernel.org/mkp/scsi/c/1a7edd041f2d
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> regards,
+> dan carpenter
