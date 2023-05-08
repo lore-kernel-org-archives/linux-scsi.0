@@ -2,139 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A74C77B75
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 14:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2FD8C77B75
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 16:04:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234306AbjEHOjS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 May 2023 10:39:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48232 "EHLO
+        id S229690AbjEHQEq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 May 2023 12:04:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234285AbjEHOjR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 10:39:17 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91C274C09
-        for <linux-scsi@vger.kernel.org>; Mon,  8 May 2023 07:39:11 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id 5b1f17b1804b1-3f42769a0c1so7307665e9.2
-        for <linux-scsi@vger.kernel.org>; Mon, 08 May 2023 07:39:11 -0700 (PDT)
+        with ESMTP id S229560AbjEHQEp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 12:04:45 -0400
+Received: from mail-yb1-xb2b.google.com (mail-yb1-xb2b.google.com [IPv6:2607:f8b0:4864:20::b2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 871115596
+        for <linux-scsi@vger.kernel.org>; Mon,  8 May 2023 09:04:43 -0700 (PDT)
+Received: by mail-yb1-xb2b.google.com with SMTP id 3f1490d57ef6-b9a6f17f2b6so25738048276.1
+        for <linux-scsi@vger.kernel.org>; Mon, 08 May 2023 09:04:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1683556750; x=1686148750;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=XKa3M9jBMdQPBsXGj4GG7TDDf9/LBhAgzA2/jVjGDng=;
-        b=UC6m4w4u7QpQUbESbXOteX0ljEB1v/64kDiKb/nTQIcuqxofVL7yw65jwvdLAVpB1j
-         jisG0AH6+vlgwVWsly70tcniAFKF6MPPk7RUfaQ92k+2/KdDh/+ozsZT/HTtALlh3tGx
-         beKipMR0g4gFfPEX4czqEBi7ZAGtMtVKHXtkUS3IQE+3+H4WaiK911e2kmjFeUobD159
-         HU5rnIriqxHlm7KCRmm1/7fnByfGOMDqldG/X1TZmu8KCfEeU4edPqZDAmaiEdmOfGW5
-         NecwP2G0Rcp7ixH6hGbgg6rAIbki/l3vbf/2hJCs0kTo1qmsUxkiditxV3+aVYj19pZq
-         7TtQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683556750; x=1686148750;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=purestorage.com; s=google2022; t=1683561883; x=1686153883;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XKa3M9jBMdQPBsXGj4GG7TDDf9/LBhAgzA2/jVjGDng=;
-        b=P2dflXS1y4g2Y31HewN3oEjq4loQ7Ado0nR19XzDpCH1l/r9NEb6odAHnDRr9kwYbR
-         W6X7jaqmS0WR9CljH680afmDqh2cfVBzCvfOxklZYQUSBytOdv8l+Up9+EkEEu8rusNw
-         AM6yBqOwlmvsRfjOX2EVhoXa437/nHA6n+RK62nY9D+TjBP8A44qGR/mn0YiaJDHdjyJ
-         ierVgXS2NlwhRFzNZIQmJQW+xHBuE/rfdlom4zrSF2wnkVu7uLGbUr4u//RTYKqbIApD
-         DJXhNnTvKZ/h5szquFqzvhbyichshJCW0IAKKU5uRja0GT2FR/TEbkMm4Y9Vrc3LixCq
-         KlFw==
-X-Gm-Message-State: AC+VfDy2Win3sPooUptYHpCfHOSkaogS7pEHyk9qV34ux7CEeMGyTC67
-        ruYvmNKEoWAkDQKqUWBxH/61jA==
-X-Google-Smtp-Source: ACHHUZ7e1NO1n+801sRZRPy5/spMBxkJtnkeTCGiE4m4ao4b80MPhoPOpj4jejdZ9SjI8LBNXBsG0Q==
-X-Received: by 2002:a1c:cc14:0:b0:3f4:20bd:ba46 with SMTP id h20-20020a1ccc14000000b003f420bdba46mr4579620wmb.5.1683556749876;
-        Mon, 08 May 2023 07:39:09 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id n9-20020a05600c294900b003f423508c6bsm4886169wmd.44.2023.05.08.07.39.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 May 2023 07:39:07 -0700 (PDT)
-Date:   Mon, 8 May 2023 17:38:55 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Dongliang Mu <dzm91@hust.edu.cn>
-Cc:     Tomas Henzl <thenzl@redhat.com>, Jing Xu <U202112064@hust.edu.cn>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        hust-os-kernel-patches@googlegroups.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: mpt3sas: mpt3sas_debugfs: return value check of
- `mpt3sas_debugfs_root`
-Message-ID: <81d236bb-3913-4eef-bf71-6d17535d6d79@kili.mountain>
-References: <20230423122535.31019-1-U202112064@hust.edu.cn>
- <6e69b57c-80ae-8b6e-cb5f-9e05da46ecd6@redhat.com>
- <1484408f-f68e-4354-ab59-56af9cd1ef14@kili.mountain>
- <b7154e2c-0438-87d1-9edc-7eb1aad40cd1@hust.edu.cn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b7154e2c-0438-87d1-9edc-7eb1aad40cd1@hust.edu.cn>
+        bh=wodWe8SDnJ14mNjq+x5RUEaw14/Y1tQx2a3swW+NcF4=;
+        b=ZuK8d8TMmvx9wkXXV/lVzryDxYdVZPoc4/Le6ZHyIglhaQOIkiVoB6AJDBvDvXBc+O
+         QcnGPcB8420Vnq/1qlJIjHQfjgQIjMtoHz1FXPM7/iEC8ZZ/OEPzfxUAcIc0V2aZA2eC
+         Zsqos2Iy807V9dK29GXiWyNRmAwvsRHWyJjg5Kgc3dZ0nAcn7UmuIRw/ekWvfsb/sA7s
+         hBbiXvRB+5L++8JAdVI6CLQXiHIbS5L6lj/wd6LzW4yi9Epicq79ZrhFq5Lm5H5MNj4+
+         yEDNwbNxNF/2LoDsQBTMAMoo8WA9CwlArhwmY4SMCJGNHEWRgmgdJyUnc8oXxrifo413
+         2k4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683561883; x=1686153883;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wodWe8SDnJ14mNjq+x5RUEaw14/Y1tQx2a3swW+NcF4=;
+        b=jlGMw/LquV6XdRhWt5lFyJIKTHeExp+k3SO334FBuIoTg+0ALvmaaHY5gC11D4xPv8
+         A6Y9s3DVuZkHMlLriLgmBcFR+sCY6nc9eLXJyM3XsX+M5ynFLXz9jWrJtzeGgi7PWdG/
+         hdVoSqNUIhwhAhiJZ2I+3wmOGbNCsMr04MopFs94afcpShIwMtK700nZXjiIAUqQNwve
+         BE1TAHLCbVNuGkS+PQ+lUTspLyN28sxNXL+WyvleRlEmtLOyj47dflaapsmunKMn/i+8
+         stWrX5tirhHs6DREblvuislj3MTa5UW/ASuDldIX9Z4aRT4j5KdFbNgFI71ePCItgXoL
+         QA6A==
+X-Gm-Message-State: AC+VfDyf4NflR65Z23SJh+lukPkD1e7v55+o+w+WW2/dTT6P5NhXmmjb
+        YuWe+fkYA6XmdN4b3fX9HtZG1w==
+X-Google-Smtp-Source: ACHHUZ4OUJTS10J3sijo8Z+5zo3cLlIBrTTs5Qkp3Rp8RwzXVqUZLmqlmoY8S31sbPUzIKK5AS9q1w==
+X-Received: by 2002:a0d:ccc9:0:b0:559:d19a:37ee with SMTP id o192-20020a0dccc9000000b00559d19a37eemr10590892ywd.15.1683561882657;
+        Mon, 08 May 2023 09:04:42 -0700 (PDT)
+Received: from smtpclient.apple ([2600:1700:6970:bea0:d134:e0c7:8da4:b0bc])
+        by smtp.gmail.com with ESMTPSA id n12-20020a819c4c000000b005460251b0d9sm2565997ywa.82.2023.05.08.09.04.41
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 08 May 2023 09:04:41 -0700 (PDT)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
+Subject: Re: [PATCH] scsi: sd: Avoid sending an INQUIRY if the page is not
+ supported
+From:   Brian Bunker <brian@purestorage.com>
+In-Reply-To: <yq1h6sn10by.fsf@ca-mkp.ca.oracle.com>
+Date:   Mon, 8 May 2023 09:04:28 -0700
+Cc:     linux-scsi@vger.kernel.org,
+        Seamus Connor <sconnor@purestorage.com>,
+        Krishna Kant <krishna.kant@purestorage.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <81D851CF-423E-480C-80C1-F05CB67E5322@purestorage.com>
+References: <20230505204950.21645-1-brian@purestorage.com>
+ <yq1h6sn10by.fsf@ca-mkp.ca.oracle.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+X-Mailer: Apple Mail (2.3731.500.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 08, 2023 at 09:40:41PM +0800, Dongliang Mu wrote:
-> > > > diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-> > > > index a6ab1db81167..c92e08c130b9 100644
-> > > > --- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-> > > > +++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-> > > > @@ -99,8 +99,6 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
-> > > >   void mpt3sas_init_debugfs(void)
-> > > >   {
-> > > >   	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
-> > > > -	if (!mpt3sas_debugfs_root)
-> > > > -		pr_info("mpt3sas: Cannot create debugfs root\n");
-> > > Hi Jing,
-> > > most drivers just ignore the return value but here the author wanted to
-> > > have the information logged.
-> > > Can you instead of removing the message modify the 'if' condition so it
-> > > suits the author's intention?
-> > 
-> > This code was always just wrong.
-> > 
-> > The history of this is slightly complicated and boring.  These days it's
-> > harmless dead code so I guess it's less bad than before.
-> 
-> Hi Dan and Tomas,
-> 
-> Any conclusion about this patch? The student Jing Xu is not sure about how
-> to revise this patch.
 
-The correct fix is to delete the code.
+> On May 8, 2023, at 5:26 AM, Martin K. Petersen =
+<martin.petersen@oracle.com> wrote:
+>=20
+>=20
+> Brian,
+>=20
+>> When SCSI devices are discovered the function sd_read_cpr gets =
+called.
+>> This call results in an INQUIRY to page 0xb9. This VPD page is called
+>> regardless of whether the target has advertised this page as
+>> supported.
+>=20
+> We used to check the page list first. However, we found several =
+devices
+> that we did not discover correctly because the pages, while present,
+> were not advertised in page 0 and thus ignored. So not checking the
+> supported pages first is a feature.
 
-Debugfs code has error checking built in and was never supposed to be
-checked for errors in normal driver code.
+Wouldn=E2=80=99t it be better if those targets fixed that problem? Do =
+they report
+nothing when VPD page 0 is requested or an incomplete list that =
+doesn=E2=80=99t
+include this 0xb9?
+>=20
+> What exactly is the problem you are experiencing wrt. your target
+> getting an inquiry for the CPR page?
 
-Originally, debugfs returned a mix of error pointers and NULL.  In the
-kernel, when you have a mix of error pointers and NULL, then the NULL
-means that the feature has been disabled deliberately.  It's not an
-error, we should not print a message.
+What happens for us is that our support and customers are used to =
+looking
+for errors when they see a problem as you would expect. When we are =
+logging
+VPD page 0xb9 not supported for every device every time a Linux host
+reboots it leads to that being incorrectly attributed to whatever actual =
+problem
+is going on. There is nothing more we can do since we do return the list
+of page codes supported and this 0xb9 is not in the list.
 
-So a different, correct-ish way to write write debugfs error handling
-was to say:
+Thanks,
+Brian
+>=20
+> --=20
+> Martin K. Petersen Oracle Linux Engineering
 
-	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
-	if (IS_ERR(mpt3sas_debugfs_root))
-		return PTR_ERR(mpt3sas_debugfs_root);
-
-However, in those days, a lot of people didn't understand error pointers
-and thought that "if (IS_ERR_OR_NULL(mpt3sas_debugfs_root)) {" was a
-super secure way to check for errors.  Or they just got it wrong and
-checked for NULL instead of error pointers.  Any of the checks are
-wrong, but if (IS_ERR()) check was at least correct-ish.
-
-I dealt with this a lot because of my work with Smatch.  I used to be
-happy if I could persuade someone to write at least correct-ish code,
-but it was pretty painful to try explain this over and over and very few
-people deleted the checks.
-
-Eventually Greg changed the code to never return NULL and mass deleted
-the IS_ERR() checks.  Not returning NULL makes it simpler to understand.
-And it makes it impossible to check in the correct-ish way so it kind of
-forces people to just delete the error handling.
-
-regards,
-dan carpenter
