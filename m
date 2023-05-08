@@ -2,89 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2051C77B7C
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 01:11:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C80BC7EE2C
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 06:21:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232087AbjEHBLl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 May 2023 21:11:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34624 "EHLO
+        id S232723AbjEHGVM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 May 2023 02:21:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232026AbjEHBLk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 May 2023 21:11:40 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 998F935AE;
-        Sun,  7 May 2023 18:11:38 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QF38G757szLnbN;
-        Mon,  8 May 2023 09:08:46 +0800 (CST)
-Received: from [10.67.101.126] (10.67.101.126) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Mon, 8 May 2023 09:11:35 +0800
-Message-ID: <938d6b5b-0271-977d-f046-5fd70d29b3ca@huawei.com>
-Date:   Mon, 8 May 2023 09:11:35 +0800
+        with ESMTP id S232700AbjEHGVJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 02:21:09 -0400
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C8E815EFD
+        for <linux-scsi@vger.kernel.org>; Sun,  7 May 2023 23:21:03 -0700 (PDT)
+Received: by mail-ed1-x52c.google.com with SMTP id 4fb4d7f45d1cf-50bc4b88998so7492200a12.3
+        for <linux-scsi@vger.kernel.org>; Sun, 07 May 2023 23:21:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1683526861; x=1686118861;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=a0zCtbvyuCZv5ZDHktClt14M1N3Yn1Kq3aOXWGII3Xk=;
+        b=obRN4lQ7yHzsItWJG4sNNHmfey7iO95l0VBtNkqyNMnl86G7pjomhab75YLbaKbRKD
+         d7J1yxq+fKLj4/sPDMuDIXjxAo+SUv5eDxcWFbjTkhF4YWwuvaabWmEy4FhxjwvGo5Wa
+         kIsTsi5TImn74gKb5GZs00vVaOQFMt7OBK3FnzxmzS6qRN/koqzTeZ6wtAyJs8u+qhVb
+         XMuUo7E/lgFVbOdcPWdUUXwiF3kHyGJ147q+SuJyTul+JVYJ6NxNu0xQPEEJBoc4jRdH
+         qQr9j3XOsFF8lSiK+LDLQfUSWjNDTbsSlk6mZv+slmqmJmSh+gIR82sZNW2/xsjw6VCj
+         yvjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683526861; x=1686118861;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=a0zCtbvyuCZv5ZDHktClt14M1N3Yn1Kq3aOXWGII3Xk=;
+        b=NzPQrX4F3ax1t9XpouTmRnb9I8tGDXATJbJv7oW6UhV1BW8aXSU1Uxk6YmNrUvztf2
+         Oor4mV6kqqz6xHIWTTuRLy+unNP1yrldZziFaIxa4aKOJXla+AXBiW9RsuJZsYMj+keY
+         5GKnWLyRgDS5sdve8kzaOwr/VoUMokVVKTcNAf+EkRGT65s3w3fboV8quMXtBLH3Uwz+
+         nn708ACyMxtnwWCqCDs/aoWz/KFMMO/eBBfIzgBAHknCE1RPhVlz6ND8C20+bWxugkFk
+         mc7+Ewb+9W/5RiBoS34aQezXeBQ4gUM++75cgVl3GACjD9IVglngdr3EDZFil7GbMPRD
+         AByQ==
+X-Gm-Message-State: AC+VfDxU8S8lO+EB5EV2E10bQn6vUV5skQiuf0yZYPFIjCFmegDepUIi
+        yExGRWJxevz0VOCspNI06YEivQ==
+X-Google-Smtp-Source: ACHHUZ7imTk2GtOBXkQpqz9YJxyQfy/GWd7QwSAHeIMqTup1BE9EF/jBA4+9QziBnqdNtVPsmJ/Q3w==
+X-Received: by 2002:a17:906:58c5:b0:966:58ad:d934 with SMTP id e5-20020a17090658c500b0096658add934mr2980785ejs.0.1683526861596;
+        Sun, 07 May 2023 23:21:01 -0700 (PDT)
+Received: from ?IPV6:2a02:810d:15c0:828:50e0:ebdf:b755:b300? ([2a02:810d:15c0:828:50e0:ebdf:b755:b300])
+        by smtp.gmail.com with ESMTPSA id kg20-20020a17090776f400b0094f3e169ca5sm4511506ejc.158.2023.05.07.23.20.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 07 May 2023 23:21:00 -0700 (PDT)
+Message-ID: <df471efa-9ec5-f323-3892-2505ba782512@linaro.org>
+Date:   Mon, 8 May 2023 08:20:59 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
-Content-Language: en-CA
-To:     Damien Le Moal <dlemoal@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <john.g.garry@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>
-References: <20230505025712.19438-1-yangxingui@huawei.com>
- <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
- <02d36ee9-cdad-454d-d822-95442d7bd67b@huawei.com>
- <f4ba7a92-1f00-c254-d196-7d21fe14dee2@kernel.org>
-From:   yangxingui <yangxingui@huawei.com>
-In-Reply-To: <f4ba7a92-1f00-c254-d196-7d21fe14dee2@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.101.126]
-X-ClientProxiedBy: dggpemm500016.china.huawei.com (7.185.36.25) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH v7 1/3] dt-bindings: ufs: qcom: Add ICE phandle
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To:     Abel Vesa <abel.vesa@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20230408214041.533749-1-abel.vesa@linaro.org>
+ <20230408214041.533749-2-abel.vesa@linaro.org>
+ <316e9ee5-fccc-e199-f727-7b8187e965ff@linaro.org>
+Content-Language: en-US
+In-Reply-To: <316e9ee5-fccc-e199-f727-7b8187e965ff@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2023/5/7 22:51, Damien Le Moal wrote:
-> On 2023/05/05 18:06, yangxingui wrote:
+On 05/05/2023 20:47, Krzysztof Kozlowski wrote:
+> On 08/04/2023 23:40, Abel Vesa wrote:
+>> Starting with SM8550, the ICE will have its own devicetree node
+>> so add the qcom,ice property to reference it.
+>>
+>> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+>> ---
+>>
+>> The v6 is here:
+>> https://lore.kernel.org/all/20230407105029.2274111-3-abel.vesa@linaro.org/
+>>
+>> Changes since v6:
+>>  * Dropped the minItems for both the qcom,ice and the reg in the
+>>    qcom,ice compatile subschema, like Krzysztof suggested
+>>
+>> Changes since v5:
+>>  * dropped the sm8550 specific subschema and replaced it with one that
+>>    mutually excludes the qcom,ice vs both the ICE specific reg range
+>>    and the ICE clock
+>>
+>> Changes since v4:
+>>  * Added check for sm8550 compatible w.r.t. qcom,ice in order to enforce
+>>    it while making sure none of the other platforms are allowed to use it
+>>
+>> Changes since v3:
+>>  * dropped the "and drop core clock" part from subject line
+>>
+>> Changes since v2:
+>>  * dropped all changes except the qcom,ice property
 >>
 >>
->> On 2023/5/5 16:17, Damien Le Moal wrote:
->>> On 2023/05/05 11:57, Xingui Yang wrote:
->>>> The function ata_get_identity() uses the helper ata_scsi_find_dev() to get
->>>> the ata_device structure of a scsi device. However, when the ata device is
->>>> managed by libsas, ata_scsi_find_dev() returns NULL, turning
->>>> ata_get_identity() into a nop and always returns -ENOMSG.
->>>
->>> What do you do to hit the issue ? A while back for me it was the queue depth
->>> setting causing problems. As Garry mentioned, this led to patch 141f3d6256e5
->>> ("ata: libata-sata: Fix device queue depth control").
->> Attempt to return the correct value at ata_scsi_find_dev() instead of
->> NULL, when the ata device is managed by libsas?
+>>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 24 +++++++++++++++++++
+>>  1 file changed, 24 insertions(+)
+>>
 > 
-> That I understand. My question is *what* user operation/command triggers this ?
-> Because on my test setup, under normal use, I do not see this issue (beside what
-> was already corrected with the queue depth control). Is the issue showing up
-> when using passthrough commands only ?
-Yeah, we found that command "hdparm -i /dev/sdc" always return faild for 
-SATA HDD disk. as follows:
-[root@localhost ~]# hdparm -i /dev/sdc
+> I see dt_binding_check errors after applying this patch. Are you sure
+> this was tested?
 
-/dev/sdc:
-  HDIO_GET_IDENTITY failed: Invalid argument
+False alarm, it was other patch in my tree.
 
-trace log：
-execve("/usr/sbin/hdparm", ["hdparm", "-i", "/dev/sdc"], 0xffffea26f620 
-/* 42 vars */) = 0
-ioctl(3, HDIO_GET_IDENTITY, 0xffffeb435f28) = -1 ENOMSG (No message of 
-desired type)
+This one is good.
 
-Thanks,
-Xingui
-.
+Best regards,
+Krzysztof
+
