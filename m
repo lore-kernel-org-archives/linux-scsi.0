@@ -2,126 +2,139 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA98C77B75
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 14:21:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A74C77B75
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 May 2023 14:39:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234427AbjEHOVz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 May 2023 10:21:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57926 "EHLO
+        id S234306AbjEHOjS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 May 2023 10:39:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229999AbjEHOVx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 10:21:53 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24C4919B9
-        for <linux-scsi@vger.kernel.org>; Mon,  8 May 2023 07:21:52 -0700 (PDT)
-Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 348EDaKt013179;
-        Mon, 8 May 2023 14:21:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=cvgU9HpY9u0oSyJar9GiK5O+k2rHFGBT7Mu1Fs/hjfs=;
- b=nVrsUwFe5B1b2JX0lwTJinarvANOH6yzbnp5YX+UtOxn6MQNUzQYB8UJWcFxlSBk5ZSd
- J0KxeHGReGcu8zRePc156IjUlp9tR98SePllJvPvvuAKFGIZoGeMuM0U4Boujn2MzXSp
- jS3fCgsa5l7WnRuZLTDoZQ9kLlQAHi31DLll9PXvORGg/IIJXNrHueQI/8q1702iBTPB
- tIqBeies6oYbV1ke0hY0gp+WqnsmtSw4cqAay9LuSzDb5wsZHCpC7T36x8xhAXj2QjYF
- 5Ylia5/XPpmG/rQisuD/yrkzG5NtKCmcAlI4dQa8hz3Oh/JY+sR0YFIMwtACiZVeYPFS vA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qf2c00rxh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 08 May 2023 14:21:26 +0000
-Received: from m0353723.ppops.net (m0353723.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 348EHXub026959;
-        Mon, 8 May 2023 14:21:25 GMT
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qf2c00rss-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 08 May 2023 14:21:25 +0000
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 348CFmJp000483;
-        Mon, 8 May 2023 14:21:19 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3qdeh6gy5v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 08 May 2023 14:21:18 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 348ELGs255640522
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 8 May 2023 14:21:16 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 831F920043;
-        Mon,  8 May 2023 14:21:16 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6105C20040;
-        Mon,  8 May 2023 14:21:16 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.171.41.150])
-        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Mon,  8 May 2023 14:21:16 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.96)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1pw1jn-000b5V-1G;
-        Mon, 08 May 2023 16:21:15 +0200
-Date:   Mon, 8 May 2023 14:21:15 +0000
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.g.garry@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Changyuan Lyu <changyuanl@google.com>,
-        Jolly Shah <jollys@google.com>,
-        Vishakha Channapattan <vishakhavc@google.com>
-Subject: Re: [PATCH v2 3/5] scsi: core: Trace SCSI sense data
-Message-ID: <20230508142115.GE9720@t480-pf1aa2c2.fritz.box>
-References: <20230503230654.2441121-1-bvanassche@acm.org>
- <20230503230654.2441121-4-bvanassche@acm.org>
- <20230508140553.GD9720@t480-pf1aa2c2.fritz.box>
- <51b8899b-473e-5a3b-2c84-f97e7f12943d@acm.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <51b8899b-473e-5a3b-2c84-f97e7f12943d@acm.org>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: q0XxqZPiGRLW6YbtFsL-lMG6G99vgFmT
-X-Proofpoint-GUID: yn2wyVIujg7CJX0lSypfCjeMF8Vx6ndh
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S234285AbjEHOjR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2023 10:39:17 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91C274C09
+        for <linux-scsi@vger.kernel.org>; Mon,  8 May 2023 07:39:11 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id 5b1f17b1804b1-3f42769a0c1so7307665e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 08 May 2023 07:39:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1683556750; x=1686148750;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=XKa3M9jBMdQPBsXGj4GG7TDDf9/LBhAgzA2/jVjGDng=;
+        b=UC6m4w4u7QpQUbESbXOteX0ljEB1v/64kDiKb/nTQIcuqxofVL7yw65jwvdLAVpB1j
+         jisG0AH6+vlgwVWsly70tcniAFKF6MPPk7RUfaQ92k+2/KdDh/+ozsZT/HTtALlh3tGx
+         beKipMR0g4gFfPEX4czqEBi7ZAGtMtVKHXtkUS3IQE+3+H4WaiK911e2kmjFeUobD159
+         HU5rnIriqxHlm7KCRmm1/7fnByfGOMDqldG/X1TZmu8KCfEeU4edPqZDAmaiEdmOfGW5
+         NecwP2G0Rcp7ixH6hGbgg6rAIbki/l3vbf/2hJCs0kTo1qmsUxkiditxV3+aVYj19pZq
+         7TtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683556750; x=1686148750;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XKa3M9jBMdQPBsXGj4GG7TDDf9/LBhAgzA2/jVjGDng=;
+        b=P2dflXS1y4g2Y31HewN3oEjq4loQ7Ado0nR19XzDpCH1l/r9NEb6odAHnDRr9kwYbR
+         W6X7jaqmS0WR9CljH680afmDqh2cfVBzCvfOxklZYQUSBytOdv8l+Up9+EkEEu8rusNw
+         AM6yBqOwlmvsRfjOX2EVhoXa437/nHA6n+RK62nY9D+TjBP8A44qGR/mn0YiaJDHdjyJ
+         ierVgXS2NlwhRFzNZIQmJQW+xHBuE/rfdlom4zrSF2wnkVu7uLGbUr4u//RTYKqbIApD
+         DJXhNnTvKZ/h5szquFqzvhbyichshJCW0IAKKU5uRja0GT2FR/TEbkMm4Y9Vrc3LixCq
+         KlFw==
+X-Gm-Message-State: AC+VfDy2Win3sPooUptYHpCfHOSkaogS7pEHyk9qV34ux7CEeMGyTC67
+        ruYvmNKEoWAkDQKqUWBxH/61jA==
+X-Google-Smtp-Source: ACHHUZ7e1NO1n+801sRZRPy5/spMBxkJtnkeTCGiE4m4ao4b80MPhoPOpj4jejdZ9SjI8LBNXBsG0Q==
+X-Received: by 2002:a1c:cc14:0:b0:3f4:20bd:ba46 with SMTP id h20-20020a1ccc14000000b003f420bdba46mr4579620wmb.5.1683556749876;
+        Mon, 08 May 2023 07:39:09 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id n9-20020a05600c294900b003f423508c6bsm4886169wmd.44.2023.05.08.07.39.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 May 2023 07:39:07 -0700 (PDT)
+Date:   Mon, 8 May 2023 17:38:55 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Dongliang Mu <dzm91@hust.edu.cn>
+Cc:     Tomas Henzl <thenzl@redhat.com>, Jing Xu <U202112064@hust.edu.cn>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        hust-os-kernel-patches@googlegroups.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: mpt3sas: mpt3sas_debugfs: return value check of
+ `mpt3sas_debugfs_root`
+Message-ID: <81d236bb-3913-4eef-bf71-6d17535d6d79@kili.mountain>
+References: <20230423122535.31019-1-U202112064@hust.edu.cn>
+ <6e69b57c-80ae-8b6e-cb5f-9e05da46ecd6@redhat.com>
+ <1484408f-f68e-4354-ab59-56af9cd1ef14@kili.mountain>
+ <b7154e2c-0438-87d1-9edc-7eb1aad40cd1@hust.edu.cn>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-08_10,2023-05-05_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 impostorscore=0
- adultscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0 mlxlogscore=999
- priorityscore=1501 phishscore=0 suspectscore=0 bulkscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2305080095
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b7154e2c-0438-87d1-9edc-7eb1aad40cd1@hust.edu.cn>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 08, 2023 at 07:10:31AM -0700, Bart Van Assche wrote:
-> On 5/8/23 07:05, Benjamin Block wrote:
-> > On Wed, May 03, 2023 at 04:06:52PM -0700, Bart Van Assche wrote:
-> >> @@ -285,11 +290,22 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
-> >>   		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
-> >>   		__entry->prot_op	= scsi_get_prot_op(cmd);
-> >>   		memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
-> >> +		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
+On Mon, May 08, 2023 at 09:40:41PM +0800, Dongliang Mu wrote:
+> > > > diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+> > > > index a6ab1db81167..c92e08c130b9 100644
+> > > > --- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+> > > > +++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+> > > > @@ -99,8 +99,6 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
+> > > >   void mpt3sas_init_debugfs(void)
+> > > >   {
+> > > >   	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
+> > > > -	if (!mpt3sas_debugfs_root)
+> > > > -		pr_info("mpt3sas: Cannot create debugfs root\n");
+> > > Hi Jing,
+> > > most drivers just ignore the return value but here the author wanted to
+> > > have the information logged.
+> > > Can you instead of removing the message modify the 'if' condition so it
+> > > suits the author's intention?
 > > 
-> > Can't hurt to have these explicitly here, but these checks are also
-> > done by `scsi_command_normalize_sense()` AFAICT.
+> > This code was always just wrong.
+> > 
+> > The history of this is slightly complicated and boring.  These days it's
+> > harmless dead code so I guess it's less bad than before.
 > 
-> Niklas requested these checks as a performance optimization.
+> Hi Dan and Tomas,
+> 
+> Any conclusion about this patch? The student Jing Xu is not sure about how
+> to revise this patch.
 
-Oh okay, didn't remember that. Fair enough.
+The correct fix is to delete the code.
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+Debugfs code has error checking built in and was never supposed to be
+checked for errors in normal driver code.
+
+Originally, debugfs returned a mix of error pointers and NULL.  In the
+kernel, when you have a mix of error pointers and NULL, then the NULL
+means that the feature has been disabled deliberately.  It's not an
+error, we should not print a message.
+
+So a different, correct-ish way to write write debugfs error handling
+was to say:
+
+	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
+	if (IS_ERR(mpt3sas_debugfs_root))
+		return PTR_ERR(mpt3sas_debugfs_root);
+
+However, in those days, a lot of people didn't understand error pointers
+and thought that "if (IS_ERR_OR_NULL(mpt3sas_debugfs_root)) {" was a
+super secure way to check for errors.  Or they just got it wrong and
+checked for NULL instead of error pointers.  Any of the checks are
+wrong, but if (IS_ERR()) check was at least correct-ish.
+
+I dealt with this a lot because of my work with Smatch.  I used to be
+happy if I could persuade someone to write at least correct-ish code,
+but it was pretty painful to try explain this over and over and very few
+people deleted the checks.
+
+Eventually Greg changed the code to never return NULL and mass deleted
+the IS_ERR() checks.  Not returning NULL makes it simpler to understand.
+And it makes it impossible to check in the correct-ish way so it kind of
+forces people to just delete the error handling.
+
+regards,
+dan carpenter
