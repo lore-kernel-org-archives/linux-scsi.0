@@ -2,115 +2,195 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6496C7EE24
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 10:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C61EC7EE2A
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 11:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234953AbjEIKK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 May 2023 06:10:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48252 "EHLO
+        id S229520AbjEILzB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 May 2023 07:55:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234560AbjEIKK1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 06:10:27 -0400
-Received: from mail-yw1-x1129.google.com (mail-yw1-x1129.google.com [IPv6:2607:f8b0:4864:20::1129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A033F524B
-        for <linux-scsi@vger.kernel.org>; Tue,  9 May 2023 03:10:24 -0700 (PDT)
-Received: by mail-yw1-x1129.google.com with SMTP id 00721157ae682-55a5a830238so51558937b3.3
-        for <linux-scsi@vger.kernel.org>; Tue, 09 May 2023 03:10:24 -0700 (PDT)
+        with ESMTP id S235609AbjEILyn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 07:54:43 -0400
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7BDC421D;
+        Tue,  9 May 2023 04:54:40 -0700 (PDT)
+Received: by mail-wr1-x42a.google.com with SMTP id ffacd0b85a97d-3062db220a3so3709421f8f.0;
+        Tue, 09 May 2023 04:54:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1683627024; x=1686219024;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=rQkbfRIbUJCVqw4JhZ/x8mgAn7rLfZy1brM0sCnVSgw=;
-        b=U1CNfIFlZ/a1WePhr2f4aPDZkCagS2Q5q5SRO7RjjDU2jDZUwcoVsBFqx9cloGIY/v
-         kfVsJo63yMDr2c/jAyx3dvDZI3A5/535YyoDqLTJBa0R9n55KGrxAVK05n56G5erKouc
-         8/5szb42oNcPenusnzqM4m49wyN8bOkTvy+39kUXY2R/9iSUOmQVL7GhtXYVEf+VLFTC
-         rzhHhTaFeS81uybq1ZDPuzz4/7tKc4CWdtVOwsiCgKh5cs2bBfcM5mTEp4lXF677J+tH
-         SjvRpzkqrsC1jHTznwynV7b5svGS85/ACYbXI4PlHzXDvSe+Z1anVO8M1/Sf+GrCztxR
-         QI0Q==
+        d=gmail.com; s=20221208; t=1683633279; x=1686225279;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=tolBytGtS8Xn8iqANX94YDwAEigexY0tGBNVZtJhEmU=;
+        b=D6TvQygrPJNzSbMNHt4fPWFwo/YKMyUETTgiVamzBUKtWWKADyyauhyudd3KgaG6Wy
+         iZ+nvp3l0YOQ2TZKMzVB3UPT4j1JLTeQa7/VNhfYQYDP4I0ZKZFmdgfhNe+vRCrg/5ao
+         yv64sC8Cr54gQ0i783euGwBVeO+zPdAg4flsJwDByFISeQP+KqS1/CYySsjjP3Oejfgb
+         zh6RtIeg5738bgB8y7hoYAMd3nzqV2E4sY/SAdR5H9rKruIXLjcSx8/rYhR5019vOU7A
+         yjSBZhlfsUDFIsn6snjXLJJPsxGKmqdaarDD+vML/Mp2RO5sgFJghcdoHV3TxLgeA0ra
+         /HJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683627024; x=1686219024;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20221208; t=1683633279; x=1686225279;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=rQkbfRIbUJCVqw4JhZ/x8mgAn7rLfZy1brM0sCnVSgw=;
-        b=bCG5Tm0+Xh/WyWfy8ODmtzL7K9+lcQt0ea/J+HYlyAL/KtOz+8X1xycdKqO2p6oz1P
-         6HVXNdczIADpOvjwyoO0uzDio5wnLHH7k0G0owySrOqOicJjcbxy/11jynJFjtwnNGQD
-         B2F6JaqJnobOZZIox2rGkKAcMc6pYybywE0T6oNugVoAD7R16x9dScmVJOGl/EajYsN0
-         7tqvmkCZtY51LMOLSAGG0b2vZi4XjCK/WV7jyTc9lpXxNohzt6tLq+iZ/gtHFDZxToeJ
-         Mbp0pGJ+VZqVGTOxaFsYE6mbadJX7IH8toVQbLm1xYSgC400IqEJv0kNZL8D6mN0XE3y
-         LwUQ==
-X-Gm-Message-State: AC+VfDxUR6my+DOuEffMHfP8+gx6JpGXQicinGMJ4+y1ADv0acLIfOTA
-        XWDp8b8hPux2Ct98oGbaw/mEAtvHfUUdesIiJbomSA==
-X-Google-Smtp-Source: ACHHUZ7en5HQ9tk8fC7W17P/UB40PYuc/5jwewMS+g/NJbXve0voOVRVYuXomwyHeYVPu4jgr23oEop/AXyacJy+J6o=
-X-Received: by 2002:a81:5404:0:b0:55d:c333:26c4 with SMTP id
- i4-20020a815404000000b0055dc33326c4mr9833694ywb.0.1683627023804; Tue, 09 May
- 2023 03:10:23 -0700 (PDT)
+        bh=tolBytGtS8Xn8iqANX94YDwAEigexY0tGBNVZtJhEmU=;
+        b=W8g8WggNjz/O9hTOLGDIGjjQCRE7L7ZXliUFze+6YJpXd6wdgQq16QbfTf08NoqjqO
+         L4sYwVFLnmUpxpr0qaXuSbAU0s9KVwR+YUMH5X58/r8KrThvf/izeaPtP3VwZYlKoHZX
+         y32fzVzB70G3e4VOKVTnz7vbEGhIzpo0hBPlQIO3TEQBIcLPGrClKlSuELNUirS30HJf
+         Kb85GZs383hMwDyfutCbVrRLdOwHnyo2Km0NVXjq3R/uIvMrJTjw9JW30uCf5FKXrkOh
+         ihYVabCCfok7rc3DLzTjJxgaCCqkJnJx85FxJ7HlfIEFRd7uGWIHxyfUufQ0UICuGLF8
+         1Cng==
+X-Gm-Message-State: AC+VfDwGpjaph1gDAoajQmBpcUiswNmeYx9ToSNynEkmm0610frNs8Tl
+        4B2rsm2QaVT8A+jAACbTqkpYU9q/9Pk=
+X-Google-Smtp-Source: ACHHUZ7lUnR1lX2mgpHgMvrPLwQZiXCLPakDNhXkNVP+sknjVOjyDfgZTT0z9ZjxVHwGQvBtagcN7Q==
+X-Received: by 2002:a05:6000:10a:b0:2f9:482f:c13f with SMTP id o10-20020a056000010a00b002f9482fc13fmr8829581wrx.46.1683633279032;
+        Tue, 09 May 2023 04:54:39 -0700 (PDT)
+Received: from localhost ([167.98.27.226])
+        by smtp.gmail.com with ESMTPSA id b15-20020a5d4b8f000000b003064600cff9sm14153895wrt.38.2023.05.09.04.54.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 May 2023 04:54:38 -0700 (PDT)
+From:   Aidan MacDonald <aidanmacdonald.0x0@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v1] scsi: ses: Avoid reporting errors for simple subenclosures
+Date:   Tue,  9 May 2023 12:54:24 +0100
+Message-Id: <20230509115424.3996664-1-aidanmacdonald.0x0@gmail.com>
 MIME-Version: 1.0
-References: <20230408214041.533749-1-abel.vesa@linaro.org> <20230408214041.533749-4-abel.vesa@linaro.org>
- <CAPDyKFqMAeKrw1KqhHhdd6U4LUogd6UiiMwe1C2fReSen11A6g@mail.gmail.com>
-In-Reply-To: <CAPDyKFqMAeKrw1KqhHhdd6U4LUogd6UiiMwe1C2fReSen11A6g@mail.gmail.com>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Tue, 9 May 2023 12:09:48 +0200
-Message-ID: <CAPDyKFpwzunLC447WWqPqrMpJRbCFqUoADERU7KG4iorOgADzA@mail.gmail.com>
-Subject: Re: [PATCH v7 3/3] mmc: sdhci-msm: Switch to the new ICE API
-To:     Bjorn Andersson <andersson@kernel.org>,
-        Abel Vesa <abel.vesa@linaro.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        Eric Biggers <ebiggers@kernel.org>, linux-mmc@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 17 Apr 2023 at 10:47, Ulf Hansson <ulf.hansson@linaro.org> wrote:
->
-> On Sat, 8 Apr 2023 at 23:40, Abel Vesa <abel.vesa@linaro.org> wrote:
-> >
-> > Now that there is a new dedicated ICE driver, drop the sdhci-msm ICE
-> > implementation and use the new ICE api provided by the Qualcomm soc
-> > driver ice. The platforms that already have ICE support will use the
-> > API as library since there will not be a devicetree node, but instead
-> > they have reg range. In this case, the of_qcom_ice_get will return an
-> > ICE instance created for the consumer's device. But if there are
-> > platforms that do not have ice reg in the consumer devicetree node
-> > and instead provide a dedicated ICE devicetree node, theof_qcom_ice_get
-> > will look up the device based on qcom,ice property and will get the ICE
-> > instance registered by the probe function of the ice driver.
-> >
-> > The ICE clock is now handle by the new driver. This is done by enabling
-> > it on the creation of the ICE instance and then enabling/disabling it on
-> > SDCC runtime resume/suspend.
-> >
-> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
->
-> Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
->
-> Bjorn, I think it should be easier if you pick this together with qcom
-> soc driver changes. I don't think there is any conflict with changes
-> in my mmc tree.
->
-> Otherwise, I will just wait for the next release cycle.
+Currently the SES driver reports bogus errors when plugging
+in a drive that exposes only a single, simple subenclosure:
 
-Okay, it looks like all dependent pieces made it into v6.4-rc1. So,
-applied for next, thanks!
+[  432.713731] scsi 3:0:0:0: Direct-Access     WD       Elements 2667    2007 PQ: 0 ANSI: 6
+[  432.714127] scsi 3:0:0:1: Enclosure         WD       SES Device       2007 PQ: 0 ANSI: 6
+...
+[  432.716508] scsi 3:0:0:1: Attached scsi generic sg2 type 13
+...
+[  439.897020] scsi 3:0:0:1: Wrong diagnostic page; asked for 1 got 8
+[  439.897023] scsi 3:0:0:1: Failed to get diagnostic page 0x1
+[  439.897025] scsi 3:0:0:1: Failed to bind enclosure -19
 
-[...]
+According to the SES specification, simple subenclosures always
+return diagnostic page 8 no matter what page was requested, so
+the device is permitted to page 8 here and nothing is wrong.
 
-Kind regards
-Uffe
+To avoid polluting the kernel logs with bogus errors, the first
+diagnostic page read bypasses the usual page code check. If it
+returns page 8 the device is assumed to be a simple subenclosure
+and no enclosure device is created. Simple subenclosures only
+return a vendor specific status byte in page 8 and don't support
+any other pages, so they can't support the enclosure interface.
+
+Signed-off-by: Aidan MacDonald <aidanmacdonald.0x0@gmail.com>
+---
+ drivers/scsi/ses.c | 53 +++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 45 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index d7d0c35c58b8..3457d8bc1ddf 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -73,9 +73,12 @@ static void init_device_slot_control(unsigned char *dest_desc,
+ 	dest_desc[3] &= 0x3c;
+ }
+ 
+-
+-static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+-			 void *buf, int bufflen)
++/*
++ * Raw RECEIVE_DIAGNOSTIC page command. Does not check the returned
++ * page code, which may differ from the requested page code!
++ */
++static int __ses_recv_diag(struct scsi_device *sdev, int page_code,
++			   void *buf, int bufflen)
+ {
+ 	int ret;
+ 	unsigned char cmd[] = {
+@@ -86,7 +89,6 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 		bufflen & 0xff,
+ 		0
+ 	};
+-	unsigned char recv_page_code;
+ 	unsigned int retries = SES_RETRIES;
+ 	struct scsi_sense_hdr sshdr;
+ 	const struct scsi_exec_args exec_args = {
+@@ -100,6 +102,15 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 		 (sshdr.sense_key == NOT_READY ||
+ 		  (sshdr.sense_key == UNIT_ATTENTION && sshdr.asc == 0x29)));
+ 
++	return ret;
++}
++
++static int ses_recv_diag(struct scsi_device *sdev, int page_code,
++			 void *buf, int bufflen)
++{
++	unsigned char recv_page_code;
++	int ret = __ses_recv_diag(sdev, page_code, buf, bufflen);
++
+ 	if (unlikely(ret))
+ 		return ret;
+ 
+@@ -108,8 +119,11 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 	if (likely(recv_page_code == page_code))
+ 		return ret;
+ 
+-	/* successful diagnostic but wrong page code.  This happens to some
+-	 * USB devices, just print a message and pretend there was an error */
++	/*
++	 * Successful diagnostic but wrong page code. Shouldn't happen
++	 * except for simple subenclosures, which should already have
++	 * been detected by this point.
++	 */
+ 
+ 	sdev_printk(KERN_ERR, sdev,
+ 		    "Wrong diagnostic page; asked for %d got %u\n",
+@@ -695,11 +709,33 @@ static int ses_intf_add(struct device *cdev)
+ 	if (!hdr_buf || !ses_dev)
+ 		goto err_init_free;
+ 
++	/*
++	 * Read without checking page code, getting a different page
++	 * is not necessarily an error for devices with only a simple
++	 * subenclosure (eg. some USB drives).
++	 */
+ 	page = 1;
+-	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
++	result = __ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
+ 	if (result)
+ 		goto recv_failed;
+ 
++	/*
++	 * A simple subenclosure only supports page 8 and will return
++	 * it after any diagnostic page request. Simple subenclosures
++	 * are not supported by this driver -- there is simply no data
++	 * to report besides a vendor specific byte -- but they will
++	 * not be treated as an error.
++	 */
++	if (hdr_buf[0] == 8) {
++		err = 0;
++		goto err_init_free;
++	}
++
++	/*
++	 * All diagnostic pages will include a length field so even
++	 * if the page code is incorrect at this point, that'll get
++	 * detected when re-reading the page.
++	 */
+ 	len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
+ 	buf = kzalloc(len, GFP_KERNEL);
+ 	if (!buf)
+@@ -817,7 +853,8 @@ static int ses_intf_add(struct device *cdev)
+  err_init_free:
+ 	kfree(ses_dev);
+ 	kfree(hdr_buf);
+-	sdev_printk(KERN_ERR, sdev, "Failed to bind enclosure %d\n", err);
++	if (err)
++		sdev_printk(KERN_ERR, sdev, "Failed to bind enclosure %d\n", err);
+ 	return err;
+ }
+ 
+-- 
+2.39.2
+
