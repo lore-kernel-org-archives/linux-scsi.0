@@ -2,83 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1286EC7EE23
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 16:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C67C77B75
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 21:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229666AbjEIQbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 May 2023 12:31:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49248 "EHLO
+        id S235563AbjEIVfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 May 2023 17:35:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232299AbjEIQbF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 12:31:05 -0400
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74D98422D;
-        Tue,  9 May 2023 09:30:59 -0700 (PDT)
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-64395e2a715so6032320b3a.3;
-        Tue, 09 May 2023 09:30:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683649859; x=1686241859;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5zwYmC5Iapd68RqlxFcQ96Glwp7DmSHjoyhPhYBPtpA=;
-        b=g//OZiE/cujbj3Z0yGhCGShvfVGmqXy2SFPdGApjjo3mJAqYBlMWpmkzP3e6DrIlKN
-         GIGCBejJ9MjPF9Hzxe162PFt8WhrcbWqBvZuIuMFRyomBkFzFcs0Dd2+fifYYmdqSmpp
-         XbSFABF3hnN3kxWmRCzYv97NAQdqIiRjmi8mgqQfDaEsV6o2lUYePGQqwL5vPoCrq2b+
-         8mmmBVnne/JdkehCRlx+JxWwytv+SzV8v+lXTn/zwPmSyGGQhJpwEzOKHUC3pbQho1EU
-         Vr18IPT2zk88eLiQwbwlWqGfqXbcQVMMSB4zoC03J3JAvnviqQg7Ofldbu6zQDOgpa2q
-         yk6g==
-X-Gm-Message-State: AC+VfDzIaHAUziKngQC9K9Br3uVQASQ8Sp1qsdlS1iR3sxFwjJ1k39z/
-        rMAlT0TbR8plM8TU5mRLvAU=
-X-Google-Smtp-Source: ACHHUZ7mxN7fZJGUConRfJ0Y1JY/m20MYrK734Vrj+cvrSI5OeKIqRvsnQaKeL0n2WbpKZXrMqwijw==
-X-Received: by 2002:a05:6a00:15c6:b0:647:7ee8:6251 with SMTP id o6-20020a056a0015c600b006477ee86251mr1911118pfu.21.1683649858777;
-        Tue, 09 May 2023 09:30:58 -0700 (PDT)
-Received: from ?IPV6:2001:4958:15a0:30:e15c:df42:f610:1b21? ([2001:4958:15a0:30:e15c:df42:f610:1b21])
-        by smtp.gmail.com with ESMTPSA id n14-20020a62e50e000000b0064399be15f0sm1948312pff.183.2023.05.09.09.30.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 09 May 2023 09:30:58 -0700 (PDT)
-Message-ID: <6192fa07-ec6f-0464-deb6-c3e9f69f6ebf@acm.org>
-Date:   Tue, 9 May 2023 09:30:57 -0700
+        with ESMTP id S235689AbjEIVf2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 17:35:28 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 747E16EA1;
+        Tue,  9 May 2023 14:35:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683668102; x=1715204102;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=LxfhN7twkbsXW4buKGDFp0m82yxZW5uwWpLzdxIpSC8=;
+  b=WMuC4KjgMwxqwDvM/1pmoDjSgK/AtbZSwQbn7LVelF7qFebmNviFT70p
+   NY3+qHW/g36bDFNLACWkv9tpKaAQZTQNd0yI4OT38bx2JV8Z88XnDj7hL
+   nNFsT93Y7pTjFhSI3gOPfBueZx7kzInnPR+8FMQc08ODxTVl0FY+D8jTo
+   gKcmxnO20xz+myJj4hN2UkiapwNj15XOdVcklVft9dQa9EgkJRB84iSvO
+   UOZuSkt4lr8Y1qOQ4rKpzxghAqkJw2B3wVEGfDc7LE2PypcWY77pBa5ga
+   17MlM221rksGc1F+0UqdN667wmHzbVjFXIhCGalKV6zhf1BEau4xL4h25
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10705"; a="330421325"
+X-IronPort-AV: E=Sophos;i="5.99,262,1677571200"; 
+   d="scan'208";a="330421325"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 May 2023 14:33:55 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10705"; a="729693392"
+X-IronPort-AV: E=Sophos;i="5.99,262,1677571200"; 
+   d="scan'208";a="729693392"
+Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 09 May 2023 14:33:52 -0700
+Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pwUxz-0002WE-0b;
+        Tue, 09 May 2023 21:33:51 +0000
+Date:   Wed, 10 May 2023 05:33:31 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk
+Cc:     oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        martin.petersen@oracle.com, bvanassche@acm.org,
+        stanley.chu@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        powen.kao@mediatek.com, naomi.chu@mediatek.com,
+        wsd_upstream@mediatek.com, Ed Tsai <ed.tsai@mediatek.com>
+Subject: Re: [PATCH 1/2] block: make the fair sharing of tag configurable
+Message-ID: <202305100557.gdIvlzRS-lkp@intel.com>
+References: <20230509065230.32552-2-ed.tsai@mediatek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>, Ed Tsai <ed.tsai@mediatek.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        "naomi.chu@mediatek.com" <naomi.chu@mediatek.com>,
-        "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <DM6PR04MB6575753742F933DE192E7325FC769@DM6PR04MB6575.namprd04.prod.outlook.com>
- <dcfae203-005f-928b-37d6-7ee5bb4e2971@acm.org>
- <DM6PR04MB6575F344EF2D962103888A56FC769@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB6575F344EF2D962103888A56FC769@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230509065230.32552-2-ed.tsai@mediatek.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/9/23 09:19, Avri Altman wrote:
-> Following your argument, then why fair allocation exists in the first place?
+Hi Ed,
 
-Does this patch answer your question?
+kernel test robot noticed the following build warnings:
 
-[PATCH v2] block: Improve shared tag set performance
-https://lore.kernel.org/linux-block/20230103195337.158625-1-bvanassche@acm.org/
+[auto build test WARNING on axboe-block/for-next]
+[also build test WARNING on jejb-scsi/for-next mkp-scsi/for-next linus/master v6.4-rc1 next-20230509]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Thanks,
+url:    https://github.com/intel-lab-lkp/linux/commits/Ed-Tsai/block-make-the-fair-sharing-of-tag-configurable/20230509-145439
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+patch link:    https://lore.kernel.org/r/20230509065230.32552-2-ed.tsai%40mediatek.com
+patch subject: [PATCH 1/2] block: make the fair sharing of tag configurable
+config: openrisc-randconfig-r022-20230509 (https://download.01.org/0day-ci/archive/20230510/202305100557.gdIvlzRS-lkp@intel.com/config)
+compiler: or1k-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/b1081024bc6d1cdaf5b39994b19040cd8e6099ec
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Ed-Tsai/block-make-the-fair-sharing-of-tag-configurable/20230509-145439
+        git checkout b1081024bc6d1cdaf5b39994b19040cd8e6099ec
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=openrisc olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=openrisc SHELL=/bin/bash
 
-Bart.
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202305100557.gdIvlzRS-lkp@intel.com/
 
+All warnings (new ones prefixed by >>):
+
+   In file included from block/blk-mq.c:12:
+   block/blk-mq.c: In function 'blk_mq_init_allocated_queue':
+>> include/linux/blkdev.h:569:39: warning: left shift count >= width of type [-Wshift-count-overflow]
+     569 |                                  (1UL << QUEUE_FLAG_FAIR_TAG_SHARING))
+         |                                       ^~
+   block/blk-mq.c:4232:27: note: in expansion of macro 'QUEUE_FLAG_MQ_DEFAULT'
+    4232 |         q->queue_flags |= QUEUE_FLAG_MQ_DEFAULT;
+         |                           ^~~~~~~~~~~~~~~~~~~~~
+
+
+vim +569 include/linux/blkdev.h
+
+   565	
+   566	#define QUEUE_FLAG_MQ_DEFAULT	((1UL << QUEUE_FLAG_IO_STAT) |		\
+   567					 (1UL << QUEUE_FLAG_SAME_COMP) |	\
+   568					 (1UL << QUEUE_FLAG_NOWAIT) |		\
+ > 569					 (1UL << QUEUE_FLAG_FAIR_TAG_SHARING))
+   570	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
