@@ -2,99 +2,181 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD7F5C7EE24
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 04:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C647C77B7C
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 04:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234709AbjEIEXA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 May 2023 00:23:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54066 "EHLO
+        id S234777AbjEIEsG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 May 2023 00:48:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbjEIEW6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 00:22:58 -0400
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A1244A0;
-        Mon,  8 May 2023 21:22:58 -0700 (PDT)
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-52c30fbccd4so4921844a12.0;
-        Mon, 08 May 2023 21:22:58 -0700 (PDT)
+        with ESMTP id S234572AbjEIErh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 00:47:37 -0400
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE1A7D86C
+        for <linux-scsi@vger.kernel.org>; Mon,  8 May 2023 21:46:44 -0700 (PDT)
+Received: by mail-io1-f71.google.com with SMTP id ca18e2360f4ac-76353eb51acso806801139f.0
+        for <linux-scsi@vger.kernel.org>; Mon, 08 May 2023 21:46:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683606177; x=1686198177;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hju9RP+TJIwPzHSbklx9tx6RuP11kFVSULgO0JpvMYo=;
-        b=MHzG6A3YAVgfm/t7ioHZV0BS6k0e5qshXSzy7XuJTgXL7pu/SHRQkogNdbmtvQawUL
-         oJaA46YxNdLEFXCvywMiV357tNAUniLGPZ0n7Pc0/rusqzAk/kZb1o/3CnNlqxX6IwzJ
-         MV/X4wHPlS6mlMrrT1x26b0zU3dLvIYsTQ4/duDGN70aC84UxFCfkcTM8yqiKAj/Fofz
-         4bcIwdD6VCEoCh4t3z2JhpbmWvy3Q/AToEaJ21S18oPy5d4pHjacMjAjYc6dmHzyRC1Q
-         tNMknqyz/g9+VVYzLpu30p/qDAo1kS0K8q0H8wxu0GZ4Cpp+WylmJkCmn4bEBmx8rWAT
-         FOUQ==
-X-Gm-Message-State: AC+VfDyAYHm6wyX41X4VRYUdd4hdQhuazMxOSn70St74zEB5Y+2QL92A
-        PfDHbm1Nvq0Xf0gvw3xzL2e6Fsb/2Hg=
-X-Google-Smtp-Source: ACHHUZ4EIdouM0mgG3IfSt23/EyjMlvnlS3vOP6OeyX3/7Ov39m4Bil5YGWJ/0jRHZ3JcfFIEk97ng==
-X-Received: by 2002:a17:902:cec2:b0:1a8:1f41:59ba with SMTP id d2-20020a170902cec200b001a81f4159bamr15207641plg.38.1683606177395;
-        Mon, 08 May 2023 21:22:57 -0700 (PDT)
-Received: from [172.20.11.151] ([173.214.130.133])
-        by smtp.gmail.com with ESMTPSA id s23-20020a170902989700b001a96269e12csm350939plp.51.2023.05.08.21.22.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 May 2023 21:22:57 -0700 (PDT)
-Message-ID: <61f8f885-3f75-4e05-37dc-b54489adaeb7@acm.org>
-Date:   Mon, 8 May 2023 21:22:56 -0700
+        d=1e100.net; s=20221208; t=1683607546; x=1686199546;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Nka0UQDLy3l68Pe1UcuY6PZ6w5ZWCFXNDKJyD70sHRs=;
+        b=QCpCBO7xSa9jwjjk5z1PhmkdfnqQrpXm39WwLEoyXJIK3mpitmdUqVAW8pGFz5gwf4
+         uJGl9h0ZTXe+59EgsQkxCclkwjNEUPlbKThXsAZCxcjQEkadbNfMf4KpPOSqSFeMYZpI
+         DyTeq1vPirJb/pnmgSjZJD/KH0Q/ZKLg5zIEEMHMy7iqjc7IRA/FbGwQ2iDHValVSpw8
+         IK9S16u11gk+FfBsU3ZGKkizRjwte58ZC1tn+FuWneSaLx1ZqOpKGXS6IXBCCrvM1rnx
+         Qkvm1h7l08GSFT4Kla6+nTkk69P9XoZphcUhjNbtXzGsInCNfb2GMhV8Ts6BU98VdqRb
+         C/Pg==
+X-Gm-Message-State: AC+VfDxz/UN5As/oeWR2t2QucZQKUu//SaXQu7r99E3LMs5nFWyOzKuJ
+        jxqywcMGiLMO4TpUe0O7CPRm/FQBpxfbUgFwep9m/JXPHY6W
+X-Google-Smtp-Source: ACHHUZ7shSVpmodaX6RVegmcGe8XgRULmYBQuRb4Ww0tg08/7hT9bHiWeooxxQw/sSYOAUzb1CjNsQHniV3I6Pe4OGQWrOzcRmlr
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v1] block: make the fair sharing of tag configurable
-Content-Language: en-US
-To:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        wsd_upstream@mediatek.com
-References: <20230509012758.27094-1-ed.tsai@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230509012758.27094-1-ed.tsai@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a02:b11e:0:b0:3a7:e46e:ab64 with SMTP id
+ r30-20020a02b11e000000b003a7e46eab64mr752942jah.1.1683607546669; Mon, 08 May
+ 2023 21:45:46 -0700 (PDT)
+Date:   Mon, 08 May 2023 21:45:46 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000c2b03c05fb3b6db0@google.com>
+Subject: [syzbot] linux-next boot error: WARNING in workqueue_sysfs_register
+From:   syzbot <syzbot+5b06ded6a65536fa99c2@syzkaller.appspotmail.com>
+To:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-next@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, sfr@canb.auug.org.au,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/8/23 18:27, Ed Tsai wrote:
-> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-> index d6af9d431dc6..b8b36823f5f5 100644
-> --- a/block/blk-mq-tag.c
-> +++ b/block/blk-mq-tag.c
-> @@ -97,6 +97,7 @@ static int __blk_mq_get_tag(struct blk_mq_alloc_data *data,
->   			    struct sbitmap_queue *bt)
->   {
->   	if (!data->q->elevator && !(data->flags & BLK_MQ_REQ_RESERVED) &&
-> +			blk_queue_fair_tag_sharing(data->q) &&
->   			!hctx_may_queue(data->hctx, bt))
->   		return BLK_MQ_NO_TAG;
+Hello,
 
-Has it been considered to move the blk_queue_fair_tag_sharing() call into
-hctx_may_queue()? That should make this patch shorter.
+syzbot found the following issue on:
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 17d7bb875fee..e96a50265285 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5149,6 +5149,9 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
->   	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
->   	if (hba->quirks & UFSHCD_QUIRK_4KB_DMA_ALIGNMENT)
->   		blk_queue_update_dma_alignment(q, 4096 - 1);
-> +
-> +	blk_queue_flag_clear(QUEUE_FLAG_FAIR_TAG_SHARING, q);
-> +
->   	/*
->   	 * Block runtime-pm until all consumers are added.
->   	 * Refer ufshcd_setup_links().
+HEAD commit:    47cba14ce6fc Add linux-next specific files for 20230509
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=17e063a8280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=d1f55a88ec660cdb
+dashboard link: https://syzkaller.appspot.com/bug?extid=5b06ded6a65536fa99c2
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
 
-Please split this patch into one patch for the block layer core and another
-patch for the UFS driver.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/0dff7f749545/disk-47cba14c.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/238b578b8345/vmlinux-47cba14c.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/2909e3e79ac1/bzImage-47cba14c.xz
 
-Thanks,
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+5b06ded6a65536fa99c2@syzkaller.appspotmail.com
 
-Bart.
+Asymmetric key parser 'x509' registered
+Asymmetric key parser 'pkcs8' registered
+Key type pkcs7_test registered
+Block layer SCSI generic (bsg) driver version 0.4 loaded (major 240)
+io scheduler mq-deadline registered
+io scheduler kyber registered
+io scheduler bfq registered
+input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input0
+ACPI: button: Power Button [PWRF]
+input: Sleep Button as /devices/LNXSYSTM:00/LNXSLPBN:00/input/input1
+ACPI: button: Sleep Button [SLPF]
+ioatdma: Intel(R) QuickData Technology Driver 5.00
+ACPI: \_SB_.LNKC: Enabled at IRQ 11
+virtio-pci 0000:00:03.0: virtio_pci: leaving for legacy driver
+ACPI: \_SB_.LNKD: Enabled at IRQ 10
+virtio-pci 0000:00:04.0: virtio_pci: leaving for legacy driver
+ACPI: \_SB_.LNKB: Enabled at IRQ 10
+virtio-pci 0000:00:06.0: virtio_pci: leaving for legacy driver
+virtio-pci 0000:00:07.0: virtio_pci: leaving for legacy driver
+N_HDLC line discipline registered with maxframe=4096
+Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
+00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+00:04: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
+00:05: ttyS2 at I/O 0x3e8 (irq = 6, base_baud = 115200) is a 16550A
+00:06: ttyS3 at I/O 0x2e8 (irq = 7, base_baud = 115200) is a 16550A
+Non-volatile memory driver v1.3
+Linux agpgart interface v0.103
+ACPI: bus type drm_connector registered
+[drm] Initialized vgem 1.0.0 20120112 for vgem on minor 0
+[drm] Initialized vkms 1.0.0 20180514 for vkms on minor 1
+Console: switching to colour frame buffer device 128x48
+platform vkms: [drm] fb0: vkmsdrmfb frame buffer device
+usbcore: registered new interface driver udl
+brd: module loaded
+loop: module loaded
+zram: Added device: zram0
+null_blk: disk nullb0 created
+null_blk: module loaded
+Guest personality initialized and is inactive
+VMCI host device registered (name=vmci, major=10, minor=118)
+Initialized host personality
+usbcore: registered new interface driver rtsx_usb
+usbcore: registered new interface driver viperboard
+usbcore: registered new interface driver dln2
+usbcore: registered new interface driver pn533_usb
+nfcsim 0.2 initialized
+usbcore: registered new interface driver port100
+usbcore: registered new interface driver nfcmrvl
+Loading iSCSI transport class v2.0-870.
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1 at kernel/workqueue.c:5925 workqueue_sysfs_register+0x32c/0x3f0 kernel/workqueue.c:5925
+Modules linked in:
+CPU: 0 PID: 1 Comm: swapper/0 Not tainted 6.4.0-rc1-next-20230509-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 04/14/2023
+RIP: 0010:workqueue_sysfs_register+0x32c/0x3f0 kernel/workqueue.c:5925
+Code: b8 00 00 00 00 00 fc ff df 48 c1 ea 03 80 3c 02 00 0f 85 ac 00 00 00 49 c7 84 24 18 01 00 00 00 00 00 00 eb b1 e8 a4 d4 2f 00 <0f> 0b 41 be ea ff ff ff eb a2 4c 89 ff e8 a2 d3 82 00 e9 9b fe ff
+RSP: 0000:ffffc90000067910 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000080000 RCX: 0000000000000000
+RDX: ffff888140660000 RSI: ffffffff81546bac RDI: 0000000000000005
+RBP: ffffc90000067a80 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000080000 R11: 0000000000000000 R12: ffff88801f7ed800
+R13: 0000000000000008 R14: ffff88801f7ed960 R15: ffff88801f7ed9c0
+FS:  0000000000000000(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffff88823ffff000 CR3: 000000000c571000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ alloc_workqueue+0x637/0x1110 kernel/workqueue.c:4485
+ scsi_host_alloc+0xd1f/0x11a0 drivers/scsi/hosts.c:513
+ virtscsi_probe+0x206/0xc80 drivers/scsi/virtio_scsi.c:872
+ virtio_dev_probe+0x57b/0x870 drivers/virtio/virtio.c:305
+ call_driver_probe drivers/base/dd.c:579 [inline]
+ really_probe+0x240/0xca0 drivers/base/dd.c:658
+ __driver_probe_device+0x1df/0x4b0 drivers/base/dd.c:800
+ driver_probe_device+0x4c/0x1a0 drivers/base/dd.c:830
+ __driver_attach+0x271/0x570 drivers/base/dd.c:1216
+ bus_for_each_dev+0x12a/0x1c0 drivers/base/bus.c:368
+ bus_add_driver+0x2e9/0x640 drivers/base/bus.c:673
+ driver_register+0x162/0x4a0 drivers/base/driver.c:246
+ virtio_scsi_init+0x76/0x110 drivers/scsi/virtio_scsi.c:1019
+ do_one_initcall+0x102/0x540 init/main.c:1246
+ do_initcall_level init/main.c:1319 [inline]
+ do_initcalls init/main.c:1335 [inline]
+ do_basic_setup init/main.c:1354 [inline]
+ kernel_init_freeable+0x5a4/0x890 init/main.c:1571
+ kernel_init+0x1e/0x2c0 init/main.c:1462
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
 
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the bug is already fixed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to change bug's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the bug is a duplicate of another bug, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
