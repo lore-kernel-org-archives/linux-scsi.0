@@ -2,152 +2,156 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C67CC77B75
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 08:33:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9617FC7EE22
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 May 2023 08:55:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230262AbjEIIdV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 May 2023 04:33:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46738 "EHLO
+        id S234728AbjEIIz4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 May 2023 04:55:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbjEIIdT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 04:33:19 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F1022114
-        for <linux-scsi@vger.kernel.org>; Tue,  9 May 2023 01:33:17 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230509083314epoutp04e480e17ed67687fd71fc3d67fe198875~dbI5OPRJu1780817808epoutp04X
-        for <linux-scsi@vger.kernel.org>; Tue,  9 May 2023 08:33:14 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230509083314epoutp04e480e17ed67687fd71fc3d67fe198875~dbI5OPRJu1780817808epoutp04X
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1683621194;
-        bh=uYJN7HQN0yUJfuNCPmL+Vq6L3jpPWUWnbtogStcJ3YA=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=VuXVwEAmDtpQfVVPSJGIcQSCEIYRs+OvlzwBGewOuBl7gYVs2f6mtlSLX1mUwvIr9
-         jiTxaXFH8+RXbB6RnqJAqJKQ0e9+Y+oWw8m850ZDgAtFSCX1DPSJjKgatDJj9j3hkw
-         5u4d7gX4xCI9Ar5BZb1RAtXH+1qugZddVFf5u7IQ=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20230509083313epcas2p23e863471d8683288ae83d7fdfaea4b32~dbI4wwKVl0643406434epcas2p28;
-        Tue,  9 May 2023 08:33:13 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.69]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4QFryc6t8Cz4x9Q0; Tue,  9 May
-        2023 08:33:12 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CE.45.22936.8450A546; Tue,  9 May 2023 17:33:12 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb~dbI3kBlAR1519215192epcas2p3e;
-        Tue,  9 May 2023 08:33:12 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230509083312epsmtrp29bff0b16d99ef7128055f855d2e22645~dbI3jJ__82304923049epsmtrp2O;
-        Tue,  9 May 2023 08:33:12 +0000 (GMT)
-X-AuditID: b6c32a48-6d3fa70000005998-0c-645a0548c83f
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        33.34.28392.8450A546; Tue,  9 May 2023 17:33:12 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230509083312epsmtip1c6ca7a82229cb5a2cf3310578f1c5d1b~dbI3WMgz90439304393epsmtip1Q;
-        Tue,  9 May 2023 08:33:12 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
-Date:   Tue,  9 May 2023 17:24:34 +0900
-Message-Id: <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrGKsWRmVeSWpSXmKPExsWy7bCmma4Ha1SKwdp+Y4uTT9awWTyYt43N
-        4uXPq2wWBx92slisXvyAxWLRjW1MFltv7GSxuLnlKIvF5V1z2Cy6r+9gs1h+/B+TRdfdG4wW
-        S/+9ZXHg9Vi85yWTx4RFBxg9vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCmCPyrbJSE1MSS1S
-        SM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMATpXSaEsMacUKBSQWFys
-        pG9nU5RfWpKqkJFfXGKrlFqQklNgXqBXnJhbXJqXrpeXWmJlaGBgZApUmJCdcfbtEcaCVdwV
-        i/4tZmtgXMXZxcjJISFgIrH16xfmLkYuDiGBHYwSk6/uh3I+MUp8vPmbFcL5zCixv3EyC0zL
-        pd59UIldjBLrpmxnBEkICfxglGhYbwpiswloSjy9OZUJpEhEYBWTxIeTd9hBEswC6hK7Jpxg
-        ArGFBTwk9qx4zgZiswioSkzd9JkVxOYVcJPY9+oTG8Q2OYmb5zrBbpIQeMsu0XL4MztEwkXi
-        8ZEfjBC2sMSr41ug4lISn9/tBWrmALKzJfYsFIMIV0gsnvYW6gNjiVnP2hlBSpiBDl2/Sx+i
-        WlniyC0WiCv5JDoO/2WHCPNKdLQJQTQqS/yaNBlqp6TEzJt3oHZ6SNz7cwQaCrESXTNOsE5g
-        lJ2FMH8BI+MqRrHUguLc9NRiowITeBwl5+duYgQnQC2PHYyz337QO8TIxMF4iFGCg1lJhHdV
-        QliKEG9KYmVValF+fFFpTmrxIUZTYGhNZJYSTc4HpuC8knhDE0sDEzMzQ3MjUwNzJXHejx3K
-        KUIC6YklqdmpqQWpRTB9TBycUg1MTes+Kgl2bTu/XZdhm1hVzIKlxjHRZd+tTtzY+9N/9+3v
-        ZsLBcXPvO7/6Kv7jcfvcu6/Frf/KKCt+feJ0/9NFCbuKlFimj12PX3yNKvlkmM1x/vSf6ZxT
-        dhiY7o+xWHWF/03xyayQBe/cy+0CctWtnYwb/NlXd/hPPR+evL6u81Z3fVv3hG0ufC8t5daK
-        dl56f3NdYc9vu9PJ2x02X8/2etp5WfL+4xkVewo570hfWvC/SejwJWPzNFO1VJtA59inrSVr
-        /Zhb7TQuyjtcssoK6FE5f1kwNTZcfPaTec8vNn6IKV017dE1i8mf7UUUCpN9mjcoTPnyUkUl
-        fpF5XadyTOk0pmOXD1vNPh7OZblaiaU4I9FQi7moOBEA3ctkNQkEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBLMWRmVeSWpSXmKPExsWy7bCSnK4Ha1SKwdtzAhYnn6xhs3gwbxub
-        xcufV9ksDj7sZLFYvfgBi8WiG9uYLLbe2MlicXPLURaLy7vmsFl0X9/BZrH8+D8mi667Nxgt
-        lv57y+LA67F4z0smjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMAexWWTkpqTWZZa
-        pG+XwJVx9u0RxoJV3BWL/i1ma2BcxdnFyMkhIWAical3H2sXIxeHkMAORolfjSsYIRKSEid2
-        PoeyhSXutxyBKvrGKLFx0Vo2kASbgKbE05tTmUASIgI7mCSWPnzMApJgFlCX2DXhBBOILSzg
-        IbFnxXOwBhYBVYmpmz6zgti8Am4S+159YoPYICdx81wn8wRGngWMDKsYJVMLinPTc4sNC4zy
-        Usv1ihNzi0vz0vWS83M3MYIDU0trB+OeVR/0DjEycTAeYpTgYFYS4V2VEJYixJuSWFmVWpQf
-        X1Sak1p8iFGag0VJnPdC18l4IYH0xJLU7NTUgtQimCwTB6dUA5Mp27HOPa+e5QgGKxku2Jt3
-        OG1KyFUDSc0HHKpvkx802n2/83vVvZNibzbP8d3YYqUqe+/2w6Apm//tWcybUf+3eW2K9FeN
-        5S+3nT3oKXPIYtGrb7er/D0dtivPDxLaZBKQfWtPTurNjfnsjcUlH+8FT7mwPH9XS4rnoenr
-        vM/sLSl5fvHZme2s+XIrb8t+eXfhkYvudJOoiG/t5+ZtPfdEQU+FbULsz8/bSvpDJVlMZHlD
-        qrKOfJ7FMCO1sHbJEf6KL6xME9Ja3F9c/1snzHquvMjkusPqG+kFLIKxBe87d7p4LDc4xfGP
-        PUBCM/XnLCm7fJdpFttXueyW89/wb5dhxtVwm/DbLCudfiwN8lZVYinOSDTUYi4qTgQApLxp
-        z7sCAAA=
-X-CMS-MailID: 20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb
-References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
+        with ESMTP id S233293AbjEIIzy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2023 04:55:54 -0400
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-he1eur04on2074.outbound.protection.outlook.com [40.107.7.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CDA713D;
+        Tue,  9 May 2023 01:55:53 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BgJZcfSJ1MSwLKXieJmdsAP9ExKeMbehLBz7viRcY8RYTCagkQDCHaTM+5j8/hz4eTql4Gwo2iGMCMVL1a05c/sb+QuM1SuwwnFdzQ+8I0mUqOQ8Jp77L7NdYD1IjZvclHqjTblnGXnna9dZpIBbRvHUNrD7SVjBLcalQvQ2bJ1x/RcdkIDMZHILlNgTHO1rz5bTxmVEaEN7+uEB+k36uisY03eWzG6Fb/AlFMdCiooXNueR4UR95f1f6sdEd1wHR5McnytbliLNQjvMmeirufHBX6spVKUMvc/PdOwG6NNf6ubqveM3uumbnm9wCAQ83j5EUIv29sXX/90Mad129Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QD7USGjqoJj6dUo+lIg3O1HGgdgusOnF9wLXSNhGPmI=;
+ b=G/O2snwSOCu2+BVbai2X16cYvbQL0R7JNdYIsL37arSJURkXn3jGqY5xWEWM0VQq+t0UDxgDMPMBSiDenCl3egVwzNciTOT8N2ipOa9qWCtq9qu57k18AERYCG3uMYnVB3Ez/Kae76HjkQ9ySffACA6aRzcszkz2rlaRkqFVXGN8wLXsNyC+8Y+6W2zi6MtfD3z3Nrp/qM1nozOtGhjzHp9tE5aR+nZ056SJXrQXsg+ZpZC7ez23ja98V+mcwMdU4e0i2gPA1zLKMWwTfZyhocFZ00euDxrcmxTYpJFuncsN+huWLpIbcMfSBoU4fXVb2859KFkoO9I221a+1j7lzg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QD7USGjqoJj6dUo+lIg3O1HGgdgusOnF9wLXSNhGPmI=;
+ b=sEj0DDVJEyCRePl8qjz099Os8apMptJgnE0bhf4dl0AOsr6/QqRGnBaMUbvylpap3V2uN2wffH1KeBpksQxcH5sE49I4n7sRS+dW9ssCgzID/B0SJZqEQ1mIpqVPO4uKJCZGI4ym0dzwPVLVL6033kJfOECVkEw2Pw4z3m/H74v1o/fHo6A54ad4UnHQhKSxusFxivBAnxE+TOTMQikbk83JwLfN69cB1Emmwbp/v+kysVUc8EAUoi/arp9X8z4wdZC/Aq7Pl5V+WswWt29Hl/1Iby4E2bJMOcFf9d73wiz1hjX1Cfdk24lF2hBtKmueb8+O0vFWHQsrUjON5alCzA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from VI1PR04MB7104.eurprd04.prod.outlook.com (2603:10a6:800:126::9)
+ by PAWPR04MB10007.eurprd04.prod.outlook.com (2603:10a6:102:387::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.32; Tue, 9 May
+ 2023 08:55:49 +0000
+Received: from VI1PR04MB7104.eurprd04.prod.outlook.com
+ ([fe80::6c14:307b:6fd3:3bfc]) by VI1PR04MB7104.eurprd04.prod.outlook.com
+ ([fe80::6c14:307b:6fd3:3bfc%7]) with mapi id 15.20.6363.033; Tue, 9 May 2023
+ 08:55:49 +0000
+Message-ID: <8536273d-20a4-1993-1381-b50e44701835@suse.com>
+Date:   Tue, 9 May 2023 10:55:46 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH 3/3] Documentation: scsi: dc395x: Remove reference to 2.4
+ driver
+Content-Language: en-US
+To:     Jonathan Corbet <corbet@lwn.net>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>
+Cc:     Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Kernel Janitors <kernel-janitors@vger.kernel.org>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20230505082704.16228-1-bagasdotme@gmail.com>
+ <20230505082704.16228-4-bagasdotme@gmail.com>
+ <d919a2e1-5749-13f8-7867-1f17277190f4@linux-m68k.org>
+ <87pm7enbpo.fsf@meer.lwn.net>
+From:   Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <87pm7enbpo.fsf@meer.lwn.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR0P281CA0140.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:96::6) To VI1PR04MB7104.eurprd04.prod.outlook.com
+ (2603:10a6:800:126::9)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: VI1PR04MB7104:EE_|PAWPR04MB10007:EE_
+X-MS-Office365-Filtering-Correlation-Id: bd268aff-d8d8-480f-8869-08db506b2f1e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rHJYwz4tof2jq3dptpPDt7YoUgxMi9G+xp/UnWX5w8PtE0+h6nKoNjFljr8jhfh8WgPCGcqZlA4tkUFD/cEd2o5l05+M1axWWBN8qZxZSb8SrrCANzD/Ng8E4XB4K4jWSVTkKoZxHSG6yGw6RW3UFfFONu4LCOZvmQay8e5ywtHHWkIpZrNzJgMT4GRTeiQoxmA9twPKFU0c7FnkR+Izjv+DYQnXy0AtkOqw3kiSgMlFV5jlMb2YliEbpzbr840c59y21j4x21LWIbV78UFIrCm4Y062gpflDuIKagmV3kDrvn22j/UtACMBKAWaSZkxbmEdDMeky4UHFHL+dOEcD5LRrl1bJPAiaeSruxcGDelOXGXsFsmPGjy5/IXZZ5HdQ/AIN3QsY1HYCqSn/KbKCqH/vAhiOjc+Nrk2uRyOdce2W/xZwfi0lP47/UodK3Lh99fwztCfPhgTcS0lA1GPJIadoCCBvxNaNTHbqVkZEGU5GxxPfip3W9UxGkcqP4BbcMhxLkvGNaTWBMoLPdQOAYiwrlgSLh/2sQMv1lT9OC7ggfrkTIWHgA8SKn7BkTY4swY+Q98jLEZ9tcHnXibvB0+E8D1DJYRX53cVjpOFnz5QHJHFct0pygCrY8BJElCdmTGrzm0eGPAQDjnW0Pn17w==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR04MB7104.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(39860400002)(346002)(376002)(136003)(396003)(366004)(451199021)(86362001)(36756003)(31696002)(6666004)(54906003)(316002)(4326008)(66556008)(66476007)(478600001)(66946007)(110136005)(6486002)(7416002)(8936002)(4744005)(8676002)(41300700001)(2906002)(5660300002)(186003)(38100700002)(53546011)(6506007)(6512007)(83380400001)(2616005)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?aVhraTRWeW5vTVBFeEowK1FtNktDckV0dHhRcXBrbE5NQWYrTEFJQzNKQzVC?=
+ =?utf-8?B?RVpzaDVaM3ZocGVnMmdDNkFHQjdmS2Fwc1BzcFkrbnhqbDFMOGR6QThSRm5a?=
+ =?utf-8?B?dXRSeHZvVXJwRU5vTmVTRnpHK3dkUUZqN0Z2aU5iZ24zUklqcG03bUh6bFlE?=
+ =?utf-8?B?Y1BnT1BLTFNzNkZvSy9oYWgxYkJXNmR6OERPcWtyVDJOVzFseXVFcGRNTmlk?=
+ =?utf-8?B?anF6QzhtZnNEU2Z4WXJmbUk3dWtJVzF3VGloNkJ5MEt3a2poakdGdnFSK1Jt?=
+ =?utf-8?B?RkNTT09qVEJGZklJc1poQVpCR3Z3M05QUElCS2pmQittRHFTS2RvYlphdmNZ?=
+ =?utf-8?B?TzlXVkdCU2xpRDZRLzE4MTZqM0YxeDVDbThMeUhXRzdETzc0bEhqajNzcFlM?=
+ =?utf-8?B?N1pUam5hZ0psK2preDRvYVE1Wk5OWi9KK2RmTEQxSUhySDNCdTdMVDdreFdI?=
+ =?utf-8?B?Nm1hL3F2Rzl3TW9udmxHTlIvdHY1Sk91T1A2NFVCWnpZbUtKS2Z5UFJscE4v?=
+ =?utf-8?B?NUlEVmE0YW9CSFNlNkZLQmVFbGJMakNqazRjbVRGcjU2cW1tYmhoUUlOZUdD?=
+ =?utf-8?B?WXZjaWxVbndKSXc4WGR1T2hhMUNOZjRBZFNkdkRWK2MxdzZ6SXFBOGkza3dZ?=
+ =?utf-8?B?U1Z0Y2VNSkdJeml6RGNiTWE2SWtLRjlkK3ZBZGk3V3V4SGVRS1lIOVNIMWJZ?=
+ =?utf-8?B?UjZXYU9oSHlqSTc5UzM0VXNzMmsxT0lFa0dSWHBBRTJONlAwZGhrOFpRQkR3?=
+ =?utf-8?B?Uy81VTZydGF3NnppNVRLczdrbzJJWUpNdTVmK0duOU1lOURWNGlmZkJGaFFO?=
+ =?utf-8?B?OTNYWk9MV3kzaUd1OWorOVFOQjU3T29EZWtsOWRJdUtMWExWMjVVMDEzL1RO?=
+ =?utf-8?B?b0RUemVTTTBFenNEQmszNTNIZzY5VHZhcjZIaEFDeUZ2VTZNWitwcmpDb0hG?=
+ =?utf-8?B?OFRpNk5XVzRpUjJISmozTTU3RGoxNGVGTVBIdnZXNEhRUnR1QlZycC9xTmxL?=
+ =?utf-8?B?VGk3UUVXNUVFT1kxQzZyTUx6N2wyRHh0UVlGRDFyMXR2SHZ0NTlLL2M0QkhL?=
+ =?utf-8?B?cjVCeWxMdDFaT3RYaGU0citnaWFGVjFYci9zb2Z6MWZmeFZKQk9NQ2w3RzdK?=
+ =?utf-8?B?SVBqU01aSkhVeWlQZGM3TDR6cWU4aXRzMTdRV1F3aUZVNW4xd1V2N3gyVkZs?=
+ =?utf-8?B?TmgrZGY0S3pCTmNYclJ6cjN5ak1yREE0L2ZxMGhyOXVhSjJOVjA0RFRxZnc1?=
+ =?utf-8?B?Yzh0VnR5TVlBSlhKNElGUUFiYXEwU3VlNUhpK1g2VFdjREd5N0s0VTkzT3pL?=
+ =?utf-8?B?R1FWM0ZEYVd5M1dFS1Ezb3E2VGJUM1NwUnQ5Q3hobExxNlVPMCtoK0tFK1F3?=
+ =?utf-8?B?R1FaZEd4VHVoUFNWem5wNFFpalQrc0dtSGgrOHBiSkY0V2J0V3Y1cVZQeGl3?=
+ =?utf-8?B?YjRFZnVNTHA0Z1VqdnNnalYvM1NqdllTa0wzQ1A3dHJIZnIrRnBUWDdzZC9Q?=
+ =?utf-8?B?SmRRMis5a2psVGR5SWNndlNQcHJoNnNYaXM3eE5NUlF2amwyWkg5ODZ0bXRK?=
+ =?utf-8?B?bGZHcDR0QnM2aElpSWlwd0prNnpuYzBwaUx3cklDeTVFaW1SVXJhTzRhT2Uz?=
+ =?utf-8?B?N0xGNVNnMUxhUHVvdEwzbnhsb2hDRFdrbGQ0dFJqN3I2TlRhdjNpNnR1M3Jy?=
+ =?utf-8?B?UlBCTnh5R290blBpa0d4YmFHeVRLR3FxMXNTTlFtYzRLaHcvMEpCZXhUTEE4?=
+ =?utf-8?B?ZzErRWh1TUFYdjUwVmpJMnVQZkhMbTlUaEliYUIxa21iWGZPdURrdnNDMm5F?=
+ =?utf-8?B?dE82dGEwTE9UNkQzb1RRS25GeVVMclJlU1BzTzF6MW5POWtrYnpTVHJLUFFV?=
+ =?utf-8?B?cStzTEdKa2Nzc2M5YVJOVE94bUtnUVdMTkFXeDVpbFh1N2IveTdwaVhwWDBV?=
+ =?utf-8?B?N284U0E2R0lmenhudGdNT3MydXYwVzdENDVYMEdsNmlBUU1OUGZQSnlSOFEy?=
+ =?utf-8?B?U1Q0eXYrOFVtNVBmSm5UTC9kWGVUK2I3RldhK1RuRThuUFVubmcwb3RyQTM0?=
+ =?utf-8?B?bm1HOUd0VFBFMFhuT28zV3dROWJuUUYxM24rSGJlY3FMVEo4R2pEZGZZZy9D?=
+ =?utf-8?B?ajJFbStqV3owWW9zdTBFK1FkRE9JUDRUM0tqaEJ0eTJxMHlVdWp2cTJqcW9L?=
+ =?utf-8?Q?a6Z5e9oaQTvGV7dC7NPSqEwMb0xDs9C4Zhtg05TiuFDk?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bd268aff-d8d8-480f-8869-08db506b2f1e
+X-MS-Exchange-CrossTenant-AuthSource: VI1PR04MB7104.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 May 2023 08:55:48.9448
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 96/wMiLsAqFPByciuZpqzyAiVCGvtXw2bX1a32cnGGtSVL4eIglTL/x+4Uw+LsRC4UTpmCZWginM1HnLXJGeeQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAWPR04MB10007
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With auto hibern8 enabled, UIC could be working
-for a while to process a hibern8 operation and HCI
-reports UIC not ready for a short term through HCS.UCRDY.
-And UFS driver can't recognize the operation.
-UFSHCI spec specifies UCRDY like this:
-whether the host controller is ready to process UIC COMMAND
+On 05.05.23 15:34, Jonathan Corbet wrote:
+> Finn Thain <fthain@linux-m68k.org> writes:
+> 
+>> On Fri, 5 May 2023, Bagas Sanjaya wrote:
 
-The 'ready' could be seen as many different meanings. If the meaning
-includes not processing any request from HCI, processing a hibern8
-operation can be 'not ready'. In this situation, the driver needs to
-wait until the operations is completed.
+>> Would it make a difference if someone does run that? Were you planning to
+>> delete the source code for the 2.4 kernel too?
+> 
+> Most of the 2.4 code has indeed been deleted *from current kernels*.
+> It's not clear to me why 2.4 documentation should be immune to that same
+> process.  If we keep every 20-year-old reference, our docs will be even
+> cruftier and less useful than they are now.
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+Hi,
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 96ce6af..fc79539 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2368,7 +2368,18 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
-  */
- static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
- {
--	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
-+	ktime_t timeout = ktime_add_ms(ktime_get(), UIC_CMD_TIMEOUT);
-+	u32 val = 0;
-+
-+	do {
-+		val = ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
-+			UIC_COMMAND_READY;
-+		if (val)
-+			break;
-+		usleep_range(500, 1000);
-+	} while (ktime_before(ktime_get(), timeout));
-+
-+	return val ? true : false;
- }
- 
- /**
--- 
-2.7.4
+the documentation of a kernel should document that kernel.
+
+Now, we have a perfectly fine tool named "git" which allows
+for metadocumentation. May I suggest that you respin the patch
+and include a link to the old stuff, which somebody has been
+nice enough to find, in the change log?
+
+	Regards
+		Oliver
 
