@@ -2,83 +2,174 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA40EC77B7C
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 22:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDECC7EE22
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 23:35:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236672AbjEJW4a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 May 2023 18:56:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53610 "EHLO
+        id S236948AbjEJXf3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 May 2023 19:35:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236594AbjEJW4Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 18:56:16 -0400
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39BE07EF4;
-        Wed, 10 May 2023 15:56:06 -0700 (PDT)
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-24df161f84bso5574536a91.3;
-        Wed, 10 May 2023 15:56:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683759365; x=1686351365;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nisiLdB8YvztSzgK+xwlknRcIDe1797ySbT6V+jwQCk=;
-        b=gPU8tf+Jr8+mJeEggLF0IBYh3XCDryTh2BK+48GuAnxn4F6Cj8Yiv6WMr2qXQbuw2U
-         Qk9tGHqXPykbFhV1oUxeM+KdjTp4QoOEtrBFnaYCUxccJSuDT8oEIbGZWmsnxOPkDxHD
-         zTjSIu/YE+WSs6yEfOMPI4ZnKv2MPJ527Xppy17cFWiT4DgBTpPjdQ+aYthh0lKZMPua
-         27N6fjU/9Dw8fzKhxHDPg+VWRvbGlRYGL98tNPR9JCJ8VR3SBny7hP6kOwe2qCRJRjlB
-         7hhicTrxfx83JkJeVr7Q03HvSM9plDA2YXlftYEh9YGHjignTpBTCD406iZahvEDFss/
-         bBmw==
-X-Gm-Message-State: AC+VfDw4kSUdQJr46kscHhtZovJbvd0YLOgo5NvGyrMj5RyMWyD79qlk
-        /bHCftaDiASTWiCS9LtDY+w=
-X-Google-Smtp-Source: ACHHUZ5setZPdY2I/a8GzOPENYkm6C4TcWEQbx0V5J9Ab+xSrae8W8bQIiOlbvRXXOpqvaFSKCejrA==
-X-Received: by 2002:a17:90b:198c:b0:244:9385:807f with SMTP id mv12-20020a17090b198c00b002449385807fmr18503926pjb.44.1683759365396;
-        Wed, 10 May 2023 15:56:05 -0700 (PDT)
-Received: from ?IPV6:2001:4958:15a0:30:63c6:648e:7352:e65e? ([2001:4958:15a0:30:63c6:648e:7352:e65e])
-        by smtp.gmail.com with ESMTPSA id g24-20020a17090a579800b0024dee5cbe29sm18658135pji.27.2023.05.10.15.56.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 May 2023 15:56:04 -0700 (PDT)
-Message-ID: <8947b1be-3dfb-4c9f-469f-d1c31d1ec994@acm.org>
-Date:   Wed, 10 May 2023 15:56:02 -0700
+        with ESMTP id S230472AbjEJXf1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 19:35:27 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FBB21710
+        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2023 16:35:24 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230510233520epoutp01008719f57543915fa3e520eb16787081~d7F0-V3xM2287722877epoutp010
+        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2023 23:35:20 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230510233520epoutp01008719f57543915fa3e520eb16787081~d7F0-V3xM2287722877epoutp010
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1683761720;
+        bh=o752e7x8drNytVH+xeQYDrNah5bJ9JO8rEbU4yGJyIo=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=mbgyUyX8aiR+wM2dpRPKJJcQG8/fG/vWw+pkJZ+biLK6Yn4F+Vci8KSA3+o0sCiPt
+         oYctl5SqZ6GIvC9LXCgGqJYJXkZ497vEKcKXJ3gdZOY6N7pAmf4cppal+gyrsa7cT/
+         k8rQunYNylgDu49JQGLZN5SdR47Rxzs/RrLpsjdM=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230510233520epcas2p15451d03fa410d7178aa5d6861e232e07~d7F0ULuQz2289522895epcas2p10;
+        Wed, 10 May 2023 23:35:20 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.36.92]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4QGrx339mRz4x9Pw; Wed, 10 May
+        2023 23:35:19 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2B.74.17293.73A2C546; Thu, 11 May 2023 08:35:19 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230510233518epcas2p3897c71373d936a19339f02ca16fdbc5b~d7Fy-ueay2020620206epcas2p3J;
+        Wed, 10 May 2023 23:35:18 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230510233518epsmtrp1f5c6035a1cd196d1dd43aa2def5ab3dc~d7Fy8aAuL0960809608epsmtrp1h;
+        Wed, 10 May 2023 23:35:18 +0000 (GMT)
+X-AuditID: b6c32a46-b23fd7000001438d-71-645c2a37a8f8
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4B.D7.28392.63A2C546; Thu, 11 May 2023 08:35:18 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.38.105]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230510233518epsmtip13321ccc948753e312a21d3bee2a10388~d7FytOsCO0879908799epsmtip1F;
+        Wed, 10 May 2023 23:35:18 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Bao D. Nguyen'" <quic_nguyenb@quicinc.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <adrian.hunter@intel.com>,
+        <sc.suh@samsung.com>, <hy50.seo@samsung.com>,
+        <sh425.lee@samsung.com>, <kwangwon.min@samsung.com>
+In-Reply-To: <991cac52-22bc-0150-4332-76ac044c5bcb@quicinc.com>
+Subject: RE: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
+Date:   Thu, 11 May 2023 08:35:18 +0900
+Message-ID: <039001d98398$1478d0b0$3d6a7210$@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 0/2] block: improve the share tag set performance
-Content-Language: en-US
-To:     axboe@kernel.dk
-Cc:     Ed Tsai <ed.tsai@mediatek.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        alice.chao@mediatek.com, powen.kao@mediatek.com,
-        naomi.chu@mediatek.com, wsd_upstream@mediatek.com
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230509065230.32552-1-ed.tsai@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: ko
+Thread-Index: AQGTQ//Bn9HITMBER2fQmcGpYd1IAgEVn6BsAYR8HMavy9ctsA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Te0xTVxzeaS+3F5eaa0U8dEFKiSYwwBYpvV1EDTjsptlIyJaxLeu69to2
+        faYPwszimOmwIJGClcXOoPKQrCwwCa2FsslD1zC3YdLhaqeERttQsWuHLptuM2u5uPHfd77v
+        9zvf9zsPjM6aRNmYSmcmjTqphotuQDwzhcISYdG7cl5kLJuYvfclSix2e1Ai9ngeJabCLQgx
+        2LuIED1BD41wB8cQIjB+FiVO/OxFiQH/UxpxesnPIFrvBAHR/zSO7GOKeydiNLG9ZxKI/xi2
+        oeLfIiFE3DFxVHxy1AXED0e2iY9PnqDVYm+rdytJqZw0ckidTC9X6RSV3IN1kmqJoILHL+GL
+        CCGXo5NqyUru/kO1JTUqTSoyl9Mg1VhSVK3UZOLu3LPbqLeYSY5SbzJXckmDXGMQGkpNUq3J
+        olOU6kjzS3wer0yQKnxfrVwMJhiGKxsb/7K+1wQ8z7eCTAzi5bC9L4K2gg0YC/cCGP7FR0sL
+        LHwFQFfPy5TwMIWvjKDPOuYW7iKUMA6gIxQB1CIGYHLeT09XofiLsCvsy0gLWfgKDQ5FzzHS
+        Qia+F45+Pw/SeDN+CPZPWVf9EHw7TAx+mtoWw5i4CA59Jk/TTHwTnD1zD0ljOp4HL8fP0qkU
+        HPg4cjGD4rPg5y3Nq3wWXgUv+TtW00H8BgaX7v4OqIb90NHvy6DwZnjfP8qgMBvG2psZaV+I
+        q+HEhWyKboS9XXGEwrugM3ocpEvoeCEcHt9JVRfAq6G1ZBuhbeaftU2Y0NbMohoL4JPOU2v+
+        OfDMrdtrnmK48PdVYAf5znUzOtfN6Fw3l/N/3/MAcYFs0mDSKkhTmaHsv5uW6bUjYPUpF9V4
+        gSOeLJ0GNAxMA4jRuVnMeN87chZTLv3wCGnUS4wWDWmaBoLUoXfQ2Vtk+tRf0Jkl/HIRr7yi
+        gi8sE/CE3K3MFypnZSxcITWTapI0kMZnfTQsk91EY8vbdh1QHjV/9cbW74q15j0Zr8V890UW
+        X2ZLfvLwg4NPVLjIlReU1V2ou2UL173ZcDlUL7K3Ng3muQUzhfZ91+64cy3XE8uBOYPm9XMD
+        w9/m5tY/ktmWChs17K8NO0qDku5v4tfQI0kk+5Vi9XO8OeNNd1/NxAcOkXfg1YAq57qA5IWH
+        iJ9Uvzr6KpZa6pNVWvRRuy7/QHVOhGxw79imYCYuleg/ia58jBdwzmvxfPTPhljbQqdHzj65
+        94Fzsaq4Wh6NIm+h3sMfhXg/dFpdgS+aayY15sRY12jCuoXfdrFogMU/ViVRhm525nBOoT9O
+        3TiWXO62MwLW5eBtLmJSSvlFdKNJ+i+osvE0UwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEIsWRmVeSWpSXmKPExsWy7bCSnK6ZVkyKwecX6hYnn6xhs3gwbxub
+        xcufV9ksDj7sZLFYvfgBi8WiG9uYLLbe2MlicXnXHDaL7us72CyWH//HZDH1xXF2i667Nxgt
+        lv57y+LA67F4z0smjwmLDjB6fF/fwebx8ektFo+Je+o8+rasYvT4vEnOo/1AN1MARxSXTUpq
+        TmZZapG+XQJXxoMb79kL9vNV/G6Ja2Dcxt3FyMkhIWAicf7eY5YuRi4OIYEdjBL7nr5mh0hI
+        SpzY+ZwRwhaWuN9yhBWi6DmjxIUV25hBEmwC2hLTHu4GS4gINDBLzP9+hQUkISRwmlHi60QL
+        EJtTwF5iy5mrYJOEBXwklh5sYQKxWQRUJd6vbgWq5+DgFbCUWDc9BSTMKyAocXLmE7AxzEDz
+        ex+2MkLY8hLb385hhjhIQeLn02WsEHERidmdbWBxEQEniY3HJ7JMYBSahWTULCSjZiEZNQtJ
+        +wJGllWMkqkFxbnpucWGBUZ5qeV6xYm5xaV56XrJ+bmbGMHRqKW1g3HPqg96hxiZOBgPMUpw
+        MCuJ8L5dEp0ixJuSWFmVWpQfX1Sak1p8iFGag0VJnPdC18l4IYH0xJLU7NTUgtQimCwTB6dU
+        A1PO/MzY/Vtk+f1YlLy4RXqMmCQtlzmeuBrSPenl5nwWxZcH5h/Qtpl0ozP2pBDHvL0XLtp1
+        tLUJaGgVrpy+hHHHf8YNZSzno3NDbbcvvOMZFc1pz+0e4TmH6bO9+bFmufmcPj8Yzoq4qp5Z
+        9Hbxv1xR6wPV7q3ndG9fn+T+7/uFCTa3AmPPOHmYrf6utOV7sNysZzvn+inzLfjRFim2WzCm
+        LKtIfeHFg5F7tbddKpN/9/RrpsSUWVLnfvlnP+U53FyZHj95sWaenHCQyxSO65sWl6zPXv9q
+        0aXbEzqvuixbaNvoMuXhK78zvJPXmMx4/rXT1aR1T2LnJDOxXMGnas3ZR+9LSzuarip+nnbE
+        bYkSS3FGoqEWc1FxIgBHPtP0NQMAAA==
+X-CMS-MailID: 20230510233518epcas2p3897c71373d936a19339f02ca16fdbc5b
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb
+References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
+        <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
+        <991cac52-22bc-0150-4332-76ac044c5bcb@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/8/23 23:52, Ed Tsai wrote:
-> The tag allocation is limited by the number of active queues and a
-> queue is marked as inactive by the queue timeout worker after up to 30Hz
-> by default.
+> On 5/9/2023 1:24 AM, Kiwoong Kim wrote:
+> > With auto hibern8 enabled, UIC could be working for a while to process
+> > a hibern8 operation and HCI reports UIC not ready for a short term
+> > through HCS.UCRDY.
+> > And UFS driver can't recognize the operation.
+> > UFSHCI spec specifies UCRDY like this:
+> > whether the host controller is ready to process UIC COMMAND
+> >
+> > The 'ready' could be seen as many different meanings. If the meaning
+> > includes not processing any request from HCI, processing a hibern8
+> > operation can be 'not ready'. In this situation, the driver needs to
+> > wait until the operations is completed.
+> >
+> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> > ---
+> >   drivers/ufs/core/ufshcd.c | 13 ++++++++++++-
+> >   1 file changed, 12 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index 96ce6af..fc79539 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > @@ -2368,7 +2368,18 @@ static inline int ufshcd_hba_capabilities(struct
+> ufs_hba *hba)
+> >    */
+> >   static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+> >   {
+> > -	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
+> > +	ktime_t timeout = ktime_add_ms(ktime_get(), UIC_CMD_TIMEOUT);
+> > +	u32 val = 0;
+> > +
+> > +	do {
+> > +		val = ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+> > +			UIC_COMMAND_READY;
+> > +		if (val)
+> > +			break;
+> > +		usleep_range(500, 1000);
+> Hi Kiwoong,
+> It looks like you are sleeping while holding the spin_lock_irqsave(hba-
+> >host->host_lock, flags) in ufshcd_send_uic_cmd()?
+
+Right. Let me fix it.
+
+Thanks.
+Kiwoong Kim
+
 > 
-> UFS devices have multiple logical units, and they can limit the depth of
-> data LUNs by the fair tag sharing algorithm. Make the fair tag sharing
-> configurable and improve the performance for UFS devices.
 > 
-> See also https://lore.kernel.org/all/20230103195337.158625-1-bvanassche@acm.org
-
-Hi Jens,
-
-This patch series is slightly more complicated than the patch that I 
-posted in January. Do you prefer the approach of this patch series or 
-rather the approach of the patch that I posted in January?
-
-Thank you,
-
-Bart.
+> > +	} while (ktime_before(ktime_get(), timeout));
+> > +
+> > +	return val ? true : false;
+> >   }
+> >
+> >   /**
 
 
