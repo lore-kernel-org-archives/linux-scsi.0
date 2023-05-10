@@ -2,74 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DE5C77B7C
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 21:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 992ADC7EE25
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 21:25:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236339AbjEJVZN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 May 2023 17:25:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40420 "EHLO
+        id S236154AbjEJVZQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 May 2023 17:25:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233254AbjEJVZH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 17:25:07 -0400
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC9034486;
-        Wed, 10 May 2023 14:25:06 -0700 (PDT)
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-643aad3bc41so6778944b3a.0;
-        Wed, 10 May 2023 14:25:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683753906; x=1686345906;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IIacPj4XUMfoP021IVdaoKOIUKuOcFLdZdLoQ79NbTw=;
-        b=M1/Uk0tfwFwd3/4w1ph2wc/s99ZM1E970mk0rPOBjbARSF5alWswy6a0Atyg7TmSBN
-         dhCJ0iz0mNuq1brNhvHZ+889Ga6iapyq/prrxnA8OeI/MGzV9uGHPvhU10fNZ7tp0aXi
-         9vnD2o6+XB+YQ6nlX2kqYglSWgE+rtzzv36ZoCx0xw4exNSROHKbGzzyhjqIFf6m3Guh
-         B5CbzlweGjk22ynKk85UmCI34Wf16PyTTuu333jQ9e1WfSVRzgXps44qLeL8mM1OKX4d
-         pSQAgZ3acRf3EMn82+hgp2H8BmgwHGsBw/W3Ix9aPhyhh2TBmjsHje4xV+VEXKOwDC0O
-         zb8w==
-X-Gm-Message-State: AC+VfDwo2SoARtJIMvGkqkH22CPXEmWNvitueBL1Vn8WtneRadezpoJ1
-        FVJFCRaAesISzYdiwICFKandOgKMZvaBdg==
-X-Google-Smtp-Source: ACHHUZ7UpQy5QXG4yifsyrXlYRQh0Ep8+JNk2OSsJ7cLZYS9yVO3iaCSp4kdHBPlQpDeqVqfz9reLA==
-X-Received: by 2002:a05:6a20:442a:b0:ff:68f1:679 with SMTP id ce42-20020a056a20442a00b000ff68f10679mr22446714pzb.52.1683753906355;
-        Wed, 10 May 2023 14:25:06 -0700 (PDT)
-Received: from ?IPV6:2001:4958:15a0:30:b447:995b:bf4d:6d9b? ([2001:4958:15a0:30:b447:995b:bf4d:6d9b])
-        by smtp.gmail.com with ESMTPSA id y67-20020a636446000000b0051b7e3546acsm3680033pgb.22.2023.05.10.14.25.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 May 2023 14:25:05 -0700 (PDT)
-Message-ID: <f4aa63fa-ee2f-3ee4-1077-1b11b81fe36b@acm.org>
-Date:   Wed, 10 May 2023 14:25:05 -0700
+        with ESMTP id S236208AbjEJVZN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 17:25:13 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D0BC2D57;
+        Wed, 10 May 2023 14:25:10 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34ALFguE017613;
+        Wed, 10 May 2023 21:24:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=3G7ROuSmnEIVSHXc7PdXlYcVyFso/euyqEayPBlEkUg=;
+ b=Z1SAjSlpx1+rAY9ZySREmJ/H2ZHaEv5k/K8OQiYveg4mpAG+SvoiAe9bATCKLdicgL87
+ Vlp3D8Jvt5pAYGER+D7B/JWCMsdwA0N9VF0mudDNuRPLzvHiTFtgo0V2UynQ9TKZMsQG
+ UZ+fBkfVQheDKVE5OXmMQmUASWaVw4USFdRgreCAhiy/Pw+t5HkPjKAOQa3NWxe9ffzq
+ JRpAXchKihYJavOlnCVZaEoPJbNuGpaMq28B9O5byh4oasj8/oFF5sldU8jcvJAm+xAs
+ TV6vh9YoDrfOF9Cz1pn3o2SGnVUDDDpwx7guxoDyGgMxsHWKfTvfAm1/JZCr4r0ZoXnr UA== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qgett0hh2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 10 May 2023 21:24:52 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34ALOpLG019535
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 10 May 2023 21:24:51 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 10 May
+ 2023 14:24:51 -0700
+Message-ID: <991cac52-22bc-0150-4332-76ac044c5bcb@quicinc.com>
+Date:   Wed, 10 May 2023 14:24:51 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v3 2/7] ufs: core: Update the ufshcd_clear_cmds()
- functionality
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
 Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1683688692.git.quic_nguyenb@quicinc.com>
- <6c9990cd13220ceea343b1e5ba463732c4ccffb9.1683688693.git.quic_nguyenb@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6c9990cd13220ceea343b1e5ba463732c4ccffb9.1683688693.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <adrian.hunter@intel.com>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
+        <kwangwon.min@samsung.com>
+References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
+ <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: XPkKfCMl94N57ZMohYB-qrxneAlY1hgC
+X-Proofpoint-GUID: XPkKfCMl94N57ZMohYB-qrxneAlY1hgC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-10_04,2023-05-05_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ priorityscore=1501 bulkscore=0 impostorscore=0 mlxscore=0
+ lowpriorityscore=0 spamscore=0 clxscore=1011 phishscore=0 adultscore=0
+ suspectscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2304280000 definitions=main-2305100175
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/9/23 22:24, Bao D. Nguyen wrote:
-> -		dev_err(hba->dev, "%s: failed to clear requests %#lx\n",
-> -			__func__, not_cleared);
-> +			dev_err(hba->dev, "%s: failed to clear requests %#lx\n",
-> +				__func__, not_cleared);
-> +		}
+On 5/9/2023 1:24 AM, Kiwoong Kim wrote:
+> With auto hibern8 enabled, UIC could be working
+> for a while to process a hibern8 operation and HCI
+> reports UIC not ready for a short term through HCS.UCRDY.
+> And UFS driver can't recognize the operation.
+> UFSHCI spec specifies UCRDY like this:
+> whether the host controller is ready to process UIC COMMAND
+> 
+> The 'ready' could be seen as many different meanings. If the meaning
+> includes not processing any request from HCI, processing a hibern8
+> operation can be 'not ready'. In this situation, the driver needs to
+> wait until the operations is completed.
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 13 ++++++++++++-
+>   1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 96ce6af..fc79539 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2368,7 +2368,18 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>    */
+>   static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+>   {
+> -	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
+> +	ktime_t timeout = ktime_add_ms(ktime_get(), UIC_CMD_TIMEOUT);
+> +	u32 val = 0;
+> +
+> +	do {
+> +		val = ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+> +			UIC_COMMAND_READY;
+> +		if (val)
+> +			break;
+> +		usleep_range(500, 1000);
+Hi Kiwoong,
+It looks like you are sleeping while holding the 
+spin_lock_irqsave(hba->host->host_lock, flags)
+in ufshcd_send_uic_cmd()?
 
-Please change "requests" into "request" and "not_cleared" into "pos". 
-Otherwise this patch looks good to me. Hence:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> +	} while (ktime_before(ktime_get(), timeout));
+> +
+> +	return val ? true : false;
+>   }
+>   
+>   /**
+
