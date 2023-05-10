@@ -2,71 +2,146 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07CCFC7EE22
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 21:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6903C7EE24
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 21:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230520AbjEJVqh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 May 2023 17:46:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48930 "EHLO
+        id S235540AbjEJVuU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 May 2023 17:50:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbjEJVqg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 17:46:36 -0400
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 136F846A9;
-        Wed, 10 May 2023 14:46:36 -0700 (PDT)
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-643912bca6fso6265644b3a.0;
-        Wed, 10 May 2023 14:46:36 -0700 (PDT)
+        with ESMTP id S232030AbjEJVuS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 17:50:18 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D2746A2;
+        Wed, 10 May 2023 14:50:18 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-64115e652eeso53554609b3a.0;
+        Wed, 10 May 2023 14:50:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683755195; x=1686347195;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20221208; t=1683755417; x=1686347417;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=niBRvOua1tXGMYCbxaZZeNyljGsY7f5YW77LPWud2zE=;
-        b=Nt4NVWblvO9A4nIkS7TxNNggKxNIQpZZtmapJphrm33xzP2Vb2oB32qhmNazj8/org
-         BWxVYQiGoDHMRTWPaJNoN6RYDxg8RU0UJbRrZjec6TpSzJ8HL2wh7nd89rIu4W0P9a6t
-         bPQn+rpl58rMA3JNWmKfpHBMDmtNQFBomcDI/kChdqfFMK3Dcls7UKADV5P4OHvgm9Dx
-         /B55NhNW1Q7JZAk5hgsYwz5yrE4rSsNgBby88H3JIF9JWh6PZVXoZNuCInZ2wRh5aRdp
-         0a8ebAVw6js1hll2HjWApa9CwHpL6FGDdVGbksw9PBwi/2Ikh2hyNQv93W1SXnZDtyv+
-         Wyuw==
-X-Gm-Message-State: AC+VfDzSDryxpAbgb+9Qkp5D4C2F/5uL5yuXrNKEaNxzOaDxCej47B0R
-        j2d1j12y+HCMar8GBcoRuoI=
-X-Google-Smtp-Source: ACHHUZ5MLGzJIsyPyeZ9PQBDB1JRZRPwtGSqAGL1SDnu/uHPJ/UcuZ0cmJXvR7qGqsDIfDk5ot0UAg==
-X-Received: by 2002:a05:6a20:9188:b0:100:d061:52ca with SMTP id v8-20020a056a20918800b00100d06152camr13146462pzd.50.1683755195353;
-        Wed, 10 May 2023 14:46:35 -0700 (PDT)
+        bh=ugw5yiiRWKEosECd8DYoddLHj5cw2hGZNdWX0C0svT8=;
+        b=Hsgz2aE0+tX+z3B9o+5/GPH7NsLKjV5So8OMGOvOxe8uCbMB4Z4pDMzUmOMsFvX1rE
+         HY1YPyJ9F/p52iktxnGnewiAVGwpS6Tjn/8GttXgh/Rn/xM6LgujEq7x7DH69v/s8ptm
+         DcveH97ksCI9HIQI+nlV8knOnCi9PgLutEvbT2y2yevAxov/i3ZqOqQ9cd+McxNnKG0H
+         eXdHHJSfge34DVckw46p06ypCrhY22r5OMzbQd1+IcxcWZa6QAKOSF5qXua2KK8pDcp1
+         GQH25y5Q4EMbkrlX1ufrgNCkfHmaVCwdwqvF5O15L0CzpZUAX1OmJ8y10+4n4tbhBA76
+         9bxA==
+X-Gm-Message-State: AC+VfDwhRNIe7ApZFGPjojLoB3h1LpH3EXM9h4DcNBDuLXf2SjuO6Wer
+        EkEF719jskoSIIxQsNolPwA=
+X-Google-Smtp-Source: ACHHUZ615GAKND1ytPyK2/No1AtrqjHqwrLRynk3v/GEup14KBlPJnJGJghuuYohdmZ1DvOUnxzvBw==
+X-Received: by 2002:a05:6a00:1894:b0:646:c56c:f0e0 with SMTP id x20-20020a056a00189400b00646c56cf0e0mr10363435pfh.15.1683755417431;
+        Wed, 10 May 2023 14:50:17 -0700 (PDT)
 Received: from ?IPV6:2001:4958:15a0:30:d8b7:fa5f:6808:3db3? ([2001:4958:15a0:30:d8b7:fa5f:6808:3db3])
-        by smtp.gmail.com with ESMTPSA id w25-20020aa78599000000b00649281e2f03sm228362pfn.141.2023.05.10.14.46.34
+        by smtp.gmail.com with ESMTPSA id e11-20020a62ee0b000000b00642ea56f06dsm3984120pfi.26.2023.05.10.14.50.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 May 2023 14:46:34 -0700 (PDT)
-Message-ID: <3414fe25-b107-f11a-db14-d086233047b7@acm.org>
-Date:   Wed, 10 May 2023 14:46:33 -0700
+        Wed, 10 May 2023 14:50:16 -0700 (PDT)
+Message-ID: <9022430e-a50b-7744-d8f5-d5953b5460e2@acm.org>
+Date:   Wed, 10 May 2023 14:50:16 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
-Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com
-References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
- <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
- <991cac52-22bc-0150-4332-76ac044c5bcb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <991cac52-22bc-0150-4332-76ac044c5bcb@quicinc.com>
+Subject: Re: [PATCH v3 3/7] ufs: mcq: Add supporting functions for mcq abort
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Alice Chao <alice.chao@mediatek.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1683688692.git.quic_nguyenb@quicinc.com>
+ <d58b5c068bdc03d5fe6d0219bb211370ae681ed2.1683688693.git.quic_nguyenb@quicinc.com>
+Content-Language: en-US
+In-Reply-To: <d58b5c068bdc03d5fe6d0219bb211370ae681ed2.1683688693.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/10/23 14:24, Bao D. Nguyen wrote:
-> It looks like you are sleeping while holding the 
-> spin_lock_irqsave(hba->host->host_lock, flags)
-> in ufshcd_send_uic_cmd()?
-Right. Please drop my Reviewed-by.
+On 5/9/23 22:24, Bao D. Nguyen wrote:
+> +/**
+> + * ufshcd_mcq_sq_cleanup - Clean up submission queue resources
+> + * associated with the pending command.
+> + * @hba - per adapter instance.
+> + * @task_tag - The command's task tag.
+> + * @result - Result of the clean up operation.
+> + *
+> + * Returns 0 and result on completion. Returns error code if
+> + * the operation fails.
+> + */
+> +int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag, int *result)
+> +{
+> +	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+> +	struct scsi_cmnd *cmd = lrbp->cmd;
+> +	struct ufs_hw_queue *hwq;
+> +	void __iomem *reg, *opr_sqd_base;
+> +	u32 nexus, id, val;
+> +	int err;
+> +
+> +	if (task_tag != hba->nutrs - UFSHCD_NUM_RESERVED) {
+> +		if (!cmd)
+> +			return FAILED;
+> +		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+> +	} else {
+> +		hwq = hba->dev_cmd_queue;
+> +	}
+> +
+> +	id = hwq->id;
+> +
+> +	mutex_lock(&hwq->sq_mutex);
+> +
+> +	/* stop the SQ fetching before working on it */
+> +	err = ufshcd_mcq_sq_stop(hba, hwq);
+> +	if (err)
+> +		goto unlock;
+> +
+> +	/* SQCTI = EXT_IID, IID, LUN, Task Tag */
+> +	nexus = lrbp->lun << 8 | task_tag;
+> +	opr_sqd_base = mcq_opr_base(hba, OPR_SQD, id);
+> +	writel(nexus, opr_sqd_base + REG_SQCTI);
+> +
+> +	/* SQRTCy.ICU = 1 */
+> +	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
+> +
+> +	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
+> +	reg = opr_sqd_base + REG_SQRTS;
+> +	err = read_poll_timeout(readl, val, val & SQ_CUS, 20,
+> +				MCQ_POLL_US, false, reg);
+> +	if (err)
+> +		dev_err(hba->dev, "%s: failed. hwq=%d, lun=0x%x, tag=%d\n",
+> +			__func__, id, lrbp->lun, task_tag);
+> +
+> +	*result = FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg));
+> +
+> +	if (ufshcd_mcq_sq_start(hba, hwq))
+> +		err = FAILED;
+> +
+> +unlock:
+> +	mutex_unlock(&hwq->sq_mutex);
+> +	return err;
+> +}
+
+Please do not use the FAILED / SUCCESS return values in this function. 
+These values should only be returned by functions related to SCSI error 
+handling. Please do the following:
+* Return a negative Unix error code in case of failure.
+* Return zero upon success.
+* Return the FIELD_GET() result as a positive value.
+* Remove the 'int *result' argument.
+
+> +	/* prevent concurrent access to sq hw */
+> +	struct mutex sq_mutex;
+
+Hmm ... a submission queue (SQ) exists in host memory so I'm not sure 
+the "hw" part of the above comment is correct.
 
 Thanks,
 
