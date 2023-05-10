@@ -2,87 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0BB0C77B7D
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 15:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E19BC77B7C
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 May 2023 18:53:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237345AbjEJP4V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 May 2023 11:56:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35580 "EHLO
+        id S235731AbjEJSx5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 May 2023 14:53:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237192AbjEJP4T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 11:56:19 -0400
+        with ESMTP id S235765AbjEJSxz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 14:53:55 -0400
 Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6FF36EA1;
-        Wed, 10 May 2023 08:56:18 -0700 (PDT)
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-643a1656b79so5010738b3a.3;
-        Wed, 10 May 2023 08:56:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C7C319A2;
+        Wed, 10 May 2023 11:53:54 -0700 (PDT)
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-644d9bf05b7so3575794b3a.3;
+        Wed, 10 May 2023 11:53:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683734178; x=1686326178;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20221208; t=1683744834; x=1686336834;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XXBPb0T0axiCTL0oMtUP2eFXZZ+7E7iyDGsMoIo5xLg=;
-        b=Z1KMFY+Uy2ParN7MmgohHDniiIX7Z7SrJ0E9sldzA+kDt34hT1GgwTqn5nplQTppO5
-         hyuOgEuWaecDCWoz/C44IShtSIkAii/b1A7yH+oKg9rF3h4p2eUT94ntZH2aq2Zpwzaz
-         C1fcPQ+W3+OvwhdDL2uTltSJ1JQpWgbykfZjgZsQmxbp1kkEeny7aoIMpBf+JHb5lGBt
-         NXigEirO0x/89y8pxGB1h9vT9H1DFX7ArBJujBe+NDzEzt8p4givboeEJM5RwfW7Cv9u
-         v6RdPLMCAOFJx2cdTBqyMdFI4mOchBrAYGqKuwH8WXAR/CGZHu59nGnOmF/Qcd7xLs6G
-         mYeQ==
-X-Gm-Message-State: AC+VfDwi1EDFZvWfUiirz4Ssxyrr4r81uZMnhZQ95jjiC9zZxECsqXvw
-        KP9XpQiVPhTcGMvhgmyU0Fs=
-X-Google-Smtp-Source: ACHHUZ4jAmb3ZAKDgW/JSwT3hbLErDK8VFH/SqJrjFHj7Uk+rZBbni5StqhaUujw2nmb2aTyt4kfDA==
-X-Received: by 2002:a05:6a20:432a:b0:100:5a09:4524 with SMTP id h42-20020a056a20432a00b001005a094524mr13881691pzk.31.1683734177883;
-        Wed, 10 May 2023 08:56:17 -0700 (PDT)
-Received: from ?IPV6:2001:4958:15a0:30:5242:f5e6:864f:4fb2? ([2001:4958:15a0:30:5242:f5e6:864f:4fb2])
-        by smtp.gmail.com with ESMTPSA id n1-20020aa78a41000000b0064550f76efesm3741316pfa.29.2023.05.10.08.56.16
+        bh=9XZnXZk2NqNpZbu4ppDYH+lMIUnLxZBrdrLy3iG8Aa8=;
+        b=mBTxO1/kU9efMJdBRh7elV1kxyqMZIH/fZehDAYB/rGAUQxPEyuZH0hSkfeoWpkCAF
+         LhQoOO5JpM15T3ZljMBSUtlIb6BOQVbRuTymYNIP7nQnebDE2TM/qKDZHUHiTKCFkLYN
+         yL/dsW9ET4qtLdrUfyLYnaeLZ30MWIDnWIZaKJ2XNLoAZ+VuT8e0ed4jeYDYEx1N+6wK
+         1JBVb0cxDAAOs6ygKIYg+ZE1Hw2zuleTGN0w7AkXKtvHPKITME4dYGY2x/1EGqwh1W38
+         8nRNnnV/LMZGEDd4/g7Np/Xft3seD4OLDJlvCl6gAsePUv+c3F+/02Ph5veN990bm39s
+         hGhg==
+X-Gm-Message-State: AC+VfDyhSPgzq3ahlKNQASYb9P/dJ4RNpN7D0efY+5+hi34L2e/C1+sS
+        z7wDJ89d3P7r+bSysm8TFnpRwbefk3+HGQ==
+X-Google-Smtp-Source: ACHHUZ7HVQwdpYNHayRmEK7RfOJmhYOj4rPihYbqAz35h7Lwx5+EkcXZaO2LHdWD25WtT/YAFPJSgQ==
+X-Received: by 2002:a05:6a00:2e0e:b0:63d:24c0:1223 with SMTP id fc14-20020a056a002e0e00b0063d24c01223mr27077278pfb.29.1683744833649;
+        Wed, 10 May 2023 11:53:53 -0700 (PDT)
+Received: from ?IPV6:2001:4958:15a0:30:62b7:b46c:dff7:98a0? ([2001:4958:15a0:30:62b7:b46c:dff7:98a0])
+        by smtp.gmail.com with ESMTPSA id t7-20020aa79387000000b0063f2a5a59d1sm3828371pfe.190.2023.05.10.11.53.52
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 May 2023 08:56:17 -0700 (PDT)
-Message-ID: <31af3339-d90e-f0bd-4c9e-0da9f8728ce4@acm.org>
-Date:   Wed, 10 May 2023 08:56:16 -0700
+        Wed, 10 May 2023 11:53:53 -0700 (PDT)
+Message-ID: <3b0a9357-88a6-c435-34d6-c75e9dfe9aaa@acm.org>
+Date:   Wed, 10 May 2023 11:53:52 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
+Subject: Re: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
 Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>, Ed Tsai <ed.tsai@mediatek.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        "naomi.chu@mediatek.com" <naomi.chu@mediatek.com>,
-        "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <DM6PR04MB6575753742F933DE192E7325FC769@DM6PR04MB6575.namprd04.prod.outlook.com>
- <dcfae203-005f-928b-37d6-7ee5bb4e2971@acm.org>
- <DM6PR04MB6575F344EF2D962103888A56FC769@DM6PR04MB6575.namprd04.prod.outlook.com>
- <6192fa07-ec6f-0464-deb6-c3e9f69f6ebf@acm.org>
- <BL0PR04MB6564242D93EE6826CF1F6747FC779@BL0PR04MB6564.namprd04.prod.outlook.com>
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, kwangwon.min@samsung.com
+References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
+ <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <BL0PR04MB6564242D93EE6826CF1F6747FC779@BL0PR04MB6564.namprd04.prod.outlook.com>
+In-Reply-To: <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/9/23 22:21, Avri Altman wrote:
-> Why it was needed to invent a new flag instead of  just clear 
-> BLK_MQ_F_TAG_QUEUE_SHARED?
+On 5/9/23 01:24, Kiwoong Kim wrote:
+> With auto hibern8 enabled, UIC could be working
+> for a while to process a hibern8 operation and HCI
+> reports UIC not ready for a short term through HCS.UCRDY.
+> And UFS driver can't recognize the operation.
+> UFSHCI spec specifies UCRDY like this:
+> whether the host controller is ready to process UIC COMMAND
+> 
+> The 'ready' could be seen as many different meanings. If the meaning
+> includes not processing any request from HCI, processing a hibern8
+> operation can be 'not ready'. In this situation, the driver needs to
+> wait until the operations is completed.
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 13 ++++++++++++-
+>   1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 96ce6af..fc79539 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2368,7 +2368,18 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>    */
+>   static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+>   {
+> -	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
+> +	ktime_t timeout = ktime_add_ms(ktime_get(), UIC_CMD_TIMEOUT);
+> +	u32 val = 0;
+> +
+> +	do {
+> +		val = ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+> +			UIC_COMMAND_READY;
+> +		if (val)
+> +			break;
+> +		usleep_range(500, 1000);
+> +	} while (ktime_before(ktime_get(), timeout));
+> +
+> +	return val ? true : false;
+>   }
+>   
+>   /**
 
-Hi Avri,
-
-The meaning of BLK_MQ_F_TAG_QUEUE_SHARED is "the tag set is shared
-across multiple request queues". Clearing BLK_MQ_F_TAG_QUEUE_SHARED if
-the tag set is shared would be wrong: it would break all the code
-outside the tag allocation code that tests this flag.
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
