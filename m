@@ -2,125 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05AEBC7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 16:00:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6894BC77B7F
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 17:29:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238492AbjEKQAg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 12:00:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50864 "EHLO
+        id S238329AbjEKR3S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 13:29:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232006AbjEKQAf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 12:00:35 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F9A940E7;
-        Thu, 11 May 2023 09:00:34 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S238150AbjEKR3R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 13:29:17 -0400
+X-Greylist: delayed 2654 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 11 May 2023 10:29:10 PDT
+Received: from mout6.gn-server.de (mout6.gn-server.de [87.238.194.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BD133C2F
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 10:29:10 -0700 (PDT)
+Received: from mout17.gn-server.de ([87.238.194.244])
+        by mout6.gn-server.de with esmtp (Exim 4.92)
+        (envelope-from <lkml@mageta.org>)
+        id 1px9PQ-00057b-QC; Thu, 11 May 2023 16:44:52 +0000
+Received: from lc0.greatnet-hosting.de ([178.254.50.20])
+        by mout17.gn-server.de with esmtp (Exim 4.92)
+        (envelope-from <lkml@mageta.org>)
+        id 1px9PQ-0003pv-L3; Thu, 11 May 2023 16:44:52 +0000
+Received: from chlorum.ategam.org (ategam.org [88.99.83.185])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C374521E2E;
-        Thu, 11 May 2023 16:00:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683820832; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zQuflMxJRoxyg3uwt19QzABTP6zt8uKHau/H9f7ScOo=;
-        b=N7wd7mWsTPkZDVL/XF86ac7UmPe/JRJAlgMJhd0tK2k41HXuMCQpTaUjK4FBccs4m47CiP
-        KPXIOOyPI8601gAwtz9Wa3SSaDbWG91lhdTgfILpbNI5YOora6co7jMQ77KLMYPjHQZl6R
-        6L8JNC+FPVVO9iu2kub/Jbp58y3JK20=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 83681134B2;
-        Thu, 11 May 2023 16:00:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id HnRbHiARXWRZAQAAMHmgww
-        (envelope-from <mwilck@suse.com>); Thu, 11 May 2023 16:00:32 +0000
-Message-ID: <960792f1597622b59e1f7ae22884eaf72926363f.camel@suse.com>
-Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
-From:   Martin Wilck <mwilck@suse.com>
-To:     Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        stable@vger.kernel.org
-Date:   Thu, 11 May 2023 18:00:31 +0200
-In-Reply-To: <20230511123432.5793-1-jgross@suse.com>
-References: <20230511123432.5793-1-jgross@suse.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 
+        (Authenticated sender: work@mageta.org)
+        by lc0.greatnet-hosting.de (Postfix) with ESMTPSA id BA2D3ECF051;
+        Thu, 11 May 2023 18:44:50 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+        d=lc0.greatnet-hosting.de; s=rsa1; t=1683823491;
+        bh=1bnfSSlX4RZCIYOKN1hdmY1+SLIhMr9vlxIhw4iy2DE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Dv+PVfMxvIxo5y/7NoOV2k0Pc4qXc685nFZnDiqVe3y7D6hsjRXWXn2til4neyncs
+         1g1e8QWtL+WYVRvxs5mLPDJXQlxXNBdJ+DXQjYP0qeoREk3vIpxW5ttg73TiZfPGi4
+         yrbOtVNRb6nMfBJXREvmac4ry6uYekqYq4W8fJ/nXJ/37+/awC2fRilvnAo9SVAZCx
+         ozj+vZ7PXUyw/GSmXxIyXX0eUIGDgECkgveQdrG0aTDcedT+WUNVH9unv4A2wAbT9o
+         fBGhu6PucUDZyz201KgzYjjAlnbulZmCdY4T3290prqnlE7nPTPw0tHQw3oG6gnL7A
+         VNcG+mQUdkPOA==
+Date:   Thu, 11 May 2023 18:44:50 +0200
+From:   Benjamin Block <lkml@mageta.org>
+To:     Brian Bunker <brian@purestorage.com>
+Cc:     Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org,
+        Seamus Connor <sconnor@purestorage.com>,
+        Krishna Kant <krishna.kant@purestorage.com>
+Subject: Re: [PATCH] scsi: sd: Avoid sending an INQUIRY if the page is not
+ supported
+Message-ID: <ZF0bgrAXJnWPJR/U@chlorum.ategam.org>
+References: <20230505204950.21645-1-brian@purestorage.com>
+ <20230508100930.GA9720@t480-pf1aa2c2.fritz.box>
+ <7C02DE30-DBA7-45E5-A16C-02C75C670E9F@purestorage.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7C02DE30-DBA7-45E5-A16C-02C75C670E9F@purestorage.com>
+User-Agent: Mutt/2.2.9 (00093fd7) (2022-11-12)
+X-Virus-Scanned: clamav-milter 0.103.2 at av0.int.greatnet.de
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2023-05-11 at 14:34 +0200, Juergen Gross wrote:
-> Some callers of scsi_execute_cmd() (like e.g. sd_spinup_disk()) are
-> passing an uninitialized struct sshdr and don't look at the return
-> value of scsi_execute_cmd() before looking at the contents of that
-> struct.
->=20
-> This can result in false positives when looking for specific error
-> conditions.
->=20
-> In order to fix that let scsi_execute_cmd() zero sshdr-
-> >response_code,
-> resulting in scsi_sense_valid() returning false.
->=20
-> Cc: stable@vger.kernel.org
-> Fixes: 3949e2f04262 ("scsi: simplify scsi_execute_req_flags")
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+On Mon, May 08, 2023 at 09:34:15AM -0700, Brian Bunker wrote:
+> > On May 8, 2023, at 3:09 AM, Benjamin Block <bblock@linux.ibm.com> wrote:
+> > On Fri, May 05, 2023 at 01:49:50PM -0700, Brian Bunker wrote:
+> > 
+> >> + int ret = -EINVAL;
+> > 
+> > Been wondering, whether it would make sense to have two different error
+> > levels here. One for the case where the page is not found in the loop
+> > that searches within page 0, and one for when page 0 is not present when
+> > we try to dereference the RCU protected pointer.
+> > 
+> > That way we could have a safe fallback. If the page is there, we use its
+> > data, if it is not, we blindly send the INQUIRY like we do today.
+> > 
+> > Not sure whether this is a bit too paranoid.. VPD page 0 is mandatory
+> > after all.
+> 
+> That could be done, but the problem would still exist for the PURE target.
+> We don’t support the page 0xb9, and we don’t advertise we do in the response
+> to VPD 0. This approach would still lead to the INQUIRY being sent to devices
 
-Reviewed-by: Martin Wilck <mwilck@suse.com>
+I wasn't meaning to send the INQUIRY regardless to what the page says,
+if it is present. I was just thinking to having fall-back for when the
+page 0 is not there at all (initially, when you call
+`rcu_dereference()`). That would support your storage, as you have page
+0, and it would be present for the check I assume.
 
-> ---
-> I'm not aware of any real error having happened due to this problem,
-> but I thought it should be fixed anyway.
-> I _think_ 3949e2f04262 was introducing the problem, but I'm not 100%
-> sure it is really the commit to be blamed.
-> ---
-> =A0drivers/scsi/scsi_lib.c | 14 ++++++++++----
-> =A01 file changed, 10 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b7c569a42aa4..923336620bff 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -209,11 +209,17 @@ int scsi_execute_cmd(struct scsi_device *sdev,
-> const unsigned char *cmd,
-> =A0=A0=A0=A0=A0=A0=A0=A0struct scsi_cmnd *scmd;
-> =A0=A0=A0=A0=A0=A0=A0=A0int ret;
-> =A0
-> -=A0=A0=A0=A0=A0=A0=A0if (!args)
-> +=A0=A0=A0=A0=A0=A0=A0if (!args) {
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0args =3D &default_args;
-> -=A0=A0=A0=A0=A0=A0=A0else if (WARN_ON_ONCE(args->sense &&
-> -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0 args->sense_len !=3D
-> SCSI_SENSE_BUFFERSIZE))
-> -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0return -EINVAL;
-> +=A0=A0=A0=A0=A0=A0=A0} else {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0/* Mark sense data to be in=
-valid. */
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if (args->sshdr)
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0arg=
-s->sshdr->response_code =3D 0;
-> +
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if (WARN_ON_ONCE(args->sens=
-e &&
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0 args->sense_len !=3D
-> SCSI_SENSE_BUFFERSIZE))
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0ret=
-urn -EINVAL;
-> +=A0=A0=A0=A0=A0=A0=A0}
-> =A0
-> =A0=A0=A0=A0=A0=A0=A0=A0req =3D scsi_alloc_request(sdev->request_queue, o=
-pf, args-
-> >req_flags);
-> =A0=A0=A0=A0=A0=A0=A0=A0if (IS_ERR(req))
+But anyway, it seems this is a no-go regardless. I didn't expect targets
+sending a valid page 0, but still supporting pages that are not listed in it.
 
+> who don’t support it, don’t expect it, and report an unexpected error. What I am
+> trying to avoid is the INQUIRY being sent to devices who don’t invite it.
+
+-- 
+Best Regards und Beste Grüße, Benjamin Block
+               PGP KeyID: 9610 2BB8 2E17 6F65 2362  6DF2 46E0 4E05 67A3 2E9E
