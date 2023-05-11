@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 025C8C77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 01:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1B8C7EE26
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 01:20:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236897AbjEKBUp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 May 2023 21:20:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51072 "EHLO
+        id S236939AbjEKBU6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 May 2023 21:20:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230004AbjEKBUn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 21:20:43 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AFF52121;
-        Wed, 10 May 2023 18:20:42 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-4f22908a082so5911897e87.1;
-        Wed, 10 May 2023 18:20:42 -0700 (PDT)
+        with ESMTP id S236907AbjEKBUy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2023 21:20:54 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0ED949E0;
+        Wed, 10 May 2023 18:20:50 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-4f004cc54f4so8997576e87.3;
+        Wed, 10 May 2023 18:20:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683768040; x=1686360040;
+        d=1e100.net; s=20221208; t=1683768048; x=1686360048;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=U8HWIrEVqYQDNE7ZSpxoyO0srjfJONXJNmQNnULPTKU=;
-        b=a85wfO0KKk0S0LC6qYocXThNoFGhNfwaNQXWov+cuQC4jp37t3g6jaeen8uUXZ4xHB
-         ubBKEbdUrIc3RZwioOQXfqloCdEAYUl3A4iU1xo3YN/LzY5J9jc7oovbYyKuv5f55txM
-         Tzwvwu8MrIe90BULuoGKvFj4X7R/sotYJazSMqii8ebQNzzINnb3btvPCyFxhzPN+y4p
-         J01T43PcilPnkG7cOcaC3NS+1pzFRJ5YKryuz7s+JgcdtAX+H/ONnI6rwEYkk6BmlJI5
-         KM4lqR4E60tR9XOW7MGWu3ebVhv0VBU5Bi69/KEHOVhJruGUmPThhx4DkZ8ssx7Zw3gA
-         ORLQ==
-X-Gm-Message-State: AC+VfDw+a6Itj6o1SKnNz4q/MtPdoBHCgzrEX4L0qMDJ/JTcUqipv4iT
-        Rd+g2LfCOwtXIpNoLGIslAhyQhWIIrfaJnqq
-X-Google-Smtp-Source: ACHHUZ7nrec4FPoRkdY5lBxH9wzCORULxpsjSRw6xRFsEALpUN8I3AAmszTq2iUB67YnOunAjsPPTg==
-X-Received: by 2002:ac2:4c8a:0:b0:4dd:af29:92c1 with SMTP id d10-20020ac24c8a000000b004ddaf2992c1mr2024055lfl.44.1683768040493;
-        Wed, 10 May 2023 18:20:40 -0700 (PDT)
+        bh=tQnmaBLfliRFPVBvPAgIuF3DzRTDHxBUbR4pCAvDYAo=;
+        b=PWwuT9j8+bKSOzOpOT9h3Q+d0cHvw6gi7JOnOx6A1UStOp+uBdyX63ApfOCs+gaWwa
+         8lH7ur5aXH77NEqvNEgAP6x4rqvOLPvmunBZosrLH6cNWOaUEQx4mQPW2XzuZ9qrXmoq
+         Zh4CBtc5zFyxmEobPTz6Gy/mxfrDqp0Ilw8L7ZJXgU3IA1RSSQ5druDFdVRF4cGrTU1p
+         3wgesXfHa4MUg1bEvRBSsiWWcNVZ1ibpgoNBaRpvqiOY3ZFHfz5Ga8/aOrdkDsKSAvRY
+         AVwLRjpG3IHTgGAHyFnUaTzvsJz7Qricu7g206sWEsECNKImm53o6dSFP0FXskK9nTJt
+         +baQ==
+X-Gm-Message-State: AC+VfDy8yzCtCe0Y4LzWGnNADfQFMQkR+FVXvdgwvjP3klNiv9vhpYjS
+        oFJpdmvbCvOTAgD+Oaeg6/uMn5wxR0q1wmjN
+X-Google-Smtp-Source: ACHHUZ7FNKY/4gQOv18bibXUlhBWrM0B5zpkU6jqcXrT4yPmj0+7wBhtMmfLjz/ANjSy6bcn5RKK6w==
+X-Received: by 2002:ac2:4c08:0:b0:4ee:8ff3:c981 with SMTP id t8-20020ac24c08000000b004ee8ff3c981mr2377353lfq.10.1683768048253;
+        Wed, 10 May 2023 18:20:48 -0700 (PDT)
 Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
-        by smtp.gmail.com with ESMTPSA id i22-20020a056512007600b004ece331c830sm915358lfo.206.2023.05.10.18.20.40
+        by smtp.gmail.com with ESMTPSA id y10-20020ac2446a000000b004f24cb9ef14sm910762lfl.47.2023.05.10.18.20.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 May 2023 18:20:40 -0700 (PDT)
+        Wed, 10 May 2023 18:20:48 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id 5E5D23C7; Thu, 11 May 2023 03:20:39 +0200 (CEST)
+        id 2C4F23C7; Thu, 11 May 2023 03:20:46 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1683768039; bh=8FtWUNOJUPSj52U4ttEG+f0MMlscHQOu52huS2ltEPc=;
+        t=1683768047; bh=Yc7aAR1XfQNo05yTlzshBLjU7Ck5BhKyc0alYxImpkE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SufS3o1GM5NH2A5X4CtFdN4zv3LQBgOkqggX220QhaOylThKRZ1PInvIoeDdJxvA4
-         kqZCzBQsocXByEWnIVC+CqrKbeFLZywRWTP3+HqpoX4VthPzI6HfzjZJ3Vqbl5Imov
-         svneUjXbPnjQGQKBQkNJpSCFI7y/OG1iNT1MqvaI=
+        b=tScP1kXKwM7GjCUti0Y99d4jkF9b/skRBtkBhN2h740iVQmBv880nH2+ZOpYUPes+
+         iNg2VqAdjz7/XxX+wuE8qqhkB9ZLwIZ7G1f+pi9ZtFy930H1D6coBbEG12eXAzak0Y
+         kCcDtF4ZuJkYwwtWRucqsDZ5lYUzPlQDHq7F6jLI=
 Received: from x1-carbon.. (unknown [64.141.80.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id 57E5474F;
-        Thu, 11 May 2023 03:15:14 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id 5A693762;
+        Thu, 11 May 2023 03:15:17 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1683767716; bh=8FtWUNOJUPSj52U4ttEG+f0MMlscHQOu52huS2ltEPc=;
+        t=1683767719; bh=Yc7aAR1XfQNo05yTlzshBLjU7Ck5BhKyc0alYxImpkE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JFG4BwD2ROz4PfYLKe9i8zWSz3QBB1/eCD9/2G5JkDBAJYNzQ+GVbosbQCx/jo2vv
-         ZJe6VLAm6dwqcHZyzX7rlaRUCj0xAGFoH9zrVx6aAnhK4v22hh8QkY8rz/hRVUxqyC
-         m4AcO08t2g0emNpH4AMAaDXAKesmn9RaXSCipjeU=
+        b=rFC4QylBHhUa9r4eibo376Qdg35VmgKS60omnntB/GbmxWYe1VtreQ4ZeI0MVsJ+U
+         7DFnT1qXmeboyDhgRRoYJkdNQRfXWl2n7bt8kzQ5gf3GFck3j296+mcVR6vxq4e39g
+         w57B6evWBtCBqOEeiFkQuvMbkH1y/kSqVRb3b32c=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -66,9 +66,9 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Damien Le Moal <dlemoal@kernel.org>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v7 09/19] scsi: allow enabling and disabling command duration limits
-Date:   Thu, 11 May 2023 03:13:42 +0200
-Message-Id: <20230511011356.227789-10-nks@flawful.org>
+Subject: [PATCH v7 10/19] scsi: sd: set read/write commands CDL index
+Date:   Thu, 11 May 2023 03:13:43 +0200
+Message-Id: <20230511011356.227789-11-nks@flawful.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230511011356.227789-1-nks@flawful.org>
 References: <20230511011356.227789-1-nks@flawful.org>
@@ -80,190 +80,125 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Damien Le Moal <dlemoal@kernel.org>
 
-Add the sysfs scsi device attribute cdl_enable to allow a user to turn
-enable or disable a device command duration limits feature. CDL is
-disabled by default. This feature must be explicitly enabled by a user by
-setting the cdl_enable attribute to 1.
+Introduce the command duration limits helper function sd_cdl_dld() to
+set the DLD bits of READ/WRITE 16 and READ/WRITE 32 commands to
+indicate to the device the command duration limit descriptor to apply
+to the commands.
 
-The new function scsi_cdl_enable() does not do anything beside setting
-the cdl_enable field of struct scsi_device in the case of a (real) scsi
-device (e.g. a SAS HDD). For ATA devices, the command duration limits
-feature needs to be enabled/disabled using the ATA feature sub-page of
-the control mode page. To do so, the scsi_cdl_enable() function checks
-if this mode page is supported using scsi_mode_sense(). If it is,
-scsi_mode_select() is used to enable and disable CDL.
+When command duration limits are enabled, sd_cdl_dld() obtains the
+index of the descriptor to apply to the command using the hints field of
+the request IO priority value (hints IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
+IOPRIO_HINT_DEV_DURATION_LIMIT_7).
+
+If command duration limits is disabled (which is the default), the limit
+index "0" is always used to indicate "no limit" for a command.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- Documentation/ABI/testing/sysfs-block-device | 13 ++++
- drivers/scsi/scsi.c                          | 62 ++++++++++++++++++++
- drivers/scsi/scsi_sysfs.c                    | 28 +++++++++
- include/scsi/scsi_device.h                   |  2 +
- 4 files changed, 105 insertions(+)
+ drivers/scsi/sd.c | 40 ++++++++++++++++++++++++++++++++++------
+ 1 file changed, 34 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
-index ffc3358cba57..2d543cfa4079 100644
---- a/Documentation/ABI/testing/sysfs-block-device
-+++ b/Documentation/ABI/testing/sysfs-block-device
-@@ -104,3 +104,16 @@ Contact:	linux-scsi@vger.kernel.org
- Description:
- 		(RO) Indicates if the device supports the command duration
- 		limits feature found in some ATA and SCSI devices.
-+
-+
-+What:		/sys/block/*/device/cdl_enable
-+Date:		May, 2023
-+KernelVersion:	v6.5
-+Contact:	linux-scsi@vger.kernel.org
-+Description:
-+		(RW) For a device supporting the command duration limits
-+		feature, write to the file to turn on or off the feature.
-+		By default this feature is turned off.
-+		Writing "1" to this file enables the use of command duration
-+		limits for read and write commands in the kernel and turns on
-+		the feature on the device. Writing "0" disables the feature.
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index c03814ce23ca..c4bf99a842f3 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -651,6 +651,68 @@ void scsi_cdl_check(struct scsi_device *sdev)
- 	kfree(buf);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a76092663246..3825e4d159fc 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1041,13 +1041,14 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+ 
+ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+-				       unsigned char flags)
++				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len = SD_EXT_CDB_SIZE;
+ 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
+ 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
+ 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
+ 	cmd->cmnd[10] = flags;
++	cmd->cmnd[11] = dld & 0x07;
+ 	put_unaligned_be64(lba, &cmd->cmnd[12]);
+ 	put_unaligned_be32(lba, &cmd->cmnd[20]); /* Expected Indirect LBA */
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[28]);
+@@ -1057,12 +1058,12 @@ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+ 
+ static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+-				       unsigned char flags)
++				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len  = 16;
+ 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
+-	cmd->cmnd[1]  = flags;
+-	cmd->cmnd[14] = 0;
++	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
++	cmd->cmnd[14] = (dld & 0x03) << 6;
+ 	cmd->cmnd[15] = 0;
+ 	put_unaligned_be64(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
+@@ -1114,6 +1115,31 @@ static blk_status_t sd_setup_rw6_cmnd(struct scsi_cmnd *cmd, bool write,
+ 	return BLK_STS_OK;
  }
  
-+/**
-+ * scsi_cdl_enable - Enable or disable a SCSI device supports for Command
-+ *                   Duration Limits
-+ * @sdev: The target device
-+ * @enable: the target state
++/*
++ * Check if a command has a duration limit set. If it does, and the target
++ * device supports CDL and the feature is enabled, return the limit
++ * descriptor index to use. Return 0 (no limit) otherwise.
 + */
-+int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
++static int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd)
 +{
-+	struct scsi_mode_data data;
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_vpd *vpd;
-+	bool is_ata = false;
-+	char buf[64];
-+	int ret;
++	struct scsi_device *sdp = sdkp->device;
++	int hint;
 +
-+	if (!sdev->cdl_supported)
-+		return -EOPNOTSUPP;
-+
-+	rcu_read_lock();
-+	vpd = rcu_dereference(sdev->vpd_pg89);
-+	if (vpd)
-+		is_ata = true;
-+	rcu_read_unlock();
++	if (!sdp->cdl_supported || !sdp->cdl_enable)
++		return 0;
 +
 +	/*
-+	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
++	 * Use "no limit" if the request ioprio does not specify a duration
++	 * limit hint.
 +	 */
-+	if (is_ata) {
-+		char *buf_data;
-+		int len;
++	hint = IOPRIO_PRIO_HINT(req_get_ioprio(scsi_cmd_to_rq(scmd)));
++	if (hint < IOPRIO_HINT_DEV_DURATION_LIMIT_1 ||
++	    hint > IOPRIO_HINT_DEV_DURATION_LIMIT_7)
++		return 0;
 +
-+		ret = scsi_mode_sense(sdev, 0x08, 0x0a, 0xf2, buf, sizeof(buf),
-+				      5 * HZ, 3, &data, NULL);
-+		if (ret)
-+			return -EINVAL;
-+
-+		/* Enable CDL using the ATA feature page */
-+		len = min_t(size_t, sizeof(buf),
-+			    data.length - data.header_length -
-+			    data.block_descriptor_length);
-+		buf_data = buf + data.header_length +
-+			data.block_descriptor_length;
-+		if (enable)
-+			buf_data[4] = 0x02;
-+		else
-+			buf_data[4] = 0;
-+
-+		ret = scsi_mode_select(sdev, 1, 0, buf_data, len, 5 * HZ, 3,
-+				       &data, &sshdr);
-+		if (ret) {
-+			if (scsi_sense_valid(&sshdr))
-+				scsi_print_sense_hdr(sdev,
-+					dev_name(&sdev->sdev_gendev), &sshdr);
-+			return ret;
-+		}
-+	}
-+
-+	sdev->cdl_enable = enable;
-+
-+	return 0;
++	return (hint - IOPRIO_HINT_DEV_DURATION_LIMIT_1) + 1;
 +}
 +
- /**
-  * scsi_device_get  -  get an additional reference to a scsi_device
-  * @sdev:	device to get a reference to
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 98fcbbf1c1e3..60317676e45f 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1222,6 +1222,33 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
- 		   sdev_show_queue_ramp_up_period,
- 		   sdev_store_queue_ramp_up_period);
- 
-+static ssize_t sdev_show_cdl_enable(struct device *dev,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	return sysfs_emit(buf, "%d\n", (int)sdev->cdl_enable);
-+}
-+
-+static ssize_t sdev_store_cdl_enable(struct device *dev,
-+				     struct device_attribute *attr,
-+				     const char *buf, size_t count)
-+{
-+	int ret;
-+	bool v;
-+
-+	if (kstrtobool(buf, &v))
-+		return -EINVAL;
-+
-+	ret = scsi_cdl_enable(to_scsi_device(dev), v);
-+	if (ret)
-+		return ret;
-+
-+	return count;
-+}
-+static DEVICE_ATTR(cdl_enable, S_IRUGO | S_IWUSR,
-+		   sdev_show_cdl_enable, sdev_store_cdl_enable);
-+
- static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
- 					 struct attribute *attr, int i)
+ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
  {
-@@ -1302,6 +1329,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- #endif
- 	&dev_attr_queue_ramp_up_period.attr,
- 	&dev_attr_cdl_supported.attr,
-+	&dev_attr_cdl_enable.attr,
- 	REF_EVT(media_change),
- 	REF_EVT(inquiry_change_reported),
- 	REF_EVT(capacity_change_reported),
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 6b8df9e253a0..b2cdb078b7bd 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -219,6 +219,7 @@ struct scsi_device {
- 	unsigned no_vpd_size:1;		/* No VPD size reported in header */
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+@@ -1125,6 +1151,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+ 	bool write = rq_data_dir(rq) == WRITE;
+ 	unsigned char protect, fua;
++	unsigned int dld;
+ 	blk_status_t ret;
+ 	unsigned int dif;
+ 	bool dix;
+@@ -1174,6 +1201,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 	fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
+ 	dix = scsi_prot_sg_count(cmd);
+ 	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
++	dld = sd_cdl_dld(sdkp, cmd);
  
- 	unsigned cdl_supported:1;	/* Command duration limits supported */
-+	unsigned cdl_enable:1;		/* Enable/disable Command duration limits */
+ 	if (dif || dix)
+ 		protect = sd_setup_protect_cmnd(cmd, dix, dif);
+@@ -1182,10 +1210,10 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
  
- 	unsigned int queue_stopped;	/* request queue is quiesced */
- 	bool offline_already;		/* Device offline message logged */
-@@ -367,6 +368,7 @@ extern void scsi_remove_device(struct scsi_device *);
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
- void scsi_attach_vpd(struct scsi_device *sdev);
- void scsi_cdl_check(struct scsi_device *sdev);
-+int scsi_cdl_enable(struct scsi_device *sdev, bool enable);
- 
- extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
- extern int __must_check scsi_device_get(struct scsi_device *);
+ 	if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
+ 		ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
+-					 protect | fua);
++					 protect | fua, dld);
+ 	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
+ 		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+-					 protect | fua);
++					 protect | fua, dld);
+ 	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+ 		   sdp->use_10_for_rw || protect) {
+ 		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
 -- 
 2.40.1
 
