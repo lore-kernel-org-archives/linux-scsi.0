@@ -2,219 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CA9C7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 21:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D09FC7EE24
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 22:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239557AbjEKV5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 17:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52134 "EHLO
+        id S239478AbjEKWKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 18:10:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239558AbjEKV5e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 17:57:34 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433C830C0;
-        Thu, 11 May 2023 14:57:03 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34BLmPKF019216;
-        Thu, 11 May 2023 21:56:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=pPbSYsPiwyxtt6l3P1M6MQt2bFYKSdpLTJDSR3vOr0w=;
- b=krI4m5lDvX4p4glv9v1mhaa+U96hN2cWpNvnGC80V8ENAUHR0iIBqt/nZnRnqXg3ky5v
- p/gdR2n3Z6nwniUGstAr/+Kxb90DTQk7nhPrcEae/D/6FMX3UGdr8jgw4Lv/VwXaDkcp
- LiFtcTwrXiviRf14SLhRJzDXczmQv60btdXLEIDXHHZdOXt8DggegXJOY0XBQnv7fhMW
- pY3MH5QqZ5yNx5n+iS72zpja5ekyMz5SJ/GShXY7SVuWyTuUWz/WnoeEewU6C/Fotii1
- Rh63zIDkpWhzyhU9d1KNztkBsAs5ZXlOlRKy/l3E0gzB6jLkeHkK30aJKuBGl82Qfhtm cA== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qgv1t9yck-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 11 May 2023 21:56:16 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34BLuFsn004794
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 11 May 2023 21:56:15 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Thu, 11 May 2023 14:56:15 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S239175AbjEKWKL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 18:10:11 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57841869A
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 15:10:03 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-64395e741fcso9490742b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 15:10:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1683843003; x=1686435003;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ooac5tL+mseyTN9L+x1m+1D+z3zZPNRSrEyDHL8CuWc=;
+        b=JXR/xm0E+UUFmWf1wRMZgI6VaUWPK5W5tDN0vIDM2B0+aOQUWkZiPgoMyBO8V6cyke
+         HPakTwy7CgGnYSqHxcjTXah9Qt1GrRy+PSwbmabFLI+1TM111+Slg9bRn3Yhxy1XMF2z
+         G0R4D24TLDlxpvCnb1z6VM2qFUEpZO95MCunk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683843003; x=1686435003;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ooac5tL+mseyTN9L+x1m+1D+z3zZPNRSrEyDHL8CuWc=;
+        b=dqNtKiRATtvLg4YTszpnBu+fT2WyRIWrhSXSmZk5NM/NncXAn7ArUZgBJHYedqQnL0
+         16RKODDLqtFTzcpC59pn4Jr1UA+Pk232MSqdl6dUPbbs6gcmABfh2K1kcLJnkjvGprjo
+         XT558I2lJNVBfEFW70we1rHYGVrxjr8FhjW2xTDeVV2de92jZ9oAQV0e8//COtAe3ofA
+         KJzGVy+4Tleop03+p4fmKsV8OoQCk1zkV9M/dBIPbfv2G6GMfUBoep0S/3eh2+3AJaIr
+         igAlViAnfLc3sK1QMuwiFKhaYoYw/X8eE1zJ15osBuPtdgPv3ykInNZrQGsLvDbuDQt5
+         Q9lg==
+X-Gm-Message-State: AC+VfDz0kxLVaf6RNbT7FjnE5Zdx9wdHF39/9jZqXEqkUiH8kWdV4h+x
+        Y76zmLfCMI0TbMJlNoP8W/ywGg==
+X-Google-Smtp-Source: ACHHUZ4aUI8ISpA8NkZd6SJuB882GbxNnfGq9BATmlyfEHldSuNSzQ43VWj3WFDwdyJ0waq/rtxjPg==
+X-Received: by 2002:a05:6a00:8c5:b0:647:4dee:62a4 with SMTP id s5-20020a056a0008c500b006474dee62a4mr14029138pfu.34.1683843002834;
+        Thu, 11 May 2023 15:10:02 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id x20-20020aa793b4000000b0063d2bb0d107sm5803828pff.64.2023.05.11.15.10.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 11 May 2023 15:10:02 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alice Chao <alice.chao@mediatek.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 5/7] ufs: mcq: Added ufshcd_mcq_abort()
-Date:   Thu, 11 May 2023 14:54:42 -0700
-Message-ID: <0e009af290bc60f1e66015bc4f77e0489a39b939.1683841772.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1683841772.git.quic_nguyenb@quicinc.com>
-References: <cover.1683841772.git.quic_nguyenb@quicinc.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: megaraid_sas: Convert union megasas_sgl to flex-arrays
+Date:   Thu, 11 May 2023 15:10:00 -0700
+Message-Id: <20230511220957.never.919-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 2oMzzs1ehAgvGiHCsn6CsW21NwiWpN2n
-X-Proofpoint-GUID: 2oMzzs1ehAgvGiHCsn6CsW21NwiWpN2n
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-11_17,2023-05-05_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 suspectscore=0 clxscore=1015
- priorityscore=1501 mlxscore=0 adultscore=0 spamscore=0 phishscore=0
- bulkscore=0 lowpriorityscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2304280000 definitions=main-2305110186
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1525; h=from:subject:message-id; bh=LtOldvtOS7BP2znGslCZolBglC52ivG2kUh4xsBr7gw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBkXWe4srTr9P0R2BfZ0l3zZwW7FDKgoLhejYjQrjIf E1DhPjSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZF1nuAAKCRCJcvTf3G3AJq5ID/ 0Y3B0fKlu1yboIdHGvoWREvQu7tbf7nV5Z41kc6P+Ojp9TNpFBIlG96li90StqxGhYgOIEkFSYH3l4 Wi2Yp/ZCkyNU+sYXJzElh/YaIzN1A6Lr4VmwQiuQaNPZImUSXDAK50ZtSe/bQOQA8dOhIlYn5UmsRX LT/qVO8M6go9nbw95DXaRuzKNy5quQ01yWS0WCZX6lfWOA3njEY4GdoIZctuxniV+tIbHQv4IXVwIp +fq1rperKy9ZE+7FnEBZ1MmQBk3XLJsk4eaO+QPEUr2g4z5U6VojjqnHwEqqcvixz0YGxl/iBe8Xap eIFLGGwEXeTl947aab86Qm1AnzMqCVKj1Wtln0muf7DGwuNOJkw6WFOLtIUFdur7GnWp7gyLDC939M fXuAQhCxIuWbzYU1hV3IjUs/PA4UufdBvofOg2+r9bje5PCZrSUXOT4XQkHwZC2OSrWva/mIQ5axn0 PDQA2r5xZuXYuDrgLookOhX0CfYleymhaYpFKZovIrPbBOb4S1WcHe/12vLSzMwfA4673xs9l8yATc e9gydMjqmpJ5+JfaKDyr8bUWxtR6omvsi0Z+YxP0HJSwm5MkHvpRXwi9h/Jg8M4LI3CJD0t5JonWy/ jLrcHchurIWO129uc/Vz5ExJ0UILUdacwQRf9o89nhNKx5C8TvKolC8Ep7Jg==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add ufshcd_mcq_abort() to support ufs abort in mcq mode.
+In the ongoing effort to replace all fake flexible arrays with true
+flexible arrays, replace the sge32, sge64, and sge_skinny members of
+union megasas_sgl with true flexible arrays. No binary differences are
+seen after this change; sizes were already being manually calculated
+using the member struct sizes directly.
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Gustavo A. R. Silva <gustavoars@kernel.org>
+Cc: megaraidlinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/ufs/core/ufs-mcq.c     | 60 ++++++++++++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  4 +++
- drivers/ufs/core/ufshcd.c      | 13 ++++++---
- 3 files changed, 73 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 655f220..63db20b 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -596,3 +596,63 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- 	mutex_unlock(&hwq->sq_mutex);
- 	return ret;
- }
-+
-+/**
-+ * ufshcd_mcq_abort - Abort the command in MCQ.
-+ * @cmd - The command to be aborted.
-+ *
-+ * Returns SUCCESS or FAILED error codes
-+ */
-+int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *host = cmd->device->host;
-+	struct ufs_hba *hba = shost_priv(host);
-+	int tag = scsi_cmd_to_rq(cmd)->tag;
-+	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-+	struct ufs_hw_queue *hwq;
-+	int err = FAILED;
-+
-+	if (!ufshcd_cmd_inflight(lrbp->cmd)) {
-+		dev_err(hba->dev,
-+			"%s: skip abort. cmd at tag %d already completed.\n",
-+			__func__, tag);
-+		goto out;
-+	}
-+
-+	/* Skip task abort in case previous aborts failed and report failure */
-+	if (lrbp->req_abort_skip) {
-+		dev_err(hba->dev, "%s: skip abort. tag %d failed earlier\n",
-+			__func__, tag);
-+		goto out;
-+	}
-+
-+	hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+
-+	if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
-+		/*
-+		 * Failure. The command should not be "stuck" in SQ for
-+		 * a long time which resulted in command being aborted.
-+		 */
-+		dev_err(hba->dev, "%s: cmd found in sq. hwq=%d, tag=%d\n",
-+			__func__, hwq->id, tag);
-+		goto out;
-+	}
-+
-+	/*
-+	 * The command is not in the submission queue, and it is not
-+	 * in the completion queue either. Query the device to see if
-+	 * the command is being processed in the device.
-+	 */
-+	if (ufshcd_try_to_abort_task(hba, tag)) {
-+		dev_err(hba->dev, "%s: device abort failed %d\n", __func__, err);
-+		lrbp->req_abort_skip = true;
-+		goto out;
-+	}
-+
-+	err = SUCCESS;
-+	if (ufshcd_cmd_inflight(lrbp->cmd))
-+		ufshcd_release_scsi_cmd(hba, lrbp);
-+
-+out:
-+	return err;
-+}
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 3f518e9..80293fd 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -80,6 +80,10 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 63bac3684c19..3554f6b07727 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1722,11 +1722,9 @@ struct megasas_sge_skinny {
+ } __packed;
  
- bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd);
- int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag);
-+int ufshcd_mcq_abort(struct scsi_cmnd *cmd);
-+int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
-+void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-+			     struct ufshcd_lrb *lrbp);
+ union megasas_sgl {
+-
+-	struct megasas_sge32 sge32[1];
+-	struct megasas_sge64 sge64[1];
+-	struct megasas_sge_skinny sge_skinny[1];
+-
++	DECLARE_FLEX_ARRAY(struct megasas_sge32, sge32);
++	DECLARE_FLEX_ARRAY(struct megasas_sge64, sge64);
++	DECLARE_FLEX_ARRAY(struct megasas_sge_skinny, sge_skinny);
+ } __attribute__ ((packed));
  
- #define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
- #define SD_ASCII_STD true
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 585f530..fbe8ba7 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -300,7 +300,6 @@ static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
- static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
--static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
- static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
- 						 bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
-@@ -5457,8 +5456,8 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- }
- 
- /* Release the resources allocated for processing a SCSI command. */
--static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
--				    struct ufshcd_lrb *lrbp)
-+void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-+			     struct ufshcd_lrb *lrbp)
- {
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 
-@@ -7396,7 +7395,7 @@ static void ufshcd_set_req_abort_skip(struct ufs_hba *hba, unsigned long bitmap)
-  *
-  * Returns zero on success, non-zero on failure
-  */
--static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
-+int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
- {
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	int err = 0;
-@@ -7557,6 +7556,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto release;
- 	}
- 
-+	if (is_mcq_enabled(hba)) {
-+		/* MCQ mode. Branch off to handle abort for mcq mode */
-+		err = ufshcd_mcq_abort(cmd);
-+		goto release;
-+	}
-+
- 	/* Skip task abort in case previous aborts failed and report failure */
- 	if (lrbp->req_abort_skip) {
- 		dev_err(hba->dev, "%s: skipping abort\n", __func__);
+ struct megasas_header {
 -- 
-2.7.4
+2.34.1
 
