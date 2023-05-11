@@ -2,138 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7861C77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 10:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC71C77B7C
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 10:57:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234030AbjEKKKP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 06:10:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50296 "EHLO
+        id S237909AbjEKK5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 06:57:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232984AbjEKKKN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 06:10:13 -0400
-X-Greylist: delayed 487 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 11 May 2023 03:10:10 PDT
-Received: from forward205c.mail.yandex.net (forward205c.mail.yandex.net [178.154.239.216])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D29D66E9D
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 03:10:10 -0700 (PDT)
-Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d100])
-        by forward205c.mail.yandex.net (Yandex) with ESMTP id 424144D322
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 13:02:03 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net [IPv6:2a02:6b8:c2a:210:0:640:45a:0])
-        by forward100a.mail.yandex.net (Yandex) with ESMTP id E6738463CC
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 13:01:59 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id x1TnbGqDfCg0-vopUR7Vj;
-        Thu, 11 May 2023 13:01:59 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=scst.dev; s=mail; t=1683799319;
-        bh=JjxnK6IrmJ8ybZqL0CBMYujCK1ZS/E+3BK8/5493khY=;
-        h=Subject:From:To:Date:Message-ID;
-        b=dIpdOH9YI5iEBeSBQPMF8jdB8T+RpLCpASECeJfJIsNb8jFDvOb9V8ZOcsRFkqo0H
-         6u3Qaju9g6kfBLiYP50Aql40JApiT77m4YSF0r/SmN9B2NHZtAo6N4PX1fDYFbcR5f
-         ERVyPSfH2r7Zn1EXdVnqqLon/Y6J2mRcLSudYn3I=
-Authentication-Results: mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net; dkim=pass header.i=@scst.dev
-Message-ID: <32b0bb9f-ba6a-e9f1-e779-5af2e115c67a@scst.dev>
-Date:   Thu, 11 May 2023 13:02:41 +0300
+        with ESMTP id S236207AbjEKK5R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 06:57:17 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80485FA
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 03:57:15 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-3f41dceb9d4so56486315e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 03:57:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1683802634; x=1686394634;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=riHRWt/DT+R28lyCQk8l026iqpHj8sFQPrXZkKMI/V8=;
+        b=NlqxWhQSqp4pPP59kmIiP6KPGwkBx08LzsGm5JsdqN3td5dPO+XFwobTm0PqtfPBHg
+         4l6907DDc2X68t7KDWg8o8avYdocnLTiKS6QPBP5Vd5mnExC95O0xoSVoyQEdhi39CC8
+         o0WYpK7xCePuEnZUHdcVc1vjT7t79VXMTMiEvkl8uYN5MFvh/Wz/JHhbqQHhV32HJRrC
+         i3u+iWOZApClFv5zvbFR+lPb7iu85MysO+nTlF+DnoRrcRbzeKclryegFYCdS3eL0VZl
+         vG/6/Me2bbPRQeqp2s1iza9kYcHtnxMFOVFenwm8YNnuAGDOwPUwTRaub4LSlf5sM+gF
+         xhcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683802634; x=1686394634;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=riHRWt/DT+R28lyCQk8l026iqpHj8sFQPrXZkKMI/V8=;
+        b=cZCPchIdQeySx6Q41yQYkxkb207XRliup66QEAgXDsfSPOE2GwGaLIfSO+XEqJjd+r
+         pLWO4ENsiE25isl+IHY+RKDaQBlMPtvhtcFpCBXFH+xrBGb9PwewSfo8Ys6ZLGai9a2V
+         3bsab0YitYSiGAZ6Mu637uBuWPFwFC7TIG0F4VD4TGX/KmGRjDo5708mQPGX6WGL7seB
+         5R9BmDsAp8owbGAh7a2UIFRtS4y6gdHV5W2cDF0SZisln2SCJcjIeAwerMgvqnNYDp8C
+         ft5xq0/WZjXHTWKCc3hXXjzbo/m4KLoHVD211I9/JYcrtSfwRwenOu1gUA/f0VyK6z6l
+         GXBA==
+X-Gm-Message-State: AC+VfDyfeAylTWP7HTD29rnVwz2jxQyQ4h5xbGkSYxChdXT3jYdWHW0Y
+        iUIj01w0nfn9h/iq3oKNxC+Wdw==
+X-Google-Smtp-Source: ACHHUZ4IgK5mNu3z2Q2O5fEX2GY1HT2CzWIHuj09gR8HPhiprguCuf6QlexEz5Hz9AoAYzkpp0ixNQ==
+X-Received: by 2002:a05:600c:3646:b0:3f4:2215:6d6 with SMTP id y6-20020a05600c364600b003f4221506d6mr12162026wmq.33.1683802634018;
+        Thu, 11 May 2023 03:57:14 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id y18-20020a5d6212000000b0030796e103a1sm11826810wru.5.2023.05.11.03.57.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 11 May 2023 03:57:12 -0700 (PDT)
+Date:   Thu, 11 May 2023 13:57:07 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     oe-kbuild@lists.linux.dev, Wenchao Hao <haowenchao2@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+        linfeilong@huawei.com, louhongxiang@huawei.com,
+        Wenchao Hao <haowenchao2@huawei.com>
+Subject: Re: [PATCH v2 2/6] scsi:scsi_debug: Add interface to manage single
+ device's error inject
+Message-ID: <5f8d3e23-9ac7-4ed2-bf5b-1d247109869a@kili.mountain>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Content-Language: en-US
-To:     linux-scsi@vger.kernel.org
-From:   Gleb Chesnokov <gleb.chesnokov@scst.dev>
-Subject: [PATCH] qla2xxx: Fix NULL pointer dereference in target mode
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230428013320.347050-3-haowenchao2@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When target mode is enabled, the pci_irq_get_affinity() function may return
-a NULL value in qla_mapq_init_qp_cpu_map() due to the qla24xx_enable_msix()
-code that handles IRQ settings for target mode. This leads to a crash due
-to a NULL pointer dereference.
+Hi Wenchao,
 
-This patch fixes the issue by adding a check for the NULL value returned
-by pci_irq_get_affinity() and introducing a 'cpu_mapped' boolean flag to
-the qla_qpair structure, ensuring that the qpair's CPU affinity is updated
-when it has not been mapped to a CPU.
+kernel test robot noticed the following build warnings:
 
-Fixes: 1d201c81d4cc ("scsi: qla2xxx: Select qpair depending on which CPU 
-post_cmd() gets called")
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Signed-off-by: Gleb Chesnokov <gleb.chesnokov@scst.dev>
----
-  drivers/scsi/qla2xxx/qla_def.h    | 1 +
-  drivers/scsi/qla2xxx/qla_init.c   | 3 +++
-  drivers/scsi/qla2xxx/qla_inline.h | 6 ++++++
-  drivers/scsi/qla2xxx/qla_isr.c    | 3 +++
-  4 files changed, 13 insertions(+)
+url:    https://github.com/intel-lab-lkp/linux/commits/Wenchao-Hao/scsi-scsi_debug-create-scsi_debug-directory-in-the-debugfs-filesystem/20230427-201534
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230428013320.347050-3-haowenchao2%40huawei.com
+patch subject: [PATCH v2 2/6] scsi:scsi_debug: Add interface to manage single device's error inject
+config: mips-randconfig-m041-20230509 (https://download.01.org/0day-ci/archive/20230511/202305110949.SGOuSCr6-lkp@intel.com/config)
+compiler: mips-linux-gcc (GCC) 12.1.0
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index df5e5b7fdcfe..84aa3571be6d 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3796,6 +3796,7 @@ struct qla_qpair {
-      uint64_t retry_term_jiff;
-      struct qla_tgt_counters tgt_counters;
-      uint16_t cpuid;
-+    bool cpu_mapped;
-      struct qla_fw_resources fwres ____cacheline_aligned;
-      struct  qla_buf_pool buf_pool;
-      u32    cmd_cnt;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c 
-b/drivers/scsi/qla2xxx/qla_init.c
-index ec0423ec6681..1a955c3ff3d6 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -9426,6 +9426,9 @@ struct qla_qpair *qla2xxx_create_qpair(struct 
-scsi_qla_host *vha, int qos,
-          qpair->rsp->req = qpair->req;
-          qpair->rsp->qpair = qpair;
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <error27@gmail.com>
+| Link: https://lore.kernel.org/r/202305110949.SGOuSCr6-lkp@intel.com/
 
-+        if (!qpair->cpu_mapped)
-+            qla_cpu_update(qpair, raw_smp_processor_id());
-+
-          if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
-              if (ha->fw_attributes & BIT_4)
-                  qpair->difdix_supported = 1;
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h 
-b/drivers/scsi/qla2xxx/qla_inline.h
-index cce6e425c121..a6e2c7d4ff87 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -538,12 +538,18 @@ qla_mapq_init_qp_cpu_map(struct qla_hw_data *ha,
+smatch warnings:
+drivers/scsi/scsi_debug.c:5359 scsi_debug_slave_destroy() warn: variable dereferenced before check 'devip' (see line 5358)
 
-      if (!ha->qp_cpu_map)
-          return;
-+
-      mask = pci_irq_get_affinity(ha->pdev, msix->vector_base0);
-+    if (!mask)
-+        return;
-+
-      qpair->cpuid = cpumask_first(mask);
-      for_each_cpu(cpu, mask) {
-          ha->qp_cpu_map[cpu] = qpair;
-      }
-      msix->cpuid = qpair->cpuid;
-+
-+    qpair->cpu_mapped = true;
-  }
+vim +/devip +5359 drivers/scsi/scsi_debug.c
 
-  static inline void
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 71feda2cdb63..245e3a5d81fd 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3770,6 +3770,9 @@ void qla24xx_process_response_queue(struct 
-scsi_qla_host *vha,
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5349  static void scsi_debug_slave_destroy(struct scsi_device *sdp)
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5350  {
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5351  	struct sdebug_dev_info *devip =
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5352  		(struct sdebug_dev_info *)sdp->hostdata;
+a34c4e98367965 FUJITA Tomonori 2008-03-25  5353  
+773642d95b8220 Douglas Gilbert 2016-04-25  5354  	if (sdebug_verbose)
+c1287970f4847a Tomas Winkler   2015-07-28  5355  		pr_info("slave_destroy <%u %u %u %llu>\n",
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5356  		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
+46ab9018f5b07d Wenchao Hao     2023-04-28  5357  
+46ab9018f5b07d Wenchao Hao     2023-04-28 @5358  	debugfs_remove(devip->debugfs_entry);
+                                                                       ^^^^^^^^^^^^^^^^^^^^
+Dereference
 
-      if (rsp->qpair->cpuid != smp_processor_id() || 
-!rsp->qpair->rcv_intr) {
-          rsp->qpair->rcv_intr = 1;
-+
-+        if (!rsp->qpair->cpu_mapped)
-+            qla_cpu_update(rsp->qpair, raw_smp_processor_id());
-      }
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30 @5359  	if (devip) {
+                                                            ^^^^^
+Checked too late.
 
-  #define __update_rsp_in(_is_shadow_hba, _rsp, _rsp_in)            \
+25985edcedea63 Lucas De Marchi 2011-03-30  5360  		/* make this slot available for re-use */
+c2248fc974df7b Douglas Gilbert 2014-11-24  5361  		devip->used = false;
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5362  		sdp->hostdata = NULL;
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5363  	}
+8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5364  }
+
 -- 
-2.40.1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
+
