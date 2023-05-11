@@ -2,86 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0DCEC77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 15:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A92C7EE22
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 15:59:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238765AbjEKPiI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 11:38:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59604 "EHLO
+        id S238458AbjEKP7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 11:59:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237708AbjEKPiH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 11:38:07 -0400
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 643674C38;
-        Thu, 11 May 2023 08:38:06 -0700 (PDT)
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6439f186366so5435871b3a.2;
-        Thu, 11 May 2023 08:38:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683819486; x=1686411486;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=EZSuUDNZroiyxm8tSJ9/WgOQoub/MYxlf8xCitRpuzE=;
-        b=E3cXAISAw9Bot++cvZ0EXW1inQ7B/pPWva41TqvasvmiaRY3nQTg70JGfGFkhbTCJU
-         N9VFXdvDw3+M0nHQv8Ct+Vi8Yo20EcsEAnquARCSWAeTR10GPS1X6OjMpd+AtsdJ53N6
-         VS/Wn/R2Q11gRh2ao5alul6MU1NDIw3LpQiqumjzZML55D/zKtQyIKZelktSOBndPYx8
-         5ayZbzKtCWRMpgRlXUFbd6F1qaMimR6gRZdBEd4Ul4U1OBXljZeVLZjrvHJLgBcc/YaY
-         Us36MTQ93BhG1zPDyD14okjZ0Z/zr68z07t+gw5Sp5HEQBEa/3VWShS+Pe+CkleUYTQx
-         8n1A==
-X-Gm-Message-State: AC+VfDw3x2sH7JXnskBzStiKoEDJv+H47UuflvFcnWd7VjM078zPTgsG
-        k8ZOckdLtGGZcX1jIWpV8BWS66AvQJk=
-X-Google-Smtp-Source: ACHHUZ4yVECYtD+qVm4EPWXQ7n+M0L0oJ8Y1QiJhaT60VoEzwjnc6YrVie/FMwn3rdeYFmeiM417FQ==
-X-Received: by 2002:a05:6a00:14d0:b0:63d:2f13:1f3 with SMTP id w16-20020a056a0014d000b0063d2f1301f3mr29540905pfu.33.1683819485772;
-        Thu, 11 May 2023 08:38:05 -0700 (PDT)
-Received: from [172.20.11.151] ([173.214.130.133])
-        by smtp.gmail.com with ESMTPSA id n1-20020aa78a41000000b0064550f76efesm5499494pfa.29.2023.05.11.08.38.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 May 2023 08:38:05 -0700 (PDT)
-Message-ID: <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
-Date:   Thu, 11 May 2023 08:38:04 -0700
+        with ESMTP id S232006AbjEKP7a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 11:59:30 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 983CB40E7;
+        Thu, 11 May 2023 08:59:28 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 54A6B21E29;
+        Thu, 11 May 2023 15:59:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1683820767; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=9Lj/YCJutpaNLuZIg73eRPmiuF7Hnb98ZHvSFAVP82o=;
+        b=o9OwJS0sfYehKFlOmkW54Waa0TK4gS9tf132nZp2uvhNtEAMuEM2Fu9M+t7ib6MpkTTi3q
+        S0THxkKqJYOj+sWBDHwmdvrtvjC6Yp8eVr++hLZo0mOlxzmAscKa5WqaN4CQgthBwTfz3M
+        EwijcuVizAUfHKAfSQd3uLZTUUILn2Y=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 12EA6134B2;
+        Thu, 11 May 2023 15:59:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id oB3ZAt8QXWRpfwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Thu, 11 May 2023 15:59:27 +0000
+Message-ID: <7fc38a4a124caef6cb96a00000043a3288f4f004.camel@suse.com>
+Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
+From:   Martin Wilck <mwilck@suse.com>
+To:     Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        stable@vger.kernel.org
+Date:   Thu, 11 May 2023 17:59:26 +0200
+In-Reply-To: <45d127c4-71e9-2959-b69c-d31c46ec721e@suse.com>
+References: <20230511123432.5793-1-jgross@suse.com>
+         <095a2264120ad51d0500c4ce8221be2f88a9537e.camel@suse.com>
+         <85a7dc28-74ec-f4d6-b5c3-ca456ce9d380@suse.com>
+         <e7c5f4334ab6ff897547c68ea216fbcba22d4929.camel@suse.com>
+         <45d127c4-71e9-2959-b69c-d31c46ec721e@suse.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.1 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-Content-Language: en-US
-To:     Christoph Hellwig <hch@infradead.org>,
-        Ed Tsai <ed.tsai@mediatek.com>
-Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        alice.chao@mediatek.com, powen.kao@mediatek.com,
-        naomi.chu@mediatek.com, wsd_upstream@mediatek.com
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <ZF0K7A6G2cYBjSgn@infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZF0K7A6G2cYBjSgn@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/11/23 08:34, Christoph Hellwig wrote:
-> On Tue, May 09, 2023 at 02:52:30PM +0800, Ed Tsai wrote:
->> The tags allocation is limited by the fair sharing algorithm. It hurts
->> the performance for UFS devices, because the queue depth of general I/O
->> is reduced by half once the UFS send a control command.
-> 
-> But it is there for a reason.  You completely fail to explain why you
-> think your change is safe, and also why you did not try to even explain
-> where the overhead is and how else you tried to mitigate it.
+On Thu, 2023-05-11 at 15:32 +0200, Juergen Gross wrote:
+> On 11.05.23 15:23, Martin Wilck wrote:
+> > On Thu, 2023-05-11 at 15:17 +0200, Juergen Gross wrote:
+> > > >=20
+> > > > We know for certain that sizeof(*sshdr) is 8 bytes, and will
+> > > > most
+> > > > probably remain so. Thus
+> > > >=20
+> > > > =A0=A0=A0=A0=A0 memset(sshdr, 0, sizeof(*sshdr))
+> > > >=20
+> > > > would result in more efficient code.
+> > >=20
+> > > I fail to see why zeroing a single byte would be less efficient
+> > > than
+> > > zeroing
+> > > a possibly unaligned 8-byte area.
+> >=20
+> > I don't think it can be unaligned. gcc seems to think the same. It
+> > compiles the memset(sshdr, ...) in scsi_normalize_sense() into a
+> > single
+> > instruction on x86_64.
+> >=20
+> > 0xffffffff8177e9d0 <scsi_normalize_sense>:=A0=A0=A0=A0=A0 nopl=A0=A0
+> > 0x0(%rax,%rax,1) [FTRACE NOP]
+> > 0xffffffff8177e9d5 <scsi_normalize_sense+5>:=A0=A0=A0 test=A0=A0 %rdi,%=
+rdi
+> > 0xffffffff8177e9d8 <scsi_normalize_sense+8>:=A0=A0=A0 movq=A0=A0 $0x0,(=
+%rdx)
+>=20
+> A struct with 8 "u8" fields can be unaligned.
 
-Hi Christoph,
+Right. I wrongly assumed this would be aligned like an u64. "The
+alignment of any given struct or union type is required by the ISO C
+standard to be at least a perfect multiple of the lowest common
+multiple of the alignments of all of the members of the struct".
 
-For which devices is the fair sharing algorithm useful? As far as I know 
-the legacy block layer did not have an equivalent of the fair sharing 
-algorithm and I'm not aware of any complaints about the legacy block 
-layer regarding to fairness. This is why I proposed in January to remove 
-the fair sharing code entirely. See also 
-https://lore.kernel.org/linux-block/20230103195337.158625-1-bvanassche@acm.org/.
+I wonder if this (non-)alignment of struct scsi_sense_hdr is
+intentional, but that's a different discussion.
 
 Thanks,
+Martin
 
-Bart.
