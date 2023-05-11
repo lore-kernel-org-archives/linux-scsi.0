@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC71C77B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 10:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC882C77B7C
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 11:02:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237909AbjEKK5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 06:57:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44352 "EHLO
+        id S237788AbjEKLCg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 07:02:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236207AbjEKK5R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 06:57:17 -0400
+        with ESMTP id S237709AbjEKLCf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 07:02:35 -0400
 Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80485FA
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 03:57:15 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-3f41dceb9d4so56486315e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 03:57:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E4F82108
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 04:02:33 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-3f41dceb9c9so40126435e9.3
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 04:02:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1683802634; x=1686394634;
+        d=linaro.org; s=google; t=1683802952; x=1686394952;
         h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
          :to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=riHRWt/DT+R28lyCQk8l026iqpHj8sFQPrXZkKMI/V8=;
-        b=NlqxWhQSqp4pPP59kmIiP6KPGwkBx08LzsGm5JsdqN3td5dPO+XFwobTm0PqtfPBHg
-         4l6907DDc2X68t7KDWg8o8avYdocnLTiKS6QPBP5Vd5mnExC95O0xoSVoyQEdhi39CC8
-         o0WYpK7xCePuEnZUHdcVc1vjT7t79VXMTMiEvkl8uYN5MFvh/Wz/JHhbqQHhV32HJRrC
-         i3u+iWOZApClFv5zvbFR+lPb7iu85MysO+nTlF+DnoRrcRbzeKclryegFYCdS3eL0VZl
-         vG/6/Me2bbPRQeqp2s1iza9kYcHtnxMFOVFenwm8YNnuAGDOwPUwTRaub4LSlf5sM+gF
-         xhcw==
+        bh=/6wHelDtK2nIDObvAlBqtnzBhHlFB/jv/mjLnemnkJU=;
+        b=yenykVmXmqxKntVc14UQ1cCjejaidb6VnoSD/Hsld4uTIF1yO061mr2c8Df6t6T2iU
+         W/2C1Ph9b6NTBoIanGBa8NcdEyC8SzMDya+r1sW5MhVEXivqJgXRv61Tn9AbjI2ei/wo
+         jrfZi5fXADaCwpTxfkp/hPOui8wloVbpM62a8gxiqPb9g0u74K7nTL8ucZQzm7nEZlMm
+         vcdi7GbpRO9HBtXY6J9MI1VPvprdnmb6wol2smMxpU79W/47/8t0wNuL34fFhMSFMzm0
+         Tzm9uUeP0+yhddW8DyUnC1l18chJ0MHtGbuIrBtQh2+VFSZwp5tFW4uu4Le//l17aY1Q
+         gIjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683802634; x=1686394634;
+        d=1e100.net; s=20221208; t=1683802952; x=1686394952;
         h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
          :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=riHRWt/DT+R28lyCQk8l026iqpHj8sFQPrXZkKMI/V8=;
-        b=cZCPchIdQeySx6Q41yQYkxkb207XRliup66QEAgXDsfSPOE2GwGaLIfSO+XEqJjd+r
-         pLWO4ENsiE25isl+IHY+RKDaQBlMPtvhtcFpCBXFH+xrBGb9PwewSfo8Ys6ZLGai9a2V
-         3bsab0YitYSiGAZ6Mu637uBuWPFwFC7TIG0F4VD4TGX/KmGRjDo5708mQPGX6WGL7seB
-         5R9BmDsAp8owbGAh7a2UIFRtS4y6gdHV5W2cDF0SZisln2SCJcjIeAwerMgvqnNYDp8C
-         ft5xq0/WZjXHTWKCc3hXXjzbo/m4KLoHVD211I9/JYcrtSfwRwenOu1gUA/f0VyK6z6l
-         GXBA==
-X-Gm-Message-State: AC+VfDyfeAylTWP7HTD29rnVwz2jxQyQ4h5xbGkSYxChdXT3jYdWHW0Y
-        iUIj01w0nfn9h/iq3oKNxC+Wdw==
-X-Google-Smtp-Source: ACHHUZ4IgK5mNu3z2Q2O5fEX2GY1HT2CzWIHuj09gR8HPhiprguCuf6QlexEz5Hz9AoAYzkpp0ixNQ==
-X-Received: by 2002:a05:600c:3646:b0:3f4:2215:6d6 with SMTP id y6-20020a05600c364600b003f4221506d6mr12162026wmq.33.1683802634018;
-        Thu, 11 May 2023 03:57:14 -0700 (PDT)
+        bh=/6wHelDtK2nIDObvAlBqtnzBhHlFB/jv/mjLnemnkJU=;
+        b=D3Z62SossmqnQk4RewYwIURJOQPjoUh7t675RAZ41fOZY5cF1FoxLtm2R0xrv5GpJ9
+         hSPF/hbONFvK+2oF+xC9O0XMAy2uIcHrtTvW36X3y4/CuizFYcw5rE2dKID0ggNoDGLf
+         1sh+qHMf8QyCTxscAf1MFBSH75oEDa1RZLyFEV1ir01Y8AOYHDl8Nb+Gu+76kO7v3rFs
+         45NLCI4sUIsuu/0g94BUoymBi3YPEOgiXoL7R1OIQr4h9AVP3IJjQKBz8FjZsnuJxUeB
+         xVEGhF6P+4TFCRUWXLyxatlFNxgSkZWCHY13k7GL3A6pOCWJ9jcQMD1TCTwoU2KOZNfU
+         WsNQ==
+X-Gm-Message-State: AC+VfDxhWFmbnvcbQCCHjSTOIsgUHPPabeDdATg/OjY+kAbQutiMnEyY
+        bFhrTcWIbDno2YbjmlpQ2YmpJQ==
+X-Google-Smtp-Source: ACHHUZ6D4jefzQLsYunWhAl+2cf9RSsn9Y9TWRug7Tm623bfFTdQ/3Ft6budj35cfNKIMk4KsSEOEQ==
+X-Received: by 2002:a1c:f408:0:b0:3f1:7372:f98f with SMTP id z8-20020a1cf408000000b003f17372f98fmr12462958wma.41.1683802951924;
+        Thu, 11 May 2023 04:02:31 -0700 (PDT)
 Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id y18-20020a5d6212000000b0030796e103a1sm11826810wru.5.2023.05.11.03.57.11
+        by smtp.gmail.com with ESMTPSA id 18-20020a05600c229200b003f17a00c214sm24947041wmf.16.2023.05.11.04.02.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 May 2023 03:57:12 -0700 (PDT)
-Date:   Thu, 11 May 2023 13:57:07 +0300
+        Thu, 11 May 2023 04:02:30 -0700 (PDT)
+Date:   Thu, 11 May 2023 14:02:27 +0300
 From:   Dan Carpenter <dan.carpenter@linaro.org>
 To:     oe-kbuild@lists.linux.dev, Wenchao Hao <haowenchao2@huawei.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
@@ -58,13 +58,13 @@ To:     oe-kbuild@lists.linux.dev, Wenchao Hao <haowenchao2@huawei.com>,
 Cc:     lkp@intel.com, oe-kbuild-all@lists.linux.dev,
         linfeilong@huawei.com, louhongxiang@huawei.com,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: Re: [PATCH v2 2/6] scsi:scsi_debug: Add interface to manage single
- device's error inject
-Message-ID: <5f8d3e23-9ac7-4ed2-bf5b-1d247109869a@kili.mountain>
+Subject: Re: [PATCH v2 6/6] scsi:scsi_debug: set command's result and sense
+ data if the error is injected
+Message-ID: <ea5ec1a0-7f4c-426a-86a0-03ce2a6233ed@kili.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230428013320.347050-3-haowenchao2@huawei.com>
+In-Reply-To: <20230428013320.347050-7-haowenchao2@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -77,43 +77,56 @@ https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Wenchao-Hao/scsi-scsi_debug-create-scsi_debug-directory-in-the-debugfs-filesystem/20230427-201534
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230428013320.347050-3-haowenchao2%40huawei.com
-patch subject: [PATCH v2 2/6] scsi:scsi_debug: Add interface to manage single device's error inject
-config: mips-randconfig-m041-20230509 (https://download.01.org/0day-ci/archive/20230511/202305110949.SGOuSCr6-lkp@intel.com/config)
+patch link:    https://lore.kernel.org/r/20230428013320.347050-7-haowenchao2%40huawei.com
+patch subject: [PATCH v2 6/6] scsi:scsi_debug: set command's result and sense data if the error is injected
+config: mips-randconfig-m041-20230509 (https://download.01.org/0day-ci/archive/20230511/202305111419.HegopAw8-lkp@intel.com/config)
 compiler: mips-linux-gcc (GCC) 12.1.0
 
 If you fix the issue, kindly add following tag where applicable
 | Reported-by: kernel test robot <lkp@intel.com>
 | Reported-by: Dan Carpenter <error27@gmail.com>
-| Link: https://lore.kernel.org/r/202305110949.SGOuSCr6-lkp@intel.com/
+| Link: https://lore.kernel.org/r/202305111419.HegopAw8-lkp@intel.com/
 
-smatch warnings:
-drivers/scsi/scsi_debug.c:5359 scsi_debug_slave_destroy() warn: variable dereferenced before check 'devip' (see line 5358)
+New smatch warnings:
+drivers/scsi/scsi_debug.c:7880 scsi_debug_queuecommand() warn: missing error code? 'ret'
 
-vim +/devip +5359 drivers/scsi/scsi_debug.c
+Old smatch warnings:
+drivers/scsi/scsi_debug.c:5389 scsi_debug_slave_destroy() warn: variable dereferenced before check 'devip' (see line 5388)
 
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5349  static void scsi_debug_slave_destroy(struct scsi_device *sdp)
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5350  {
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5351  	struct sdebug_dev_info *devip =
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5352  		(struct sdebug_dev_info *)sdp->hostdata;
-a34c4e98367965 FUJITA Tomonori 2008-03-25  5353  
-773642d95b8220 Douglas Gilbert 2016-04-25  5354  	if (sdebug_verbose)
-c1287970f4847a Tomas Winkler   2015-07-28  5355  		pr_info("slave_destroy <%u %u %u %llu>\n",
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5356  		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
-46ab9018f5b07d Wenchao Hao     2023-04-28  5357  
-46ab9018f5b07d Wenchao Hao     2023-04-28 @5358  	debugfs_remove(devip->debugfs_entry);
-                                                                       ^^^^^^^^^^^^^^^^^^^^
-Dereference
+vim +/ret +7880 drivers/scsi/scsi_debug.c
 
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30 @5359  	if (devip) {
-                                                            ^^^^^
-Checked too late.
+70abb3e2434633 Wenchao Hao     2023-04-28  7861  	if (sdebug_timeout_cmd(scp)) {
+70abb3e2434633 Wenchao Hao     2023-04-28  7862  		scmd_printk(KERN_INFO, scp, "timeout command 0x%x\n", opcode);
+70abb3e2434633 Wenchao Hao     2023-04-28  7863  		return 0;
+70abb3e2434633 Wenchao Hao     2023-04-28  7864  	}
+70abb3e2434633 Wenchao Hao     2023-04-28  7865  
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7866  	ret = sdebug_fail_queue_cmd(scp);
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7867  	if (ret) {
+                                                            ^^^
 
-25985edcedea63 Lucas De Marchi 2011-03-30  5360  		/* make this slot available for re-use */
-c2248fc974df7b Douglas Gilbert 2014-11-24  5361  		devip->used = false;
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5362  		sdp->hostdata = NULL;
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5363  	}
-8dea0d02f8bb71 FUJITA Tomonori 2008-03-30  5364  }
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7868  		scmd_printk(KERN_INFO, scp, "fail queue command 0x%x with 0x%x\n",
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7869  				opcode, ret);
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7870  		return ret;
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7871  	}
+b3f5d28c11bee2 Wenchao Hao     2023-04-28  7872  
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7873  	if (sdebug_fail_cmd(scp, &ret, &err)) {
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7874  		scmd_printk(KERN_INFO, scp,
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7875  			"fail command 0x%x with hostbyte=0x%x, "
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7876  			"driverbyte=0x%x, statusbyte=0x%x, "
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7877  			"sense_key=0x%x, asc=0x%x, asq=0x%x\n",
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7878  			opcode, err.host_byte, err.driver_byte,
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7879  			err.status_byte, err.sense_key, err.asc, err.asq);
+ef1cd466d439a1 Wenchao Hao     2023-04-28 @7880  		return ret;
+
+ret is success.
+
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7881  	}
+ef1cd466d439a1 Wenchao Hao     2023-04-28  7882  
+3a90a63d02b8b7 Douglas Gilbert 2020-07-12  7883  	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
+3a90a63d02b8b7 Douglas Gilbert 2020-07-12  7884  		atomic_set(&sdeb_inject_pending, 1);
+3a90a63d02b8b7 Douglas Gilbert 2020-07-12  7885  
+c2248fc974df7b Douglas Gilbert 2014-11-24  7886  	na = oip->num_attached;
+c2248fc974df7b Douglas Gilbert 2014-11-24  7887  	r_pfp = oip->pfp;
 
 -- 
 0-DAY CI Kernel Test Service
