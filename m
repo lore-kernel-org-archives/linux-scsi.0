@@ -2,114 +2,138 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E61AC7EE22
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 05:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7861C77B7C
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 10:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236538AbjEKFXr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 01:23:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43752 "EHLO
+        id S234030AbjEKKKP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 06:10:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236869AbjEKFXh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 01:23:37 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B28084EFF;
-        Wed, 10 May 2023 22:22:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683782578; x=1715318578;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=YQILfujNddGsJDn6gNgiGkyToy216wtJuXCwsYZYlRU=;
-  b=Y2M0D5j7A0dhgFXUFe6H4aeCFDPPC4kFK0EwSDk0G1sU7yyFLim8h09J
-   vNe/mRY8ZrT7kGi3pFfnIKjdm6LI1R45uvMp8i8MuFWcldA++BJH2LYT4
-   N0JLqL4VMyz9GGaIYU3eotKQmYsj5rZjMMiOEzYmRJPINmZ3rfbY46GGC
-   m8Y4SIvs7VZw4SRTwaoxO+D1TPjRj0dSmWzDsN8De/dd43RL8m6pfj0Cm
-   bujzfGRzNI1Cm/zRlUfsB1FeWeul1Cgyg81fPj9upQ7Vq42dwWDDucsSk
-   fwqKXULIqkEAFxdoCSv9yhMuFK9cU6INfVkYH+HyQHKNgRlYJqRF67rIm
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10706"; a="353487834"
-X-IronPort-AV: E=Sophos;i="5.99,266,1677571200"; 
-   d="scan'208";a="353487834"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 May 2023 22:22:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10706"; a="873819393"
-X-IronPort-AV: E=Sophos;i="5.99,266,1677571200"; 
-   d="scan'208";a="873819393"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.251.218.125])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 May 2023 22:22:30 -0700
-Message-ID: <08bc0186-4684-2321-65d8-4c2ae622acea@intel.com>
-Date:   Thu, 11 May 2023 08:22:26 +0300
+        with ESMTP id S232984AbjEKKKN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 06:10:13 -0400
+X-Greylist: delayed 487 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 11 May 2023 03:10:10 PDT
+Received: from forward205c.mail.yandex.net (forward205c.mail.yandex.net [178.154.239.216])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D29D66E9D
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 03:10:10 -0700 (PDT)
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d100])
+        by forward205c.mail.yandex.net (Yandex) with ESMTP id 424144D322
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 13:02:03 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net [IPv6:2a02:6b8:c2a:210:0:640:45a:0])
+        by forward100a.mail.yandex.net (Yandex) with ESMTP id E6738463CC
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 13:01:59 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id x1TnbGqDfCg0-vopUR7Vj;
+        Thu, 11 May 2023 13:01:59 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=scst.dev; s=mail; t=1683799319;
+        bh=JjxnK6IrmJ8ybZqL0CBMYujCK1ZS/E+3BK8/5493khY=;
+        h=Subject:From:To:Date:Message-ID;
+        b=dIpdOH9YI5iEBeSBQPMF8jdB8T+RpLCpASECeJfJIsNb8jFDvOb9V8ZOcsRFkqo0H
+         6u3Qaju9g6kfBLiYP50Aql40JApiT77m4YSF0r/SmN9B2NHZtAo6N4PX1fDYFbcR5f
+         ERVyPSfH2r7Zn1EXdVnqqLon/Y6J2mRcLSudYn3I=
+Authentication-Results: mail-nwsmtp-smtp-production-main-55.vla.yp-c.yandex.net; dkim=pass header.i=@scst.dev
+Message-ID: <32b0bb9f-ba6a-e9f1-e779-5af2e115c67a@scst.dev>
+Date:   Thu, 11 May 2023 13:02:41 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.11.0
-Subject: Re: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        kwangwon.min@samsung.com
-References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
- <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
+ Thunderbird/102.11.0
 Content-Language: en-US
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     linux-scsi@vger.kernel.org
+From:   Gleb Chesnokov <gleb.chesnokov@scst.dev>
+Subject: [PATCH] qla2xxx: Fix NULL pointer dereference in target mode
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/05/23 11:24, Kiwoong Kim wrote:
-> With auto hibern8 enabled, UIC could be working
-> for a while to process a hibern8 operation and HCI
-> reports UIC not ready for a short term through HCS.UCRDY.
-> And UFS driver can't recognize the operation.
-> UFSHCI spec specifies UCRDY like this:
-> whether the host controller is ready to process UIC COMMAND
-> 
-> The 'ready' could be seen as many different meanings. If the meaning
-> includes not processing any request from HCI, processing a hibern8
-> operation can be 'not ready'. In this situation, the driver needs to
-> wait until the operations is completed.
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> ---
->  drivers/ufs/core/ufshcd.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 96ce6af..fc79539 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2368,7 +2368,18 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
->   */
->  static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
->  {
-> -	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
-> +	ktime_t timeout = ktime_add_ms(ktime_get(), UIC_CMD_TIMEOUT);
-> +	u32 val = 0;
-> +
-> +	do {
-> +		val = ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
-> +			UIC_COMMAND_READY;
-> +		if (val)
-> +			break;
-> +		usleep_range(500, 1000);
+When target mode is enabled, the pci_irq_get_affinity() function may return
+a NULL value in qla_mapq_init_qp_cpu_map() due to the qla24xx_enable_msix()
+code that handles IRQ settings for target mode. This leads to a crash due
+to a NULL pointer dereference.
 
-Pedantically, the sleep probably needs to be less than the
-auto-hibernate idle timer period?
+This patch fixes the issue by adding a check for the NULL value returned
+by pci_irq_get_affinity() and introducing a 'cpu_mapped' boolean flag to
+the qla_qpair structure, ensuring that the qpair's CPU affinity is updated
+when it has not been mapped to a CPU.
 
-> +	} while (ktime_before(ktime_get(), timeout));
+Fixes: 1d201c81d4cc ("scsi: qla2xxx: Select qpair depending on which CPU 
+post_cmd() gets called")
 
-read_poll_timeout() would be a better choice for I/O polling
+Signed-off-by: Gleb Chesnokov <gleb.chesnokov@scst.dev>
+---
+  drivers/scsi/qla2xxx/qla_def.h    | 1 +
+  drivers/scsi/qla2xxx/qla_init.c   | 3 +++
+  drivers/scsi/qla2xxx/qla_inline.h | 6 ++++++
+  drivers/scsi/qla2xxx/qla_isr.c    | 3 +++
+  4 files changed, 13 insertions(+)
 
-> +
-> +	return val ? true : false;
->  }
->  
->  /**
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index df5e5b7fdcfe..84aa3571be6d 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3796,6 +3796,7 @@ struct qla_qpair {
+      uint64_t retry_term_jiff;
+      struct qla_tgt_counters tgt_counters;
+      uint16_t cpuid;
++    bool cpu_mapped;
+      struct qla_fw_resources fwres ____cacheline_aligned;
+      struct  qla_buf_pool buf_pool;
+      u32    cmd_cnt;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c 
+b/drivers/scsi/qla2xxx/qla_init.c
+index ec0423ec6681..1a955c3ff3d6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -9426,6 +9426,9 @@ struct qla_qpair *qla2xxx_create_qpair(struct 
+scsi_qla_host *vha, int qos,
+          qpair->rsp->req = qpair->req;
+          qpair->rsp->qpair = qpair;
 
++        if (!qpair->cpu_mapped)
++            qla_cpu_update(qpair, raw_smp_processor_id());
++
+          if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
+              if (ha->fw_attributes & BIT_4)
+                  qpair->difdix_supported = 1;
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h 
+b/drivers/scsi/qla2xxx/qla_inline.h
+index cce6e425c121..a6e2c7d4ff87 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -538,12 +538,18 @@ qla_mapq_init_qp_cpu_map(struct qla_hw_data *ha,
+
+      if (!ha->qp_cpu_map)
+          return;
++
+      mask = pci_irq_get_affinity(ha->pdev, msix->vector_base0);
++    if (!mask)
++        return;
++
+      qpair->cpuid = cpumask_first(mask);
+      for_each_cpu(cpu, mask) {
+          ha->qp_cpu_map[cpu] = qpair;
+      }
+      msix->cpuid = qpair->cpuid;
++
++    qpair->cpu_mapped = true;
+  }
+
+  static inline void
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 71feda2cdb63..245e3a5d81fd 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3770,6 +3770,9 @@ void qla24xx_process_response_queue(struct 
+scsi_qla_host *vha,
+
+      if (rsp->qpair->cpuid != smp_processor_id() || 
+!rsp->qpair->rcv_intr) {
+          rsp->qpair->rcv_intr = 1;
++
++        if (!rsp->qpair->cpu_mapped)
++            qla_cpu_update(rsp->qpair, raw_smp_processor_id());
+      }
+
+  #define __update_rsp_in(_is_shadow_hba, _rsp, _rsp_in)            \
+-- 
+2.40.1
