@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF249C77B75
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 04:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37DA2C77B75
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 04:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239735AbjELEJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 May 2023 00:09:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36730 "EHLO
+        id S239812AbjELEuw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 May 2023 00:50:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbjELEJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 00:09:42 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 910FF4690;
-        Thu, 11 May 2023 21:09:40 -0700 (PDT)
+        with ESMTP id S239720AbjELEus (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 00:50:48 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A3D93C31;
+        Thu, 11 May 2023 21:50:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683864580; x=1715400580;
+  t=1683867045; x=1715403045;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=fcbUHHCvv27Z7cvBWPO4g48FuQrn51hib5BzUZ0vb0w=;
-  b=MumyJsM5ZswYTvuQPKCPX3mSWtNcwEkQS+trNEmRUB2FWDflbQzxQ6pR
-   7FFh175G1q+VxoJNWNo+JLrOErXpyTXALQZ8N8sRy9s4KflONWTmjNPE6
-   K+UJ0Fwuiu5fYcgQBkOmpK9FS8N1AfDyYihp1c7Cueo+YnSbQCP/xIaFU
-   kwNupuPQC5CFqTKAbjpz4mbSqJpi5EEQJ5Lnd93GolVIyp1De0rVAGrZZ
-   lnxcjCSVGeM/7yKRT+tUkqeifbevH9J2y6uS1kWP8J5WzAtQ506Is6lUb
-   jCOrDLYLCguOTR3OfVsgriplisTg0JGJ9avaqnGhvTlunqsERVxDl2ulA
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="414062344"
+  bh=pMFVv1uBIlgnp8wWGKGSzd3x8A+J9J8az3drOkGxukQ=;
+  b=R+mJmvtsl5BMyx0dKC4XfbgmOCauPytjAEVRa+vRTHjhUrK+649t7nfX
+   ZZlECAwqdecJFcdzShmPjtow1k/xj4sJdRmoVi9jaFPUr0FCxJ/tyjuYo
+   LGDrE8kZcd+i/rGKX9oOAJTNeaJ6E0PyVrf6zRIPqYxI/nnYzpNHWbuZ9
+   bOI8X5XsZBn1/O7dheqBIrWReV9I3je8csqcJkgqzTIzu/nBhVpG8tfTk
+   D01aDkDANorcUmBQAJ3H6ZQbaDoD2Q3Il7ctzZb74dbbH7mq2JDmo9tWy
+   7TnvrCXQ5HxDRhndiJ81HiD6p8pR4imWk17s8vc84BOGpmy8qZLZJmtrb
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="330320731"
 X-IronPort-AV: E=Sophos;i="5.99,269,1677571200"; 
-   d="scan'208";a="414062344"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2023 21:09:39 -0700
+   d="scan'208";a="330320731"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2023 21:50:42 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="694077288"
+X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="732883596"
 X-IronPort-AV: E=Sophos;i="5.99,269,1677571200"; 
-   d="scan'208";a="694077288"
+   d="scan'208";a="732883596"
 Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
-  by orsmga007.jf.intel.com with ESMTP; 11 May 2023 21:09:36 -0700
+  by orsmga001.jf.intel.com with ESMTP; 11 May 2023 21:50:37 -0700
 Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1pxK63-0004UI-0U;
-        Fri, 12 May 2023 04:09:35 +0000
-Date:   Fri, 12 May 2023 12:09:11 +0800
+        id 1pxKjk-0004XC-1V;
+        Fri, 12 May 2023 04:50:36 +0000
+Date:   Fri, 12 May 2023 12:50:00 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
@@ -57,7 +57,7 @@ Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         open list <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH v4 4/7] ufs: mcq: Add support for clean up mcq resources
-Message-ID: <202305121123.KOfhO8tv-lkp@intel.com>
+Message-ID: <202305121245.uSA6swAd-lkp@intel.com>
 References: <33fe3d5bd6223d0ca1b5002efb7efc7bb90f3495.1683841772.git.quic_nguyenb@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -81,7 +81,7 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Bao-D-Nguyen/ufs-core-Com
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/33fe3d5bd6223d0ca1b5002efb7efc7bb90f3495.1683841772.git.quic_nguyenb%40quicinc.com
 patch subject: [PATCH v4 4/7] ufs: mcq: Add support for clean up mcq resources
-config: i386-randconfig-a013 (https://download.01.org/0day-ci/archive/20230512/202305121123.KOfhO8tv-lkp@intel.com/config)
+config: x86_64-randconfig-a014 (https://download.01.org/0day-ci/archive/20230512/202305121245.uSA6swAd-lkp@intel.com/config)
 compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
@@ -92,12 +92,12 @@ reproduce (this is a W=1 build):
         git checkout e05a8eb3fd257b04965c2333d4bf0161177ef504
         # save the config file
         mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ufs/core/
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
 
 If you fix the issue, kindly add following tag where applicable
 | Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202305121123.KOfhO8tv-lkp@intel.com/
+| Link: https://lore.kernel.org/oe-kbuild-all/202305121245.uSA6swAd-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
