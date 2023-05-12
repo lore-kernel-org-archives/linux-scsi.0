@@ -2,109 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D09FC7EE24
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 May 2023 22:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C758C77B7F
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 00:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239478AbjEKWKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 18:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59674 "EHLO
+        id S239561AbjELA4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 May 2023 20:56:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239175AbjEKWKL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 18:10:11 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57841869A
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 15:10:03 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-64395e741fcso9490742b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 15:10:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1683843003; x=1686435003;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ooac5tL+mseyTN9L+x1m+1D+z3zZPNRSrEyDHL8CuWc=;
-        b=JXR/xm0E+UUFmWf1wRMZgI6VaUWPK5W5tDN0vIDM2B0+aOQUWkZiPgoMyBO8V6cyke
-         HPakTwy7CgGnYSqHxcjTXah9Qt1GrRy+PSwbmabFLI+1TM111+Slg9bRn3Yhxy1XMF2z
-         G0R4D24TLDlxpvCnb1z6VM2qFUEpZO95MCunk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683843003; x=1686435003;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ooac5tL+mseyTN9L+x1m+1D+z3zZPNRSrEyDHL8CuWc=;
-        b=dqNtKiRATtvLg4YTszpnBu+fT2WyRIWrhSXSmZk5NM/NncXAn7ArUZgBJHYedqQnL0
-         16RKODDLqtFTzcpC59pn4Jr1UA+Pk232MSqdl6dUPbbs6gcmABfh2K1kcLJnkjvGprjo
-         XT558I2lJNVBfEFW70we1rHYGVrxjr8FhjW2xTDeVV2de92jZ9oAQV0e8//COtAe3ofA
-         KJzGVy+4Tleop03+p4fmKsV8OoQCk1zkV9M/dBIPbfv2G6GMfUBoep0S/3eh2+3AJaIr
-         igAlViAnfLc3sK1QMuwiFKhaYoYw/X8eE1zJ15osBuPtdgPv3ykInNZrQGsLvDbuDQt5
-         Q9lg==
-X-Gm-Message-State: AC+VfDz0kxLVaf6RNbT7FjnE5Zdx9wdHF39/9jZqXEqkUiH8kWdV4h+x
-        Y76zmLfCMI0TbMJlNoP8W/ywGg==
-X-Google-Smtp-Source: ACHHUZ4aUI8ISpA8NkZd6SJuB882GbxNnfGq9BATmlyfEHldSuNSzQ43VWj3WFDwdyJ0waq/rtxjPg==
-X-Received: by 2002:a05:6a00:8c5:b0:647:4dee:62a4 with SMTP id s5-20020a056a0008c500b006474dee62a4mr14029138pfu.34.1683843002834;
-        Thu, 11 May 2023 15:10:02 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id x20-20020aa793b4000000b0063d2bb0d107sm5803828pff.64.2023.05.11.15.10.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 May 2023 15:10:02 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: [PATCH] scsi: megaraid_sas: Convert union megasas_sgl to flex-arrays
-Date:   Thu, 11 May 2023 15:10:00 -0700
-Message-Id: <20230511220957.never.919-kees@kernel.org>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229654AbjELA4c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 20:56:32 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 655EF4C1F
+        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 17:56:30 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230512005626epoutp045edf3a176479968449254b445149f3de~eP16-TUT21841418414epoutp045
+        for <linux-scsi@vger.kernel.org>; Fri, 12 May 2023 00:56:26 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230512005626epoutp045edf3a176479968449254b445149f3de~eP16-TUT21841418414epoutp045
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1683852986;
+        bh=UWdqvj4jqUiBJVcjC49V1+iOASf5bvIpCUi81ez4Mm0=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=XLw5a5YTVBVgN9/jbvwLyOJdbnhlM9mG6UYiN5kEHY5IZMSVAPGMFH+TQ4w/T2ZNS
+         JsvONVlPY292L5CPT8NQ4XOi56UhcULnT4RiKo5iFgXFoMHBev8UtMvz6JpyBX7mYm
+         xrcjHya7IokwjDmBbVTjfu9hBqBIWbBbnz/1kMqg=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230512005626epcas2p1318ca098f6935858dca2440be16a1dc7~eP16znIP82227622276epcas2p1S;
+        Fri, 12 May 2023 00:56:26 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.90]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4QHVhB0yW2z4x9Q7; Fri, 12 May
+        2023 00:56:26 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        EC.4C.22936.8BE8D546; Fri, 12 May 2023 09:56:24 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230512005624epcas2p3fcc75e005e49233579b4ac91ee6ebd87~eP15AbKEp1930919309epcas2p3U;
+        Fri, 12 May 2023 00:56:24 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230512005624epsmtrp2e042110166fbc71fcb08948670c1a8ad~eP14_yXYg1528415284epsmtrp2Y;
+        Fri, 12 May 2023 00:56:24 +0000 (GMT)
+X-AuditID: b6c32a48-6d3fa70000005998-30-645d8eb87200
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C0.C3.28392.8BE8D546; Fri, 12 May 2023 09:56:24 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.38.105]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230512005624epsmtip20d9a215077b948c7ae41ac0951274d25~eP140X0um3016930169epsmtip2O;
+        Fri, 12 May 2023 00:56:24 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        <linux-scsi@vger.kernel.org>
+In-Reply-To: <08bc0186-4684-2321-65d8-4c2ae622acea@intel.com>
+Subject: RE: [RFC PATCH v1] ufs: poll HCS.UCRDY before issuing a UIC command
+Date:   Fri, 12 May 2023 09:56:24 +0900
+Message-ID: <006701d9846c$92f5b190$b8e114b0$@samsung.com>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1525; h=from:subject:message-id; bh=LtOldvtOS7BP2znGslCZolBglC52ivG2kUh4xsBr7gw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBkXWe4srTr9P0R2BfZ0l3zZwW7FDKgoLhejYjQrjIf E1DhPjSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZF1nuAAKCRCJcvTf3G3AJq5ID/ 0Y3B0fKlu1yboIdHGvoWREvQu7tbf7nV5Z41kc6P+Ojp9TNpFBIlG96li90StqxGhYgOIEkFSYH3l4 Wi2Yp/ZCkyNU+sYXJzElh/YaIzN1A6Lr4VmwQiuQaNPZImUSXDAK50ZtSe/bQOQA8dOhIlYn5UmsRX LT/qVO8M6go9nbw95DXaRuzKNy5quQ01yWS0WCZX6lfWOA3njEY4GdoIZctuxniV+tIbHQv4IXVwIp +fq1rperKy9ZE+7FnEBZ1MmQBk3XLJsk4eaO+QPEUr2g4z5U6VojjqnHwEqqcvixz0YGxl/iBe8Xap eIFLGGwEXeTl947aab86Qm1AnzMqCVKj1Wtln0muf7DGwuNOJkw6WFOLtIUFdur7GnWp7gyLDC939M fXuAQhCxIuWbzYU1hV3IjUs/PA4UufdBvofOg2+r9bje5PCZrSUXOT4XQkHwZC2OSrWva/mIQ5axn0 PDQA2r5xZuXYuDrgLookOhX0CfYleymhaYpFKZovIrPbBOb4S1WcHe/12vLSzMwfA4673xs9l8yATc e9gydMjqmpJ5+JfaKDyr8bUWxtR6omvsi0Z+YxP0HJSwm5MkHvpRXwi9h/Jg8M4LI3CJD0t5JonWy/ jLrcHchurIWO129uc/Vz5ExJ0UILUdacwQRf9o89nhNKx5C8TvKolC8Ep7Jg==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQGTQ//Bn9HITMBER2fQmcGpYd1IAgEVn6BsAb8Rfw2vy6shAA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrDKsWRmVeSWpSXmKPExsWy7bCmhe6OvtgUgydvLSxOPlnDZtF9fQeb
+        A5PH4j0vmTw+b5ILYIrKtslITUxJLVJIzUvOT8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21
+        VXLxCdB1y8wBGq+kUJaYUwoUCkgsLlbSt7Mpyi8tSVXIyC8usVVKLUjJKTAv0CtOzC0uzUvX
+        y0stsTI0MDAyBSpMyM64uvIWY0E7U8XKXeYNjOcZuxg5OSQETCSO7Z/IBmILCexglNh63K+L
+        kQvI/sQoMfXnESYI5zOjxNKzv5lgOr7s2sUGkdjFKLFn4z8o5yWjRMe268wgVWwC2hLTHu5m
+        BbFFBPwljsy6BLaPU8BWYtvpA2CThAV8JJYebAGzWQRUJa6/WA/WyytgKXG7t5kNwhaUODnz
+        CQuIzSwgL7H97RxmiCsUJH4+XQY130li+dcpbBA1IhKzO9uYQQ6SEDjFLnFl30Sos10k5n35
+        AtUsLPHq+BZ2CFtK4vO7vUDNHEB2tsSehWIQ4QqJxdPeskDYxhKznrUzgpQwC2hKrN+lD1Gt
+        LHHkFtRlfBIdh/+yQ4R5JTrahCAalSV+TZoMDWhJiZk370Dt9JC49+cI4wRGxVlIfpyF5MdZ
+        SH6ZhbB3ASPLKkax1ILi3PTUYqMCE3hMJ+fnbmIEJzstjx2Ms99+0DvEyMTBeIhRgoNZSYT3
+        7ZLoFCHelMTKqtSi/Pii0pzU4kOMpsBQn8gsJZqcD0y3eSXxhiaWBiZmZobmRqYG5krivB87
+        lFOEBNITS1KzU1MLUotg+pg4OKUamNgsf/JlyDc9mydhNi/CoMWx7L236gQ3mxA55ks+9max
+        2/Y8SpFJ7+N+mXF958X/k7bFxP3RyRPV2u/03OE08yLejH/CTQF9Xbt+VtjkRj8vatosMy3+
+        nuNKjdY7R47crv/4qni+/PFX01Z02cuFPdee9PGBf/kM/Zk3IypiGr42K/ons3sLrbp/Vufv
+        zSnO+w8fMa/MMIm+uEFxsvXXxif3CwPC+DesqpWdwS9bWPv9wqwnF/+un6ndXFY3O/qYTO91
+        U6eS/qSI9jhpk5evK7b/YM17nuUaZnX9hduFqYV33eds//lMYGNUn44c73afPT+VOWIOPBJi
+        THsgJ5LJKbyGY94Ur5lT+DcdlVu6RImlOCPRUIu5qDgRAARjQKH/AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrHLMWRmVeSWpSXmKPExsWy7bCSvO6OvtgUg6k31C1OPlnDZtF9fQeb
+        A5PH4j0vmTw+b5ILYIrisklJzcksSy3St0vgyri68hZjQTtTxcpd5g2M5xm7GDk5JARMJL7s
+        2sUGYgsJ7GCUmLEnHyIuKXFi53OoGmGJ+y1HWLsYuYBqnjNKTNyxESzBJqAtMe3hblYQW0TA
+        X+LIrEuMEEUnGSUuLDjPBJLgFLCV2Hb6AJgtLOAjsfRgC5jNIqAqcf3FemYQm1fAUuJ2bzMb
+        hC0ocXLmExYQmxloQe/DVkYIW15i+9s5zBAXKUj8fLoMarGTxPKvU9ggakQkZne2MU9gFJqF
+        ZNQsJKNmIRk1C0nLAkaWVYySqQXFuem5xYYFRnmp5XrFibnFpXnpesn5uZsYwUGupbWDcc+q
+        D3qHGJk4GA8xSnAwK4nwvl0SnSLEm5JYWZValB9fVJqTWnyIUZqDRUmc90LXyXghgfTEktTs
+        1NSC1CKYLBMHp1QDU9zahTKXlGoa26wXFr5b4/pXZ9Kuw9NeH/4/8cmGrwzmEd7PfRdcuf1R
+        u+Hj4wMtevMT57N/nMHvxVrzYHs20x6Zia/fGARvPLdzg1JaYAlvcjvD+j05OStO131J/yHv
+        5LnhBcu21cmtJydaLJn5/MHpGus6jRr7HpmGe/y7V/XesI596T4rlYHFyO+Kyq/9l68u0Lng
+        H/Gw1f1qjO/uY/8M8t5eWZqlmjp1+o6zhxVtLs7+JnaP+2zVDB+L00beF3bNPDlre/lBMZPQ
+        PA5RoyOfZc9H/BJ7OL/v26XyaN0ES5c3R/iuCGzKu/LuYPiBqU90jGdZM0YxVny5eEZvnvQE
+        xtTgYJuoxWlxr09dV+ZUYinOSDTUYi4qTgQAcSdMIOECAAA=
+X-CMS-MailID: 20230512005624epcas2p3fcc75e005e49233579b4ac91ee6ebd87
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb
+References: <CGME20230509083312epcas2p375f77d18a9026f7d263750baf9c9a5bb@epcas2p3.samsung.com>
+        <1683620674-160173-1-git-send-email-kwmad.kim@samsung.com>
+        <08bc0186-4684-2321-65d8-4c2ae622acea@intel.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the ongoing effort to replace all fake flexible arrays with true
-flexible arrays, replace the sge32, sge64, and sge_skinny members of
-union megasas_sgl with true flexible arrays. No binary differences are
-seen after this change; sizes were already being manually calculated
-using the member struct sizes directly.
+> Pedantically, the sleep probably needs to be less than the auto-hibernate
+> idle timer period?
+> 
+> > +	} while (ktime_before(ktime_get(), timeout));
+> 
+> read_poll_timeout() would be a better choice for I/O polling
 
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Gustavo A. R. Silva <gustavoars@kernel.org>
-Cc: megaraidlinux.pdl@broadcom.com
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/scsi/megaraid/megaraid_sas.h | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+It makes sense. Got it. Thanks.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 63bac3684c19..3554f6b07727 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1722,11 +1722,9 @@ struct megasas_sge_skinny {
- } __packed;
- 
- union megasas_sgl {
--
--	struct megasas_sge32 sge32[1];
--	struct megasas_sge64 sge64[1];
--	struct megasas_sge_skinny sge_skinny[1];
--
-+	DECLARE_FLEX_ARRAY(struct megasas_sge32, sge32);
-+	DECLARE_FLEX_ARRAY(struct megasas_sge64, sge64);
-+	DECLARE_FLEX_ARRAY(struct megasas_sge_skinny, sge_skinny);
- } __attribute__ ((packed));
- 
- struct megasas_header {
--- 
-2.34.1
 
