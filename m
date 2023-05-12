@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76D4DC77B7C
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 06:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53C61C77B7C
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 06:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239756AbjELGar (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 May 2023 02:30:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51278 "EHLO
+        id S240051AbjELGat (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 May 2023 02:30:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240028AbjELGa3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 02:30:29 -0400
+        with ESMTP id S239990AbjELGam (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 02:30:42 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C2426E97;
-        Thu, 11 May 2023 23:30:17 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34C4nKg9031752;
-        Fri, 12 May 2023 06:29:50 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE19D6A78;
+        Thu, 11 May 2023 23:30:20 -0700 (PDT)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34C6NmXh004410;
+        Fri, 12 May 2023 06:29:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=YjRs36zs23+wsk0UH3qudaf3FDkE8BSi2qMzsXRIUMI=;
- b=A6+KexG409e2QDsF8snqzFBOuD0MRQySioCC4F2B7APvewC403JwOQSgy1lCBHXDPXyo
- VjjRyyGN4psi26F1oVuw6te/p5zkJxzdkb7VNRzFpaFqndjpcdhHnxHJw8lHhV2ixlCj
- 9b7VFxqG33vZnEPNNUnqBRBKQfr+VbrC1ucn0hzvVwMPjdeo38+p2z6f98hbtK6chB61
- L7BB1ZUuUgbwzu1tzpk2hY/94SHAvnauzJqq+pGVSJT/WDMEMa1RaHWaGa8fwIULkhzD
- d1+LcYJo2mSuOlRF2QSlW3US6fvCp7v7DD4ArPbpNUL7kyiGBhDOPAud4+zFqjSz+QIm Kw== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qhes207k0-1
+ bh=es6eYtFN4TvEiHU9fqntjiDXORLk7kyO352msyDkqo4=;
+ b=YB3ty0O+Gptk66s2f0/2k4/KD8z3MaQEbGkS0/Ob1PkLZ77H44NMmSxiHB8Lv8RCWR49
+ SyJtKAEOy6Yd7zyj97Q9w0Jr83MF79z6/ejrgv5/FydibJWjuQVmsux1pDjLpvzs0A2L
+ k/yyk36P05m5jQshvAznAh/caLXB5asQ5hVJLNuzmI7OnBDct7i7vM8gRQP6UMmrJsj7
+ fKULlyrxBzPTRBxZt+B7vfo3bdeeCAU/t2lPbrnpaHYpSG/Y4x3PK58yJFov+9nWx19d
+ lT7fljQ5D6+5jL/aXwPjc1HMLj1EwfAKyabxV7TK6jl3NK1GvVS89zqzJg3WskgbmOSO XQ== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qh5g99858-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 12 May 2023 06:29:50 +0000
+        Fri, 12 May 2023 06:29:11 +0000
 Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34C6TnAQ026677
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34C6TAKH013428
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 12 May 2023 06:29:49 GMT
+        Fri, 12 May 2023 06:29:10 GMT
 Received: from stor-berry.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Thu, 11 May 2023 23:29:48 -0700
+ 15.2.986.42; Thu, 11 May 2023 23:29:09 -0700
 From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
         <bvanassche@acm.org>, <mani@kernel.org>,
@@ -48,11 +48,12 @@ CC:     <linux-scsi@vger.kernel.org>,
         "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Eric Biggers <ebiggers@google.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 4/7] ufs: mcq: Add support for clean up mcq resources
-Date:   Thu, 11 May 2023 23:28:51 -0700
-Message-ID: <5cf9b73b2de151e941de697b17410f282b35e548.1683872601.git.quic_nguyenb@quicinc.com>
+Subject: [PATCH v5 1/7] ufs: core: Combine 32-bit command_desc_base_addr_lo/hi
+Date:   Thu, 11 May 2023 23:28:48 -0700
+Message-ID: <7dec3a486501d9e30dfb5a70eed7c7661187b8c9.1683872601.git.quic_nguyenb@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1683872601.git.quic_nguyenb@quicinc.com>
 References: <cover.1683872601.git.quic_nguyenb@quicinc.com>
@@ -63,165 +64,73 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: r4sztxSZh0-kc7-sdDpUi8V6uhASd0Kw
-X-Proofpoint-GUID: r4sztxSZh0-kc7-sdDpUi8V6uhASd0Kw
+X-Proofpoint-GUID: T3Z7-wR8YYRsPpnSMQW2Y2BXxbsc9pNu
+X-Proofpoint-ORIG-GUID: T3Z7-wR8YYRsPpnSMQW2Y2BXxbsc9pNu
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-12_03,2023-05-05_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
- impostorscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0 adultscore=0
- mlxscore=0 suspectscore=0 mlxlogscore=999 phishscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
+ lowpriorityscore=0 mlxlogscore=999 mlxscore=0 clxscore=1015
+ priorityscore=1501 spamscore=0 impostorscore=0 malwarescore=0
+ suspectscore=0 adultscore=0 bulkscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2304280000
  definitions=main-2305120055
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update ufshcd_clear_cmd() to clean up the mcq resources similar
-to the function ufshcd_utrl_clear() does for sdb mode.
-
-Update ufshcd_try_to_abort_task() to support mcq mode so that
-this function can be invoked in either mcq or sdb mode.
+The UTP command descriptor base address is a 57-bit field in the
+UTP transfer request descriptor. Combine the two 32-bit
+command_desc_base_addr_lo/hi fields into a 64-bit for better handling
+of this field.
 
 Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 ---
- drivers/ufs/core/ufshcd-priv.h |  1 +
- drivers/ufs/core/ufshcd.c      | 74 +++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 66 insertions(+), 9 deletions(-)
+ drivers/ufs/core/ufshcd.c | 6 ++----
+ include/ufs/ufshci.h      | 6 ++----
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 40727e8..3f518e9 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -78,6 +78,7 @@ struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 				       struct ufs_hw_queue *hwq);
- 
-+bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd);
- int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag);
- 
- #define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 140ab15..e9d30c3 100644
+index 9434328..5527d45 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -3005,6 +3005,26 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
- }
+@@ -3875,10 +3875,8 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 		/* Configure UTRD with command descriptor base address */
+ 		cmd_desc_element_addr =
+ 				(cmd_desc_dma_addr + (cmd_desc_size * i));
+-		utrdlp[i].command_desc_base_addr_lo =
+-				cpu_to_le32(lower_32_bits(cmd_desc_element_addr));
+-		utrdlp[i].command_desc_base_addr_hi =
+-				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
++		utrdlp[i].command_desc_base_addr =
++				cpu_to_le64(cmd_desc_element_addr);
  
- /*
-+ * Check with the block layer if the command is inflight
-+ * @cmd: command to check.
-+ *
-+ * Returns true if command is inflight; false if not.
-+ */
-+bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq;
-+
-+	if (!cmd)
-+		return false;
-+
-+	rq = scsi_cmd_to_rq(cmd);
-+	if (!blk_mq_request_started(rq))
-+		return false;
-+
-+	return true;
-+}
-+
-+/*
-  * Clear the pending command in the controller and wait until
-  * the controller confirms that the command has been cleared.
-  * @hba: per adapter instance
-@@ -3012,8 +3032,23 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
-  */
- static int ufshcd_clear_cmd(struct ufs_hba *hba, u32 task_tag)
- {
--	unsigned long flags;
- 	u32 mask = 1U << task_tag;
-+	unsigned long flags;
-+	int err;
-+
-+	if (is_mcq_enabled(hba)) {
-+		/*
-+		 * MCQ mode. Clean up the MCQ resources similar to
-+		 * what the ufshcd_utrl_clear() does for SDB mode.
-+		 */
-+		err = ufshcd_mcq_sq_cleanup(hba, task_tag);
-+		if (err) {
-+			dev_err(hba->dev, "%s: failed tag=%d. err=%d\n",
-+				__func__, task_tag, err);
-+			return err;
-+		}
-+		return 0;
-+	}
+ 		/* Response upiu and prdt offset should be in double words */
+ 		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 11424bb..7c5a76b 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -503,8 +503,7 @@ struct request_desc_header {
+ /**
+  * struct utp_transfer_req_desc - UTP Transfer Request Descriptor (UTRD)
+  * @header: UTRD header DW-0 to DW-3
+- * @command_desc_base_addr_lo: UCD base address low DW-4
+- * @command_desc_base_addr_hi: UCD base address high DW-5
++ * @command_desc_base_addr: UCD base address DW 4-5
+  * @response_upiu_length: response UPIU length DW-6
+  * @response_upiu_offset: response UPIU offset DW-6
+  * @prd_table_length: Physical region descriptor length DW-7
+@@ -516,8 +515,7 @@ struct utp_transfer_req_desc {
+ 	struct request_desc_header header;
  
- 	/* clear outstanding transaction before retry */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -7384,6 +7419,20 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
- 			 */
- 			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
- 				__func__, tag);
-+			if (is_mcq_enabled(hba)) {
-+				/* MCQ mode */
-+				if (ufshcd_cmd_inflight(lrbp->cmd)) {
-+					/* sleep for max. 200us same delay as in SDB mode */
-+					usleep_range(100, 200);
-+					continue;
-+				}
-+				/* command completed already */
-+				dev_err(hba->dev, "%s: cmd at tag=%d is cleared.\n",
-+					__func__, tag);
-+				goto out;
-+			}
-+
-+			/* Single Doorbell Mode */
- 			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 			if (reg & (1 << tag)) {
- 				/* sleep for max. 200us to stabilize */
-@@ -7449,13 +7498,16 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+ 	/* DW 4-5*/
+-	__le32  command_desc_base_addr_lo;
+-	__le32  command_desc_base_addr_hi;
++	__le64  command_desc_base_addr;
  
- 	ufshcd_hold(hba, false);
--	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	/* If command is already aborted/completed, return FAILED. */
--	if (!(test_bit(tag, &hba->outstanding_reqs))) {
--		dev_err(hba->dev,
--			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
--			__func__, tag, hba->outstanding_reqs, reg);
--		goto release;
-+
-+	if (!is_mcq_enabled(hba)) {
-+		reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+		if (!test_bit(tag, &hba->outstanding_reqs)) {
-+			/* If command is already aborted/completed, return FAILED. */
-+			dev_err(hba->dev,
-+				"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
-+				__func__, tag, hba->outstanding_reqs, reg);
-+			goto release;
-+		}
- 	}
- 
- 	/* Print Transfer Request of aborted task */
-@@ -7480,7 +7532,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	}
- 	hba->req_abort_count++;
- 
--	if (!(reg & (1 << tag))) {
-+	if (!is_mcq_enabled(hba) && !(reg & (1 << tag))) {
-+		/* only execute this code in single doorbell mode */
- 		dev_err(hba->dev,
- 		"%s: cmd was completed, but without a notifying intr, tag = %d",
- 		__func__, tag);
-@@ -7506,6 +7559,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto release;
- 	}
- 
-+	if (is_mcq_enabled(hba))
-+		goto release;
-+
- 	/* Skip task abort in case previous aborts failed and report failure */
- 	if (lrbp->req_abort_skip) {
- 		dev_err(hba->dev, "%s: skipping abort\n", __func__);
+ 	/* DW 6 */
+ 	__le16  response_upiu_length;
 -- 
 2.7.4
 
