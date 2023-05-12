@@ -2,111 +2,232 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8B7C77B7C
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 02:58:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF249C77B75
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 04:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239799AbjELC6W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 May 2023 22:58:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44126 "EHLO
+        id S239735AbjELEJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 May 2023 00:09:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231229AbjELC6V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2023 22:58:21 -0400
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB91F10CE
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2023 19:58:18 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 2C1F9E19FB;
-        Fri, 12 May 2023 02:58:18 +0000 (UTC)
-Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 17618609F5;
-        Fri, 12 May 2023 02:58:18 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
-        with ESMTP id 7H3GxO9oAgWa; Fri, 12 May 2023 02:58:17 +0000 (UTC)
-Received: from [192.168.48.17] (host-192.252-165-26.dyn.295.ca [192.252.165.26])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 4671D60506;
-        Fri, 12 May 2023 02:58:16 +0000 (UTC)
-Message-ID: <368d06ff-889c-ed05-8ecc-e25e99817465@interlog.com>
-Date:   Thu, 11 May 2023 22:58:16 -0400
+        with ESMTP id S229547AbjELEJm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 00:09:42 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 910FF4690;
+        Thu, 11 May 2023 21:09:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683864580; x=1715400580;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=fcbUHHCvv27Z7cvBWPO4g48FuQrn51hib5BzUZ0vb0w=;
+  b=MumyJsM5ZswYTvuQPKCPX3mSWtNcwEkQS+trNEmRUB2FWDflbQzxQ6pR
+   7FFh175G1q+VxoJNWNo+JLrOErXpyTXALQZ8N8sRy9s4KflONWTmjNPE6
+   K+UJ0Fwuiu5fYcgQBkOmpK9FS8N1AfDyYihp1c7Cueo+YnSbQCP/xIaFU
+   kwNupuPQC5CFqTKAbjpz4mbSqJpi5EEQJ5Lnd93GolVIyp1De0rVAGrZZ
+   lnxcjCSVGeM/7yKRT+tUkqeifbevH9J2y6uS1kWP8J5WzAtQ506Is6lUb
+   jCOrDLYLCguOTR3OfVsgriplisTg0JGJ9avaqnGhvTlunqsERVxDl2ulA
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="414062344"
+X-IronPort-AV: E=Sophos;i="5.99,269,1677571200"; 
+   d="scan'208";a="414062344"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2023 21:09:39 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="694077288"
+X-IronPort-AV: E=Sophos;i="5.99,269,1677571200"; 
+   d="scan'208";a="694077288"
+Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
+  by orsmga007.jf.intel.com with ESMTP; 11 May 2023 21:09:36 -0700
+Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pxK63-0004UI-0U;
+        Fri, 12 May 2023 04:09:35 +0000
+Date:   Fri, 12 May 2023 12:09:11 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        linux-scsi@vger.kernel.org,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 4/7] ufs: mcq: Add support for clean up mcq resources
+Message-ID: <202305121123.KOfhO8tv-lkp@intel.com>
+References: <33fe3d5bd6223d0ca1b5002efb7efc7bb90f3495.1683841772.git.quic_nguyenb@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH] scsi: sd: Avoid sending an INQUIRY if the page is not
- supported
-Content-Language: en-CA
-To:     Benjamin Block <lkml@mageta.org>,
-        Brian Bunker <brian@purestorage.com>
-Cc:     Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org,
-        Seamus Connor <sconnor@purestorage.com>,
-        Krishna Kant <krishna.kant@purestorage.com>
-References: <20230505204950.21645-1-brian@purestorage.com>
- <20230508100930.GA9720@t480-pf1aa2c2.fritz.box>
- <7C02DE30-DBA7-45E5-A16C-02C75C670E9F@purestorage.com>
- <ZF0bgrAXJnWPJR/U@chlorum.ategam.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <ZF0bgrAXJnWPJR/U@chlorum.ategam.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <33fe3d5bd6223d0ca1b5002efb7efc7bb90f3495.1683841772.git.quic_nguyenb@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-05-11 12:44, Benjamin Block wrote:
-> On Mon, May 08, 2023 at 09:34:15AM -0700, Brian Bunker wrote:
->>> On May 8, 2023, at 3:09 AM, Benjamin Block <bblock@linux.ibm.com> wrote:
->>> On Fri, May 05, 2023 at 01:49:50PM -0700, Brian Bunker wrote:
->>>
->>>> + int ret = -EINVAL;
->>>
->>> Been wondering, whether it would make sense to have two different error
->>> levels here. One for the case where the page is not found in the loop
->>> that searches within page 0, and one for when page 0 is not present when
->>> we try to dereference the RCU protected pointer.
->>>
->>> That way we could have a safe fallback. If the page is there, we use its
->>> data, if it is not, we blindly send the INQUIRY like we do today.
->>>
->>> Not sure whether this is a bit too paranoid.. VPD page 0 is mandatory
->>> after all.
->>
->> That could be done, but the problem would still exist for the PURE target.
->> We don’t support the page 0xb9, and we don’t advertise we do in the response
->> to VPD 0. This approach would still lead to the INQUIRY being sent to devices
-> 
-> I wasn't meaning to send the INQUIRY regardless to what the page says,
-> if it is present. I was just thinking to having fall-back for when the
-> page 0 is not there at all (initially, when you call
-> `rcu_dereference()`). That would support your storage, as you have page
-> 0, and it would be present for the check I assume.
-> 
-> But anyway, it seems this is a no-go regardless. I didn't expect targets
-> sending a valid page 0, but still supporting pages that are not listed in it.
+Hi Bao,
 
-SCSI standards did contain words that implied vendors would report all
-VPD/log/mode pages and operation codes using the mechanisms added to
-those standards over the years. I guess users pressured vendors to do
-this. Then recently, in T10 approved proposal 21-063r2, the weasel
-words "may or may not" were added to all those mechanisms. IMO that
-was a pretty disgraceful move by the storage vendors that control T10.
+kernel test robot noticed the following build warnings:
 
-Doug Gilbert
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.4-rc1 next-20230511]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Bao-D-Nguyen/ufs-core-Combine-32-bit-command_desc_base_addr_lo-hi/20230512-060009
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/33fe3d5bd6223d0ca1b5002efb7efc7bb90f3495.1683841772.git.quic_nguyenb%40quicinc.com
+patch subject: [PATCH v4 4/7] ufs: mcq: Add support for clean up mcq resources
+config: i386-randconfig-a013 (https://download.01.org/0day-ci/archive/20230512/202305121123.KOfhO8tv-lkp@intel.com/config)
+compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/e05a8eb3fd257b04965c2333d4bf0161177ef504
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Bao-D-Nguyen/ufs-core-Combine-32-bit-command_desc_base_addr_lo-hi/20230512-060009
+        git checkout e05a8eb3fd257b04965c2333d4bf0161177ef504
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ufs/core/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202305121123.KOfhO8tv-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/ufs/core/ufshcd.c:7526:32: warning: variable 'reg' is uninitialized when used here [-Wuninitialized]
+           if (!is_mcq_enabled(hba) && !(reg & (1 << tag))) {
+                                         ^~~
+   drivers/ufs/core/ufshcd.c:7489:9: note: initialize the variable 'reg' to silence this warning
+           u32 reg;
+                  ^
+                   = 0
+   1 warning generated.
 
 
-P.S. I have a new option appearing in some of my utilities: --examine
-The idea is that it uses an iota function to check for unreported
-VPD/log/mode pages as the "report supported" device server responses
-"may or may not" be trustworthy :-)
+vim +/reg +7526 drivers/ufs/core/ufshcd.c
 
->> who don’t support it, don’t expect it, and report an unexpected error. What I am
->> trying to avoid is the INQUIRY being sent to devices who don’t invite it.
-> 
+  7473	
+  7474	/**
+  7475	 * ufshcd_abort - scsi host template eh_abort_handler callback
+  7476	 * @cmd: SCSI command pointer
+  7477	 *
+  7478	 * Returns SUCCESS/FAILED
+  7479	 */
+  7480	static int ufshcd_abort(struct scsi_cmnd *cmd)
+  7481	{
+  7482		struct Scsi_Host *host = cmd->device->host;
+  7483		struct ufs_hba *hba = shost_priv(host);
+  7484		int tag = scsi_cmd_to_rq(cmd)->tag;
+  7485		struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+  7486		unsigned long flags;
+  7487		int err = FAILED;
+  7488		bool outstanding;
+  7489		u32 reg;
+  7490	
+  7491		WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+  7492	
+  7493		ufshcd_hold(hba, false);
+  7494	
+  7495		if (!is_mcq_enabled(hba) && !test_bit(tag, &hba->outstanding_reqs)) {
+  7496			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+  7497			/* If command is already aborted/completed, return FAILED. */
+  7498			dev_err(hba->dev,
+  7499				"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
+  7500				__func__, tag, hba->outstanding_reqs, reg);
+  7501			goto release;
+  7502		}
+  7503	
+  7504		/* Print Transfer Request of aborted task */
+  7505		dev_info(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
+  7506	
+  7507		/*
+  7508		 * Print detailed info about aborted request.
+  7509		 * As more than one request might get aborted at the same time,
+  7510		 * print full information only for the first aborted request in order
+  7511		 * to reduce repeated printouts. For other aborted requests only print
+  7512		 * basic details.
+  7513		 */
+  7514		scsi_print_command(cmd);
+  7515		if (!hba->req_abort_count) {
+  7516			ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, tag);
+  7517			ufshcd_print_evt_hist(hba);
+  7518			ufshcd_print_host_state(hba);
+  7519			ufshcd_print_pwr_info(hba);
+  7520			ufshcd_print_tr(hba, tag, true);
+  7521		} else {
+  7522			ufshcd_print_tr(hba, tag, false);
+  7523		}
+  7524		hba->req_abort_count++;
+  7525	
+> 7526		if (!is_mcq_enabled(hba) && !(reg & (1 << tag))) {
+  7527			/* only execute this code in single doorbell mode */
+  7528			dev_err(hba->dev,
+  7529			"%s: cmd was completed, but without a notifying intr, tag = %d",
+  7530			__func__, tag);
+  7531			__ufshcd_transfer_req_compl(hba, 1UL << tag);
+  7532			goto release;
+  7533		}
+  7534	
+  7535		/*
+  7536		 * Task abort to the device W-LUN is illegal. When this command
+  7537		 * will fail, due to spec violation, scsi err handling next step
+  7538		 * will be to send LU reset which, again, is a spec violation.
+  7539		 * To avoid these unnecessary/illegal steps, first we clean up
+  7540		 * the lrb taken by this cmd and re-set it in outstanding_reqs,
+  7541		 * then queue the eh_work and bail.
+  7542		 */
+  7543		if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
+  7544			ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, lrbp->lun);
+  7545	
+  7546			spin_lock_irqsave(host->host_lock, flags);
+  7547			hba->force_reset = true;
+  7548			ufshcd_schedule_eh_work(hba);
+  7549			spin_unlock_irqrestore(host->host_lock, flags);
+  7550			goto release;
+  7551		}
+  7552	
+  7553		/* Skip task abort in case previous aborts failed and report failure */
+  7554		if (lrbp->req_abort_skip) {
+  7555			dev_err(hba->dev, "%s: skipping abort\n", __func__);
+  7556			ufshcd_set_req_abort_skip(hba, hba->outstanding_reqs);
+  7557			goto release;
+  7558		}
+  7559	
+  7560		err = ufshcd_try_to_abort_task(hba, tag);
+  7561		if (err) {
+  7562			dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
+  7563			ufshcd_set_req_abort_skip(hba, hba->outstanding_reqs);
+  7564			err = FAILED;
+  7565			goto release;
+  7566		}
+  7567	
+  7568		/*
+  7569		 * Clear the corresponding bit from outstanding_reqs since the command
+  7570		 * has been aborted successfully.
+  7571		 */
+  7572		spin_lock_irqsave(&hba->outstanding_lock, flags);
+  7573		outstanding = __test_and_clear_bit(tag, &hba->outstanding_reqs);
+  7574		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+  7575	
+  7576		if (outstanding)
+  7577			ufshcd_release_scsi_cmd(hba, lrbp);
+  7578	
+  7579		err = SUCCESS;
+  7580	
+  7581	release:
+  7582		/* Matches the ufshcd_hold() call at the start of this function. */
+  7583		ufshcd_release(hba);
+  7584		return err;
+  7585	}
+  7586	
 
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
