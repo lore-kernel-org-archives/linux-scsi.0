@@ -2,350 +2,239 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C467C7EE25
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 08:10:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE19EC77B7C
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 12:51:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240026AbjELIKN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 May 2023 04:10:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37104 "EHLO
+        id S240844AbjELMvz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 May 2023 08:51:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239902AbjELIJa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 04:09:30 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2061e.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe5b::61e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2DA10E52;
-        Fri, 12 May 2023 01:08:28 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=f+HTBXeObu0fOJ4k4+LK61g18sUsL7H9H3YU7YDfipM1lL+VKRQ5cDMAaAuup3FElg7m0WpdD3iw6VtV+6jZM4dDWRAVLZntWmRSINOaGdL1R2c+o58zCEXZY9gRbXlF+ULfbG1Lsa2fa75svRLErSO+wGBp3/z8Y+5f+35CJ8YskNsDEB1VqcVc6CxWZrA6pG5TMJ+rWaUY6b3PIfZg91+xKdja8NRbGOLzIKXHlhZUCxMxtdYhFOQ9RYyjPuhKKsVfBoHWdKoHsb80MrqK3l7FQyhfG/C+zcHvqXOnJytpmyhrHqWTAUkSwUQTV8WJYyvv71kIfZbyjzZqh7tGbA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BWZon/QtQeQxIm2xALI9b/xp6IIc8xxX26Bp46PTpAY=;
- b=aKS/+wLYequvB4Nuj+9uY9Y1KKjWMOKQ8raz+t1GA/+nadzhs43Pq1mJBIf1vmt18MpS8FWSUbHMralnlk8sT3BBT+jaRwgNcg4Qs+9+AshFMn+6pMYp7LdjKSBLhvmPjfO3e37eab9wmJjEo/4TV3jEUbI9HJfbm5C13bnjt1xIDUfP9hbmzTuTUaLdqUbIXdGSkeTbOg1wHkpBND7akG77nDtMNBXjCQEqP3pDD5bYbKt2UiXmnPRtXKe7aa20dbAQzJsOf3ikzlYnWZJ+BqRET/9DTfRRywRIQvWvj2BnKPAb2x0u2bkzZH2U1c4vDAWoecbZ+v1ORVPtTkgu2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BWZon/QtQeQxIm2xALI9b/xp6IIc8xxX26Bp46PTpAY=;
- b=lFGsvvnK4QEDEs55VOfXEvJ0HWXJT4f5xOYxYEMqaJiqbCGt9EoQRN+xjbCXl8gIqYRhvf62uldrYQJDzt62NI/PjE59gMC2iy02J+mk3sjJZJh2oBc37RxGkFFyh5bRUOCOs6J+xxY2BVJQ9ZJ2Wb7zpsTYiJoMkld41ypvKVlQGr53ZSYNusw/4vNNhMB5Y9upJStWSk1s7yjfxkKGjatbvCWBqP+VXSDEuQ95uUtr29Mw9PvlQXVT3h0HYmXqeTZIocz/xOTxwxGjIrehD5ysGcrVxfR+b6gr+5G8FZSSNpVdVh19Ou3B3pb7bUTnRoei7Ns4/t0PQXU2FA1+qw==
-Received: from BN9PR03CA0427.namprd03.prod.outlook.com (2603:10b6:408:113::12)
- by IA1PR12MB8264.namprd12.prod.outlook.com (2603:10b6:208:3f5::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6387.22; Fri, 12 May
- 2023 08:08:25 +0000
-Received: from BN8NAM11FT038.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:113:cafe::32) by BN9PR03CA0427.outlook.office365.com
- (2603:10b6:408:113::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6387.25 via Frontend
- Transport; Fri, 12 May 2023 08:08:25 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN8NAM11FT038.mail.protection.outlook.com (10.13.176.246) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6387.24 via Frontend Transport; Fri, 12 May 2023 08:08:25 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Fri, 12 May 2023
- 01:08:13 -0700
-Received: from dev.nvidia.com (10.126.230.37) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.37; Fri, 12 May
- 2023 01:08:12 -0700
-From:   Chaitanya Kulkarni <kch@nvidia.com>
-To:     <linux-block@vger.kernel.org>, <linux-bcache@vger.kernel.org>,
-        <linux-raid@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
-CC:     <axboe@kernel.dk>, <colyli@suse.de>, <kent.overstreet@gmail.com>,
-        <agk@redhat.com>, <snitzer@kernel.org>, <dm-devel@redhat.com>,
-        <song@kernel.org>, <hch@lst.de>, <sagi@grimberg.me>,
-        <kch@nvidia.com>, <martin.petersen@oracle.com>
-Subject: [RFC PATCH] block: add meaningful macro for flush op flags
-Date:   Fri, 12 May 2023 01:07:57 -0700
-Message-ID: <20230512080757.387523-1-kch@nvidia.com>
-X-Mailer: git-send-email 2.40.0
+        with ESMTP id S240725AbjELMvu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 08:51:50 -0400
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CCEADD90;
+        Fri, 12 May 2023 05:51:34 -0700 (PDT)
+Received: by mail-wr1-x432.google.com with SMTP id ffacd0b85a97d-3063891d61aso9479599f8f.0;
+        Fri, 12 May 2023 05:51:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683895892; x=1686487892;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vgLcpkOWjTuKgLbFL1cilELC3qgg7jjF46hKO6uvH6M=;
+        b=oTkkeSWsttEZNS2wqBOIoDatoMqrfPswSu82LAzhnGIyJ7B4YXbuVF23HAToR71Beo
+         FXwRJXw8AfZdp+GYoURQbAdr+7uwoHvgKXooptxLRWdka+60UvPs0nMXRxKmKoi/reIQ
+         krgCSdBT8X2OwnBImjly11/nbqrP0ubtb6+iRMy/IQnDST9dk6gO+V+j+NH85gWwrYUE
+         yZhX33I8oGm9UMcAVIiTJWtOawidfEkUsWWCBzidncUyVMZz4duk/uBgj/MURZXA0N0M
+         8WwPzr+gTU0b9bwUlBTmZjVO8cmK46tWicChKs9Dq/9C9WQJnHyyOgVGUdOPAbY2eF25
+         E3ug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683895892; x=1686487892;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vgLcpkOWjTuKgLbFL1cilELC3qgg7jjF46hKO6uvH6M=;
+        b=B1I71IjJf0pZ7LbpLm6Vbgv0Phwmbq+NWpPPCICMTaxqNYYK7mJ1Xv6qYL9ci4Jvvk
+         ZFfM/YrwLpGsPsqeBzHZZfpGavUMxFICi3tBuAz+B2SZWFSh6bmJVDoWyOi9sbh//hwW
+         u/2G5pyAnC1g9MR1U73BVB3tmIsLy4+StqeaM3qQkrotp9ae9MZZqoUF9JCpJPrUejrr
+         4DS42n+P7E/XnAqZL3IwOxb8qikwise/kl+TgB3xaniq7mIFY+cVwoHLDGruK83cXFpk
+         qFoQFBHmJ3bdjq4cmgRtmEIh1SMLZ2mB6ZkTdcrgKVALfIYTVg0azDbKYNJCM0NUV/1E
+         I07g==
+X-Gm-Message-State: AC+VfDxN1oYYFztYan9fjMqvokZNvOcVL38ph50ZTufcyG/NJfA9JpYh
+        QVIsR8caRQ8gbz18tUs4F90cvwn8E1g=
+X-Google-Smtp-Source: ACHHUZ6mtWJ0L6q1tUMub8NAYzVbvLAVB9ukIA9kOyQkdS/IIl8CCgpuL5zb5TbFX8IzuBTtv7AVWw==
+X-Received: by 2002:adf:ed92:0:b0:2f8:24f7:cc4a with SMTP id c18-20020adfed92000000b002f824f7cc4amr18424422wro.57.1683895892340;
+        Fri, 12 May 2023 05:51:32 -0700 (PDT)
+Received: from localhost.localdomain ([176.221.215.212])
+        by smtp.gmail.com with ESMTPSA id l19-20020a1c7913000000b003f42ceb3bf4sm9940148wme.32.2023.05.12.05.51.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 May 2023 05:51:31 -0700 (PDT)
+From:   Maksim Kiselev <bigunclemax@gmail.com>
+To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc:     Maksim Kiselev <bigunclemax@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/1] Adaptec RAID 6405 controller driver crash at apater reset
+Date:   Fri, 12 May 2023 15:51:12 +0300
+Message-Id: <20230512125114.1329613-1-bigunclemax@gmail.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.126.230.37]
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT038:EE_|IA1PR12MB8264:EE_
-X-MS-Office365-Filtering-Correlation-Id: 22f4c5b9-c067-4230-9145-08db52c00fb8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tGr7I95rCI7umabVb/j9/7l3jrhXJyPIOk2/fYjACFX0msZcOHs47HpuscArmNecGBfG78CWJIpHhtqWA0+aPK3rO7TC79zw0Lt5xKmFJwmcMid4QOsRsdN9DijvlDmP3BgrWWqYzzR1YgQb303j4tbnBCNkFi9lll65NF4rfeKirXaBiOrR7o6qW6eXKH8m0m5/VfM47E6fjBig4XetgAYNGY5M30MuDsDe0FyhXVHH5JTRkwLaqQ5AL055kCNwAN+stgYFnJlp7CB612EPHRjBVXLx0Gfkw+l9EL87tpEgy1JCtVnXw7MRz+3IJlImEopxbgeT0lH7ib1wzYxB9tanSGMKjtSniOiFAJum9M8AutwhZwLuWlG65HHp4xcLUQMXqunRckNsVsjVExX9p95N623oR1R7d603yvoSLPKr+f6y5H04Y+/wfsplNfiXTd6uo9EhdNz0DJVFY7aapsA4PAmYOJG6JMRlu4Lel805oRHmi0GhgiKORuqk9EEtpj+oMq0JOGknziP6ectxJ0Evkh12hhcNY6GxBOPjSuWdSP/XERk5pNzVVa2Ydh8FA7kHu4ucGX7W3N6GzRYagDMR1u3nk5a5En0r9xbQbfKS0mBAFF2kIzX1VC7s+DgcEw3iVbQ2SQQc8NuSDAuuUCVaP0tKSd+WzSriltq3iVd+YPcSuVy616ivBKkwnz8So+X/busG9d70bdq/EvCdcNPBsRKbLY5liSFN664yUXfwvYfllHWW22/MLgbZPDgHlCqlzqyuc3A/YGIqevPdPJOTainzo5L9hOf1UMTbhHA=
-X-Forefront-Antispam-Report: CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230028)(4636009)(346002)(396003)(136003)(376002)(39860400002)(451199021)(40470700004)(36840700001)(46966006)(70586007)(82310400005)(2906002)(7416002)(8936002)(5660300002)(8676002)(316002)(478600001)(41300700001)(70206006)(4326008)(110136005)(47076005)(54906003)(40460700003)(7696005)(966005)(6666004)(1076003)(26005)(356005)(7636003)(82740400003)(186003)(16526019)(336012)(426003)(2616005)(36756003)(40480700001)(83380400001)(36860700001)(2101003);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2023 08:08:25.2134
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 22f4c5b9-c067-4230-9145-08db52c00fb8
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT038.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8264
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Flush requests are implemented as REQ_OP_WRITE + REQ_OP_PREFLUSH
-combination and not REQ_OP_FLUSH + REQ_PREFLUSH combination.
+Hello mates!
 
-This unclear nature has lead to the confusion and bugs in the code for
-block drivers causing more work for testing, reviews and fixes :-
+I have server with Adaptec RAID 6405 controller.
+RAID10 is configured with four SAS disks.
+I use arcconf tool for disks health monitoring.
 
-1. https://lore.kernel.org/all/ZFHgefWofVt24tRl@infradead.org/
-2. https://marc.info/?l=linux-block&m=168386364026498&w=2
+Sometimes I faced with the problem that arcconf stuck and at the same
+time cpu io usage grew to ~60-70%. In kernel log I got this report about
+use-after-free and NULL pointer dereference error.
 
-Add a macro (name can me more meaningful) with a meaningful comment
-clearing the confusion and replace the REQ_OP_WRITE | REQ_PREFLUSH with
-the new macro name that also saves code repetation.
+I was starting to look at aacraid driver. After some "investigations"
+I found that if `aac_adapter_check_health` fail (line 2474), it leads to
+`aac_command_thread` finish. 
+Then after ~20-30 seconds `scsi_try_host_reset` happens.
+Farther execution reach `_aac_reset_adapter` function and try to stop
+already finished thread (kthread_stop(aac->thread) in line 1499).
 
-Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
----
- block/blk-flush.c                   | 2 +-
- drivers/md/bcache/request.c         | 3 +--
- drivers/md/dm-bufio.c               | 2 +-
- drivers/md/dm-integrity.c           | 2 +-
- drivers/md/dm-log.c                 | 2 +-
- drivers/md/dm-raid1.c               | 2 +-
- drivers/md/dm-snap-persistent.c     | 5 ++---
- drivers/md/dm-writecache.c          | 2 +-
- drivers/md/dm.c                     | 2 +-
- drivers/md/md.c                     | 3 +--
- drivers/md/raid5-cache.c            | 3 +--
- drivers/md/raid5-ppl.c              | 3 +--
- drivers/nvme/target/io-cmd-bdev.c   | 2 +-
- drivers/target/target_core_iblock.c | 3 +--
- include/linux/blk_types.h           | 7 +++++++
- 15 files changed, 22 insertions(+), 21 deletions(-)
+As a result we got use-after-free warning and NULL pointer dereference
+crash. (Actually if we will enable KASAN than we will get waring a
+little bit earlier when accessing `aac->thread->pid` in line 1497)
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 04698ed9bcd4..376f00257100 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -460,7 +460,7 @@ int blkdev_issue_flush(struct block_device *bdev)
- {
- 	struct bio bio;
+So, I added some debug output to make things clear.
+
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index deb32c9f4b3e..38df5e8d8e38 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1494,13 +1494,14 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+         *        commands are completing in the interrupt service.
+         */
+        aac_adapter_disable_int(aac);
++       printk(KERN_INFO">>> %s [%d] Before access to aac->thread\n", __func__, __LINE__);
+        if (aac->thread && aac->thread->pid != current->pid) {
+                spin_unlock_irq(host->host_lock);
+                kthread_stop(aac->thread);
+                aac->thread = NULL;
+                jafo = 1;
+        }
+-
++       printk(KERN_INFO">>> %s [%d] After access to aac->thread\n", __func__, __LINE__);
+        /*
+         *      If a positive health, means in a known DEAD PANIC
+         * state and the adapter could be reset to `try again'.
+@@ -2471,8 +2472,10 @@ int aac_command_thread(void *data)
  
--	bio_init(&bio, bdev, NULL, 0, REQ_OP_WRITE | REQ_PREFLUSH);
-+	bio_init(&bio, bdev, NULL, 0, REQ_FLUSH_OPF);
- 	return submit_bio_wait(&bio);
+                        /* Don't even try to talk to adapter if its sick */
+                        ret = aac_adapter_check_health(dev);
+-                       if (ret || !dev->queues)
++                       if (ret || !dev->queues) {
++                               printk(KERN_INFO">>> %s [%d] adapter_check_health problem. Go out...\n", __func__, __LINE__);
+                                break;
++                       }
+                        next_check_jiffies = jiffies
+                                           + ((long)(unsigned)check_interval)
+                                           * HZ;
+@@ -2518,6 +2521,7 @@ int aac_command_thread(void *data)
+        if (dev->queues)
+                remove_wait_queue(&dev->queues->queue[HostNormCmdQueue].cmdready, &wait);
+        dev->aif_thread = 0;
++       printk(KERN_INFO">>> %s [%d] aac_command_thread stopped\n", __func__, __LINE__);
+        return 0;
  }
- EXPORT_SYMBOL(blkdev_issue_flush);
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 67a2e29e0b40..ab89897a36a2 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -1023,8 +1023,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
- 			 */
- 			struct bio *flush;
- 
--			flush = bio_alloc_bioset(bio->bi_bdev, 0,
--						 REQ_OP_WRITE | REQ_PREFLUSH,
-+			flush = bio_alloc_bioset(bio->bi_bdev, 0, REQ_FLUSH_OPF,
- 						 GFP_NOIO, &dc->disk.bio_split);
- 			if (!flush) {
- 				s->iop.status = BLK_STS_RESOURCE;
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index eea977662e81..da815325842b 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -2133,7 +2133,7 @@ EXPORT_SYMBOL_GPL(dm_bufio_write_dirty_buffers);
- int dm_bufio_issue_flush(struct dm_bufio_client *c)
- {
- 	struct dm_io_request io_req = {
--		.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-+		.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
- 		.mem.type = DM_IO_KMEM,
- 		.mem.ptr.addr = NULL,
- 		.client = c->dm_io,
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 31838b13ea54..2d90f8ad1ae5 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -1533,7 +1533,7 @@ static void dm_integrity_flush_buffers(struct dm_integrity_c *ic, bool flush_dat
- 	if (!ic->meta_dev)
- 		flush_data = false;
- 	if (flush_data) {
--		fr.io_req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-+		fr.io_req.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
- 		fr.io_req.mem.type = DM_IO_KMEM,
- 		fr.io_req.mem.ptr.addr = NULL,
- 		fr.io_req.notify.fn = flush_notify,
-diff --git a/drivers/md/dm-log.c b/drivers/md/dm-log.c
-index f9f84236dfcd..2c40f865ef16 100644
---- a/drivers/md/dm-log.c
-+++ b/drivers/md/dm-log.c
-@@ -311,7 +311,7 @@ static int flush_header(struct log_c *lc)
- 		.count = 0,
- 	};
- 
--	lc->io_req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
-+	lc->io_req.bi_opf = REQ_FLUSH_OPF;
- 
- 	return dm_io(&lc->io_req, 1, &null_location, NULL);
- }
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index ddcb2bc4a617..7acb9a390b38 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -265,7 +265,7 @@ static int mirror_flush(struct dm_target *ti)
- 	struct dm_io_region io[MAX_NR_MIRRORS];
- 	struct mirror *m;
- 	struct dm_io_request io_req = {
--		.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-+		.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
- 		.mem.type = DM_IO_KMEM,
- 		.mem.ptr.addr = NULL,
- 		.client = ms->io_client,
-diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
-index 15649921f2a9..cfb7f1b92c5e 100644
---- a/drivers/md/dm-snap-persistent.c
-+++ b/drivers/md/dm-snap-persistent.c
-@@ -739,8 +739,7 @@ static void persistent_commit_exception(struct dm_exception_store *store,
- 	/*
- 	 * Commit exceptions to disk.
- 	 */
--	if (ps->valid && area_io(ps, REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA |
--				 REQ_SYNC))
-+	if (ps->valid && area_io(ps, REQ_FLUSH_OPF | REQ_FUA | REQ_SYNC))
- 		ps->valid = 0;
- 
- 	/*
-@@ -817,7 +816,7 @@ static int persistent_commit_merge(struct dm_exception_store *store,
- 	for (i = 0; i < nr_merged; i++)
- 		clear_exception(ps, ps->current_committed - 1 - i);
- 
--	r = area_io(ps, REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA);
-+	r = area_io(ps, REQ_FLUSH_OPF | REQ_FUA);
- 	if (r < 0)
- 		return r;
- 
-diff --git a/drivers/md/dm-writecache.c b/drivers/md/dm-writecache.c
-index 074cb785eafc..538f74114d13 100644
---- a/drivers/md/dm-writecache.c
-+++ b/drivers/md/dm-writecache.c
-@@ -590,7 +590,7 @@ static void writecache_disk_flush(struct dm_writecache *wc, struct dm_dev *dev)
- 	region.bdev = dev->bdev;
- 	region.sector = 0;
- 	region.count = 0;
--	req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
-+	req.bi_opf = REQ_FLUSH_OPF;
- 	req.mem.type = DM_IO_KMEM;
- 	req.mem.ptr.addr = NULL;
- 	req.client = wc->dm_io;
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 3b694ba3a106..a570024a747d 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1555,7 +1555,7 @@ static void __send_empty_flush(struct clone_info *ci)
- 	 * the basis for the clone(s).
- 	 */
- 	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0,
--		 REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC);
-+		 REQ_FLUSH_OPF | REQ_SYNC);
- 
- 	ci->bio = &flush_bio;
- 	ci->sector_count = 0;
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8e344b4b3444..5f72a693dc1c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -533,8 +533,7 @@ static void submit_flushes(struct work_struct *ws)
- 			atomic_inc(&rdev->nr_pending);
- 			atomic_inc(&rdev->nr_pending);
- 			rcu_read_unlock();
--			bi = bio_alloc_bioset(rdev->bdev, 0,
--					      REQ_OP_WRITE | REQ_PREFLUSH,
-+			bi = bio_alloc_bioset(rdev->bdev, 0, REQ_FLUSH_OPF,
- 					      GFP_NOIO, &mddev->bio_set);
- 			bi->bi_end_io = md_end_flush;
- 			bi->bi_private = rdev;
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 46182b955aef..692c3ed33b1f 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1303,8 +1303,7 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
- 
- 	if (!do_flush)
- 		return;
--	bio_init(&log->flush_bio, log->rdev->bdev, NULL, 0,
--		  REQ_OP_WRITE | REQ_PREFLUSH);
-+	bio_init(&log->flush_bio, log->rdev->bdev, NULL, 0, REQ_FLUSH_OPF);
- 	log->flush_bio.bi_end_io = r5l_log_flush_endio;
- 	submit_bio(&log->flush_bio);
- }
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index e495939bb3e0..da2012744b0d 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -629,8 +629,7 @@ static void ppl_do_flush(struct ppl_io_unit *io)
- 		if (bdev) {
- 			struct bio *bio;
- 
--			bio = bio_alloc_bioset(bdev, 0,
--					       REQ_OP_WRITE | REQ_PREFLUSH,
-+			bio = bio_alloc_bioset(bdev, 0, REQ_FLUSH_OPF,
- 					       GFP_NOIO, &ppl_conf->flush_bs);
- 			bio->bi_private = io;
- 			bio->bi_end_io = ppl_flush_endio;
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index c2d6cea0236b..2717b64cb02f 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -342,7 +342,7 @@ static void nvmet_bdev_execute_flush(struct nvmet_req *req)
- 		return;
- 
- 	bio_init(bio, req->ns->bdev, req->inline_bvec,
--		 ARRAY_SIZE(req->inline_bvec), REQ_OP_WRITE | REQ_PREFLUSH);
-+		 ARRAY_SIZE(req->inline_bvec), REQ_FLUSH_OPF);
- 	bio->bi_private = req;
- 	bio->bi_end_io = nvmet_bio_done;
- 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index cc838ffd1294..01984d07ff9c 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -419,8 +419,7 @@ iblock_execute_sync_cache(struct se_cmd *cmd)
- 	if (immed)
- 		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 
--	bio = bio_alloc(ib_dev->ibd_bd, 0, REQ_OP_WRITE | REQ_PREFLUSH,
--			GFP_KERNEL);
-+	bio = bio_alloc(ib_dev->ibd_bd, 0, REQ_FLUSH_OPF, GFP_KERNEL);
- 	bio->bi_end_io = iblock_end_io_flush;
- 	if (!immed)
- 		bio->bi_private = cmd;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 740afe80f297..f3afdbb3f239 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -455,6 +455,13 @@ enum req_flag_bits {
- #define REQ_NOMERGE_FLAGS \
- 	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA)
- 
-+/*
-+ * Flush requests are implemented as REQ_OP_WRITE + REQ_OP_PREFLUSH combination
-+ * and not REQ_OP_FLUSH + REQ_PREFLUSH combination.
-+ */
-+
-+#define REQ_FLUSH_OPF (REQ_OP_WRITE | REQ_PREFLUSH)
-+
- enum stat_group {
- 	STAT_READ,
- 	STAT_WRITE,
+
+And here is the kernel log I got.
+
+
+[  436.735653] >>> aac_command_thread [2476] adapter_check_health problem. Go out...
+[  436.735663] >>> aac_command_thread [2524] aac_command_thread stopped
+[  461.667761] aacraid: Host bus reset request. SCSI hang ?
+[  461.669216] aacraid 0000:01:00.0: Adapter health - 247
+[  461.670575] aacraid 0000:01:00.0: outstanding cmd: midlevel-0
+[  461.670581] aacraid 0000:01:00.0: outstanding cmd: lowlevel-0
+[  461.670585] aacraid 0000:01:00.0: outstanding cmd: error handler-0
+[  461.670589] aacraid 0000:01:00.0: outstanding cmd: firmware-1
+[  461.670592] aacraid 0000:01:00.0: outstanding cmd: kernel-0
+[  461.707700] >>> _aac_reset_adapter [1497] Before access to aac->thread
+[  461.707724] ------------[ cut here ]------------
+[  461.707725] refcount_t: addition on 0; use-after-free.
+[  461.707729] WARNING: CPU: 1 PID: 116 at lib/refcount.c:25 refcount_warn_saturate+0x72/0x100
+[  461.707734] Modules linked in: fuse md5 hmac nfsd auth_rpcgss oid_registry nfs_acl lockd grace sunrpc cn iptable_raw xt_conntrack iptable_nat bpfilter sctp ip6_udp_tunnel udp_tunnel nf_nat_sip nf_nat nf_conntrack_sip nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 libcrc32c ipv6 nls_iso8859_1 nls_cp437 ipmi_watchdog sg overlay squashfs loop crc32c_generic ext4 mbcache jbd2 ipmi_ssif input_leds led_class hid_generic usbhid hid sd_mod iTCO_wdt intel_pmc_bxt iTCO_vendor_support mfd_core ast drm_shmem_helper coretemp drm_kms_helper ahci syscopyarea sysfillrect x86_pkg_temp_thermal sysimgblt i2c_i801 libahci i2c_smbus igb i2c_algo_bit libata aacraid dca scsi_mod xhci_pci scsi_common xhci_hcd intel_pch_thermal fan acpi_ipmi 8250 8250_base ipmi_si serial_mctrl_gpio ipmi_devintf serial_core ipmi_msghandler video wmi acpi_power_meter intel_pmc_core hwmon button unix
+[  461.707783] CPU: 1 PID: 116 Comm: scsi_eh_0 Tainted: G        W          6.3.0.0-g2cd293ea6f73-dirty #12
+[  461.707785] Hardware name: Supermicro Super Server/X11SSH-LN4F, BIOS 2.7 12/07/2021
+[  461.707786] RIP: 0010:refcount_warn_saturate+0x72/0x100
+[  461.707789] Code: db d6 86 00 01 e8 5e 83 df ff 0f 0b 5d c3 80 3d ca d6 86 00 00 75 d1 48 c7 c7 68 6a 53 99 c6 05 ba d6 86 00 01 e8 3e 83 df ff <0f> 0b 5d c3 80 3d ac d6 86 00 00 75 b1 48 c7 c7 40 6a 53 99 c6 05
+[  461.707790] RSP: 0018:ffffb964402f7d58 EFLAGS: 00010286
+[  461.707792] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000027
+[  461.707793] RDX: ffffa2ca2fa5c548 RSI: 0000000000000001 RDI: ffffa2ca2fa5c540
+[  461.707795] RBP: ffffb964402f7d58 R08: ffffffff996aa3a8 R09: 0000000000000003
+[  461.707796] R10: ffffffff9963a3c0 R11: ffffffff996923c0 R12: ffffa2c8d03b8000
+[  461.707797] R13: ffffa2c8d03b8028 R14: ffffa2c8d9bc0000 R15: ffffa2c8d9bc0000
+[  461.707798] FS:  0000000000000000(0000) GS:ffffa2ca2fa40000(0000) knlGS:0000000000000000
+[  461.707799] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  461.707801] CR2: 00007f9209808000 CR3: 00000001caa2a002 CR4: 00000000003706e0
+[  461.707802] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  461.707803] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[  461.707804] Call Trace:
+[  461.707805]  <TASK>
+[  461.707806]  kthread_stop+0xdb/0xe0
+[  461.707809]  aac_reset_adapter+0x409/0x6f0 [aacraid]
+[  461.707815]  aac_eh_host_reset+0x50/0x90 [aacraid]
+[  461.707819]  scsi_try_host_reset+0x26/0xc0 [scsi_mod]
+[  461.707825]  scsi_eh_ready_devs+0x34e/0x920 [scsi_mod]
+[  461.707831]  ? scsi_eh_get_sense+0x160/0x160 [scsi_mod]
+[  461.707838]  scsi_error_handler+0x355/0x360 [scsi_mod]
+[  461.707845]  kthread+0xda/0x100
+[  461.707847]  ? kthread_complete_and_exit+0x20/0x20
+[  461.707849]  ret_from_fork+0x1f/0x30
+[  461.707852]  </TASK>
+[  461.707852] ---[ end trace 0000000000000000 ]---
+[  461.707855] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[  461.708215] #PF: supervisor write access in kernel mode
+[  461.708552] #PF: error_code(0x0002) - not-present page
+[  461.708900] PGD 0 P4D 0 
+[  461.709234] Oops: 0002 [#1] PREEMPT SMP
+[  461.709558] CPU: 1 PID: 116 Comm: scsi_eh_0 Tainted: G        W          6.3.0.0-g2cd293ea6f73-dirty #12
+[  461.710197] Hardware name: Supermicro Super Server/X11SSH-LN4F, BIOS 2.7 12/07/2021
+[  461.710521] RIP: 0010:kthread_stop+0x3f/0xe0
+[  461.710837] Code: 41 54 49 89 fc 53 f0 0f c1 47 28 85 c0 0f 84 a6 00 00 00 8d 50 01 09 c2 78 6d 41 f6 44 24 2e 20 74 7a 49 8b 9c 24 80 04 00 00 <f0> 80 0b 02 4c 89 e7 e8 65 ff ff ff f0 41 80 4c 24 02 02 4c 89 e7
+[  461.711831] RSP: 0018:ffffb964402f7d68 EFLAGS: 00010202
+[  461.712177] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000027
+[  461.712531] RDX: ffffa2ca2fa5c548 RSI: 0000000000000001 RDI: ffffa2ca2fa5c540
+[  461.712890] RBP: ffffb964402f7d88 R08: ffffffff996aa3a8 R09: 0000000000000003
+[  461.713262] R10: ffffffff9963a3c0 R11: ffffffff996923c0 R12: ffffa2c8d03b8000
+[  461.713633] R13: ffffa2c8d03b8028 R14: ffffa2c8d9bc0000 R15: ffffa2c8d9bc0000
+[  461.713998] FS:  0000000000000000(0000) GS:ffffa2ca2fa40000(0000) knlGS:0000000000000000
+[  461.714365] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  461.714734] CR2: 0000000000000000 CR3: 00000001caa2a002 CR4: 00000000003706e0
+[  461.715114] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  461.715497] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[  461.715884] Call Trace:
+[  461.716267]  <TASK>
+[  461.716651]  aac_reset_adapter+0x409/0x6f0 [aacraid]
+[  461.717052]  aac_eh_host_reset+0x50/0x90 [aacraid]
+[  461.717455]  scsi_try_host_reset+0x26/0xc0 [scsi_mod]
+[  461.717856]  scsi_eh_ready_devs+0x34e/0x920 [scsi_mod]
+[  461.718262]  ? scsi_eh_get_sense+0x160/0x160 [scsi_mod]
+[  461.718656]  scsi_error_handler+0x355/0x360 [scsi_mod]
+[  461.719044]  kthread+0xda/0x100
+[  461.719429]  ? kthread_complete_and_exit+0x20/0x20
+[  461.719823]  ret_from_fork+0x1f/0x30
+[  461.720216]  </TASK>
+[  461.720604] Modules linked in: fuse md5 hmac nfsd auth_rpcgss oid_registry nfs_acl lockd grace sunrpc cn iptable_raw xt_conntrack iptable_nat bpfilter sctp ip6_udp_tunnel udp_tunnel nf_nat_sip nf_nat nf_conntrack_sip nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 libcrc32c ipv6 nls_iso8859_1 nls_cp437 ipmi_watchdog sg overlay squashfs loop crc32c_generic ext4 mbcache jbd2 ipmi_ssif input_leds led_class hid_generic usbhid hid sd_mod iTCO_wdt intel_pmc_bxt iTCO_vendor_support mfd_core ast drm_shmem_helper coretemp drm_kms_helper ahci syscopyarea sysfillrect x86_pkg_temp_thermal sysimgblt i2c_i801 libahci i2c_smbus igb i2c_algo_bit libata aacraid dca scsi_mod xhci_pci scsi_common xhci_hcd intel_pch_thermal fan acpi_ipmi 8250 8250_base ipmi_si serial_mctrl_gpio ipmi_devintf serial_core ipmi_msghandler video wmi acpi_power_meter intel_pmc_core hwmon button unix
+[  461.724589] CR2: 0000000000000000
+[  461.725038] ---[ end trace 0000000000000000 ]---
+[  461.725493] RIP: 0010:kthread_stop+0x3f/0xe0
+[  461.725930] Code: 41 54 49 89 fc 53 f0 0f c1 47 28 85 c0 0f 84 a6 00 00 00 8d 50 01 09 c2 78 6d 41 f6 44 24 2e 20 74 7a 49 8b 9c 24 80 04 00 00 <f0> 80 0b 02 4c 89 e7 e8 65 ff ff ff f0 41 80 4c 24 02 02 4c 89 e7
+[  461.727247] RSP: 0018:ffffb964402f7d68 EFLAGS: 00010202
+[  461.727693] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000027
+[  461.728150] RDX: ffffa2ca2fa5c548 RSI: 0000000000000001 RDI: ffffa2ca2fa5c540
+[  461.728598] RBP: ffffb964402f7d88 R08: ffffffff996aa3a8 R09: 0000000000000003
+[  461.729053] R10: ffffffff9963a3c0 R11: ffffffff996923c0 R12: ffffa2c8d03b8000
+[  461.729504] R13: ffffa2c8d03b8028 R14: ffffa2c8d9bc0000 R15: ffffa2c8d9bc0000
+[  461.729948] FS:  0000000000000000(0000) GS:ffffa2ca2fa40000(0000) knlGS:0000000000000000
+[  461.730396] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  461.730840] CR2: 0000000000000000 CR3: 00000001caa2a002 CR4: 00000000003706e0
+[  461.731308] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  461.731766] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[  461.732223] note: scsi_eh_0[116] exited with irqs disabled
+
+
+Also I made a kinda ugly patch that fixes this issue for me.
+
+Does anyone have any thoughts on this? I will be glad to see them :)
+
+Maksim Kiselev (1):
+  scsi: aacraid: Prevent stopping of already finished thread on adapter
+    reset
+
+ drivers/scsi/aacraid/commsup.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
 -- 
-2.40.0
+2.39.2
 
