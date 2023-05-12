@@ -2,42 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F024C7EE2A
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 13:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4EE8C77B7C
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 May 2023 14:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240854AbjELNBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 May 2023 09:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55824 "EHLO
+        id S241297AbjELOC0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 May 2023 10:02:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240512AbjELNAw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 09:00:52 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 026079004;
-        Fri, 12 May 2023 06:00:49 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4B6AC68B05; Fri, 12 May 2023 15:00:43 +0200 (CEST)
-Date:   Fri, 12 May 2023 15:00:42 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Chaitanya Kulkarni <kch@nvidia.com>
-Cc:     linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        axboe@kernel.dk, colyli@suse.de, kent.overstreet@gmail.com,
-        agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
-        song@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com
-Subject: Re: [RFC PATCH] block: add meaningful macro for flush op flags
-Message-ID: <20230512130042.GA29078@lst.de>
-References: <20230512080757.387523-1-kch@nvidia.com>
+        with ESMTP id S241363AbjELOCU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2023 10:02:20 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 322AF19B2;
+        Fri, 12 May 2023 07:02:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=o42bYRiGDYv0oiaZby38uYs2JfHiCSTG+EB2+ilcPVk=; b=Map3vAxfT7tsVfbMF/gNeenRuo
+        KLBR5Nzp0laRWmmdiRmjCrUlwA2qAl2I9ItANArxroeXiXYWVIQKCXqA1zKVKZIHbFCa2jdB2eoOd
+        7NPmfhfqDnrBzTmDZVBK0b7kTX+Qr5X1wq/bOjeTsvgleSOBxSD6XyINFlYfsMmt/g1nEac2cRso2
+        IrnQVXP1ccbFFx+1s5K2CZWW7IZ1uH17gFTL5Fxd4TQeXKVTK5wUaDeiBo47CboZmU19YBfNgGUKM
+        CSmE1z8PhialJ38FDh3KbtUju36Wft/LvaFTf52a4CRl9uo1nIuxkjpR6h4T4ByriElFSaL6RyP6f
+        DSL5qX3w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1pxTLb-00C6TY-1i;
+        Fri, 12 May 2023 14:02:15 +0000
+Date:   Fri, 12 May 2023 07:02:15 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        stanley.chu@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        powen.kao@mediatek.com, naomi.chu@mediatek.com,
+        wsd_upstream@mediatek.com
+Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
+Message-ID: <ZF5G5ztMng8Xbd1W@infradead.org>
+References: <20230509065230.32552-1-ed.tsai@mediatek.com>
+ <20230509065230.32552-3-ed.tsai@mediatek.com>
+ <ZF0K7A6G2cYBjSgn@infradead.org>
+ <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230512080757.387523-1-kch@nvidia.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hell no.  This is just obsfucation.  We can look into actually exposing
-REQ_OP_FLUSH at the bio level, but not something like this.
+On Thu, May 11, 2023 at 08:38:04AM -0700, Bart Van Assche wrote:
+> For which devices is the fair sharing algorithm useful? As far as I know the
+> legacy block layer did not have an equivalent of the fair sharing algorithm
+> and I'm not aware of any complaints about the legacy block layer regarding
+> to fairness. This is why I proposed in January to remove the fair sharing
+> code entirely. See also https://lore.kernel.org/linux-block/20230103195337.158625-1-bvanassche@acm.org/.
 
+Because the old code did not do tag allocation itself?  Either way I
+don't think a "I'll opt out for a random driver" is the proper approach
+when you think it's not needed.  Especially not without any data
+explaining why just that driver is a special snowflake.
