@@ -2,96 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE4DC77B7D
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 May 2023 01:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37D19C7EE22
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 May 2023 02:10:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238141AbjEOBnc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 May 2023 21:43:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45676 "EHLO
+        id S233364AbjEOCKy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 May 2023 22:10:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229708AbjEOBnb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 May 2023 21:43:31 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EABA10E9;
-        Sun, 14 May 2023 18:43:30 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QKMb13jWdz4f3mJ8;
-        Mon, 15 May 2023 09:43:25 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgBH9CE9jmFkXtnYIg--.28848S3;
-        Mon, 15 May 2023 09:43:27 +0800 (CST)
-Subject: Re: [RFC PATCH] block: add meaningful macro for flush op flags
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "colyli@suse.de" <colyli@suse.de>,
-        "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@kernel.org" <snitzer@kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230512080757.387523-1-kch@nvidia.com>
- <20230512130042.GA29078@lst.de>
- <67376534-ac4a-3cd9-fab6-fd3a062f5e48@nvidia.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2ca38f24-6c6f-4975-fcc8-e700c67029ee@huaweicloud.com>
-Date:   Mon, 15 May 2023 09:43:25 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S230074AbjEOCKx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 May 2023 22:10:53 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40DD110EC
+        for <linux-scsi@vger.kernel.org>; Sun, 14 May 2023 19:10:51 -0700 (PDT)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4QKN5h24hsz18LVZ;
+        Mon, 15 May 2023 10:06:32 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Mon, 15 May 2023 10:10:48 +0800
+From:   chenxiang <chenxiang66@hisilicon.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+        Yihang Li <liyihang9@huawei.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>
+Subject: [PATCH 1/3] scsi: hisi_sas: Configure initial value of some registers according to HBA model
+Date:   Mon, 15 May 2023 10:41:19 +0800
+Message-ID: <1684118481-95908-2-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1684118481-95908-1-git-send-email-chenxiang66@hisilicon.com>
+References: <1684118481-95908-1-git-send-email-chenxiang66@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <67376534-ac4a-3cd9-fab6-fd3a062f5e48@nvidia.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgBH9CE9jmFkXtnYIg--.28848S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYI7kC6x804xWl14x267AKxVW5JVWrJwAF
-        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-        64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
-        1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjxUFDGOUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+From: Yihang Li <liyihang9@huawei.com>
 
-在 2023/05/13 9:09, Chaitanya Kulkarni 写道:
-> On 5/12/23 06:00, Christoph Hellwig wrote:
->> Hell no.  This is just obsfucation.  We can look into actually exposing
->> REQ_OP_FLUSH at the bio level, but not something like this.
->>
-> 
-> and that's why I made it RFC, thanks for the can you please elaborate
-> on "exposing REQ_OP_FLUSH at the bio level" ?
+For SAS HBAs of 920 and previous version, we use init_reg_v3_hw() to set
+some registers which are related to HW boards. For SAS HBAs of 920B and
+later version, those HW registers are set through firmware. And different
+HBA models are distinguished through pci_dev->revision.
 
-I think Christoph means that use this flag directly for bio, it's only
-used for reqeust for now.
+Signed-off-by: Yihang Li <liyihang9@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-Thanks,
-Kuai
-> 
-> I'd really like work that ...
-> 
-> -ck
-> 
-> 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 12d5884..e279c9c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -627,12 +627,12 @@ static void interrupt_enable_v3_hw(struct hisi_hba *hisi_hba)
+ 
+ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ {
++	struct pci_dev *pdev = hisi_hba->pci_dev;
+ 	int i, j;
+ 
+ 	/* Global registers init */
+ 	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE,
+ 			 (u32)((1ULL << hisi_hba->queue_count) - 1));
+-	hisi_sas_write32(hisi_hba, SAS_AXI_USER3, 0);
+ 	hisi_sas_write32(hisi_hba, CFG_MAX_TAG, 0xfff0400);
+ 	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
+ 	hisi_sas_write32(hisi_hba, CFG_AGING_TIME, 0x1);
+@@ -652,6 +652,9 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_sas_write32(hisi_hba, ARQOS_ARCACHE_CFG, 0xf0f0);
+ 	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
+ 
++	if (pdev->revision < 0x30)
++		hisi_sas_write32(hisi_hba, SAS_AXI_USER3, 0);
++
+ 	interrupt_enable_v3_hw(hisi_hba);
+ 	for (i = 0; i < hisi_hba->n_phy; i++) {
+ 		enum sas_linkrate max;
+@@ -669,7 +672,6 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 		prog_phy_link_rate |= hisi_sas_get_prog_phy_linkrate_mask(max);
+ 		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE,
+ 			prog_phy_link_rate);
+-		hisi_sas_phy_write32(hisi_hba, i, SERDES_CFG, 0xffc00);
+ 		hisi_sas_phy_write32(hisi_hba, i, SAS_RX_TRAIN_TIMER, 0x13e80);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, 0xffffffff);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
+@@ -680,13 +682,18 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x1);
+ 		hisi_sas_phy_write32(hisi_hba, i, STP_LINK_TIMER, 0x7f7a120);
+ 		hisi_sas_phy_write32(hisi_hba, i, CON_CFG_DRIVER, 0x2a0a01);
+-		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG, 0x32);
+ 		hisi_sas_phy_write32(hisi_hba, i, SAS_EC_INT_COAL_TIME,
+ 				     0x30f4240);
+-		/* used for 12G negotiate */
+-		hisi_sas_phy_write32(hisi_hba, i, COARSETUNE_TIME, 0x1e);
+ 		hisi_sas_phy_write32(hisi_hba, i, AIP_LIMIT, 0x2ffff);
+ 
++		/* set value through firmware for 920B and later version */
++		if (pdev->revision < 0x30) {
++			hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG, 0x32);
++			hisi_sas_phy_write32(hisi_hba, i, SERDES_CFG, 0xffc00);
++			/* used for 12G negotiate */
++			hisi_sas_phy_write32(hisi_hba, i, COARSETUNE_TIME, 0x1e);
++		}
++
+ 		/* get default FFE configuration for BIST */
+ 		for (j = 0; j < FFE_CFG_MAX; j++) {
+ 			u32 val = hisi_sas_phy_read32(hisi_hba, i,
+-- 
+2.8.1
 
