@@ -2,60 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B4FC77B7D
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 May 2023 09:58:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6BEC7EE23
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 May 2023 12:19:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240178AbjEOJ6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 May 2023 05:58:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35106 "EHLO
+        id S241786AbjEOMTU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 May 2023 08:19:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239089AbjEOJ6u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 May 2023 05:58:50 -0400
-Received: from mail-vk1-xa36.google.com (mail-vk1-xa36.google.com [IPv6:2607:f8b0:4864:20::a36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D8C3A0
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2023 02:58:49 -0700 (PDT)
-Received: by mail-vk1-xa36.google.com with SMTP id 71dfb90a1353d-44fd6c24d5aso4457071e0c.3
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2023 02:58:49 -0700 (PDT)
+        with ESMTP id S241564AbjEOMTS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 May 2023 08:19:18 -0400
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E412E53
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2023 05:19:13 -0700 (PDT)
+Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-3f450815d02so39601825e9.0
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2023 05:19:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20221208.gappssmtp.com; s=20221208; t=1684144728; x=1686736728;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EbXtIGp63Fscsuq6HvXYDK8e/YBIj3uFeNgrwLOtSjg=;
-        b=W8n2J/7TndzsZATZelIs3QwudW1eqdOYL3HJYK8CXM1bZGxhhsMsBBHq27NGgmaRwV
-         m144VzSX5RUi6NQek8gWDGbqMlNCljhgs2ADrAS7S22hXtzw9diQF9D1BSgy+wWMF9zK
-         STUM0/0OJDhbaJ8FzhUsRdM3brxuzyvZn1BnxrjaLxhBHV43P2yRU6GayDNot2dVWZ6g
-         v3ibb4q+oVC6dBmMgjXcowBMN61F+z9RtC0J6T+oDXlYuBxyvVxyZS9Jn4r1HRqnAArD
-         Ia0Nz+n/KKFnn8Z241c+4juVYqQ9D/dF2QD5O43RcnygL4yOZxJVZCAPRnadD7doLMDI
-         caUw==
+        d=bgdev-pl.20221208.gappssmtp.com; s=20221208; t=1684153152; x=1686745152;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=L912CSeolNZtYdQ8RZjTKt4b4LSvo4r4682xBt0zJjc=;
+        b=U+ib7nrp1j5RymaVeBottDtU2UQWB9P+aB7p2Kk9adtcpQ3b48jVgUfn+o15WQwh/J
+         VZ+z0d0KjsTba6bzI2SucZqskj6kRcMw+HR4/sWtEI2tPD7/dOcXDeXeXL94BVFDWJor
+         L6kYb0568hAlcDzqPVOtFBFc27Dg6/2icQXSnPvoVgos49/fSF7CsO7Xk8ErEn/WOZhV
+         FYdAg1m2u20V7ajVbbLbHRk2/e10Vvz80LkYxH2v0ZW+1LuWlxW2tkM/fYWE3ioQdNJA
+         9rwJGRKCOjbL1lt5QkoriHmW97ru2MLaNgp44pvlxQVZFhBNLz3nNRK+HtyKNupygwai
+         uDxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684144728; x=1686736728;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EbXtIGp63Fscsuq6HvXYDK8e/YBIj3uFeNgrwLOtSjg=;
-        b=EsqJ7yUkWhBYt0FmzUXV37RYTPAgBiOdlOnOzbV4wYkoweoO/AeVUPiABJ9sd9gOxr
-         DODOgGMNyOy9TDRIgLU/FTKOja+Z1JiZLuGEiVRwsL/bjzFKlf9ytuXZElGaXQ/VhoDR
-         GFGl1Q438u6H8IojGf6GNghRvu1qv/9msX8cae314gDAkln4Edt0itO7s7idPhJhdL9P
-         uJPto2XJoI13fXYLXdSjDZH4D2yVAnc2zr4PDSr4gSMNyjbtj7J4BLg5dq+8lcalg6Wl
-         NnPqwLcqoyY7oPvr9YQYRVG7BmqsyKTebSqSNBuSuJWZllGg0flN6EPMwzQg0+QjbGCc
-         O4rA==
-X-Gm-Message-State: AC+VfDyeDY7F8yYMfcc2JEo6/NQsPDzu71L0Hr+IdGjJ+SZnCe6IIll8
-        lY8vb/o8yLjf1u07MYJB2a2xsWfS9jdINUSMmexr7A==
-X-Google-Smtp-Source: ACHHUZ6DHZcKjPVvUXhtel4kMOfQHIuPoYEDoT3uupfFpobTSZjjgpOCyVhxviL7y9JsLigfEdajYPxDkpqzdJoa9X4=
-X-Received: by 2002:a1f:3d14:0:b0:453:75ff:7fbe with SMTP id
- k20-20020a1f3d14000000b0045375ff7fbemr4987110vka.16.1684144728426; Mon, 15
- May 2023 02:58:48 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230515095308.183424-1-brgl@bgdev.pl> <d10d66a6-3e28-5c42-c650-9d00d53045f0@linaro.org>
-In-Reply-To: <d10d66a6-3e28-5c42-c650-9d00d53045f0@linaro.org>
+        d=1e100.net; s=20221208; t=1684153152; x=1686745152;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=L912CSeolNZtYdQ8RZjTKt4b4LSvo4r4682xBt0zJjc=;
+        b=OEbLyAcsD/2uWgvc7GJ2Pk49B0nBeuQLLN0x1oxjrwhoB6lPk9Gp8vMtQiSknPGbWR
+         4t7fu7W3Xi1W0zEw/tiEFxGpjFz4GAiUS2MwxkqN0KiLe+l0ZEC2ToDYgNR1ujDbOeUV
+         xk20sIxpiAtxa+qFmlgaCqU0BYvOIThbzR85T3wLuKipQAfpOqUGTeOMifbYYyVtrZH9
+         kC/Ae4JFeGxHlfCsAyhTdmrekHcvV21sKzBsx4z6ubHUvP+lAArQ8stXDjROroXOcRm0
+         n/U1h7dAX8W9zM6fg1O7a53rebc1NGAOmOddrlug1TZRhToOQVVW59g58/W2TevSF5qx
+         JTtA==
+X-Gm-Message-State: AC+VfDyauhhVSiNBT3ADmT2/7wBdYF9rD/iNL8Hk5cBaxoyKUZMR+jcA
+        rVZPI5N+LsWIVfRMMHy5KPjolA==
+X-Google-Smtp-Source: ACHHUZ4cjC89qH3/rJziQ7Tbr+oTbvM0sVWCqTBk3NprhE9Hucvy65oL/bFZblZQcoXwom6wcpCXUg==
+X-Received: by 2002:a5d:6591:0:b0:2f4:4e1a:bea2 with SMTP id q17-20020a5d6591000000b002f44e1abea2mr22755001wru.59.1684153151997;
+        Mon, 15 May 2023 05:19:11 -0700 (PDT)
+Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:1388:9f6:c7d9:3b77])
+        by smtp.gmail.com with ESMTPSA id k15-20020a5d428f000000b003062d815fa6sm32361582wrq.85.2023.05.15.05.19.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 May 2023 05:19:11 -0700 (PDT)
 From:   Bartosz Golaszewski <brgl@bgdev.pl>
-Date:   Mon, 15 May 2023 11:58:37 +0200
-Message-ID: <CAMRc=MdffxxgXqb3APCrc3en23WgHY6rxAb8Ed80oLc=bGLuCg@mail.gmail.com>
-Subject: Re: [PATCH v4 0/3] arm64: qcom: sa8775p: add support for UFS
-To:     Konrad Dybcio <konrad.dybcio@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
+To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
         Vinod Koul <vkoul@kernel.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -63,38 +59,42 @@ Cc:     Andy Gross <agross@kernel.org>,
         Manivannan Sadhasivam <mani@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org,
         Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: [PATCH] arm64: dts: qcom: sa8775p: mark the UFS controller as dma-coherent
+Date:   Mon, 15 May 2023 14:19:08 +0200
+Message-Id: <20230515121908.303432-1-brgl@bgdev.pl>
+X-Mailer: git-send-email 2.39.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 15, 2023 at 11:57=E2=80=AFAM Konrad Dybcio <konrad.dybcio@linar=
-o.org> wrote:
->
->
->
-> On 15.05.2023 11:53, Bartosz Golaszewski wrote:
-> > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> >
-> > Update relevant DT bindings, add new config to the driver and add UFS
-> > and PHY nodes to the .dtsi and enable them in the board .dts for
-> > sa8775p-ride.
-> >
-> > v3 -> v4:
-> > - drop applied patches
-> > - mark the UFS as dma-coherent
-> Bjorn picked all of these up, you need to send an incremental
-> patch now.
->
-> Konrad
+From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
-Ah cr*p just saw it too, they were not in next yet so didn't notice
-when rebasing. Will send an incremental patch then.
+The UFS is cache coherent, so mark it as such in the dtsi.
 
-Bart
+Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+---
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+index c5e2e3256bc4..c0717dac100c 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+@@ -605,6 +605,7 @@ ufs_mem_hc: ufs@1d84000 {
+ 			power-domains = <&gcc UFS_PHY_GDSC>;
+ 			required-opps = <&rpmhpd_opp_nom>;
+ 			iommus = <&apps_smmu 0x100 0x0>;
++			dma-coherent;
+ 			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+ 				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+ 				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+-- 
+2.39.2
+
