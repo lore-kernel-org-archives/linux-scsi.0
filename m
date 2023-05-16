@@ -2,115 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97401C77B7A
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 May 2023 15:12:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34CBEC77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 May 2023 17:57:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233909AbjEPPMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 May 2023 11:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41726 "EHLO
+        id S231317AbjEPR5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 May 2023 13:57:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233481AbjEPPMY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2023 11:12:24 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F6AF3A98;
-        Tue, 16 May 2023 08:12:22 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1ab267e3528so102406055ad.0;
-        Tue, 16 May 2023 08:12:22 -0700 (PDT)
+        with ESMTP id S229458AbjEPR5p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2023 13:57:45 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CE93125
+        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2023 10:57:44 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-ba69d93a6b5so14882720276.1
+        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2023 10:57:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1684259863; x=1686851863;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=XYAsynXy0qhLt31JsQGFwwPdGuXbkEfsjf2hEcVOFMI=;
+        b=HNQtLQVZkKAmG0RuWXNB3Qfs6Eknt+JgqrGmCUosMrev8RfpdcLgxRUtrYSf9HU6Aq
+         NBpVag0+ymzcHg4V12fzNfN3ZgY968fkjq+n5QSSCnSeU+88CH1J3BL+qm35cU33Z8Yp
+         SG4MVflqYKiwZ/pRq9HbS4v5Oy2Jlhg+geg+Z4LKKKHUYjmVIq1qovsL6nawLruy+U/j
+         TRGh/0aneBFevtqdV0ID7PCOYMUv163Qh0zm3oFc33lE2/0cgDxlesyDqbwVFHHTWkFU
+         5+X+NhfuAziXHZN7KLQbC5lMue6Xetsw9xSulVJj0UBsucSLUrjpaTfjrwKoIiPtGL+M
+         qkRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684249942; x=1686841942;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZX1f8Bzw327HwH/5x2zhY/BAkrcZat0nUszLiZ8Dn9c=;
-        b=YCv/cmlnDuLOxFk0qXdkAjZ69RG+XcSXx46fRJjEVQwfoU04J2y+VwUo/T1ldsxsgO
-         4Du4usQzBoSuRVZ03XB4ySqmSNXJ/NKlLnPshLwyA9wmOvgKUO1bSS8Wy4GCXK4T5GUT
-         ScERdoM44E9BWpeQ6PuIzH8DYgz509ndkrKsySDC+d6Jl3LD+3huWX3y3zCWucVQDkS7
-         ALN5Tl/n7HOJv2IfBFM30MHjwgU+GyF5MJD7QmTFhKfBggoFSUz4FjrsHjoLqEGthMaw
-         LNGTTv7YSUDXEHxifZ62+yh3BHgTnONOgmesqTQ6YTjbvmxxDGN/6uLMgfPL/GqqG+ou
-         Xzkg==
-X-Gm-Message-State: AC+VfDwCcJLreMBqQSYVcjNVYZBlf4/lRHFftqryizGIz/uUJrpTAAsz
-        neHxXofPYr0WhocBbs6OXhA=
-X-Google-Smtp-Source: ACHHUZ4q/GrA5JQKmbrPvawP8TTFNdoAM3+i1CgNAtug+vtc9Cf2K8M5RYMoX3E9HE7pHn1bXDt7pg==
-X-Received: by 2002:a17:903:41d0:b0:1ad:55e6:16fe with SMTP id u16-20020a17090341d000b001ad55e616femr26890381ple.15.1684249941858;
-        Tue, 16 May 2023 08:12:21 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id m17-20020a170902bb9100b001aaef9d0102sm15597698pls.197.2023.05.16.08.12.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 16 May 2023 08:12:21 -0700 (PDT)
-Message-ID: <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
-Date:   Tue, 16 May 2023 08:12:19 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        wsd_upstream@mediatek.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <ZF0K7A6G2cYBjSgn@infradead.org>
- <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
- <ZF5G5ztMng8Xbd1W@infradead.org>
- <2740ee82-e35f-1cbf-f5d0-373f94eb14a5@acm.org>
- <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        d=1e100.net; s=20221208; t=1684259863; x=1686851863;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XYAsynXy0qhLt31JsQGFwwPdGuXbkEfsjf2hEcVOFMI=;
+        b=L2/gosb3T8ZAdDxezCxvOgDeLPEAAARButHTEK+HwEut7h7yCiDLCbIcKxPSS2/zqK
+         VeNL7uzWdGF6cKNFkZxMx085ZfccS9noZnU5pQxHfd1Lp2jJD2pFILcPlWofMDJvqrKU
+         k71BrEtfM0wn/8Iie7ROr7thAamNAAe4i2mzacdaX8WwwsMHcMPxJzuP4yOgW9dUlXHZ
+         VGKt9ee0SkIeNLnW7IFc0RRaqqvj/dMg4524ErOGViVUBOHvxJdpU0i54M1zMWWhg5m0
+         tQ+AOPqE7BJY9Rmg3gBobS9SonC91uMetb07UpH13tgxXqXx4fTAv2gpGslD0QL09DOJ
+         xdQw==
+X-Gm-Message-State: AC+VfDwoqlmLGa0GkqtZOm/KK0xqE/FPyJkDRvFFqvrS5BoH4jdwgyPW
+        7wanv2t+T5KNGn40Dhk2HwNjTnOSGUK3GQ==
+X-Google-Smtp-Source: ACHHUZ6vT+g1sIVdxaiODXjnAKnpgOo7aXFzFwkzqdbwsc/WeEp/ry6zgCaDmFgGXU9H1Utt4ULX94e/Ts3pQQ==
+X-Received: from pranav-first.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:390b])
+ (user=pranavpp job=sendgmr) by 2002:a25:1bd4:0:b0:ba7:85fd:9d38 with SMTP id
+ b203-20020a251bd4000000b00ba785fd9d38mr6534719ybb.4.1684259863386; Tue, 16
+ May 2023 10:57:43 -0700 (PDT)
+Date:   Tue, 16 May 2023 17:57:37 +0000
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.40.1.606.ga4b1b128d6-goog
+Message-ID: <20230516175737.1831575-1-pranavpp@google.com>
+Subject: [PATCH] scsi: pm80xx: Set phy_attached to zero when device is gone
+From:   Pranav Prasad <pranavpp@google.com>
+To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Igor Pylypiv <ipylypiv@google.com>,
+        Pranav Prasad <pranavpp@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/12/23 20:09, Yu Kuai wrote:
-> 在 2023/05/13 2:12, Bart Van Assche 写道:
->> The fair tag sharing algorithm has a negative impact on all SCSI 
->> devices with multiple logical units. This is because logical units are 
->> considered active until (request timeout) seconds have elapsed after 
->> the logical unit stopped being used (see also the blk_mq_tag_idle() 
->> call in blk_mq_timeout_work()). UFS users are hit by this because UFS 
->> 3.0 devices have a limited queue depth (32) and because power 
->> management commands are submitted to a logical unit (WLUN). Hence, it 
->> happens often that the block layer "active queue" counter is equal to 
->> 2 while only one logical unit is being used actively (a logical unit 
->> backed by NAND flash). The performance difference between queue depths 
->> 16 and 32 for UFS devices is significant.
-> 
-> We meet similiar problem before, but I think remove tag fair sharing
-> might cause some problems, because get tag is not fair currently, for
-> example 2 devices share 32 tag, while device a issue large amount of
-> io concurrently, and device b only issue one io, in this case, if fair
-> tag sharing is removed, device b can get bad io latency.
-> 
-> By the way, I tried to propose a way to workaround this by following:
-> 
-> 1) disable fair tag sharing untill get tag found no tag is avaiable;
-> 2) enable fair tag sharing again if the disk donesn't faild to get tag
-> for a period of time;
-> 
-> Can this approch be considered?
+From: Igor Pylypiv <ipylypiv@google.com>
 
-I'm afraid that this approach won't help for the UFS driver since it is 
-likely that all tags are in use by a single logical unit during an IOPS 
-test. Hence, fair sharing would be enabled even when we don't want it to 
-be enabled.
+Set phy_attached to zero when device is gone.
 
-I propose that we switch to one of these two approaches:
-* Either remove the fair tag sharing code entirely and rely on the 
-fairness mechanism provided by the sbitmap code. I'm referring to how 
-__sbitmap_queue_wake_up() uses the wake_index member variable.
-* Or make the behavior of the fairness algorithm configurable from user 
-space. One possible approach is to make the proportion of tags for a 
-logical unit / NVMe namespace configurable via sysfs. This will allow to 
-reduce the number of tags for the WLUN of UFS devices.
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+Signed-off-by: Pranav Prasad <pranavpp@google.com>
+---
+ drivers/scsi/pm8001/pm8001_sas.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index e5673c774f66..c57fc671509d 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -706,6 +706,7 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
+ 			spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 		}
+ 		PM8001_CHIP_DISP->dereg_dev_req(pm8001_ha, device_id);
++		pm8001_ha->phy[pm8001_dev->attached_phy].phy_attached = 0;
+ 		pm8001_free_dev(pm8001_dev);
+ 	} else {
+ 		pm8001_dbg(pm8001_ha, DISC, "Found dev has gone.\n");
+-- 
+2.40.1.606.ga4b1b128d6-goog
 
