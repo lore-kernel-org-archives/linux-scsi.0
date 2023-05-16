@@ -2,88 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34CBEC77B75
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 May 2023 17:57:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5AC4C7EE24
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 May 2023 18:15:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231317AbjEPR5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 May 2023 13:57:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47038 "EHLO
+        id S230258AbjEPSPa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 May 2023 14:15:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjEPR5p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2023 13:57:45 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CE93125
-        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2023 10:57:44 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-ba69d93a6b5so14882720276.1
-        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2023 10:57:44 -0700 (PDT)
+        with ESMTP id S229854AbjEPSP2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2023 14:15:28 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6E0F524D
+        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2023 11:15:27 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id 98e67ed59e1d1-24e015fcf3dso10716702a91.3
+        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2023 11:15:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1684259863; x=1686851863;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=XYAsynXy0qhLt31JsQGFwwPdGuXbkEfsjf2hEcVOFMI=;
-        b=HNQtLQVZkKAmG0RuWXNB3Qfs6Eknt+JgqrGmCUosMrev8RfpdcLgxRUtrYSf9HU6Aq
-         NBpVag0+ymzcHg4V12fzNfN3ZgY968fkjq+n5QSSCnSeU+88CH1J3BL+qm35cU33Z8Yp
-         SG4MVflqYKiwZ/pRq9HbS4v5Oy2Jlhg+geg+Z4LKKKHUYjmVIq1qovsL6nawLruy+U/j
-         TRGh/0aneBFevtqdV0ID7PCOYMUv163Qh0zm3oFc33lE2/0cgDxlesyDqbwVFHHTWkFU
-         5+X+NhfuAziXHZN7KLQbC5lMue6Xetsw9xSulVJj0UBsucSLUrjpaTfjrwKoIiPtGL+M
-         qkRA==
+        d=chromium.org; s=google; t=1684260927; x=1686852927;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=byFT3vV2qfPS05ZcRtgBidf32OEFCTYrPqr4duaWLfA=;
+        b=T4NuXoRHSsrJ0z7tw3wP6OdPIZlXuLO6oQ+ktPT5x/lj7U0l20o8ZsJ0yhEDHrQsu6
+         Y7O9qCu5gFJbF4Rla1iWSPuwnj74RLPDS4RRpzVHAE3SZQc6koODaAetNXqh4lfsnc16
+         J95oEnLsQuv8TD5LNarluxzBcaFCX9yfmZErY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684259863; x=1686851863;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=XYAsynXy0qhLt31JsQGFwwPdGuXbkEfsjf2hEcVOFMI=;
-        b=L2/gosb3T8ZAdDxezCxvOgDeLPEAAARButHTEK+HwEut7h7yCiDLCbIcKxPSS2/zqK
-         VeNL7uzWdGF6cKNFkZxMx085ZfccS9noZnU5pQxHfd1Lp2jJD2pFILcPlWofMDJvqrKU
-         k71BrEtfM0wn/8Iie7ROr7thAamNAAe4i2mzacdaX8WwwsMHcMPxJzuP4yOgW9dUlXHZ
-         VGKt9ee0SkIeNLnW7IFc0RRaqqvj/dMg4524ErOGViVUBOHvxJdpU0i54M1zMWWhg5m0
-         tQ+AOPqE7BJY9Rmg3gBobS9SonC91uMetb07UpH13tgxXqXx4fTAv2gpGslD0QL09DOJ
-         xdQw==
-X-Gm-Message-State: AC+VfDwoqlmLGa0GkqtZOm/KK0xqE/FPyJkDRvFFqvrS5BoH4jdwgyPW
-        7wanv2t+T5KNGn40Dhk2HwNjTnOSGUK3GQ==
-X-Google-Smtp-Source: ACHHUZ6vT+g1sIVdxaiODXjnAKnpgOo7aXFzFwkzqdbwsc/WeEp/ry6zgCaDmFgGXU9H1Utt4ULX94e/Ts3pQQ==
-X-Received: from pranav-first.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:390b])
- (user=pranavpp job=sendgmr) by 2002:a25:1bd4:0:b0:ba7:85fd:9d38 with SMTP id
- b203-20020a251bd4000000b00ba785fd9d38mr6534719ybb.4.1684259863386; Tue, 16
- May 2023 10:57:43 -0700 (PDT)
-Date:   Tue, 16 May 2023 17:57:37 +0000
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.40.1.606.ga4b1b128d6-goog
-Message-ID: <20230516175737.1831575-1-pranavpp@google.com>
-Subject: [PATCH] scsi: pm80xx: Set phy_attached to zero when device is gone
-From:   Pranav Prasad <pranavpp@google.com>
-To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Igor Pylypiv <ipylypiv@google.com>,
-        Pranav Prasad <pranavpp@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        d=1e100.net; s=20221208; t=1684260927; x=1686852927;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=byFT3vV2qfPS05ZcRtgBidf32OEFCTYrPqr4duaWLfA=;
+        b=TswwgG1JQd3LIjBb8pLXlCeKKNWipcXfpBI2We5ikGt9C1e9Gz47gf/nuPOke+sIt8
+         l9rBKr1OGMXp76YTD4dcep/jGYKn5E0Vyv+F16j+y1GoaDq1l25c4+MEJ2LsCLuPYIvr
+         OOfQHEArpO8cNX8hKOhpXwlATtqHdzHpn3Uei3Tep7z4KRhDWANlBlnWy3SoKLk6uUL4
+         IfLoX5D0dj/p5icYqfydge3AyYslAZ6wBQKa2yNg9WHnfpIMIgrk5B05fs21lJSzqgkP
+         dssp/PQFCcfbTOLAJDZPqzbuiemrIksoKxw/JZTRH8d1iW4N/tkupiyaiSJ0f/uUQTeD
+         /yvQ==
+X-Gm-Message-State: AC+VfDyAWohDVgX1/ok7aLpLRJSK2D2W6XG2aUQ0VJ/5q7HbNjHHlSpo
+        9b5U160zro+zoAQNWUscx8sC4g==
+X-Google-Smtp-Source: ACHHUZ7CKbbi4Bbdft7vLEfnIr5e/SMAQZFeaBzDdw4hFH5TRaYWg3Zsqc1N+lLJS37u5UW7BAjMnw==
+X-Received: by 2002:a17:90a:3485:b0:247:2d9d:4722 with SMTP id p5-20020a17090a348500b002472d9d4722mr38324941pjb.0.1684260927115;
+        Tue, 16 May 2023 11:15:27 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id m6-20020a17090a3f8600b00246be20e216sm1902219pjc.34.2023.05.16.11.15.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 May 2023 11:15:26 -0700 (PDT)
+Date:   Tue, 16 May 2023 11:15:25 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Azeem Shaikh <azeemshaikh38@gmail.com>
+Cc:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: bfa: Replace all non-returning strlcpy with strscpy
+Message-ID: <202305161115.75DCAE2@keescook>
+References: <20230516013345.723623-1-azeemshaikh38@gmail.com>
+ <CADmuW3U_tGb+2E5DZVBjMKGTezsTFh5pTjDhJfQ_mNcMvk5GPQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CADmuW3U_tGb+2E5DZVBjMKGTezsTFh5pTjDhJfQ_mNcMvk5GPQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Igor Pylypiv <ipylypiv@google.com>
+> On Mon, May 15, 2023 at 9:35 PM Azeem Shaikh <azeemshaikh38@gmail.com> wrote:
+> >
+> > strlcpy() reads the entire source buffer first.
+> > This read may exceed the destination size limit.
+> > This is both inefficient and can lead to linear read
+> > overflows if a source string is not NUL-terminated [1].
+> > In an effort to remove strlcpy() completely [2], replace
+> > strlcpy() here with strscpy().
+> > No return values were used, so direct replacement is safe.
+> >
+> > [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+> > [2] https://github.com/KSPP/linux/issues/89
+> >
+> > Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
 
-Set phy_attached to zero when device is gone.
+Reviewed-by: Kees Cook <keescook@chromium.org>
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Pranav Prasad <pranavpp@google.com>
----
- drivers/scsi/pm8001/pm8001_sas.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index e5673c774f66..c57fc671509d 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -706,6 +706,7 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
- 			spin_lock_irqsave(&pm8001_ha->lock, flags);
- 		}
- 		PM8001_CHIP_DISP->dereg_dev_req(pm8001_ha, device_id);
-+		pm8001_ha->phy[pm8001_dev->attached_phy].phy_attached = 0;
- 		pm8001_free_dev(pm8001_dev);
- 	} else {
- 		pm8001_dbg(pm8001_ha, DISC, "Found dev has gone.\n");
 -- 
-2.40.1.606.ga4b1b128d6-goog
-
+Kees Cook
