@@ -2,136 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FAEDC7EE2A
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 07:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86927C77B75
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 08:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230237AbjEQHtg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 03:49:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46070 "EHLO
+        id S229784AbjEQIV6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 04:21:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbjEQHte (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 03:49:34 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5302D5591;
-        Wed, 17 May 2023 00:49:21 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QLlcD4YTxz4f3jpp;
-        Wed, 17 May 2023 15:49:16 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgD31QP7hmRkFY5qIw--.45129S3;
-        Wed, 17 May 2023 15:49:17 +0800 (CST)
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Yu Kuai <yukuai1@huaweicloud.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        wsd_upstream@mediatek.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <ZF0K7A6G2cYBjSgn@infradead.org>
- <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
- <ZF5G5ztMng8Xbd1W@infradead.org>
- <2740ee82-e35f-1cbf-f5d0-373f94eb14a5@acm.org>
- <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
- <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
-Date:   Wed, 17 May 2023 15:49:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229724AbjEQIV5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 04:21:57 -0400
+Received: from forward502b.mail.yandex.net (forward502b.mail.yandex.net [178.154.239.146])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DC8B358B
+        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2023 01:21:54 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:2007:0:640:bf5a:0])
+        by forward502b.mail.yandex.net (Yandex) with ESMTP id D1E415F5ED;
+        Wed, 17 May 2023 11:21:52 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id pLX6eJAWn0U0-BzUi45sl;
+        Wed, 17 May 2023 11:21:52 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=scst.dev; s=mail; t=1684311712;
+        bh=Hc7Ct6IFJnjDbYyF/0SWWP9trwad6fyprnowYmZrI7c=;
+        h=From:In-Reply-To:Cc:Date:References:To:Subject:Message-ID;
+        b=BaRT7bNLO+HwjDhixNFHGWBnVbw4KOlGZo/F2cQg/MA1Huhmqhe2mQb1QR3JLHEPL
+         A9S2MOXCFy3TZGI52sNviinF8rA/g4Vx4J8wvk/P914jre0Sn6k8F/TQL6WdBMHaxH
+         w/vfl8tar+Oeda2wPXlHdthFM6pq2Omze5DvBIu4=
+Authentication-Results: mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net; dkim=pass header.i=@scst.dev
+Message-ID: <56b416f2-4e0f-b6cf-d6d5-b7c372e3c6a2@scst.dev>
+Date:   Wed, 17 May 2023 11:22:35 +0300
 MIME-Version: 1.0
-In-Reply-To: <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: [PATCH] qla2xxx: Fix NULL pointer dereference in target mode
+Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <32b0bb9f-ba6a-e9f1-e779-5af2e115c67a@scst.dev>
+ <yq1h6sbvjne.fsf@ca-mkp.ca.oracle.com>
+From:   Gleb Chesnokov <gleb.chesnokov@scst.dev>
+In-Reply-To: <yq1h6sbvjne.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgD31QP7hmRkFY5qIw--.45129S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFyrWw17AF4rZw48Zr4ktFb_yoW5JFW7pF
-        Z3tF45Cw4kJ34jka1kZr4IgF1rt393JFWUJrnxAry0k398Ars7Zr17G3yY9FyrAw4kCF1j
-        yrWFqrykXFy8ZaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbQVy7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+When target mode is enabled, the pci_irq_get_affinity() function may return
+a NULL value in qla_mapq_init_qp_cpu_map() due to the qla24xx_enable_msix()
+code that handles IRQ settings for target mode. This leads to a crash due
+to a NULL pointer dereference.
 
-在 2023/05/16 23:12, Bart Van Assche 写道:
-> On 5/12/23 20:09, Yu Kuai wrote:
->> 在 2023/05/13 2:12, Bart Van Assche 写道:
->>> The fair tag sharing algorithm has a negative impact on all SCSI 
->>> devices with multiple logical units. This is because logical units 
->>> are considered active until (request timeout) seconds have elapsed 
->>> after the logical unit stopped being used (see also the 
->>> blk_mq_tag_idle() call in blk_mq_timeout_work()). UFS users are hit 
->>> by this because UFS 3.0 devices have a limited queue depth (32) and 
->>> because power management commands are submitted to a logical unit 
->>> (WLUN). Hence, it happens often that the block layer "active queue" 
->>> counter is equal to 2 while only one logical unit is being used 
->>> actively (a logical unit backed by NAND flash). The performance 
->>> difference between queue depths 16 and 32 for UFS devices is 
->>> significant.
->>
->> We meet similiar problem before, but I think remove tag fair sharing
->> might cause some problems, because get tag is not fair currently, for
->> example 2 devices share 32 tag, while device a issue large amount of
->> io concurrently, and device b only issue one io, in this case, if fair
->> tag sharing is removed, device b can get bad io latency.
->>
->> By the way, I tried to propose a way to workaround this by following:
->>
->> 1) disable fair tag sharing untill get tag found no tag is avaiable;
->> 2) enable fair tag sharing again if the disk donesn't faild to get tag
->> for a period of time;
->>
->> Can this approch be considered?
-> 
-> I'm afraid that this approach won't help for the UFS driver since it is 
-> likely that all tags are in use by a single logical unit during an IOPS 
-> test. Hence, fair sharing would be enabled even when we don't want it to 
-> be enabled.
+This patch fixes the issue by adding a check for the NULL value returned
+by pci_irq_get_affinity() and introducing a 'cpu_mapped' boolean flag to
+the qla_qpair structure, ensuring that the qpair's CPU affinity is updated
+when it has not been mapped to a CPU.
 
-It's right my original method is not flexible.
+Fixes: 1d201c81d4cc ("scsi: qla2xxx: Select qpair depending on which CPU post_cmd() gets called")
 
-> 
-> I propose that we switch to one of these two approaches:
+Signed-off-by: Gleb Chesnokov <gleb.chesnokov@scst.dev>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+---
+  drivers/scsi/qla2xxx/qla_def.h    | 1 +
+  drivers/scsi/qla2xxx/qla_init.c   | 3 +++
+  drivers/scsi/qla2xxx/qla_inline.h | 6 ++++++
+  drivers/scsi/qla2xxx/qla_isr.c    | 3 +++
+  4 files changed, 13 insertions(+)
 
-How about a smoothing method that the device with more io will share
-more tag, and each device will get at least one tag?
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index df5e5b7fdcfe..84aa3571be6d 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3796,6 +3796,7 @@ struct qla_qpair {
+      uint64_t retry_term_jiff;
+      struct qla_tgt_counters tgt_counters;
+      uint16_t cpuid;
++    bool cpu_mapped;
+      struct qla_fw_resources fwres ____cacheline_aligned;
+      struct  qla_buf_pool buf_pool;
+      u32    cmd_cnt;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ec0423ec6681..1a955c3ff3d6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -9426,6 +9426,9 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
+          qpair->rsp->req = qpair->req;
+          qpair->rsp->qpair = qpair;
 
-Thanks,
-Kuai
++        if (!qpair->cpu_mapped)
++            qla_cpu_update(qpair, raw_smp_processor_id());
++
+          if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
+              if (ha->fw_attributes & BIT_4)
+                  qpair->difdix_supported = 1;
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index cce6e425c121..a6e2c7d4ff87 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -538,12 +538,18 @@ qla_mapq_init_qp_cpu_map(struct qla_hw_data *ha,
 
-> * Either remove the fair tag sharing code entirely and rely on the 
-> fairness mechanism provided by the sbitmap code. I'm referring to how 
-> __sbitmap_queue_wake_up() uses the wake_index member variable.
-> * Or make the behavior of the fairness algorithm configurable from user 
-> space. One possible approach is to make the proportion of tags for a 
-> logical unit / NVMe namespace configurable via sysfs. This will allow to 
-> reduce the number of tags for the WLUN of UFS devices.
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> .
-> 
+      if (!ha->qp_cpu_map)
+          return;
++
+      mask = pci_irq_get_affinity(ha->pdev, msix->vector_base0);
++    if (!mask)
++        return;
++
+      qpair->cpuid = cpumask_first(mask);
+      for_each_cpu(cpu, mask) {
+          ha->qp_cpu_map[cpu] = qpair;
+      }
+      msix->cpuid = qpair->cpuid;
++
++    qpair->cpu_mapped = true;
+  }
+
+  static inline void
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 71feda2cdb63..245e3a5d81fd 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3770,6 +3770,9 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+
+      if (rsp->qpair->cpuid != smp_processor_id() || !rsp->qpair->rcv_intr) {
+          rsp->qpair->rcv_intr = 1;
++
++        if (!rsp->qpair->cpu_mapped)
++            qla_cpu_update(rsp->qpair, raw_smp_processor_id());
+      }
+
+  #define __update_rsp_in(_is_shadow_hba, _rsp, _rsp_in)            \
+-- 
+2.40.1
 
