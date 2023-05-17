@@ -2,62 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B07AC7EE2E
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 14:31:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF2B1C77B75
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 14:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231860AbjEQObA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 10:31:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52904 "EHLO
+        id S231954AbjEQObs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 10:31:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231792AbjEQOa5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 10:30:57 -0400
-Received: from mail-io1-xd29.google.com (mail-io1-xd29.google.com [IPv6:2607:f8b0:4864:20::d29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07FC67AB8;
-        Wed, 17 May 2023 07:30:57 -0700 (PDT)
-Received: by mail-io1-xd29.google.com with SMTP id ca18e2360f4ac-76c64ddee11so20345339f.2;
-        Wed, 17 May 2023 07:30:57 -0700 (PDT)
+        with ESMTP id S231891AbjEQObr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 10:31:47 -0400
+Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8C3FD7;
+        Wed, 17 May 2023 07:31:45 -0700 (PDT)
+Received: by mail-il1-x12d.google.com with SMTP id e9e14a558f8ab-33179bbb900so2038505ab.3;
+        Wed, 17 May 2023 07:31:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684333856; x=1686925856;
+        d=gmail.com; s=20221208; t=1684333905; x=1686925905;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=m4G0ffA6zmiA7GH7zmCNMUfYrrJvuole56H+sbXXV7w=;
-        b=eT5kHWUFo55SmDc35iD7xK/1mEeYE8kGtY53rC3Sb1A2IjklfvANgMkamm3iTyhZUC
-         qehFKlUlF+n5vqwJZ12TElAHVl3WbxNVEXt5hBeWZ+OUxB/IhcvH61MmuY4RQ1KGv7bC
-         FEp3XPX65zhltac05BRDePQPq59og8srm6AZ8zakNFF2SsoCEMtID1h2K1f6pKiadHuf
-         wJEpCZn7UtyFYkHff9Gq34IqD9EZQfuRCKzrDTUhA5uNZQXJ8F75+g9/v6+nmPEsboTi
-         xMIbnCsAeCnGM92eFciAa9sfyK4RaWrZGJPhAFJR/lQsr1wMXB1tW0aKF/1rsYNbrYku
-         ltYw==
+        bh=2Lke+yCCOr0es05iyZ8RuBmLQLBA6r6BTGksr8bpRhM=;
+        b=Pg3W+iFAfOfGF+wIsN5Uto67nR/pcQc6Uen1eLfI1TK11t/dizUcJYkp+ZWuvaZKK3
+         ELrXjFINXmUMj+9i79RbuR+jVtjuM8O1IeCkmdJwBXAs/mdtvdyau5NF7yBfNKq5CmQE
+         QUM6vPyR3iFBKc3GYgn8o7dzml3cTVwX5okun5MRoT8iVK9Ee6RSrmim+TcQbSZ/9Yiz
+         +2BX8GUUI1JbezWuOPZuHNjSssy9b07q9rUKWQXJjYTQGF9AEvbMjPtrwtiICCzGtd1/
+         oSdH8v8H1IyOBs0HJ5W496m//a+TqdXu92147pWH+SgVuFoNwD3elpzseYH/biAF3enl
+         OKKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684333856; x=1686925856;
+        d=1e100.net; s=20221208; t=1684333905; x=1686925905;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=m4G0ffA6zmiA7GH7zmCNMUfYrrJvuole56H+sbXXV7w=;
-        b=g2GMBT9tT0yjMu5JyY4KNoFBrO13fUlq3Ki7Fj7z+zxwQnZDKynCivhduvTaYHv/xy
-         nG+UFd4acKhQ++EIcSHCwWdu6UgZl4DMO4w36Y1SY7iPZhvjD8Auxsdk629Wcgpl2erp
-         WUVDvt7r4wvlo2gksH8/kC+ILCUH/Zilg5VafICSJsfDox4strFq9EYBpRkeRSoKFxlG
-         gGEj3h267iOaXBaETc/HxTePOtZbSt/skWoYUIneNMTNoi60hHFSxJeizQUl5cqiorUH
-         rBqjVwYwoVEs8pEpOl+DcesZip3DPcRxWlHwbL5AODI7u/QKgae14rHU87D9TSEI1Z9/
-         R6wA==
-X-Gm-Message-State: AC+VfDyOrYpduXU26XJJ+NY2QFQI3v73mXydMzuQPVusdh1hLKbSqAJW
-        pJqJz+vUB4fg090NJmyWRoU=
-X-Google-Smtp-Source: ACHHUZ6p682nSxZpGqVNGTnWlwaKJsm8R0x2lauLJBIZsfd9OAZwuzm+jcFKbEM9dL4QdZb6TzaBAg==
-X-Received: by 2002:a6b:680d:0:b0:76c:8674:81e7 with SMTP id d13-20020a6b680d000000b0076c867481e7mr4727944ioc.21.1684333856216;
-        Wed, 17 May 2023 07:30:56 -0700 (PDT)
+        bh=2Lke+yCCOr0es05iyZ8RuBmLQLBA6r6BTGksr8bpRhM=;
+        b=AM69lx9xW6aCdRZ8Pje2JukGnC9UNs0ttRgKStCnRaBNsLfrjikxi//KeYKNhceGFm
+         vQAlkmdg68cbJ1ff8j/sVWPtIcdEShB3YzsBoP5NnAKJD7CJuSfsLP3gxoJrbu84HhuN
+         nWvC9EsTFBoLz6cZFJ3sB+5tI3ysaoLM512tMxA/mSOKTP5owo+4QMrSB1Ysbm7NqsAV
+         ANHyotZ1slc1fx9JpaL/+5XUiIHuOLHR+b5VdQPjJQlO91e+DOc7LeoX29kx6METuow9
+         1Smdv3Ej2Pg/3u2fiWv1j7UkqzINI3XilEqwW5PlBg2s8L7+/cWYrJ/nwCB5Pw0qJd18
+         om/A==
+X-Gm-Message-State: AC+VfDzKbyA1SX93+f14oacr5ELva7JbC/Uokplz61HD1haVPLPNZaEh
+        G3Z3VBMADg78S/5QtcgVnit+w+kV0nylXA==
+X-Google-Smtp-Source: ACHHUZ7J6AS3RReBuk7ob2oUgt6e1ky1TB7AAp3I0h6cavueIKN2LhKrBiKYKgYjUL+i0Gkr62fCbw==
+X-Received: by 2002:a92:da45:0:b0:325:d689:6cd7 with SMTP id p5-20020a92da45000000b00325d6896cd7mr2277338ilq.16.1684333904626;
+        Wed, 17 May 2023 07:31:44 -0700 (PDT)
 Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
-        by smtp.gmail.com with ESMTPSA id g11-20020a6be60b000000b0076f931316b0sm2775923ioh.55.2023.05.17.07.30.55
+        by smtp.gmail.com with ESMTPSA id 10-20020a920d0a000000b0032b399aafa5sm8416592iln.18.2023.05.17.07.31.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 May 2023 07:30:55 -0700 (PDT)
+        Wed, 17 May 2023 07:31:44 -0700 (PDT)
 From:   Azeem Shaikh <azeemshaikh38@gmail.com>
-To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com
 Cc:     linux-hardening@vger.kernel.org,
         Azeem Shaikh <azeemshaikh38@gmail.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: aacraid: Replace all non-returning strlcpy with strscpy
-Date:   Wed, 17 May 2023 14:30:49 +0000
-Message-ID: <20230517143049.1519806-1-azeemshaikh38@gmail.com>
+Subject: [PATCH] scsi: bnx2i: Replace all non-returning strlcpy with strscpy
+Date:   Wed, 17 May 2023 14:31:30 +0000
+Message-ID: <20230517143130.1519941-1-azeemshaikh38@gmail.com>
 X-Mailer: git-send-email 2.40.1.606.ga4b1b128d6-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -78,20 +80,20 @@ No return values were used, so direct replacement is safe.
 
 Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
 ---
- drivers/scsi/aacraid/aachba.c |    2 +-
+ drivers/scsi/bnx2i/bnx2i_init.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 24c049eff157..70e1cac1975e 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -3289,7 +3289,7 @@ static int query_disk(struct aac_dev *dev, void __user *arg)
- 	else
- 		qd.unmapped = 0;
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 2b3f0c10478e..872ad37e2a6e 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -383,7 +383,7 @@ int bnx2i_get_stats(void *handle)
+ 	if (!stats)
+ 		return -ENOMEM;
  
--	strlcpy(qd.name, fsa_dev_ptr[qd.cnum].devname,
-+	strscpy(qd.name, fsa_dev_ptr[qd.cnum].devname,
- 	  min(sizeof(qd.name), sizeof(fsa_dev_ptr[qd.cnum].devname) + 1));
+-	strlcpy(stats->version, DRV_MODULE_VERSION, sizeof(stats->version));
++	strscpy(stats->version, DRV_MODULE_VERSION, sizeof(stats->version));
+ 	memcpy(stats->mac_add1 + 2, hba->cnic->mac_addr, ETH_ALEN);
  
- 	if (copy_to_user(arg, &qd, sizeof (struct aac_query_disk)))
+ 	stats->max_frame_size = hba->netdev->mtu;
 
