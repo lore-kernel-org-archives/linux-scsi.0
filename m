@@ -2,88 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6029DC77B7F
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 18:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C90D4C77B75
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 19:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229555AbjEQSXc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 14:23:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54626 "EHLO
+        id S229911AbjEQTNb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 15:13:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbjEQSXa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 14:23:30 -0400
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E0D4AD26;
-        Wed, 17 May 2023 11:23:16 -0700 (PDT)
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1ae3fe67980so12194915ad.3;
-        Wed, 17 May 2023 11:23:16 -0700 (PDT)
+        with ESMTP id S229731AbjEQTNX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 15:13:23 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D9DA59EE
+        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2023 12:13:20 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1ae4be0b1f3so9575155ad.0
+        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2023 12:13:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1684350800; x=1686942800;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=R6czxj2yh/2mLyL8a+KpoQy5McU/reD4RvDXw+77Cpc=;
+        b=QwKQlvilqcEW2x6DKwphNwJhhD+FIPW3wsl/pJqnfEhMuS5gPImBThRtc8IeFe9ATj
+         9kRW5jalZeegpFo9A40Jj4PZVs9ip76KAgOktsvYXoZNyQn9eubHm/mzXKUDSdmfQkXq
+         hx+OqrWYi/AW+RjK/5NRxbzwzOcz36qulbkF4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684347796; x=1686939796;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=yBzWQWarXz9+zZ2Mc7G87KcpNXJGB6yUDNeKIXNCtSA=;
-        b=UkskJbNeTvAcm426IjPFfI97COAA4aWhhnz5GPsmfnfuh/V7HtzmqytwwVvC4p/Tos
-         w0pofK8JW2hn+YZh6oeoVEj/hHFeNrC1dT1JPnG0U7AG9IHcZyf5alG+G9h/PKKN95jb
-         3cVwtm0bUFt2tqK/d89M/bz4nfc1KrCmji6NkbA+mghmXaZjqmIJjO1uUJ4vFCmk6YwJ
-         c1MNQrcQEmj7+pk1R9LQnuh2HN2R+3FoTQtHUAZXbi04OXBRzQ1P3CjypNbzMYoieU47
-         ybiaO95UMmH0gudjsDFmuxGAMFsGjzwIDOtbuMPbRDjpo2RtDCLfEqcSwp2J4injT1Am
-         W6EQ==
-X-Gm-Message-State: AC+VfDwG/R1fmlKcif8Lul9X6RNPzOMJvI2XLrE37cAm9SBb8CULFwEt
-        Zs7Y3UNVWEQ/GWSdv7S8Rbg=
-X-Google-Smtp-Source: ACHHUZ4YGGTWAES+ifNoAmfqzMuyp7rgF6Rhkiiru7ruMgSKKpN7kzpCCSfJrIQ7EJbOmjWIGpTfVQ==
-X-Received: by 2002:a17:903:124f:b0:1ac:451d:34a with SMTP id u15-20020a170903124f00b001ac451d034amr54880269plh.33.1684347796297;
-        Wed, 17 May 2023 11:23:16 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id b9-20020a170902650900b001a6dc4f4a8csm18010196plk.73.2023.05.17.11.23.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 May 2023 11:23:15 -0700 (PDT)
-Message-ID: <097caed2-10b3-7cd1-7c06-90f983e5c720@acm.org>
-Date:   Wed, 17 May 2023 11:23:13 -0700
+        d=1e100.net; s=20221208; t=1684350800; x=1686942800;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=R6czxj2yh/2mLyL8a+KpoQy5McU/reD4RvDXw+77Cpc=;
+        b=kIqNYvdSnF/RozlgTq16RcF6Xm/pju8ZM0m6M2X5R/Jtn0wXIw0y55RbzvWHtfNu0G
+         6eT0CYt/lo5mTtG5//ORYrUMoPj/LVZyphWRkv3vF9IoHB3Czk9J/coO20UuHV/h6mXh
+         Csg4pjcvJAkJDTKVFQ3t7eorN/3Yx3Rm/6LjjkUcfvqdxwEVqt4foMfzsE/J8XlmDyTi
+         tgn6yAms0PNt9yH06y9j0g28Yb7jgZkue30gbUAQ2qfSru/BWRsIRGRMgia4syCnWmgc
+         3uphZOu7Nv18D/8agaxY6xFCv2h9s9sDvZmq8llwenZQ/Jhf/OKEWbAX0g3uyMK517Tm
+         eY8w==
+X-Gm-Message-State: AC+VfDz6xQU4Szr2Em7eaiHsCKmTVFJEmJOlj037uVnYK9hxVFNS+q4J
+        md7oEjjpV7l74f6lZzjMw+v8GA==
+X-Google-Smtp-Source: ACHHUZ64wPSvM/q5kDI7IKFpS45eLHhjh6pMFolF+HvUoNJeUircwL59gxk6wPnioJ8AyerG0Kiv0Q==
+X-Received: by 2002:a17:90b:80f:b0:253:2c87:9459 with SMTP id bk15-20020a17090b080f00b002532c879459mr585016pjb.45.1684350800035;
+        Wed, 17 May 2023 12:13:20 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id 10-20020a17090a0f8a00b0024e06a71ef5sm2013789pjz.56.2023.05.17.12.13.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 May 2023 12:13:19 -0700 (PDT)
+Date:   Wed, 17 May 2023 12:13:19 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Azeem Shaikh <azeemshaikh38@gmail.com>
+Cc:     Adam Radford <aradford@gmail.com>, linux-hardening@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: 3w-9xxx: Replace all non-returning strlcpy with
+ strscpy
+Message-ID: <202305171213.3CA3EC1@keescook>
+References: <20230517142955.1519572-1-azeemshaikh38@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        wsd_upstream@mediatek.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <ZF0K7A6G2cYBjSgn@infradead.org>
- <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
- <ZF5G5ztMng8Xbd1W@infradead.org>
- <2740ee82-e35f-1cbf-f5d0-373f94eb14a5@acm.org>
- <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
- <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
- <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230517142955.1519572-1-azeemshaikh38@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/17/23 00:49, Yu Kuai wrote:
-> 在 2023/05/16 23:12, Bart Van Assche 写道:
->> I propose that we switch to one of these two approaches:
+On Wed, May 17, 2023 at 02:29:55PM +0000, Azeem Shaikh wrote:
+> strlcpy() reads the entire source buffer first.
+> This read may exceed the destination size limit.
+> This is both inefficient and can lead to linear read
+> overflows if a source string is not NUL-terminated [1].
+> In an effort to remove strlcpy() completely [2], replace
+> strlcpy() here with strscpy().
+> No return values were used, so direct replacement is safe.
 > 
-> How about a smoothing method that the device with more io will share
-> more tag, and each device will get at least one tag?
+> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+> [2] https://github.com/KSPP/linux/issues/89
+> 
+> Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
 
-Hi Yu,
+Reviewed-by: Kees Cook <keescook@chromium.org>
 
-hctx_may_queue() is called from the hot path (blk_mq_get_tag()). I'm 
-pretty sure that adding any nontrivial code in that path will cause a 
-performance (IOPS) regression. So I don't think that adding a smoothing 
-method in hctx_may_queue() is a realistic option.
-
-Thanks,
-
-Bart.
+-- 
+Kees Cook
