@@ -2,62 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AA46C77B7F
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 14:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B07AC7EE2E
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 14:31:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231749AbjEQOaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 10:30:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52328 "EHLO
+        id S231860AbjEQObA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 10:31:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229740AbjEQOaV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 10:30:21 -0400
-Received: from mail-il1-x12e.google.com (mail-il1-x12e.google.com [IPv6:2607:f8b0:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A6C69C;
-        Wed, 17 May 2023 07:30:20 -0700 (PDT)
-Received: by mail-il1-x12e.google.com with SMTP id e9e14a558f8ab-3361b08a564so5657245ab.3;
-        Wed, 17 May 2023 07:30:20 -0700 (PDT)
+        with ESMTP id S231792AbjEQOa5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 10:30:57 -0400
+Received: from mail-io1-xd29.google.com (mail-io1-xd29.google.com [IPv6:2607:f8b0:4864:20::d29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07FC67AB8;
+        Wed, 17 May 2023 07:30:57 -0700 (PDT)
+Received: by mail-io1-xd29.google.com with SMTP id ca18e2360f4ac-76c64ddee11so20345339f.2;
+        Wed, 17 May 2023 07:30:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684333820; x=1686925820;
+        d=gmail.com; s=20221208; t=1684333856; x=1686925856;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=yNUMQ1PEW/q33xRaa3QEUyTPfbVsUmYNJm0BWOVeXO4=;
-        b=WvGb/E9JOdG7FSmn8zE2q48KwNsDlB+LL/p9y2AqxtlKYYfLzI+ptQKMjtVgA2AyTR
-         7Qbj1enSn4b/no9DOQziR3ihlN30R6f22k6Aqb20hMPEduBgJWB5W8tb2RbjkdG6Z0n1
-         OtFAuYTgwNrAUy9DHLaA3aX1VygCPtb8MkoxmLwytPLZXwiPhsxAhJVdUk82dTLD8wjS
-         ppOgSs1dQQ9W2kRnW7f68XW8YMNGgtXorFTpfJNzwBIKMJJbqoxWa4pv33uF4MAvgp87
-         ufK0C9nM68+F4ZsK3sgDb6BrjV/PkAONiUnEcnDyJrstlJDrALt35E10GjsZ6wpWlMZz
-         C5pg==
+        bh=m4G0ffA6zmiA7GH7zmCNMUfYrrJvuole56H+sbXXV7w=;
+        b=eT5kHWUFo55SmDc35iD7xK/1mEeYE8kGtY53rC3Sb1A2IjklfvANgMkamm3iTyhZUC
+         qehFKlUlF+n5vqwJZ12TElAHVl3WbxNVEXt5hBeWZ+OUxB/IhcvH61MmuY4RQ1KGv7bC
+         FEp3XPX65zhltac05BRDePQPq59og8srm6AZ8zakNFF2SsoCEMtID1h2K1f6pKiadHuf
+         wJEpCZn7UtyFYkHff9Gq34IqD9EZQfuRCKzrDTUhA5uNZQXJ8F75+g9/v6+nmPEsboTi
+         xMIbnCsAeCnGM92eFciAa9sfyK4RaWrZGJPhAFJR/lQsr1wMXB1tW0aKF/1rsYNbrYku
+         ltYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684333820; x=1686925820;
+        d=1e100.net; s=20221208; t=1684333856; x=1686925856;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=yNUMQ1PEW/q33xRaa3QEUyTPfbVsUmYNJm0BWOVeXO4=;
-        b=N/lyGgaqf3VERBUrQYoHpX98+SOUhyXwWhjgA72nYLuvkt4dE5QjNI84sibI13D0uA
-         0//gzjPkk8EYugXiMEpN4pEZ61xBBLdlaHEQK+CZ66OwJIMpLtYaQ0RpiHy73xT9aroT
-         evYuh8rI838A/sgykqamA/mLwcEgaCpnX2iSflRToN9VN3Qvqelirl94qF8l8dEo7Iqy
-         c8gDbuuFMo715rRalbpsKaBTXrzjfwDjHcL5S67irXzw01EHNs4uoF+3GR3SacOZoyzO
-         Qb3X1ghnEOVANRv3MWwCvr82+SEPfDBGWBG7NDAoFcjRs5UhP+xcDYq+3+hFKSkSdlXR
-         kQNQ==
-X-Gm-Message-State: AC+VfDyR6ktK4x7gaYfFAVn3wKBMvi5SuZ7bGW+zwhQhI/YWjBgivur0
-        lZGtA6rnn/Yp47vcVQUO1EQzeZnwpTXyag==
-X-Google-Smtp-Source: ACHHUZ6/3uRbfAeIuIA2STlk3/JDq8+dYaVfVPym/azA03JYjDzYn7elAXf/5OV0s0wqu3dVjbTyTw==
-X-Received: by 2002:a92:de50:0:b0:338:1e73:ca0 with SMTP id e16-20020a92de50000000b003381e730ca0mr2354891ilr.11.1684333819595;
-        Wed, 17 May 2023 07:30:19 -0700 (PDT)
+        bh=m4G0ffA6zmiA7GH7zmCNMUfYrrJvuole56H+sbXXV7w=;
+        b=g2GMBT9tT0yjMu5JyY4KNoFBrO13fUlq3Ki7Fj7z+zxwQnZDKynCivhduvTaYHv/xy
+         nG+UFd4acKhQ++EIcSHCwWdu6UgZl4DMO4w36Y1SY7iPZhvjD8Auxsdk629Wcgpl2erp
+         WUVDvt7r4wvlo2gksH8/kC+ILCUH/Zilg5VafICSJsfDox4strFq9EYBpRkeRSoKFxlG
+         gGEj3h267iOaXBaETc/HxTePOtZbSt/skWoYUIneNMTNoi60hHFSxJeizQUl5cqiorUH
+         rBqjVwYwoVEs8pEpOl+DcesZip3DPcRxWlHwbL5AODI7u/QKgae14rHU87D9TSEI1Z9/
+         R6wA==
+X-Gm-Message-State: AC+VfDyOrYpduXU26XJJ+NY2QFQI3v73mXydMzuQPVusdh1hLKbSqAJW
+        pJqJz+vUB4fg090NJmyWRoU=
+X-Google-Smtp-Source: ACHHUZ6p682nSxZpGqVNGTnWlwaKJsm8R0x2lauLJBIZsfd9OAZwuzm+jcFKbEM9dL4QdZb6TzaBAg==
+X-Received: by 2002:a6b:680d:0:b0:76c:8674:81e7 with SMTP id d13-20020a6b680d000000b0076c867481e7mr4727944ioc.21.1684333856216;
+        Wed, 17 May 2023 07:30:56 -0700 (PDT)
 Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
-        by smtp.gmail.com with ESMTPSA id a2-20020a927f02000000b003312915e615sm8153185ild.28.2023.05.17.07.30.18
+        by smtp.gmail.com with ESMTPSA id g11-20020a6be60b000000b0076f931316b0sm2775923ioh.55.2023.05.17.07.30.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 May 2023 07:30:19 -0700 (PDT)
+        Wed, 17 May 2023 07:30:55 -0700 (PDT)
 From:   Azeem Shaikh <azeemshaikh38@gmail.com>
-To:     Adam Radford <aradford@gmail.com>
+To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 Cc:     linux-hardening@vger.kernel.org,
         Azeem Shaikh <azeemshaikh38@gmail.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: 3w-9xxx: Replace all non-returning strlcpy with strscpy
-Date:   Wed, 17 May 2023 14:29:55 +0000
-Message-ID: <20230517142955.1519572-1-azeemshaikh38@gmail.com>
+Subject: [PATCH] scsi: aacraid: Replace all non-returning strlcpy with strscpy
+Date:   Wed, 17 May 2023 14:30:49 +0000
+Message-ID: <20230517143049.1519806-1-azeemshaikh38@gmail.com>
 X-Mailer: git-send-email 2.40.1.606.ga4b1b128d6-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -78,20 +78,20 @@ No return values were used, so direct replacement is safe.
 
 Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
 ---
- drivers/scsi/3w-9xxx.c |    2 +-
+ drivers/scsi/aacraid/aachba.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 38d20a69ee12..f925f8664c2c 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -617,7 +617,7 @@ static int twa_check_srl(TW_Device_Extension *tw_dev, int *flashed)
- 	}
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 24c049eff157..70e1cac1975e 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3289,7 +3289,7 @@ static int query_disk(struct aac_dev *dev, void __user *arg)
+ 	else
+ 		qd.unmapped = 0;
  
- 	/* Load rest of compatibility struct */
--	strlcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
-+	strscpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
- 		sizeof(tw_dev->tw_compat_info.driver_version));
- 	tw_dev->tw_compat_info.driver_srl_high = TW_CURRENT_DRIVER_SRL;
- 	tw_dev->tw_compat_info.driver_branch_high = TW_CURRENT_DRIVER_BRANCH;
+-	strlcpy(qd.name, fsa_dev_ptr[qd.cnum].devname,
++	strscpy(qd.name, fsa_dev_ptr[qd.cnum].devname,
+ 	  min(sizeof(qd.name), sizeof(fsa_dev_ptr[qd.cnum].devname) + 1));
+ 
+ 	if (copy_to_user(arg, &qd, sizeof (struct aac_query_disk)))
 
