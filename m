@@ -2,207 +2,175 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5210C77B7D
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 03:49:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E2AC7EE22
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 04:54:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231574AbjEQDtU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 May 2023 23:49:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36858 "EHLO
+        id S231944AbjEQEyo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 00:54:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbjEQDtJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2023 23:49:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DEA010E6;
-        Tue, 16 May 2023 20:49:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230494AbjEQEyl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 00:54:41 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17DC91BF;
+        Tue, 16 May 2023 21:54:40 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 020A660C76;
-        Wed, 17 May 2023 03:49:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11784C433EF;
-        Wed, 17 May 2023 03:49:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684295347;
-        bh=KMdJO9KJ1LnqfLYsyJYf54nj97W1ti/PFsJ+sWomfsc=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=r/uG6K3HxyTKBujntiVW3EvoEbKcp1zB9lNGReX5FdwANnS90jefD9j64rpByPVVt
-         M/rs38MV1UZRsTZqCMgh4LhOAiiWcggXMuOspACd1uYU4IROhbKK0q06W8qRskwtvP
-         cO0VBA77KefYLq07FSAGi4rt1HipWvrodMU1eRSgp25zMwdU3y3Qxoqwj+UTDb6B9e
-         /SOGlM/misSqpbTUGuSawbX1n26id+L2jvOEhMyhLzVm3/stx+xIHKuLbto0sGP5CM
-         P3BjWMuukeswcGEcUpIisiLyr4ECDmulChWmF+yQvo5cn+8061czM4UwLc1b8MteOR
-         eCibf3YBqHQ3Q==
-Message-ID: <b53321ab-679d-e007-6407-6bd00149948e@kernel.org>
-Date:   Wed, 17 May 2023 11:49:03 +0800
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B1511226E7;
+        Wed, 17 May 2023 04:54:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1684299278; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rWZkKDly6UrF08WFSKFIM5mwpzlYOxjZ3ccxBqQ7tTA=;
+        b=IZUSMQGAYqiU1h9saN+9cLI2IsD7bkNt8t30RbeQe7bCSKnDH0f2mTRE1kZM33cubBrDv+
+        udIpzmHbapOMnd0SYKxWIJ2wHJNtAd1YfkZpGGY/Jtop0YN41xJ3Wl4TAE2RmqQ1M3tHXl
+        uyJL6byqtMM2oAsG7uUICDM0iTQN5co=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8594C13478;
+        Wed, 17 May 2023 04:54:38 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id WpZ6Hw5eZGRwSAAAMHmgww
+        (envelope-from <jgross@suse.com>); Wed, 17 May 2023 04:54:38 +0000
+Message-ID: <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
+Date:   Wed, 17 May 2023 06:54:38 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v5] scsi: support packing multi-segment in UNMAP command
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
 Content-Language: en-US
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com, hch@infradead.org
-Cc:     bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Chao Yu <chao@kernel.org>
-References: <20230310123604.1820231-1-chao@kernel.org>
-From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <20230310123604.1820231-1-chao@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
+References: <20230511123432.5793-1-jgross@suse.com>
+ <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
+From:   Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
+In-Reply-To: <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------VynfZeR0Zs3FLfUChVryoRdd"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI maintainers,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------VynfZeR0Zs3FLfUChVryoRdd
+Content-Type: multipart/mixed; boundary="------------65tiF7x8ki04pxuY1LvH4n4V";
+ protected-headers="v1"
+From: Juergen Gross <jgross@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
+Message-ID: <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
+Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
+References: <20230511123432.5793-1-jgross@suse.com>
+ <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
 
-Any comments on this patch?
+--------------65tiF7x8ki04pxuY1LvH4n4V
+Content-Type: multipart/mixed; boundary="------------1IVi3w3S37QiPdQWBMzpyRGs"
 
-To Christoph, should I just drop HPB part change?
+--------------1IVi3w3S37QiPdQWBMzpyRGs
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-On 2023/3/10 20:36, Chao Yu wrote:
-> As SCSI SBC4 specification section 5.30.2 describes that it can
-> support unmapping one or more LBA range in single UNMAP command.
-> 
-> However, previously we only pack one LBA range in UNMAP command
-> by default no matter device gives the block limits that says it
-> can support unmapping multiple LBA ranges with a single UNMAP
-> command.
-> 
-> This patch sets max_discard_segments config according to block
-> limits of device, and supports unmapping multiple LBA ranges with
-> a single UNMAP command.
-> 
-> Signed-off-by: Chao Yu <chao@kernel.org>
-> ---
-> v5:
-> - fix to assign cmd->cmnd[7] and cmd->cmnd[8] w/ data_len correctly.
-> - fix to let ufshpb recognize and handle discard request which contains
-> multiple ranges correctly.
->   drivers/scsi/sd.c         | 36 +++++++++++++++++++++++++-----------
->   drivers/scsi/sd.h         |  1 +
->   drivers/ufs/core/ufshpb.c | 21 +++++++++++++++++++--
->   3 files changed, 45 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 4bb87043e6db..1908b31c7342 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -792,6 +792,8 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
->   	q->limits.discard_granularity =
->   		max(sdkp->physical_block_size,
->   		    sdkp->unmap_granularity * logical_block_size);
-> +	blk_queue_max_discard_segments(q, min_t(u32, U16_MAX,
-> +				sdkp->max_unmap_block_desc_count));
->   	sdkp->provisioning_mode = mode;
->   
->   	switch (mode) {
-> @@ -851,9 +853,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
->   	struct scsi_device *sdp = cmd->device;
->   	struct request *rq = scsi_cmd_to_rq(cmd);
->   	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-> -	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
-> -	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-> -	unsigned int data_len = 24;
-> +	unsigned short segments = blk_rq_nr_discard_segments(rq);
-> +	unsigned int data_len = 8 + 16 * segments;
-> +	unsigned int descriptor_offset = 8;
-> +	struct bio *bio;
->   	char *buf;
->   
->   	buf = sd_set_special_bvec(rq, data_len);
-> @@ -862,12 +865,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
->   
->   	cmd->cmd_len = 10;
->   	cmd->cmnd[0] = UNMAP;
-> -	cmd->cmnd[8] = 24;
-> +	cmd->cmnd[7] = data_len >> 8;
-> +	cmd->cmnd[8] = data_len & 0xff;
-> +
-> +	put_unaligned_be16(6 + 16 * segments, &buf[0]);
-> +	put_unaligned_be16(16 * segments, &buf[2]);
->   
-> -	put_unaligned_be16(6 + 16, &buf[0]);
-> -	put_unaligned_be16(16, &buf[2]);
-> -	put_unaligned_be64(lba, &buf[8]);
-> -	put_unaligned_be32(nr_blocks, &buf[16]);
-> +	__rq_for_each_bio(bio, rq) {
-> +		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
-> +		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
-> +
-> +		put_unaligned_be64(lba, &buf[descriptor_offset]);
-> +		put_unaligned_be32(nr_blocks, &buf[descriptor_offset + 8]);
-> +		descriptor_offset += 16;
-> +	}
->   
->   	cmd->allowed = sdkp->max_retries;
->   	cmd->transfersize = data_len;
-> @@ -2917,7 +2928,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->   	sdkp->opt_xfer_blocks = get_unaligned_be32(&vpd->data[12]);
->   
->   	if (vpd->len >= 64) {
-> -		unsigned int lba_count, desc_count;
-> +		unsigned int lba_count;
->   
->   		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&vpd->data[36]);
->   
-> @@ -2925,9 +2936,12 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->   			goto out;
->   
->   		lba_count = get_unaligned_be32(&vpd->data[20]);
-> -		desc_count = get_unaligned_be32(&vpd->data[24]);
->   
-> -		if (lba_count && desc_count)
-> +		/* Extract the MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT. */
-> +		sdkp->max_unmap_block_desc_count =
-> +					get_unaligned_be32(&vpd->data[24]);
-> +
-> +		if (lba_count && sdkp->max_unmap_block_desc_count)
->   			sdkp->max_unmap_blocks = lba_count;
->   
->   		sdkp->unmap_granularity = get_unaligned_be32(&vpd->data[28]);
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index 5eea762f84d1..e7c51d23395b 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -119,6 +119,7 @@ struct scsi_disk {
->   	u32		opt_xfer_blocks;
->   	u32		max_ws_blocks;
->   	u32		max_unmap_blocks;
-> +	u32		max_unmap_block_desc_count;
->   	u32		unmap_granularity;
->   	u32		unmap_alignment;
->   	u32		index;
-> diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
-> index a46a7666c891..327b29cf506f 100644
-> --- a/drivers/ufs/core/ufshpb.c
-> +++ b/drivers/ufs/core/ufshpb.c
-> @@ -383,13 +383,30 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->   	rgn = hpb->rgn_tbl + rgn_idx;
->   	srgn = rgn->srgn_tbl + srgn_idx;
->   
-> -	/* If command type is WRITE or DISCARD, set bitmap as dirty */
-> -	if (ufshpb_is_write_or_discard(cmd)) {
-> +	/* If command type is WRITE, set bitmap as dirty */
-> +	if (op_is_write(req_op(scsi_cmd_to_rq(cmd)))) {
->   		ufshpb_iterate_rgn(hpb, rgn_idx, srgn_idx, srgn_offset,
->   				   transfer_len, true);
->   		return 0;
->   	}
->   
-> +	/* If command type is DISCARD, set bitmap as dirty */
-> +	if (op_is_discard(req_op(scsi_cmd_to_rq(cmd)))) {
-> +		struct bio *bio;
-> +
-> +		__rq_for_each_bio(bio, scsi_cmd_to_rq(cmd)) {
-> +			lpn = sectors_to_logical(cmd->device,
-> +						bio->bi_iter.bi_sector);
-> +			transfer_len = sectors_to_logical(cmd->device,
-> +							bio_sectors(bio));
-> +			ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx,
-> +						&srgn_idx, &srgn_offset);
-> +			ufshpb_iterate_rgn(hpb, rgn_idx, srgn_idx,
-> +					srgn_offset, transfer_len, true);
-> +		}
-> +		return 0;
-> +	}
-> +
->   	if (!ufshpb_is_supported_chunk(hpb, transfer_len))
->   		return 0;
->   
+T24gMTcuMDUuMjMgMDQ6MDYsIE1hcnRpbiBLLiBQZXRlcnNlbiB3cm90ZToNCj4gDQo+IEp1
+ZXJnZW4sDQo+IA0KPj4gU29tZSBjYWxsZXJzIG9mIHNjc2lfZXhlY3V0ZV9jbWQoKSAobGlr
+ZSBlLmcuIHNkX3NwaW51cF9kaXNrKCkpIGFyZQ0KPj4gcGFzc2luZyBhbiB1bmluaXRpYWxp
+emVkIHN0cnVjdCBzc2hkciBhbmQgZG9uJ3QgbG9vayBhdCB0aGUgcmV0dXJuDQo+PiB2YWx1
+ZSBvZiBzY3NpX2V4ZWN1dGVfY21kKCkgYmVmb3JlIGxvb2tpbmcgYXQgdGhlIGNvbnRlbnRz
+IG9mIHRoYXQNCj4+IHN0cnVjdC4NCj4gDQo+IFdoaWNoIGNhbGxlcnM/IHNkX3NwaW51cF9k
+aXNrKCkgYXBwZWFycyB0byBkbyB0aGUgcmlnaHQgdGhpbmcuLi4NCj4gDQoNCk5vdCByZWFs
+bHkuIEl0IGlzIGNhbGxpbmcgbWVkaWFfbm90X3ByZXNlbnQoKSBkaXJlY3RseSBhZnRlciB0
+aGUgY2FsbCBvZg0Kc2NzaV9leGVjdXRlX2NtZCgpIHdpdGhvdXQgY2hlY2tpbmcgdGhlIHJl
+c3VsdC4gbWVkaWFfbm90X3ByZXNlbnQoKSBpcyBsb29raW5nDQphdCBzc2hkciwgd2hpY2gg
+aXMgdW5pbml0aWFsaXplZCBpbiBjYXNlIG9mIGFuIGVhcmx5IGVycm9yIGluDQpzY3NpX2V4
+ZWN1dGVfY21kKCkuIFRoZSBzYW1lIGFwcGxpZXMgdG8gcmVhZF9jYXBhY2l0eV8xWzA2XSgp
+Lg0KDQpzY3NpX3Rlc3RfdW5pdF9yZWFkeSgpIGFuZCBzY3NpX3JlcG9ydF9sdW5fc2Nhbigp
+IGhhdmUgdGhlIHByb2JsZW0sIHRvby4NCg0KRG8gSSBuZWVkIHRvIGZpbmQgb3RoZXIgZXhh
+bXBsZXM/DQoNCg0KSnVlcmdlbg0K
+--------------1IVi3w3S37QiPdQWBMzpyRGs
+Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+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
+jR/i1DG86lem3iBDXzXsZDn8R38=3D
+=3D2wuH
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------1IVi3w3S37QiPdQWBMzpyRGs--
+
+--------------65tiF7x8ki04pxuY1LvH4n4V--
+
+--------------VynfZeR0Zs3FLfUChVryoRdd
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmRkXg4FAwAAAAAACgkQsN6d1ii/Ey+9
+mQgAkLJQrMbOGzMBl5aEvua4miR6hM6GPt5iGqAkD2psjHz1ebim7nN7W5cCgjjlOyShQkDCTbIZ
+BFY9c+CVvyngHE6BwA6rpqy2FWa0QkJCr7Z1f819iPm+HAfqqmfS7HyC4Ut+3cJtCk09Ydk+Bvgv
+H8Gzi6CWgY2BCcjjhjhE50uURPkotL6eYRbXw9Uxt/uCf9T62C6XGsfH7u9859PHReyLc5P6qiDj
+CbH0Wt12LG4j92mlh6g7h3pQ7SP5uc80QraT6QRTP+MDpqHwjD73yF5wZLmnIb6B+crz/Tn3Oti5
+r97s8XODsGH98SilY1tegVNfm28GeeQTV1J5euAVrg==
+=NEFs
+-----END PGP SIGNATURE-----
+
+--------------VynfZeR0Zs3FLfUChVryoRdd--
