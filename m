@@ -2,92 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FD66C7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 21:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F39DC7EE22
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 May 2023 21:33:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230114AbjEQVWq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 17:22:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34400 "EHLO
+        id S229695AbjEQVdL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 17:33:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230123AbjEQVWm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 17:22:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E91BE93C5;
-        Wed, 17 May 2023 14:22:20 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2926463F50;
-        Wed, 17 May 2023 21:22:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96D3FC433D2;
-        Wed, 17 May 2023 21:22:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684358531;
-        bh=+UBNma6+QwyfRTTsSbQ+zHDD3QPnoGuxziYDj6m1XuY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Yc8dU4J0tcVwCGLSjyi8RGTiECnCafsxjGaY8F+XnNdSSERYxet03Roajsp7Q28/B
-         /bzFtVxGzCuLFM3DWHQ4NSZUcmpSUBkE/RPkhLHsczLNARSYJHXuCiqWa8U0PUmyOl
-         j0Vs8lcpZG0kkSl0fC2TM8kEsV0tzLpWOJQnI8m0grj9Ln+IVotdDkOM8aN82Knz3y
-         +FY1HAXD/98BeGiVmxs82ploHDxgyWw+l+5UFxW1fkalbMCrOv1NKoIks0GzcYqS3o
-         dWO22EB5vtHBZk0PO1NYVub58HII6h03jc7y+rzeufa0yJtUA97PbS8Q/CedTaqJ6N
-         nCKTX3NbHKaAw==
-Date:   Wed, 17 May 2023 15:23:01 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH 2/2][next] scsi: lpfc: Use struct_size() helper
-Message-ID: <99e06733f5f35c6cd62e05f530b93107bfd03362.1684358315.git.gustavoars@kernel.org>
-References: <cover.1684358315.git.gustavoars@kernel.org>
+        with ESMTP id S229668AbjEQVdK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 17:33:10 -0400
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 422D15580
+        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2023 14:33:08 -0700 (PDT)
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2535edae73cso27029a91.2
+        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2023 14:33:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684359188; x=1686951188;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZMQnwZVYG2jGsz6VexgSojqTax2sOF1hDpsJtAE3N/A=;
+        b=K2Z7LNJeVxy4kx8a2iFkOxKOlzj0qu0bgbs3IbZzWp8V/nrpFcIjvtg7wFI2vNoJqa
+         gH8oDDA/ByUepygcFpjgcvNlGtOEqlWQGVsuhqzA2efK86g0HfJIwdyAz+j93GYdRFwD
+         t6E8y5RwL/Y1d6zGFpsUtF89JXB7cD52VBbDOT7jBIV5sdwkP7wHLl8JZkW7Ms1fHBAI
+         G24mvJYgAWo1c2VUzIjdxe7Wip2+uhLaj6M8Zd5V/rIIbSK6PjRZBMJxcAoBwIdZZB1W
+         zvNV4TV84BmrFZgvzmhPt40/ESsG8xL1s65/ffzA8ef/LXakhqLO4ukD9dcm92yjSbWy
+         ctMQ==
+X-Gm-Message-State: AC+VfDxNSlA5HV/CbMKCj5cpeLK0jf4Wb0ENU4faaIutqILoJUmXX2Gf
+        tKOu+U9/v39OnBtCpDqekKB2ZxX4XO0=
+X-Google-Smtp-Source: ACHHUZ4SLLTC4k9SxtRvRauG5R5sfaFuPfPo1la0WYQQone+qDPS0EoSwoH+z18XdoEdiKPmx3UKkw==
+X-Received: by 2002:a17:90b:10c:b0:24e:1f14:991e with SMTP id p12-20020a17090b010c00b0024e1f14991emr227452pjz.36.1684359187531;
+        Wed, 17 May 2023 14:33:07 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id n5-20020a17090a670500b0024e33c69ee5sm29059pjj.5.2023.05.17.14.33.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 May 2023 14:33:06 -0700 (PDT)
+Message-ID: <d740a40b-5794-6e82-c171-1e18cf4e4d50@acm.org>
+Date:   Wed, 17 May 2023 14:33:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1684358315.git.gustavoars@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH 5/5] scsi: ufs: Ungate the clock synchronously
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Daniil Lunev <dlunev@chromium.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+References: <20230504235052.4423-1-bvanassche@acm.org>
+ <20230504235052.4423-6-bvanassche@acm.org>
+ <DM6PR04MB657581B1396166C81E77A963FC709@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB657581B1396166C81E77A963FC709@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prefer struct_size() over open-coded versions of idiom:
+On 5/7/23 00:08, Avri Altman wrote:
+>> -int ufshcd_hold(struct ufs_hba *hba, bool async)
+>> +void ufshcd_hold(struct ufs_hba *hba)
+>>   {
+> How about switching to the block quiescing API as well - blk_mq_{un}quiesce_tagset,
+> Instead of scsi_{un}block_requests?
 
-sizeof(struct-with-flex-array) + sizeof(typeof-flex-array-elements) * count
+Hi Avri,
 
-where count is the max number of items the flexible array is supposed to
-contain.
+Did you perhaps want to refer to blk_mq_freeze_queue()? 
+ufshcd_scsi_block_requests() may be called from inside 
+ufshcd_queuecommand(). Calling blk_mq_freeze_queue() from inside 
+ufshcd_queuecommand() would cause a deadlock.
 
-Link: https://github.com/KSPP/linux/issues/160
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/scsi/lpfc/lpfc_ct.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Thanks,
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index e880d127d7f5..3b95c56023bf 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3748,8 +3748,7 @@ lpfc_vmid_cmd(struct lpfc_vport *vport,
- 		rap->obj[0].entity_id_len = vmid->vmid_len;
- 		memcpy(rap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
- 		size = RAPP_IDENT_OFFSET +
--			sizeof(struct lpfc_vmid_rapp_ident_list) +
--			sizeof(struct entity_id_object);
-+			struct_size(rap, obj, rap->no_of_objects);
- 		retry = 1;
- 		break;
- 
-@@ -3768,8 +3767,7 @@ lpfc_vmid_cmd(struct lpfc_vport *vport,
- 		dap->obj[0].entity_id_len = vmid->vmid_len;
- 		memcpy(dap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
- 		size = DAPP_IDENT_OFFSET +
--			sizeof(struct lpfc_vmid_dapp_ident_list) +
--			sizeof(struct entity_id_object);
-+			struct_size(dap, obj, dap->no_of_objects);
- 		write_lock(&vport->vmid_lock);
- 		vmid->flag &= ~LPFC_VMID_REGISTERED;
- 		write_unlock(&vport->vmid_lock);
--- 
-2.34.1
-
+Bart.
