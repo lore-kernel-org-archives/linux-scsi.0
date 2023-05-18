@@ -2,27 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20FA0C77B7F
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 01:49:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B46C77B75
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 02:23:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229695AbjERBtN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 21:49:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42948 "EHLO
+        id S229794AbjERCXo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 May 2023 22:23:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229559AbjERBtM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 21:49:12 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E04CE7A;
-        Wed, 17 May 2023 18:49:11 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QMCZC3YDqz4f3p1T;
-        Thu, 18 May 2023 09:49:07 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgCHgR8ShGVkF5GbIw--.28610S3;
-        Thu, 18 May 2023 09:49:08 +0800 (CST)
+        with ESMTP id S229549AbjERCXi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 22:23:38 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDE633C26;
+        Wed, 17 May 2023 19:23:23 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1ae50da739dso10847985ad.1;
+        Wed, 17 May 2023 19:23:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684376603; x=1686968603;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=A0HO+zrjQx0EnGmBwSxKYED9w5RWjcQswIihNrV1+/s=;
+        b=Zf9NCC82DJeZNg02XdyvqXmBF684gctyWcQQKNwhZMh17HIJqYx/ZGyfz9BBLuBQKy
+         AQjAuUWs5qoObQJkj9o0yuMLXj+4YeDL6D6SFK4akpzFJRNiSlfrE2FzzcAsxVhWksd6
+         O/+bO9sM0oebqBoTgE97ooA+yYsyhUHWGbGd7ryB2emK4gRLEPCiH6EU5R4FL0v/MPZi
+         ZMmEwgu8wbAxL+QUYyIraYfmMxoKvdQP1r9q+OD2eDhXAgVbyyPBh2EkvhdDng6kfnlA
+         jnpGuAOXYSlbBU7je3PVZA/w0/ZaoswpajWfYwpK6SXINon2DMlzO1DXUkIj1/bhjym2
+         WuLQ==
+X-Gm-Message-State: AC+VfDw3wjxm1bpU3HQOWT+OjB7GpQj9Mv7CHHF4U9BqzOgGInmH8DDI
+        D/ZUPCwPixlVIOWEcGyBlXKpKGOCbQ8=
+X-Google-Smtp-Source: ACHHUZ5v65/veJm9sVIzAkJDP7o32IKI922Z1/Q9bxhyqCvGbAvUdzZp8moIlHPKev+trVh+zhXN6g==
+X-Received: by 2002:a17:902:d48c:b0:1a6:ebc1:c54c with SMTP id c12-20020a170902d48c00b001a6ebc1c54cmr1275890plg.1.1684376603188;
+        Wed, 17 May 2023 19:23:23 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id q3-20020a170902dac300b001ac2c3e436asm69404plx.186.2023.05.17.19.23.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 May 2023 19:23:22 -0700 (PDT)
+Message-ID: <66906bd5-d73f-af96-bf38-c6aee576fa73@acm.org>
+Date:   Wed, 17 May 2023 19:23:20 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
 Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Yu Kuai <yukuai1@huaweicloud.com>,
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>,
         Christoph Hellwig <hch@infradead.org>
 Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -41,64 +63,28 @@ References: <20230509065230.32552-1-ed.tsai@mediatek.com>
  <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
  <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
  <097caed2-10b3-7cd1-7c06-90f983e5c720@acm.org>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <f9ccab59-91a1-69d5-6d20-2c6ea0e24b5a@huaweicloud.com>
-Date:   Thu, 18 May 2023 09:49:06 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <097caed2-10b3-7cd1-7c06-90f983e5c720@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCHgR8ShGVkF5GbIw--.28610S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrKFykZryDXFW5WFyUCF4xCrg_yoWDuFc_uw
-        4DZ3Z2gw17uryxKF4jgr4IqrWUta4UWw17XFW0gF1Sy3s5KFsxKr1DW3Z3ua9xXa1xKrn8
-        ur4UX3WjqrWvgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb3AFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUOmhFUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+ <f9ccab59-91a1-69d5-6d20-2c6ea0e24b5a@huaweicloud.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <f9ccab59-91a1-69d5-6d20-2c6ea0e24b5a@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 5/17/23 18:49, Yu Kuai wrote:
+> Currently, fair share from hctx_may_queue() requires two
+> atomic_read(active_queues and active_requests), I think this smoothing
+> method can be placed into get_tag fail path, for example, the more times
+> a disk failed to get tag in a period of time, the more tag this disk can
+> get, and all the information can be updated here(perhaps directly
+> record how many tags a disk can get, then hctx_may_queue() still only
+> require 2 atomic_read()).
 
-在 2023/05/18 2:23, Bart Van Assche 写道:
-> On 5/17/23 00:49, Yu Kuai wrote:
->> 在 2023/05/16 23:12, Bart Van Assche 写道:
->>> I propose that we switch to one of these two approaches:
->>
->> How about a smoothing method that the device with more io will share
->> more tag, and each device will get at least one tag?
-> 
-> Hi Yu,
-> 
-> hctx_may_queue() is called from the hot path (blk_mq_get_tag()). I'm 
-> pretty sure that adding any nontrivial code in that path will cause a 
-> performance (IOPS) regression. So I don't think that adding a smoothing 
-> method in hctx_may_queue() is a realistic option.
-> 
-
-Currently, fair share from hctx_may_queue() requires two
-atomic_read(active_queues and active_requests), I think this smoothing
-method can be placed into get_tag fail path, for example, the more times
-a disk failed to get tag in a period of time, the more tag this disk can
-get, and all the information can be updated here(perhaps directly
-record how many tags a disk can get, then hctx_may_queue() still only
-require 2 atomic_read()).
+That sounds interesting to me. Do you perhaps plan to implement this 
+approach and to post it as a patch?
 
 Thanks,
-Bart
+
+Bart.
 
