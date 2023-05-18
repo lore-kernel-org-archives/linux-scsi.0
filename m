@@ -2,80 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD0B4C77B7D
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 19:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FC4C7EE25
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 19:32:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229942AbjERTWW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 May 2023 15:22:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51326 "EHLO
+        id S229529AbjERTcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 May 2023 15:32:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229493AbjERTWU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 15:22:20 -0400
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A25E52
-        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 12:22:18 -0700 (PDT)
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-51f6461af24so1586856a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 12:22:18 -0700 (PDT)
+        with ESMTP id S229461AbjERTcG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 15:32:06 -0400
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F588E51
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 12:32:05 -0700 (PDT)
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-64d2981e3abso448104b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 12:32:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684437738; x=1687029738;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dTue8s2JQF/he/QccC9xtoLudEnum8Wl/eWHuhFe+Zk=;
-        b=EZustFkYu3MQLuW4QeAeO5pbswhn/d+HeQbN1VztqTob3YKbVnfWlXG3nZPJXMuaV7
-         CC/iEMAYb4ndjOoYbfy/jST8644W38+r7mUtibRrjtGnoSpGPnApB33vBw66pXqRNWn5
-         Ll3VQiTDtvMNMd8ypQGjSq6Ner0yQLfEwsCpGzxo5F4cOLZ/YcZuifLMOCXPmCKQkg43
-         1xRp7HcuVgm1fpLkCLUQESgX0gGq81bR3/vikveGXdRKr8vyBzK9+OBboUHyD7ULMSYW
-         MnYPWVWPx9yw26ZCB+1/dz5ZLDFfio5J5hBVUQ8BeG+GAhyMz9pHrJ57Ytso1VQ9Z6h6
-         H7mQ==
-X-Gm-Message-State: AC+VfDzqfRfkEXOL6EZ9jtFy7k8aiRGeTjp0bz64TXw6e+cIJhaeRd2J
-        W6gFqhEGxtJjIn3ShbOYIH0=
-X-Google-Smtp-Source: ACHHUZ5INdwfC5NeGW5988O7WifQ3RV69yAwUd+DJPBf4tqCK4Izg5mgJ3SSuqHNNSFv49B/p4q3OQ==
-X-Received: by 2002:a17:903:1ca:b0:1ad:e639:e673 with SMTP id e10-20020a17090301ca00b001ade639e673mr30807plh.53.1684437737942;
-        Thu, 18 May 2023 12:22:17 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id je7-20020a170903264700b001a943c41c37sm1850170plb.7.2023.05.18.12.22.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 May 2023 12:22:17 -0700 (PDT)
-Message-ID: <a6da705d-5858-2b73-dc93-a82b618a4ace@acm.org>
-Date:   Thu, 18 May 2023 12:22:16 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v3 2/4] scsi: core: Trace SCSI sense data
-Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.g.garry@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>
-References: <20230517230927.1091124-1-bvanassche@acm.org>
- <20230517230927.1091124-3-bvanassche@acm.org>
- <ZGV4kTms/igv9s0O@ovpn-8-16.pek2.redhat.com>
+        d=1e100.net; s=20221208; t=1684438324; x=1687030324;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=W7p0kNk2INlMmjQio6iqxyfwbLgYk2uKoPUQuecn1To=;
+        b=ZavaJkYt3AhKuqY2EWr4yf9ESwWzUB/jYnTYodhc+Sc7uFDjurSHbHdha27L4HFnjM
+         AdEfMKOWPohEl87hIMIgDIYhl15Am2WahC6EcGq7oUwZeqJRYt1R7DtpNJ9LIhrfzFBi
+         LPdJBKuhNspGKmRgu9pUqp5BBBxVM7RAIbJRg152o3gDBpdQUnL7eJm3qfw7PQEv2IKc
+         Z8kIC+NGI9QjuGqNap6p6F3eJuvhdP4F0IHx6Tu8S65wZ/y8TyqGzK7+rAGNERJ8R9o3
+         hSPYRGR6lABCbdQP3htq1Fus5ufmmTygLwZyKBho7JBmyhd/2ohCia2cvXnfJI0Ueoxg
+         6nVw==
+X-Gm-Message-State: AC+VfDyLpO5pgBXMlkr1WYYbCXc72XeTOQV9lAJZ/nBDZpBM4ts3gz9S
+        GZ4hkOc4vSbtkM2ZOEGCxbw=
+X-Google-Smtp-Source: ACHHUZ4Ekguj9eQwtJZm28wOLFeybyELzk+X9PNpXeuchX2G3Oz7jqeQuzDe/7K4zNaNk1AbCHtLOg==
+X-Received: by 2002:a05:6a00:2d1c:b0:643:b489:246d with SMTP id fa28-20020a056a002d1c00b00643b489246dmr7115372pfb.3.1684438324525;
+        Thu, 18 May 2023 12:32:04 -0700 (PDT)
+Received: from bvanassche-glaptop2.roam.corp.google.com ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id 11-20020a63050b000000b0051afa49e07asm1619047pgf.50.2023.05.18.12.32.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 May 2023 12:32:03 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZGV4kTms/igv9s0O@ovpn-8-16.pek2.redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 0/3] SCSI core patches
+Date:   Thu, 18 May 2023 12:31:56 -0700
+Message-ID: <20230518193159.1166304-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.1.698.g37aff9b760-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/17/23 18:00, Ming Lei wrote:
-> On Wed, May 17, 2023 at 04:09:25PM -0700, Bart Van Assche wrote:
->>   	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u " \
->>   		  "prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s) " \
->> -		  "result=(driver=%s host=%s message=%s status=%s)",
->> +		  "result=(driver=%s host=%s message=%s status=%s "
->> +		  "sense_key=%#x asc=%#x ascq=%#x)",
-> 
-> This way probably breaks userspace script or utility, maybe you can
-> just append "sense(sense_key=%#x asc=%#x ascq=%#x)" only.
+Hi Martin,
 
-I will make this change.
+Please consider these SCSI core patches for the next merge window.
 
 Thanks,
 
 Bart.
+
+Changes compared to v3:
+- Changed the SCSI tracing format to make it less likely to break existing
+  user space software that parses SCSI trace information.
+- Dropped patch "Delay running the queue if the host is blocked".
+
+Changes compared to v2:
+- Dropped patch "Update a source code comment".
+- In patch "Trace SCSI sense data", changed the format for the sense key and
+  left out a superfluous parenthese.
+- In patch "Only kick the requeue list if necessary", moved the
+  blk_mq_kick_requeue_list() call from scsi_run_host_queues() into
+  scsi_run_queue().
+
+Changes compared to v1:
+- Improved the SCSI tracing patch as requested by Steven Rostedt and
+  Niklas Cassel.
+- Added patch "Delay running the queue if the host is blocked".
+
+Bart Van Assche (3):
+  scsi: core: Use min() instead of open-coding it
+  scsi: core: Trace SCSI sense data
+  scsi: core: Only kick the requeue list if necessary
+
+ drivers/scsi/scsi_common.c  |  3 +--
+ drivers/scsi/scsi_lib.c     | 13 ++++++++-----
+ include/trace/events/scsi.h | 21 +++++++++++++++++++--
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
