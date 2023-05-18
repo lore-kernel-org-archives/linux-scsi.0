@@ -2,101 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1B56C77B7A
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 02:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44006C7EE24
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 04:48:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229668AbjERClB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 May 2023 22:41:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35764 "EHLO
+        id S229717AbjEREsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 May 2023 00:48:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229576AbjERClA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2023 22:41:00 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3141A4
-        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2023 19:40:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1684377615;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=rXkSB9jfwGCWMCTsTJhRgp+dpc2WRKDS72vdcWXZKuE=;
-        b=JsGDi2EozG4AVfzm7Ug8PgXY5sFcp5KVYmdxD6KSmoBnUc2p5JUfKo1XC25UpmooP44u6E
-        6baFBKwvyQNB0TOoqrOb0tMOWVLMNpA8VKF/nn+1of7WaURtJNim+PZ2AC1G4oLHiQ7Lva
-        SMBEFfwCVbjbR3Sqic096wZfRES0BUE=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-569-KoTcBLsTMiuP4A_GIRUMuA-1; Wed, 17 May 2023 22:40:10 -0400
-X-MC-Unique: KoTcBLsTMiuP4A_GIRUMuA-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 179D9185A78B;
-        Thu, 18 May 2023 02:40:10 +0000 (UTC)
-Received: from ovpn-8-16.pek2.redhat.com (ovpn-8-25.pek2.redhat.com [10.72.8.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1FF94492C3F;
-        Thu, 18 May 2023 02:40:04 +0000 (UTC)
-Date:   Thu, 18 May 2023 10:39:59 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.g.garry@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        ming.lei@redhat.com
-Subject: Re: [PATCH v3 4/4] scsi: core: Delay running the queue if the host
- is blocked
-Message-ID: <ZGWP/3dX1sgpRj+t@ovpn-8-16.pek2.redhat.com>
-References: <20230517230927.1091124-1-bvanassche@acm.org>
- <20230517230927.1091124-5-bvanassche@acm.org>
- <ZGV8YfsLYIR2H21/@ovpn-8-16.pek2.redhat.com>
- <07c13761-7f71-3281-fff7-60ec196759c5@acm.org>
+        with ESMTP id S229626AbjEREsQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 00:48:16 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E36A9211D;
+        Wed, 17 May 2023 21:48:15 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id ffacd0b85a97d-30786c87cdaso1482231f8f.2;
+        Wed, 17 May 2023 21:48:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1684385294; x=1686977294;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YXzqCsmhWx6vLlLx9fa7LWO9eUQ6VRxv85e5IWG1dls=;
+        b=TsZ3BX4j7UQPLV7QbH52+4JxNJrU1AiCMlW3fc0cWwqiPmCa+kp0O+LPuYeG2s9lMY
+         HKridmd9zuHnSVd8mTe5rAjfnESPAynU+cAzSFQM3clbMQvQcGJV+S3eRig9W/IETr/v
+         OL7v/vDmBbysHed2pIvKydi/772V98+kGxqsV+cL2XGF6S5hfXpY+ykoo8nfUnqvOq6X
+         7mREjqJkQvsziTQNeKO3u861dcXk6T5sYVsusW1X3Bf5+bPsFX+acqTbOjIA9YATIMtk
+         Bdcm9PH3F+Ms8eTZ7BSwXHReHRknHuj4RMA5wJ5dmzjDH43+8f/1qqc2vKyJU+BI4O2y
+         0NRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684385294; x=1686977294;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YXzqCsmhWx6vLlLx9fa7LWO9eUQ6VRxv85e5IWG1dls=;
+        b=dkyN7lEdlDVpAZjafanizvrhMvMnZkQastUayYJVf4wc1okwE87b4jgJDQha2Kf5p2
+         Tiq+zlP+vXs+d3qd7gzk8+4ISBritftE5x2FVaxxBb3DTZhGBXhursdB4RagCHvEKFu6
+         MBwM6oltO/YuRsIopqzJdxoRrfEyqfCK6ROtoaiA/DBed+Fs3YRcmA6UfjNhs7N3+Ckj
+         D/BsXTZ+wHWqa6vsWBAKvqmrSxlLRfcMP49qcxt2k51NwD8gcf+izognunoT+skvq+Bx
+         fjr5s+B6g1f70od5IdIPxyht1HWBMGYiPpFADb2WD8IKKZLMf0bt967ZcZUpOyhpug6x
+         4xag==
+X-Gm-Message-State: AC+VfDzxyqp6D5dZfbrQsABshT/RJJdI6b3dLZUwhlLdrFCVRrGwrh2g
+        pfm9zRFsNW1zEM62o42fbnpc+g8XAYfmCwUBve8=
+X-Google-Smtp-Source: ACHHUZ55fbbvFhO5eBFO0p+flbgDgNbsz9EVZyM7FR6aKss6mij2A3xni/ZvfjpjjPEqbEB1k8KjB8iYlQsee4sCNqw=
+X-Received: by 2002:a5d:5963:0:b0:306:b3f8:690f with SMTP id
+ e35-20020a5d5963000000b00306b3f8690fmr506638wri.36.1684385294081; Wed, 17 May
+ 2023 21:48:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <07c13761-7f71-3281-fff7-60ec196759c5@acm.org>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+References: <20230516025404.2843867-1-azeemshaikh38@gmail.com>
+ <yq1cz2zu42r.fsf@ca-mkp.ca.oracle.com> <CADmuW3U+AMVf5xDVTri4Mtyk1GnHf+E_6kPJcsNUSPjF05u7qQ@mail.gmail.com>
+In-Reply-To: <CADmuW3U+AMVf5xDVTri4Mtyk1GnHf+E_6kPJcsNUSPjF05u7qQ@mail.gmail.com>
+From:   Azeem Shaikh <azeemshaikh38@gmail.com>
+Date:   Thu, 18 May 2023 00:48:02 -0400
+Message-ID: <CADmuW3UvuHvVHnQx3AGZso2N6JwnJ_5--jHxJPa+q-FFFz6N7Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Replace all non-returning strlcpy with strscpy
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 17, 2023 at 07:34:38PM -0700, Bart Van Assche wrote:
-> On 5/17/23 18:16, Ming Lei wrote:
-> > On Wed, May 17, 2023 at 04:09:27PM -0700, Bart Van Assche wrote:
-> > > @@ -1767,7 +1767,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
-> > >   		break;
-> > >   	case BLK_STS_RESOURCE:
-> > >   	case BLK_STS_ZONE_RESOURCE:
-> > > -		if (scsi_device_blocked(sdev))
-> > > +		if (scsi_device_blocked(sdev) || shost->host_self_blocked)
-> > >   			ret = BLK_STS_DEV_RESOURCE;
-> > 
-> > What if scsi_unblock_requests() is just called after the above check and
-> > before returning to block layer core? Then this request is invisible to
-> > scsi_run_host_queues()<-scsi_unblock_requests(), and io hang happens.
-> 
-> If returning BLK_STS_DEV_RESOURCE could cause an I/O hang, wouldn't that be
-> a bug in the block layer core? Isn't the block layer core expected to rerun
-> the queue after a delay if a block driver returns BLK_STS_DEV_RESOURCE? See
-> also blk_mq_dispatch_rq_list().
+On Wed, May 17, 2023 at 10:11=E2=80=AFAM Azeem Shaikh <azeemshaikh38@gmail.=
+com> wrote:
+>
+> On Tue, May 16, 2023 at 9:42=E2=80=AFPM Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+> >
+> >
+> > Azeem,
+> >
+> > > strlcpy() reads the entire source buffer first. This read may exceed
+> > > the destination size limit. This is both inefficient and can lead to
+> > > linear read overflows if a source string is not NUL-terminated [1]. I=
+n
+> > > an effort to remove strlcpy() completely [2], replace strlcpy() here
+> > > with strscpy(). No return values were used, so direct replacement is
+> > > safe.
+> >
+> > Applied to 6.5/scsi-staging, thanks!
+> >
+>
+> Thanks a lot for the quick response Martin (on this and other patches
+> too). Just for my understanding, do you mind pointing me to the
+> 6.5/scsi-staging tree?
 
-Please see comment for BLK_STS_DEV_RESOURCE:
-
-/*
- * BLK_STS_DEV_RESOURCE is returned from the driver to the block layer if
- * device related resources are unavailable, but the driver can guarantee
- * that the queue will be rerun in the future once resources become
- * available again. This is typically the case for device specific
- * resources that are consumed for IO. If the driver fails allocating these
- * resources, we know that inflight (or pending) IO will free these
- * resource upon completion.
-
-Basically it requires driver to re-run queue.
-
-In reality, it can be full of race, maybe we can just remove
-BLK_STS_DEV_RESOURCE.
-
-Thanks,
-Ming
-
+Found it: https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/=
+?h=3D6.5/scsi-staging
