@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E9D5C7EE2C
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 21:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E55E5C7EE2F
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 21:27:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230292AbjERV14 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 May 2023 17:27:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46432 "EHLO
+        id S230315AbjERV16 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 May 2023 17:27:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229555AbjERV1z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 17:27:55 -0400
+        with ESMTP id S230280AbjERV14 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 17:27:56 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D104E45;
-        Thu, 18 May 2023 14:27:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D785CC0;
+        Thu, 18 May 2023 14:27:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OWDpELemsND2h0o7cM9zQ1tXCQDiK45JkyNrhKbgfiU=; b=yXJilKCzhP+qKEKUWYQgi5COU/
-        REFspkBMHZlTs52T7eNJR2cTv5n0ReiO94PuPWa592qd76xHat5H60NEgV3QEPPE4dUEZJXKWdFSW
-        /ZgFdUPLizqNpo6NZow1IlG7ULRd3LrB0yLbkpSXfQ7c22VE7NUVf9lyvTHL+5DwaWSm5otoyaPO3
-        H1v/YXcXWEnnIAd6mQNcwM9SLIAbVbrb90tJEqOEAK6bSvxf8maYzJaF+QT51B2Mm0SIKUsEa/EuL
-        IdgeWgHegFuar6dQ+HqFG22JHvSVzKAQJE5+RiPIZBuidgngudDPtpKl+GTlV4fl2yyEMOfnDMSmJ
-        xvRaPu+w==;
+        bh=yDH+ArLaMd1MpNSWYh/A1MRf2Rgus6BaFTXxBSJze68=; b=Jh/frAeYv5ETQfMQFtPJebX1Kx
+        kNzQ7diUtmMNOL9WJg9cJM72ZF1vNC9llzk0HbgHGbauguhuPHThfbpOYAxVXO1g8NWNFPfguRWd2
+        FNep8Fr0OaLrSpco61L1jMSRBFyIEiQY2djdQZB6OacK/auuTbGQ2UBU9rWvYUnlORy5nKfs5q4wD
+        aSm92iQyvURHUAKhxHxkhYSUafnGki7b3gJujL0tf2QVSNyZ8jAuCiwdlT4cbI/uerp4pJLb9XRu6
+        XqMeU05r/hu/Onos6tq6hXkrJdn5Z7dx4G/H2TzaurtGjTtiU+sgFHgBT3fSF6Lx6h/9QEBSFQqKK
+        wUfLwuYA==;
 Received: from [2601:1c2:980:9ec0::2764] (helo=bombadil.infradead.org)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pzlAA-00EFRV-09;
-        Thu, 18 May 2023 21:27:54 +0000
+        id 1pzlAB-00EFRV-2E;
+        Thu, 18 May 2023 21:27:55 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org
-Subject: [PATCH 02/11] Docs/scsi: introduction: multiple cleanups
-Date:   Thu, 18 May 2023 14:27:40 -0700
-Message-Id: <20230518212749.18266-3-rdunlap@infradead.org>
+        linux-doc@vger.kernel.org, James Smart <james.smart@broadcom.com>
+Subject: [PATCH 06/11] Docs/scsi: scsi_fc_transport: fix typo in heading
+Date:   Thu, 18 May 2023 14:27:44 -0700
+Message-Id: <20230518212749.18266-7-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230518212749.18266-1-rdunlap@infradead.org>
 References: <20230518212749.18266-1-rdunlap@infradead.org>
@@ -47,12 +47,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Modify URLs to use https instead of http.
-Remove ancient URLs that don't work.
-Change "scsi" in text to "SCSI".
-Change "cdrom" in text to "CD-ROM".
-Drop the reference to "autoclean" for modules since I can't
-  find it in any current documentation.
+Fix the typo "Tansport" to be "Transport".
+Update email address for James Smart.
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
@@ -60,56 +56,30 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: Jonathan Corbet <corbet@lwn.net>
 Cc: linux-doc@vger.kernel.org
+Cc: James Smart <james.smart@broadcom.com>
 ---
- Documentation/scsi/scsi.rst |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ Documentation/scsi/scsi_fc_transport.rst |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff -- a/Documentation/scsi/scsi.rst b/Documentation/scsi/scsi.rst
---- a/Documentation/scsi/scsi.rst
-+++ b/Documentation/scsi/scsi.rst
-@@ -6,30 +6,28 @@ SCSI subsystem documentation
+diff -- a/Documentation/scsi/scsi_fc_transport.rst b/Documentation/scsi/scsi_fc_transport.rst
+--- a/Documentation/scsi/scsi_fc_transport.rst
++++ b/Documentation/scsi/scsi_fc_transport.rst
+@@ -1,8 +1,8 @@
+ .. SPDX-License-Identifier: GPL-2.0
  
- The Linux Documentation Project (LDP) maintains a document describing
- the SCSI subsystem in the Linux kernel (lk) 2.4 series. See:
--http://www.tldp.org/HOWTO/SCSI-2.4-HOWTO . The LDP has single
-+https://www.tldp.org/HOWTO/SCSI-2.4-HOWTO . The LDP has single
- and multiple page HTML renderings as well as postscript and pdf.
--It can also be found at:
--http://web.archive.org/web/%2E/http://www.torque.net/scsi/SCSI-2.4-HOWTO
+-================
+-SCSI FC Tansport
+-================
++=================
++SCSI FC Transport
++=================
  
- Notes on using modules in the SCSI subsystem
- ============================================
--The scsi support in the linux kernel can be modularized in a number of
-+The SCSI support in the Linux kernel can be modularized in a number of
- different ways depending upon the needs of the end user.  To understand
- your options, we should first define a few terms.
+ Date:  11/18/2008
  
--The scsi-core (also known as the "mid level") contains the core of scsi
--support.  Without it you can do nothing with any of the other scsi drivers.
--The scsi core support can be a module (scsi_mod.o), or it can be built into
--the kernel. If the core is a module, it must be the first scsi module
-+The scsi-core (also known as the "mid level") contains the core of SCSI
-+support.  Without it you can do nothing with any of the other SCSI drivers.
-+The SCSI core support can be a module (scsi_mod.o), or it can be built into
-+the kernel. If the core is a module, it must be the first SCSI module
- loaded, and if you unload the modules, it will have to be the last one
--unloaded.  In practice the modprobe and rmmod commands (and "autoclean")
-+unloaded.  In practice the modprobe and rmmod commands
- will enforce the correct ordering of loading and unloading modules in
- the SCSI subsystem.
+@@ -556,5 +556,5 @@ The following people have contributed to
  
- The individual upper and lower level drivers can be loaded in any order
--once the scsi core is present in the kernel (either compiled in or loaded
--as a module).  The disk driver (sd_mod.o), cdrom driver (sr_mod.o),
--tape driver [1]_ (st.o) and scsi generics driver (sg.o) represent the upper
-+once the SCSI core is present in the kernel (either compiled in or loaded
-+as a module).  The disk driver (sd_mod.o), CD-ROM driver (sr_mod.o),
-+tape driver [1]_ (st.o) and SCSI generics driver (sg.o) represent the upper
- level drivers to support the various assorted devices which can be
- controlled.  You can for example load the tape driver to use the tape drive,
- and then unload it once you have no further need for the driver (and release
-@@ -44,4 +42,3 @@ built into the kernel.
  
- .. [1] There is a variant of the st driver for controlling OnStream tape
-        devices. Its module name is osst.o .
--
+ James Smart
+-james.smart@emulex.com
++james.smart@broadcom.com
+ 
