@@ -2,83 +2,159 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B53C77B7D
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 19:54:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E63AEC77B73
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 20:21:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229851AbjERTyb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 May 2023 15:54:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36600 "EHLO
+        id S230213AbjERUVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 May 2023 16:21:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229614AbjERTy3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 15:54:29 -0400
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 370EAE43;
-        Thu, 18 May 2023 12:54:29 -0700 (PDT)
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2533b600d35so2450520a91.1;
-        Thu, 18 May 2023 12:54:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684439668; x=1687031668;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6wdolwlpbuv2Z12HD1Qbe+hXD0bhyAObpIkruQgw9vI=;
-        b=e9BiXNihF9FTyIjrZScNXkCH4Hn/NBHj4VVpn43Xf2oo6KyRJmLH1P2poO8C4jN6+f
-         Se1Wb5OV9R7Ugrjya0wrr0vLQn8D+OTCVfClSTGj8NH+oh9QSGa6sdfbdph84Jmk1xsh
-         5WMilT+4CsgQO+JJ7pPytLQ8RDHoUoNopPKXdD6u63uGn/O3OgC4bhjx5QToh6xeeJNq
-         p88lwPzH+VQEGVoY5j1F++YkREd6ORnUc7Kbo/eEnIwgr+t8WBadF15Tn1g8kZ42wwLF
-         o8cdpDOgfC40JON2ppLgeofts8Khr9djVy54ZZMXHc2tvoRgkElPLN5n2v39MhEhTGJ9
-         tRew==
-X-Gm-Message-State: AC+VfDzOWYDFC2Ea5wkyjl2ykJOLohykFgxVrCI0m3t1n2WLcwep/fFG
-        iTu5drBqd1SdAxUGEWJ85fk=
-X-Google-Smtp-Source: ACHHUZ5TQGnA/Statr8aMHj1h3GJXjV7HU3FBcQB+q5BARW6/JrZa8g/nC+IO/uynKlh4wlbluvaLA==
-X-Received: by 2002:a17:90a:e393:b0:253:78a7:6d with SMTP id b19-20020a17090ae39300b0025378a7006dmr787435pjz.4.1684439668593;
-        Thu, 18 May 2023 12:54:28 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id r14-20020a17090a454e00b002528588560fsm75797pjm.13.2023.05.18.12.54.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 May 2023 12:54:27 -0700 (PDT)
-Message-ID: <fb0efbd1-a54f-09d6-bd27-6f665b461e58@acm.org>
-Date:   Thu, 18 May 2023 12:54:27 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
+        with ESMTP id S229973AbjERUVI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 16:21:08 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BFA710D2
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 13:21:03 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1pzk7I-0002YB-Up; Thu, 18 May 2023 22:20:52 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1pzk7F-0019uO-Ej; Thu, 18 May 2023 22:20:49 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1pzk7E-005kwI-RA; Thu, 18 May 2023 22:20:48 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Xiang Chen <chenxiang66@hisilicon.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
-References: <20230511123432.5793-1-jgross@suse.com>
- <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
- <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
- <9d356278-c826-dacf-cbe0-79f512b7970e@oracle.com>
- <60aeffe4-b31d-4ea3-d4ea-f50ae25e0316@suse.com>
- <74879c87-689f-6a8e-a177-8bde4c9c4e51@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <74879c87-689f-6a8e-a177-8bde4c9c4e51@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc:     linux-scsi@vger.kernel.org, kernel@pengutronix.de
+Subject: [PATCH] scsi: hisi_sas: Convert to platform remove callback returning void
+Date:   Thu, 18 May 2023 22:20:43 +0200
+Message-Id: <20230518202043.261739-1-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.39.2
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4272; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=Fr4AdTOm26xRT/v5+ND70mcCKG9f+Qgf1scc+ROos3Q=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBkZoibb8QR3vjcwNc6IGCZcRqg+EfunBeqWOnfw ZoLcc9K0yiJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZGaImwAKCRCPgPtYfRL+ TmIRB/9ldQL2YCSPFZ/U6I+b9z1TqHuj264cgxuEkXhzgdqowxy41KOYv3C3u73VeueXCxawBq4 TJpgQLs+UjetcTBqKdiymNGwPpqWB/lh7v7ZCqZjhTNtF6rTPsx44YJFcd/6n0icRt/kTMnOap7 V7bj9ph0HqycEUh+S61Nr0lMPgoXwwvBle8KFoLbSGGlnkc8AANHNs5HT7ilMj8/9NMGyfQhpOC KmVJWpfoLQdC5xEWdkQH/uIk4NRZyQZxLfovJn9I1OYSC/VGH7uZT32Ho3LH3OxumtuRfcV8hIz pEs07G87B9f/uGsuvVqExwRGTxzPSMyhHFVH6dxuFHgdYBN7
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/18/23 03:57, John Garry wrote:
-> I think it's better to fix up the callers.
+The .remove() callback for a platform driver returns an int which makes
+many driver authors wrongly assume it's possible to do error handling by
+returning an error code. However the value returned is (mostly) ignored
+and this typically results in resource leaks. To improve here there is a
+quest to make the remove callback return void. In the first step of this
+quest all drivers are converted to .remove_new() which already returns
+void.
 
-+1
+hisi_sas_remove() returned zero unconditionally so this was changed to
+return void. Then it has the right prototype to be used directly as
+remove callback for the two hisi_sas drivers.
 
-> Further to that, I dislike 
-> how we pass a pointer to this local sshdr structure. I would prefer if 
-> scsi_execute_cmd() could kmalloc() the mem for these buffers and the 
-> callers could handle free'ing them - I can put together a patch for 
-> that, to see what people think.
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       | 2 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 3 +--
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 7 +------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 7 +------
+ 4 files changed, 4 insertions(+), 15 deletions(-)
 
-sizeof(struct scsi_sense_hdr) = 8. Using kmalloc() to allocate an eight 
-byte data structure sounds like overkill to me. Additionally, making 
-scsi_execute_cmd() allocate struct scsi_sense_hdr and letting the 
-callers free that data structure will make it harder to review whether 
-or not any memory leaks are triggered. No such review is necessary if 
-the scsi_execute_cmd() caller allocates that data structure on the stack.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index fb7c52c119df..9e73e9cbbcfc 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -642,7 +642,7 @@ extern void hisi_sas_sata_done(struct sas_task *task,
+ extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+-extern int hisi_sas_remove(struct platform_device *pdev);
++extern void hisi_sas_remove(struct platform_device *pdev);
+ 
+ extern int hisi_sas_slave_configure(struct scsi_device *sdev);
+ extern int hisi_sas_slave_alloc(struct scsi_device *sdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 412431c901a7..8f22ece957bd 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -2560,7 +2560,7 @@ int hisi_sas_probe(struct platform_device *pdev,
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_probe);
+ 
+-int hisi_sas_remove(struct platform_device *pdev)
++void hisi_sas_remove(struct platform_device *pdev)
+ {
+ 	struct sas_ha_struct *sha = platform_get_drvdata(pdev);
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+@@ -2573,7 +2573,6 @@ int hisi_sas_remove(struct platform_device *pdev)
+ 
+ 	hisi_sas_free(hisi_hba);
+ 	scsi_host_put(shost);
+-	return 0;
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_remove);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 0aa8c9c88535..94fbbceddc2e 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1790,11 +1790,6 @@ static int hisi_sas_v1_probe(struct platform_device *pdev)
+ 	return hisi_sas_probe(pdev, &hisi_sas_v1_hw);
+ }
+ 
+-static int hisi_sas_v1_remove(struct platform_device *pdev)
+-{
+-	return hisi_sas_remove(pdev);
+-}
+-
+ static const struct of_device_id sas_v1_of_match[] = {
+ 	{ .compatible = "hisilicon,hip05-sas-v1",},
+ 	{},
+@@ -1810,7 +1805,7 @@ MODULE_DEVICE_TABLE(acpi, sas_v1_acpi_match);
+ 
+ static struct platform_driver hisi_sas_v1_driver = {
+ 	.probe = hisi_sas_v1_probe,
+-	.remove = hisi_sas_v1_remove,
++	.remove_new = hisi_sas_remove,
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = sas_v1_of_match,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index cd78e4c983aa..87d8e408ccd1 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3619,11 +3619,6 @@ static int hisi_sas_v2_probe(struct platform_device *pdev)
+ 	return hisi_sas_probe(pdev, &hisi_sas_v2_hw);
+ }
+ 
+-static int hisi_sas_v2_remove(struct platform_device *pdev)
+-{
+-	return hisi_sas_remove(pdev);
+-}
+-
+ static const struct of_device_id sas_v2_of_match[] = {
+ 	{ .compatible = "hisilicon,hip06-sas-v2",},
+ 	{ .compatible = "hisilicon,hip07-sas-v2",},
+@@ -3640,7 +3635,7 @@ MODULE_DEVICE_TABLE(acpi, sas_v2_acpi_match);
+ 
+ static struct platform_driver hisi_sas_v2_driver = {
+ 	.probe = hisi_sas_v2_probe,
+-	.remove = hisi_sas_v2_remove,
++	.remove_new = hisi_sas_remove,
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = sas_v2_of_match,
 
-Bart.
+base-commit: ac9a78681b921877518763ba0e89202254349d1b
+-- 
+2.39.2
+
