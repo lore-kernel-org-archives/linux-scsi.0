@@ -2,104 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BB8C77B7A
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 07:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1148C77B7D
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 May 2023 07:58:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229970AbjERHzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 May 2023 03:55:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42234 "EHLO
+        id S229625AbjERH6t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 May 2023 03:58:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229779AbjERHzl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 03:55:41 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40EC62691;
-        Thu, 18 May 2023 00:55:40 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QMMj40xYGz4f3nTp;
-        Thu, 18 May 2023 15:55:36 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R_32WVkiB2sIw--.13756S3;
-        Thu, 18 May 2023 15:55:37 +0800 (CST)
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Yu Kuai <yukuai1@huaweicloud.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        wsd_upstream@mediatek.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <ZF0K7A6G2cYBjSgn@infradead.org>
- <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
- <ZF5G5ztMng8Xbd1W@infradead.org>
- <2740ee82-e35f-1cbf-f5d0-373f94eb14a5@acm.org>
- <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
- <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
- <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
- <097caed2-10b3-7cd1-7c06-90f983e5c720@acm.org>
- <f9ccab59-91a1-69d5-6d20-2c6ea0e24b5a@huaweicloud.com>
- <66906bd5-d73f-af96-bf38-c6aee576fa73@acm.org>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <bef8340e-f051-db63-5c2f-a2bc94c678ac@huaweicloud.com>
-Date:   Thu, 18 May 2023 15:55:35 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229530AbjERH6r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2023 03:58:47 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53E3F1FE8
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 00:58:46 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34HMFR7X012975
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 00:58:46 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=pfpt0220; bh=oDh45N7YZ3Pqav7pCTex8Rg9meVBPQEnaZSLuIdXHzA=;
+ b=TOSNtJkQQksRR5TFdW7/hdP/yzu9yKsTpDj6ClfJdPTVtKwo5OEaok7FDTB8Etlemfqb
+ acrsuICpTBmWjWTQ9r3eJ0s8yYkEuVBvNtbW/FdZGVIHFtKF09MronR4UmrYD1WwiaKd
+ YRwvdVAG2csOjc6HBtIHIyCnltqq6rPcFPxrx1KtbP2rdIvaHOxgj6fTtmfHjrv3CmSK
+ 2CA8qxiGpchVDWec5yO0795aqqdQyuaVKoMOKnV/daoSp83PAPD5rawLLn1vBcVhR0r1
+ E6IEmBBap0O52gulFRnut+OF9mct491muIGpvbNqJ2HiTkh5RC22s7L9ZJse6woE2g43 yg== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3qn7jb9rdn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2023 00:58:46 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Thu, 18 May
+ 2023 00:58:44 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Thu, 18 May 2023 00:58:44 -0700
+Received: from localhost.marvell.com (unknown [10.30.46.195])
+        by maili.marvell.com (Postfix) with ESMTP id 5E2AC3F706F;
+        Thu, 18 May 2023 00:58:42 -0700 (PDT)
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
+Subject: [PATCH 0/8] qla2xxx klocwork fixes
+Date:   Thu, 18 May 2023 13:28:33 +0530
+Message-ID: <20230518075841.40363-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 MIME-Version: 1.0
-In-Reply-To: <66906bd5-d73f-af96-bf38-c6aee576fa73@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R_32WVkiB2sIw--.13756S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xr48Zw43XF48ury5CF1kuFg_yoW3JrXEgw
-        4DWas2gw42gry7Kayjkr4SvFWqqay7Z3WUXFW0qFWay3s5KrW3Krn09rn5Wa1fXw4xtrn0
-        9r15X34Yv3yIvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb3AFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUOmhFUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Proofpoint-GUID: 0H6JK2a4rHQzi76OmCUd994Ns1p4buL2
+X-Proofpoint-ORIG-GUID: 0H6JK2a4rHQzi76OmCUd994Ns1p4buL2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-18_05,2023-05-17_02,2023-02-09_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Martin,
 
-在 2023/05/18 10:23, Bart Van Assche 写道:
-> On 5/17/23 18:49, Yu Kuai wrote:
->> Currently, fair share from hctx_may_queue() requires two
->> atomic_read(active_queues and active_requests), I think this smoothing
->> method can be placed into get_tag fail path, for example, the more times
->> a disk failed to get tag in a period of time, the more tag this disk can
->> get, and all the information can be updated here(perhaps directly
->> record how many tags a disk can get, then hctx_may_queue() still only
->> require 2 atomic_read()).
-> 
-> That sounds interesting to me. Do you perhaps plan to implement this 
-> approach and to post it as a patch?
-
-Of course, I'll try to send a RFC patch.
+Please apply the qla2xxx driver klocwork fixes to
+the scsi tree at your earliest convenience.
 
 Thanks,
-Kuai
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> .
-> 
+Nilesh
+
+Bikash Hazarika (2):
+  qla2xxx: klocwork - Fix potential null pointer dereference
+  qla2xxx: klocwork - correct the index of array
+
+Nilesh Javali (4):
+  qla2xxx: klocwork - Array index may go out of bound
+  qla2xxx: klocwork - Check for a valid fcport pointer
+  qla2xxx: klocwork - Check valid rport returned by fc_bsg_to_rport
+  qla2xxx: Update version to 10.02.08.400-k
+
+Quinn Tran (1):
+  qla2xxx: klocwork - Fix buffer overrun
+
+Shreyas Deodhar (1):
+  qla2xxx: klocwork - pointer may be dereferenced
+
+ drivers/scsi/qla2xxx/qla_bsg.c     | 6 ++++++
+ drivers/scsi/qla2xxx/qla_edif.c    | 3 ++-
+ drivers/scsi/qla2xxx/qla_init.c    | 2 +-
+ drivers/scsi/qla2xxx/qla_inline.h  | 5 ++++-
+ drivers/scsi/qla2xxx/qla_iocb.c    | 8 +++++---
+ drivers/scsi/qla2xxx/qla_os.c      | 3 ++-
+ drivers/scsi/qla2xxx/qla_version.h | 4 ++--
+ 7 files changed, 22 insertions(+), 9 deletions(-)
+
+
+base-commit: 44ef1604ae9492a7d9238ea79aa0cc7b4c4de860
+-- 
+2.23.1
 
