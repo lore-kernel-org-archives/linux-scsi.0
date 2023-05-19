@@ -2,71 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB42DC77B75
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:56:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67053C7EE23
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230133AbjESW47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 May 2023 18:56:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59408 "EHLO
+        id S231615AbjESW5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 May 2023 18:57:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230127AbjESW46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:56:58 -0400
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B1D5101;
-        Fri, 19 May 2023 15:56:56 -0700 (PDT)
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2533a03388dso2688045a91.2;
-        Fri, 19 May 2023 15:56:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684537016; x=1687129016;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1XhktrS4pjZiSF5CEkm3e0GzTVsAdSXWeFoG2dQLx48=;
-        b=CC2W9orn6ZvkLghjBRJdudFMsMIP3IWBex/mnJqNA4H546+BeSYM2lI5UB78CCqxo1
-         47X4K08QRWqbjnBlwJ/nDmPK+5Dp3i93eVgcU7AqT+/7yiSpv00D2JQMKS7xIgaA3H2I
-         jGASFgr2NgoJyknrq1rugtbFVVPjh150be+gDYFFfibFxYQxDzxUaLaroFao/0wvNmrG
-         2vpc3cOfKgSY+JbHV0QQDB225ldMJ3BRAxPuct26sIvU+ENY1IY/AMGtStJmCSikxSew
-         8i+2iYEw2rhdQvY/+JzbeNBlUkiZ4/LkXSNRtSyX044G1HGDHgmvv1n9qHK9P/XDVf3i
-         09aw==
-X-Gm-Message-State: AC+VfDyXtrgr6tRGpiNuyvLK0/QH5AhTpgLOQp+b97uWXhrBgE+443TK
-        1TGY5C/KX2RN+VBzhuHhf7GbTgmzlwc=
-X-Google-Smtp-Source: ACHHUZ5RNlOvKy/+siOiFnOai/5TiFKjqwC0RcKJx8TBxt/xuO0VfDShkEj+HZKyRGNVfJ0jZX5n2A==
-X-Received: by 2002:a17:90a:5792:b0:24d:f2f5:f571 with SMTP id g18-20020a17090a579200b0024df2f5f571mr3586528pji.36.1684537015922;
-        Fri, 19 May 2023 15:56:55 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:102a:f960:4ec2:663d? ([2620:15c:211:201:102a:f960:4ec2:663d])
-        by smtp.gmail.com with ESMTPSA id e4-20020a17090a4a0400b00250cf4e7d25sm1915151pjh.41.2023.05.19.15.56.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 May 2023 15:56:55 -0700 (PDT)
-Message-ID: <7c1dd111-e1cf-e806-7d74-f65138e8fca3@acm.org>
-Date:   Fri, 19 May 2023 15:56:53 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v5 3/7] ufs: mcq: Add supporting functions for mcq abort
-Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alice Chao <alice.chao@mediatek.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Eric Biggers <ebiggers@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1683872601.git.quic_nguyenb@quicinc.com>
- <e95d40f2d9e473b809d6aa54cfa85b9d1a2e8b15.1683872601.git.quic_nguyenb@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e95d40f2d9e473b809d6aa54cfa85b9d1a2e8b15.1683872601.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S231542AbjESW5c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:57:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3186099;
+        Fri, 19 May 2023 15:57:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BAC4965B4D;
+        Fri, 19 May 2023 22:57:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2A154C433D2;
+        Fri, 19 May 2023 22:57:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684537050;
+        bh=b1VXzCYjqb7tUyQrcWZVf1YOrL3eUyI/NGqoNJmQHFk=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=qW5/dCEh7/R1LQMafi3FaGYL3OVuthqLS5qKtaaLNkk4F7aSGYR3IwrXqM+U85C3g
+         KaiowDvrquMCu2GMe+1OApKPManbK7K+fyBRgIp5Lks9b6zoHVKK12MlwYj+vC+7Z/
+         I2NdWFfqVj9nSXvd1MVAm3y1U09TjkhS6xjolrm0lA3fgorJmTBGSxw8Ynt4oqfF+g
+         0StqaPSH6M67xxZp/qeAMsS8JKss4qVpldno9SjbAQc5n0DAH14J7DD0PbuJ06IFIR
+         wij7IjKmY04IP8rcvIS78Xp8N0iqyHUBF38bMtcYICXlmxZ4zUaRjVHQUHtXNPXL7H
+         dygWBjKGc7Kxg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 19119C73FE0;
+        Fri, 19 May 2023 22:57:30 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.4-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <2238c5b07fdbaca34f4fdba4ad6c79ee3d214c7c.camel@HansenPartnership.com>
+References: <2238c5b07fdbaca34f4fdba4ad6c79ee3d214c7c.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <2238c5b07fdbaca34f4fdba4ad6c79ee3d214c7c.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 09e797c8641f6ad435c33ae24c223351197ea29a
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 5565ec4ef4f0d676fc8518556e239ac6945b5186
+Message-Id: <168453705009.17720.1755453612238725125.pr-tracker-bot@kernel.org>
+Date:   Fri, 19 May 2023 22:57:30 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/11/23 23:28, Bao D. Nguyen wrote:
-> Add supporting functions to handle ufs abort in mcq mode.
+The pull request you sent on Fri, 19 May 2023 17:25:27 -0400:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/5565ec4ef4f0d676fc8518556e239ac6945b5186
 
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
