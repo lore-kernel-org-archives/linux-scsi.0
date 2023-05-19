@@ -2,88 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5D43C7EE23
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA12CC77B75
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230165AbjESWUp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 May 2023 18:20:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47824 "EHLO
+        id S230333AbjESWq7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 May 2023 18:46:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjESWUn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:20:43 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 771481A8;
-        Fri, 19 May 2023 15:20:42 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-64d2e8a842cso1138608b3a.3;
-        Fri, 19 May 2023 15:20:42 -0700 (PDT)
+        with ESMTP id S229579AbjESWq6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:46:58 -0400
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 647FAFE;
+        Fri, 19 May 2023 15:46:57 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1ae85b71141so9461265ad.0;
+        Fri, 19 May 2023 15:46:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684534842; x=1687126842;
-        h=content-transfer-encoding:in-reply-to:from:references:to
+        d=1e100.net; s=20221208; t=1684536417; x=1687128417;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=n/pMPPdx5W3ZOIDniRvAGehFY24LmkEefv16ppdwDAk=;
-        b=lL4g/UmqI9+cpLn21C121OscbBah5fOe1TjfRzu9wOhlChZqNUUpE50gjTUhyx3Wa3
-         4EHb3+wS8BYPCjMsacLfkhZRIdYSUZMYjiAGh6ZQsF4mRkOz4jOtfRVcwWEW3Sbu96HS
-         1p4Y9jFVt9cwjZEX3uVwx7BC3WJ2YduxjS9qIAl8WtDi1BvBUEqF4O39utRILOSJ6J2T
-         E5ZRYIlL7z80waLosd2pPRlRa3j1p70+eLcaZBrn7u9GDsKIB9bS4LpO7z+/7m5QYKoM
-         l1TANpnWylz1A1zN9A/ROGejN4c65MjEEHn9A1nB9W8QVBwnIfaPKXaAWem+SpFODpUV
-         LZxQ==
-X-Gm-Message-State: AC+VfDyE1sAPAsHPebWz7iWQSgGB6nT25PDVWCg6/Tb5BUANgwKGaYWM
-        QwOcmlMhvkv4r7VdEEvWIMI=
-X-Google-Smtp-Source: ACHHUZ5Kyndb+J6vUB6H5cNzAfa4r427Q0gUzfKOltnnhsPQcJQnR2VFg3ol7hWrZj0mmZvV/+lHcQ==
-X-Received: by 2002:a05:6a00:138a:b0:646:663a:9d60 with SMTP id t10-20020a056a00138a00b00646663a9d60mr5816438pfg.10.1684534841787;
-        Fri, 19 May 2023 15:20:41 -0700 (PDT)
+        bh=lDYo2RuaT7h147GhvjSkJ6eFYV+ISM/8wq3TGBb7iAc=;
+        b=PWk7Sj2RZr+H3qQE2eg7VhPhroykdYlQvAwbQvBsAIlADCFeIrmUG/OjEeau1C3uAp
+         YkJPkCr8uFqm7akRBvUaNkuAaW+M6uHvag3PFuFWYSSjyNHY5irPCrctt7zxLIQ6dMK3
+         7XpgPAIun4R4rAS9TY+lb+ZEMeUlLo2w1Mr+sWWWIkMqvpfk6aTVG0XWt9YW5zAsX6Sn
+         4vdFDapsnLG01/n1Q5VdE7zDYsGcknP8AIm6ufXwK2FIsxec3VaL3vneI4KTocsS2cmR
+         Suux+iYMUlB6QBlZotIygCXGRV48bAEIhPr4q6mlSA2vx88mpndmgICNHU17tVnehqgE
+         4arA==
+X-Gm-Message-State: AC+VfDwksU73O/dP59blwMw5YXf1VodmB82lgzlkK4uV/hs0gxTiNczM
+        Bm+ymEtdwUOdmilfHlWgyYk=
+X-Google-Smtp-Source: ACHHUZ7B2eX0aQ1+ZttqtH64J7o4NS1g6keQAyRMbbNX7ydsGZZCigPnu0PEI0vCAly3aqX4QbltGQ==
+X-Received: by 2002:a17:902:680d:b0:1a5:5e7:a1cc with SMTP id h13-20020a170902680d00b001a505e7a1ccmr3495810plk.58.1684536416808;
+        Fri, 19 May 2023 15:46:56 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:102a:f960:4ec2:663d? ([2620:15c:211:201:102a:f960:4ec2:663d])
-        by smtp.gmail.com with ESMTPSA id y26-20020a62b51a000000b006475f831838sm172249pfe.30.2023.05.19.15.20.40
+        by smtp.gmail.com with ESMTPSA id iw10-20020a170903044a00b001ac2f98e953sm123652plb.216.2023.05.19.15.46.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 May 2023 15:20:41 -0700 (PDT)
-Message-ID: <d6f2d05f-5dc2-3239-e4e6-299397a61ca0@acm.org>
-Date:   Fri, 19 May 2023 15:20:39 -0700
+        Fri, 19 May 2023 15:46:55 -0700 (PDT)
+Message-ID: <2f695901-c099-b286-a874-5cfdf9a0d7d7@acm.org>
+Date:   Fri, 19 May 2023 15:46:53 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v3] ufs: poll pmc until another pa request is completed
+Subject: Re: [PATCH v5 1/7] ufs: core: Combine 32-bit
+ command_desc_base_addr_lo/hi
 Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com,
-        junwoo80.lee@samsung.com
-References: <CGME20230516040117epcas2p4477bbc8aedf05a8c3bc0bd755eeadba0@epcas2p4.samsung.com>
- <1684209152-115304-1-git-send-email-kwmad.kim@samsung.com>
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Eric Biggers <ebiggers@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1683872601.git.quic_nguyenb@quicinc.com>
+ <7dec3a486501d9e30dfb5a70eed7c7661187b8c9.1683872601.git.quic_nguyenb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1684209152-115304-1-git-send-email-kwmad.kim@samsung.com>
+In-Reply-To: <7dec3a486501d9e30dfb5a70eed7c7661187b8c9.1683872601.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/15/23 20:52, Kiwoong Kim wrote:
-> +		spin_lock_irqsave(hba->host->host_lock, flags);
-> +		hba->active_uic_cmd = NULL;
-> +		if (ufshcd_is_link_broken(hba)) {
-> +			spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +			ret = -ENOLINK;
-> +			goto out;
-> +		}
-> +		hba->uic_async_done = cnf;
-> +		cmd->argument2 = 0;
-> +		cmd->argument3 = mode;
-> +		ret = __ufshcd_send_uic_cmd(hba, cmd, true);
-> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+On 5/11/23 23:28, Bao D. Nguyen wrote:
+> The UTP command descriptor base address is a 57-bit field in the
+> UTP transfer request descriptor. Combine the two 32-bit
+> command_desc_base_addr_lo/hi fields into a 64-bit for better handling
+> of this field.
 
-Please consider adding 	lockdep_assert_held(&hba->uic_cmd_mutex) near
-the start of __ufshcd_poll_uic_pwr() to document that this function is
-serialized against other contexts that submit an UIC.
-
-Additionally, I don't think that it is necessary to hold the host lock
-around the ufshcd_is_link_broken() or __ufshcd_send_uic_cmd() calls.
-
-Thanks,
-
-Bart.
-
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
