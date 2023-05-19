@@ -2,115 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25D25C77B75
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 04:53:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F1A8C7EE2A
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 07:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229816AbjESExv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 May 2023 00:53:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52712 "EHLO
+        id S229701AbjESHEE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 May 2023 03:04:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbjESExu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 00:53:50 -0400
-Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00CF710DC;
-        Thu, 18 May 2023 21:53:47 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.nyi.internal (Postfix) with ESMTP id 704385C0148;
-        Fri, 19 May 2023 00:53:47 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute6.internal (MEProxy); Fri, 19 May 2023 00:53:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; t=1684472027; x=1684558427; bh=DvA6KR+zTo8Tl
-        45tDoGl60OGn7Mp+gVqUU5IsuJpDS4=; b=S6oEgnqWG0ih2m1BwJ0eqeB0LUzVD
-        xHTXh//gxAs/c/scnaj9KHEK+FAQpzDKNycaqraX5r/dc5dzpiptvzdyB3tiQH7x
-        /5mN7RRCcaGAGWnJKSb9tnZO5REuaN52m8/jQQgDhsUbKjZYMsKlT5N/lZ6ruYLn
-        WJ6GA4vaw/Qv0uU8HzpwMbErIgvLoxMoABzUfe4ccXA7C0Q5xgYlYXnsXN3y6XvQ
-        Tb9z3Zw02oFQAV+G3YQHr4X/UIgfVkooQzyQ3LY/eXjbjHeaVJpWBWyJ3dNMCZ/H
-        rah9uaGW/0nQTXzd4OBRt1yjRVgN0cKnYkeOLyURoXueBI31srv0BoMKQ==
-X-ME-Sender: <xms:2gBnZEHJNpxdgBoqPuj_hFS3JjjvYLjM3rBuT19dvoFupgW1uZT03Q>
-    <xme:2gBnZNUyBuqOe9WPDEP1rHLK_xSHVjx_2LEB0eLzMV3dkpVvu9yg3HB8Yr-2PepzU
-    aNVsAs3zVpaN4pr1gY>
-X-ME-Received: <xmr:2gBnZOJaC8CCp_c4uivU0V1KI11wcNUzI4lMJdIenHtsVLcNbqDSg6fZztBPLbrmo-rbZWXWsD2UdnKEGm3eCGi12F0YI7b_yiA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeeigedgkeelucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpedvtedtgeduhefhkeeuueegteetheeuleeuieevkeeluddvvdffffdtvdet
-    ieeuudenucffohhmrghinhepthhlughprdhorhhgpdgrrhgthhhivhgvrdhorhhgpdhtoh
-    hrqhhuvgdrnhgvthenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhl
-    fhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:2gBnZGEquAG8b4FWurj3i1wbsqUjOftOxpIjQt6VI2kLKr0zjMGSIg>
-    <xmx:2gBnZKX1LJ3cfOaKUsEq4NFkaqNbcf2ZDPpxna0pHbhuUrqIHt_mcg>
-    <xmx:2gBnZJNx2VvDy8WH9VKQJJ8Ccx7Kg5VXpsazI_GUC6wxJXDafevZjQ>
-    <xmx:2wBnZIx0diWrG9R0VfsLLF835b2gG923T4XAW1HYPeATzgLlzAoRVg>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 19 May 2023 00:53:43 -0400 (EDT)
-Date:   Fri, 19 May 2023 14:53:40 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Randy Dunlap <rdunlap@infradead.org>
-cc:     linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 02/11] Docs/scsi: introduction: multiple cleanups
-In-Reply-To: <20230518212749.18266-3-rdunlap@infradead.org>
-Message-ID: <525c424f-a748-80f5-5a16-ca979bc77864@linux-m68k.org>
-References: <20230518212749.18266-1-rdunlap@infradead.org> <20230518212749.18266-3-rdunlap@infradead.org>
+        with ESMTP id S229504AbjESHED (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 03:04:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13DDEE73
+        for <linux-scsi@vger.kernel.org>; Fri, 19 May 2023 00:03:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1684479796;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=089CE+5hhdiEgCOACPwfkq5NJunF4/L0Hh/3kGYN7Ak=;
+        b=WCQ3hdU2ZEsh36lvjR0VI6tf+h7Hy6TSOTFkHTvIzfH0rBcwwwiHcHpNHm9CLKOvlkDEd3
+        7VztMV7bqZKA0iCSf4qlOM3au+AqjgUmHiX7DI+IeJR6DEwVT3agswiRpIu+HeGLsR5YWt
+        jGhnHHUstF2EBdMW6pC8Lm1fSZ5A+S8=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-346-HJ18yhLOPPCBfqXUuw85YA-1; Fri, 19 May 2023 03:03:14 -0400
+X-MC-Unique: HJ18yhLOPPCBfqXUuw85YA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 121163C10EC3;
+        Fri, 19 May 2023 07:03:14 +0000 (UTC)
+Received: from ovpn-8-21.pek2.redhat.com (ovpn-8-21.pek2.redhat.com [10.72.8.21])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 663451410DD5;
+        Fri, 19 May 2023 07:03:09 +0000 (UTC)
+Date:   Fri, 19 May 2023 15:03:04 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.g.garry@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>
+Subject: Re: [PATCH v4 2/3] scsi: core: Trace SCSI sense data
+Message-ID: <ZGcfKBYhOYz1gsf6@ovpn-8-21.pek2.redhat.com>
+References: <20230518193159.1166304-1-bvanassche@acm.org>
+ <20230518193159.1166304-3-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230518193159.1166304-3-bvanassche@acm.org>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On Thu, 18 May 2023, Randy Dunlap wrote:
-
-> Modify URLs to use https instead of http.
-> Remove ancient URLs that don't work.
-> Change "scsi" in text to "SCSI".
-> Change "cdrom" in text to "CD-ROM".
-> Drop the reference to "autoclean" for modules since I can't
->   find it in any current documentation.
+On Thu, May 18, 2023 at 12:31:58PM -0700, Bart Van Assche wrote:
+> If a command fails, SCSI sense data is essential to determine why it
+> failed. Hence make the sense key, ASC and ASCQ codes available in the
+> ftrace output.
 > 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> Cc: linux-doc@vger.kernel.org
+> Cc: Niklas Cassel <niklas.cassel@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.g.garry@oracle.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  Documentation/scsi/scsi.rst |   23 ++++++++++-------------
->  1 file changed, 10 insertions(+), 13 deletions(-)
-> 
-> diff -- a/Documentation/scsi/scsi.rst b/Documentation/scsi/scsi.rst
-> --- a/Documentation/scsi/scsi.rst
-> +++ b/Documentation/scsi/scsi.rst
-> @@ -6,30 +6,28 @@ SCSI subsystem documentation
->  
->  The Linux Documentation Project (LDP) maintains a document describing
->  the SCSI subsystem in the Linux kernel (lk) 2.4 series. See:
-> -http://www.tldp.org/HOWTO/SCSI-2.4-HOWTO . The LDP has single
-> +https://www.tldp.org/HOWTO/SCSI-2.4-HOWTO . The LDP has single
->  and multiple page HTML renderings as well as postscript and pdf.
-> -It can also be found at:
-> -http://web.archive.org/web/%2E/http://www.torque.net/scsi/SCSI-2.4-HOWTO
->  
 
-That link got corrupted by commit b7223d9bdec. It used to be
-http://web.archive.org/web/*/http://www.torque.net/scsi/SCSI-2.4-HOWTO
-which does actually work.
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-FWIW, I'm not in favour of replacing any links with archive.org links 
-unless no better source can be found. I am in favour of citations in the 
-form of a link with retrieval date. In this context the date can often be 
-inferred from commit or release dates.
+Thanks,
+Ming
 
-Therefore, a second commit, 0ea6e611221, could also be reverted with 
-regards to this link (if you're planning to edit it). Just my $0.02.
