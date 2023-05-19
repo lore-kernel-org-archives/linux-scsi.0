@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA12CC77B75
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FB78C77B75
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:53:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230333AbjESWq7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 May 2023 18:46:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56018 "EHLO
+        id S230312AbjESWxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 May 2023 18:53:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229579AbjESWq6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:46:58 -0400
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 647FAFE;
-        Fri, 19 May 2023 15:46:57 -0700 (PDT)
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1ae85b71141so9461265ad.0;
-        Fri, 19 May 2023 15:46:57 -0700 (PDT)
+        with ESMTP id S229534AbjESWxK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:53:10 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C911BD;
+        Fri, 19 May 2023 15:53:09 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-64d2467d640so2559834b3a.1;
+        Fri, 19 May 2023 15:53:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684536417; x=1687128417;
+        d=1e100.net; s=20221208; t=1684536789; x=1687128789;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lDYo2RuaT7h147GhvjSkJ6eFYV+ISM/8wq3TGBb7iAc=;
-        b=PWk7Sj2RZr+H3qQE2eg7VhPhroykdYlQvAwbQvBsAIlADCFeIrmUG/OjEeau1C3uAp
-         YkJPkCr8uFqm7akRBvUaNkuAaW+M6uHvag3PFuFWYSSjyNHY5irPCrctt7zxLIQ6dMK3
-         7XpgPAIun4R4rAS9TY+lb+ZEMeUlLo2w1Mr+sWWWIkMqvpfk6aTVG0XWt9YW5zAsX6Sn
-         4vdFDapsnLG01/n1Q5VdE7zDYsGcknP8AIm6ufXwK2FIsxec3VaL3vneI4KTocsS2cmR
-         Suux+iYMUlB6QBlZotIygCXGRV48bAEIhPr4q6mlSA2vx88mpndmgICNHU17tVnehqgE
-         4arA==
-X-Gm-Message-State: AC+VfDwksU73O/dP59blwMw5YXf1VodmB82lgzlkK4uV/hs0gxTiNczM
-        Bm+ymEtdwUOdmilfHlWgyYk=
-X-Google-Smtp-Source: ACHHUZ7B2eX0aQ1+ZttqtH64J7o4NS1g6keQAyRMbbNX7ydsGZZCigPnu0PEI0vCAly3aqX4QbltGQ==
-X-Received: by 2002:a17:902:680d:b0:1a5:5e7:a1cc with SMTP id h13-20020a170902680d00b001a505e7a1ccmr3495810plk.58.1684536416808;
-        Fri, 19 May 2023 15:46:56 -0700 (PDT)
+        bh=y6DvZRhRSgpFSsqZJXPLzouaL3pfMhi0ojIdoZK57HM=;
+        b=kAqMdv4SmjW9ae4KS4CJ45U+JcI1S67ifn1DYRFXkiofbItbQY0fv0b2HiShplrrZ7
+         dENCL56qNt2S3B1MGkWaknp7Aqu+B7Xpgqy23CMgiKREvYSPqigu/72kJ8BgnaAQZ/lo
+         ccWcHA8DIEoBmokJ+uwccgp6InG0/Vn8+z9pRUeoYbwMd0cu1rZUUn5fbfdWFJ2MDC8/
+         87IheThk3R59Xlumey+QtckrpmNFRgctdVHPsjfc+9lsZ0hM1wGDa4hIwB9GJKjzWRif
+         GkV+vM7XXzdiDKmGG4jBmpudhQ7tM44QRTafD6dVnyYEKk3Vs6oKPtOx1x8tli0qKjUj
+         IoKA==
+X-Gm-Message-State: AC+VfDz/xAhpIPQDXgINLbhvtm9hGaxj2SD0pKea6RJptUiYHg4NzxMO
+        tt9n7KE8Tqdnlz69l24EOiSri4QyEC8=
+X-Google-Smtp-Source: ACHHUZ5r5G3UFYDG2bKUkHedq0WIDJFGTUiH+tZEZXjuMVhiTZPbHTqusv8qSED9BHtqMooGP4+Zrg==
+X-Received: by 2002:a05:6a00:15c7:b0:62d:d045:392 with SMTP id o7-20020a056a0015c700b0062dd0450392mr5151989pfu.32.1684536788813;
+        Fri, 19 May 2023 15:53:08 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:102a:f960:4ec2:663d? ([2620:15c:211:201:102a:f960:4ec2:663d])
-        by smtp.gmail.com with ESMTPSA id iw10-20020a170903044a00b001ac2f98e953sm123652plb.216.2023.05.19.15.46.55
+        by smtp.gmail.com with ESMTPSA id s16-20020aa78d50000000b005aa60d8545esm187968pfe.61.2023.05.19.15.53.07
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 May 2023 15:46:55 -0700 (PDT)
-Message-ID: <2f695901-c099-b286-a874-5cfdf9a0d7d7@acm.org>
-Date:   Fri, 19 May 2023 15:46:53 -0700
+        Fri, 19 May 2023 15:53:08 -0700 (PDT)
+Message-ID: <72c3d1b1-69de-b91b-09e4-08875a3602d9@acm.org>
+Date:   Fri, 19 May 2023 15:53:06 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v5 1/7] ufs: core: Combine 32-bit
- command_desc_base_addr_lo/hi
+Subject: Re: [PATCH v5 2/7] ufs: core: Update the ufshcd_clear_cmds()
+ functionality
 Content-Language: en-US
 To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
@@ -51,13 +51,11 @@ To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         beanhuo@micron.com, avri.altman@wdc.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Eric Biggers <ebiggers@google.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1683872601.git.quic_nguyenb@quicinc.com>
- <7dec3a486501d9e30dfb5a70eed7c7661187b8c9.1683872601.git.quic_nguyenb@quicinc.com>
+ <91bddbc5945a7a651bb1edc35ac5ff54a20bf6c1.1683872601.git.quic_nguyenb@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <7dec3a486501d9e30dfb5a70eed7c7661187b8c9.1683872601.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <91bddbc5945a7a651bb1edc35ac5ff54a20bf6c1.1683872601.git.quic_nguyenb@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -65,9 +63,17 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/11/23 23:28, Bao D. Nguyen wrote:
-> The UTP command descriptor base address is a 57-bit field in the
-> UTP transfer request descriptor. Combine the two 32-bit
-> command_desc_base_addr_lo/hi fields into a 64-bit for better handling
-> of this field.
+> In the ufshcd_clear_cmds(), the 2nd pamameter would be the
+> bit mask of the command to be cleared in the transfer request
+> door bell register. This bit mask mechanism does not scale well in
+> mcq mode when the queue depth becomes much greater than 64. Change the
+> 2nd parameter to the function to be the task_tag number of the
+> corresponding bit to be cleared in the door bell register.
+> By doing so, mcq mode with a large queue depth can reuse this function.
+> 
+> Since the behavior of this function is changed from handling
+> multiple commands into a single command, rename ufshcd_clear_cmds()
+> into ufshcd_clear_cmd().
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
