@@ -2,239 +2,148 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A750FC7EE23
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 21:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 401DCC77B7A
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 May 2023 22:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229945AbjESVZi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 May 2023 17:25:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53510 "EHLO
+        id S229955AbjESWQN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 May 2023 18:16:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjESVZh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 17:25:37 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1903DCF;
-        Fri, 19 May 2023 14:25:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1684531529;
-        bh=094Puwu8vIezV8RK/4d0Dgvl5Ma8uw6FQGF92DXq06Q=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=QEeTAToK4iZo36U9cWzSZbJA1+hpdoCE7fOllsscIQG+2wAz0bC6PsbzfEVHWPY3y
-         C/ojGyuRVybUu1Z0HWKD4LUSeOaX+Jvv7Ora79qmmj3E9S0gvUnxbmAOX8nT2xdlTo
-         t1ta3RUmVSxBJ7m82SCPZT/AVEsTjAU2SlKWrJqE=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id F1AD81289E47;
-        Fri, 19 May 2023 17:25:29 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id 3rvcKCwLSxje; Fri, 19 May 2023 17:25:29 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1684531529;
-        bh=094Puwu8vIezV8RK/4d0Dgvl5Ma8uw6FQGF92DXq06Q=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=QEeTAToK4iZo36U9cWzSZbJA1+hpdoCE7fOllsscIQG+2wAz0bC6PsbzfEVHWPY3y
-         C/ojGyuRVybUu1Z0HWKD4LUSeOaX+Jvv7Ora79qmmj3E9S0gvUnxbmAOX8nT2xdlTo
-         t1ta3RUmVSxBJ7m82SCPZT/AVEsTjAU2SlKWrJqE=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 54F611289E43;
-        Fri, 19 May 2023 17:25:29 -0400 (EDT)
-Message-ID: <2238c5b07fdbaca34f4fdba4ad6c79ee3d214c7c.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.4-rc2
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 19 May 2023 17:25:27 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229503AbjESWQM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2023 18:16:12 -0400
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00A2018F;
+        Fri, 19 May 2023 15:16:10 -0700 (PDT)
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1ae615d5018so22475885ad.1;
+        Fri, 19 May 2023 15:16:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684534570; x=1687126570;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XtM0QQIU8DI6fo0EMR+USpkpdkW5a7e0M4zESvox7Pk=;
+        b=VlfYDjeYSXtsAVV1ctXqWpvBTdQ+hKbVB477AHvtu1BX1+MXxrlXn5coABgXSipqty
+         EEtDzS7M4G4ZED2jSLlFaowg0rdop0J8ndufnArOuFJg40Xs8dd1ne6WntFO+exVXrSI
+         fO3MAuF07IEWpMuqFuC0s8V0M2r4KewNDOgBvOjEl8L5hoz0jqd3++yfvQLnBCOsd9MR
+         tC+moHzsiMeSbqzu/KdgnjCempSZRfEeHgfslrGnf5+W6UFWDAsavhysPlHd9Zg8RwPc
+         7BpWScgWuVkGykUt+dswDX+N8o7m4glqIFaiurlvqgkuwErJa91rxsxI4IBXUre3faOJ
+         uztg==
+X-Gm-Message-State: AC+VfDzgRLpeTEYsbrg752dBBbiOyi4VwdPfW3MZC5UGoleK9CVs/Huu
+        vKGrMlh6hTRqlLmo+CkO9jU=
+X-Google-Smtp-Source: ACHHUZ6aAxD485/wVKDZ0bBQlfeObDUeCRkHxLNbStjrAHM+Rv/2TWXWJKQ4OabwG5a3QwDd3nuChg==
+X-Received: by 2002:a17:902:7d8d:b0:1ab:19db:f2b with SMTP id a13-20020a1709027d8d00b001ab19db0f2bmr4087054plm.36.1684534570327;
+        Fri, 19 May 2023 15:16:10 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:102a:f960:4ec2:663d? ([2620:15c:211:201:102a:f960:4ec2:663d])
+        by smtp.gmail.com with ESMTPSA id g2-20020a170902740200b001ac84f87b1dsm111904pll.155.2023.05.19.15.16.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 19 May 2023 15:16:09 -0700 (PDT)
+Message-ID: <a7296997-89a1-2fb6-3bb4-1fc60d50a132@acm.org>
+Date:   Fri, 19 May 2023 15:16:07 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2] ufs: poll HCS.UCRDY before issuing a UIC command
+Content-Language: en-US
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, kwangwon.min@samsung.com
+References: <CGME20230516034218epcas2p297e9c5a33d370c8c45a40ab58f500ae0@epcas2p2.samsung.com>
+ <1684208012-114324-1-git-send-email-kwmad.kim@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1684208012-114324-1-git-send-email-kwmad.kim@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Six small fixes.  Four in drivers and the two core changes should be
-read together as a correction to a prior iorequest_cnt fix that exposed
-us to a potential use after free. 
+On 5/15/23 20:33, Kiwoong Kim wrote:
+> v1 -> v2: replace usleep_range with udelay
+> because it's a sleepable period.
+> 
+> With auto hibern8 enabled, UIC could be working
+> for a while to process a hibern8 operation and HCI
+> reports UIC not ready for a short term through HCS.UCRDY.
+> And UFS driver can't recognize the operation.
+> UFSHCI spec specifies UCRDY like this:
+> whether the host controller is ready to process UIC COMMAND
+> 
+> The 'ready' could be seen as many different meanings. If the meaning
+> includes not processing any request from HCI, processing a hibern8
+> operation can be 'not ready'. In this situation, the driver needs to
+> wait until the operations is completed.
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 13 ++++++++++++-
+>   1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 9434328..5f6819a 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2365,7 +2365,18 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>    */
+>   static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+>   {
+> -	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
+> +	ktime_t timeout = ktime_add_ms(ktime_get(), UIC_CMD_TIMEOUT);
+> +	u32 val = 0;
+> +
+> +	do {
+> +		val = ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+> +			UIC_COMMAND_READY;
+> +		if (val)
+> +			break;
+> +		udelay(500);
+> +	} while (ktime_before(ktime_get(), timeout));
+> +
+> +	return val ? true : false;
+>   }
 
-The patch is available here:
+Sleeping during up to 500 ms while holding a spin lock is not acceptable.
+Has it been considered to modify the UFS core such that the host_lock is
+not held around calls of the above function, e.g. via the (untested) patch
+below?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Thanks,
 
-The short changelog is:
+Bart.
 
-Michael Kelley (1):
-      scsi: storvsc: Don't pass unused PFNs to Hyper-V host
 
-Po-Wen Kao (3):
-      scsi: ufs: core: Fix MCQ nr_hw_queues
-      scsi: ufs: core: Rename symbol sizeof_utp_transfer_cmd_desc()
-      scsi: ufs: core: Fix MCQ tag calculation
-
-Wenchao Hao (2):
-      scsi: core: Decrease scsi_device's iorequest_cnt if dispatch failed
-      scsi: Revert "scsi: core: Do not increase scsi_device's iorequest_cnt if dispatch failed"
-
-And the diffstat:
-
- drivers/scsi/scsi_lib.c    |  5 ++++-
- drivers/scsi/storvsc_drv.c |  8 ++++----
- drivers/ufs/core/ufs-mcq.c |  5 +++--
- drivers/ufs/core/ufshcd.c  | 10 +++++-----
- include/ufs/ufshcd.h       |  2 +-
- 5 files changed, 17 insertions(+), 13 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b7c569a42aa4..0226c9279cef 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1463,6 +1463,8 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	struct Scsi_Host *host = cmd->device->host;
- 	int rtn = 0;
- 
-+	atomic_inc(&cmd->device->iorequest_cnt);
-+
- 	/* check if the device is still usable */
- 	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
- 		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
-@@ -1483,6 +1485,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		 */
- 		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
- 			"queuecommand : device blocked\n"));
-+		atomic_dec(&cmd->device->iorequest_cnt);
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
- 
-@@ -1515,6 +1518,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	trace_scsi_dispatch_cmd_start(cmd);
- 	rtn = host->hostt->queuecommand(host, cmd);
- 	if (rtn) {
-+		atomic_dec(&cmd->device->iorequest_cnt);
- 		trace_scsi_dispatch_cmd_error(cmd, rtn);
- 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
- 		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
-@@ -1761,7 +1765,6 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		goto out_dec_host_busy;
- 	}
- 
--	atomic_inc(&cmd->device->iorequest_cnt);
- 	return BLK_STS_OK;
- 
- out_dec_host_busy:
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index d9ce379c4d2e..e6bc622954cf 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1780,7 +1780,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 
- 	length = scsi_bufflen(scmnd);
- 	payload = (struct vmbus_packet_mpb_array *)&cmd_request->mpb;
--	payload_sz = sizeof(cmd_request->mpb);
-+	payload_sz = 0;
- 
- 	if (scsi_sg_count(scmnd)) {
- 		unsigned long offset_in_hvpg = offset_in_hvpage(sgl->offset);
-@@ -1789,10 +1789,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 		unsigned long hvpfn, hvpfns_to_add;
- 		int j, i = 0, sg_count;
- 
--		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
-+		payload_sz = (hvpg_count * sizeof(u64) +
-+			      sizeof(struct vmbus_packet_mpb_array));
- 
--			payload_sz = (hvpg_count * sizeof(u64) +
--				      sizeof(struct vmbus_packet_mpb_array));
-+		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
- 			payload = kzalloc(payload_sz, GFP_ATOMIC);
- 			if (!payload)
- 				return SCSI_MLQUEUE_DEVICE_BUSY;
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 202ff71e1b58..51b3c6ae781d 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -150,7 +150,8 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
- 	u32 hba_maxq, rem, tot_queues;
- 	struct Scsi_Host *host = hba->host;
- 
--	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
-+	/* maxq is 0 based value */
-+	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1;
- 
- 	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
- 			rw_queues;
-@@ -265,7 +266,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
- 	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
- 		hba->ucdl_dma_addr;
- 
--	return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
-+	return div_u64(addr, ufshcd_get_ucd_size(hba));
- }
- 
- static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 45fd374fe56c..e7e79f515e14 100644
+index 9736b2b4120e..394283b04d7c 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2849,10 +2849,10 @@ static void ufshcd_map_queues(struct Scsi_Host *shost)
- static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
- {
- 	struct utp_transfer_cmd_desc *cmd_descp = (void *)hba->ucdl_base_addr +
--		i * sizeof_utp_transfer_cmd_desc(hba);
-+		i * ufshcd_get_ucd_size(hba);
- 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
- 	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
--		i * sizeof_utp_transfer_cmd_desc(hba);
-+		i * ufshcd_get_ucd_size(hba);
- 	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
- 				       response_upiu);
- 	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
-@@ -3761,7 +3761,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	size_t utmrdl_size, utrdl_size, ucdl_size;
- 
- 	/* Allocate memory for UTP command descriptors */
--	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * hba->nutrs;
-+	ucdl_size = ufshcd_get_ucd_size(hba) * hba->nutrs;
- 	hba->ucdl_base_addr = dmam_alloc_coherent(hba->dev,
- 						  ucdl_size,
- 						  &hba->ucdl_dma_addr,
-@@ -3861,7 +3861,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 	prdt_offset =
- 		offsetof(struct utp_transfer_cmd_desc, prd_table);
- 
--	cmd_desc_size = sizeof_utp_transfer_cmd_desc(hba);
-+	cmd_desc_size = ufshcd_get_ucd_size(hba);
- 	cmd_desc_dma_addr = hba->ucdl_dma_addr;
- 
- 	for (i = 0; i < hba->nutrs; i++) {
-@@ -8452,7 +8452,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
- {
- 	size_t ucdl_size, utrdl_size;
- 
--	ucdl_size = sizeof(struct utp_transfer_cmd_desc) * nutrs;
-+	ucdl_size = ufshcd_get_ucd_size(hba) * nutrs;
- 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
- 			   hba->ucdl_dma_addr);
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index f7553293ba98..df1d04f7a542 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1133,7 +1133,7 @@ static inline size_t ufshcd_sg_entry_size(const struct ufs_hba *hba)
- 	({ (void)(hba); BUILD_BUG_ON(sg_entry_size != sizeof(struct ufshcd_sg_entry)); })
- #endif
- 
--static inline size_t sizeof_utp_transfer_cmd_desc(const struct ufs_hba *hba)
-+static inline size_t ufshcd_get_ucd_size(const struct ufs_hba *hba)
- {
- 	return sizeof(struct utp_transfer_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
- }
+@@ -2416,7 +2416,6 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
+  		      bool completion)
+  {
+  	lockdep_assert_held(&hba->uic_cmd_mutex);
+-	lockdep_assert_held(hba->host->host_lock);
+
+  	if (!ufshcd_ready_for_uic_cmd(hba)) {
+  		dev_err(hba->dev,
+@@ -2452,9 +2451,7 @@ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  	mutex_lock(&hba->uic_cmd_mutex);
+  	ufshcd_add_delay_before_dme_cmd(hba);
+
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+  	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+  	if (!ret)
+  		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+
+@@ -4122,8 +4119,8 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+  		wmb();
+  		reenable_intr = true;
+  	}
+-	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
+  	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
+  	if (ret) {
+  		dev_err(hba->dev,
+  			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
 
