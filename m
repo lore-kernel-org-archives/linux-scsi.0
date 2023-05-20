@@ -2,84 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F454C77B7F
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 May 2023 04:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E025C77B7A
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 May 2023 08:46:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229568AbjETEmx convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 20 May 2023 00:42:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55604 "EHLO
+        id S231313AbjETIqp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 20 May 2023 04:46:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbjETEmw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 May 2023 00:42:52 -0400
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 044FFE40;
-        Fri, 19 May 2023 21:42:49 -0700 (PDT)
-Received: from smtpclient.apple (unknown [124.16.139.61])
-        by APP-05 (Coremail) with SMTP id zQCowAC3v4u5T2hkS4LeAQ--.40596S2;
-        Sat, 20 May 2023 12:42:34 +0800 (CST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
-Subject: Re: memory leak in do_epoll_create
-From:   =?utf-8?B?6IyD5L+K5p2w?= <junjie2020@iscas.ac.cn>
-In-Reply-To: <20230519185703.GA3288616@google.com>
-Date:   Sat, 20 May 2023 12:42:23 +0800
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Transfer-Encoding: 8BIT
-Message-Id: <BF300751-7758-4FDE-AB54-9D25974DC873@iscas.ac.cn>
-References: <eb5a09c.67fa.1883321b285.Coremail.junjie2020@iscas.ac.cn>
- <20230519185703.GA3288616@google.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-X-Mailer: Apple Mail (2.3731.500.231)
-X-CM-TRANSID: zQCowAC3v4u5T2hkS4LeAQ--.40596S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7urW8AFy7tF15GrW5uFW3KFg_yoW8JFy7pF
-        45ta9a9r4ktFn3J340va18Za4ft3yfWFy3Jrs8Xw4rGr9xJryfArykKFWY9asFqr18CrWF
-        vrWqqF1qyw1UGaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvIb7Iv0xC_Cr1lb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I2
-        0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-        A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xII
-        jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJVW8Jr1l84ACjcxK6I
-        8E87Iv6xkF7I0E14v26r4UJVWxJr1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8I
-        j28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr
-        4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxG
-        rwCY02Avz4vE14v_Gryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2
-        IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v2
-        6r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2
-        IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv
-        67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf
-        9x07j7KsbUUUUU=
-X-Originating-IP: [124.16.139.61]
-X-CM-SenderInfo: xmxqyxbhsqji46lvutnvoduhdfq/
+        with ESMTP id S231301AbjETIqn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 May 2023 04:46:43 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 244D2E4C;
+        Sat, 20 May 2023 01:46:42 -0700 (PDT)
+Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
+        by mta-01.yadro.com (Proxmox) with ESMTP id EA90A342388;
+        Sat, 20 May 2023 11:46:38 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
+        :cc:content-type:content-type:date:from:from:in-reply-to
+        :message-id:mime-version:references:reply-to:subject:subject:to
+        :to; s=mta-01; bh=fkECQlR9rLVSIN/F4sez472vipRURgcRLDvkhrvB4T4=; b=
+        UuqNXrKV3xui2busCIEj3xhEwlcchtH1fH7JTOC6FVjO/JUncnVZMJohdHPvWDTA
+        rJmfnjIReSzjodfrjnujIdrNcrYCXA3UyJLlfKBJl9xMTp5PXoROZpMhYEQ+KoQt
+        Tcu07rwfJmm/Ene3/Jm5hsAL+9pASnKGyffQSGzlpDY=
+Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id E00A6342036;
+        Sat, 20 May 2023 11:46:38 +0300 (MSK)
+Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Sat, 20 May
+ 2023 11:46:38 +0300
+Date:   Sat, 20 May 2023 11:46:00 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Grzegorz Uriasz <gorbak25@gmail.com>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <dutkahugo@gmail.com>
+Subject: Re: [PATCH] scsi: target: Fix data corruption under concurrent
+ target configuration
+Message-ID: <20230520084600.GC20571@yadro.com>
+References: <5f637569-36af-a8d0-e378-b27a63f08501@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <5f637569-36af-a8d0-e378-b27a63f08501@gmail.com>
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thank you for your response. This is my first time submitting crashes to kernel developers, so forgive me if there are any shortcomings. In my opinion, some of the code crashes in the old version may also be present in the new version. That’s why I want to report these crash to you. I will take note of the issues you mentioned and make a meaningful contribution by submitting valid kernel errors next time.!
-Sincerely!
-> 2023年5月20日 02:57，Eric Biggers <ebiggers@kernel.org> 写道：
+Hi Grzegorz,
+
+On Sat, May 20, 2023 at 02:26:14AM +0200, Grzegorz Uriasz wrote:
 > 
-> On Fri, May 19, 2023 at 04:30:26PM +0800, 范俊杰 wrote:
->> Hi Kernel maintainers,
->> 
->> Our tool found a new bug memory leak in do_epoll_create in Kernel commit
->> v5.14.
->> 
-> 
-> v5.14 is almost 2 years old.  Why are you testing such an old kernel version?
-> This bug could have already been fixed almost 2 years ago.
-> 
-> Also, if you think this is a bug in eventpoll, this report should be sent to
-> linux-fsdevel, as per './scripts/get_maintainer.pl fs/eventpoll.c'.  It's
-> unclear why you are sending this report to linux-scsi.
-> 
->> The report is as below and this bug don't have a repro C program until
->> now. Please inform me if you confirm this is a reproducible bug.
-> 
-> I think you answered your own question.  It doesn't have a reproducer;
-> therefore, it's not reproducible.
-> 
-> - Eric
+> This fixes data corruptions arising from concurrent enabling of a target
+> devices. When multiple enable calls are made concurrently then it is
+> possible for the target device to be set up twice which results in a
+> kernel BUG.
+> Introduces a per target device mutex for serializing enable requests.
+
+Device enable call is already secured by configfs per-file mutex. That
+is actually per device. So Enable procedures are already not executed
+simulteniously.
+
+Look like you wrongly identified the root cause of double list_add.
+
+
+If you have an evidence that dev->dev_flags could have no DF_CONFIGURED
+bit, then it meeans that it (dev_flags) is raced in other
+configuration actions (udev_path, vpd_unit_serial, alias).
+Bits in dev->dev_flags are written not atomically and if you writes to
+enable, alias, udev_path,unit_serial files simulteniously, then some
+bits could be lost.
+
+IHMO the best solution is to make dev_flags changes be atomical.
+
+BR,
+ Dmitry
 
