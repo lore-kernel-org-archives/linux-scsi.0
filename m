@@ -2,194 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7F5C7EE2A
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 May 2023 05:24:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A36C77B73
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 May 2023 05:43:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229714AbjEUFYB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 May 2023 01:24:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34814 "EHLO
+        id S229935AbjEUFnZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 May 2023 01:43:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbjEUFYA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2023 01:24:00 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A86128;
-        Sat, 20 May 2023 22:23:59 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id CDDF91FDD1;
-        Sun, 21 May 2023 05:23:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1684646636; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jDs5PWzIb5j2h+LCKYMH/wWHxP24TZPVqLA4oF4S6B0=;
-        b=hmlO21PfymYtxIpGjaJjrl2CNY1nDRPRorMyYg8IwWE0l9eDFEicEbuvDHVeaTJdJJ+9o1
-        4eELv7aFLiRLKzPTD0v2W8k+yGUphta5Wmj5oSBnE9zEdKN/7EJ1ZDA8EFYABCnxDhGhsI
-        VUvv2Db4IlJ5xyGlpSAXHo3ftfLkUvA=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9BD321390B;
-        Sun, 21 May 2023 05:23:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id ycuwJOyqaWSFdAAAMHmgww
-        (envelope-from <jgross@suse.com>); Sun, 21 May 2023 05:23:56 +0000
-Message-ID: <73fd2741-3730-ca1d-7e23-0bf9cf10f423@suse.com>
-Date:   Sun, 21 May 2023 07:23:56 +0200
+        with ESMTP id S229481AbjEUFnX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2023 01:43:23 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B3E8B9;
+        Sat, 20 May 2023 22:43:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
+        t=1684647796; i=deller@gmx.de;
+        bh=wIE6ZCVoJYmlgH2DCnr7SkehVklk/MwSINRyzHNGD7w=;
+        h=X-UI-Sender-Class:Date:From:Subject:To;
+        b=SmzNX1kT+AbfE+JbYzG+sdFOVDzw22ZLmP3dEc5g8vhOVesWxPs8AiqMdSSYtmEGb
+         LosH0WzttfsTuycdBDGgpmg3mmhBa9XT6TsgbJvzTaNlwGTE94do02AJ+39y9d5zWw
+         GpjQ+qPCNfz59VJsGcw8AS9YDsxz9FZiTjpmi6fDEl3R/pipjNowIU0EAasSlHmFSm
+         r5roOZ24Hg2ty7xVMOHAaN281R7Duzu6CzqQrM5KFV1MO0B5y0a2nJSiNrLK4aQDgd
+         30/v4DxsaSWTMkWttylK2770Q1P5iXRltICsXQF8lVKxMoS1z/nQjHLWZsiRWvDwBj
+         axHJV0/Kd9LgA==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [192.168.20.60] ([94.134.156.224]) by mail.gmx.net (mrgmx005
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1Mdeb5-1qZOVB23dJ-00ZjvM; Sun, 21
+ May 2023 07:43:16 +0200
+Message-ID: <5057d550-c3f4-be34-d3e6-390790051232@gmx.de>
+Date:   Sun, 21 May 2023 07:43:15 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
-Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
+ Thunderbird/102.10.0
+From:   Helge Deller <deller@gmx.de>
+Subject: spinlock recursion in aio_complete()
+To:     Linux SCSI List <linux-scsi@vger.kernel.org>, linux-aio@kvack.org,
+        linux-parisc <linux-parisc@vger.kernel.org>
 Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
-References: <20230511123432.5793-1-jgross@suse.com>
- <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
- <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
- <9d356278-c826-dacf-cbe0-79f512b7970e@oracle.com>
- <60aeffe4-b31d-4ea3-d4ea-f50ae25e0316@suse.com>
- <74879c87-689f-6a8e-a177-8bde4c9c4e51@oracle.com>
- <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
-From:   Juergen Gross <jgross@suse.com>
-In-Reply-To: <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------Ir0cc06T7GC9xpBoU2Z6gt8d"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:FPJZS2yjUeDBltt8xHEPSeFzlBvThIgPnBywmo7B+Kh+5CSXqvl
+ 0+aA2ha9orGwyyaofjKnDD4Cj0r4Ou06oC6Bu17+t2ItRHDg6E7oyAWUpKnt4fQ2iB21T0c
+ avlO18BLFoSBQXgkfdA/i/UrzjnTSS8f+8aQgst6Sx+sN2ZEI+5j57BoDlgop+W9LliHZUW
+ MYBqa5hB831bGcT9eGYXg==
+UI-OutboundReport: notjunk:1;M01:P0:eACzzXxwg2g=;TzAqyM2xNIVM+wk9woye/ytcido
+ Tt+2IGOeOgp/85eOf25CYDgB4SJ1t63XlzoISXhnQXfEGzG3nK+kDmULiXQzJ3iraJK5ukxe9
+ VRCG253lnZ9tIEcPb6/Lgnv0tH36kHvFKmp0ilpzE7boepwMAUy8zSwkmAwFmA7o4QSrwhhLN
+ hi57xGIxhsot2nNQzN2LlZMVVcc9w/ifhTG/Y4ZdFZMhGXoNv6Qskvk9kjMEwNPrrsvcCTxw3
+ mckefEnNpodh7KKAuMYxrUz4PGV0SvKgyUWBXaI++xDkPjREqdHS4+dtUIzsxhgO4AyE8P8pg
+ ucSKtuiXVRqDj0tDWFMBZEH+sOFxVO/KfDY1wgWxNA8SxH8UMSMJZlbLpDTieVID5B9KxZSx2
+ AthQ0TwGRkYUbu8yrTZ7Lbe59B7FMpsTeml95GaGoGiBX4Td5gSMeVLmFz9CFhi24qUXzPU5O
+ LipifdKwiCHhAUmCWR/UWKD6WZSXQexC9yHxmVstPBV2r+T9ZTKDpVqdDuNhSVauneRQaVrAt
+ oUivMGr0YTiETZuLHxQy02YlXsAWOduSuwIxAamnDvWXMTLw6/7u3+5XaxbNocXFgun1uiafY
+ YPOQRFy3vR2r+Qb5E5kXzaJvH5iAn9RwBXvf39srCoabcUVIp7G1IIHdkkxmUioK0dABJ7Xk9
+ ZS2zV/tXIBFhRerVwA4LdCOohDYTCR3nv8iKJvj3hRqtQa204DwKYdg2oK7O89FzSiZ9Yjxsu
+ jY7IiBV4yJiTJPdo5R4AeW28w1S4x16oQ1rIbaBd39r5pa9YDZIlybUH0W1UpeNarc86OR+4L
+ NKRs0RhWWDJSNMxibwFWfsxrNzzjiYxrl9zhQhR9S9Z9BP2vOh/2pKcdsZzJ1h6er6SMAB06h
+ zq/mJBXGZWaPwz6U2swAMaJLMGgEvYIVblY+MDwEMm+uS8GHMi+aniZ0e/T4p6hRS194Z49px
+ W7RcK3NMxpQsAKH4fVSwGKLouac=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------Ir0cc06T7GC9xpBoU2Z6gt8d
-Content-Type: multipart/mixed; boundary="------------itRklF4GeRTx2kWh9ThwD0F6";
- protected-headers="v1"
-From: Juergen Gross <jgross@suse.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
- John Garry <john.g.garry@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
-Message-ID: <73fd2741-3730-ca1d-7e23-0bf9cf10f423@suse.com>
-Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
-References: <20230511123432.5793-1-jgross@suse.com>
- <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
- <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
- <9d356278-c826-dacf-cbe0-79f512b7970e@oracle.com>
- <60aeffe4-b31d-4ea3-d4ea-f50ae25e0316@suse.com>
- <74879c87-689f-6a8e-a177-8bde4c9c4e51@oracle.com>
- <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
+Hi,
 
---------------itRklF4GeRTx2kWh9ThwD0F6
-Content-Type: multipart/mixed; boundary="------------qMWMFDBW1utuPCbXAlZnm6nr"
+On a single-CPU parisc64 machine I face the spinlock recursion below.
+Happens reproduceably directly at bootup since kernel 6.2 (and ~ 6.1.5).
+Kernel is built for SMP. Same kernel binary works nicely on machines with more than
+one CPU, but stops on UP machines.
+Any idea or patch I could try?
 
---------------qMWMFDBW1utuPCbXAlZnm6nr
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Helge
 
-T24gMjEuMDUuMjMgMDM6MTksIE1hcnRpbiBLLiBQZXRlcnNlbiB3cm90ZToNCj4gDQo+IEpv
-aG4sDQo+IA0KPj4gQE1hcnRpbiwgRG8geW91IGhhdmUgYW55IHByZWZlcmVuY2UgZm9yIHdo
-YXQgd2UgZG8gbm93PyBUaGlzIGNvZGUNCj4+IHdoaWNoIGRvZXMgbm90IGNoZWNrIGZvciBl
-cnJvciBhbmQgZG9lcyBub3QgcHJlLXplcm8gc3NoZHIgaXMNCj4+IGxvbmdzdGFuZGluZywg
-c28gSSBhbSBub3Qgc3VyZSBpZiBKdWVyZ2VuJ3MgY2hhbmdlIGlzIHJlcXVpcmVkIGZvciBm
-b3INCj4+IHY2LjQuIEknbSB0aGlua2luZyB0byBmaXggY2FsbGVycyBmb3IgdjYuNSBhbmQg
-YWxzbyBtYXliZSBjaGFuZ2UgdGhlDQo+PiBBUEksIGFzIEkgZGVzY3JpYmVkLg0KPiANCj4g
-QXMgSSBhbGx1ZGVkIHRvIGluIHRoZSB0cmFjaW5nIHRocmVhZCwgSSdkIGxpa2UgdG8gc2Vl
-IFNLL0FTQy9BU0NRIGJlaW5nDQo+IGdlbmVyYWxseSBhdmFpbGFibGUgaW4gdGhlIHNjc2lf
-Y21uZCByZXN1bHRzIGluc3RlYWQgb2YgYWxsIHRoaXMgc2Vuc2UNCj4gYnVmZmVyIGFuZCBz
-ZW5zZSBoZWFkZXIgbWljcm9tYW5hZ2VtZW50IGluIGV2ZXJ5IGNhbGxlci4gVGhhdCdzIGEg
-cHJldHR5DQo+IGhlYXZ5IGxpZnQsIHRob3VnaC4NCj4gDQo+IFNob3J0IHRlcm0gd2UgbmVl
-ZCBhbGwgY2FsbGVycyB0byBiZSBmaXhlZCB1cC4gSSdtIG5vdCBhIHBhcnRpY3VsYXJseQ0K
-PiBiaWcgZmFuIG9mIHNjc2lfZXhlY3V0ZV9jbWQoKSB6ZXJvaW5nIHNvbWV0aGluZyBiZWlu
-ZyBwYXNzZWQgaW4uIEkNCj4gd29uZGVyIGlmIGl0IHdvdWxkIGJlIHdvcnRoIGhhdmluZyBh
-IERFQ0xBUkVfU0VOU0VfSEVBREVSKCk/DQoNCnNzaGRyIGlzIG91dHB1dCBvbmx5IGRhdGEs
-IHNvIHNldHRpbmcgaXQgYmVmb3JlIHJldHVybmluZyBzZWVtcyB0byBiZSBhDQpzZW5zaWJs
-ZSB0aGluZyB0byBkby4NCg0KTGV0dGluZyB0aGUgY2FsbGVycyBkbyB0aGF0IGlzIGtpbmQg
-b2YgYSBsYXllcmluZyB2aW9sYXRpb24gSU1ITywgYXMgdGhpcw0Kd291bGQgc3ByZWFkIHRo
-ZSBrbm93bGVkZ2UgdGhhdCBzY3NpX2V4ZWN1dGVfY21kKCkgaXNuJ3Qgc2V0dGluZyBpdHMg
-b3V0cHV0DQpkYXRhIGFsd2F5cy4NCg0KSW4gdGhlIGVuZCBpdHMgeW91ciBkZWNpc2lvbiwg
-b2YgY291cnNlLg0KDQoNCkp1ZXJnZW4NCg==
---------------qMWMFDBW1utuPCbXAlZnm6nr
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
-
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-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
-jR/i1DG86lem3iBDXzXsZDn8R38=3D
-=3D2wuH
------END PGP PUBLIC KEY BLOCK-----
-
---------------qMWMFDBW1utuPCbXAlZnm6nr--
-
---------------itRklF4GeRTx2kWh9ThwD0F6--
-
---------------Ir0cc06T7GC9xpBoU2Z6gt8d
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmRpquwFAwAAAAAACgkQsN6d1ii/Ey8x
-LAgAlSEEWx6phlVBDVwkL8Egn49EPcK1OcA4VQ1QcSTHONRLA0q5QhY/GFiuYpqUB4Qmlk9dLrI4
-08q9QMLab+C2yzJoRefXxBeDsMnhB+MLV0WCGIs3H59shBfe1zbDWs29t+6rDCJBG/KTDw8rlg1O
-5SDeKh4mm7mvhziiQ89sBZVBNpK5956HbiN9BoXeoX6QdlRgnrFA2nMhlq5TkY4BXE4YPZmhkN0c
-PgBSYznEi1gcVtl1h7R6021WRqvfibsuOZV3/lLG/ZI3bVPDuwlTWumLJUpsPh5HP2B5Ov10OWX5
-JOdf80Euyf5YSrkE2VkkMxQRSK4KAZKzl8n7qUC6aQ==
-=2FXn
------END PGP SIGNATURE-----
-
---------------Ir0cc06T7GC9xpBoU2Z6gt8d--
+[   26.116568] fuse: init (API version 7.38)
+[   26.338231] loop: module loaded
+[   26.357390] BUG: spinlock recursion on CPU#0, systemd/1
+[   26.357504]  lock: 0x4ad42618, .magic: dead4ead, .owner: systemd/1, .owner_cpu: 0
+[   26.357884] CPU: 0 PID: 1 Comm: systemd Not tainted 6.3.3+ #180
+[   26.357976] Hardware name: 9000/800/rp3410
+[   26.361055] Backtrace:
+[   26.361055]  [<000000004030c4d0>] show_stack+0x74/0xb0
+[   26.361055]  [<00000000412ec758>] dump_stack_lvl+0xd8/0x128
+[   26.361055]  [<00000000412ec7dc>] dump_stack+0x34/0x48
+[   26.361055]  [<00000000412d6c8c>] spin_dump+0xe0/0x120
+[   26.361055]  [<00000000403f026c>] do_raw_spin_lock+0x138/0x1a0
+[   26.361055]  [<00000000412efcb0>] _raw_spin_lock_irqsave+0x3c/0x78
+[   26.361055]  [<0000000040808b9c>] aio_complete+0x68/0x470
+[   26.361055]  [<000000004080bd54>] aio_complete_rw+0x200/0x400
+[   26.361055]  [<0000000040aac314>] blkdev_bio_end_io_async+0x60/0x140
+[   26.361055]  [<0000000040ab0fb0>] bio_endio+0x274/0x318
+[   26.361055]  [<0000000040ad0b38>] blk_update_request+0x2bc/0x600
+[   26.361055]  [<0000000040e6daa4>] scsi_end_request+0x60/0x370
+[   26.361055]  [<0000000040e6ef68>] scsi_io_completion+0x9c/0x8e8
+[   26.361055]  [<0000000040e5d5c8>] scsi_finish_command+0x10c/0x290
+[   26.361055]  [<0000000040e6e7c4>] scsi_complete+0x118/0x308
+[   26.361055]  [<0000000040acd3fc>] blk_mq_complete_request+0x60/0x98
+[   26.361055]  [<0000000040e6eaf0>] scsi_done_internal+0x13c/0x1c8
+[   26.361055]  [<0000000040e6ebac>] scsi_done+0x30/0x60
+[   26.361055]  [<0000000040e8b140>] sym_xpt_done+0x94/0xc8
+[   26.361055]  [<0000000040e91588>] sym_interrupt+0x5bc/0x28e8
+[   26.361055]  [<0000000040e88c1c>] sym53c8xx_intr+0x98/0x170
+[   26.361055]  [<00000000403fe380>] __handle_irq_event_percpu+0xdc/0x338
+[   26.361055]  [<00000000403fe618>] handle_irq_event_percpu+0x3c/0xf8
+[   26.361055]  [<000000004040925c>] handle_percpu_irq+0xb8/0x110
+[   26.361055]  [<00000000403fcc74>] generic_handle_irq+0x60/0xb0
+[   26.361055]  [<000000004030f930>] do_cpu_irq_mask+0x304/0x508
+[   26.361055]  [<0000000040303070>] intr_return+0x0/0xc
