@@ -2,108 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A36C77B73
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 May 2023 05:43:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A56BDC7EE23
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 May 2023 06:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229935AbjEUFnZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 May 2023 01:43:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36852 "EHLO
+        id S229704AbjEUGmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 May 2023 02:42:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbjEUFnX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2023 01:43:23 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B3E8B9;
-        Sat, 20 May 2023 22:43:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
-        t=1684647796; i=deller@gmx.de;
-        bh=wIE6ZCVoJYmlgH2DCnr7SkehVklk/MwSINRyzHNGD7w=;
-        h=X-UI-Sender-Class:Date:From:Subject:To;
-        b=SmzNX1kT+AbfE+JbYzG+sdFOVDzw22ZLmP3dEc5g8vhOVesWxPs8AiqMdSSYtmEGb
-         LosH0WzttfsTuycdBDGgpmg3mmhBa9XT6TsgbJvzTaNlwGTE94do02AJ+39y9d5zWw
-         GpjQ+qPCNfz59VJsGcw8AS9YDsxz9FZiTjpmi6fDEl3R/pipjNowIU0EAasSlHmFSm
-         r5roOZ24Hg2ty7xVMOHAaN281R7Duzu6CzqQrM5KFV1MO0B5y0a2nJSiNrLK4aQDgd
-         30/v4DxsaSWTMkWttylK2770Q1P5iXRltICsXQF8lVKxMoS1z/nQjHLWZsiRWvDwBj
-         axHJV0/Kd9LgA==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from [192.168.20.60] ([94.134.156.224]) by mail.gmx.net (mrgmx005
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1Mdeb5-1qZOVB23dJ-00ZjvM; Sun, 21
- May 2023 07:43:16 +0200
-Message-ID: <5057d550-c3f4-be34-d3e6-390790051232@gmx.de>
-Date:   Sun, 21 May 2023 07:43:15 +0200
+        with ESMTP id S229464AbjEUGmQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2023 02:42:16 -0400
+Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com [66.111.4.27])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D79C8FE;
+        Sat, 20 May 2023 23:42:14 -0700 (PDT)
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailout.nyi.internal (Postfix) with ESMTP id 43B9A5C00A9;
+        Sun, 21 May 2023 02:42:14 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute6.internal (MEProxy); Sun, 21 May 2023 02:42:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:content-type:date:date
+        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm1; t=1684651334; x=1684737734; bh=gPrys0vkcHlGP
+        tYBYK6F1sl19b9RAU8HqVL8+AFxLlo=; b=VWqKkBivBtd2iP7BGLrKU5gLDxY98
+        MGwWLvrkkjzbsf6HJPJa5e9DEShpcoDjUoAn0NW+k5shcZranVkXkKqxUUSqM2v3
+        E/MPWeAiaqIxPmjSj0vFXLSXYzeEnJmseRZN9jzsbtfMsZjfdfJl9Xv+P4MP8uFZ
+        vanWQzdRAeUMF/KB/2frT1EtQbf/sd0NGgmtH1FRDtGNfMlvbWaEvaDVaxUfa1qz
+        1tM6ZiMSwkF39V6gAcqgXPHQpbSrxgGWBbAsvTKSe40Ky3g7WHd90zk2BU8EixFE
+        0D/oMtiUE28Ga01+vzwx6XuD/iyUAvYSYFZPXPdn16SMdnelFoldMzTPA==
+X-ME-Sender: <xms:Rb1pZKYGGdclzMledTRE2ZKjKDGKf1XutToTaNuRe7T5VXC0B1g4Ag>
+    <xme:Rb1pZNYUn27RuTu_SePi0Jala468edcHmUjjLYlfYA2Vcy3nWr_8b_4HatImHBQz5
+    JJDczjCDUDAJ0rRnLU>
+X-ME-Received: <xmr:Rb1pZE97HMf1j233MP3c4Slg2u0AHmOghp9n2IWvBUNJ5ghReHxmImoYayDJru2aTFy_U9nchgwB3AckU1N4o0xVYdhmSBqjHbg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeeikedguddtlecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvvefujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhn
+    ucfvhhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrf
+    grthhtvghrnhepfeeiheejvdetgfeitddutefhkeeilefhveehgfdvtdekkedvkeehffdt
+    keevvdeunecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiii
+    gvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmhei
+    kehkrdhorhhg
+X-ME-Proxy: <xmx:Rb1pZMrmoNGy90TgBUIo9SDoB_p8E63nSCo0_9FyUkkSKvig-rMQsA>
+    <xmx:Rb1pZFqEV_tCCp-MFItfATDr8SF3PwYRkjoIxknX1cc2YHv0C9oxyQ>
+    <xmx:Rb1pZKTSCjXEFcmsc0xfWTimY90N5a5QuBLfHenglp7an5CQitHHDg>
+    <xmx:Rr1pZOC9F4Hc-eJ6NrHLHl4eedJqkAO29d9ZAbSkfKoVhKhQBALNbg>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
+ 21 May 2023 02:42:10 -0400 (EDT)
+Date:   Sun, 21 May 2023 16:42:15 +1000 (AEST)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Tejun Heo <tj@kernel.org>
+cc:     jiangshanlai@gmail.com, linux-kernel@vger.kernel.org,
+        kernel-team@meta.com, Michael Schmitz <schmitzmic@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RESEND 01/13] scsi: ncr53c8xx: Use default @max_active
+ for hostdata->work_q
+In-Reply-To: <ZGmGZxYmN0En7wAB@slm.duckdns.org>
+Message-ID: <ea7df70c-01ab-2ad3-a775-542afc6f21d6@linux-m68k.org>
+References: <20230509015032.3768622-1-tj@kernel.org> <20230509015032.3768622-2-tj@kernel.org> <ZGmGZxYmN0En7wAB@slm.duckdns.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-From:   Helge Deller <deller@gmx.de>
-Subject: spinlock recursion in aio_complete()
-To:     Linux SCSI List <linux-scsi@vger.kernel.org>, linux-aio@kvack.org,
-        linux-parisc <linux-parisc@vger.kernel.org>
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:FPJZS2yjUeDBltt8xHEPSeFzlBvThIgPnBywmo7B+Kh+5CSXqvl
- 0+aA2ha9orGwyyaofjKnDD4Cj0r4Ou06oC6Bu17+t2ItRHDg6E7oyAWUpKnt4fQ2iB21T0c
- avlO18BLFoSBQXgkfdA/i/UrzjnTSS8f+8aQgst6Sx+sN2ZEI+5j57BoDlgop+W9LliHZUW
- MYBqa5hB831bGcT9eGYXg==
-UI-OutboundReport: notjunk:1;M01:P0:eACzzXxwg2g=;TzAqyM2xNIVM+wk9woye/ytcido
- Tt+2IGOeOgp/85eOf25CYDgB4SJ1t63XlzoISXhnQXfEGzG3nK+kDmULiXQzJ3iraJK5ukxe9
- VRCG253lnZ9tIEcPb6/Lgnv0tH36kHvFKmp0ilpzE7boepwMAUy8zSwkmAwFmA7o4QSrwhhLN
- hi57xGIxhsot2nNQzN2LlZMVVcc9w/ifhTG/Y4ZdFZMhGXoNv6Qskvk9kjMEwNPrrsvcCTxw3
- mckefEnNpodh7KKAuMYxrUz4PGV0SvKgyUWBXaI++xDkPjREqdHS4+dtUIzsxhgO4AyE8P8pg
- ucSKtuiXVRqDj0tDWFMBZEH+sOFxVO/KfDY1wgWxNA8SxH8UMSMJZlbLpDTieVID5B9KxZSx2
- AthQ0TwGRkYUbu8yrTZ7Lbe59B7FMpsTeml95GaGoGiBX4Td5gSMeVLmFz9CFhi24qUXzPU5O
- LipifdKwiCHhAUmCWR/UWKD6WZSXQexC9yHxmVstPBV2r+T9ZTKDpVqdDuNhSVauneRQaVrAt
- oUivMGr0YTiETZuLHxQy02YlXsAWOduSuwIxAamnDvWXMTLw6/7u3+5XaxbNocXFgun1uiafY
- YPOQRFy3vR2r+Qb5E5kXzaJvH5iAn9RwBXvf39srCoabcUVIp7G1IIHdkkxmUioK0dABJ7Xk9
- ZS2zV/tXIBFhRerVwA4LdCOohDYTCR3nv8iKJvj3hRqtQa204DwKYdg2oK7O89FzSiZ9Yjxsu
- jY7IiBV4yJiTJPdo5R4AeW28w1S4x16oQ1rIbaBd39r5pa9YDZIlybUH0W1UpeNarc86OR+4L
- NKRs0RhWWDJSNMxibwFWfsxrNzzjiYxrl9zhQhR9S9Z9BP2vOh/2pKcdsZzJ1h6er6SMAB06h
- zq/mJBXGZWaPwz6U2swAMaJLMGgEvYIVblY+MDwEMm+uS8GHMi+aniZ0e/T4p6hRS194Z49px
- W7RcK3NMxpQsAKH4fVSwGKLouac=
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On Sat, 20 May 2023, Tejun Heo wrote:
 
-On a single-CPU parisc64 machine I face the spinlock recursion below.
-Happens reproduceably directly at bootup since kernel 6.2 (and ~ 6.1.5).
-Kernel is built for SMP. Same kernel binary works nicely on machines with more than
-one CPU, but stops on UP machines.
-Any idea or patch I could try?
+> From: Tejun Heo <tj@kernel.org>
+> Subject: scsi: ncr53c8xx: Use default @max_active for hostdata->work_q
+> 
 
-Helge
+This driver is normally referred to as ncr5380 or NCR5380. (It doesn't 
+support any other member of the 538x family.)
 
-[   26.116568] fuse: init (API version 7.38)
-[   26.338231] loop: module loaded
-[   26.357390] BUG: spinlock recursion on CPU#0, systemd/1
-[   26.357504]  lock: 0x4ad42618, .magic: dead4ead, .owner: systemd/1, .owner_cpu: 0
-[   26.357884] CPU: 0 PID: 1 Comm: systemd Not tainted 6.3.3+ #180
-[   26.357976] Hardware name: 9000/800/rp3410
-[   26.361055] Backtrace:
-[   26.361055]  [<000000004030c4d0>] show_stack+0x74/0xb0
-[   26.361055]  [<00000000412ec758>] dump_stack_lvl+0xd8/0x128
-[   26.361055]  [<00000000412ec7dc>] dump_stack+0x34/0x48
-[   26.361055]  [<00000000412d6c8c>] spin_dump+0xe0/0x120
-[   26.361055]  [<00000000403f026c>] do_raw_spin_lock+0x138/0x1a0
-[   26.361055]  [<00000000412efcb0>] _raw_spin_lock_irqsave+0x3c/0x78
-[   26.361055]  [<0000000040808b9c>] aio_complete+0x68/0x470
-[   26.361055]  [<000000004080bd54>] aio_complete_rw+0x200/0x400
-[   26.361055]  [<0000000040aac314>] blkdev_bio_end_io_async+0x60/0x140
-[   26.361055]  [<0000000040ab0fb0>] bio_endio+0x274/0x318
-[   26.361055]  [<0000000040ad0b38>] blk_update_request+0x2bc/0x600
-[   26.361055]  [<0000000040e6daa4>] scsi_end_request+0x60/0x370
-[   26.361055]  [<0000000040e6ef68>] scsi_io_completion+0x9c/0x8e8
-[   26.361055]  [<0000000040e5d5c8>] scsi_finish_command+0x10c/0x290
-[   26.361055]  [<0000000040e6e7c4>] scsi_complete+0x118/0x308
-[   26.361055]  [<0000000040acd3fc>] blk_mq_complete_request+0x60/0x98
-[   26.361055]  [<0000000040e6eaf0>] scsi_done_internal+0x13c/0x1c8
-[   26.361055]  [<0000000040e6ebac>] scsi_done+0x30/0x60
-[   26.361055]  [<0000000040e8b140>] sym_xpt_done+0x94/0xc8
-[   26.361055]  [<0000000040e91588>] sym_interrupt+0x5bc/0x28e8
-[   26.361055]  [<0000000040e88c1c>] sym53c8xx_intr+0x98/0x170
-[   26.361055]  [<00000000403fe380>] __handle_irq_event_percpu+0xdc/0x338
-[   26.361055]  [<00000000403fe618>] handle_irq_event_percpu+0x3c/0xf8
-[   26.361055]  [<000000004040925c>] handle_percpu_irq+0xb8/0x110
-[   26.361055]  [<00000000403fcc74>] generic_handle_irq+0x60/0xb0
-[   26.361055]  [<000000004030f930>] do_cpu_irq_mask+0x304/0x508
-[   26.361055]  [<0000000040303070>] intr_return+0x0/0xc
+> hostdata->work_q only hosts a single work item, hostdata->main_task, and
+> thus doesn't need explicit concurrency limit. Let's use the default
+> @max_active. This doesn't cost anything and clearly expresses that
+> @max_active doesn't matter.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+
+Acked-by: Finn Thain <fthain@linux-m68k.org>
+
+> Cc: Finn Thain <fthain@linux-m68k.org>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+> Hello,
+> 
+> Resending because I screwed up the cc list in the original posting. The
+> whole series can be viewed at:
+> 
+>   http://lkml.kernel.org/r/20230509015032.3768622-1-tj@kernel.org
+> 
+> It's not a must but it'd be great if I can route this through the 
+> workqueue tree so that it can go together with other related and 
+> followup cleanups.
+> 
+> Thanks.
+> 
+
+No objection from me. I guess it's Martin's call?
