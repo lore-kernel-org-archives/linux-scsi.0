@@ -2,115 +2,194 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F072C77B7A
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 May 2023 02:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7F5C7EE2A
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 May 2023 05:24:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229662AbjEUCsL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 20 May 2023 22:48:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52298 "EHLO
+        id S229714AbjEUFYB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 May 2023 01:24:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbjEUCsK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 May 2023 22:48:10 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B4EA107;
-        Sat, 20 May 2023 19:48:09 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id 41be03b00d2f7-5144a9c11c7so4320886a12.2;
-        Sat, 20 May 2023 19:48:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684637289; x=1687229289;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=a79Vo58JHfGLRFzTXzs92sJx4IbsuI16qLQD+jJeNPA=;
-        b=VcUmjPfbxHa8Y8zJZxES3rJVjF2vnytlrj62kXk/JM/oI0QIAO1B2/OX5zBcPA7d55
-         VWNPwFwLr5l8DqK0NFllNCV00YbN1XGamRoNNwG7yYaltB9aCuHgdHYQTNUZkleTTpLA
-         GbzcE84jggJH/xwkRfTSpBYXiWcoQ89r6RbhpIh3Cx0bXbzcO3yIV/Xqdyqd2CTT38cg
-         B/FUSz5x03Q5zT1B71YIfvfDaOSlDCQ61m+WfzG/J+wijsvsxIzmTqqdWw0iCY5NdVsb
-         /ejGy4suawhHWpt8XfBIOrPyuQhE4UMWFxb3cpvC8gVxW14N6OBNK33IcoQDSIHNNEWQ
-         JRcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684637289; x=1687229289;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=a79Vo58JHfGLRFzTXzs92sJx4IbsuI16qLQD+jJeNPA=;
-        b=f3vsLHnMyG/cLnqvwMogbUmqAv2X46oFc3JNJBT6mcVxP+nUNVxwc4TuRfD263L1Cf
-         fbUQ/rIwCWLZMnkPioi1BeUb1w/rBNJckjPSJVuz4XeNMyjDV/jsTeGR8vfDLNWsSUpK
-         LcR8/wJ2/Uls5OFyRifyu5y2njtMWEUMwmovB5iYqT8Mqy+qnw7mUe/tx2VvI7lrhVeS
-         x/zrZAH9Qzz/W0S2Qb+gQHxSo9WcArFPBlmyuEcsPDf3QYWvxcg5DERJBd636w2yxV9A
-         pJAAaHoloxQSQVTbWzCvvF1dyAULusQiOl8K/LloCG9kfYmgqZeNrkVhutoShHdPWLKQ
-         dMRw==
-X-Gm-Message-State: AC+VfDw0dDnP+vqxpEnJ5oMCG/QAyLU5k8m06oXozbpjajg2fPkunSDM
-        Y1U1F9Q6ZJnBEo0maV+671c=
-X-Google-Smtp-Source: ACHHUZ4BD05o4GzaiREoSuGK621jLhb8v4fkssb2Er1Fg6IRWkbz9g67DxnIRLx8LWlWW8AbGx/aGw==
-X-Received: by 2002:a17:902:d345:b0:1a2:6257:36b9 with SMTP id l5-20020a170902d34500b001a2625736b9mr7604627plk.31.1684637288836;
-        Sat, 20 May 2023 19:48:08 -0700 (PDT)
-Received: from localhost (2603-800c-1a02-1bae-a7fa-157f-969a-4cde.res6.spectrum.com. [2603:800c:1a02:1bae:a7fa:157f:969a:4cde])
-        by smtp.gmail.com with ESMTPSA id jh9-20020a170903328900b001a6f7744a27sm2191910plb.87.2023.05.20.19.48.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 20 May 2023 19:48:08 -0700 (PDT)
-Sender: Tejun Heo <htejun@gmail.com>
-Date:   Sat, 20 May 2023 16:48:07 -1000
-From:   Tejun Heo <tj@kernel.org>
-To:     jiangshanlai@gmail.com
-Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
-        Finn Thain <fthain@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH RESEND 01/13] scsi: ncr53c8xx: Use default @max_active for
- hostdata->work_q
-Message-ID: <ZGmGZxYmN0En7wAB@slm.duckdns.org>
-References: <20230509015032.3768622-1-tj@kernel.org>
- <20230509015032.3768622-2-tj@kernel.org>
+        with ESMTP id S229481AbjEUFYA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2023 01:24:00 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A86128;
+        Sat, 20 May 2023 22:23:59 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id CDDF91FDD1;
+        Sun, 21 May 2023 05:23:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1684646636; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=jDs5PWzIb5j2h+LCKYMH/wWHxP24TZPVqLA4oF4S6B0=;
+        b=hmlO21PfymYtxIpGjaJjrl2CNY1nDRPRorMyYg8IwWE0l9eDFEicEbuvDHVeaTJdJJ+9o1
+        4eELv7aFLiRLKzPTD0v2W8k+yGUphta5Wmj5oSBnE9zEdKN/7EJ1ZDA8EFYABCnxDhGhsI
+        VUvv2Db4IlJ5xyGlpSAXHo3ftfLkUvA=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9BD321390B;
+        Sun, 21 May 2023 05:23:56 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ycuwJOyqaWSFdAAAMHmgww
+        (envelope-from <jgross@suse.com>); Sun, 21 May 2023 05:23:56 +0000
+Message-ID: <73fd2741-3730-ca1d-7e23-0bf9cf10f423@suse.com>
+Date:   Sun, 21 May 2023 07:23:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230509015032.3768622-2-tj@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
+Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
+References: <20230511123432.5793-1-jgross@suse.com>
+ <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
+ <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
+ <9d356278-c826-dacf-cbe0-79f512b7970e@oracle.com>
+ <60aeffe4-b31d-4ea3-d4ea-f50ae25e0316@suse.com>
+ <74879c87-689f-6a8e-a177-8bde4c9c4e51@oracle.com>
+ <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
+From:   Juergen Gross <jgross@suse.com>
+In-Reply-To: <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------Ir0cc06T7GC9xpBoU2Z6gt8d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tejun Heo <tj@kernel.org>
-Subject: scsi: ncr53c8xx: Use default @max_active for hostdata->work_q
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------Ir0cc06T7GC9xpBoU2Z6gt8d
+Content-Type: multipart/mixed; boundary="------------itRklF4GeRTx2kWh9ThwD0F6";
+ protected-headers="v1"
+From: Juergen Gross <jgross@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ John Garry <john.g.garry@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>, stable@vger.kernel.org
+Message-ID: <73fd2741-3730-ca1d-7e23-0bf9cf10f423@suse.com>
+Subject: Re: [PATCH] scsi: Let scsi_execute_cmd() mark args->sshdr as invalid
+References: <20230511123432.5793-1-jgross@suse.com>
+ <yq1ttwbsoii.fsf@ca-mkp.ca.oracle.com>
+ <6614f626-d174-03d0-0993-79e6f6169b71@suse.com>
+ <9d356278-c826-dacf-cbe0-79f512b7970e@oracle.com>
+ <60aeffe4-b31d-4ea3-d4ea-f50ae25e0316@suse.com>
+ <74879c87-689f-6a8e-a177-8bde4c9c4e51@oracle.com>
+ <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1v8gmpkq4.fsf@ca-mkp.ca.oracle.com>
 
-hostdata->work_q only hosts a single work item, hostdata->main_task, and
-thus doesn't need explicit concurrency limit. Let's use the default
-@max_active. This doesn't cost anything and clearly expresses that
-@max_active doesn't matter.
+--------------itRklF4GeRTx2kWh9ThwD0F6
+Content-Type: multipart/mixed; boundary="------------qMWMFDBW1utuPCbXAlZnm6nr"
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Finn Thain <fthain@linux-m68k.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
-Hello,
+--------------qMWMFDBW1utuPCbXAlZnm6nr
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-Resending because I screwed up the cc list in the original posting. The
-whole series can be viewed at:
+T24gMjEuMDUuMjMgMDM6MTksIE1hcnRpbiBLLiBQZXRlcnNlbiB3cm90ZToNCj4gDQo+IEpv
+aG4sDQo+IA0KPj4gQE1hcnRpbiwgRG8geW91IGhhdmUgYW55IHByZWZlcmVuY2UgZm9yIHdo
+YXQgd2UgZG8gbm93PyBUaGlzIGNvZGUNCj4+IHdoaWNoIGRvZXMgbm90IGNoZWNrIGZvciBl
+cnJvciBhbmQgZG9lcyBub3QgcHJlLXplcm8gc3NoZHIgaXMNCj4+IGxvbmdzdGFuZGluZywg
+c28gSSBhbSBub3Qgc3VyZSBpZiBKdWVyZ2VuJ3MgY2hhbmdlIGlzIHJlcXVpcmVkIGZvciBm
+b3INCj4+IHY2LjQuIEknbSB0aGlua2luZyB0byBmaXggY2FsbGVycyBmb3IgdjYuNSBhbmQg
+YWxzbyBtYXliZSBjaGFuZ2UgdGhlDQo+PiBBUEksIGFzIEkgZGVzY3JpYmVkLg0KPiANCj4g
+QXMgSSBhbGx1ZGVkIHRvIGluIHRoZSB0cmFjaW5nIHRocmVhZCwgSSdkIGxpa2UgdG8gc2Vl
+IFNLL0FTQy9BU0NRIGJlaW5nDQo+IGdlbmVyYWxseSBhdmFpbGFibGUgaW4gdGhlIHNjc2lf
+Y21uZCByZXN1bHRzIGluc3RlYWQgb2YgYWxsIHRoaXMgc2Vuc2UNCj4gYnVmZmVyIGFuZCBz
+ZW5zZSBoZWFkZXIgbWljcm9tYW5hZ2VtZW50IGluIGV2ZXJ5IGNhbGxlci4gVGhhdCdzIGEg
+cHJldHR5DQo+IGhlYXZ5IGxpZnQsIHRob3VnaC4NCj4gDQo+IFNob3J0IHRlcm0gd2UgbmVl
+ZCBhbGwgY2FsbGVycyB0byBiZSBmaXhlZCB1cC4gSSdtIG5vdCBhIHBhcnRpY3VsYXJseQ0K
+PiBiaWcgZmFuIG9mIHNjc2lfZXhlY3V0ZV9jbWQoKSB6ZXJvaW5nIHNvbWV0aGluZyBiZWlu
+ZyBwYXNzZWQgaW4uIEkNCj4gd29uZGVyIGlmIGl0IHdvdWxkIGJlIHdvcnRoIGhhdmluZyBh
+IERFQ0xBUkVfU0VOU0VfSEVBREVSKCk/DQoNCnNzaGRyIGlzIG91dHB1dCBvbmx5IGRhdGEs
+IHNvIHNldHRpbmcgaXQgYmVmb3JlIHJldHVybmluZyBzZWVtcyB0byBiZSBhDQpzZW5zaWJs
+ZSB0aGluZyB0byBkby4NCg0KTGV0dGluZyB0aGUgY2FsbGVycyBkbyB0aGF0IGlzIGtpbmQg
+b2YgYSBsYXllcmluZyB2aW9sYXRpb24gSU1ITywgYXMgdGhpcw0Kd291bGQgc3ByZWFkIHRo
+ZSBrbm93bGVkZ2UgdGhhdCBzY3NpX2V4ZWN1dGVfY21kKCkgaXNuJ3Qgc2V0dGluZyBpdHMg
+b3V0cHV0DQpkYXRhIGFsd2F5cy4NCg0KSW4gdGhlIGVuZCBpdHMgeW91ciBkZWNpc2lvbiwg
+b2YgY291cnNlLg0KDQoNCkp1ZXJnZW4NCg==
+--------------qMWMFDBW1utuPCbXAlZnm6nr
+Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
 
-  http://lkml.kernel.org/r/20230509015032.3768622-1-tj@kernel.org
+-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-It's not a must but it'd be great if I can route this through the workqueue
-tree so that it can go together with other related and followup cleanups.
+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
+jR/i1DG86lem3iBDXzXsZDn8R38=3D
+=3D2wuH
+-----END PGP PUBLIC KEY BLOCK-----
 
-Thanks.
+--------------qMWMFDBW1utuPCbXAlZnm6nr--
 
- drivers/scsi/NCR5380.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--------------itRklF4GeRTx2kWh9ThwD0F6--
 
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -417,7 +417,7 @@ static int NCR5380_init(struct Scsi_Host
- 	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
- 	                        WQ_UNBOUND | WQ_MEM_RECLAIM,
--	                        1, instance->host_no);
-+				0, instance->host_no);
- 	if (!hostdata->work_q)
- 		return -ENOMEM;
- 
+--------------Ir0cc06T7GC9xpBoU2Z6gt8d
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmRpquwFAwAAAAAACgkQsN6d1ii/Ey8x
+LAgAlSEEWx6phlVBDVwkL8Egn49EPcK1OcA4VQ1QcSTHONRLA0q5QhY/GFiuYpqUB4Qmlk9dLrI4
+08q9QMLab+C2yzJoRefXxBeDsMnhB+MLV0WCGIs3H59shBfe1zbDWs29t+6rDCJBG/KTDw8rlg1O
+5SDeKh4mm7mvhziiQ89sBZVBNpK5956HbiN9BoXeoX6QdlRgnrFA2nMhlq5TkY4BXE4YPZmhkN0c
+PgBSYznEi1gcVtl1h7R6021WRqvfibsuOZV3/lLG/ZI3bVPDuwlTWumLJUpsPh5HP2B5Ov10OWX5
+JOdf80Euyf5YSrkE2VkkMxQRSK4KAZKzl8n7qUC6aQ==
+=2FXn
+-----END PGP SIGNATURE-----
+
+--------------Ir0cc06T7GC9xpBoU2Z6gt8d--
