@@ -2,181 +2,173 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11114C77B73
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 06:58:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D37C7EE26
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 07:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232249AbjEVG6t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 May 2023 02:58:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60682 "EHLO
+        id S232133AbjEVHFr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 May 2023 03:05:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231932AbjEVG6f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 02:58:35 -0400
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B9E01FFC;
-        Sun, 21 May 2023 23:56:15 -0700 (PDT)
-Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-4f1411e8111so6204373e87.1;
-        Sun, 21 May 2023 23:56:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684738573; x=1687330573;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RjIdl2Km4auVdeOee+ENz9jijVAGGq4cYOtS4qc9bPw=;
-        b=Qa5AMN9DoH5/PJ1qcjvtJvelEFhNxxBIAQPSCDcdBe6uuUp62hQOTA6ZHOY3CTxCLM
-         8tTlAF68S0eUqwN7/lr5FAqH2pRXZGiky8wUkM1qIGxZ06Xq3p1htMG/f0XE+oinIbdw
-         auodvw8CqLHNRbWhRki9TwNKtd/zAR+3bmrJQA1WO3LnG4XEeuznf95iFr9GDwVb4BfF
-         lIs4FXyVqCQPGvrRdVHZIQyM5ole0gjPHsFYZIl5K3tiz7veBHGUMgpgZC1n0JGB3Am8
-         QJ9hV5QQxwECWT909gnRBT2rzzL8NhK9awsogS0CmkVyGxQKwNeZdawHgjlP6TQ3uLtl
-         jx2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684738573; x=1687330573;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=RjIdl2Km4auVdeOee+ENz9jijVAGGq4cYOtS4qc9bPw=;
-        b=S0JZpMx1N+SvPuvWHvL5iclSVIZg0f74W1aa4LvCM5N9mjFIB6hky3BCNJumXRs8mj
-         TIJa+7WcwGlvIPsFqx9IRQ43c8vzVfzfNiLmZQ8QQnpsUn7xgCwOIBGg+FNJKIK7VdmQ
-         f74j8GIbQlu2sYkAxnkN8Sv5JatHpfwK+FQeynnDlD0u6q7MQ7TA/vifgyxPjL53pfM/
-         ltw9NrQ33KJODOBeJ0RGitebfko2IgB7DuiS+rs+EzQ55EM/yZ0RH6FTRg14L4QoxrrO
-         IBSAlJWPgGMbmaXsWh/wud4rR5tC9qbH3M20o1rE4G+kLbtujmKlG2VpGge3jnlvvyKW
-         1N7Q==
-X-Gm-Message-State: AC+VfDwQxWxTPejRCn9EuaIYdbSQ1uqPPpy7Zw9zumId9hkfhC7OYMBZ
-        81F92Vs6epNWYQ3qM2JhQg0Xds40QA6DAE9cfA==
-X-Google-Smtp-Source: ACHHUZ7ayZusqT8tJdXENnLUQn5th5A/n6VTy+8wS8fCxaS2HsOykHtX20Q3TklWfQH9CU6/xnFMAjWK5MFvYMDl+mo=
-X-Received: by 2002:ac2:4c18:0:b0:4dd:9fd8:3a36 with SMTP id
- t24-20020ac24c18000000b004dd9fd83a36mr2954763lfq.1.1684738573145; Sun, 21 May
- 2023 23:56:13 -0700 (PDT)
+        with ESMTP id S231220AbjEVHFV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 03:05:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB4C61FEF;
+        Mon, 22 May 2023 00:02:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C6A1361197;
+        Mon, 22 May 2023 07:02:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36A79C433EF;
+        Mon, 22 May 2023 07:02:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684738938;
+        bh=c4gWqr9ur4of/a8IC06iYHE7k0Seduk+Q9U0csTEnpE=;
+        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+        b=CDrbZwdhAf88j9UkLMmkDgcaPt//jDinfRmwjncBfzJMJ+kHL005fLuLGd6rBqEkw
+         kbHokEnu3u1GdDnkLzmDhpxEd/TVL3hiWSoZzjrS/I45qGySLF0xMJEXWLiMYDxrZs
+         ERkJ0gDAK3RtCEjYOzHK1Qr9XEtkC8g5vpHR0AX9RnMFhx3dCdl6z3AcarqMXhY6TX
+         9cq2x0c7WHJqJkr5t5CDZhZkvroPfJAL5cbVFtUuZ2jqqj6YBPSeiIj2N+Z1TAUOOH
+         59kCOrU/jIp+mXj6nAZK8AlY8M3426500PEb52Xbiaym0QCFV5DmDe2NmjXLyVYX9H
+         jZ/b4mthmEejw==
+Message-ID: <68953040-1622-254b-f6f8-b279eccacfb1@kernel.org>
+Date:   Mon, 22 May 2023 16:02:16 +0900
 MIME-Version: 1.0
-References: <cover.1683872601.git.quic_nguyenb@quicinc.com>
- <7b884263c9db9a9666086a345ede85bb56d9dfc7.1683872601.git.quic_nguyenb@quicinc.com>
- <CAGaU9a8t9CHcGvJk+GFaTO=pDQA+PwEjCWH8sMo=T6-oKvTrsw@mail.gmail.com>
-In-Reply-To: <CAGaU9a8t9CHcGvJk+GFaTO=pDQA+PwEjCWH8sMo=T6-oKvTrsw@mail.gmail.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Mon, 22 May 2023 14:56:00 +0800
-Message-ID: <CAGaU9a8+mDgVu9-rmH944NhbSCGocADUhbdin5gQkrc_FD1xMQ@mail.gmail.com>
-Subject: Re: [PATCH v5 7/7] ufs: core: Add error handling for MCQ mode
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     yangxingui <yangxingui@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, john.g.garry@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, prime.zeng@hisilicon.com,
+        kangfenglong@huawei.com
+References: <20230505025712.19438-1-yangxingui@huawei.com>
+ <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
+ <02d36ee9-cdad-454d-d822-95442d7bd67b@huawei.com>
+ <f4ba7a92-1f00-c254-d196-7d21fe14dee2@kernel.org>
+ <938d6b5b-0271-977d-f046-5fd70d29b3ca@huawei.com>
+ <a5c2e157-aaf7-1300-3fbb-1300ac216cee@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <a5c2e157-aaf7-1300-3fbb-1300ac216cee@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 22, 2023 at 2:48=E2=80=AFPM Stanley Chu <chu.stanley@gmail.com>=
- wrote:
->
-> Hi Bao,
->
-> Bao D. Nguyen <quic_nguyenb@quicinc.com> =E6=96=BC 2023=E5=B9=B45=E6=9C=
-=8812=E6=97=A5 =E9=80=B1=E4=BA=94 =E4=B8=8B=E5=8D=882:34=E5=AF=AB=E9=81=93=
-=EF=BC=9A
-> >
-> > Add support for error handling for MCQ mode.
-> >
-> > Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> > ---
-> >  drivers/ufs/core/ufshcd.c | 85 +++++++++++++++++++++++++++++++++++++++=
-++------
-> >  1 file changed, 74 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index ec07e49..9345118 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -3148,6 +3148,16 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hb=
-a *hba,
-> >                 err =3D -ETIMEDOUT;
-> >                 dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d=
-\n",
-> >                         __func__, lrbp->task_tag);
-> > +
-> > +               /* MCQ mode */
-> > +               if (is_mcq_enabled(hba)) {
-> > +                       err =3D ufshcd_clear_cmd(hba, lrbp->task_tag);
-> > +                       if (!err)
-> > +                               hba->dev_cmd.complete =3D NULL;
->
-> How about always clearing hba->dev_cmd.complete? If ufshcd_clear_cmd()
-> fails (for example, times out), "complete" should be cleared, similar
-> to the "pending" case in the SDB path.
->
-> > +                       return err;
-> > +               }
-> > +
-> > +               /* SDB mode */
-> >                 if (ufshcd_clear_cmd(hba, lrbp->task_tag) =3D=3D 0) {
-> >                         /* successfully cleared the command, retry if n=
-eeded */
-> >                         err =3D -EAGAIN;
-> > @@ -5581,6 +5591,10 @@ static int ufshcd_poll(struct Scsi_Host *shost, =
-unsigned int queue_num)
-> >   */
-> >  static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
-> >  {
-> > +       struct ufshcd_lrb *lrbp;
-> > +       u32 hwq_num, utag;
-> > +       int tag;
-> > +
-> >         /* Resetting interrupt aggregation counters first and reading t=
-he
-> >          * DOOR_BELL afterward allows us to handle all the completed re=
-quests.
-> >          * In order to prevent other interrupts starvation the DB is re=
-ad once
-> > @@ -5599,7 +5613,22 @@ static irqreturn_t ufshcd_transfer_req_compl(str=
-uct ufs_hba *hba)
-> >          * Ignore the ufshcd_poll() return value and return IRQ_HANDLED=
- since we
-> >          * do not want polling to trigger spurious interrupt complaints=
-.
-> >          */
-> > -       ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
-> > +       if (!is_mcq_enabled(hba)) {
-> > +               ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTE=
-XT);
-> > +               goto out;
-> > +       }
-> > +
-> > +       /* MCQ mode */
-> > +       for (tag =3D 0; tag < hba->nutrs; tag++) {
-> > +               lrbp =3D &hba->lrb[tag];
-> > +               if (ufshcd_cmd_inflight(lrbp->cmd)) {
-> > +                       utag =3D blk_mq_unique_tag(scsi_cmd_to_rq(lrbp-=
->cmd));
-> > +                       hwq_num =3D blk_mq_unique_tag_to_hwq(utag);
-> > +                       ufshcd_poll(hba->host, hwq_num);
-> > +               }
-> > +       }
->
-> In SDB mode, the DOOR_BELL is reset by ufshcd_hba_stop(). All bits
-> that were previously set in DOOR_BELL are also set in "completed_reqs"
-> in ufshcd_poll(). This allows ufshcd_poll() to handle all outstanding
-> requests properly.
->
-> However, in MCQ mode, the CQ tail registers cannot provide the same
-> information after they are reset. Hence, they cannot be properly
-> referenced by ufshcd_poll().
+On 5/22/23 10:35, Damien Le Moal wrote:
+> On 5/8/23 10:11, yangxingui wrote:
+>>
+>>
+>> On 2023/5/7 22:51, Damien Le Moal wrote:
+>>> On 2023/05/05 18:06, yangxingui wrote:
+>>>>
+>>>>
+>>>> On 2023/5/5 16:17, Damien Le Moal wrote:
+>>>>> On 2023/05/05 11:57, Xingui Yang wrote:
+>>>>>> The function ata_get_identity() uses the helper ata_scsi_find_dev() to get
+>>>>>> the ata_device structure of a scsi device. However, when the ata device is
+>>>>>> managed by libsas, ata_scsi_find_dev() returns NULL, turning
+>>>>>> ata_get_identity() into a nop and always returns -ENOMSG.
+>>>>>
+>>>>> What do you do to hit the issue ? A while back for me it was the queue depth
+>>>>> setting causing problems. As Garry mentioned, this led to patch 141f3d6256e5
+>>>>> ("ata: libata-sata: Fix device queue depth control").
+>>>> Attempt to return the correct value at ata_scsi_find_dev() instead of
+>>>> NULL, when the ata device is managed by libsas?
+>>>
+>>> That I understand. My question is *what* user operation/command triggers this ?
+>>> Because on my test setup, under normal use, I do not see this issue (beside what
+>>> was already corrected with the queue depth control). Is the issue showing up
+>>> when using passthrough commands only ?
+>> Yeah, we found that command "hdparm -i /dev/sdc" always return faild for 
+>> SATA HDD disk. as follows:
+>> [root@localhost ~]# hdparm -i /dev/sdc
+>>
+>> /dev/sdc:
+>>   HDIO_GET_IDENTITY failed: Invalid argument
+> 
+> I cannot recreate this issue exactly like this. Here is my setup with a pm80xx
+> driver (Adaptec HBA):
+> 
+> [7:0:0:0]    disk    ATA      WDC  WUH721818AL W232  /dev/sdd   /dev/sg5
+> [7:0:1:0]    disk    ATA      WDC  WUH721818AL WTW2  /dev/sdi   /dev/sg6
+> [7:0:2:0]    disk    ATA      WDC  WUH722222AL Wf86  /dev/sdf   /dev/sg7
+> [7:0:3:0]    zbc     ATA      WDC  WSH722020AL W803  /dev/sdg   /dev/sg8
+> 
+> Using the first drive, I get:
+> 
+> sudo hdparm -i /dev/sdd
+> 
+> /dev/sdd:
+> 
+>  Model=WDC  WUH721818ALN604, FwRev=PCGNW232, SerialNo=3KG10LBK
+>  Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+>  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=56
+>  BuffType=DualPortCache, BuffSize=unknown, MaxMultSect=2, MultSect=off
+>  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=4394582016
+>  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>  PIO modes:  pio0 pio1 pio2 pio3 pio4
+>  DMA modes:  mdma0 mdma1 mdma2
+>  UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+>  AdvancedPM=yes: disabled (255) WriteCache=enabled
+>  Drive conforms to: unknown:  ATA/ATAPI-2,3,4,5,6,7
+> 
+>  * signifies the current active mode
+> 
+> So all good. However, for the following drives, I get:
+> 
+> sudo hdparm -i /dev/sdi
+> 
+> /dev/sdi:
+>  HDIO_GET_IDENTITY failed: No message of desired type
+> 
+> (same for sdf and sdg).
+> 
+> Will dig into this.
 
-A fixed version sample is as follows and has been tested on our end.
+OK, so the issue is that __ata_scsi_find_dev() calls ata_find_dev() with devno
+== scsidev->id. This leads to devno being 0, 1, 2 and 3 for connected drives
+sdd, sd1, sdf and sdg, as shown by lsscsi. However, each drive has its own
+port+link, with the link for each one having  ata_link_max_devices() == 1, so
+ata_find_dev() works only for the first drive with scsidev->id == 0 and fails
+for the others. A naive fix would be this:
 
-struct scsi_cmnd *cmd;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7bb12deab70c..e4d6f17d7ccc 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2718,7 +2718,7 @@ static struct ata_device *__ata_scsi_find_dev(struct
+ata_port *ap,
+        if (!sata_pmp_attached(ap)) {
+                if (unlikely(scsidev->channel || scsidev->lun))
+                        return NULL;
+-               devno = scsidev->id;
++               devno = 0;
+        } else {
+                if (unlikely(scsidev->id || scsidev->lun))
+                        return NULL;
 
-for (tag =3D 0; tag < hba->nutrs; tag++) {
-        lrbp =3D &hba->lrb[tag];
-        cmd =3D lrbp->cmd;
-        if (ufshcd_cmd_inflight(cmd)) {
-                set_host_byte(cmd, DID_ERROR);
-                ufshcd_release_scsi_cmd(hba, lrbp);
-                scsi_done(cmd);
-        }
-}
+And running this on my setup, it works. This makes libsas added ports/devices
+look like AHCI ones, where all devices have ID 0 for the !pmp case.
 
-Thanks,
-Stanley Chu
+However, I am not sure this would be OK for all setups...
+
+John,
+
+Any idea if there is any cases where libsas managed drives would endup not being
+correctly identified by this change ? As long as a device always has its own
+port, I do not see any issue. But is there a case where we could have multiple
+devices on the same port ? Per libata, max is 2, and that is only for the IDE
+master/slave case. Otherwise, it is always 1.
+
+Not that looking at the pmp case, I am not confident at all that the
+identification is correct for libsas. But I do not think that anyone would ever
+connect a pmp box to a libsas HBA...
+
+-- 
+Damien Le Moal
+Western Digital Research
+
