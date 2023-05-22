@@ -2,79 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF2BCC7EE2F
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 22:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4D4C7EE30
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 22:46:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234870AbjEVWqk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 May 2023 18:46:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49592 "EHLO
+        id S234855AbjEVWql (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 May 2023 18:46:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234855AbjEVWqe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 18:46:34 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB23B118;
-        Mon, 22 May 2023 15:46:33 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MKNrLq021966;
-        Mon, 22 May 2023 22:46:29 GMT
+        with ESMTP id S234848AbjEVWqc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 18:46:32 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26F0D100;
+        Mon, 22 May 2023 15:46:31 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MKOTg4016126;
+        Mon, 22 May 2023 22:46:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=ILjsmggriKaYre68r1nUi//jgjhWnTcY3nxtrL7Gs90=;
- b=YOYzZOPrpuvE5j5Cp8pO3Di3B45R6atVuxxQZ42PPj8O0nMlD/C3VsbPn2Xbc/Icw4E8
- 7Oybv02jr7M2SvJKia2pNa6h5YHbGCr+9Nwepkn50gp48WWiMqeJdu2NcbR7kjrpqzTM
- FsiWfur+nPCSQmI62O3cStXG5nldNS+9k5EH1bokiEhnw/CjwVgVhZlpHm4KZBxRJhNR
- xYENmbU/HAF4BeF0zfpZVtQvd+yw+tpjvY8U6n+PtaOw//mcUUR9C3Nkc69ml85AK8xl
- Jj1hvtSrlXzSzqtqibRg5ZQgGn+/cCURo/xXeZL8ixTprjk7vaUUsys160C1w8pOyoj/ dg== 
+ bh=3mNg1sKwIWiWD++N1LUDmW/m+i/nN4JVF3h4Wp7D1wI=;
+ b=3qNE0cj72KwkD1pYDT7eCC4B+e4rU+HUdkta7yzIf0tM+tpaP7TTpCYI6ye0YAydk5Qc
+ Ri2XOO8XLbrpZymNdf0NTubNB2WfUmBc/dXe0xjTqPQlKZjC0QW5pfadIQUUB1SXx4Yb
+ rBQXlHZqgH+1miplLNw+/cD3QNYOEwkB81yIF8VaIFVCBRbRTCwFXne3UgdFpNUsA44a
+ mYjMrAOVhc1h1cxMLprTfmxrukdgw4fP15JqpCiYeSl7vFAXogu1L3AXN76Sww54Hk0s
+ r60dV1BZDparJykPcqFry0fUQhPUOHWF4/YPh33Auz8KYm7H+we6QIEphnOy61PMmv1Y tg== 
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qpp3qktpr-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qpp3mkuqh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 22:46:29 +0000
+        Mon, 22 May 2023 22:46:26 +0000
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34MLYUWH027619;
-        Mon, 22 May 2023 22:46:28 GMT
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34MLmQIt027330;
+        Mon, 22 May 2023 22:46:25 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3qqk2ctfbe-1
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3qqk2ctfam-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 22:46:28 +0000
+        Mon, 22 May 2023 22:46:25 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MMkPxY017332;
-        Mon, 22 May 2023 22:46:27 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MMkPxU017332;
+        Mon, 22 May 2023 22:46:25 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3qqk2ctfa8-3;
-        Mon, 22 May 2023 22:46:27 +0000
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3qqk2ctfa8-1;
+        Mon, 22 May 2023 22:46:24 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+To:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
         Azeem Shaikh <azeemshaikh38@gmail.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+        azeems@google.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH] scsi: qla4xxx: Replace all non-returning strlcpy with strscpy
-Date:   Mon, 22 May 2023 18:46:14 -0400
-Message-Id: <168479035945.1118074.16320595294990863793.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: bfa: Replace all non-returning strlcpy with strscpy
+Date:   Mon, 22 May 2023 18:46:12 -0400
+Message-Id: <168479035941.1118074.14331804966851481235.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230516025355.2835898-1-azeemshaikh38@gmail.com>
-References: <20230516025355.2835898-1-azeemshaikh38@gmail.com>
+In-Reply-To: <20230516013345.723623-1-azeemshaikh38@gmail.com>
+References: <20230516013345.723623-1-azeemshaikh38@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
  definitions=2023-05-22_16,2023-05-22_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=964 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 phishscore=0
  malwarescore=0 suspectscore=0 spamscore=0 bulkscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
  definitions=main-2305220192
-X-Proofpoint-GUID: 5b-ojb_yvJi6mPFnVyFWU42tG9dBFJtI
-X-Proofpoint-ORIG-GUID: 5b-ojb_yvJi6mPFnVyFWU42tG9dBFJtI
+X-Proofpoint-ORIG-GUID: bfORZNylzNOnDjz5PUHEIus_LwkItmB-
+X-Proofpoint-GUID: bfORZNylzNOnDjz5PUHEIus_LwkItmB-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 16 May 2023 02:53:55 +0000, Azeem Shaikh wrote:
+On Tue, 16 May 2023 01:33:45 +0000, Azeem Shaikh wrote:
 
 > strlcpy() reads the entire source buffer first.
 > This read may exceed the destination size limit.
@@ -88,8 +87,8 @@ On Tue, 16 May 2023 02:53:55 +0000, Azeem Shaikh wrote:
 
 Applied to 6.5/scsi-queue, thanks!
 
-[1/1] scsi: qla4xxx: Replace all non-returning strlcpy with strscpy
-      https://git.kernel.org/mkp/scsi/c/41300cc989c2
+[1/1] scsi: bfa: Replace all non-returning strlcpy with strscpy
+      https://git.kernel.org/mkp/scsi/c/973464fded69
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
