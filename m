@@ -2,381 +2,157 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B74C7EE29
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 21:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E59C77B75
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 21:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233823AbjEVVdj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 May 2023 17:33:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45270 "EHLO
+        id S232972AbjEVVkm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 May 2023 17:40:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbjEVVdi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 17:33:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2391A7;
-        Mon, 22 May 2023 14:33:36 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5FB30621CC;
-        Mon, 22 May 2023 21:33:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA921C433EF;
-        Mon, 22 May 2023 21:33:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684791215;
-        bh=ZyCirKPzIU6ZS3HCCQhkFymuVVawBZeVE2tj0DyWJtM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dFNsWQGgND/C9ncLbUN45hnG0FWbHZFwwRbPr9aE0GPiyjOXedOhkWsvPxF8e05qy
-         j9/RCWlnCmXgoJXPegESbKwfTvCxP3C1KMxvTPtq7ZGTI2/c8ALpHQlKFfA2k9DIrJ
-         zXmIFavlhG2VK9S4+vyVNe9MiUginnI66m9u51BUX6T202W7uGH4jaS0wNgMbIYnwD
-         StuD0vRXYonsrdJ0RtJopMEqgv9JBnbCHBFASiI571Q8qLauidt+gpQHNtCQDGkjpt
-         y9VpuUoCtktJJiD8HINGyQEtmgdOo/cqGZ9+wb03L9GLErRet4Obilk7Yr2XzC8DQF
-         n41U+jcclMjYg==
-Date:   Mon, 22 May 2023 15:34:25 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Daniel Latypov <dlatypov@google.com>, storagedev@microchip.com,
-        linux-nvme@lists.infradead.org, Guo Xuenan <guoxuenan@huawei.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        linux-hardening@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org,
-        James Smart <james.smart@broadcom.com>,
+        with ESMTP id S231932AbjEVVkk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 17:40:40 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58967DB;
+        Mon, 22 May 2023 14:40:39 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MKNsKZ001969;
+        Mon, 22 May 2023 21:40:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=qK9bKPyPnjMEvXhZVJhQyW/Bo5HHdHxPVVv069VYr9w=;
+ b=u2lM24WQWixS6FuPHlE3UzVUU7VgdzV1z1RvuKKAIi2T+uwswa2G6rHtnasTvE/TZoIm
+ CSprGTVgCa1Q+9v7O4hQ8/Gee8gbHDfZqnONWq8eT5ZUo6VMiMQq0ks6b1b3MGk/Fqfn
+ D/RwbrmIGLZ9/FSs8kOkw/rKV2i/oeWPMGvxwmbfMxOCoMROYsC7xWR+z2BfLEi7mmpK
+ Pg+qC9/Giez78CUmQ0SOoZzNP78oSRTvL4EM1cWtBMV6wc2Zc21kvy7LNmJsO8gMRR+l
+ JYMII5um5AR6Z2CspagIDp/nxTPwihrRoNHD1czHLVZ9HbeXqodveF21Vh6guRYEXXgF sw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qpp44kq6r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 May 2023 21:40:37 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34MLamDX023609;
+        Mon, 22 May 2023 21:40:36 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2171.outbound.protection.outlook.com [104.47.56.171])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3qqk8th0dc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 May 2023 21:40:36 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Zn/oEF1FFtQ+0oIeJF7vXa+N6UHLgjwpufBYHWUDsJXUOl/T7VQCNaFC2Inawq84pNIhmtt7jUTVmlu3ewhqHtoMIgkjtkJIZmFHgeAuakUgFE3ffkEpyCKzIKPH6pDg2rJzvx5LqnS2rfn+3GDFlyAvTfP37vNwosAYnoUn8tYtOfTnAP4lhZzhHKqnmHWwUd9FriD4Co17UDJBFo3y3QiWyAuMy0wiy5JmIi6MKA5zfFtY7X6u+XHsIw1s/XU4W3UehtJWb+4OhCgZhtj9v3jEBR1TIQJEq+ilLvGphp0k/ljublI9eF03qOu4TUpWgP+GpklS8N+bkB3bJuhvag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qK9bKPyPnjMEvXhZVJhQyW/Bo5HHdHxPVVv069VYr9w=;
+ b=lVpqn+o/YJNAgoJd8TLcowIpyLpMhDkua9tf7W5mDIXnZMCe+z1W6NIGGk8RUtwSK8DuIoqGz3aU1Ai2dF4ljO/n4cs+b3KEVUXaw6VvMEeKhyP61DPfBm6dJ/w9leHSxqYqr++wOSnH6EsgzJTostpGwt3MA3TuRz8kGXJV4dJ2Ex6ed0QAWFrMvFw39fPD+HK6dzKjWVtK3nUMtj3IXlLCJ58EqCBRcvOnhUztYTonoBDH6IgmszM/1ZF4QKxUy4YI5LsRESaJQ+Z/RfC5RDy672lj8oO9vLbHHvrfClYgqSmSIiuuadTms3Vj8QE/ffNU8q/qNocpgy/ZQlY/Ow==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qK9bKPyPnjMEvXhZVJhQyW/Bo5HHdHxPVVv069VYr9w=;
+ b=WSpYX2YyrJRgLueAnr7Yq0OPssKBImkNiUbb0XCRq4odqFVQGzzNNAP207WH5Ya8Exmrhym1cLSHwbJt/9CYIlGSi+3ZNbH4Z1p5lkgVHbxJw1g999qtGTcwitRBDrKsejeb4o781vgXLNGc/abqsjgwuihf8FGahUA2Ifno3Cc=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by DS7PR10MB5925.namprd10.prod.outlook.com (2603:10b6:8:87::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6411.28; Mon, 22 May
+ 2023 21:40:33 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::9a52:4c2f:9ec1:5f16]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::9a52:4c2f:9ec1:5f16%7]) with mapi id 15.20.6411.028; Mon, 22 May 2023
+ 21:40:33 +0000
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
         Kashyap Desai <kashyap.desai@broadcom.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        intel-wired-lan@lists.osuosl.org, Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Keith Busch <kbusch@kernel.org>,
-        HighPoint Linux Team <linux@highpoint-tech.com>,
-        megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        netdev@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Sumit Saxena <sumit.saxena@broadcom.com>,
-        Tales Aparecida <tales.aparecida@gmail.com>,
-        Don Brace <don.brace@microchip.com>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [Intel-wired-lan] [PATCH] overflow: Add struct_size_t() helper
-Message-ID: <ZGvf4aW8G12pC2pj@work>
-References: <20230522211810.never.421-kees@kernel.org>
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: mpi3mr: Fix the type used for pointers to bitmap
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1sfboniyg.fsf@ca-mkp.ca.oracle.com>
+References: <8bdf9148ce1a5d01aac11c46c8617b477813457e.1683473011.git.christophe.jaillet@wanadoo.fr>
+Date:   Mon, 22 May 2023 17:40:31 -0400
+In-Reply-To: <8bdf9148ce1a5d01aac11c46c8617b477813457e.1683473011.git.christophe.jaillet@wanadoo.fr>
+        (Christophe JAILLET's message of "Sun, 7 May 2023 17:23:49 +0200")
+Content-Type: text/plain
+X-ClientProxiedBy: DS7PR05CA0028.namprd05.prod.outlook.com
+ (2603:10b6:5:3b9::33) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230522211810.never.421-kees@kernel.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DS7PR10MB5925:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7bd2563a-fc8a-4556-82ea-08db5b0d2c09
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: gDbheWAESNtfzdT03AEpFAyTBf/6hIfcdsJpFbIFhEAiv5X5WMTk9nDqMuvyMsE4aWEGsJJKDhqhnrBPl8YwJwy3r+dKxIRo1+GWEcBUohcnG7iVsBMej+BYtYdeXrVWeaAJDvUCgmf0kNO+Sn7cJf92h+nlF6O4HPDj+U1Qh1F14WbuL357xZcxbKLj76O1l8H2zwycVaRc1yKwW/iwtl4ZqHCQ/ReADDbPOFG4rjJ1+lZ6G4PpYnMxqDDg1SVNP6x0BXc+4HKZNqYvPT4vK48cyXt98NcZXLjs9m/HbwMQXvI5juAmO21uDBMABWuvJeQcMlqmhdGe+xQIxlcLu43qMeiTIrT8vsfrtXDPTnbiPCecgCGbdmn0gC+k3pUfxx5dTg+Ium0ek0oRT8fivBO6gHIDU0KGdfIC5YS5PzeaoDsX5gDNig1RioiV7ZWwgfWCTaSntcrxGhYDBWyCYoC6dBdgNvFMcw+hMGPXtcgd5J57DzYmUAaeM/CbHjEPfeVh8DGyy+xdwtnuly8BgI37UcOoiPD96FAypt8bkYgLJ8ZamqsSMWNAat6ClIf51Qzm9uwhWCRY7bpEs5zTkX65w5pLZuLqh/5RDnyCdEw=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(39860400002)(136003)(366004)(346002)(376002)(451199021)(8676002)(8936002)(5660300002)(7416002)(186003)(26005)(6512007)(6506007)(86362001)(38100700002)(41300700001)(36916002)(6486002)(558084003)(66476007)(66556008)(66946007)(316002)(478600001)(6916009)(4326008)(54906003)(2906002)(66899021)(32563001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?bOjLlLmyrekOXlh9Vt5jlOuJZACXGeOoali6TTAKbiHDEbE4bbkkEctkFsDH?=
+ =?us-ascii?Q?Wxth28WxctahhEBJFaTgWHfP+drRaU1A1E6UUzbvP2uIOjlF2bIoiOe5nO6t?=
+ =?us-ascii?Q?yCoL7vwvWDESzjqWMrd8URcyGpw8N8L/K+37ELz3eYBJhpRn6dogW5uYbvLP?=
+ =?us-ascii?Q?wFX1a04vUl2Bz+JOs6k0WpfbY9IIq95On+2nmQ/m4vTWnnl1KMIzmLQsrdCE?=
+ =?us-ascii?Q?GteQ4lZ0WGa3kH+h3iKfy0qQDYhfnn2z9BOFtgTFbXq5PNSoNxi982yrRitK?=
+ =?us-ascii?Q?ITiJV3OmWjdsGrqkzS5pW0eKG2cNMmohu1UjCswAZuI3AaZkluZF3jkSBMLx?=
+ =?us-ascii?Q?1a5erkuLSF3MFFtmTxBMRvZzvOCI/x6dRwBKUwxzMvMO88AlW+JdoMd9q/Pf?=
+ =?us-ascii?Q?dfFLp+nN0ywKhhkti1n43Q9pDtsKX3/BN6zW476HThQEFfVJiMdXx96PI1TT?=
+ =?us-ascii?Q?Yk2BKRCKRp5zdHrVywi/OvsK1GvAaZtgQsYiCWWfmrPLkWLo3q1YXE+cCtMf?=
+ =?us-ascii?Q?UigutaKP/g9UB1Sen5uxrv1czjNUN982fsuq3stgsx2/i0/5b7IZ0mK0/MGb?=
+ =?us-ascii?Q?MhHDnRv7L3ybzf9dGqQek7YaTjH5YyfZtNPmiukpdv0F5h9ENj6/m2YIemaR?=
+ =?us-ascii?Q?SZR37a4NQ9ItsAiCcLpMiMY96nJoEu0XVoE45ZePz0XTaV/1JbA/70uqTkFH?=
+ =?us-ascii?Q?xsf9xSGIUrSiPWAzrYz8phkItY6pHdDhfAVS6FPl4oLfxgMYRcTyjdhCKtUJ?=
+ =?us-ascii?Q?alG3A/f7oaYLiQ3Feh1OAsrneR66rJ7zIBqdtgl58Erl6GGwvsHsc6sQdmJb?=
+ =?us-ascii?Q?e1TrzCUIySyIge3fGsYwa2ejsyYLnl90MtjnygTMdBqh5RUQQ6ykvP5vU/Pa?=
+ =?us-ascii?Q?8PBKMC1wjISiksDz9E1d5ogwZqFtngB13+VSAKiXTXa7lvQJB2syRbFyucOr?=
+ =?us-ascii?Q?eAdbxzXSsh7+MgDyV8arxO50zEhTGCLMpaRNJgw1mlM4dscXjyljGoGPeZKF?=
+ =?us-ascii?Q?3c8JDihwG4LdHr84wTAqqDtT6NKoe7HY+5fy/F9D6W0mWLne6P7mCW9mQwpY?=
+ =?us-ascii?Q?Ynrdp+PE2ub8xOwvlaIEHPKywcfirKtuvw2W6J+WadAJfFl3u5xL492MA8di?=
+ =?us-ascii?Q?rFSdz9gLaOmjEiiGOnRy7ITE3uDnVBYKX9yHKHawEZf1U9yihBXStYoKLWap?=
+ =?us-ascii?Q?ggeKm8Cbgch1PJgAP+nSnOvx4OamFeN2IOhwwjokP5pVcSUWF6liGKyV2Ml6?=
+ =?us-ascii?Q?ATp4Tt0coTwzaLCjcSdl3XQ0DurRnfCyvRfxqFMQcZK2G2qDc25vX8j0Spjw?=
+ =?us-ascii?Q?33uaugtuO7hiEXS3OaYXOdMkto1DIgdyY15yB8MGrp96z4zJoAPlYUuBtfAf?=
+ =?us-ascii?Q?q0kai2oxJKC2k6M2TZU+Fxe7gXPvhYPyDHEz36bs/Ird1FDnjE+SvjgPvRo0?=
+ =?us-ascii?Q?kgUlyg7eLL8tjMBjElzjrOw3GmGnX9j2oL9xzjRmVELd6fTfWV7PYnCca/tn?=
+ =?us-ascii?Q?ou+XkYJh0rmdp+wN0a4fxaATohZLW31QUVbkG3g1v7K6DJFFp71LLFZ6Zq5F?=
+ =?us-ascii?Q?esoIw3XBm4K3BbAb80og2oyaNN0CpU6uLK0NZ+H1D2OyzYQAlgeyjABfA3ih?=
+ =?us-ascii?Q?tw=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: RSx3+9Foep1UDroUK0wMMYrWYPr91kVARum/zX5c5pCP9O6pjRsvuzcC95EsM48RM+Y8nRVUo/3U0x8juhOHzfTpSOFeZ9PLq5Ao3S2SRSokycMKVgZWfzpRzdn5Lub15z/j6Zr3vC+uqWIR06HI70UcCKFt8EPshbfj6Kl34zweEmAe7aCYdYGGg4kKAXM9EFfTNj7x3w0MKcQDN9kcak8xtTl2LOSEnDdH+ea22xH6fH052hU/2uIUODumIzxMxh+pK9/BfESc4PEeAtmbn9QRyEmZon8e4ahhSoaBgF62m8hZAuOPw+J3sIUaIR9a4CL7Wk741jpGqTLLM6VQtn/nTd+I24Z6RDmtQYLYp99iQ/AzlKPKb2xpAMbC3ublAB/kkIDzRXW4kSl5xZ6Ldu0B4fwK7IeGHtxe00H1dntVVTkdEYxcD5EUi8+5FCRSyRIYd7506fEuryBmYrX4dWmXxZBlNxi6VVaAuDPlI5Lz4Xc7xu/kWwpwlOAuJMoTvndARcWVOmkasxvLg28j8zO1MAOHSBER7OEoz0TnPELKF739x0mr4jtyrKQv8LNHv/0ZU2MzpJ0SeCubRGUDoM+oo/Ej2JZwqvNwvx8AQhgUMkWGLbeN0xR1aRBuapa0ptkR8H/jpxJ3bcC0qKnsC4llXYKo8LZpeMw2zQDcGEWMwglk3TyEJlNKdkgq7Jvf+7RyUKPbW6TKdRGBi4Go9XrMAs1EBCLOjDqOrEDdM1rHTK+ufbbRdIv9WtBxMCcxY7O/n9jYswb4PshQeo6z7i8rVi8/vWWKXgVirzqLB/iN3i3B3oQkj/oJmTEt5BKQV48U+gGiap4z4XSVVReKTint7/OPsANPOIYHWx+Du7M=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7bd2563a-fc8a-4556-82ea-08db5b0d2c09
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 May 2023 21:40:33.6315
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RUgBWMRmDqLwz83aS+jXxAXzSNYQ3zjfzQxa2Owl//xghSIEkQuOpg/BkOSwD43mh5RXFE6DHdEq9fjL9Y+x37ubxAWxjff79C1YGOeHWmM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5925
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-22_16,2023-05-22_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 mlxscore=0
+ mlxlogscore=872 bulkscore=0 malwarescore=0 suspectscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305220183
+X-Proofpoint-GUID: VBOAQuJli6Mx2nso8tWGBMtHzIJ44pCa
+X-Proofpoint-ORIG-GUID: VBOAQuJli6Mx2nso8tWGBMtHzIJ44pCa
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 22, 2023 at 02:18:13PM -0700, Kees Cook wrote:
-> While struct_size() is normally used in situations where the structure
-> type already has a pointer instance, there are places where no variable
-> is available. In the past, this has been worked around by using a typed
-> NULL first argument, but this is a bit ugly. Add a helper to do this,
-> and replace the handful of instances of the code pattern with it.
-> 
-> Instances were found with this Coccinelle script:
-> 
-> @struct_size_t@
-> identifier STRUCT, MEMBER;
-> expression COUNT;
-> @@
-> 
-> -       struct_size((struct STRUCT *)\(0\|NULL\),
-> +       struct_size_t(struct STRUCT,
->                 MEMBER, COUNT)
 
-This indeed was much needed.
+Christophe,
 
-Plus, we save 3 characters on each line. :D
+> Bitmaps are "unsigned long[]", so better use "unsigned long *" instead
+> of a plain "void *" when dealing with pointers to bitmaps.
 
-> 
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-> Cc: Tony Nguyen <anthony.l.nguyen@intel.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Eric Dumazet <edumazet@google.com>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Paolo Abeni <pabeni@redhat.com>
-> Cc: James Smart <james.smart@broadcom.com>
-> Cc: Keith Busch <kbusch@kernel.org>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Sagi Grimberg <sagi@grimberg.me>
-> Cc: HighPoint Linux Team <linux@highpoint-tech.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-> Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> Cc: Don Brace <don.brace@microchip.com>
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Guo Xuenan <guoxuenan@huawei.com>
-> Cc: Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>
-> Cc: Nick Desaulniers <ndesaulniers@google.com>
-> Cc: Daniel Latypov <dlatypov@google.com>
-> Cc: kernel test robot <lkp@intel.com>
-> Cc: intel-wired-lan@lists.osuosl.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-nvme@lists.infradead.org
-> Cc: linux-scsi@vger.kernel.org
-> Cc: megaraidlinux.pdl@broadcom.com
-> Cc: storagedev@microchip.com
-> Cc: linux-xfs@vger.kernel.org
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Applied to 6.5/scsi-staging, thanks!
 
-Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-
-Thanks!
---
-Gustavo
-
-> ---
-> Unless there are objections, I'll just take this via my tree...
-> ---
->  drivers/net/ethernet/intel/ice/ice_ddp.h  |  9 ++++-----
->  drivers/nvme/host/fc.c                    |  8 ++++----
->  drivers/scsi/hptiop.c                     |  4 ++--
->  drivers/scsi/megaraid/megaraid_sas_base.c | 12 ++++++------
->  drivers/scsi/megaraid/megaraid_sas_fp.c   |  6 +++---
->  drivers/scsi/smartpqi/smartpqi_init.c     |  2 +-
->  fs/xfs/libxfs/xfs_btree.h                 |  2 +-
->  fs/xfs/scrub/btree.h                      |  2 +-
->  include/linux/overflow.h                  | 18 +++++++++++++++++-
->  lib/overflow_kunit.c                      |  2 +-
->  10 files changed, 40 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/ice/ice_ddp.h b/drivers/net/ethernet/intel/ice/ice_ddp.h
-> index 37eadb3d27a8..41acfe26df1c 100644
-> --- a/drivers/net/ethernet/intel/ice/ice_ddp.h
-> +++ b/drivers/net/ethernet/intel/ice/ice_ddp.h
-> @@ -185,7 +185,7 @@ struct ice_buf_hdr {
->  
->  #define ICE_MAX_ENTRIES_IN_BUF(hd_sz, ent_sz)                                 \
->  	((ICE_PKG_BUF_SIZE -                                                  \
-> -	  struct_size((struct ice_buf_hdr *)0, section_entry, 1) - (hd_sz)) / \
-> +	  struct_size_t(struct ice_buf_hdr,  section_entry, 1) - (hd_sz)) / \
->  	 (ent_sz))
->  
->  /* ice package section IDs */
-> @@ -297,7 +297,7 @@ struct ice_label_section {
->  };
->  
->  #define ICE_MAX_LABELS_IN_BUF                                             \
-> -	ICE_MAX_ENTRIES_IN_BUF(struct_size((struct ice_label_section *)0, \
-> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_label_section,  \
->  					   label, 1) -                    \
->  				       sizeof(struct ice_label),          \
->  			       sizeof(struct ice_label))
-> @@ -352,7 +352,7 @@ struct ice_boost_tcam_section {
->  };
->  
->  #define ICE_MAX_BST_TCAMS_IN_BUF                                               \
-> -	ICE_MAX_ENTRIES_IN_BUF(struct_size((struct ice_boost_tcam_section *)0, \
-> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_boost_tcam_section,  \
->  					   tcam, 1) -                          \
->  				       sizeof(struct ice_boost_tcam_entry),    \
->  			       sizeof(struct ice_boost_tcam_entry))
-> @@ -372,8 +372,7 @@ struct ice_marker_ptype_tcam_section {
->  };
->  
->  #define ICE_MAX_MARKER_PTYPE_TCAMS_IN_BUF                                    \
-> -	ICE_MAX_ENTRIES_IN_BUF(                                              \
-> -		struct_size((struct ice_marker_ptype_tcam_section *)0, tcam, \
-> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_marker_ptype_tcam_section,  tcam, \
->  			    1) -                                             \
->  			sizeof(struct ice_marker_ptype_tcam_entry),          \
->  		sizeof(struct ice_marker_ptype_tcam_entry))
-> diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-> index 2ed75923507d..691f2df574ce 100644
-> --- a/drivers/nvme/host/fc.c
-> +++ b/drivers/nvme/host/fc.c
-> @@ -2917,8 +2917,8 @@ nvme_fc_create_io_queues(struct nvme_fc_ctrl *ctrl)
->  
->  	ret = nvme_alloc_io_tag_set(&ctrl->ctrl, &ctrl->tag_set,
->  			&nvme_fc_mq_ops, 1,
-> -			struct_size((struct nvme_fcp_op_w_sgl *)NULL, priv,
-> -				    ctrl->lport->ops->fcprqst_priv_sz));
-> +			struct_size_t(struct nvme_fcp_op_w_sgl, priv,
-> +				      ctrl->lport->ops->fcprqst_priv_sz));
->  	if (ret)
->  		return ret;
->  
-> @@ -3536,8 +3536,8 @@ nvme_fc_init_ctrl(struct device *dev, struct nvmf_ctrl_options *opts,
->  
->  	ret = nvme_alloc_admin_tag_set(&ctrl->ctrl, &ctrl->admin_tag_set,
->  			&nvme_fc_admin_mq_ops,
-> -			struct_size((struct nvme_fcp_op_w_sgl *)NULL, priv,
-> -				    ctrl->lport->ops->fcprqst_priv_sz));
-> +			struct_size_t(struct nvme_fcp_op_w_sgl, priv,
-> +				      ctrl->lport->ops->fcprqst_priv_sz));
->  	if (ret)
->  		goto fail_ctrl;
->  
-> diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-> index 06ccb51bf6a9..f5334ccbf2ca 100644
-> --- a/drivers/scsi/hptiop.c
-> +++ b/drivers/scsi/hptiop.c
-> @@ -1394,8 +1394,8 @@ static int hptiop_probe(struct pci_dev *pcidev, const struct pci_device_id *id)
->  	host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
->  	host->max_cmd_len = 16;
->  
-> -	req_size = struct_size((struct hpt_iop_request_scsi_command *)0,
-> -			       sg_list, hba->max_sg_descriptors);
-> +	req_size = struct_size_t(struct hpt_iop_request_scsi_command,
-> +				 sg_list, hba->max_sg_descriptors);
->  	if ((req_size & 0x1f) != 0)
->  		req_size = (req_size + 0x1f) & ~0x1f;
->  
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 317c944c68e3..050eed8e2684 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -5153,8 +5153,8 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
->  		fusion->max_map_sz = ventura_map_sz;
->  	} else {
->  		fusion->old_map_sz =
-> -			struct_size((struct MR_FW_RAID_MAP *)0, ldSpanMap,
-> -				    instance->fw_supported_vd_count);
-> +			struct_size_t(struct MR_FW_RAID_MAP, ldSpanMap,
-> +				      instance->fw_supported_vd_count);
->  		fusion->new_map_sz =  sizeof(struct MR_FW_RAID_MAP_EXT);
->  
->  		fusion->max_map_sz =
-> @@ -5789,8 +5789,8 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
->  	struct fusion_context *fusion = instance->ctrl_context;
->  	size_t pd_seq_map_sz;
->  
-> -	pd_seq_map_sz = struct_size((struct MR_PD_CFG_SEQ_NUM_SYNC *)0, seq,
-> -				    MAX_PHYSICAL_DEVICES);
-> +	pd_seq_map_sz = struct_size_t(struct MR_PD_CFG_SEQ_NUM_SYNC, seq,
-> +				      MAX_PHYSICAL_DEVICES);
->  
->  	instance->use_seqnum_jbod_fp =
->  		instance->support_seqnum_jbod_fp;
-> @@ -8033,8 +8033,8 @@ static void megasas_detach_one(struct pci_dev *pdev)
->  	if (instance->adapter_type != MFI_SERIES) {
->  		megasas_release_fusion(instance);
->  		pd_seq_map_sz =
-> -			struct_size((struct MR_PD_CFG_SEQ_NUM_SYNC *)0,
-> -				    seq, MAX_PHYSICAL_DEVICES);
-> +			struct_size_t(struct MR_PD_CFG_SEQ_NUM_SYNC,
-> +				      seq, MAX_PHYSICAL_DEVICES);
->  		for (i = 0; i < 2 ; i++) {
->  			if (fusion->ld_map[i])
->  				dma_free_coherent(&instance->pdev->dev,
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-> index 4463a538102a..b8b388a4e28f 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-> @@ -326,9 +326,9 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
->  	else if (instance->supportmax256vd)
->  		expected_size = sizeof(struct MR_FW_RAID_MAP_EXT);
->  	else
-> -		expected_size = struct_size((struct MR_FW_RAID_MAP *)0,
-> -					    ldSpanMap,
-> -					    le16_to_cpu(pDrvRaidMap->ldCount));
-> +		expected_size = struct_size_t(struct MR_FW_RAID_MAP,
-> +					      ldSpanMap,
-> +					      le16_to_cpu(pDrvRaidMap->ldCount));
->  
->  	if (le32_to_cpu(pDrvRaidMap->totalSize) != expected_size) {
->  		dev_dbg(&instance->pdev->dev, "megasas: map info structure size 0x%x",
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index 03de97cd72c2..f4e0aa262164 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -5015,7 +5015,7 @@ static int pqi_create_queues(struct pqi_ctrl_info *ctrl_info)
->  }
->  
->  #define PQI_REPORT_EVENT_CONFIG_BUFFER_LENGTH	\
-> -	struct_size((struct pqi_event_config *)0, descriptors, PQI_MAX_EVENT_DESCRIPTORS)
-> +	struct_size_t(struct pqi_event_config,  descriptors, PQI_MAX_EVENT_DESCRIPTORS)
->  
->  static int pqi_configure_events(struct pqi_ctrl_info *ctrl_info,
->  	bool enable_events)
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index a2aa36b23e25..4d68a58be160 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -301,7 +301,7 @@ struct xfs_btree_cur
->  static inline size_t
->  xfs_btree_cur_sizeof(unsigned int nlevels)
->  {
-> -	return struct_size((struct xfs_btree_cur *)NULL, bc_levels, nlevels);
-> +	return struct_size_t(struct xfs_btree_cur, bc_levels, nlevels);
->  }
->  
->  /* cursor flags */
-> diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-> index 9d7b9ee8bef4..c32b5fad6174 100644
-> --- a/fs/xfs/scrub/btree.h
-> +++ b/fs/xfs/scrub/btree.h
-> @@ -60,7 +60,7 @@ struct xchk_btree {
->  static inline size_t
->  xchk_btree_sizeof(unsigned int nlevels)
->  {
-> -	return struct_size((struct xchk_btree *)NULL, lastkey, nlevels - 1);
-> +	return struct_size_t(struct xchk_btree, lastkey, nlevels - 1);
->  }
->  
->  int xchk_btree(struct xfs_scrub *sc, struct xfs_btree_cur *cur,
-> diff --git a/include/linux/overflow.h b/include/linux/overflow.h
-> index 0e33b5cbdb9f..f9b60313eaea 100644
-> --- a/include/linux/overflow.h
-> +++ b/include/linux/overflow.h
-> @@ -283,7 +283,7 @@ static inline size_t __must_check size_sub(size_t minuend, size_t subtrahend)
->   * @member: Name of the array member.
->   * @count: Number of elements in the array.
->   *
-> - * Calculates size of memory needed for structure @p followed by an
-> + * Calculates size of memory needed for structure of @p followed by an
->   * array of @count number of @member elements.
->   *
->   * Return: number of bytes needed or SIZE_MAX on overflow.
-> @@ -293,4 +293,20 @@ static inline size_t __must_check size_sub(size_t minuend, size_t subtrahend)
->  		sizeof(*(p)) + flex_array_size(p, member, count),	\
->  		size_add(sizeof(*(p)), flex_array_size(p, member, count)))
->  
-> +/**
-> + * struct_size_t() - Calculate size of structure with trailing flexible array
-> + * @type: structure type name.
-> + * @member: Name of the array member.
-> + * @count: Number of elements in the array.
-> + *
-> + * Calculates size of memory needed for structure @type followed by an
-> + * array of @count number of @member elements. Prefer using struct_size()
-> + * when possible instead, to keep calculations associated with a specific
-> + * instance variable of type @type.
-> + *
-> + * Return: number of bytes needed or SIZE_MAX on overflow.
-> + */
-> +#define struct_size_t(type, member, count)					\
-> +	struct_size((type *)NULL, member, count)
-> +
->  #endif /* __LINUX_OVERFLOW_H */
-> diff --git a/lib/overflow_kunit.c b/lib/overflow_kunit.c
-> index dcd3ba102db6..34db0b3aa502 100644
-> --- a/lib/overflow_kunit.c
-> +++ b/lib/overflow_kunit.c
-> @@ -649,7 +649,7 @@ struct __test_flex_array {
->  static void overflow_size_helpers_test(struct kunit *test)
->  {
->  	/* Make sure struct_size() can be used in a constant expression. */
-> -	u8 ce_array[struct_size((struct __test_flex_array *)0, data, 55)];
-> +	u8 ce_array[struct_size_t(struct __test_flex_array, data, 55)];
->  	struct __test_flex_array *obj;
->  	int count = 0;
->  	int var;
-> -- 
-> 2.34.1
-> 
-> _______________________________________________
-> Intel-wired-lan mailing list
-> Intel-wired-lan@osuosl.org
-> https://lists.osuosl.org/mailman/listinfo/intel-wired-lan
+-- 
+Martin K. Petersen	Oracle Linux Engineering
