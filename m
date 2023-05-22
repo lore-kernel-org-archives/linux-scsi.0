@@ -2,62 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C772C7EE2E
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 08:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D86CFC77B73
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 09:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232411AbjEVIp6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 May 2023 04:45:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36588 "EHLO
+        id S232602AbjEVJoY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 May 2023 05:44:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232211AbjEVIp4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 04:45:56 -0400
-X-Greylist: delayed 1646 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 22 May 2023 01:45:54 PDT
-Received: from mail.simsborovin.com (mail.simsborovin.com [89.40.118.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05FCAC4
-        for <linux-scsi@vger.kernel.org>; Mon, 22 May 2023 01:45:53 -0700 (PDT)
-Received: by mail.simsborovin.com (Postfix, from userid 1001)
-        id D95A7840ED; Mon, 22 May 2023 09:16:06 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=simsborovin.com;
-        s=mail; t=1684743376;
-        bh=so3xiFooQ9N0D/cd/+ivPaO6nnHsd9cY/G2xa/w5Tfg=;
-        h=Date:From:To:Subject:From;
-        b=b9tmvamdfB5LJWlKWBG8U37Ab/6oiIGcHRH5CaHpGB3CJs0hR0WQ7Bm7FN4m8rfOp
-         7UHFkNfFgHaISS23eN2Rl3A/XpmjIicgB/6C1h28iAiV09RE+UhDKfabnUsoYA7r53
-         ZgtpXJkSFgAnI18W0PGaWozQrZpB1FMz1wJ4M1rpS0do4Wnokv/LRY0KyPDqL+lrni
-         yKntRuGIaXj+ktJCEue5IlEl/Z3XhFQpcxMjVRbSJCRr73ZHdJOmdXtmsot5CM5YEL
-         B0grNpSM+tXcMuamVGi7K3gJB5pOBBMgMMcGgZMjthb7JYsHXVQuCwOUmgFepYLmdX
-         IWr/vi/rCS6ww==
-Received: by mail.simsborovin.com for <linux-scsi@vger.kernel.org>; Mon, 22 May 2023 08:15:58 GMT
-Message-ID: <20230522074501-0.1.3m.go06.0.ed0gc0dpo1@simsborovin.com>
-Date:   Mon, 22 May 2023 08:15:58 GMT
-From:   "Konrad Trojanowski" <konrad.trojanowski@simsborovin.com>
-To:     <linux-scsi@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.simsborovin.com
+        with ESMTP id S232648AbjEVJoV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 05:44:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62726F9;
+        Mon, 22 May 2023 02:44:16 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 92C7760C1B;
+        Mon, 22 May 2023 09:44:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1090C433D2;
+        Mon, 22 May 2023 09:44:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684748656;
+        bh=SVoYzzxZuFTGXh87Jk2YnPaJ8G3ijBqVH+39j9Y0BD4=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=j4HjcmHoE11NThX3xZMpEsBFoaasEqREvcKGYj7W5KNBsA1RFh51lpq8O9GhYSrbw
+         6axF4z76Hon97BhDohwjxWKX+c1YI1G005Xxglj1YHOE86t5VpxGSEpKPB2L9r4kNL
+         L+Sx5Az8cq0xSJD0cVQ/JDERZ00m3L9v3StMsxIpMh++hq4MsUZL0gzyjwindVLWMU
+         EnwdkW2L3qFKVWz3jJ/7ODjFPz8wBIsf+e1L5JfXhs/Qcnuo22p1onEESS1oJYMbQE
+         x72CqHg+Kfufd3tYMKwh6jYMf4rKQ83PxF2W+t3I6TYohGeZiALMZT231yN363AhOY
+         yFkOkhCXKrfFg==
+Message-ID: <960e2aac-1769-6037-dd77-58999313fefc@kernel.org>
+Date:   Mon, 22 May 2023 18:44:13 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2] ata: libata-scsi: Fix get identity data failed
+Content-Language: en-US
+To:     Jason Yan <yanaijie@huawei.com>,
+        yangxingui <yangxingui@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, john.g.garry@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, prime.zeng@hisilicon.com,
+        kangfenglong@huawei.com
+References: <20230505025712.19438-1-yangxingui@huawei.com>
+ <291f1d97-9195-45ac-8e12-058f5c797277@kernel.org>
+ <02d36ee9-cdad-454d-d822-95442d7bd67b@huawei.com>
+ <f4ba7a92-1f00-c254-d196-7d21fe14dee2@kernel.org>
+ <938d6b5b-0271-977d-f046-5fd70d29b3ca@huawei.com>
+ <a5c2e157-aaf7-1300-3fbb-1300ac216cee@kernel.org>
+ <68953040-1622-254b-f6f8-b279eccacfb1@kernel.org>
+ <c88dcbc3-d530-3e9e-f674-a2fe64ad5fdc@huawei.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <c88dcbc3-d530-3e9e-f674-a2fe64ad5fdc@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 5/22/23 17:00, Jason Yan wrote:
+>> OK, so the issue is that __ata_scsi_find_dev() calls ata_find_dev() with devno
+>> == scsidev->id. This leads to devno being 0, 1, 2 and 3 for connected drives
+>> sdd, sd1, sdf and sdg, as shown by lsscsi. However, each drive has its own
+>> port+link, with the link for each one having  ata_link_max_devices() == 1, so
+>> ata_find_dev() works only for the first drive with scsidev->id == 0 and fails
+>> for the others. A naive fix would be this:
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 7bb12deab70c..e4d6f17d7ccc 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -2718,7 +2718,7 @@ static struct ata_device *__ata_scsi_find_dev(struct
+>> ata_port *ap,
+>>          if (!sata_pmp_attached(ap)) {
+>>                  if (unlikely(scsidev->channel || scsidev->lun))
+>>                          return NULL;
+>> -               devno = scsidev->id;
+>> +               devno = 0;
+>>          } else {
+>>                  if (unlikely(scsidev->id || scsidev->lun))
+>>                          return NULL;
+>>
+>> And running this on my setup, it works. This makes libsas added ports/devices
+>> look like AHCI ones, where all devices have ID 0 for the !pmp case.
+>>
+>> However, I am not sure this would be OK for all setups...
+>>
+>> John,
+>>
+>> Any idea if there is any cases where libsas managed drives would endup not being
+>> correctly identified by this change ? As long as a device always has its own
+>> port, I do not see any issue. But is there a case where we could have multiple
+>> devices on the same port ? Per libata, max is 2, and that is only for the IDE
+>> master/slave case. Otherwise, it is always 1.
+>>
+> 
+> AFAIK, libsas does not support multiple devices on the same port. So 
+> this change is ok for libsas.
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
+Yes, for libsas it is OK. But as is, it will break master+slave IDE setups... So
+the fix needs to be finer than this.
 
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+> 
+>> Not that looking at the pmp case, I am not confident at all that the
+>> identification is correct for libsas. But I do not think that anyone would ever
+>> connect a pmp box to a libsas HBA...
+>>
+> 
+> libsas's does not support pmp either, and I do not see any future plans 
+> to support pmp.
 
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
+Good. Dealing with that one is always painful.
 
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+> So the above change (needs a ATA_FLAG_SAS_HOST check) looks good to me.
+
+Yes, this flag check is needed to avoid breaking IDE/pata.
+
+> It's better to make libsas behave as other ata drivers so that we can 
+> drop the ATA_FLAG_SAS_HOST check. But this need tons of work for libsas.
+
+Yes, getting rid of this special casing with this flag would be really nice. It
+should not be needed. I will try to write a proper fix not using it for now, to
+facilitate removing the flag later.
 
 
-Pozdrawiam
-Konrad Trojanowski
+-- 
+Damien Le Moal
+Western Digital Research
+
