@@ -2,140 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A4A0C7EE2D
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 16:48:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 513C7C77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 17:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233316AbjEWQsN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 12:48:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57472 "EHLO
+        id S237995AbjEWRKc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 13:10:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237806AbjEWQsL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 12:48:11 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E0B4E6;
-        Tue, 23 May 2023 09:48:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684860490; x=1716396490;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=HW6IhTyUueCSfeJ7rWfhSJdEaQsGNU+FlBIEnOYHN0k=;
-  b=J45rhaKL9O38OhbDRvgyNQVt/B1Znlk1o4qQF4joL0QfV3d3LBiNlIi6
-   C7TxBGMwSnsCF94nx8yLoF26TJgMmj4mUHKVLeHlF0d9hpvJryx9paEq6
-   OQEHHYGCpxCaGXKfFt8jJ8LPbceOE0mQOq1ZtZvbU2e9kD1ayyFQVHaCZ
-   27dfYrW97Y5PfQivM8hKCVuR5AWpDw5sLynCZaJYLqdf91Esmpc4GK7A2
-   bu1C/wVuGEY6PP7njB/GEx9MGc7qRav5F7ptKB+fY8egrsj4gB+q+ptTR
-   dZik2kGRVf5JQhazJiDeem2NPTmY6zmKNusMCEwSFs/rHzYeKBap5KZb5
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="342759206"
-X-IronPort-AV: E=Sophos;i="6.00,186,1681196400"; 
-   d="scan'208";a="342759206"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 May 2023 09:48:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="1034152694"
-X-IronPort-AV: E=Sophos;i="6.00,186,1681196400"; 
-   d="scan'208";a="1034152694"
-Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 23 May 2023 09:46:22 -0700
-Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q1V9R-000Dw1-2I;
-        Tue, 23 May 2023 16:46:21 +0000
-Date:   Wed, 24 May 2023 00:45:36 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com,
-        junwoo80.lee@samsung.com
-Cc:     oe-kbuild-all@lists.linux.dev, Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: Re: [PATCH v1 1/3] ufs: make __ufshcd_send_uic_cmd not wrapped by
- host_lock
-Message-ID: <202305240017.qlNZOZVe-lkp@intel.com>
-References: <c511c7f03ce77a604aa5211c3ffac96022c3ee40.1684822284.git.kwmad.kim@samsung.com>
+        with ESMTP id S229506AbjEWRKb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 13:10:31 -0400
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1759C2
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 10:10:29 -0700 (PDT)
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-64d3491609fso3476270b3a.3
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 10:10:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684861829; x=1687453829;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jo3xjFpBnr/x+nMMb7I2cW6M50SJXTKNdeEsLZBNoCc=;
+        b=fGCjMsFIysDHVqmqy72YmOgCTmO9UOCEdAgVGliqiADw5vZOlmYMqS1DUVA5k5UXGk
+         +qKqyDB+pY5Z5SzO5EoR3o+W6QYkALE5K86HSwWfK2Nbjk7s2LLxILIk1tgvUgjN/lc8
+         ZsSN2i3gymPMs5GVQ5PBDhugKxSCEjaHHURlPIkO8mFFELNjVR6EbKu4w1fDtPOOEJbv
+         rcXn6kDbg9RgngEQjj2NiIgLPUo/SDhtHuIsZUT82VQtNivZohJgyo6HCGy4O9ikFMjt
+         HfyrSKUKjwjKe9GNKoZmeyVH/qZEYv+4xLxCvMvHxWgB9EBWyZsQa1uei/n5bea77y1R
+         IMxQ==
+X-Gm-Message-State: AC+VfDx3rQnxb2KuVNF6dQq0OI1gOiquASMVm5pkEhcHNbemRoiSpnKt
+        5p62K/dFBAyYGm7N1HmtXNc=
+X-Google-Smtp-Source: ACHHUZ6MVQ9Aiu++oj2PpnzMrIfmg5mlTiZ2ppwBoS3o8J2CncQ9Ut1iBE7J31uQwUJXekFuXbefmg==
+X-Received: by 2002:a05:6a00:a14:b0:647:2ce5:57c4 with SMTP id p20-20020a056a000a1400b006472ce557c4mr20664557pfh.5.1684861828752;
+        Tue, 23 May 2023 10:10:28 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:24d2:69cd:ef9a:8f83? ([2620:15c:211:201:24d2:69cd:ef9a:8f83])
+        by smtp.gmail.com with ESMTPSA id f20-20020aa782d4000000b00634dde2992bsm5982488pfn.132.2023.05.23.10.10.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 May 2023 10:10:28 -0700 (PDT)
+Message-ID: <343be0eb-0650-cc5e-3154-ffe30f92c17d@acm.org>
+Date:   Tue, 23 May 2023 10:10:26 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c511c7f03ce77a604aa5211c3ffac96022c3ee40.1684822284.git.kwmad.kim@samsung.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2 3/4] scsi: ufs: Enable the BLK_MQ_F_BLOCKING flag
+Content-Language: en-US
+To:     Adrian Hunter <adrian.hunter@intel.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230517222359.1066918-1-bvanassche@acm.org>
+ <20230517222359.1066918-4-bvanassche@acm.org>
+ <957fb6d6-83db-6230-d81c-646e12ed7bf1@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <957fb6d6-83db-6230-d81c-646e12ed7bf1@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Kiwoong,
+On 5/23/23 09:39, Adrian Hunter wrote:
+> On 18/05/23 01:23, Bart Van Assche wrote:
+>> Prepare for adding code in ufshcd_queuecommand() that may sleep.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>>   drivers/ufs/core/ufshcd.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 7ee150d67d49..993034ac1696 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -8756,6 +8756,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
+>>   	.max_host_blocked	= 1,
+>>   	.track_queue_depth	= 1,
+>>   	.skip_settle_delay	= 1,
+>> +	.queuecommand_may_block = true,
+> 
+> Shouldn't this only be for controllers that support
+> clock gating?
 
-kernel test robot noticed the following build warnings:
+Hi Adrian,
 
-[auto build test WARNING on v6.4-rc3]
-[also build test WARNING on linus/master next-20230523]
-[cannot apply to jejb-scsi/for-next mkp-scsi/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The overhead of BLK_MQ_F_BLOCKING is small relative to the time required to
+queue a UFS command so I think enabling BLK_MQ_F_BLOCKING for all UFS host
+controllers is fine. BLK_MQ_F_BLOCKING causes the block layer to use SRCU
+instead of RCU. The cost of the sleepable RCU primitives is dominated by
+the memory barrier (smp_mb()) in the srcu_read_lock() and srcu_read_unlock()
+calls. From kernel/rcu/srcutree.c:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Kiwoong-Kim/ufs-poll-HCS-UCRDY-before-issuing-a-UIC-command/20230523-215413
-base:   44c026a73be8038f03dbdeef028b642880cf1511
-patch link:    https://lore.kernel.org/r/c511c7f03ce77a604aa5211c3ffac96022c3ee40.1684822284.git.kwmad.kim%40samsung.com
-patch subject: [PATCH v1 1/3] ufs: make __ufshcd_send_uic_cmd not wrapped by host_lock
-config: x86_64-allmodconfig (https://download.01.org/0day-ci/archive/20230524/202305240017.qlNZOZVe-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-12) 11.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/c3fdde6dc3c766e3141c3ed43ae136ceb345c1c1
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Kiwoong-Kim/ufs-poll-HCS-UCRDY-before-issuing-a-UIC-command/20230523-215413
-        git checkout c3fdde6dc3c766e3141c3ed43ae136ceb345c1c1
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=x86_64 olddefconfig
-        make W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/ufs/core/
+int __srcu_read_lock(struct srcu_struct *ssp)
+{
+	int idx;
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202305240017.qlNZOZVe-lkp@intel.com/
+	idx = READ_ONCE(ssp->srcu_idx) & 0x1;
+	this_cpu_inc(ssp->sda->srcu_lock_count[idx].counter);
+	smp_mb(); /* B */  /* Avoid leaking the critical section. */
+	return idx;
+}
+EXPORT_SYMBOL_GPL(__srcu_read_lock);
 
-All warnings (new ones prefixed by >>):
+void __srcu_read_unlock(struct srcu_struct *ssp, int idx)
+{
+	smp_mb(); /* C */  /* Avoid leaking the critical section. */
+	this_cpu_inc(ssp->sda->srcu_unlock_count[idx].counter);
+}
+EXPORT_SYMBOL_GPL(__srcu_read_unlock);
 
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_send_uic_cmd':
->> drivers/ufs/core/ufshcd.c:2479:23: warning: unused variable 'flags' [-Wunused-variable]
-    2479 |         unsigned long flags;
-         |                       ^~~~~
+The rcu_read_lock() and rcu_read_lock() implementations do not call
+smp_mb() as one can see in include/linux/rcupdate.h:
 
+static inline void __rcu_read_lock(void)
+{
+	preempt_disable();
+}
 
-vim +/flags +2479 drivers/ufs/core/ufshcd.c
+static inline void __rcu_read_unlock(void)
+{
+	preempt_enable();
+	if (IS_ENABLED(CONFIG_RCU_STRICT_GRACE_PERIOD))
+		rcu_read_unlock_strict();
+}
 
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2468  
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2469  /**
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2470   * ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2471   * @hba: per adapter instance
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2472   * @uic_cmd: UIC command
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2473   *
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2474   * Returns 0 only if success.
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2475   */
-e77044c5a8422e drivers/scsi/ufs/ufshcd.c Avri Altman      2018-10-07  2476  int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2477  {
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2478  	int ret;
-57d104c153d3d6 drivers/scsi/ufs/ufshcd.c Subhash Jadavani 2014-09-25 @2479  	unsigned long flags;
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2480  
-a22bcfdbf10b41 drivers/scsi/ufs/ufshcd.c jongmin jeong    2021-10-18  2481  	if (hba->quirks & UFSHCD_QUIRK_BROKEN_UIC_CMD)
-a22bcfdbf10b41 drivers/scsi/ufs/ufshcd.c jongmin jeong    2021-10-18  2482  		return 0;
-a22bcfdbf10b41 drivers/scsi/ufs/ufshcd.c jongmin jeong    2021-10-18  2483  
-1ab27c9cf8b63d drivers/scsi/ufs/ufshcd.c Sahitya Tummala  2014-09-25  2484  	ufshcd_hold(hba, false);
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2485  	mutex_lock(&hba->uic_cmd_mutex);
-cad2e03d860779 drivers/scsi/ufs/ufshcd.c Yaniv Gardi      2015-03-31  2486  	ufshcd_add_delay_before_dme_cmd(hba);
-cad2e03d860779 drivers/scsi/ufs/ufshcd.c Yaniv Gardi      2015-03-31  2487  
-d75f7fe495cf57 drivers/scsi/ufs/ufshcd.c Yaniv Gardi      2016-02-01  2488  	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
-57d104c153d3d6 drivers/scsi/ufs/ufshcd.c Subhash Jadavani 2014-09-25  2489  	if (!ret)
-57d104c153d3d6 drivers/scsi/ufs/ufshcd.c Subhash Jadavani 2014-09-25  2490  		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
-57d104c153d3d6 drivers/scsi/ufs/ufshcd.c Subhash Jadavani 2014-09-25  2491  
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2492  	mutex_unlock(&hba->uic_cmd_mutex);
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2493  
-1ab27c9cf8b63d drivers/scsi/ufs/ufshcd.c Sahitya Tummala  2014-09-25  2494  	ufshcd_release(hba);
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2495  	return ret;
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2496  }
-6ccf44fe4cd7c4 drivers/scsi/ufs/ufshcd.c Seungwon Jeon    2013-06-26  2497  
+Thanks,
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Bart.
+
