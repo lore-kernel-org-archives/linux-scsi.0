@@ -2,81 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C41C7EE26
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 21:41:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53A1EC7EE26
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 21:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237571AbjEWVlp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 17:41:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36660 "EHLO
+        id S234835AbjEWVls (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 17:41:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234456AbjEWVlo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 17:41:44 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C08AEFA
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 14:41:43 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-ba88ec544ddso434869276.1
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 14:41:43 -0700 (PDT)
+        with ESMTP id S238288AbjEWVlq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 17:41:46 -0400
+Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA40FA
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 14:41:45 -0700 (PDT)
+Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-561f201a646so3829577b3.1
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 14:41:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1684878103; x=1687470103;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=DYoP+7y3H6KxflmECkTj0wmu7P4fg+DdkxFWOe2r+Gw=;
-        b=fiYfRUVv6NDJ5NH3wVrtXPpRMWJsZHcc72EYpz6mfFUVqJDMQiDkSDwLuV4tuZZNmr
-         KosGFPNUODdxyPJN1Vvbm4TX8BuYIaiDAxPkmc1SqOgSIG11U7rNSFHupVCZ6wK3fxSo
-         BU7elBqN6D8meTOn6NGXNNEm7R3q0E/7/6nVvKkaCR8xhB7LxWjhavNXEdfEGgqRnIiY
-         MfUNRvkYtfBjOxhGPlnv0lyKaF4EQr5ClEgmq85xIQW0T/Vn0f77GUhuiN4SvCmjSZtg
-         roT5Rt04/ombtVEqKPDShkUvMMSJCQYGpu20Fhs/lYQzOPVmUyXz0ApyqENH6TTE3brK
-         QOHw==
+        d=google.com; s=20221208; t=1684878104; x=1687470104;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/zFD/sWJ5X0Do7uK1EvSSeUTvJhq9b59SmXRDn2sIn4=;
+        b=TjM3N2YQOZ1c6QUEWJ2gRFeAs13Q1W9t1jDZOdVrzBU6CbUqi7nHykV1m6JwcXHVJP
+         5JWnTPKBI1VX76C5DYEhlVsMFIuz5LxoXP5IuEj3gCYjvlCjxityOZY23sT377bDYNzv
+         zQ72uUFMHqWBjAEg3vu8biDuzrfuAusAdTRT71/hzPZDV8b55XErO+bgiw/uqgcrII9G
+         skZ28g6UxTRxH6tOBABS2nFtvP0j6Yzh53KqL1x/YCA72JA6WXA0Ya8a2q9b/WZ2y1wV
+         4xiJiJUN8pJEpwYwKgAf0Q+XU8MMKxd1CDDGWdXqcBHzxPfowQGH/4rjgHCvQCRmR6TI
+         DlSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684878103; x=1687470103;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=DYoP+7y3H6KxflmECkTj0wmu7P4fg+DdkxFWOe2r+Gw=;
-        b=gDgvSd6teLMop42k67N9H1UjyJsZmV5Sh88yNFo0CTI2nr0/CV+bEhEJb98r66eJ/y
-         Yu8nbc+AzVGLsuPLCD5XKlTQlo64PDZAUCRvkUZWu5M8nBI/u+THzj50U72kXuAcQKVA
-         Z2EHB3rVXA4WGzTlHCJZnLYnmQjOdi5o7FHEtvun11cFH+XEWk65xjneWPM6p8BbK4dV
-         y7SeNx130cqTqVX0/PRg94msT24xv2sgZPRlXwjRCGKsm0FxO26TudL91MWiAH7W8tQ7
-         JQoZdtBOwGpWDySN+WLJOk0gnTtHAjnuEIk9Zqngk3nXQf7gD5e2jSItqPPM5/DrmRt6
-         tyZg==
-X-Gm-Message-State: AC+VfDx31JqkCv01uxYoQY/+xs4IrQZtMFJLePYqGmCum0YCvYnMKI74
-        xce4PtSveoaqI3keWJDqVerHgpqQhLqeKA==
-X-Google-Smtp-Source: ACHHUZ6rDfhPdvFJHBI17huMiHUy5WPeuPTapN6ej6oM5BcAycgGa2pPMIjNcbUEz1/tKeG7b+/AjLfxaHlMuQ==
+        d=1e100.net; s=20221208; t=1684878104; x=1687470104;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/zFD/sWJ5X0Do7uK1EvSSeUTvJhq9b59SmXRDn2sIn4=;
+        b=gkPIhDFjmar6NNUUSUu9G7EQRjCyXHo7R8CAEUNhbRE+RAfcXvKq+pg1wniDJNGEcu
+         ulcl+RbDkWclwyZyFm+XDdkoj0ov7JO8j+qRgCpqZ1JvXzoUEZdCAQnlx2i42WyzxlNC
+         wl86namgkKjb2//VxKIT7JXfmX4xCwEcUgqPxly3PVKOXiHBDQu1oOqs+q12UdP5eJ3j
+         KY7YK3cg2JJ2dPOLHhL+p5TGXYJC+8RL31xsWK054c86310ZsGiCFKyk/pn4gfiQGkSB
+         rFZ/CyP+XVDy/idBKMewhpBpPREdPkSp2oXbFwlZio+uENwl28rqM0JyPllONNnzg1YY
+         N57Q==
+X-Gm-Message-State: AC+VfDxjqnW1ojuLEKjZ4O0JxRfHCuqv4Oc8BLZ4wMRZB+Z2zwqv+RMs
+        HY1FvQg7eVvaJ5hdqsxwj71FydAnCopD9A==
+X-Google-Smtp-Source: ACHHUZ5O+MF+h1p3utfJMCythPh6m4T4DvAAYW9sRJc3IBsXOEI6BvM7U9Pcvymsut/+66qg4gz2Whtf+mzhkA==
 X-Received: from pranav-first.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:390b])
- (user=pranavpp job=sendgmr) by 2002:a05:6902:3c2:b0:ba8:939b:6574 with SMTP
- id g2-20020a05690203c200b00ba8939b6574mr9212761ybs.12.1684878103088; Tue, 23
- May 2023 14:41:43 -0700 (PDT)
-Date:   Tue, 23 May 2023 21:41:25 +0000
+ (user=pranavpp job=sendgmr) by 2002:a81:a704:0:b0:561:bf07:ee28 with SMTP id
+ e4-20020a81a704000000b00561bf07ee28mr9728612ywh.5.1684878104664; Tue, 23 May
+ 2023 14:41:44 -0700 (PDT)
+Date:   Tue, 23 May 2023 21:41:26 +0000
+In-Reply-To: <20230523214127.4006891-1-pranavpp@google.com>
 Mime-Version: 1.0
+References: <20230523214127.4006891-1-pranavpp@google.com>
 X-Mailer: git-send-email 2.40.1.698.g37aff9b760-goog
-Message-ID: <20230523214127.4006891-1-pranavpp@google.com>
-Subject: [PATCH 0/2] scsi: pm80xx: Fatal error checks
+Message-ID: <20230523214127.4006891-2-pranavpp@google.com>
+Subject: [PATCH 1/2] scsi: pm80xx: Add fatal error check for pm8001_phy_control()
 From:   Pranav Prasad <pranavpp@google.com>
 To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Changyuan Lyu <changyuanl@google.com>,
         Pranav Prasad <pranavpp@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch series adds fatal error checks for pm8001 driver
-functions pm8001_phy_control() and pm8001_lu_reset().
+From: Changyuan Lyu <changyuanl@google.com>
 
-1. Added a fatal error check in pm8001_phy_control().
+This patch adds a fatal error check for the pm8001_phy_control() function.
 
-2. Added a fatal error check in pm8001_lu_reset().
+Signed-off-by: Changyuan Lyu <changyuanl@google.com>
+Signed-off-by: Pranav Prasad <pranavpp@google.com>
+---
+ drivers/scsi/pm8001/pm8001_sas.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Changyuan Lyu (1):
-  scsi: pm80xx: Add fatal error check for pm8001_phy_control()
-
-Igor Pylypiv (1):
-  scsi: pm80xx: Add fatal error check for pm8001_lu_reset()
-
- drivers/scsi/pm8001/pm8001_sas.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index e5673c774f66..b153f0966e5d 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -167,6 +167,16 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 	pm8001_ha = sas_phy->ha->lldd_ha;
+ 	phy = &pm8001_ha->phy[phy_id];
+ 	pm8001_ha->phy[phy_id].enable_completion = &completion;
++
++	if (PM8001_CHIP_DISP->fatal_errors(pm8001_ha)) {
++		/* If the controller is in fatal error state,
++		 *  we will not get a response from the controller
++		 */
++		pm8001_dbg(pm8001_ha, FAIL,
++				"Phy control failed due to fatal errors\n");
++		return -EFAULT;
++	}
++
+ 	switch (func) {
+ 	case PHY_FUNC_SET_LINK_RATE:
+ 		rates = funcdata;
 -- 
 2.40.1.698.g37aff9b760-goog
 
