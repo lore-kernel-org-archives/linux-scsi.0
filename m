@@ -2,129 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19074C7EE29
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 10:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71136C7EE26
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 10:24:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236192AbjEWKId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 06:08:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46784 "EHLO
+        id S236550AbjEWKYh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 06:24:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232871AbjEWKIc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 06:08:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4893BFA;
-        Tue, 23 May 2023 03:08:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D85A7609AE;
-        Tue, 23 May 2023 10:08:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 122AAC433EF;
-        Tue, 23 May 2023 10:08:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684836510;
-        bh=D3l0vlRfmlGlM4dfcP9O1kQ16yD7pSyIfio5CoFpRyI=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=UP/WTuoe3Dv4m6Hgxg+LP62R3MdNQvmTxu2IY5MwOvHQjNjUFb1M01cGGzl79oiP6
-         KgEuAq8/2ikAIZosRTlvvA8momVAjxrMO53S08RnB3zaSsJ/gzTBOoTBLGU1MRMEQZ
-         Pxmo5/0z2Q/wxQxuhz6CQVG3X5pV5pRDy7kpZCc1u8VXs+VYeoIAW7j7cC38gIVa3c
-         AQX+Fbrl7NW5XKLqgjGv8EC0ydq9una0T3v8SYjPm56LIDHc8diGXCNSUw8O6JW43s
-         rESMBLeiRqU8LfJpafoDjV7ASDPScCDi/MApVZJn3qFpBzZtutNsw7LcYaHHqPb8U+
-         75uvF6R0eqzAw==
-Message-ID: <09f5d62b-1bd4-3a25-e178-2225f1c7b603@kernel.org>
-Date:   Tue, 23 May 2023 19:08:27 +0900
+        with ESMTP id S230041AbjEWKYg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 06:24:36 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3412E94;
+        Tue, 23 May 2023 03:24:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
+        t=1684837450; i=deller@gmx.de;
+        bh=LnrOaZKOZPkWsLvDI4WNIWvJEIR5zNBixanXhsXOf50=;
+        h=X-UI-Sender-Class:Date:From:To:References:Subject:In-Reply-To;
+        b=hfjScB2UoBvfqAxVP255N9PqMNrvDv9KpvZ0eChwFS1gQBJ++C2oNLXFAy5r4IiW6
+         1PSl1UjILx1+BNDbBFqe7PCVoTrHTOHnIuMiPWGMCizfK9lh7dVLhPAQKfhe6NHgOI
+         RCJgJ+R1P46pPSnh7TwQ3AyluNLpnZnsiWfZQ18L7ziqsvnlg4erBAnnqdgAwqFsZ1
+         IPIBj6q7oFW3PM3p3E0UIp1Z5KcQn4SqkVV2yOUPR2icsD+mm0BGAtcEt2iGpA1ezh
+         hQ1H7PCtdPqaNTZrSFP4ImcLP0yWa7QmJ8ifZCtt2MiWDkkFLDuYwsOpSHP3lfygBx
+         7UESRgVrlaCFA==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [192.168.20.60] ([94.134.145.169]) by mail.gmx.net (mrgmx105
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1M8QWG-1q5muI0VRA-004SXQ; Tue, 23
+ May 2023 12:24:10 +0200
+Message-ID: <4d786f73-8c6f-4fd1-cdd6-42f2d59d6120@gmx.de>
+Date:   Tue, 23 May 2023 12:24:04 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v7 00/19] Add Command Duration Limits support
 Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230511011356.227789-1-nks@flawful.org>
- <yq1h6s4nix8.fsf@ca-mkp.ca.oracle.com> <ZGyN1KkCXsTo8ZwG@x1-carbon>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZGyN1KkCXsTo8ZwG@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From:   Helge Deller <deller@gmx.de>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        linux-aio@kvack.org, linux-parisc <linux-parisc@vger.kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>
+References: <5057d550-c3f4-be34-d3e6-390790051232@gmx.de>
+ <89053bf1-6bc3-3778-7662-14d15bd778a3@acm.org>
+ <8bd7faad-abf4-f7b3-03c9-e06f9b5d2148@gmx.de>
+ <077b00a6-9587-2e28-3f8a-44871f9428ca@acm.org>
+ <5e684a22-dcc1-095f-ac18-fd1b3bf81cd6@gmx.de>
+Subject: Re: spinlock recursion in aio_complete()
+In-Reply-To: <5e684a22-dcc1-095f-ac18-fd1b3bf81cd6@gmx.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:auW7OuoOvYAf9oQI5PN5n/Tnt+1xnbElNxtUVpNi0k/OgIqHud2
+ TqoKVr0GSEQz4qxLAJFLwyBwKcrC3HQqG1wjLKa4lRrpbtVLIib9g42Pcd2FKZw/POXneAe
+ 1rV9OWomTfiussVhLe43JV3YypaivVh9nuAZGZlC3kDKsKIO3xEqVp2VttGcMr5YlT+Lqb8
+ aiV+thm8immNkiAoLOtvA==
+UI-OutboundReport: notjunk:1;M01:P0:gqsxP5t/FpA=;yBxdOI+PCebRGyif+DYLl6b+iY9
+ /cFp/JBxGAY4L6FgaO6Yy1K1PRW8F+FX4GPeQZPYYB8Rku2U2dy/fnTd+HbpuWVghHo5EJ+NV
+ 08NVcGPDTJVsuk9+Jbtr9rb0kZPgKVpm0TlEv1E08VO/UPGvNJckushpqNjK8eEfW9Ny37o3S
+ 9Mzj47YkhMIHrhE6yHurDMyKWOgcByqgLXf+DXdj60Vah+cCRsBvHeM3hIq7EZIvI39bq20S8
+ 1ghbXJybadi0zfxu+wXCMl1lr/2uRt2MeOZBwHEQAJNtZaLbolrgxVtB6xVG/pJIHH/p6RmLd
+ Y1rRf9DPkLUUSF81obgw38INEB0aA01Xpj2Q7TTkoBiknXZUJgpl45nn9rXkUEl1zv8xZmHi7
+ HNyrqosgpKpLMLNcoCUoVatpr0qB1jzqg5fmDuJH+bL1kTFpcFlYAutYSBlC4YkIv3yLAAK+i
+ /ApN056WtVmNlendIDvaTiUL8uqlCyA3vQMJxumrgnWKqVlw8yMpD8X4kMsbQu6DMMzYi0Cdk
+ Xr8SvLYubeVaqq3RvU127252U9QCeLnnEFFI6cZ1kPOdjDLHxO3ToTFXIjqMsU2KpPLHenfnn
+ coSO4pSU2JJwpDpDdMcse2FSNe+wgWc4kWzyDNGB0MJNj+bxi6esCmFFultNVivCSvmHq0tR0
+ pzTM0uHp9cKjrr0RpETYf3ShwdIPs7ichuHCV2+ue87qLlSsu+TxK5l8Q7hYyno96y3VE6/q2
+ wSComp136SyxtL1L7E/sCbE7BoulxaBiH00zThOkWRRs/eGiUXwsLuRmOg1echf0Jz3TscDYR
+ +OzmCZPPUqEOxFyVjb/BYARydYKw7wctn+rksqHJWtE9sEpFwWNn41wS27Ed5XBuTp+5mYpYE
+ PASQMRHvM8IjIRtAca618q9mIIK54I5zdYmSoIHz+woTLL+XoXay98qmnIwtsfICMVPieCqWH
+ SQkoR45L+N6XCsMGZV45HgT0psM=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/23/23 18:56, Niklas Cassel wrote:
-> On Mon, May 22, 2023 at 05:41:19PM -0400, Martin K. Petersen wrote:
+On 5/22/23 23:22, Helge Deller wrote:
+>>> It hangs in fs/aio.c:1128, function aio_complete(), in this call:
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0spin_lock_irqsave(&ctx->completion_lock,=
+ flags);
 >>
->> Niklas,
->>
->>> This series adds support for Command Duration Limits.
->>
->> Applied to 6.5/scsi-staging, thanks!
-> 
-> Thank you Martin!
-> 
-> 
-> Damien, Martin,
-> considering that the libata changes depend on the scsi changes,
-> and considering that further libata EH cleanups are planned for
-> 6.5 now when the IPR driver is gone, I think that the best move
-> is to follow the advice of:
-> https://docs.kernel.org/maintainer/rebasing-and-merging.html#merging-from-sibling-or-upstream-trees
+>> All code that I found and that obtains ctx->completion_lock disables IR=
+Qs.
+>> It is not clear to me how this spinlock can be locked recursively? Is i=
+t
+>> sure that the "spinlock recursion" report is correct?
+>
+> Yes, it seems correct.
+> [...]
 
-Hannes cleanup of EH will create a conflict with the scsi tree but can go in
-through the ata tree independently so I was not planning on doing a rebase,
-especially not on the scsi tree. I will notify Stephen about the conflict send
-him a resolution to apply and carry for linux-next. When the 6.5 merge window
-open, I will wait for the James to send the scsi PR and send my PR to Linus
-after that with the conflict resolution, as usual.
+Bart, thanks to your suggestions I was able to narrow down the problem!
 
-So far, I do not see any big issue with that.
+I got LOCKDEP working on parisc, which then reports:
+	raw_local_irq_restore() called with IRQs enabled
+for the spin_unlock_irqrestore() in function aio_complete(), which shouldn=
+'t happen.
 
-> 
-> Specifically:
-> "Merging another subsystem tree to resolve a dependency risks bringing in
-> other bugs and should almost never be done. If that subsystem tree fails
-> to be pulled upstream, whatever problems it had will block the merging of
-> your tree as well.
-> Preferable alternatives include agreeing with the maintainer to carry both
-> sets of changes in one of the trees or creating a topic branch dedicated
-> to the prerequisite commits that can be merged into both trees."
-> 
-> 
-> 
-> Martin created a topic branch/SHA1 for the CDL series:
-> 18bd7718b5c489b3161b6c2ab4685d57c1e2da3b
-> in order for him to be able to have a nice merge commit:
-> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=6.5/scsi-staging&id=8b60e2189fcd8b10b592608256eb97aebfcff147
-> 
-> So, I suggest that, after this has been applied to
-> 6.5/scsi-queue (right now it is only in 6.5/scsi-staging),
-> that Damien merges the same topic branch/SHA1:
-> 18bd7718b5c489b3161b6c2ab4685d57c1e2da3b
-> to libata/for-6.5.
-> 
-> Perhaps the fix:
-> https://lore.kernel.org/linux-scsi/20230523074701.293502-1-dlemoal@kernel.org/T/#u
-> could be applied on top of that SHA1, or folded in,
-> the important thing is that libata merges the exact same SHA1
-> for the CDL series as scsi-queue.
-> (Especially since I noticed that Martin did some minor changes to
-> the ioprio hints patch, namely changed IO to I/O in the comments
-> describing the macros, so Damien can't just take the patches from
-> the list as is, as that would create conflicts for Linus when he
-> merges the two different subsystem trees.)
-> 
-> 
-> Kind regards,
-> Niklas
+Finally, I found that parisc's flush_dcache_page() re-enables the IRQs
+which leads to the spinlock hang in aio_complete().
 
--- 
-Damien Le Moal
-Western Digital Research
+So, this is NOT a bug in aio or scsci, but we need fix in the the arch cod=
+e.
 
+
+While checking flush_dcache_page() re-enables IRQs, I see on parisc and AR=
+M(32):
+flush_dcache_page()  calls:
+   -> flush_dcache_mmap_lock()   /  flush_dcache_mmap_unlock()
+which uses: xa_lock_irq()	/  xa_unlock_irq()
+
+So, the call to xa_unlock_irq() re-enables the IRQs unconditionally
+and triggers the hang in aio_complete().
+
+I temporarily #defined flush_dcache_mmap_lock() to NOP and the kernel boot=
+ed nicely.
+
+Not sure yet what the best fix is...
+
+Helge
