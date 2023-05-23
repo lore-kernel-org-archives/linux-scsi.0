@@ -2,101 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D922C7EE29
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 10:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50281C7EE29
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 10:53:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229525AbjEWKwL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 06:52:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36350 "EHLO
+        id S236391AbjEWKx6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 06:53:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236610AbjEWKvx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 06:51:53 -0400
-Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C789D11A;
-        Tue, 23 May 2023 03:51:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:
-        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=nNaVVitAdqly0HV3wb/gpkjgT9kyHVKcL6u7vHyYEuo=; b=tZQeapXf+QATFM4a3PS6TRgoJc
-        1ccZwWLDnCgasphlRBVwQmZ5rT6ozj6PDDHRoqmMnKjszz4T9KdpIhwmDxHrUnDq7KA4s0OxTd4xq
-        j/XftNjnyOMUEf+itf+JgO2LT8lUEbLQqWYcEdyyZK0L+orUCxF+qQvytMUMi0mrqrv4K+/3J6xOO
-        VBDpnlw2klvY+vydmdriPp4tPQXLng08oq/Q0us4pRTPh23lKlfUzjUmmsT/FAWy4V5DpdDM0FWZt
-        Rj7dPHCUywOtL8+88Gj/QUIdzlT5PW7kE0bLAqBvhzzRZd1tQZ//Ii4nVnGBtl9COM82vPKbHic6f
-        rtqgDUdw==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:49026)
-        by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1q1PcK-0000ET-9C; Tue, 23 May 2023 11:51:48 +0100
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.94.2)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1q1PcH-0000Vk-28; Tue, 23 May 2023 11:51:45 +0100
-Date:   Tue, 23 May 2023 11:51:45 +0100
-From:   "Russell King (Oracle)" <linux@armlinux.org.uk>
-To:     Helge Deller <deller@gmx.de>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        linux-aio@kvack.org, linux-parisc <linux-parisc@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>
-Subject: Re: spinlock recursion in aio_complete()
-Message-ID: <ZGyawdtBhNnvvTv3@shell.armlinux.org.uk>
-References: <5057d550-c3f4-be34-d3e6-390790051232@gmx.de>
- <89053bf1-6bc3-3778-7662-14d15bd778a3@acm.org>
- <8bd7faad-abf4-f7b3-03c9-e06f9b5d2148@gmx.de>
- <077b00a6-9587-2e28-3f8a-44871f9428ca@acm.org>
- <5e684a22-dcc1-095f-ac18-fd1b3bf81cd6@gmx.de>
- <4d786f73-8c6f-4fd1-cdd6-42f2d59d6120@gmx.de>
+        with ESMTP id S232091AbjEWKx5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 06:53:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5876B121;
+        Tue, 23 May 2023 03:53:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D598060F77;
+        Tue, 23 May 2023 10:53:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF92BC433D2;
+        Tue, 23 May 2023 10:53:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684839235;
+        bh=pQ96aHXywFyqqMHQEBK3XeZ6UVAHJ7zdPWunfjlTFEk=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=fjKcA+zeLT719eqkmVP9ciA5C05rv5RqgjajWEt/PTV9964mXggZq7TydOPOW01Mo
+         FobpPzZwhUq5fW4q3u2AOJzci7RDfNAz5tOY/rDry3WYrmnPLvYwnIEz90KA8oB2Hd
+         0vMSLqFS9mA/Q+zujshHOt5C16uvVv2lgkGCG7ZAPWQ7bcMU9MYh38GFj8hXeLpD89
+         UTudM8dadOGN3gP5mHWJOLliG7UX3/zDEAfKFh1z0dIZtwifM/HTIOdvzgqdYvhVtr
+         p1BlzLGpxo2uuEx5sCenj5IbOgEKT8IkWv+dcORMCcxbSZGhr2uDCNJFZc0pEzv0G5
+         sGD8vccANbEnQ==
+Message-ID: <f0b7dcf8-812d-5a2d-986b-5fa5b6b5a236@kernel.org>
+Date:   Tue, 23 May 2023 19:53:53 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4d786f73-8c6f-4fd1-cdd6-42f2d59d6120@gmx.de>
-Sender: Russell King (Oracle) <linux@armlinux.org.uk>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v7 00/19] Add Command Duration Limits support
+Content-Language: en-US
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20230511011356.227789-1-nks@flawful.org>
+ <yq1h6s4nix8.fsf@ca-mkp.ca.oracle.com> <ZGyN1KkCXsTo8ZwG@x1-carbon>
+ <09f5d62b-1bd4-3a25-e178-2225f1c7b603@kernel.org>
+ <ZGyW54tCwesk7IXu@x1-carbon>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZGyW54tCwesk7IXu@x1-carbon>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 23, 2023 at 12:24:04PM +0200, Helge Deller wrote:
-> On 5/22/23 23:22, Helge Deller wrote:
-> > > > It hangs in fs/aio.c:1128, function aio_complete(), in this call:
-> > > >      spin_lock_irqsave(&ctx->completion_lock, flags);
-> > > 
-> > > All code that I found and that obtains ctx->completion_lock disables IRQs.
-> > > It is not clear to me how this spinlock can be locked recursively? Is it
-> > > sure that the "spinlock recursion" report is correct?
-> > 
-> > Yes, it seems correct.
-> > [...]
+On 5/23/23 19:35, Niklas Cassel wrote:
+> On Tue, May 23, 2023 at 07:08:27PM +0900, Damien Le Moal wrote:
+>> On 5/23/23 18:56, Niklas Cassel wrote:
+>>> On Mon, May 22, 2023 at 05:41:19PM -0400, Martin K. Petersen wrote:
+>>>>
+>>>> Niklas,
+>>>>
+>>>>> This series adds support for Command Duration Limits.
+>>>>
+>>>> Applied to 6.5/scsi-staging, thanks!
+>>>
+>>> Thank you Martin!
+>>>
+>>>
+>>> Damien, Martin,
+>>> considering that the libata changes depend on the scsi changes,
+>>> and considering that further libata EH cleanups are planned for
+>>> 6.5 now when the IPR driver is gone, I think that the best move
+>>> is to follow the advice of:
+>>> https://docs.kernel.org/maintainer/rebasing-and-merging.html#merging-from-sibling-or-upstream-trees
+>>
+>> Hannes cleanup of EH will create a conflict with the scsi tree but can go in
+>> through the ata tree independently so I was not planning on doing a rebase,
+>> especially not on the scsi tree. I will notify Stephen about the conflict send
+>> him a resolution to apply and carry for linux-next. When the 6.5 merge window
+>> open, I will wait for the James to send the scsi PR and send my PR to Linus
+>> after that with the conflict resolution, as usual.
 > 
-> Bart, thanks to your suggestions I was able to narrow down the problem!
+> I wasn't suggesting that you do a rebase on the scsi tree, I was
+> suggesting for a topic branch to be merged through both trees.
 > 
-> I got LOCKDEP working on parisc, which then reports:
-> 	raw_local_irq_restore() called with IRQs enabled
-> for the spin_unlock_irqrestore() in function aio_complete(), which shouldn't happen.
+> But I was just thinking how to make it as easy as possible to
+> handle additional libata patches that should go on top of the
+> CDL series (without creating conflicts for Stephen and Linus).
 > 
-> Finally, I found that parisc's flush_dcache_page() re-enables the IRQs
-> which leads to the spinlock hang in aio_complete().
+>>
+>> So far, I do not see any big issue with that.
 > 
-> So, this is NOT a bug in aio or scsci, but we need fix in the the arch code.
+> If you think that the conflicts will be trivial, feel free to
+> ignore my suggestion :)
 
-You can find some of the background to this at:
+So far, the conflicts do not look bad at all. So we should be fine. Will adapt
+if needed.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git/commit/?id=16ceff2d5dc9f0347ab5a08abff3f4647c2fee04
-
-which introduced flush_dcache_mmap_lock(). It looks like Hugh had
-questions over whether this should be _irqsave() rather than _irq()
-but I guess at the time all callers had interrupts enabled, and
-it's only recently that someone came up with the idea of calling
-flush_dcache_page() with interrupts disabled.
-
-Adding another arg to flush_dcache_mmap_lock() to save the flags
-may be doable, but requires a patch that touches not only architectures
-that have a private implementation, but also various code in mm/.
+> 
+> 
+> Kind regards,
+> Niklas
 
 -- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
+Damien Le Moal
+Western Digital Research
+
