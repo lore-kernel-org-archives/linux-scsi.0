@@ -2,141 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8FFDC7EE23
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 19:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D419BC7EE23
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 19:47:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230283AbjEWTTR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 15:19:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32770 "EHLO
+        id S238463AbjEWTrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 15:47:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjEWTTQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 15:19:16 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76C31119
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 12:19:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684869555; x=1716405555;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=yM9TBg6uQFkbHqVCyvPVdO6hAsDVrCf91Vn0SRYPfqI=;
-  b=j92Qc3h3KcfQaFBl/FQTdL2U6Zi1LPQ34QqZFyHurHZ9ivzMgbQFSW2m
-   wFmVlub29jkylHc941SupxzROaOYEuN7+8C0RcjmEoYKsLBwu3/hpzeks
-   DjvloYecvhMJBQpCHEBZ7YF5fSvExZr5KWB/Y6FD4+hEYewf9Upd+NhYW
-   10HH3j7qmxmzkL730WoMGoVxS1mCpqipK+LidD1KA70hQgBFZSWHWk5MG
-   mf2527Pbnc5V788Gh4DNh2imNja+RDqd9DCogz0MTXMNiLl5SkxeP7nBa
-   eajjty/XVN22LtkDZ+XFcFLseb+lArY/Bi2OPcrQElhs2FGs74efr6vIP
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="416797182"
-X-IronPort-AV: E=Sophos;i="6.00,187,1681196400"; 
-   d="scan'208";a="416797182"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 May 2023 12:19:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="878323840"
-X-IronPort-AV: E=Sophos;i="6.00,187,1681196400"; 
-   d="scan'208";a="878323840"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.249.39.37])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 May 2023 12:19:13 -0700
-Message-ID: <cac55dea-ec77-2802-f975-89a1cb1c734f@intel.com>
-Date:   Tue, 23 May 2023 22:19:07 +0300
+        with ESMTP id S238424AbjEWTre (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 15:47:34 -0400
+X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 23 May 2023 12:47:33 PDT
+Received: from omta34.uswest2.a.cloudfilter.net (omta34.uswest2.a.cloudfilter.net [35.89.44.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F1B119
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 12:47:33 -0700 (PDT)
+Received: from eig-obgw-6008a.ext.cloudfilter.net ([10.0.30.227])
+        by cmsmtp with ESMTP
+        id 1RfGq4hnnfaVX1XxKq9eLN; Tue, 23 May 2023 19:46:02 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id 1XxJq6ZOjVMWD1XxJqIPfQ; Tue, 23 May 2023 19:46:01 +0000
+X-Authority-Analysis: v=2.4 cv=ZcEOi+ZA c=1 sm=1 tr=0 ts=646d17f9
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=WzbPXH4gqzPVN0x6HrNMNA==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=P0xRbXHiH_UA:10
+ a=wYkD_t78qR0A:10 a=VwQbUJbxAAAA:8 a=kxGpGzF3zFx1SGUESVUA:9 a=QEXdDO2ut3YA:10
+ a=AjGcO6oz07-iQ99wixmX:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=ljMdlDdx5J+18DhoS8j4K1VQdJl1syC7905CE3fxYNA=; b=Z6e4ETW7+WGTJoQk8juniRCmgr
+        IfMLlfnM8z86BSWy81Z2wZqu6Qleuoj1q5/a+xsO7Wxqh4sTzrUpwQPI9VZZEIq3kkNczH00G0qBn
+        9CA6KqwjkjkC8O5VWHmfjLbJmEq+WM/0LSEmooPD4U4LMHg7xDDy+GZVF4DD2RFJ8iGfT2tAvPwtf
+        Kum244yx6WE0kMVyHIiBSBdgKRp1wfcq4ZD83t0FsHyh8bow7GYqC0pnFgSlQmo4FcE2pPVAYdDpa
+        fheb+OMtYLyQfg0YXaSoUaeEUN7EYc8JGw2/l4hDGMihz1ctWtClFJbEgRN1TM6WcWZoLNoruHQbY
+        ic0Z+YFA==;
+Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:58740 helo=[192.168.15.7])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1q1XxI-003bHK-HH;
+        Tue, 23 May 2023 14:46:00 -0500
+Message-ID: <3d298c36-cdd8-62bd-2fef-c2ce63e662ef@embeddedor.com>
+Date:   Tue, 23 May 2023 13:46:54 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.11.0
-Subject: Re: [PATCH v2 3/4] scsi: ufs: Enable the BLK_MQ_F_BLOCKING flag
+ Thunderbird/102.11.0
+Subject: Re: [PATCH 1/2][next] scsi: lpfc: Replace one-element array with
+ flexible-array member
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20230517222359.1066918-1-bvanassche@acm.org>
- <20230517222359.1066918-4-bvanassche@acm.org>
- <957fb6d6-83db-6230-d81c-646e12ed7bf1@intel.com>
- <343be0eb-0650-cc5e-3154-ffe30f92c17d@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <343be0eb-0650-cc5e-3154-ffe30f92c17d@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+To:     Kees Cook <keescook@chromium.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+References: <cover.1684358315.git.gustavoars@kernel.org>
+ <6c6dcab88524c14c47fd06b9332bd96162656db5.1684358315.git.gustavoars@kernel.org>
+ <yq11qj8nhy7.fsf@ca-mkp.ca.oracle.com> <202305231031.C9E6124@keescook>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <202305231031.C9E6124@keescook>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.21.192
+X-Source-L: No
+X-Exim-ID: 1q1XxI-003bHK-HH
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.7]) [187.162.21.192]:58740
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 3
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfCiogRkP8TzHsfGNrDYhMm/Kni9l3XxaU0iQT8SXuyF73reNc8HDFSsJy5KS23g0Jonzy4NZPIeY0soSKhu0/RPOVSH02WwVUuoyH45GBk8uEW4kmHJx
+ pVY5iPNaDQLfnADu4z3B24DpcPvyTBBKXMqda0ynGik/2YIWQBbpv3lAQJX7fyZRG8ZFnK1Tuk+h6yxdsxqz8kNgro3Ln1MkK/GcTzlYc7ghIOyxLxXfxQP7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23/05/23 20:10, Bart Van Assche wrote:
-> On 5/23/23 09:39, Adrian Hunter wrote:
->> On 18/05/23 01:23, Bart Van Assche wrote:
->>> Prepare for adding code in ufshcd_queuecommand() that may sleep.
->>>
->>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>> ---
->>>   drivers/ufs/core/ufshcd.c | 1 +
->>>   1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->>> index 7ee150d67d49..993034ac1696 100644
->>> --- a/drivers/ufs/core/ufshcd.c
->>> +++ b/drivers/ufs/core/ufshcd.c
->>> @@ -8756,6 +8756,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
->>>       .max_host_blocked    = 1,
->>>       .track_queue_depth    = 1,
->>>       .skip_settle_delay    = 1,
->>> +    .queuecommand_may_block = true,
+
+
+On 5/23/23 11:31, Kees Cook wrote:
+> On Mon, May 22, 2023 at 06:02:21PM -0400, Martin K. Petersen wrote:
 >>
->> Shouldn't this only be for controllers that support
->> clock gating?
+>> Gustavo,
+>>
+>>> One-element arrays are deprecated, and we are replacing them with flexible
+>>> array members instead. So, replace one-element arrays with flexible-array
+>>> members in a couple of structures, and refactor the rest of the code,
+>>> accordingly.
+>>>
+>>> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+>>> routines on memcpy() and help us make progress towards globally
+>>> enabling -fstrict-flex-arrays=3 [1].
+>>>
+>>> This results in no differences in binary output.
+>>
+>> Applied to 6.5/scsi-staging, thanks!
 > 
-> Hi Adrian,
-> 
-> The overhead of BLK_MQ_F_BLOCKING is small relative to the time required to
-> queue a UFS command so I think enabling BLK_MQ_F_BLOCKING for all UFS host
-> controllers is fine.
+> Martin, I think this patch is not right -- can you drop this from
+> staging for the moment?
 
-Doesn't it also force the queue to be run asynchronously always?
+Martin just took patch 1/2, which is correct:
 
-But in any case, it doesn't seem like something to force on drivers
-just because it would take a bit more coding to make it optional.
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=6.5/scsi-staging&id=e90644b0ce2d700a65579ac74ff594414e8ba30f
 
-
->                      BLK_MQ_F_BLOCKING causes the block layer to use SRCU
-> instead of RCU. The cost of the sleepable RCU primitives is dominated by
-> the memory barrier (smp_mb()) in the srcu_read_lock() and srcu_read_unlock()
-> calls. From kernel/rcu/srcutree.c:
-> 
-> int __srcu_read_lock(struct srcu_struct *ssp)
-> {
->     int idx;
-> 
->     idx = READ_ONCE(ssp->srcu_idx) & 0x1;
->     this_cpu_inc(ssp->sda->srcu_lock_count[idx].counter);
->     smp_mb(); /* B */  /* Avoid leaking the critical section. */
->     return idx;
-> }
-> EXPORT_SYMBOL_GPL(__srcu_read_lock);
-> 
-> void __srcu_read_unlock(struct srcu_struct *ssp, int idx)
-> {
->     smp_mb(); /* C */  /* Avoid leaking the critical section. */
->     this_cpu_inc(ssp->sda->srcu_unlock_count[idx].counter);
-> }
-> EXPORT_SYMBOL_GPL(__srcu_read_unlock);
-> 
-> The rcu_read_lock() and rcu_read_lock() implementations do not call
-> smp_mb() as one can see in include/linux/rcupdate.h:
-> 
-> static inline void __rcu_read_lock(void)
-> {
->     preempt_disable();
-> }
-> 
-> static inline void __rcu_read_unlock(void)
-> {
->     preempt_enable();
->     if (IS_ENABLED(CONFIG_RCU_STRICT_GRACE_PERIOD))
->         rcu_read_unlock_strict();
-> }
-> 
-> Thanks,
-> 
-> Bart.
-> 
-
+--
+Gustavo
