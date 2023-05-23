@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18157C77B75
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 18:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ACBDC77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 18:22:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236429AbjEWSWS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 14:22:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34584 "EHLO
+        id S236660AbjEWSWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 14:22:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235771AbjEWSWR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 14:22:17 -0400
+        with ESMTP id S236816AbjEWSWV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 14:22:21 -0400
 Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB0398F
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:16 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1ae4048627aso6257485ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6480A121
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:20 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1ae4048627aso6257585ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684866136; x=1687458136;
+        d=gmail.com; s=20221208; t=1684866140; x=1687458140;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1/km8r/hoK7uPsU/DWvsiWqa0QeEAv+3IjDh4hwQlcM=;
-        b=mgFCU78SOvRFsyYr6c5Vv9hfQ6EjI9KMEbRIlYir1Pw7AEJZC/NK4CdQFCP5jNOXjd
-         /sJlXu+nFVV2e6XR70nckOMPuSAbzeeQGJ1mHlw97dSKVLwzfesUVEYYFpyICBevHorC
-         DkM6deDn9wQaBn1m2NxynGmfdW/mvKAYeeL1DOhR8zs3620R2N87dWAVPcfooH17wi00
-         xGy9Nvz/Hn63tgXfLDpx2fZ2aQDLleUpTeylPnBnkdo472hOFrKiWz05kucR+U2oKq1X
-         3fQDteO2UDE4c3Tne94ol3t8uCl+MbrghwmPOnJPE816SwNSgG6NHmrKi31YELcw14DD
-         VW5A==
+        bh=gAfQ8b0tn94H81/5FybU8owxPv/I7hE3zdSO2lGGD1E=;
+        b=eAVfrsiPiHXpvVYCGeOssmrEFkJrXcoMbChrgC490SUKW2yakTPyWEsXg3FmbSwG3e
+         rB83qH0UeXxD8AoY3aPJzmIiXJdKrpEdabRERCM5PdC/p0xjkiEYoP10K7xHzEm9dD2+
+         bgPu4zB+Ed/Kt5vg/YL79YUSziwdJj0CHfjegux8xU2vTJj3kR16JVDBkwMep/rkhTYC
+         TZXW7duCVP9R7GgaW3jeMW2a1xOIfs7dNnB8vEXPeWI3GPpvPFkiJo+B41TlhlyH0NId
+         xSHOjKhHno7tt9ZY3V0NgMTGLWDtosb7tNf/Z1c4177U/w+DFaF4NuXu0q77H6GgxTDe
+         Ey2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684866136; x=1687458136;
+        d=1e100.net; s=20221208; t=1684866140; x=1687458140;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=1/km8r/hoK7uPsU/DWvsiWqa0QeEAv+3IjDh4hwQlcM=;
-        b=JRHWa5FvRxOBj7f9TFn16dE7/7E/0K19ju4nciwongoRWmFNssrX43POMwrKNzTVyn
-         YWxPDJuwI+09kwzv9voMNpr6Rl4yGen43lfW799LvTPFt4tH7LhrrH1EAm5fo4/Drb/K
-         Ot0sP+ZjbrbvU5V14rvr4/UMoRQYl9c7sRoWFlJ030uLsVEp3BZDgGqtMclvpi1ccT7Q
-         O1vhlSOQ3hD1eE6hGofFGj2Do1nzwxK908QX+eWV77Vgt12kZqzaCrIOrsG/vUeOd3e9
-         5GBbt44q/HpUc35m33xCL5rt5YsvKqS3a7t3Hhk2jyOyLO+tN45xhz0NoBkhSapipDkq
-         5BSA==
-X-Gm-Message-State: AC+VfDzOqY16VWHzFxJ26yu2roy8/pzx+8DV66rh0H1U+OvSV8jOwusN
-        cN7FsxDY5d7kFhQNPlRMcy3eVwC4o5Q=
-X-Google-Smtp-Source: ACHHUZ7NUDGnWiCjnoEVc0UncwJeca7rTLIoEUpsalnpAAlU8gDe9ti6UDgtCV9lUmMKNG/671FhhA==
-X-Received: by 2002:a17:903:32c3:b0:1ae:3dcf:ecf3 with SMTP id i3-20020a17090332c300b001ae3dcfecf3mr16426522plr.6.1684866136416;
-        Tue, 23 May 2023 11:22:16 -0700 (PDT)
+        bh=gAfQ8b0tn94H81/5FybU8owxPv/I7hE3zdSO2lGGD1E=;
+        b=BWP/Q8MHJaYY8lvjotKEi8KXcI5hqLbPx5u3Jhh42Llax03Vu10LF0ziub03oEJKFC
+         TTS1+S2oL1HS2BtYppezG93+M4TBxkq8aYraRHe8mfN6aF/LhPDyEPWU1JzGKuoZzy3+
+         4IbFMyq6Ps0pTWtFGAwx0ncZ0ovwEQnYneu58PGYvgufXujtArVEbRj/+WQSN/H7lSRp
+         vU58qJ2N8n7c/dA6FYZQJfUwmal8T/Iq3HoXzF/RJcJ/o+j+JndOWGZVa5V/v0sXEvSn
+         zahFL3rNxxwxq40nSCaE3dwGi3It6MFrd2RTLb8BNGq6KsBTtNpQqpJgQphpbWe/8CYa
+         xKvw==
+X-Gm-Message-State: AC+VfDyuzQ7XZpLIaf5xU+fINvZTCAOQEUmt9vKwJm5/IpshY7+8ddK6
+        bkH6BCY9gb4A0ERFkh8abS4BuZ6Hxtg=
+X-Google-Smtp-Source: ACHHUZ5lJDubQA+UGDBkw+FANAUQxcsd+C7+asahe/V3QNcQIecoPk7emfwAv+p+7Nv9wMZiizvGRw==
+X-Received: by 2002:a17:902:d4c2:b0:1ac:656f:a68d with SMTP id o2-20020a170902d4c200b001ac656fa68dmr16281937plg.4.1684866139887;
+        Tue, 23 May 2023 11:22:19 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w10-20020a170902e88a00b001a687c505e9sm7070870plg.237.2023.05.23.11.22.15
+        by smtp.gmail.com with ESMTPSA id w10-20020a170902e88a00b001a687c505e9sm7070870plg.237.2023.05.23.11.22.19
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 May 2023 11:22:16 -0700 (PDT)
+        Tue, 23 May 2023 11:22:19 -0700 (PDT)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
         Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 2/9] lpfc: Clear NLP_IN_DEV_LOSS flag if already in rediscovery
-Date:   Tue, 23 May 2023 11:31:59 -0700
-Message-Id: <20230523183206.7728-3-justintee8345@gmail.com>
+Subject: [PATCH 3/9] lpfc: Account for fabric domain ctlr device loss recovery
+Date:   Tue, 23 May 2023 11:32:00 -0700
+Message-Id: <20230523183206.7728-4-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20230523183206.7728-1-justintee8345@gmail.com>
 References: <20230523183206.7728-1-justintee8345@gmail.com>
@@ -65,40 +65,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In dev_loss_tmo callback routine, we early return if the ndlp is in a state
-of rediscovery.  This occurs when a target proactively PLOGIs or PRLIs
-after an RSCN before the dev_loss_tmo callback routine is scheduled to run.
-Move clear of the NLP_IN_DEV_LOSS flag before the ndlp state check in such
-cases.
+Pre-existing device loss recovery logic via the NLP_IN_RECOV_POST_DEV_LOSS
+flag only handled Fabric Port Login, Fabric Controller, Management, and
+Name Server addresses.
+
+Fabric domain controllers fall under the same category for usage of the
+NLP_IN_RECOV_POST_DEV_LOSS flag.  Add a default case statement to mark
+an ndlp for device loss recovery.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 63e42e3f2165..f99b5c206cdb 100644
+index f99b5c206cdb..a5c69d4bf2e0 100644
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
 +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -556,6 +556,9 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
- 				 ndlp->nlp_DID, ndlp->nlp_flag,
- 				 ndlp->nlp_state, ndlp->nlp_rpi);
- 	}
-+	spin_lock_irqsave(&ndlp->lock, iflags);
-+	ndlp->nlp_flag &= ~NLP_IN_DEV_LOSS;
-+	spin_unlock_irqrestore(&ndlp->lock, iflags);
+@@ -458,11 +458,9 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+ 	if (ndlp->nlp_type & NLP_FABRIC) {
+ 		spin_lock_irqsave(&ndlp->lock, iflags);
  
- 	/* If we are devloss, but we are in the process of rediscovering the
- 	 * ndlp, don't issue a NLP_EVT_DEVICE_RM event.
-@@ -565,9 +568,6 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
- 		return fcf_inuse;
- 	}
- 
--	spin_lock_irqsave(&ndlp->lock, iflags);
--	ndlp->nlp_flag &= ~NLP_IN_DEV_LOSS;
--	spin_unlock_irqrestore(&ndlp->lock, iflags);
- 	if (!(ndlp->fc4_xpt_flags & NVME_XPT_REGD))
- 		lpfc_disc_state_machine(vport, ndlp, NULL, NLP_EVT_DEVICE_RM);
+-		/* In massive vport configuration settings or when the FLOGI
+-		 * completes with a sequence timeout, it's possible
+-		 * dev_loss_tmo fired during node recovery.  The driver has to
+-		 * account for this race to allow for recovery and keep
+-		 * the reference counting correct.
++		/* The driver has to account for a race between any fabric
++		 * node that's in recovery when dev_loss_tmo expires. When this
++		 * happens, the driver has to allow node recovery.
+ 		 */
+ 		switch (ndlp->nlp_DID) {
+ 		case Fabric_DID:
+@@ -489,6 +487,17 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+ 			    ndlp->nlp_state <= NLP_STE_REG_LOGIN_ISSUE)
+ 				recovering = true;
+ 			break;
++		default:
++			/* Ensure the nlp_DID at least has the correct prefix.
++			 * The fabric domain controller's last three nibbles
++			 * vary so we handle it in the default case.
++			 */
++			if (ndlp->nlp_DID & Fabric_DID_MASK) {
++				if (ndlp->nlp_state >= NLP_STE_PLOGI_ISSUE &&
++				    ndlp->nlp_state <= NLP_STE_REG_LOGIN_ISSUE)
++					recovering = true;
++			}
++			break;
+ 		}
+ 		spin_unlock_irqrestore(&ndlp->lock, iflags);
  
 -- 
 2.38.0
