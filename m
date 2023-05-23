@@ -2,121 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D419BC7EE23
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 19:47:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2131AC77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 19:57:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238463AbjEWTrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 15:47:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49732 "EHLO
+        id S238275AbjEWT5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 15:57:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238424AbjEWTre (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 15:47:34 -0400
-X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 23 May 2023 12:47:33 PDT
-Received: from omta34.uswest2.a.cloudfilter.net (omta34.uswest2.a.cloudfilter.net [35.89.44.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F1B119
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 12:47:33 -0700 (PDT)
-Received: from eig-obgw-6008a.ext.cloudfilter.net ([10.0.30.227])
-        by cmsmtp with ESMTP
-        id 1RfGq4hnnfaVX1XxKq9eLN; Tue, 23 May 2023 19:46:02 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTP
-        id 1XxJq6ZOjVMWD1XxJqIPfQ; Tue, 23 May 2023 19:46:01 +0000
-X-Authority-Analysis: v=2.4 cv=ZcEOi+ZA c=1 sm=1 tr=0 ts=646d17f9
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=WzbPXH4gqzPVN0x6HrNMNA==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=P0xRbXHiH_UA:10
- a=wYkD_t78qR0A:10 a=VwQbUJbxAAAA:8 a=kxGpGzF3zFx1SGUESVUA:9 a=QEXdDO2ut3YA:10
- a=AjGcO6oz07-iQ99wixmX:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=ljMdlDdx5J+18DhoS8j4K1VQdJl1syC7905CE3fxYNA=; b=Z6e4ETW7+WGTJoQk8juniRCmgr
-        IfMLlfnM8z86BSWy81Z2wZqu6Qleuoj1q5/a+xsO7Wxqh4sTzrUpwQPI9VZZEIq3kkNczH00G0qBn
-        9CA6KqwjkjkC8O5VWHmfjLbJmEq+WM/0LSEmooPD4U4LMHg7xDDy+GZVF4DD2RFJ8iGfT2tAvPwtf
-        Kum244yx6WE0kMVyHIiBSBdgKRp1wfcq4ZD83t0FsHyh8bow7GYqC0pnFgSlQmo4FcE2pPVAYdDpa
-        fheb+OMtYLyQfg0YXaSoUaeEUN7EYc8JGw2/l4hDGMihz1ctWtClFJbEgRN1TM6WcWZoLNoruHQbY
-        ic0Z+YFA==;
-Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:58740 helo=[192.168.15.7])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1q1XxI-003bHK-HH;
-        Tue, 23 May 2023 14:46:00 -0500
-Message-ID: <3d298c36-cdd8-62bd-2fef-c2ce63e662ef@embeddedor.com>
-Date:   Tue, 23 May 2023 13:46:54 -0600
+        with ESMTP id S229614AbjEWT5X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 15:57:23 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACBF711D
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 12:57:22 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1ae52ce3250so633735ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 12:57:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684871842; x=1687463842;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=aEMR/1fYgZN6Ufgt/aUQUbsl8vCT2KNtFgYxGRfJPxg=;
+        b=kXyAlR+evnCnuI+i55ssRRRGam7vts9Z24zUtFqI3e6du6w/EMS2JUC8TZYQHylPTv
+         2NhN5iQll+oxxols7Xs3TOuN9mnb4tD/7hY/m9znNDI0ywtECGYCGNbQy0X6Q77HwbGw
+         ilVp95+3BcOEnzj8qvP87MhcGI1gJUOMUTqyq6uRHCZdPsp8sqTvi0jn+o5VWh3BGriI
+         o7tyUXZyLNlNztwUgcfPhRUi6JqjPrR7bJOOPquit1gfwXtDubi5e2odQvMa3Md+Jkqc
+         D0WzVnOszVkJSlLFTGaOVEbTp1DGGokZJgVnl9yxETpXiinrBsRwCTyhWr8eF2AEZUKS
+         Phww==
+X-Gm-Message-State: AC+VfDwkiymkmDNU/BHd8lfgXc/jOQHWqIePfxQlpEWm38Ic/8HIQBR7
+        chYooZAJV82N97XNe+BqmCeb47Jq9sM=
+X-Google-Smtp-Source: ACHHUZ4i1vezEVX5Nb+E0HnDxfokdOCsQCeWsUhkgQj5LjDgTj3Y68eaEU+DKZgU2Z6Eka/Ki+7/8w==
+X-Received: by 2002:a05:6a20:4315:b0:100:74c5:f916 with SMTP id h21-20020a056a20431500b0010074c5f916mr13899724pzk.40.1684871841931;
+        Tue, 23 May 2023 12:57:21 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:24d2:69cd:ef9a:8f83? ([2620:15c:211:201:24d2:69cd:ef9a:8f83])
+        by smtp.gmail.com with ESMTPSA id e26-20020a63501a000000b005143448896csm6390734pgb.58.2023.05.23.12.57.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 May 2023 12:57:21 -0700 (PDT)
+Message-ID: <2d37028b-c7a1-f2ac-abb5-e85c00aceba2@acm.org>
+Date:   Tue, 23 May 2023 12:57:20 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH 1/2][next] scsi: lpfc: Replace one-element array with
- flexible-array member
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2 3/4] scsi: ufs: Enable the BLK_MQ_F_BLOCKING flag
 Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <cover.1684358315.git.gustavoars@kernel.org>
- <6c6dcab88524c14c47fd06b9332bd96162656db5.1684358315.git.gustavoars@kernel.org>
- <yq11qj8nhy7.fsf@ca-mkp.ca.oracle.com> <202305231031.C9E6124@keescook>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <202305231031.C9E6124@keescook>
+To:     Adrian Hunter <adrian.hunter@intel.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230517222359.1066918-1-bvanassche@acm.org>
+ <20230517222359.1066918-4-bvanassche@acm.org>
+ <957fb6d6-83db-6230-d81c-646e12ed7bf1@intel.com>
+ <343be0eb-0650-cc5e-3154-ffe30f92c17d@acm.org>
+ <cac55dea-ec77-2802-f975-89a1cb1c734f@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <cac55dea-ec77-2802-f975-89a1cb1c734f@intel.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.21.192
-X-Source-L: No
-X-Exim-ID: 1q1XxI-003bHK-HH
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.7]) [187.162.21.192]:58740
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfCiogRkP8TzHsfGNrDYhMm/Kni9l3XxaU0iQT8SXuyF73reNc8HDFSsJy5KS23g0Jonzy4NZPIeY0soSKhu0/RPOVSH02WwVUuoyH45GBk8uEW4kmHJx
- pVY5iPNaDQLfnADu4z3B24DpcPvyTBBKXMqda0ynGik/2YIWQBbpv3lAQJX7fyZRG8ZFnK1Tuk+h6yxdsxqz8kNgro3Ln1MkK/GcTzlYc7ghIOyxLxXfxQP7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 5/23/23 11:31, Kees Cook wrote:
-> On Mon, May 22, 2023 at 06:02:21PM -0400, Martin K. Petersen wrote:
->>
->> Gustavo,
->>
->>> One-element arrays are deprecated, and we are replacing them with flexible
->>> array members instead. So, replace one-element arrays with flexible-array
->>> members in a couple of structures, and refactor the rest of the code,
->>> accordingly.
->>>
->>> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
->>> routines on memcpy() and help us make progress towards globally
->>> enabling -fstrict-flex-arrays=3 [1].
->>>
->>> This results in no differences in binary output.
->>
->> Applied to 6.5/scsi-staging, thanks!
+On 5/23/23 12:19, Adrian Hunter wrote:
+> On 23/05/23 20:10, Bart Van Assche wrote:
+>> The overhead of BLK_MQ_F_BLOCKING is small relative to the time required to
+>> queue a UFS command so I think enabling BLK_MQ_F_BLOCKING for all UFS host
+>> controllers is fine.
 > 
-> Martin, I think this patch is not right -- can you drop this from
-> staging for the moment?
+> Doesn't it also force the queue to be run asynchronously always?
+> 
+> But in any case, it doesn't seem like something to force on drivers
+> just because it would take a bit more coding to make it optional.
+Making BLK_MQ_F_BLOCKING optional would complicate testing of the UFS 
+driver. Although it is possible to make BLK_MQ_F_BLOCKING optional, I'm 
+wondering whether it is worth it? I haven't noticed any performance 
+difference in my tests with BLK_MQ_F_BLOCKING enabled compared to 
+BLK_MQ_F_BLOCKING disabled.
 
-Martin just took patch 1/2, which is correct:
+Thanks,
 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=6.5/scsi-staging&id=e90644b0ce2d700a65579ac74ff594414e8ba30f
-
---
-Gustavo
+Bart.
