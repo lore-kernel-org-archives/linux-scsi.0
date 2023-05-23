@@ -2,289 +2,146 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15DA9C77B7A
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 06:28:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B058DC7EE26
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 06:59:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235237AbjEWG2U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 02:28:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34790 "EHLO
+        id S235290AbjEWG7i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 02:59:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234983AbjEWG2Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 02:28:16 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD183186
-        for <linux-scsi@vger.kernel.org>; Mon, 22 May 2023 23:28:13 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230523062812epoutp03a8f3b736a4267e375cb5f62d4a238e6e~hsduZRrzb0598905989epoutp03Z
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 06:28:12 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230523062812epoutp03a8f3b736a4267e375cb5f62d4a238e6e~hsduZRrzb0598905989epoutp03Z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1684823292;
-        bh=w3jI9nVFjFtaZhjMo1fL28/6y8KVI4J1TL4/ZBRb5RQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
-        b=CqGTIZCKY3kphi1a1vP303d6nre5wwft4XUVfR374W4gHAcIq78sx9RcJC+6I2Tuw
-         pmOCXoBMcuEUr9Pzt6FsvhVK7xAvSgA/ZGpN48gRsZsCnxXYJ/r2g+dJ7BbR/fzPpi
-         tJOuCVAMxJH13d1IhUcJ8WytGHqgpRzxQtu06Y1g=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20230523062811epcas2p243a58112066a5ed5be6622d1b7834f0c~hsdtrWopL3076330763epcas2p2J;
-        Tue, 23 May 2023 06:28:11 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.88]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4QQPWt61Vlz4x9Q1; Tue, 23 May
-        2023 06:28:10 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        75.94.07392.AFC5C646; Tue, 23 May 2023 15:28:10 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-        20230523062810epcas2p454b203a703524d0ce10577091f63d37d~hsdsnamVU2700227002epcas2p4U;
-        Tue, 23 May 2023 06:28:10 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230523062810epsmtrp2bceb0b6a3856d533250df767142c92bf~hsdsmcIAy1738517385epsmtrp2b;
-        Tue, 23 May 2023 06:28:10 +0000 (GMT)
-X-AuditID: b6c32a47-eedff70000001ce0-8b-646c5cfaf516
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        30.4F.28392.AFC5C646; Tue, 23 May 2023 15:28:10 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230523062810epsmtip1d681ab19704a771b00380ebb61bc8738~hsdsYK6cL1521615216epsmtip1p;
-        Tue, 23 May 2023 06:28:10 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com,
-        junwoo80.lee@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1 3/3] ufs: poll pmc until another pa request is completed
-Date:   Tue, 23 May 2023 15:19:10 +0900
-Message-Id: <65681553332dda2700c9c2d5760c1b74934dfc70.1684822284.git.kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1684822284.git.kwmad.kim@samsung.com>
-In-Reply-To: <cover.1684822284.git.kwmad.kim@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDJsWRmVeSWpSXmKPExsWy7bCmqe6vmJwUg1Vz9C1OPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
-        LD/+j8mi6+4NRoul/96yOPB7XL7i7bF4z0smjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
-        P9DNFMARlW2TkZqYklqkkJqXnJ+SmZduq+QdHO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZ
-        A3S8kkJZYk4pUCggsbhYSd/Opii/tCRVISO/uMRWKbUgJafAvECvODG3uDQvXS8vtcTK0MDA
-        yBSoMCE7Y/Hj3+wFDw0rVrYtZ2lgvKnRxcjJISFgInF1/3nWLkYuDiGBHYwS/1d9YYZwPjFK
-        HJx8jAnC+cwocb/zJitMy4Ezj6ASuxglJvXfZARJCAn8YJR4sVUVxGYT0JR4enMqE4gtInCD
-        SeJJvyiIzSygLrFrwgmwuLCAt8Tiv+tYQGwWAVWJNxc2gy3gFYiWmD5hLRPEMjmJm+c6mUFs
-        TgFLiQ2vmtlQ2VxANQs5JE6s28oI0eAisWnOLqhmYYlXx7ewQ9hSEp/f7QVq4ACysyX2LBSD
-        CFdILJ72lgXCNpaY9aydEaSEGej+9bv0IaqVJY7cYoG4nk+i4/Bfdogwr0RHmxBEo7LEr0mT
-        ofZLSsy8eQdqp4fEvy+n2SEh1cMosaF9G+MERvlZCAsWMDKuYhRLLSjOTU8tNiowhsddcn7u
-        JkZwMtVy38E44+0HvUOMTByMhxglOJiVRHhPlGenCPGmJFZWpRblxxeV5qQWH2I0BQbjRGYp
-        0eR8YDrPK4k3NLE0MDEzMzQ3MjUwVxLnlbY9mSwkkJ5YkpqdmlqQWgTTx8TBKdXAtNNLcbWG
-        5M6N22sq5vy+JaCwwKSlX1L/1rET9UwbXAP2x79bae0cHdQbqdWZVeLxJ8Q+4bGJb/TTnV+b
-        NN/GzOHYs6hYZaJ9V47kI9H4+Q3Lnx2s6/z7THr9rDZn+bfBe7edrZi33+/jyZcNG9bVi5q8
-        6zjXfN3q2uvN8wVuLY56u/BhF+8LXuNTWzTPP/ZMk9gueE/rpXmJ5rcHeo63HE4vWyZc0Hf0
-        w4teP589E6Pmejwu3ZvC2cT1e2rNtMwph/6+3sjrznBNpcvk7+LQRr8XpeH+nYtTA/3mvZ8w
-        69xfrj17r02WSO68NUl62eVTs5NWZDfV1QUJKglX3p9k/WfH2omVu9Wc59c3dBosbFViKc5I
-        NNRiLipOBAD31wqTLwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrMLMWRmVeSWpSXmKPExsWy7bCSnO6vmJwUg//vhCxOPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
-        LD/+j8mi6+4NRoul/96yOPB7XL7i7bF4z0smjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
-        P9DNFMARxWWTkpqTWZZapG+XwJWx+PFv9oKHhhUr25azNDDe1Ohi5OSQEDCROHDmEROILSSw
-        g1Hi9nMliLikxImdzxkhbGGJ+y1HWLsYuYBqvjFK7Jr2iwUkwSagKfH05lQmkISIwCsmibn/
-        T4F1MAuoS+yacAJsqrCAt8Tiv+vAGlgEVCXeXNjMCmLzCkRLTJ+wlglig5zEzXOdzCA2p4Cl
-        xIZXzWxdjBxA2ywkGr/x4RCewCiwgJFhFaNkakFxbnpusWGBUV5quV5xYm5xaV66XnJ+7iZG
-        cDxoae1g3LPqg94hRiYOxkOMEhzMSiK8J8qzU4R4UxIrq1KL8uOLSnNSiw8xSnOwKInzXug6
-        GS8kkJ5YkpqdmlqQWgSTZeLglGpgOmVsankldGJfpPvpleHvxIsuiZ3muiDt7lUvejp8+8Xk
-        z1unOv6t4Dd83ndwylf3j9EfdPnuMr/cf+XRH8mrNf8639sWc8cF23wzn17F5pRx5MTy0M2l
-        /rOPOD1qV2fbbLR/+QyT+ysuSWQfWVBtoeyxZ8OvBZW+iQfvfFVkmfJnTpvR4g9zb0c+sdom
-        bnCF/2zNzSLFbaUPVafuS316nPlI0j3vK+J20/aWLBTdcCvDLt386tLCKZ8+T7C2Xxz1fk0w
-        QzV/UdSpKVdfzjnTLqyzX/1fIGPCbIFVUmFrwtZ55GbNmLnalP3e2ylyLPzGlxXyHJ5933br
-        Z5BAT8WvJa2v1iSUy7557rrqWOWbWeFKLMUZiYZazEXFiQAAEJVa9gIAAA==
-X-CMS-MailID: 20230523062810epcas2p454b203a703524d0ce10577091f63d37d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230523062810epcas2p454b203a703524d0ce10577091f63d37d
-References: <cover.1684822284.git.kwmad.kim@samsung.com>
-        <CGME20230523062810epcas2p454b203a703524d0ce10577091f63d37d@epcas2p4.samsung.com>
+        with ESMTP id S235243AbjEWG7c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 02:59:32 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEAEC119;
+        Mon, 22 May 2023 23:59:30 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34N5wRZp003873;
+        Tue, 23 May 2023 06:59:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=Ex1tFxvKrAnpGLQRQ3xEj2hakDnV5kwPAUrcxK4mQsI=;
+ b=ZruPuJCtWanF7CwfQcjXF9ptTGyrWWC1pTET0BsUMdfAo3WCvuEAmCfcMQcGAlsr30mZ
+ np4urwGv/ado1BliI2rz7sxrOe7UlOUOnk39yN30rbUWeA0Ppb6uVXvousqHWSnvVHYg
+ t0Ffrnehp5Yebgf0CJSd7Fyf155DFQffsnrJ5fhoYcuCHZvwGfvQzK/Afn3tf5aVObvh
+ Abtun+LdQqJwe0nxrsLfhcGFNl+OTfw+GnwJs5Q4ULDJSQsTD66BUaGr1LAKM2Yq9OJ0
+ TQvhLEs+c59504mFMYbh4Xe0aO6lusgNh+WrcYMiPRWCmd9RYNTIwxANVmCrveXGNWJa aA== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qrf778wtn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 May 2023 06:59:01 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34N6x0og015738
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 May 2023 06:59:00 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Mon, 22 May
+ 2023 23:58:59 -0700
+Message-ID: <1e99521e-1e15-b7ec-30be-1f6a86ea728f@quicinc.com>
+Date:   Mon, 22 May 2023 23:58:59 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v5 7/7] ufs: core: Add error handling for MCQ mode
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1683872601.git.quic_nguyenb@quicinc.com>
+ <7b884263c9db9a9666086a345ede85bb56d9dfc7.1683872601.git.quic_nguyenb@quicinc.com>
+ <5065e9ca-d5ce-22fc-4089-651cfacb7166@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <5065e9ca-d5ce-22fc-4089-651cfacb7166@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: IfqR3gXU64h5IlsWlu252i4gctquHXUk
+X-Proofpoint-ORIG-GUID: IfqR3gXU64h5IlsWlu252i4gctquHXUk
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-23_03,2023-05-22_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 impostorscore=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305230056
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-v2 -> v3
-1) check time in the loop with jiffies, instead of miliseconds.
-2) change a variable's name and fix a typo and wrong alignment.
+On 5/19/2023 4:03 PM, Bart Van Assche wrote:
+> On 5/11/23 23:28, Bao D. Nguyen wrote:
+>> @@ -6378,18 +6407,36 @@ static bool ufshcd_abort_all(struct ufs_hba *hba)
+>>       bool needs_reset = false;
+>>       int tag, ret;
+>> -    /* Clear pending transfer requests */
+>> -    for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
+>> -        ret = ufshcd_try_to_abort_task(hba, tag);
+>> -        dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+>> -            hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
+>> -            ret ? "failed" : "succeeded");
+>> -        if (ret) {
+>> -            needs_reset = true;
+>> -            goto out;
+>> +    if (is_mcq_enabled(hba)) {
+>> +        struct ufshcd_lrb *lrbp;
+>> +        int tag;
+>> +
+>> +        for (tag = 0; tag < hba->nutrs; tag++) {
+>> +            lrbp = &hba->lrb[tag];
+>> +            if (!ufshcd_cmd_inflight(lrbp->cmd))
+>> +                continue;
+>> +            ret = ufshcd_try_to_abort_task(hba, tag);
+>> +            dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+>> +                hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
+>> +                ret ? "failed" : "succeeded");
+>> +            if (ret) {
+>> +                needs_reset = true;
+>> +                goto out;
+>> +            }
+>> +        }
+>> +    } else {
+>> +        /* Clear pending transfer requests */
+>> +        for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
+>> +            ret = ufshcd_try_to_abort_task(hba, tag);
+>> +            dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+>> +                hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
+>> +                ret ? "failed" : "succeeded");
+>> +            if (ret) {
+>> +                needs_reset = true;
+>> +                goto out;
+>> +            }
+>>           }
+>>       }
+> 
+> Please move the ufshcd_cmd_inflight() check into ufshcd_try_to_abort_task()
+> such that the same code path can be used for MCQ and legacy mode.
+Hi Bart,
+Because the ufshcd_try_to_abort_task() is shared by sdb and mcq modes, I 
+feel a bit uncomfortable using the new function ufshcd_cmd_inflight() in 
+ufshcd_try_to_abort_task(). In this patch series, I am trying to avoid 
+changing the sdb error handling logic as much as possible; only add 
+error handling support for mcq mode. If you feel there is a very good 
+benefit in making the change, I would give it a try. Otherwise, I would 
+prefer not touching sdb error handling code that has been working well. 
+Please let me know.
 
-v1 -> v2
-1) remove clearing hba->active_uic_cmd at the end of __ufshcd_poll_uic_pwr
-2) change commit message on the cited clause: 5.7.12.11 -> 5.7.12.1.1
-3) add mdelay to avoid too many issueing
-4) change the timeout for the polling to 100ms because I found it
-sometimes takes much longer than expected.
+Thanks,
+Bao
 
-Regarding 5.7.12.1.1 in Unipro v1.8, PA rejects sebsequent
-requests following the first request from upper layer or remote.
-In this situation, PA responds w/ BUSY in cases
-when they come from upper layer and does nothing for
-the requests. So HCI doesn't receive ind, a.k.a. indicator
-for its requests and an interrupt, IS.UPMS isn't generated.
-
-When LINERESET occurs, the error handler issues PMC which is
-recognized as a request for PA. If a host's PA gets or raises
-LINERESET, and a request for PMC, this could be a concurrent
-situation mentioned above. And I found that situation w/ my
-environment.
-
-[  222.929539]I[0:DefaultDispatch:20410] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecdl : 0x80000002
-[  222.999009]I[0: arch_disk_io_1:20413] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
-[  222.999200] [6:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufs_pwr_mode_restore_needed : mode = 0x15, pwr_rx = 1, pwr_tx = 1
-[  223.002876]I[0: arch_disk_io_3:20422] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
-[  223.501050] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: pwr ctrl cmd 0x2 with mode 0x11 completion timeout
-[  223.502305] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_change_power_mode: power mode change failed -110
-[  223.502312] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_err_handler: Failed to restore power mode, err = -110
-[  223.502392] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_is_pwr_mode_restore_needed : mode = 0x11, pwr_rx = 1, pwr_tx = 1
-
-This patch is to poll PMC's result w/o checking its ind until
-the result is not busy, i.e. 09h, to avoid the rejection.
-
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 93 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 65 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a772f92..3cf2fbe 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -98,6 +98,9 @@
- /* Polling time to wait for fDeviceInit */
- #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
- 
-+/* Polling time to wait until PA is ready */
-+#define UIC_PA_RDY_TIMEOUT	100	/* millisecs */
-+
- /* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
- static bool use_mcq_mode = true;
- 
-@@ -4146,6 +4149,62 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- }
- EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
- 
-+static int __ufshcd_poll_uic_pwr(struct ufs_hba *hba, struct uic_command *cmd,
-+		struct completion *cnf)
-+{
-+	unsigned long flags;
-+	int ret;
-+	u32 mode = cmd->argument3;
-+	unsigned long deadline = jiffies +
-+		msecs_to_jiffies(UIC_PA_RDY_TIMEOUT);
-+
-+	do {
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		hba->active_uic_cmd = NULL;
-+		if (ufshcd_is_link_broken(hba)) {
-+			spin_unlock_irqrestore(hba->host->host_lock, flags);
-+			ret = -ENOLINK;
-+			goto out;
-+		}
-+		hba->uic_async_done = cnf;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+		cmd->argument2 = 0;
-+		cmd->argument3 = mode;
-+		ret = __ufshcd_send_uic_cmd(hba, cmd, true);
-+		if (ret) {
-+			dev_err(hba->dev,
-+				"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
-+				cmd->command, cmd->argument3, ret);
-+			goto out;
-+		}
-+
-+		/* This value is heuristic */
-+		if (!wait_for_completion_timeout(&cmd->done,
-+						 msecs_to_jiffies(5))) {
-+			ret = -ETIMEDOUT;
-+			dev_err(hba->dev,
-+				"pwr ctrl cmd 0x%x with mode 0x%x timeout\n",
-+				cmd->command, cmd->argument3);
-+			if (cmd->cmd_active)
-+				goto out;
-+
-+			dev_info(hba->dev, "%s: pwr ctrl cmd has already been completed\n", __func__);
-+		}
-+
-+		/* retry only for busy cases */
-+		ret = cmd->argument2 & MASK_UIC_COMMAND_RESULT;
-+		if (ret != UIC_CMD_RESULT_BUSY)
-+			break;
-+
-+		dev_info(hba->dev, "%s: PA is busy and can't handle a requeest, %d\n", __func__, ret);
-+		mdelay(1);
-+
-+	} while (time_before(jiffies, deadline));
-+out:
-+	return ret;
-+}
-+
- /**
-  * ufshcd_uic_pwr_ctrl - executes UIC commands (which affects the link power
-  * state) and waits for it to take effect.
-@@ -4168,33 +4227,13 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	unsigned long flags;
- 	u8 status;
- 	int ret;
--	bool reenable_intr = false;
- 
--	mutex_lock(&hba->uic_cmd_mutex);
--	ufshcd_add_delay_before_dme_cmd(hba);
--
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (ufshcd_is_link_broken(hba)) {
--		ret = -ENOLINK;
--		goto out_unlock;
--	}
--	hba->uic_async_done = &uic_async_done;
--	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
--		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
--		/*
--		 * Make sure UIC command completion interrupt is disabled before
--		 * issuing UIC command.
--		 */
--		wmb();
--		reenable_intr = true;
--	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
-+	ret = __ufshcd_poll_uic_pwr(hba, cmd, &uic_async_done);
- 	if (ret) {
--		dev_err(hba->dev,
--			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
--			cmd->command, cmd->argument3, ret);
--		goto out;
-+		if (ret == -ENOLINK)
-+			goto out_unlock;
-+		else
-+			goto out;
- 	}
- 
- 	if (!wait_for_completion_timeout(hba->uic_async_done,
-@@ -4231,14 +4270,12 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->active_uic_cmd = NULL;
- 	hba->uic_async_done = NULL;
--	if (reenable_intr)
--		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
- 	if (ret) {
- 		ufshcd_set_link_broken(hba);
- 		ufshcd_schedule_eh_work(hba);
- 	}
--out_unlock:
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out_unlock:
- 	mutex_unlock(&hba->uic_cmd_mutex);
- 
- 	return ret;
--- 
-2.7.4
+> 
+> Thanks,
+> 
+> Bart.
 
