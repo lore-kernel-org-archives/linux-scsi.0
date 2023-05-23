@@ -2,114 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50281C7EE29
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 10:53:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E048C77B75
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 14:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236391AbjEWKx6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 06:53:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37620 "EHLO
+        id S237345AbjEWOlR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 10:41:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232091AbjEWKx5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 06:53:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5876B121;
-        Tue, 23 May 2023 03:53:56 -0700 (PDT)
+        with ESMTP id S237372AbjEWOlN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 10:41:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF7151B5;
+        Tue, 23 May 2023 07:41:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D598060F77;
-        Tue, 23 May 2023 10:53:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF92BC433D2;
-        Tue, 23 May 2023 10:53:53 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ACC6E63341;
+        Tue, 23 May 2023 14:41:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 054AEC433D2;
+        Tue, 23 May 2023 14:41:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684839235;
-        bh=pQ96aHXywFyqqMHQEBK3XeZ6UVAHJ7zdPWunfjlTFEk=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=fjKcA+zeLT719eqkmVP9ciA5C05rv5RqgjajWEt/PTV9964mXggZq7TydOPOW01Mo
-         FobpPzZwhUq5fW4q3u2AOJzci7RDfNAz5tOY/rDry3WYrmnPLvYwnIEz90KA8oB2Hd
-         0vMSLqFS9mA/Q+zujshHOt5C16uvVv2lgkGCG7ZAPWQ7bcMU9MYh38GFj8hXeLpD89
-         UTudM8dadOGN3gP5mHWJOLliG7UX3/zDEAfKFh1z0dIZtwifM/HTIOdvzgqdYvhVtr
-         p1BlzLGpxo2uuEx5sCenj5IbOgEKT8IkWv+dcORMCcxbSZGhr2uDCNJFZc0pEzv0G5
-         sGD8vccANbEnQ==
-Message-ID: <f0b7dcf8-812d-5a2d-986b-5fa5b6b5a236@kernel.org>
-Date:   Tue, 23 May 2023 19:53:53 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v7 00/19] Add Command Duration Limits support
-Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+        s=k20201202; t=1684852867;
+        bh=d9J3DkDPYoY3R19fL1JMV5Kh4ZEEyVTMhbq27T3m+Tk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=etOhZG44wkJggVLmEJT26ihmCK04oldyLTDOs4/a17yQwOSWMGdPOrUlrOTRlcqdM
+         HMqarlJcFu81mB4zFNS9MpyG8gLgBh/AZVslrR4Eo073J9Jpe1CbF+dwrimwJIMDJq
+         sv4Thqo5bkx4pq4LJPvZ1K2q1hSHsE2m6IqvmLKtBqGn8LN+1ggaywHtOujvpUucJy
+         6bFWMzNUskpAm3vg/NPOlPrsQo4jxcM/aSkXKYk36H2UYXs2zvqeP1GawNs3CBdDP5
+         Rx9LmTIwyDqTEX8lXysrrqacTatQDqJRMkYEOag7/5+bfWJKS3NYKqoNRbIaK5INcX
+         g3D5+AqswI92Q==
+Date:   Tue, 23 May 2023 08:41:59 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230511011356.227789-1-nks@flawful.org>
- <yq1h6s4nix8.fsf@ca-mkp.ca.oracle.com> <ZGyN1KkCXsTo8ZwG@x1-carbon>
- <09f5d62b-1bd4-3a25-e178-2225f1c7b603@kernel.org>
- <ZGyW54tCwesk7IXu@x1-carbon>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZGyW54tCwesk7IXu@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 2/2][next] scsi: lpfc: Use struct_size() helper
+Message-ID: <ZGzQt2VFG4P/Vufn@work>
+References: <cover.1684358315.git.gustavoars@kernel.org>
+ <99e06733f5f35c6cd62e05f530b93107bfd03362.1684358315.git.gustavoars@kernel.org>
+ <202305171601.B3FF9D0BB@keescook>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202305171601.B3FF9D0BB@keescook>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/23/23 19:35, Niklas Cassel wrote:
-> On Tue, May 23, 2023 at 07:08:27PM +0900, Damien Le Moal wrote:
->> On 5/23/23 18:56, Niklas Cassel wrote:
->>> On Mon, May 22, 2023 at 05:41:19PM -0400, Martin K. Petersen wrote:
->>>>
->>>> Niklas,
->>>>
->>>>> This series adds support for Command Duration Limits.
->>>>
->>>> Applied to 6.5/scsi-staging, thanks!
->>>
->>> Thank you Martin!
->>>
->>>
->>> Damien, Martin,
->>> considering that the libata changes depend on the scsi changes,
->>> and considering that further libata EH cleanups are planned for
->>> 6.5 now when the IPR driver is gone, I think that the best move
->>> is to follow the advice of:
->>> https://docs.kernel.org/maintainer/rebasing-and-merging.html#merging-from-sibling-or-upstream-trees
->>
->> Hannes cleanup of EH will create a conflict with the scsi tree but can go in
->> through the ata tree independently so I was not planning on doing a rebase,
->> especially not on the scsi tree. I will notify Stephen about the conflict send
->> him a resolution to apply and carry for linux-next. When the 6.5 merge window
->> open, I will wait for the James to send the scsi PR and send my PR to Linus
->> after that with the conflict resolution, as usual.
+On Wed, May 17, 2023 at 04:01:47PM -0700, Kees Cook wrote:
+> On Wed, May 17, 2023 at 03:23:01PM -0600, Gustavo A. R. Silva wrote:
+> > Prefer struct_size() over open-coded versions of idiom:
+> > 
+> > sizeof(struct-with-flex-array) + sizeof(typeof-flex-array-elements) * count
+> > 
+> > where count is the max number of items the flexible array is supposed to
+> > contain.
+> > 
+> > Link: https://github.com/KSPP/linux/issues/160
+> > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> > ---
+> >  drivers/scsi/lpfc/lpfc_ct.c | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+> > index e880d127d7f5..3b95c56023bf 100644
+> > --- a/drivers/scsi/lpfc/lpfc_ct.c
+> > +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> > @@ -3748,8 +3748,7 @@ lpfc_vmid_cmd(struct lpfc_vport *vport,
+> >  		rap->obj[0].entity_id_len = vmid->vmid_len;
+> >  		memcpy(rap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
+> >  		size = RAPP_IDENT_OFFSET +
+> > -			sizeof(struct lpfc_vmid_rapp_ident_list) +
+> > -			sizeof(struct entity_id_object);
+> > +			struct_size(rap, obj, rap->no_of_objects);
 > 
-> I wasn't suggesting that you do a rebase on the scsi tree, I was
-> suggesting for a topic branch to be merged through both trees.
-> 
-> But I was just thinking how to make it as easy as possible to
-> handle additional libata patches that should go on top of the
-> CDL series (without creating conflicts for Stephen and Linus).
-> 
->>
->> So far, I do not see any big issue with that.
-> 
-> If you think that the conflicts will be trivial, feel free to
-> ignore my suggestion :)
+> Has rap->no_of_objects always been "1"? (i.e. there was a prior
+> multiplication here before...
 
-So far, the conflicts do not look bad at all. So we should be fine. Will adapt
-if needed.
+Mmh.. not sure what multiplication you are talking about. I based these
+changes on the fact that rap->no_of_objects is set to cpu_to_be32(1);
+for both instances. It doesn't show up in the context of the patch, so
+here you go:
 
-> 
-> 
-> Kind regards,
-> Niklas
+3747                 rap->no_of_objects = cpu_to_be32(1);
+3748                 rap->obj[0].entity_id_len = vmid->vmid_len;
+3749                 memcpy(rap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
+3750                 size = RAPP_IDENT_OFFSET +
+3751                         sizeof(struct lpfc_vmid_rapp_ident_list) +
+3752                         sizeof(struct entity_id_object);
 
--- 
-Damien Le Moal
-Western Digital Research
 
+--
+Gustavo
