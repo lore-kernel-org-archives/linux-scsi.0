@@ -2,75 +2,128 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20328C77B75
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 05:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAE02C7EE23
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 06:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233967AbjEWFz1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 01:55:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47402 "EHLO
+        id S234628AbjEWG2P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 02:28:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229844AbjEWFzZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 01:55:25 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96809115;
-        Mon, 22 May 2023 22:55:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=f9sp9X29rgCQutb1zyE01/AbOq
-        vvWhdCJdNJmWOTdpGbrPMqnfPwdWtXyJItgUJklC82G5xiqj0mrMp5gXWlrUyIeXR+Mo++eDaMld4
-        tWsVWKUUVdFiL9GEbmNRBORxElvBLme8vx5TTV6tYdjJ1e5eSV/VbS43P+Khj8kMOh1O1PmULkLJL
-        0OOzVdMaikHhPYDVaCp6lILsdt3BDSSS47fwmWLB1b9IJk0UQN9gdlYyugYZbkMVru3EO8fQg0G+G
-        R7W4esEGccYKZIxg5UNd3i+kRa2lJcm+3kpcPRdptBLx2RRxWT1S+kucCJVOfA0C6e6Y7HByMAMiS
-        62Q8eALw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q1Kz2-0091FK-2G;
-        Tue, 23 May 2023 05:54:56 +0000
-Date:   Mon, 22 May 2023 22:54:56 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        James Smart <james.smart@broadcom.com>,
-        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        HighPoint Linux Team <linux@highpoint-tech.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Don Brace <don.brace@microchip.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Guo Xuenan <guoxuenan@huawei.com>,
-        Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Daniel Latypov <dlatypov@google.com>,
-        kernel test robot <lkp@intel.com>,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        megaraidlinux.pdl@broadcom.com, storagedev@microchip.com,
-        linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Tales Aparecida <tales.aparecida@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] overflow: Add struct_size_t() helper
-Message-ID: <ZGxVMAa/3QOd3cRf@infradead.org>
-References: <20230522211810.never.421-kees@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230522211810.never.421-kees@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        with ESMTP id S235046AbjEWG2N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 02:28:13 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52D58138
+        for <linux-scsi@vger.kernel.org>; Mon, 22 May 2023 23:28:09 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230523062805epoutp02e71aa8fb8defd8e74e4269825dc58fa0~hsdoeWi_o0886308863epoutp02F
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 06:28:05 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230523062805epoutp02e71aa8fb8defd8e74e4269825dc58fa0~hsdoeWi_o0886308863epoutp02F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1684823286;
+        bh=cR5tXXN+QkMQaMg9/Au1EJSSPjswQSxXF8zOF6/3i0A=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=a7/k1BTqvYxASMkcg/KFWxMY7Hfa629inwzdyUAxUu6+cX/9dUht1ar5wk3KnfYL3
+         46jyKWOuLrslmwH7ObDuODVOOV2aZlES9G0FYQl1DnjqqHt02aQWbUDpDImUPCr1hS
+         8wEWhbkost2Gi6uklfXeo+dUmX3f7+dGSaGLMEdM=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20230523062805epcas2p448c1d1877a21429290438be105b14c28~hsdoArM8k2700227002epcas2p4G;
+        Tue, 23 May 2023 06:28:05 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.101]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4QQPWm5m8Bz4x9Q1; Tue, 23 May
+        2023 06:28:04 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        68.01.11450.4FC5C646; Tue, 23 May 2023 15:28:04 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230523062804epcas2p3ef5af461aac27abb52cf891bf0a7c9fb~hsdm7M-Io0207802078epcas2p3k;
+        Tue, 23 May 2023 06:28:04 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230523062804epsmtrp1300f23c279b3450570c7185a5fe84ab9~hsdm6OP220622306223epsmtrp1l;
+        Tue, 23 May 2023 06:28:04 +0000 (GMT)
+X-AuditID: b6c32a45-1dbff70000022cba-5d-646c5cf4296f
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CB.3F.28392.4FC5C646; Tue, 23 May 2023 15:28:04 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20230523062804epsmtip11289c3a06ace5ce00f9285333928a9d5~hsdmpAWbt1521615216epsmtip1l;
+        Tue, 23 May 2023 06:28:04 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, kwangwon.min@samsung.com,
+        junwoo80.lee@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v1 0/3] change UIC command handling
+Date:   Tue, 23 May 2023 15:19:07 +0900
+Message-Id: <cover.1684822284.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpgk+LIzCtJLcpLzFFi42LZdljTTPdLTE6KQe8rDYuTT9awWTyYt43N
+        4uXPq2wWBx92slhM+/CT2WL14gcsFotubGOy2PW3mcli642dLBY3txxlsbi8aw6bRff1HWwW
+        y4//Y7LounuD0WLpv7csDvwel694eyze85LJY8KiA4we39d3sHl8fHqLxaNvyypGj8+b5Dza
+        D3QzBXBEZdtkpCampBYppOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXm
+        AB2vpFCWmFMKFApILC5W0rezKcovLUlVyMgvLrFVSi1IySkwL9ArTswtLs1L18tLLbEyNDAw
+        MgUqTMjO2HlvMmvBF9aKvkuT2RsYG1m7GDk5JARMJBYvOMPYxcjFISSwg1Hiev9NZgjnE6PE
+        zOu7oZzPjBLTPh0BcjjAWk6eNYGI72KU+PtnHgvIKCGBH4wSHZONQGw2AU2JpzenMoHYIgI3
+        mCSe9IuC2MwC6hK7JpwAiwsLGEu8eDEBbCaLgKrEuSVyIGFeAQuJNWcvsUBcJydx81wn2A0S
+        Ao0cElfXXWeDSLhI/Oq8CVUkLPHq+BZ2CFtK4mV/GzvEndkSexaKQYQrJBZPewtVbiwx61k7
+        I0gJM9CZ63fpQ1QrSxy5xQJxJJ9Ex+G/UEN4JTrahCAalSV+TZrMCGFLSsy8eQdqp4fEhclN
+        TCDlQgKxEstO209glJ2FMH4BI+MqRrHUguLc9NRiowJDePwk5+duYgQnRS3XHYyT337QO8TI
+        xMF4iFGCg1lJhPdEeXaKEG9KYmVValF+fFFpTmrxIUZTYFhNZJYSTc4HpuW8knhDE0sDEzMz
+        Q3MjUwNzJXFeaduTyUIC6YklqdmpqQWpRTB9TBycUg1MUqxRxm7CNZsf/1+82WhDhsp+15yH
+        S1cZ6fX/U2SfFig5ydFLStvgYlj2jZNH+iYuLKz6s+TTuo8fdxxa+sVtVxcrK6v1hL/PH5cK
+        nJ/5mufvmwOVtzcE2y7nCnrroP7d/fUrJ53ZR6wf22T82aHVp+mruC2G8+5lKc3uclXhbdHi
+        0h7qvcz+Whx+Hg7Hjp/79+QHf+ChZYGhKod99YJNHyhH8EyPvRObbXNLeGHolIK5ZS+DXZar
+        aL5ZE5e5U+a2Y0zmjUSXrJr1TZuapaddm7M4SPOlZZnOBWOno6pOF85eXiG78n7zKaujB3rZ
+        /70r2roupmUtV9j19Uom629N3/rqq42IXefi7XqM4Ub8SizFGYmGWsxFxYkAwFRQ+xMEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCLMWRmVeSWpSXmKPExsWy7bCSnO6XmJwUg33HuS1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
+        LD/+j8mi6+4NRoul/96yOPB7XL7i7bF4z0smjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
+        P9DNFMARxWWTkpqTWZZapG+XwJWx895k1oIvrBV9lyazNzA2snYxcnBICJhInDxr0sXIxSEk
+        sINRYkv/VMYuRk6guKTEiZ3PoWxhifstR1ghir4xSky6tJ8JJMEmoCnx9OZUJpCEiMArJom5
+        /0+BdTALqEvsmnACrEhYwFjixYsJzCDbWARUJc4tkQMJ8wpYSKw5e4kFYoGcxM1zncwTGHkW
+        MDKsYpRMLSjOTc8tNiwwykst1ytOzC0uzUvXS87P3cQIDlgtrR2Me1Z90DvEyMTBeIhRgoNZ
+        SYT3RHl2ihBvSmJlVWpRfnxRaU5q8SFGaQ4WJXHeC10n44UE0hNLUrNTUwtSi2CyTBycUg1M
+        e9coHdnI8KvmakXvM86/ap7hIWanFDbYvFDqf63t6qFz8uUDP4EjDj6u/88s+LAyS0uM74Th
+        RGWm2IParldXO5WtXsA6Y1nZnradh45tuOu8juV4vLf4c/3WqAAO7de64Rs6wvym9XakSd6R
+        PyFySu6T6ak7zhEh++7fjOkp/XjLKNj++on75S4CTBtso5sd2R1qebIVHRQz18zPt12WaBEb
+        2pJ4m+/Cgefm8x7sy/uWm/ykyPxiTJb8H/NjE6/frprtxNpcwu08S3Gn/elbM2+nK13iEQzJ
+        Z35c6LSmRl7uVtjuL/viPXL8WxcYc5sfeBubuuxxJtuLTZOZmHXrLdbsj7ngzFG8TeV6dKIS
+        S3FGoqEWc1FxIgBCVcCFxwIAAA==
+X-CMS-MailID: 20230523062804epcas2p3ef5af461aac27abb52cf891bf0a7c9fb
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230523062804epcas2p3ef5af461aac27abb52cf891bf0a7c9fb
+References: <CGME20230523062804epcas2p3ef5af461aac27abb52cf891bf0a7c9fb@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good:
+There are two issues on UIC command handling related to auto hibern8.
+https://lore.kernel.org/linux-scsi/1684208012-114324-1-git-send-email-kwmad.kim@samsung.com/
+https://lore.kernel.org/linux-scsi/1684209152-115304-1-git-send-email-kwmad.kim@samsung.com/
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Now I combine the two things into this thread.
+And one thing added to make part of submitting a UIC command apart
+from the critical section w/ host_lock.
+
+Kiwoong Kim (3):
+  ufs: make __ufshcd_send_uic_cmd not wrapped by host_lock
+  ufs: poll HCS.UCRDY before issuing a UIC command
+  ufs: poll pmc until another pa request is completed
+
+ drivers/ufs/core/ufshcd.c | 109 ++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 77 insertions(+), 32 deletions(-)
+
+-- 
+2.7.4
+
