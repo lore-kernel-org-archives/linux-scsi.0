@@ -2,99 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A7CC77B73
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 01:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F765C7EE26
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 01:21:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235243AbjEWBBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 May 2023 21:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56918 "EHLO
+        id S233430AbjEWBVI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 May 2023 21:21:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234560AbjEWBAo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 21:00:44 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83ACC196;
-        Mon, 22 May 2023 17:58:34 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id 41be03b00d2f7-534696e4e0aso3863748a12.0;
-        Mon, 22 May 2023 17:58:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684803514; x=1687395514;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=m/TN5H2z3LpXN/tgkrSVUCXuSpR0rK3XhYwk0PjuaCI=;
-        b=SIwN3J9dLeEEUFNtNtwBysRaT7B//5MeVsP8eyBLenB9tLtdAzIMNcTrapemETi0lu
-         f1Cl5tIL63VPLJx5Q4LKuB75//+F2jh8mbJ1zUsBqcsOwmUTvolshbVb+UArw5bCYJtY
-         nR1UAg5TqImG47wr6VeaWs+oPgbunaMFFcpx8C/tHeyQ/jMkpa1LLA81tlUTjMNy6v2/
-         1bOMr1PAY2Xg/TarKOHVxPAf+Z2BhYkonq/Nr8yStZ8kZqgFN9B1CoCX5shd0QpEz5ee
-         UrceODeCBkUTnIcd7TCgqTiKbZatsGgAWuIqz2+pdr8856jkJI9JgitwY0ks2V4JS5C0
-         JAIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684803514; x=1687395514;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=m/TN5H2z3LpXN/tgkrSVUCXuSpR0rK3XhYwk0PjuaCI=;
-        b=Yzx57jCBkXQV8S8HGN/lKMLGWqhGyEX8IsxuZvjAuS1JRuOlCOlJiCz0K6ekwA2o1A
-         q25gtVnHlNyL/2bV6ua+E7EF1/4LHm3uXkxpSS9jN/Vmsyl3YhMI9zOFL7gcq0JaGgxI
-         X0cVGNoM6RfRjT4kM3pwB1mpZQS7mO/xhXl56UsAY1UhYjFeX5kycaBtslCf6HSYEBY3
-         9Vr31tx3KNg9w7jtToyNxunXjbwTFQdORn9/wgTPZCJIiAYqojRvtbAH4syttrgxnY/k
-         ZuT5c15PaanB8hEW0X01/eD75s+fsViRpXEAvuZHDaF+Ef+m7En1ILJKf9zCNjmdO5Xh
-         AlAg==
-X-Gm-Message-State: AC+VfDwvJXIBeqUI00hfgsQr8m42Mu75/37kQp0hPIg+VAEowBZ/7qSv
-        2wv4gnO7KyEYUgBJsf+Yq5o=
-X-Google-Smtp-Source: ACHHUZ5pW0WgPZKvATk/xZ1Socp7ec7BFUpiko1vlkAvxBEG7EBNK6x9a9f/nA9U72TmTSC+B7koQQ==
-X-Received: by 2002:a17:902:c153:b0:1ac:988e:2624 with SMTP id 19-20020a170902c15300b001ac988e2624mr13628616plj.37.1684803513520;
-        Mon, 22 May 2023 17:58:33 -0700 (PDT)
-Received: from localhost ([2620:10d:c090:400::5:39c])
-        by smtp.gmail.com with ESMTPSA id i1-20020a635401000000b0051b36aee4f6sm4914044pgb.83.2023.05.22.17.58.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 May 2023 17:58:33 -0700 (PDT)
-Sender: Tejun Heo <htejun@gmail.com>
-Date:   Mon, 22 May 2023 14:58:31 -1000
-From:   Tejun Heo <tj@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     jiangshanlai@gmail.com, linux-kernel@vger.kernel.org,
-        kernel-team@meta.com, Finn Thain <fthain@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RESEND 01/13] scsi: ncr53c8xx: Use default @max_active
- for hostdata->work_q
-Message-ID: <ZGwPt4VNs1RhWpvn@slm.duckdns.org>
-References: <20230509015032.3768622-1-tj@kernel.org>
- <20230509015032.3768622-2-tj@kernel.org>
- <ZGmGZxYmN0En7wAB@slm.duckdns.org>
- <yq1v8gkm3aq.fsf@ca-mkp.ca.oracle.com>
+        with ESMTP id S229477AbjEWBVH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 21:21:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFA2693;
+        Mon, 22 May 2023 18:21:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 435DA61990;
+        Tue, 23 May 2023 01:21:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FA92C433EF;
+        Tue, 23 May 2023 01:21:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684804865;
+        bh=yFQuG1ghxykUNbtOvy6MwI9xsYMH1cMEJOySRSZyp10=;
+        h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+        b=TVr/EPGOzgmSjA8a8vnrObQ2AQ5HFImBw3O1HSLT9mRjqlpHf7NvT6AExfWi+PRga
+         a+ZGU8do5SIBoxBQ5bCxmhsVlZiJ4tuwCke9A37Zawq/qf+GMHcqB+snt/7MISCf6+
+         haDcLPqGtyo30V4Qte9lqm9wmbZzEimLXnzw8NmNgzLyDO2mEcPcyEOHrwyowYgwes
+         4RBHhl1MXE3i8FKfOb4lVSatp187gEEwLqSyYDSl0tP05ecl/B0pkOHN7Go9H74VXM
+         UdBFwl9XAT9qS+TCmpxpE87RsTHbmTzgT5YSeYTDYOxQgprvD0ntyxomOtn1wfeBqC
+         LFpjkZUPvwspQ==
+Date:   Mon, 22 May 2023 18:21:02 -0700
+From:   Kees Cook <kees@kernel.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kees Cook <keescook@chromium.org>
+CC:     azeemshaikh38@gmail.com, Adam Radford <aradford@gmail.com>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jejb@linux.ibm.com,
+        linux-hardening@vger.kernel.org
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH=5D_scsi=3A_3w-9xxx=3A_Replace_a?= =?US-ASCII?Q?ll_non-returning_strlcpy_with_strscpy?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <yq18rdgm1mo.fsf@ca-mkp.ca.oracle.com>
+References: <20230517142955.1519572-1-azeemshaikh38@gmail.com> <168478437626.244538.8257051598276343700.b4-ty@chromium.org> <yq18rdgm1mo.fsf@ca-mkp.ca.oracle.com>
+Message-ID: <A8157E92-E340-4031-8054-378728CC5BD4@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq1v8gkm3aq.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 22, 2023 at 06:06:56PM -0400, Martin K. Petersen wrote:
-> 
-> Hi Tejun!
-> 
-> > Subject: scsi: ncr53c8xx: Use default @max_active for hostdata->work_q
-> >
-> > hostdata->work_q only hosts a single work item, hostdata->main_task, and
-> > thus doesn't need explicit concurrency limit. Let's use the default
-> > @max_active. This doesn't cost anything and clearly expresses that
-> > @max_active doesn't matter.
-> 
-> > It's not a must but it'd be great if I can route this through the workqueue
-> > tree so that it can go together with other related and followup cleanups.
-> 
-> As Finn pointed out, please make sure it's tagged NCR5380: instead of
-> ncr53c8xx:. Otherwise OK.
-> 
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+On May 22, 2023 3:41:58 PM PDT, "Martin K=2E Petersen" <martin=2Epetersen@o=
+racle=2Ecom> wrote:
+>
+>Kees,
+>
+>> On Wed, 17 May 2023 14:29:55 +0000, Azeem Shaikh wrote:
+>>> strlcpy() reads the entire source buffer first=2E
+>>> This read may exceed the destination size limit=2E
+>>> This is both inefficient and can lead to linear read
+>>> overflows if a source string is not NUL-terminated [1]=2E
+>>> In an effort to remove strlcpy() completely [2], replace
+>>> strlcpy() here with strscpy()=2E
+>>> No return values were used, so direct replacement is safe=2E
+>>>=20
+>>> [=2E=2E=2E]
+>>
+>> Applied to for-next/hardening, thanks!
+>>
+>> [1/1] scsi: 3w-9xxx: Replace all non-returning strlcpy with strscpy
+>>       https://git=2Ekernel=2Eorg/kees/c/fa36c95739ab
+>
+>Are you planning on sending these? That's fine with me, just need to
+>know if I should close them in patchwork=2E=2E=2E
 
-Will update and apply to wq/for-6.5-cleanup-ordered.
+Yeah, I took a bunch that hadn't been picked up yet:
+https://git=2Ekernel=2Eorg/pub/scm/linux/kernel/git/kees/linux=2Egit/log/?=
+h=3Dfor-next/hardening
 
-Thank you.
+Thanks!
 
--- 
-tejun
+
+--=20
+Kees Cook
