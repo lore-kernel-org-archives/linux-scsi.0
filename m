@@ -2,100 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9871CC77B75
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 18:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FA0C7EE26
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 18:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235790AbjEWSWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 14:22:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34550 "EHLO
+        id S236376AbjEWSWO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 14:22:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229564AbjEWSWF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 14:22:05 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3677691
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:04 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1ae4e6825e1so6218655ad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:04 -0700 (PDT)
+        with ESMTP id S229564AbjEWSWN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 14:22:13 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D890E5
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:12 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1ae4048627aso6257325ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 11:22:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684866123; x=1687458123;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=JLdgcRhIWDXITIzobcpfee8WCCpviV3G9d4UE/Vyj6c=;
-        b=W9IyklSnn6gtZj6q04/6Ec2V8rWr9rgrhg3TLYNV/O6lMiGi8b429brBVAYTYOQqi7
-         PVz7KHsUct/LAC9WDRbag3JF/MSx8PkmZPKKU8o+MAKydQwwlj9VOCIkiUGwx76mPMTl
-         Fl7CTUA6iSbCNASaoW06tbzVfoGkfsMcXIEsoRPyRRVbHbTqMqz1UKT90w2/a7DV5udS
-         BuBxQ50hMr3UwEnDSIioalw4t18EWhwvKNTELCQ2QiSlgbfcwNI2nwnCpxPKcjthZyhT
-         gAg3hFdclZwx8pDiOrd3AVL7c08FOSaOqDaQdhl7o0dGWSNm7bZwSX7dYVDVXA7uYATZ
-         mbwg==
+        d=gmail.com; s=20221208; t=1684866131; x=1687458131;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jgcGzZlXCGd3bc0jRl53WVeei9tpamQ4JEm5NYxlArY=;
+        b=j/OtVarv1TgQQf/CzhwiHGZPlrSipzn0P3g5c9xeVqBDcofogd9s03Uf5TLVVCDyQ2
+         3iLT+7J/PBdidJVreP+2oGSpFTqPccYBf2dyAJZEqyN3g60WNLsKSEzML5Gq8ZglnoAR
+         JogaW2m6ttGqOAkrkdqWGgGayLAxMQ/Zm22cUPgVWRLLITx2AqcEuQcyr7ejlOShJI6s
+         HBI0W6MhTHvPh6uRuJExPu5TPprWpElzk+N1lpXVnznPfdtHyza892kDEkHNcs0jzgOy
+         HQa1o6QdTcAm6u4lpbvszWIdjVZSGCU9pdu0spPGcg4qrOkkhmjBnHXbidwYCxPG8qF6
+         LTHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684866123; x=1687458123;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=JLdgcRhIWDXITIzobcpfee8WCCpviV3G9d4UE/Vyj6c=;
-        b=dybyG1GnxkfwZjnuTbvIQ2xz+4r+27CtG0xBRqA4w7ZDVuXWi2cph22NCnHhe6mWRG
-         uFQctk9I101Ot4IoV+zxtx17+NpKYC5WO4fnp1nZtdhBcsZZaN73b20LhppPvY+2viq0
-         d8L05p+uAukX55U0Gs22eLYh01Ht8n5Sqvsv3N6Lk/qpjebXUOOwTbHq7cCWR1BEzpxW
-         2d8bca8rZsCkkursicu4SeBcOFUQN4JPWhIir/xPCsdII57ceQimIbEh4/DmJmeu8OCK
-         dvZD/i+/qWJYJTpBlCDRsl7j+At9mHm9ju1V2xqhbv/ga642APJJRWMOl1YM0nPQW6fM
-         Ep3A==
-X-Gm-Message-State: AC+VfDyvIyqlcvmRYA4WpY/Amjt95M3qcQQBNLiBisx0Xgpgvco8o49h
-        wlHMDwtK1yuzY51fsQdU78GDj0RGt88=
-X-Google-Smtp-Source: ACHHUZ5gMgpqbN8hv7HKMny7M0leZhUHFnC1LQmJE0r/Zs7ODmAV0zKFaGNkLKDPbSLvZ3kMKL7ghQ==
-X-Received: by 2002:a17:903:22ca:b0:1a6:6bdb:b548 with SMTP id y10-20020a17090322ca00b001a66bdbb548mr16214108plg.1.1684866123269;
-        Tue, 23 May 2023 11:22:03 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1684866131; x=1687458131;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jgcGzZlXCGd3bc0jRl53WVeei9tpamQ4JEm5NYxlArY=;
+        b=ZmrYzlbau6PhasLC2WQ/uMu9782yYsoPHGaNrGV2HS65pzn1xfCZP08dNMfbS1s426
+         OL6GBc+TAZ9qyiicRc1v2AT8IrW7C7HALrw2AFQR9pALI6wWaTZuRX3L+J75KpifkYIe
+         XH0FnzdW5cqyCgH/xSL6A9rgy+uVjPpsgb439yFSWsA9ZnBmGDDR2FUKdXgbezn5eJA9
+         j6pbSC8SgNwVWRBJn8wL5z94xOPBxwR2W3FuC7eDrfCbV9q1V0nAWgBveuFnfpKTshm8
+         NBoE8seWevsjI0jwpis6bYRVP0jnTV3USKkWP7FOYrMHlpprc7m95zAsXK8t4NoKp6pn
+         ikUw==
+X-Gm-Message-State: AC+VfDy9u41dibpbcb4qYI7Zl9FCnfo6RZPxJGUOalfu6SlL3w9cbOvn
+        ksLr6w8lG2SkEfoPxnSiAOzfbPxds48=
+X-Google-Smtp-Source: ACHHUZ7QVlGGWvpp5wVyHVDkyKZJeZUWLoVWnOj53jpeNOGBwERAwIZfnTVbK6eJbJxo1dOleb91IA==
+X-Received: by 2002:a17:903:32c3:b0:1ae:3dcf:ecf3 with SMTP id i3-20020a17090332c300b001ae3dcfecf3mr16426294plr.6.1684866131385;
+        Tue, 23 May 2023 11:22:11 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w10-20020a170902e88a00b001a687c505e9sm7070870plg.237.2023.05.23.11.22.02
+        by smtp.gmail.com with ESMTPSA id w10-20020a170902e88a00b001a687c505e9sm7070870plg.237.2023.05.23.11.22.10
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 May 2023 11:22:02 -0700 (PDT)
+        Tue, 23 May 2023 11:22:10 -0700 (PDT)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
         Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 0/9] lpfc: Update lpfc to revision 14.2.0.13
-Date:   Tue, 23 May 2023 11:31:57 -0700
-Message-Id: <20230523183206.7728-1-justintee8345@gmail.com>
+Subject: [PATCH 1/9] lpfc: Fix use-after-free rport memory access in lpfc_register_remote_port
+Date:   Tue, 23 May 2023 11:31:58 -0700
+Message-Id: <20230523183206.7728-2-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20230523183206.7728-1-justintee8345@gmail.com>
+References: <20230523183206.7728-1-justintee8345@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update lpfc to revision 14.2.0.13
+Due to a target port D_ID swap, it is possible for the
+lpfc_register_remote_port routine to touch post mortem fc_rport memory when
+trying to access fc_rport->dd_data.
 
-This patch set contains discovery bug fixes, firmware logging improvements,
-clean up of CQ handling, and statistics collection enhancements.
+The D_ID swap causes a simultaneous call to lpfc_unregister_remote_port,
+where fc_remote_port_delete reclaims fc_rport memory.
 
-The patches were cut against Martin's 6.5/scsi-queue tree.
+Remove the fc_rport->dd_data->pnode NULL assignment because the following
+line reassigns ndlp->rport with an fc_rport object from fc_remote_port_add
+anyways.  The pnode nullification is superfluous.
 
-Justin Tee (9):
-  lpfc: Fix use-after-free rport memory access in
-    lpfc_register_remote_port
-  lpfc: Clear NLP_IN_DEV_LOSS flag if already in rediscovery
-  lpfc: Account for fabric domain ctlr device loss recovery
-  lpfc: Revise NPIV ELS unsol rcv cmpl logic to drop ndlp based on
-    nlp_state
-  lpfc: Change firmware upgrade logging to KERN_NOTICE instead of
-    TRACE_EVENT
-  lpfc: Clean up SLI-4 CQE status handling
-  lpfc: Enhance congestion statistics collection
-  lpfc: Update lpfc version to 14.2.0.13
-  lpfc: Copyright updates for 14.2.0.13 patches
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
- drivers/scsi/lpfc/lpfc.h         |  65 +++-----
- drivers/scsi/lpfc/lpfc_els.c     |  14 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c |  33 ++--
- drivers/scsi/lpfc/lpfc_hw4.h     |   3 -
- drivers/scsi/lpfc/lpfc_init.c    | 250 +++++++++----------------------
- drivers/scsi/lpfc/lpfc_logmsg.h  |   6 +-
- drivers/scsi/lpfc/lpfc_nvme.c    |  17 ++-
- drivers/scsi/lpfc/lpfc_nvmet.c   |   6 +-
- drivers/scsi/lpfc/lpfc_scsi.c    |  65 ++++----
- drivers/scsi/lpfc/lpfc_sli.c     |  54 +++----
- drivers/scsi/lpfc/lpfc_version.h |   2 +-
- 11 files changed, 195 insertions(+), 320 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 67bfdddb897c..63e42e3f2165 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -4498,14 +4498,6 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	if (vport->load_flag & FC_UNLOADING)
+ 		return;
+ 
+-	/*
+-	 * Disassociate any older association between this ndlp and rport
+-	 */
+-	if (ndlp->rport) {
+-		rdata = ndlp->rport->dd_data;
+-		rdata->pnode = NULL;
+-	}
+-
+ 	ndlp->rport = rport = fc_remote_port_add(shost, 0, &rport_ids);
+ 	if (!rport) {
+ 		dev_printk(KERN_WARNING, &phba->pcidev->dev,
 -- 
 2.38.0
 
