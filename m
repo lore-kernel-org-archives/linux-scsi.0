@@ -2,75 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F26C7EE2E
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 May 2023 23:12:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A7CC77B73
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 01:01:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232426AbjEVXMc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 May 2023 19:12:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59376 "EHLO
+        id S235243AbjEWBBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 May 2023 21:01:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232262AbjEVXMb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 19:12:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A465EA7;
-        Mon, 22 May 2023 16:12:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 397C762CA5;
-        Mon, 22 May 2023 23:12:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B2B6C433D2;
-        Mon, 22 May 2023 23:12:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684797149;
-        bh=99kPGD3M7DQzlajQDUrP8KoLC8rGnM1kR91USoH29aw=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=g6YvxGgM1XECOca1RBlSuAMOQBCyvnnMhoT0ulF9OStij6dDQWuk87L6KvKX3Aw//
-         Je3MDR71outThUTIA0kwih/RioU5SxL+15TZw2cl2pJBgIqUFDyf/XBc7dQdfVcS/q
-         BbjRSyiFEtTOrbTn5jSENaUVpGdsdFEJy7miP1iA6rIiydBlY1ynKBJs9qd67juW4j
-         vSjbkjmk6h3IMbdGtPZCC99byFri2CMoNBcnlhjGb9hKZMKmTa53TIuqZv5GIsZMSy
-         dprucPPyxHJu/Tw37hH+1hWvRBwIWDRHcn+QItu8Pk2dbDQzJwlwrvc2KOh/I/WXw5
-         F7Bt+rDOagnzA==
-Message-ID: <dfbe04fc-7884-7cee-70ad-5fadac18a575@kernel.org>
-Date:   Tue, 23 May 2023 08:12:27 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v7 00/19] Add Command Duration Limits support
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Niklas Cassel <nks@flawful.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Paolo Valente <paolo.valente@linaro.org>,
+        with ESMTP id S234560AbjEWBAo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2023 21:00:44 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83ACC196;
+        Mon, 22 May 2023 17:58:34 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id 41be03b00d2f7-534696e4e0aso3863748a12.0;
+        Mon, 22 May 2023 17:58:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1684803514; x=1687395514;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=m/TN5H2z3LpXN/tgkrSVUCXuSpR0rK3XhYwk0PjuaCI=;
+        b=SIwN3J9dLeEEUFNtNtwBysRaT7B//5MeVsP8eyBLenB9tLtdAzIMNcTrapemETi0lu
+         f1Cl5tIL63VPLJx5Q4LKuB75//+F2jh8mbJ1zUsBqcsOwmUTvolshbVb+UArw5bCYJtY
+         nR1UAg5TqImG47wr6VeaWs+oPgbunaMFFcpx8C/tHeyQ/jMkpa1LLA81tlUTjMNy6v2/
+         1bOMr1PAY2Xg/TarKOHVxPAf+Z2BhYkonq/Nr8yStZ8kZqgFN9B1CoCX5shd0QpEz5ee
+         UrceODeCBkUTnIcd7TCgqTiKbZatsGgAWuIqz2+pdr8856jkJI9JgitwY0ks2V4JS5C0
+         JAIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684803514; x=1687395514;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=m/TN5H2z3LpXN/tgkrSVUCXuSpR0rK3XhYwk0PjuaCI=;
+        b=Yzx57jCBkXQV8S8HGN/lKMLGWqhGyEX8IsxuZvjAuS1JRuOlCOlJiCz0K6ekwA2o1A
+         q25gtVnHlNyL/2bV6ua+E7EF1/4LHm3uXkxpSS9jN/Vmsyl3YhMI9zOFL7gcq0JaGgxI
+         X0cVGNoM6RfRjT4kM3pwB1mpZQS7mO/xhXl56UsAY1UhYjFeX5kycaBtslCf6HSYEBY3
+         9Vr31tx3KNg9w7jtToyNxunXjbwTFQdORn9/wgTPZCJIiAYqojRvtbAH4syttrgxnY/k
+         ZuT5c15PaanB8hEW0X01/eD75s+fsViRpXEAvuZHDaF+Ef+m7En1ILJKf9zCNjmdO5Xh
+         AlAg==
+X-Gm-Message-State: AC+VfDwvJXIBeqUI00hfgsQr8m42Mu75/37kQp0hPIg+VAEowBZ/7qSv
+        2wv4gnO7KyEYUgBJsf+Yq5o=
+X-Google-Smtp-Source: ACHHUZ5pW0WgPZKvATk/xZ1Socp7ec7BFUpiko1vlkAvxBEG7EBNK6x9a9f/nA9U72TmTSC+B7koQQ==
+X-Received: by 2002:a17:902:c153:b0:1ac:988e:2624 with SMTP id 19-20020a170902c15300b001ac988e2624mr13628616plj.37.1684803513520;
+        Mon, 22 May 2023 17:58:33 -0700 (PDT)
+Received: from localhost ([2620:10d:c090:400::5:39c])
+        by smtp.gmail.com with ESMTPSA id i1-20020a635401000000b0051b36aee4f6sm4914044pgb.83.2023.05.22.17.58.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 May 2023 17:58:33 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Mon, 22 May 2023 14:58:31 -1000
+From:   Tejun Heo <tj@kernel.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     jiangshanlai@gmail.com, linux-kernel@vger.kernel.org,
+        kernel-team@meta.com, Finn Thain <fthain@linux-m68k.org>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230511011356.227789-1-nks@flawful.org>
- <yq1h6s4nix8.fsf@ca-mkp.ca.oracle.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <yq1h6s4nix8.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RESEND 01/13] scsi: ncr53c8xx: Use default @max_active
+ for hostdata->work_q
+Message-ID: <ZGwPt4VNs1RhWpvn@slm.duckdns.org>
+References: <20230509015032.3768622-1-tj@kernel.org>
+ <20230509015032.3768622-2-tj@kernel.org>
+ <ZGmGZxYmN0En7wAB@slm.duckdns.org>
+ <yq1v8gkm3aq.fsf@ca-mkp.ca.oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1v8gkm3aq.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/23/23 06:41, Martin K. Petersen wrote:
+On Mon, May 22, 2023 at 06:06:56PM -0400, Martin K. Petersen wrote:
 > 
-> Niklas,
+> Hi Tejun!
 > 
->> This series adds support for Command Duration Limits.
+> > Subject: scsi: ncr53c8xx: Use default @max_active for hostdata->work_q
+> >
+> > hostdata->work_q only hosts a single work item, hostdata->main_task, and
+> > thus doesn't need explicit concurrency limit. Let's use the default
+> > @max_active. This doesn't cost anything and clearly expresses that
+> > @max_active doesn't matter.
 > 
-> Applied to 6.5/scsi-staging, thanks!
+> > It's not a must but it'd be great if I can route this through the workqueue
+> > tree so that it can go together with other related and followup cleanups.
 > 
+> As Finn pointed out, please make sure it's tagged NCR5380: instead of
+> ncr53c8xx:. Otherwise OK.
+> 
+> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Thanks Martin !
+Will update and apply to wq/for-6.5-cleanup-ordered.
 
+Thank you.
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+tejun
