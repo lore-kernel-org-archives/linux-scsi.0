@@ -2,127 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 513C7C77B75
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 17:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E69C7EE2D
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 May 2023 17:28:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237995AbjEWRKc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 May 2023 13:10:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45132 "EHLO
+        id S237843AbjEWR17 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 May 2023 13:27:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbjEWRKb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 13:10:31 -0400
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1759C2
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 10:10:29 -0700 (PDT)
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-64d3491609fso3476270b3a.3
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 10:10:29 -0700 (PDT)
+        with ESMTP id S237760AbjEWR14 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2023 13:27:56 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 935F41A7
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 10:27:52 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-64d604cc0aaso13591b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2023 10:27:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1684862872; x=1687454872;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=v73SNWkJH3oIBfAgDFu9oHuE573I+sUvec66+59twXo=;
+        b=e2z3Kg3pPBYPGUfrCD+XwFdRW9xZfNyCbg2bb0DXZFzDjqKkk8/aCdUxFSRmxvwqBI
+         omNhossXs9KI4w2k0bWuEppgH7brABawOb3OYUCcBgrtQZ7Gq1dULK1tIIX3JunmGeG9
+         IxooEGBc4NR7zMYGNXVZz7G77MuzJ00JgtWRQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684861829; x=1687453829;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jo3xjFpBnr/x+nMMb7I2cW6M50SJXTKNdeEsLZBNoCc=;
-        b=fGCjMsFIysDHVqmqy72YmOgCTmO9UOCEdAgVGliqiADw5vZOlmYMqS1DUVA5k5UXGk
-         +qKqyDB+pY5Z5SzO5EoR3o+W6QYkALE5K86HSwWfK2Nbjk7s2LLxILIk1tgvUgjN/lc8
-         ZsSN2i3gymPMs5GVQ5PBDhugKxSCEjaHHURlPIkO8mFFELNjVR6EbKu4w1fDtPOOEJbv
-         rcXn6kDbg9RgngEQjj2NiIgLPUo/SDhtHuIsZUT82VQtNivZohJgyo6HCGy4O9ikFMjt
-         HfyrSKUKjwjKe9GNKoZmeyVH/qZEYv+4xLxCvMvHxWgB9EBWyZsQa1uei/n5bea77y1R
-         IMxQ==
-X-Gm-Message-State: AC+VfDx3rQnxb2KuVNF6dQq0OI1gOiquASMVm5pkEhcHNbemRoiSpnKt
-        5p62K/dFBAyYGm7N1HmtXNc=
-X-Google-Smtp-Source: ACHHUZ6MVQ9Aiu++oj2PpnzMrIfmg5mlTiZ2ppwBoS3o8J2CncQ9Ut1iBE7J31uQwUJXekFuXbefmg==
-X-Received: by 2002:a05:6a00:a14:b0:647:2ce5:57c4 with SMTP id p20-20020a056a000a1400b006472ce557c4mr20664557pfh.5.1684861828752;
-        Tue, 23 May 2023 10:10:28 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:24d2:69cd:ef9a:8f83? ([2620:15c:211:201:24d2:69cd:ef9a:8f83])
-        by smtp.gmail.com with ESMTPSA id f20-20020aa782d4000000b00634dde2992bsm5982488pfn.132.2023.05.23.10.10.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 May 2023 10:10:28 -0700 (PDT)
-Message-ID: <343be0eb-0650-cc5e-3154-ffe30f92c17d@acm.org>
-Date:   Tue, 23 May 2023 10:10:26 -0700
+        d=1e100.net; s=20221208; t=1684862872; x=1687454872;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=v73SNWkJH3oIBfAgDFu9oHuE573I+sUvec66+59twXo=;
+        b=E1s5bhCICHtNHqdeHvjHaBDNZj51q/H06dtJQ0mXA6ftDogy+ivcDNTlY4BZSHWxrs
+         O2S2AnojTrx/B2qkQ7Xt2hSD5MblICoEZuNvqTpJ6GpTlskGkFUao8fZ+YHsxWhmSLUj
+         rwp+hvJhbcPswZh745rXZYn99CAmeYN4Y2B8ejJ46fSIcUWGafimAi+7H+gWWLLRpcgT
+         jrXVXJapDStId6q/y0peeCfxa+C0df5FlAEP6utId2PVZix29j0DotdzS0ZiUExVMUFa
+         /gjLAuWaJH5gUngm7igIKkD/xoWPb7OiHUb4QF5GwHkiViyA6x2gjoBHdQSJJnMHcZNJ
+         8IdQ==
+X-Gm-Message-State: AC+VfDyeb+OW89E0EkSUdtHO1lNyVa1N+lskX4fWKo1geAxIO/OfrJaK
+        OhWe1A2pe/e8b4oIEcu/A6zDWLHLo2o/q4CPhGY=
+X-Google-Smtp-Source: ACHHUZ5Xdk89VGymw7Iyy95VEjMiZMV432tMAIVjPE0sOuBGYOXzvURg046DkfzdvUECWza0gKecUA==
+X-Received: by 2002:a05:6a20:3d83:b0:104:bd18:9857 with SMTP id s3-20020a056a203d8300b00104bd189857mr18080676pzi.11.1684862871990;
+        Tue, 23 May 2023 10:27:51 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id x7-20020a62fb07000000b0063d670ad850sm6182343pfm.92.2023.05.23.10.27.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 May 2023 10:27:51 -0700 (PDT)
+Date:   Tue, 23 May 2023 10:27:51 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 2/2][next] scsi: lpfc: Use struct_size() helper
+Message-ID: <202305231026.594B2F913D@keescook>
+References: <cover.1684358315.git.gustavoars@kernel.org>
+ <99e06733f5f35c6cd62e05f530b93107bfd03362.1684358315.git.gustavoars@kernel.org>
+ <202305171601.B3FF9D0BB@keescook>
+ <ZGzQt2VFG4P/Vufn@work>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v2 3/4] scsi: ufs: Enable the BLK_MQ_F_BLOCKING flag
-Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20230517222359.1066918-1-bvanassche@acm.org>
- <20230517222359.1066918-4-bvanassche@acm.org>
- <957fb6d6-83db-6230-d81c-646e12ed7bf1@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <957fb6d6-83db-6230-d81c-646e12ed7bf1@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZGzQt2VFG4P/Vufn@work>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/23/23 09:39, Adrian Hunter wrote:
-> On 18/05/23 01:23, Bart Van Assche wrote:
->> Prepare for adding code in ufshcd_queuecommand() that may sleep.
->>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> ---
->>   drivers/ufs/core/ufshcd.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 7ee150d67d49..993034ac1696 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -8756,6 +8756,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
->>   	.max_host_blocked	= 1,
->>   	.track_queue_depth	= 1,
->>   	.skip_settle_delay	= 1,
->> +	.queuecommand_may_block = true,
+On Tue, May 23, 2023 at 08:41:59AM -0600, Gustavo A. R. Silva wrote:
+> On Wed, May 17, 2023 at 04:01:47PM -0700, Kees Cook wrote:
+> > On Wed, May 17, 2023 at 03:23:01PM -0600, Gustavo A. R. Silva wrote:
+> > > Prefer struct_size() over open-coded versions of idiom:
+> > > 
+> > > sizeof(struct-with-flex-array) + sizeof(typeof-flex-array-elements) * count
+> > > 
+> > > where count is the max number of items the flexible array is supposed to
+> > > contain.
+> > > 
+> > > Link: https://github.com/KSPP/linux/issues/160
+> > > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> > > ---
+> > >  drivers/scsi/lpfc/lpfc_ct.c | 6 ++----
+> > >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+> > > index e880d127d7f5..3b95c56023bf 100644
+> > > --- a/drivers/scsi/lpfc/lpfc_ct.c
+> > > +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> > > @@ -3748,8 +3748,7 @@ lpfc_vmid_cmd(struct lpfc_vport *vport,
+> > >  		rap->obj[0].entity_id_len = vmid->vmid_len;
+> > >  		memcpy(rap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
+> > >  		size = RAPP_IDENT_OFFSET +
+> > > -			sizeof(struct lpfc_vmid_rapp_ident_list) +
+> > > -			sizeof(struct entity_id_object);
+> > > +			struct_size(rap, obj, rap->no_of_objects);
+> > 
+> > Has rap->no_of_objects always been "1"? (i.e. there was a prior
+> > multiplication here before...
 > 
-> Shouldn't this only be for controllers that support
-> clock gating?
+> Mmh.. not sure what multiplication you are talking about. I based these
+> changes on the fact that rap->no_of_objects is set to cpu_to_be32(1);
+> for both instances. It doesn't show up in the context of the patch, so
+> here you go:
+> 
+> 3747                 rap->no_of_objects = cpu_to_be32(1);
 
-Hi Adrian,
+Ah-ha! So, yeah, this patch is bad then, since no_of_objects will be a
+big-endian "1".
 
-The overhead of BLK_MQ_F_BLOCKING is small relative to the time required to
-queue a UFS command so I think enabling BLK_MQ_F_BLOCKING for all UFS host
-controllers is fine. BLK_MQ_F_BLOCKING causes the block layer to use SRCU
-instead of RCU. The cost of the sleepable RCU primitives is dominated by
-the memory barrier (smp_mb()) in the srcu_read_lock() and srcu_read_unlock()
-calls. From kernel/rcu/srcutree.c:
+This change:
 
-int __srcu_read_lock(struct srcu_struct *ssp)
-{
-	int idx;
++			struct_size(rap, obj, rap->no_of_objects);
 
-	idx = READ_ONCE(ssp->srcu_idx) & 0x1;
-	this_cpu_inc(ssp->sda->srcu_lock_count[idx].counter);
-	smp_mb(); /* B */  /* Avoid leaking the critical section. */
-	return idx;
-}
-EXPORT_SYMBOL_GPL(__srcu_read_lock);
+needs to explicitly be:
 
-void __srcu_read_unlock(struct srcu_struct *ssp, int idx)
-{
-	smp_mb(); /* C */  /* Avoid leaking the critical section. */
-	this_cpu_inc(ssp->sda->srcu_unlock_count[idx].counter);
-}
-EXPORT_SYMBOL_GPL(__srcu_read_unlock);
++			struct_size(rap, obj, 1);
 
-The rcu_read_lock() and rcu_read_lock() implementations do not call
-smp_mb() as one can see in include/linux/rcupdate.h:
+Or, alternatively, just drop the patch entirely.
 
-static inline void __rcu_read_lock(void)
-{
-	preempt_disable();
-}
-
-static inline void __rcu_read_unlock(void)
-{
-	preempt_enable();
-	if (IS_ENABLED(CONFIG_RCU_STRICT_GRACE_PERIOD))
-		rcu_read_unlock_strict();
-}
-
-Thanks,
-
-Bart.
-
+-- 
+Kees Cook
