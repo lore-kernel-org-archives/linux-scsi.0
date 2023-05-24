@@ -2,328 +2,150 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2B5C77B7A
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 20:38:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE909C77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 23:34:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231861AbjEXUiE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 May 2023 16:38:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42674 "EHLO
+        id S233601AbjEXXeW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 May 2023 19:34:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229565AbjEXUiD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 16:38:03 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D8D710B
-        for <linux-scsi@vger.kernel.org>; Wed, 24 May 2023 13:38:01 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-64d41d8bc63so1127308b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 24 May 2023 13:38:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684960681; x=1687552681;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EPgN+x11j9c7CWViTXwWdIynoIvPviij1iooN8SHTFo=;
-        b=feRIZICVfOxrsKuiozoHtp8qJm0Cq7IDCH7hT6RClzovhhVIZZfdzyw9cKCTIxxffM
-         bdcgu+7J93xdiETuehiyr+LhK0AwWhCzyH6KNWKpwjb72nAQXB+OCpUx0F6ENmj2DpjB
-         LHmHbgAyIadVSPYPT9Ca7gvkkcyeHU9MIjLQ7GsuyleDTpdEyJfTyoDu7WeIh8XuIWbV
-         HFiXIh98MBZSfr9fXu6rAWDNGITKf/3Fq3STab+I8HKMR91Pp6oJ+J419X1dPP7D7TQB
-         2fPscZ3Sz9lrNd8BZasECaxSQey3vvc8DwgfkMbwjvZNJD80iDUnBd9YXYrNsFShz5Mw
-         L7YA==
-X-Gm-Message-State: AC+VfDwxvn7+AU9rOo4CSUhNPBvxn7NFGqPT8hTs7LBIZe4RKHRFynJ5
-        y5Au4MSPCqzKlzU2b7vpucE=
-X-Google-Smtp-Source: ACHHUZ73CIT8cWGTx7xgzrtP1vE8FBs14g5XK/mv4KweHv5a0dF7KrsCTc1UUKVGHQTmW7Q1okST0w==
-X-Received: by 2002:a05:6a21:998f:b0:10a:c0cb:43ea with SMTP id ve15-20020a056a21998f00b0010ac0cb43eamr19368895pzb.49.1684960680643;
-        Wed, 24 May 2023 13:38:00 -0700 (PDT)
-Received: from bvanassche-glaptop2.roam.corp.google.com ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id a7-20020a17090a70c700b002535dc42bb5sm1690122pjm.47.2023.05.24.13.37.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 May 2023 13:38:00 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang@linux.alibaba.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Adrien Thierry <athierry@redhat.com>,
-        Zhe Wang <zhe.wang1@unisoc.com>,
-        Daniil Lunev <dlunev@chromium.org>, Liang He <windhl@126.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Keoseong Park <keosung.park@samsung.com>
-Subject: [PATCH v3 4/4] scsi: ufs: Simplify driver shutdown
-Date:   Wed, 24 May 2023 13:36:22 -0700
-Message-ID: <20230524203659.1394307-5-bvanassche@acm.org>
-X-Mailer: git-send-email 2.40.1.698.g37aff9b760-goog
-In-Reply-To: <20230524203659.1394307-1-bvanassche@acm.org>
-References: <20230524203659.1394307-1-bvanassche@acm.org>
-MIME-Version: 1.0
+        with ESMTP id S229527AbjEXXeV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 19:34:21 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E3F499;
+        Wed, 24 May 2023 16:34:19 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34ONUFVp012614;
+        Wed, 24 May 2023 23:34:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=p0DrbhpKPVJF9JpO77Y8hTgrmqnvhBr03yX/RFmxj+Q=;
+ b=vRgyNC6fqGF6To8jajtxXFyatSFrYj5C8I/T5jwgfukfybrAu6j0XqZ7jnQ4cvD+zvXt
+ XrRSzRmhxXJLWmUb7GU/hygoJmPnzQJVbZHFL8khauJCbIMnlUR/JA7/iQmMHNZ4+aM6
+ tl0YEV3BDqZUIJaFZLgd+c5f8P8D3sw0jN/MRvjeAIXdfENlrDN1LUzfyTwcsaJufd4u
+ FShGe74bFc+HK58HV2Vsm94UxZBAt+tP+PXJYks8ISddIfOIe48efacuFJxeRbZsY/jw
+ MgolD/T8ODjcIeBq+4YKF4LUtIxw12QL1yL8hMmdeT1eGN3riVFrhWY3++KUMPzzqTAk mg== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qsva4806c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 24 May 2023 23:34:15 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34OMHrQH028521;
+        Wed, 24 May 2023 23:34:14 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2102.outbound.protection.outlook.com [104.47.70.102])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3qqk2t52hk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 24 May 2023 23:34:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=O6Ld052SkZrW1/HAGMpJeb6ZVywA0SKMuvf3dhGr9yoohnp8zXT4UDLDxtVvUXvBP6ySvZFiSudq98ecxQanuDxh5tyv+1UHcpyeqfvQOIs2wErUfsO/5mz+R6ceEkvCAcJ/+JflAAaFCuOVonP4Y+Jbf74pQH1tWzTfxFWsQpwEUnCgaPaDPhWOs28vEUNyN/GVJFWvb2FsaDhIIViZ7G5uGGgJlUK1rTKb6jasb0ts2tG1kkMz+NVGZi5s71xFOHcLR1aE6m5BRmTABI2Wr5+Mj8wSKR+L8GWnljN4p9OwlYtmW/Vu4uP7nEJlo5Zp1b/xyB3YFOS8+Sc2DilN4A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=p0DrbhpKPVJF9JpO77Y8hTgrmqnvhBr03yX/RFmxj+Q=;
+ b=KIrAjAeutvzZgECWFe7vz3G2rCmTOZ6qUrQc4Kgglknh1pMaGbwjrO4yY6Q7gXKjN5MsH+2uNkCaXL5R/Sa+TXptXOLTis7IpMXBb4PvRBs6wVRysGU9ODU71bR5EFCJs93b8ijUjq55/P+5PdWRCX1L2EAyj88MNQSPeYwR6BP5VCaZY5oXfdPO2MskJ2PnldCqAb/F5owkzXTddjb8q4fG9MypDlBx1lZAh9NUPMxeJyRxhx6j2PfF4QH+E8dTJNhTRBM+2OQFR7uPzTO9J7cdoKbdDDCHRUdjFbmI+FMflbARpaugoC9RNyR/rUe0fr7w+oM1unmxYcV+N5wM7g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=p0DrbhpKPVJF9JpO77Y8hTgrmqnvhBr03yX/RFmxj+Q=;
+ b=sOFqpE21KYN29k2Cp1qWmiawgAJd2GBmhCQgNj1wpCWjj/qp+8bpJkpvy8QltFTbPmN2pSU+ZWpxJtQJi47JpIrd/hpej3Y5bBW3rI9mNPXQkqTzLHf5HlEONtZ1Y8WARyR9JboyVioORgDYNlOmOujzWFEJKcpIEoEA7mCendA=
+Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
+ by BL3PR10MB6114.namprd10.prod.outlook.com (2603:10b6:208:3b9::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6433.14; Wed, 24 May
+ 2023 23:34:12 +0000
+Received: from CY8PR10MB7243.namprd10.prod.outlook.com
+ ([fe80::13d6:c3f3:2447:6559]) by CY8PR10MB7243.namprd10.prod.outlook.com
+ ([fe80::13d6:c3f3:2447:6559%5]) with mapi id 15.20.6433.015; Wed, 24 May 2023
+ 23:34:10 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        stefanha@redhat.com, jasowang@redhat.com, mst@redhat.com,
+        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
+Subject: [PATCH 0/3] vhost-scsi: Fix IO hangs when using windows
+Date:   Wed, 24 May 2023 18:34:04 -0500
+Message-Id: <20230524233407.41432-1-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: DM6PR07CA0052.namprd07.prod.outlook.com
+ (2603:10b6:5:74::29) To CY8PR10MB7243.namprd10.prod.outlook.com
+ (2603:10b6:930:7c::10)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|BL3PR10MB6114:EE_
+X-MS-Office365-Filtering-Correlation-Id: 31b1ec51-85ae-4ac6-80d2-08db5caf5fa0
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: dGFNl0pvpnOST3YJZuOx563YoAg48qGMnUGBir7MM7unf8iTtoC4ltjd4HrVpIi8+l+yxhXLHiQh8RDgfniAvFFXweHOuiQ0Z49xQ5hzUBKX0gEfPFGG487o6hJ0rsb8Ve3DlUrbEeSWCe6sXu8iXj+Kf6nkHyvJ+XJTmauGvZcHRAeHohzdGQyLxpsqgT+6mxjdtQd6h5KRvYLKkveBIqghzqi9AG1Hu8E14vmTsidCdGjAqRfQ43rkSYsAQkLoDRu8iWUsauzckpNkB0bB2qu/9BYgwQvvUPYLodUDmVE2zBILYQy6PTFoRVlF+w7jLQBv8ERfMc7S9DNuH7g9glX/qIXz7Qb7CGHNG+oAwU2JUZjT2aINQvONTU0wWGNYTUlmfTvJtW2/+LvmOMlYG2aHCh5mjY7Y8qJYlMDwZDHGg6O8sNwv+E7RV8tZhCr10aSgnCiEzyIMvszhzoE7LLiBvuA2PWMmAWFhshP+IhHCc5Wn6MDha0npofH12JuxpmLcwDjjQ0qFYIiRZgZbyWh4OahfcbvQRpkW7vx3Nxh7osGihnYF912EJAQzgQCF
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(366004)(376002)(396003)(346002)(136003)(39860400002)(451199021)(2906002)(4744005)(5660300002)(8936002)(8676002)(316002)(41300700001)(66556008)(66476007)(478600001)(66946007)(6486002)(36756003)(6666004)(6512007)(6506007)(26005)(2616005)(1076003)(86362001)(38100700002)(186003)(83380400001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?KcZjz9YWdVLdK61pRte0HtuhPcCmaswAypivNcuUvDHEXkQI2quOR3phfZv6?=
+ =?us-ascii?Q?2lmz3Bx4E3FMu4atYxrR1WsBkoSqICx9x186FhBUVZtRBKWYAlT03xINt/Pe?=
+ =?us-ascii?Q?KLEzCmBeZ5sqvvbXbDvndiKVfBFlNwjF4hrfwl/7+7xirHFagSJajs2KyHqW?=
+ =?us-ascii?Q?vOvWxbXaNEL/Jz3Yy1vwPLGV4KjuOviK6jZHlR8Mv2o404jwS2wCCNPef2vn?=
+ =?us-ascii?Q?NSVZU/oH1trpeW15NBZXO92W22lPHbKObt4t01DeVUmt0Qn1EfeYbePCazjU?=
+ =?us-ascii?Q?NqPpsbtuFvaqes/Hv6znGsx5l2sieYEssToQnjCM/A6luyJ9kYHhCSyNn9QV?=
+ =?us-ascii?Q?LSv6AUZHlwpYxDrE5DYWJIC0ceEh6oekZls+U4Xv3LVTedCRt4wsXkbpz8Md?=
+ =?us-ascii?Q?VUn5l2Lud81PeHUyDfh9erQ80/2LKF2WHcas7id6o6WM1U/omowN2Ekqnak2?=
+ =?us-ascii?Q?u3zmh60ym15vb5pf1oVwluHBt7IcM17+5Fa8I+4xwM6jQiKhaEmGSzUmlLNc?=
+ =?us-ascii?Q?4eqg791JBQJ5QdUKzZ3MhTyAuE3GxzLO47mkTK+yIheiBHFws+SAy/RTUu5M?=
+ =?us-ascii?Q?x+3Jkbpv+kxC0dH4lOEux+2ccWxC4KJ9NbWqPNQGotkOxDM2SpiMB4cNyaJp?=
+ =?us-ascii?Q?K4pjbqqmoh2cVu1Ypev82HukfCdyj3aMGXnohRwrXm3KvlsctWm7JhZdtwiW?=
+ =?us-ascii?Q?maQHNDuSVHLazk9t6/SyB3WHkaBAoykczvDRFqAdk8pjn6et8DS2DMFSw8TX?=
+ =?us-ascii?Q?9hvIHITliS4OIDEfvrah1aKJ97rcLVzFx/a/y3wr6EeRx4pPVnWtloZOT75X?=
+ =?us-ascii?Q?RepadjuAlEGxGXlEAlRJUzcAsAsPh1hMLIdVfY+6mho8bIjSgrb6+oSKisxy?=
+ =?us-ascii?Q?nTJkTp6hwBG5nJljseCx31x+jOD0V4F/xcH6wPWKr2b9rzPTj8H3kHf++IA+?=
+ =?us-ascii?Q?L36bViQFp4uDRuyI3IcNIJisgpCVZVUSiO1TryWhYcWB+fZCJll8UdPYdZFi?=
+ =?us-ascii?Q?W8swIy5qKzsvZRsRd2To3dQxdyWeyBCZgcOmozMMCdKzcQrbMVYTPKWcmXkO?=
+ =?us-ascii?Q?KhdKc59HTWPZxApRT0C7ILitpEyEsmP6UTg+JMBm7UwHlakla5Oqq8tkhj9M?=
+ =?us-ascii?Q?YavIB19x/zzi77KkX1HiSUET/GvkNMGaFu9LkQQS3Uspfzvve846EufMp6xF?=
+ =?us-ascii?Q?j33RivoD7Jwy0phw4OXqHGHCKrApteQv55C/dKM9R7cPSb/Wy+P7OYEfH1CC?=
+ =?us-ascii?Q?e2RZ3pnmdoO8ie3dWeoi7Vka7bQkQWkFk++UkN2FnhiZQIKmB/QUUVJeGsI/?=
+ =?us-ascii?Q?7wWRshYnIHWV1PovUGsuzXqA1PqnerDCpJh8XD+iiAf+oDVGD4MPKxAhpWGA?=
+ =?us-ascii?Q?es4GKH1wcVls1vSCsLpL/4koLm3sTVk9AZLskAlzkwXkMcDIi4IUjkXarxY/?=
+ =?us-ascii?Q?kGdHJKjE9afMP55br6vM9bG24MyeKhQIu/JtBXcR35gRR8hQvg03gVO6fZGc?=
+ =?us-ascii?Q?X6mN8E7nQdactwpye5OQagEPnYB3aEGqVpQ6Sucsuh8a9gwyAIIxr88ULz57?=
+ =?us-ascii?Q?l1PUaysAGnshjwv0xk2h934bGzRK3vsEnR0/fmIPk/oLe4fJ2fpdszuAQfoc?=
+ =?us-ascii?Q?kg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: Zn/Ha3u0ERAvA29bLsfVzpvwuceEB41hbIE/mm0WN5oca7UcCWO/Isa7m/DCAqD2VS9nljnJ6U5d3U6zKKId+ublCb42vBXUxBafUqUePEnJ54Kg2n4tEHqgd78y2fyEbtLcln3jr4LdndFOn7MR3O5wwOgBX58Is9+xa2PjZEInjr7r+BwCINfFVfmATr9iOQPkP7fuQ9TLBrwSKeLv6eBPuBfyN94T2i0yGX3H3CL8sXdQqxbMFAGUsy6qXLbjwq3CCHeov9WrPpXeeI2wKzIDUdmqQCQ3dxOd466LumiHu/ooq+DOek7+AcCimcI94e/MJobiKCW28jhHxtkQhmxI7fjGHXcda6kzCvR9SMilEhZ15T3cMD52JKKZK4GsCa80E+YUSlaRHpVRoAlp4mHotLitikvwxrvz9+bOf8v45mvAHY9Z+ulmtZKJ0bsL/EYjE9xlWTadjorHq56SIyqtDH06WbpOU7acCmFIATR2wLBuwqEjcXlKakOYOcijSDVsHqzS7sqvbHSaPlvTLDyJnpFj6SMOVRPK2gT8wXexrEwXuMJiEN3tWg8suxNaVo3OUv0+m3x/dLkVGbQDPyADa/JKQWSUD2c5QyJvTdXE5nOWpNkx//31OeMfp0cEYX0dc39+OQ589yYRUkE8vVgDbq+U4Oz+NqBvpPGyNYbrmX9QjdsFh5/V+pu+V2y50czbKZDkDpznS2l+I+cvC9yBEEhSM9aVa/0Of0s6yf2RodpVcXrX1cVj4EYTniDc8+AN1cGPGNyljWhG1Tn60/tRSAC/qmkyWv65hZgkfGDR5iK+IS6dw2g4hYdnuPMe6gNEvNYNCtmTpJ+XSyGMFB8RJ3kFXgQDCBp9A2q9dMo=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 31b1ec51-85ae-4ac6-80d2-08db5caf5fa0
+X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2023 23:34:10.0865
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: R10AYtJfCJqNZtCCBF8kmNJZPK3ffOBDeagibWpoSLEiOFUe8rUVqxydL+GW+a0sIVJkcc79tf3efmKlQuT6lG1WgyDRvrjDlUHDXzYiEk0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR10MB6114
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-24_16,2023-05-24_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ mlxscore=0 bulkscore=0 suspectscore=0 mlxlogscore=660 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305240197
+X-Proofpoint-GUID: q_Mh-pi7FZCHoTB1fZco0spy-yZjLMiG
+X-Proofpoint-ORIG-GUID: q_Mh-pi7FZCHoTB1fZco0spy-yZjLMiG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All UFS host drivers call ufshcd_shutdown(). Hence, instead of calling
-ufshcd_shutdown() from the host driver .shutdown() callback, inline that
-function into ufshcd_wl_shutdown().
+The following patches were made over Linus's tree and fix an issue
+where windows guests will send iovecs with offset/lengths that result
+in IOs that are not aligned to 512. The LIO layer will then send them
+to Linux's block layer but it requires 512 byte alignment, so depending
+on the block driver being used we will get IO errors or hung IO.
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c             | 23 +++++------------------
- drivers/ufs/host/cdns-pltfrm.c        |  1 -
- drivers/ufs/host/tc-dwc-g210-pci.c    | 10 ----------
- drivers/ufs/host/tc-dwc-g210-pltfrm.c |  1 -
- drivers/ufs/host/ufs-exynos.c         |  1 -
- drivers/ufs/host/ufs-hisi.c           |  1 -
- drivers/ufs/host/ufs-mediatek.c       |  1 -
- drivers/ufs/host/ufs-qcom.c           |  1 -
- drivers/ufs/host/ufs-sprd.c           |  1 -
- drivers/ufs/host/ufshcd-pci.c         | 10 ----------
- drivers/ufs/host/ufshcd-pltfrm.c      |  6 ------
- drivers/ufs/host/ufshcd-pltfrm.h      |  1 -
- include/ufs/ufshcd.h                  |  1 -
- 13 files changed, 5 insertions(+), 53 deletions(-)
+The following patches have vhost-scsi detect when windows sends these
+IOs and copy them to a bounce buffer. It then does some cleanup in
+the related code.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 908b9f98b2e0..abe9a430cc37 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9936,9 +9936,7 @@ EXPORT_SYMBOL(ufshcd_runtime_resume);
- static void ufshcd_wl_shutdown(struct device *dev)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	struct ufs_hba *hba;
--
--	hba = shost_priv(sdev->host);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
- 
- 	down(&hba->host_sem);
- 	hba->shutting_down = true;
-@@ -9953,27 +9951,16 @@ static void ufshcd_wl_shutdown(struct device *dev)
- 		scsi_device_quiesce(sdev);
- 	}
- 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
--}
- 
--/**
-- * ufshcd_shutdown - shutdown routine
-- * @hba: per adapter instance
-- *
-- * This function would turn off both UFS device and UFS hba
-- * regulators. It would also disable clocks.
-- *
-- * Returns 0 always to allow force shutdown even in case of errors.
-- */
--int ufshcd_shutdown(struct ufs_hba *hba)
--{
-+	/*
-+	 * Next, turn off the UFS controller and the UFS regulators. Disable
-+	 * clocks.
-+	 */
- 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
- 		ufshcd_suspend(hba);
- 
- 	hba->is_powered = false;
--	/* allow force shutdown even in case of errors */
--	return 0;
- }
--EXPORT_SYMBOL(ufshcd_shutdown);
- 
- /**
-  * ufshcd_remove - de-allocate SCSI host and host memory space
-diff --git a/drivers/ufs/host/cdns-pltfrm.c b/drivers/ufs/host/cdns-pltfrm.c
-index e05c0ae64eea..26761425a76c 100644
---- a/drivers/ufs/host/cdns-pltfrm.c
-+++ b/drivers/ufs/host/cdns-pltfrm.c
-@@ -328,7 +328,6 @@ static const struct dev_pm_ops cdns_ufs_dev_pm_ops = {
- static struct platform_driver cdns_ufs_pltfrm_driver = {
- 	.probe	= cdns_ufs_pltfrm_probe,
- 	.remove	= cdns_ufs_pltfrm_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
- 	.driver	= {
- 		.name   = "cdns-ufshcd",
- 		.pm     = &cdns_ufs_dev_pm_ops,
-diff --git a/drivers/ufs/host/tc-dwc-g210-pci.c b/drivers/ufs/host/tc-dwc-g210-pci.c
-index 92b8ad4b58fe..f96fe5855841 100644
---- a/drivers/ufs/host/tc-dwc-g210-pci.c
-+++ b/drivers/ufs/host/tc-dwc-g210-pci.c
-@@ -32,15 +32,6 @@ static struct ufs_hba_variant_ops tc_dwc_g210_pci_hba_vops = {
- 	.link_startup_notify	= ufshcd_dwc_link_startup_notify,
- };
- 
--/**
-- * tc_dwc_g210_pci_shutdown - main function to put the controller in reset state
-- * @pdev: pointer to PCI device handle
-- */
--static void tc_dwc_g210_pci_shutdown(struct pci_dev *pdev)
--{
--	ufshcd_shutdown((struct ufs_hba *)pci_get_drvdata(pdev));
--}
--
- /**
-  * tc_dwc_g210_pci_remove - de-allocate PCI/SCSI host and host memory space
-  *		data structure memory
-@@ -137,7 +128,6 @@ static struct pci_driver tc_dwc_g210_pci_driver = {
- 	.id_table = tc_dwc_g210_pci_tbl,
- 	.probe = tc_dwc_g210_pci_probe,
- 	.remove = tc_dwc_g210_pci_remove,
--	.shutdown = tc_dwc_g210_pci_shutdown,
- 	.driver = {
- 		.pm = &tc_dwc_g210_pci_pm_ops
- 	},
-diff --git a/drivers/ufs/host/tc-dwc-g210-pltfrm.c b/drivers/ufs/host/tc-dwc-g210-pltfrm.c
-index f15a84d0c176..4d5389dd9585 100644
---- a/drivers/ufs/host/tc-dwc-g210-pltfrm.c
-+++ b/drivers/ufs/host/tc-dwc-g210-pltfrm.c
-@@ -92,7 +92,6 @@ static const struct dev_pm_ops tc_dwc_g210_pltfm_pm_ops = {
- static struct platform_driver tc_dwc_g210_pltfm_driver = {
- 	.probe		= tc_dwc_g210_pltfm_probe,
- 	.remove		= tc_dwc_g210_pltfm_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
- 	.driver		= {
- 		.name	= "tc-dwc-g210-pltfm",
- 		.pm	= &tc_dwc_g210_pltfm_pm_ops,
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 0bf5390739e1..f41056f57fd7 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -1757,7 +1757,6 @@ static const struct dev_pm_ops exynos_ufs_pm_ops = {
- static struct platform_driver exynos_ufs_pltform = {
- 	.probe	= exynos_ufs_probe,
- 	.remove	= exynos_ufs_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
- 	.driver	= {
- 		.name	= "exynos-ufshc",
- 		.pm	= &exynos_ufs_pm_ops,
-diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
-index 4c423eba8aa9..18b72e2e68c1 100644
---- a/drivers/ufs/host/ufs-hisi.c
-+++ b/drivers/ufs/host/ufs-hisi.c
-@@ -593,7 +593,6 @@ static const struct dev_pm_ops ufs_hisi_pm_ops = {
- static struct platform_driver ufs_hisi_pltform = {
- 	.probe	= ufs_hisi_probe,
- 	.remove	= ufs_hisi_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
- 	.driver	= {
- 		.name	= "ufshcd-hisi",
- 		.pm	= &ufs_hisi_pm_ops,
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index a054810e321d..33b301649757 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1647,7 +1647,6 @@ static const struct dev_pm_ops ufs_mtk_pm_ops = {
- static struct platform_driver ufs_mtk_pltform = {
- 	.probe      = ufs_mtk_probe,
- 	.remove     = ufs_mtk_remove,
--	.shutdown   = ufshcd_pltfrm_shutdown,
- 	.driver = {
- 		.name   = "ufshcd-mtk",
- 		.pm     = &ufs_mtk_pm_ops,
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 82d02e7f3b4f..059de74dfea3 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1723,7 +1723,6 @@ static const struct dev_pm_ops ufs_qcom_pm_ops = {
- static struct platform_driver ufs_qcom_pltform = {
- 	.probe	= ufs_qcom_probe,
- 	.remove	= ufs_qcom_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
- 	.driver	= {
- 		.name	= "ufshcd-qcom",
- 		.pm	= &ufs_qcom_pm_ops,
-diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
-index 051f3f40d92c..2bad75dd6d58 100644
---- a/drivers/ufs/host/ufs-sprd.c
-+++ b/drivers/ufs/host/ufs-sprd.c
-@@ -444,7 +444,6 @@ static const struct dev_pm_ops ufs_sprd_pm_ops = {
- static struct platform_driver ufs_sprd_pltform = {
- 	.probe = ufs_sprd_probe,
- 	.remove = ufs_sprd_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
- 	.driver = {
- 		.name = "ufshcd-sprd",
- 		.pm = &ufs_sprd_pm_ops,
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 9c911787f84c..38276dac8e52 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -504,15 +504,6 @@ static int ufshcd_pci_restore(struct device *dev)
- }
- #endif
- 
--/**
-- * ufshcd_pci_shutdown - main function to put the controller in reset state
-- * @pdev: pointer to PCI device handle
-- */
--static void ufshcd_pci_shutdown(struct pci_dev *pdev)
--{
--	ufshcd_shutdown((struct ufs_hba *)pci_get_drvdata(pdev));
--}
--
- /**
-  * ufshcd_pci_remove - de-allocate PCI/SCSI host and host memory space
-  *		data structure memory
-@@ -618,7 +609,6 @@ static struct pci_driver ufshcd_pci_driver = {
- 	.id_table = ufshcd_pci_tbl,
- 	.probe = ufshcd_pci_probe,
- 	.remove = ufshcd_pci_remove,
--	.shutdown = ufshcd_pci_shutdown,
- 	.driver = {
- 		.pm = &ufshcd_pci_pm_ops
- 	},
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index 5739ff007828..0b7430033047 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.c
-+++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -190,12 +190,6 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
- 	return err;
- }
- 
--void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
--{
--	ufshcd_shutdown((struct ufs_hba *)platform_get_drvdata(pdev));
--}
--EXPORT_SYMBOL_GPL(ufshcd_pltfrm_shutdown);
--
- static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
- {
- 	struct device *dev = hba->dev;
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.h b/drivers/ufs/host/ufshcd-pltfrm.h
-index 2e4ba2bfbcad..2df108f4ac13 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.h
-+++ b/drivers/ufs/host/ufshcd-pltfrm.h
-@@ -31,7 +31,6 @@ int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *dev_param,
- void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param);
- int ufshcd_pltfrm_init(struct platform_device *pdev,
- 		       const struct ufs_hba_variant_ops *vops);
--void ufshcd_pltfrm_shutdown(struct platform_device *pdev);
- int ufshcd_populate_vreg(struct device *dev, const char *name,
- 			 struct ufs_vreg **out_vreg);
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index f7553293ba98..db2e669985d5 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1277,7 +1277,6 @@ extern int ufshcd_system_freeze(struct device *dev);
- extern int ufshcd_system_thaw(struct device *dev);
- extern int ufshcd_system_restore(struct device *dev);
- #endif
--extern int ufshcd_shutdown(struct ufs_hba *hba);
- 
- extern int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
- 				      int agreed_gear,
+
