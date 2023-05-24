@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67EF7C77B7A
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 20:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A11C2C77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 20:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230072AbjEXUhP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 May 2023 16:37:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42490 "EHLO
+        id S232032AbjEXUhS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 May 2023 16:37:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232021AbjEXUhM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 16:37:12 -0400
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D623180
-        for <linux-scsi@vger.kernel.org>; Wed, 24 May 2023 13:37:11 -0700 (PDT)
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-5307502146aso579081a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 24 May 2023 13:37:11 -0700 (PDT)
+        with ESMTP id S230219AbjEXUhQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 16:37:16 -0400
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1DC210B
+        for <linux-scsi@vger.kernel.org>; Wed, 24 May 2023 13:37:15 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2553f2706bfso201746a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 24 May 2023 13:37:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684960630; x=1687552630;
+        d=1e100.net; s=20221208; t=1684960635; x=1687552635;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=1xTU511RNGl1AHFsKHmW3okpv21QbRYC3A6KDgyY3fw=;
-        b=TspCFhMYSMo5iDPiTrxJHD++jAPABzi2AKNIS0EW5LXWFwMbyyzwwCVc2v46Ofeo1M
-         oO9/vfaIv2gjkEvypQbmg8JNr1IYQll5lG+wK5r/YKRg/Enz4z9qVJo+HajdfBgpl61I
-         Ntc+o9okwU96aR8EQ0ala70sOebywmwKQlzXMSiaxSOWYRq4h5hW5PkJfng3KljXdgBk
-         2of94AFhB+ULCyJZBVPc4zKvHwf0p+6Zc3ve6wP8oFXt9teOzH21j/TJsThi1pFuWN79
-         p/ZQ3mPQdI93GDRMGNAlIbp9o0Zj8mbt9CfxVXzMMSlToy3oiVnHFUacMcnrDALNI1+j
-         HbWA==
-X-Gm-Message-State: AC+VfDwAr1EgPLaD2qFjxXcSeXPORXMOLlm8AKpAMn5HVzuhSffW2b23
-        MtvMru5VR09nJ3MHgV56BaY=
-X-Google-Smtp-Source: ACHHUZ59qsIJE06LijbO8DVVeG67XXl5JW1VzerAfyA1OVJ04nUso7t1GJHGFG69jysEl+68Dt3GgQ==
-X-Received: by 2002:a17:90b:4b01:b0:253:34da:480 with SMTP id lx1-20020a17090b4b0100b0025334da0480mr17713969pjb.31.1684960630419;
-        Wed, 24 May 2023 13:37:10 -0700 (PDT)
+        bh=11dlsUxeIT9kbH4dHEV1w/hQN2ZednujI/Fc46fxKH8=;
+        b=bAXoEysuulkM0RkuNOsBJL0vxRppVQ81jKlW1dB3Bf4czkbXxXS9JL5Wcvn/T3qIXh
+         /DDOMyoyia7izCKZPqXE6U0ioDGbAxsHckPUFyjboUWhy59R2YUL6MWBsvQeMKaCGdd4
+         iCFmSRvIqSPu7WxmPNzYLKIk2grGy4Z8fKpoPRFl0t5P7OzND4qYdBavKnQo/ZHVTSr5
+         7alVw2d1Yz86QW7J4EQ9AQikb0U8+aTGJh1aCybS9+WGbTHfbtOrPy9i+KD4voJHLZfA
+         s6w8CWtZxYY5ymgOmrh9PXT2khwBPuVa6wb0TodQV8lv/Wt55tZfmGZkbg4D/uUp7KVF
+         W7+Q==
+X-Gm-Message-State: AC+VfDxypn10pawsSa+SlXhtLRvqwTPP98IOq7z/wWsMBlPSNrO/6JP2
+        PAzWVsDvRX1G68+cFhbSJaU=
+X-Google-Smtp-Source: ACHHUZ4HeWmGVGFx7OMU9ZOBfc/Se1Y5iJxNmqCjeA5K19hlc/t6bimDmgA5kurEl1yEDYCzftDhxA==
+X-Received: by 2002:a17:90b:3ec2:b0:253:3d30:e6f9 with SMTP id rm2-20020a17090b3ec200b002533d30e6f9mr468323pjb.15.1684960635261;
+        Wed, 24 May 2023 13:37:15 -0700 (PDT)
 Received: from bvanassche-glaptop2.roam.corp.google.com ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id a7-20020a17090a70c700b002535dc42bb5sm1690122pjm.47.2023.05.24.13.37.09
+        by smtp.gmail.com with ESMTPSA id a7-20020a17090a70c700b002535dc42bb5sm1690122pjm.47.2023.05.24.13.37.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 May 2023 13:37:10 -0700 (PDT)
+        Wed, 24 May 2023 13:37:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         Avri Altman <avri.altman@wdc.com>,
         Asutosh Das <quic_asutoshd@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
         Ziqi Chen <quic_ziqichen@quicinc.com>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Adrien Thierry <athierry@redhat.com>
-Subject: [PATCH v3 1/4] scsi: ufs: Increase the START STOP UNIT timeout from one to ten seconds
-Date:   Wed, 24 May 2023 13:36:19 -0700
-Message-ID: <20230524203659.1394307-2-bvanassche@acm.org>
+        Adrien Thierry <athierry@redhat.com>,
+        Santosh Y <santoshsy@gmail.com>,
+        James Bottomley <JBottomley@Parallels.com>
+Subject: [PATCH v3 2/4] scsi: ufs: Fix handling of lrbp->cmd
+Date:   Wed, 24 May 2023 13:36:20 -0700
+Message-ID: <20230524203659.1394307-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.1.698.g37aff9b760-goog
 In-Reply-To: <20230524203659.1394307-1-bvanassche@acm.org>
 References: <20230524203659.1394307-1-bvanassche@acm.org>
@@ -63,35 +64,81 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-One UFS vendor asked to increase the UFS timeout from 1 s to 3 s.
-Another UFS vendor asked to increase the UFS timeout from 1 s to 10 s.
-Hence this patch that increases the UFS timeout to 10 s. This patch can
-cause the total timeout to exceed 20 s, the Android shutdown timeout.
-This is fine since the loop around ufshcd_execute_start_stop() exists to
-deal with unit attentions and because unit attentions are reported
-quickly.
+ufshcd_queuecommand() may be called two times in a row for a SCSI
+command before it is completed. Hence make the following changes:
+- In the functions that submit a command, do not check the old value of
+  lrbp->cmd nor clear lrbp->cmd in error paths.
+- In ufshcd_release_scsi_cmd(), do not clear lrbp->cmd.
 
-Fixes: dcd5b7637c6d ("scsi: ufs: Reduce the START STOP UNIT timeout")
-Fixes: 8f2c96420c6e ("scsi: ufs: core: Reduce the power mode change timeout")
-Acked-by: Adrian Hunter <adrian.hunter@intel.com>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+See also scsi_send_eh_cmnd().
+
+This patch prevents that the following appears if a command times out:
+
+WARNING: at drivers/ufs/core/ufshcd.c:2965 ufshcd_queuecommand+0x6f8/0x9a8
+Call trace:
+ ufshcd_queuecommand+0x6f8/0x9a8
+ scsi_send_eh_cmnd+0x2c0/0x960
+ scsi_eh_test_devices+0x100/0x314
+ scsi_eh_ready_devs+0xd90/0x114c
+ scsi_error_handler+0x2b4/0xb70
+ kthread+0x16c/0x1e0
+
+Fixes: 5a0b0cb9bee7 ("[SCSI] ufs: Add support for sending NOP OUT UPIU")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index fdf5073c7c6c..dc4b047db27e 100644
+index dc4b047db27e..3a7598120d23 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -9170,7 +9170,8 @@ static int ufshcd_execute_start_stop(struct scsi_device *sdev,
- 	};
+@@ -2931,7 +2931,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		(hba->clk_gating.state != CLKS_ON));
  
- 	return scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, /*buffer=*/NULL,
--			/*bufflen=*/0, /*timeout=*/HZ, /*retries=*/0, &args);
-+			/*bufflen=*/0, /*timeout=*/10 * HZ, /*retries=*/0,
-+			&args);
+ 	lrbp = &hba->lrb[tag];
+-	WARN_ON(lrbp->cmd);
+ 	lrbp->cmd = cmd;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+@@ -2947,7 +2946,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	err = ufshcd_map_sg(hba, lrbp);
+ 	if (err) {
+-		lrbp->cmd = NULL;
+ 		ufshcd_release(hba);
+ 		goto out;
+ 	}
+@@ -3166,7 +3164,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 	down_read(&hba->clk_scaling_lock);
+ 
+ 	lrbp = &hba->lrb[tag];
+-	WARN_ON(lrbp->cmd);
++	lrbp->cmd = NULL;
+ 	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+ 	if (unlikely(err))
+ 		goto out;
+@@ -5408,7 +5406,6 @@ static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
+ 	struct scsi_cmnd *cmd = lrbp->cmd;
+ 
+ 	scsi_dma_unmap(cmd);
+-	lrbp->cmd = NULL;	/* Mark the command as completed. */
+ 	ufshcd_release(hba);
+ 	ufshcd_clk_scaling_update_busy(hba);
  }
+@@ -7023,7 +7020,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	down_read(&hba->clk_scaling_lock);
  
- /**
+ 	lrbp = &hba->lrb[tag];
+-	WARN_ON(lrbp->cmd);
+ 	lrbp->cmd = NULL;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = 0;
+@@ -7195,7 +7191,6 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
+ 	down_read(&hba->clk_scaling_lock);
+ 
+ 	lrbp = &hba->lrb[tag];
+-	WARN_ON(lrbp->cmd);
+ 	lrbp->cmd = NULL;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = UFS_UPIU_RPMB_WLUN;
