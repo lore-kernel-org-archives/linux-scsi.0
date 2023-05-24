@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0376CC7EE37
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 07:53:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE84C77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 07:55:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239956AbjEXHxe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 May 2023 03:53:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50420 "EHLO
+        id S239155AbjEXHzW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 May 2023 03:55:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232910AbjEXHxd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 03:53:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E559D;
-        Wed, 24 May 2023 00:53:32 -0700 (PDT)
+        with ESMTP id S240109AbjEXHzS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 03:55:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DDA7A1;
+        Wed, 24 May 2023 00:55:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B07AD63A49;
-        Wed, 24 May 2023 07:53:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A09EC433D2;
-        Wed, 24 May 2023 07:53:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 96D2763A4C;
+        Wed, 24 May 2023 07:55:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4F67C433EF;
+        Wed, 24 May 2023 07:55:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684914811;
-        bh=AD7LEcaMCtJLi7npLhnsfjZKm93qmgeNPCRUWDwWJno=;
+        s=k20201202; t=1684914916;
+        bh=gGib/GiA2Gm73b/0ofZL7dpN4pnLkrUgu6vCLEL+1W8=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=VNGLf86TMxmkx7FET3zjvs7Rs89YK/oThhi+RnJYKL0sLndSjQR8SvvB8z0YVZApa
-         m/dfrwJyj5PkvQoAVlOCYuZFPFGLkzmeUksUESuNbjjjoJm/36dN4Z3bWjgdCv4fPr
-         D5qMGQlJ7DxDkgnpDQRBJdCdaWEhzjNrKMqHNOsJUS8bSOV93YTjaPo/1SkIx1eLeh
-         0SOvgb23EjAiWMevySHXniixGdgDT5AD69ZjKjMlWgAY3CcbM268WEz7WVS4sll+ew
-         rtYUQDEapbc2237J3Vrkf8IQG++fkHDeIeWiOwxiHuFzxkm2bWwYnoWaqcswNwFAvR
-         syTx9uNWyr/cQ==
-Message-ID: <96ea8d7a-2dca-76b5-4f41-1de3c211d35c@kernel.org>
-Date:   Wed, 24 May 2023 16:53:28 +0900
+        b=bNwORg2fsGCZ1L383C+8xuiKbgDJVbGHMZyOa7tiH9aRTE+gxZJ/6tG1YFUoV3dku
+         a4jzUPp7K3OefjBZBOmzwC0gj5LZiTFfHdedlJCgI9QBaAZT9QnOIxAID17+0r3Lj2
+         jV3YMMdJEZa0iVDt5Uk7sLSxIusIWsm38RqpdClb7vFNjy1XBYnrozwto6cEu642PZ
+         /ZYVTJQQIX5b0TjUFzBAi5s+Y3GBtBRrCYg98bgzB222j9nbTeeBlSeuROByzZyvmH
+         HmiVhs1wBk7nNTKt7TfB588sSeHhW8FxYex8FEMlGNabjocHQun5h8xmaPi88qSqaz
+         NUwI/whDfKFAg==
+Message-ID: <8de540c2-9b85-34ea-5f6d-e440ccce08b9@kernel.org>
+Date:   Wed, 24 May 2023 16:55:13 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH 1/2] scsi: pm80xx: Add fatal error check for
- pm8001_phy_control()
+Subject: Re: [PATCH 2/2] scsi: pm80xx: Add fatal error check for
+ pm8001_lu_reset()
 Content-Language: en-US
 To:     Pranav Prasad <pranavpp@google.com>,
         Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Changyuan Lyu <changyuanl@google.com>
+        Igor Pylypiv <ipylypiv@google.com>
 References: <20230523214127.4006891-1-pranavpp@google.com>
- <20230523214127.4006891-2-pranavpp@google.com>
+ <20230523214127.4006891-3-pranavpp@google.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230523214127.4006891-2-pranavpp@google.com>
+In-Reply-To: <20230523214127.4006891-3-pranavpp@google.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -57,43 +57,42 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/24/23 06:41, Pranav Prasad wrote:
-> From: Changyuan Lyu <changyuanl@google.com>
+> From: Igor Pylypiv <ipylypiv@google.com>
 > 
-> This patch adds a fatal error check for the pm8001_phy_control() function.
+> This patch adds a fatal error check for pm8001_lu_reset().
 > 
-> Signed-off-by: Changyuan Lyu <changyuanl@google.com>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 > Signed-off-by: Pranav Prasad <pranavpp@google.com>
 > ---
 >  drivers/scsi/pm8001/pm8001_sas.c | 10 ++++++++++
 >  1 file changed, 10 insertions(+)
 > 
 > diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index e5673c774f66..b153f0966e5d 100644
+> index b153f0966e5d..e302d5879bb7 100644
 > --- a/drivers/scsi/pm8001/pm8001_sas.c
 > +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -167,6 +167,16 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
->  	pm8001_ha = sas_phy->ha->lldd_ha;
->  	phy = &pm8001_ha->phy[phy_id];
->  	pm8001_ha->phy[phy_id].enable_completion = &completion;
+> @@ -918,6 +918,16 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
+>  	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+>  	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
+>  	DECLARE_COMPLETION_ONSTACK(completion_setstate);
 > +
 > +	if (PM8001_CHIP_DISP->fatal_errors(pm8001_ha)) {
 > +		/* If the controller is in fatal error state,
-> +		 *  we will not get a response from the controller
+> +		 * we will not get a response from the controller
 > +		 */
-
-Multi-line comment style: must start with an empty "/*" line.
-
 > +		pm8001_dbg(pm8001_ha, FAIL,
-> +				"Phy control failed due to fatal errors\n");
-
-Please align the args together.
-
-> +		return -EFAULT;
+> +				"LUN reset failed due to fatal errors\n");
+> +		return rc;
 > +	}
 > +
->  	switch (func) {
->  	case PHY_FUNC_SET_LINK_RATE:
->  		rates = funcdata;
+
+Same comments as patch 1. And does this really need to be a separate patch ?
+both patches touch the same file, and add a similar change to 2 functions, so I
+would fold this in patch 1.
+
+>  	if (dev_is_sata(dev)) {
+>  		struct sas_phy *phy = sas_get_local_phy(dev);
+>  		sas_execute_internal_abort_dev(dev, 0, NULL);
 
 -- 
 Damien Le Moal
