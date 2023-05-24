@@ -2,237 +2,430 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE4F8C7EE2C
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 14:18:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85FC1C77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 May 2023 15:42:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235864AbjEXOSS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 May 2023 10:18:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53114 "EHLO
+        id S237495AbjEXPm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 May 2023 11:42:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234198AbjEXOSR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 10:18:17 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B488119;
-        Wed, 24 May 2023 07:18:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684937892; x=1716473892;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=1iQCpw/J8b4ow6an4aBxEQoU1oA43ahwT/M6UCw7OWE=;
-  b=Ew7FXCXxoqv/5j14NfkBBEXit2o5PiEfyyODbJTMQiLpC7Fyk9hMKLhE
-   hc7Ech4d4RLgDjNJTpR0dCrdguX7XOD9za8KjCvvDg53u8xJrhZFpgO00
-   JZfmD/jZhWDSETOFMDP1Bu1l4dKnNrqFilVSbsv4YHvXheFjT3rXNH+mv
-   HzMazH/tMMjxnuSpHpDBLUK8nJ0e/Jbipjj3cGiI4OBJ9qrAD1ma6+1vx
-   9EVWaTWoWQuXv/b3kyqUAyy98Z8tH1gKhqGccc4aqCK2OZa/C+Sh5qoI/
-   bM+ONrsWu3WpwRgDRGA/qGTNeG/JBhzTITI/la93Sx7OeG8J2e1tFUrxh
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10720"; a="352420982"
-X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
-   d="scan'208";a="352420982"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 07:18:10 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10720"; a="698559507"
-X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
-   d="scan'208";a="698559507"
-Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
-  by orsmga007.jf.intel.com with ESMTP; 24 May 2023 07:18:09 -0700
-Received: from orsmsx612.amr.corp.intel.com (10.22.229.25) by
- ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Wed, 24 May 2023 07:18:09 -0700
-Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
- orsmsx612.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23 via Frontend Transport; Wed, 24 May 2023 07:18:09 -0700
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.42) by
- edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.23; Wed, 24 May 2023 07:18:09 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PWw+ZDfzY1vCfbIHcubKXGJU/7vJ+dPdK3G60/gg4hVK8Cy0OROKLaP8EWQ8RRsWZFhCVv6ScTW+3K3q35icAcz0pUWtFKJ9W4H9vMu1VKBiCBe2i6zlgDV7fhxoKOPzBKQZgBQyqgqToqia5RjgJmpB3TC22cevUholMN9d5IsnxCaHiXwYdRnvfKq9JGiLakwjC76Nu/zqpVkIeLyDG6yMk5epeUnxNsHrHN+tGgn7OjoJiWaKhqQLYkJRbckJhiKgcu2JnD+t+nIU+xis5OaJvvkcEz8rZTqHwTlv+yy/eKLEfE/ZXz4meTAMdAZybzb+WzeC3bUoZwkkyyT2Ow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nrse2M0wULZCNNRDOF5wLry+2/KouMeyxl4dOth/qRQ=;
- b=fSCvH2GEG14Mb+DOPLyNBHCpfhGYqXKiXBYMIpTOOFNmXzwNl/nB57ABu+WKamcT1D64SGAZbLRLguqKck4I+OXi6UGjVtHuNrKae45WxmPV/Xe9Ilc8gYpihb5CVkDIZK5r74ZQcdxInGsa6RCN8x2sNpW5AvSyE9Thn9WgSZdxUgn/tyG0RGX5zzRW+6i8j/tshiJ5OxvvNNRlMHwP+ohrmjjbJUIFIm/YWOzs+U8TSMKusHWTbWZoafT0ygFz/5da8rdbk0NfPjjTSTXH/MAuOOpJxUmbx90KdCUrsrKw/qSSTRR3foIm6FrFo3HLAZgFbLf+cSMTAw50Uz+B4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from DM6PR11MB3625.namprd11.prod.outlook.com (2603:10b6:5:13a::21)
- by SA2PR11MB5130.namprd11.prod.outlook.com (2603:10b6:806:11d::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6411.28; Wed, 24 May
- 2023 14:18:07 +0000
-Received: from DM6PR11MB3625.namprd11.prod.outlook.com
- ([fe80::64d9:76b5:5b43:1590]) by DM6PR11MB3625.namprd11.prod.outlook.com
- ([fe80::64d9:76b5:5b43:1590%2]) with mapi id 15.20.6411.028; Wed, 24 May 2023
- 14:18:07 +0000
-Message-ID: <1d909989-5418-17ca-f161-67b4c05c6fb2@intel.com>
-Date:   Wed, 24 May 2023 16:17:56 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [Intel-wired-lan] [PATCH] overflow: Add struct_size_t() helper
-Content-Language: en-US
-To:     Jakub Kicinski <kuba@kernel.org>, Kees Cook <keescook@chromium.org>
-CC:     "Darrick J. Wong" <djwong@kernel.org>,
-        Daniel Latypov <dlatypov@google.com>,
-        <storagedev@microchip.com>, <linux-nvme@lists.infradead.org>,
+        with ESMTP id S237364AbjEXPmd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2023 11:42:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E10A10C7;
+        Wed, 24 May 2023 08:41:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 33B5961737;
+        Wed, 24 May 2023 15:40:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86682C433EF;
+        Wed, 24 May 2023 15:40:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684942849;
+        bh=GnBtoU8AMWYWI0jmSKm6MAQYcMfd9WMfCQJci24HSso=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=iumgZOlwMMVHnX3saoIbtTHjUshN63+XBubTBJi17C6veAJPuwlOHoFz6mD+N+CfC
+         DsRlkO8WESZ/IZ0psjH3pWnzMN80Oqa8umBBZXTH2orLwWEq7YdUz5N3CCN9HHmvK1
+         fuvB4Omj594/ClEQivNwooSDO1gQQO/aD6EcAiSqIhDHqiEGOI96j83oZK959IrrLa
+         cZedGhsGZ+NvTax50h/VT/us59Rc9YvONq7m662wirC1aQ6Lt+jKQvE0/hN9sw5FP6
+         iz0ApmoVCgbJDSp/Z541KCZSTqunVAUYL+Grd4H5txwgdTGNj+2Vr7IFjiSKdmVSmA
+         rRvccFrd1ygSw==
+Date:   Wed, 24 May 2023 08:40:49 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Nitesh Shetty <nj.shetty@samsung.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
         James Smart <james.smart@broadcom.com>,
-        "Guo Xuenan" <guoxuenan@huawei.com>,
-        Eric Dumazet <edumazet@google.com>,
-        "Tony Nguyen" <anthony.l.nguyen@intel.com>,
-        <linux-hardening@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>, <linux-scsi@vger.kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        <intel-wired-lan@lists.osuosl.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Gwan-gyeong Mun" <gwan-gyeong.mun@intel.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Keith Busch" <kbusch@kernel.org>,
-        HighPoint Linux Team <linux@highpoint-tech.com>,
-        <megaraidlinux.pdl@broadcom.com>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        <netdev@vger.kernel.org>,
-        "Nick Desaulniers" <ndesaulniers@google.com>,
-        <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        "Tales Aparecida" <tales.aparecida@gmail.com>,
-        Don Brace <don.brace@microchip.com>,
-        "David S. Miller" <davem@davemloft.net>
-References: <20230522211810.never.421-kees@kernel.org>
- <20230523205354.06b147c6@kernel.org>
-From:   Alexander Lobakin <aleksander.lobakin@intel.com>
-In-Reply-To: <20230523205354.06b147c6@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR2P281CA0176.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:9f::14) To DM6PR11MB3625.namprd11.prod.outlook.com
- (2603:10b6:5:13a::21)
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        gost.dev@samsung.com, anuj20.g@samsung.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        ming.lei@redhat.com, James.Bottomley@hansenpartnership.com,
+        linux-fsdevel@vger.kernel.org, dlemoal@kernel.org,
+        joshi.k@samsung.com, nitheshshetty@gmail.com, bvanassche@acm.org
+Subject: Re: [dm-devel] [PATCH v11 2/9] block: Add copy offload support
+ infrastructure
+Message-ID: <20230524154049.GD11607@frogsfrogsfrogs>
+References: <20230522104146.2856-1-nj.shetty@samsung.com>
+ <CGME20230522104536epcas5p23dd8108dd267ec588e5c36e8f9eb9fe8@epcas5p2.samsung.com>
+ <20230522104146.2856-3-nj.shetty@samsung.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR11MB3625:EE_|SA2PR11MB5130:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1aa4a62a-49b5-4d7d-a5bd-08db5c61b1a7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: oibmwHQLyesMT4J0kfOdL+xf6ve6FBoCQY5O8bMauI6ODC3cwO4fseuBLTzgnMuOKrTrxRHC0w/Q6V85iRQ1DwEOEAKxJ3MOf2WoxBDjXnEisTLaKkV6DbNDXJZoVfgS/7CnrHs2aYbnOkAFwAhP57koLQza8ciJfKGNw2k2Lso0pGULCZ6w61VKbFCOzCZlWrZLBdH+yxjz4B6SWT1KTbH40Ewbs1kW36YskAsHX9p3yvjsDFfwituMNe38o5YMsqTzuHQzfiL2EELFfsS9iPdPRW0VaX+ZCbJU1G0SRy2CTnS6aKbp/eiYeiA15VzbKe97mBeOWcj1R8iqn5l5DzVWGBeXYamvxCYhX3Ayau0rhMGQfRU3Nq4qnbbvt8gltbLJxvvpz4DVyWUE/CERgsAb61qYr9gkQ3M8pdtHl/QGsXH66ZIjPBnsMHltNN2/C0sjqcp4V/aRZmQc1lno8DpRD1YYnP1lg/vWB+2zT79lUOXqAfSds/mW1lHgucHck2JQNynpc8yRIREpV+SWTTsSG8J4FBXjC1B4tgmFAuxUZM4YRVoU6ISCOzmMbwHufX4romIgAoIjTbCKiGIeRd7vCuJL6dQnOUtASCSm4dW6Rfwu+S3jWHm5IgXylKqU0bLbGAPXHzhYq7CkVAaAqw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB3625.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(136003)(376002)(346002)(366004)(39860400002)(396003)(451199021)(82960400001)(186003)(6512007)(6506007)(26005)(38100700002)(7406005)(7416002)(2616005)(36756003)(2906002)(316002)(6666004)(4326008)(66476007)(66946007)(66556008)(41300700001)(6486002)(54906003)(110136005)(31696002)(86362001)(478600001)(31686004)(8676002)(8936002)(5660300002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SWRTVnliVkJET2RBQ2ZvOVlWcGdaUWl3dTF2clQzL0N5OU5LeGJISG4vU1lS?=
- =?utf-8?B?dkt1ZDhyZWdYSmJ3VTV3WUlBWmY0czR5RUxXMkRKNDNVMXRPNTkxRzk5Y05F?=
- =?utf-8?B?TG5qd1NsS0NReS81L28rell1QWUwSTRnQUVCcVpsYm5mcWdlZUZQeW9LMU80?=
- =?utf-8?B?YVkyUWJDVTI4S3FUdythMmZHZHVMTzFwYjFBSFM4UEdxTUMrWU4vaEo4dUNi?=
- =?utf-8?B?Y3NqdXU4WVFMRkMzUms2ZGNFckNRN3QyZEhoM2Zyd1d1SEF3b0Q0WThrK3hj?=
- =?utf-8?B?Nm81dnhraWRoZEgvemI4eG9va0wzay9aSm43NUxJN09SR1pRaFpmWE1NYzhS?=
- =?utf-8?B?cTVrakdad0VJNDV6Y1FIK25jSnNNUlNBY1I3OVNwTTJXaEh0U2pSeXlWeDJs?=
- =?utf-8?B?a3hKUUZYcjlqUDZHZ0E1K3N1YzdweWtEZVM5VVk5STVRRGZIUkZUVWgvdmhM?=
- =?utf-8?B?K1dMSHljVHRQcWRqN2kyYldKWWZ3RHpDeUY0RzFTTmpCWUJGcTNVU0xxVE5s?=
- =?utf-8?B?MUhHNDFNUXBtS2RGQzBCaXRROVZ0NnlydEVwbzdxL3R2MWNReWdyalhKTVpN?=
- =?utf-8?B?NS9vMXBpNFZOZ3QzOGc3enpzNEF4NVBGRTRqaklmUjB0TzFQaThCSmtJZ1gw?=
- =?utf-8?B?WXBMOFB1UVd5L0ZRQ1p6WTg5cXVRSFJNTklIRXQ3aWpKRVZNRnQxQWZsVnBX?=
- =?utf-8?B?NklOdHBrV2JEL01ncXMzS0x0a2M2Vm8rcEFNbmhxU0V1Ukl6cUlldXBFSnJa?=
- =?utf-8?B?Zi9GZi9nMERGQ1N1SHJ2dTZjNnRxcVdQODFiZVYvb1NMUW5NOWZ5emkxbGg1?=
- =?utf-8?B?QjdTV2hPNGh3NHp6dnN4SEJ6S0hEUFF6azVVV0gyS1drVGprVlNTL09wY0lL?=
- =?utf-8?B?ZEE3NmlrVERSZ0h4ZjVXZ1JNaUlZRnR6SGJzRkQ4Ylk5R2o3empjYUs5VDVv?=
- =?utf-8?B?YVBwQ29ZS3FHK0R3SUMrWUIzVUJzdGtNWkI3UU1qcDRwRHNZYjA5eDdydnJn?=
- =?utf-8?B?RDFBejRjN21wUWttM0liaUdLNEYvanlqRDZyNDVKTTROQXpNaFN2bkcyMU9t?=
- =?utf-8?B?Y1lBaEU3aVR6TmVxT09iMDJ4WE4zcndtSEIzYUJWb2tEbDZZbDN4YWZJU2NP?=
- =?utf-8?B?RDlEc1VubDdLMEk4a3JqWlFlWVZiU3g0NFJPK2xhYVBsTkdrWTFDYU13Y3Ez?=
- =?utf-8?B?aXcrZkdGTVFIYXpPVEphNHZrZnltOUwwQkpjQVNzOTU4c0QzOGpvUXo3WmNP?=
- =?utf-8?B?Q1RJczBVbVlGYWhPbTdGRVI4SE15L1JiV2Fac3dZNFV1SVhneXRXTUxPYkox?=
- =?utf-8?B?UjBlUVpyOUtGNGpweVpwdWFzSXk1NlowN0pjZTdLQ0RDMlM5Uk1FZU1wKys3?=
- =?utf-8?B?TzRWeVp2eVFoTXpPNzJJK01KUWYwZ1NDN2pCUUYzU3ZzdTRVSVVoOTE5QnB4?=
- =?utf-8?B?SmJpSUNMK3AyUHkrVjM5bUQwQlZVZWhCVGdiVHNKUVhWc1lSdE5hamZjcHUw?=
- =?utf-8?B?UDdIMzVxK0d5T0c4L3FhcndHTkVxY3RKek9sOXdwa1QrUWxPYVhqRExtU1Mr?=
- =?utf-8?B?VjFnUVJRQ2txelhQdXJxeXNWQ2xKeE8rMnk1NzFpK3dQYUk5L2VZWE54M25Y?=
- =?utf-8?B?WnRkVUpsVHF2blRHOUhSN1RLdmRHN1ZDUUhjUUNhd3VzTUV5V2FPc3pRZXZm?=
- =?utf-8?B?RGU3VUtqU05CRGJQM2RXZnNVcEhUUVdrYWxpY2ZFVWw4RTNST2JlRFM3Mkow?=
- =?utf-8?B?YTNKWEZRVTRKS0orWkZYbXZNak1iOVdSMTlFbEQ1TUl5RmVMZCtRV2htS2N1?=
- =?utf-8?B?UDR0dm1waTFLS1luaUZlWWdadVZDZlQ0d3JTTGlLZm9wMVRoem9aYlBvdUhz?=
- =?utf-8?B?TVYrdStFanNja2hoWXBYR3djRnF3NzJFdUVacklycFU4RkNBa2ZvVm1DUlNh?=
- =?utf-8?B?ZUlNNkpkZHU4QlBWamYyQWx0Q3BRV0tFdzBHSFYwNS9pZlpUMVE1aXhEck5p?=
- =?utf-8?B?SHZGNVpUTUJwaUljUzRoNWsvT2RRd1E4VVAwL0pTUlVMTWxXWVNrakREMG4y?=
- =?utf-8?B?VHpleFBUczNzOENmZmlTVm5oUTlkeVFSN2RSbFJkTkhZaGhBQzdiR3dER0s2?=
- =?utf-8?B?Vlc4Tnczc0d3dUUxdm9jOGI2bU56bjFtVUVSb1Zac1IyRmZCQlhXdGdXQ2JP?=
- =?utf-8?B?Mnc9PQ==?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1aa4a62a-49b5-4d7d-a5bd-08db5c61b1a7
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB3625.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2023 14:18:06.9803
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GZa5YNCGdC90BUrBWM/DzmXUbTnNDU+ZXAdAeZoy0SROq5ZD9krLJCDsKxsXraoFDiyS1Piq1hjK7ODBEHE18NPqjU2YXDIosBY9exOEkOE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB5130
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230522104146.2856-3-nj.shetty@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jakub Kicinski <kuba@kernel.org>
-Date: Tue, 23 May 2023 20:53:54 -0700
-
-> On Mon, 22 May 2023 14:18:13 -0700 Kees Cook wrote:
->> diff --git a/drivers/net/ethernet/intel/ice/ice_ddp.h b/drivers/net/ethernet/intel/ice/ice_ddp.h
->> index 37eadb3d27a8..41acfe26df1c 100644
->> --- a/drivers/net/ethernet/intel/ice/ice_ddp.h
->> +++ b/drivers/net/ethernet/intel/ice/ice_ddp.h
->> @@ -185,7 +185,7 @@ struct ice_buf_hdr {
->>  
->>  #define ICE_MAX_ENTRIES_IN_BUF(hd_sz, ent_sz)                                 \
->>  	((ICE_PKG_BUF_SIZE -                                                  \
->> -	  struct_size((struct ice_buf_hdr *)0, section_entry, 1) - (hd_sz)) / \
->> +	  struct_size_t(struct ice_buf_hdr,  section_entry, 1) - (hd_sz)) / \
->>  	 (ent_sz))
->>  
->>  /* ice package section IDs */
->> @@ -297,7 +297,7 @@ struct ice_label_section {
->>  };
->>  
->>  #define ICE_MAX_LABELS_IN_BUF                                             \
->> -	ICE_MAX_ENTRIES_IN_BUF(struct_size((struct ice_label_section *)0, \
->> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_label_section,  \
->>  					   label, 1) -                    \
->>  				       sizeof(struct ice_label),          \
->>  			       sizeof(struct ice_label))
->> @@ -352,7 +352,7 @@ struct ice_boost_tcam_section {
->>  };
->>  
->>  #define ICE_MAX_BST_TCAMS_IN_BUF                                               \
->> -	ICE_MAX_ENTRIES_IN_BUF(struct_size((struct ice_boost_tcam_section *)0, \
->> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_boost_tcam_section,  \
->>  					   tcam, 1) -                          \
->>  				       sizeof(struct ice_boost_tcam_entry),    \
->>  			       sizeof(struct ice_boost_tcam_entry))
->> @@ -372,8 +372,7 @@ struct ice_marker_ptype_tcam_section {
->>  };
->>  
->>  #define ICE_MAX_MARKER_PTYPE_TCAMS_IN_BUF                                    \
->> -	ICE_MAX_ENTRIES_IN_BUF(                                              \
->> -		struct_size((struct ice_marker_ptype_tcam_section *)0, tcam, \
->> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_marker_ptype_tcam_section,  tcam, \
->>  			    1) -                                             \
->>  			sizeof(struct ice_marker_ptype_tcam_entry),          \
->>  		sizeof(struct ice_marker_ptype_tcam_entry))
+On Mon, May 22, 2023 at 04:11:33PM +0530, Nitesh Shetty wrote:
+> Introduce blkdev_issue_copy which takes similar arguments as
+> copy_file_range and performs copy offload between two bdevs.
+> Introduce REQ_COPY copy offload operation flag. Create a read-write
+> bio pair with a token as payload and submitted to the device in order.
+> Read request populates token with source specific information which
+> is then passed with write request.
+> This design is courtesy Mikulas Patocka's token based copy
 > 
-> Acked-by: Jakub Kicinski <kuba@kernel.org>
+> Larger copy will be divided, based on max_copy_sectors limit.
 > 
-> but Intel ICE folks please speak up if this has a high chance of
-> conflicts, I think I've seen some ICE DDP patches flying around :(
+> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> ---
+>  block/blk-lib.c           | 235 ++++++++++++++++++++++++++++++++++++++
+>  block/blk.h               |   2 +
+>  include/linux/blk_types.h |  25 ++++
+>  include/linux/blkdev.h    |   3 +
+>  4 files changed, 265 insertions(+)
+> 
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index e59c3069e835..ed089e703cb1 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -115,6 +115,241 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>  }
+>  EXPORT_SYMBOL(blkdev_issue_discard);
+>  
+> +/*
+> + * For synchronous copy offload/emulation, wait and process all in-flight BIOs.
+> + * This must only be called once all bios have been issued so that the refcount
+> + * can only decrease. This just waits for all bios to make it through
+> + * blkdev_copy_write_endio.
+> + */
+> +static int blkdev_copy_wait_completion(struct cio *cio)
+> +{
+> +	int ret;
+> +
+> +	if (cio->endio)
+> +		return 0;
+> +
+> +	if (atomic_read(&cio->refcount)) {
+> +		__set_current_state(TASK_UNINTERRUPTIBLE);
+> +		blk_io_schedule();
+> +	}
+> +
+> +	ret = cio->comp_len;
+> +	kfree(cio);
+> +
+> +	return ret;
+> +}
+> +
+> +static void blkdev_copy_offload_write_endio(struct bio *bio)
+> +{
+> +	struct copy_ctx *ctx = bio->bi_private;
+> +	struct cio *cio = ctx->cio;
+> +	sector_t clen;
+> +
+> +	if (bio->bi_status) {
+> +		clen = (bio->bi_iter.bi_sector << SECTOR_SHIFT) - cio->pos_out;
+> +		cio->comp_len = min_t(sector_t, clen, cio->comp_len);
+> +	}
+> +	__free_page(bio->bi_io_vec[0].bv_page);
+> +	bio_put(bio);
+> +
+> +	kfree(ctx);
+> +	if (!atomic_dec_and_test(&cio->refcount))
+> +		return;
+> +	if (cio->endio) {
+> +		cio->endio(cio->private, cio->comp_len);
+> +		kfree(cio);
+> +	} else
+> +		blk_wake_io_task(cio->waiter);
+> +}
+> +
+> +static void blkdev_copy_offload_read_endio(struct bio *read_bio)
+> +{
+> +	struct copy_ctx *ctx = read_bio->bi_private;
+> +	struct cio *cio = ctx->cio;
+> +	sector_t clen;
+> +
+> +	if (read_bio->bi_status) {
+> +		clen = (read_bio->bi_iter.bi_sector << SECTOR_SHIFT)
+> +				- cio->pos_in;
+> +		cio->comp_len = min_t(sector_t, clen, cio->comp_len);
+> +		__free_page(read_bio->bi_io_vec[0].bv_page);
+> +		bio_put(ctx->write_bio);
+> +		bio_put(read_bio);
+> +		kfree(ctx);
+> +		if (atomic_dec_and_test(&cio->refcount)) {
+> +			if (cio->endio) {
+> +				cio->endio(cio->private, cio->comp_len);
+> +				kfree(cio);
+> +			} else
+> +				blk_wake_io_task(cio->waiter);
+> +		}
+> +		return;
+> +	}
+> +
+> +	schedule_work(&ctx->dispatch_work);
+> +	bio_put(read_bio);
+> +}
+> +
+> +static void blkdev_copy_dispatch_work(struct work_struct *work)
+> +{
+> +	struct copy_ctx *ctx = container_of(work, struct copy_ctx,
+> +			dispatch_work);
+> +
+> +	submit_bio(ctx->write_bio);
+> +}
+> +
+> +/*
+> + * __blkdev_copy_offload	- Use device's native copy offload feature.
+> + * we perform copy operation by sending 2 bio.
+> + * 1. First we send a read bio with REQ_COPY flag along with a token and source
+> + * and length. Once read bio reaches driver layer, device driver adds all the
+> + * source info to token and does a fake completion.
+> + * 2. Once read operation completes, we issue write with REQ_COPY flag with same
+> + * token. In driver layer, token info is used to form a copy offload command.
+> + *
+> + * Returns the length of bytes copied or error if encountered
+> + */
+> +static int __blkdev_copy_offload(struct block_device *bdev_in, loff_t pos_in,
+> +		struct block_device *bdev_out, loff_t pos_out, size_t len,
+> +		cio_iodone_t endio, void *private, gfp_t gfp_mask)
+> +{
+> +	struct cio *cio;
+> +	struct copy_ctx *ctx;
+> +	struct bio *read_bio, *write_bio;
+> +	struct page *token;
+> +	sector_t copy_len;
+> +	sector_t rem, max_copy_len;
+> +
+> +	cio = kzalloc(sizeof(struct cio), GFP_KERNEL);
+> +	if (!cio)
+> +		return -ENOMEM;
+> +	atomic_set(&cio->refcount, 0);
+> +	cio->waiter = current;
+> +	cio->endio = endio;
+> +	cio->private = private;
+> +
+> +	max_copy_len = min(bdev_max_copy_sectors(bdev_in),
+> +			bdev_max_copy_sectors(bdev_out)) << SECTOR_SHIFT;
+> +
+> +	cio->pos_in = pos_in;
+> +	cio->pos_out = pos_out;
+> +	/* If there is a error, comp_len will be set to least successfully
+> +	 * completed copied length
+> +	 */
+> +	cio->comp_len = len;
+> +	for (rem = len; rem > 0; rem -= copy_len) {
+> +		copy_len = min(rem, max_copy_len);
+> +
+> +		token = alloc_page(gfp_mask);
+> +		if (unlikely(!token))
+> +			goto err_token;
+> +
+> +		ctx = kzalloc(sizeof(struct copy_ctx), gfp_mask);
+> +		if (!ctx)
+> +			goto err_ctx;
+> +		read_bio = bio_alloc(bdev_in, 1, REQ_OP_READ | REQ_COPY
+> +			| REQ_SYNC | REQ_NOMERGE, gfp_mask);
+> +		if (!read_bio)
+> +			goto err_read_bio;
+> +		write_bio = bio_alloc(bdev_out, 1, REQ_OP_WRITE
+> +			| REQ_COPY | REQ_SYNC | REQ_NOMERGE, gfp_mask);
+> +		if (!write_bio)
+> +			goto err_write_bio;
+> +
+> +		ctx->cio = cio;
+> +		ctx->write_bio = write_bio;
+> +		INIT_WORK(&ctx->dispatch_work, blkdev_copy_dispatch_work);
+> +
+> +		__bio_add_page(read_bio, token, PAGE_SIZE, 0);
+> +		read_bio->bi_iter.bi_size = copy_len;
+> +		read_bio->bi_iter.bi_sector = pos_in >> SECTOR_SHIFT;
+> +		read_bio->bi_end_io = blkdev_copy_offload_read_endio;
+> +		read_bio->bi_private = ctx;
+> +
+> +		__bio_add_page(write_bio, token, PAGE_SIZE, 0);
+> +		write_bio->bi_iter.bi_size = copy_len;
+> +		write_bio->bi_end_io = blkdev_copy_offload_write_endio;
+> +		write_bio->bi_iter.bi_sector = pos_out >> SECTOR_SHIFT;
+> +		write_bio->bi_private = ctx;
+> +
+> +		atomic_inc(&cio->refcount);
+> +		submit_bio(read_bio);
+> +		pos_in += copy_len;
+> +		pos_out += copy_len;
+> +	}
+> +
+> +	/* Wait for completion of all IO's*/
+> +	return blkdev_copy_wait_completion(cio);
+> +
+> +err_write_bio:
+> +	bio_put(read_bio);
+> +err_read_bio:
+> +	kfree(ctx);
+> +err_ctx:
+> +	__free_page(token);
+> +err_token:
+> +	cio->comp_len = min_t(sector_t, cio->comp_len, (len - rem));
+> +	if (!atomic_read(&cio->refcount))
+> +		return -ENOMEM;
+> +	/* Wait for submitted IOs to complete */
+> +	return blkdev_copy_wait_completion(cio);
+> +}
+> +
+> +static inline int blkdev_copy_sanity_check(struct block_device *bdev_in,
+> +	loff_t pos_in, struct block_device *bdev_out, loff_t pos_out,
+> +	size_t len)
+> +{
+> +	unsigned int align = max(bdev_logical_block_size(bdev_out),
+> +					bdev_logical_block_size(bdev_in)) - 1;
+> +
+> +	if (bdev_read_only(bdev_out))
+> +		return -EPERM;
+> +
+> +	if ((pos_in & align) || (pos_out & align) || (len & align) || !len ||
+> +		len >= COPY_MAX_BYTES)
+> +		return -EINVAL;
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * @bdev_in:	source block device
+> + * @pos_in:	source offset
+> + * @bdev_out:	destination block device
+> + * @pos_out:	destination offset
+> + * @len:	length in bytes to be copied
+> + * @endio:	endio function to be called on completion of copy operation,
+> + *		for synchronous operation this should be NULL
+> + * @private:	endio function will be called with this private data, should be
+> + *		NULL, if operation is synchronous in nature
+> + * @gfp_mask:   memory allocation flags (for bio_alloc)
+> + *
+> + * Returns the length of bytes copied or error if encountered
+> + *
+> + * Description:
+> + *	Copy source offset from source block device to destination block
+> + *	device. Max total length of copy is limited to MAX_COPY_TOTAL_LENGTH
+> + */
+> +int blkdev_issue_copy(struct block_device *bdev_in, loff_t pos_in,
 
-I haven't found anything that would conflict with this, esp. since it
-implies no functional changes.
-I agree it's been much needed, great, thanks!
+I'd have thought you'd return ssize_t here.  If the two block devices
+are loopmounted xfs files, we can certainly reflink "copy" more than 2GB
+at a time.
 
-Reviewed-by: Alexander Lobakin <aleksander.lobakin@intel.com>
+--D
 
-Olek
+> +		      struct block_device *bdev_out, loff_t pos_out, size_t len,
+> +		      cio_iodone_t endio, void *private, gfp_t gfp_mask)
+> +{
+> +	struct request_queue *q_in = bdev_get_queue(bdev_in);
+> +	struct request_queue *q_out = bdev_get_queue(bdev_out);
+> +	int ret;
+> +
+> +	ret = blkdev_copy_sanity_check(bdev_in, pos_in, bdev_out, pos_out, len);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (blk_queue_copy(q_in) && blk_queue_copy(q_out))
+> +		ret = __blkdev_copy_offload(bdev_in, pos_in, bdev_out, pos_out,
+> +			   len, endio, private, gfp_mask);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(blkdev_issue_copy);
+> +
+>  static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+>  		sector_t sector, sector_t nr_sects, gfp_t gfp_mask,
+>  		struct bio **biop, unsigned flags)
+> diff --git a/block/blk.h b/block/blk.h
+> index 45547bcf1119..ec48a237fe12 100644
+> --- a/block/blk.h
+> +++ b/block/blk.h
+> @@ -303,6 +303,8 @@ static inline bool bio_may_exceed_limits(struct bio *bio,
+>  		break;
+>  	}
+>  
+> +	if (unlikely(op_is_copy(bio->bi_opf)))
+> +		return false;
+>  	/*
+>  	 * All drivers must accept single-segments bios that are <= PAGE_SIZE.
+>  	 * This is a quick and dirty check that relies on the fact that
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index 740afe80f297..0117e33087e1 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -420,6 +420,7 @@ enum req_flag_bits {
+>  	 */
+>  	/* for REQ_OP_WRITE_ZEROES: */
+>  	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
+> +	__REQ_COPY,		/* copy request */
+>  
+>  	__REQ_NR_BITS,		/* stops here */
+>  };
+> @@ -444,6 +445,7 @@ enum req_flag_bits {
+>  #define REQ_POLLED	(__force blk_opf_t)(1ULL << __REQ_POLLED)
+>  #define REQ_ALLOC_CACHE	(__force blk_opf_t)(1ULL << __REQ_ALLOC_CACHE)
+>  #define REQ_SWAP	(__force blk_opf_t)(1ULL << __REQ_SWAP)
+> +#define REQ_COPY	((__force blk_opf_t)(1ULL << __REQ_COPY))
+>  #define REQ_DRV		(__force blk_opf_t)(1ULL << __REQ_DRV)
+>  #define REQ_FS_PRIVATE	(__force blk_opf_t)(1ULL << __REQ_FS_PRIVATE)
+>  
+> @@ -474,6 +476,11 @@ static inline bool op_is_write(blk_opf_t op)
+>  	return !!(op & (__force blk_opf_t)1);
+>  }
+>  
+> +static inline bool op_is_copy(blk_opf_t op)
+> +{
+> +	return op & REQ_COPY;
+> +}
+> +
+>  /*
+>   * Check if the bio or request is one that needs special treatment in the
+>   * flush state machine.
+> @@ -533,4 +540,22 @@ struct blk_rq_stat {
+>  	u64 batch;
+>  };
+>  
+> +typedef void (cio_iodone_t)(void *private, int comp_len);
+> +
+> +struct cio {
+> +	struct task_struct *waiter;     /* waiting task (NULL if none) */
+> +	atomic_t refcount;
+> +	loff_t pos_in;
+> +	loff_t pos_out;
+> +	size_t comp_len;
+> +	cio_iodone_t *endio;		/* applicable for async operation */
+> +	void *private;			/* applicable for async operation */
+> +};
+> +
+> +struct copy_ctx {
+> +	struct cio *cio;
+> +	struct work_struct dispatch_work;
+> +	struct bio *write_bio;
+> +};
+> +
+>  #endif /* __LINUX_BLK_TYPES_H */
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index c9bf11adccb3..6f2814ab4741 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1051,6 +1051,9 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>  		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop);
+>  int blkdev_issue_secure_erase(struct block_device *bdev, sector_t sector,
+>  		sector_t nr_sects, gfp_t gfp);
+> +int blkdev_issue_copy(struct block_device *bdev_in, loff_t pos_in,
+> +		      struct block_device *bdev_out, loff_t pos_out, size_t len,
+> +		      cio_iodone_t end_io, void *private, gfp_t gfp_mask);
+>  
+>  #define BLKDEV_ZERO_NOUNMAP	(1 << 0)  /* do not free blocks */
+>  #define BLKDEV_ZERO_NOFALLBACK	(1 << 1)  /* don't write explicit zeroes */
+> -- 
+> 2.35.1.500.gb896f729e2
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://listman.redhat.com/mailman/listinfo/dm-devel
+> 
