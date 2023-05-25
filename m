@@ -2,50 +2,45 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7D2C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 May 2023 18:38:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ABB2C7EE2F
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 May 2023 18:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242079AbjEYSio (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 May 2023 14:38:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56976 "EHLO
+        id S242108AbjEYSjL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 May 2023 14:39:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242035AbjEYSiN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2023 14:38:13 -0400
+        with ESMTP id S242022AbjEYSij (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2023 14:38:39 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5957E2115;
-        Thu, 25 May 2023 11:36:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1352DE69;
+        Thu, 25 May 2023 11:36:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A6BB0648D7;
-        Thu, 25 May 2023 18:35:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B8FFC433D2;
-        Thu, 25 May 2023 18:35:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 64C5B648DF;
+        Thu, 25 May 2023 18:35:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B14EC433D2;
+        Thu, 25 May 2023 18:35:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685039726;
-        bh=PRWCD+xhEF1UZpcAgOovW3slI80wQJy3hmteQFBF7Aw=;
+        s=k20201202; t=1685039728;
+        bh=YTQNMzu6xtBpjnBNiSqKehjsTvKGspXh7Ovuy4IeBbM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WryjnOAr5Yrk4dtaSb4qFtIYlevRojllHmbcpJOe9hHrzK1SLLEVx9cu32EE7Otpy
-         DW37k5C3dmRGWu8D2CtADKFjApMaNpkemcPKK7lh2dbmX+X33EvG0EffwmSwIObUrB
-         zfCAYCBBJVFqYl/AoFyy8JQt+X3KF2zwHLkXZ8nFTwKYFpNIxi89q/ROfKxZ/Sg8Fe
-         tG3spPtNZhborHOnmbCG6RqLs+EPec1+1VeL8n+GvtsT1qaZctiRtYLHtT9tG4L0i8
-         z9CdjOUjVZAHHK3RWftn9xKPr6po9/BESloLrKtraZ5pIvZljDnzD7hHO2Ot1cL/so
-         zR9f4m2LqaiJg==
+        b=TEF8om+3V87NjWJpxwz/dUyIr6AE4ZfhVa7hU0kmCZUaqYo2lLA+vD1eHJ0WC2sb5
+         vKZlfx/mR4/ynZQ4o9dJShDrUWoCZCqfk6xTRLiR6xfHSGwgzFdTk0zUZR18lZChlr
+         dlIfGZHUMHdDyebSM2PWEnmGIdWOATxNP/Q6oxsa7Kh5Igu6R3Zdb/x8VkOvVvVYQZ
+         SFKgXnA2SCgWxiVrD7PGqhpn2BchNB5Ne4A8v6OjGwmNGbO1vLbQy9bBTyVjS2njOc
+         Y0PguFtX9bKbbp5LYt/pQu3yH21hQrIvbJkJxCOMbw9tIYHAK7YhYQmgt3/x1zuQA2
+         YxHAQrm1EIERw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>, Bean Huo <beanhuo@micron.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+Cc:     Wenchao Hao <haowenchao2@huawei.com>,
+        Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, quic_cang@quicinc.com,
-        quic_asutoshd@quicinc.com, alice.chao@mediatek.com,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.3 51/67] scsi: ufs: core: Fix MCQ nr_hw_queues
-Date:   Thu, 25 May 2023 14:31:28 -0400
-Message-Id: <20230525183144.1717540-51-sashal@kernel.org>
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.3 53/67] scsi: core: Decrease scsi_device's iorequest_cnt if dispatch failed
+Date:   Thu, 25 May 2023 14:31:30 -0400
+Message-Id: <20230525183144.1717540-53-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230525183144.1717540-1-sashal@kernel.org>
 References: <20230525183144.1717540-1-sashal@kernel.org>
@@ -57,38 +52,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Po-Wen Kao <powen.kao@mediatek.com>
+From: Wenchao Hao <haowenchao2@huawei.com>
 
-[ Upstream commit 72a81bb0b6fc9b759ac0fdaca3ec5884a8b2f304 ]
+[ Upstream commit 09e797c8641f6ad435c33ae24c223351197ea29a ]
 
-Since MAXQ is 0-based value, add one to obtain number of hardware queues.
+If scsi_dispatch_cmd() failed, the SCSI command was not sent to the target,
+scsi_queue_rq() would return BLK_STS_RESOURCE and the related request would
+be requeued. The timeout of this request would not fire, no one would
+increase iodone_cnt.
 
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-Link: https://lore.kernel.org/r/20230504154454.26654-4-powen.kao@mediatek.com
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+The above flow would result the iodone_cnt smaller than iorequest_cnt.  So
+decrease the iorequest_cnt if dispatch failed to workaround the issue.
+
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+Reported-by: Ming Lei <ming.lei@redhat.com>
+Closes: https://lore.kernel.org/r/ZF+zB+bB7iqe0wGd@ovpn-8-17.pek2.redhat.com
+Link: https://lore.kernel.org/r/20230515070156.1790181-3-haowenchao2@huawei.com
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufs-mcq.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 937933d3f77c2..51b3c6ae781df 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -150,7 +150,8 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
- 	u32 hba_maxq, rem, tot_queues;
- 	struct Scsi_Host *host = hba->host;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 03964b26f3f27..0226c9279cef6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1485,6 +1485,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		 */
+ 		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
+ 			"queuecommand : device blocked\n"));
++		atomic_dec(&cmd->device->iorequest_cnt);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
  
--	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
-+	/* maxq is 0 based value */
-+	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1;
- 
- 	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
- 			rw_queues;
+@@ -1517,6 +1518,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	trace_scsi_dispatch_cmd_start(cmd);
+ 	rtn = host->hostt->queuecommand(host, cmd);
+ 	if (rtn) {
++		atomic_dec(&cmd->device->iorequest_cnt);
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+ 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+ 		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
 -- 
 2.39.2
 
