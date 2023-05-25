@@ -2,53 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C4DC77B7A
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 May 2023 18:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7D2C77B7E
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 May 2023 18:38:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242011AbjEYShf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 May 2023 14:37:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51772 "EHLO
+        id S242079AbjEYSio (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 May 2023 14:38:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241953AbjEYShQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2023 14:37:16 -0400
+        with ESMTP id S242035AbjEYSiN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2023 14:38:13 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A529B1987;
-        Thu, 25 May 2023 11:35:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5957E2115;
+        Thu, 25 May 2023 11:36:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A165648E0;
-        Thu, 25 May 2023 18:34:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 955DDC4339C;
-        Thu, 25 May 2023 18:34:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A6BB0648D7;
+        Thu, 25 May 2023 18:35:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B8FFC433D2;
+        Thu, 25 May 2023 18:35:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685039698;
-        bh=6YmevBviBkehl6EAczyX6mPWGWg8NS8LrHggZS65toA=;
+        s=k20201202; t=1685039726;
+        bh=PRWCD+xhEF1UZpcAgOovW3slI80wQJy3hmteQFBF7Aw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=irRF1K2v7rNYx2Br5YnmBEEjmNClA2Mip6h7pExako0DICVezP0nE8zTVqt9aGhWk
-         06A3LGSR9FKldMw8MhONYTSivptQYoimcj3onO0nA2rqCw8Zy+w6Yq+uo/za8VNQjC
-         li09omwVH45HqRUUWjd32JyPL2qifY9CtQIkdYvGKJasFhkxcWP8l4+AN9t1eKICv9
-         ZAGfX2kuGuirONySx4iz8IByo1JEYL+Zz+dKpTvMHWlBZcHiDumH9DG4xfmYLSsXdJ
-         YdP0CISqri83htM9wjZLTEz875fAglcN0OzLndaIbqVA5dGEsf+ZUVvHIQVwZ7IuuG
-         49wFPOQiqhgpg==
+        b=WryjnOAr5Yrk4dtaSb4qFtIYlevRojllHmbcpJOe9hHrzK1SLLEVx9cu32EE7Otpy
+         DW37k5C3dmRGWu8D2CtADKFjApMaNpkemcPKK7lh2dbmX+X33EvG0EffwmSwIObUrB
+         zfCAYCBBJVFqYl/AoFyy8JQt+X3KF2zwHLkXZ8nFTwKYFpNIxi89q/ROfKxZ/Sg8Fe
+         tG3spPtNZhborHOnmbCG6RqLs+EPec1+1VeL8n+GvtsT1qaZctiRtYLHtT9tG4L0i8
+         z9CdjOUjVZAHHK3RWftn9xKPr6po9/BESloLrKtraZ5pIvZljDnzD7hHO2Ot1cL/so
+         zR9f4m2LqaiJg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Po-Wen Kao <powen.kao@mediatek.com>, Bean Huo <beanhuo@micron.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         matthias.bgg@gmail.com, quic_cang@quicinc.com,
         quic_asutoshd@quicinc.com, alice.chao@mediatek.com,
-        avri.altman@wdc.com, beanhuo@micron.com, j-young.choi@samsung.com,
-        Arthur.Simchaev@wdc.com, athierry@redhat.com,
         linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.3 49/67] scsi: ufs: core: Fix MCQ tag calculation
-Date:   Thu, 25 May 2023 14:31:26 -0400
-Message-Id: <20230525183144.1717540-49-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.3 51/67] scsi: ufs: core: Fix MCQ nr_hw_queues
+Date:   Thu, 25 May 2023 14:31:28 -0400
+Message-Id: <20230525183144.1717540-51-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230525183144.1717540-1-sashal@kernel.org>
 References: <20230525183144.1717540-1-sashal@kernel.org>
@@ -62,55 +59,36 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Po-Wen Kao <powen.kao@mediatek.com>
 
-[ Upstream commit 5149452ca66289ef33d13897ee845a2f6f5b680f ]
+[ Upstream commit 72a81bb0b6fc9b759ac0fdaca3ec5884a8b2f304 ]
 
-The transfer command descriptor is allocated in ufshcd_memory_alloc() and
-referenced by the transfer request descriptor with stride size
-sizeof_utp_transfer_cmd_desc() instead of sizeof(struct
-utp_transfer_cmd_desc).
-
-Consequently, computing tag by address offset should also refer to the
-same stride.
+Since MAXQ is 0-based value, add one to obtain number of hardware queues.
 
 Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-Link: https://lore.kernel.org/r/20230504154454.26654-2-powen.kao@mediatek.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20230504154454.26654-4-powen.kao@mediatek.com
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufs-mcq.c | 2 +-
- drivers/ufs/core/ufshcd.c  | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/ufs/core/ufs-mcq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 202ff71e1b582..b7c5f39b50e6d 100644
+index 937933d3f77c2..51b3c6ae781df 100644
 --- a/drivers/ufs/core/ufs-mcq.c
 +++ b/drivers/ufs/core/ufs-mcq.c
-@@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
- 	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
- 		hba->ucdl_dma_addr;
+@@ -150,7 +150,8 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+ 	u32 hba_maxq, rem, tot_queues;
+ 	struct Scsi_Host *host = hba->host;
  
--	return div_u64(addr, sizeof(struct utp_transfer_cmd_desc));
-+	return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
- }
+-	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities);
++	/* maxq is 0 based value */
++	hba_maxq = FIELD_GET(MAX_QUEUE_SUP, hba->mcq_capabilities) + 1;
  
- static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 70b112038792a..c7a9a1cedf920 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8422,7 +8422,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
- {
- 	size_t ucdl_size, utrdl_size;
- 
--	ucdl_size = sizeof(struct utp_transfer_cmd_desc) * nutrs;
-+	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * nutrs;
- 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
- 			   hba->ucdl_dma_addr);
- 
+ 	tot_queues = UFS_MCQ_NUM_DEV_CMD_QUEUES + read_queues + poll_queues +
+ 			rw_queues;
 -- 
 2.39.2
 
