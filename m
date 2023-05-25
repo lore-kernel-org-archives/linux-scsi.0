@@ -2,58 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0073BC7EE2C
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 May 2023 18:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A2FC7EE31
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 May 2023 18:43:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241841AbjEYSjo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 May 2023 14:39:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56778 "EHLO
+        id S242427AbjEYSnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 May 2023 14:43:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241922AbjEYSjH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2023 14:39:07 -0400
+        with ESMTP id S242268AbjEYSnl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2023 14:43:41 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 454461725;
-        Thu, 25 May 2023 11:37:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B92CE10FB;
+        Thu, 25 May 2023 11:40:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 427A7647B7;
-        Thu, 25 May 2023 18:35:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DB06C4339C;
-        Thu, 25 May 2023 18:35:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 930B960C07;
+        Thu, 25 May 2023 18:38:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36EB7C4339B;
+        Thu, 25 May 2023 18:38:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685039714;
-        bh=nv4pu/DVjuArKp1IDphcIeJJlJ9bGuaD2HPi5eSGOho=;
+        s=k20201202; t=1685039901;
+        bh=P/peyh5WpAYMJe0ntuLy22A+iOI/4fbFq/pWTMDopZQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LwOAMOjtpDl68aakBVXvtjSZvZXGO15uyY3/tJ9zvNXei2usM6iYiJH8VN/6QssTq
-         3HRqRakJhmVqGoYiQ11lPgS2XYK23tXqwnSBnVQhvJaawnDhNP+qXW0TprHJTWe/WP
-         2HbnKJBPqLcSWe036hJMPrqnN+FrrijHLELlmI/SuaKSMuNssYZ/VXfQZ2OndKdLsC
-         U1nBOpME6HyiPaKFslwfh3sH/OmRDbsh3fjc11DABdw5kPmOz/IKDZRVrPuTUs/PVV
-         lChmJVmfJWqr+iVCNydnJzwlLmWHHRST0+1xzjEOrCJP2Cl0Bqd/F6MjmIJwLRWmJQ
-         6yzQ3robuC1dQ==
+        b=EmNqLNIoQkl72By1SJxh2DvveQR13sdIFQa897iSQS11AMJNVjol+V3U3/ytv7Q9f
+         KuXyn8Z6kyWBWu/mkViAcMzindvgBVTqjZ28hhy90SMoslnJvp5vqDmpvm2KqZYf3C
+         o4icwaDN6xmzKM7nHqCvyMZY230BxzBx8WoDyl6Zld6wf6+k2fZTnvPFrJz1Wbozhs
+         c/HPeZT74CQTkxACrTVryPbdJ7PVQnw0RVAgwsx09m9BwSwYnD0bDflpHPWJRNh2G3
+         2SEyazvmZ6VXuv6zovlBEkqzNf/T7GN913dU66WZyr4ojnXQRgTWCZ4g2Blwzr71uL
+         dSTmmXGpokUzw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Wenchao Hao <haowenchao2@huawei.com>,
+        Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, quic_cang@quicinc.com,
-        quic_asutoshd@quicinc.com, alice.chao@mediatek.com,
-        avri.altman@wdc.com, beanhuo@micron.com, j-young.choi@samsung.com,
-        Arthur.Simchaev@wdc.com, athierry@redhat.com, ebiggers@google.com,
-        yoshihiro.shimoda.uh@renesas.com, keosung.park@samsung.com,
-        dlunev@chromium.org, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.3 50/67] scsi: ufs: core: Rename symbol sizeof_utp_transfer_cmd_desc()
-Date:   Thu, 25 May 2023 14:31:27 -0400
-Message-Id: <20230525183144.1717540-50-sashal@kernel.org>
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 43/57] scsi: core: Decrease scsi_device's iorequest_cnt if dispatch failed
+Date:   Thu, 25 May 2023 14:35:53 -0400
+Message-Id: <20230525183607.1793983-43-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230525183144.1717540-1-sashal@kernel.org>
-References: <20230525183144.1717540-1-sashal@kernel.org>
+In-Reply-To: <20230525183607.1793983-1-sashal@kernel.org>
+References: <20230525183607.1793983-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -62,97 +52,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Po-Wen Kao <powen.kao@mediatek.com>
+From: Wenchao Hao <haowenchao2@huawei.com>
 
-[ Upstream commit 06caeb536b2b21668efd2d6fa97c09461957b3a7 ]
+[ Upstream commit 09e797c8641f6ad435c33ae24c223351197ea29a ]
 
-Naming the functions after standard operators like sizeof() may cause
-confusion. Rename it to ufshcd_get_ucd_size().
+If scsi_dispatch_cmd() failed, the SCSI command was not sent to the target,
+scsi_queue_rq() would return BLK_STS_RESOURCE and the related request would
+be requeued. The timeout of this request would not fire, no one would
+increase iodone_cnt.
 
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-Link: https://lore.kernel.org/r/20230504154454.26654-3-powen.kao@mediatek.com
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The above flow would result the iodone_cnt smaller than iorequest_cnt.  So
+decrease the iorequest_cnt if dispatch failed to workaround the issue.
+
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+Reported-by: Ming Lei <ming.lei@redhat.com>
+Closes: https://lore.kernel.org/r/ZF+zB+bB7iqe0wGd@ovpn-8-17.pek2.redhat.com
+Link: https://lore.kernel.org/r/20230515070156.1790181-3-haowenchao2@huawei.com
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufs-mcq.c |  2 +-
- drivers/ufs/core/ufshcd.c  | 10 +++++-----
- include/ufs/ufshcd.h       |  2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index b7c5f39b50e6d..937933d3f77c2 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -265,7 +265,7 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
- 	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
- 		hba->ucdl_dma_addr;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 8b89fab7c4206..fb6e9a7a7f58b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1491,6 +1491,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		 */
+ 		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
+ 			"queuecommand : device blocked\n"));
++		atomic_dec(&cmd->device->iorequest_cnt);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
  
--	return div_u64(addr, sizeof_utp_transfer_cmd_desc(hba));
-+	return div_u64(addr, ufshcd_get_ucd_size(hba));
- }
- 
- static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c7a9a1cedf920..b95b5afd7eaeb 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2821,10 +2821,10 @@ static void ufshcd_map_queues(struct Scsi_Host *shost)
- static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
- {
- 	struct utp_transfer_cmd_desc *cmd_descp = (void *)hba->ucdl_base_addr +
--		i * sizeof_utp_transfer_cmd_desc(hba);
-+		i * ufshcd_get_ucd_size(hba);
- 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
- 	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
--		i * sizeof_utp_transfer_cmd_desc(hba);
-+		i * ufshcd_get_ucd_size(hba);
- 	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
- 				       response_upiu);
- 	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
-@@ -3733,7 +3733,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	size_t utmrdl_size, utrdl_size, ucdl_size;
- 
- 	/* Allocate memory for UTP command descriptors */
--	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * hba->nutrs;
-+	ucdl_size = ufshcd_get_ucd_size(hba) * hba->nutrs;
- 	hba->ucdl_base_addr = dmam_alloc_coherent(hba->dev,
- 						  ucdl_size,
- 						  &hba->ucdl_dma_addr,
-@@ -3833,7 +3833,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 	prdt_offset =
- 		offsetof(struct utp_transfer_cmd_desc, prd_table);
- 
--	cmd_desc_size = sizeof_utp_transfer_cmd_desc(hba);
-+	cmd_desc_size = ufshcd_get_ucd_size(hba);
- 	cmd_desc_dma_addr = hba->ucdl_dma_addr;
- 
- 	for (i = 0; i < hba->nutrs; i++) {
-@@ -8422,7 +8422,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
- {
- 	size_t ucdl_size, utrdl_size;
- 
--	ucdl_size = sizeof_utp_transfer_cmd_desc(hba) * nutrs;
-+	ucdl_size = ufshcd_get_ucd_size(hba) * nutrs;
- 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
- 			   hba->ucdl_dma_addr);
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 431c3afb2ce0f..db70944c681aa 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1138,7 +1138,7 @@ static inline size_t ufshcd_sg_entry_size(const struct ufs_hba *hba)
- 	({ (void)(hba); BUILD_BUG_ON(sg_entry_size != sizeof(struct ufshcd_sg_entry)); })
- #endif
- 
--static inline size_t sizeof_utp_transfer_cmd_desc(const struct ufs_hba *hba)
-+static inline size_t ufshcd_get_ucd_size(const struct ufs_hba *hba)
- {
- 	return sizeof(struct utp_transfer_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
- }
+@@ -1523,6 +1524,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	trace_scsi_dispatch_cmd_start(cmd);
+ 	rtn = host->hostt->queuecommand(host, cmd);
+ 	if (rtn) {
++		atomic_dec(&cmd->device->iorequest_cnt);
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+ 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+ 		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
 -- 
 2.39.2
 
