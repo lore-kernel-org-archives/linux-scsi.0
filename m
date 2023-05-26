@@ -2,190 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52D69C77B73
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 May 2023 18:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E792C77B7C
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 May 2023 23:52:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230121AbjEZSHL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 May 2023 14:07:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58840 "EHLO
+        id S230317AbjEZXwh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 May 2023 19:52:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229519AbjEZSHK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 May 2023 14:07:10 -0400
-Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EE95FB
-        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2023 11:07:09 -0700 (PDT)
-Received: by mail-wr1-x42e.google.com with SMTP id ffacd0b85a97d-30adb83aa69so540600f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2023 11:07:08 -0700 (PDT)
+        with ESMTP id S231440AbjEZXwf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 May 2023 19:52:35 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D33B513A
+        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2023 16:52:01 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-babb53e6952so2832721276.0
+        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2023 16:52:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1685124427; x=1687716427;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=IYzcNf56l3kRNIDWOjfq6VLi7EFD07bmt5TlP+JpYRg=;
-        b=P887EXN+ssEk0qzWjH2eYTkgBKmyqLeFjZmQdJmcizUi+jA67GX+vtN6C7Vlscp8l9
-         ivtY0H9U446ZTJa9RpKeEmfrqc/FX3lYiG7lCrS318lv7OhLKii7T2PKLd3O7NYLGPoT
-         UEpjcXqXvi8lRrwoj8gcrjbVQAFgTcTWzDPIg=
+        d=google.com; s=20221208; t=1685145120; x=1687737120;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=3gkL2ZysifCX6QuWFr+kemlXIPFMHwY6YLDYqUvek4g=;
+        b=zzD3toTUDIquQRqQxVbpkGZCNhAGQJVkVodWmJyBF5PKTm6ASrqgwxniGFDtinz9zZ
+         rboUSdqPDY+nHOBIzLtsP21/bNWzI9bLvYAmHorq/VHjS7xRK/yiS6CWXeIZjKevCtiA
+         rjoHoRVpwUMcwyr4JSKijQTllPlzGJ1wgpeE1BfSABrAFhBfXGQCtSDxLUmcfIgmcwLe
+         HXFGe62HDokUZj7jztEtEHeN4T9lgksA7NLqGeVeDc4sEP7PCe5unSRKAoiNSmfgzuvq
+         G0Y8e6sSFKWowXQUAQnE1h1qByiWfWeICT8bks9Kp2ja+EyUU/p+iGMDlXHUBJVk5+JN
+         HPmg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685124427; x=1687716427;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=IYzcNf56l3kRNIDWOjfq6VLi7EFD07bmt5TlP+JpYRg=;
-        b=ScUsOx90pQskOgzqJLZwysewox+r56dk/275OZdY33p1zas50atLyYchkHdAis0Tma
-         j8uo5+14dPETCvKfyuv20itRfUawZdDj26mCLi7hGFoaUZihaIak1t1PfnjhjWDq71cV
-         qgRKmke5m3O7T8XlAX5g3Pldrvjq4m6PGHzR1vLrRq5Uj4vNu/cuhqyXMUpJKDMQWPCz
-         At+el2NrL33SOLnPtOWerOdGHTnO0KNWImJM1VKUAjCAXeqWJxpk+UzepzBuiialdPg+
-         TDlU8gRPEV78G7xTeKb6UQRnTMj4dzvDaY87hhRhI5fA3MH8hqDEs8X7fCeUmLpoFW9l
-         0xzw==
-X-Gm-Message-State: AC+VfDynbE5FXOxchdRRMa0dPqoQyP7bSgzGugt+ZDAQxYfzpoce2Scg
-        WA7wj0yvPKV1ECvHYxtPC0itzbpA6oILywAFqks/zuJK1yRwk8+pZx4dkqn/mmP+ZXT0VBHFLIg
-        1rPUbCEG8eV9dla95GFJzEEuVh4w4
-X-Google-Smtp-Source: ACHHUZ66i+vRiXTH2sfv3CNiuHWtgMyZeWWqZrkQeF2v6NBKkdRSfCj5UmuZP/ts3b9zVlhu9qw10FRhp7N19chQP3k=
-X-Received: by 2002:a5d:54c4:0:b0:30a:8c0b:320e with SMTP id
- x4-20020a5d54c4000000b0030a8c0b320emr1937561wrv.10.1685124427401; Fri, 26 May
- 2023 11:07:07 -0700 (PDT)
-MIME-Version: 1.0
-References: <ZG0fDdY/PPQ/ijlt@work> <CABPRKS9ykHvaOGUboDXZ261LLPS78+YFpOZAcJEeLKGfEUe21g@mail.gmail.com>
- <202305261041.4C23B96F@keescook>
-In-Reply-To: <202305261041.4C23B96F@keescook>
-From:   Justin Tee <justin.tee@broadcom.com>
-Date:   Fri, 26 May 2023 11:06:55 -0700
-Message-ID: <CAAmqgVPcSa36H7J2ABPmgCkkn8d7Asy+Wdn-xmQLuPqTupE5Gg@mail.gmail.com>
-Subject: Re: [PATCH v2][next] scsi: lpfc: Use struct_size() helper
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Justin Tee <justintee8345@gmail.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ebc1e405fc9c9aec"
+        d=1e100.net; s=20221208; t=1685145120; x=1687737120;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3gkL2ZysifCX6QuWFr+kemlXIPFMHwY6YLDYqUvek4g=;
+        b=OHlqCtCOaeJEahYcO6LvfscDBmsbrkln69wxLVhOY1ZvmOJLZjiure7vzM4ZtozX6a
+         5+bdRZx4j22ZwaM213FGAuKonNwG0hGtE6WIIbXLKytmqImEaFDIzjJ27rR0R7zo0/q4
+         8zzB5sOdwpnPV7vJrS8tEWmlZWA2890MgBUMMLeKx+PtyP9kumREq5uzreUavwzfgYlP
+         oz6Q0TTPQdl0BYEPNCXfoI23NWJ5ZsPrI9OC++tGP09/neBBIeAOOASEBqPs9pyyoq4J
+         6fupiYs/p9DO/Tn92xQoGeeLbtZXkJxlc57kgd6Zor+pw+ObXxCdIJ2VU9KCts15UJIl
+         5irQ==
+X-Gm-Message-State: AC+VfDyHSX5CW5dKG+BLn8Er4+u11zTnUqaS4Y2JysKM+sPR/IhR7gVM
+        sM08dwaM2+M17c6Uyspno4lNAmXqLaxBBA==
+X-Google-Smtp-Source: ACHHUZ5j0DjM8sq5pG0MJ56RrsWclxTU1KJd7CMJmIXPcL0xUwk9eY/XbzgabbsKPXKeyfU+QWGDnMxOSK626w==
+X-Received: from pranav-first.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:390b])
+ (user=pranavpp job=sendgmr) by 2002:a25:4582:0:b0:ba8:91c2:268a with SMTP id
+ s124-20020a254582000000b00ba891c2268amr1885823yba.0.1685145120249; Fri, 26
+ May 2023 16:52:00 -0700 (PDT)
+Date:   Fri, 26 May 2023 23:51:55 +0000
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.41.0.rc0.172.g3f132b7071-goog
+Message-ID: <20230526235155.433243-1-pranavpp@google.com>
+Subject: [PATCH v2] scsi: pm80xx: Add fatal error checks
+From:   Pranav Prasad <pranavpp@google.com>
+To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Changyuan Lyu <changyuanl@google.com>,
+        Pranav Prasad <pranavpp@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ebc1e405fc9c9aec
-Content-Type: text/plain; charset="UTF-8"
+From: Changyuan Lyu <changyuanl@google.com>
 
-> > We probably should have declared no_of_objects as __be32 to have
-> > avoided this confusion.
->
-> Perhaps this patch can add that too?
+This patch adds a fatal error check for the pm8001_phy_control()
+and pm8001_lu_reset() functions.
 
-Yes, please.  Something like this is fine:
+Changes compared to v1:
+- Changed the patch series to a single patch.
+- Added empty "/*" line to the comments as requested
+  by Damien Le Moal.
+- Aligned function arguments in pm8001_dbg() as
+  requested by Damien Le Moal.
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index 19b2d2754f32..e5a639d96122 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -1414,12 +1414,12 @@ struct app_id_object {
- };
+Signed-off-by: Changyuan Lyu <changyuanl@google.com>
+Signed-off-by: Pranav Prasad <pranavpp@google.com>
+---
+ drivers/scsi/pm8001/pm8001_sas.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
- struct lpfc_vmid_rapp_ident_list {
--       uint32_t no_of_objects;
-+       __be32 no_of_objects;
-        struct entity_id_object obj[1];
- };
-
- struct lpfc_vmid_dapp_ident_list {
--       uint32_t no_of_objects;
-+       __be32 no_of_objects;
-        struct entity_id_object obj[1];
- };
-
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index e5673c774f66..a5a31dfa4512 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -167,6 +167,17 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 	pm8001_ha = sas_phy->ha->lldd_ha;
+ 	phy = &pm8001_ha->phy[phy_id];
+ 	pm8001_ha->phy[phy_id].enable_completion = &completion;
++
++	if (PM8001_CHIP_DISP->fatal_errors(pm8001_ha)) {
++		/*
++		 * If the controller is in fatal error state,
++		 * we will not get a response from the controller
++		 */
++		pm8001_dbg(pm8001_ha, FAIL,
++			   "Phy control failed due to fatal errors\n");
++		return -EFAULT;
++	}
++
+ 	switch (func) {
+ 	case PHY_FUNC_SET_LINK_RATE:
+ 		rates = funcdata;
+@@ -908,6 +919,17 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
+ 	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+ 	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
+ 	DECLARE_COMPLETION_ONSTACK(completion_setstate);
++
++	if (PM8001_CHIP_DISP->fatal_errors(pm8001_ha)) {
++		/*
++		 * If the controller is in fatal error state,
++		 * we will not get a response from the controller
++		 */
++		pm8001_dbg(pm8001_ha, FAIL,
++			   "LUN reset failed due to fatal errors\n");
++		return rc;
++	}
++
+ 	if (dev_is_sata(dev)) {
+ 		struct sas_phy *phy = sas_get_local_phy(dev);
+ 		sas_execute_internal_abort_dev(dev, 0, NULL);
 -- 
-This electronic communication and the information and any files transmitted 
-with it, or attached to it, are confidential and are intended solely for 
-the use of the individual or entity to whom it is addressed and may contain 
-information that is confidential, legally privileged, protected by privacy 
-laws, or otherwise restricted from disclosure to anyone else. If you are 
-not the intended recipient or the person responsible for delivering the 
-e-mail to the intended recipient, you are hereby notified that any use, 
-copying, distributing, dissemination, forwarding, printing, or copying of 
-this e-mail is strictly prohibited. If you received this e-mail in error, 
-please return the e-mail to the sender, delete it from your computer, and 
-destroy any printed copy of it.
+2.40.1.698.g37aff9b760-goog
 
---000000000000ebc1e405fc9c9aec
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-QsyUohclvlxgt5d/MsBG6WZxZ+uppzNvjEk/wUu+6JQNUVEMviA6eBCCi+4ShjZUbGPES11h5lw/
-wuyQZDIjy+1hGPtLHBXI/QQEbU3OVdTRn+aEMwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
-MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
-LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
-dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
-HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
-bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
-gRdqdXN0aW4udGVlQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
-gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUlHfvnuNaLp52RO2Y2En9J+7MKI4wDQYJ
-KoZIhvcNAQELBQADggEBAGaBsEmLZwejb3YsmigadLZGto3hJ7Erq2YZLhL7Pgtxft1/j4JNLsRN
-t3ZJIW2Xzfbj0p328xRekSP1gjZ9Szre0fxEFXH1sS1a7WP9E0fHxVW07xVsxGxo5opAh5Gf/bQH
-S4x9pCO48FJI310L1RGQiqFKY/OECnXO821y8MAyObbGo9HNHP4Sk6F5J1v2qJzbLtMfj8ybbTGe
-SidstRgjOIqMldZs2Koio14QFE7hJY+8KRiKfq+eb1EwQTMzBxZsMOL5vUSZjYg2+Fqwyr6YYp0w
-Lsq/wH9o18xSvL/FikpG4JRxiT20RdM6DQrk9lv8ijASZCuN3JR61WUNz2AxggJtMIICaQIBATBr
-MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
-YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwMd6BsMSBDsagVFtYwDQYJYIZI
-AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIETaN4rKPovIiXV1259kT7KCm/y8G+3d/XpDj134
-duRHMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDUyNjE4MDcw
-N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
-AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
-hkiG9w0BAQEFAASCAQDDGLWN1jClEFdHQrqn4oOU7uphMg6jW9v/uTxwf0rho//6kMddyj1QDTrh
-BLqMyp7K7ooQ62zhrdmBwaLzFvwUD39qrRAK1Wgzl9R6OZu8cifugPLPiTPqjM7luHBXReS4X8tK
-2QEqFDVD/3oFGpCyODlsS3lxW4nWuqdr2cOSq2MU2eQ/N2YN+CvwqdyFnnVO52lKVyk4NQroUdKS
-ofQYJx8pwq5lYkRaPTXZT1m2T+9BF47iivEWqdhngOef1wTWGZWlb3VVfhHn4lCnqjFdpzxo5UYz
-r4Vae/5yVs2k8tQBUzzy7zmhGRoyZwYWDYyERkpfOPfkvm1FhNMSxbGo
---000000000000ebc1e405fc9c9aec--
