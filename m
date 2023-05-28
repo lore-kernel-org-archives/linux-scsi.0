@@ -2,85 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B554CC7EE29
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 May 2023 14:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98BA2C7EE29
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 May 2023 20:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbjE1OBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 May 2023 10:01:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58418 "EHLO
+        id S229560AbjE1UaF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 May 2023 16:30:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229589AbjE1OBo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 May 2023 10:01:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFDEFC9;
-        Sun, 28 May 2023 07:01:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 52BC561730;
-        Sun, 28 May 2023 14:01:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69B08C433D2;
-        Sun, 28 May 2023 14:01:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1685282502;
-        bh=IsefeyptmWfGbQl4cywapOg6S7HuyWajQPFCB3z6mOU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=n2C2d8Xv2zpXwhw8dLe2BFItft/csg6JIXVvzF5nZqULxf3uMCGztm7W77pOh7Ch2
-         zonoFvUOFDk10xlhiQ0CntEkCfBCK8RVgJQbx0Hwgy0zd3QpaNCuukH61Rib4qwBtv
-         2q+m2IA4RFIY6pxlXm12u39O6DUPjs7kRswUvZ40=
-Date:   Sun, 28 May 2023 14:59:18 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Ben Hutchings <benh@debian.org>
-Cc:     Sasha Levin <sashal@kernel.org>, stable <stable@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-scsi <linux-scsi@vger.kernel.org>, security@kernel.org
-Subject: Re: dpt_i2o fixes for stable
-Message-ID: <2023052856-starfish-avoid-3dde@gregkh>
-References: <b1d71ba992d0adab2519dff17f6d241279c0f5f1.camel@debian.org>
- <2023052823-uncoated-slimy-cbc7@gregkh>
- <5eb8dad50ac455513be8c93c2f0aa0b5b9627b3e.camel@debian.org>
+        with ESMTP id S229499AbjE1UaE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 May 2023 16:30:04 -0400
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32F52AF;
+        Sun, 28 May 2023 13:30:03 -0700 (PDT)
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1b04706c974so946405ad.2;
+        Sun, 28 May 2023 13:30:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685305802; x=1687897802;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3c7ui0/0zw8IQNoKpfcjNz481KA4SVJAj1O/dOTWz+I=;
+        b=Eawk4uMKEv96dj2SZoPKpvgEqfju/75vrNvdDte68yrUoO4jEd3cZ2PPKeSGVrHavK
+         F+Byo2ekaEvHGZMojcE56c5dQP38cAcfZKQCeDm06K966EYoVis2XFDfgSRlNcrjspGc
+         IkaXqNcEk5lZYkLZYekJaF/usCn/END1Q3A6nfgIhqEDiJMUIL19FHKi/k7K+l7UvxEj
+         diG9FWZHijgY26WL/ecgmmQrg0dfXeYHFe9iYc7U8HK93zNo7u8pDDQmFBUQz3HqX0bC
+         f4vCdXRdVGoJIxV7pRy625NiY+u8/pUqXscZPxJs3zqXuWoZihJAV089r2RbFDWF8U9N
+         IWng==
+X-Gm-Message-State: AC+VfDwyLW+wYL5dXN3gUopQ0L7iTglI1UNwlGLEXpSiEd0QANpw2uQE
+        ZjyvreaAbnv40NBZ5Nnha8sYXG4faDg=
+X-Google-Smtp-Source: ACHHUZ72JUTyDD3Z/8V2/4u60WttgODbYdRvA0+Cr7LqFxCiOzY4TKJqg0d4xnI/MlCQ9cZwrO009g==
+X-Received: by 2002:a17:903:2442:b0:1af:bbfd:1c07 with SMTP id l2-20020a170903244200b001afbbfd1c07mr9906437pls.57.1685305801890;
+        Sun, 28 May 2023 13:30:01 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id v2-20020a170902d68200b001b03842ab78sm1453118ply.89.2023.05.28.13.30.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 28 May 2023 13:30:01 -0700 (PDT)
+Message-ID: <c86f90b4-458a-3066-4a8e-6e510a41a37d@acm.org>
+Date:   Sun, 28 May 2023 13:30:01 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5eb8dad50ac455513be8c93c2f0aa0b5b9627b3e.camel@debian.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: scsi/stex time_after() build warnings
+Content-Language: en-US
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-scsi@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <89df78d0-fb52-9045-2074-1d6f0afae4d9@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <89df78d0-fb52-9045-2074-1d6f0afae4d9@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, May 28, 2023 at 02:40:52PM +0200, Ben Hutchings wrote:
-> On Sun, 2023-05-28 at 08:02 +0100, Greg Kroah-Hartman wrote:
-> > On Sat, May 27, 2023 at 10:42:00PM +0200, Ben Hutchings wrote:
-> > > I'm proposing to address the most obvious issues with dpt_i2o on stable
-> > > branches.  At this stage it may be better to remove it as has been done
-> > > upstream, but I'd rather limit the regression for anyone still using
-> > > the hardware.
-> > > 
-> > > The changes are:
-> > > 
-> > > - "scsi: dpt_i2o: Remove broken pass-through ioctl (I2OUSERCMD)",
-> > >   which closes security flaws including CVE-2023-2007.
-> > > - "scsi: dpt_i2o: Do not process completions with invalid addresses",
-> > >   which removes the remaining bus_to_virt() call and may slightly
-> > >   improve handling of misbehaving hardware.
-> > > 
-> > > These changes have been compiled on all the relevant stable branches,
-> > > but I don't have hardware to test on.
-> > 
-> > Why don't we just delete it in the stable trees as well?  If no one has
-> > the hardware (otherwise the driver would not have been removed), who is
-> > going to hit these issues anyway?
-> 
-> We don't know that no-one is using the hardware, just because no-one
-> among a small group of kernel developers and early adopters has spoken
-> up yet.
+On 5/27/23 16:08, Randy Dunlap wrote:
+> When I build stex.o for i386, I see these build warnings:
 
-So what are we supposed to do here.  Take patches that even if the
-driver is added back upstream will not get merged there (as it will not
-be obvious they are needed)?  Or just ignore this?
+Are you perhaps using gcc 13?
 
-Why did you work on these changes, were there reports of problems?  Or
-complaints from users?  Something else?
+Has the following alternative patch been considered? I think this patch 
+is lower risk than the patch in the original email:
 
-thanks,
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 5b230e149c3d..8ffb75be99bc 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -109,7 +109,9 @@ enum {
+  	TASK_ATTRIBUTE_HEADOFQUEUE		= 0x1,
+  	TASK_ATTRIBUTE_ORDERED			= 0x2,
+  	TASK_ATTRIBUTE_ACA			= 0x4,
++};
 
-greg k-h
++enum {
+  	SS_STS_NORMAL				= 0x80000000,
+  	SS_STS_DONE				= 0x40000000,
+  	SS_STS_HANDSHAKE			= 0x20000000,
+@@ -121,7 +123,9 @@ enum {
+  	SS_I2H_REQUEST_RESET			= 0x2000,
+
+  	SS_MU_OPERATIONAL			= 0x80000000,
++};
+
++enum {
+  	STEX_CDB_LENGTH				= 16,
+  	STATUS_VAR_LEN				= 128,
+
+
+Thanks,
+
+Bart.
