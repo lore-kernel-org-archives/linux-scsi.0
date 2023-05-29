@@ -2,72 +2,154 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19813C7EE23
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 May 2023 20:27:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA657C7EE23
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 May 2023 22:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229627AbjE2U1V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 May 2023 16:27:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49662 "EHLO
+        id S229483AbjE2WND (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 May 2023 18:13:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbjE2U1U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 16:27:20 -0400
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5C3B7;
-        Mon, 29 May 2023 13:27:19 -0700 (PDT)
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-256832ee24aso849786a91.0;
-        Mon, 29 May 2023 13:27:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685392039; x=1687984039;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ta8eeQVmNHIA73QwvIWQwgms5NVmEHdBIhCFYMN/ltI=;
-        b=D3r8VqrZdvcEQyu3qjzOZG0x1mFPQlntlMdoO4ku/g6gEFqR6FLe5iDeW0ljg/tS33
-         JLOJf1ZemfJls9CVSZwcnowdYOkb3YIDwB7rKLO4m/iBqqRGESC2AeoX90bpWVbtjsMe
-         o9dnplJeOj/iLgtj3eab1MUXgdXMc1JS0SoQtsktIDVfpStbbjX+qSbBfs6m7Sk3gdyt
-         y05zeQwFeNGHgiR28X/ClOcZkkwYSvvtzOL3BztxZBkIa86BkL/dhy6lAkJjnJiBwbR0
-         y58iGUd/kgFfu3kHw/m4t7ofZmRP0mkGoqF9bahsi1UVNcBmF8BiaMT62owdMbNDps9L
-         fALQ==
-X-Gm-Message-State: AC+VfDxnNnOaTVJGn07QQmjYrunSXoPjScoe5uA/O9yam5vMupsNLiY9
-        BjdRnlv73EsNdq7z3N9JeBA=
-X-Google-Smtp-Source: ACHHUZ5pL8rxk2MUSTmst8N1i9gOLuwOdWfu8iKNvMkS6cJNNGFNJfD+z+ZcJGoNrAZl20rsj3oZEg==
-X-Received: by 2002:a17:90b:87:b0:253:62c2:4e1b with SMTP id bb7-20020a17090b008700b0025362c24e1bmr131128pjb.48.1685392039238;
-        Mon, 29 May 2023 13:27:19 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id y11-20020a17090a784b00b00250bf8495b3sm9105863pjl.39.2023.05.29.13.27.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 May 2023 13:27:18 -0700 (PDT)
-Message-ID: <743ee7a6-e239-7ce0-de2c-091907c6932b@acm.org>
-Date:   Mon, 29 May 2023 13:27:18 -0700
+        with ESMTP id S229469AbjE2WNB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 18:13:01 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ED9CCD
+        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2023 15:13:00 -0700 (PDT)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34TMCb3F008310;
+        Mon, 29 May 2023 22:12:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=7XsRUszmKtdDjqYeDUgXHOEJ+t0fXmbX6y2C83u0YK0=;
+ b=OpGUuI0EbR1mFF2wAn4gqVF2wuX2IN69BCZ4VvdAOqvNyRCBomywhJCG0w9mEpqQJIVQ
+ SAWkSDYwrgHiiCptmZLDdv5dqFFQOksbfO6/66fUdQ4TvmxJAdR1sp99CtEolFtNMTwx
+ HxAyWDjDkbQQDwrdIrJqPVTgYppDvidebbnpAOMWgVDLUbUZTH236X4kwuJR9lahNBZg
+ nWYrnxDpD1/MXReM/pKkSw4BHC42s96ADEkg7JwYwgAGpfWpH2Rw/COhobJ2PhvTTK+x
+ ngIcQsJTk6Ae9UQ/wLnFmLQjhnnl2e1rIjXMIFIhkVu8Z+xkF694Z9Hy2HFD4Vag9G04 1w== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qub5r49r8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 29 May 2023 22:12:36 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34TMCZWo014600
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 29 May 2023 22:12:35 GMT
+Received: from stor-berry.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Mon, 29 May 2023 15:12:35 -0700
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
+        <bvanassche@acm.org>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: [PATCH v7 0/7] ufs: core: mcq: Add ufshcd_abort() and error handler support in MCQ mode
+Date:   Mon, 29 May 2023 15:12:19 -0700
+Message-ID: <cover.1685396241.git.quic_nguyenb@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH] scsi: stex: Fix gcc 13 warnings
-Content-Language: en-US
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        stable@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230529202157.11361-1-bvanassche@acm.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230529202157.11361-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: PmqBtaS9g7ZfoH3dJIHigv5PGN1CUhEH
+X-Proofpoint-GUID: PmqBtaS9g7ZfoH3dJIHigv5PGN1CUhEH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-29_12,2023-05-29_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 impostorscore=0
+ lowpriorityscore=0 clxscore=1015 malwarescore=0 suspectscore=0
+ adultscore=0 phishscore=0 spamscore=0 priorityscore=1501 mlxscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305290187
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/29/23 13:21, Bart Van Assche wrote:
-> gcc 13 may assign another type to enumeration constants than gcc 12. Split
-> the large enum at the top of source file stex.c such that the type of the
-> constants used in time expressions is changed back to the same type chosen
-> by gcc 12. This patch suppresses compiler warnings like this one:
+This patch series enable support for ufshcd_abort() and error handler in MCQ mode.
 
-Please ignore this email and the replies to this email since it includes
-two different patch series.
+Bao D. Nguyen (7):
+  ufs: core: Combine 32-bit command_desc_base_addr_lo/hi
+  ufs: core: Update the ufshcd_clear_cmds() functionality
+  ufs: mcq: Add supporting functions for mcq abort
+  ufs: mcq: Add support for clean up mcq resources
+  ufs: mcq: Added ufshcd_mcq_abort()
+  ufs: mcq: Use ufshcd_mcq_poll_cqe_lock() in mcq mode
+  ufs: core: Add error handling for MCQ mode
 
-Thanks,
+ drivers/ufs/core/ufs-mcq.c     | 259 ++++++++++++++++++++++++++++++++++++++++-
+ drivers/ufs/core/ufshcd-priv.h |  18 ++-
+ drivers/ufs/core/ufshcd.c      | 256 ++++++++++++++++++++++++++++++++--------
+ drivers/ufs/host/ufs-qcom.c    |   2 +-
+ include/ufs/ufshcd.h           |   5 +-
+ include/ufs/ufshci.h           |  23 +++-
+ 6 files changed, 501 insertions(+), 62 deletions(-)
+---
+Changes compared to v6:
+patch #7: Added a new argument force_compl to function ufshcd_mcq_compl_pending_transfer().
+          Added a new function ufshcd_mcq_compl_all_cqes_lock().
+	  This change is to handle the case where the ufs host controller has been reset by
+	  the ufshcd_hba_stop() in ufshcd_host_reset_and_restore() prior to calling
+	  ufshcd_complete_requests(). The new logic is added to correctly complete all the
+	  commands that have been completed in the Completion Queue, or inform the scsi layer
+	  about those commands that are still stuck/pending in the hardware.
+---
+v5->v6: Addressed Stanley's comments
+patch #1,2,3,4,6: unchanged.
+patch #5: fixed extra erroneous if() statement introduced in version v5
+patch #7: Change ufshcd_complete_requests() to call a new mcq function
+          ufshcd_mcq_compl_pending_transfer(), leaving ufshcd_transfer_req_compl()
+          to be used in SDB mode only.
 
-Bart.
+          Reset the hwq's head and tail slot variables to default values
+          when the ufs host controller hw has been reset.
+---
+v4->v5:
+patch #4: fixed uninitialized variable access introduced in patch v3.
+---
+v3->v4: Mainly addressed Bart's comments
+patch #1: updated the commit message
+patch #2: renamed ufshcd_clear_cmds() into ufshcd_clear_cmd()
+patch #3: removed result arg in ufshcd_mcq_sq_cleanup()
+patch #4: removed check for "!rq" in ufshcd_cmd_inflight()
+          avoided access to door bell register in mcq mode 
+patch #5, 6: unchanged
+patch #7: ufshcd_clear_cmds() to ufshcd_clear_cmd()
+--- 
+v2->v3:
+patch #1:
+  New patch per Bart's comment. Helps process utp cmd
+  descriptor addr easier.
+patch #2:
+  New patch to address Bart's comment regarding potentialoverflow 
+  when mcq queue depth becomes greater than 64.
+patch #3:
+  Address Bart's comments
+  . Replaced ufshcd_mcq_poll_register() with read_poll_timeout()
+  . Replace spin_lock(sq_lock) with mutex(sq_mutex)
+  . Updated ufshcd_mcq_nullify_cmd() and renamed to ufshcd_mcq_nullify_sqe()
+  . Minor cosmetic changes
+patch #4:
+  Adress Bart's comments. Added new function ufshcd_cmd_inflight()
+  to replace the usage of lrbp->cmd
+patch #5:
+  Continue replacing lrbp->cmd with ufshcd_cmd_inflight()
+patch #6:
+  No change
+patch #7:
+  Address Stanley Chu's comment about clearing hba->dev_cmd.complete
+  in clear ufshcd_wait_for_dev_cmd()
+  Address Bart's comment.
+---
+v1->v2:
+patch #1: Addressed Powen's comment. Replaced read_poll_timeout()
+with ufshcd_mcq_poll_register(). The function read_poll_timeout()
+may sleep while the caller is holding a spin_lock(). Poll the registers
+in a tight loop instead. 
+-- 
+2.7.4
 
