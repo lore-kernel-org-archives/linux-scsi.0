@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75023C7EE2C
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 May 2023 20:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8365EC7EE23
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 May 2023 20:22:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229589AbjE2UWP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 May 2023 16:22:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47836 "EHLO
+        id S229531AbjE2UWS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 May 2023 16:22:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbjE2UWL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 16:22:11 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F287B7;
-        Mon, 29 May 2023 13:22:10 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-64d1e96c082so2701302b3a.1;
-        Mon, 29 May 2023 13:22:10 -0700 (PDT)
+        with ESMTP id S229736AbjE2UWO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 16:22:14 -0400
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE56DB;
+        Mon, 29 May 2023 13:22:14 -0700 (PDT)
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-64d426e63baso4168847b3a.0;
+        Mon, 29 May 2023 13:22:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685391730; x=1687983730;
+        d=1e100.net; s=20221208; t=1685391733; x=1687983733;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=X726oTSi5TDX6BOyc1kfjYGxx8zMhwjRkOSwfMjOfCs=;
-        b=OWQULuiwASmGAMqcRcHCL8rMBbgfT323aJymmdRwzVxq8MiZLY7NeAX4FxI1wTVWY9
-         aFv9I7tFKTThPDT/J0r/yKdQi9UxRq6vwhFJUIQ4el7a1xFphOlzurP7DBCq6DxpTa7Y
-         qQ9IP6PHzvU7Ezqvdq2/L2+w5UDC25A/7bHExQnvNI3TnV44ga3k/ZQMHTXU6boteaPH
-         /ayXW2mMlNLwHlSl4uX/x/J48jVNQiHpgX5Y/4jiR8McmxodReo7JMTPK+SWjo+Qnv2W
-         ByxL86Xbn4ne874HWZH9IkfCzpTYUOQjUj/RV5+pSZEq+6AkROn79HMa1haqmivkd34s
-         ZUoA==
-X-Gm-Message-State: AC+VfDydCKvoMCtSHVT/XCmFAgwZyODE1dQc/lFIc/hcQ1x5aTi1xvoQ
-        xUDkqqsxZ9yOch6w6YH1kdXxifga7iE=
-X-Google-Smtp-Source: ACHHUZ59E4gwNio9vY0szzoHr3vNJisOVk7PYBqAPdnDnglQuya5DQTCYkksllcssToNMp2as8nkOg==
-X-Received: by 2002:a05:6a00:2183:b0:63b:859f:f094 with SMTP id h3-20020a056a00218300b0063b859ff094mr774934pfi.20.1685391729918;
-        Mon, 29 May 2023 13:22:09 -0700 (PDT)
+        bh=SQKRuWWQJWJEZwl2UnrxCG4HCHgO25yPqjuLBA5DMrk=;
+        b=Sx7vWB41ErQ9DFay7Ws1s/nBYi8bTkRvOLGCVKKdYzi+Tju6ZmJmujUXzsvqQQECqN
+         DKZFVdqK5EfLoYN864Z70vgg3ASoW5zCBnh66pY+KXY91Uj4Zqn7tZYnbBB4bMpnbm2X
+         1Hmb9ZZLEEwGvYit0uQFeKI0yxhueJgbx/JsQa5dhXdNMc0wrPkipnwwEwZG1UxrGD1F
+         O28NBqkEDtNMU9eAdiceo/vSt61QumePGtz9SsddsDAzawFV4sHV4Q3BSfda6x9Wa9L/
+         oWabRMnNMAmeDjpYWmcIyLAh2vgfSz+WDtfYBzMnUwvYPtnJSTNCEDEECkiSblRZL/Uu
+         gPTw==
+X-Gm-Message-State: AC+VfDyOyEiyhgI3yBWN5jIH+LjGbPt6d1ZiMmfeBJ9qEyQUWf3TiFom
+        fNEr6gyCb72PaeDZwtOhYjs=
+X-Google-Smtp-Source: ACHHUZ59drKE79ScAZGyAaSOqNhSetaM0Qh2rhEXI+kB3EQNMxhjuoGQ3Z7Gt4vbk2IHJ4PlqlJ0ow==
+X-Received: by 2002:a05:6a00:24d1:b0:643:9cc0:a3be with SMTP id d17-20020a056a0024d100b006439cc0a3bemr918858pfv.5.1685391733442;
+        Mon, 29 May 2023 13:22:13 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id b19-20020a639313000000b0051b0e564963sm7439342pge.49.2023.05.29.13.22.09
+        by smtp.gmail.com with ESMTPSA id b19-20020a639313000000b0051b0e564963sm7439342pge.49.2023.05.29.13.22.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 May 2023 13:22:09 -0700 (PDT)
+        Mon, 29 May 2023 13:22:13 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
@@ -44,10 +44,15 @@ Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>, stable@vger.kernel.org,
         Randy Dunlap <rdunlap@infradead.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v4 2/5] scsi: core: Support setting BLK_MQ_F_BLOCKING
-Date:   Mon, 29 May 2023 13:21:54 -0700
-Message-Id: <20230529202157.11361-4-bvanassche@acm.org>
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Adrien Thierry <athierry@redhat.com>
+Subject: [PATCH v4 3/5] scsi: ufs: Conditionally enable the BLK_MQ_F_BLOCKING flag
+Date:   Mon, 29 May 2023 13:21:55 -0700
+Message-Id: <20230529202157.11361-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230529202157.11361-1-bvanassche@acm.org>
 References: <20230529202157.11361-1-bvanassche@acm.org>
@@ -57,80 +62,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prepare for adding code in ufshcd_queuecommand() that may sleep. This
-patch is similar to a patch posted last year by Mike Christie. See also
-https://lore.kernel.org/all/20220308003957.123312-2-michael.christie@oracle.com/
+Prepare for adding code in ufshcd_queuecommand() that may sleep.
 
-Cc: Mike Christie <michael.christie@oracle.com>
+Acked-by: Adrian Hunter <adrian.hunter@intel.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hosts.c     |  1 +
- drivers/scsi/scsi_lib.c  | 11 ++++-------
- include/scsi/scsi_host.h |  6 ++++++
- 3 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index f0bc8bbb3938..198edf03f929 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -441,6 +441,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
- 	shost->cmd_per_lun = sht->cmd_per_lun;
- 	shost->no_write_same = sht->no_write_same;
- 	shost->host_tagset = sht->host_tagset;
-+	shost->queuecommand_may_block = sht->queuecommand_may_block;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index abe9a430cc37..c2d9109102f3 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10187,6 +10187,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	host->max_channel = UFSHCD_MAX_CHANNEL;
+ 	host->unique_id = host->host_no;
+ 	host->max_cmd_len = UFS_CDB_SIZE;
++	host->queuecommand_may_block = !!(hba->caps & UFSHCD_CAP_CLK_GATING);
  
- 	if (shost_eh_deadline == -1 || !sht->eh_host_reset_handler)
- 		shost->eh_deadline = -1;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5f29faa0560f..e0b5d35e7949 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1981,6 +1981,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
- 	tag_set->flags |=
- 		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
-+	if (shost->queuecommand_may_block)
-+		tag_set->flags |= BLK_MQ_F_BLOCKING;
- 	tag_set->driver_data = shost;
- 	if (shost->host_tagset)
- 		tag_set->flags |= BLK_MQ_F_TAG_HCTX_SHARED;
-@@ -2969,13 +2971,8 @@ scsi_host_block(struct Scsi_Host *shost)
- 		}
- 	}
- 
--	/*
--	 * SCSI never enables blk-mq's BLK_MQ_F_BLOCKING flag so
--	 * calling synchronize_rcu() once is enough.
--	 */
--	WARN_ON_ONCE(shost->tag_set.flags & BLK_MQ_F_BLOCKING);
--
--	synchronize_rcu();
-+	/* Wait for ongoing scsi_queue_rq() calls to finish. */
-+	blk_mq_wait_quiesce_done(&shost->tag_set);
- 
- 	return 0;
- }
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 0f29799efa02..70b7475dcf56 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -458,6 +458,9 @@ struct scsi_host_template {
- 	/* True if the host uses host-wide tagspace */
- 	unsigned host_tagset:1;
- 
-+	/* The queuecommand callback may block. See also BLK_MQ_F_BLOCKING. */
-+	unsigned queuecommand_may_block:1;
-+
- 	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
-@@ -653,6 +656,9 @@ struct Scsi_Host {
- 	/* True if the host uses host-wide tagspace */
- 	unsigned host_tagset:1;
- 
-+	/* The queuecommand callback may block. See also BLK_MQ_F_BLOCKING. */
-+	unsigned queuecommand_may_block:1;
-+
- 	/* Host responded with short (<36 bytes) INQUIRY result */
- 	unsigned short_inquiry:1;
+ 	hba->max_pwr_info.is_valid = false;
  
