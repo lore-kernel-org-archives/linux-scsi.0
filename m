@@ -2,93 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08598C7EE23
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 May 2023 19:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CBAC77B7A
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 May 2023 20:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229502AbjE2T6I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 May 2023 15:58:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38012 "EHLO
+        id S229687AbjE2UWJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 May 2023 16:22:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229620AbjE2T6H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 15:58:07 -0400
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96792B7
-        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2023 12:58:05 -0700 (PDT)
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-25695bb6461so571162a91.1
-        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2023 12:58:05 -0700 (PDT)
+        with ESMTP id S229567AbjE2UWI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 16:22:08 -0400
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52B45BE;
+        Mon, 29 May 2023 13:22:07 -0700 (PDT)
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-64d30ab1f89so2462506b3a.3;
+        Mon, 29 May 2023 13:22:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685390285; x=1687982285;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0wq1Xh7+4swbpSMKkec3uM0FF9HDaxIgP69hmeY2x/E=;
-        b=NRttw0bSArkxvkbIiJRgDWtu4u4DvY6UDpabqx1xyLq4XEiUWGi3JjUevXyXEu5bEh
-         npLVf7b5KS1HQnfn54/swxyxK+B9yKsLGzgKIonzwELIjaLK2P4Jjwus9Oc0Pqj225jm
-         RiPk9jqD8/Ohq/guxBaKidjsamX41PKMj8nybB8ZRTyUrh/L5p2ZMSTU7ngDe6S88Iyb
-         IzFJkqqtDBvADsJL5l93taM9P4o+oHKmZJsz518iuxA8lhEmcbdCmOBgulqxmB5EI+qY
-         1sI6kRs3hI+Qgm0+MitUy2tylegQ0ZTyinup2Yf52wk993ACBicBIl2SAMkrkLsESgou
-         Ae8A==
-X-Gm-Message-State: AC+VfDxa83F3xbdCZYja6clmaGaqGTZBvc4cuejPrUmpVxXSETxvxX2v
-        MGJjmRD5g53uxM3/bNP1PL4=
-X-Google-Smtp-Source: ACHHUZ6sjAURffjbA9on/wwfkFXdVzH9Y9hRjFeOsGBTuU4aSDl22++2VJSahbkuqVjcaHJH6h2dxA==
-X-Received: by 2002:a17:902:db08:b0:1af:d6fb:199c with SMTP id m8-20020a170902db0800b001afd6fb199cmr9144543plx.16.1685390284870;
-        Mon, 29 May 2023 12:58:04 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id bg8-20020a1709028e8800b001ac591b0500sm8623615plb.134.2023.05.29.12.58.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 May 2023 12:58:04 -0700 (PDT)
-Message-ID: <18ea494e-7d76-8c40-9368-93d86bb6b9f7@acm.org>
-Date:   Mon, 29 May 2023 12:58:02 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v3 4/4] scsi: ufs: Ungate the clock synchronously
-Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Daniil Lunev <dlunev@chromium.org>,
-        Can Guo <quic_cang@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Adrien Thierry <athierry@redhat.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Keoseong Park <keosung.park@samsung.com>
-References: <20230526173007.1627017-1-bvanassche@acm.org>
- <20230526173007.1627017-5-bvanassche@acm.org>
- <d8a4d596-9739-25ec-52c4-75fd225eb144@intel.com>
+        d=1e100.net; s=20221208; t=1685391727; x=1687983727;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=MAnY68W9tQQFxirzvgmzIs7axxvCCPBIV4gB1cEwbKs=;
+        b=OVhSoldwwqXhd0OC3l7Rd0s2eK1FHOsoUQKeRPo9c8hhS1+0ERgtA+nE4yjsp9Mjbv
+         Xsf5z8tqzGzRAdFe/fe874pgsYR4ffUFPfkAEwK3wR4ltoDKqbi7mFQrdvWthkg1s4Rp
+         eMVoGxRu4MxqNlSO/A+rPJ+dS97DFi3aduagLEgQONoBzDljTNcGUGZ9BS9YJIZlCJXP
+         6oB4/2McrK8JMqR7p0Vpx/rsrdOQ6OZXWCg6XpILm2Tdrq1RV1qYfeXUMz3o991MHm0Q
+         0ZLvoWHtdreYB5UV37SDvc/P8r2yZNlvca+1Rv28epms0hoa8zMPQkQmNeE9zM5Ki3lq
+         Hs1w==
+X-Gm-Message-State: AC+VfDzVgcScr0AXAo5mNF96osPDlX70++wg7hpNS3yqEncAEBmrU8M2
+        E6daSarTyZcsLj2o7i/wLPs=
+X-Google-Smtp-Source: ACHHUZ4kbOzbFQO2vJ+IW7zM+gyhgOYAWCSf/xu8KqGlSzzvfTH3lyUkKwk7AqESaXfvPmDj0c+4fQ==
+X-Received: by 2002:a05:6a20:914e:b0:10a:e177:9e73 with SMTP id x14-20020a056a20914e00b0010ae1779e73mr67536pzc.46.1685391726540;
+        Mon, 29 May 2023 13:22:06 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id b19-20020a639313000000b0051b0e564963sm7439342pge.49.2023.05.29.13.22.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 May 2023 13:22:06 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <d8a4d596-9739-25ec-52c4-75fd225eb144@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>, stable@vger.kernel.org,
+        Randy Dunlap <rdunlap@infradead.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH] scsi: stex: Fix gcc 13 warnings
+Date:   Mon, 29 May 2023 13:21:51 -0700
+Message-Id: <20230529202157.11361-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.40.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/29/23 00:29, Adrian Hunter wrote:
-> On 26/05/23 20:29, Bart Van Assche wrote:
->> -int ufshcd_hold(struct ufs_hba *hba, bool async);
->> +void ufshcd_hold(struct ufs_hba *hba);
->>   void ufshcd_release(struct ufs_hba *hba);
-> 
-> Declarations of ufshcd_hold() / ufshcd_release() seem to be
-> unnecessarily duplicated in drivers/ufs/core/ufshcd-priv.h
-> and include/ufs/ufshcd.h
+gcc 13 may assign another type to enumeration constants than gcc 12. Split
+the large enum at the top of source file stex.c such that the type of the
+constants used in time expressions is changed back to the same type chosen
+by gcc 12. This patch suppresses compiler warnings like this one:
 
-I will repost this series and add a patch that removes the
-duplicated declarations.
+In file included from ./include/linux/bitops.h:7,
+                 from ./include/linux/kernel.h:22,
+                 from drivers/scsi/stex.c:13:
+drivers/scsi/stex.c: In function ‘stex_common_handshake’:
+./include/linux/typecheck.h:12:25: error: comparison of distinct pointer types lacks a cast [-Werror]
+   12 |         (void)(&__dummy == &__dummy2); \
+      |                         ^~
+./include/linux/jiffies.h:106:10: note: in expansion of macro ‘typecheck’
+  106 |          typecheck(unsigned long, b) && \
+      |          ^~~~~~~~~
+drivers/scsi/stex.c:1035:29: note: in expansion of macro ‘time_after’
+ 1035 |                         if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
+      |                             ^~~~~~~~~~
 
-Thanks,
+See also https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107405.
 
-Bart.
+Cc: stable@vger.kernel.org
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Tested-by: Randy Dunlap <rdunlap@infradead.org> # build-tested
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/stex.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 5b230e149c3d..8ffb75be99bc 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -109,7 +109,9 @@ enum {
+ 	TASK_ATTRIBUTE_HEADOFQUEUE		= 0x1,
+ 	TASK_ATTRIBUTE_ORDERED			= 0x2,
+ 	TASK_ATTRIBUTE_ACA			= 0x4,
++};
+ 
++enum {
+ 	SS_STS_NORMAL				= 0x80000000,
+ 	SS_STS_DONE				= 0x40000000,
+ 	SS_STS_HANDSHAKE			= 0x20000000,
+@@ -121,7 +123,9 @@ enum {
+ 	SS_I2H_REQUEST_RESET			= 0x2000,
+ 
+ 	SS_MU_OPERATIONAL			= 0x80000000,
++};
+ 
++enum {
+ 	STEX_CDB_LENGTH				= 16,
+ 	STATUS_VAR_LEN				= 128,
+ 
