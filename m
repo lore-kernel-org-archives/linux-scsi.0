@@ -2,154 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA4CCC77B73
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 10:42:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C63B5C7EE23
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 11:10:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229989AbjE3KmB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 06:42:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37118 "EHLO
+        id S230481AbjE3LKM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 07:10:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231148AbjE3Kl6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 06:41:58 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EA54E8
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 03:41:56 -0700 (PDT)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230530104154epoutp01522ead25f25ba3c9821242b68903719a~j5cO2Vix30864108641epoutp01I
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 10:41:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230530104154epoutp01522ead25f25ba3c9821242b68903719a~j5cO2Vix30864108641epoutp01I
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1685443314;
-        bh=e4TeZbW46dphNnP8CuNH+8k9Da2YCsqAHU9OQBI1OwI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Zkbl9mb3ylHviCR0tv364qYFl0onIn9JYq5uc2HBDHdAqdVqUcp6Gz2Fd4IMYNtnf
-         Mu6VEFA3JXrbMLNwB6GN3WEPRhqxla30s+fk3p8nsG6Mc9chhqosqGT4TTlXP5lT5m
-         kGvwI7+XNzRjr9CNm33p7dQfBbCFzzaXmWgWNv38=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20230530104153epcas5p2876a4c3f4e06f0e8e6c882b2fd33ffef~j5cN-Evjq0384103841epcas5p2h;
-        Tue, 30 May 2023 10:41:53 +0000 (GMT)
-Received: from epsmges5p2new.samsung.com (unknown [182.195.38.175]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4QVpqM4sc2z4x9Pw; Tue, 30 May
-        2023 10:41:51 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3C.91.44881.FE2D5746; Tue, 30 May 2023 19:41:51 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230530102050epcas5p24882da82b49dc397d3ab694d51658705~j5J2J-5Pj2734627346epcas5p2e;
-        Tue, 30 May 2023 10:20:50 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230530102050epsmtrp2dd099d94863ef09ba0c46326022e7ff0~j5J2IXIeD0209902099epsmtrp2H;
-        Tue, 30 May 2023 10:20:50 +0000 (GMT)
-X-AuditID: b6c32a4a-c47ff7000001af51-2c-6475d2ef7820
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        93.4D.28392.20EC5746; Tue, 30 May 2023 19:20:50 +0900 (KST)
-Received: from green245 (unknown [107.99.41.245]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20230530102045epsmtip13a67ba165c229e2b47ea3d055ff9f54b~j5Jw0ZBr42118821188epsmtip1C;
-        Tue, 30 May 2023 10:20:44 +0000 (GMT)
-Date:   Tue, 30 May 2023 15:47:40 +0530
-From:   Nitesh Shetty <nj.shetty@samsung.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        James Smart <james.smart@broadcom.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        James.Bottomley@hansenpartnership.com, bvanassche@acm.org,
-        hare@suse.de, ming.lei@redhat.com, dlemoal@kernel.org,
-        anuj20.g@samsung.com, joshi.k@samsung.com, nitheshshetty@gmail.com,
-        gost.dev@samsung.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH v11 2/9] block: Add copy offload support infrastructure
-Message-ID: <20230530101740.lsb3mnt5zx6n7tzn@green245>
+        with ESMTP id S229535AbjE3LKL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 07:10:11 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08F75B0
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 04:10:10 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id a640c23a62f3a-96f8d485ef3so675394966b.0
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 04:10:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685445008; x=1688037008;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=R8G37TBNrAXNARzoGRP4mOfSp1MgT4ZHRFgb1p3wvZ4=;
+        b=nhsoQoeo7B8zzGXoxM6MMiWWl7lDDCmY9lRcR48oyNpgjt+Cgk+gMvHGkfH6t3e/fC
+         C4bTuffvKb75bR6NTuyg0JuzTAdVnabdh1ph0mQOezSeZWBgNVUmw1FladF750M7H4yU
+         vZDGkuG9LETU0HAyKQiclMAb2r8QFgYlx6FbsiPhWBbQL88UruxSxb9xZKb48eP01iDF
+         V3NaQr/onEF4QzaQtfVftNLFz9EElvhLaiKVM5z766Ty78HesI7x98llF5p9EiUD5c8s
+         sy/Otc2wM56f7MuuaAm58sjpMShMSutwusHPIdblxccRUsjINqXuyKiKiNxgnhhmQQRG
+         bchg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685445008; x=1688037008;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=R8G37TBNrAXNARzoGRP4mOfSp1MgT4ZHRFgb1p3wvZ4=;
+        b=Fw+XUlqy0ATBZCGSECV/J2vRQuglJjYKR/Y/gxPzxeOfjcUwSoherfVPzi9ZBC07Ob
+         ethHzZz+SP+rsW8XsltaZg/RN3YVW21CKSbwYgd5m11TP7ZXLFuWTtdf2f3fhcD+Wd2S
+         RnKRGhB4cenpwJKE7KiB3TJMJ2kyl2Haq/f3BkaCRM4BcqDJGWaacJ4l4auolVyjUlf4
+         L6zGee1GfrW7Zot5Ji7zcnVBetFW24SDKSztR0GocK5POryQ/u8sqxbuNQ/LvoiHu8gP
+         /FZ19gHrPXrQAsm3z2fJFLJrSRIPuxr11CzkojcUf7eXikOm9EP1Fayw875RcxB/1/Wf
+         58eg==
+X-Gm-Message-State: AC+VfDwvnL064/L+vV4KR1EBHM1J0JdZe7jZK1Dw4IUYIzga1N2CL/QO
+        epEc8l0brIYPDvPNAXlDAuw=
+X-Google-Smtp-Source: ACHHUZ6yiaMq15otxc56Akku32ZJ1rLBLSpjmtcYV/Bhn3WLZGh412HUxYynIwQXGOi8eWLp/I4n0A==
+X-Received: by 2002:a17:907:9722:b0:973:946d:96ba with SMTP id jg34-20020a170907972200b00973946d96bamr2150213ejc.69.1685445008132;
+        Tue, 30 May 2023 04:10:08 -0700 (PDT)
+Received: from [10.176.234.233] ([165.225.203.148])
+        by smtp.gmail.com with ESMTPSA id y11-20020a1709060a8b00b00965bf86c00asm7335110ejf.143.2023.05.30.04.10.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 May 2023 04:10:07 -0700 (PDT)
+Message-ID: <ebfa75c01d0f565d82b78d68417da4abfd0985cf.camel@gmail.com>
+Subject: Re: [PATCH v4 5/5] scsi: ufs: Ungate the clock synchronously
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Daniil Lunev <dlunev@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        Adrien Thierry <athierry@redhat.com>,
+        Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>
+Date:   Tue, 30 May 2023 13:10:05 +0200
+In-Reply-To: <20230529202640.11883-6-bvanassche@acm.org>
+References: <20230529202640.11883-1-bvanassche@acm.org>
+         <20230529202640.11883-6-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu1 
 MIME-Version: 1.0
-In-Reply-To: <ZHTm/v1jTZhcpDei@casper.infradead.org>
-User-Agent: NeoMutt/20171215
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Te1BUVRzHO3eXuxcH7LIr0xEyaLMxQXAXlvWgrFBa3UAbm9SZdISu7B2W
-        ZB/tZTWhAkFRNOIVhMtOPkJRQEB0cuWhsLwJ2pCQoHiYoJUpAgoKAe2ya+N/n9/3fL9zfr/f
-        mUNw+EaeGxGtimW0KjpGiC/i/lC/cqXP6A2dXHSveDkqa2viIENZCY6SMmY5qLg/HUf36scB
-        yn34lIOGrgejmgf5Dqi39iqGqk9nYeh8cSOGLqYTqOrUGIYa5+/jKMt0E6CRbj2Gavq8UXVN
-        Kxd1VRpwNFAy74BOnB3hoWM9RhwVNs9hyJSdjCHj8AGASu+NclFLnzsyzzY7oJknBjxkGdX1
-        SxilH+zAqav6fh5lHrjIpXKz2nDq0jkvqqtDR1UUpeJUxXgWj2rJm+FSlwoSqKreRJxKS36A
-        U2MjfVxq9Fo3Tn19uQhsEezYE6RgaDmj9WRUkWp5tCpKJgz7MGJDRIBUJPYRB6I1Qk8VrWRk
-        wo2btvi8Ex1jWZLQcy8do7NIW2iWFa5eH6RV62IZT4WajZUJGY08RiPR+LK0ktWponxVTOxa
-        sUjkF2AxfrxH0Tx3iavp5X1WdOo3biJowI8CRwKSEpg8Nck5ChYRfLIKwN72Y/ZiHMCDx3OA
-        1cUnJwA0l/s/SwzOmB1spkoAu+tPY7biDoBPzhZYCoLgkq/Dw22+VsRJb/jjPGHFJeQb8J/L
-        flY3h+zE4bj59kIXAjIMDv9UvpB0JqVwao62ys6kC2w9Psy1sqPl2rmmPzEru5Ivw7wzjxf6
-        hOQdR3hldNA+zUZ4JaXSzgL4d/Nlno3d4MSDGru+D57/5hxuCx8EUN+jB7aDYHioLZ1jZQ6p
-        gHkp/fbAMpjTVorZ9MUwbWYYs+nO0PjdM34NlpSdtPuXwptTB+xMwUcp1Tzbfu4CWPCVmZsB
-        PPTPTad/7j4br4WpD5Mc9JZlcEh3WDhH2HAlLKtcfRI4FIGljIZVRjFsgMZPxez7/70j1coK
-        sPCFvEKN4NbQQ18TwAhgApDgCJc4y2hWzneW0/vjGK06QquLYVgTCLA8VSbHzTVSbfmDqtgI
-        sSRQJJFKpZJAf6lY+JLzCllrJJ+MomOZPQyjYbTPchjh6JaIrQLp7VXbwgVh4k2dhxbTQ6Kf
-        rz1e1WJapokeDvUp3+yxvuNCmsskXFe9jT/o7/iFMXxFocfOF/796K9gHZiX7RRsTWhKfTPk
-        frdS0D59YjvrVFu7zTjJe/TBXGZlfnNpwqe7vLy3Nx7+drYz9Ogn63ridQFrZIZEXbggvSek
-        qtMznr9Uv3uSei/kbY/fv/w1+62h/Y3v1/U47XYiiz1Kcgqk6EUD0zA9E1In3t94duvyd103
-        jsSVu3xfHZCEsoMOP/08i4mPy9cCxfXbdTc2n2nIlLhn1N1qrR95NTdRubbPxTt+h2Z9k1m6
-        dyzFsDX3QtL2uF2mgVfubmifyDSoj/S7Tvf+IeSyClrsxdGy9H8wQ8YVywQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrOIsWRmVeSWpSXmKPExsWy7bCSnC7TudIUg6MLdCzWnzrGbDFn/Ro2
-        i6YJf5ktVt/tZ7N4ffgTo8W0Dz+ZLR7st7fY+242q8XNAzuZLPYsmsRksXL1USaLjf0cFrsX
-        fmSyOPr/LZvFpEPXGC2eXp3FZLH3lrbFnr0nWSwu75rDZnFvzX9Wi/nLnrJbdF/fwWax/Pg/
-        JotDk5uZLHY8aWS0WPf6PYvFiVvSFuf/Hme1+P1jDpuDrMflK94es+6fZfPYOesuu8f5extZ
-        PKZNOsXmsXmFlsfls6Uem1Z1snls+jSJ3ePEjN8sHpuX1HvsvtnA5tHb/I7N4+PTWywe7/dd
-        ZfPo27KKMUA4issmJTUnsyy1SN8ugSvj6UzRgm7Wirubv7A0ME5g6WLk5JAQMJG4//s8K4gt
-        JLCDUeLNv1SIuKTEsr9HmCFsYYmV/56zdzFyAdU8YZT4cOYAWxcjBweLgKpE+yk9EJNNQFvi
-        9H8OEFNEQEPizRYjkGpmgetsEpOurQUbLyzgLfHk3AYmkBpeATOJ7/8SISY+Z5SYuOwaWA2v
-        gKDEyZlPwE5jBqqZt/khM0g9s4C0xPJ/HCBhTqCL/x17wQRiiwrISMxY+pV5AqPgLCTds5B0
-        z0LoXsDIvIpRMrWgODc9t9iwwCgvtVyvODG3uDQvXS85P3cTIzhtaGntYNyz6oPeIUYmDsZD
-        jBIczEoivLaJxSlCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeS90nYwXEkhPLEnNTk0tSC2CyTJx
-        cEo1MHk/vpn7nu+FXZZp20KzgNvLi+xrKy/Z3WYK7SlPcvo5WVvxc4xka95jE3XuY+uPz2jy
-        VcqYxF4+LyV9z6MA1vl7dgmmsXZy+mlf6vyuct4r+qOS9cWCawse3I9ifRmY+Ugz7vz+SzGh
-        wnn397UJ3X0j735+qdPUGOHlLRuuf1qQNdPsRcnd9E33NdcnN1TL7RPamXfeRH27oGf7fLFL
-        r8pZj+YWqzIYVLr2tHZmlLXWvOssf9JuukGVKfdeQ0BktLaRw/boohkrYxj2dlx78OOq7m0Z
-        YzbplB9ydflTu2UXz/yn/zRit1Ds04btD/R1F34x+9feebzt/N6N4sLyZ2Icr91wNq9Xe7j7
-        kk+nEktxRqKhFnNRcSIAIU/XjIoDAAA=
-X-CMS-MailID: 20230530102050epcas5p24882da82b49dc397d3ab694d51658705
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-        boundary="----dpMjS_Krfo.HeTa1.nqRY6lfIY-msh.FGO-xMH_14-IlSSmS=_312ff_"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230522104536epcas5p23dd8108dd267ec588e5c36e8f9eb9fe8
-References: <20230522104146.2856-1-nj.shetty@samsung.com>
-        <CGME20230522104536epcas5p23dd8108dd267ec588e5c36e8f9eb9fe8@epcas5p2.samsung.com>
-        <20230522104146.2856-3-nj.shetty@samsung.com>
-        <ZHTm/v1jTZhcpDei@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-------dpMjS_Krfo.HeTa1.nqRY6lfIY-msh.FGO-xMH_14-IlSSmS=_312ff_
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Disposition: inline
+On Mon, 2023-05-29 at 13:26 -0700, Bart Van Assche wrote:
+> Ungating the clock asynchronously causes ufshcd_queuecommand() to
+> return
+> SCSI_MLQUEUE_HOST_BUSY and hence causes commands to be requeued.=C2=A0
+> This is
+> suboptimal. Allow ufshcd_queuecommand() to sleep such that clock
+> ungating
+> does not trigger command requeuing. Remove the
+> ufshcd_scsi_block_requests()
+> and ufshcd_scsi_unblock_requests() calls because these are no longer
+> needed. The flush_work(&hba->clk_gating.ungate_work) call is
+> sufficient to
+> make the SCSI core wait for clock ungating to complete.
+>=20
+> Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-On 23/05/29 06:55PM, Matthew Wilcox wrote:
->On Mon, May 22, 2023 at 04:11:33PM +0530, Nitesh Shetty wrote:
->> +		token = alloc_page(gfp_mask);
->
->Why is PAGE_SIZE the right size for 'token'?  That seems quite unlikely.
->I could understand it being SECTOR_SIZE or something that's dependent on
->the device, but I cannot fathom it being dependent on the host' page size.
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
-This has nothing to do with block device at this point, merely a place
-holder to store information about copy offload such as src sectors, len.
-Token will be typecasted by driver to get copy info.
-SECTOR_SIZE also should work in this case, will update in next version.
-
-------dpMjS_Krfo.HeTa1.nqRY6lfIY-msh.FGO-xMH_14-IlSSmS=_312ff_
-Content-Type: text/plain; charset="utf-8"
-
-
-------dpMjS_Krfo.HeTa1.nqRY6lfIY-msh.FGO-xMH_14-IlSSmS=_312ff_--
