@@ -2,112 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2342C7EE23
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 02:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D0CC77B7A
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 05:24:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbjE3Cxk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 May 2023 22:53:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42416 "EHLO
+        id S229915AbjE3FYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 01:24:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbjE3Cxj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2023 22:53:39 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBF2EA8;
-        Mon, 29 May 2023 19:53:37 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2b03d3e41fcso57195241fa.0;
-        Mon, 29 May 2023 19:53:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685415216; x=1688007216;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=abv0F38Kb+H1iq841VQW7GAB7tr+6RM1I7/gkXbGhvM=;
-        b=GBZoAIJldvjvXxQlv3aSpuDSzWykHF7NTzRVvsiSnG2TBH6OoMl8xV0belYMoYUd0r
-         B4jzbszYhWlMUjx0lyvh4R5Iddor6Okxf8OCze1QtBWbS2vc6UxK+tE1jmEFFgBCNJ5Z
-         hRQlPCn6EWLHIncYKZAeAsE3IJ0QEFAFC3BjgkUuB+0RcsLl7ssaIsEA0qdPXFPvVvAx
-         1uDlh7jZEDRpraLHxhC81lZsy7+PpX9jdmP+rsqVOLb1N2xguubUDovqeca+aYT0ZkJB
-         +x6F5betYYURb4w8IgsIooMvjDgE0JrqnHPmDEOKMsu/nerSZjL+SwVhDfcZu4Hy3Zhb
-         HG6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685415216; x=1688007216;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=abv0F38Kb+H1iq841VQW7GAB7tr+6RM1I7/gkXbGhvM=;
-        b=By/lns75K8LmA5Uh/Sujpi3tgb5LbNbUxNIRQ/PRtPET2LcUBTkUBNXR5NT9FHpMnr
-         YDtgKh1EzuPom0OfVERh5i6SQIyhzjpS79BueXNnUEtNJL0aI+QQQbBpLmtYEsMo5/0/
-         T6gGExX1nk6MdKuZsVqhpyEAvZqBU6hNT/e/IV4rjYb883m27C04geGx+BuTdBNF19bz
-         vjLKhCQ7drnNLcFQLt0g77BB0PdTW6+GWwxYrWyj4Y4Mncmlh61xlBB0x3mGCm6+FrUH
-         3I8v1/NNcPXycjYHLf/9LHAd20IhE63aa/TD5w0pIysuyVLYSbPryoCfl8WMkuAcipLH
-         ylgA==
-X-Gm-Message-State: AC+VfDzjAbZsRZrcNy8qe/QsaKQwL8TkC163mbypuAUHIHYboAuHKvWp
-        aIfjpgAGIwjE4X2EIBwCTf/73+s+ztNzmOxtkikrn4/vtw==
-X-Google-Smtp-Source: ACHHUZ77y0PA2RlEEvFIe5qH2zMe2mxNW2B+qocVvwjH5POSpPgz9W6FNC2AhueN6zpdzHPKkZU4WNJvPyEw4+B4Rd0=
-X-Received: by 2002:a2e:b5dc:0:b0:2a9:d4f0:6 with SMTP id g28-20020a2eb5dc000000b002a9d4f00006mr3800615ljn.17.1685415215746;
- Mon, 29 May 2023 19:53:35 -0700 (PDT)
+        with ESMTP id S229507AbjE3FYa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 01:24:30 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 104B3AD
+        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2023 22:24:28 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34U4l0id021445;
+        Tue, 30 May 2023 05:24:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=WFyfiyP148MYf55b9OHBRE4mI1uTMbcbZAP1cjZsELo=;
+ b=gqcQFES1gguCekkOMQL2RAnQN/esNFVx8728uiVze7VSq4sMRmFX6TRrepKhiSCiTIjO
+ xbqfkFiaVxg8dZ2zcYh4PnQuhk29S48JkoMmEXQOVlEWc6/VkpNdJp7bW38BCYi2V/dD
+ Oppqtmyewo0EJ/Lj3G1TbAz93TNKJNHG5AcST72nwxQzVJjUZdOvnaytiTRJzeKFHwxi
+ p8BmmZpKoB4amxrngXUYWiIRk9PEz/WvAb3UViJa97CPYiPLhUs1W6VOy2yGV47vsrXB
+ ZC4pZi2vF+l/MV0jXJGny90NSu0jDK2uY5ffPhpAaqFLnovdMUB8y3UciXIMRUIbpy5j bA== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qvwm4s414-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 30 May 2023 05:24:04 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34U5O24u003952
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 30 May 2023 05:24:03 GMT
+Received: from [10.253.33.217] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Mon, 29 May
+ 2023 22:24:00 -0700
+Message-ID: <32628a40-d2bf-76bb-3043-708c813e38b3@quicinc.com>
+Date:   Tue, 30 May 2023 13:23:41 +0800
 MIME-Version: 1.0
-References: <20230530023227.16653-1-powen.kao@mediatek.com>
-In-Reply-To: <20230530023227.16653-1-powen.kao@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Tue, 30 May 2023 10:53:24 +0800
-Message-ID: <CAGaU9a9q2j8jSPjufa__vTCoW_beQFL9VjSzm5uQqqAsVLr+Hw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] Add MCQ support for MTK platform
-To:     Po-Wen Kao <powen.kao@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v7 0/7] ufs: core: mcq: Add ufshcd_abort() and error
+ handler support in MCQ mode
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        <quic_asutoshd@quicinc.com>, <bvanassche@acm.org>,
+        <mani@kernel.org>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>
+References: <cover.1685396241.git.quic_nguyenb@quicinc.com>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <cover.1685396241.git.quic_nguyenb@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: o26Tyys5n6KshaoX2N0AnHbIW8blmmBi
+X-Proofpoint-GUID: o26Tyys5n6KshaoX2N0AnHbIW8blmmBi
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-30_02,2023-05-29_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 spamscore=0 clxscore=1011 priorityscore=1501
+ adultscore=0 bulkscore=0 mlxscore=0 malwarescore=0 mlxlogscore=713
+ phishscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2304280000 definitions=main-2305300043
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Po-Wen,
+Hi Bao,
 
-On Tue, May 30, 2023 at 10:44=E2=80=AFAM Po-Wen Kao <powen.kao@mediatek.com=
-> wrote:
+On 5/30/2023 6:12 AM, Bao D. Nguyen wrote:
+> This patch series enable support for ufshcd_abort() and error handler in MCQ mode.
 >
-> v1 -> v2
-> - Introduce MCQ SQ to CQ mapping vops and provide MTK implementation.
-> - Update export symbol patch
+> Bao D. Nguyen (7):
+>    ufs: core: Combine 32-bit command_desc_base_addr_lo/hi
+>    ufs: core: Update the ufshcd_clear_cmds() functionality
+>    ufs: mcq: Add supporting functions for mcq abort
+>    ufs: mcq: Add support for clean up mcq resources
+>    ufs: mcq: Added ufshcd_mcq_abort()
+>    ufs: mcq: Use ufshcd_mcq_poll_cqe_lock() in mcq mode
+>    ufs: core: Add error handling for MCQ mode
 >
-> v1
-> - Separated from topic "[PATCH v4 0/5] Several UFS MCQ Code Changes".
->   Here are some changes since last upload
->   - Store irq in per host array
->   - Symbol rename
->   - Use ufshcd_mcq_poll_cqe_lock() instead of ufshcd_mcq_poll_cqe_nolock(=
-)
->   - Handle invalid irq dts property
->   - Remove ufshcd_disable_intr(hba, MCQ_CQ_EVENT_STATUS) in MCQ mode.
->     This will become host quirk later.
->
-> Peter Wang (1):
->   scsi: ufs: core: Introduce mcq ops to config cqid
->
-> Po-Wen Kao (2):
->   scsi: ufs: core: Export symbols for MTK driver module
->   scsi: ufs: ufs-mediatek: Add MCQ support for MTK platform
->
->  drivers/ufs/core/ufs-mcq.c      |   6 +-
->  drivers/ufs/core/ufshcd-priv.h  |  10 +-
->  drivers/ufs/core/ufshcd.c       |  11 ++
->  drivers/ufs/host/ufs-mediatek.c | 188 +++++++++++++++++++++++++++++++-
->  drivers/ufs/host/ufs-mediatek.h |  33 ++++++
->  include/ufs/ufshcd.h            |   8 ++
->  6 files changed, 251 insertions(+), 5 deletions(-)
->
-> --
-> 2.18.0
->
+>   drivers/ufs/core/ufs-mcq.c     | 259 ++++++++++++++++++++++++++++++++++++++++-
+>   drivers/ufs/core/ufshcd-priv.h |  18 ++-
+>   drivers/ufs/core/ufshcd.c      | 256 ++++++++++++++++++++++++++++++++--------
+>   drivers/ufs/host/ufs-qcom.c    |   2 +-
+>   include/ufs/ufshcd.h           |   5 +-
+>   include/ufs/ufshci.h           |  23 +++-
+>   6 files changed, 501 insertions(+), 62 deletions(-)
+> ---
+> Changes compared to v6:
+> patch #7: Added a new argument force_compl to function ufshcd_mcq_compl_pending_transfer().
+>            Added a new function ufshcd_mcq_compl_all_cqes_lock().
+> 	  This change is to handle the case where the ufs host controller has been reset by
+> 	  the ufshcd_hba_stop() in ufshcd_host_reset_and_restore() prior to calling
+> 	  ufshcd_complete_requests(). The new logic is added to correctly complete all the
+> 	  commands that have been completed in the Completion Queue, or inform the scsi layer
+> 	  about those commands that are still stuck/pending in the hardware.
+> ---
 
-For this series, feel free to add
+Feel free to my Reviewed-by tag to this series,
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Can Guo<quic_cang@quicinc.com>
+
+
+Thanks.
+Regards,
+Can Guo.
+
