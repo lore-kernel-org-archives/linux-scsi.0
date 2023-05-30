@@ -2,86 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79053C7EE2E
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 16:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1A2FC77B73
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 16:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232124AbjE3QZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 12:25:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41678 "EHLO
+        id S231979AbjE3Qll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 12:41:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232468AbjE3QZg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 12:25:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E049AF7;
-        Tue, 30 May 2023 09:25:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7593562CAE;
-        Tue, 30 May 2023 16:25:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E44EC433A7;
-        Tue, 30 May 2023 16:25:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685463918;
-        bh=D5LdQuy2U1gKYvQKSrKbDYGL1yk23EzjPBPT+ECI098=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bWjfsnxvaB+RfXzxYDiyXGeWMTqCxvrahj4YaFI8fmAw77BlSOrbefOWeHFXavAe1
-         hkK9lGYQ0RJxL4lyP8tLavc0vQ89zVc7fRdklYycUeOHOmtL8wsjz2UvlOLFHYV07y
-         fGOShoT4pNuWZaHUrZN62WOjdZ32pgCLzJYAdMa1mwb1i29iQ3s7TUqnUNvGXJkyW9
-         Ly3Y3nRcKXFM5T9vVACm/ByrL+rrOfuIT6Mj0NieqaLI7Nw0utwDnAur+l0hmlN1IJ
-         /LkWW/P2zMF6iURvdYxawYU9dTfKGurfX4upoiPajRIabpiYDnSVVzbhEFLt7/t5fN
-         3Tkgt9gOCXalg==
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Bjorn Andersson <andersson@kernel.org>
-Cc:     linux-arm-msm@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        with ESMTP id S230491AbjE3Qlk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 12:41:40 -0400
+Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 975F6F9;
+        Tue, 30 May 2023 09:41:35 -0700 (PDT)
+Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-76c64da0e46so131049239f.0;
+        Tue, 30 May 2023 09:41:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685464894; x=1688056894;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mxSEcH8XMhad+l3757OBmVZiqWVuwlAI7XsQ8Ql9GBg=;
+        b=ldetHcwivAH9hVYdV2CfRIcyuc61rIzapE+qyz2t/m97jOZHGzsNiVUd45x7s+8UL8
+         rCOeR27eyPrrhK3PUlcz2ZbryZXFfOiCJVD4zj75ckfvNiDWMfM27EE62ZLqEtLzn68P
+         +bWRRv2CD2gIlWYjvr0XlDref1iAldl36VKGQlUhi+3pIMRe9eBgxFUbmByqApMisoyn
+         eXL1kFbB1xow/c+dymFzgHcGyprrmJd2c6pC3ufh14PJ/hV/08ORmehUXGJaOJZnEP1L
+         Saa1AayrCDJF5/ycm39fd+pGF+IeHwzXprxDAZn9EJO2Z5oPgUBgp/mecb891XovaogK
+         mnTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685464894; x=1688056894;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mxSEcH8XMhad+l3757OBmVZiqWVuwlAI7XsQ8Ql9GBg=;
+        b=EFAUmtaBTYngoPqNZd8El4mrxwkWE0dh23IuRi5GsGqGQ+r+jcNDKLoHJwwgu0fOYy
+         JQlp3aLEQVwMz0sR4GEIeSpT76rHmvnJeZ0MjpUs0bThTttm5X8DBT17TVDxPM1vICMU
+         n1jJSUF6JC412Y6HsyWwZKiqlTk1aD1DhOYHF7wa7gSRYWBhiTn5WcKfg1uIGg3Qnp9S
+         Gw5tvzokyxL5Rj/VUh8q2QwZds6sNO6MyCNsDJ4JioN0M8N/FtKLuIz5pMMo/69bBMMB
+         gMaQ/kRmqdC0ZuUfzvwdX61wLkUk2IJC2kwLAorHqRpCtYAH9BATt7auluLHi+WqdQtt
+         TNwg==
+X-Gm-Message-State: AC+VfDxXIidyfKBx7IVOx8Qtwz4uziQhmWtVoux9R+1KQGK5szXoYz8B
+        5h7+ghN4xuHBhTVt2ohON90L2Bfhhsh3nw==
+X-Google-Smtp-Source: ACHHUZ7h6h6Eq4wXXvU4DGcSXirjIMhqpxh4fzQEe6FxgI8QuLAp8ANtFCztbuHT2NEDst+MhgAR4g==
+X-Received: by 2002:a5d:87c2:0:b0:774:7a6d:8753 with SMTP id q2-20020a5d87c2000000b007747a6d8753mr1970436ios.9.1685464894493;
+        Tue, 30 May 2023 09:41:34 -0700 (PDT)
+Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
+        by smtp.gmail.com with ESMTPSA id q22-20020a5ea616000000b007767a221ea0sm3255267ioi.11.2023.05.30.09.41.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 May 2023 09:41:34 -0700 (PDT)
+From:   Azeem Shaikh <azeemshaikh38@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-hardening@vger.kernel.org,
+        Azeem Shaikh <azeemshaikh38@gmail.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Vinod Koul <vkoul@kernel.org>
-Subject: [PATCH v3 04/15] scsi: ufs: dt-bindings: Add SC8180x binding
-Date:   Tue, 30 May 2023 21:54:43 +0530
-Message-Id: <20230530162454.51708-5-vkoul@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230530162454.51708-1-vkoul@kernel.org>
-References: <20230530162454.51708-1-vkoul@kernel.org>
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: ufs: Replace all non-returning strlcpy with strscpy
+Date:   Tue, 30 May 2023 16:41:31 +0000
+Message-ID: <20230530164131.987213-1-azeemshaikh38@gmail.com>
+X-Mailer: git-send-email 2.41.0.rc0.172.g3f132b7071-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Document the UFS HC for SC8180x SoC
+strlcpy() reads the entire source buffer first.
+This read may exceed the destination size limit.
+This is both inefficient and can lead to linear read
+overflows if a source string is not NUL-terminated [1].
+In an effort to remove strlcpy() completely [2], replace
+strlcpy() here with strscpy().
+No return values were used, so direct replacement is safe.
 
-Signed-off-by: Vinod Koul <vkoul@kernel.org>
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+[2] https://github.com/KSPP/linux/issues/89
+
+Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
 ---
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ufs/core/ufs-fault-injection.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index c5a06c048389..a3db34f35f4f 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -26,6 +26,7 @@ properties:
-           - qcom,msm8994-ufshc
-           - qcom,msm8996-ufshc
-           - qcom,msm8998-ufshc
-+          - qcom,sc8180x-ufshc
-           - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-           - qcom,sm6350-ufshc
-@@ -105,6 +106,7 @@ allOf:
-           contains:
-             enum:
-               - qcom,msm8998-ufshc
-+              - qcom,sc8280x-ufshc
-               - qcom,sc8280xp-ufshc
-               - qcom,sm8250-ufshc
-               - qcom,sm8350-ufshc
--- 
-2.40.1
+diff --git a/drivers/ufs/core/ufs-fault-injection.c b/drivers/ufs/core/ufs-fault-injection.c
+index 7ac7c4e7ff83..5b1184aac585 100644
+--- a/drivers/ufs/core/ufs-fault-injection.c
++++ b/drivers/ufs/core/ufs-fault-injection.c
+@@ -54,7 +54,7 @@ static int ufs_fault_set(const char *val, const struct kernel_param *kp)
+ 	if (!setup_fault_attr(attr, (char *)val))
+ 		return -EINVAL;
+ 
+-	strlcpy(kp->arg, val, FAULT_INJ_STR_SIZE);
++	strscpy(kp->arg, val, FAULT_INJ_STR_SIZE);
+ 
+ 	return 0;
+ }
 
