@@ -2,99 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1A2FC77B73
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 16:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4F9C7EE32
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 17:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231979AbjE3Qll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 12:41:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54586 "EHLO
+        id S233217AbjE3RTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 13:19:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230491AbjE3Qlk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 12:41:40 -0400
-Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 975F6F9;
-        Tue, 30 May 2023 09:41:35 -0700 (PDT)
-Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-76c64da0e46so131049239f.0;
-        Tue, 30 May 2023 09:41:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685464894; x=1688056894;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=mxSEcH8XMhad+l3757OBmVZiqWVuwlAI7XsQ8Ql9GBg=;
-        b=ldetHcwivAH9hVYdV2CfRIcyuc61rIzapE+qyz2t/m97jOZHGzsNiVUd45x7s+8UL8
-         rCOeR27eyPrrhK3PUlcz2ZbryZXFfOiCJVD4zj75ckfvNiDWMfM27EE62ZLqEtLzn68P
-         +bWRRv2CD2gIlWYjvr0XlDref1iAldl36VKGQlUhi+3pIMRe9eBgxFUbmByqApMisoyn
-         eXL1kFbB1xow/c+dymFzgHcGyprrmJd2c6pC3ufh14PJ/hV/08ORmehUXGJaOJZnEP1L
-         Saa1AayrCDJF5/ycm39fd+pGF+IeHwzXprxDAZn9EJO2Z5oPgUBgp/mecb891XovaogK
-         mnTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685464894; x=1688056894;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mxSEcH8XMhad+l3757OBmVZiqWVuwlAI7XsQ8Ql9GBg=;
-        b=EFAUmtaBTYngoPqNZd8El4mrxwkWE0dh23IuRi5GsGqGQ+r+jcNDKLoHJwwgu0fOYy
-         JQlp3aLEQVwMz0sR4GEIeSpT76rHmvnJeZ0MjpUs0bThTttm5X8DBT17TVDxPM1vICMU
-         n1jJSUF6JC412Y6HsyWwZKiqlTk1aD1DhOYHF7wa7gSRYWBhiTn5WcKfg1uIGg3Qnp9S
-         Gw5tvzokyxL5Rj/VUh8q2QwZds6sNO6MyCNsDJ4JioN0M8N/FtKLuIz5pMMo/69bBMMB
-         gMaQ/kRmqdC0ZuUfzvwdX61wLkUk2IJC2kwLAorHqRpCtYAH9BATt7auluLHi+WqdQtt
-         TNwg==
-X-Gm-Message-State: AC+VfDxXIidyfKBx7IVOx8Qtwz4uziQhmWtVoux9R+1KQGK5szXoYz8B
-        5h7+ghN4xuHBhTVt2ohON90L2Bfhhsh3nw==
-X-Google-Smtp-Source: ACHHUZ7h6h6Eq4wXXvU4DGcSXirjIMhqpxh4fzQEe6FxgI8QuLAp8ANtFCztbuHT2NEDst+MhgAR4g==
-X-Received: by 2002:a5d:87c2:0:b0:774:7a6d:8753 with SMTP id q2-20020a5d87c2000000b007747a6d8753mr1970436ios.9.1685464894493;
-        Tue, 30 May 2023 09:41:34 -0700 (PDT)
-Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
-        by smtp.gmail.com with ESMTPSA id q22-20020a5ea616000000b007767a221ea0sm3255267ioi.11.2023.05.30.09.41.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 May 2023 09:41:34 -0700 (PDT)
-From:   Azeem Shaikh <azeemshaikh38@gmail.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     linux-hardening@vger.kernel.org,
-        Azeem Shaikh <azeemshaikh38@gmail.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S233001AbjE3RTI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 13:19:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6391BD9;
+        Tue, 30 May 2023 10:19:07 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EE7B7630C8;
+        Tue, 30 May 2023 17:19:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA22EC433D2;
+        Tue, 30 May 2023 17:19:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685467146;
+        bh=PIBi+WICffiBvaB2Kw9KN3H9bNAFCDH01ZgbVaQGbpg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=E2Xa4JrAvvdRGyRf3zxeWBvkc5cuOtjqlw0qF7dZxyI06ngCrCEr+2VfwVIRMVVdd
+         V5zTylUXQRCf1KW4HPXzMIdv+9vrMt1yP+n7FUDa+t2FjNJ4LF5+BlKFZwjSqNBqRe
+         ZHB1IFdqYD9OcZl9/+Ecs/JcoSOvUOC9V09t4ZzWib5Tw6UHYj9RtfWvo7heP6Av47
+         dD3CVQoa6UM26DNqLEt2ojddXXiZcVQpH+lX3kslYjvfSLtg1sWzEWznuptvI921Y/
+         KH17pTxqsO/dGyBabW1mpfH4P2fEriexl3TKpaNOhSUcu+Vgyc5AIWsf3E+ZScPJZ6
+         l+0N0Pn0M1pBQ==
+From:   Bjorn Andersson <andersson@kernel.org>
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        linux-pci@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Wesley Cheng <quic_wcheng@quicinc.com>,
+        linux-scsi@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
+        linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: ufs: Replace all non-returning strlcpy with strscpy
-Date:   Tue, 30 May 2023 16:41:31 +0000
-Message-ID: <20230530164131.987213-1-azeemshaikh38@gmail.com>
-X-Mailer: git-send-email 2.41.0.rc0.172.g3f132b7071-goog
+        Georgi Djakov <djakov@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: (subset) [PATCH v3 00/15] Introduce the SC8180x devices
+Date:   Tue, 30 May 2023 10:22:49 -0700
+Message-Id: <168546732606.2227271.7267063763992454803.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230530162454.51708-1-vkoul@kernel.org>
+References: <20230530162454.51708-1-vkoul@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strlcpy() reads the entire source buffer first.
-This read may exceed the destination size limit.
-This is both inefficient and can lead to linear read
-overflows if a source string is not NUL-terminated [1].
-In an effort to remove strlcpy() completely [2], replace
-strlcpy() here with strscpy().
-No return values were used, so direct replacement is safe.
+On Tue, 30 May 2023 21:54:39 +0530, Vinod Koul wrote:
+> This introduces Qualcomm SC8180x SoC which features in Lenovo Flex 5G
+> laptop. This also adds support for Primus platform as well as Lenovo Flex 5G
+> laptop.
+> 
+> Changes in v3:
+>  - Split DTS patch into smaller check
+>  - checkpatch and dtbs check error fixes
+>  - fix comments from Konrad/Krzysztof
+> 
+> [...]
 
-[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
-[2] https://github.com/KSPP/linux/issues/89
+Quite a few DT validation warnings left, but let's get it merged so that we can
+work on those together.
 
-Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
----
- drivers/ufs/core/ufs-fault-injection.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, thanks!
 
-diff --git a/drivers/ufs/core/ufs-fault-injection.c b/drivers/ufs/core/ufs-fault-injection.c
-index 7ac7c4e7ff83..5b1184aac585 100644
---- a/drivers/ufs/core/ufs-fault-injection.c
-+++ b/drivers/ufs/core/ufs-fault-injection.c
-@@ -54,7 +54,7 @@ static int ufs_fault_set(const char *val, const struct kernel_param *kp)
- 	if (!setup_fault_attr(attr, (char *)val))
- 		return -EINVAL;
- 
--	strlcpy(kp->arg, val, FAULT_INJ_STR_SIZE);
-+	strscpy(kp->arg, val, FAULT_INJ_STR_SIZE);
- 
- 	return 0;
- }
+[06/15] arm64: dts: qcom: Introduce the SC8180x platform
+        commit: 8575f197b077001591ef3ff709cdee48785daf0d
+[07/15] arm64: dts: qcom: sc8180x: Add interconnects and lmh
+        commit: f3be8a111d7eaf4e291b6c2d51dd0adb39934b32
+[08/15] arm64: dts: qcom: sc8180x: Add thermal zones
+        commit: d1d3ca03554e51be44546638f83169bb05b20ef8
+[09/15] arm64: dts: qcom: sc8180x: Add QUPs
+        commit: 0018761d1564f64d567e119fd9156c473b4592d7
+[10/15] arm64: dts: qcom: sc8180x: Add PCIe instances
+        commit: d20b6c84f56ae3a9823cc0fa5cfad330536ba0d1
+[11/15] arm64: dts: qcom: sc8180x: Add remoteprocs, wifi and usb nodes
+        commit: b080f53a8f44eeaa9db9628d8d339ab5a2afb5bd
+[12/15] arm64: dts: qcom: sc8180x: Add display and gpu nodes
+        commit: 494dec9b6f541451b2e82905b0eebd9a4ac9848b
+[13/15] arm64: dts: qcom: sc8180x: Add pmics
+        commit: d3302290f59e8533a56a8fa2455357f843d8dcf6
+[14/15] arm64: dts: qcom: sc8180x: Introduce Primus
+        commit: 2ce38cc1e8fea4e251e4563e436104369bf3b322
+[15/15] arm64: dts: qcom: sc8180x: Introduce Lenovo Flex 5G
+        commit: 20dea72a393c6d5572088b8ad01dbb9e9aca64ce
 
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
