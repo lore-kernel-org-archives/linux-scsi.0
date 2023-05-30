@@ -2,106 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4F9C7EE32
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 17:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D7BC7EE23
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 17:45:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233217AbjE3RTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 13:19:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48608 "EHLO
+        id S232396AbjE3RpG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 13:45:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233001AbjE3RTI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 13:19:08 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6391BD9;
-        Tue, 30 May 2023 10:19:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EE7B7630C8;
-        Tue, 30 May 2023 17:19:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA22EC433D2;
-        Tue, 30 May 2023 17:19:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685467146;
-        bh=PIBi+WICffiBvaB2Kw9KN3H9bNAFCDH01ZgbVaQGbpg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E2Xa4JrAvvdRGyRf3zxeWBvkc5cuOtjqlw0qF7dZxyI06ngCrCEr+2VfwVIRMVVdd
-         V5zTylUXQRCf1KW4HPXzMIdv+9vrMt1yP+n7FUDa+t2FjNJ4LF5+BlKFZwjSqNBqRe
-         ZHB1IFdqYD9OcZl9/+Ecs/JcoSOvUOC9V09t4ZzWib5Tw6UHYj9RtfWvo7heP6Av47
-         dD3CVQoa6UM26DNqLEt2ojddXXiZcVQpH+lX3kslYjvfSLtg1sWzEWznuptvI921Y/
-         KH17pTxqsO/dGyBabW1mpfH4P2fEriexl3TKpaNOhSUcu+Vgyc5AIWsf3E+ZScPJZ6
-         l+0N0Pn0M1pBQ==
-From:   Bjorn Andersson <andersson@kernel.org>
-To:     Vinod Koul <vkoul@kernel.org>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        devicetree@vger.kernel.org,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Wesley Cheng <quic_wcheng@quicinc.com>,
-        linux-scsi@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
-        linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Georgi Djakov <djakov@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: (subset) [PATCH v3 00/15] Introduce the SC8180x devices
-Date:   Tue, 30 May 2023 10:22:49 -0700
-Message-Id: <168546732606.2227271.7267063763992454803.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230530162454.51708-1-vkoul@kernel.org>
-References: <20230530162454.51708-1-vkoul@kernel.org>
+        with ESMTP id S232289AbjE3RpF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 13:45:05 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5FA8C5
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 10:45:03 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34UCjoI0005505;
+        Tue, 30 May 2023 17:39:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=++9igwt/DTcR7UvYeVf0VvLoF7rk3HCWFMP6R7AfnzQ=;
+ b=WQTaVHzp+ZY37RH9jbs5hSY3TajznPzGA+f6HYzpLC8yTogq7tNDHnlo82kWrHiTt7ku
+ pKxdFyG0Q6I3O9+oqXbU7VTxFbMBoi67Exj99A39ZPA9MQWIh/nYed8uuwfw5Ts+sZ6o
+ iKq0/8cVmAAS2sLbE6oOvEJIXNTVgNbdNMrBFgizjKy+qNWPZqPsrNFFp2PF10w4U4HF
+ gsp8i8GBg6YXRzYdd0GcC0fqjgw51+6Cdi2yAASER5aA6Z2NfuC+t0K8OBF4brjLPm81
+ 34NP7sESOLAKuGGa8i26hD9WRdDhsrJA2PY1bl2VtqXJoOObpVGv2R3sVM93BGqgkYtz Sw== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qw03q2bmy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 30 May 2023 17:39:38 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34UHdbel005985
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 30 May 2023 17:39:37 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Tue, 30 May
+ 2023 10:39:36 -0700
+Message-ID: <01139a52-3105-1fe7-b077-89a215e5fcd8@quicinc.com>
+Date:   Tue, 30 May 2023 10:39:36 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v4 5/5] scsi: ufs: Ungate the clock synchronously
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     Jaegeuk Kim <jaegeuk@kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Adrian Hunter" <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Daniil Lunev <dlunev@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Ziqi Chen" <quic_ziqichen@quicinc.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        Adrien Thierry <athierry@redhat.com>,
+        Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>
+References: <20230529202640.11883-1-bvanassche@acm.org>
+ <20230529202640.11883-6-bvanassche@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <20230529202640.11883-6-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ltXuxnPkNjFU-y3IvSSCxj8KfpNQsnxE
+X-Proofpoint-ORIG-GUID: ltXuxnPkNjFU-y3IvSSCxj8KfpNQsnxE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-30_13,2023-05-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 spamscore=0 impostorscore=0
+ clxscore=1011 mlxlogscore=990 adultscore=0 phishscore=0 priorityscore=1501
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305300140
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 30 May 2023 21:54:39 +0530, Vinod Koul wrote:
-> This introduces Qualcomm SC8180x SoC which features in Lenovo Flex 5G
-> laptop. This also adds support for Primus platform as well as Lenovo Flex 5G
-> laptop.
+On 5/29/2023 1:26 PM, Bart Van Assche wrote:
+> Ungating the clock asynchronously causes ufshcd_queuecommand() to return
+> SCSI_MLQUEUE_HOST_BUSY and hence causes commands to be requeued.  This is
+> suboptimal. Allow ufshcd_queuecommand() to sleep such that clock ungating
+> does not trigger command requeuing. Remove the ufshcd_scsi_block_requests()
+> and ufshcd_scsi_unblock_requests() calls because these are no longer
+> needed. The flush_work(&hba->clk_gating.ungate_work) call is sufficient to
+> make the SCSI core wait for clock ungating to complete.
 > 
-> Changes in v3:
->  - Split DTS patch into smaller check
->  - checkpatch and dtbs check error fixes
->  - fix comments from Konrad/Krzysztof
-> 
-> [...]
+> Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Quite a few DT validation warnings left, but let's get it merged so that we can
-work on those together.
+Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 
-Applied, thanks!
-
-[06/15] arm64: dts: qcom: Introduce the SC8180x platform
-        commit: 8575f197b077001591ef3ff709cdee48785daf0d
-[07/15] arm64: dts: qcom: sc8180x: Add interconnects and lmh
-        commit: f3be8a111d7eaf4e291b6c2d51dd0adb39934b32
-[08/15] arm64: dts: qcom: sc8180x: Add thermal zones
-        commit: d1d3ca03554e51be44546638f83169bb05b20ef8
-[09/15] arm64: dts: qcom: sc8180x: Add QUPs
-        commit: 0018761d1564f64d567e119fd9156c473b4592d7
-[10/15] arm64: dts: qcom: sc8180x: Add PCIe instances
-        commit: d20b6c84f56ae3a9823cc0fa5cfad330536ba0d1
-[11/15] arm64: dts: qcom: sc8180x: Add remoteprocs, wifi and usb nodes
-        commit: b080f53a8f44eeaa9db9628d8d339ab5a2afb5bd
-[12/15] arm64: dts: qcom: sc8180x: Add display and gpu nodes
-        commit: 494dec9b6f541451b2e82905b0eebd9a4ac9848b
-[13/15] arm64: dts: qcom: sc8180x: Add pmics
-        commit: d3302290f59e8533a56a8fa2455357f843d8dcf6
-[14/15] arm64: dts: qcom: sc8180x: Introduce Primus
-        commit: 2ce38cc1e8fea4e251e4563e436104369bf3b322
-[15/15] arm64: dts: qcom: sc8180x: Introduce Lenovo Flex 5G
-        commit: 20dea72a393c6d5572088b8ad01dbb9e9aca64ce
-
-Best regards,
--- 
-Bjorn Andersson <andersson@kernel.org>
