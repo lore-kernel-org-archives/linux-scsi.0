@@ -2,136 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8EBC77B7A
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 09:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6A6C77B73
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 09:48:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230141AbjE3JrV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 05:47:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57714 "EHLO
+        id S230267AbjE3JsV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 05:48:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbjE3JrU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 05:47:20 -0400
-Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DA43AD
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 02:47:19 -0700 (PDT)
-Received: by mail-vs1-xe2d.google.com with SMTP id ada2fe7eead31-439367c12ceso2823230137.0
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 02:47:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20221208.gappssmtp.com; s=20221208; t=1685440038; x=1688032038;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OIzhChYUNLfm+XWki27JvZkO7NGgI4DFHIFwo2T7aS0=;
-        b=bBkPAO2St5nJS4Kko98Tl60g8CTrz4Nn54qpkMWme+FATa5T6sx8k0544Cm0V518eu
-         PguWspaNIRycRueuC4UxrB5+FuCj+dXJQqiidL/e4ukbPdlKmQtSaGNAfbrJvaJRHaKR
-         2GJssxV+7AtQZya8RptndBvMoSMt7hR55I+NR4/oqy6yMh9VJS+UExy+y/n1QvpRDogx
-         OojCNQDKPQsRIJ7R/ysgwyw8V1Y/E/p1Z3nPl0T6EAo/5BJcFHdoqkDfEqjtdzCBaQZc
-         rFPDmyI0qCr74+oj8ETtfvkADEXaovqDyxO2vPxHX0Y33RjKrc5GqBu6mo2fSdn17Ir5
-         e+3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685440038; x=1688032038;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OIzhChYUNLfm+XWki27JvZkO7NGgI4DFHIFwo2T7aS0=;
-        b=jewD2l40YGuFJc0y6n7Gj3sqVr3Hg/yvDDNlIJvMuRD6kppVe3Bmw5IPko+6o83KzI
-         bJG7tJw+yQ/LjnFaVbWLzNzIBEC6c57C/+JdjEha4ehZ6RikuRbUkcCOBqDOLuO3FkJL
-         bEQiu009hJ34m79kzIYjSdaKvPr65Wjq1SM8lomnGkAnrZv6WSdTSKDE4v+Z5QISRrdp
-         +NkJYxBD1JnDqKhlzLEB7J8tvl8r5vL5Mz0eccu1OFKnRxhJg98O81lwSvePKdk8iARY
-         TIfehpiOulI9qBtnwOq8K8ZRzi5DyjTlKV3RYRACvwe0nMDmmXu1usYxu8Pa0hO955Hz
-         H/MQ==
-X-Gm-Message-State: AC+VfDyz/s5rAM8clMsSiZwhS6tWAG3xXMmj6uKZCf7h22SUwUuiAx3e
-        Rw/vEDKLLIiWEE8ErEoyTbrwJY8gBDfv73ghCVhilw==
-X-Google-Smtp-Source: ACHHUZ6YElDOMjsnjuiqQPgxgQ7QloYBoa4ZvDWgRo3oSyyufZR6kZTSCoJ6Bf8lfwaaT/BrhKvzzzC/ep67kdjyrlU=
-X-Received: by 2002:a67:f24a:0:b0:430:acc:a150 with SMTP id
- y10-20020a67f24a000000b004300acca150mr502826vsm.3.1685440038182; Tue, 30 May
- 2023 02:47:18 -0700 (PDT)
+        with ESMTP id S230333AbjE3JsU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 05:48:20 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70D8DF9
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 02:48:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1685440098; x=1716976098;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=mYxzCwavp+2UVrbEVFAooXmSp3Wz//xLzYAx3rdKIwg=;
+  b=crDucUCjUL8r/ElsLyXy1yQdje9Wpvf2uEoDrbB44pqzmBKtdaPWiV1z
+   sU3zPtUwJMh2phO3z5dc9KtXLTrWC9DiKkyddsxI4PKLmLg4lCXR5N9Ji
+   MDAs9HlCaPISgeh78U7M6josSYCX6G20d5p1HihV90zizfuAByVEhf6vb
+   KHIDOvcwL9l6Bj8YFH6Gx2YLwxjGdZto2cHna0OigkrDhdh/CstcdoMvE
+   Y2+Mz5qukkOxXtthEFlqv9gWUQuO2nxyiD+HWM23rL9ONyPfn/GxQUi00
+   ng90fVBOQD3M/5cyD8GlbVBzTcuzNFlGZIJFUeaA2lh3JXvOIwZfOQj5G
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10725"; a="418351501"
+X-IronPort-AV: E=Sophos;i="6.00,203,1681196400"; 
+   d="scan'208";a="418351501"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 May 2023 02:48:17 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10725"; a="739451724"
+X-IronPort-AV: E=Sophos;i="6.00,203,1681196400"; 
+   d="scan'208";a="739451724"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.46.19])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 May 2023 02:48:13 -0700
+Message-ID: <0130e6e7-bf86-eae0-ac25-3755798a5703@intel.com>
+Date:   Tue, 30 May 2023 12:48:08 +0300
 MIME-Version: 1.0
-References: <20230411130446.401440-1-brgl@bgdev.pl> <20230411130446.401440-2-brgl@bgdev.pl>
- <CAMRc=MdDct0UzJPpOTuKHmm23Jc529NwkBWJJmXfeevpkQaSxQ@mail.gmail.com> <CAMRc=Me4EQ_7ArCeJASzKTimuSH=yNkrwm9DgE93s7kjdS5Nrw@mail.gmail.com>
-In-Reply-To: <CAMRc=Me4EQ_7ArCeJASzKTimuSH=yNkrwm9DgE93s7kjdS5Nrw@mail.gmail.com>
-From:   Bartosz Golaszewski <brgl@bgdev.pl>
-Date:   Tue, 30 May 2023 11:47:07 +0200
-Message-ID: <CAMRc=MfhYu6sxhFABjyQUT5NGwNu1oJuRjMBqPvQ0Z8MhjoSRg@mail.gmail.com>
-Subject: Re: [PATCH v3 1/5] dt-bindings: ufs: qcom: add compatible for sa8775p
-To:     Kishon Vijay Abraham I <kishon@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, Bjorn Andersson <andersson@kernel.org>,
-        linux-kernel@vger.kernel.org,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.11.0
+Subject: Re: [PATCH v4 4/5] scsi: ufs: Declare ufshcd_{hold,release}() once
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <quic_cang@quicinc.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
-        linux-scsi@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Avri Altman <avri.altman@wdc.com>
+References: <20230529202640.11883-1-bvanassche@acm.org>
+ <20230529202640.11883-5-bvanassche@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20230529202640.11883-5-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 25, 2023 at 11:37=E2=80=AFAM Bartosz Golaszewski <brgl@bgdev.pl=
-> wrote:
->
-> On Tue, May 16, 2023 at 12:06=E2=80=AFPM Bartosz Golaszewski <brgl@bgdev.=
-pl> wrote:
-> >
-> > On Tue, Apr 11, 2023 at 3:04=E2=80=AFPM Bartosz Golaszewski <brgl@bgdev=
-.pl> wrote:
-> > >
-> > > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> > >
-> > > Add the compatible string for the UFS on sa8775p platforms.
-> > >
-> > > Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> > > Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> > > ---
-> > >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> > >
-> > > diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Do=
-cumentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> > > index c5a06c048389..b1c00424c2b0 100644
-> > > --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> > > +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> > > @@ -26,6 +26,7 @@ properties:
-> > >            - qcom,msm8994-ufshc
-> > >            - qcom,msm8996-ufshc
-> > >            - qcom,msm8998-ufshc
-> > > +          - qcom,sa8775p-ufshc
-> > >            - qcom,sc8280xp-ufshc
-> > >            - qcom,sdm845-ufshc
-> > >            - qcom,sm6350-ufshc
-> > > @@ -105,6 +106,7 @@ allOf:
-> > >            contains:
-> > >              enum:
-> > >                - qcom,msm8998-ufshc
-> > > +              - qcom,sa8775p-ufshc
-> > >                - qcom,sc8280xp-ufshc
-> > >                - qcom,sm8250-ufshc
-> > >                - qcom,sm8350-ufshc
-> > > --
-> > > 2.37.2
-> > >
-> >
-> > Bjorn,
-> >
-> > Are you picking this one up as well or should it go through Rob's tree?
-> >
-> > Bart
->
-> Gentle ping.
->
-> Bart
+On 29/05/23 23:26, Bart Van Assche wrote:
+> ufshcd_hold() and ufshcd_release are declared twice: once in
+> drivers/ufs/core/ufshcd-priv.h and a second time in include/ufs/ufshcd.h.
+> Remove the declarations from ufshcd-priv.h.
+> 
+> Fixes: dd11376b9f1b ("scsi: ufs: Split the drivers/scsi/ufs directory")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Hey UFS maintainers, could you please pick this one up for the next
-merge window?
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-Thanks in advance,
-Bartosz
+> ---
+>  drivers/ufs/core/ufshcd-priv.h | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+> index d53b93c21a0c..8f58c2169398 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -84,9 +84,6 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+>  int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+>  			    u8 **buf, bool ascii);
+>  
+> -int ufshcd_hold(struct ufs_hba *hba, bool async);
+> -void ufshcd_release(struct ufs_hba *hba);
+> -
+>  int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
+>  
+>  int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+
