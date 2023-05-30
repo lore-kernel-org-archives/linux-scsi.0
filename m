@@ -2,97 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B28C7EE2E
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 16:23:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2880C7EE32
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 16:25:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231368AbjE3QXv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 12:23:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39784 "EHLO
+        id S232649AbjE3QZh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 12:25:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232022AbjE3QXd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 12:23:33 -0400
-Received: from mail-il1-x129.google.com (mail-il1-x129.google.com [IPv6:2607:f8b0:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14B0EF7;
-        Tue, 30 May 2023 09:23:25 -0700 (PDT)
-Received: by mail-il1-x129.google.com with SMTP id e9e14a558f8ab-33b4b70693eso17436965ab.1;
-        Tue, 30 May 2023 09:23:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685463804; x=1688055804;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wf5Jl4L5iGKB9g9WAO3hQ5Kz/WXc65qEj717gqBRX5w=;
-        b=Y/SSeuwGjQLmJUJ5gIwpqYpNQd/DUr3WtF6p5Hpw3kIQwybP15kZPjc2ETUBT5v+a8
-         4/2m1vdkTwVVQ7e1EB0lfCe2XhvEK2ni7wJeycQNNzi6exdBczX+ZyAqYhnIo+QnsZ8E
-         97/fCeYXUU0YwV/BuOwkhrhiefKf/7lEQDH8EevvROg6sLz1J+iOyVh5OqFhyqjh2wrN
-         Tdk62TWzACH2C5UR3QXyOIvU2PZnkc3DeLmdfK9qy/cuc7XCEURca4xvh6ZBuxBimTrY
-         LMQfuglWAYtDDz7gSBATFalJN5HiJYPjjHDsoY+x3fcrl+2iXNT/QsX6zavC0aCKO7Ji
-         Sx0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685463804; x=1688055804;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wf5Jl4L5iGKB9g9WAO3hQ5Kz/WXc65qEj717gqBRX5w=;
-        b=j4Hv4KGLGneR0N/l2cGmewIiRK7e1Wg64EiZj22om6jhiWUEzAh354N/FVS3EyMNTa
-         z/YsJ1cNgO0eD9J/ehiLCbMcSa166taTyFX2fwUUmqLjKN14GqOVhYVsFiCt19hVitDv
-         ryLf6NJvjFtvfDSB0iLnvkPDLRIv7aFVG3HIxz93paWpWiHIPP7MspZELMlTn0No8xI0
-         TWWhaCDSdMFinQcGAO0mnh/HEPYSVFsvXwzom2NyG9+kcN1LtPT6aG728g6c64t0Vu1a
-         DzVbJf13eZiH7Kzkk3J5Sa8wzYo8SV26Gtl+baXGxEfqhP/mIdQBlIHgC7sVVcfypf6O
-         RD6w==
-X-Gm-Message-State: AC+VfDxNDzMXyrf8htWVtLo44ALpGokvgoh8+wa6d0PQxbH63bFxQ4lx
-        7wXWESLJKo/vf0Uaj6alpp8=
-X-Google-Smtp-Source: ACHHUZ4iEManahS8tA9CcIeVxg11T95mCOr54VBbEadoPhb/eCpsS52imW/5Ihe7AeMVPxt8Mee3gw==
-X-Received: by 2002:a92:d34a:0:b0:33b:4c71:a245 with SMTP id a10-20020a92d34a000000b0033b4c71a245mr95983ilh.8.1685463804245;
-        Tue, 30 May 2023 09:23:24 -0700 (PDT)
-Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
-        by smtp.gmail.com with ESMTPSA id v15-20020a92d24f000000b0033568b32890sm2558996ilg.24.2023.05.30.09.23.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 May 2023 09:23:23 -0700 (PDT)
-From:   Azeem Shaikh <azeemshaikh38@gmail.com>
-To:     Don Brace <don.brace@microchip.com>
-Cc:     linux-hardening@vger.kernel.org,
-        Azeem Shaikh <azeemshaikh38@gmail.com>,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: smartpqi: Replace all non-returning strlcpy with strscpy
-Date:   Tue, 30 May 2023 16:23:21 +0000
-Message-ID: <20230530162321.984035-1-azeemshaikh38@gmail.com>
-X-Mailer: git-send-email 2.41.0.rc0.172.g3f132b7071-goog
+        with ESMTP id S232036AbjE3QZf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 12:25:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CAD3E8;
+        Tue, 30 May 2023 09:25:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F53562CD7;
+        Tue, 30 May 2023 16:25:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E037C433D2;
+        Tue, 30 May 2023 16:24:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685463903;
+        bh=ACMyBw8aBnxiwOn2sGNCuMmXFrRs+KzaneQ9BAek270=;
+        h=From:To:Cc:Subject:Date:From;
+        b=XvWvDIE1Ft9keSbeXqQfOI1P3L00zUknWIQdylE1nrnb9OynfjQ1ln8qoIgm3NPq0
+         SZ73e2WlSLBQxQepWFJEQXhJcKghKsmYT+up9nc1PUj+i/vCthruVK1OAeqGQMn59e
+         DCqaAQOp06jGCvqZpEUTM+TJ3suSTx1eCt+OEyB51GT9rfn8Fac54EFwMtN7SgugPW
+         HGZFi9/ESXdojChhxxgPtL0fU/3o9t7x7QzZnhBbkx9/l/ekSeTzoHEl4/3g0AsQdD
+         PRFE62cp5QePE2869nUSxvHX4PABXveEGgmdWNRDYKc5jsDqi0+lyxFGDW///XMW2C
+         jNI4QCt2zJgzg==
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Bjorn Andersson <andersson@kernel.org>
+Cc:     linux-arm-msm@vger.kernel.org,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Wesley Cheng <quic_wcheng@quicinc.com>,
+        Georgi Djakov <djakov@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v3 00/15] Introduce the SC8180x devices
+Date:   Tue, 30 May 2023 21:54:39 +0530
+Message-Id: <20230530162454.51708-1-vkoul@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strlcpy() reads the entire source buffer first.
-This read may exceed the destination size limit.
-This is both inefficient and can lead to linear read
-overflows if a source string is not NUL-terminated [1].
-In an effort to remove strlcpy() completely [2], replace
-strlcpy() here with strscpy().
-No return values were used, so direct replacement is safe.
+This introduces Qualcomm SC8180x SoC which features in Lenovo Flex 5G
+laptop. This also adds support for Primus platform as well as Lenovo Flex 5G
+laptop.
 
-[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
-[2] https://github.com/KSPP/linux/issues/89
+Changes in v3:
+ - Split DTS patch into smaller check
+ - checkpatch and dtbs check error fixes
+ - fix comments from Konrad/Krzysztof
 
-Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes in v2:
+ - Fix the ufs pcie and phy bindings
+ - Lots of error fixes for dtbs_check
+ - Add few more missing compatiables
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 03de97cd72c2..74f608b9fc9d 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6903,7 +6903,7 @@ static ssize_t pqi_lockup_action_store(struct device *dev,
- 	char *action_name;
- 	char action_name_buffer[32];
- 
--	strlcpy(action_name_buffer, buffer, sizeof(action_name_buffer));
-+	strscpy(action_name_buffer, buffer, sizeof(action_name_buffer));
- 	action_name = strstrip(action_name_buffer);
- 
- 	for (i = 0; i < ARRAY_SIZE(pqi_lockup_actions); i++) {
+Bjorn Andersson (3):
+  arm64: dts: qcom: Introduce the SC8180x platform
+  arm64: dts: qcom: sc8180x: Introduce Primus
+  arm64: dts: qcom: sc8180x: Introduce Lenovo Flex 5G
+
+Vinod Koul (12):
+  dt-bindings: PCI: qcom: Fix sc8180x clocks and interrupts
+  dt-bindings: usb: qcom,dwc3: Add SC8180x binding
+  dt-bindings: interconnect: split SC8180x to own schema
+  scsi: ufs: dt-bindings: Add SC8180x binding
+  dt-bindings: qcom,pdc: Add SC8180x compatible
+  arm64: dts: qcom: sc8180x: Add interconnects and lmh
+  arm64: dts: qcom: sc8180x: Add thermal zones
+  arm64: dts: qcom: sc8180x: Add QUPs
+  arm64: dts: qcom: sc8180x: Add PCIe instances
+  arm64: dts: qcom: sc8180x: Add remoteprocs, wifi and usb nodes
+  arm64: dts: qcom: sc8180x: Add display and gpu nodes
+  arm64: dts: qcom: sc8180x: Add pmics
+
+ .../bindings/interconnect/qcom,rpmh.yaml      |   11 -
+ .../interconnect/qcom,sc8180x-rpmh.yaml       |   49 +
+ .../interrupt-controller/qcom,pdc.yaml        |    1 +
+ .../devicetree/bindings/pci/qcom,pcie.yaml    |   29 +-
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |    2 +
+ .../devicetree/bindings/usb/qcom,dwc3.yaml    |    3 +
+ arch/arm64/boot/dts/qcom/Makefile             |    2 +
+ .../boot/dts/qcom/sc8180x-lenovo-flex-5g.dts  |  583 +++
+ arch/arm64/boot/dts/qcom/sc8180x-pmics.dtsi   |  326 ++
+ arch/arm64/boot/dts/qcom/sc8180x-primus.dts   |  706 +++
+ arch/arm64/boot/dts/qcom/sc8180x.dtsi         | 4030 +++++++++++++++++
+ 11 files changed, 5730 insertions(+), 12 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/interconnect/qcom,sc8180x-rpmh.yaml
+ create mode 100644 arch/arm64/boot/dts/qcom/sc8180x-lenovo-flex-5g.dts
+ create mode 100644 arch/arm64/boot/dts/qcom/sc8180x-pmics.dtsi
+ create mode 100644 arch/arm64/boot/dts/qcom/sc8180x-primus.dts
+ create mode 100644 arch/arm64/boot/dts/qcom/sc8180x.dtsi
+
+-- 
+2.40.1
 
