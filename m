@@ -2,73 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F34C77B73
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 13:35:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A50C77B73
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 14:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232718AbjE3Nfr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 09:35:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57148 "EHLO
+        id S232931AbjE3OIV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 10:08:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232717AbjE3Nfl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 09:35:41 -0400
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34472E5;
-        Tue, 30 May 2023 06:35:38 -0700 (PDT)
-Received: by mail-lj1-x229.google.com with SMTP id 38308e7fff4ca-2af7081c9ebso47225901fa.1;
-        Tue, 30 May 2023 06:35:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685453736; x=1688045736;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5kEycXkYKRLRpxEwUXtZ7ALwt5KCXp4fBeeC6hygqMU=;
-        b=qTxyaglAvkzM6Pxye5rwyFxfQQDvXnVY5js+9godxnL2a1ZdlJeqNyQktc66fR2ZpO
-         OG+JM3Qr3E7Sca7lCP8NlbMnr95lPPMdKC3/UYIhUYbWcPHwdp6Uopbno1JoTGzbwLeL
-         YPGIrD1uoAFQlUZsbz6sIyjs/5VHyN2ujXfwOAk/7MxnzT7+eoOPYYm3YPA5VnFYXA/l
-         lKX4lfsXECZqiXTiBRFjOsidTVUQ6EC1A4YHmA6xdR0EJUy87k65G7//rK4okyp7aSkV
-         9mDfsf6XPGfpABYU5ymBhwh90mz1UGBCuxJTNEsN2VM6ouLE9ZAcQrfWtPrYnho5b+dy
-         Lvvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685453736; x=1688045736;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5kEycXkYKRLRpxEwUXtZ7ALwt5KCXp4fBeeC6hygqMU=;
-        b=GczffXyvRf81RnM5nl9DfrIul//i1dlb3XJW6xRrStea2OLnTc7b7HTeb0cCMZiGTL
-         FjUZCSoj3rcFrqIj4iQ8jvH1FHAEWBdE2FLpSXKIcpGVsfUdQo6WhARJEUZUhj8Zj6RC
-         cQ8amsGZcVXscGswctOSiW779EVtpguvCFjGBo4nRThF1glR3AGhPOYA+vJ4hlQe1wYH
-         A5QzWUNlSvzAM1r3FPb61fOXFTo+FtatldkCZt+I500Ixg55BSPT+64YTCuqybEAdJK4
-         e92gPBRM3YtgVliA/3t95FJEE47Y71QSfrHck9AVSL7BYWnYn+H1DEqGalkW0Esd1WCY
-         PcHw==
-X-Gm-Message-State: AC+VfDydw0rR/ES+4RzwSFy55+vuBy8OUiMEXTkmqN3hEv2aV6LZPiF5
-        Ar3VnH+EUuOG0Wb3CQ4A7LIwSe4fAVZT0DxTCg==
-X-Google-Smtp-Source: ACHHUZ7Vi0nd71flZWzb24MAnvs1nFjE3mGbWsNfiZdwsqrBpHuz496GJmDubGDwYF5FTyd3unJmUPr3miOjy1FU6OE=
-X-Received: by 2002:a2e:834b:0:b0:2ac:66c8:3c4b with SMTP id
- l11-20020a2e834b000000b002ac66c83c4bmr727518ljh.11.1685453735886; Tue, 30 May
- 2023 06:35:35 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230530075033.11006-1-avri.altman@wdc.com> <93839d61500f626e78f8c63b3a11b29ef4f17b11.camel@gmail.com>
-In-Reply-To: <93839d61500f626e78f8c63b3a11b29ef4f17b11.camel@gmail.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Tue, 30 May 2023 21:35:24 +0800
-Message-ID: <CAGaU9a-vanwZjyE_ygZKo-uEL0AOU4sW0hdQ5Ge=6sqZT8_34A@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Do not open code SZ_x
-To:     Bean Huo <huobean@gmail.com>
-Cc:     Avri Altman <avri.altman@wdc.com>,
+        with ESMTP id S232922AbjE3OIU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 10:08:20 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FD3BF1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 07:08:15 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230530140811epoutp0484f23b3dff90cbafe927369a5fa86e5b~j8QWFIHVe0278302783epoutp04M
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2023 14:08:11 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230530140811epoutp0484f23b3dff90cbafe927369a5fa86e5b~j8QWFIHVe0278302783epoutp04M
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1685455691;
+        bh=rf7tS+NmbGO9udzvDmUCm45lU4H36ni9hxNLjBRtmEM=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=T8bMg/u8/WTujNzCZbPlPIPWzwKog8V11ho4CK2svhP+qEvaSwR7diDD3NO7ZvOgA
+         dgW8/CWbxTBM3dj4TJ7rVv6QAwJQsdN+UXKo1cVWzTz8kVJgbLJ9vu5q67+kO1YKGe
+         8+uleTHQRDcjSN4vedgvC9/NFv2qaF5gusM8HmiU=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230530140810epcas2p1497def228476a69cef70c83ef2563581~j8QVHsNzf2501025010epcas2p1_;
+        Tue, 30 May 2023 14:08:10 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.102]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4QVvPP5fhlz4x9Pv; Tue, 30 May
+        2023 14:08:09 +0000 (GMT)
+X-AuditID: b6c32a48-c3ff87000000acbc-2a-6476034932ae
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        18.8A.44220.94306746; Tue, 30 May 2023 23:08:09 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: [PATCH] scsi: ufs: core: Do not open code SZ_x
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     Avri Altman <avri.altman@wdc.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20230530075033.11006-1-avri.altman@wdc.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230530140809epcms2p3aff4826012218b0e937e02aa3e30bec2@epcms2p3>
+Date:   Tue, 30 May 2023 23:08:09 +0900
+X-CMS-MailID: 20230530140809epcms2p3aff4826012218b0e937e02aa3e30bec2
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpik+LIzCtJLcpLzFFi42LZdljTQteTuSzFoOujjsXLn1fZLF4e0rR4
+        dPsZo8WqiXkWl3fNYbPovr6DzWL58X9MDuweDw5tZvH4+PQWi0ffllWMHp83yXm0H+hmCmCN
+        yrbJSE1MSS1SSM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMATpCSaEs
+        MacUKBSQWFyspG9nU5RfWpKqkJFfXGKrlFqQklNgXqBXnJhbXJqXrpeXWmJlaGBgZApUmJCd
+        cWDuS6aCvSIV+74fZGtgPCbQxcjJISFgIrH6eCNLFyMHh5DADkaJ6ZEgJq+AoMTfHcIgprCA
+        tcS9z+ogxUICShJdC7cyg9jCAgYS66bvAbPZBPQkpvy+w9jFyMUhIjCJUWLj0mlsIAlmgTqJ
+        3XP+sEFs4pWY0f6UBcKWlti+fCsjiM0pYClx+8V0Zoi4hsSPZb1QtqjEzdVv2WHs98fmM0LY
+        IhKt985C1QhKPPi5GyouKdF6ZivUrnqJ1ven2EEOkhCYwCjReOwP1CB9iWsdG8GO4BXwlbh7
+        5jtYnEVAVeLlsmdQQ10kPk6bwwTxgLzE9rdzmEEBwSygKbF+lz6IKSGgLHHkFgtEBZ9Ex+G/
+        7DAvNmz8jZW9Y94TJghbTeLRgi2sExiVZyECehaSXbMQdi1gZF7FKJZaUJybnlpsVGACj9nk
+        /NxNjODEqOWxg3H22w96hxiZOBgPMUpwMCuJ8NomFqcI8aYkVlalFuXHF5XmpBYfYjQF+nIi
+        s5Rocj4wNeeVxBuaWBqYmJkZmhuZGpgrifN+7FBOERJITyxJzU5NLUgtgulj4uCUamBqM/LQ
+        O3Vw6ccdc324be+k2KaXTNgX+zvVy+ztJf1lMV9MRQ7+XePxmGXu3aO7TifXnJD4v/tJSVzT
+        83U7pXZ9uSF1QvPtlfaGiSGpT8z2NX/MLGt1i6i36NP+bMt57VjVdd0ZPxepF2d5+C/XvrzL
+        cKfH4g0//+pf+NL8bE9F5OmZ+iXZDauXbVvN4zVDcu8Uvv486f39V5PO1wbOfJr/9tKOwEt+
+        t5sOzi9ZdthxtcSD/Fb1nzwGy586T8jafKRDYSLH5+N7T/ct7fLW8DskqqgmLfV0pzVj0I1l
+        K1Zefll831ljztKL6SutF9w+xn+ZKdtlZalcwvG85hdRXuEvGn4m3jvAFrrwkMCbHaxcj5VY
+        ijMSDbWYi4oTARhRSPEVBAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230530075120epcas2p10917546a2e01da2a17c34b7460f85eef
+References: <20230530075033.11006-1-avri.altman@wdc.com>
+        <CGME20230530075120epcas2p10917546a2e01da2a17c34b7460f85eef@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 30, 2023 at 7:22=E2=80=AFPM Bean Huo <huobean@gmail.com> wrote:
->
-> On Tue, 2023-05-30 at 10:50 +0300, Avri Altman wrote:
-> > A tad cleanup - No functional change.
-> >
-> > Signed-off-by: Avri Altman <avri.altman@wdc.com>
+Hi Avri,
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+>A tad cleanup - No functional change.
+>
+>Signed-off-by: Avri Altman <avri.altman@wdc.com>
+>---
+> drivers/ufs/core/ufshcd.c | 8 ++++----
+> include/ufs/ufshci.h      | 2 +-
+> 2 files changed, 5 insertions(+), 5 deletions(-)
+>
+>diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>index fdf5073c7c6c..1f206bd453cf 100644
+>--- a/drivers/ufs/core/ufshcd.c
+>+++ b/drivers/ufs/core/ufshcd.c
+>@@ -2519,7 +2519,7 @@ static void ufshcd_sgl_to_prdt(struct ufs_hba *hba, struct ufshcd_lrb *lrbp, int
+> 			 * 11b to indicate Dword granularity. A value of '3'
+> 			 * indicates 4 bytes, '7' indicates 8 bytes, etc."
+> 			 */
+>-			WARN_ONCE(len > 256 * 1024, "len = %#x\n", len);
+>+			WARN_ONCE(len > SZ_256K, "len = %#x\n", len);
+> 			prd->size = cpu_to_le32(len - 1);
+> 			prd->addr = cpu_to_le64(sg->dma_address);
+> 			prd->reserved = 0;
+>@@ -3765,7 +3765,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+> 
+> 	/*
+> 	 * Allocate memory for UTP Transfer descriptors
+>-	 * UFSHCI requires 1024 byte alignment of UTRD
+>+	 * UFSHCI requires 1KB alignment of UTRD
+> 	 */
+> 	utrdl_size = (sizeof(struct utp_transfer_req_desc) * hba->nutrs);
+> 	hba->utrdl_base_addr = dmam_alloc_coherent(hba->dev,
+>@@ -3773,7 +3773,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+> 						   &hba->utrdl_dma_addr,
+> 						   GFP_KERNEL);
+> 	if (!hba->utrdl_base_addr ||
+>-	    WARN_ON(hba->utrdl_dma_addr & (1024 - 1))) {
+>+	    WARN_ON(hba->utrdl_dma_addr & (SZ_1K - 1))) {
+
+How about changing the UTMRD part inside ufshcd_memory_alloc() as well?
+
+Best Regards,
+Keoseong
+
+> 		dev_err(hba->dev,
+> 			"Transfer Descriptor Memory allocation failed\n");
+> 		goto out;
+>@@ -8760,7 +8760,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
+> 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+> 	.can_queue		= UFSHCD_CAN_QUEUE,
+> 	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
+>-	.max_sectors		= (1 << 20) / SECTOR_SIZE, /* 1 MiB */
+>+	.max_sectors		= SZ_1M / SECTOR_SIZE,
+> 	.max_host_blocked	= 1,
+> 	.track_queue_depth	= 1,
+> 	.skip_settle_delay	= 1,
+>diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+>index 11424bb03814..db2d5db5c88e 100644
+>--- a/include/ufs/ufshci.h
+>+++ b/include/ufs/ufshci.h
+>@@ -453,7 +453,7 @@ enum {
+> };
+> 
+> /* The maximum length of the data byte count field in the PRDT is 256KB */
+>-#define PRDT_DATA_BYTE_COUNT_MAX	(256 * 1024)
+>+#define PRDT_DATA_BYTE_COUNT_MAX	SZ_256K
+> /* The granularity of the data byte count field in the PRDT is 32-bit */
+> #define PRDT_DATA_BYTE_COUNT_PAD	4
+> 
+>-- 
+>2.40.0
+>
