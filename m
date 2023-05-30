@@ -2,118 +2,167 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D0CC77B7A
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 05:24:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48012C7EE23
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 06:13:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229915AbjE3FYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 01:24:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40324 "EHLO
+        id S229620AbjE3GNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 02:13:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbjE3FYa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 01:24:30 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 104B3AD
-        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2023 22:24:28 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34U4l0id021445;
-        Tue, 30 May 2023 05:24:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=WFyfiyP148MYf55b9OHBRE4mI1uTMbcbZAP1cjZsELo=;
- b=gqcQFES1gguCekkOMQL2RAnQN/esNFVx8728uiVze7VSq4sMRmFX6TRrepKhiSCiTIjO
- xbqfkFiaVxg8dZ2zcYh4PnQuhk29S48JkoMmEXQOVlEWc6/VkpNdJp7bW38BCYi2V/dD
- Oppqtmyewo0EJ/Lj3G1TbAz93TNKJNHG5AcST72nwxQzVJjUZdOvnaytiTRJzeKFHwxi
- p8BmmZpKoB4amxrngXUYWiIRk9PEz/WvAb3UViJa97CPYiPLhUs1W6VOy2yGV47vsrXB
- ZC4pZi2vF+l/MV0jXJGny90NSu0jDK2uY5ffPhpAaqFLnovdMUB8y3UciXIMRUIbpy5j bA== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qvwm4s414-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 30 May 2023 05:24:04 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34U5O24u003952
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 30 May 2023 05:24:03 GMT
-Received: from [10.253.33.217] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Mon, 29 May
- 2023 22:24:00 -0700
-Message-ID: <32628a40-d2bf-76bb-3043-708c813e38b3@quicinc.com>
-Date:   Tue, 30 May 2023 13:23:41 +0800
+        with ESMTP id S229551AbjE3GNL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 02:13:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E586BEC;
+        Mon, 29 May 2023 23:13:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8021162A32;
+        Tue, 30 May 2023 06:13:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6328AC433D2;
+        Tue, 30 May 2023 06:13:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685427188;
+        bh=orvAfFB1al0I5E+N/dd1jRm8DcYqs+dBcPiT7570GoU=;
+        h=From:To:Subject:Date:From;
+        b=QQbYKyy5q6xxFFpacZ8k4ySj1uQTgCwOxQNXDfmXymFDKxReknTz+B3zZA135hh9H
+         qOAMtCtVhbXu5lelm/ha6uEQl1JXlwsnXfSy9okbgOKbPklJ3M9jBxOE1ByEvXntLs
+         XAM21wCS8hUkstYFU/TRkKzJ1V63yxSM/eOcgFemzqX3wozdXLY2H1dNh5BXE95Whm
+         JomLYM6XUWDsXlFpUV0Z5Ghz9W+B386LRtn5dLHDwpkhz98RsCKyjuL/0CiTR4TI08
+         Qgu4koHS27zmFXK/yiTCXNcZq5kItFjcH8R1xTXe9TNjR96hVsh+l6Zf0EO7KETk8b
+         lj6RsqmFe+pag==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org
+Subject: [PATCH] block: improve ioprio value validity checks
+Date:   Tue, 30 May 2023 15:13:07 +0900
+Message-Id: <20230530061307.525644-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v7 0/7] ufs: core: mcq: Add ufshcd_abort() and error
- handler support in MCQ mode
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        <quic_asutoshd@quicinc.com>, <bvanassche@acm.org>,
-        <mani@kernel.org>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>
-References: <cover.1685396241.git.quic_nguyenb@quicinc.com>
-Content-Language: en-US
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <cover.1685396241.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: o26Tyys5n6KshaoX2N0AnHbIW8blmmBi
-X-Proofpoint-GUID: o26Tyys5n6KshaoX2N0AnHbIW8blmmBi
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
- definitions=2023-05-30_02,2023-05-29_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- lowpriorityscore=0 spamscore=0 clxscore=1011 priorityscore=1501
- adultscore=0 bulkscore=0 mlxscore=0 malwarescore=0 mlxlogscore=713
- phishscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2304280000 definitions=main-2305300043
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bao,
+The introduction of the macro IOPRIO_PRIO_LEVEL() in commit
+eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
+results in an iopriority level to always be masked using the macro
+IOPRIO_LEVEL_MASK, and thus to the kernel always seeing an acceptable
+value for an I/O priority level when checked in ioprio_check_cap().
+Before this patch, this function would return an error for some (but not
+all) invalid values for a level valid range of [0..7].
 
-On 5/30/2023 6:12 AM, Bao D. Nguyen wrote:
-> This patch series enable support for ufshcd_abort() and error handler in MCQ mode.
->
-> Bao D. Nguyen (7):
->    ufs: core: Combine 32-bit command_desc_base_addr_lo/hi
->    ufs: core: Update the ufshcd_clear_cmds() functionality
->    ufs: mcq: Add supporting functions for mcq abort
->    ufs: mcq: Add support for clean up mcq resources
->    ufs: mcq: Added ufshcd_mcq_abort()
->    ufs: mcq: Use ufshcd_mcq_poll_cqe_lock() in mcq mode
->    ufs: core: Add error handling for MCQ mode
->
->   drivers/ufs/core/ufs-mcq.c     | 259 ++++++++++++++++++++++++++++++++++++++++-
->   drivers/ufs/core/ufshcd-priv.h |  18 ++-
->   drivers/ufs/core/ufshcd.c      | 256 ++++++++++++++++++++++++++++++++--------
->   drivers/ufs/host/ufs-qcom.c    |   2 +-
->   include/ufs/ufshcd.h           |   5 +-
->   include/ufs/ufshci.h           |  23 +++-
->   6 files changed, 501 insertions(+), 62 deletions(-)
-> ---
-> Changes compared to v6:
-> patch #7: Added a new argument force_compl to function ufshcd_mcq_compl_pending_transfer().
->            Added a new function ufshcd_mcq_compl_all_cqes_lock().
-> 	  This change is to handle the case where the ufs host controller has been reset by
-> 	  the ufshcd_hba_stop() in ufshcd_host_reset_and_restore() prior to calling
-> 	  ufshcd_complete_requests(). The new logic is added to correctly complete all the
-> 	  commands that have been completed in the Completion Queue, or inform the scsi layer
-> 	  about those commands that are still stuck/pending in the hardware.
-> ---
+Restore and improve the detection of invalid priority levels by
+introducing the inline function ioprio_value() to check an ioprio class,
+level and hint value before combining these fields into a single value
+to be used with ioprio_set() or AIOs. If an invalid value for the class,
+level or hint of an ioprio is detected, ioprio_value() returns an ioprio
+using the class IOPRIO_CLASS_INVALID, indicating an invalid value and
+causing ioprio_check_cap() to return -EINVAL.
 
-Feel free to my Reviewed-by tag to this series,
+Fixes: 6c913257226a ("scsi: block: Introduce ioprio hints")
+Fixes: eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ block/ioprio.c              |  1 +
+ include/uapi/linux/ioprio.h | 47 +++++++++++++++++++++++--------------
+ 2 files changed, 31 insertions(+), 17 deletions(-)
 
-Reviewed-by: Can Guo<quic_cang@quicinc.com>
-
-
-Thanks.
-Regards,
-Can Guo.
+diff --git a/block/ioprio.c b/block/ioprio.c
+index f0d9e818abc5..b5a942519a79 100644
+--- a/block/ioprio.c
++++ b/block/ioprio.c
+@@ -58,6 +58,7 @@ int ioprio_check_cap(int ioprio)
+ 			if (level)
+ 				return -EINVAL;
+ 			break;
++		case IOPRIO_CLASS_INVALID:
+ 		default:
+ 			return -EINVAL;
+ 	}
+diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
+index 607c7617b9d2..7310449c0178 100644
+--- a/include/uapi/linux/ioprio.h
++++ b/include/uapi/linux/ioprio.h
+@@ -6,15 +6,13 @@
+  * Gives us 8 prio classes with 13-bits of data for each class
+  */
+ #define IOPRIO_CLASS_SHIFT	13
+-#define IOPRIO_CLASS_MASK	0x07
++#define IOPRIO_NR_CLASSES	8
++#define IOPRIO_CLASS_MASK	(IOPRIO_NR_CLASSES - 1)
+ #define IOPRIO_PRIO_MASK	((1UL << IOPRIO_CLASS_SHIFT) - 1)
+ 
+ #define IOPRIO_PRIO_CLASS(ioprio)	\
+ 	(((ioprio) >> IOPRIO_CLASS_SHIFT) & IOPRIO_CLASS_MASK)
+ #define IOPRIO_PRIO_DATA(ioprio)	((ioprio) & IOPRIO_PRIO_MASK)
+-#define IOPRIO_PRIO_VALUE(class, data)	\
+-	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
+-	 ((data) & IOPRIO_PRIO_MASK))
+ 
+ /*
+  * These are the io priority classes as implemented by the BFQ and mq-deadline
+@@ -25,10 +23,13 @@
+  * served when no one else is using the disk.
+  */
+ enum {
+-	IOPRIO_CLASS_NONE,
+-	IOPRIO_CLASS_RT,
+-	IOPRIO_CLASS_BE,
+-	IOPRIO_CLASS_IDLE,
++	IOPRIO_CLASS_NONE	= 0,
++	IOPRIO_CLASS_RT		= 1,
++	IOPRIO_CLASS_BE		= 2,
++	IOPRIO_CLASS_IDLE	= 3,
++
++	/* Special class to indicate an invalid ioprio value */
++	IOPRIO_CLASS_INVALID	= 7,
+ };
+ 
+ /*
+@@ -73,15 +74,6 @@ enum {
+ #define IOPRIO_PRIO_HINT(ioprio)	\
+ 	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
+ 
+-/*
+- * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
+- * a class, level and hint.
+- */
+-#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
+-	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
+-	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
+-	 ((level) & IOPRIO_LEVEL_MASK))
+-
+ /*
+  * IO hints.
+  */
+@@ -107,4 +99,25 @@ enum {
+ 	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
+ };
+ 
++#define IOPRIO_BAD_VALUE(val, max) ((val) < 0 || (val) >= (max))
++
++/*
++ * Return an I/O priority value based on a class, a level and a hint.
++ */
++static __always_inline __u16 ioprio_value(int class, int level, int hint)
++{
++	if (IOPRIO_BAD_VALUE(class, IOPRIO_NR_CLASSES) ||
++	    IOPRIO_BAD_VALUE(level, IOPRIO_NR_LEVELS) ||
++	    IOPRIO_BAD_VALUE(hint, IOPRIO_NR_HINTS))
++		return IOPRIO_CLASS_INVALID << IOPRIO_CLASS_SHIFT;
++
++	return (class << IOPRIO_CLASS_SHIFT) |
++		(hint << IOPRIO_HINT_SHIFT) | level;
++}
++
++#define IOPRIO_PRIO_VALUE(class, level)			\
++	ioprio_value(class, level, IOPRIO_HINT_NONE)
++#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)	\
++	ioprio_value(class, level, hint)
++
+ #endif /* _UAPI_LINUX_IOPRIO_H */
+-- 
+2.40.1
 
