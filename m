@@ -2,167 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48012C7EE23
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 06:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CE3C7EE2E
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 May 2023 06:40:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbjE3GNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 May 2023 02:13:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53988 "EHLO
+        id S230251AbjE3Gkb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 May 2023 02:40:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbjE3GNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 02:13:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E586BEC;
-        Mon, 29 May 2023 23:13:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230266AbjE3Gk3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 May 2023 02:40:29 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45C25E5;
+        Mon, 29 May 2023 23:40:27 -0700 (PDT)
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8021162A32;
-        Tue, 30 May 2023 06:13:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6328AC433D2;
-        Tue, 30 May 2023 06:13:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685427188;
-        bh=orvAfFB1al0I5E+N/dd1jRm8DcYqs+dBcPiT7570GoU=;
-        h=From:To:Subject:Date:From;
-        b=QQbYKyy5q6xxFFpacZ8k4ySj1uQTgCwOxQNXDfmXymFDKxReknTz+B3zZA135hh9H
-         qOAMtCtVhbXu5lelm/ha6uEQl1JXlwsnXfSy9okbgOKbPklJ3M9jBxOE1ByEvXntLs
-         XAM21wCS8hUkstYFU/TRkKzJ1V63yxSM/eOcgFemzqX3wozdXLY2H1dNh5BXE95Whm
-         JomLYM6XUWDsXlFpUV0Z5Ghz9W+B386LRtn5dLHDwpkhz98RsCKyjuL/0CiTR4TI08
-         Qgu4koHS27zmFXK/yiTCXNcZq5kItFjcH8R1xTXe9TNjR96hVsh+l6Zf0EO7KETk8b
-         lj6RsqmFe+pag==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org
-Subject: [PATCH] block: improve ioprio value validity checks
-Date:   Tue, 30 May 2023 15:13:07 +0900
-Message-Id: <20230530061307.525644-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.40.1
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7452221ADE;
+        Tue, 30 May 2023 06:40:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1685428825; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ums/OE0NoU0xPsq2lPAiBPTLNXmJTWhJx3jwHOKTFxc=;
+        b=M1mgx31aI/sWrOfL1CuAF3531nz4LpBvpGp9kHfalJnsxVIRa6wamknTuqVX25ZrE3eqZs
+        dUAEF1q5tVb/uNOaPnidSjltZTOeDSGdiQEjGdL9tglX6LWRSrBayQ6Fv4pKeCWMTJcoJo
+        CuQCNUU2Any8KDAwqQLdSge2lNAb+OQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1685428825;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ums/OE0NoU0xPsq2lPAiBPTLNXmJTWhJx3jwHOKTFxc=;
+        b=SIbJna/DzUlB69l01DqRjh69SMTlfIuqf/8naSQ0XHYFWfEEhP2aP5YM2pTBHkrzbYAD/P
+        dxzlCsn9VHvsJ0DQ==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 369491342F;
+        Tue, 30 May 2023 06:40:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id PAB0C1madWSwbAAAGKfGzw
+        (envelope-from <hare@suse.de>); Tue, 30 May 2023 06:40:25 +0000
+Message-ID: <bbc624f1-1569-df23-5209-c30246600fac@suse.de>
+Date:   Tue, 30 May 2023 08:40:24 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH v4 1/5] scsi: core: Rework scsi_host_block()
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        stable@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>, Ye Bin <yebin10@huawei.com>
+References: <20230529202157.11361-1-bvanassche@acm.org>
+ <20230529202157.11361-3-bvanassche@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230529202157.11361-3-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The introduction of the macro IOPRIO_PRIO_LEVEL() in commit
-eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
-results in an iopriority level to always be masked using the macro
-IOPRIO_LEVEL_MASK, and thus to the kernel always seeing an acceptable
-value for an I/O priority level when checked in ioprio_check_cap().
-Before this patch, this function would return an error for some (but not
-all) invalid values for a level valid range of [0..7].
+On 5/29/23 22:21, Bart Van Assche wrote:
+> Make scsi_host_block() easier to read by converting it to the widely used
+> early-return style. See also commit f983622ae605 ("scsi: core: Avoid
+> calling synchronize_rcu() for each device in scsi_host_block()").
+> 
+> Reviewed-by: Mike Christie <michael.christie@oracle.com>
+> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+> Cc: Ye Bin <yebin10@huawei.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/scsi_lib.c | 18 +++++++++++++-----
+>   1 file changed, 13 insertions(+), 5 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Restore and improve the detection of invalid priority levels by
-introducing the inline function ioprio_value() to check an ioprio class,
-level and hint value before combining these fields into a single value
-to be used with ioprio_set() or AIOs. If an invalid value for the class,
-level or hint of an ioprio is detected, ioprio_value() returns an ioprio
-using the class IOPRIO_CLASS_INVALID, indicating an invalid value and
-causing ioprio_check_cap() to return -EINVAL.
+Cheers,
 
-Fixes: 6c913257226a ("scsi: block: Introduce ioprio hints")
-Fixes: eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- block/ioprio.c              |  1 +
- include/uapi/linux/ioprio.h | 47 +++++++++++++++++++++++--------------
- 2 files changed, 31 insertions(+), 17 deletions(-)
-
-diff --git a/block/ioprio.c b/block/ioprio.c
-index f0d9e818abc5..b5a942519a79 100644
---- a/block/ioprio.c
-+++ b/block/ioprio.c
-@@ -58,6 +58,7 @@ int ioprio_check_cap(int ioprio)
- 			if (level)
- 				return -EINVAL;
- 			break;
-+		case IOPRIO_CLASS_INVALID:
- 		default:
- 			return -EINVAL;
- 	}
-diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
-index 607c7617b9d2..7310449c0178 100644
---- a/include/uapi/linux/ioprio.h
-+++ b/include/uapi/linux/ioprio.h
-@@ -6,15 +6,13 @@
-  * Gives us 8 prio classes with 13-bits of data for each class
-  */
- #define IOPRIO_CLASS_SHIFT	13
--#define IOPRIO_CLASS_MASK	0x07
-+#define IOPRIO_NR_CLASSES	8
-+#define IOPRIO_CLASS_MASK	(IOPRIO_NR_CLASSES - 1)
- #define IOPRIO_PRIO_MASK	((1UL << IOPRIO_CLASS_SHIFT) - 1)
- 
- #define IOPRIO_PRIO_CLASS(ioprio)	\
- 	(((ioprio) >> IOPRIO_CLASS_SHIFT) & IOPRIO_CLASS_MASK)
- #define IOPRIO_PRIO_DATA(ioprio)	((ioprio) & IOPRIO_PRIO_MASK)
--#define IOPRIO_PRIO_VALUE(class, data)	\
--	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
--	 ((data) & IOPRIO_PRIO_MASK))
- 
- /*
-  * These are the io priority classes as implemented by the BFQ and mq-deadline
-@@ -25,10 +23,13 @@
-  * served when no one else is using the disk.
-  */
- enum {
--	IOPRIO_CLASS_NONE,
--	IOPRIO_CLASS_RT,
--	IOPRIO_CLASS_BE,
--	IOPRIO_CLASS_IDLE,
-+	IOPRIO_CLASS_NONE	= 0,
-+	IOPRIO_CLASS_RT		= 1,
-+	IOPRIO_CLASS_BE		= 2,
-+	IOPRIO_CLASS_IDLE	= 3,
-+
-+	/* Special class to indicate an invalid ioprio value */
-+	IOPRIO_CLASS_INVALID	= 7,
- };
- 
- /*
-@@ -73,15 +74,6 @@ enum {
- #define IOPRIO_PRIO_HINT(ioprio)	\
- 	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
- 
--/*
-- * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
-- * a class, level and hint.
-- */
--#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
--	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
--	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
--	 ((level) & IOPRIO_LEVEL_MASK))
--
- /*
-  * IO hints.
-  */
-@@ -107,4 +99,25 @@ enum {
- 	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
- };
- 
-+#define IOPRIO_BAD_VALUE(val, max) ((val) < 0 || (val) >= (max))
-+
-+/*
-+ * Return an I/O priority value based on a class, a level and a hint.
-+ */
-+static __always_inline __u16 ioprio_value(int class, int level, int hint)
-+{
-+	if (IOPRIO_BAD_VALUE(class, IOPRIO_NR_CLASSES) ||
-+	    IOPRIO_BAD_VALUE(level, IOPRIO_NR_LEVELS) ||
-+	    IOPRIO_BAD_VALUE(hint, IOPRIO_NR_HINTS))
-+		return IOPRIO_CLASS_INVALID << IOPRIO_CLASS_SHIFT;
-+
-+	return (class << IOPRIO_CLASS_SHIFT) |
-+		(hint << IOPRIO_HINT_SHIFT) | level;
-+}
-+
-+#define IOPRIO_PRIO_VALUE(class, level)			\
-+	ioprio_value(class, level, IOPRIO_HINT_NONE)
-+#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)	\
-+	ioprio_value(class, level, hint)
-+
- #endif /* _UAPI_LINUX_IOPRIO_H */
+Hannes
 -- 
-2.40.1
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
