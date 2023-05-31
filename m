@@ -2,155 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB25C7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 May 2023 22:18:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10728C7EE23
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 May 2023 22:22:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231152AbjEaWSc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 May 2023 18:18:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41436 "EHLO
+        id S231190AbjEaWW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 May 2023 18:22:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbjEaWSb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 18:18:31 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D05AB9F
-        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 15:18:30 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34VK8Oam032504;
-        Wed, 31 May 2023 22:18:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-03-30;
- bh=XFMkgMQABde4GPUXqxcf3cY14IqdhAyg0cVvg27x9pE=;
- b=kN8IGp5XNppHkEuAs6hhoTjWVEIJer5KwfivE1bnX8tknZJbzaYXnENcTCPIXPR8JtTt
- K2r77jKkzSPmA59HYEzPzf08Zxznj7DZcW1GW8qCYnZnwOVEeE2y4gEaCdRcOCdz+5zH
- JrkGQJSXn9hOTW93JjTdz/MjbGaq58DaevxArEINpFNixFEpN5fD6wD2zphXnImN5POX
- 4D1KQvk7P07iX/PYTcVRga4QxZkHGwaNiCaiAzl7m4wxyWSEZJJYmVPaUFShdbSuSLQZ
- EmcjjKenPi6+w6a2V9V+QU0Jf0qb4/uapkpoJ4vmkKcxrpa19vhxxBMDOs30wc2Ufx/e LA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qvhb97523-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 31 May 2023 22:18:28 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34VLucL0003695;
-        Wed, 31 May 2023 22:18:26 GMT
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02lp2049.outbound.protection.outlook.com [104.47.57.49])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3qv4ydwtq4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 31 May 2023 22:18:26 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FlGhJBXHJuTkWPRyny5O/iMh47rI76qadpJuQ068rQ96V5xQQtiyXZydNxsIk+pWH4Pu72QPm+Qz4rhWM981vcM6TiIllOAGmOZ8XbEWZNkgZcLGMdiJyt/bVpbbJlnJHHHuIMR8mVEeWdLg5cMPJcbdQDuKrywl2BoX69S+QCpajY6ytIaEoiIPa1V0L/lBv4G1NljA2R6jQ0WXrHUdHY2wNnMcWnU7Ro821QWWy1Hwt5sutpT2ExWykmHhNbQWn5VTUdP6ABPq5cXRPpnzQkdC7ZxthzQSP4E/7ZD0w0OjT+B43YFcz2hCKgwxIq2LlVOExAvGMaD4VCx2pmMXSg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XFMkgMQABde4GPUXqxcf3cY14IqdhAyg0cVvg27x9pE=;
- b=Hdd2pbefWyjlYqkwmCODf1QmoH7AfD4YaGKXJDveiLW/dRF7Qj/OdJ4yJ0LtzZ4OZ/N5ibcACjAhCqb0o3xSCJTJPytIVxEX0NskAVrr7q6Sl1IT7JEieJiqJKggrc6a/+CFBouDj2yNQEFXw643N6j11zY+TrlT09S4to9za0EZ8GndpcQw/bnd/Z9qY4z+WXGCcL2s4F1xA3x69LJ8Nk55FW9NeXO6uhtJjdDTzeZ5MPxRX34/Wm3TEyF5mvm6i7F0x2wZZqyKhCGgI2S/bX0bTluKBZLEvFAc3246IIpV5d1mVZKztCAYHOaLc/ZJLi+nNhky816Qh+CrKM5zDw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S231183AbjEaWW4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 18:22:56 -0400
+Received: from mail-qv1-xf2d.google.com (mail-qv1-xf2d.google.com [IPv6:2607:f8b0:4864:20::f2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB5F19D
+        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 15:22:55 -0700 (PDT)
+Received: by mail-qv1-xf2d.google.com with SMTP id 6a1803df08f44-62626bf02f4so594126d6.0
+        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 15:22:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XFMkgMQABde4GPUXqxcf3cY14IqdhAyg0cVvg27x9pE=;
- b=c9Wf00H7L9CRdtns5qcN/ZyS8zHEyxVBe2UTTGmao2wNre0e40FeJxJvWTGQDacrJLSVBVLH+CH9KWJS2RDj7jLrwY9qsXR3y4Kv2sn/9v7oXNm77hHcvfP6vpjSY7fcSKD0lmLIcnQ0G3nuFXfd2MM00wKEqjJdsmdzlqDSKDk=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by SJ1PR10MB5978.namprd10.prod.outlook.com (2603:10b6:a03:45f::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6433.24; Wed, 31 May
- 2023 22:18:24 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::9a52:4c2f:9ec1:5f16]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::9a52:4c2f:9ec1:5f16%7]) with mapi id 15.20.6433.022; Wed, 31 May 2023
- 22:18:24 +0000
-To:     Justin Tee <justintee8345@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, jsmart2021@gmail.com,
-        justin.tee@broadcom.com, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH 1/1] lpfc: Fix incorrect big endian type assignments in
- FDMI and VMID paths
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq11qiwcfh9.fsf@ca-mkp.ca.oracle.com>
-References: <20230530191405.21580-1-justintee8345@gmail.com>
-Date:   Wed, 31 May 2023 18:18:21 -0400
-In-Reply-To: <20230530191405.21580-1-justintee8345@gmail.com> (Justin Tee's
-        message of "Tue, 30 May 2023 12:14:05 -0700")
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR05CA0175.namprd05.prod.outlook.com
- (2603:10b6:a03:339::30) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=gmail.com; s=20221208; t=1685571775; x=1688163775;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Nl3h0YcjaczrpJ4lLQyJhbcAfs7rgj2ERto9s2Uqm3w=;
+        b=HsvZbP97y6MHzfSdqT8/K0km/IeeTyrpyo9rrZXeRn9ywDxt1pdNqL+SRJ/i5sbZPq
+         pxsN6pk0zJPWcjG50kIyFQ6k48sGaO8C7TvGwo4eyBfaMuJa/Fglgms8YW3nrU8Moq2l
+         No9t+16iMpEJjMX1F4yAzP3kO38izHgUKlSRDmxgCUMmeku2IvZPczTS7uF8PBzTyPy6
+         0t/WTjt9bWf1TCBeIajUARmGYPx9cszRS27u/k65Js2gIrEpXoGLnTCgdIxbxgWJnCfm
+         5rjkztmp9RwYhPYaPn1iRBdLu1vLcinFuIEUuXhODuu418773XwA2KHrEgtan6C0/A0O
+         PAcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685571775; x=1688163775;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Nl3h0YcjaczrpJ4lLQyJhbcAfs7rgj2ERto9s2Uqm3w=;
+        b=JHb6yEHSoBoVBYr3TOXbVWTGN3yaD6jochexFWZv4sv+ih+8D3X3zfHhkEwb+4bXTk
+         GQ8hCUTohAhU3yfXPfn6//OSJKj7LjA6BdusK+sYTl0fxrwM+DXlWOEv80dlnPVaZwT3
+         525nOAHopoiXNhG/DGXnxZaiqZ3ZdK5VdqB4BYOqgkkL6eEN0YKBOe33KctFfmEr+Zlz
+         7BA4Q8sBuJFVafKFEVSBOvR5mMBYS4i95d6OzwOgda+/m/KqQDnwY8imtSCyWXkri34p
+         USNlxS53reYWY3X/kizvo5idhsd/HpIluD2cz97BWwTj1Y14YYBI7G3XdXtWn0lGbw8O
+         RpFw==
+X-Gm-Message-State: AC+VfDz8OqbY2hJYjmjYiwTIHxL8wyncmR0yv4KDJ7to2VhCmLo79RNQ
+        WarENVScK7D7XBAZ1uKoGDYDaZqMDA4=
+X-Google-Smtp-Source: ACHHUZ5TpSm+rCcBCq4tg/uxAAuBL7VCQgsQlzYc2PX9M1ijyb/FC4Ltp5RABJniECzS3aS9DhN/kg==
+X-Received: by 2002:a05:6214:76f:b0:628:268c:1d72 with SMTP id f15-20020a056214076f00b00628268c1d72mr3282942qvz.5.1685571774804;
+        Wed, 31 May 2023 15:22:54 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id g12-20020a0cf84c000000b00628274a709fsm1151610qvo.47.2023.05.31.15.22.53
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 31 May 2023 15:22:54 -0700 (PDT)
+From:   Justin Tee <justintee8345@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
+        Justin Tee <justintee8345@gmail.com>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Kees Cook <keescook@chromium.org>
+Subject: [PATCH v3][next] scsi: lpfc: Use struct_size() helper
+Date:   Wed, 31 May 2023 15:33:19 -0700
+Message-Id: <20230531223319.24328-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|SJ1PR10MB5978:EE_
-X-MS-Office365-Filtering-Correlation-Id: 72436417-dd84-449a-5105-08db6224f34a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: AvcDE/YuugwsOjXfdvTSbPkJvMgEkMgeN5rx50QcxUPwWwcs2B3lG9R+t8I2Aoj7CVYLTLMb6shSPwDeoHaRSbJ2qnTnUOV0ew+uJB5HE1xWnWA1AcGdPqAE0O5mSw5ygPxRNDEwdFByTG+cyXuwWPYtWb0T1BDI862xeKgTNJi63UC3mp6WpD6LokGmUT8usSSKKUmBKrAsZE9zBbI9DuNLBW3L6kmMZUpYgTEIfqMfeLhLxvz0l4YX8tqdKDh62T4QcpAUzQQ33OjMwYZ8lmC6KBx3Qy/MyTZzkB7qWU2BWmDhLMNsRAnJ2wKQcVLxGR61tB1GnwuDaAWAAuWgY6COnwE4H6DEMvIDtyi9EC3qwchhu3nqj0IMhYM4QNtwaAySf0ecf33EV2IXsl2rm3whOdz2pPrDbMAhfOPr8SfBe8Hwa8xHWjrkOlh1XKFH2i2um5W5E5C7uHFXWHmJ8UHoYBVocAPr5Oi+IA/F9sGEOqtI0GyIbQw3XZ9ivNVJUpYdLo+Tl7fVKPw3SBWCJpxDyrjC6Pyu+81K8/IdoE7+IGhmes86edgWhS+ezXSx
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(366004)(39860400002)(376002)(346002)(136003)(451199021)(6486002)(36916002)(316002)(6666004)(5660300002)(8936002)(86362001)(41300700001)(83380400001)(8676002)(478600001)(38100700002)(186003)(6512007)(6506007)(26005)(4326008)(6916009)(2906002)(4744005)(66946007)(66556008)(66476007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ZbRbgzLwQ3VIttXHR8wHPhGPFJRhuRNuzgSS/cBIDaj+bD4xk703SFQPad1M?=
- =?us-ascii?Q?CxyywRBKB9CXNA15u0z5sDukJKQHmtAWbHBKw/56xnaXcIrheDspZpdpcApA?=
- =?us-ascii?Q?UpLrRil+D9kvw1XocpalT4yo7lSEeV+h/KRbC0lOFENT0Cg2jBpCmS9qVKeY?=
- =?us-ascii?Q?GfIMSN/ke53KoqlnC/pMxU1dClUgwDB7x4h5JgKVFyN77mnSObe3LSn3JHER?=
- =?us-ascii?Q?b9ehFBOdvgFxCQQTdixlDbu4kxZPYolCjXbe0d22Km2kO5Ym1mJshqgeYOyk?=
- =?us-ascii?Q?5wy7GIVvaV6ivWjyW89XbFM9bG798+RkTIrlTxhmM5D+cAGnW4l+8cR8jyIf?=
- =?us-ascii?Q?9SXCkEOO9RrG0VXLPjAlz5rErWZC2vZz1daPen7n8vpmn5PSKV7t/vkoebkv?=
- =?us-ascii?Q?SkxYp+beYQVE5EWWbQjhA/hqeNeqaqakg+4LBDz/qHTdH6Zu4e4Xl2i3yWUH?=
- =?us-ascii?Q?pJN2Ka4u/fHfdANg9RTxvH7v3d3nvyToTrndfiU/VQJg+hjrlMHvKDB43Fyy?=
- =?us-ascii?Q?BWNEeeJ6a/MEWPQFqdcW6OQYx1JpbTDTE6n0f8BdzGXIBarOKSjjiOgJnbhc?=
- =?us-ascii?Q?lYpeImwLhrjlWczP7J3VU0JA+ZxSq2Ie/FOtzLGP0XV4W4J60DPgGZHf261k?=
- =?us-ascii?Q?i8ZL7H8zSW60l38s97AjqmquROeu/EKTIH2nr+9RDWwJN6Rv4dchEweVmzda?=
- =?us-ascii?Q?wlbYLqNhch2WqNyHHXP3uUpfhh3TJDiUQy+k79daokitLe5yIubgH5SmwIjo?=
- =?us-ascii?Q?a5QnYqgqs2Ya/hK4Y5PivjD+gKZDn3PUdYavzUef8OS8YBjf6Hw3n35ISAuM?=
- =?us-ascii?Q?u6EB3V6367z6DPzb1eer0K6e4XgIRoR0YZ4BvM/vOZfTmesUU8Au4SUj3pkx?=
- =?us-ascii?Q?K9q9IxiQXatbpdkulSa4zMVDPbaAMaBerya0vuBMaTMaD8s3onDn4WrYYbUY?=
- =?us-ascii?Q?AUhwEOUYttj74wY1YnnZNeHHCyWRVu/FWWTMtHRqQT1FGV/CG8iNAFBvGxmz?=
- =?us-ascii?Q?3LdXvEeblIOSjuWCTyW16mIiYpBEYsYXV3qe6Hdj/eMC0PeoqLtMP2VFrziF?=
- =?us-ascii?Q?ct9Pc+DyWGDeCJNkIlK+WGP9jCz46z5Tl+E4XkvmdrKPj04ZAZ4cE5wESNof?=
- =?us-ascii?Q?HCQuBbtRXVN+eFfuSf/gAs+vXHOKoUa6bRWIV6MlcG7QOJSkIupuMiY7PXAW?=
- =?us-ascii?Q?0ISK9JbdpnU1uWKO7EGzXgxSHFPcuYFhwF+rGNMgTR6fFqqpaK7soYV1tuKc?=
- =?us-ascii?Q?w6FJz18HbCMWlHi2aZqNOE8RFoMjHeku1m+1OE9hpJtsjePIOK48nrP+YhPv?=
- =?us-ascii?Q?590f0mZUpActVNb8F+4ZEwRsx8HaPyeSLEsNE8UVvyT8AleVmqPfPwJ1Puzc?=
- =?us-ascii?Q?oPdGAUPL5JtIsa9KFVMkaSVztSmXRYpHoXSSAz2sehzvOMsLLOGKXIHnKL6X?=
- =?us-ascii?Q?IgC787ZHU4Jb90JbBP4ddWpghoFeIC64IQzvVZaPG4JTvu3951GazOxfQTJl?=
- =?us-ascii?Q?tCijWP3bKbh5ldzWEeIsFKvmkVgWK5zFy7w9QD6h9rtBIaTBVtPxhxrph1XN?=
- =?us-ascii?Q?hLQMz4PloC9Hy9PrCDEaFFZNGOcdkX6FyDPf97tQyIC5el1CIqKZgJ3BNk43?=
- =?us-ascii?Q?ag=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: dnA1BKmo1rWgdekCHSwSkBELiftwpTVGLeLErm/cBOd06Gzrx1vj0bbOEM6Z0zJLPvwJA6IKCA37ayofIpTCal+WgaGnD7vca5wx3bHSJbmTp8fxOD/4Ks/+7EQZaYBnug1LPHmuuOM84a5nkU8mwSALhAlAECGiiZoOjxJFHWjXuqjuOcTlTd9c+Ei1ARqSsMIpftA5OF344ay6NYEqBpimPhAWDPbFeIjKthjCmpbUPSm/MHFVuMXE70EpetJNrcMlnNqH80f0ljsWs0gcA+eQW5KsX25yeLsEXbyB9H5cBPuqvlcjMgWxKR7sDg0t5ns7uWxa8DIfHEq+GDqS/6MGfAu0VWnSPHMDi9iRale3erJyryWcO3ZRps4vkuPfzUe04yBmU6qOg1BLOnBklFBoggieBvdyEutuypGyzuo/pVtlDXyYAOiekLgqzrxGPbYVYd67OvSD96Fg5nXX8pkLoCzMjq9sbbTIKvhAr0NpZyZoYZrUIxBtxyvqOhkIpv9xNtXsBZ81/ExdDvh6CVQR5LTrbjHLxTn59G499jrXkxW9A3E8z+WMnOFtOO7gaQp+IykYC85bDVT90hynoBPo8NFeJvbmizaI0gsqE3zFzwN4xAr7QHKHf7395Y6OQsndmONuJGu/wP0zp5wVis+rT+guFRxvbIdOYnvMx5ziU3bP5A8vAn66PBzOpacO0gQ5sBpkBSVRtm2d0J8kHHfzhi7UITzxJXariEhmuOMcwPXow8CZD1Vpu7bY43FqzoNDiZms+JacR63QWW/X9gx6HW1r6O+pCh1R3wKTdCWg+vyQDQHpl8ilUOEDpDTKDVVkD435GJRultt/QrurBuW9TWw+l4kmr/lleIibe+w=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 72436417-dd84-449a-5105-08db6224f34a
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2023 22:18:24.4532
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cA+6H9BU7PKZatQLmab3tZKEbDsv5Cmtg+JVcJwJwP9mFbbnxBSDgZumGm8VoZ6tgqrRkyuSJIMkzDBAHrmzUJ6Bh7lq07DejmW/YgebEvY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR10MB5978
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
- definitions=2023-05-31_16,2023-05-31_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=684
- adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305310188
-X-Proofpoint-GUID: YBFTh7HzqVzbszRJPM1oqqsgALRVyA6o
-X-Proofpoint-ORIG-GUID: YBFTh7HzqVzbszRJPM1oqqsgALRVyA6o
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Prefer struct_size() over open-coded versions of idiom:
 
-Justin,
+sizeof(struct-with-flex-array) + sizeof(typeof-flex-array-elements) * count
 
-> The kernel test robot reported sparse warnings regarding the improper
-> usage of beXX_to_cpu macros.
->
-> Change the flagged FDMI and VMID member variables to __beXX and redo
-> the beXX_to_cpu macros appropriately.
+where count is the max number of items the flexible array is supposed to
+contain.
 
-Applied to 6.5/scsi-staging, thanks!
+Link: https://github.com/KSPP/linux/issues/160
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+---
+Changes in v3:
+ - Instead of hardcode to 1, use be32_to_cpu(rap->no_of_objects).
+   (Justin Tee).
 
+v2:
+ - Use literal 1 in call to struct_size(), instead of rap->no_of_objects
+   (Kees Cook).
+
+v1:
+ - Link:
+   https://lore.kernel.org/linux-hardening/99e06733f5f35c6cd62e05f530b93107bfd03362.1684358315.git.gustavoars@kernel.org/
+---
+ drivers/scsi/lpfc/lpfc_ct.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index e880d127d7f5..703429512ead 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -3748,8 +3748,7 @@ lpfc_vmid_cmd(struct lpfc_vport *vport,
+ 		rap->obj[0].entity_id_len = vmid->vmid_len;
+ 		memcpy(rap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
+ 		size = RAPP_IDENT_OFFSET +
+-			sizeof(struct lpfc_vmid_rapp_ident_list) +
+-			sizeof(struct entity_id_object);
++		       struct_size(rap, obj, be32_to_cpu(rap->no_of_objects));
+ 		retry = 1;
+ 		break;
+ 
+@@ -3768,8 +3767,7 @@ lpfc_vmid_cmd(struct lpfc_vport *vport,
+ 		dap->obj[0].entity_id_len = vmid->vmid_len;
+ 		memcpy(dap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
+ 		size = DAPP_IDENT_OFFSET +
+-			sizeof(struct lpfc_vmid_dapp_ident_list) +
+-			sizeof(struct entity_id_object);
++		       struct_size(dap, obj, be32_to_cpu(dap->no_of_objects));
+ 		write_lock(&vport->vmid_lock);
+ 		vmid->flag &= ~LPFC_VMID_REGISTERED;
+ 		write_unlock(&vport->vmid_lock);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.38.0
+
