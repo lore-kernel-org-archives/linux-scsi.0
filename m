@@ -2,104 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1AD9C77B7A
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 May 2023 12:33:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B54EC77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 May 2023 12:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235028AbjEaMds (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 May 2023 08:33:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38372 "EHLO
+        id S235967AbjEaMuF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 May 2023 08:50:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230446AbjEaMdr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 08:33:47 -0400
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 861228E
-        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 05:33:46 -0700 (PDT)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1b1806264e9so1375905ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 05:33:46 -0700 (PDT)
+        with ESMTP id S235985AbjEaMtY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 08:49:24 -0400
+Received: from mail-io1-f47.google.com (mail-io1-f47.google.com [209.85.166.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D89910C6;
+        Wed, 31 May 2023 05:48:53 -0700 (PDT)
+Received: by mail-io1-f47.google.com with SMTP id ca18e2360f4ac-77496b0b345so150008439f.3;
+        Wed, 31 May 2023 05:48:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685536426; x=1688128426;
+        d=1e100.net; s=20221208; t=1685537309; x=1688129309;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=99KMGE8WDZ9cWEvhvApN/YKNyqOK8gluMsjFb51l2Bg=;
-        b=gkG4pZRhkilfGrELtVx4lrePWpGkOZNlf2x9V6hALjBZqzEAjyIgNjOkm40ErQIUlB
-         XDzI0eKRNqShInevveaub+q5gogPljRI7Zta7yr+CBkti2nMW/kUgkFAKALFr2TK8yf/
-         wqc4raxHfeTXUdDsig9iGwTEF32Q8tGF35wj/hlx0bn0lNMSkCihA2nZEyJ3XXzwFrVo
-         p5/bjcXwKDkwRKlDhouvJ5tlp54ED/fDnt0pvJZPd2CQ/ilQvxP+iUeGVsDq1SSbha1A
-         Ne7z6QYW6jmil+9a0YOkJ1rBy9BmA4pDT3GJ/gBqZgGJxfDMOBOkSiM3nzx1u5AT6Spm
-         XNmQ==
-X-Gm-Message-State: AC+VfDxaHjcfN9KsslMCu2TDH0rX6w3Kcof/eJQBCvD5acso0mSW8e9P
-        zx9qqQJRSewkBTzCqvqHBHuqwkpuTu0=
-X-Google-Smtp-Source: ACHHUZ5amKSv1eA8diZ17sXkogN+1+iTmJ+eITwDbMvHp5bRRsvDYUQzVi/Uul1+xPBqa4Ycs4PndQ==
-X-Received: by 2002:a17:902:e993:b0:1af:aafb:64c8 with SMTP id f19-20020a170902e99300b001afaafb64c8mr3749405plb.21.1685536425851;
-        Wed, 31 May 2023 05:33:45 -0700 (PDT)
+        bh=xqGnCPChL19fXfFgwza4KZGrYtNeSBi3Wbd7oMZ8AFA=;
+        b=JxzsD3gmjS9QfK89JENp4pLAKtR3Cl9RqvjfLqmvJHDUUhFJhOiCm6Z/DmxRSYdXUo
+         vtwSdFuAqoH74xfd+ZHLcnWrSl6qqNiIvrkQHT1vTXVYI5mx+lcLmJT59JZXJ70c+Rdp
+         oa5nrvvzOmIA1+g3IN9WBro2W4O3yBNJSOyXAxRaKE20hSRfHzgZ/smzMzGs56eOD98q
+         2TKbQ8pvNWZ+z/204CDzDRW3m5hWt5QyCu6eQWJE3aT/PqopGs0nVPL8oZKhKbcG0Slp
+         m4jBX0vlNZ5UJj5dKWfIhelcCEkUCJLXf/V+Qaq6dVdcCxZTtdNGo7XG1Uhgo3oL44fF
+         9hoA==
+X-Gm-Message-State: AC+VfDyGZgxpefHh+NahFUxmzi14Pnqc53LeC646yzkbRvZDLynnNUtg
+        0NedC6dhUJhSmHm6T9Otf+U=
+X-Google-Smtp-Source: ACHHUZ4R4uX8mr/AZ2HXFs3fevTI77W0Xf8YIKy1DNJDCRdolpMdohmafLKGMFXSOzxIB2JLuXEyKQ==
+X-Received: by 2002:a6b:d914:0:b0:769:a826:2818 with SMTP id r20-20020a6bd914000000b00769a8262818mr4531978ioc.16.1685537308401;
+        Wed, 31 May 2023 05:48:28 -0700 (PDT)
 Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id t14-20020a1709028c8e00b001b01448ba72sm1235815plo.215.2023.05.31.05.33.45
+        by smtp.gmail.com with ESMTPSA id c12-20020aa7880c000000b00646ebc77b1fsm3295119pfo.75.2023.05.31.05.48.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 31 May 2023 05:33:45 -0700 (PDT)
-Message-ID: <8563e3b4-3347-e702-03b5-94133d9472c1@acm.org>
-Date:   Wed, 31 May 2023 05:33:45 -0700
+        Wed, 31 May 2023 05:48:28 -0700 (PDT)
+Message-ID: <ec9c378c-fedd-5a90-bb12-085395e0d22e@acm.org>
+Date:   Wed, 31 May 2023 05:48:27 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [EXT] Re: [PATCH 2/8] qla2xxx: klocwork - Fix potential null
- pointer dereference
+Subject: Re: [PATCH v2 1/3] scsi: ufs: core: Introduce mcq ops to config cqid
 Content-Language: en-US
-To:     Nilesh Javali <njavali@marvell.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        Bikash Hazarika <bhazarika@marvell.com>,
-        Anil Gurumurthy <agurumurthy@marvell.com>,
-        Shreyas Deodhar <sdeodhar@marvell.com>
-References: <20230518075841.40363-1-njavali@marvell.com>
- <20230518075841.40363-3-njavali@marvell.com>
- <f312be96-786e-f5f3-a92e-54a5983dfa19@acm.org>
- <CO6PR18MB45008A33CB0D57741DDB828CAF489@CO6PR18MB4500.namprd18.prod.outlook.com>
+To:     Stanley Chu <chu.stanley@gmail.com>
+Cc:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com
+References: <20230530023227.16653-1-powen.kao@mediatek.com>
+ <20230530023227.16653-2-powen.kao@mediatek.com>
+ <1c182151-6e8c-5068-b38c-f8e842e6e13b@acm.org>
+ <CAGaU9a9TsoaUtoMX8cNmAhfBnCddRtWYEG8ACdRNJfri+sdasg@mail.gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CO6PR18MB45008A33CB0D57741DDB828CAF489@CO6PR18MB4500.namprd18.prod.outlook.com>
+In-Reply-To: <CAGaU9a9TsoaUtoMX8cNmAhfBnCddRtWYEG8ACdRNJfri+sdasg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/31/23 04:43, Nilesh Javali wrote:
-> We can prevent the crash and notify the occurrence of this
-> rare case by adding warn_on like,
-> 
-> +       WARN_ON_ONCE(!cur_dsd);
-> +       if (cur_dsd) {
-> +               cur_dsd->address = 0;
-> +               cur_dsd->length = 0;
-> +               cur_dsd++;
-> +       }
->          cmd_pkt->control_flags |= cpu_to_le16(CF_DATA_SEG_DESCR_ENABLE);
->          return 0;
->   }
+On 5/30/23 18:54, Stanley Chu wrote:
+> In addition, some benchmark data shows that the performance can be
+> improved by using fewer CQs to aggregate the interrupt handling of
+> completion requests.
 
-I think there is a much better solution: drop the new "if (cur_dsd) {" 
-test and instead add the following code:
+What has been measured? IOPS only or both IOPS and latency?
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c 
-b/drivers/scsi/qla2xxx/qla_iocb.c
-index 6acfdcc48b16..a1675f056a5c 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -607,7 +607,8 @@ qla24xx_build_scsi_type_6_iocbs(srb_t *sp, struct 
-cmd_type_6 *cmd_pkt,
-  	put_unaligned_le32(COMMAND_TYPE_6, &cmd_pkt->entry_type);
+How big is the difference? A few percent or more?
 
-  	/* No data transfer */
--	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE) {
-+	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE ||
-+	    tot_dsds == 0) {
-  		cmd_pkt->byte_count = cpu_to_le32(0);
-  		return 0;
-  	}
+For which number of SQs and which number of CQs has performance data 
+been measured?
 
-Is the above change sufficient to suppress the Klocwork warning?
+Would the following work instead of introducing a new vop?
+- Introduce a new capability flag, e.g. UFSHCD_CAP_SINGLE_CQ.
+- Set that flag from inside ufs_mtk_init().
+- Modify the UFS core driver such that the number of completion queues
+   depends on the UFSHCD_CAP_SINGLE_CQ flag.
+
+> Therefore, we would like to introduce a vop to allow the host to
+> configure it accordingly.
+
+We do not accept new vops upstream without a user. Where is the 
+implementation of the new .config_cqid() callback?
 
 Thanks,
 
 Bart.
+
