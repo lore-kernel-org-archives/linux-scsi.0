@@ -2,108 +2,189 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49633C7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 May 2023 13:34:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24010C77B73
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 May 2023 14:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236414AbjEaNeK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 May 2023 09:34:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51232 "EHLO
+        id S232705AbjEaO53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 May 2023 10:57:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236449AbjEaNdz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 09:33:55 -0400
-Received: from smtp-fw-9102.amazon.com (smtp-fw-9102.amazon.com [207.171.184.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0A0FE72;
-        Wed, 31 May 2023 06:33:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazon201209;
-  t=1685540021; x=1717076021;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=WD5BzMcADxhlAngBVOOoK2oqXNiHBd2z06dC7AGlDIk=;
-  b=gxbVgDc+5M1+IYlViyWbrbfFclIKs1hr5MFug6kg5YBSLhQvaeXtpRG1
-   NbORTu7Yjoqb89p8XYjEDdrpOTPj7RG69MRhxiuEdc4GYlpRpZllMm2nn
-   SXplOzYOD/FP3omncXx+mLV2sZlMg+bo7H6y91StNBSF6modhXC6drrsA
-   M=;
-X-IronPort-AV: E=Sophos;i="6.00,207,1681171200"; 
-   d="scan'208";a="342672529"
-Received: from pdx4-co-svc-p1-lb2-vlan2.amazon.com (HELO email-inbound-relay-pdx-2c-m6i4x-fad5e78e.us-west-2.amazon.com) ([10.25.36.210])
-  by smtp-border-fw-9102.sea19.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 13:33:35 +0000
-Received: from EX19D008EUA001.ant.amazon.com (pdx1-ws-svc-p6-lb9-vlan2.pdx.amazon.com [10.236.137.194])
-        by email-inbound-relay-pdx-2c-m6i4x-fad5e78e.us-west-2.amazon.com (Postfix) with ESMTPS id 85B95A07FD;
-        Wed, 31 May 2023 13:33:33 +0000 (UTC)
-Received: from EX19MTAUWB001.ant.amazon.com (10.250.64.248) by
- EX19D008EUA001.ant.amazon.com (10.252.50.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 31 May 2023 13:33:28 +0000
-Received: from dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com (10.15.57.183)
- by mail-relay.amazon.com (10.250.64.254) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 31 May 2023 13:33:27 +0000
-Received: by dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com (Postfix, from userid 5466572)
-        id 6F338AD4; Wed, 31 May 2023 13:33:27 +0000 (UTC)
-From:   Maximilian Heyne <mheyne@amazon.de>
-CC:     Maximilian Heyne <mheyne@amazon.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S232329AbjEaO52 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 10:57:28 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C0E11D;
+        Wed, 31 May 2023 07:57:25 -0700 (PDT)
+Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34VEg85R030847;
+        Wed, 31 May 2023 14:56:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=OBYjAsiQnYeqsncNk244KPMIAGvoR7IKEXAV3+x3XmY=;
+ b=VK4s0Z0LU5Q0JFwRrBWPdUE/BmlwNhytMGNfJyO7BjpGyJ+zdvyQjfXKbUn1TOITDfTH
+ bjNTrNWoxSidiPbdO/teq2cNU8Qk8ADaDKTbai7AV+z8XLe/ZBQCM2YaVUPalIxEKYvW
+ xOLFBvHQ/FpgspQC+jXzaZp2WG2C08Po4Ld0Bfbm/SFrKCJs4Odtzu2yJplCzqTC/D+W
+ 2vy4jvGbtp385jyzAUmTgfgKkS43xFfBmJ0WhbA49qvViVzepsFheod9YgMRB9pkdiD7
+ Lns0jelZ7KLOh7kDWOmoKufI5P/48rcUaYjESkzGqoGzOQzaQPtY0cm5qiav0r/ljDRH lA== 
+Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qx87s0fnv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 31 May 2023 14:56:56 +0000
+Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
+        by ppma02wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34VBZs0T008110;
+        Wed, 31 May 2023 14:56:54 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([9.208.129.117])
+        by ppma02wdc.us.ibm.com (PPS) with ESMTPS id 3qu9g8c5pf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 31 May 2023 14:56:54 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34VEureu4784708
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 31 May 2023 14:56:53 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7584A58057;
+        Wed, 31 May 2023 14:56:52 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7298558059;
+        Wed, 31 May 2023 14:56:51 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.61.55.64])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Wed, 31 May 2023 14:56:51 +0000 (GMT)
+Message-ID: <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
+Subject: Re: [PATCH][next] scsi: lpfc: Avoid -Wstringop-overflow warning
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Kees Cook <keescook@chromium.org>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <JBottomley@Parallels.com>,
-        Adam Radford <aradford@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        <megaraidlinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] scsi: megaraid: Fix uninitialized mbox in mega_cmd_done
-Date:   Wed, 31 May 2023 13:32:59 +0000
-Message-ID: <20230531133259.55619-1-mheyne@amazon.de>
-X-Mailer: git-send-email 2.39.2
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Date:   Wed, 31 May 2023 10:56:50 -0400
+In-Reply-To: <202305301529.1EEA11B@keescook>
+References: <ZHZq7AV9Q2WG1xRB@work>
+         <fe0739cbe279cf9db2ebff1146e7ae540cc1ad6c.camel@linux.ibm.com>
+         <202305301529.1EEA11B@keescook>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To:     unlisted-recipients:; (no To-header on input)
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: WBQatvEGQiKAHXw7oHidJWHURI-cBAD_
+X-Proofpoint-GUID: WBQatvEGQiKAHXw7oHidJWHURI-cBAD_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-31_08,2023-05-31_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxscore=0
+ bulkscore=0 lowpriorityscore=0 clxscore=1011 priorityscore=1501
+ suspectscore=0 spamscore=0 impostorscore=0 mlxlogscore=999 malwarescore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305310124
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is similar to commit 7a2ae008a53c ("scsi: megaraid: Fix
-mega_cmd_done() CMDID_INT_CMDS"). When cmdid == CMDID_INT_CMDS and
-status != 0 then mbox is still NULL but is dereferenced below.
+On Tue, 2023-05-30 at 15:44 -0700, Kees Cook wrote:
+> On Tue, May 30, 2023 at 05:36:06PM -0400, James Bottomley wrote:
+> > On Tue, 2023-05-30 at 15:30 -0600, Gustavo A. R. Silva wrote:
+> > > Avoid confusing the compiler about possible negative sizes.
+> > > Use size_t instead of int for variables size and copied.
+> > > 
+> > > Address the following warning found with GCC-13:
+> > > In function ‘lpfc_debugfs_ras_log_data’,
+> > >     inlined from ‘lpfc_debugfs_ras_log_open’ at
+> > > drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
+> > > drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: ‘memcpy’
+> > > specified
+> > > bound between 18446744071562067968 and 18446744073709551615
+> > > exceeds
+> > > maximum object size 9223372036854775807 [-Wstringop-overflow=]
+> > >  2210 |                         memcpy(buffer + copied, dmabuf-
+> > > >virt,
+> > >       |                        
+> > > ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > >  2211 |                                size - copied - 1);
+> > >       |                                ~~~~~~~~~~~~~~~~~~
+> > > 
+> > 
+> > This looks like a compiler bug to me and your workaround would have
+> > us using unsigned types everywhere for sizes, which seems wrong. 
+> > There are calls which return size or error for which we have
+> > ssize_t and that type has to be usable in things like memcpy, so
+> > the compiler must be fixed or the warning disabled.
+> 
+> The compiler is (correctly) noticing that the calculation involving
+> "size" (from which "copied" is set) could go negative.
 
-This bug was discovered and resolved using Coverity Static Analysis
-Security Testing (SAST) by Synopsys, Inc.
+It can?  But if it can, then changing size and copied to unsigned
+doesn't fix it, does it?
 
-Fixes: 0f2bb84d2a68 ("[SCSI] megaraid: simplify internal command handling")
-Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
----
-Note: I have only compile tested this commit. Haven't tried reproducing it.
+> The "unsigned types everywhere" is a slippery slope argument that
+> doesn't apply: this is fixing a specific case of a helper taking a
+> size that is never expected to go negative in multiple places
+> (open-coded multiplication, vmalloc, lpfc_debugfs_ras_log_data, etc).
+> It should be bounds checked at the least...
 
- drivers/scsi/megaraid.c | 1 +
- 1 file changed, 1 insertion(+)
+So your claim is the compiler only gets it wrong in this one case and
+if we just change this one case it will never get it wrong again?  I
+think I prefer the idea that there's a problem in the bounds checking
+code which should be susceptible to fixing if we file a compiler bug
+(either it should get it right or ignore the case if it can't decide).
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index e92f1a73cc9b..4dfe8865a18a 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1442,6 +1442,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
- 		if (cmdid == CMDID_INT_CMDS) {
- 			scb = &adapter->int_scb;
- 			cmd = scb->cmd;
-+			mbox = (mbox_t *)scb->raw_mbox;
- 
- 			list_del_init(&scb->list);
- 			scb->state = SCB_FREE;
--- 
-2.39.2
+> struct lpfc_hba {
+>         ...
+>         uint32_t cfg_ras_fwlog_buffsize;
+>         ...
+> };
+> 
+> lpfc_debugfs_ras_log_open():
+>         ...
+>         struct lpfc_hba *phba = inode->i_private;
+>         int size;
+>         ...
+>         size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba-
+> >cfg_ras_fwlog_buffsize;
+>         debug->buffer = vmalloc(size);
+>         ...
+>         debug->len = lpfc_debugfs_ras_log_data(phba, debug->buffer,
+> size);
+>         ...
+> 
+> lpfc_debugfs_ras_log_data():
+>         ...
+>                 if ((copied + LPFC_RAS_MAX_ENTRY_SIZE) >= (size - 1))
+> {
+>                         memcpy(buffer + copied, dmabuf->virt,
+>                                size - copied - 1);
+> 
+> Honestly, the "if" above is the weirdest part, and perhaps that
+> should
+> just be adjusted instead:
+> 
+>         if (size <= LPFC_RAS_MAX_ENTRY_SIZE)
+>                 return -ENOMEM;
+>         ...
+>                 if (size - copied <= LPFC_RAS_MAX_ENTRY_SIZE) {
+>                         memcpy(..., size - copied - 1);
+>                         copied += size - copied - 1;
+>                         break;
+>                 }
+>                 ...
+>         }
+>         return copied;
 
+No one said you couldn't improve the code.  It was claiming a fix by
+changing a signed variable to unsigned that got my attention because
+it's a classic indicator of compiler problems.  I didn't say anything
+about all the strlcpy replacements where the source is guaranteed to be
+zero terminated so the problem alluded to in the changelog doesn't
+exist.  But since it all becomes about the inefficiency of the ignored
+strlen it did strike me that the most common pattern in sysfs code is
+strlcpy followed by strim or strstrip, which could be done slightly
+more efficiently as a single operation, if someone wanted actually to
+improve our sysfs use cases ...
 
-
-
-Amazon Development Center Germany GmbH
-Krausenstr. 38
-10117 Berlin
-Geschaeftsfuehrung: Christian Schlaeger, Jonathan Weiss
-Eingetragen am Amtsgericht Charlottenburg unter HRB 149173 B
-Sitz: Berlin
-Ust-ID: DE 289 237 879
-
+James
 
 
