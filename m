@@ -2,157 +2,128 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB4BDC77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 16:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFC65C77B7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 18:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231615AbjFAQs7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 12:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60618 "EHLO
+        id S229693AbjFASNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 14:13:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231354AbjFAQs6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 12:48:58 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B65B195
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2023 09:48:57 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1b01d3bb571so5382035ad.2
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2023 09:48:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1685638137; x=1688230137;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=I7sIZxy7gcUStde8URE/x1USu0Ac7NEoHkxfkIRrq8Q=;
-        b=O5v9C+cpDpBpGItvH0zQNTTgjJRbBzUAAX5rLRQAlChNgLThGeWZ8wMHpncPDsbdhJ
-         0KADHgqApvBqugAsYXvWIIbtTQQc+if/6nCKJj0ogUPsLWEohV0AOTOXPf7TbnVme6vq
-         MWD0zkQymoph8GAivP/P+Twa2BLHeK4c8Bi2c=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685638137; x=1688230137;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=I7sIZxy7gcUStde8URE/x1USu0Ac7NEoHkxfkIRrq8Q=;
-        b=lok92PKuYjjjR1VIewK33bONOtomDjDNlRikngsOo69M3aRQBpHqoH8QovjpDMay0E
-         MTJv/DrZoKN1Ld2cXaQVmtYjgHRUXe66i+YI9/qS7/oHAKthVITmh2TITEFOrvXsfIzb
-         3SLjFHCtsQw5l/eSQCxCuKsV3pMrhb7dA0dXdivTsf7QKiKGAtzrV9kDiW3777Bbb8Wr
-         41a5Ae7UgNcxvoOlLiX8ntOsNIw34VSVMC96xB1d7+5WpKQjmIvdC9nUc/m1D8XIG+AS
-         8hY7wR7Ch7f2YKO1XCWn7Uky1BEdgK6cFAsETsQqziwylENQUrbs78ovpCAgz5pMhz+3
-         H/bw==
-X-Gm-Message-State: AC+VfDzoCml/48zsXRWuoUZSQsJ7WkPYq4QJEBFrO80Qkhh/1L1cIm8o
-        gReNQXTFLDfFyffITWSjDD+bUw==
-X-Google-Smtp-Source: ACHHUZ6el6CagK7aXG5sNb126VxFGEOTWEKUyFtRTxw5GCMxYH7KhJqdaBU6w7GCuHNGGh667Yxm6w==
-X-Received: by 2002:a17:903:18c:b0:1ae:50cc:45b with SMTP id z12-20020a170903018c00b001ae50cc045bmr6738733plg.36.1685638136955;
-        Thu, 01 Jun 2023 09:48:56 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id i10-20020a17090332ca00b001af98dcf958sm3684665plr.288.2023.06.01.09.48.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 09:48:56 -0700 (PDT)
-Date:   Thu, 1 Jun 2023 09:48:55 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     James Bottomley <jejb@linux.ibm.com>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: lpfc: Avoid -Wstringop-overflow warning
-Message-ID: <202306010931.92796DC@keescook>
-References: <ZHZq7AV9Q2WG1xRB@work>
- <fe0739cbe279cf9db2ebff1146e7ae540cc1ad6c.camel@linux.ibm.com>
- <202305301529.1EEA11B@keescook>
- <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
+        with ESMTP id S229524AbjFASNK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 14:13:10 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCB3B123;
+        Thu,  1 Jun 2023 11:13:09 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 351A6QH6009107;
+        Thu, 1 Jun 2023 18:12:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=jTGP7Vsgjxm812AUKY1rMnWy3VKrpwWdhTSG3NhCRo0=;
+ b=WII1+L0rmbqBCh1e/z8d0oQHKwX4cA4lTH+30kJdQJsJqNGK/+gRI9V+CaOLkp6pI8vc
+ akeuB6T9P3ccBnbCqflAM60sioEzqtq0gA0kMuwadqgXpz3dDD6w849x6MfCrHzF5fM4
+ MBj+SzXfLmn9Fda+00hMctuUlQrGIl8514fG4BrVpnNOP7kDBTBBJsFsz6W/7FWVhfw7
+ 9HE+aQOXav9r8C5JbWdyvF5wRwWw5zcI7/OY/SK+L6VW9lHIUkGNKbTlySvzgkonO45l
+ TDi1LekVlvwONVJJ4SdASgbvjVaIhx3Xp4EnSqzf5qH7SXmOtZ0RloTFZUk13pwjV5KV Rw== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qxs9gs9e8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 01 Jun 2023 18:12:59 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 351ICwgH001124
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 1 Jun 2023 18:12:58 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Thu, 1 Jun 2023
+ 11:12:57 -0700
+Message-ID: <aef25380-790e-6776-aaf2-6a74971054e4@quicinc.com>
+Date:   Thu, 1 Jun 2023 11:12:57 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v1] ufs: core: Remove the nolock version of
+ ufshcd_mcq_poll_cqe()
+Content-Language: en-US
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
+        <bvanassche@acm.org>
+References: <20230601090202.27035-1-stanley.chu@mediatek.com>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <20230601090202.27035-1-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 6jBla3t2X-I2NVpN2T5O7i2jh1BsVb7J
+X-Proofpoint-GUID: 6jBla3t2X-I2NVpN2T5O7i2jh1BsVb7J
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-06-01_08,2023-05-31_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ spamscore=0 priorityscore=1501 malwarescore=0 bulkscore=0 adultscore=0
+ phishscore=0 lowpriorityscore=0 mlxlogscore=999 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2306010157
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 31, 2023 at 10:56:50AM -0400, James Bottomley wrote:
-> On Tue, 2023-05-30 at 15:44 -0700, Kees Cook wrote:
-> > On Tue, May 30, 2023 at 05:36:06PM -0400, James Bottomley wrote:
-> > > On Tue, 2023-05-30 at 15:30 -0600, Gustavo A. R. Silva wrote:
-> > > > Avoid confusing the compiler about possible negative sizes.
-> > > > Use size_t instead of int for variables size and copied.
-> > > > 
-> > > > Address the following warning found with GCC-13:
-> > > > In function ‘lpfc_debugfs_ras_log_data’,
-> > > >     inlined from ‘lpfc_debugfs_ras_log_open’ at
-> > > > drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
-> > > > drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: ‘memcpy’
-> > > > specified
-> > > > bound between 18446744071562067968 and 18446744073709551615
-> > > > exceeds
-> > > > maximum object size 9223372036854775807 [-Wstringop-overflow=]
-> > > >  2210 |                         memcpy(buffer + copied, dmabuf-
-> > > > >virt,
-> > > >       |                        
-> > > > ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > > >  2211 |                                size - copied - 1);
-> > > >       |                                ~~~~~~~~~~~~~~~~~~
-> > > > 
-> > > 
-> > > This looks like a compiler bug to me and your workaround would have
-> > > us using unsigned types everywhere for sizes, which seems wrong. 
-> > > There are calls which return size or error for which we have
-> > > ssize_t and that type has to be usable in things like memcpy, so
-> > > the compiler must be fixed or the warning disabled.
-> > 
-> > The compiler is (correctly) noticing that the calculation involving
-> > "size" (from which "copied" is set) could go negative.
+On 6/1/2023 2:02 AM, Stanley Chu wrote:
+> Since ufshcd_mcq_poll_cqe_nolock() is no longer used by any users,
+> it should be removed.
 > 
-> It can?  But if it can, then changing size and copied to unsigned
-> doesn't fix it, does it?
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+>   drivers/ufs/core/ufs-mcq.c | 17 ++++-------------
+>   1 file changed, 4 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 920eb954f594..785fc9762cad 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -307,11 +307,13 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
+>   	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+>   }
+>   
+> -static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+> -						struct ufs_hw_queue *hwq)
+> +unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+> +				       struct ufs_hw_queue *hwq)
+>   {
+>   	unsigned long completed_reqs = 0;
+> +	unsigned long flags;
+>   
+> +	spin_lock_irqsave(&hwq->cq_lock, flags);
+>   	ufshcd_mcq_update_cq_tail_slot(hwq);
+>   	while (!ufshcd_mcq_is_cq_empty(hwq)) {
+>   		ufshcd_mcq_process_cqe(hba, hwq);
+> @@ -321,17 +323,6 @@ static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+>   
+>   	if (completed_reqs)
+>   		ufshcd_mcq_update_cq_head(hwq);
+> -
+> -	return completed_reqs;
+> -}
+> -
+> -unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+> -				       struct ufs_hw_queue *hwq)
+> -{
+> -	unsigned long completed_reqs, flags;
+> -
+> -	spin_lock_irqsave(&hwq->cq_lock, flags);
+> -	completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
+>   	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+>   
+>   	return completed_reqs;
+Hi Stanley,
 
-Yes:
+Other than the commit message that Bart mentioned, this patch looks good.
 
-	(int)	(const expression 256 * 1024)		(u32)
-        size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
-
-this can wrap to negative if cfg_ras_fwlog_buffsize is large enough. If
-"size" is size_t, it can't wrap, and is therefore never negative.
-
-> So your claim is the compiler only gets it wrong in this one case and
-> if we just change this one case it will never get it wrong again?
-
-What? No, I'm saying this is a legitimate diagnostic, and the wrong type
-was chosen for "size": it never needs to carry a negative value, and it
-potentially needs to handle values greater than u32.
-
-But you're right -- there is still a potential for runtime confusion in
-that the return from lpfc_debugfs_ras_log_data() must be signed. So
-perhaps the best option is to check for overflow directly.
-
-Gustavo, does this fix it?
-
-
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index bdf34af4ef36..7f9b221e7c34 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
- 		goto out;
- 	}
- 	spin_unlock_irq(&phba->hbalock);
--	debug = kmalloc(sizeof(*debug), GFP_KERNEL);
-+
-+	if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
-+			       phba->cfg_ras_fwlog_buffsize, &size))
-+		goto out;
-+
-+	debug = kzalloc(sizeof(*debug), GFP_KERNEL);
- 	if (!debug)
- 		goto out;
- 
--	size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
- 	debug->buffer = vmalloc(size);
- 	if (!debug->buffer)
- 		goto free_debug;
-
-
--Kees
-
--- 
-Kees Cook
+Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
