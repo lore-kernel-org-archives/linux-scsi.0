@@ -2,113 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF104C77B7A
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 22:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6526C7EE23
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 23:39:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231710AbjFAWvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 18:51:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54022 "EHLO
+        id S232912AbjFAXj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 19:39:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231429AbjFAWvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 18:51:04 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70B59133;
-        Thu,  1 Jun 2023 15:50:56 -0700 (PDT)
-X-UUID: c19232e200ce11eeb20a276fd37b9834-20230602
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=QR78UJzld29HzCed3Ao3JhksvYknZ6XWy+PAaTNSICo=;
-        b=H15KowaHt9V9SXrACVWaHp1eP1/WCUSAh82BDG38UkQFmPAbjNR3pmvdXVz7BXj9+E+YIFev5vNWs5BY/3GqEUiV7tSQ3YYf3UOCZCcJppgER0l1VUfT1e8mKgQbxD0rBlJVl4Rkv/eyXUpfV1NZJQGLz6AKmkpE4CHS2z+HhEM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.25,REQID:0f7c423a-9247-42ec-93e9-45a77f58957a,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:95
-X-CID-INFO: VERSION:1.1.25,REQID:0f7c423a-9247-42ec-93e9-45a77f58957a,IP:0,URL
-        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
-        :quarantine,TS:95
-X-CID-META: VersionHash:d5b0ae3,CLOUDID:8563c16d-2f20-4998-991c-3b78627e4938,B
-        ulkID:230602065051I1VYJF7R,BulkQuantity:0,Recheck:0,SF:29|28|17|19|48|38,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-        ,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-UUID: c19232e200ce11eeb20a276fd37b9834-20230602
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 375743438; Fri, 02 Jun 2023 06:50:50 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 2 Jun 2023 06:50:49 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 2 Jun 2023 06:50:49 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <bvanassche@acm.org>
-CC:     <stanley.chu@mediatek.com>
-Subject: [PATCH v2] ufs: core: Combine ufshcd_mq_poll_cqe functions
-Date:   Fri, 2 Jun 2023 06:50:48 +0800
-Message-ID: <20230601225048.12228-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S232746AbjFAXjv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 19:39:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3FEE136;
+        Thu,  1 Jun 2023 16:39:50 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B6EE646B3;
+        Thu,  1 Jun 2023 23:39:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA09C433EF;
+        Thu,  1 Jun 2023 23:39:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685662789;
+        bh=3jR6coTEIcQtDZcNzSMSFv+M4QM62RvBoRRP0rTVqDY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=fwc7Tv0DaRLNwBp0LIrrU8Ot+TZ8GxkknFOtF7HdZbG2BM2+QkEHGkrNQAhjeqfKC
+         95COu5tIu/DBAA9fFFzhQzVZG0gZBic5SJzHbJJIGGUGSyuDRZQfJgSRWRjOjahJtL
+         v5QQVcdPfunXzlsLY0XhxNr9yg0W2SMHZO6Me3den1nsWJWcablV46r1Wh+rSqhM+3
+         8OT+OgEPDdJf+Dy37ih6KM1QJ75q7NnSQj42MVexWoBqIWxH48DlgR1d5Q/IEw6Q0R
+         MhBTJXdyGFnICpULkSxMc/POPCMFpRJJCCMErrRmjGRxyZN2/B3A8B6qNtral0teVk
+         s7p9MKckvfIVw==
+Date:   Thu, 1 Jun 2023 17:40:41 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kees Cook <keescook@chromium.org>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH v2][next] scsi: lpfc: Avoid -Wstringop-overflow warning
+Message-ID: <ZHkseX6TiFahvxJA@work>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, ufshcd_mcq_poll_cqe_nolock() is only called by
-ufshcd_mcq_poll_cqe_lock() with the addition of a spinlock wrapper
-for ufshcd_mcq_poll_cqe_nolock(). Combining these two functions
-into one would result in cleaner code.
+Prevent any potential integer wrapping issue, and avoid a
+-Wstringop-overflow warning by using the check_mul_overflow() helper.
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+drivers/scsi/lpfc/lpfc.h:
+837:#define LPFC_RAS_MIN_BUFF_POST_SIZE (256 * 1024)
+
+drivers/scsi/lpfc/lpfc_debugfs.c:
+2266 size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
+
+this can wrap to negative if cfg_ras_fwlog_buffsize is large
+enough. And even when in practice this is not possible (due to
+phba->cfg_ras_fwlog_buffsize never being larger than 4[1]), the
+compiler is legitimately warning us about potentially buggy code.
+
+Fix the following warning seen under GCC-13:
+In function ‘lpfc_debugfs_ras_log_data’,
+    inlined from ‘lpfc_debugfs_ras_log_open’ at drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
+drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: ‘memcpy’ specified bound between 18446744071562067968 and 18446744073709551615 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+ 2210 |                         memcpy(buffer + copied, dmabuf->virt,
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 2211 |                                size - copied - 1);
+      |                                ~~~~~~~~~~~~~~~~~~
+
+Link: https://github.com/KSPP/linux/issues/305
+Link: https://lore.kernel.org/linux-hardening/CABPRKS8zyzrbsWt4B5fp7kMowAZFiMLKg5kW26uELpg1cDKY3A@mail.gmail.com/ [1]
+Co-developed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/ufs/core/ufs-mcq.c | 17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+Changes in v2:
+ - Use check_mul_overflow() helper (Kees).
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 920eb954f594..785fc9762cad 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -307,11 +307,13 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
- 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
- }
+v1:
+ - Link: https://lore.kernel.org/linux-hardening/ZHZq7AV9Q2WG1xRB@work/
+
+ drivers/scsi/lpfc/lpfc_debugfs.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index bdf34af4ef36..7f9b221e7c34 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
+ 		goto out;
+ 	}
+ 	spin_unlock_irq(&phba->hbalock);
+-	debug = kmalloc(sizeof(*debug), GFP_KERNEL);
++
++	if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
++			       phba->cfg_ras_fwlog_buffsize, &size))
++		goto out;
++
++	debug = kzalloc(sizeof(*debug), GFP_KERNEL);
+ 	if (!debug)
+ 		goto out;
  
--static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
--						struct ufs_hw_queue *hwq)
-+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-+				       struct ufs_hw_queue *hwq)
- {
- 	unsigned long completed_reqs = 0;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(&hwq->cq_lock, flags);
- 	ufshcd_mcq_update_cq_tail_slot(hwq);
- 	while (!ufshcd_mcq_is_cq_empty(hwq)) {
- 		ufshcd_mcq_process_cqe(hba, hwq);
-@@ -321,17 +323,6 @@ static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
- 
- 	if (completed_reqs)
- 		ufshcd_mcq_update_cq_head(hwq);
--
--	return completed_reqs;
--}
--
--unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
--				       struct ufs_hw_queue *hwq)
--{
--	unsigned long completed_reqs, flags;
--
--	spin_lock_irqsave(&hwq->cq_lock, flags);
--	completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
- 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
- 
- 	return completed_reqs;
+-	size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
+ 	debug->buffer = vmalloc(size);
+ 	if (!debug->buffer)
+ 		goto free_debug;
 -- 
-2.18.0
+2.34.1
 
