@@ -2,57 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C33C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 12:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A5EC77B7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 14:10:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233139AbjFAMr4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 08:47:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43044 "EHLO
+        id S233846AbjFAOKS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 10:10:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231812AbjFAMrz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 08:47:55 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F403123;
-        Thu,  1 Jun 2023 05:47:54 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1b0314f057cso3089595ad.1;
-        Thu, 01 Jun 2023 05:47:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685623674; x=1688215674;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7draYKi8O8bY9wpEzwPd85VAVlOaAQazTlzk61kz37k=;
-        b=mfj8jc21WKJhT/qxElCYvsyZMZvrzYH0y2VRVsz1o2Ixfe2g6kojtfVHpKZVUe66q7
-         p/oUzXPuloa/KBguAEz04854ms5IKBa89iYQMrXYv67jcn9lI7VKaLVQE5qeSgUJmy4t
-         jb6T+HVBIF7dYl7OQkwYxpqcOsckJiQOOxgeOlXMwFFaruIaCIYtBca4OUPxf8+iDmsy
-         3Cn69moMWkO4RTKQk4vkGfOJ/ncI8wKle1lWsT9eaRxcnYQTWkD3biPfp4R32OTu+Gou
-         4YOJb0Ktmy4GiVFtuW52+xBOZOFnLr+RA7fLpCQ6hLgEJtdm4OfmrnBTNYLpaYGCW1vL
-         yieQ==
+        with ESMTP id S233897AbjFAOKL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 10:10:11 -0400
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA23CE79;
+        Thu,  1 Jun 2023 07:09:48 -0700 (PDT)
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-64d3bc502ddso1111226b3a.0;
+        Thu, 01 Jun 2023 07:09:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685623674; x=1688215674;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7draYKi8O8bY9wpEzwPd85VAVlOaAQazTlzk61kz37k=;
-        b=AAOEQlrv7RaDrGG+Y0O6aX05BDQDMgdaUNtIX2px2P7YnkG9HTy7Wn9yPCWMEMcFO7
-         iePB6GxscsuWIZG4lJfs0bep8ldT6wQhv4ZtGwv8eG4qrOsZqd8vlVOM7pjPv+P3jpRy
-         QQIJyVka9qLzlNq5KOgFxme7uRwfSRkunfOuVTPKisDLMe18PeaSTH2Vt9pIDZhP+h5m
-         HkuITN/pLA3lG0ni5RnR7kF/O1QHCguD2Y7JRTlGu0BS7+rjcF0MB/JFCfLbWbA4b+Is
-         6kZ6snOPrsqPEpNn6CsD1MEdZ6W+a2IkGNM7k0tofSUm+jSS5sIrWnx0qzzmUbccONhZ
-         2v6A==
-X-Gm-Message-State: AC+VfDy+szO9VBYeSZQx0JYN/XDdvhrHNhXM17BHAevLSDS2sxMYbzpm
-        tBMflE1UK5Gwws78VGlNAwg=
-X-Google-Smtp-Source: ACHHUZ5VNZ5sy+s5T7CqaFiqvnvVZxxEDK8LXR+reufT1NEMzZIh2ZpS7FVC6ZWsYJD1KUHyQ7eN0A==
-X-Received: by 2002:a17:902:930b:b0:1af:d213:668c with SMTP id bc11-20020a170902930b00b001afd213668cmr5240056plb.12.1685623673691;
-        Thu, 01 Jun 2023 05:47:53 -0700 (PDT)
-Received: from localhost.localdomain ([43.224.245.242])
-        by smtp.gmail.com with ESMTPSA id u9-20020a170902e80900b001ab0669d84csm3418213plg.26.2023.06.01.05.47.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 05:47:53 -0700 (PDT)
-From:   Zhang Hui <masonzhang.xiaomi@gmail.com>
-X-Google-Original-From: Zhang Hui <zhanghui31@xiaomi.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        d=1e100.net; s=20221208; t=1685628530; x=1688220530;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TI76AT4YHLTbGXU1L9WXoyjgIgrdWz0UcRsneNrJPSg=;
+        b=PRMyn5c+YU3o6Cg3o9biMH+Ewu6gh79tvxovvyWWssIu28D7Xr4V8UG+t1MK2OW8dE
+         1ZIo7yahJATaD5yRvsan47yrwR5bdXaHOYIxnZZBjpmRbhvBDVDHgJkcbaARjvrGAyFE
+         s3rkTkWiSm3f1JjSrXNpmcKl2uQdfooe4bZwBhAoKZyasnTp83GyjYUMGTj4rZbX+ZTs
+         OWXgpVaNjVs/dBJLljnAWvB1FOt3ES2cextkyy86b84odZ666EisIK1s13+YQgG76Ed5
+         8LnWrofPSvF58nayrGwJU/iHq5PgazL1JweftK39TOfE7RO+eRwRjgs5CfSl76UcUARz
+         k/bQ==
+X-Gm-Message-State: AC+VfDxXcC3ME58ns3el+Sz2/QNHGbkeX/cFTT5iS52YFSFL0GXxU/Xg
+        vsbR7abU0LJphC/0yXJ+RKJFMYW6nJU=
+X-Google-Smtp-Source: ACHHUZ6JNsk5v6xRbmmrmKljlVN/Pk+7V/9hGIpYskO7fzA2+4UCdKARv1rKhZznu4RVdT7BqwNNWQ==
+X-Received: by 2002:a05:6a00:24c9:b0:64c:ecf7:f4a4 with SMTP id d9-20020a056a0024c900b0064cecf7f4a4mr11829719pfv.24.1685628530329;
+        Thu, 01 Jun 2023 07:08:50 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id r25-20020a6560d9000000b00528da88275bsm1237834pgv.47.2023.06.01.07.08.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 01 Jun 2023 07:08:49 -0700 (PDT)
+Message-ID: <61ff835b-bd00-8cf3-6e4a-30c82cf9e7b1@acm.org>
+Date:   Thu, 1 Jun 2023 07:08:47 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH v2] scsi: ufs: core: Fix ufshcd_inc_sq_tail function bug
+Content-Language: en-US
+To:     Zhang Hui <masonzhang.xiaomi@gmail.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Can Guo <quic_cang@quicinc.com>,
@@ -63,44 +57,43 @@ Cc:     Can Guo <quic_cang@quicinc.com>,
         zhanghui <zhanghui31@xiaomi.com>, Bean Huo <beanhuo@micron.com>,
         peng.zhou@mediatek.com, yudongbin@xiaomi.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: ufs: core: Fix ufshcd_inc_sq_tail function bug
-Date:   Thu,  1 Jun 2023 20:46:14 +0800
-Message-Id: <20230601124613.1446-1-zhanghui31@xiaomi.com>
-X-Mailer: git-send-email 2.39.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230601124613.1446-1-zhanghui31@xiaomi.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230601124613.1446-1-zhanghui31@xiaomi.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: zhanghui <zhanghui31@xiaomi.com>
+On 6/1/23 05:46, Zhang Hui wrote:
+> From: zhanghui <zhanghui31@xiaomi.com>
+> 
+> When qdepth is not power of 2, not every bit of the mask is 1, so
+> sq_tail_slot some bits will be cleared unexpected.
+> 
+> Signed-off-by: zhanghui <zhanghui31@xiaomi.com>
+> ---
+>   drivers/ufs/core/ufshcd-priv.h | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+> index d53b93c21a0c..319fba31c1f5 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -366,10 +366,11 @@ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
+>   static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
+>   	__must_hold(&q->sq_lock)
+>   {
+> -	u32 mask = q->max_entries - 1;
+>   	u32 val;
+>   
+> -	q->sq_tail_slot = (q->sq_tail_slot + 1) & mask;
+> +	q->sq_tail_slot++;
+> +	if (q->sq_tail_slot == q->max_entries)
+> +		q->sq_tail_slot = 0;
+>   	val = q->sq_tail_slot * sizeof(struct utp_transfer_req_desc);
+>   	writel(val, q->mcq_sq_tail);
+>   }
 
-When qdepth is not power of 2, not every bit of the mask is 1, so
-sq_tail_slot some bits will be cleared unexpected.
-
-Signed-off-by: zhanghui <zhanghui31@xiaomi.com>
----
- drivers/ufs/core/ufshcd-priv.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index d53b93c21a0c..319fba31c1f5 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -366,10 +366,11 @@ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
- static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
- 	__must_hold(&q->sq_lock)
- {
--	u32 mask = q->max_entries - 1;
- 	u32 val;
- 
--	q->sq_tail_slot = (q->sq_tail_slot + 1) & mask;
-+	q->sq_tail_slot++;
-+	if (q->sq_tail_slot == q->max_entries)
-+		q->sq_tail_slot = 0;
- 	val = q->sq_tail_slot * sizeof(struct utp_transfer_req_desc);
- 	writel(val, q->mcq_sq_tail);
- }
--- 
-2.39.0
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
