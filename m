@@ -2,88 +2,66 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7679C77B7A
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 02:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14E92C7EE23
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 05:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229925AbjFACI5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 May 2023 22:08:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49742 "EHLO
+        id S231340AbjFAFX7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 01:23:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjFACIz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 22:08:55 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 169E3121;
-        Wed, 31 May 2023 19:08:55 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id 98e67ed59e1d1-2565b864f9aso59410a91.1;
-        Wed, 31 May 2023 19:08:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685585334; x=1688177334;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3oX7QLOAzm6QWUBabTjRoRDv03PwxV5OaOraCC7VjOQ=;
-        b=QmdL0GPWAgSelup5ZEXgiS4Kt2zjZ0zSD30b4E9BoiOnHwEU5BM4KDD++laeCitJs9
-         FfiJtLDzT7+DFcYgZAh5qAWGQ65zcOu2ieiWd0aYLd09Y+ONeEu3dNxxt9X20jPkdC0Z
-         MBs22NDXRoK+M5iwkFmvxod95zs6Yj4Da6OorYq3S1UAvbNMs6nd485YehrBbdZR50vu
-         gj+g3v7va1nq/ghw1o7ICPuzsEBpKehOikQanDBX6kujJBnbp8iTAj/2gMQsMmN8TAEE
-         pNralqAgWXaA4Jh0cdnSAA6Ye8/zZvvMMl4kTtD0Cj/fifkz1R2oFcW0VBeeU+n/LXQc
-         88+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685585334; x=1688177334;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3oX7QLOAzm6QWUBabTjRoRDv03PwxV5OaOraCC7VjOQ=;
-        b=JgPJ7Z5yNxe5U4WPbPVG1s32ExRGCwiNvL5YehR/N6bBH3sAwsnT6ytPhvqG0Jc1Io
-         0daDwIilJjByhPuglEhhjoTq5EZTOgXyDEzWStZ5d2OlztFsxK32ViL7wDjkZjfE5NK6
-         09mncwEH4/1uRttYNGMiZlNwg7hRuArGgctfjEbEqFV8h+QGzf0rLd4ZA3h+B6JL1xGR
-         dhoSRrqT3ueQLqls3r8jH/n/jiF0Dz2zyBllVX5npJu5LmGsnx2QKaInTSI0G4Rxl/ij
-         64ZTKl3UoOzormzxS347G/JYTHpbhwmEAy2Zdd4WW0MtGOvOy/JBidRsll2DjgJFjSJn
-         caMw==
-X-Gm-Message-State: AC+VfDzLD8QLsnAwfuI+klaCc9s2gtaoNIc8JKZLXf2pz+x58NpLwRC0
-        ps9YC46JFaBt5WIxivCpJa4tDuOORLXHzw==
-X-Google-Smtp-Source: ACHHUZ46vtjiRqs9XzP0DVwSkRPTcJVVkos/z7I8p3nD5k48XuniFDSUl/pA8pKgNEpkVC5cWkdCtg==
-X-Received: by 2002:a17:902:b18f:b0:1ab:7c4:eb24 with SMTP id s15-20020a170902b18f00b001ab07c4eb24mr4856292plr.22.1685585334400;
-        Wed, 31 May 2023 19:08:54 -0700 (PDT)
-Received: from [192.168.43.80] (subs03-180-214-233-81.three.co.id. [180.214.233.81])
-        by smtp.gmail.com with ESMTPSA id je4-20020a170903264400b001ab2b4105ddsm2106399plb.60.2023.05.31.19.08.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 31 May 2023 19:08:54 -0700 (PDT)
-Message-ID: <e783e493-23a4-0cec-eb6d-f81400324b74@gmail.com>
-Date:   Thu, 1 Jun 2023 09:08:49 +0700
+        with ESMTP id S230428AbjFAFX5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 01:23:57 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FAB712C
+        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 22:23:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=GxAZ/2ep9J9KVatAx7A08uKleXaeqo3EQFW7PaUgnxk=; b=ci54wLFdXuZ/BySnIgu0tCsedf
+        eX24h+t490XVEP2Tl2fRfU9ShUDCU0VXx44IaxZVPZ4P8I12AqNne9o3/ttNDuX4kcX7UGcn9ENrk
+        9ZathlR8Uo68ZHDLqYxOX/Q1DKQKT8DclhlCIxWwYq8cG1OOXENigHugeQljD6TC3deU5rNz+2Tf+
+        7FHlkJeDtx05VICfhjIa0x3KAOBxipuHERMxhlu/yA05ir2AQ3XdV0zI7Aw6vuhB/uiaQ3omWY+/C
+        bjvcFr2Nk1eTvmhwRFYRAjUuCquh3vGxJY9otWlKwLF7BLNKNFJKeeN55es/BPiQoj4Bj7fG7qh+0
+        I+KKqe/A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q4amo-0021AB-0d;
+        Thu, 01 Jun 2023 05:23:46 +0000
+Date:   Wed, 31 May 2023 22:23:46 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Adrien Thierry <athierry@redhat.com>
+Subject: Re: [PATCH] scsi: ufs: Include major and minor number in command
+ tracing output
+Message-ID: <ZHgrYgDmvhs7Iw/d@infradead.org>
+References: <20230531223924.25341-1-bvanassche@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH 05/11] Docs/scsi: dc395x: shorten the chapter heading
-Content-Language: en-US
-To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-        Ali Akcaagac <aliakc@web.de>,
-        Jamie Lenehan <lenehan@twibble.org>, dc395x@twibble.org
-References: <20230518212749.18266-1-rdunlap@infradead.org>
- <20230518212749.18266-6-rdunlap@infradead.org>
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-In-Reply-To: <20230518212749.18266-6-rdunlap@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230531223924.25341-1-bvanassche@acm.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/19/23 04:27, Randy Dunlap wrote:
-> -======================================
-> -README file for the dc395x SCSI driver
-> -======================================
-> +==================
-> +dc395x SCSI driver
-> +==================
->  
+On Wed, May 31, 2023 at 03:39:20PM -0700, Bart Van Assche wrote:
+> UFS devices are typically configured with multiple logical units.
+> The device name, e.g. 13200000.ufs, does not include logical unit
+> information. Hence this patch that replaces the device name with
+> the disk major and minor number in the tracing output, e.g. 8,0,
+> just like the block layer tracing information.
 
-Acked-by: Bagas Sanjaya <bagasdotme@gmail.com>
-
--- 
-An old man doll... just what I always wanted! - Clara
+Please also drop the never used group_id value while you're at it.
 
