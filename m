@@ -2,217 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A55C77B7A
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 01:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7679C77B7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 02:08:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230213AbjFABDv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 May 2023 21:03:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35136 "EHLO
+        id S229925AbjFACI5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 May 2023 22:08:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229724AbjFABDt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 21:03:49 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C58D124;
-        Wed, 31 May 2023 18:03:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685581428; x=1717117428;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=FcpEhhHKf3wMwSQp7s1CHb/lh7gNq+Jw/cYiVpJ82ns=;
-  b=jSffbDBICCl2Hv4Pg0tY9Y85ulSgWGsArIC3VocgnvF6WSyDhlE3SSpI
-   eCQhx6UwMvOGxUoWyznvdxhfnWtJoSHEwYediUvUIYKhCQjECx9KZpfLR
-   JaqK+rTYwMu71k2HqEciZCp6U0RvM7P6mmvd0JZHENz1p6eeFCuXuET9S
-   aRJq8cD6JtFg13ws61Y4xWNkzGEdnw2hheEGI05DTHrpGf506gCSbRX8f
-   Zj0jwsL3lo4YtJ0+YPFpauk9T9XGQyfnIaSPda2WD/tFrAQmh55hmu6u1
-   bJ0gMuHMvpRwbkkiGDPZYVDrDyVny/SgMv7uPdtl5Oa221pj0e01jNOx8
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="335762250"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="335762250"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 18:02:43 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="1037265142"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="1037265142"
-Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
-  by fmsmga005.fm.intel.com with ESMTP; 31 May 2023 18:02:42 -0700
-Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
- ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Wed, 31 May 2023 18:02:42 -0700
-Received: from orsmsx602.amr.corp.intel.com (10.22.229.15) by
- ORSMSX611.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Wed, 31 May 2023 18:02:41 -0700
-Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
- orsmsx602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23 via Frontend Transport; Wed, 31 May 2023 18:02:41 -0700
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.177)
- by edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.23; Wed, 31 May 2023 18:02:41 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MDA+8ZubCFEPACSxlZZWRnvynC6g6HYJ9rwgBi9cMzerIUGKZgH+MACFu9Vom7nmKUVfxrVE6SlJY7Ef+oXuPD7obPB78WSeHxHMcjgHWd0+PKKmUCDJNFPaj8mcp2FvwTYebdvbW1/s227k9k5VT9f29nwbKomaQsE0WII2rYWO3fZ7Kz7+Leu0547Kg7mzRoGoFQiswFiydwtWf9K6qOpNgnIu9z2rCfanpGKvJt89QvIZJZ9p1IQ+P5ZZn6x8GyoE12u1QxS9Z0E4n+1z4H7PRmSdIo4EyPHCZHwUV2o2kYRnasJvUyFLCsKNyFUwTvbUCcPqMcJLm5HFkwYD0g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FcpEhhHKf3wMwSQp7s1CHb/lh7gNq+Jw/cYiVpJ82ns=;
- b=Kp/doZ5IN7F1T+1mVr83cstXKQIzANMmBjkWvakaVlfsGV7YEGMckI8MxCqYRvHIfEIjEjsZ3Plz5XzMiJrMMub5Sr8hvjIDSc927dCZfnwaoc90yW6vgOQKWps7gc63y7TNY2Hg1GVl7743/liFL34R5D8VS7itkwwGWLMg1OMHyd30W0yVZ1pvVbwicW9AwjWExCn/KnQWWb/HxsG5hrRmPNh1y5oUPLaQkCVu6F2E2nDcSF5ZqB6/GyPuSwNZEr0lBZEP0iE5fAMCtz3SGjHuisOfyMIrdokJTrWQ7WY9x0H5NuN4B9ZF0AXS4ZbbVqtm/e4jPHOxrII3Rl9s2Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from SN7PR11MB6850.namprd11.prod.outlook.com (2603:10b6:806:2a2::8)
- by IA1PR11MB6467.namprd11.prod.outlook.com (2603:10b6:208:3a5::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6433.22; Thu, 1 Jun
- 2023 01:02:40 +0000
-Received: from SN7PR11MB6850.namprd11.prod.outlook.com
- ([fe80::8dbf:b38f:fad2:69e0]) by SN7PR11MB6850.namprd11.prod.outlook.com
- ([fe80::8dbf:b38f:fad2:69e0%6]) with mapi id 15.20.6433.024; Thu, 1 Jun 2023
- 01:02:39 +0000
-From:   "Zhu, Bing" <bing.zhu@intel.com>
-To:     Shyam Saini <shyamsaini@linux.microsoft.com>,
-        "alex.bennee@linaro.org" <alex.bennee@linaro.org>
-CC:     "code@tyhicks.com" <code@tyhicks.com>,
-        "Matti.Moell@opensynergy.com" <Matti.Moell@opensynergy.com>,
-        "arnd@linaro.org" <arnd@linaro.org>,
-        "hmo@opensynergy.com" <hmo@opensynergy.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "joakim.bech@linaro.org" <joakim.bech@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "maxim.uvarov@linaro.org" <maxim.uvarov@linaro.org>,
-        "ruchika.gupta@linaro.org" <ruchika.gupta@linaro.org>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
-        "Huang, Yang" <yang.huang@intel.com>,
-        "sumit.garg@linaro.org" <sumit.garg@linaro.org>,
-        "jens.wiklander@linaro.org" <jens.wiklander@linaro.org>,
-        "op-tee@lists.trustedfirmware.org" <op-tee@lists.trustedfirmware.org>
-Subject: RE: [PATCH  v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-Thread-Topic: [PATCH  v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-Thread-Index: AQHZk/OXR3LF1Hi7pkCJXle1/5bkgq91H0hw
-Date:   Thu, 1 Jun 2023 01:02:39 +0000
-Message-ID: <SN7PR11MB6850DA4A185E3429B62531CD84499@SN7PR11MB6850.namprd11.prod.outlook.com>
-References: <20220405093759.1126835-1-alex.bennee@linaro.org>
- <20230531191007.13460-1-shyamsaini@linux.microsoft.com>
-In-Reply-To: <20230531191007.13460-1-shyamsaini@linux.microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN7PR11MB6850:EE_|IA1PR11MB6467:EE_
-x-ms-office365-filtering-correlation-id: a2f83758-78e0-4f6d-6e7b-08db623be554
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rMvce1IfUvGVz2qO9Li5LWGEbaTW9gJNb0YFNqTR3Ang2x6H8vfXyRp/adm/gwya7ayca9Tf2VoWcDv+UpZydhe9k04qBxcays87Ai9mz8GeqNWmEX8PIu2bDKBfCCRhAMdLw4qzXvs8fT2HLp7P3tbs4WCXEryMD7lSAbbnAOUmTmwqxL91TxS+O/ceXzTcVGAdCTUgwh0OhUhQMCvOsV5w21ZKwLzPBjNudf4aSKslnvp78Z5LCcwNDOc10YuYclnSOxkF2AvGi2H/D2XRJrrcNu05Hne1i4mpWKEaGlEc8mDPVZ52M3rKFxjC+3Tw9uiygsv0+C4y9YJMsJkz6DGdaO9WiDnqusD0NWaXdiVsDcL7ZnAF25hseZWDnFxnU7QHn1ek1cOtuqEqKzC+cT3yjf3gLLuaUi1WXMApUuhgyLsxh4WS1Rl1iC1q4NbR/Ul6sx7hIyVCmKw58P11BCeYriWSX8ZCd2VclCFC2vuCk08lcOPA7M5l+CcaKhaG1eFqpIDUrqXCXkExK6YscbNEYjQ2AeFe5gO83wdOfkRFcLyrQYyrvLDnu9jnwY2eqfXNi+tumo7NiyBMXAzRFEjDaWFnh14F/qwF40Q2UkY=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR11MB6850.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(136003)(366004)(346002)(376002)(39860400002)(396003)(451199021)(26005)(186003)(33656002)(7696005)(53546011)(9686003)(6506007)(316002)(2906002)(71200400001)(55016003)(52536014)(5660300002)(8676002)(41300700001)(7416002)(8936002)(966005)(86362001)(82960400001)(122000001)(38100700002)(110136005)(54906003)(4326008)(64756008)(38070700005)(66446008)(478600001)(83380400001)(66946007)(66556008)(76116006)(66476007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?Windows-1252?Q?JBzANlImPn5ijNfiQATZ5S7CjBFjFNveNY15arzcv4ktxRcRUWM0Q/Vr?=
- =?Windows-1252?Q?CO7Z/zC1bpIBK+6+hHOvyCDnVXbAIHybl4dMe9SGgxnDLytmIGTyX9oB?=
- =?Windows-1252?Q?3lxPzf/XzXqSfOZNNLczldsIfWNWHHPH1YC2abGHqrBAw2V0LebTfZLJ?=
- =?Windows-1252?Q?c17+j+GsbLteI/rai9CFRwQU84/ahOBnuOrF2FPtw4mkJtYMHS5XfDX3?=
- =?Windows-1252?Q?JwaF0YnG3AfPT2Xx2omLDCUKwJrVjiOP1XdA4jyFNoDEAZ6a7Pb8GLdK?=
- =?Windows-1252?Q?zpm3CCzmV0qswHlK76F6Lbeqzk0epGJKanND0jKUEyZyZ5llHkEK7pUH?=
- =?Windows-1252?Q?uKmmQxMtS25oVO0VwIpEp/TNP/xZb3SeXK2bXZmoKGSiGPse4jfRy+l6?=
- =?Windows-1252?Q?7ZZ8S0gW/FXx5HuQMp8vOjdHBsCqPZDt6gqetX/CPEtSSoJfKN7Buuzj?=
- =?Windows-1252?Q?K262Z4FSXRZwpqeUfT5SE9dJGf8VZ952UnRaS5GBCWg/3kpJBsKztbN8?=
- =?Windows-1252?Q?7UjokExf5Dy0heKfOOicQbinYDgkhAw/Xrq7iAvtnaiphJdoVdK0BT3b?=
- =?Windows-1252?Q?czcUugLGZNK7xY1drM4pcerXhQnkqVtti0rpOMxA39JD0fnguCDHD2zI?=
- =?Windows-1252?Q?DPUHgovDQOCeWLJPLnQVvJ8tm/eUG4c7d7N3xn03JF4S5kyzNvYE1+Nj?=
- =?Windows-1252?Q?HvjJnsHHObOARq8LUt9XQnRRZCAL3ZfkBCMyOvNugyKg1HZoy/0YIBzz?=
- =?Windows-1252?Q?XnDt6N8h2RaOTeIewhEMtuP1xeKav6AOgnnX0C6xEV+VqYXVUzjo0QIH?=
- =?Windows-1252?Q?o9RwaLmwQ+LMWx7VSAxuJQvNpfadFUtTXfCT78njkbkC+VXGEv4AqOnH?=
- =?Windows-1252?Q?dh2K7t748k+JsMwjmKqdF9Sw6TYBxHl8/KnusqWIufuVY2fhPONtH+A8?=
- =?Windows-1252?Q?16avY94VjV3qKeVp/A9j1JwttAi3dkAuJrHlpYD+UrUYhSmlBO8R4zIn?=
- =?Windows-1252?Q?EPekrkpaBsfsqoHyoqjXxpyi83uX3+is/4lU0jQA5bqIdfJClmt44MAH?=
- =?Windows-1252?Q?aqryrNBUuVnRdKLb5F6HqyC45M6/Vk7HPG1lWksA0ZJFlcT92pJFzi0b?=
- =?Windows-1252?Q?V0Iu7F+IRFfNUGN+XbKv64vLli8R1LGIUWhKMOl54Q9FNrWNJKCrROSB?=
- =?Windows-1252?Q?ux8prAbk5nDbzOaWm1zWZZ/g50vttOjff6J/TuQGHEFvxnXDBagPAe8e?=
- =?Windows-1252?Q?fXJaRR94A5LGBE/PDXJNWxXeKEqVF09yTYQYfurB1w+ap1Ukr+eFsJ+2?=
- =?Windows-1252?Q?qYSk38oZPQoyPCt6zG5R7deKvXTjM/9O3RbRB7VIOuRyUEdUxfXcBMET?=
- =?Windows-1252?Q?Zs1jThpGotnAzPxytfFOh3O19f/smDmsvk3tZAiT0bDnO9g6YgnZ1UZ1?=
- =?Windows-1252?Q?ZZOl+95LMoH4ymez+i8lguhV2ohii+h/cNlXH6dRp5JMoQXahcothOav?=
- =?Windows-1252?Q?T/9I1oVxDhS9BgoSlIPzI6pai7r4S16J/XnJ7VOVZtRxnWjH/A/3OFvS?=
- =?Windows-1252?Q?cylKAlYyg7wv4UYzL0LfEat2kU3NU8Pfe0V36MYA+LQiz+0Uz1ZgnL7b?=
- =?Windows-1252?Q?hF60gjNJWK/LTJPUDvkeTXa9l2c9I6VaNzzQZ6dWlozke+isDoy8laEv?=
- =?Windows-1252?Q?ZuLYeAIxd9o=3D?=
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229459AbjFACIz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 22:08:55 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 169E3121;
+        Wed, 31 May 2023 19:08:55 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id 98e67ed59e1d1-2565b864f9aso59410a91.1;
+        Wed, 31 May 2023 19:08:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685585334; x=1688177334;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3oX7QLOAzm6QWUBabTjRoRDv03PwxV5OaOraCC7VjOQ=;
+        b=QmdL0GPWAgSelup5ZEXgiS4Kt2zjZ0zSD30b4E9BoiOnHwEU5BM4KDD++laeCitJs9
+         FfiJtLDzT7+DFcYgZAh5qAWGQ65zcOu2ieiWd0aYLd09Y+ONeEu3dNxxt9X20jPkdC0Z
+         MBs22NDXRoK+M5iwkFmvxod95zs6Yj4Da6OorYq3S1UAvbNMs6nd485YehrBbdZR50vu
+         gj+g3v7va1nq/ghw1o7ICPuzsEBpKehOikQanDBX6kujJBnbp8iTAj/2gMQsMmN8TAEE
+         pNralqAgWXaA4Jh0cdnSAA6Ye8/zZvvMMl4kTtD0Cj/fifkz1R2oFcW0VBeeU+n/LXQc
+         88+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685585334; x=1688177334;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3oX7QLOAzm6QWUBabTjRoRDv03PwxV5OaOraCC7VjOQ=;
+        b=JgPJ7Z5yNxe5U4WPbPVG1s32ExRGCwiNvL5YehR/N6bBH3sAwsnT6ytPhvqG0Jc1Io
+         0daDwIilJjByhPuglEhhjoTq5EZTOgXyDEzWStZ5d2OlztFsxK32ViL7wDjkZjfE5NK6
+         09mncwEH4/1uRttYNGMiZlNwg7hRuArGgctfjEbEqFV8h+QGzf0rLd4ZA3h+B6JL1xGR
+         dhoSRrqT3ueQLqls3r8jH/n/jiF0Dz2zyBllVX5npJu5LmGsnx2QKaInTSI0G4Rxl/ij
+         64ZTKl3UoOzormzxS347G/JYTHpbhwmEAy2Zdd4WW0MtGOvOy/JBidRsll2DjgJFjSJn
+         caMw==
+X-Gm-Message-State: AC+VfDzLD8QLsnAwfuI+klaCc9s2gtaoNIc8JKZLXf2pz+x58NpLwRC0
+        ps9YC46JFaBt5WIxivCpJa4tDuOORLXHzw==
+X-Google-Smtp-Source: ACHHUZ46vtjiRqs9XzP0DVwSkRPTcJVVkos/z7I8p3nD5k48XuniFDSUl/pA8pKgNEpkVC5cWkdCtg==
+X-Received: by 2002:a17:902:b18f:b0:1ab:7c4:eb24 with SMTP id s15-20020a170902b18f00b001ab07c4eb24mr4856292plr.22.1685585334400;
+        Wed, 31 May 2023 19:08:54 -0700 (PDT)
+Received: from [192.168.43.80] (subs03-180-214-233-81.three.co.id. [180.214.233.81])
+        by smtp.gmail.com with ESMTPSA id je4-20020a170903264400b001ab2b4105ddsm2106399plb.60.2023.05.31.19.08.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 31 May 2023 19:08:54 -0700 (PDT)
+Message-ID: <e783e493-23a4-0cec-eb6d-f81400324b74@gmail.com>
+Date:   Thu, 1 Jun 2023 09:08:49 +0700
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR11MB6850.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a2f83758-78e0-4f6d-6e7b-08db623be554
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Jun 2023 01:02:39.2724
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ZEtomgawvgQ++GZ+OU2lJuHTIGbXoqStc5bwH4lXiPrxc2PZ6jfsgqn7lr21RmkrTSIMSGM3Tv2mP9UgMW3EOw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB6467
-X-OriginatorOrg: intel.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH 05/11] Docs/scsi: dc395x: shorten the chapter heading
+Content-Language: en-US
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linux-doc@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>, dc395x@twibble.org
+References: <20230518212749.18266-1-rdunlap@infradead.org>
+ <20230518212749.18266-6-rdunlap@infradead.org>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <20230518212749.18266-6-rdunlap@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As an alternative, Is it possible to change ftpm design not to depend on RP=
-MB access at the earlier/boot stage? Because to my understanding, typically=
- PCRs don't require persistent/NV storage (for example, before RPMB or tee-=
-supplicant is ready, use TEE memory instead as temporary storage)
+On 5/19/23 04:27, Randy Dunlap wrote:
+> -======================================
+> -README file for the dc395x SCSI driver
+> -======================================
+> +==================
+> +dc395x SCSI driver
+> +==================
+>  
 
-Bing
+Acked-by: Bagas Sanjaya <bagasdotme@gmail.com>
 
-IPAS Security Brown Belt (https://www.credly.com/badges/69ea809f-3a96-4bc7-=
-bb2f-442c1b17af26)
-System Software Engineering
-Software and Advanced Technology Group
-Zizhu Science Park, Shanghai, China
+-- 
+An old man doll... just what I always wanted! - Clara
 
------Original Message-----
-From: Shyam Saini <shyamsaini@linux.microsoft.com>=20
-Sent: Thursday, June 1, 2023 3:10 AM
-To: alex.bennee@linaro.org
-Cc: code@tyhicks.com; Matti.Moell@opensynergy.com; arnd@linaro.org; Zhu, Bi=
-ng <bing.zhu@intel.com>; hmo@opensynergy.com; ilias.apalodimas@linaro.org; =
-joakim.bech@linaro.org; linux-kernel@vger.kernel.org; linux-mmc@vger.kernel=
-.org; linux-scsi@vger.kernel.org; maxim.uvarov@linaro.org; ruchika.gupta@li=
-naro.org; Winkler, Tomas <tomas.winkler@intel.com>; ulf.hansson@linaro.org;=
- Huang, Yang <yang.huang@intel.com>; sumit.garg@linaro.org; jens.wiklander@=
-linaro.org; op-tee@lists.trustedfirmware.org
-Subject: [PATCH v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-
-Hi Alex,
-
-[ Resending, Sorry for the noise ]
-=20
-Are you still working on it or planning to resubmit it ?
-
-[1] The current optee tee kernel driver implementation doesn't work when IM=
-A is used with optee implemented ftpm.
-
-The ftpm has dependency on tee-supplicant which comes once the user space i=
-s up and running and IMA attestation happens at boot time and it requires t=
-o extend ftpm PCRs.=20
-
-But IMA can't use PCRs if ftpm use secure emmc RPMB partition. As optee can=
- only access RPMB via tee-supplicant(user space). So, there should be a fas=
-t path to allow optee os to access the RPMB parititon without waiting for u=
-ser-space tee supplicant.
-
-To achieve this fast path linux optee driver and mmc driver needs some work=
- and finally it will need RPMB driver which you posted.
-=20
-Please let me know what's your plan on this.
-=20
-[1] https://optee.readthedocs.io/en/latest/architecture/secure_storage.html
-
-Best Regards,
-Shyam
