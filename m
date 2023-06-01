@@ -2,93 +2,180 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C56C7C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 21:12:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00911C7EE29
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 22:14:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231373AbjFAVMI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 17:12:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41672 "EHLO
+        id S229610AbjFAWOM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 18:14:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbjFAVMH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 17:12:07 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 982BD12C
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2023 14:12:06 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-64d18d772bdso1588753b3a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2023 14:12:06 -0700 (PDT)
+        with ESMTP id S229498AbjFAWOL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 18:14:11 -0400
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD2CB1B4;
+        Thu,  1 Jun 2023 15:13:44 -0700 (PDT)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-561d1c4846cso328887b3.1;
+        Thu, 01 Jun 2023 15:13:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685657608; x=1688249608;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wgSe4yPKC4Ie6mfk+f6dt8MfVPoiPfF24WwsiP2m7pk=;
+        b=JgiWv+DBFw3orHyGwm/A7Uj0Gs+A/6iLpp2/S9llhZLFWJMa15tbHWSk1y3lxd7h82
+         8RAPPWHHwbu3MUu4vQA/COZM00+v+t7UCp7cpz5cv0BBHc0C8xjM4gCK5Xj8HiF2FmeG
+         jMm3+dKcEjlsemIMyw92zoiqg7CG1qzxJCxbqHuZkikIG39ZIAHNWz+Hooo/qGxSnR4D
+         5mXmfMwj4FJsNx5oYSvSd5G50gVb6XVr2wyKDe+68oq3Nqi/StZqAImiIzW9ja8g7bQ+
+         Kb3MLgjMCVuZK1iDbmCpD05cV+ErJyilmWbmWPho0ChMxZa5tLEtKtNGRTVyE26QbN09
+         bWOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685653926; x=1688245926;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3NiZALMm6J4tmcomcvMQcO3EC6PCDMYo+ZshTCWUhiY=;
-        b=JdLo7ToXxHG5Ft/Q6AgCZ05CPX+Uk83TePfjb4HN8EUa5I+Z8HsFXzsdaPQ+2+HFL0
-         VlMAQKouCb7VdUDhmV+EPr/3YMFWNCGMiKm0RvZ7VZqmn4aEuQoUyEAbhziFLt/GBg2Z
-         hHGEdrKC67KEUgwcZ+ooRi6sFRZ6ElIKgOXGnsnTvub7eqP80O8SUi/+ulrx8A2vFH6Q
-         R8OeC1ww97rJq7ztBWZzMie9O+G0OmLUFXrywCehJZJgDopc9dJljfCG6STFoi5Qnqps
-         nxugkQHRSl6+E66ON0KiT8jsVSxywfh/styUoukyCQIbHhqqMrCyTKdwGb2l/imOgoL1
-         AEjA==
-X-Gm-Message-State: AC+VfDyPdC6/f48upuZ2gm/ddHSQzf5RiMDaqXUdKS8+ebVVSLIVJ8TQ
-        Qka3QQK//Vf1EarRoNtb/84=
-X-Google-Smtp-Source: ACHHUZ4YbVLjEG/s87+vF6JaUZmN7z8m/g7ndJKv3gSkhKYsMMXuPr0yCqKQhqhhfdd+FT3mjV3W/Q==
-X-Received: by 2002:a05:6a00:9a5:b0:641:39cb:1716 with SMTP id u37-20020a056a0009a500b0064139cb1716mr13548973pfg.20.1685653925977;
-        Thu, 01 Jun 2023 14:12:05 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id e26-20020a62aa1a000000b0063f0068cf6csm5427087pff.198.2023.06.01.14.12.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Jun 2023 14:12:05 -0700 (PDT)
-Message-ID: <2490926f-d8cc-3ce4-7a00-b8db58c89848@acm.org>
-Date:   Thu, 1 Jun 2023 14:12:04 -0700
+        d=1e100.net; s=20221208; t=1685657608; x=1688249608;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wgSe4yPKC4Ie6mfk+f6dt8MfVPoiPfF24WwsiP2m7pk=;
+        b=Vwn2NDKRieZkeYq/cYbTRn16wfRCq1K/ttBAfk6NmsXrTudUASD36Gfdkxdkru+p2I
+         EOX3kf/RT8LFxsbQrThQazDQ4AKgeVg9gkwZiab3hr33n5qMoJN5MfM2w0kjuaXsUUUH
+         yMkjDSwKGo41uVi3peCH+FfqheZJebLPsivosb1+TSxmuoxmhDLn31/LRT0Sp7H6QlB4
+         icXrWTPZGgB4m61hDs6llzf4Dyamr95QL41QABjx0FXQJcaIkMtQ6ZMQQ9JH3DRKIZMt
+         nH8xv8TlOhWvYc6ES+azbFSkN0pj3xzmmIBRve9kHrf241bfy1Pfj7E0UJNA3Gxizlzo
+         3hwA==
+X-Gm-Message-State: AC+VfDyOEURppr2UbtEXlLCjZDYiDCntnC4N11Ea4NWCP0SGH05BAizN
+        aaWuZzADbpePDpkETcmqBtG1DIcgiZ8qhC/sJ0o=
+X-Google-Smtp-Source: ACHHUZ7FdK1COpLoHURlQ5kwJbzc1UrbXE+KoasqlIFy7FrHIBtaKwzHqkHZ7GjiaEbsOFUcXfnJ9clIDEHuKMWLkSY=
+X-Received: by 2002:a81:70cd:0:b0:561:eb6d:c0db with SMTP id
+ l196-20020a8170cd000000b00561eb6dc0dbmr8043695ywc.2.1685657607097; Thu, 01
+ Jun 2023 15:13:27 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] scsi: ufs: Include major and minor number in command
- tracing output
-Content-Language: en-US
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Adrien Thierry <athierry@redhat.com>
-References: <20230531223924.25341-1-bvanassche@acm.org>
- <ZHgrYgDmvhs7Iw/d@infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZHgrYgDmvhs7Iw/d@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <ZHZq7AV9Q2WG1xRB@work> <fe0739cbe279cf9db2ebff1146e7ae540cc1ad6c.camel@linux.ibm.com>
+ <202305301529.1EEA11B@keescook> <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
+ <202306010931.92796DC@keescook>
+In-Reply-To: <202306010931.92796DC@keescook>
+From:   Justin Tee <justintee8345@gmail.com>
+Date:   Thu, 1 Jun 2023 15:13:16 -0700
+Message-ID: <CABPRKS8zyzrbsWt4B5fp7kMowAZFiMLKg5kW26uELpg1cDKY3A@mail.gmail.com>
+Subject: Re: [PATCH][next] scsi: lpfc: Avoid -Wstringop-overflow warning
+To:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     James Bottomley <jejb@linux.ibm.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/31/23 22:23, Christoph Hellwig wrote:
-> On Wed, May 31, 2023 at 03:39:20PM -0700, Bart Van Assche wrote:
->> UFS devices are typically configured with multiple logical units.
->> The device name, e.g. 13200000.ufs, does not include logical unit
->> information. Hence this patch that replaces the device name with
->> the disk major and minor number in the tracing output, e.g. 8,0,
->> just like the block layer tracing information.
-> 
-> Please also drop the never used group_id value while you're at it.
+I understand the desire to satisfy a compiler warning, but for what
+it=E2=80=99s worth I don=E2=80=99t think "size" could ever be negative here=
+.
 
-Hi Christoph,
+size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
 
-I will look into removing the GROUP ID information from the UFS tracing 
-output. Do you agree with adding the GROUP ID information in the SCSI 
-tracing output after data temperature support has been added in the 
-block layer and SCSI core? As you probably know the T10 committee 
-recently approved Ralph Weber's Constrained Streams proposal.
+phba->cfg_ras_fwlog_buffsize could never be larger than 4 because it
+is restricted via lpfc_ras_fwlog_buffsize_set and LPFC_ATTR=E2=80=99s call =
+to
+lpfc_rangecheck(val, 0, 4).
 
-Thanks,
+And, #define LPFC_RAS_MIN_BUFF_POST_SIZE (256 * 1024).
 
-Bart.
+So, 256 * 1024 * 4 =3D 1,048,576 =3D 0x00100000 is the max =E2=80=9Csize=E2=
+=80=9D could ever be.
 
-
+On Thu, Jun 1, 2023 at 9:49=E2=80=AFAM Kees Cook <keescook@chromium.org> wr=
+ote:
+>
+> On Wed, May 31, 2023 at 10:56:50AM -0400, James Bottomley wrote:
+> > On Tue, 2023-05-30 at 15:44 -0700, Kees Cook wrote:
+> > > On Tue, May 30, 2023 at 05:36:06PM -0400, James Bottomley wrote:
+> > > > On Tue, 2023-05-30 at 15:30 -0600, Gustavo A. R. Silva wrote:
+> > > > > Avoid confusing the compiler about possible negative sizes.
+> > > > > Use size_t instead of int for variables size and copied.
+> > > > >
+> > > > > Address the following warning found with GCC-13:
+> > > > > In function =E2=80=98lpfc_debugfs_ras_log_data=E2=80=99,
+> > > > >     inlined from =E2=80=98lpfc_debugfs_ras_log_open=E2=80=99 at
+> > > > > drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
+> > > > > drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: =E2=80=98memcp=
+y=E2=80=99
+> > > > > specified
+> > > > > bound between 18446744071562067968 and 18446744073709551615
+> > > > > exceeds
+> > > > > maximum object size 9223372036854775807 [-Wstringop-overflow=3D]
+> > > > >  2210 |                         memcpy(buffer + copied, dmabuf-
+> > > > > >virt,
+> > > > >       |
+> > > > > ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > > > >  2211 |                                size - copied - 1);
+> > > > >       |                                ~~~~~~~~~~~~~~~~~~
+> > > > >
+> > > >
+> > > > This looks like a compiler bug to me and your workaround would have
+> > > > us using unsigned types everywhere for sizes, which seems wrong.
+> > > > There are calls which return size or error for which we have
+> > > > ssize_t and that type has to be usable in things like memcpy, so
+> > > > the compiler must be fixed or the warning disabled.
+> > >
+> > > The compiler is (correctly) noticing that the calculation involving
+> > > "size" (from which "copied" is set) could go negative.
+> >
+> > It can?  But if it can, then changing size and copied to unsigned
+> > doesn't fix it, does it?
+>
+> Yes:
+>
+>         (int)   (const expression 256 * 1024)           (u32)
+>         size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsi=
+ze;
+>
+> this can wrap to negative if cfg_ras_fwlog_buffsize is large enough. If
+> "size" is size_t, it can't wrap, and is therefore never negative.
+>
+> > So your claim is the compiler only gets it wrong in this one case and
+> > if we just change this one case it will never get it wrong again?
+>
+> What? No, I'm saying this is a legitimate diagnostic, and the wrong type
+> was chosen for "size": it never needs to carry a negative value, and it
+> potentially needs to handle values greater than u32.
+>
+> But you're right -- there is still a potential for runtime confusion in
+> that the return from lpfc_debugfs_ras_log_data() must be signed. So
+> perhaps the best option is to check for overflow directly.
+>
+> Gustavo, does this fix it?
+>
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_de=
+bugfs.c
+> index bdf34af4ef36..7f9b221e7c34 100644
+> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
+> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+> @@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, st=
+ruct file *file)
+>                 goto out;
+>         }
+>         spin_unlock_irq(&phba->hbalock);
+> -       debug =3D kmalloc(sizeof(*debug), GFP_KERNEL);
+> +
+> +       if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
+> +                              phba->cfg_ras_fwlog_buffsize, &size))
+> +               goto out;
+> +
+> +       debug =3D kzalloc(sizeof(*debug), GFP_KERNEL);
+>         if (!debug)
+>                 goto out;
+>
+> -       size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsi=
+ze;
+>         debug->buffer =3D vmalloc(size);
+>         if (!debug->buffer)
+>                 goto free_debug;
+>
+>
+> -Kees
+>
+> --
+> Kees Cook
