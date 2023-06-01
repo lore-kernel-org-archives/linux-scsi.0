@@ -2,153 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 305EBC7EE29
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 22:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF104C77B7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 22:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232932AbjFAW2j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 18:28:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46728 "EHLO
+        id S231710AbjFAWvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 18:51:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229612AbjFAW2i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 18:28:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08A3212C;
-        Thu,  1 Jun 2023 15:28:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A2A3364A7F;
-        Thu,  1 Jun 2023 22:28:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C511C4339B;
-        Thu,  1 Jun 2023 22:28:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685658516;
-        bh=R7TPrCl84YiuCBQfEPy70uaHWlIn5vuvHUQAmc+LCvA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oO9ExzI3xpC85rpluTYF03EIjweEG7BDEzkV4XmEOXEeRmHXV7eqb+Run/hlIrkoz
-         q3toDgOfeP559QiU8jcSPuy+c4ng9vYCrIaUhBFfesCNAMYHASxFxIx+UeC+sXK0+i
-         eylvQiqMvgmXERO3NQkYe/U7tu9F4AMKY+xrjDOe5QCHLtJST2/W7zci/+62/4UYEe
-         OCEeJu4lIHeFXJtbqqoSAbvOmtiPBClrDufMhQFJOicZc9bIiFu5zffUco73gJGDoX
-         83K5jXtsmhNuMY4pethqAZFJpnthtvFhkV8nECpzJaR+d8EE0TCoKV88H3hEqDKqFz
-         ZM5FqjLX+uKDg==
-Date:   Thu, 1 Jun 2023 16:29:27 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     James Bottomley <jejb@linux.ibm.com>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: lpfc: Avoid -Wstringop-overflow warning
-Message-ID: <ZHkbxyw8vLom2YEV@work>
-References: <ZHZq7AV9Q2WG1xRB@work>
- <fe0739cbe279cf9db2ebff1146e7ae540cc1ad6c.camel@linux.ibm.com>
- <202305301529.1EEA11B@keescook>
- <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
- <202306010931.92796DC@keescook>
+        with ESMTP id S231429AbjFAWvE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 18:51:04 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70B59133;
+        Thu,  1 Jun 2023 15:50:56 -0700 (PDT)
+X-UUID: c19232e200ce11eeb20a276fd37b9834-20230602
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=QR78UJzld29HzCed3Ao3JhksvYknZ6XWy+PAaTNSICo=;
+        b=H15KowaHt9V9SXrACVWaHp1eP1/WCUSAh82BDG38UkQFmPAbjNR3pmvdXVz7BXj9+E+YIFev5vNWs5BY/3GqEUiV7tSQ3YYf3UOCZCcJppgER0l1VUfT1e8mKgQbxD0rBlJVl4Rkv/eyXUpfV1NZJQGLz6AKmkpE4CHS2z+HhEM=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.25,REQID:0f7c423a-9247-42ec-93e9-45a77f58957a,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:95
+X-CID-INFO: VERSION:1.1.25,REQID:0f7c423a-9247-42ec-93e9-45a77f58957a,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
+        :quarantine,TS:95
+X-CID-META: VersionHash:d5b0ae3,CLOUDID:8563c16d-2f20-4998-991c-3b78627e4938,B
+        ulkID:230602065051I1VYJF7R,BulkQuantity:0,Recheck:0,SF:29|28|17|19|48|38,T
+        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+        ,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-UUID: c19232e200ce11eeb20a276fd37b9834-20230602
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 375743438; Fri, 02 Jun 2023 06:50:50 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 2 Jun 2023 06:50:49 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 2 Jun 2023 06:50:49 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
+        <bvanassche@acm.org>
+CC:     <stanley.chu@mediatek.com>
+Subject: [PATCH v2] ufs: core: Combine ufshcd_mq_poll_cqe functions
+Date:   Fri, 2 Jun 2023 06:50:48 +0800
+Message-ID: <20230601225048.12228-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <202306010931.92796DC@keescook>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 01, 2023 at 09:48:55AM -0700, Kees Cook wrote:
-> On Wed, May 31, 2023 at 10:56:50AM -0400, James Bottomley wrote:
-> > On Tue, 2023-05-30 at 15:44 -0700, Kees Cook wrote:
-> > > On Tue, May 30, 2023 at 05:36:06PM -0400, James Bottomley wrote:
-> > > > On Tue, 2023-05-30 at 15:30 -0600, Gustavo A. R. Silva wrote:
-> > > > > Avoid confusing the compiler about possible negative sizes.
-> > > > > Use size_t instead of int for variables size and copied.
-> > > > > 
-> > > > > Address the following warning found with GCC-13:
-> > > > > In function ‘lpfc_debugfs_ras_log_data’,
-> > > > >     inlined from ‘lpfc_debugfs_ras_log_open’ at
-> > > > > drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
-> > > > > drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: ‘memcpy’
-> > > > > specified
-> > > > > bound between 18446744071562067968 and 18446744073709551615
-> > > > > exceeds
-> > > > > maximum object size 9223372036854775807 [-Wstringop-overflow=]
-> > > > >  2210 |                         memcpy(buffer + copied, dmabuf-
-> > > > > >virt,
-> > > > >       |                        
-> > > > > ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > > > >  2211 |                                size - copied - 1);
-> > > > >       |                                ~~~~~~~~~~~~~~~~~~
-> > > > > 
-> > > > 
-> > > > This looks like a compiler bug to me and your workaround would have
-> > > > us using unsigned types everywhere for sizes, which seems wrong. 
-> > > > There are calls which return size or error for which we have
-> > > > ssize_t and that type has to be usable in things like memcpy, so
-> > > > the compiler must be fixed or the warning disabled.
-> > > 
-> > > The compiler is (correctly) noticing that the calculation involving
-> > > "size" (from which "copied" is set) could go negative.
-> > 
-> > It can?  But if it can, then changing size and copied to unsigned
-> > doesn't fix it, does it?
-> 
-> Yes:
-> 
-> 	(int)	(const expression 256 * 1024)		(u32)
->         size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
-> 
-> this can wrap to negative if cfg_ras_fwlog_buffsize is large enough. If
-> "size" is size_t, it can't wrap, and is therefore never negative.
-> 
-> > So your claim is the compiler only gets it wrong in this one case and
-> > if we just change this one case it will never get it wrong again?
-> 
-> What? No, I'm saying this is a legitimate diagnostic, and the wrong type
-> was chosen for "size": it never needs to carry a negative value, and it
-> potentially needs to handle values greater than u32.
-> 
-> But you're right -- there is still a potential for runtime confusion in
-> that the return from lpfc_debugfs_ras_log_data() must be signed. So
-> perhaps the best option is to check for overflow directly.
-> 
-> Gustavo, does this fix it?
+Currently, ufshcd_mcq_poll_cqe_nolock() is only called by
+ufshcd_mcq_poll_cqe_lock() with the addition of a spinlock wrapper
+for ufshcd_mcq_poll_cqe_nolock(). Combining these two functions
+into one would result in cleaner code.
 
-Yep; it does.
+Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/ufs/core/ufs-mcq.c | 17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
-I think we can go with this solution.
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 920eb954f594..785fc9762cad 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -307,11 +307,13 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
+ 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+ }
+ 
+-static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+-						struct ufs_hw_queue *hwq)
++unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
++				       struct ufs_hw_queue *hwq)
+ {
+ 	unsigned long completed_reqs = 0;
++	unsigned long flags;
+ 
++	spin_lock_irqsave(&hwq->cq_lock, flags);
+ 	ufshcd_mcq_update_cq_tail_slot(hwq);
+ 	while (!ufshcd_mcq_is_cq_empty(hwq)) {
+ 		ufshcd_mcq_process_cqe(hba, hwq);
+@@ -321,17 +323,6 @@ static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+ 
+ 	if (completed_reqs)
+ 		ufshcd_mcq_update_cq_head(hwq);
+-
+-	return completed_reqs;
+-}
+-
+-unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+-				       struct ufs_hw_queue *hwq)
+-{
+-	unsigned long completed_reqs, flags;
+-
+-	spin_lock_irqsave(&hwq->cq_lock, flags);
+-	completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
+ 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+ 
+ 	return completed_reqs;
+-- 
+2.18.0
 
-Thanks!
---
-Gustavo
-
-> 
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-> index bdf34af4ef36..7f9b221e7c34 100644
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-> @@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
->  		goto out;
->  	}
->  	spin_unlock_irq(&phba->hbalock);
-> -	debug = kmalloc(sizeof(*debug), GFP_KERNEL);
-> +
-> +	if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
-> +			       phba->cfg_ras_fwlog_buffsize, &size))
-> +		goto out;
-> +
-> +	debug = kzalloc(sizeof(*debug), GFP_KERNEL);
->  	if (!debug)
->  		goto out;
->  
-> -	size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
->  	debug->buffer = vmalloc(size);
->  	if (!debug->buffer)
->  		goto free_debug;
-> 
-> 
-> -Kees
-> 
-> -- 
-> Kees Cook
