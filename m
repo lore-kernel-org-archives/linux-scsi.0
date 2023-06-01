@@ -2,138 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBEDC7EE2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 00:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF32C7EE2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 00:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230405AbjFAAoB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 May 2023 20:44:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56758 "EHLO
+        id S230213AbjFAAoZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 May 2023 20:44:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230429AbjFAAn6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 20:43:58 -0400
+        with ESMTP id S229476AbjFAAoY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2023 20:44:24 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BAC8185;
-        Wed, 31 May 2023 17:43:50 -0700 (PDT)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34VJbiXu020031;
-        Thu, 1 Jun 2023 00:43:35 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 111EB180;
+        Wed, 31 May 2023 17:44:02 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34VKMq59032547;
+        Thu, 1 Jun 2023 00:43:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=GD6hCxEk3L0IIhByLlcvvVsHmFrFS9FYPAJZDk1KJhs=;
- b=rT+oBvRU4md5ESCBLwSk9WX0jyi4rVTbUx5sEEy/2jewAQhAaxa1AOsvdwQfrdI6rUc8
- l/lmL1/wSqH13/anfp4OCbDrw5Mh062dZCImOrxEdO013OP5OoOgiaA1LA3QHM6yiFIm
- RWuMRycEOkLWPlEMCl1aNXsp0sT8rnTbtCx5x8tpaEyte7KcNuy2XRQ7p7TdRZ+0nc7I
- 8GvzgbVAZO0rqZSrmfNh60543LejhE3a5mve9qkmBHLMbRu8xgY2bTHB/QHTeBA0tpUu
- dFbYjP+57m5X+AHFRSdn6l3dhrk9oYFCg1I/Drv+xmtCIWBzdLemf0BkFie0jyDibHWz tg== 
+ bh=DwlCJOrdcwDOpNkwjccWqX8sLlYnPGR/xoGvu6B5/Jo=;
+ b=ThA2s8vBavRkrnImgl8oR90Jf1oH1xFKNJNqqAQ7/a9yy11S446TXYma8Iov7VV7TUTz
+ BmcmZ1hd4jZcmmF7vfKHxJOmyKB+++2X1qzDq2cKl6s1hQAaNyeHvE9UVQvtmFU8HlaD
+ bBdyFUOZvKKqPkbmEZFsKvhatm7mLLoyD36jaTu0xd1/C/SMw8BVry2Ru8PJcEzRUhKn
+ x2m2uGPAdOYh8XIXfF9NjkDvwIPAtyvgjolFZTF1C616Be+FuwFwLwGp+ocLqOEgL8SK
+ 4WBahuC/foID0jV+4ubt2bXT+f8GHqKOzRNejZ/CO3CwRwMKizIQqB5qkB3Ymp84wdmd 7Q== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qvhjh7cnw-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qvhb97d74-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Jun 2023 00:43:35 +0000
+        Thu, 01 Jun 2023 00:43:36 +0000
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34VMhvGw004404;
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34VNQ8NO004399;
         Thu, 1 Jun 2023 00:43:34 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3qv4ye2eav-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3qv4ye2eb3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Thu, 01 Jun 2023 00:43:34 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3510hV9L008516;
-        Thu, 1 Jun 2023 00:43:33 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3510hV9N008516;
+        Thu, 1 Jun 2023 00:43:34 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3qv4ye2e6s-3;
-        Thu, 01 Jun 2023 00:43:33 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3qv4ye2e6s-4;
+        Thu, 01 Jun 2023 00:43:34 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Jens Axboe <axboe@kernel.dk>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Niklas Cassel <nks@flawful.org>
+To:     linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: [PATCH v7 00/19] Add Command Duration Limits support
-Date:   Wed, 31 May 2023 20:43:12 -0400
-Message-Id: <168558000054.2461197.15843380024043711693.b4-ty@oracle.com>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linux-doc@vger.kernel.org, Gerd Knorr <kraxel@bytesex.org>,
+        Oliver Neukum <oliver@neukum.org>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>, dc395x@twibble.org,
+        James Smart <james.smart@broadcom.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        megaraidlinux.pdl@broadcom.com,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 00/11] Documentation/scsi: organize SCSI docs & make more readable
+Date:   Wed, 31 May 2023 20:43:13 -0400
+Message-Id: <168558000067.2461197.10750328689572620807.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230511011356.227789-1-nks@flawful.org>
-References: <20230511011356.227789-1-nks@flawful.org>
+In-Reply-To: <20230518212749.18266-1-rdunlap@infradead.org>
+References: <20230518212749.18266-1-rdunlap@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
  definitions=2023-05-31_18,2023-05-31_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=830
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
  adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0 mlxscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2306010004
-X-Proofpoint-GUID: 0ArI-bCon4iraFW0sj-1q9sYhdeEwk0Q
-X-Proofpoint-ORIG-GUID: 0ArI-bCon4iraFW0sj-1q9sYhdeEwk0Q
+X-Proofpoint-GUID: YOalXPWJ9zyKACfXifjcLWKGlvVbE_3r
+X-Proofpoint-ORIG-GUID: YOalXPWJ9zyKACfXifjcLWKGlvVbE_3r
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 11 May 2023 03:13:33 +0200, Niklas Cassel wrote:
+On Thu, 18 May 2023 14:27:38 -0700, Randy Dunlap wrote:
 
-> This series adds support for Command Duration Limits.
-> The series is based on linux tag: v6.4-rc1
-> The series can also be found in git:
-> https://github.com/floatious/linux/commits/cdl-v7
+> Organize the SCSI documentation into categories instead of
+> alphabetically by filename.
 > 
+> Modify several of the document chapter headings so that they are
+> shorter and easier to find.
 > 
-> =================
-> CDL in ATA / SCSI
-> =================
-> Command Duration Limits is defined in:
-> T13 ATA Command Set - 5 (ACS-5) and
-> T10 SCSI Primary Commands - 6 (SPC-6) respectively
-> (a simpler version of CDL is defined in T10 SPC-5).
+> Make several updates to the scsi-generic driver documentation.
 > 
 > [...]
 
 Applied to 6.5/scsi-queue, thanks!
 
-[01/19] ioprio: cleanup interface definition
-        https://git.kernel.org/mkp/scsi/c/eca2040972b4
-[02/19] block: introduce ioprio hints
-        https://git.kernel.org/mkp/scsi/c/6c913257226a
-[03/19] block: introduce BLK_STS_DURATION_LIMIT
-        https://git.kernel.org/mkp/scsi/c/dffc480d2df1
-[04/19] scsi: core: allow libata to complete successful commands via EH
-        https://git.kernel.org/mkp/scsi/c/3d848ca1ebc8
-[05/19] scsi: rename and move get_scsi_ml_byte()
-        https://git.kernel.org/mkp/scsi/c/734326937b65
-[06/19] scsi: support retrieving sub-pages of mode pages
-        https://git.kernel.org/mkp/scsi/c/a6cdc35fab0d
-[07/19] scsi: support service action in scsi_report_opcode()
-        https://git.kernel.org/mkp/scsi/c/152e52fb6ff1
-[08/19] scsi: detect support for command duration limits
-        https://git.kernel.org/mkp/scsi/c/624885209f31
-[09/19] scsi: allow enabling and disabling command duration limits
-        https://git.kernel.org/mkp/scsi/c/1b22cfb14142
-[10/19] scsi: sd: set read/write commands CDL index
-        https://git.kernel.org/mkp/scsi/c/e59e80cfef60
-[11/19] scsi: sd: handle read/write CDL timeout failures
-        https://git.kernel.org/mkp/scsi/c/390e2d1a5874
-[12/19] ata: libata-scsi: remove unnecessary !cmd checks
-        https://git.kernel.org/mkp/scsi/c/91a8967ca7f4
-[13/19] ata: libata: change ata_eh_request_sense() to not set CHECK_CONDITION
-        https://git.kernel.org/mkp/scsi/c/24aeebbf8ea9
-[14/19] ata: libata: detect support for command duration limits
-        https://git.kernel.org/mkp/scsi/c/62e4a60e0cdb
-[15/19] ata: libata-scsi: handle CDL bits in ata_scsiop_maint_in()
-        https://git.kernel.org/mkp/scsi/c/0de558015286
-[16/19] ata: libata-scsi: add support for CDL pages mode sense
-        https://git.kernel.org/mkp/scsi/c/673b2fe6ff1d
-[17/19] ata: libata: add ATA feature control sub-page translation
-        https://git.kernel.org/mkp/scsi/c/df60f9c64576
-[18/19] ata: libata: set read/write commands CDL index
-        https://git.kernel.org/mkp/scsi/c/eafe804bda7b
-[19/19] ata: libata: handle completion of CDL commands using policy 0xD
-        https://git.kernel.org/mkp/scsi/c/18bd7718b5c4
+[01/11] Docs/scsi: organize the SCSI documentation
+        https://git.kernel.org/mkp/scsi/c/682b07d2ff54
+[02/11] Docs/scsi: introduction: multiple cleanups
+        https://git.kernel.org/mkp/scsi/c/c4e672ac8c49
+[03/11] Docs/scsi: arcmsr: use a chapter heading for clarity
+        https://git.kernel.org/mkp/scsi/c/1d3e21238f50
+[04/11] Docs/scsi: scsi-changer: shorten the chapter heading
+        https://git.kernel.org/mkp/scsi/c/a292835f69c6
+[05/11] Docs/scsi: dc395x: shorten the chapter heading
+        https://git.kernel.org/mkp/scsi/c/573a43f26d80
+[06/11] Docs/scsi: scsi_fc_transport: fix typo in heading
+        https://git.kernel.org/mkp/scsi/c/66fcd6026c71
+[07/11] Docs/scsi: scsi-generic: multiple cleanups
+        https://git.kernel.org/mkp/scsi/c/8ebddfeef518
+[08/11] Docs/scsi: g_NCR5380: shorten chapter heading
+        https://git.kernel.org/mkp/scsi/c/b636a0297e4f
+[09/11] Docs/scsi: megaraid: clarify chapter heading
+        https://git.kernel.org/mkp/scsi/c/0176d3395a3a
+[10/11] Docs/scsi: ncr53c8xx: shorten chapter heading
+        https://git.kernel.org/mkp/scsi/c/7c891fe3db3a
+[11/11] Docs/scsi: sym53c8xx_2: shorten chapter heading
+        https://git.kernel.org/mkp/scsi/c/f047d1e38bdf
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
