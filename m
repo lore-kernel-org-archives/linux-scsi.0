@@ -2,85 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38870C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 15:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AF4C7EE2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 15:57:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233550AbjFAPSt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 11:18:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56666 "EHLO
+        id S234303AbjFAP5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 11:57:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235071AbjFAPSi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 11:18:38 -0400
-Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77FE410D1;
-        Thu,  1 Jun 2023 08:18:03 -0700 (PDT)
-Received: by mail-lj1-x22a.google.com with SMTP id 38308e7fff4ca-2af189d323fso29167541fa.1;
-        Thu, 01 Jun 2023 08:18:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685632681; x=1688224681;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oTAumcalUcQiGx1tnlErkX6GyqVTNQRt5wh7k3odTZA=;
-        b=fsYBW3VTm0kYhHCDQIE7yTK+842UysSDHQPY1amB9atiM9FMZanfftkgZOI+BjL9/v
-         YcpI4lBcNB7tT+17Jcy3Q06ANmdx8MLn8QIV+7PvOUGVA5H6nuIQj15mQeOatCmmKvU1
-         3oSDVGPT/7m5HuhsGcgWIYmqeW/qvoRO86KjlqRzMg7vuTozIJzvmOdbqwlb18SLai49
-         qnWXC5vG3Z7/B0YLHmvXYd5lvuB/WFmfDv22lLzqky/12ukYbroXO8p8lGM88SyTtlka
-         PoeGFbEiP1bFQFn4pnPRRH5KErwY2huXeKqr4lC+nSj7BAlYbQj8jAfIFLSKySugpiX3
-         Khgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685632681; x=1688224681;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oTAumcalUcQiGx1tnlErkX6GyqVTNQRt5wh7k3odTZA=;
-        b=FSi2q5itC3vJcfGYCKKw7odgKNWAOI8nWiLyjlwHN8p73ouZxOqrbm9Uc4bUF7ox/v
-         FAhKSKU/mnqwO4j2ObNePjcSgcDvqCkraaMczJQ/GHpi4+SJ5qcMOJSIeXpgIu7s4f3e
-         gwNyyA7n2wmnPdpJP6GhJkUDrlqGkopcBYW/94dYL/BsEri9aYM7nm41eVDXKN3mvk94
-         1FTdOMzhYlJ93SeqGbfE+pcu0di1b0djd8+V+LKo60z7ULOT0Nehx5eLVUZGqRJHlRTY
-         kDGTQXamXqLNQtuZ0D9YP+WqHkBwob4FjYxoKCeensYR29bPdk5GzoAxGiJPzhaQWEy1
-         xZrw==
-X-Gm-Message-State: AC+VfDwQTb+yFJ97KMzUzAMv9coI8Rs8XT0IuANCskGDOQt5NogZXPM2
-        jEXWi2dSe8UEeF2V6ic89yayrx5jU9t071mHcw==
-X-Google-Smtp-Source: ACHHUZ7POzm7EFn/TiX6knB2rEnVKU47reEuIkrPfBqJPtaASLAcUeeMOuJ44BupaBw63F8lERn32AY7nkyeW/Rlob4=
-X-Received: by 2002:a2e:a230:0:b0:2af:1460:4253 with SMTP id
- i16-20020a2ea230000000b002af14604253mr784298ljm.3.1685632680862; Thu, 01 Jun
- 2023 08:18:00 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230601124613.1446-1-zhanghui31@xiaomi.com>
-In-Reply-To: <20230601124613.1446-1-zhanghui31@xiaomi.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Thu, 1 Jun 2023 23:17:49 +0800
-Message-ID: <CAGaU9a_75FToskToj4GDrFqoYSD3mn3GoUKrtiF-bMJgU98wPQ@mail.gmail.com>
-Subject: Re: [PATCH v2] scsi: ufs: core: Fix ufshcd_inc_sq_tail function bug
-To:     Zhang Hui <masonzhang.xiaomi@gmail.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        zhanghui <zhanghui31@xiaomi.com>, Bean Huo <beanhuo@micron.com>,
-        peng.zhou@mediatek.com, yudongbin@xiaomi.com,
+        with ESMTP id S234084AbjFAP5x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 11:57:53 -0400
+Received: from smtp-relay-canonical-1.canonical.com (smtp-relay-canonical-1.canonical.com [185.125.188.121])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92617134;
+        Thu,  1 Jun 2023 08:57:51 -0700 (PDT)
+Received: from localhost.localdomain (unknown [10.101.196.174])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id A20C641795;
+        Thu,  1 Jun 2023 15:57:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1685635070;
+        bh=DhRFpLZy2hfyDYD8yUQHlqkoTRIcIzEoR9HeLiZfc8o=;
+        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
+        b=ZB5QNLujNDq3B3ALtV9mHbJwDV0D6Gc0PJfypM5wZYljiX8OB8kkvlJ8HTtqCOk9O
+         QNqLgOkcnDjiP0Q5b0pDDfe5ALUWcH9JEeIgvbZsgIaJ+XJ+6EWzn1h4RWi5k/oV5T
+         PKzvxp241OFnxXfMj8WBR/S8FPSlx5RHz0paftwOcUJkO9GhZRKy8Yppk309mvXTcG
+         uQzelo2SEQ3vtb0J3ekC7qL8lkKpm7IFbb29ZPeg4/czSp7FVBCtoyj84QSlZ8XMaX
+         BvCkK6UQVfFiAMv4HxR4467ReodYJW2xJoD9bZciZvxDcqlhBBpcXtImlp/XiPHlkn
+         zK4eXONY/TBPA==
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     dlemoal@kernel.org, bblock@linux.ibm.com, acelan.kao@canonical.com,
+        linux-pm@vger.kernel.org,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: [PATCH v5] scsi: core: Wait until device is fully resumed before doing rescan
+Date:   Thu,  1 Jun 2023 23:56:52 +0800
+Message-Id: <20230601155652.1157611-1-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 1, 2023 at 8:57=E2=80=AFPM Zhang Hui <masonzhang.xiaomi@gmail.c=
-om> wrote:
->
-> From: zhanghui <zhanghui31@xiaomi.com>
->
-> When qdepth is not power of 2, not every bit of the mask is 1, so
-> sq_tail_slot some bits will be cleared unexpected.
->
-> Signed-off-by: zhanghui <zhanghui31@xiaomi.com>
+During system resuming process, the resuming order is from top to down.
+Namely, the ATA host is resumed before disks connected to it.
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+When an EH is scheduled while ATA host is resumed and disk device is
+still suspended, the device_lock hold by scsi_rescan_device() is never
+released so the dpm_resume() of the disk is blocked forerver, therefore
+the system can never be resumed back.
+
+That's because scsi_attach_vpd() is expecting the disk device is in
+operational state, as it doesn't work on suspended device.
+
+To avoid such deadlock, wait until the scsi device is fully resumed,
+before continuing the rescan process.
+
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+v5:
+ - Use a different approach. Wait until the disk device is resumed.
+
+v4: 
+ - No change.
+
+v3:
+ - New patch to resolve undefined pm_suspend_target_state.
+
+v2:
+ - Schedule rescan task at the end of system resume phase.
+ - Wording.
+
+ drivers/scsi/scsi_scan.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index d217be323cc6..a59aada98ac5 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1621,6 +1621,9 @@ void scsi_rescan_device(struct device *dev)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 
++	if (dev->power.is_suspended)
++		wait_for_completion(&dev->power.completion);
++
+ 	device_lock(dev);
+ 
+ 	scsi_attach_vpd(sdev);
+-- 
+2.34.1
+
