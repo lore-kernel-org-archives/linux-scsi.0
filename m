@@ -2,110 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB28C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 09:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 897B5C77B7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 09:14:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232007AbjFAJDW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 05:03:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58328 "EHLO
+        id S232691AbjFAJOT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 05:14:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232519AbjFAJDU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 05:03:20 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A5C710C4;
-        Thu,  1 Jun 2023 02:02:47 -0700 (PDT)
-X-UUID: fa776718005a11eeb20a276fd37b9834-20230601
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=nmPyA18HFmF7VUllxvu4R1sfBOHplruxD5sH3Nf1XfU=;
-        b=T4VwWdLz80+UY+bVAR/884z6xR3v5RyxEqyBCAx6U44Xxvo6810pdCMdrXBIZOdfIv69Iz7MIHbo7/a0sAFEdEaDJupYxOywrweEyJvKClH6SBWXS6qeBVWfMg5LOZhp1dIbpu5SSG6w02CTcmlnWUTlMjsnBRC8oVcVYURhNYU=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.25,REQID:dc36925c-7000-461f-b339-20e579be72b6,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:95
-X-CID-INFO: VERSION:1.1.25,REQID:dc36925c-7000-461f-b339-20e579be72b6,IP:0,URL
-        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
-        :quarantine,TS:95
-X-CID-META: VersionHash:d5b0ae3,CLOUDID:f6dc0e3d-de1e-4348-bc35-c96f92f1dcbb,B
-        ulkID:230601170207E6QTFJR0,BulkQuantity:0,Recheck:0,SF:38|29|28|17|19|48,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-        ,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-UUID: fa776718005a11eeb20a276fd37b9834-20230601
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1831319348; Thu, 01 Jun 2023 17:02:04 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 1 Jun 2023 17:02:03 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 1 Jun 2023 17:02:03 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <bvanassche@acm.org>
-CC:     <stanley.chu@mediatek.com>
-Subject: [PATCH v1] ufs: core: Remove the nolock version of ufshcd_mcq_poll_cqe()
-Date:   Thu, 1 Jun 2023 17:02:02 +0800
-Message-ID: <20230601090202.27035-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S232356AbjFAJOP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 05:14:15 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D79FDE7;
+        Thu,  1 Jun 2023 02:14:14 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-64d44b198baso552512b3a.0;
+        Thu, 01 Jun 2023 02:14:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685610854; x=1688202854;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=xMARNOfEe0u/4psMeYuFfqWOzY+kT8DC4HRTyQFo2qg=;
+        b=Re8yyQliQIJ/8C6NcrbPduLlM0FkGtbkutpo6IUKlXingWN2B7Fa6jZdfrw6EuU82p
+         fRc6Z3ya3ErU2eLzzdR5F6iAug0uCAospnp+9oBIJHiLEZ8ssrIkRfITynVunTRMD8/N
+         IPBOXrkIBHLI5tj61EidKAKxwhZXfKm7AOxZfCBxqpvMTrWDY2nQjV9w/dSbcKP1l+VJ
+         kPfJ527dKTLJjHrLrr5ZbKUbYO/Q/AZHtzLgOtL4o+a0UXJrzmFMIvuYzKdcMfvV77zI
+         cjATR7jkwLnC2+/zedqQ/8WiV7KV23PkBILEogNPDs1cixTXEkFx5E6/oEUVCnMxtA70
+         DDTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685610854; x=1688202854;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xMARNOfEe0u/4psMeYuFfqWOzY+kT8DC4HRTyQFo2qg=;
+        b=YrGP71L7LcWHhb7Prcj+AsdMNd/3H9Jbjl+8IgfuSHpNDY0Kaw6zglOx9rmnchDnHR
+         HmdS29WpS8zb7OfaZ5esjm9HcgwN39qjVEBxOy9Ja0ERUUR5pXsPG9SCre8ZUyenWLX+
+         xiJMAomSWGxw1n1hdmWevaXeSuSdZli4ONa4XVY/OoGCTnvyfOhrr15y36rqrKdH47E7
+         /5QMdrssbHKnPTl3BlglejSagRltnlOloSOTynoxCCGnr+YUIrVBYWE0lis+nbulJ4++
+         p1jZ/0XQ7xCQ3Hwc7Dkyx3geWueHeJgnG4/FXFHT8l7+WQx7ZjoYYNoxSqzX+FxEquWj
+         oD7Q==
+X-Gm-Message-State: AC+VfDyHCf0iV3ex6ves94qyV9ekuPkvYAH7YoI4W+ymi4RB+Pz05/6B
+        IFRyJApovy4EyW+pO7BsYC8=
+X-Google-Smtp-Source: ACHHUZ5lFjaYlFUmRfI4uAlFbV09sXZDvXloteNfQ2mU3aVzdjtswpIBVkMQFh78hq7+czuUyyRYNQ==
+X-Received: by 2002:a05:6a20:54a3:b0:10d:951f:58bd with SMTP id i35-20020a056a2054a300b0010d951f58bdmr1408215pzk.19.1685610854276;
+        Thu, 01 Jun 2023 02:14:14 -0700 (PDT)
+Received: from localhost.localdomain ([43.224.245.242])
+        by smtp.gmail.com with ESMTPSA id f11-20020aa782cb000000b0064aea45b040sm4558133pfn.168.2023.06.01.02.14.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Jun 2023 02:14:13 -0700 (PDT)
+From:   Zhang Hui <masonzhang.xiaomi@gmail.com>
+X-Google-Original-From: Zhang Hui <zhanghui31@xiaomi.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        zhanghui <zhanghui31@xiaomi.com>, Bean Huo <beanhuo@micron.com>,
+        peng.zhou@mediatek.com, yudongbin@xiaomi.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v1 1/1] scsi: ufs: core: Fix ufshcd_inc_sq_tail function bug
+Date:   Thu,  1 Jun 2023 17:13:57 +0800
+Message-Id: <20230601091357.1365-1-zhanghui31@xiaomi.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since ufshcd_mcq_poll_cqe_nolock() is no longer used by any users,
-it should be removed.
+From: zhanghui <zhanghui31@xiaomi.com>
 
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+If q->max_entries is not multiple of 32, mask not every bit is 1.
+So q->sq_tail_slot some bit will be cleared by use this way.
+
+Signed-off-by: zhanghui <zhanghui31@xiaomi.com>
 ---
- drivers/ufs/core/ufs-mcq.c | 17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+ drivers/ufs/core/ufshcd-priv.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 920eb954f594..785fc9762cad 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -307,11 +307,13 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
- 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
- }
- 
--static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
--						struct ufs_hw_queue *hwq)
-+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-+				       struct ufs_hw_queue *hwq)
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index d53b93c21a0c..319fba31c1f5 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -366,10 +366,11 @@ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
+ static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
+ 	__must_hold(&q->sq_lock)
  {
- 	unsigned long completed_reqs = 0;
-+	unsigned long flags;
+-	u32 mask = q->max_entries - 1;
+ 	u32 val;
  
-+	spin_lock_irqsave(&hwq->cq_lock, flags);
- 	ufshcd_mcq_update_cq_tail_slot(hwq);
- 	while (!ufshcd_mcq_is_cq_empty(hwq)) {
- 		ufshcd_mcq_process_cqe(hba, hwq);
-@@ -321,17 +323,6 @@ static unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
- 
- 	if (completed_reqs)
- 		ufshcd_mcq_update_cq_head(hwq);
--
--	return completed_reqs;
--}
--
--unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
--				       struct ufs_hw_queue *hwq)
--{
--	unsigned long completed_reqs, flags;
--
--	spin_lock_irqsave(&hwq->cq_lock, flags);
--	completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
- 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
- 
- 	return completed_reqs;
+-	q->sq_tail_slot = (q->sq_tail_slot + 1) & mask;
++	q->sq_tail_slot++;
++	if (q->sq_tail_slot == q->max_entries)
++		q->sq_tail_slot = 0;
+ 	val = q->sq_tail_slot * sizeof(struct utp_transfer_req_desc);
+ 	writel(val, q->mcq_sq_tail);
+ }
 -- 
-2.18.0
+2.39.0
 
