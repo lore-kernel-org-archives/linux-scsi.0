@@ -2,128 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CB7C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 20:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C56C7C77B7E
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 21:12:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231691AbjFAUyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 16:54:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36644 "EHLO
+        id S231373AbjFAVMI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 17:12:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229693AbjFAUym (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 16:54:42 -0400
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25CD9189;
-        Thu,  1 Jun 2023 13:54:41 -0700 (PDT)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1b02fcde49aso8241965ad.0;
-        Thu, 01 Jun 2023 13:54:41 -0700 (PDT)
+        with ESMTP id S229497AbjFAVMH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 17:12:07 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 982BD12C
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2023 14:12:06 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-64d18d772bdso1588753b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2023 14:12:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685652880; x=1688244880;
+        d=1e100.net; s=20221208; t=1685653926; x=1688245926;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=aPwIIZji4mV+ZRru26BAK0A17cLTb3lSIzhJ0eieN5U=;
-        b=J+88XhuXISTqusx0iTMC+i3zRwGscoq3fKAggjVfW8m2N37wgSWj8HbPagvprzm3QX
-         p9seo/B1xAQBX5OhxQ+drk8wv3yAoNij0bXr2YpSu6ymENJsGJ597DEhqHu3zJ0iHcTw
-         TCVvVGy7xBb3IaSXj99XexwlejylC2RM0OeL+Cud9CM153xl7oL+sApM41tqgiDxhY5H
-         OazU5tNinLc1i0uGQraU7VjVcx6dyZ8cyxy0w2UsrjOyk8oKkPAgokMVveB5cG1Ku0PI
-         udSPr7DbUWVrGk676s1uE01oicGQ9cXr0bY92k5PQwyPwTqZDQ/FK5GdwZT1nHFdUfOI
-         o8Bg==
-X-Gm-Message-State: AC+VfDyqjDgTzc7QKZts0FxEc6zLLB9ioU5kPVEWwuTPIgyyObbj5HYw
-        G1L7L/0ohSscbfurz4iPoTI=
-X-Google-Smtp-Source: ACHHUZ5hUChDXbEmqYIU8V8OQaDiPwT6USDEoTMPSLkgzUsyWLT/1zZYL1PVhpX7Lh14eAmy+9e7hw==
-X-Received: by 2002:a17:902:ab96:b0:1a9:bc13:7e20 with SMTP id f22-20020a170902ab9600b001a9bc137e20mr404142plr.44.1685652880497;
-        Thu, 01 Jun 2023 13:54:40 -0700 (PDT)
+        bh=3NiZALMm6J4tmcomcvMQcO3EC6PCDMYo+ZshTCWUhiY=;
+        b=JdLo7ToXxHG5Ft/Q6AgCZ05CPX+Uk83TePfjb4HN8EUa5I+Z8HsFXzsdaPQ+2+HFL0
+         VlMAQKouCb7VdUDhmV+EPr/3YMFWNCGMiKm0RvZ7VZqmn4aEuQoUyEAbhziFLt/GBg2Z
+         hHGEdrKC67KEUgwcZ+ooRi6sFRZ6ElIKgOXGnsnTvub7eqP80O8SUi/+ulrx8A2vFH6Q
+         R8OeC1ww97rJq7ztBWZzMie9O+G0OmLUFXrywCehJZJgDopc9dJljfCG6STFoi5Qnqps
+         nxugkQHRSl6+E66ON0KiT8jsVSxywfh/styUoukyCQIbHhqqMrCyTKdwGb2l/imOgoL1
+         AEjA==
+X-Gm-Message-State: AC+VfDyPdC6/f48upuZ2gm/ddHSQzf5RiMDaqXUdKS8+ebVVSLIVJ8TQ
+        Qka3QQK//Vf1EarRoNtb/84=
+X-Google-Smtp-Source: ACHHUZ4YbVLjEG/s87+vF6JaUZmN7z8m/g7ndJKv3gSkhKYsMMXuPr0yCqKQhqhhfdd+FT3mjV3W/Q==
+X-Received: by 2002:a05:6a00:9a5:b0:641:39cb:1716 with SMTP id u37-20020a056a0009a500b0064139cb1716mr13548973pfg.20.1685653925977;
+        Thu, 01 Jun 2023 14:12:05 -0700 (PDT)
 Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id j13-20020a170902758d00b001a52c38350fsm3929463pll.169.2023.06.01.13.54.39
+        by smtp.gmail.com with ESMTPSA id e26-20020a62aa1a000000b0063f0068cf6csm5427087pff.198.2023.06.01.14.12.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Jun 2023 13:54:40 -0700 (PDT)
-Message-ID: <f6a79164-944c-a355-40f3-0bddbcb37357@acm.org>
-Date:   Thu, 1 Jun 2023 13:54:38 -0700
+        Thu, 01 Jun 2023 14:12:05 -0700 (PDT)
+Message-ID: <2490926f-d8cc-3ce4-7a00-b8db58c89848@acm.org>
+Date:   Thu, 1 Jun 2023 14:12:04 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v2 1/3] scsi: ufs: core: Introduce mcq ops to config cqid
+Subject: Re: [PATCH] scsi: ufs: Include major and minor number in command
+ tracing output
 Content-Language: en-US
-To:     =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
-        <peter.wang@mediatek.com>,
-        =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
-        "chu.stanley@gmail.com" <chu.stanley@gmail.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
-        =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
-        <eddie.huang@mediatek.com>,
-        =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
-        <Alice.Chao@mediatek.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        wsd_upstream <wsd_upstream@mediatek.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
-        <Chun-hung.Wu@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        =?UTF-8?B?U3RhbmxleSBDaHUgKOacseWOn+mZnik=?= 
-        <stanley.chu@mediatek.com>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "angelogioacchino.delregno@collabora.com" 
-        <angelogioacchino.delregno@collabora.com>
-References: <20230530023227.16653-1-powen.kao@mediatek.com>
- <20230530023227.16653-2-powen.kao@mediatek.com>
- <1c182151-6e8c-5068-b38c-f8e842e6e13b@acm.org>
- <CAGaU9a9TsoaUtoMX8cNmAhfBnCddRtWYEG8ACdRNJfri+sdasg@mail.gmail.com>
- <ec9c378c-fedd-5a90-bb12-085395e0d22e@acm.org>
- <fd0fceb04efa34e6d86f09c5554746cfcc5c993f.camel@mediatek.com>
- <4ea8427d-8b09-d35f-0e2c-2df486b79692@acm.org>
- <d5f239c6f104d9dd4e5493d5d06709e33f12226b.camel@mediatek.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Adrien Thierry <athierry@redhat.com>
+References: <20230531223924.25341-1-bvanassche@acm.org>
+ <ZHgrYgDmvhs7Iw/d@infradead.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <d5f239c6f104d9dd4e5493d5d06709e33f12226b.camel@mediatek.com>
+In-Reply-To: <ZHgrYgDmvhs7Iw/d@infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/1/23 07:41, Peter Wang (王信友) wrote:
-> On Thu, 2023-06-01 at 07:23 -0700, Bart Van Assche wrote:
->> Thanks, I had overlooked this. Do you agree that the above shows that the
->> flag I proposed in my previous email (UFSHCD_CAP_SINGLE_CQ) is sufficient
->> to support the MediaTek use case? I want to keep the SQ-CQ association code
->> in the UFS driver core because the next step will probably to switch from
->> one CQ per SQ to one CQ per CPU core for UFS controllers that support
->> multiple completion interrupts.
->
-> If the UFS device speed is geting higher and higher, one CQ may not sufficient.
+On 5/31/23 22:23, Christoph Hellwig wrote:
+> On Wed, May 31, 2023 at 03:39:20PM -0700, Bart Van Assche wrote:
+>> UFS devices are typically configured with multiple logical units.
+>> The device name, e.g. 13200000.ufs, does not include logical unit
+>> information. Hence this patch that replaces the device name with
+>> the disk major and minor number in the tracing output, e.g. 8,0,
+>> just like the block layer tracing information.
 > 
-> So, UFSHCD_CAP_SINGLE_CQ is not flexible for us beacuse we may want to map to two CQs.
+> Please also drop the never used group_id value while you're at it.
 
-Hi Peter,
+Hi Christoph,
 
-Let's take a step back. The MediaTek UFSHCI 4.0 host controller only 
-supports a single completion interrupt. A significant disadvantage of 
-the single completion interrupt approach is that all completion 
-interrupts are processed by the same CPU core. This is known to cause 
-problems on Android. If sufficient time is spent in an interrupt 
-handler, threads that run on the same CPU core as the interrupt handler 
-may get scheduled too late. This can result in e.g. audio glitches 
-noticeable by humans. Hardware designers told me that the area occupied 
-by a single interrupt line is small. So I think it is fair to say that 
-the (nonstandard!) approach of only supporting a single completion 
-interrupt in an UFSHCI 4.0 controller is not a good choice.
+I will look into removing the GROUP ID information from the UFS tracing 
+output. Do you agree with adding the GROUP ID information in the SCSI 
+tracing output after data temperature support has been added in the 
+block layer and SCSI core? As you probably know the T10 committee 
+recently approved Ralph Weber's Constrained Streams proposal.
 
-The UFS driver already supports multiple hardware queue types 
-(HCTX_TYPE_DEFAULT, READ and POLL). An interesting optimization would be 
-to combine the completion queues for at least the DEFAULT and READ queue 
-types. Introducing a vop to configure the completion queue ID would make 
-it almost impossible to implement this optimization in a generic way.
-
-Asking to add a vop that improves performance by only a few percent for 
-a *nonstandard* controller and at the same time that makes it very hard 
-to optimize the driver for standards compliant controllers is something 
-that I consider unreasonable.
+Thanks,
 
 Bart.
+
+
