@@ -2,96 +2,157 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AF4C7EE2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 15:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB4BDC77B7E
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 16:49:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234303AbjFAP5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 11:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56668 "EHLO
+        id S231615AbjFAQs7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 12:48:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234084AbjFAP5x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 11:57:53 -0400
-Received: from smtp-relay-canonical-1.canonical.com (smtp-relay-canonical-1.canonical.com [185.125.188.121])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92617134;
-        Thu,  1 Jun 2023 08:57:51 -0700 (PDT)
-Received: from localhost.localdomain (unknown [10.101.196.174])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id A20C641795;
-        Thu,  1 Jun 2023 15:57:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1685635070;
-        bh=DhRFpLZy2hfyDYD8yUQHlqkoTRIcIzEoR9HeLiZfc8o=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=ZB5QNLujNDq3B3ALtV9mHbJwDV0D6Gc0PJfypM5wZYljiX8OB8kkvlJ8HTtqCOk9O
-         QNqLgOkcnDjiP0Q5b0pDDfe5ALUWcH9JEeIgvbZsgIaJ+XJ+6EWzn1h4RWi5k/oV5T
-         PKzvxp241OFnxXfMj8WBR/S8FPSlx5RHz0paftwOcUJkO9GhZRKy8Yppk309mvXTcG
-         uQzelo2SEQ3vtb0J3ekC7qL8lkKpm7IFbb29ZPeg4/czSp7FVBCtoyj84QSlZ8XMaX
-         BvCkK6UQVfFiAMv4HxR4467ReodYJW2xJoD9bZciZvxDcqlhBBpcXtImlp/XiPHlkn
-         zK4eXONY/TBPA==
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     dlemoal@kernel.org, bblock@linux.ibm.com, acelan.kao@canonical.com,
-        linux-pm@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5] scsi: core: Wait until device is fully resumed before doing rescan
-Date:   Thu,  1 Jun 2023 23:56:52 +0800
-Message-Id: <20230601155652.1157611-1-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S231354AbjFAQs6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 12:48:58 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B65B195
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2023 09:48:57 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1b01d3bb571so5382035ad.2
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2023 09:48:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1685638137; x=1688230137;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=I7sIZxy7gcUStde8URE/x1USu0Ac7NEoHkxfkIRrq8Q=;
+        b=O5v9C+cpDpBpGItvH0zQNTTgjJRbBzUAAX5rLRQAlChNgLThGeWZ8wMHpncPDsbdhJ
+         0KADHgqApvBqugAsYXvWIIbtTQQc+if/6nCKJj0ogUPsLWEohV0AOTOXPf7TbnVme6vq
+         MWD0zkQymoph8GAivP/P+Twa2BLHeK4c8Bi2c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685638137; x=1688230137;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=I7sIZxy7gcUStde8URE/x1USu0Ac7NEoHkxfkIRrq8Q=;
+        b=lok92PKuYjjjR1VIewK33bONOtomDjDNlRikngsOo69M3aRQBpHqoH8QovjpDMay0E
+         MTJv/DrZoKN1Ld2cXaQVmtYjgHRUXe66i+YI9/qS7/oHAKthVITmh2TITEFOrvXsfIzb
+         3SLjFHCtsQw5l/eSQCxCuKsV3pMrhb7dA0dXdivTsf7QKiKGAtzrV9kDiW3777Bbb8Wr
+         41a5Ae7UgNcxvoOlLiX8ntOsNIw34VSVMC96xB1d7+5WpKQjmIvdC9nUc/m1D8XIG+AS
+         8hY7wR7Ch7f2YKO1XCWn7Uky1BEdgK6cFAsETsQqziwylENQUrbs78ovpCAgz5pMhz+3
+         H/bw==
+X-Gm-Message-State: AC+VfDzoCml/48zsXRWuoUZSQsJ7WkPYq4QJEBFrO80Qkhh/1L1cIm8o
+        gReNQXTFLDfFyffITWSjDD+bUw==
+X-Google-Smtp-Source: ACHHUZ6el6CagK7aXG5sNb126VxFGEOTWEKUyFtRTxw5GCMxYH7KhJqdaBU6w7GCuHNGGh667Yxm6w==
+X-Received: by 2002:a17:903:18c:b0:1ae:50cc:45b with SMTP id z12-20020a170903018c00b001ae50cc045bmr6738733plg.36.1685638136955;
+        Thu, 01 Jun 2023 09:48:56 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id i10-20020a17090332ca00b001af98dcf958sm3684665plr.288.2023.06.01.09.48.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Jun 2023 09:48:56 -0700 (PDT)
+Date:   Thu, 1 Jun 2023 09:48:55 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     James Bottomley <jejb@linux.ibm.com>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] scsi: lpfc: Avoid -Wstringop-overflow warning
+Message-ID: <202306010931.92796DC@keescook>
+References: <ZHZq7AV9Q2WG1xRB@work>
+ <fe0739cbe279cf9db2ebff1146e7ae540cc1ad6c.camel@linux.ibm.com>
+ <202305301529.1EEA11B@keescook>
+ <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <25ef15e7601e1b4510cbbd40c6d1ab7c64213863.camel@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During system resuming process, the resuming order is from top to down.
-Namely, the ATA host is resumed before disks connected to it.
+On Wed, May 31, 2023 at 10:56:50AM -0400, James Bottomley wrote:
+> On Tue, 2023-05-30 at 15:44 -0700, Kees Cook wrote:
+> > On Tue, May 30, 2023 at 05:36:06PM -0400, James Bottomley wrote:
+> > > On Tue, 2023-05-30 at 15:30 -0600, Gustavo A. R. Silva wrote:
+> > > > Avoid confusing the compiler about possible negative sizes.
+> > > > Use size_t instead of int for variables size and copied.
+> > > > 
+> > > > Address the following warning found with GCC-13:
+> > > > In function ‘lpfc_debugfs_ras_log_data’,
+> > > >     inlined from ‘lpfc_debugfs_ras_log_open’ at
+> > > > drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
+> > > > drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: ‘memcpy’
+> > > > specified
+> > > > bound between 18446744071562067968 and 18446744073709551615
+> > > > exceeds
+> > > > maximum object size 9223372036854775807 [-Wstringop-overflow=]
+> > > >  2210 |                         memcpy(buffer + copied, dmabuf-
+> > > > >virt,
+> > > >       |                        
+> > > > ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > > >  2211 |                                size - copied - 1);
+> > > >       |                                ~~~~~~~~~~~~~~~~~~
+> > > > 
+> > > 
+> > > This looks like a compiler bug to me and your workaround would have
+> > > us using unsigned types everywhere for sizes, which seems wrong. 
+> > > There are calls which return size or error for which we have
+> > > ssize_t and that type has to be usable in things like memcpy, so
+> > > the compiler must be fixed or the warning disabled.
+> > 
+> > The compiler is (correctly) noticing that the calculation involving
+> > "size" (from which "copied" is set) could go negative.
+> 
+> It can?  But if it can, then changing size and copied to unsigned
+> doesn't fix it, does it?
 
-When an EH is scheduled while ATA host is resumed and disk device is
-still suspended, the device_lock hold by scsi_rescan_device() is never
-released so the dpm_resume() of the disk is blocked forerver, therefore
-the system can never be resumed back.
+Yes:
 
-That's because scsi_attach_vpd() is expecting the disk device is in
-operational state, as it doesn't work on suspended device.
+	(int)	(const expression 256 * 1024)		(u32)
+        size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
 
-To avoid such deadlock, wait until the scsi device is fully resumed,
-before continuing the rescan process.
+this can wrap to negative if cfg_ras_fwlog_buffsize is large enough. If
+"size" is size_t, it can't wrap, and is therefore never negative.
 
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
-v5:
- - Use a different approach. Wait until the disk device is resumed.
+> So your claim is the compiler only gets it wrong in this one case and
+> if we just change this one case it will never get it wrong again?
 
-v4: 
- - No change.
+What? No, I'm saying this is a legitimate diagnostic, and the wrong type
+was chosen for "size": it never needs to carry a negative value, and it
+potentially needs to handle values greater than u32.
 
-v3:
- - New patch to resolve undefined pm_suspend_target_state.
+But you're right -- there is still a potential for runtime confusion in
+that the return from lpfc_debugfs_ras_log_data() must be signed. So
+perhaps the best option is to check for overflow directly.
 
-v2:
- - Schedule rescan task at the end of system resume phase.
- - Wording.
+Gustavo, does this fix it?
 
- drivers/scsi/scsi_scan.c | 3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index d217be323cc6..a59aada98ac5 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1621,6 +1621,9 @@ void scsi_rescan_device(struct device *dev)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
-+	if (dev->power.is_suspended)
-+		wait_for_completion(&dev->power.completion);
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index bdf34af4ef36..7f9b221e7c34 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
+ 		goto out;
+ 	}
+ 	spin_unlock_irq(&phba->hbalock);
+-	debug = kmalloc(sizeof(*debug), GFP_KERNEL);
 +
- 	device_lock(dev);
++	if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
++			       phba->cfg_ras_fwlog_buffsize, &size))
++		goto out;
++
++	debug = kzalloc(sizeof(*debug), GFP_KERNEL);
+ 	if (!debug)
+ 		goto out;
  
- 	scsi_attach_vpd(sdev);
--- 
-2.34.1
+-	size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
+ 	debug->buffer = vmalloc(size);
+ 	if (!debug->buffer)
+ 		goto free_debug;
 
+
+-Kees
+
+-- 
+Kees Cook
