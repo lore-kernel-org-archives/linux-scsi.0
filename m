@@ -2,123 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6A0AC77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 11:37:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C33C77B7E
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 12:47:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231276AbjFALhY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 07:37:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42178 "EHLO
+        id S233139AbjFAMr4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 08:47:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbjFALhX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 07:37:23 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED37E129;
-        Thu,  1 Jun 2023 04:37:22 -0700 (PDT)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3518aJ20016784;
-        Thu, 1 Jun 2023 11:32:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=3UBiAuW2p6np2qDHCwZSiasHNtb2TxsYcIbvRRtCpM0=;
- b=RxQtsITCPv/GQmCaUurfLI1UXJa/GZRRtVERO1RtIw//MRj/+zibcQAVVbhQ2vNGmGsJ
- pIMaMgj4BGeoyl6kPDLfEPVZSJPc6cUkNlW1z9tLPfuJ+xsUdCmYkYg/Sd1OSDuYKMdn
- NSu9tlsL4hw7NaeTZIqvhtdmYbFRdhk8kK7ROSO+cvJz8F7G3RhjlF+lQxUOm33v3tJb
- bU9l/6qdlt6APOPeHjECdFQgt1jWtExRya8EaTkxWmOGE9bflMG+yVr3lzWoyEVhi/9y
- O1tNXwgV3WCzebqNd5UFNQDkxuVpl3UsoViM/B1tu3iHwspLrFxyNvzVhRnh+7E6JsM0 xg== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qxqyd8cx8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 01 Jun 2023 11:32:07 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 351BW7gD024612
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 1 Jun 2023 11:32:07 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Thu, 1 Jun 2023
- 04:32:06 -0700
-Message-ID: <6890bec9-df97-fe42-a2b4-0b8ce1701464@quicinc.com>
-Date:   Thu, 1 Jun 2023 04:32:06 -0700
+        with ESMTP id S231812AbjFAMrz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 08:47:55 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F403123;
+        Thu,  1 Jun 2023 05:47:54 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1b0314f057cso3089595ad.1;
+        Thu, 01 Jun 2023 05:47:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685623674; x=1688215674;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=7draYKi8O8bY9wpEzwPd85VAVlOaAQazTlzk61kz37k=;
+        b=mfj8jc21WKJhT/qxElCYvsyZMZvrzYH0y2VRVsz1o2Ixfe2g6kojtfVHpKZVUe66q7
+         p/oUzXPuloa/KBguAEz04854ms5IKBa89iYQMrXYv67jcn9lI7VKaLVQE5qeSgUJmy4t
+         jb6T+HVBIF7dYl7OQkwYxpqcOsckJiQOOxgeOlXMwFFaruIaCIYtBca4OUPxf8+iDmsy
+         3Cn69moMWkO4RTKQk4vkGfOJ/ncI8wKle1lWsT9eaRxcnYQTWkD3biPfp4R32OTu+Gou
+         4YOJb0Ktmy4GiVFtuW52+xBOZOFnLr+RA7fLpCQ6hLgEJtdm4OfmrnBTNYLpaYGCW1vL
+         yieQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685623674; x=1688215674;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7draYKi8O8bY9wpEzwPd85VAVlOaAQazTlzk61kz37k=;
+        b=AAOEQlrv7RaDrGG+Y0O6aX05BDQDMgdaUNtIX2px2P7YnkG9HTy7Wn9yPCWMEMcFO7
+         iePB6GxscsuWIZG4lJfs0bep8ldT6wQhv4ZtGwv8eG4qrOsZqd8vlVOM7pjPv+P3jpRy
+         QQIJyVka9qLzlNq5KOgFxme7uRwfSRkunfOuVTPKisDLMe18PeaSTH2Vt9pIDZhP+h5m
+         HkuITN/pLA3lG0ni5RnR7kF/O1QHCguD2Y7JRTlGu0BS7+rjcF0MB/JFCfLbWbA4b+Is
+         6kZ6snOPrsqPEpNn6CsD1MEdZ6W+a2IkGNM7k0tofSUm+jSS5sIrWnx0qzzmUbccONhZ
+         2v6A==
+X-Gm-Message-State: AC+VfDy+szO9VBYeSZQx0JYN/XDdvhrHNhXM17BHAevLSDS2sxMYbzpm
+        tBMflE1UK5Gwws78VGlNAwg=
+X-Google-Smtp-Source: ACHHUZ5VNZ5sy+s5T7CqaFiqvnvVZxxEDK8LXR+reufT1NEMzZIh2ZpS7FVC6ZWsYJD1KUHyQ7eN0A==
+X-Received: by 2002:a17:902:930b:b0:1af:d213:668c with SMTP id bc11-20020a170902930b00b001afd213668cmr5240056plb.12.1685623673691;
+        Thu, 01 Jun 2023 05:47:53 -0700 (PDT)
+Received: from localhost.localdomain ([43.224.245.242])
+        by smtp.gmail.com with ESMTPSA id u9-20020a170902e80900b001ab0669d84csm3418213plg.26.2023.06.01.05.47.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Jun 2023 05:47:53 -0700 (PDT)
+From:   Zhang Hui <masonzhang.xiaomi@gmail.com>
+X-Google-Original-From: Zhang Hui <zhanghui31@xiaomi.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        zhanghui <zhanghui31@xiaomi.com>, Bean Huo <beanhuo@micron.com>,
+        peng.zhou@mediatek.com, yudongbin@xiaomi.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: ufs: core: Fix ufshcd_inc_sq_tail function bug
+Date:   Thu,  1 Jun 2023 20:46:14 +0800
+Message-Id: <20230601124613.1446-1-zhanghui31@xiaomi.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v1 1/1] ufs: mcq: Fix the variable wraparound logic
-Content-Language: en-US
-To:     <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alice Chao <alice.chao@mediatek.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <f711489c6b95ec410e500543fd24ca9fc0f462cd.1685618737.git.quic_nguyenb@quicinc.com>
- <e6e8559eee9626afa38f88e18080398e7296e1bb.1685617541.git.quic_nguyenb@quicinc.com>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <e6e8559eee9626afa38f88e18080398e7296e1bb.1685617541.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: VJJSTrWvtvm_vquxPG2ZOmRJh7MvFdlg
-X-Proofpoint-GUID: VJJSTrWvtvm_vquxPG2ZOmRJh7MvFdlg
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
- definitions=2023-06-01_08,2023-05-31_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 bulkscore=0 spamscore=0
- adultscore=0 impostorscore=0 priorityscore=1501 lowpriorityscore=0
- suspectscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2304280000 definitions=main-2306010102
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Please ignore this duplicate patch. My apologies.
+From: zhanghui <zhanghui31@xiaomi.com>
 
-Thanks,
-Bao
+When qdepth is not power of 2, not every bit of the mask is 1, so
+sq_tail_slot some bits will be cleared unexpected.
 
-On 6/1/2023 4:27 AM, Bao D. Nguyen wrote:
-> If the hwq's queue depth is not a multiple of 4s, the
-> logic used for wrapping around the increase-by-1 sq_head_slot
-> variable in ufshcd_mcq_sqe_search() will give an incorrect
-> result because the binary expression of the mask is not
-> a uniform of all 1s.
-> 
-> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> ---
->   drivers/ufs/core/ufs-mcq.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 66ac02e..8e5bc88 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -585,7 +585,6 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
->   {
->   	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
->   	struct utp_transfer_req_desc *utrd;
-> -	u32 mask = hwq->max_entries - 1;
->   	__le64  cmd_desc_base_addr;
->   	bool ret = false;
->   	u64 addr, match;
-> @@ -610,7 +609,10 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
->   			ret = true;
->   			goto out;
->   		}
-> -		sq_head_slot = (sq_head_slot + 1) & mask;
-> +
-> +		sq_head_slot++;
-> +		if (sq_head_slot == hwq->max_entries)
-> +			sq_head_slot = 0;
->   	}
->   
->   out:
+Signed-off-by: zhanghui <zhanghui31@xiaomi.com>
+---
+ drivers/ufs/core/ufshcd-priv.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index d53b93c21a0c..319fba31c1f5 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -366,10 +366,11 @@ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
+ static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
+ 	__must_hold(&q->sq_lock)
+ {
+-	u32 mask = q->max_entries - 1;
+ 	u32 val;
+ 
+-	q->sq_tail_slot = (q->sq_tail_slot + 1) & mask;
++	q->sq_tail_slot++;
++	if (q->sq_tail_slot == q->max_entries)
++		q->sq_tail_slot = 0;
+ 	val = q->sq_tail_slot * sizeof(struct utp_transfer_req_desc);
+ 	writel(val, q->mcq_sq_tail);
+ }
+-- 
+2.39.0
 
