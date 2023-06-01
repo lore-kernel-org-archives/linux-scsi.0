@@ -2,160 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F4E8C77B7E
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 05:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3619C77B7A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 07:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231673AbjFAFzj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 01:55:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58054 "EHLO
+        id S231853AbjFAHYQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 03:24:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232103AbjFAFzS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 01:55:18 -0400
-Received: from mail-ua1-f50.google.com (mail-ua1-f50.google.com [209.85.222.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52F4810CA
-        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 22:54:06 -0700 (PDT)
-Received: by mail-ua1-f50.google.com with SMTP id a1e0cc1a2514c-783ff10cdbaso107763241.2
-        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2023 22:54:06 -0700 (PDT)
+        with ESMTP id S231790AbjFAHYK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 03:24:10 -0400
+Received: from smtp-fw-80006.amazon.com (smtp-fw-80006.amazon.com [99.78.197.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD3829F;
+        Thu,  1 Jun 2023 00:23:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1685598545; x=1688190545;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=222BY0SYS4nugQ0P0MJrMmdC8tsRz0lLhBmT4GRgFQc=;
-        b=QPvq+CY8o/bzzCij7ed+4Uoe+Xc4th2wm5aDL+EP4ZtT76F45TCk91slLGZrHRyZ6e
-         VWNvPDktedrQjYfQmtLJ7TiYJKehSwG4EQdRqPpinnSlfQKbxgwleS0H+Y1wJV64s4rL
-         NW1aH0j35BVvo7Ut34/L4Uh61qDYMyHZ1a+JgVqQlNq65mRT5laZ4P82FSGCkyRge2T4
-         GCBUM3pg5ivAF2MYHFZT5C2qayYkrGj9OlNjEFTVc2msVrOWUYBIY90URGXWtB730Qcd
-         5x+RepAvfIFSXRBJhG4I9AiywrlUst9JgPQVO6NXxtMcg0pAqEOsCY4X4YhiaUI7avhK
-         nx3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685598545; x=1688190545;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=222BY0SYS4nugQ0P0MJrMmdC8tsRz0lLhBmT4GRgFQc=;
-        b=c7XAGi7aVKINIaHd8vwbt81YfDaIW6aUCzeeauvFtQtqZLQZUXP1iSoWTEuam6BEeU
-         OXXNqmzL/r1LvXzV2q2dUOdHutSIFv3+L5yfiXlOkEO0sAiVF2aM6JW2Av3172ZouOna
-         6CIYOPwNSZTxWTgmbsiFB3oeWtrqknNKCQUF80T+vccwT+bccQFseAjG8HfI27i9OR7j
-         qBh54XmSvpxH3MfnTvw0Hrf8XW7hejoXDXKl/MrRLyBD1LqA3cxFn8K/If9Pvpuc3eSJ
-         wmuAexwYX7fUudji8a6ToFaLPQyxonm7bc9zFY1z4GhlE0uR6rt3posnfso5ttrtoXHs
-         N8hw==
-X-Gm-Message-State: AC+VfDwwhw2FcPITnbcXIudpCayRllnY0Wh+oOhXwykc6OxPanSgTOBq
-        d8RXmXeHCaoB2dPjDGHUTz2q8MXPFJuv8d6hLOvBIA==
-X-Google-Smtp-Source: ACHHUZ7oulECEBrLYMu3LXhunZNTKM5SJWw4v30Vjm2MvCtsuv+q1Cu+msYCLP+eCPGuF/XKhJHgqUYgLMHFHQh2idA=
-X-Received: by 2002:a67:eb4b:0:b0:434:2f6a:6009 with SMTP id
- x11-20020a67eb4b000000b004342f6a6009mr3583474vso.8.1685598545449; Wed, 31 May
- 2023 22:49:05 -0700 (PDT)
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazon201209;
+  t=1685604239; x=1717140239;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=7mqdnmsXuIWuWi1J0aDxuFjgfrWdJ16+HRGU+cCI0WA=;
+  b=TWzxsI8Djd0Ldpwc3ol0GTtpLvMG3Zpmle2ekxWhD6Iun1IDGraACbqy
+   Fd0n550hq7CwQVnarUCpZlwM6Bi6DL/fU/AiwpbKVkqbmzC0Mzt5d8Mus
+   AslaPkCbTz7M5SjPZiwFjjV9Vpy92XrPHtC6a+zbTUjp69iZKovsANu4f
+   g=;
+X-IronPort-AV: E=Sophos;i="6.00,209,1681171200"; 
+   d="scan'208";a="217885865"
+Received: from pdx4-co-svc-p1-lb2-vlan2.amazon.com (HELO email-inbound-relay-pdx-2b-m6i4x-7fa2de02.us-west-2.amazon.com) ([10.25.36.210])
+  by smtp-border-fw-80006.pdx80.corp.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jun 2023 07:23:57 +0000
+Received: from EX19MTAUWC002.ant.amazon.com (pdx1-ws-svc-p6-lb9-vlan3.pdx.amazon.com [10.236.137.198])
+        by email-inbound-relay-pdx-2b-m6i4x-7fa2de02.us-west-2.amazon.com (Postfix) with ESMTPS id D5BD040E57;
+        Thu,  1 Jun 2023 07:23:56 +0000 (UTC)
+Received: from EX19MTAUWA001.ant.amazon.com (10.250.64.204) by
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Thu, 1 Jun 2023 07:23:53 +0000
+Received: from dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com (10.15.57.183)
+ by mail-relay.amazon.com (10.250.64.204) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Thu, 1 Jun 2023 07:23:53 +0000
+Received: by dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com (Postfix, from userid 5466572)
+        id AF3A0970; Thu,  1 Jun 2023 07:23:52 +0000 (UTC)
+Date:   Thu, 1 Jun 2023 07:23:52 +0000
+From:   Maximilian Heyne <mheyne@amazon.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        James Bottomley <JBottomley@Parallels.com>,
+        Adam Radford <aradford@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        <megaraidlinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: megaraid: Fix uninitialized mbox in mega_cmd_done
+Message-ID: <20230601072352.GA123625@dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com>
+References: <20230531133259.55619-1-mheyne@amazon.de>
+ <yq1v8g8b0e8.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-References: <20220405093759.1126835-1-alex.bennee@linaro.org>
- <20230531191007.13460-1-shyamsaini@linux.microsoft.com> <SN7PR11MB6850DA4A185E3429B62531CD84499@SN7PR11MB6850.namprd11.prod.outlook.com>
- <CAC_iWjKAdimEH0SsC_z9QuFS4sGLp2BVzx03s+RKvcLXY25kuQ@mail.gmail.com>
-In-Reply-To: <CAC_iWjKAdimEH0SsC_z9QuFS4sGLp2BVzx03s+RKvcLXY25kuQ@mail.gmail.com>
-From:   Sumit Garg <sumit.garg@linaro.org>
-Date:   Thu, 1 Jun 2023 11:18:54 +0530
-Message-ID: <CAFA6WYPKeJYTzvnZkoL_dw6uXSkhAh6uxoEOWHYU7oLNRDRWaA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-To:     Ilias Apalodimas <ilias.apalodimas@linaro.org>
-Cc:     "Zhu, Bing" <bing.zhu@intel.com>,
-        Shyam Saini <shyamsaini@linux.microsoft.com>,
-        "alex.bennee@linaro.org" <alex.bennee@linaro.org>,
-        "code@tyhicks.com" <code@tyhicks.com>,
-        "Matti.Moell@opensynergy.com" <Matti.Moell@opensynergy.com>,
-        "arnd@linaro.org" <arnd@linaro.org>,
-        "hmo@opensynergy.com" <hmo@opensynergy.com>,
-        "joakim.bech@linaro.org" <joakim.bech@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "maxim.uvarov@linaro.org" <maxim.uvarov@linaro.org>,
-        "ruchika.gupta@linaro.org" <ruchika.gupta@linaro.org>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
-        "Huang, Yang" <yang.huang@intel.com>,
-        "jens.wiklander@linaro.org" <jens.wiklander@linaro.org>,
-        "op-tee@lists.trustedfirmware.org" <op-tee@lists.trustedfirmware.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <yq1v8g8b0e8.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 1 Jun 2023 at 11:02, Ilias Apalodimas
-<ilias.apalodimas@linaro.org> wrote:
->
-> Hi Bing
->
-> On Thu, 1 Jun 2023 at 04:03, Zhu, Bing <bing.zhu@intel.com> wrote:
-> >
-> > As an alternative, Is it possible to change ftpm design not to depend o=
-n RPMB access at the earlier/boot stage? Because to my understanding, typic=
-ally PCRs don't require persistent/NV storage (for example, before RPMB or =
-tee-supplicant is ready, use TEE memory instead as temporary storage)
->
-> I am not entirely sure this will solve our problem here.  You are
-> right that we shouldn't depend on the supplicant to extend PCRs. But
-> what happens if an object is sealed against certain PCR values?  We
-> are back to the same problem
+On Wed, May 31, 2023 at 06:38:12PM -0400, Martin K. Petersen wrote:
+> Hi Maximilian!
 
-+1
+Hi Martin,
 
-Temporary storage may be a stop gap solution for some use-cases but
-having a fast path access to RPMB via kernel should be our final goal.
-I would suggest we start small with the MMC subsystem to expose RPMB
-access APIs for OP-TEE driver rather than a complete RPMB subsystem.
+thanks for your response.
 
--Sumit
+> 
+> > This is similar to commit 7a2ae008a53c ("scsi: megaraid: Fix
+> > mega_cmd_done() CMDID_INT_CMDS").
+> 
+> That's supposed to be commit 75cb113cd43f, right?
 
->
-> Thanks
-> /Ilias
-> >
-> > Bing
-> >
-> > IPAS Security Brown Belt (https://www.credly.com/badges/69ea809f-3a96-4=
-bc7-bb2f-442c1b17af26)
-> > System Software Engineering
-> > Software and Advanced Technology Group
-> > Zizhu Science Park, Shanghai, China
-> >
-> > -----Original Message-----
-> > From: Shyam Saini <shyamsaini@linux.microsoft.com>
-> > Sent: Thursday, June 1, 2023 3:10 AM
-> > To: alex.bennee@linaro.org
-> > Cc: code@tyhicks.com; Matti.Moell@opensynergy.com; arnd@linaro.org; Zhu=
-, Bing <bing.zhu@intel.com>; hmo@opensynergy.com; ilias.apalodimas@linaro.o=
-rg; joakim.bech@linaro.org; linux-kernel@vger.kernel.org; linux-mmc@vger.ke=
-rnel.org; linux-scsi@vger.kernel.org; maxim.uvarov@linaro.org; ruchika.gupt=
-a@linaro.org; Winkler, Tomas <tomas.winkler@intel.com>; ulf.hansson@linaro.=
-org; Huang, Yang <yang.huang@intel.com>; sumit.garg@linaro.org; jens.wiklan=
-der@linaro.org; op-tee@lists.trustedfirmware.org
-> > Subject: [PATCH v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-> >
-> > Hi Alex,
-> >
-> > [ Resending, Sorry for the noise ]
-> >
-> > Are you still working on it or planning to resubmit it ?
-> >
-> > [1] The current optee tee kernel driver implementation doesn't work whe=
-n IMA is used with optee implemented ftpm.
-> >
-> > The ftpm has dependency on tee-supplicant which comes once the user spa=
-ce is up and running and IMA attestation happens at boot time and it requir=
-es to extend ftpm PCRs.
-> >
-> > But IMA can't use PCRs if ftpm use secure emmc RPMB partition. As optee=
- can only access RPMB via tee-supplicant(user space). So, there should be a=
- fast path to allow optee os to access the RPMB parititon without waiting f=
-or user-space tee supplicant.
-> >
-> > To achieve this fast path linux optee driver and mmc driver needs some =
-work and finally it will need RPMB driver which you posted.
-> >
-> > Please let me know what's your plan on this.
-> >
-> > [1] https://optee.readthedocs.io/en/latest/architecture/secure_storage.=
-html
-> >
-> > Best Regards,
-> > Shyam
+Sorry, yes I meant this commit. I accidentally got the commit id form the 5.4
+backport.
+
+> 
+> > When cmdid == CMDID_INT_CMDS and status != 0 then mbox is still NULL
+> > but is dereferenced below.
+> 
+> Is this actually a valid scenario, though? The mbox is only dereferenced
+> if there is status returned from an attached device. And I am guessing
+> that a controller-internal command does not talk to any attached device.
+> Thus status should always be 0 for CMDID_INT_CMDS. I don't have the
+> megaraid firmware manual so this is pure guesswork on my part. But you
+> would think we would have come across an invalid deref since the
+> original 2014 commit made the offending change.
+> 
+
+This could indeed be the case. I only found this because it was reported by
+static code analysis. However, by reading the code it's not obvious that this is
+how it works. Should we therefore skip the whole status checking switch for
+internal commands to make it more clear? For example, by a goto to the end of
+the loop when the scb gets freed or just adding the scb free, list removal
+and a continue?
+
+
+
+
+Amazon Development Center Germany GmbH
+Krausenstr. 38
+10117 Berlin
+Geschaeftsfuehrung: Christian Schlaeger, Jonathan Weiss
+Eingetragen am Amtsgericht Charlottenburg unter HRB 149173 B
+Sitz: Berlin
+Ust-ID: DE 289 237 879
+
+
+
