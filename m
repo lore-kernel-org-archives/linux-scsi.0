@@ -2,106 +2,146 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E1BC77B7A
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 01:01:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76ECDC7EE2A
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 01:10:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232724AbjFBBBM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 21:01:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36624 "EHLO
+        id S233221AbjFBBKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 21:10:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230492AbjFBBBK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 21:01:10 -0400
-Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40D44F2
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2023 18:01:07 -0700 (PDT)
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 6EC0D3F554
-        for <linux-scsi@vger.kernel.org>; Fri,  2 Jun 2023 01:01:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1685667665;
-        bh=wCbPB1ZDTWLt/oEJv6P7qx4Cdd8dnV7Y9TrZ5aVJ2o0=;
-        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-         To:Cc:Content-Type;
-        b=qf/XcOkaa1ZekfrU8e8pefIvLAuErEBq2vbDuJeLl8UfohcxPbe53BJdfDpOaKIzc
-         3qRU+g4B1JsDXDPhbh90sNjTLaj5i+nwDJm1VJ0+HzUKXFjgfLx4nm/ycnHVD8Y4S9
-         XRW+jb9MagLpnuaBrpEceiDDB/W319ytSabXGMyavt8guDZF7yTbMlJHvGu4qBbPMt
-         1PLRK+TJNUBKBuKyZJA0ZGzT9u71UlUk02E6+Mx9dY3cl6oL745QR+VQCuBdw2U1y2
-         0uB+z+iW0Ofu/T04g9FzsTlSeMlpmAjV6F0UFmJ7+ic8AXIyg09xQBN7SomdQu16Zl
-         ZURwHdFUk1h+g==
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-5428d1915acso294654a12.0
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2023 18:01:05 -0700 (PDT)
+        with ESMTP id S232941AbjFBBKt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 21:10:49 -0400
+Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0FE8E4;
+        Thu,  1 Jun 2023 18:10:48 -0700 (PDT)
+Received: by mail-ot1-x335.google.com with SMTP id 46e09a7af769-6b10a3d91dfso77611a34.0;
+        Thu, 01 Jun 2023 18:10:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685668248; x=1688260248;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JH98QIvRTr6UanreAyKHqgM4BGZBSV4Xr4LOowmlmGk=;
+        b=Ttry9yv4yGffZ8+5YY7QOR5UGwV3VAzvywcudKmI3R1O8C2JeTzwqd4rh81lKYhgxt
+         1mOw9aZ9R2D5e2BcpBux2/DN8bdZhcimrgZm/WO7Xdvmy1BjCAtBmmVIm5lk9rEnl6GB
+         C4UZS90gRXrBx7dq7mTILSRxNBI/Jv3L856YbU5gHV90dfpP3Qvz0QZ8VcdNFDQtmwXa
+         2aZ1J/l3viG5lbVx88WF0a9WSagGnltXene62GwcSO38LwuZD2REoBED1TnIjbtrdB3m
+         U2QhcNsG2zEy4Q61JrMY6RQOPbC1vS8pXpmobb4zltkUlvRHlCGd8gt24Pv/W9yFz9EZ
+         pZRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685667663; x=1688259663;
+        d=1e100.net; s=20221208; t=1685668248; x=1688260248;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wCbPB1ZDTWLt/oEJv6P7qx4Cdd8dnV7Y9TrZ5aVJ2o0=;
-        b=H4TJQyo/uS0S1Q3yMHMdKh47JYuflZRusOmiVx70zUShQaZC1sMw2gC4AURWpwmNZj
-         KgEmnN/2sYZmakefifg4DHmyc+y7Ub5ieAVCEtQFdNRl/K8WTjozXGA+shdElaNQKxa+
-         6I17VXEkb6P+jAja/FEIreptEBCO7oeTbN+unvhc4p+SW4oJ+t0P5DO8Mn0ySiUZNkMU
-         4754usI1SWNSKNTXHYcZlfT2sCO+BA6J3MPJiIrzmdUt/kdeTQ1gzkVLQypV7oFp+Y1K
-         //AaqWcph4Sdgd5r4X4oqaVHdRrksNbyHWmbAbEzqPv9cFtz4PlESSy1vGKWfybv+vBA
-         AQ1A==
-X-Gm-Message-State: AC+VfDzHNuKKJQMkaxRu9PYNNU6ytvmn1u2P+NN8oB791CI3oLDHiwkl
-        dCEDhukyE2ZjyNQrwIVVZviW17Rs5GbUfkd0V6ka5m7DIgNO/5GfAFvbd0yEoXjRg+jG/iWb/aY
-        3S58bfs6Jg9W+qTMM3b/dzRgy+fCfVh3VfUTUYF850g2ILEqG2PWStEA=
-X-Received: by 2002:a05:6a20:101a:b0:103:b436:aef7 with SMTP id gs26-20020a056a20101a00b00103b436aef7mr3265575pzc.16.1685667663270;
-        Thu, 01 Jun 2023 18:01:03 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ6VYL0KZ+3iS8gCc9F1FccQPyYsJMympHRukppGkxqbJhX/s/Mr1+03VnVxAzE9Sg4EziYgwHd5k/dOBTS9O0k=
-X-Received: by 2002:a05:6a20:101a:b0:103:b436:aef7 with SMTP id
- gs26-20020a056a20101a00b00103b436aef7mr3265549pzc.16.1685667662942; Thu, 01
- Jun 2023 18:01:02 -0700 (PDT)
+        bh=JH98QIvRTr6UanreAyKHqgM4BGZBSV4Xr4LOowmlmGk=;
+        b=lPGgqJfIh1UaeLIoz735pj2ffcT4hrquZcFRJ82Jyjuh5thN0tDLWje8uODSTKqa7l
+         qINzLt94cpY+1FEZ/I7x+5IjlQl6j7zrR2AskYez1Uf/C2JGF704dzAfsBw8ZJvzDCde
+         ut5XqA4ehIoAV5LEc7jLrw/Pi5prZ2vgASQelgGoVjOr6V6NlZ1745YVcpmRK6pz+v71
+         6LDIzX1ZLoAmbnXFCJvI7pVsbsvUlSrgb3tvgR8AJw7y1tLubO+hE5VdswlJuE/lk3s9
+         nkknRh0+HzES9jxxG29++wm2sBc7Qm/FYOsqJP4t0DoyELNfquVmmVx442wNuY04tuqb
+         Og8Q==
+X-Gm-Message-State: AC+VfDyLWG4X+u9AhFwZ8GQQSvwHXqlNRzfXAs3+2EvtT16tV6hwImS+
+        GCZyzpFJ2QiBpRg2/tJgLwxuJ20t5YGuSkQeATQ=
+X-Google-Smtp-Source: ACHHUZ4XPuz4c9rrooO5lzthn7ewEGiToh11VcZSPY2ZDm7z6XPwg9tBLrptzSglD5xyAvjUJgt1RfQTN0DOsuX7HE8=
+X-Received: by 2002:aca:a8c1:0:b0:385:d91:ee30 with SMTP id
+ r184-20020acaa8c1000000b003850d91ee30mr4236678oie.3.1685668247712; Thu, 01
+ Jun 2023 18:10:47 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230601155652.1157611-1-kai.heng.feng@canonical.com> <164576ab-4e68-ca5d-0c9e-d756588cdbb5@acm.org>
-In-Reply-To: <164576ab-4e68-ca5d-0c9e-d756588cdbb5@acm.org>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Fri, 2 Jun 2023 09:00:51 +0800
-Message-ID: <CAAd53p6S=nzxgwBky6daJZ8wa-HaBODpjwLPYZ52g8FPXbbACw@mail.gmail.com>
-Subject: Re: [PATCH v5] scsi: core: Wait until device is fully resumed before
- doing rescan
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, dlemoal@kernel.org,
-        bblock@linux.ibm.com, acelan.kao@canonical.com,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+References: <ZHkseX6TiFahvxJA@work>
+In-Reply-To: <ZHkseX6TiFahvxJA@work>
+From:   Justin Tee <justintee8345@gmail.com>
+Date:   Thu, 1 Jun 2023 18:10:36 -0700
+Message-ID: <CABPRKS_FD=oeJGAEk2kpiwxSP-eDRXmm0iMhDfOW0CLV4qcS3Q@mail.gmail.com>
+Subject: Re: [PATCH v2][next] scsi: lpfc: Avoid -Wstringop-overflow warning
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Kees Cook <keescook@chromium.org>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Justin Tee <justin.tee@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 2, 2023 at 3:48=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
- wrote:
->
-> On 6/1/23 08:56, Kai-Heng Feng wrote:
-> > During system resuming process, the resuming order is from top to down.
-> > Namely, the ATA host is resumed before disks connected to it.
-> >
-> > When an EH is scheduled while ATA host is resumed and disk device is
-> > still suspended, the device_lock hold by scsi_rescan_device() is never
-> > released so the dpm_resume() of the disk is blocked forerver, therefore
-> > the system can never be resumed back.
-> >
-> > That's because scsi_attach_vpd() is expecting the disk device is in
-> > operational state, as it doesn't work on suspended device.
-> >
-> > To avoid such deadlock, wait until the scsi device is fully resumed,
-> > before continuing the rescan process.
->
-> Why doesn't scsi_attach_vpd() support runtime power management? Calling
-> scsi_attach_vpd() should result in a call of sdev_runtime_resume(),
+Thanks Gustavo and Kees.
 
-It's system-wide resume in this context, so it's dpm_resume() waiting
-for the lock to be released by scsi_rescan_device().
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-Kai-Heng
-
-> isn't it?
+On Thu, Jun 1, 2023 at 4:43=E2=80=AFPM Gustavo A. R. Silva
+<gustavoars@kernel.org> wrote:
 >
-> Thanks,
+> Prevent any potential integer wrapping issue, and avoid a
+> -Wstringop-overflow warning by using the check_mul_overflow() helper.
 >
-> Bart.
+> drivers/scsi/lpfc/lpfc.h:
+> 837:#define LPFC_RAS_MIN_BUFF_POST_SIZE (256 * 1024)
+>
+> drivers/scsi/lpfc/lpfc_debugfs.c:
+> 2266 size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
+>
+> this can wrap to negative if cfg_ras_fwlog_buffsize is large
+> enough. And even when in practice this is not possible (due to
+> phba->cfg_ras_fwlog_buffsize never being larger than 4[1]), the
+> compiler is legitimately warning us about potentially buggy code.
+>
+> Fix the following warning seen under GCC-13:
+> In function =E2=80=98lpfc_debugfs_ras_log_data=E2=80=99,
+>     inlined from =E2=80=98lpfc_debugfs_ras_log_open=E2=80=99 at drivers/s=
+csi/lpfc/lpfc_debugfs.c:2271:15:
+> drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: =E2=80=98memcpy=E2=80=
+=99 specified bound between 18446744071562067968 and 18446744073709551615 e=
+xceeds maximum object size 9223372036854775807 [-Wstringop-overflow=3D]
+>  2210 |                         memcpy(buffer + copied, dmabuf->virt,
+>       |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>  2211 |                                size - copied - 1);
+>       |                                ~~~~~~~~~~~~~~~~~~
+>
+> Link: https://github.com/KSPP/linux/issues/305
+> Link: https://lore.kernel.org/linux-hardening/CABPRKS8zyzrbsWt4B5fp7kMowA=
+ZFiMLKg5kW26uELpg1cDKY3A@mail.gmail.com/ [1]
+> Co-developed-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+> Changes in v2:
+>  - Use check_mul_overflow() helper (Kees).
+>
+> v1:
+>  - Link: https://lore.kernel.org/linux-hardening/ZHZq7AV9Q2WG1xRB@work/
+>
+>  drivers/scsi/lpfc/lpfc_debugfs.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_de=
+bugfs.c
+> index bdf34af4ef36..7f9b221e7c34 100644
+> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
+> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+> @@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, st=
+ruct file *file)
+>                 goto out;
+>         }
+>         spin_unlock_irq(&phba->hbalock);
+> -       debug =3D kmalloc(sizeof(*debug), GFP_KERNEL);
+> +
+> +       if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
+> +                              phba->cfg_ras_fwlog_buffsize, &size))
+> +               goto out;
+> +
+> +       debug =3D kzalloc(sizeof(*debug), GFP_KERNEL);
+>         if (!debug)
+>                 goto out;
+>
+> -       size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsi=
+ze;
+>         debug->buffer =3D vmalloc(size);
+>         if (!debug->buffer)
+>                 goto free_debug;
+> --
+> 2.34.1
 >
