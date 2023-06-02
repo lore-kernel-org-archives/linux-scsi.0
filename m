@@ -2,146 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76ECDC7EE2A
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 01:10:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E569C7EE2D
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 02:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233221AbjFBBKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 21:10:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40288 "EHLO
+        id S233253AbjFBCiE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 22:38:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232941AbjFBBKt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 21:10:49 -0400
-Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0FE8E4;
-        Thu,  1 Jun 2023 18:10:48 -0700 (PDT)
-Received: by mail-ot1-x335.google.com with SMTP id 46e09a7af769-6b10a3d91dfso77611a34.0;
-        Thu, 01 Jun 2023 18:10:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685668248; x=1688260248;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JH98QIvRTr6UanreAyKHqgM4BGZBSV4Xr4LOowmlmGk=;
-        b=Ttry9yv4yGffZ8+5YY7QOR5UGwV3VAzvywcudKmI3R1O8C2JeTzwqd4rh81lKYhgxt
-         1mOw9aZ9R2D5e2BcpBux2/DN8bdZhcimrgZm/WO7Xdvmy1BjCAtBmmVIm5lk9rEnl6GB
-         C4UZS90gRXrBx7dq7mTILSRxNBI/Jv3L856YbU5gHV90dfpP3Qvz0QZ8VcdNFDQtmwXa
-         2aZ1J/l3viG5lbVx88WF0a9WSagGnltXene62GwcSO38LwuZD2REoBED1TnIjbtrdB3m
-         U2QhcNsG2zEy4Q61JrMY6RQOPbC1vS8pXpmobb4zltkUlvRHlCGd8gt24Pv/W9yFz9EZ
-         pZRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685668248; x=1688260248;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JH98QIvRTr6UanreAyKHqgM4BGZBSV4Xr4LOowmlmGk=;
-        b=lPGgqJfIh1UaeLIoz735pj2ffcT4hrquZcFRJ82Jyjuh5thN0tDLWje8uODSTKqa7l
-         qINzLt94cpY+1FEZ/I7x+5IjlQl6j7zrR2AskYez1Uf/C2JGF704dzAfsBw8ZJvzDCde
-         ut5XqA4ehIoAV5LEc7jLrw/Pi5prZ2vgASQelgGoVjOr6V6NlZ1745YVcpmRK6pz+v71
-         6LDIzX1ZLoAmbnXFCJvI7pVsbsvUlSrgb3tvgR8AJw7y1tLubO+hE5VdswlJuE/lk3s9
-         nkknRh0+HzES9jxxG29++wm2sBc7Qm/FYOsqJP4t0DoyELNfquVmmVx442wNuY04tuqb
-         Og8Q==
-X-Gm-Message-State: AC+VfDyLWG4X+u9AhFwZ8GQQSvwHXqlNRzfXAs3+2EvtT16tV6hwImS+
-        GCZyzpFJ2QiBpRg2/tJgLwxuJ20t5YGuSkQeATQ=
-X-Google-Smtp-Source: ACHHUZ4XPuz4c9rrooO5lzthn7ewEGiToh11VcZSPY2ZDm7z6XPwg9tBLrptzSglD5xyAvjUJgt1RfQTN0DOsuX7HE8=
-X-Received: by 2002:aca:a8c1:0:b0:385:d91:ee30 with SMTP id
- r184-20020acaa8c1000000b003850d91ee30mr4236678oie.3.1685668247712; Thu, 01
- Jun 2023 18:10:47 -0700 (PDT)
+        with ESMTP id S229598AbjFBCiD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 22:38:03 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4259B18D;
+        Thu,  1 Jun 2023 19:38:01 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QXRrF6D2lzqTbZ;
+        Fri,  2 Jun 2023 10:33:17 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Fri, 2 Jun 2023 10:37:58 +0800
+Subject: Re: [PATCH] ata: libata-sata: Simplify ata_change_queue_depth()
+To:     Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     John Garry <john.g.garry@oracle.com>
+References: <20230601222607.263024-1-dlemoal@kernel.org>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <a21cd2a8-fe80-0201-38c6-62945dfb6698@huawei.com>
+Date:   Fri, 2 Jun 2023 10:37:58 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-References: <ZHkseX6TiFahvxJA@work>
-In-Reply-To: <ZHkseX6TiFahvxJA@work>
-From:   Justin Tee <justintee8345@gmail.com>
-Date:   Thu, 1 Jun 2023 18:10:36 -0700
-Message-ID: <CABPRKS_FD=oeJGAEk2kpiwxSP-eDRXmm0iMhDfOW0CLV4qcS3Q@mail.gmail.com>
-Subject: Re: [PATCH v2][next] scsi: lpfc: Avoid -Wstringop-overflow warning
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Kees Cook <keescook@chromium.org>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Justin Tee <justin.tee@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20230601222607.263024-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm100004.china.huawei.com (7.192.105.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks Gustavo and Kees.
-
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
-
-On Thu, Jun 1, 2023 at 4:43=E2=80=AFPM Gustavo A. R. Silva
-<gustavoars@kernel.org> wrote:
->
-> Prevent any potential integer wrapping issue, and avoid a
-> -Wstringop-overflow warning by using the check_mul_overflow() helper.
->
-> drivers/scsi/lpfc/lpfc.h:
-> 837:#define LPFC_RAS_MIN_BUFF_POST_SIZE (256 * 1024)
->
-> drivers/scsi/lpfc/lpfc_debugfs.c:
-> 2266 size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
->
-> this can wrap to negative if cfg_ras_fwlog_buffsize is large
-> enough. And even when in practice this is not possible (due to
-> phba->cfg_ras_fwlog_buffsize never being larger than 4[1]), the
-> compiler is legitimately warning us about potentially buggy code.
->
-> Fix the following warning seen under GCC-13:
-> In function =E2=80=98lpfc_debugfs_ras_log_data=E2=80=99,
->     inlined from =E2=80=98lpfc_debugfs_ras_log_open=E2=80=99 at drivers/s=
-csi/lpfc/lpfc_debugfs.c:2271:15:
-> drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: =E2=80=98memcpy=E2=80=
-=99 specified bound between 18446744071562067968 and 18446744073709551615 e=
-xceeds maximum object size 9223372036854775807 [-Wstringop-overflow=3D]
->  2210 |                         memcpy(buffer + copied, dmabuf->virt,
->       |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->  2211 |                                size - copied - 1);
->       |                                ~~~~~~~~~~~~~~~~~~
->
-> Link: https://github.com/KSPP/linux/issues/305
-> Link: https://lore.kernel.org/linux-hardening/CABPRKS8zyzrbsWt4B5fp7kMowA=
-ZFiMLKg5kW26uELpg1cDKY3A@mail.gmail.com/ [1]
-> Co-developed-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+On 2023/6/2 6:26, Damien Le Moal wrote:
+> Commit 141f3d6256e5 ("ata: libata-sata: Fix device queue depth control")
+> added a struct ata_device argument to ata_change_queue_depth() to
+> address problems with changing the queue depth of ATA devices managed
+> through libsas. This was due to problems with ata_scsi_find_dev() which
+> are now fixed with commit 7f875850f20a ("ata: libata-scsi: Use correct
+> device no in ata_find_dev()").
+> 
+> Undo some of the changes of commit 141f3d6256e5: remove the added struct
+> ata_device aregument and use again ata_scsi_find_dev() to find the
+> target ATA device structure. While doing this, also make sure that
+> ata_scsi_find_dev() is called with ap->lock held, as it should.
+> 
+> libsas and libata call sites of ata_change_queue_depth() are updated to
+> match the modified function arguments.
+> 
+> Signed-off-by: Damien Le Moal<dlemoal@kernel.org>
 > ---
-> Changes in v2:
->  - Use check_mul_overflow() helper (Kees).
->
-> v1:
->  - Link: https://lore.kernel.org/linux-hardening/ZHZq7AV9Q2WG1xRB@work/
->
->  drivers/scsi/lpfc/lpfc_debugfs.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_de=
-bugfs.c
-> index bdf34af4ef36..7f9b221e7c34 100644
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-> @@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, st=
-ruct file *file)
->                 goto out;
->         }
->         spin_unlock_irq(&phba->hbalock);
-> -       debug =3D kmalloc(sizeof(*debug), GFP_KERNEL);
-> +
-> +       if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
-> +                              phba->cfg_ras_fwlog_buffsize, &size))
-> +               goto out;
-> +
-> +       debug =3D kzalloc(sizeof(*debug), GFP_KERNEL);
->         if (!debug)
->                 goto out;
->
-> -       size =3D LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsi=
-ze;
->         debug->buffer =3D vmalloc(size);
->         if (!debug->buffer)
->                 goto free_debug;
-> --
-> 2.34.1
->
+>   drivers/ata/libata-sata.c           | 19 ++++++++++---------
+>   drivers/scsi/libsas/sas_scsi_host.c |  3 +--
+>   include/linux/libata.h              |  4 ++--
+>   3 files changed, 13 insertions(+), 13 deletions(-)
+
+Reviewed-by: Jason Yan <yanaijie@huawei.com>
+
+Thanks,
+Jason
