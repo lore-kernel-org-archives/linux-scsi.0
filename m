@@ -2,101 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EDE8C77B7A
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 08:51:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6655C7EE2E
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 12:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234931AbjFBIva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jun 2023 04:51:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51380 "EHLO
+        id S235732AbjFBMHi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jun 2023 08:07:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234942AbjFBIvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2023 04:51:01 -0400
-Received: from smtp-relay-canonical-0.canonical.com (smtp-relay-canonical-0.canonical.com [185.125.188.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9296C10EF;
-        Fri,  2 Jun 2023 01:50:48 -0700 (PDT)
-Received: from localhost.localdomain (unknown [10.101.196.174])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id ED5803F181;
-        Fri,  2 Jun 2023 08:50:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1685695846;
-        bh=9iDW23eSDGpAU5YPcKTOrXKlERG4X+SdChKCH7zHRoE=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=YeXM7zAYzGpv/Tgh19segV9F0cuncXXVEmaobPJ0MIVMdrRkhjpcmeW2nS1F00BlO
-         lJO2gfE5ZwyDtZQDtlryH4uEzhlsulbaUDjWR/xAioOseUVily8cZkUWHHnxEY829O
-         IZLMWXfBKirAz0Lnc809TPdds3niGmrg0eotgcqptRTf2d95GPxiqrnGacQmBcruGa
-         bTaWkXlW+/VlvlnOPfigL7s2zLXEm6LuyPSB6RdU4fWJ53LIj2HTt5z/CFZjVHDdeY
-         DOZDv4c/CnjpHBJ3mpYW3MWdFnoOsF1geOhhwSVm+Nm6YGCJi04fQ8bqaGCFhF2HC7
-         VA07WFU6wvUDA==
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     dlemoal@kernel.org, bblock@linux.ibm.com, acelan.kao@canonical.com,
-        linux-pm@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v6] scsi: core: Wait until device is fully resumed before doing rescan
-Date:   Fri,  2 Jun 2023 16:49:56 +0800
-Message-Id: <20230602084956.1299001-1-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S235661AbjFBMHH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2023 08:07:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E04AD3
+        for <linux-scsi@vger.kernel.org>; Fri,  2 Jun 2023 05:06:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685707581;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=r3eog2jJ180dc325mkmwjwsvnRZJ4iih8R1ZCYZSotw=;
+        b=VfG2TzGyRPPWFBxHHyrLo7lyl8B6COm32M4E5qjbUqDNMQ3louEodLQmrPo/NMHyy3k/mV
+        fAMc43oYFLNBmZe4ciul8AYyhzlgPEzlyrQcM12G3Lev+9IhMMOiHf7IMtBtWUoQox1mZF
+        TmZKWuDQgZ5jG5vi3bmxNYDC0wvlOhA=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-625-5hJiFMiYMOCV-66LoXY6ig-1; Fri, 02 Jun 2023 08:06:20 -0400
+X-MC-Unique: 5hJiFMiYMOCV-66LoXY6ig-1
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-3f612a1b0fdso11389245e9.2
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Jun 2023 05:06:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685707579; x=1688299579;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=r3eog2jJ180dc325mkmwjwsvnRZJ4iih8R1ZCYZSotw=;
+        b=LZzevOZzhkZrXBvIOI0HmYIRXbkM8BecUdOntw7jnjEAy8bYpQVhy7IJDz6OKj/5p+
+         CU9FOixDYYP14Sl9Kbv+yepCAVwi/IJa6/U2/sFagAeb3e/t292EwFy2pp6eRCgCvoWr
+         9RIAuTd1Wia2txOvrCFthxsKeKV1r2yt7qVwTE+DGpMzpm84wac4buTOaZoKolM6+HAf
+         7NwGUroCGj8MFxm1gIZJfuqimXsB6OYll44o/St4wkuWpSvntBwRjzmF6hjn8wu/iLVP
+         MvfGNff32qfm3KhOuoVL9zfdP+wLnA99WQkZg62AW3AhkCnZfvNRye4w0138ns/x52sZ
+         SY6g==
+X-Gm-Message-State: AC+VfDwGe8p1jCt2zDmCYNGA3/9IibNUy6pgN4C2+LY9kWDyo9rz06Rg
+        bSfVxyIt1PUN6bwnwOnEqG5GzUv85hSkhHMLvMyJb/egc3G/Q6xhg+7qdK6wtMDso/Cmg5oItNW
+        mIVnGBRX48e7jRE6OCJuHdQ==
+X-Received: by 2002:a1c:6a15:0:b0:3f6:89e:2716 with SMTP id f21-20020a1c6a15000000b003f6089e2716mr1982214wmc.33.1685707579183;
+        Fri, 02 Jun 2023 05:06:19 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ5208596q5G59Oc8rJfdmFIY+/Vvnx/JmMv3Fx9NDu17J8RLqtPrBw/B/kjXPHSnF2ttJ7m/A==
+X-Received: by 2002:a1c:6a15:0:b0:3f6:89e:2716 with SMTP id f21-20020a1c6a15000000b003f6089e2716mr1982190wmc.33.1685707578902;
+        Fri, 02 Jun 2023 05:06:18 -0700 (PDT)
+Received: from redhat.com ([2.55.4.169])
+        by smtp.gmail.com with ESMTPSA id y20-20020a05600c365400b003f60a446fe5sm1760836wmq.29.2023.06.02.05.06.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Jun 2023 05:06:18 -0700 (PDT)
+Date:   Fri, 2 Jun 2023 08:06:15 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: virtio_scsi: Remove a useless function call
+Message-ID: <20230602080607-mutt-send-email-mst@kernel.org>
+References: <08740635cdb0f8293e57c557b22e048daae50961.1685345683.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <08740635cdb0f8293e57c557b22e048daae50961.1685345683.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During system resuming process, the resuming order is from top to down.
-Namely, the ATA host is resumed before disks connected to it.
+On Mon, May 29, 2023 at 09:35:08AM +0200, Christophe JAILLET wrote:
+> 'inq_result' is known to be NULL. There is no point calling kfree().
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-When an EH is scheduled while ATA host is resumed and disk device is
-still suspended, the device_lock hold by scsi_rescan_device() is never
-released so the dpm_resume() of the disk is blocked forerver, therefore
-the system can never be resumed back.
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
 
-That's because scsi_attach_vpd() is expecting the disk device is in
-operational state, as it doesn't work on suspended device.
-
-To avoid such deadlock, wait until the scsi device is fully resumed,
-before continuing the rescan process.
-
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
-v6:
- - Fix !CONFIG_PM_SLEEP compilation error.
-
-v5:
- - Use a different approach. Wait until the disk device is resumed.
-
-v4: 
- - No change.
-
-v3:
- - New patch to resolve undefined pm_suspend_target_state.
-
-v2:
- - Schedule rescan task at the end of system resume phase.
- - Wording.
-
- drivers/scsi/scsi_scan.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index d217be323cc6..092f37464101 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1621,6 +1621,11 @@ void scsi_rescan_device(struct device *dev)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
-+#ifdef CONFIG_PM_SLEEP
-+	if (dev->power.is_suspended)
-+		wait_for_completion(&dev->power.completion);
-+#endif
-+
- 	device_lock(dev);
- 
- 	scsi_attach_vpd(sdev);
--- 
-2.34.1
+> ---
+>  drivers/scsi/virtio_scsi.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 58498da9869a..bd5633667d01 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -338,10 +338,8 @@ static int virtscsi_rescan_hotunplug(struct virtio_scsi *vscsi)
+>  	int result, inquiry_len, inq_result_len = 256;
+>  	char *inq_result = kmalloc(inq_result_len, GFP_KERNEL);
+>  
+> -	if (!inq_result) {
+> -		kfree(inq_result);
+> +	if (!inq_result)
+>  		return -ENOMEM;
+> -	}
+>  
+>  	shost_for_each_device(sdev, shost) {
+>  		inquiry_len = sdev->inquiry_len ? sdev->inquiry_len : 36;
+> -- 
+> 2.34.1
 
