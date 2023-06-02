@@ -2,115 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6526C7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jun 2023 23:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E1BC77B7A
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 01:01:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232912AbjFAXj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jun 2023 19:39:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41434 "EHLO
+        id S232724AbjFBBBM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jun 2023 21:01:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232746AbjFAXjv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 19:39:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3FEE136;
-        Thu,  1 Jun 2023 16:39:50 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230492AbjFBBBK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2023 21:01:10 -0400
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40D44F2
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2023 18:01:07 -0700 (PDT)
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B6EE646B3;
-        Thu,  1 Jun 2023 23:39:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA09C433EF;
-        Thu,  1 Jun 2023 23:39:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685662789;
-        bh=3jR6coTEIcQtDZcNzSMSFv+M4QM62RvBoRRP0rTVqDY=;
-        h=Date:From:To:Cc:Subject:From;
-        b=fwc7Tv0DaRLNwBp0LIrrU8Ot+TZ8GxkknFOtF7HdZbG2BM2+QkEHGkrNQAhjeqfKC
-         95COu5tIu/DBAA9fFFzhQzVZG0gZBic5SJzHbJJIGGUGSyuDRZQfJgSRWRjOjahJtL
-         v5QQVcdPfunXzlsLY0XhxNr9yg0W2SMHZO6Me3den1nsWJWcablV46r1Wh+rSqhM+3
-         8OT+OgEPDdJf+Dy37ih6KM1QJ75q7NnSQj42MVexWoBqIWxH48DlgR1d5Q/IEw6Q0R
-         MhBTJXdyGFnICpULkSxMc/POPCMFpRJJCCMErrRmjGRxyZN2/B3A8B6qNtral0teVk
-         s7p9MKckvfIVw==
-Date:   Thu, 1 Jun 2023 17:40:41 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kees Cook <keescook@chromium.org>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH v2][next] scsi: lpfc: Avoid -Wstringop-overflow warning
-Message-ID: <ZHkseX6TiFahvxJA@work>
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 6EC0D3F554
+        for <linux-scsi@vger.kernel.org>; Fri,  2 Jun 2023 01:01:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1685667665;
+        bh=wCbPB1ZDTWLt/oEJv6P7qx4Cdd8dnV7Y9TrZ5aVJ2o0=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=qf/XcOkaa1ZekfrU8e8pefIvLAuErEBq2vbDuJeLl8UfohcxPbe53BJdfDpOaKIzc
+         3qRU+g4B1JsDXDPhbh90sNjTLaj5i+nwDJm1VJ0+HzUKXFjgfLx4nm/ycnHVD8Y4S9
+         XRW+jb9MagLpnuaBrpEceiDDB/W319ytSabXGMyavt8guDZF7yTbMlJHvGu4qBbPMt
+         1PLRK+TJNUBKBuKyZJA0ZGzT9u71UlUk02E6+Mx9dY3cl6oL745QR+VQCuBdw2U1y2
+         0uB+z+iW0Ofu/T04g9FzsTlSeMlpmAjV6F0UFmJ7+ic8AXIyg09xQBN7SomdQu16Zl
+         ZURwHdFUk1h+g==
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-5428d1915acso294654a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2023 18:01:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685667663; x=1688259663;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wCbPB1ZDTWLt/oEJv6P7qx4Cdd8dnV7Y9TrZ5aVJ2o0=;
+        b=H4TJQyo/uS0S1Q3yMHMdKh47JYuflZRusOmiVx70zUShQaZC1sMw2gC4AURWpwmNZj
+         KgEmnN/2sYZmakefifg4DHmyc+y7Ub5ieAVCEtQFdNRl/K8WTjozXGA+shdElaNQKxa+
+         6I17VXEkb6P+jAja/FEIreptEBCO7oeTbN+unvhc4p+SW4oJ+t0P5DO8Mn0ySiUZNkMU
+         4754usI1SWNSKNTXHYcZlfT2sCO+BA6J3MPJiIrzmdUt/kdeTQ1gzkVLQypV7oFp+Y1K
+         //AaqWcph4Sdgd5r4X4oqaVHdRrksNbyHWmbAbEzqPv9cFtz4PlESSy1vGKWfybv+vBA
+         AQ1A==
+X-Gm-Message-State: AC+VfDzHNuKKJQMkaxRu9PYNNU6ytvmn1u2P+NN8oB791CI3oLDHiwkl
+        dCEDhukyE2ZjyNQrwIVVZviW17Rs5GbUfkd0V6ka5m7DIgNO/5GfAFvbd0yEoXjRg+jG/iWb/aY
+        3S58bfs6Jg9W+qTMM3b/dzRgy+fCfVh3VfUTUYF850g2ILEqG2PWStEA=
+X-Received: by 2002:a05:6a20:101a:b0:103:b436:aef7 with SMTP id gs26-20020a056a20101a00b00103b436aef7mr3265575pzc.16.1685667663270;
+        Thu, 01 Jun 2023 18:01:03 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ6VYL0KZ+3iS8gCc9F1FccQPyYsJMympHRukppGkxqbJhX/s/Mr1+03VnVxAzE9Sg4EziYgwHd5k/dOBTS9O0k=
+X-Received: by 2002:a05:6a20:101a:b0:103:b436:aef7 with SMTP id
+ gs26-20020a056a20101a00b00103b436aef7mr3265549pzc.16.1685667662942; Thu, 01
+ Jun 2023 18:01:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+References: <20230601155652.1157611-1-kai.heng.feng@canonical.com> <164576ab-4e68-ca5d-0c9e-d756588cdbb5@acm.org>
+In-Reply-To: <164576ab-4e68-ca5d-0c9e-d756588cdbb5@acm.org>
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Fri, 2 Jun 2023 09:00:51 +0800
+Message-ID: <CAAd53p6S=nzxgwBky6daJZ8wa-HaBODpjwLPYZ52g8FPXbbACw@mail.gmail.com>
+Subject: Re: [PATCH v5] scsi: core: Wait until device is fully resumed before
+ doing rescan
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, dlemoal@kernel.org,
+        bblock@linux.ibm.com, acelan.kao@canonical.com,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prevent any potential integer wrapping issue, and avoid a
--Wstringop-overflow warning by using the check_mul_overflow() helper.
+On Fri, Jun 2, 2023 at 3:48=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
+ wrote:
+>
+> On 6/1/23 08:56, Kai-Heng Feng wrote:
+> > During system resuming process, the resuming order is from top to down.
+> > Namely, the ATA host is resumed before disks connected to it.
+> >
+> > When an EH is scheduled while ATA host is resumed and disk device is
+> > still suspended, the device_lock hold by scsi_rescan_device() is never
+> > released so the dpm_resume() of the disk is blocked forerver, therefore
+> > the system can never be resumed back.
+> >
+> > That's because scsi_attach_vpd() is expecting the disk device is in
+> > operational state, as it doesn't work on suspended device.
+> >
+> > To avoid such deadlock, wait until the scsi device is fully resumed,
+> > before continuing the rescan process.
+>
+> Why doesn't scsi_attach_vpd() support runtime power management? Calling
+> scsi_attach_vpd() should result in a call of sdev_runtime_resume(),
 
-drivers/scsi/lpfc/lpfc.h:
-837:#define LPFC_RAS_MIN_BUFF_POST_SIZE (256 * 1024)
+It's system-wide resume in this context, so it's dpm_resume() waiting
+for the lock to be released by scsi_rescan_device().
 
-drivers/scsi/lpfc/lpfc_debugfs.c:
-2266 size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
+Kai-Heng
 
-this can wrap to negative if cfg_ras_fwlog_buffsize is large
-enough. And even when in practice this is not possible (due to
-phba->cfg_ras_fwlog_buffsize never being larger than 4[1]), the
-compiler is legitimately warning us about potentially buggy code.
-
-Fix the following warning seen under GCC-13:
-In function ‘lpfc_debugfs_ras_log_data’,
-    inlined from ‘lpfc_debugfs_ras_log_open’ at drivers/scsi/lpfc/lpfc_debugfs.c:2271:15:
-drivers/scsi/lpfc/lpfc_debugfs.c:2210:25: warning: ‘memcpy’ specified bound between 18446744071562067968 and 18446744073709551615 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
- 2210 |                         memcpy(buffer + copied, dmabuf->virt,
-      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 2211 |                                size - copied - 1);
-      |                                ~~~~~~~~~~~~~~~~~~
-
-Link: https://github.com/KSPP/linux/issues/305
-Link: https://lore.kernel.org/linux-hardening/CABPRKS8zyzrbsWt4B5fp7kMowAZFiMLKg5kW26uELpg1cDKY3A@mail.gmail.com/ [1]
-Co-developed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
-Changes in v2:
- - Use check_mul_overflow() helper (Kees).
-
-v1:
- - Link: https://lore.kernel.org/linux-hardening/ZHZq7AV9Q2WG1xRB@work/
-
- drivers/scsi/lpfc/lpfc_debugfs.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index bdf34af4ef36..7f9b221e7c34 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2259,11 +2259,15 @@ lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
- 		goto out;
- 	}
- 	spin_unlock_irq(&phba->hbalock);
--	debug = kmalloc(sizeof(*debug), GFP_KERNEL);
-+
-+	if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
-+			       phba->cfg_ras_fwlog_buffsize, &size))
-+		goto out;
-+
-+	debug = kzalloc(sizeof(*debug), GFP_KERNEL);
- 	if (!debug)
- 		goto out;
- 
--	size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
- 	debug->buffer = vmalloc(size);
- 	if (!debug->buffer)
- 		goto free_debug;
--- 
-2.34.1
-
+> isn't it?
+>
+> Thanks,
+>
+> Bart.
+>
