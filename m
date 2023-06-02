@@ -2,93 +2,76 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC081C7EE24
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 15:30:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E03C7EE2A
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 16:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236366AbjFBPaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jun 2023 11:30:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45490 "EHLO
+        id S235872AbjFBQjZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jun 2023 12:39:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235457AbjFBPaX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2023 11:30:23 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C33118C;
-        Fri,  2 Jun 2023 08:30:22 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-64d57cd373fso2601142b3a.1;
-        Fri, 02 Jun 2023 08:30:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685719822; x=1688311822;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TPKdSeegJ1AjrJW7LMNG9qtOmBvErTcO60Kp9uoBAUo=;
-        b=B9ra3mj7DImeWz7UQ+7vlYszdhQQs67FppTsNnLFkwnf6zcN+f/+YYvcQEBbavjksc
-         6C4V7ZL67thxgkK1CLQWaft5aLBIMLqkx1WEUDtfxZM5bK4dDr7Y6zT+TGq5j3EuicRK
-         I84BVKgeCstctHErojGZ3hz3EGQ9YNVrgc34FK3Vo853KRAKiD2SnNr1MvXG9w8iKA14
-         9wedDXR8YdEJgCfj1ciQZbZs9eihPJUeQmsQEGenrNl/fODUtePpaeMJebMwuI9P8Gab
-         dABxyhqq1RWjgyZoiPYHp1LDGFvupZPW/BTMNPip2y7S8BrP5JuBtnOEc3Zdn985GuZH
-         Ffnw==
-X-Gm-Message-State: AC+VfDyrwkXynhhzH2a59n+gWyesSJblk2LgcY9igrFjbDIq2meFQF6I
-        jv9zSfhg2hp2/JZ83suS8VY=
-X-Google-Smtp-Source: ACHHUZ6t+PZGDb1tlOYRkSVMTfB+/8WJ1iwPlQA6V89bTxaoWefn2zm47DGjvtayj0rFawrAfWDGbA==
-X-Received: by 2002:a17:902:e9d5:b0:1b0:56cf:b89d with SMTP id 21-20020a170902e9d500b001b056cfb89dmr152512plk.12.1685719821515;
-        Fri, 02 Jun 2023 08:30:21 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id w5-20020a170902904500b001ae365072cfsm1508558plz.219.2023.06.02.08.30.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Jun 2023 08:30:21 -0700 (PDT)
-Message-ID: <7b553268-69d3-913a-f9de-28f8d45bdb1e@acm.org>
-Date:   Fri, 2 Jun 2023 08:30:19 -0700
+        with ESMTP id S235101AbjFBQjX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2023 12:39:23 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92D2A13E;
+        Fri,  2 Jun 2023 09:39:22 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 4028621A27;
+        Fri,  2 Jun 2023 16:39:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1685723961; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=JSAhD21I8oIRAF+FVtzDtku5fSJ0TvsKEcAyaT7dRWc=;
+        b=uYMvmggQVeFGuYvsbc2QZXGh9phZb4g+iqSRBvWVGVN2Q3ezKyGmA8hIMJjx/Zmc4KyDtL
+        51RtYH9u0f2IwX9l5yyOw331VYMDFfs+FwMWNZDYSXPzJ8xvxdEHLIYEhEIwBQ80DkI2Ij
+        suhvOYsrNzTGZKe+K42nPONqagxvUxA=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D4CEC133E6;
+        Fri,  2 Jun 2023 16:39:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 8b89MjgbemSEDwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Fri, 02 Jun 2023 16:39:20 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>
+Subject: [PATCH 0/3] scsi: fixes for targets with many LUNs
+Date:   Fri,  2 Jun 2023 18:38:42 +0200
+Message-Id: <20230602163845.32108-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v6] scsi: core: Wait until device is fully resumed before
- doing rescan
-Content-Language: en-US
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     dlemoal@kernel.org, bblock@linux.ibm.com, acelan.kao@canonical.com,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230602084956.1299001-1-kai.heng.feng@canonical.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230602084956.1299001-1-kai.heng.feng@canonical.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/2/23 01:49, Kai-Heng Feng wrote:
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index d217be323cc6..092f37464101 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1621,6 +1621,11 @@ void scsi_rescan_device(struct device *dev)
->   {
->   	struct scsi_device *sdev = to_scsi_device(dev);
->   
-> +#ifdef CONFIG_PM_SLEEP
-> +	if (dev->power.is_suspended)
-> +		wait_for_completion(&dev->power.completion);
-> +#endif
-> +
->   	device_lock(dev);
->   
->   	scsi_attach_vpd(sdev);
+From: Martin Wilck <mwilck@suse.com>
 
-Directly accessing dev->power.completion from the SCSI core seems like a 
-layering violation to me. Isn't this an object that should only be 
-accessed directly by the device driver power management core? 
-Additionally, what guarantees that the desired power state has been 
-reached after wait_for_completion(&dev->power.completion) has finished?
+This patch series addresses some issues we saw in a test setup
+with a large number of SCSI LUNs. The first two patches simply
+increase the number of available sg and bsg devices. The last one
+fixes an large delay we encountered between blocking a Fibre Channel
+remote port and the dev_loss_tmo.
 
-I think we need another solution. The device_lock() and device_unlock() 
-calls have been introduced by commit e27829dc92e5 ("scsi: serialize 
-->rescan against ->remove"). I think there are other ways to serialize
-scsi_rescan_device() against scsi_remove_device(), e.g. via 
-host->scan_mutex. Is this something that has been considered?
+Hannes Reinecke (3):
+  bsg: increase number of devices
+  scsi: sg: increase number of devices
+  scsi: simplify scsi_stop_queue()
 
-Thanks,
+ block/bsg.c             |  2 +-
+ drivers/scsi/scsi_lib.c | 29 +++++++++++++++--------------
+ drivers/scsi/sg.c       |  2 +-
+ 3 files changed, 17 insertions(+), 16 deletions(-)
 
-Bart.
+-- 
+2.40.1
+
