@@ -2,69 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB07C7EE24
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 15:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC081C7EE24
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jun 2023 15:30:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235858AbjFBPTO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jun 2023 11:19:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38094 "EHLO
+        id S236366AbjFBPaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jun 2023 11:30:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235527AbjFBPTN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2023 11:19:13 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560A718C
-        for <linux-scsi@vger.kernel.org>; Fri,  2 Jun 2023 08:19:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PMNmgpSspMOUWKnuT9nAq/1E/sj45v7g+3FrIRz57Dg=; b=flprYJJoNltN2UYwIZE16ML6js
-        EknzlVQKVoHk47mRZyA8tC+FgEAPTliVV7Qh9xMkShG7+ppdpBELXvhAp/oSsHb1n44Msm51PgBIZ
-        G/kZNPenoz1TD8O+39C68eAKrEqLfEK5NTdjE4mMU0wBs7ls8zdAnOVPk0O48CGwy2RiDraZSw6N9
-        vs7dYgvci//GIBLSw6HpGQIZvzVmaSQ0U1fUZu0tcJyTl1vLbE83caBJn/A/JGzRKjc6HpvnRCNS9
-        zZieZV9woNhhXxqQ3OnlHZ188qTeUnk2OHZOmpRNwJrglR0qciOpraQwtvqSPvFrO7wU7rg2iNNcW
-        Zs68urOQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q56YV-007Eg9-1m;
-        Fri, 02 Jun 2023 15:19:07 +0000
-Date:   Fri, 2 Jun 2023 08:19:07 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Adrien Thierry <athierry@redhat.com>
-Subject: Re: [PATCH] scsi: ufs: Include major and minor number in command
- tracing output
-Message-ID: <ZHoIayr4wtYwQEHq@infradead.org>
-References: <20230531223924.25341-1-bvanassche@acm.org>
- <ZHgrYgDmvhs7Iw/d@infradead.org>
- <2490926f-d8cc-3ce4-7a00-b8db58c89848@acm.org>
+        with ESMTP id S235457AbjFBPaX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2023 11:30:23 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C33118C;
+        Fri,  2 Jun 2023 08:30:22 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-64d57cd373fso2601142b3a.1;
+        Fri, 02 Jun 2023 08:30:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685719822; x=1688311822;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TPKdSeegJ1AjrJW7LMNG9qtOmBvErTcO60Kp9uoBAUo=;
+        b=B9ra3mj7DImeWz7UQ+7vlYszdhQQs67FppTsNnLFkwnf6zcN+f/+YYvcQEBbavjksc
+         6C4V7ZL67thxgkK1CLQWaft5aLBIMLqkx1WEUDtfxZM5bK4dDr7Y6zT+TGq5j3EuicRK
+         I84BVKgeCstctHErojGZ3hz3EGQ9YNVrgc34FK3Vo853KRAKiD2SnNr1MvXG9w8iKA14
+         9wedDXR8YdEJgCfj1ciQZbZs9eihPJUeQmsQEGenrNl/fODUtePpaeMJebMwuI9P8Gab
+         dABxyhqq1RWjgyZoiPYHp1LDGFvupZPW/BTMNPip2y7S8BrP5JuBtnOEc3Zdn985GuZH
+         Ffnw==
+X-Gm-Message-State: AC+VfDyrwkXynhhzH2a59n+gWyesSJblk2LgcY9igrFjbDIq2meFQF6I
+        jv9zSfhg2hp2/JZ83suS8VY=
+X-Google-Smtp-Source: ACHHUZ6t+PZGDb1tlOYRkSVMTfB+/8WJ1iwPlQA6V89bTxaoWefn2zm47DGjvtayj0rFawrAfWDGbA==
+X-Received: by 2002:a17:902:e9d5:b0:1b0:56cf:b89d with SMTP id 21-20020a170902e9d500b001b056cfb89dmr152512plk.12.1685719821515;
+        Fri, 02 Jun 2023 08:30:21 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id w5-20020a170902904500b001ae365072cfsm1508558plz.219.2023.06.02.08.30.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Jun 2023 08:30:21 -0700 (PDT)
+Message-ID: <7b553268-69d3-913a-f9de-28f8d45bdb1e@acm.org>
+Date:   Fri, 2 Jun 2023 08:30:19 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2490926f-d8cc-3ce4-7a00-b8db58c89848@acm.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v6] scsi: core: Wait until device is fully resumed before
+ doing rescan
+Content-Language: en-US
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     dlemoal@kernel.org, bblock@linux.ibm.com, acelan.kao@canonical.com,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230602084956.1299001-1-kai.heng.feng@canonical.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230602084956.1299001-1-kai.heng.feng@canonical.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 01, 2023 at 02:12:04PM -0700, Bart Van Assche wrote:
-> I will look into removing the GROUP ID information from the UFS tracing
-> output. Do you agree with adding the GROUP ID information in the SCSI
-> tracing output after data temperature support has been added in the block
-> layer and SCSI core? As you probably know the T10 committee recently
-> approved Ralph Weber's Constrained Streams proposal.
+On 6/2/23 01:49, Kai-Heng Feng wrote:
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index d217be323cc6..092f37464101 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1621,6 +1621,11 @@ void scsi_rescan_device(struct device *dev)
+>   {
+>   	struct scsi_device *sdev = to_scsi_device(dev);
+>   
+> +#ifdef CONFIG_PM_SLEEP
+> +	if (dev->power.is_suspended)
+> +		wait_for_completion(&dev->power.completion);
+> +#endif
+> +
+>   	device_lock(dev);
+>   
+>   	scsi_attach_vpd(sdev);
 
-Yes.  It might take a while for that with the speed of the committee..
+Directly accessing dev->power.completion from the SCSI core seems like a 
+layering violation to me. Isn't this an object that should only be 
+accessed directly by the device driver power management core? 
+Additionally, what guarantees that the desired power state has been 
+reached after wait_for_completion(&dev->power.completion) has finished?
 
+I think we need another solution. The device_lock() and device_unlock() 
+calls have been introduced by commit e27829dc92e5 ("scsi: serialize 
+->rescan against ->remove"). I think there are other ways to serialize
+scsi_rescan_device() against scsi_remove_device(), e.g. via 
+host->scan_mutex. Is this something that has been considered?
+
+Thanks,
+
+Bart.
