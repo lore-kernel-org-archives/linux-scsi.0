@@ -2,90 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F699C7EE29
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jun 2023 01:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51198C7EE23
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jun 2023 04:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229830AbjFDBpV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 3 Jun 2023 21:45:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39120 "EHLO
+        id S230152AbjFDExD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 4 Jun 2023 00:53:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbjFDBpU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Jun 2023 21:45:20 -0400
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85CA51A8;
-        Sat,  3 Jun 2023 18:45:19 -0700 (PDT)
-Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 06D29E17EA;
-        Sun,  4 Jun 2023 01:45:18 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id E1DEB37272;
-        Sun,  4 Jun 2023 01:45:17 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id navQ8nBG76f1; Sun,  4 Jun 2023 01:45:17 +0000 (UTC)
-Received: from [192.168.48.17] (host-192.252-165-26.dyn.295.ca [192.252.165.26])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 1531A3726F;
-        Sun,  4 Jun 2023 01:45:15 +0000 (UTC)
-Message-ID: <b99938ff-d08f-63c2-b146-8c4e6488038b@interlog.com>
-Date:   Sat, 3 Jun 2023 21:45:15 -0400
+        with ESMTP id S230093AbjFDEw7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2023 00:52:59 -0400
+Received: from smtp.smtpout.orange.fr (smtp-25.smtpout.orange.fr [80.12.242.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6706CED
+        for <linux-scsi@vger.kernel.org>; Sat,  3 Jun 2023 21:52:57 -0700 (PDT)
+Received: from pop-os.home ([86.243.2.178])
+        by smtp.orange.fr with ESMTPA
+        id 5fjZqns8y8SAU5fjZqOpgA; Sun, 04 Jun 2023 06:52:55 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+        s=t20230301; t=1685854375;
+        bh=lyyRlrC3KmRbFllkxLGkBpc9Qfqgsg8QHBWroitmBNg=;
+        h=From:To:Cc:Subject:Date;
+        b=BjuY3g6VMj9Z54gwTuPn+Zznrg4H2rJPBowIME/+4rVatdQx6UCiJiqTEoU5bLoMn
+         rlaVunUL0vtQ2lQA6mkbmCx2OoLs6JrezKqwp06PqILz6Hx2S5bYS3RTIiKMSbi9Hh
+         RClM/PsViCQTwrpXTd+99qAP31Zk7wFkL4rKHS4rG+t2Qb0EizBJaXrq+yxGE71xKZ
+         EZhJNZBWHYmZDcmm/o+Cw5u8DOtZLiv8b1fEV9cxl3J4Q5MDmB44dcjLd27RJr/5NE
+         MPT/rxGbXjUQNz2j7pTpiYfeGWXAxypdz0GcP0ljt4szhIT86J99fW6V9xFQoyk7U8
+         Rctm0kGx3OEWA==
+X-ME-Helo: pop-os.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sun, 04 Jun 2023 06:52:55 +0200
+X-ME-IP: 86.243.2.178
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH] qla2xxx: Drop useless LIST_HEAD
+Date:   Sun,  4 Jun 2023 06:52:42 +0200
+Message-Id: <49bb77624c9edc8d9bf8fe71d0c8a4cd7e582175.1685854354.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.2
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 2/3] scsi: sg: increase number of devices
-To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
-Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-References: <20230602163845.32108-1-mwilck@suse.com>
- <20230602163845.32108-3-mwilck@suse.com>
-Content-Language: en-CA
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <20230602163845.32108-3-mwilck@suse.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023-06-02 12:38, mwilck@suse.com wrote:
-> From: Hannes Reinecke <hare@suse.de>
-> 
-> Larger setups may need to allocate more than 32k sg devices, so
-> increase the number of devices to the full range of minor device
-> numbers.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+'new_fcports' is unused, so drop it.
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Usage of new_fcports has been removed in commit 726b85487067 ("qla2xxx: Add
+framework for async fabric discovery")
+---
+ drivers/scsi/qla2xxx/qla_init.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks.
-
-> ---
->   drivers/scsi/sg.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 037f8c98a6d3..6c04cf941dac 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -71,7 +71,7 @@ static int sg_proc_init(void);
->   
->   #define SG_ALLOW_DIO_DEF 0
->   
-> -#define SG_MAX_DEVS 32768
-> +#define SG_MAX_DEVS (1 << MINORBITS)
->   
->   /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
->    * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 95ae754582e7..f1724c7d39d5 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -6220,7 +6220,6 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 	fc_port_t	*fcport;
+ 	uint16_t	mb[MAILBOX_REGISTER_COUNT];
+ 	uint16_t	loop_id;
+-	LIST_HEAD(new_fcports);
+ 	struct qla_hw_data *ha = vha->hw;
+ 	int		discovery_gen;
+ 
+-- 
+2.34.1
 
