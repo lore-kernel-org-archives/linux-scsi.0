@@ -2,69 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C14FC77B73
-	for <linux-scsi@archiver.kernel.org>; Sat,  3 Jun 2023 18:13:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F699C7EE29
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jun 2023 01:45:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229632AbjFCSNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 3 Jun 2023 14:13:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58794 "EHLO
+        id S229830AbjFDBpV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 3 Jun 2023 21:45:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229625AbjFCSNK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Jun 2023 14:13:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1368C91;
-        Sat,  3 Jun 2023 11:13:10 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229490AbjFDBpU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Jun 2023 21:45:20 -0400
+Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85CA51A8;
+        Sat,  3 Jun 2023 18:45:19 -0700 (PDT)
+Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A42AD61715;
-        Sat,  3 Jun 2023 18:13:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 12D42C433EF;
-        Sat,  3 Jun 2023 18:13:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685815989;
-        bh=BaLdbUDwszNFoR+RoJcfTMCqQGxzkVQRDhyLXhSmqdQ=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=qJC1EV5Qaw9GYPBkTCjWYyzPfqmn2u50FDyKfTzi9flzfJwc6wcQgrJ8NV/f7kB8R
-         hR+tB06ZfcLadbfJSuxhm1tX9ifeM9zfL5Csuk5gBfVPvXecYBCfFhQMq1rJx6tBjU
-         0c8ZoOPAwBW4pQHRgGwep6rJm4UvMsHqho4uT2mNYpWspS7brsA2S3AoutZd4i/Epu
-         RkA5zuO47MGWIJHKpOEhgHhRlUy/ExSytBnjfyUDr6auEPRhz94BLHk/kOh/NyNCTs
-         aXDgHexyCBz+k+t8l4mxFtt4ce4pUR1kkjwV8xjvVEQUlDwnqIXibbLpNbN7K5J5SD
-         bRfUeuZ8KIZEw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id F2C39C395E0;
-        Sat,  3 Jun 2023 18:13:08 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.4-rc4
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <b4e84e8564b86822ec4dab6ba85995888df20991.camel@HansenPartnership.com>
-References: <b4e84e8564b86822ec4dab6ba85995888df20991.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <b4e84e8564b86822ec4dab6ba85995888df20991.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 6d074ce231772c66e648a61f6bd2245e7129d1f5
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: e5282a7d8f6b604f2bb6a06457734b8cf1e2f8f2
-Message-Id: <168581598898.28460.4174809796768994968.pr-tracker-bot@kernel.org>
-Date:   Sat, 03 Jun 2023 18:13:08 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 06D29E17EA;
+        Sun,  4 Jun 2023 01:45:18 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id E1DEB37272;
+        Sun,  4 Jun 2023 01:45:17 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id navQ8nBG76f1; Sun,  4 Jun 2023 01:45:17 +0000 (UTC)
+Received: from [192.168.48.17] (host-192.252-165-26.dyn.295.ca [192.252.165.26])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 1531A3726F;
+        Sun,  4 Jun 2023 01:45:15 +0000 (UTC)
+Message-ID: <b99938ff-d08f-63c2-b146-8c4e6488038b@interlog.com>
+Date:   Sat, 3 Jun 2023 21:45:15 -0400
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.2
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 2/3] scsi: sg: increase number of devices
+To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+References: <20230602163845.32108-1-mwilck@suse.com>
+ <20230602163845.32108-3-mwilck@suse.com>
+Content-Language: en-CA
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20230602163845.32108-3-mwilck@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 03 Jun 2023 13:43:28 -0400:
+On 2023-06-02 12:38, mwilck@suse.com wrote:
+> From: Hannes Reinecke <hare@suse.de>
+> 
+> Larger setups may need to allocate more than 32k sg devices, so
+> increase the number of devices to the full range of minor device
+> numbers.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/e5282a7d8f6b604f2bb6a06457734b8cf1e2f8f2
+Thanks.
 
-Thank you!
+> ---
+>   drivers/scsi/sg.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 037f8c98a6d3..6c04cf941dac 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -71,7 +71,7 @@ static int sg_proc_init(void);
+>   
+>   #define SG_ALLOW_DIO_DEF 0
+>   
+> -#define SG_MAX_DEVS 32768
+> +#define SG_MAX_DEVS (1 << MINORBITS)
+>   
+>   /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
+>    * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
