@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A720C7EE23
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jun 2023 07:57:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B1CC7EE23
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jun 2023 07:58:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229869AbjFEH5k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jun 2023 03:57:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46226 "EHLO
+        id S230480AbjFEH6w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Jun 2023 03:58:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231851AbjFEH5T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2023 03:57:19 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72245116;
-        Mon,  5 Jun 2023 00:57:05 -0700 (PDT)
+        with ESMTP id S231264AbjFEH5o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2023 03:57:44 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9375CE9;
+        Mon,  5 Jun 2023 00:57:43 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 32149218F1;
-        Mon,  5 Jun 2023 07:57:04 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 4F31C1F8AE;
+        Mon,  5 Jun 2023 07:57:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1685951824; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1685951862; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=8thiXCYqQgDRsNK276xQ03oQP1hHA2/Xst1LyVZIPlw=;
-        b=ZTnMk0jcK+1Q+ShxLXibHkJ7O2AsKDKzk6UtXyCoGCmYXDpgG3pvBM+smaS71gTIufD/I9
-        bTVf9fgsW9XJDwz5gqhTF9OmfR2llqAWjwlVGB6l1VH1y/cLy7BSnUert2+Kj2ulQ2wPLH
-        yRpw2ex5vnpEr0WvYOXkRPFsOUnpXXU=
+        bh=DUjOizhKCNd6heWb4WYl0+3v2X+4u56JrhHKxKoYCwM=;
+        b=K//Hra4XSYynswkPe4sEsR0fO0A5YgUz5F+qRrk0Od0GI+qF8JCfpErYLzFYI7oC1xqopO
+        iBQ9L8m3uxXyHYM+2K6Iu+gk57k0U29oSRUSYRbfmZLHkRq3Q+Lr6C+sh8tdutyCvKPJ80
+        pdNuykSwYNK4CnHiXSvLEHS9RIOg3NA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1685951824;
+        s=susede2_ed25519; t=1685951862;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=8thiXCYqQgDRsNK276xQ03oQP1hHA2/Xst1LyVZIPlw=;
-        b=x/gyg6lxwa4J/DSmb43cnmGuce6+MOnknmkzsBBPVXuh4Ri+6Xa1vr3egRaOtseVfd7zal
-        hPXl4BUDvJ7ddoCQ==
+        bh=DUjOizhKCNd6heWb4WYl0+3v2X+4u56JrhHKxKoYCwM=;
+        b=q++AcGdhlZYlMzQkksrnHEapl6oQvble/b/zQ/fRYOLayjApnAnfMqagurGSchF3zvMCct
+        +/DBlxiVhXqfVxBw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0AF51139C8;
-        Mon,  5 Jun 2023 07:57:04 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E0065139C8;
+        Mon,  5 Jun 2023 07:57:41 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id YorIAVCVfWTeeQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 05 Jun 2023 07:57:04 +0000
-Message-ID: <9375665c-7789-21e9-d122-dca1a18e8d1b@suse.de>
-Date:   Mon, 5 Jun 2023 09:57:03 +0200
+        id JjrjMXWVfWRAegAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 05 Jun 2023 07:57:41 +0000
+Message-ID: <07da13b1-e7bd-53b2-29d8-e236c17beb62@suse.de>
+Date:   Mon, 5 Jun 2023 09:57:41 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
-Subject: Re: [PATCH 1/3] ata: libata-sata: Improve ata_change_queue_depth()
+Subject: Re: [PATCH 2/3] ata: libata-eh: Use ata_ncq_enabled() in
+ ata_eh_speed_down()
 Content-Language: en-US
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
         linux-scsi@vger.kernel.org,
@@ -61,9 +62,9 @@ To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
 Cc:     John Garry <john.g.garry@oracle.com>,
         Jason Yan <yanaijie@huawei.com>
 References: <20230605013212.573489-1-dlemoal@kernel.org>
- <20230605013212.573489-2-dlemoal@kernel.org>
+ <20230605013212.573489-3-dlemoal@kernel.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230605013212.573489-2-dlemoal@kernel.org>
+In-Reply-To: <20230605013212.573489-3-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -71,37 +72,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 6/5/23 03:32, Damien Le Moal wrote:
-> ata_change_queue_depth() implements different behaviors for ATA devices
-> managed by libsas than for those managed by libata directly.
-> Specifically, if a user attempts to set a device queue depth to a value
-> larger than 32 (ATA_MAX_QUEUE), the queue depth is capped to the maximum
-> and set to 32 for libsas managed devices whereas for libata managed
-> devices, the queue depth is unchanged and an error returned to the user.
-> This is due to the fact that for libsas devices, sdev->host->can_queue
-> may indicate the host (HBA) maximum number of commands that can be
-> queued rather than the device maximum queue depth.
-> 
-> Change ata_change_queue_depth() to provide a consistent behavior for all
-> devices by changing the queue depth capping code to a check that the
-> user provided value does not exceed the device maximum queue depth.
-> This check is moved before the code clearing or setting the
-> ATA_DFLAG_NCQ_OFF flag to ensure that this flag is not modified when an
-> invlaid queue depth is provided.
-> 
-> While at it, two other small improvements are added:
-> 1) Use ata_ncq_supported() instead of ata_ncq_enabled() and clear the
->     ATA_DFLAG_NCQ_OFF flag only and only if needed.
-> 2) If the user provided queue depth is equal to the current queue depth,
->     do not return an error as that is useless.
-> 
-> Overall, the behavior of ata_change_queue_depth() for libata managed
-> devices is unchanged. The behavior with libsas managed devices becomes
-> consistent with libata managed devices.
+> Instead of hardconfign the device flag tests to detect if NCQ is
+> supported and enabled in ata_eh_speed_down(), use ata_ncq_enabled().
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-sata.c | 25 +++++++++++++++----------
->   1 file changed, 15 insertions(+), 10 deletions(-)
+>   drivers/ata/libata-eh.c | 4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
