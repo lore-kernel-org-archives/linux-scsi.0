@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A04C7EE45
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:46:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E7EC7EE3A
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:46:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234644AbjFFHqP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:46:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50642 "EHLO
+        id S236447AbjFFHqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 03:46:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234348AbjFFHo1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:44:27 -0400
+        with ESMTP id S236660AbjFFHnU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:43:20 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD0821BD4;
-        Tue,  6 Jun 2023 00:41:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 639B41BC3;
+        Tue,  6 Jun 2023 00:41:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=rEj4t4RByNCnEGoVckpjuOqOSqkYA0bI6jBzshMrCBQ=; b=reUq0A7aIRxNvxcQU4tLunP86X
-        H5T3lbnnI0syQYXk4WpwsHbWarRNnbB1Ejinyj0U5j9N6Xc8lDSnGhfVpE0VAyaaNlpshg0cq2AWk
-        H/AiZzOK3MfQZxXIcVz/mFljOI2rr+/oczCVgaSLG8cxdxFFF31FwXIaNfWsS8GjGPwhOhpfR45mL
-        aH1JaNHGBZCbLBZUKvsgUSymRmvl7oDjrh2VVV4WuzeiifXsrTbcjvhBKpBd1lII26GclF49T17yH
-        ETLpJbaNQjbQM5JdMQyVIK0noqFAz2nPbGyIvVaQrFCioTYq14mNIzHq+cGYs24y5oVWcQYhcIXrt
-        trSDszIg==;
+        bh=898bG3yB0h/4R6DBTCYmRThE64ZfC658omyA+boEEQA=; b=Fd6YFaCzXy0iamT55KE0gx+7dN
+        a+UnS0IIigBYWM1bh8mIEwZK5m2tYYmWPhlar96roitd7hUcWGglUePNlImlPUQ6769VWww2VGEkU
+        XhxpcQDKpeaKxfmZK969rkbfWxU3xMsv421yjRbMWuhUdo6GiJevyvAEt6wQBaamvd9I5VOrkmx6D
+        CzAtXwAquq5FUACfU9DbUkBTzhIOTXmXmRbXn9QOJngm7lxD3phyKIOJb8f9it/OJLMzzgq9f5r/R
+        0OqEmdpEteKmZM72kaBy9nkSoZydv8+Wc0w8ePYhhjhaWu+HWQ2S/QBThZ9+ei/zUAgDPd3QonRyj
+        WHf7FBvA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q6RJx-000aH6-0p;
-        Tue, 06 Jun 2023 07:41:37 +0000
+        id 1q6RJa-000Ztj-1C;
+        Tue, 06 Jun 2023 07:41:14 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org
-Subject: [PATCH 31/31] fs: remove the now unused FMODE_* flags
-Date:   Tue,  6 Jun 2023 09:39:50 +0200
-Message-Id: <20230606073950.225178-32-hch@lst.de>
+Subject: [PATCH 25/31] ubd: remove commented out code in ubd_open
+Date:   Tue,  6 Jun 2023 09:39:44 +0200
+Message-Id: <20230606073950.225178-26-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230606073950.225178-1-hch@lst.de>
 References: <20230606073950.225178-1-hch@lst.de>
@@ -64,32 +64,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-FMODE_NDELAY, FMODE_EXCL and FMODE_WRITE_IOCTL were only used for
-block internal purposed and are now entirely unused, so remove them.
+This code has been dead forever, make sure it doesn't show up in code
+searches.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/fs.h | 7 -------
+ arch/um/drivers/ubd_kern.c | 7 -------
  1 file changed, 7 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ad1d2c9afb3fa4..8045c7ef4000c2 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -119,13 +119,6 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
- #define FMODE_PWRITE		((__force fmode_t)0x10)
- /* File is opened for execution with sys_execve / sys_uselib */
- #define FMODE_EXEC		((__force fmode_t)0x20)
--/* File is opened with O_NDELAY (only set for block devices) */
--#define FMODE_NDELAY		((__force fmode_t)0x40)
--/* File is opened with O_EXCL (only set for block devices) */
--#define FMODE_EXCL		((__force fmode_t)0x80)
--/* File is opened using open(.., 3, ..) and is writeable only for ioctls
--   (specialy hack for floppy.c) */
--#define FMODE_WRITE_IOCTL	((__force fmode_t)0x100)
- /* 32bit hashes as llseek() offset (for directories) */
- #define FMODE_32BITHASH         ((__force fmode_t)0x200)
- /* 64bit hashes as llseek() offset (for directories) */
+diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
+index 8b79554968addb..20c1a16199c503 100644
+--- a/arch/um/drivers/ubd_kern.c
++++ b/arch/um/drivers/ubd_kern.c
+@@ -1170,13 +1170,6 @@ static int ubd_open(struct gendisk *disk, fmode_t mode)
+ 	}
+ 	ubd_dev->count++;
+ 	set_disk_ro(disk, !ubd_dev->openflags.w);
+-
+-	/* This should no more be needed. And it didn't work anyway to exclude
+-	 * read-write remounting of filesystems.*/
+-	/*if((mode & FMODE_WRITE) && !ubd_dev->openflags.w){
+-	        if(--ubd_dev->count == 0) ubd_close_dev(ubd_dev);
+-	        err = -EROFS;
+-	}*/
+ out:
+ 	mutex_unlock(&ubd_mutex);
+ 	return err;
 -- 
 2.39.2
 
