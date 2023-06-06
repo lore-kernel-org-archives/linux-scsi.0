@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F438C7EE24
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:41:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB4CC7EE3A
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:41:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235305AbjFFHlQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:41:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50130 "EHLO
+        id S234678AbjFFHlX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 03:41:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236401AbjFFHke (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:40:34 -0400
+        with ESMTP id S235422AbjFFHlA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:41:00 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D28810C6;
-        Tue,  6 Jun 2023 00:40:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5123AE54;
+        Tue,  6 Jun 2023 00:40:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=7kSiDWX+wBfpAMl1gbSCpgjgS70R4anaEnwRQlQDcQo=; b=nFRQKfpiDHj53kS6vmfxS7C3cA
-        eILPXidLfwXuzQExX0rKMjrPLyAwZkFmTVPgpKPbx9sZm99EoptcHglNzlnKI7MP/iXpq6oT/LmPg
-        K/tZWRM0g4CWcVHOgsIIn+0ZXWy/kSqdoAOzwkogdg0BwORc+v35hymsI+cydLuRiboBKvPgP3ZDf
-        4uhNhTDAU5SgfUuV6tcVQbUZXIrPZ/CBb6Z4pGfdHPjg9eN7iSoBrMaCh117//0Qse5mpkdkoUWwj
-        X+Zd3ikZUk3cBBPyJbNUkclymt4hxzn9x2PuTwygbhcZdgwbplh8zEhY9PafAqCYkEa0n9EAjXVsH
-        iFM/Krkg==;
+        bh=qVOrkQYaq+SX22HuuXUcSy5ptKgWrZvwoxfyWDjTNnY=; b=PZGsx1CCD2z+deKxuGotXw5aYf
+        rNyskY7AyOr1FlBkPXZIURauJboA9G1KfRUFRMstjX9XjxTctwtM2HPKli0YcMDhkVBYqgxV4P8dN
+        AfY/988vKFPSDvom3cXJqwcikLjCUkiilmz/+gwcOn5nDIgAUNuOSGNLDV06cMiI9281lfybVMezH
+        xFbiwGKDc/OF7aQ5SMe05WRqmuQy8oe0ms+73QI+rBLYBanvKwVnRMXakGAfOy4EpWBIwGvtfPAwC
+        uN05KHcS/jsxfUhY2GcVWHYTbY1PmJ7g3xAWrnDkJtbQzztiyMOsltH73yikkgoECU5vPMuDMx7WN
+        wprYeXhA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q6RIZ-000Ykh-1p;
-        Tue, 06 Jun 2023 07:40:12 +0000
+        id 1q6RIh-000YuD-04;
+        Tue, 06 Jun 2023 07:40:19 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org
-Subject: [PATCH 06/31] cdrom: remove the unused mode argument to cdrom_release
-Date:   Tue,  6 Jun 2023 09:39:25 +0200
-Message-Id: <20230606073950.225178-7-hch@lst.de>
+Subject: [PATCH 08/31] block: share code between disk_check_media_change and disk_force_media_change
+Date:   Tue,  6 Jun 2023 09:39:27 +0200
+Message-Id: <20230606073950.225178-9-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230606073950.225178-1-hch@lst.de>
 References: <20230606073950.225178-1-hch@lst.de>
@@ -64,66 +64,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Factor the common logic between disk_check_media_change and
+disk_force_media_change into a helper.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/cdrom/cdrom.c | 2 +-
- drivers/cdrom/gdrom.c | 2 +-
- drivers/scsi/sr.c     | 2 +-
- include/linux/cdrom.h | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ block/disk-events.c | 37 ++++++++++++++++---------------------
+ 1 file changed, 16 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index adebac1bd210d9..998b03fe976e22 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -1250,7 +1250,7 @@ static int check_for_audio_disc(struct cdrom_device_info *cdi,
- 	return 0;
+diff --git a/block/disk-events.c b/block/disk-events.c
+index 8b1b63225738f8..06f325662b3494 100644
+--- a/block/disk-events.c
++++ b/block/disk-events.c
+@@ -262,6 +262,18 @@ static unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask)
+ 	return pending;
  }
  
--void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode)
-+void cdrom_release(struct cdrom_device_info *cdi)
++static bool __disk_check_media_change(struct gendisk *disk, unsigned int events)
++{
++	if (!(events & DISK_EVENT_MEDIA_CHANGE))
++		return false;
++
++	if (__invalidate_device(disk->part0, true))
++		pr_warn("VFS: busy inodes on changed media %s\n",
++			disk->disk_name);
++	set_bit(GD_NEED_PART_SCAN, &disk->state);
++	return true;
++}
++
+ /**
+  * disk_check_media_change - check if a removable media has been changed
+  * @disk: gendisk to check
+@@ -274,18 +286,9 @@ static unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask)
+  */
+ bool disk_check_media_change(struct gendisk *disk)
  {
- 	const struct cdrom_device_ops *cdo = cdi->ops;
- 
-diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
-index 14922403983e9e..a401dc4218a998 100644
---- a/drivers/cdrom/gdrom.c
-+++ b/drivers/cdrom/gdrom.c
-@@ -481,7 +481,7 @@ static int gdrom_bdops_open(struct block_device *bdev, fmode_t mode)
- 	bdev_check_media_change(bdev);
- 
- 	mutex_lock(&gdrom_mutex);
--	ret = cdrom_open(gd.cd_info, mode);
-+	ret = cdrom_open(gd.cd_info);
- 	mutex_unlock(&gdrom_mutex);
- 	return ret;
+-	unsigned int events;
+-
+-	events = disk_clear_events(disk, DISK_EVENT_MEDIA_CHANGE |
+-				   DISK_EVENT_EJECT_REQUEST);
+-	if (!(events & DISK_EVENT_MEDIA_CHANGE))
+-		return false;
+-
+-	if (__invalidate_device(disk->part0, true))
+-		pr_warn("VFS: busy inodes on changed media %s\n",
+-			disk->disk_name);
+-	set_bit(GD_NEED_PART_SCAN, &disk->state);
+-	return true;
++	return __disk_check_media_change(disk,
++			disk_clear_events(disk, DISK_EVENT_MEDIA_CHANGE |
++						DISK_EVENT_EJECT_REQUEST));
  }
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 444c7efc14cba7..6d33120ee5ba85 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -512,7 +512,7 @@ static void sr_block_release(struct gendisk *disk, fmode_t mode)
- 	struct scsi_cd *cd = scsi_cd(disk);
+ EXPORT_SYMBOL(disk_check_media_change);
  
- 	mutex_lock(&cd->lock);
--	cdrom_release(&cd->cdi, mode);
-+	cdrom_release(&cd->cdi);
- 	mutex_unlock(&cd->lock);
+@@ -303,15 +306,7 @@ EXPORT_SYMBOL(disk_check_media_change);
+ bool disk_force_media_change(struct gendisk *disk, unsigned int events)
+ {
+ 	disk_event_uevent(disk, events);
+-
+-	if (!(events & DISK_EVENT_MEDIA_CHANGE))
+-		return false;
+-
+-	if (__invalidate_device(disk->part0, true))
+-		pr_warn("VFS: busy inodes on changed media %s\n",
+-			disk->disk_name);
+-	set_bit(GD_NEED_PART_SCAN, &disk->state);
+-	return true;
++	return __disk_check_media_change(disk, events);
+ }
+ EXPORT_SYMBOL_GPL(disk_force_media_change);
  
- 	scsi_device_put(cd->device);
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index 385e94732b2cf1..3f23d5239de254 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -102,7 +102,7 @@ int cdrom_read_tocentry(struct cdrom_device_info *cdi,
- 
- /* the general block_device operations structure: */
- int cdrom_open(struct cdrom_device_info *cdi, fmode_t mode);
--extern void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode);
-+void cdrom_release(struct cdrom_device_info *cdi);
- int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
- 		unsigned int cmd, unsigned long arg);
- extern unsigned int cdrom_check_events(struct cdrom_device_info *cdi,
 -- 
 2.39.2
 
