@@ -2,72 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EEFC7EE24
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 17:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EECC7EE45
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 19:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237630AbjFFRia (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 13:38:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43462 "EHLO
+        id S231956AbjFFTjM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 15:39:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233697AbjFFRi3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 13:38:29 -0400
-Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com [209.85.219.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0AB910DE;
-        Tue,  6 Jun 2023 10:38:28 -0700 (PDT)
-Received: by mail-yb1-f174.google.com with SMTP id 3f1490d57ef6-bacf685150cso8044914276.3;
-        Tue, 06 Jun 2023 10:38:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686073108; x=1688665108;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/jZZzUpN02JfdEi9qpDyIpAeWgU+U11uOqjPbUWV+z4=;
-        b=Awzscidih9NOaFhCv0cGI/VX1NIMtFePaiEpZmyFv+mtGuHyXNXk8R25emzVsOzwZM
-         YvGtYyjIt0oRw9MpFSLNd2h12CoFL1xAbO2PC3SczM2WP6HLBg3pTb47ZoWbI4qeiNdb
-         jKc4W+RcG6AVBpWhyi3RNLjV1ZFbDPBdZarkfaD2Cp9h96pO50MYBfA0uIlFJ7dnasfn
-         Wbo6UREshct7hBve61WVdQhbf9lCE0S9HlS/dtwNZQTHeI0kdM+kss0jPHqdvyjFsWNl
-         yQKAlf+2VgIFafzk6PVYZmTyWN4lyvP9jN9EZg+eRHFTCT3j6kmDJGywFCm9t4erd8E0
-         trBw==
-X-Gm-Message-State: AC+VfDxbWOIud0ThWthzT69N2azze4c6Gj6GafQ+4GhYMFQK5fptJNFU
-        9ORhX/GzJTT/VL9GQIhKb/A=
-X-Google-Smtp-Source: ACHHUZ4bEOvgjkl+iBEBIndL9y9CH3erxgjvl5w+3hTt64XlcaBY418SZ1VZoiWjxsBK7SR/rFq0rA==
-X-Received: by 2002:a25:7a86:0:b0:bb1:650c:8c04 with SMTP id v128-20020a257a86000000b00bb1650c8c04mr2706557ybc.56.1686073108054;
-        Tue, 06 Jun 2023 10:38:28 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id j12-20020a17090a840c00b00253311d508esm9721400pjn.27.2023.06.06.10.38.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Jun 2023 10:38:27 -0700 (PDT)
-Message-ID: <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
-Date:   Tue, 6 Jun 2023 10:38:25 -0700
+        with ESMTP id S232094AbjFFTiy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 15:38:54 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B37210EC;
+        Tue,  6 Jun 2023 12:38:53 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id F284C1FD94;
+        Tue,  6 Jun 2023 19:38:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1686080332; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=qVIEkGqw5a+jSqUHhvJwqFvm7MGHdaBak6UofBYr9tc=;
+        b=PrO7Lw0z3fEWibFaTiR5OrwxUNJnICasm5nPgrpv1IshqwYOy2tZ5HDcuuyl6dmmHjB2pC
+        J0Mj0YCDro1oSGwNECCf5E2NOQ0Y9KjuGy6hloqnhQVJArgRoG7Oyxm7LSBFpggTWqiehM
+        f8Ts775JlMNIkkkzXglb7/+6jXiz0w0=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9FDBF13776;
+        Tue,  6 Jun 2023 19:38:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id MCl8JUuLf2RaFwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Tue, 06 Jun 2023 19:38:51 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH v2 2/3] scsi: sg: increase number of devices
+Date:   Tue,  6 Jun 2023 21:38:44 +0200
+Message-Id: <20230606193845.9627-3-mwilck@suse.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230606193845.9627-1-mwilck@suse.com>
+References: <20230606193845.9627-1-mwilck@suse.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH] scsi: sd: support specify probe type of build-in driver
-Content-Language: en-US
-To:     Jianlin Lv <iecedge@gmail.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, paulmck@kernel.org, bp@suse.de,
-        peterz@infradead.org, will@kernel.org, rdunlap@infradead.org,
-        kim.phillips@amd.com, rostedt@goodmis.org, wyes.karny@amd.com
-Cc:     jianlv@ebay.com, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20230606051217.2064-1-iecedge@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230606051217.2064-1-iecedge@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/5/23 22:12, Jianlin Lv wrote:
-> In scenarios where SCSI disk name sensitivity is crucial, the probe type
-> of the build-in sd driver can be set to synchronous. As a result,
-> the scsi disk names are deterministic.
+From: Hannes Reinecke <hare@suse.de>
 
-Which are these scenarios?
+Larger setups may need to allocate more than 32k sg devices, so
+increase the number of devices to the full range of minor device
+numbers.
 
-Additionally, how can synchronous scanning of sd devices make a 
-difference if there are multiple host bus adapters that use an interface 
-type that is scanned asynchronously?
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/sg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bart.
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 037f8c98a6d3..6c04cf941dac 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -71,7 +71,7 @@ static int sg_proc_init(void);
+ 
+ #define SG_ALLOW_DIO_DEF 0
+ 
+-#define SG_MAX_DEVS 32768
++#define SG_MAX_DEVS (1 << MINORBITS)
+ 
+ /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
+  * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
+-- 
+2.40.1
+
