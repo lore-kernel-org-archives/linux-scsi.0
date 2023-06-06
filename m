@@ -2,156 +2,224 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5500CC77B7A
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 13:03:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E0D4C7EE24
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 14:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233398AbjFFNDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 09:03:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60892 "EHLO
+        id S237833AbjFFOTV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 10:19:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231431AbjFFNDV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 09:03:21 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4A81F4
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Jun 2023 06:02:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686056560;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JRcRRTG+mqlO4mJEu7HX8NmYwUMGAhmL5rrRoJ2JEDQ=;
-        b=DPUa1HwB9AkMCMZfkgK2sX6M7aqmMcQ/zlozUxvQEw+jQLqLyxHa8sLEurIWi6VJpZvU8w
-        I+7pwrkUPWvLA/E1Ys2Y/TuT9VOclPcrp7oVQd7pfeiyi9kFJy96FzodOBiUJjt8mKZo0V
-        nUku9fup1G8UY3r2Zw3Tid/9N/0Mv40=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-19-yEd6r6VfORGUXlT2TpcTCw-1; Tue, 06 Jun 2023 09:02:37 -0400
-X-MC-Unique: yEd6r6VfORGUXlT2TpcTCw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 53C0C8032F5;
-        Tue,  6 Jun 2023 13:02:36 +0000 (UTC)
-Received: from [10.22.16.51] (unknown [10.22.16.51])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B2A554087C62;
-        Tue,  6 Jun 2023 13:02:35 +0000 (UTC)
-Message-ID: <3ef3bb51-ed26-9f52-84cf-93dc3f365ccb@redhat.com>
-Date:   Tue, 6 Jun 2023 09:02:35 -0400
+        with ESMTP id S237212AbjFFOTT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 10:19:19 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 938BF10DF
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Jun 2023 07:19:15 -0700 (PDT)
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230606141912epoutp01aedc1dfeb663b5048ade7f71b2260bef~mF69xtEvF0346703467epoutp01i
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Jun 2023 14:19:12 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230606141912epoutp01aedc1dfeb663b5048ade7f71b2260bef~mF69xtEvF0346703467epoutp01i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1686061152;
+        bh=UOxM1GwH4N78/5VcZmRi0SOFUE4InTqlB4yboWdBops=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=PZw1PRsP3Vrqe4rBgl2Q+llmA+X/Y64Mgt62j0rqVIiINQHQz37xv9cTHbe78woTb
+         5BxEesBBycF+gggWT9A5ORabSDHqm0HgkJVRO6OoIW9+f+7OZdJFEDgW6HO58kUDBK
+         ZFYVIHdSenb57diO3bEYFPfETDlbB5mJcxWAs+jM=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20230606141911epcas5p3feaf4868278ede2a218037055402778a~mF68ppvKo0226602266epcas5p3G;
+        Tue,  6 Jun 2023 14:19:11 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.181]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4QbCJt3gbnz4x9Pp; Tue,  6 Jun
+        2023 14:19:10 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        ED.0D.04567.E504F746; Tue,  6 Jun 2023 23:19:10 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20230606113849epcas5p20436fd9c3a47354fc4f5264540cd9887~mDu7kpk5C1243112431epcas5p2V;
+        Tue,  6 Jun 2023 11:38:49 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230606113849epsmtrp1037164b0d5a6cfbe44a01819ba98ed2b~mDu7i-Kls0420604206epsmtrp1I;
+        Tue,  6 Jun 2023 11:38:49 +0000 (GMT)
+X-AuditID: b6c32a49-943ff700000011d7-f9-647f405ec85f
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B7.47.28392.9CA1F746; Tue,  6 Jun 2023 20:38:49 +0900 (KST)
+Received: from green245 (unknown [107.99.41.245]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230606113842epsmtip230b93d2fae8d0d35d5b4cfcfbf869ead~mDu1DVgJ-2435324353epsmtip29;
+        Tue,  6 Jun 2023 11:38:42 +0000 (GMT)
+Date:   Tue, 6 Jun 2023 17:05:35 +0530
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        willy@infradead.org, hare@suse.de, djwong@kernel.org,
+        bvanassche@acm.org, ming.lei@redhat.com, dlemoal@kernel.org,
+        nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Kanchan Joshi <joshi.k@samsung.com>,
+        Javier =?utf-8?B?R29uesOhbGV6?= <javier.gonz@samsung.com>,
+        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v12 5/9] nvme: add copy offload support
+Message-ID: <20230606113535.rjbhe6eqlyqk4pqq@green245>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [bug report] WARNING: CPU: 23 PID: 35995 at lib/refcount.c:28
- refcount_warn_saturate+0xba/0x110
-Content-Language: en-US
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>
-References: <CAGS2=YoMsjT19mVP9Te_Mx1yKpgLDbZuDQnUV_VLCjhJ=F8D8w@mail.gmail.com>
-Cc:     Guangwu Zhang <guazhang@redhat.com>
-From:   John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <CAGS2=YoMsjT19mVP9Te_Mx1yKpgLDbZuDQnUV_VLCjhJ=F8D8w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
+In-Reply-To: <ZH3mjUb+yqI11XD8@infradead.org>
+User-Agent: NeoMutt/20171215
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te1STZRzHz/O+493QZq9c6nGUcN44JtiAGeADSKChvQEVzTpd/gB2tvcw
+        AradjYlmHW4KAnJRWycWxEUuAiUIZBNEcURDkYAQCPJCBmgQ90MoKLS50fG/z/P9/b7P7/n9
+        fufh4DZX2TxOtCyeUcpEsRSxgXWhzWU7PzwwUeJRnmmHaq//gqOUvCc4qrmdS6DJtnmAvp59
+        hKPR1nSA+kY3oZErAahl+lsrNNR6EUOXSk9hqDOvFENVNe0Yai6Zw9BftxbYqH1tikCn9AMA
+        jfVrMdQyvAOVpJWx0KWWayzU11RAoKKKMTbKGtQRqNKwiiH96VQM6UaTATo3OcNCHcMOqPuJ
+        wQqtPCwgAh3pvpshtPZuF0Ff1N5m0913zrPohrOudF+Xmq6vziDohrJEunkoiaDP5Jy2orNT
+        pwl6bmyYRc9c7ifonMZqQDd0HqEX6reGbf40ZreUEUkYpRMjE8sl0bIofyrkQMSbEV7eHgK+
+        wAftopxkojjGnwoKDePvj441DotyOiiKVRulMJFKRbm/sVspV8czTlK5Kt6fYhSSWIWnwk0l
+        ilOpZVFuMibeV+DhsdPLmBgZIzUMlrIVDQ6HBpYfWiWBKy9kAmsOJD1hT2EFy8Q2ZDOAustv
+        ZYINRp4HMD9LA8yHBQCLu/uxdcdEVwZhDjQB2N8+ZMkaB3B5rR2YslikM2w7M2d0cDgEuQN2
+        rnFMsh3pAocr03ET42Q1G7auUia2Jf3gyODkU51LesM/0qosvBleyx9lma6xJvlwOPsjk2xP
+        vgS/KV/ETWUh+a81LO4xtwDJIFjSfhI3sy2cMDSyzcyDf+emWTgBVn11ljCbjwKoHdQCcyAA
+        Hruea3mcFJb0j1v0l6Hm+jnMrG+C2Sujlklwoe67dX4Ffl9bTJh5CxxYSrYwDc/3PLZM6x6A
+        bSl6LA84ap9pTvtMPTP7wozZFCutsWmcdICVqxwzusDaJvdiYFUNtjAKVVwUo/JSCGRMwv8L
+        F8vj6sHTv+T6tg7cHpl10wOMA/QAcnDKjvtZQKLEhisRHf6cUcojlOpYRqUHXsZdncR59mK5
+        8TPK4iMEnj4ent7e3p4+r3sLqBe5r/pfE9uQUaJ4JoZhFIxy3YdxrHlJGHK4eKFWfMc2fJnn
+        5yzgCJMNB/bZP256b3DJdwCbC+w3iBxDHgiXeoM9uxf9Auq8KiUYN0WhGj9xaT6O3Lq2Udgb
+        Tsn5edJmeye+5uO6LKFPTfmhB7d0E9s60MC+XceL7FM06SNTWWq334lk/s8rFUKe+7bUHu6j
+        9B9GkjUn6HcTZB/8s1odmX/0tRs81nxP4dXf9nwZoqZCe9N6/YV2+p2FU6HHfrxboJvR7V3I
+        HZ2ua5wUf7gH3P9kY2pZuziHf397/g2NRurc4WbI/fMWCH4nKPL9sKidrUXJVZ0d+MzzB8ti
+        vgheFFXcvGc35PTcfuGuw4yj8CdSefwI8WtE3VoYxVJJRQJXXKkS/Qe0f8wY1AQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpileLIzCtJLcpLzFFi42LZdlhJXvekVH2KwYpt8hbrTx1jtmia8JfZ
+        YvXdfjaL14c/MVpM+/CT2eLJgXZGi8tP+Cwe7Le32PtuNqvFzQM7mSz2LJrEZHF6wiImi5Wr
+        jzJZ7F74kcni8Z3P7BZH/79ls5h06BqjxdOrs5gs9t7StljYtoTFYs/ekywWl3fNYbOYv+wp
+        u0X39R1sFsuP/2OyODS5mclix5NGRot1r9+zWJy4JW1x/u9xVovfP+awOch7XL7i7THr/lk2
+        j52z7rJ7nL+3kcVj8wotj8tnSz02repk89i8pN5j980GNo/FfZNZPXqb37F5fHx6i8Xj/b6r
+        bB59W1Yxemw+Xe3xeZNcgGAUl01Kak5mWWqRvl0CV8afTztYC55KVBx5vZi5gbFbpIuRk0NC
+        wETi1dlONhBbSGAHo8SvmxYQcUmJZX+PMEPYwhIr/z1n72LkAqp5wihx9vpeFpAEi4CKxOHF
+        H5m6GDk42AS0JU7/5wAJiwhoStxa3s4MUs8ssI5d4uvWa2CDhAWsJR5cfw1m8wqYSdxuW8kM
+        MfQRo8T/I8ugEoISJ2c+AVvADFQ0b/NDZpAFzALSEsv/cYCYnAK6Erd6w0EqRAVkJGYs/co8
+        gVFwFpLmWUiaZyE0L2BkXsUomVpQnJueW2xYYJSXWq5XnJhbXJqXrpecn7uJEZxMtLR2MO5Z
+        9UHvECMTB+MhRgkOZiUR3l1e1SlCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeS90nYwXEkhPLEnN
+        Tk0tSC2CyTJxcEo1MLU+OaWufuTyRoVPCv08vlE7nq07MuF4bcMm/o60vvMlbcm7Pl/1mLd9
+        ztH9l+72c6ee+DXFKzvLa+ZxCT/JZIblbzofX2vVkWUO0L/6SClK5h6Xs/ilnIlPQ9XXn3vq
+        az1NPSqi7N2O30XznC8Hlk7YfTvg9nRR5xtOV+4Giql2/vgsmRWz+OOxyODJgvZWjS8c5py8
+        fTj96Y+iY/HVKw/4199n3rhRdOf3isRqnWVybZllKaqa1/bfevKp3m99aAznpTviSy66L308
+        TyX0j4DyhcYmmVbBc4zz9NRN+5Z379TodNuh9HDxt9N7zy5+5bJ37v2m09OYj1kk+FwXNmN1
+        bHg75X/8fTv5DyZ9PSFKLMUZiYZazEXFiQAmhJ86lQMAAA==
+X-CMS-MailID: 20230606113849epcas5p20436fd9c3a47354fc4f5264540cd9887
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----JBF_njb0NWiSS48ThI00c_Y9Zxz.JAos93qymBy6wSZnW6dc=_4db83_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230605122310epcas5p4aaebfc26fe5377613a36fe50423cf494
+References: <20230605121732.28468-1-nj.shetty@samsung.com>
+        <CGME20230605122310epcas5p4aaebfc26fe5377613a36fe50423cf494@epcas5p4.samsung.com>
+        <20230605121732.28468-6-nj.shetty@samsung.com>
+        <ZH3mjUb+yqI11XD8@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Saurav, Nilesh,
+------JBF_njb0NWiSS48ThI00c_Y9Zxz.JAos93qymBy6wSZnW6dc=_4db83_
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Disposition: inline
 
-Can you please look into this?  It seems we have a major regression in the 6.5 QEDF driver.
+On 23/06/05 06:43AM, Christoph Hellwig wrote:
+>>  		break;
+>>  	case REQ_OP_READ:
+>> -		ret = nvme_setup_rw(ns, req, cmd, nvme_cmd_read);
+>> +		if (unlikely(req->cmd_flags & REQ_COPY))
+>> +			nvme_setup_copy_read(ns, req);
+>> +		else
+>> +			ret = nvme_setup_rw(ns, req, cmd, nvme_cmd_read);
+>>  		break;
+>>  	case REQ_OP_WRITE:
+>> -		ret = nvme_setup_rw(ns, req, cmd, nvme_cmd_write);
+>> +		if (unlikely(req->cmd_flags & REQ_COPY))
+>> +			ret = nvme_setup_copy_write(ns, req, cmd);
+>> +		else
+>> +			ret = nvme_setup_rw(ns, req, cmd, nvme_cmd_write);
+>
+>Yikes.  Overloading REQ_OP_READ and REQ_OP_WRITE with something entirely
+>different brings us back the horrors of the block layer 15 years ago.
+>Don't do that.  Please add separate REQ_COPY_IN/OUT (or maybe
+>SEND/RECEIVE or whatever) methods.
+>
 
-/John
+Downside will be duplicating checks which are present for read, write in
+block layer, device-mapper and zoned devices.
+But we can do this, shouldn't be an issue.
 
-On 6/5/23 23:17, Guangwu Zhang wrote:
-> Hi,
-> qedf IO testing found the error with latest linux-block/for-next,
-> please have a look.
-> 
-> kernel repo : https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-> commit: Merge branch 'for-6.5/block' into for-next
-> 
-> 
-> [ 7305.031233] ------------[ cut here ]------------
-> [ 7305.033749] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-> tx_buff_off=00000000, rx_buff_off=00000000, rx_id=073f
-> [ 7305.038904] refcount_t: underflow; use-after-free.
-> [ 7305.038918] WARNING: CPU: 23 PID: 35995 at lib/refcount.c:28
-> refcount_warn_saturate+0xba/0x110
-> [ 7305.065853] Modules linked in: nfsv3 nfs_acl bnx2fc cnic uio
-> rpcsec_gss_krb5 auth_rpcgss nfsv4 dns_resolver nfs lockd grace fscache
-> netfs sunrpc vfat fat dm_service_time dm_multipath intel_rapl_msr
-> intel_rapl_common sb_edac x86_pkg_temp_thermal intel_powerclamp
-> coretemp kvm_intel kvm mgag200 i2c_algo_bit drm_shmem_helper
-> dell_wmi_descriptor drm_kms_helper ipmi_ssif ledtrig_audio
-> sparse_keymap irqbypass rfkill rapl video syscopyarea intel_cstate
-> mei_me ipmi_si sysfillrect mei intel_uncore iTCO_wdt sysimgblt pcspkr
-> iTCO_vendor_support dcdbas mxm_wmi ipmi_devintf lpc_ich
-> ipmi_msghandler acpi_power_meter drm fuse xfs libcrc32c sr_mod sd_mod
-> cdrom t10_pi sg qede qedf crct10dif_pclmul crc32_pclmul crc32c_intel
-> qed ahci libahci ghash_clmulni_intel libata libfcoe libfc tg3
-> megaraid_sas scsi_transport_fc crc8 wmi dm_mirror dm_region_hash
-> dm_log dm_mod [last unloaded: tls]
-> [ 7305.151246] CPU: 23 PID: 35995 Comm: kworker/23:0 Kdump: loaded Not
-> tainted 6.4.0-rc3+ #1
-> [ 7305.160379] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS
-> 2.16.0 07/20/2022
-> [ 7305.168832] Workqueue: qedf_io_wq qedf_fp_io_handler [qedf]
-> [ 7305.175069] RIP: 0010:refcount_warn_saturate+0xba/0x110
-> [ 7305.180911] Code: 01 01 e8 c9 4d ae ff 0f 0b c3 cc cc cc cc 80 3d
-> 1a ae 6f 01 00 75 85 48 c7 c7 d8 e3 bb ac c6 05 0a ae 6f 01 01 e8 a6
-> 4d ae ff <0f> 0b c3 cc cc cc cc 80 3d f5 ad 6f 01 00 0f 85 5e ff ff ff
-> 48 c7
-> [ 7305.201873] RSP: 0018:ffff9cc488507e80 EFLAGS: 00010282
-> [ 7305.207708] RAX: 0000000000000000 RBX: ffff904a44ac7410 RCX: 0000000000000027
-> [ 7305.215685] RDX: ffff904e2fcdf848 RSI: 0000000000000001 RDI: ffff904e2fcdf840
-> [ 7305.223654] RBP: ffff9046cc488040 R08: 80000000ffff9b21 R09: 657466612d657375
-> [ 7305.231623] R10: 203b776f6c667265 R11: 646e75203a745f74 R12: ffff904e2fcf1880
-> [ 7305.239591] R13: ffffbcc47fcc7500 R14: 0000000000000000 R15: ffffbcc47fcc7505
-> [ 7305.247559] FS:  0000000000000000(0000) GS:ffff904e2fcc0000(0000)
-> knlGS:0000000000000000
-> [ 7305.256595] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 7305.263011] CR2: 0000563088c3b008 CR3: 0000000102bfc006 CR4: 00000000001706e0
-> [ 7305.267445] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-> Error detection CQE, xid=0x743
-> [ 7305.270983] Call Trace:
-> [ 7305.280598] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-> err_warn_bitmap=00000040:00000000
-> [ 7305.283328]  <TASK>
-> [ 7305.283330]  qedf_fp_io_handler+0x40/0x50 [qedf]
-> [ 7305.293237] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-> tx_buff_off=00000000, rx_buff_off=00000000, rx_id=04ec
-> [ 7305.295574]  process_one_work+0x1e5/0x3f0
-> [ 7305.296755] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-> Error detection CQE, xid=0x194
-> [ 7305.296761] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-> err_warn_bitmap=00000040:00000000
-> [ 7305.296764] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-> tx_buff_off=00000000, rx_buff_off=00000000, rx_id=013d
-> [ 7305.324202] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-> Error detection CQE, xid=0x37c
-> [ 7305.326752]  ? __pfx_worker_thread+0x10/0x10
-> [ 7305.336659] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-> err_warn_bitmap=00000040:00000000
-> [ 7305.337543] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-> Error detection CQE, xid=0x47b
-> [ 7305.337549] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-> err_warn_bitmap=00000000:00004000
-> [ 7305.337552] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-> tx_buff_off=00000000, rx_buff_off=00000000, rx_id=06ed
-> [ 7305.348603]  worker_thread+0x50/0x3a0
-> [ 7305.358219] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-> tx_buff_off=00000000, rx_buff_off=00000000, rx_id=04ed
-> [ 7305.362987]  ? __pfx_worker_thread+0x10/0x10
-> [ 7305.373920] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-> Error detection CQE, xid=0x731
-> [ 7305.382497]  kthread+0xe2/0x110
-> [ 7305.382502]  ? __pfx_kthread+0x10/0x10
-> [ 7305.382505]  ret_from_fork+0x2c/0x50
-> [ 7305.382511]  </TASK>
-> [ 7305.382512] ---[ end trace 0000000000000000 ]---
-> 
+>> +	/* setting copy limits */
+>> +	if (blk_queue_flag_test_and_set(QUEUE_FLAG_COPY, q))
+>
+>I don't understand this comment.
+>
 
+It was a mistake. Comment is misplaced and it should have been
+"setting copy flag" instead of "setting copy limits".
+Anyway now we feel this comment is redundant, will remove it.
+Also, we should have used blk_queue_flag_set to enable copy offload.
+
+>> +struct nvme_copy_token {
+>> +	char *subsys;
+>> +	struct nvme_ns *ns;
+>> +	sector_t src_sector;
+>> +	sector_t sectors;
+>> +};
+>
+>Why do we need a subsys token?  Inter-namespace copy is pretty crazy,
+>and not really anything we should aim for.  But this whole token design
+>is pretty odd anyway.  The only thing we'd need is a sequence number /
+>idr / etc to find an input and output side match up, as long as we
+>stick to the proper namespace scope.
+>
+
+The idea behind subsys is to prevent copy across different subsystem.
+For example, copy across nvme subsystem and the scsi subsystem. [1]
+At present, we don't support inter-namespace(copy across NVMe namespace),
+but after community feedback for previous series we left scope for it.
+About idr per namespace, it will be similar to namespace check that
+we are doing to prevent copy across namespace.
+We went with current structure for token, as it was solving above
+issues as well as provides a placeholder for storing source LBA and
+number of sectors.
+Do have any suggestions on how we can store source info, if we go with
+idr based approach ?
+
+[1] https://lore.kernel.org/all/alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com/T/#m407f24fb4454d35c3283a5e51fdb04f1600463af
+
+>> +	if (unlikely((req->cmd_flags & REQ_COPY) &&
+>> +				(req_op(req) == REQ_OP_READ))) {
+>> +		blk_mq_start_request(req);
+>> +		return BLK_STS_OK;
+>> +	}
+>
+>This really needs to be hiden inside of nvme_setup_cmd.  And given
+>that other drivers might need similar handling the best way is probably
+>to have a new magic BLK_STS_* value for request started but we're
+>not actually sending it to hardware.
+
+Sure we will add new BLK_STS_* for completion and move the snippet.
+
+Thank you,
+Nitesh Shetty
+
+------JBF_njb0NWiSS48ThI00c_Y9Zxz.JAos93qymBy6wSZnW6dc=_4db83_
+Content-Type: text/plain; charset="utf-8"
+
+
+------JBF_njb0NWiSS48ThI00c_Y9Zxz.JAos93qymBy6wSZnW6dc=_4db83_--
