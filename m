@@ -2,149 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAABFC77B73
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 03:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C65C7EE24
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 05:12:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234509AbjFFDRb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jun 2023 23:17:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39422 "EHLO
+        id S230499AbjFFFMv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 01:12:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230362AbjFFDRa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2023 23:17:30 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE6FF127
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Jun 2023 20:16:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686021405;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type;
-        bh=q0RfyB+wRaMVmrfPDcEL7PT0iuGuLLwJieOrWccLQLM=;
-        b=Wd0yf2B6aDCUkQyMSkU/kvSjdhmg42LY1Dxz5aA503Bdmf4BKiKRH8nRqBwtTAfSDWOkqn
-        UvaqsPouyb7Be4Y1uDK/KCooPVRk53oK3D0ZTccoMVhKw9x668Rjjpswwn687vq8E5+9Ja
-        s+bFEPxBgrewhZ1PhonTTPpAaR0UusU=
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
- [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-511-CGrCBQZXNfW0HC_sDIS4uw-1; Mon, 05 Jun 2023 23:16:43 -0400
-X-MC-Unique: CGrCBQZXNfW0HC_sDIS4uw-1
-Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-514b8a3c0d3so3411798a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jun 2023 20:16:43 -0700 (PDT)
+        with ESMTP id S234408AbjFFFMo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 01:12:44 -0400
+Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAEE0123;
+        Mon,  5 Jun 2023 22:12:38 -0700 (PDT)
+Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-565bd368e19so57501937b3.1;
+        Mon, 05 Jun 2023 22:12:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686028358; x=1688620358;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8oq115v7opk1kvdj9ziSNYaJGB85R3jZNwGWEgDNy3c=;
+        b=OsRTo+hsJIugXQPIR5sgBM4A9Z1R7WLB6boVGjUdAaXp54HjE3KgZedWQevahtI/FR
+         Omrg4Mr34iolwF/f3T6AQBV96m/KcsPvH745lNKIfhXKJA4+Vm+4OBcsgeL3EwFCP/pS
+         QO7suTVUSYwN1Ld2/Mj9jRMSnTNcxP3UswMi2KgHVNmt2mE2/l3Kbt8QjHQo8ka+AF5X
+         iRCw2ifSZ4KcRR2FYl1ITYNzw1cuhWcilAWuvIQwAmVP7UGqgNsNQ+o5PEJE4WxDhLr3
+         C0/zzcsKFglNcpuG61s+v5CLfGN2rO48+eDDMwwGZa56h7IS+LggL6sRLSsPzWQz1fYV
+         R6yA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686021402; x=1688613402;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=q0RfyB+wRaMVmrfPDcEL7PT0iuGuLLwJieOrWccLQLM=;
-        b=PHAr04JNAEt+1UAgBBKLFPa+GE85IOLHKGiIdE8cpdyZnghYZcLb+YpWY6l12HgNWE
-         9awdxMr4SIJXyeewCX73WL9CdBbOzHSeg4DJfC8V4z+D+uwiPZE4S1mFPEGa7hZRqU2f
-         GelW97XFpzn9og8w4D3FY2HCOioD1fHLhkda4e0nznisKScCz6KOtuX3dZPHmcZr2376
-         ubV4lSjk4uKPGFQi5KcJJ1PL1dlAIWgzsC/1LbXncxfe5QUINC6zF8hIsnWut/vr1KZ8
-         gASKUgpGNmiVquyiiy6DnfjnJVPcOzzj+uAhLdWWsWX++MmezFEW15ZhkGRk/VI1uBCw
-         wFlw==
-X-Gm-Message-State: AC+VfDwDdTTI7UF/U/wdEZAJH5Pp3ROZlLoHJ6l4qeQEW+CIvDLbm0Hx
-        1bhe8fyoyxHbXfsNtGaPwtZL6La9FZnABC5SFm+EemA0xJ30yxhTXNk6BML+S/mw3wAI6U7i2Tb
-        R685eH/3AnIfvDRg9vdcytxpIS2Qbv3gbqZZVUCmwJuY3VJgN1I4=
-X-Received: by 2002:a05:6402:147:b0:514:9c05:819e with SMTP id s7-20020a056402014700b005149c05819emr722352edu.0.1686021402202;
-        Mon, 05 Jun 2023 20:16:42 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ49ClK6v/MPZZe0RrYXrXTEPlGTRu6WG4TG9CSzTJco6j3U5HVw5N2YpRVvwayoK9AhU+2cAvois/dl22431JQ=
-X-Received: by 2002:a05:6402:147:b0:514:9c05:819e with SMTP id
- s7-20020a056402014700b005149c05819emr722343edu.0.1686021401877; Mon, 05 Jun
- 2023 20:16:41 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1686028358; x=1688620358;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8oq115v7opk1kvdj9ziSNYaJGB85R3jZNwGWEgDNy3c=;
+        b=JClNy0bvAhqfWlUBuXgqSIDE4/zrS2yN+B7yI8xeHFp0rZYPhjo0fyAnYEUAzOVvwy
+         Rs+GqGgzkw1Tnfg/2BFOyq8HOIgYOTxVQ0h2Xt79fYfW1L0paQf+ugXK5i+EkjRAeI/3
+         O3s4Yl53hc/bnhhs6R8zrTe6QdjLv4a8pPozCsVRrBLjltVR4tvAsjhee+XJYSYJFOCF
+         FXXTSOq6crVVdAnF1GMGg2xB2qUqjmwAwBXtRy3A1A7r2Lgcvq60Kjm9Dtr7In619/5y
+         P0igY0a9WojD4SclfeTJ5B17hDNEHMUkKg6RkXVfEuQTmQjItRbkoFYbuqwueu1ntQGZ
+         3P9w==
+X-Gm-Message-State: AC+VfDzl3x3eJQM9dQYPBVSCLdfuwmT2tpBguqKNlV/JEGPcNp/fCkrk
+        kja3xfTXgekJc432ZPO1sAk=
+X-Google-Smtp-Source: ACHHUZ5h3PA0xcImyQ8vFP5pPyoTW6IRSa15Nl3FOGkQ24eCgEKFdoHXl6hJVozgh6N1raiDp+afEg==
+X-Received: by 2002:a81:688b:0:b0:569:ecfc:dd77 with SMTP id d133-20020a81688b000000b00569ecfcdd77mr439526ywc.6.1686028357871;
+        Mon, 05 Jun 2023 22:12:37 -0700 (PDT)
+Received: from ip-172-31-23-7.us-east-2.compute.internal (ec2-18-222-137-9.us-east-2.compute.amazonaws.com. [18.222.137.9])
+        by smtp.googlemail.com with ESMTPSA id o64-20020a0dcc43000000b00565ebcdcc95sm3824722ywd.84.2023.06.05.22.12.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Jun 2023 22:12:37 -0700 (PDT)
+From:   Jianlin Lv <iecedge@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
+        bp@suse.de, peterz@infradead.org, will@kernel.org,
+        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
+        wyes.karny@amd.com
+Cc:     iecedge@gmail.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: sd: support specify probe type of build-in driver
+Date:   Tue,  6 Jun 2023 05:12:17 +0000
+Message-Id: <20230606051217.2064-1-iecedge@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-From:   Guangwu Zhang <guazhang@redhat.com>
-Date:   Tue, 6 Jun 2023 11:17:47 +0800
-Message-ID: <CAGS2=YoMsjT19mVP9Te_Mx1yKpgLDbZuDQnUV_VLCjhJ=F8D8w@mail.gmail.com>
-Subject: [bug report] WARNING: CPU: 23 PID: 35995 at lib/refcount.c:28 refcount_warn_saturate+0xba/0x110
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        John Meneghini <jmeneghi@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-qedf IO testing found the error with latest linux-block/for-next,
-please have a look.
+When SCSI disks are located on different SCSI hosts within a system,
+asynchronous detection can lead to non-deterministic SCSI disk names.
 
-kernel repo : https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-commit: Merge branch 'for-6.5/block' into for-next
+This patch introduces the 'sd_probe_type=' kernel boot parameter.
 
+In scenarios where SCSI disk name sensitivity is crucial, the probe type
+of the build-in sd driver can be set to synchronous. As a result,
+the scsi disk names are deterministic.
 
-[ 7305.031233] ------------[ cut here ]------------
-[ 7305.033749] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-tx_buff_off=00000000, rx_buff_off=00000000, rx_id=073f
-[ 7305.038904] refcount_t: underflow; use-after-free.
-[ 7305.038918] WARNING: CPU: 23 PID: 35995 at lib/refcount.c:28
-refcount_warn_saturate+0xba/0x110
-[ 7305.065853] Modules linked in: nfsv3 nfs_acl bnx2fc cnic uio
-rpcsec_gss_krb5 auth_rpcgss nfsv4 dns_resolver nfs lockd grace fscache
-netfs sunrpc vfat fat dm_service_time dm_multipath intel_rapl_msr
-intel_rapl_common sb_edac x86_pkg_temp_thermal intel_powerclamp
-coretemp kvm_intel kvm mgag200 i2c_algo_bit drm_shmem_helper
-dell_wmi_descriptor drm_kms_helper ipmi_ssif ledtrig_audio
-sparse_keymap irqbypass rfkill rapl video syscopyarea intel_cstate
-mei_me ipmi_si sysfillrect mei intel_uncore iTCO_wdt sysimgblt pcspkr
-iTCO_vendor_support dcdbas mxm_wmi ipmi_devintf lpc_ich
-ipmi_msghandler acpi_power_meter drm fuse xfs libcrc32c sr_mod sd_mod
-cdrom t10_pi sg qede qedf crct10dif_pclmul crc32_pclmul crc32c_intel
-qed ahci libahci ghash_clmulni_intel libata libfcoe libfc tg3
-megaraid_sas scsi_transport_fc crc8 wmi dm_mirror dm_region_hash
-dm_log dm_mod [last unloaded: tls]
-[ 7305.151246] CPU: 23 PID: 35995 Comm: kworker/23:0 Kdump: loaded Not
-tainted 6.4.0-rc3+ #1
-[ 7305.160379] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS
-2.16.0 07/20/2022
-[ 7305.168832] Workqueue: qedf_io_wq qedf_fp_io_handler [qedf]
-[ 7305.175069] RIP: 0010:refcount_warn_saturate+0xba/0x110
-[ 7305.180911] Code: 01 01 e8 c9 4d ae ff 0f 0b c3 cc cc cc cc 80 3d
-1a ae 6f 01 00 75 85 48 c7 c7 d8 e3 bb ac c6 05 0a ae 6f 01 01 e8 a6
-4d ae ff <0f> 0b c3 cc cc cc cc 80 3d f5 ad 6f 01 00 0f 85 5e ff ff ff
-48 c7
-[ 7305.201873] RSP: 0018:ffff9cc488507e80 EFLAGS: 00010282
-[ 7305.207708] RAX: 0000000000000000 RBX: ffff904a44ac7410 RCX: 0000000000000027
-[ 7305.215685] RDX: ffff904e2fcdf848 RSI: 0000000000000001 RDI: ffff904e2fcdf840
-[ 7305.223654] RBP: ffff9046cc488040 R08: 80000000ffff9b21 R09: 657466612d657375
-[ 7305.231623] R10: 203b776f6c667265 R11: 646e75203a745f74 R12: ffff904e2fcf1880
-[ 7305.239591] R13: ffffbcc47fcc7500 R14: 0000000000000000 R15: ffffbcc47fcc7505
-[ 7305.247559] FS:  0000000000000000(0000) GS:ffff904e2fcc0000(0000)
-knlGS:0000000000000000
-[ 7305.256595] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 7305.263011] CR2: 0000563088c3b008 CR3: 0000000102bfc006 CR4: 00000000001706e0
-[ 7305.267445] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-Error detection CQE, xid=0x743
-[ 7305.270983] Call Trace:
-[ 7305.280598] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-err_warn_bitmap=00000040:00000000
-[ 7305.283328]  <TASK>
-[ 7305.283330]  qedf_fp_io_handler+0x40/0x50 [qedf]
-[ 7305.293237] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-tx_buff_off=00000000, rx_buff_off=00000000, rx_id=04ec
-[ 7305.295574]  process_one_work+0x1e5/0x3f0
-[ 7305.296755] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-Error detection CQE, xid=0x194
-[ 7305.296761] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-err_warn_bitmap=00000040:00000000
-[ 7305.296764] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-tx_buff_off=00000000, rx_buff_off=00000000, rx_id=013d
-[ 7305.324202] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-Error detection CQE, xid=0x37c
-[ 7305.326752]  ? __pfx_worker_thread+0x10/0x10
-[ 7305.336659] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-err_warn_bitmap=00000040:00000000
-[ 7305.337543] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-Error detection CQE, xid=0x47b
-[ 7305.337549] [0000:04:00.2]:[qedf_process_error_detect:1521]:11:
-err_warn_bitmap=00000000:00004000
-[ 7305.337552] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-tx_buff_off=00000000, rx_buff_off=00000000, rx_id=06ed
-[ 7305.348603]  worker_thread+0x50/0x3a0
-[ 7305.358219] [0000:04:00.2]:[qedf_process_error_detect:1525]:11:
-tx_buff_off=00000000, rx_buff_off=00000000, rx_id=04ed
-[ 7305.362987]  ? __pfx_worker_thread+0x10/0x10
-[ 7305.373920] [0000:04:00.2]:[qedf_process_error_detect:1519]:11:
-Error detection CQE, xid=0x731
-[ 7305.382497]  kthread+0xe2/0x110
-[ 7305.382502]  ? __pfx_kthread+0x10/0x10
-[ 7305.382505]  ret_from_fork+0x2c/0x50
-[ 7305.382511]  </TASK>
-[ 7305.382512] ---[ end trace 0000000000000000 ]---
+Signed-off-by: Jianlin Lv <iecedge@gmail.com>
+---
+ .../admin-guide/kernel-parameters.txt         |  9 ++++++++
+ drivers/scsi/sd.c                             | 23 +++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 9e5bab29685f..083f741d63bb 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5611,6 +5611,15 @@
+ 			non-zero "wait" parameter.  See weight_single
+ 			and weight_many.
+ 
++	sd_probe_type=	[HW,SCSI] Manual setup probe type of built-in scsi disk driver
++			Format: <int>
++			Default: 1
++			<int> -- device driver probe type to try
++				0 - PROBE_DEFAULT_STRATEGY
++				1 - PROBE_PREFER_ASYNCHRONOUS
++				2 - PROBE_FORCE_SYNCHRONOUS
++			Example: sd_probe_type=1
++
+ 	skew_tick=	[KNL] Offset the periodic timer tick per cpu to mitigate
+ 			xtime_lock contention on larger systems, and/or RCU lock
+ 			contention on all systems with CONFIG_MAXSMP set.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1624d528aa1f..78b80b9e5618 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -121,6 +121,9 @@ static void scsi_disk_release(struct device *cdev);
+ 
+ static DEFINE_IDA(sd_index_ida);
+ 
++/* Probe type of SCSI Disk Driver */
++static int sd_probe_type = PROBE_PREFER_ASYNCHRONOUS;
++
+ static mempool_t *sd_page_pool;
+ static struct lock_class_key sd_bio_compl_lkclass;
+ 
+@@ -3826,6 +3829,25 @@ static int sd_resume_runtime(struct device *dev)
+ 	return sd_resume(dev);
+ }
+ 
++#ifndef MODULE
++
++/* Set the boot options to sd driver.
++ * Syntax is defined in Documentation/admin-guide/kernel-parameters.txt.
++ */
++static int __init sd_probe_setup(char *str)
++{
++	int probe_type = -1;
++
++	if (get_option(&str, &probe_type) && probe_type >= 0 && probe_type < 3)
++		sd_probe_type = probe_type;
++
++	return 1;
++}
++
++__setup("sd_probe_type=", sd_probe_setup);
++
++#endif
++
+ /**
+  *	init_sd - entry point for this driver (both when built in or when
+  *	a module).
+@@ -3858,6 +3880,7 @@ static int __init init_sd(void)
+ 		goto err_out_class;
+ 	}
+ 
++	sd_template.gendrv.probe_type = sd_probe_type;
+ 	err = scsi_register_driver(&sd_template.gendrv);
+ 	if (err)
+ 		goto err_out_driver;
+-- 
+2.25.1
 
