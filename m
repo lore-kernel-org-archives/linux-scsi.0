@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5940DC7EE45
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B34D9C7EE2F
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:42:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235004AbjFFHl4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:41:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51172 "EHLO
+        id S229880AbjFFHmV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 03:42:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236510AbjFFHlM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:41:12 -0400
+        with ESMTP id S236559AbjFFHlN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:41:13 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4B2010F7;
-        Tue,  6 Jun 2023 00:40:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBCEF170A;
+        Tue,  6 Jun 2023 00:40:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=FfW9DuqWcqftCK2V6shZmYbcTRlwjUtw9gvZaCo9uwY=; b=4IsKSEVIFLiRaOu49nM5+2+Atx
-        sWynEbtjaTBj4wCpEyskc+AVpK9xBK2MyKKGe4FYbxvhjaC5LimsABd4cvkv1jv+VhxiAcI8wHrul
-        BQ2EKZrYRElZjwKKlbsbcfmSdhaNX3g7h/PXGWfGeexe2oLRsJNFeu/fB50MxFxZbLVXR6FJPlChH
-        THp/dF/6FsqG8FhQ5IEhDUSDTpOKU/RFO7wrS/JncAebuXfCX6h84SO3T0Bcu0BqepXfa25O/ttFX
-        SKqzGH4GKjuqqkUpWzm3dwGyXzwy+CxxbeOKtT2njKDlzxoOMJNzaZg2vjCZzLeLKN98TI5RxOZKb
-        Rt27q2sw==;
+        bh=5ZtPhPdJKTDTdyqevIERvcb7Bzke9D31HMKtWNK3WW4=; b=gRieWKPuaV0j1+l/6EHokTx5AR
+        fJ9iG0u7eEdZ5ITUuWzcaBMz7SazZpKbhBa8JWs/b+tQxBXGQ26jGp0n5bbvKSKYF5St4mWw5sV58
+        NlPGd7KTpiY6mMJokiOqvUgZy50O1OuiToUTVm8l8FoSesj1a/ux5roYKEsl1VC7TVNOUvdGJ1o0Z
+        b2A3BXZqefT1Mhf+rZUKaNRFwL/QJGo5HBgUmNcRPexlVzC8k2oxr2OEfmLzJArfHrB4nE7BYfffj
+        z11TYMzpABLahJEVJhYTAwiqRj+9PqeqZWhh+qjRE4h5dBVrJhOBgCrETXuloh+7mzgxZFcnmYnwI
+        7yDJisCA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q6RIt-000Z8r-0R;
-        Tue, 06 Jun 2023 07:40:31 +0000
+        id 1q6RIy-000ZEq-1z;
+        Tue, 06 Jun 2023 07:40:37 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org
-Subject: [PATCH 11/31] block: rename blkdev_close to blkdev_release
-Date:   Tue,  6 Jun 2023 09:39:30 +0200
-Message-Id: <20230606073950.225178-12-hch@lst.de>
+Subject: [PATCH 13/31] bcache: don't pass a stack address to blkdev_get_by_path
+Date:   Tue,  6 Jun 2023 09:39:32 +0200
+Message-Id: <20230606073950.225178-14-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230606073950.225178-1-hch@lst.de>
 References: <20230606073950.225178-1-hch@lst.de>
@@ -64,35 +64,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make the function name match the method name.
+sb is just an on-stack pointer that can easily be reused by other calls.
+Switch to use the bcache-wide bcache_kobj instead as there is no need to
+claim per-bcache device anyway.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/fops.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/bcache/super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/fops.c b/block/fops.c
-index 6a3087b750a6cd..26af2b39c758e1 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -500,7 +500,7 @@ static int blkdev_open(struct inode *inode, struct file *filp)
- 	return 0;
- }
- 
--static int blkdev_close(struct inode *inode, struct file *filp)
-+static int blkdev_release(struct inode *inode, struct file *filp)
- {
- 	struct block_device *bdev = filp->private_data;
- 
-@@ -677,7 +677,7 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 
- const struct file_operations def_blk_fops = {
- 	.open		= blkdev_open,
--	.release	= blkdev_close,
-+	.release	= blkdev_release,
- 	.llseek		= blkdev_llseek,
- 	.read_iter	= blkdev_read_iter,
- 	.write_iter	= blkdev_write_iter,
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 94b91c45c9e2a9..4a2aed047aec12 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -2560,7 +2560,7 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
+ 	err = "failed to open device";
+ 	bdev = blkdev_get_by_path(strim(path),
+ 				  FMODE_READ|FMODE_WRITE|FMODE_EXCL,
+-				  sb, NULL);
++				  bcache_kobj, NULL);
+ 	if (IS_ERR(bdev)) {
+ 		if (bdev == ERR_PTR(-EBUSY)) {
+ 			dev_t dev;
 -- 
 2.39.2
 
