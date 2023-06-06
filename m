@@ -2,152 +2,180 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C65C7EE24
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 05:12:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79724C7EE37
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 07:40:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230499AbjFFFMv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 01:12:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41688 "EHLO
+        id S234742AbjFFHkY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 03:40:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234408AbjFFFMo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 01:12:44 -0400
-Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAEE0123;
-        Mon,  5 Jun 2023 22:12:38 -0700 (PDT)
-Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-565bd368e19so57501937b3.1;
-        Mon, 05 Jun 2023 22:12:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686028358; x=1688620358;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8oq115v7opk1kvdj9ziSNYaJGB85R3jZNwGWEgDNy3c=;
-        b=OsRTo+hsJIugXQPIR5sgBM4A9Z1R7WLB6boVGjUdAaXp54HjE3KgZedWQevahtI/FR
-         Omrg4Mr34iolwF/f3T6AQBV96m/KcsPvH745lNKIfhXKJA4+Vm+4OBcsgeL3EwFCP/pS
-         QO7suTVUSYwN1Ld2/Mj9jRMSnTNcxP3UswMi2KgHVNmt2mE2/l3Kbt8QjHQo8ka+AF5X
-         iRCw2ifSZ4KcRR2FYl1ITYNzw1cuhWcilAWuvIQwAmVP7UGqgNsNQ+o5PEJE4WxDhLr3
-         C0/zzcsKFglNcpuG61s+v5CLfGN2rO48+eDDMwwGZa56h7IS+LggL6sRLSsPzWQz1fYV
-         R6yA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686028358; x=1688620358;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8oq115v7opk1kvdj9ziSNYaJGB85R3jZNwGWEgDNy3c=;
-        b=JClNy0bvAhqfWlUBuXgqSIDE4/zrS2yN+B7yI8xeHFp0rZYPhjo0fyAnYEUAzOVvwy
-         Rs+GqGgzkw1Tnfg/2BFOyq8HOIgYOTxVQ0h2Xt79fYfW1L0paQf+ugXK5i+EkjRAeI/3
-         O3s4Yl53hc/bnhhs6R8zrTe6QdjLv4a8pPozCsVRrBLjltVR4tvAsjhee+XJYSYJFOCF
-         FXXTSOq6crVVdAnF1GMGg2xB2qUqjmwAwBXtRy3A1A7r2Lgcvq60Kjm9Dtr7In619/5y
-         P0igY0a9WojD4SclfeTJ5B17hDNEHMUkKg6RkXVfEuQTmQjItRbkoFYbuqwueu1ntQGZ
-         3P9w==
-X-Gm-Message-State: AC+VfDzl3x3eJQM9dQYPBVSCLdfuwmT2tpBguqKNlV/JEGPcNp/fCkrk
-        kja3xfTXgekJc432ZPO1sAk=
-X-Google-Smtp-Source: ACHHUZ5h3PA0xcImyQ8vFP5pPyoTW6IRSa15Nl3FOGkQ24eCgEKFdoHXl6hJVozgh6N1raiDp+afEg==
-X-Received: by 2002:a81:688b:0:b0:569:ecfc:dd77 with SMTP id d133-20020a81688b000000b00569ecfcdd77mr439526ywc.6.1686028357871;
-        Mon, 05 Jun 2023 22:12:37 -0700 (PDT)
-Received: from ip-172-31-23-7.us-east-2.compute.internal (ec2-18-222-137-9.us-east-2.compute.amazonaws.com. [18.222.137.9])
-        by smtp.googlemail.com with ESMTPSA id o64-20020a0dcc43000000b00565ebcdcc95sm3824722ywd.84.2023.06.05.22.12.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jun 2023 22:12:37 -0700 (PDT)
-From:   Jianlin Lv <iecedge@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
-        bp@suse.de, peterz@infradead.org, will@kernel.org,
-        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
-        wyes.karny@amd.com
-Cc:     iecedge@gmail.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: sd: support specify probe type of build-in driver
-Date:   Tue,  6 Jun 2023 05:12:17 +0000
-Message-Id: <20230606051217.2064-1-iecedge@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S236341AbjFFHkQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 03:40:16 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FC28E55;
+        Tue,  6 Jun 2023 00:40:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=SQswGPGJjSOolqgUFSYGX1AabMy5/DP2Tw/s3/r3yqg=; b=2MynR8QAmA2gZpPRvkdWYM0ENb
+        IArUaR1A7xEHD/0or2gLb5eP/s9nrLYL9L/daXdZs3nYCua+W3GJb+I/B7x5/W4/Rf7mLD7JKCGYT
+        H8EqZSkISD07AX4uFHc3zMtkj7yOSXEwTQpEFcvIcE/u2PcA50ARtaouBNJ8AleEKy/cUEx1xWOm0
+        ja9Y90mDqAin14gK2EkrCpBotfhdPskWa9VGlp0+BM+PW/cmh7k0XZ9+MuiqC9OOUiiHr+pY3q/eg
+        FYNNMUjpJSf4h7hc3O0Bqkg3aJeu+WMHXQq6bjVNh9CMn7ta7E8WrGD5+93ahvV3aiSQigm3VSe+B
+        ViJqSx7Q==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1q6RIH-000Ya3-0f;
+        Tue, 06 Jun 2023 07:39:53 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Richard Weinberger <richard@nod.at>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Coly Li <colyli@suse.de>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-btrfs@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: decouple block open flags from fmode_t
+Date:   Tue,  6 Jun 2023 09:39:19 +0200
+Message-Id: <20230606073950.225178-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When SCSI disks are located on different SCSI hosts within a system,
-asynchronous detection can lead to non-deterministic SCSI disk names.
+Hi all,
 
-This patch introduces the 'sd_probe_type=' kernel boot parameter.
+this series adds a new blk_mode_t for block open flags instead of abusing
+fmode_t.  The block open flags work very different from the normal use of
+fmode_t and only share the basic READ/WRITE flags with it.  None of the
+other normal FMODE_* flags is used, but instead there are three
+block-specific ones not used by anyone else, which can now be removed.
 
-In scenarios where SCSI disk name sensitivity is crucial, the probe type
-of the build-in sd driver can be set to synchronous. As a result,
-the scsi disk names are deterministic.
+Note that I've only CCed maintainers and lists for drivers and file systems
+that have non-trivial changes, as otherwise the series would spam literally
+everyone in the block and file system world.
 
-Signed-off-by: Jianlin Lv <iecedge@gmail.com>
----
- .../admin-guide/kernel-parameters.txt         |  9 ++++++++
- drivers/scsi/sd.c                             | 23 +++++++++++++++++++
- 2 files changed, 32 insertions(+)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 9e5bab29685f..083f741d63bb 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -5611,6 +5611,15 @@
- 			non-zero "wait" parameter.  See weight_single
- 			and weight_many.
- 
-+	sd_probe_type=	[HW,SCSI] Manual setup probe type of built-in scsi disk driver
-+			Format: <int>
-+			Default: 1
-+			<int> -- device driver probe type to try
-+				0 - PROBE_DEFAULT_STRATEGY
-+				1 - PROBE_PREFER_ASYNCHRONOUS
-+				2 - PROBE_FORCE_SYNCHRONOUS
-+			Example: sd_probe_type=1
-+
- 	skew_tick=	[KNL] Offset the periodic timer tick per cpu to mitigate
- 			xtime_lock contention on larger systems, and/or RCU lock
- 			contention on all systems with CONFIG_MAXSMP set.
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1624d528aa1f..78b80b9e5618 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -121,6 +121,9 @@ static void scsi_disk_release(struct device *cdev);
- 
- static DEFINE_IDA(sd_index_ida);
- 
-+/* Probe type of SCSI Disk Driver */
-+static int sd_probe_type = PROBE_PREFER_ASYNCHRONOUS;
-+
- static mempool_t *sd_page_pool;
- static struct lock_class_key sd_bio_compl_lkclass;
- 
-@@ -3826,6 +3829,25 @@ static int sd_resume_runtime(struct device *dev)
- 	return sd_resume(dev);
- }
- 
-+#ifndef MODULE
-+
-+/* Set the boot options to sd driver.
-+ * Syntax is defined in Documentation/admin-guide/kernel-parameters.txt.
-+ */
-+static int __init sd_probe_setup(char *str)
-+{
-+	int probe_type = -1;
-+
-+	if (get_option(&str, &probe_type) && probe_type >= 0 && probe_type < 3)
-+		sd_probe_type = probe_type;
-+
-+	return 1;
-+}
-+
-+__setup("sd_probe_type=", sd_probe_setup);
-+
-+#endif
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
-@@ -3858,6 +3880,7 @@ static int __init init_sd(void)
- 		goto err_out_class;
- 	}
- 
-+	sd_template.gendrv.probe_type = sd_probe_type;
- 	err = scsi_register_driver(&sd_template.gendrv);
- 	if (err)
- 		goto err_out_driver;
--- 
-2.25.1
-
+Diffstat:
+ arch/um/drivers/ubd_kern.c          |   20 ++-----
+ arch/xtensa/platforms/iss/simdisk.c |    6 +-
+ block/bdev.c                        |   99 ++++++++++++++++++------------------
+ block/blk-zoned.c                   |   12 ++--
+ block/blk.h                         |   26 ++++++++-
+ block/bsg-lib.c                     |    2 
+ block/bsg.c                         |    8 +-
+ block/disk-events.c                 |   47 +++++++----------
+ block/fops.c                        |   54 ++++++++++++-------
+ block/genhd.c                       |   13 ++--
+ block/ioctl.c                       |   61 +++++++---------------
+ drivers/block/amiflop.c             |   20 +++----
+ drivers/block/aoe/aoeblk.c          |    8 +-
+ drivers/block/ataflop.c             |   43 +++++++--------
+ drivers/block/drbd/drbd_main.c      |   13 ++--
+ drivers/block/drbd/drbd_nl.c        |   23 +++++---
+ drivers/block/floppy.c              |   72 +++++++++++++-------------
+ drivers/block/loop.c                |   24 ++++----
+ drivers/block/mtip32xx/mtip32xx.c   |    4 -
+ drivers/block/nbd.c                 |   12 ++--
+ drivers/block/pktcdvd.c             |   36 ++++++-------
+ drivers/block/rbd.c                 |    6 +-
+ drivers/block/rnbd/rnbd-clt.c       |    8 +-
+ drivers/block/rnbd/rnbd-srv-sysfs.c |    3 -
+ drivers/block/rnbd/rnbd-srv.c       |   23 ++++----
+ drivers/block/rnbd/rnbd-srv.h       |    2 
+ drivers/block/sunvdc.c              |    2 
+ drivers/block/swim.c                |   24 ++++----
+ drivers/block/swim3.c               |   33 +++++-------
+ drivers/block/ublk_drv.c            |    4 -
+ drivers/block/xen-blkback/xenbus.c  |    4 -
+ drivers/block/xen-blkfront.c        |    2 
+ drivers/block/z2ram.c               |    8 +-
+ drivers/block/zram/zram_drv.c       |   21 +++----
+ drivers/cdrom/cdrom.c               |   36 +++----------
+ drivers/cdrom/gdrom.c               |   12 ++--
+ drivers/md/bcache/bcache.h          |    2 
+ drivers/md/bcache/request.c         |    4 -
+ drivers/md/bcache/super.c           |   25 ++++-----
+ drivers/md/dm-cache-target.c        |   12 ++--
+ drivers/md/dm-clone-target.c        |   10 +--
+ drivers/md/dm-core.h                |    7 +-
+ drivers/md/dm-era-target.c          |    6 +-
+ drivers/md/dm-ioctl.c               |   10 +--
+ drivers/md/dm-snap.c                |    4 -
+ drivers/md/dm-table.c               |   11 ++--
+ drivers/md/dm-thin.c                |    9 +--
+ drivers/md/dm-verity-fec.c          |    2 
+ drivers/md/dm-verity-target.c       |    6 +-
+ drivers/md/dm.c                     |   20 +++----
+ drivers/md/dm.h                     |    2 
+ drivers/md/md.c                     |   50 +++++++++---------
+ drivers/mmc/core/block.c            |   12 ++--
+ drivers/mtd/devices/block2mtd.c     |    6 +-
+ drivers/mtd/mtd_blkdevs.c           |    8 +-
+ drivers/mtd/mtdblock.c              |    2 
+ drivers/mtd/ubi/block.c             |    9 +--
+ drivers/nvme/host/core.c            |    6 +-
+ drivers/nvme/host/ioctl.c           |   66 +++++++++++++-----------
+ drivers/nvme/host/multipath.c       |    6 +-
+ drivers/nvme/host/nvme.h            |    4 -
+ drivers/nvme/target/io-cmd-bdev.c   |    4 -
+ drivers/s390/block/dasd.c           |   10 +--
+ drivers/s390/block/dasd_genhd.c     |    5 +
+ drivers/s390/block/dasd_int.h       |    3 -
+ drivers/s390/block/dasd_ioctl.c     |    2 
+ drivers/s390/block/dcssblk.c        |   11 +---
+ drivers/scsi/ch.c                   |    3 -
+ drivers/scsi/scsi_bsg.c             |    4 -
+ drivers/scsi/scsi_ioctl.c           |   38 ++++++-------
+ drivers/scsi/sd.c                   |   39 ++++++--------
+ drivers/scsi/sg.c                   |    7 +-
+ drivers/scsi/sr.c                   |   22 ++++----
+ drivers/scsi/st.c                   |    2 
+ drivers/target/target_core_iblock.c |    9 +--
+ drivers/target/target_core_pscsi.c  |   10 +--
+ fs/btrfs/dev-replace.c              |    6 +-
+ fs/btrfs/ioctl.c                    |   12 ++--
+ fs/btrfs/super.c                    |   21 ++-----
+ fs/btrfs/volumes.c                  |   55 +++++++++-----------
+ fs/btrfs/volumes.h                  |   11 +---
+ fs/erofs/super.c                    |    7 +-
+ fs/ext4/super.c                     |   11 +---
+ fs/f2fs/super.c                     |   12 ++--
+ fs/jfs/jfs_logmgr.c                 |    6 +-
+ fs/nfs/blocklayout/dev.c            |    9 +--
+ fs/nilfs2/super.c                   |   12 +---
+ fs/ocfs2/cluster/heartbeat.c        |    7 +-
+ fs/reiserfs/journal.c               |   19 +++---
+ fs/reiserfs/reiserfs.h              |    1 
+ fs/super.c                          |   33 ++++--------
+ fs/xfs/xfs_super.c                  |   15 ++---
+ include/linux/blkdev.h              |   68 +++++++++++-------------
+ include/linux/bsg.h                 |    2 
+ include/linux/cdrom.h               |   12 ++--
+ include/linux/device-mapper.h       |    8 +-
+ include/linux/fs.h                  |    8 --
+ include/linux/mtd/blktrans.h        |    2 
+ include/scsi/scsi_ioctl.h           |    4 -
+ kernel/power/hibernate.c            |   12 +---
+ kernel/power/power.h                |    2 
+ kernel/power/swap.c                 |   28 ++++------
+ mm/swapfile.c                       |    7 +-
+ 103 files changed, 796 insertions(+), 853 deletions(-)
