@@ -2,76 +2,159 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A5FC77B7A
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 20:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD67AC7EE45
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jun 2023 22:51:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236918AbjFFUd6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jun 2023 16:33:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53336 "EHLO
+        id S240105AbjFFWvO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jun 2023 18:51:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234193AbjFFUd5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 16:33:57 -0400
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9507B1A7;
-        Tue,  6 Jun 2023 13:33:56 -0700 (PDT)
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-256931ec244so5687966a91.3;
-        Tue, 06 Jun 2023 13:33:56 -0700 (PDT)
+        with ESMTP id S240033AbjFFWuv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2023 18:50:51 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 723CE1717
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Jun 2023 15:50:47 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id ffacd0b85a97d-30ad458f085so14566f8f.0
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2023 15:50:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=philpotter-co-uk.20221208.gappssmtp.com; s=20221208; t=1686091846; x=1688683846;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZsgUvAUYrCnrR/1XiT9juxzkogVY5Vs72GapwMni78s=;
+        b=VmbPZldWPYAwRsYyMwk8A03rXJyrpTvXOEYSvwFSEfXYGQ9f0DibZgbOcZv9ahaGKf
+         PI5+OxAdMYvbZGfbUvFF/CsIWyPYoUJBv4adaCgbsLoKZ4qUcAWsIa6Ri3jpTK/bHQrT
+         Ohep93vPQ7ryyJQWAyfDBFxol1ij/mZJMW0A0iwqiwl36LvAZOLX1aeY9L0SpoZCLnJz
+         wVbN864mtnWORoS661vBrZSXNRIiY6AXoBUlqUh/rkIvLh2gwYqiK+WaVFKW8of/Br1s
+         OKeXsZtVkiiCWR6CHlkqhjfmhnyDAQPTMoZhbcUNAf6eh7p56c8hqiOZ1oxWgdRViFlH
+         o2mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686083636; x=1688675636;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MgJp+orwk1NKxueTZD2IplILXAWARVtQ9HQ4gN8T56w=;
-        b=UeLbdlSvBGqlOFJlTSI3vhBZ93+qSLbefLqPhyy4PrZreXgcMrF3KvaYwWekrBOnN9
-         Oq9CsEdImWHqlOQekGdbffRPY8I8U9BEJzyNH8O6G8MSdLA7yCFC388B4baBin4QUNDK
-         C41lFfJtroAJYiuwxrydnnceBwDZCOdX3JHOouEznCtkAM1SrMMxcJSUZ6pBwifBIw0u
-         JeFTNYwRKfRDhdfZ2qRF6Cet9FySP2gFyLy+93Sf3sYuGq4NZSFD+GYCe6Qr3RDqIuk8
-         ZzEEm1hoFhWYJpyFbMeGpTw6omN4Gget2qzhxZIOMSUKqCiDQ3zOHy0uHM0h14rRiJEB
-         Vvwg==
-X-Gm-Message-State: AC+VfDz9xb1OvrvepG6YscwHM1APuYlzWonkNjTzBo93p3HhcMRk+jiu
-        8zyLgpKnfGNiqux/QwBNMhM=
-X-Google-Smtp-Source: ACHHUZ54ZXhppPBlZio1a0xCAdGhS7743bczBArw4DhbAmwgKbH4ZpB5w23QwGVm1a0qzsRA08VCUg==
-X-Received: by 2002:a17:902:f683:b0:1af:b92d:b5fe with SMTP id l3-20020a170902f68300b001afb92db5femr4114616plg.0.1686083635869;
-        Tue, 06 Jun 2023 13:33:55 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id q16-20020a170902bd9000b001a64011899asm8899148pls.25.2023.06.06.13.33.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Jun 2023 13:33:55 -0700 (PDT)
-Message-ID: <3c9414d7-fd6d-f6fd-31c0-16fadb5bb574@acm.org>
-Date:   Tue, 6 Jun 2023 13:33:54 -0700
+        d=1e100.net; s=20221208; t=1686091846; x=1688683846;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZsgUvAUYrCnrR/1XiT9juxzkogVY5Vs72GapwMni78s=;
+        b=lcg8rOO8ic/+GTFgBC23q6WSHug934f5fOC0JJTvkTcxiMpAeENYRolOzd6stQf7HF
+         LMBXJYyO/sAxMjXKFM+eNAugWIbVV2tLQFvI4EKeBB+09hS3PeG4kEuNiMpPclaBu06/
+         EubOIu3+P2XH3g9enBZE3Vrxmo4WQA0W48CwUj5uhVRfYF8FCrtFLuGPitFbRL7lwiGI
+         I5HpPygj7hh+DytrvaMSa6hpRgico1yO0mJKXeEDHkHyFDxF1y7cn2aQKQvwAMEcYJSR
+         8qH831Z0RDOkMh8nFnhB9Ua8CSlTsVBYTqOGNGfDb8EGPq7CWQVYtSI68BA2sbVD9B3u
+         VuJg==
+X-Gm-Message-State: AC+VfDwbOSEqo9dnjtouqYqIRD2BLcg6yMUpxDn9al4R/6qVQts7WIuZ
+        ZsnO9aDY23qt3dp5eaGkVojxOQ==
+X-Google-Smtp-Source: ACHHUZ6DIZ/PhyT9JV3FzdchvbYZ3qIwLNNEqf/pmfFBTRfAYv0aDDapWKAK27qD8k0ew1wS3jRAUg==
+X-Received: by 2002:a5d:6b82:0:b0:30e:47e2:7eca with SMTP id n2-20020a5d6b82000000b0030e47e27ecamr4524731wrx.3.1686091845858;
+        Tue, 06 Jun 2023 15:50:45 -0700 (PDT)
+Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.1.e.e.d.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:dfde:e1a0::2])
+        by smtp.gmail.com with ESMTPSA id l6-20020a5d4bc6000000b0030ae3a6be5bsm13760443wrt.78.2023.06.06.15.50.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Jun 2023 15:50:45 -0700 (PDT)
+Date:   Tue, 6 Jun 2023 23:50:43 +0100
+From:   Phillip Potter <phil@philpotter.co.uk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Coly Li <colyli@suse.de>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-btrfs@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH 02/31] cdrom: remove the unused bdev argument to
+ cdrom_open
+Message-ID: <ZH+4QyeJ2WCOaPGO@equinox>
+References: <20230606073950.225178-1-hch@lst.de>
+ <20230606073950.225178-3-hch@lst.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v2 0/3] scsi: fixes for targets with many LUNs
-Content-Language: en-US
-To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-References: <20230606193845.9627-1-mwilck@suse.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230606193845.9627-1-mwilck@suse.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230606073950.225178-3-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/6/23 12:38, mwilck@suse.com wrote:
-> From: Martin Wilck <mwilck@suse.com>
+On Tue, Jun 06, 2023 at 09:39:21AM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/cdrom/cdrom.c | 3 +--
+>  drivers/cdrom/gdrom.c | 2 +-
+>  drivers/scsi/sr.c     | 2 +-
+>  include/linux/cdrom.h | 3 +--
+>  4 files changed, 4 insertions(+), 6 deletions(-)
 > 
-> This patch series addresses some issues we saw in a test setup
-> with a large number of SCSI LUNs. The first two patches simply
-> increase the number of available sg and bsg devices. The last one
-> fixes an large delay we encountered between blocking a Fibre Channel
-> remote port and the dev_loss_tmo.
+> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+> index 416f723a2dbb33..e3eab319cb0474 100644
+> --- a/drivers/cdrom/cdrom.c
+> +++ b/drivers/cdrom/cdrom.c
+> @@ -1155,8 +1155,7 @@ int open_for_data(struct cdrom_device_info *cdi)
+>   * is in their own interest: device control becomes a lot easier
+>   * this way.
+>   */
+> -int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+> -	       fmode_t mode)
+> +int cdrom_open(struct cdrom_device_info *cdi, fmode_t mode)
+>  {
+>  	int ret;
+>  
+> diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+> index ceded5772aac6d..eaa2d5a90bc82f 100644
+> --- a/drivers/cdrom/gdrom.c
+> +++ b/drivers/cdrom/gdrom.c
+> @@ -481,7 +481,7 @@ static int gdrom_bdops_open(struct block_device *bdev, fmode_t mode)
+>  	bdev_check_media_change(bdev);
+>  
+>  	mutex_lock(&gdrom_mutex);
+> -	ret = cdrom_open(gd.cd_info, bdev, mode);
+> +	ret = cdrom_open(gd.cd_info, mode);
+>  	mutex_unlock(&gdrom_mutex);
+>  	return ret;
+>  }
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 12869e6d4ebda8..61b83880e395a4 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -498,7 +498,7 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
+>  		sr_revalidate_disk(cd);
+>  
+>  	mutex_lock(&cd->lock);
+> -	ret = cdrom_open(&cd->cdi, bdev, mode);
+> +	ret = cdrom_open(&cd->cdi, mode);
+>  	mutex_unlock(&cd->lock);
+>  
+>  	scsi_autopm_put_device(sdev);
+> diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+> index 67caa909e3e615..cc5717cb0fa8a8 100644
+> --- a/include/linux/cdrom.h
+> +++ b/include/linux/cdrom.h
+> @@ -101,8 +101,7 @@ int cdrom_read_tocentry(struct cdrom_device_info *cdi,
+>  		struct cdrom_tocentry *entry);
+>  
+>  /* the general block_device operations structure: */
+> -extern int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+> -			fmode_t mode);
+> +int cdrom_open(struct cdrom_device_info *cdi, fmode_t mode);
+>  extern void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode);
+>  extern int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
+>  		       fmode_t mode, unsigned int cmd, unsigned long arg);
+> -- 
+> 2.39.2
 > 
-> Changes v1 -> v2:
->   - call blk_mq_wait_quiesce_done() from scsi_target_block() to
->     cover the case where BLK_MQ_F_BLOCKING is set (Bart van Assche)
 
-For the entire series:
+Thanks for the patch, looks good to me.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Phillip Potter <phil@philpotter.co.uk>
+
+Regards,
+Phil
