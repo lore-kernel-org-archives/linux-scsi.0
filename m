@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 249F3C7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 09:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD731C77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 09:42:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239763AbjFGJl2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:41:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57174 "EHLO
+        id S239134AbjFGJm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 05:42:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235490AbjFGJl0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 05:41:26 -0400
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C763E43
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Jun 2023 02:41:25 -0700 (PDT)
-Received: by mail-ed1-x52c.google.com with SMTP id 4fb4d7f45d1cf-51458187be1so1122144a12.2
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jun 2023 02:41:25 -0700 (PDT)
+        with ESMTP id S238677AbjFGJmz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 05:42:55 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCF93EB
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jun 2023 02:42:52 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id 4fb4d7f45d1cf-5149e65c218so1169514a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jun 2023 02:42:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1686130883; x=1688722883;
+        d=ionos.com; s=google; t=1686130971; x=1688722971;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/hFPeu/3BJQ1XAEBfX/WbvMEVzeUhOBPi58IZ/Esj6w=;
-        b=DQ2W7u0kTQ72LzKcRWTgSG5Ic2en/sUZGdoBco91l0Mccvv0oAQBf/skoCqaEe9seE
-         +dzp3Di1fk566WbDYFELqWJPFl5MunPBPZMeITsSShGZc7BDokFlIiDQLZFB4ZrSewGv
-         3oX0GYhrvTDmISog+YzCJR1YtaZTCauUpfCjvwOk/JH+2E22rzqjqm0VAxXGE6uAZmC+
-         EGD5OJ0fSz21kp9IqsqErfAtnLdYe5oeRENAmZus9bszHTyvCXJZvWktYhQnQZuZ89iJ
-         k32HqmMpJwKqRO7v+RyJDkZmScyggr+L8hspyToZJsfDu3VkwGwgCJBAnl1PESLHhwEf
-         au/Q==
+        bh=iTSJC08M16dk7ac+qC1NLiFtaB9M/5yyS+Z15P92ssA=;
+        b=T8ER5TNAg8z1wij3zxfOUWFCDItlghCiuUXhsaqzc4ZwLofamB8RtpTyQLSVJ9h2UJ
+         K5p37hopSMXQsov3IbM/+pXTCPYzGIBfMzkaAwZATA27zGzqc2RsatdEeeSYzb8OJe7S
+         EtKjbCR7ypq1BPl33V5iDYjnSNzEbZ8SSmlT2bsu8chvDUII0Eyuhqg1weJGkPNF54UA
+         at62NLYWJFIfELcet832L35oN/vTBLLRmhbv4E6euKkZT5GIkiCfz/SvQVjjr0TSQFn4
+         eMDgRORV7ULS7YCAm2XXby1mXqhN+JgUeFWJ6iq0dvTYt+w3IowjHJDt6ezXaXQ0V0f7
+         BdPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686130883; x=1688722883;
+        d=1e100.net; s=20221208; t=1686130971; x=1688722971;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=/hFPeu/3BJQ1XAEBfX/WbvMEVzeUhOBPi58IZ/Esj6w=;
-        b=OtEwJwybUKQyPa1+gbIKQL6taZaCKjmt1sB30owlfX9er5biB9CuyW4HC3R12WKTeO
-         WMpF2pqFLL5JRsS3w+gZ2WKEUHnzDOVkvv78+Bn1Xtimc7w9Cbxx3hbJj3NICrfh+wfO
-         OTdclFB39J6iMr7VbMpLr9CIfRhWHu/oJVLbIkc5tuzkWcHuZRVq3FO7MKlRzFSIcIPd
-         Xoq/FcELcqOwjpipSoJlNcLzUr2a9q87sY6uMzH6ZNAeWCcK6p1JwMxwnLMkhmqDZZJf
-         0uk1ffFTgETKbZz7TKsnsZCT0UkWqaeQUb/fhN08AeICwL1ubw+pjkzPUm9q/wQ96OyK
-         oFfQ==
-X-Gm-Message-State: AC+VfDz6eWS1sW17/d3R+ByoYYCS1PJvZxNqRO4UUbgfu12Z2BRAdAkR
-        8uPHgFWEI7cI3S5CaqMQfIC4IwLPTXYMZkSDYYorbg==
-X-Google-Smtp-Source: ACHHUZ78LLb5/9Eve9DZQqNC/TRa3vxkXV4pVMAtKfHjnQnscHPEcmWv/7uCCN4Q8kcsT8KuG+XDWcwCZO/ggZjCnJk=
-X-Received: by 2002:a17:907:2d8c:b0:94e:e97b:c65 with SMTP id
- gt12-20020a1709072d8c00b0094ee97b0c65mr5404803ejc.60.1686130883637; Wed, 07
- Jun 2023 02:41:23 -0700 (PDT)
+        bh=iTSJC08M16dk7ac+qC1NLiFtaB9M/5yyS+Z15P92ssA=;
+        b=YGz11M/PWr7pU61HgCDrwyK+GtK1/ETgP/LXu5Ue6Ispr9F+7LYSadkcMsNwUsODxm
+         AvxwDSNTuZj0dVjzAF4mmNvG2X/zkKf4Qy1SS5IZvA6Jnkw0vBFgy8SUFM6StY2zxFpb
+         9/EK0g4lVeAeeHahtiPHlRyzVezm91d/zWnkeTX6vs9WWbR+QGkXdCaveZSox5sf/TL/
+         o6iIi4SimbB9DjCRBShdAlAEhE7AUMl4Bj6vFgC6YAb3NwDTSHpTuE3wpqMEoKrPL6Po
+         2AgHVcDmE4FNzdCWwEByPpHibnl6Z4ymXgjL/aCr8xKUBYFN9pU9cX8wQvfr7vWB0BYc
+         yilQ==
+X-Gm-Message-State: AC+VfDxucVEeUbZKFILY8myPJinfSIc9WPZVfq8dIvnu/AdRl8fyhBeB
+        nwznM8T5kHBlp0hCUaBBTBSWynMQs6HbtXgKjtDLRg==
+X-Google-Smtp-Source: ACHHUZ5i8f5AUVXLioiA4Msh4foVuVuox1MKnFKi4fucw3rKEDDzkk1m6bVkvWRpki6Lz1RgGXGnv70bM2LGvyL4BxY=
+X-Received: by 2002:aa7:cd55:0:b0:514:8e6f:7113 with SMTP id
+ v21-20020aa7cd55000000b005148e6f7113mr3506396edw.22.1686130971195; Wed, 07
+ Jun 2023 02:42:51 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230606073950.225178-1-hch@lst.de> <20230606073950.225178-11-hch@lst.de>
-In-Reply-To: <20230606073950.225178-11-hch@lst.de>
+References: <20230606073950.225178-1-hch@lst.de> <20230606073950.225178-10-hch@lst.de>
+In-Reply-To: <20230606073950.225178-10-hch@lst.de>
 From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 7 Jun 2023 11:41:12 +0200
-Message-ID: <CAMGffEkqXCkxpA+qqDVfx0echCPvNpWgK3hZWbb11F6cv2EQ-A@mail.gmail.com>
-Subject: Re: [PATCH 10/31] block: remove the unused mode argument to ->release
+Date:   Wed, 7 Jun 2023 11:42:40 +0200
+Message-ID: <CAMGffEkKpHzatfeJhKtJQMTNckJGc7sJQ_LWFg-KvazvOD4DWw@mail.gmail.com>
+Subject: Re: [PATCH 09/31] block: pass a gendisk to ->open
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -83,22 +83,21 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On Tue, Jun 6, 2023 at 9:40=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrote=
 :
 >
-> The mode argument to the ->release block_device_operation is never used,
-> so remove it.
+> ->open is only called on the whole device.  Make that explicit by
+> passing a gendisk instead of the block_device.
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  arch/um/drivers/ubd_kern.c          |  4 ++--
->  arch/xtensa/platforms/iss/simdisk.c |  2 +-
->  block/bdev.c                        | 14 +++++++-------
->  drivers/block/amiflop.c             |  2 +-
->  drivers/block/aoe/aoeblk.c          |  2 +-
->  drivers/block/ataflop.c             |  4 ++--
->  drivers/block/drbd/drbd_main.c      |  4 ++--
->  drivers/block/floppy.c              |  2 +-
->  drivers/block/loop.c                |  2 +-
->  drivers/block/nbd.c                 |  2 +-
->  drivers/block/pktcdvd.c             |  4 ++--
->  drivers/block/rbd.c                 |  2 +-
->  drivers/block/rnbd/rnbd-clt.c       |  2 +-
+>  arch/um/drivers/ubd_kern.c          |  5 ++---
+>  arch/xtensa/platforms/iss/simdisk.c |  4 ++--
+>  block/bdev.c                        |  2 +-
+>  drivers/block/amiflop.c             |  8 ++++----
+>  drivers/block/aoe/aoeblk.c          |  4 ++--
+>  drivers/block/ataflop.c             | 16 +++++++--------
+>  drivers/block/drbd/drbd_main.c      |  6 +++---
+>  drivers/block/floppy.c              | 30 +++++++++++++++--------------
+>  drivers/block/nbd.c                 |  8 ++++----
+>  drivers/block/pktcdvd.c             |  6 +++---
+>  drivers/block/rbd.c                 |  4 ++--
+>  drivers/block/rnbd/rnbd-clt.c       |  4 ++--
 Acked-by: Jack Wang <jinpu.wang@ionos.com> # for rnbd
