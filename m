@@ -2,87 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B615C77B7A
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 09:57:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F21F0C7EE23
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 11:38:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238868AbjFGJ47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:56:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36902 "EHLO
+        id S238257AbjFGLiw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 07:38:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234789AbjFGJ46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 05:56:58 -0400
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55D12173B;
-        Wed,  7 Jun 2023 02:56:56 -0700 (PDT)
-Received: from ed3e173716be.home.arpa (unknown [124.16.138.125])
-        by APP-03 (Coremail) with SMTP id rQCowAD3_y_cT4BkWqGxDA--.3849S2;
-        Wed, 07 Jun 2023 17:37:33 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        chenzhongjin@huawei.com, dwagner@suse.de, hare@suse.de
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] scsi: efct: Add missing check for ioremap
-Date:   Wed,  7 Jun 2023 17:37:30 +0800
-Message-Id: <20230607093730.18982-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S234009AbjFGLiv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 07:38:51 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED7A11730
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jun 2023 04:38:49 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 357BIesp030024
+        for <linux-scsi@vger.kernel.org>; Wed, 7 Jun 2023 04:38:49 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=pfpt0220; bh=nE9zLv/HSNb4fDsWyXulh38a/z46yFnmg/muj8mYep0=;
+ b=amc74j27m6Ym5BG7YckRKZS6Evt4s9H2hbdgYjT8xUmFB+l0/aP8EYgGOdHMYS+MZwb3
+ tseCq7M7GDbjSXE2TDGzfsV1akWKfKyb0IPW2+6RNQurEPWEbjdvbLjeS45GEnytVsnW
+ ytJW+leLhs5M+AZG5y+UTMPNEVoAMpo4S0ZYm5qrbSwhCWm//g9sK+y5umITqAaIFhJZ
+ j+61nsdVX0E+F2cbVmqTqzuS3XfNVHVPK9CrZEBnKtrQUubaRCkYO6yDX2PAU2sUEJR/
+ 7ry0+J5Bp1U9CdiohSehcwSj9R546Ftzmh2UBPyqLGxcDIEmHGMp3zYrRRPsgBGA8PkM TQ== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3r2a75afe9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jun 2023 04:38:49 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 7 Jun
+ 2023 04:38:46 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Wed, 7 Jun 2023 04:38:46 -0700
+Received: from localhost.marvell.com (unknown [10.30.46.195])
+        by maili.marvell.com (Postfix) with ESMTP id 17BA73F7045;
+        Wed,  7 Jun 2023 04:38:44 -0700 (PDT)
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
+Subject: [PATCH v2 0/8] qla2xxx klocwork fixes
+Date:   Wed, 7 Jun 2023 17:08:35 +0530
+Message-ID: <20230607113843.37185-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: rQCowAD3_y_cT4BkWqGxDA--.3849S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xw4Utr45ZFWDurWrXrWfuFg_yoWkCwc_uF
-        ZI9ryfurWDCr1kJr17Ar1xA39I9rsIgw1fWr1Fqa4F9wsxXrZruay8AF97JrWjgw4ktF1D
-        GryDJr4Ykw1jkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbV8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-        Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr
-        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
-        n2IY04v7MxkIecxEwVAFwVW8uwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJV
-        W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
-        1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
-        IIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvE
-        x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvj
-        DU0xZFpf9x0JU4BT5UUUUU=
-X-Originating-IP: [124.16.138.125]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: Svv2wHXn2zfpM0OT3aZfwj_wU72rII50
+X-Proofpoint-GUID: Svv2wHXn2zfpM0OT3aZfwj_wU72rII50
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-06-07_06,2023-06-07_01,2023-05-22_02
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add check for ioremap() and return the error if it fails in order to
-guarantee the success of ioremap().
+Martin,
 
-Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
-Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
----
- drivers/scsi/elx/efct/efct_driver.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Please apply the qla2xxx driver klocwork fixes to
+the scsi tree at your earliest convenience.
 
-diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
-index 49fd2cfed70c..77c6252dcb3e 100644
---- a/drivers/scsi/elx/efct/efct_driver.c
-+++ b/drivers/scsi/elx/efct/efct_driver.c
-@@ -528,6 +528,8 @@ efct_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		if (pci_resource_flags(pdev, i) & IORESOURCE_MEM) {
- 			efct->reg[r] = ioremap(pci_resource_start(pdev, i),
- 					       pci_resource_len(pdev, i));
-+			if (!efct->reg[r])
-+				goto ioremap_out;
- 			r++;
- 		}
- 
-@@ -580,7 +582,7 @@ efct_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	efct_teardown_msix(efct);
- dma_mask_out:
- 	pci_set_drvdata(pdev, NULL);
--
-+ioremap_out:
- 	for (i = 0; i < EFCT_PCI_MAX_REGS; i++) {
- 		if (efct->reg[i])
- 			iounmap(efct->reg[i]);
+Thanks,
+Nilesh
+
+v2:
+- Incorporate review comments for patch 2/8, 3/8, 7/8.
+
+Bikash Hazarika (2):
+  qla2xxx: klocwork - Fix potential null pointer dereference
+  qla2xxx: klocwork - correct the index of array
+
+Nilesh Javali (4):
+  qla2xxx: klocwork - Array index may go out of bound
+  qla2xxx: klocwork - avoid fcport pointer dereference
+  qla2xxx: klocwork - Check valid rport returned by fc_bsg_to_rport
+  qla2xxx: Update version to 10.02.08.400-k
+
+Quinn Tran (1):
+  qla2xxx: klocwork - Fix buffer overrun
+
+Shreyas Deodhar (1):
+  qla2xxx: klocwork - pointer may be dereferenced
+
+ drivers/scsi/qla2xxx/qla_bsg.c     | 6 ++++++
+ drivers/scsi/qla2xxx/qla_edif.c    | 4 ++--
+ drivers/scsi/qla2xxx/qla_init.c    | 2 +-
+ drivers/scsi/qla2xxx/qla_inline.h  | 5 ++++-
+ drivers/scsi/qla2xxx/qla_iocb.c    | 3 ++-
+ drivers/scsi/qla2xxx/qla_os.c      | 3 ++-
+ drivers/scsi/qla2xxx/qla_version.h | 4 ++--
+ 7 files changed, 19 insertions(+), 8 deletions(-)
+
+
+base-commit: 44ef1604ae9492a7d9238ea79aa0cc7b4c4de860
 -- 
-2.25.1
+2.23.1
 
