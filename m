@@ -2,129 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9076FC77B7A
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 20:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D4CC77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 20:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231513AbjFGUHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 16:07:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37322 "EHLO
+        id S235506AbjFGUz4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 16:55:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231439AbjFGUHR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 16:07:17 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 352D4210B;
-        Wed,  7 Jun 2023 13:07:14 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id B751821A13;
-        Wed,  7 Jun 2023 20:07:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1686168432; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=J7ykc0e+u/G22RQG0NJx6bGNqBYp+rLwfwbPjKoPuKo=;
-        b=g7jLqcvh8igTvb1wOAZd4B/00TRukbouCHqJtLOPclbw1zGRKXibWhd4CK1pSaXyhiy7dK
-        M4UzZiPWkwDWGTIYOht3LyMjofwjgzpKQvNnhElsXt1WYrbgR+wA65Mco/JO6p0t1/O3vL
-        BjKVrkNGTx9CSPx/gqBj/11+lY2GHFk=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1FBFA1346D;
-        Wed,  7 Jun 2023 20:07:12 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id e7rfA3DjgGTkMQAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 07 Jun 2023 20:07:12 +0000
-Message-ID: <ff669f59e3c42e5dec4920d705e2b8748ad600d5.camel@suse.com>
-Subject: Re: [PATCH v3 4/8] scsi: call scsi_stop_queue() without state_mutex
- held
-From:   Martin Wilck <mwilck@suse.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Date:   Wed, 07 Jun 2023 22:07:10 +0200
-In-Reply-To: <50cb1a5bd501721d7c816b1ca8bf560daa8e3cc9.camel@suse.com>
-References: <20230607182249.22623-1-mwilck@suse.com>
-         <20230607182249.22623-5-mwilck@suse.com>
-         <3b8b13bf-a458-827a-b916-07d7eee8ae00@acm.org>
-         <50cb1a5bd501721d7c816b1ca8bf560daa8e3cc9.camel@suse.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 
+        with ESMTP id S235480AbjFGUzy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 16:55:54 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 537D392
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jun 2023 13:55:53 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id 4fb4d7f45d1cf-5149c76f4dbso2405647a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jun 2023 13:55:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686171352; x=1688763352;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ektklZhVWRcOKwLrtgBZu6BNUNHtSSmuP1mClXRp1IA=;
+        b=ZJQCvZ2evpXakBg7UM+ZGV2vEfFJUL+otFwGoYsMilw8hZ/dmb3ZEpVF/H2JLy1bBb
+         mL5KPS/bVkURvhOxOIcaj7uS36s0d3LZ++mt2auPceBZnlXQwjxf80aRa4rhjpcH3Lsn
+         QjJ2k6MeYZ5eVW+7pEeousOI7Xn1dU4POLz9Mr1Z7UjSsP8uwhz/K4xhlL9Oa9FL/XAG
+         w0DJclQ0osy7zY+ds88Ji8XX+oyAZ5Zvqs7wR0rjEfqm2TcX9y6YhSnUPYY7YoRLMtNT
+         Wwe58AFO+wg7mvc7z07My8RaNRiu//L1HuX549Qr3VJst9CoAlshZ3HAbGNq6bI5gOBJ
+         EiBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686171352; x=1688763352;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ektklZhVWRcOKwLrtgBZu6BNUNHtSSmuP1mClXRp1IA=;
+        b=RcVlKq9cETpDmaajvwRfccqOo15qCELUgcfBrCT35skzsZSfe5RAaTUrv8ntCuUcSK
+         7IcXNocxes00l/CbTQsbXG5owohZ3JDNkAwfe5cCKVXdKUOEISX3uHktfwLmaHxblmzB
+         paUZwdNjSovou079nwaANsVaxBbYvat756WWV/OPk5Ckwo2NMhsDgtqPrek5dJsXSXyO
+         0SmA9ijXBKxLB1WZXmWq9tBMaCTlLg8Uo32xqnvrtkVGIYrfFr5nGMFYvaa4e9CxlWj+
+         jzlyr3SzG2hjLdzlBJM6JLmRDTswZ5NEp2cXNPQb33IrStSAbZ+HMWp0R4R3IDOHAkZg
+         eqyA==
+X-Gm-Message-State: AC+VfDxIC4hfOV1n6See+c3PNvqy3qgp2SUnLu990VtNwGPcumiyz4pa
+        OQx5wLa/u+DCSGk3PU/MqEs=
+X-Google-Smtp-Source: ACHHUZ7ktgMsEnCJrIw+CDa8sE9m+55xNzqZ6GbTUBd6F2W4LOuZCGHuFVCTLv8c8KF2elfUp+PekQ==
+X-Received: by 2002:a17:907:e88:b0:977:e916:9b83 with SMTP id ho8-20020a1709070e8800b00977e9169b83mr8002143ejc.8.1686171351527;
+        Wed, 07 Jun 2023 13:55:51 -0700 (PDT)
+Received: from ?IPV6:2a01:598:b97f:2abf:5939:fccc:ab6a:6807? ([2a01:598:b97f:2abf:5939:fccc:ab6a:6807])
+        by smtp.gmail.com with ESMTPSA id u16-20020aa7d550000000b005149c3fa632sm6673716edr.13.2023.06.07.13.55.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 07 Jun 2023 13:55:50 -0700 (PDT)
+Message-ID: <a53bca5b-c730-7558-0a59-16bda9fbc22c@gmail.com>
+Date:   Wed, 7 Jun 2023 22:55:48 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH] scsi: ufs: Remove a ufshcd_add_command_trace() call
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Adrien Thierry <athierry@redhat.com>
+References: <20230531224050.25554-1-bvanassche@acm.org>
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <20230531224050.25554-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Bart,
+On 01.06.23 12:40 AM, Bart Van Assche wrote:
+> ufshcd_add_command_trace() traces SCSI commands. Remove a
+> ufshcd_add_command_trace() call from a code path that is not related to
+> SCSI commands.
+>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/ufs/core/ufshcd.c | 1 -
+>   1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 0856f01b761d..1f7a4ec211ff 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5400,7 +5400,6 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
+>   		   lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+>   		if (hba->dev_cmd.complete) {
+>   			hba->dev_cmd.cqe = cqe;
+> -			ufshcd_add_command_trace(hba, task_tag, UFS_DEV_COMP);
+>   			complete(hba->dev_cmd.complete);
+>   			ufshcd_clk_scaling_update_busy(hba);
+>   		}
 
-On Wed, 2023-06-07 at 21:37 +0200, Martin Wilck wrote:
-> On Wed, 2023-06-07 at 12:16 -0700, Bart Van Assche wrote:
-> > On 6/7/23 11:22, mwilck@suse.com=A0wrote:
-> > > From: Martin Wilck <mwilck@suse.com>
-> > >=20
-> > > sdev->state_mutex protects only sdev->sdev_state. There's no
-> > > reason
-> > > to keep it held while calling scsi_stop_queue().
-> > >=20
-> > > Signed-off-by: Martin Wilck <mwilck@suse.com>
-> > > ---
-> > > =A0 drivers/scsi/scsi_lib.c | 2 +-
-> > > =A0 1 file changed, 1 insertion(+), 1 deletion(-)
-> > >=20
-> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > index ce5788643011..26e7ce25fa05 100644
-> > > --- a/drivers/scsi/scsi_lib.c
-> > > +++ b/drivers/scsi/scsi_lib.c
-> > > @@ -2795,9 +2795,9 @@ static void scsi_device_block(struct
-> > > scsi_device *sdev, void *data)
-> > > =A0=20
-> > > =A0=A0=A0=A0=A0=A0=A0=A0mutex_lock(&sdev->state_mutex);
-> > > =A0=A0=A0=A0=A0=A0=A0=A0err =3D __scsi_internal_device_block_nowait(s=
-dev);
-> > > +=A0=A0=A0=A0=A0=A0=A0mutex_unlock(&sdev->state_mutex);
-> > > =A0=A0=A0=A0=A0=A0=A0=A0if (err =3D=3D 0)
-> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_stop_queue(sdev,=
- false);
-> > > -=A0=A0=A0=A0=A0=A0=A0mutex_unlock(&sdev->state_mutex);
-> > > =A0=20
-> > > =A0=A0=A0=A0=A0=A0=A0=A0WARN_ONCE(err, "__scsi_internal_device_block_=
-nowait(%s)
-> > > failed: err =3D %d\n",
-> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 dev_name(&sdev->s=
-dev_gendev), err);
-> >=20
-> > There is a reason why scsi_stop_queue() is called with the sdev
-> > state
-> > mutex held: if this mutex is not held, unblocking of a SCSI device
-> > can=20
-> > start before the scsi_stop_queue() call has finished. It is not
-> > allowed=20
-> > to swap the order of the blk_mq_quiesce_queue() and=20
-> > blk_mq_unquiesce_queue() calls.
->=20
-> Thanks. This wasn't obvious to me from the current code. I'll add a
-> comment in the next version.
+The tracepoint entry here is of no use, it's never executed, it just 
+returns.
 
-The crucial question is now, is it sufficient to call
-blk_mq_quiesce_queue_nowait() under the mutex, or does the call to
-blk_mq_wait_quiesce_done() have to be under the mutex, too?
-The latter would actually kill off our attempt to fix the delay
-in fc_remote_port_delete() that was caused by repeated
-synchronize_rcu() calls.
-
-But if I understand you correctly, moving the wait out of the mutex
-should be ok. I'll update the series accordingly.
-
-Thanks,
-Martin
-
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
