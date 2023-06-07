@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77FD8C83003
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 08:35:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABD7CC77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 08:39:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237737AbjFGIfq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 04:35:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41944 "EHLO
+        id S237989AbjFGIj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 04:39:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238478AbjFGIfk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 04:35:40 -0400
+        with ESMTP id S234009AbjFGIjZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 04:39:25 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 197EA1730;
-        Wed,  7 Jun 2023 01:35:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2BE2E7E;
+        Wed,  7 Jun 2023 01:39:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8E73A63C39;
-        Wed,  7 Jun 2023 08:35:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78533C433D2;
-        Wed,  7 Jun 2023 08:35:25 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6DB2660C67;
+        Wed,  7 Jun 2023 08:39:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A3A1C433EF;
+        Wed,  7 Jun 2023 08:39:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686126931;
-        bh=OMT81Nj+03/UUqXvR/WATI3J1MFOVo+i3KL8UfpdkEc=;
+        s=k20201202; t=1686127163;
+        bh=KpWcSBDck/xwxFkd8Vk7fAgf7Ve8mFKgiGPrEW6K2Q0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cXORTW2prZhLBaGAe7/mLRmhhTZvaBHSnzVd0HFARKJDQ62eKOG4Kzb7xZlfPL9nO
-         97zwfyA/DQztpsvm9grNPGz7haRUOQZrQturaW0SFSa0uosZB40SJST0dXmizK2H91
-         Vrg9ubXMdO+Gt6gYl3oFWyWVhTdUtfr7NIIdvz5ZfTiIhubmxyIDaIzXV3KgUyxjww
-         GcTRPH6U8lSPzfLUWbreqgZvDgNSFImMLsmVidpwIncpJKPPhhlshVQd4J7rrP6eJV
-         7nFr4sqb1S0ehPF5Xwg1baPwzoSZ6HowqC26ZK1aX2UPURtsR/Sx1T5MKoxTEoav5Y
-         AB2Mai1SAj/KQ==
-Date:   Wed, 7 Jun 2023 10:35:22 +0200
+        b=uA7EJ9P/L5+3z/cwnQO3ez6heNBOh2ztm0tByBVVVWSG+Ty9bViARmYghliiiTOjF
+         zfyDKZ/WVZKnKqb27eoLFNy9Gp4VWJLbdFkpxtUdjTW1ihovnzx9mCqpvHlcVKl0Th
+         Rf10QupAAvqzcAYZp+8tXsnFlejznxrDCiS1fwCDYebGVZXivhfNLwt2PfA+VtSam8
+         pCcZzAUeaQGLwZNEeJwBUOIWm8QeGe+wPLl1Arn+PXC4T9/q84iyVBg8Og8sHsu9AC
+         ymPxr4yq3cRtmcaUpMPCw2/GSyLHKDd4l8T1R7oWgm4TKIqgSNoA6xqMxcENCVvjqq
+         jYZClevsYWR4w==
+Date:   Wed, 7 Jun 2023 10:39:10 +0200
 From:   Christian Brauner <brauner@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
@@ -54,20 +54,22 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org
-Subject: Re: [PATCH 11/31] block: rename blkdev_close to blkdev_release
-Message-ID: <20230607-renovieren-getier-8fba2cb1185d@brauner>
+Subject: Re: [PATCH 14/31] rnbd-srv: don't pass a holder for non-exclusive
+ blkdev_get_by_path
+Message-ID: <20230607-deckname-gewettert-cf7a2bce127f@brauner>
 References: <20230606073950.225178-1-hch@lst.de>
- <20230606073950.225178-12-hch@lst.de>
+ <20230606073950.225178-15-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230606073950.225178-12-hch@lst.de>
+In-Reply-To: <20230606073950.225178-15-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 09:39:30AM +0200, Christoph Hellwig wrote:
-> Make the function name match the method name.
+On Tue, Jun 06, 2023 at 09:39:33AM +0200, Christoph Hellwig wrote:
+> Passing a holder to blkdev_get_by_path when FMODE_EXCL isn't set doesn't
+> make sense, so pass NULL instead.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
