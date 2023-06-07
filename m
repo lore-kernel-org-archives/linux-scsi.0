@@ -2,99 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36F02C7EE25
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 18:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D33C7EE25
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 18:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbjFGSXr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 14:23:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37592 "EHLO
+        id S229944AbjFGSXt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 14:23:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229683AbjFGSXl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 14:23:41 -0400
+        with ESMTP id S230125AbjFGSXo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 14:23:44 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0138226A3;
-        Wed,  7 Jun 2023 11:23:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A5662708;
+        Wed,  7 Jun 2023 11:23:20 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id DE2DD21A12;
-        Wed,  7 Jun 2023 18:23:14 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7B94C21A1B;
+        Wed,  7 Jun 2023 18:23:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1686162194; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=0tH7ZVZ8K6Zl7Tbv4Qxycx3ttP8l0Pu3O+4wFI22LQw=;
-        b=dNHfVCccjTFPsWaqEyfhvhaVtSV4rPKP+4V0QIrJPXy2j1GWVgp2fAU9A6Pk8oyV/tSr9p
-        JKEGCv0qyhJS8DmXuhwD9fFU0QDskagNYKS5/lpf0WLb734bQtsGziuh5IPKCJgu3lh6TU
-        99+rWm66wWYkpFw8VfznV++DHattPaY=
+        t=1686162196; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Md2lKFbYYlIFRimhTAFovw3H98C3UoSpAEfzkvqw8/k=;
+        b=HpDVVkf16prTrt7Yyjpec0Ir5S09X7dSv6oih5WjTVjM+BmQ1JtcywYVxZKlihdsSHiR/s
+        ha7Vu3fRAk5FNedmIzZ5BNq3Z/H2sEwdAANMu5VAaGjH2J33l30LC3uS7mJhxEMaFej7vY
+        yP+PdbfT6mPv2tf+9vq28/hjdJJY64Y=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3D5E81346D;
-        Wed,  7 Jun 2023 18:23:14 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C002B1346D;
+        Wed,  7 Jun 2023 18:23:15 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id QfBpCxLLgGRzBQAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 07 Jun 2023 18:23:14 +0000
+        id GCkvKxPLgGRzBQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Wed, 07 Jun 2023 18:23:15 +0000
 From:   mwilck@suse.com
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
         Bart Van Assche <Bart.VanAssche@sandisk.com>
 Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
         linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v3 0/8] scsi: fixes for targets with many LUNs, and scsi_target_block rework
-Date:   Wed,  7 Jun 2023 20:22:41 +0200
-Message-Id: <20230607182249.22623-1-mwilck@suse.com>
+        Hannes Reinecke <hare@suse.de>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 2/8] scsi: sg: increase number of devices
+Date:   Wed,  7 Jun 2023 20:22:43 +0200
+Message-Id: <20230607182249.22623-3-mwilck@suse.com>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230607182249.22623-1-mwilck@suse.com>
+References: <20230607182249.22623-1-mwilck@suse.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+From: Hannes Reinecke <hare@suse.de>
 
-This patch series addresses some issues we saw in a test setup
-with a large number of SCSI LUNs. The first two patches simply
-increase the number of available sg and bsg devices. 3-6 fix
-a large delay we encountered between blocking a Fibre Channel
-remote port and the dev_loss_tmo. 7-8 apply additional changes
-to scsi_target_block(), as suggested in the review of the v2 series.
+Larger setups may need to allocate more than 32k sg devices, so
+increase the number of devices to the full range of minor device
+numbers.
 
-Changes v2 -> v3:
- - Split previous 3/3 into 4 separate patches as suggested by
-   Christoph Hellwig.
- - Added 7/8 and 8/8, as suggested by Christoph and Bart van Assche.
- - Added s-o-b and reviewed-by tags.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/sg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes v1 -> v2:
- - call blk_mq_wait_quiesce_done() from scsi_target_block() to
-   cover the case where BLK_MQ_F_BL*** SUBJECT HERE ***
-
-Hannes Reinecke (2):
-  bsg: increase number of devices
-  scsi: sg: increase number of devices
-
-Martin Wilck (6):
-  scsi: merge scsi_internal_device_block() and device_block()
-  scsi: call scsi_stop_queue() without state_mutex held
-  scsi: don't wait for quiesce in scsi_stop_queue()
-  scsi: don't wait for quiesce in scsi_device_block()
-  scsi: have scsi_target_block() expect a scsi_target parent argument
-  scsi: add Scsi_Host argument to scsi_target_block()
-
- block/bsg.c                         |  2 +-
- drivers/scsi/scsi_lib.c             | 72 +++++++++++++----------------
- drivers/scsi/scsi_transport_fc.c    |  2 +-
- drivers/scsi/scsi_transport_iscsi.c |  3 +-
- drivers/scsi/scsi_transport_srp.c   |  4 +-
- drivers/scsi/sg.c                   |  2 +-
- drivers/scsi/snic/snic_disc.c       |  2 +-
- include/scsi/scsi_device.h          |  2 +-
- 8 files changed, 41 insertions(+), 48 deletions(-)
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 037f8c98a6d3..6c04cf941dac 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -71,7 +71,7 @@ static int sg_proc_init(void);
+ 
+ #define SG_ALLOW_DIO_DEF 0
+ 
+-#define SG_MAX_DEVS 32768
++#define SG_MAX_DEVS (1 << MINORBITS)
+ 
+ /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
+  * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
 -- 
 2.40.1
 
