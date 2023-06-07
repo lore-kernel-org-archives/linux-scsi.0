@@ -2,79 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 362E4C7EE23
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 08:42:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A5AC77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 08:52:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239235AbjFGImI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 04:42:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45454 "EHLO
+        id S238532AbjFGIwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 04:52:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239125AbjFGImC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 04:42:02 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6264C1721;
-        Wed,  7 Jun 2023 01:41:57 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id a640c23a62f3a-9745d99cfccso985665766b.1;
-        Wed, 07 Jun 2023 01:41:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686127316; x=1688719316;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=LVvlvoB02nvnsnKJNEtRpAZOz6oiby60WKtoUe7P+GY=;
-        b=OymjuXBxiDerqwX3JfzNWdavhSO66hb6xPOM7aTrHoDtyvTeMGIjGNXJgc/zIGD33g
-         eYqzWP7xsgKxyYG1GfcRNFJOf+GIf+DFQ018pqJS3qIerqbN1w9VnvbeyWs4prbWw4/E
-         SduzQmsPqRBBMt/EgwRGfaVHLoFqvJkmO2G5XQmygRQlWGQG6tSl0/ORdF5DcZ3b0CDv
-         x3AUpfipt/L6Jlu/RRsiN9RZxRT+SoecO1rHLbT7bK8yVuTlFICYI2feiT7GjTDUkAHh
-         4FfBm8dEuDoPb7MqApaAsMWr0D7ivwCLjTDVegufSba7A6JrgNVFqqBdBOku0hwuHEqs
-         PiZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686127316; x=1688719316;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LVvlvoB02nvnsnKJNEtRpAZOz6oiby60WKtoUe7P+GY=;
-        b=Pk/bda60eS816W/Cx/r/mPI7+hEid6ykrqJKuYC7/MvaEq2wCJez90ZJwOB6B+UxHZ
-         PMS5eUXoe6ZEpZ/OIfiecISQXGioMGUQ2iuOMRAZ5YOYTpw7O1cV9ulNfjay9mRHWTvK
-         vBEoUzlNnFavnMNYc632xFYJ+f+y2iz0pXjWgtwuHyH6Mww0lLAz2MwXPdZljyHnwYPa
-         wfG6FERKVKwQ1so8Pz8PVoz0AShYBr/EZQ0uiSF8hJXmX9ehh2M+JB5u8Tw5HD3XwOt9
-         AHQBmSDGUnWgB1DF1iLsOIX0QNVilq3pucFJby7bPeP5LZmrP92ybUU6HTk+7NWkOYnU
-         bjxw==
-X-Gm-Message-State: AC+VfDwK31ijb3ssa3/a3suwf5coA8N1Ao9PQtqRM/1m9foJdloL0P/s
-        pl0HFzpnYsyHe9ULL9/KUEU=
-X-Google-Smtp-Source: ACHHUZ6YjASw/aH/Db8HdCXMq296JKT5ZbfQIIRMgoA3Vta/rnzJSGSa6oM9bwmVzBHkB17IH6vRzQ==
-X-Received: by 2002:a17:907:608c:b0:953:517a:8f1a with SMTP id ht12-20020a170907608c00b00953517a8f1amr5154659ejc.58.1686127315448;
-        Wed, 07 Jun 2023 01:41:55 -0700 (PDT)
-Received: from ?IPV6:2003:c5:871a:eb:baf3:f2aa:5a58:4b8a? (p200300c5871a00ebbaf3f2aa5a584b8a.dip0.t-ipconnect.de. [2003:c5:871a:eb:baf3:f2aa:5a58:4b8a])
-        by smtp.gmail.com with ESMTPSA id lx5-20020a170906af0500b00965c6c63ea3sm6664908ejb.35.2023.06.07.01.41.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Jun 2023 01:41:55 -0700 (PDT)
-Message-ID: <ace67990-3873-5e5a-73af-00ba573c917e@gmail.com>
-Date:   Wed, 7 Jun 2023 10:41:53 +0200
+        with ESMTP id S239605AbjFGIuh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 04:50:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40D431BDC;
+        Wed,  7 Jun 2023 01:50:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 562AC633E4;
+        Wed,  7 Jun 2023 08:50:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DEBAC433EF;
+        Wed,  7 Jun 2023 08:49:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686127803;
+        bh=PZjCdaHviY+RVqpZkaQVixpnvUVrPR62Zf8+mzHD1uk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=psgkq590ELlnR3YewhzuAje3f6nLqAdxD2ks0a0ex7l9AURvWbDqzYkAaTTfQ3LRh
+         lbjVPemFfDSDVxbPW+yVAYbVlRK2mYcGkDU+s9QomicwFqaBsiwabN/y6C+B9XbF7a
+         TUp8gIDqcrYKdDf1/ALLYLXJICKJabskE/hFOC/X2WxRVUqsCWuBbuBtyCKTR3JcP5
+         UshWyePpXwuCBpPQlRL5oU0JjL5XQDDGrzAY9Q4EpVcVDZmW/DwUYrjmVOzW63Jixr
+         ioDpPQD0ktu/OZfW3TlmJmEpP8gCBlQwrZ8iPtiqN0Aky+ak3ORBZqrV1HDSve4xiN
+         ZX/3XM7Ql6s/w==
+Date:   Wed, 7 Jun 2023 10:49:55 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Coly Li <colyli@suse.de>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-btrfs@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH 16/31] block: use the holder as indication for exclusive
+ opens
+Message-ID: <20230607-umtriebe-absicht-0b2232e4f212@brauner>
+References: <20230606073950.225178-1-hch@lst.de>
+ <20230606073950.225178-17-hch@lst.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v2] ufs: core: Combine ufshcd_mq_poll_cqe functions
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        bvanassche@acm.org
-References: <20230601225048.12228-1-stanley.chu@mediatek.com>
-Content-Language: en-US
-From:   Bean Huo <huobean@gmail.com>
-In-Reply-To: <20230601225048.12228-1-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230606073950.225178-17-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 02.06.23 12:50 AM, Stanley Chu wrote:
-> Currently, ufshcd_mcq_poll_cqe_nolock() is only called by
-> ufshcd_mcq_poll_cqe_lock() with the addition of a spinlock wrapper
-> for ufshcd_mcq_poll_cqe_nolock(). Combining these two functions
-> into one would result in cleaner code.
->
-> Reviewed-by: Bao D. Nguyen<quic_nguyenb@quicinc.com>
-> Signed-off-by: Stanley Chu<stanley.chu@mediatek.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
+On Tue, Jun 06, 2023 at 09:39:35AM +0200, Christoph Hellwig wrote:
+> The current interface for exclusive opens is rather confusing as it
+> requires both the FMODE_EXCL flag and a holder.  Remove the need to pass
+> FMODE_EXCL and just key off the exclusive open off a non-NULL holder.
+> 
+> For blkdev_put this requires adding the holder argument, which provides
+> better debug checking that only the holder actually releases the hold,
+> but at the same time allows removing the now superfluous mode argument.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+Looks good to me,
+Acked-by: Christian Brauner <brauner@kernel.org>
