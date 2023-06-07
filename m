@@ -2,108 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4FF2C77B7A
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 15:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5825C77B7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 15:55:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235147AbjFGPia (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 11:38:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48636 "EHLO
+        id S241531AbjFGPzx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 11:55:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235079AbjFGPi3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 11:38:29 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0C3A125;
-        Wed,  7 Jun 2023 08:38:28 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id A15301FDAF;
-        Wed,  7 Jun 2023 15:38:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1686152307; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Kkwlk03GZO5nENrvtVROVto9i8M8yZ82CN7aOAB3zBw=;
-        b=KWv3E76mWyJniU27FhrjPpLJqpUZJXMFdDhPUCg8YC2G3mUnPWyUMAzU9zVP9soTrW1SHk
-        QdazOR4d+s9rQxUaaJ/9eT9fojTAi9rKTC29Erbv6x5cQTihROytFlzvj9AOBUNwaK9pC4
-        LhAODKpUNBz566fNxokekBwQHRoUhpM=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3EBAE1346D;
-        Wed,  7 Jun 2023 15:38:27 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id HYRoDXOkgGRsNAAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 07 Jun 2023 15:38:27 +0000
-Message-ID: <7ee70331d921854e2b27de3d072d0d8f8ce97f3b.camel@suse.com>
-Subject: Re: [PATCH v2 3/3] scsi: simplify scsi_stop_queue()
-From:   Martin Wilck <mwilck@suse.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Date:   Wed, 07 Jun 2023 17:38:26 +0200
-In-Reply-To: <903c7222-c95e-fda1-9b90-b59e184944cf@acm.org>
-References: <20230606193845.9627-1-mwilck@suse.com>
-         <20230606193845.9627-4-mwilck@suse.com> <20230607052710.GC20052@lst.de>
-         <c0563161eb613f9500e6a1cccdcff6fc64efffad.camel@suse.com>
-         <903c7222-c95e-fda1-9b90-b59e184944cf@acm.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 
+        with ESMTP id S235761AbjFGPzv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 11:55:51 -0400
+Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C32EA1FE3;
+        Wed,  7 Jun 2023 08:55:38 -0700 (PDT)
+Received: by mail-oi1-x22f.google.com with SMTP id 5614622812f47-38ede2e0e69so4761340b6e.2;
+        Wed, 07 Jun 2023 08:55:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686153338; x=1688745338;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RO0aJJovSF9bV+DSlg1gHqU0aawQtEHtPHuC3Z3Ckl4=;
+        b=AhVqhjUey60mWsf9lUma21vKf23qUGRrfdEixj1tR2ZS+pOWcS8XHHtUHcwrw5Cnb1
+         MwdaAG1H3s+mOH7ZUG61xLJ38kkS5PvciGnbqHZ+RVgmhbmbRDjt+sGsB6EsTvuRBLeR
+         w+8mFRyyYp8wBYe3Qnn6qzrNGt4I1DzhN3ueomwFvzvf4/zsZTqXVO32FAmsz6Um4Rqv
+         7mtiEtQh1sP/gvrFMS3xyPeDP3IabjEPjcIU9wdsyw8QGE+HZhvY0G5kOQSX/f6Oe4nD
+         LgOZtUfMpQ2aBvHvnmTGZ+hujPUM4wiG1HgvEtA6gcYI82kQzpk2U1LF73vzpPzE8BQZ
+         IZVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686153338; x=1688745338;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RO0aJJovSF9bV+DSlg1gHqU0aawQtEHtPHuC3Z3Ckl4=;
+        b=IDZ0PSRALn9kdgpMFrEmmQ+65bhi5FoYZQ0yCrsiAw3UeB60/nKYRPwCgXpzflbM8Y
+         Cf0ldrSrNP0PARPOW+BfoA7lw4470203x15pFcar32rjD6clJtkTaarWqtOPHWGU/9Ax
+         e3arhgq/yCMHF5H4Y21XoOKcPgPO/gNLYv6bYAKsifPpLUb0O9N53+YMA1lQdOuW6nB/
+         3lA3k/XC6EqJx13ysrJWRq8qCGIGIf6rKtl+ZMnfnH67shgzbobGgcROVIP8l12rJCdO
+         42M9PTOgogwwsuOjbpVtYqNCxgFHsVPW0ZMQoPGGw3M/KcOU9AXrZN/4VEhNfFf+L3kG
+         Bu6g==
+X-Gm-Message-State: AC+VfDysflIwC6avI9+Xs80Ea/kJb6f7u86hhHFx8ikvNlSRHk6tb4cP
+        LQgMMaQdKe37VgoPYL/0iGHPOIO4NaCh3F4zTSI=
+X-Google-Smtp-Source: ACHHUZ6pz5aofLeiOdDelx6VrzDDlzr3Qt5LB9eY9BmZAU5x8a4xa5VHCo/bNeY56xEaC1WaI4YME1hiyU4Q088X60g=
+X-Received: by 2002:aca:1908:0:b0:398:30af:53b8 with SMTP id
+ l8-20020aca1908000000b0039830af53b8mr2841363oii.6.1686153337871; Wed, 07 Jun
+ 2023 08:55:37 -0700 (PDT)
 MIME-Version: 1.0
+References: <20230606051217.2064-1-iecedge@gmail.com> <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
+In-Reply-To: <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
+From:   Jianlin Lv <iecedge@gmail.com>
+Date:   Wed, 7 Jun 2023 23:55:26 +0800
+Message-ID: <CAFA-uR_Zn4MdFKs6U6dqPjuVS60yN4RcYU4jJzjknqy7-RWyEQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: sd: support specify probe type of build-in driver
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
+        bp@suse.de, peterz@infradead.org, will@kernel.org,
+        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
+        wyes.karny@amd.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2023-06-07 at 07:05 -0700, Bart Van Assche wrote:
-> On 6/7/23 02:26, Martin Wilck wrote:
-> > On Wed, 2023-06-07 at 07:27 +0200, Christoph Hellwig wrote:
-> > > On Tue, Jun 06, 2023 at 09:38:45PM +0200, mwilck@suse.com=A0wrote:
-> > > > =A0=A0scsi_target_block(struct device *dev)
-> > > > =A0=A0{
-> > > > +=A0=A0=A0=A0=A0=A0=A0struct Scsi_Host *shost =3D dev_to_shost(dev)=
-;
-> > > > +
-> > > > =A0=A0=A0=A0=A0=A0=A0=A0=A0if (scsi_is_target_device(dev))
-> > > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0starget_for_each=
-_device(to_scsi_target(dev),
-> > > > NULL,
-> > > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0device_block);
-> > > > =A0=A0=A0=A0=A0=A0=A0=A0=A0else
-> > > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0device_for_each_=
-child(dev, NULL,
-> > > > target_block);
-> > > > +
-> > > > +=A0=A0=A0=A0=A0=A0=A0/* Wait for ongoing scsi_queue_rq() calls to =
-finish. */
-> > > > +=A0=A0=A0=A0=A0=A0=A0if (!WARN_ON_ONCE(!shost))
-> > >=20
-> > > How could host ever be NULL here?=A0 I can't see why we'd want this
-> > > check.
-> >=20
-> > The reason is simple: I wasn't certain if dev_to_shost() could
-> > return
-> > NULL, and preferred skipping the wait over an Oops. I hear you say
-> > that
-> > dev_to_shost() can't go wrong, so I'll remove the NULL test.
->=20
-> I propose to pass shost as the first argument to scsi_target_block()=20
-> instead of using dev_to_shost() inside scsi_target_block(). Except in
-> __iscsi_block_session(), shost is already available as a local
-> variable.
+On Wed, Jun 7, 2023 at 1:38=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
+ wrote:
+>
+> On 6/5/23 22:12, Jianlin Lv wrote:
+> > In scenarios where SCSI disk name sensitivity is crucial, the probe typ=
+e
+> > of the build-in sd driver can be set to synchronous. As a result,
+> > the scsi disk names are deterministic.
+>
+> Which are these scenarios?
+>
+> Additionally, how can synchronous scanning of sd devices make a
+> difference if there are multiple host bus adapters that use an interface
+> type that is scanned asynchronously?
+>
+> Bart.
 
-If we do this, it might actually be cleaner to just pass the tag set to
-wait for.
+The change was prompted by an issue with SCSI devices probing
+non-deterministic. On the issue node, there are two types of SCSI hosts:
 
-Martin
+1. MegaRAID adapters associated with 24 local disks. The disks are named
+sequentially as "sda," "sdb," and so on, up to "sdx."
+2. STAT controllers associated with the root disk, named "sdy."
 
+Both the MegaRAID adapters and the SATA controller (PCH) are accessed via
+the PCIe bus. In theory, depending on their PCIe bus ID in ascending order,
+the devices should be initialized in ascending order as well.
+
+However, the SCSI driver currently probes devices asynchronously to allow
+for more parallelism.
+
+__driver_attach
+  ->if (driver_allows_async_probing(drv))
+      async_schedule_dev(__driver_attach_async_helper, dev);
+
+During the probing of SCSI disks attached to MegaRAID, root disk probing
+may occur, resulting in a disk naming inconsistency issue.
+For example, if root disk probing happens in the middle,it is named "sdq",
+The subsequent SCSI disks that are probed will have their names drift,
+starting from "sdr" up to "sdy."
+
+For cloud deployment, the local volume provisioner detects and creates PVs
+for each local disk (from sda to sdx) on the host, and it cleans up the
+disks when they are released.
+This requires the logical names of the disks to be deterministic.
+
+Therefore, I have submitted this patch to allow users to configure the
+SCSI disk probe type.
+If synchronous probing is configured, the SCSI disk probing order is
+deterministic and will follow the ascending order of the PCIe bus ID.
+
+Jianlin
