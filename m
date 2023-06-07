@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC63C8300C
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 09:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A02AC87FE2
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 09:05:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239540AbjFGJEQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:04:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59032 "EHLO
+        id S238182AbjFGJFV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 05:05:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238561AbjFGJDt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 05:03:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 600341BDA;
-        Wed,  7 Jun 2023 02:02:21 -0700 (PDT)
+        with ESMTP id S239800AbjFGJEu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 05:04:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B6F211B;
+        Wed,  7 Jun 2023 02:03:18 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 372D2615D2;
-        Wed,  7 Jun 2023 09:02:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C307C4339B;
-        Wed,  7 Jun 2023 09:02:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A58361D44;
+        Wed,  7 Jun 2023 09:03:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DCCDC433D2;
+        Wed,  7 Jun 2023 09:03:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686128540;
-        bh=F5yK/CebQYGivXkJ/hRkJ11KpKZaKc+G+VOQffjNVTg=;
+        s=k20201202; t=1686128597;
+        bh=q7AdZhSDALKQcnwiboxtavjTYhFCYH416kEbuBo82ZY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sAfQXO5SH40rCtDhbwEvXcSBRhslBvNvKUU+/C6zJmUW7rk4KDZem+SyB7w55qX2y
-         S8GP7XOz+Sh1JsNAkUh/43kCDhRagfGOJ6ymJTvy8EvYu8/Y72NkSvyaxeGEoX5NYg
-         ZNDcw7HYM0UpR6uCZuSvmtx8nAL3oOFkFGjtbLip/0jPFzG0EsuCrfGiU3+dsUo6Mk
-         09/Q8RacrQEXGw7OpkFy06YCu5mCCT4iywdTjXjWEe2cbi2/c6/h5WqzuX58R/oEbv
-         wLB23zogewfEPk6rfCC+XUbaeVedBS79aJPk4vzv1kQ3/T/szT3pO6l5YM/nxQqSRl
-         uTtUOEbNKxpzw==
-Date:   Wed, 7 Jun 2023 11:02:12 +0200
+        b=LmFv4NUDSWWO12W7cnryBDYV8PpqTiV6m9IiQfaN+Gy1TfavMxnrDvH/1VFaqu0VY
+         pNdbYyRHzF2xHsOOKI87miWMENWlYg9+fsdmVVKTz7wYCo6GM1+2x+3dTWnt7WYDdZ
+         Mcjyuj+xp5weCEAYKk11qk0vTGQUIzOnBLlKJpx07Q5ZRsx7ASXqBbtAW0ZLkT7Ew4
+         zBKVTwzdquqRp3RuennzrpOsYTw2sC0VjBfUPhiyrzzFVaAdPGx6+N+quMH0El0KVh
+         SXVIETbMrhU8sh4IsaqUJwCWqqtEaM+3Y6KO5/S9XwefBpx2SMbZ5aVq7LqHVJcaJB
+         5ShZ62p5oKScw==
+Date:   Wed, 7 Jun 2023 11:03:09 +0200
 From:   Christian Brauner <brauner@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
@@ -54,21 +54,22 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org
-Subject: Re: [PATCH 25/31] ubd: remove commented out code in ubd_open
-Message-ID: <20230607-mietpreis-deich-90ec6cba9ca8@brauner>
+Subject: Re: [PATCH 26/31] block: move a few internal definitions out of
+ blkdev.h
+Message-ID: <20230607-kernkompetenz-halbleiter-b8874bc39061@brauner>
 References: <20230606073950.225178-1-hch@lst.de>
- <20230606073950.225178-26-hch@lst.de>
+ <20230606073950.225178-27-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230606073950.225178-26-hch@lst.de>
+In-Reply-To: <20230606073950.225178-27-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 09:39:44AM +0200, Christoph Hellwig wrote:
-> This code has been dead forever, make sure it doesn't show up in code
-> searches.
+On Tue, Jun 06, 2023 at 09:39:45AM +0200, Christoph Hellwig wrote:
+> All these helpers are only used in core block code, so move them out of
+> the public header.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
