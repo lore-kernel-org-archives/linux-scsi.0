@@ -2,86 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDF9C7EE25
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 13:34:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4050BC87FDC
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jun 2023 13:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235414AbjFGNe4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 09:34:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54130 "EHLO
+        id S240729AbjFGNjR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 09:39:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240827AbjFGNey (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 09:34:54 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2511D1993;
-        Wed,  7 Jun 2023 06:34:54 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 6B8376732D; Wed,  7 Jun 2023 15:34:49 +0200 (CEST)
-Date:   Wed, 7 Jun 2023 15:34:49 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Martin Wilck <mwilck@suse.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
+        with ESMTP id S240670AbjFGNjO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 09:39:14 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31FB71BD7;
+        Wed,  7 Jun 2023 06:39:11 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id C1B66219B5;
+        Wed,  7 Jun 2023 13:39:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1686145149;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=kvX+K1GPLsIpoFmWJX2s5gmxPQdlBYXQkV75nn7bEZM=;
+        b=QMstqGgedcYgY/d/rSGDFDlChRste65gtAtzSH+mlxXl5vEtulOq2TI/sCACizK7l4xAIA
+        Zug8XKFA7SpEs+Tfusy0dW9TRY25HOfO+RBfFn6tbKVwi3s66msfhIUZOO9bDHcakuZnvK
+        aOdFM2BAbO6jcrNhKt6b1QqrvqZHki4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1686145149;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=kvX+K1GPLsIpoFmWJX2s5gmxPQdlBYXQkV75nn7bEZM=;
+        b=wiFEvVZJSCbh6tVWyAuV/c0zFOWqBvdMPHB2HTHPCfNySm7jDxfJJMoNpYlbzC7zNnQARu
+        aZxg6KqpACFRuUAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1C3E41346D;
+        Wed,  7 Jun 2023 13:39:09 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id AS4SBX2IgGQXbwAAMHmgww
+        (envelope-from <dsterba@suse.cz>); Wed, 07 Jun 2023 13:39:09 +0000
+Date:   Wed, 7 Jun 2023 15:32:53 +0200
+From:   David Sterba <dsterba@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Coly Li <colyli@suse.de>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 3/3] scsi: simplify scsi_stop_queue()
-Message-ID: <20230607133449.GB20840@lst.de>
-References: <20230606193845.9627-1-mwilck@suse.com> <20230606193845.9627-4-mwilck@suse.com> <20230607052710.GC20052@lst.de> <c0563161eb613f9500e6a1cccdcff6fc64efffad.camel@suse.com> <e982c95ad7ee29f80e8c0ba88f0cece837e344b9.camel@suse.com> <20230606193845.9627-1-mwilck@suse.com> <20230606193845.9627-4-mwilck@suse.com> <20230607052710.GC20052@lst.de> <c0563161eb613f9500e6a1cccdcff6fc64efffad.camel@suse.com>
+        Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-btrfs@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH 15/31] btrfs: don't pass a holder for non-exclusive
+ blkdev_get_by_path
+Message-ID: <20230607133253.GO25292@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20230606073950.225178-1-hch@lst.de>
+ <20230606073950.225178-16-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e982c95ad7ee29f80e8c0ba88f0cece837e344b9.camel@suse.com> <c0563161eb613f9500e6a1cccdcff6fc64efffad.camel@suse.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20230606073950.225178-16-hch@lst.de>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 07, 2023 at 11:26:04AM +0200, Martin Wilck wrote:
-> > cleanups:
-> > 
-> >   1) remove scsi_internal_device_block and fold it into device_block
-> 
-> ok
-> 
-> >   2) move the scsi_internal_device_block in what was
-> 
-> You mean scsi_stop_queue() here, right?
+On Tue, Jun 06, 2023 at 09:39:34AM +0200, Christoph Hellwig wrote:
+> Passing a holder to blkdev_get_by_path when FMODE_EXCL isn't set doesn't
+> make sense, so pass NULL instead and remove the holder argument from the
+> call chains the only end up in non-FMODE_EXCL blkdev_get_by_path calls.
 
-Yes.
+Please add
 
-> The reason is simple: I wasn't certain if dev_to_shost() could return
-> NULL, and preferred skipping the wait over an Oops. I hear you say that
-> dev_to_shost() can't go wrong, so I'll remove the NULL test.
+"Exclusive mode for device scanning is not used since 50d281fc434c
+ ("btrfs: scan device in non-exclusive mode")."
 
-Well, the parent device can't really go away while we have a reference
-to a child.  So the only case where it can return NULL is if the
-passed in device isn't the child of a SCSI host, which would be a grave
-programming error.
-
-> 
-> > Btw, as far as I can tell scsi_target_block is never called for
-> > a device that is a target device.  It might be worth throwing in
-> > another patch to remove support for that case and simplify things
-> > further.
-> 
-> Can we do this separately, maybe? 
-
-Sure.  Would be nice to just tack into onto the end of this series
-if you touch the area, though.
-
-> On Wed, 2023-06-07 at 11:26 +0200, Martin Wilck wrote:
-> > On Wed, 2023-06-07 at 07:27 +0200, Christoph Hellwig wrote:
-> > > 
-> > >   3) remove scsi_stop_queue and open code it in the two callers,
-> > > one
-> > >      of which currently wants nowait semantics, and one that
-> > > doesn't.
-> > ok
-> 
-> Hm, scsi_stop_queue() pairs with scsi_start_queue(), do we really want
-> to open-code it?
-
-Oh well, feel free to keep it if you prefer it that way.
+Acked-by: David Sterba <dsterba@suse.com>
