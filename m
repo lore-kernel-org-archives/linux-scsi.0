@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DA51C87FE7
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:03:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48335C87FF1
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:03:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235895AbjFHLDf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 07:03:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35472 "EHLO
+        id S235991AbjFHLDh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 07:03:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235157AbjFHLD1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:03:27 -0400
+        with ESMTP id S233746AbjFHLD0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:03:26 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8D32134;
-        Thu,  8 Jun 2023 04:03:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4AFB11A;
+        Thu,  8 Jun 2023 04:03:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=WVOLYCYgNhurfOY8cVan3fvTgQgKmYPWrYutrJ2vXRM=; b=qyT0M/2tVDs9AVGQPIMNQZxI0I
-        kiiW95vvxeGfq+g9SDYSNtmxtI7R5kN06IlrPOZjCsSqXD6prbwiCBvOGKO8BBzGEYtpRSaJ00EjB
-        VP/xEP1E8kt9e+kdcf35ZXVVRdeOf1aRWAdGR9l6LnsbsVZx+AeSsw7kJk3ucn/6igTTr2yJDKZ00
-        HYgE5ezEwHu3KAjgE+gA7dllqOQsrc7Tex+y5Clbmc1W77I4ns6o9ZaVoq1wlYi9x2ClAizYTUR8K
-        4dex9WW67jAaG7Zm2BMK7cfiH9PQSHgYf8G6zKNHARoCpZ93w/BrMPW+ZUpKe5VlwRiMRWtGIG6x4
-        TcjI7f8w==;
+        bh=BmFZdJDxSYPrPp/5b46O5wB0cxwTyzebO+dineKE9zs=; b=sEDimAvob7MsJTQnU0rfHCx94d
+        TdllY86Cgn+v1SVN38tEQDXX4gAk1rNeoTKW+8ZlBOTi/fywSiY5VFvHOx7wywJCeRwbpr6Rc5OV2
+        Qn35jAilebfCm5iZIKh9BpxnZdW2qf98gnQnauyg93xz9gkg41imSWuTTWRGc3tIDKoALBp91G9o6
+        jZsvNijnfwJ0q/ZfIKAWaR1RGACVCLSBIRby5PljwCv8yIUptjEY0m+/nxG7gZzBPDoR9qSPQzpaj
+        hSrlKhYfDXptX12/RipQ3OpNcjhXiay/LkgB3ISIbEhcYS8IEk/HBewUsKErT7gnhsGpw60ix5iXa
+        C9QR9LAA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q7DQ2-0091dM-18;
-        Thu, 08 Jun 2023 11:03:06 +0000
+        id 1q7DQ8-0091fh-0H;
+        Thu, 08 Jun 2023 11:03:12 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/30] cdrom: remove the unused bdev argument to cdrom_open
-Date:   Thu,  8 Jun 2023 13:02:30 +0200
-Message-Id: <20230608110258.189493-3-hch@lst.de>
+Subject: [PATCH 04/30] cdrom: remove the unused cdrom_close_write release code
+Date:   Thu,  8 Jun 2023 13:02:32 +0200
+Message-Id: <20230608110258.189493-5-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230608110258.189493-1-hch@lst.de>
 References: <20230608110258.189493-1-hch@lst.de>
@@ -64,71 +64,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+cdrom_close_write is empty, and the for_data flag it is keyed off is
+never set.  Remove all this clutter.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Phillip Potter <phil@philpotter.co.uk>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Acked-by: Christian Brauner <brauner@kernel.org>
 ---
- drivers/cdrom/cdrom.c | 3 +--
- drivers/cdrom/gdrom.c | 2 +-
- drivers/scsi/sr.c     | 2 +-
- include/linux/cdrom.h | 3 +--
- 4 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/cdrom/cdrom.c | 15 ---------------
+ include/linux/cdrom.h |  1 -
+ 2 files changed, 16 deletions(-)
 
 diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 416f723a2dbb33..e3eab319cb0474 100644
+index 245e5bbb05d41c..08abf1ffede002 100644
 --- a/drivers/cdrom/cdrom.c
 +++ b/drivers/cdrom/cdrom.c
-@@ -1155,8 +1155,7 @@ int open_for_data(struct cdrom_device_info *cdi)
-  * is in their own interest: device control becomes a lot easier
-  * this way.
-  */
--int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
--	       fmode_t mode)
-+int cdrom_open(struct cdrom_device_info *cdi, fmode_t mode)
- {
- 	int ret;
- 
-diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
-index ceded5772aac6d..eaa2d5a90bc82f 100644
---- a/drivers/cdrom/gdrom.c
-+++ b/drivers/cdrom/gdrom.c
-@@ -481,7 +481,7 @@ static int gdrom_bdops_open(struct block_device *bdev, fmode_t mode)
- 	bdev_check_media_change(bdev);
- 
- 	mutex_lock(&gdrom_mutex);
--	ret = cdrom_open(gd.cd_info, bdev, mode);
-+	ret = cdrom_open(gd.cd_info, mode);
- 	mutex_unlock(&gdrom_mutex);
- 	return ret;
+@@ -978,15 +978,6 @@ static void cdrom_dvd_rw_close_write(struct cdrom_device_info *cdi)
+ 	cdi->media_written = 0;
  }
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 12869e6d4ebda8..61b83880e395a4 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -498,7 +498,7 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
- 		sr_revalidate_disk(cd);
  
- 	mutex_lock(&cd->lock);
--	ret = cdrom_open(&cd->cdi, bdev, mode);
-+	ret = cdrom_open(&cd->cdi, mode);
- 	mutex_unlock(&cd->lock);
+-static int cdrom_close_write(struct cdrom_device_info *cdi)
+-{
+-#if 0
+-	return cdrom_flush_cache(cdi);
+-#else
+-	return 0;
+-#endif
+-}
+-
+ /* badly broken, I know. Is due for a fixup anytime. */
+ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ {
+@@ -1282,12 +1273,6 @@ void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode)
+ 	opened_for_data = !(cdi->options & CDO_USE_FFLAGS) ||
+ 		!(mode & FMODE_NDELAY);
  
- 	scsi_autopm_put_device(sdev);
+-	/*
+-	 * flush cache on last write release
+-	 */
+-	if (CDROM_CAN(CDC_RAM) && !cdi->use_count && cdi->for_data)
+-		cdrom_close_write(cdi);
+-
+ 	cdo->release(cdi);
+ 	if (cdi->use_count == 0) {      /* last process that closes dev*/
+ 		if (opened_for_data &&
 diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index 67caa909e3e615..cc5717cb0fa8a8 100644
+index 4aea8c82d16971..0a5db0b0c958a1 100644
 --- a/include/linux/cdrom.h
 +++ b/include/linux/cdrom.h
-@@ -101,8 +101,7 @@ int cdrom_read_tocentry(struct cdrom_device_info *cdi,
- 		struct cdrom_tocentry *entry);
- 
- /* the general block_device operations structure: */
--extern int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
--			fmode_t mode);
-+int cdrom_open(struct cdrom_device_info *cdi, fmode_t mode);
- extern void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode);
- extern int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
- 		       fmode_t mode, unsigned int cmd, unsigned long arg);
+@@ -61,7 +61,6 @@ struct cdrom_device_info {
+ 	__u8 last_sense;
+ 	__u8 media_written;		/* dirty flag, DVD+RW bookkeeping */
+ 	unsigned short mmc3_profile;	/* current MMC3 profile */
+-	int for_data;
+ 	int (*exit)(struct cdrom_device_info *);
+ 	int mrw_mode_page;
+ 	__s64 last_media_change_ms;
 -- 
 2.39.2
 
