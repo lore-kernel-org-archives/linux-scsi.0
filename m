@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B0BC83003
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 033BFC7EE29
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:06:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235420AbjFHLGx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 07:06:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36124 "EHLO
+        id S236346AbjFHLG4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 07:06:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236232AbjFHLFJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:05:09 -0400
+        with ESMTP id S236313AbjFHLGD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:06:03 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B58942D60;
-        Thu,  8 Jun 2023 04:04:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D0FC2D7F;
+        Thu,  8 Jun 2023 04:04:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=D+1s3WT+5DpsHw6D0N73ilbFCvVf0P+vhIMd+8ZE9LA=; b=40Te1n4Dyq79Fvl8DiG/4q/bRo
-        VTK3fXaSnaNNg1uOs526jLkNTpHwlbTJt5jmBxhgZxaikDudUl5mm+mGUQuUPzTI+l3GxVc9KxxXn
-        M0u9wkYFM1nlyleudq0pRlJRKmHm0M/ldAYGoysH/K2SaONPz05psQK0kO5bzoQgK4WqStI0m6KqL
-        7jJzBJE4GL4xkU2KnLRRgd3OeBmywzsBlmlcWFhtymotB+hEmhzNWDG6W9CXpPMrNHdrxWxBOjdWm
-        w7NtmU2XUqlRvQQJZZu/4nEZCVfDMTNSJR0uNM+71E6h4npceh/JitURnDS2n4/7TzJnLyOygUh2S
-        mv3c6bbg==;
+        bh=POouKGvveG/KhITgHpTZ7KYqo/RAGhaN1xR2Wciupo0=; b=EcIzCKB9dEH30RjdEI/DabgwV/
+        6ZE+m+wtvZk6OlgaAm4++oJn5FTLnCIoCYvUSixjcb5vsY48DtbyAF4PDNJ/rUJORL1vNC823Al4U
+        VogmIfb6HzJmAK7DP+LO5jRK6FEnbun1AtQpt1pPcF50L3s5FmpYxmyflfpxPuE7q7N0wzfVyrSB8
+        mNHn32tzxgxj01b+nT/bN6+F8F6UZG8I0kTELL4n7KxuHYSBQ/GlztYhMGyhnBDpN7FKP/M06AY4h
+        ARLvSfsMwWJCnbdIol8AZA7AQ8Dfm329oHy3IynpXfnam/tcuzu3MT53AqEu8DXAUCaDdLeh7/WED
+        B7h06UbQ==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q7DQj-0092O2-23;
-        Thu, 08 Jun 2023 11:03:49 +0000
+        id 1q7DR5-0092kv-0m;
+        Thu, 08 Jun 2023 11:04:11 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/30] scsi: replace the fmode_t argument to scsi_cmd_allowed with a simple bool
-Date:   Thu,  8 Jun 2023 13:02:46 +0200
-Message-Id: <20230608110258.189493-19-hch@lst.de>
+Subject: [PATCH 24/30] ubd: remove commented out code in ubd_open
+Date:   Thu,  8 Jun 2023 13:02:52 +0200
+Message-Id: <20230608110258.189493-25-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230608110258.189493-1-hch@lst.de>
 References: <20230608110258.189493-1-hch@lst.de>
@@ -64,99 +64,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of passing a fmode_t and only checking it for FMODE_WRITE, pass
-a bool open_for_write to prepare for callers that won't have the fmode_t.
+This code has been dead forever, make sure it doesn't show up in code
+searches.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Acked-by: Christian Brauner <brauner@kernel.org>
+Acked-by: Richard Weinberger <richard@nod.at>
 ---
- drivers/scsi/scsi_bsg.c   | 2 +-
- drivers/scsi/scsi_ioctl.c | 8 ++++----
- drivers/scsi/sg.c         | 2 +-
- include/scsi/scsi_ioctl.h | 2 +-
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ arch/um/drivers/ubd_kern.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index 96ee35256a168f..12431f35f861e1 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -42,7 +42,7 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
- 	if (copy_from_user(scmd->cmnd, uptr64(hdr->request), scmd->cmd_len))
- 		goto out_put_request;
- 	ret = -EPERM;
--	if (!scsi_cmd_allowed(scmd->cmnd, mode))
-+	if (!scsi_cmd_allowed(scmd->cmnd, mode & FMODE_WRITE))
- 		goto out_put_request;
- 
- 	ret = 0;
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index e3b31d32b6a92e..dda5468ca97f90 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -248,7 +248,7 @@ static int scsi_send_start_stop(struct scsi_device *sdev, int data)
-  * Only a subset of commands are allowed for unprivileged users. Commands used
-  * to format the media, update the firmware, etc. are not permitted.
-  */
--bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode)
-+bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
- {
- 	/* root can do any command. */
- 	if (capable(CAP_SYS_RAWIO))
-@@ -338,7 +338,7 @@ bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode)
- 	case GPCMD_SET_READ_AHEAD:
- 	/* ZBC */
- 	case ZBC_OUT:
--		return (mode & FMODE_WRITE);
-+		return open_for_write;
- 	default:
- 		return false;
+diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
+index 8b79554968addb..20c1a16199c503 100644
+--- a/arch/um/drivers/ubd_kern.c
++++ b/arch/um/drivers/ubd_kern.c
+@@ -1170,13 +1170,6 @@ static int ubd_open(struct gendisk *disk, fmode_t mode)
  	}
-@@ -354,7 +354,7 @@ static int scsi_fill_sghdr_rq(struct scsi_device *sdev, struct request *rq,
- 		return -EMSGSIZE;
- 	if (copy_from_user(scmd->cmnd, hdr->cmdp, hdr->cmd_len))
- 		return -EFAULT;
--	if (!scsi_cmd_allowed(scmd->cmnd, mode))
-+	if (!scsi_cmd_allowed(scmd->cmnd, mode & FMODE_WRITE))
- 		return -EPERM;
- 	scmd->cmd_len = hdr->cmd_len;
- 
-@@ -554,7 +554,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
- 		goto error;
- 
- 	err = -EPERM;
--	if (!scsi_cmd_allowed(scmd->cmnd, mode))
-+	if (!scsi_cmd_allowed(scmd->cmnd, mode & FMODE_WRITE))
- 		goto error;
- 
- 	/* default.  possible overridden later */
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 037f8c98a6d364..e49ea693d0b656 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -237,7 +237,7 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- 
- 	if (sfp->parentdp->device->type == TYPE_SCANNER)
- 		return 0;
--	if (!scsi_cmd_allowed(cmd, filp->f_mode))
-+	if (!scsi_cmd_allowed(cmd, filp->f_mode & FMODE_WRITE))
- 		return -EPERM;
- 	return 0;
- }
-diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
-index beac64e38b8746..914201a8cb947c 100644
---- a/include/scsi/scsi_ioctl.h
-+++ b/include/scsi/scsi_ioctl.h
-@@ -49,7 +49,7 @@ int scsi_ioctl(struct scsi_device *sdev, fmode_t mode, int cmd,
- 		void __user *arg);
- int get_sg_io_hdr(struct sg_io_hdr *hdr, const void __user *argp);
- int put_sg_io_hdr(const struct sg_io_hdr *hdr, void __user *argp);
--bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode);
-+bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write);
- 
- #endif /* __KERNEL__ */
- #endif /* _SCSI_IOCTL_H */
+ 	ubd_dev->count++;
+ 	set_disk_ro(disk, !ubd_dev->openflags.w);
+-
+-	/* This should no more be needed. And it didn't work anyway to exclude
+-	 * read-write remounting of filesystems.*/
+-	/*if((mode & FMODE_WRITE) && !ubd_dev->openflags.w){
+-	        if(--ubd_dev->count == 0) ubd_close_dev(ubd_dev);
+-	        err = -EROFS;
+-	}*/
+ out:
+ 	mutex_unlock(&ubd_mutex);
+ 	return err;
 -- 
 2.39.2
 
