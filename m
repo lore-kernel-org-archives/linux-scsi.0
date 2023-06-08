@@ -2,107 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A171EC7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 02:46:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB6AC7EE23
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 02:51:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233690AbjFHCqS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jun 2023 22:46:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48390 "EHLO
+        id S233835AbjFHCv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jun 2023 22:51:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233680AbjFHCqP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 22:46:15 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 171E62126;
-        Wed,  7 Jun 2023 19:46:14 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Qc7rK4mhKz4f3lKQ;
-        Thu,  8 Jun 2023 10:46:09 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgD3rLDwQIFkn13HLA--.37355S6;
-        Thu, 08 Jun 2023 10:46:11 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     hch@lst.de, axboe@kernel.dk, dgilbert@interlog.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, yukuai3@huawei.com,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: [PATCH v3 2/2] block: fix blktrace debugfs entries leakage
-Date:   Thu,  8 Jun 2023 10:41:59 +0800
-Message-Id: <20230608024159.1282953-3-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230608024159.1282953-1-yukuai1@huaweicloud.com>
-References: <20230608024159.1282953-1-yukuai1@huaweicloud.com>
+        with ESMTP id S233803AbjFHCvU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2023 22:51:20 -0400
+Received: from mail-vk1-xa34.google.com (mail-vk1-xa34.google.com [IPv6:2607:f8b0:4864:20::a34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 064BA1FF7;
+        Wed,  7 Jun 2023 19:51:16 -0700 (PDT)
+Received: by mail-vk1-xa34.google.com with SMTP id 71dfb90a1353d-463fdee669cso147754e0c.0;
+        Wed, 07 Jun 2023 19:51:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686192675; x=1688784675;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+4iCMufvU+mSHmPOmnXMCrZIm6v3t8Nrs/bcmlqQqCU=;
+        b=JKRyNhZ8bTG0BgOBUtLCvd/63nTwEAMUi/YoZ+JabRgc64hK9Jc+/4gll1b5cpxVJL
+         waD71aWa0V2zpn9hL3NEPyYfvpn7+P89wrGyqNBS0zicSX1lktF+PYXW3KPFICXk+4aG
+         6wm2GA80Vg53vRio3rR9tahUCTNPr9d1RerNYpnYjmgmIyWqlOnXgCYmKEIj4htcq/DP
+         Wf9tEpi0xGKs6DG/OCxjNKHEhPLRnz2IQE2X4aXwAwORBeRfuweY5cQ+4cdKkvUrt/HV
+         olB7OkwTLiY6CdMtC9eZ3xqDqD/VcctKbhvpilS2X6K/zlhil9ucXV4Zfo7eRjXfnw1c
+         nzRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686192675; x=1688784675;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+4iCMufvU+mSHmPOmnXMCrZIm6v3t8Nrs/bcmlqQqCU=;
+        b=agmBw+imyaYEfFTqpsDeqmjOm2XIrUWVlU2I2F+M1m6WJQfKC9qYBSq8XG/ChgUMQt
+         crosi2b7E7sp4JpBGuDNiSLtFWny6sOBsmDsb+QKcY6eEGPX3MysDxe07LEwhiAxwe+q
+         l3iZj0xxu4oO0wQ5CWAlbP7tUn3zm1yTXMxPAsUCS1nlpYrP7r3oAmkP3+sbkatA3VeF
+         k1z/hWEGFb+J5dMDtFiTfAdCNC7i47IBp6hl+mmKRyPXeSca++SOBv+bvTsFpq3GzuyJ
+         mZonERQQ3iyGhg1n1OsE+gjvrovh/5i/T/V/g/CkWKAueGG8oC/eArLlSJoq3haxXye/
+         LwEw==
+X-Gm-Message-State: AC+VfDwWoVRRkg0JmxVwf0ND3/J+cLr3PmyUHCBbx1uKp25JBIvaJKTB
+        OobtJ+i4wuJxYPgobFgKzeWBtNgfsGUrZ6n+IGShD/g+jIk=
+X-Google-Smtp-Source: ACHHUZ45xdz52r6mci4tsf4hW5WjVNgXix00zbT41XCQNvK3y33Ok0aCpKw5aIYWRfWbw+QdwBYs5ZW/gUGomuqLCp0=
+X-Received: by 2002:a1f:4551:0:b0:440:4946:fac with SMTP id
+ s78-20020a1f4551000000b0044049460facmr407809vka.4.1686192674953; Wed, 07 Jun
+ 2023 19:51:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3rLDwQIFkn13HLA--.37355S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7uw4fWFyxGF1fury7Zr4DXFb_yoW8Wry5pa
-        9rur45KrWjvr4YvF1Duw17XF18Ka95GryrAr9agFWYvr17Crs8X392vr4IgrWrAFZI9rZ8
-        Wa4UGr9xArWkXaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8Jw
-        CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOJPEUUUU
-        U
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230606051217.2064-1-iecedge@gmail.com> <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
+ <CAFA-uR_Zn4MdFKs6U6dqPjuVS60yN4RcYU4jJzjknqy7-RWyEQ@mail.gmail.com> <e9b8b9c5-f400-9152-0f4b-537b05203dd2@acm.org>
+In-Reply-To: <e9b8b9c5-f400-9152-0f4b-537b05203dd2@acm.org>
+From:   Jianlin Lv <iecedge@gmail.com>
+Date:   Thu, 8 Jun 2023 10:51:03 +0800
+Message-ID: <CAFA-uR83jHJsDXnn-3LWcrw251S4MizHC_JPJssYrgoD6kLoAg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: sd: support specify probe type of build-in driver
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
+        bp@suse.de, peterz@infradead.org, will@kernel.org,
+        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
+        wyes.karny@amd.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Thu, Jun 8, 2023 at 1:07=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
+ wrote:
+>
+> On 6/7/23 08:55, Jianlin Lv wrote:
+> > 1. MegaRAID adapters associated with 24 local disks. The disks are name=
+d
+> > sequentially as "sda," "sdb," and so on, up to "sdx."
+> > 2. STAT controllers associated with the root disk, named "sdy."
+> >
+> > Both the MegaRAID adapters and the SATA controller (PCH) are accessed v=
+ia
+> > the PCIe bus. In theory, depending on their PCIe bus ID in ascending or=
+der,
+> > the devices should be initialized in ascending order as well.
+>
+> Hmm ... I don't think there is anything that prevents the PCIe maintainer
+> from changing the PCIe probing behavior from synchronous to asynchronous?
+> In other words, I don't think it is safe to assume that PCIe devices are
+> always scanned in the same order.
+>
+> > For cloud deployment, the local volume provisioner detects and creates =
+PVs
+> > for each local disk (from sda to sdx) on the host, and it cleans up the
+> > disks when they are released.
+> > This requires the logical names of the disks to be deterministic.
+>
+> I see two possible solutions:
+> - Change the volume provisioner such that it uses disk references that do
+>    not depend on the probing order, e.g. /dev/disk/by-id/...
 
-Commit 99d055b4fd4b ("block: remove per-disk debugfs files in
-blk_unregister_queue") moves blk_trace_shutdown() from
-blk_release_queue() to blk_unregister_queue(), this is safe if blktrace
-is created through sysfs, however, there is a regression in corner
-case.
+Yes, The "/dev/disk/by-id/" can uniquely identify SCSI devices. However,
+I don't think it is suitable for the volume provisioner workflow.
+For nodes of the same SKU , a unified YAML file will be defined to instruct
+the volume provisioner on how to manage the local disks.
+If use WWID, it would mean that a unique YAML file needs to be defined
+for each node. This approach becomes impractical when dealing with a large
+number of work nodes.
 
-blktrace can still be enabled after del_gendisk() through ioctl if
-the disk is opened before del_gendisk(), and if blktrace is not shutdown
-through ioctl before closing the disk, debugfs entries will be leaked.
+Jianlin
 
-Fix this problem by shutdown blktrace in disk_release(), this is safe
-because blk_trace_remove() is reentrant.
-
-Fixes: 99d055b4fd4b ("block: remove per-disk debugfs files in blk_unregister_queue")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/genhd.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/block/genhd.c b/block/genhd.c
-index 3537b7d7c484..134cb6eb8e91 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -25,8 +25,9 @@
- #include <linux/pm_runtime.h>
- #include <linux/badblocks.h>
- #include <linux/part_stat.h>
--#include "blk-throttle.h"
-+#include <linux/blktrace_api.h>
- 
-+#include "blk-throttle.h"
- #include "blk.h"
- #include "blk-mq-sched.h"
- #include "blk-rq-qos.h"
-@@ -1171,6 +1172,8 @@ static void disk_release(struct device *dev)
- 	might_sleep();
- 	WARN_ON_ONCE(disk_live(disk));
- 
-+	blk_trace_remove(disk->queue);
-+
- 	/*
- 	 * To undo the all initialization from blk_mq_init_allocated_queue in
- 	 * case of a probe failure where add_disk is never called we have to
--- 
-2.39.2
-
+> - Implement an algorithm in systemd that makes disk names predictable.
+>    An explanation of how predictable names work for network interfaces is
+>    available here: https://wiki.debian.org/NetworkInterfaceNames. The
+>    systemd documentation about predictable network names is available her=
+e:
+>    https://www.freedesktop.org/software/systemd/man/systemd.net-naming-sc=
+heme.html
+>
+> These alternatives have the advantage that disk scanning remains asynchro=
+nous.
+>
+> Thanks,
+>
+> Bart.
+>
