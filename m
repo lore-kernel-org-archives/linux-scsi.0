@@ -2,169 +2,205 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F84DC7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 09:56:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D27AC7EE25
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 10:17:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235533AbjFHJ4C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 05:56:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52972 "EHLO
+        id S235708AbjFHKRG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 06:17:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231439AbjFHJ4A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 05:56:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 351932706;
-        Thu,  8 Jun 2023 02:55:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BD26164B8F;
-        Thu,  8 Jun 2023 09:55:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CDF3C433EF;
-        Thu,  8 Jun 2023 09:55:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686218158;
-        bh=orvAfFB1al0I5E+N/dd1jRm8DcYqs+dBcPiT7570GoU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=em1GgHm/m1aDnLB+lun7eRnUfT6i4/d2dLvOdMF+XQNgGvWubkwMDp6z0VCQ5jJ7Y
-         5cHgvYWBbaFu9ISmmsxBI9Z2IkQE7Gu4rrhdXrZYRv0yTC5pNnIROo6v703i9t2XGg
-         ZsGWDsrR1aEDsqoS9UU0zgVFiiiD1xkDTd7Bqm+oWwDa5CfDq9q5J964FYUrjVUM3D
-         MKdXP/XdNCLqWrFaWgUX8Oo9Nf4KdL+jPb3licINBAZSpOPOwADLAJahUio98R1AXg
-         565v45NVV4KLLihtDz8h3wIxIE2Uj0LqhkoFBseDATInLymdQm6GWx7YGzSOe4QZM4
-         qQ/yNIGaK1eRA==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org
-Cc:     Linus Walleij <linus.walleij@linaro.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH RESEND] block: improve ioprio value validity checks
-Date:   Thu,  8 Jun 2023 18:55:56 +0900
-Message-Id: <20230608095556.124001-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-MIME-Version: 1.0
+        with ESMTP id S233473AbjFHKRE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 06:17:04 -0400
+Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2131.outbound.protection.outlook.com [40.107.117.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D8BB1FE9;
+        Thu,  8 Jun 2023 03:17:00 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=LPaq747JkNeMopnc0SjJ0kUeNFgOTDVBfO0KORejzRB0y8UjOAj3yK9POtD4jVtqS4YWUBDHoYK9DhN3vxFdHcnW9eCYpKJFoBqE3VFVI4nvLuK2u9YUYjPpW1doAoI9a9mJ8yQ1GsSuClFT9AnWjB/PQr73HDmX25gHoJq5lka+mmgm30eSQLrl2AudZuM1emxH63OlHm4k18avi+p/InCpj52EQapw1ASS9gNEhjgUsF3eH5ANvplNb6hNEtkYNsfeRO2Y9T+E2QPKJ0jAqHgO3igm/2hgKP0lOQxm/cxwjXdPh9tc4s46cAdArjro+d0tQXuzDTSMbOmUi6KcVA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=eFpzV2LhUr2j88hXBSvVs00EoHLqU6C4ERRuiAIjjno=;
+ b=gNl8g8CD33C+O4gArAKVM1x8TZBX3OBrxVHpchWELZqdKfDxIEpHFVXAQzkXXezazfDZEUKBpGfiJs2xnfqT/qfLKrRdrqfDQerRBnqBvyBQgXa8sz94IAI85y7CmdSSLPrn5DcF4hxsCYFZcKgsBCm5NHj/htqTLUZZ3DgR57S3aEGnOZVdv+S4QLOAZFpNVuwuHhNBVy/tyD/9dwG6icEHGARuMAc0skPgVSVR9gNRf6DyaRvT62FVxejb4KGhJ3SiEvq6wt1rTZNt/wAcFdQQqb1VtOJdo4if+wVYOVUsyccnsdS32X4ZxvFjASdwr7hrqKqveCYwmcgG+KiqhQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eFpzV2LhUr2j88hXBSvVs00EoHLqU6C4ERRuiAIjjno=;
+ b=C5CyWhzYwfcn+X8ulW1vWLAc0/nXQH+cVS+tKmhI2THB87XqDwTl1dV/sws01jFypjRyb3duGNCHODzpDTarvnA+XDExcXopGq83JaLlVImaw+8uh3hBriPkg+kgNGl5b/T1WK+v6SGNODeNfxhMdlVWv08nu8bB7KSpLlERaEiOq3xxA1BcAgf+7RM79a96FxVu8nSccPMGIncnjlkipw4k6eyfUsFzYRkKrzyWApi+Klz1/622hyefWZVJ/hxbKSxbd2GNmLUbf1+FbH/jHT2OgSURoGlV0bXZL484TMtZ6sKlFPwI7V1fDve4cq1spPHWSNSSaPIzwsEnuhlhlA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from TYZPR06MB6697.apcprd06.prod.outlook.com (2603:1096:400:451::6)
+ by PSAPR06MB4456.apcprd06.prod.outlook.com (2603:1096:301:8e::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.33; Thu, 8 Jun
+ 2023 10:16:56 +0000
+Received: from TYZPR06MB6697.apcprd06.prod.outlook.com
+ ([fe80::f652:a96b:482:409e]) by TYZPR06MB6697.apcprd06.prod.outlook.com
+ ([fe80::f652:a96b:482:409e%5]) with mapi id 15.20.6455.030; Thu, 8 Jun 2023
+ 10:16:55 +0000
+From:   Lu Hongfei <luhongfei@vivo.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Daniil Lunev <dlunev@chromium.org>,
+        Lu Hongfei <luhongfei@vivo.com>,
+        linux-scsi@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST
+        CONTROLLER DRIVER), linux-kernel@vger.kernel.org (open list)
+Cc:     opensource.kernel@vivo.com
+Subject: [PATCH] scsi: ufs: wb: Add explicit flush_threshold sysfs attribute
+Date:   Thu,  8 Jun 2023 18:16:40 +0800
+Message-Id: <20230608101642.40086-1-luhongfei@vivo.com>
+X-Mailer: git-send-email 2.39.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TYCP301CA0049.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:400:384::13) To TYZPR06MB6697.apcprd06.prod.outlook.com
+ (2603:1096:400:451::6)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYZPR06MB6697:EE_|PSAPR06MB4456:EE_
+X-MS-Office365-Filtering-Correlation-Id: c6d203a8-2ae0-4f74-c7fe-08db68097c81
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: LVCh5YqHLozSKg7/JvsvSYno7glaof0l1XRMXdTDJCFv+mi97ZlvdXMCpIj8nIhkSzQzsRbeunf2kY7/XUmLYOoklPdqYEKQ31djkEWMc0BUwCH0/ImFwJjpcYOesO2vMmsCrvltdf8PFT2eYRfEyCiKmlbh/2GbPKF7YY3r59+lfbIx5cDaL36jq0qZQzMSzEnbAqWNLHOJdeq0XC+sIS6hz+bavmGVm22NkZknWe/SD9ApMVhlPG4D/hTIbPXlg54+22Moo3K/PcLysKn36DXQeawTY4mU+Mkh6lpusJzQWMiOwYxE9lGd7hEW6mHshWR1VBM9YR40t6gpW1k/w7XdNKAQD+q7lgvZGMJmbUWgf4Fbi49LcqPuDAkozA+S6OuvMFc17bGD+GAoYK+/iIGcMDjnA8GwkCwm5nc0Gn0Ovgv8ukAdp5hGTbSTYgNvgJ+AHuB38vLqFApqMJIZlTHV9d8du5JjN08IOV3M2PSeBlsT1Kmi1mSvTTx6NWz9ZjrfeQKuviUaj1R3Jip4mvRzj9/PCiUrpaHGLoPCTzrEFeK+QEOrnZXiKIitl5sJlakG9bCBLqbYdb2lYa88+jYYF7ACmhlbkNokFq6CaRKqQolFFBQxFS81BCKJXS3grJrYZihWVDN51NZNjXENGw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB6697.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(346002)(136003)(39850400004)(366004)(396003)(376002)(451199021)(8676002)(107886003)(8936002)(110136005)(478600001)(6666004)(52116002)(5660300002)(41300700001)(6486002)(316002)(26005)(1076003)(7416002)(186003)(6506007)(66556008)(66946007)(6512007)(4326008)(66476007)(2616005)(2906002)(921005)(38100700002)(38350700002)(86362001)(36756003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?UA6b+RWyBsEkYOwh5EzuZF+tw/Okogcq9cL5PcLQPnG8ecuy6XlP0WnJlLmk?=
+ =?us-ascii?Q?vfT8SbEhhZVJjfgrvCXiw32MBAcM5fjFbJtYPpxj6VOnqRbS7chgwSHkdc3J?=
+ =?us-ascii?Q?13gB3c7PIBXafQg/QFV4ZFmSEs+y//RRHLYIL+FELsDjfsZPXMLW47rmZkOI?=
+ =?us-ascii?Q?KGMgTrOrPlGWZo9nYyYQIIpNBkmgb/EjEXtfklVqqosAIAPDcDslNfB34C3Z?=
+ =?us-ascii?Q?frZW5shKgHfmlUiKbwUE3/GVgm0/5tSSxBiAV3Vh0tkNrDXexa8ndv2PIIW7?=
+ =?us-ascii?Q?KWNO1Vi6iYuTd7Cs8TZkUVKXrSJk75BPKcAI8Zt2t+4bvVdZzfxhptrC2MM9?=
+ =?us-ascii?Q?FphRenyRngiMWFCbJkd3G24isc6GjH9n9UgEc/RqSnppZUpIwAVLnrpY7BUS?=
+ =?us-ascii?Q?VmPTgLcjg8O2Lve16xCyhEfZh/h6aiiBooWfPB979+YwMtFgZnWv5FrBwjiN?=
+ =?us-ascii?Q?0OE3zNNDgpQsOx7jJ0BFO2rY9q/zBESAB7IA4I0QqGAFrLTlAgWsERA/r6ol?=
+ =?us-ascii?Q?XxmC7lXFKtzxW7B/nRxtFULYgX1+W4UDfBNeWDmB/GCXjqvFXV5kfF7S//4I?=
+ =?us-ascii?Q?Iv8CRn3hlJVbjuasnbo6OxtxKk0j7VA8lLLUH1xh2FGBfXW35lO+2/S1PCCB?=
+ =?us-ascii?Q?CG8Zp94lmSLshWx8XnNCRhFq7a2gKcx83BMIgJ3UsXgixM97F3i8deP4+aZ5?=
+ =?us-ascii?Q?cx5A6gnPJ+e8Sa3inGMJhoSJulz2EHJfatrzFK/kgIUDpslDPT19CuaEtsiI?=
+ =?us-ascii?Q?MTzmNrE09+nJzA5dB6DNjDZjQ9wNKbc8A8UXikBZG/73ptw3v1qGjo5QB5Zh?=
+ =?us-ascii?Q?TQL6q4rh8osDwfFYEMh0o7hukPBpDtbwt4Nz6SqtHixbNFW+CusxNnPYRhYW?=
+ =?us-ascii?Q?b59HzUaWxSTEA8rtbctNtO6ckj3yomXRILoLuHmwVI05oAtYAdscwaQYgwgc?=
+ =?us-ascii?Q?OG5+BAIpn+oJVmIWhi51xe55vYrSWOtyUf/Q1gPUjRyDTv2xwKf2w4MccI71?=
+ =?us-ascii?Q?w8sG96PWx1jKnEn4xg+EzG3irHunMPYj2kft5Cn4EDKTo8WEKJLhU6+RKKHT?=
+ =?us-ascii?Q?dCptdKi91Rfpy5ZMV5FDj9fBgFIR/aQoWTj7+RP3/t0NcIy6x1lsqozizDBo?=
+ =?us-ascii?Q?6IELYa6UV9dP1T3Hzrhf6/uSj50IrGDNA435s0nicnIfKhyMbeS1xumYAokX?=
+ =?us-ascii?Q?CBeuD1hPNSkgdvKYClaFmAojGWEVPU5L2ABZ5R/NAebFcPjNWdVVCvn6P5U1?=
+ =?us-ascii?Q?wVR0TtrKVp1AFgmcTI08ww0pN+CNa7F7QoVyCghb3nYLHp0IyzTAeDoQVXhY?=
+ =?us-ascii?Q?5OzbMTON6XLRHXa4J53iZnrQlkfDf+ogo5tyU++s8kiW76YleQPcFDyJg2Y2?=
+ =?us-ascii?Q?3uTM/mr6+K3A72f3ySwf2IJLMYLrio3VrZqpz72wLHUZIZ061TTU6TvlfnZp?=
+ =?us-ascii?Q?SRfSslbAeuNGEIjgKWw2FZPctESbn4HyK+zOssCsRzxZjV49fgYqhAkBXNWf?=
+ =?us-ascii?Q?10ZSousl/vF0ft4oKgi++EnXlfQrvq8H5yLaxLVtD09o2zy9BxXOR2b7hs+w?=
+ =?us-ascii?Q?GzULS8gezDEz7rDWfSKkjmmVBS48RDUAnxs5Vtgw?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c6d203a8-2ae0-4f74-c7fe-08db68097c81
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB6697.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jun 2023 10:16:55.9324
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: JlX1WCgkgRF0uEyENakPCS/Pyqs+mFBgIG8yGypSOVeZEj9wA/jcqwezsqe6F8295y6h2ldRRLQN+2jGF1+tdg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PSAPR06MB4456
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The introduction of the macro IOPRIO_PRIO_LEVEL() in commit
-eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
-results in an iopriority level to always be masked using the macro
-IOPRIO_LEVEL_MASK, and thus to the kernel always seeing an acceptable
-value for an I/O priority level when checked in ioprio_check_cap().
-Before this patch, this function would return an error for some (but not
-all) invalid values for a level valid range of [0..7].
+There are three flags that control Write Booster Feature:
 
-Restore and improve the detection of invalid priority levels by
-introducing the inline function ioprio_value() to check an ioprio class,
-level and hint value before combining these fields into a single value
-to be used with ioprio_set() or AIOs. If an invalid value for the class,
-level or hint of an ioprio is detected, ioprio_value() returns an ioprio
-using the class IOPRIO_CLASS_INVALID, indicating an invalid value and
-causing ioprio_check_cap() to return -EINVAL.
+    1. WB ON/OFF
+    2. WB Hibern Flush ON/OFF (implicitly)
+    3. WB Flush ON/OFF (explicit)
 
-Fixes: 6c913257226a ("scsi: block: Introduce ioprio hints")
-Fixes: eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+In the case of "Hibern Flush", one of the conditions for flush WB buffer is
+that avail_wb_buff < wb_flush_threshold.
+
+As we know, different users have different requirements for power
+consumption and performance. Therefore, we need the ability to manually
+set wb_flush_threshold, so that users can easily and flexibly adjust
+the wb_flush_threshold value, thereby achieving a balance between power
+consumption and performance.
+
+So the sysfs attribute that controls this is necessary.
+
+The meaning of wb_flush_threshold is the percentage of WB's total size,
+such as 1 representing 10%, 2 representing 20%, and so on.
+
+Signed-off-by: Lu Hongfei <luhongfei@vivo.com>
 ---
- block/ioprio.c              |  1 +
- include/uapi/linux/ioprio.h | 47 +++++++++++++++++++++++--------------
- 2 files changed, 31 insertions(+), 17 deletions(-)
+ drivers/ufs/core/ufs-sysfs.c | 37 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-diff --git a/block/ioprio.c b/block/ioprio.c
-index f0d9e818abc5..b5a942519a79 100644
---- a/block/ioprio.c
-+++ b/block/ioprio.c
-@@ -58,6 +58,7 @@ int ioprio_check_cap(int ioprio)
- 			if (level)
- 				return -EINVAL;
- 			break;
-+		case IOPRIO_CLASS_INVALID:
- 		default:
- 			return -EINVAL;
- 	}
-diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
-index 607c7617b9d2..7310449c0178 100644
---- a/include/uapi/linux/ioprio.h
-+++ b/include/uapi/linux/ioprio.h
-@@ -6,15 +6,13 @@
-  * Gives us 8 prio classes with 13-bits of data for each class
-  */
- #define IOPRIO_CLASS_SHIFT	13
--#define IOPRIO_CLASS_MASK	0x07
-+#define IOPRIO_NR_CLASSES	8
-+#define IOPRIO_CLASS_MASK	(IOPRIO_NR_CLASSES - 1)
- #define IOPRIO_PRIO_MASK	((1UL << IOPRIO_CLASS_SHIFT) - 1)
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index cdf3d5f2b77b..679f65dc4cab
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -298,6 +298,41 @@ static ssize_t enable_wb_buf_flush_store(struct device *dev,
+ 	return res < 0 ? res : count;
+ }
  
- #define IOPRIO_PRIO_CLASS(ioprio)	\
- 	(((ioprio) >> IOPRIO_CLASS_SHIFT) & IOPRIO_CLASS_MASK)
- #define IOPRIO_PRIO_DATA(ioprio)	((ioprio) & IOPRIO_PRIO_MASK)
--#define IOPRIO_PRIO_VALUE(class, data)	\
--	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
--	 ((data) & IOPRIO_PRIO_MASK))
- 
- /*
-  * These are the io priority classes as implemented by the BFQ and mq-deadline
-@@ -25,10 +23,13 @@
-  * served when no one else is using the disk.
-  */
- enum {
--	IOPRIO_CLASS_NONE,
--	IOPRIO_CLASS_RT,
--	IOPRIO_CLASS_BE,
--	IOPRIO_CLASS_IDLE,
-+	IOPRIO_CLASS_NONE	= 0,
-+	IOPRIO_CLASS_RT		= 1,
-+	IOPRIO_CLASS_BE		= 2,
-+	IOPRIO_CLASS_IDLE	= 3,
-+
-+	/* Special class to indicate an invalid ioprio value */
-+	IOPRIO_CLASS_INVALID	= 7,
- };
- 
- /*
-@@ -73,15 +74,6 @@ enum {
- #define IOPRIO_PRIO_HINT(ioprio)	\
- 	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
- 
--/*
-- * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
-- * a class, level and hint.
-- */
--#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
--	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
--	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
--	 ((level) & IOPRIO_LEVEL_MASK))
--
- /*
-  * IO hints.
-  */
-@@ -107,4 +99,25 @@ enum {
- 	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
- };
- 
-+#define IOPRIO_BAD_VALUE(val, max) ((val) < 0 || (val) >= (max))
-+
-+/*
-+ * Return an I/O priority value based on a class, a level and a hint.
-+ */
-+static __always_inline __u16 ioprio_value(int class, int level, int hint)
++static ssize_t wb_flush_threshold_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
 +{
-+	if (IOPRIO_BAD_VALUE(class, IOPRIO_NR_CLASSES) ||
-+	    IOPRIO_BAD_VALUE(level, IOPRIO_NR_LEVELS) ||
-+	    IOPRIO_BAD_VALUE(hint, IOPRIO_NR_HINTS))
-+		return IOPRIO_CLASS_INVALID << IOPRIO_CLASS_SHIFT;
++	struct ufs_hba *hba = dev_get_drvdata(dev);
 +
-+	return (class << IOPRIO_CLASS_SHIFT) |
-+		(hint << IOPRIO_HINT_SHIFT) | level;
++	return sysfs_emit(buf, "%d\n", hba->vps->wb_flush_threshold);
 +}
 +
-+#define IOPRIO_PRIO_VALUE(class, level)			\
-+	ioprio_value(class, level, IOPRIO_HINT_NONE)
-+#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)	\
-+	ioprio_value(class, level, hint)
++static ssize_t wb_flush_threshold_store(struct device *dev,
++					  struct device_attribute *attr,
++					  const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned int wb_flush_threshold;
 +
- #endif /* _UAPI_LINUX_IOPRIO_H */
++	if (!ufshcd_is_wb_allowed(hba)) {
++		dev_warn(dev, "It is not allowed to configure WB buf flush threshold!\n");
++		return -EOPNOTSUPP;
++	}
++
++	if (kstrtouint(buf, 0, &wb_flush_threshold))
++		return -EINVAL;
++
++	/* The range of values for wb_flush_threshold is (0,10] */
++	if (wb_flush_threshold <= 0 || wb_flush_threshold > 10) {
++		dev_err(dev, "The value of wb_flush_threshold is invalid!\n");
++		return -EINVAL;
++	}
++
++	hba->vps->wb_flush_threshold = wb_flush_threshold;
++
++	return count;
++}
++
+ static DEVICE_ATTR_RW(rpm_lvl);
+ static DEVICE_ATTR_RO(rpm_target_dev_state);
+ static DEVICE_ATTR_RO(rpm_target_link_state);
+@@ -307,6 +342,7 @@ static DEVICE_ATTR_RO(spm_target_link_state);
+ static DEVICE_ATTR_RW(auto_hibern8);
+ static DEVICE_ATTR_RW(wb_on);
+ static DEVICE_ATTR_RW(enable_wb_buf_flush);
++static DEVICE_ATTR_RW(wb_flush_threshold);
+ 
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
+@@ -318,6 +354,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_auto_hibern8.attr,
+ 	&dev_attr_wb_on.attr,
+ 	&dev_attr_enable_wb_buf_flush.attr,
++	&dev_attr_wb_flush_threshold.attr,
+ 	NULL
+ };
+ 
 -- 
-2.40.1
+2.39.0
 
