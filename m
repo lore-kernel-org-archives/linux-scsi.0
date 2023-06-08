@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB38C7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E35DEC7EE29
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:06:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236187AbjFHLGp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 07:06:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36144 "EHLO
+        id S236130AbjFHLGr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 07:06:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236391AbjFHLFO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:05:14 -0400
+        with ESMTP id S236304AbjFHLGD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:06:03 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5304335A5;
-        Thu,  8 Jun 2023 04:04:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8D6C3A82;
+        Thu,  8 Jun 2023 04:04:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OYUHh+4M0utRLFunGOJAUcyyaBU5s2THoZb+BQl7GUE=; b=XMxt1xBscJ0pI2z9wXwtBfhHoj
-        NaYMPR541sRAbKkNuq94A0tGaOdOL2ppU67LomkE8PHY1cLidjOlmD1ASO1pdXCpk0TwV2vD/WbBR
-        9kiggNU0hMlB7OKMpYl+7IiwsFYBd4AMo4RNXxOSqah0M1fTVzzNIxH4opHOEUD6ocDCS1QCOZDsR
-        ctTIHDJR3fDm3H3rHOfGswVKS8V8h7zZ3zaeE9z4hbqCdVvCfvfOA0KBL5SD8cN96eGG5AD6dpUnG
-        r3gJ4kX/hr+9Vw6Ni/HBW9azjuUusZbT0wswuRD8pEJpADntyxeC7hSr3xDQtNuv+v+3O4GfQn6ui
-        qiZvPnZg==;
+        bh=vY4TzS76/rJ2xce2OD2MlrdJfdqE96jSdZdHV2ROwoI=; b=qtZc66QRnp6ItyMHZhuUGe4A72
+        oyK4P17k4i9Jb1HIO4XtasJgiPIm6p6crRVvWHHR0j0/9GEb6CBkbLV9MTbVP6DdY2Mfm98SLeTnT
+        9mLNMtLmQhKjNylaC1PAef4Q7FzQ0pBzRblaH4gZF769uixkLEtT9ztqGg04mcOqgLBwawZL50W7T
+        kHxO4V5h7JuAnuMXQ0G/NZW9PIiYBaQWnXrk81+Xg/nignplbrRscS+3zydxIt3mk4CjPW8jF4lFD
+        nbbYeIBITvF/v2l/ARUaUnGbAWR0CzX5NkYxlkYPZdMZ/gNvUDFfOcfgqIodGUOmv+5VAAilMRx5f
+        DB4z1kzA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q7DQq-0092W2-2a;
-        Thu, 08 Jun 2023 11:03:57 +0000
+        id 1q7DR0-0092dV-19;
+        Thu, 08 Jun 2023 11:04:06 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/30] scsi: replace the fmode_t argument to ->sg_io_fn with a simple bool
-Date:   Thu,  8 Jun 2023 13:02:48 +0200
-Message-Id: <20230608110258.189493-21-hch@lst.de>
+Subject: [PATCH 22/30] mtd: block: use a simple bool to track open for write
+Date:   Thu,  8 Jun 2023 13:02:50 +0200
+Message-Id: <20230608110258.189493-23-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230608110258.189493-1-hch@lst.de>
 References: <20230608110258.189493-1-hch@lst.de>
@@ -64,101 +64,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of passing a fmode_t and only checking it for FMODE_WRITE, pass
-a bool open_for_write to prepare for callers that won't have the fmode_t.
+Instead of propagating the fmode_t, just use a bool to track if a mtd
+block device was opened for writing.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Acked-by: Christian Brauner <brauner@kernel.org>
+Acked-by: Richard Weinberger <richard@nod.at>
 ---
- block/bsg-lib.c         | 2 +-
- block/bsg.c             | 8 +++++---
- drivers/scsi/scsi_bsg.c | 4 ++--
- include/linux/bsg.h     | 2 +-
- 4 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/mtd/mtd_blkdevs.c    | 2 +-
+ drivers/mtd/mtdblock.c       | 2 +-
+ include/linux/mtd/blktrans.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 435c32373cd68f..b3acdbdb6e7ea8 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -26,7 +26,7 @@ struct bsg_set {
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index f0bb09fde95e3a..bd0b7545364349 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -208,7 +208,7 @@ static int blktrans_open(struct gendisk *disk, fmode_t mode)
+ 	ret = __get_mtd_device(dev->mtd);
+ 	if (ret)
+ 		goto error_release;
+-	dev->file_mode = mode;
++	dev->writable = mode & FMODE_WRITE;
+ 
+ unlock:
+ 	dev->open++;
+diff --git a/drivers/mtd/mtdblock.c b/drivers/mtd/mtdblock.c
+index a0a1194dc1d902..fa476fb4dffb6c 100644
+--- a/drivers/mtd/mtdblock.c
++++ b/drivers/mtd/mtdblock.c
+@@ -294,7 +294,7 @@ static void mtdblock_release(struct mtd_blktrans_dev *mbd)
+ 		 * It was the last usage. Free the cache, but only sync if
+ 		 * opened for writing.
+ 		 */
+-		if (mbd->file_mode & FMODE_WRITE)
++		if (mbd->writable)
+ 			mtd_sync(mbd->mtd);
+ 		vfree(mtdblk->cache_data);
+ 	}
+diff --git a/include/linux/mtd/blktrans.h b/include/linux/mtd/blktrans.h
+index 15cc9b95e32b52..6e471436bba556 100644
+--- a/include/linux/mtd/blktrans.h
++++ b/include/linux/mtd/blktrans.h
+@@ -34,7 +34,7 @@ struct mtd_blktrans_dev {
+ 	struct blk_mq_tag_set *tag_set;
+ 	spinlock_t queue_lock;
+ 	void *priv;
+-	fmode_t file_mode;
++	bool writable;
  };
  
- static int bsg_transport_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
--		fmode_t mode, unsigned int timeout)
-+		bool open_for_write, unsigned int timeout)
- {
- 	struct bsg_job *job;
- 	struct request *rq;
-diff --git a/block/bsg.c b/block/bsg.c
-index 7eca43f33d7ff8..bec4027842b31e 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -54,7 +54,8 @@ static unsigned int bsg_timeout(struct bsg_device *bd, struct sg_io_v4 *hdr)
- 	return max_t(unsigned int, timeout, BLK_MIN_SG_TIMEOUT);
- }
- 
--static int bsg_sg_io(struct bsg_device *bd, fmode_t mode, void __user *uarg)
-+static int bsg_sg_io(struct bsg_device *bd, bool open_for_write,
-+		     void __user *uarg)
- {
- 	struct sg_io_v4 hdr;
- 	int ret;
-@@ -63,7 +64,8 @@ static int bsg_sg_io(struct bsg_device *bd, fmode_t mode, void __user *uarg)
- 		return -EFAULT;
- 	if (hdr.guard != 'Q')
- 		return -EINVAL;
--	ret = bd->sg_io_fn(bd->queue, &hdr, mode, bsg_timeout(bd, &hdr));
-+	ret = bd->sg_io_fn(bd->queue, &hdr, open_for_write,
-+			   bsg_timeout(bd, &hdr));
- 	if (!ret && copy_to_user(uarg, &hdr, sizeof(hdr)))
- 		return -EFAULT;
- 	return ret;
-@@ -146,7 +148,7 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 	case SG_EMULATED_HOST:
- 		return put_user(1, intp);
- 	case SG_IO:
--		return bsg_sg_io(bd, file->f_mode, uarg);
-+		return bsg_sg_io(bd, file->f_mode & FMODE_WRITE, uarg);
- 	case SCSI_IOCTL_SEND_COMMAND:
- 		pr_warn_ratelimited("%s: calling unsupported SCSI_IOCTL_SEND_COMMAND\n",
- 				current->comm);
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index 12431f35f861e1..a9a9ec086a7e3f 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -10,7 +10,7 @@
- #define uptr64(val) ((void __user *)(uintptr_t)(val))
- 
- static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
--		fmode_t mode, unsigned int timeout)
-+		bool open_for_write, unsigned int timeout)
- {
- 	struct scsi_cmnd *scmd;
- 	struct request *rq;
-@@ -42,7 +42,7 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
- 	if (copy_from_user(scmd->cmnd, uptr64(hdr->request), scmd->cmd_len))
- 		goto out_put_request;
- 	ret = -EPERM;
--	if (!scsi_cmd_allowed(scmd->cmnd, mode & FMODE_WRITE))
-+	if (!scsi_cmd_allowed(scmd->cmnd, open_for_write))
- 		goto out_put_request;
- 
- 	ret = 0;
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index 1ac81c809da9b3..ee2df73edf83f8 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -9,7 +9,7 @@ struct device;
- struct request_queue;
- 
- typedef int (bsg_sg_io_fn)(struct request_queue *, struct sg_io_v4 *hdr,
--		fmode_t mode, unsigned int timeout);
-+		bool open_for_write, unsigned int timeout);
- 
- struct bsg_device *bsg_register_queue(struct request_queue *q,
- 		struct device *parent, const char *name,
+ struct mtd_blktrans_ops {
 -- 
 2.39.2
 
