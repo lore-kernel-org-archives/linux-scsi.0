@@ -2,25 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B305C83003
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 08:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC1FC7EE45
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 08:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235528AbjFHIl4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 04:41:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41076 "EHLO
+        id S235578AbjFHIrh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 04:47:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234692AbjFHIli (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 04:41:38 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 801F32D4A;
-        Thu,  8 Jun 2023 01:41:37 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9341068BFE; Thu,  8 Jun 2023 10:41:29 +0200 (CEST)
-Date:   Thu, 8 Jun 2023 10:41:29 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Phillip Potter <phil@philpotter.co.uk>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Richard Weinberger <richard@nod.at>,
+        with ESMTP id S235212AbjFHIre (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 04:47:34 -0400
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C81F2728
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Jun 2023 01:47:31 -0700 (PDT)
+Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-3f7368126a6so1869585e9.0
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Jun 2023 01:47:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=philpotter-co-uk.20221208.gappssmtp.com; s=20221208; t=1686214050; x=1688806050;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3Z0zXMf0/p1bWmc9mPlzpLlXYRZkfsnJE7sT8NRRA6c=;
+        b=vkzOBIDyJZnE5t4Mj6KFwse5JLCGNYhVpD7M+LgRRAMweH7g5OH2v9GR8Kjk+mPpJm
+         NFJNzRyEA3IyKuvp7ODnGHL2Af5KJgwvRhzjwf+IFMbbs3Ted974+vGTeleHQR5SKwGb
+         b51DB4GATQSJy7/aa6dVBWvtN1fKh3j+MsQqSLaL0gg8C7sUjIaXCDmas7Q82iLoi2Fi
+         ugG3zDp2J/kj+Q3TNNSScGVCX2fMCwjdIX6YCNNx4q8YsyhkIaQSOa714CgWEa7Wuf3g
+         xuWNdIeV51MWblNgszX4dDTQTNus8HSvkBuoP0iMTSy1oAvOKlY2L1m7f7ZPLQvrDhY6
+         hPXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686214050; x=1688806050;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3Z0zXMf0/p1bWmc9mPlzpLlXYRZkfsnJE7sT8NRRA6c=;
+        b=Rjm7Hdu7//MqjDZb05IY5PFgTXer4cjvFH3U2Q0C3/b1Bj9r4Cwv516uCYCDM3zkzP
+         b6gc8J/XiTu0oQBMHnHi2BP14W8ZJ4FWKzTaPE9mgBtIINht4c3bA/YmhZ2ca0q3BDm4
+         DxoXer4Q0lXTft7odi51OMbF/ci5y3GRS3tKJJD+T6dwElPIu94lu5CayL4mFI8MCK1k
+         CHi3glmBaxCNGzmrZbEaAvsZWho/ES2ONRnLekdCCHGLlq8i/2VSD/pzfvcwTxfOrITC
+         W3BJL7Gk7oINUffK77SpGk1E3zvNwBMh/OOagY30/S0XbS7c2WhLKvRYuI76SjGnGAUq
+         rUjg==
+X-Gm-Message-State: AC+VfDwIE/gjG65COr2vPV6enDn4ZScgXHb06Fd87sat6czH2JMfQiGA
+        xqDKFFWXCjM8LCzNQXlLybNefg==
+X-Google-Smtp-Source: ACHHUZ64php+m1QCHow4PROIWkYJdsxvPRvM75l2Ndr3HzBRHztMsSyV31x82/mpTwubbqm80EXyLg==
+X-Received: by 2002:a05:600c:d6:b0:3f6:389:73b1 with SMTP id u22-20020a05600c00d600b003f6038973b1mr839950wmm.6.1686214049725;
+        Thu, 08 Jun 2023 01:47:29 -0700 (PDT)
+Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.1.e.e.d.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:dfde:e1a0::2])
+        by smtp.gmail.com with ESMTPSA id n19-20020a7bcbd3000000b003f73a101f88sm1253740wmi.16.2023.06.08.01.47.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Jun 2023 01:47:29 -0700 (PDT)
+Date:   Thu, 8 Jun 2023 09:47:27 +0100
+From:   Phillip Potter <phil@philpotter.co.uk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
         Josef Bacik <josef@toxicpanda.com>,
         "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
         Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@suse.de>,
@@ -41,22 +72,35 @@ Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         linux-pm@vger.kernel.org
 Subject: Re: [PATCH 06/31] cdrom: remove the unused mode argument to
  cdrom_release
-Message-ID: <20230608084129.GA14689@lst.de>
-References: <20230606073950.225178-1-hch@lst.de> <20230606073950.225178-7-hch@lst.de> <ZH+6qd1W75G49P7p@equinox>
+Message-ID: <ZIGVn9E9ME26V0Gn@equinox>
+References: <20230606073950.225178-1-hch@lst.de>
+ <20230606073950.225178-7-hch@lst.de>
+ <ZH+6qd1W75G49P7p@equinox>
+ <20230608084129.GA14689@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZH+6qd1W75G49P7p@equinox>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20230608084129.GA14689@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 07, 2023 at 12:00:57AM +0100, Phillip Potter wrote:
-> Looks good, thanks.
+On Thu, Jun 08, 2023 at 10:41:29AM +0200, Christoph Hellwig wrote:
+> On Wed, Jun 07, 2023 at 12:00:57AM +0100, Phillip Potter wrote:
+> > Looks good, thanks.
+> > 
+> > Signed-off-by: Phillip Potter <phil@philpotter.co.uk>
 > 
-> Signed-off-by: Phillip Potter <phil@philpotter.co.uk>
+> Hmm, these signoffs don't really make sense here.  Were they intended
+> as Reviewed-bys?
+> 
+Hi Christoph,
 
-Hmm, these signoffs don't really make sense here.  Were they intended
-as Reviewed-bys?
+Yes indeed - I was under the impression it was appropriate for a
+maintainer to signal their approval of a patch to maintained code using
+a Signed-off-by tag due to their involvement in the submission process?
+Apologies if I've got this wrong, happy to send Reviewed-bys by all
+means.
 
+Regards,
+Phil
