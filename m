@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B2E7C8300C
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:06:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F62C87FE2
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 11:06:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236399AbjFHLGF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 07:06:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36168 "EHLO
+        id S236353AbjFHLGH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 07:06:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236340AbjFHLFF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:05:05 -0400
+        with ESMTP id S236356AbjFHLFG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 07:05:06 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE75F359E;
-        Thu,  8 Jun 2023 04:04:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05D04273E;
+        Thu,  8 Jun 2023 04:04:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=BWc5z9HT4dUA9mjQNGkIg08JFiqviKFgFc2kwBdnmvA=; b=DSaSxe/TisXuiNZhOR1TgSi7tx
-        33lAtkUXPMOr9WQm9Z+HhNKEJGoeKJSluj7uhXRCmimH7VoHS0E0fvUNcZ7UiWxsb/tBtz6fXhZlr
-        GE9jtxC+Q8FoQSEQz+4vk9nOOH8BTAjfrUuFLcHba2SvPuPGZNkEv8QjVxkATSDkihbdNi6umKqVB
-        7p2NEvk5EAeqwWcAKAwVWRbUBkG4tyEy/NutpgRnWrvU0mWTHAqNh1aG3veS9lJl/Zm3XwnRRN4uy
-        kPNwBnK5dcXc2ETiMnCmg0liMCPKVYmWiFEJ6OPE/jhf6OnfgqyBEoO+PrWwml+/G7QKTlQlKNK+/
-        sLCUxnmg==;
+        bh=zzKaJQa3JhGzap/6QNdzKP1Wkdkqpf0FeoakP4LHYJI=; b=IFokquyjT9HqPzGLqUwTr6ecRn
+        oGX/XXdsUirqOsUW6DttjK8Xx+L4Z4CmPRZESIbn2144Hb4wCpwmu+oG/xZIDwjhrEZijxIuniecN
+        xFKnTMQw4BKhssjuOdH77PUD4jFoDYzVT3audpsAukeeY8AYuknmSxnQVL/KTmlf53rM8W3HbKPmB
+        sSEcuqZO/g6gybfzLieIxrkUSqabKGOF6mP37wPvRVZ/80R86AOVFeLBZRNvTpKnmKYXCNQfBH8EH
+        Gj5McU8d9//mIV8ML3zdYjGKkoPoEqrsbpVHb3nqQkz6vDPO4aG0Rzy9hLO6r1zWlw/wxf84SzOow
+        x90jqCVQ==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q7DQR-00921s-1m;
-        Thu, 08 Jun 2023 11:03:31 +0000
+        id 1q7DQe-0092IK-25;
+        Thu, 08 Jun 2023 11:03:45 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
@@ -51,9 +51,9 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-pm@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/30] swsusp: don't pass a stack address to blkdev_get_by_path
-Date:   Thu,  8 Jun 2023 13:02:39 +0200
-Message-Id: <20230608110258.189493-12-hch@lst.de>
+Subject: [PATCH 16/30] block: add a sb_open_mode helper
+Date:   Thu,  8 Jun 2023 13:02:44 +0200
+Message-Id: <20230608110258.189493-17-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230608110258.189493-1-hch@lst.de>
 References: <20230608110258.189493-1-hch@lst.de>
@@ -64,44 +64,116 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-holder is just an on-stack pointer that can easily be reused by other calls,
-replace it with a static variable that doesn't change.
+Add a helper to return the open flags for blkdev_get_by* for passed in
+super block flags instead of open coding the logic in many places.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Christian Brauner <brauner@kernel.org>
 ---
- kernel/power/swap.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/btrfs/super.c       |  5 +----
+ fs/nilfs2/super.c      |  7 ++-----
+ fs/super.c             | 15 ++++-----------
+ include/linux/blkdev.h |  7 +++++++
+ 4 files changed, 14 insertions(+), 20 deletions(-)
 
-diff --git a/kernel/power/swap.c b/kernel/power/swap.c
-index 81aec3b2c60510..b03ff1a33c7f68 100644
---- a/kernel/power/swap.c
-+++ b/kernel/power/swap.c
-@@ -1510,6 +1510,8 @@ int swsusp_read(unsigned int *flags_p)
- 	return error;
- }
+diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+index 1a2ee9407f5414..fd02b92e39106a 100644
+--- a/fs/btrfs/super.c
++++ b/fs/btrfs/super.c
+@@ -1440,12 +1440,9 @@ static struct dentry *btrfs_mount_root(struct file_system_type *fs_type,
+ 	struct btrfs_fs_devices *fs_devices = NULL;
+ 	struct btrfs_fs_info *fs_info = NULL;
+ 	void *new_sec_opts = NULL;
+-	fmode_t mode = FMODE_READ;
++	fmode_t mode = sb_open_mode(flags);
+ 	int error = 0;
  
-+static void *swsusp_holder;
-+
- /**
-  *      swsusp_check - Check for swsusp signature in the resume device
-  */
-@@ -1517,14 +1519,13 @@ int swsusp_read(unsigned int *flags_p)
- int swsusp_check(bool snapshot_test)
+-	if (!(flags & SB_RDONLY))
+-		mode |= FMODE_WRITE;
+-
+ 	if (data) {
+ 		error = security_sb_eat_lsm_opts(data, &new_sec_opts);
+ 		if (error)
+diff --git a/fs/nilfs2/super.c b/fs/nilfs2/super.c
+index 61d5e79a5e81df..a41fd84d4e28ab 100644
+--- a/fs/nilfs2/super.c
++++ b/fs/nilfs2/super.c
+@@ -1278,14 +1278,11 @@ nilfs_mount(struct file_system_type *fs_type, int flags,
  {
- 	int error;
--	void *holder;
- 	fmode_t mode = FMODE_READ;
+ 	struct nilfs_super_data sd;
+ 	struct super_block *s;
+-	fmode_t mode = FMODE_READ;
+ 	struct dentry *root_dentry;
+ 	int err, s_new = false;
  
- 	if (snapshot_test)
- 		mode |= FMODE_EXCL;
+-	if (!(flags & SB_RDONLY))
+-		mode |= FMODE_WRITE;
+-
+-	sd.bdev = blkdev_get_by_path(dev_name, mode, fs_type, NULL);
++	sd.bdev = blkdev_get_by_path(dev_name, sb_open_mode(flags), fs_type,
++				     NULL);
+ 	if (IS_ERR(sd.bdev))
+ 		return ERR_CAST(sd.bdev);
  
- 	hib_resume_bdev = blkdev_get_by_dev(swsusp_resume_device,
--					    mode, &holder, NULL);
-+					    mode, &swsusp_holder, NULL);
- 	if (!IS_ERR(hib_resume_bdev)) {
- 		set_blocksize(hib_resume_bdev, PAGE_SIZE);
- 		clear_page(swsusp_header);
+diff --git a/fs/super.c b/fs/super.c
+index 8563794a8bc462..dc7f328398339d 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1255,17 +1255,13 @@ int get_tree_bdev(struct fs_context *fc,
+ {
+ 	struct block_device *bdev;
+ 	struct super_block *s;
+-	fmode_t mode = FMODE_READ;
+ 	int error = 0;
+ 
+-	if (!(fc->sb_flags & SB_RDONLY))
+-		mode |= FMODE_WRITE;
+-
+ 	if (!fc->source)
+ 		return invalf(fc, "No source specified");
+ 
+-	bdev = blkdev_get_by_path(fc->source, mode, fc->fs_type,
+-				  &fs_holder_ops);
++	bdev = blkdev_get_by_path(fc->source, sb_open_mode(fc->sb_flags),
++				  fc->fs_type, &fs_holder_ops);
+ 	if (IS_ERR(bdev)) {
+ 		errorf(fc, "%s: Can't open blockdev", fc->source);
+ 		return PTR_ERR(bdev);
+@@ -1344,13 +1340,10 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
+ {
+ 	struct block_device *bdev;
+ 	struct super_block *s;
+-	fmode_t mode = FMODE_READ;
+ 	int error = 0;
+ 
+-	if (!(flags & SB_RDONLY))
+-		mode |= FMODE_WRITE;
+-
+-	bdev = blkdev_get_by_path(dev_name, mode, fs_type, &fs_holder_ops);
++	bdev = blkdev_get_by_path(dev_name, sb_open_mode(flags), fs_type,
++				  &fs_holder_ops);
+ 	if (IS_ERR(bdev))
+ 		return ERR_CAST(bdev);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d5b99796f12c11..97803603902076 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1473,6 +1473,13 @@ struct blk_holder_ops {
+ 	void (*mark_dead)(struct block_device *bdev);
+ };
+ 
++/*
++ * Return the correct open flags for blkdev_get_by_* for super block flags
++ * as stored in sb->s_flags.
++ */
++#define sb_open_mode(flags) \
++	(FMODE_READ | (((flags) & SB_RDONLY) ? 0 : FMODE_WRITE))
++
+ struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t mode, void *holder,
+ 		const struct blk_holder_ops *hops);
+ struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
 -- 
 2.39.2
 
