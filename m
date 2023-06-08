@@ -2,125 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE74C7EE23
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 16:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E1E4C7EE2E
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jun 2023 16:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231359AbjFHQD7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jun 2023 12:03:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51800 "EHLO
+        id S234560AbjFHQYO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jun 2023 12:24:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233006AbjFHQDs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 12:03:48 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C77AA30F3;
-        Thu,  8 Jun 2023 09:03:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686240210; x=1717776210;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=1MRnlppyZ7daGfrggdDXnfQ0xNGZl1S17/wP4Qk7OmM=;
-  b=NNEi6b2GrkjpHRrJKrFfHCeCvt6OSeSRm4O2H0jzTwsFhOUrDftFNFI7
-   rzFAqysRSOHuRdThVo8hUzlhHN0X9WrlatLWY8vyFktSw/v7Z6QJn6G2c
-   F5TqWrkACkKAJkhKrV1Is3P8ZAJ5r6w/UWGWrgeCuRO/tGIeNXSB3ckdv
-   AZo6M4X6y8QRaqAiN7j7uP2sANcilm6U5tAOiVZpnRaHZOh1559ko9mBf
-   9x4I8Qpt/Q04CVarpnucsgPX6PBeQjYbC94sWIOhdCJTFLVGua2SKseN2
-   yYIzz8XHKNHkqou+Wcuf2shDZXOZjrDhDUIm5aJw51/YMODaC1f6i6p3E
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10735"; a="360699893"
-X-IronPort-AV: E=Sophos;i="6.00,227,1681196400"; 
-   d="scan'208";a="360699893"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 09:03:28 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10735"; a="822664803"
-X-IronPort-AV: E=Sophos;i="6.00,227,1681196400"; 
-   d="scan'208";a="822664803"
-Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
-  by fmsmga002.fm.intel.com with ESMTP; 08 Jun 2023 09:03:24 -0700
-Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q7I6e-00080q-00;
-        Thu, 08 Jun 2023 16:03:24 +0000
-Date:   Fri, 9 Jun 2023 00:02:36 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de, axboe@kernel.dk,
-        dgilbert@interlog.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: Re: [PATCH v3 1/2] scsi: sg: fix blktrace debugfs entries leakage
-Message-ID: <202306082353.o2lpbQcL-lkp@intel.com>
-References: <20230608024159.1282953-2-yukuai1@huaweicloud.com>
+        with ESMTP id S235038AbjFHQX4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2023 12:23:56 -0400
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAC063AAC;
+        Thu,  8 Jun 2023 09:23:25 -0700 (PDT)
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-517ab9a4a13so552409a12.1;
+        Thu, 08 Jun 2023 09:23:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686241398; x=1688833398;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Wqu/i7eeSgXY/ZHZ2JjHyZ/7wB17Cu+AK25hSX7kGOQ=;
+        b=h246vOavl/KLNV+ogk29KP7SnDUtwCJUtMOy21ehFEoxpEAoD3E3/OacbBwJRyBhex
+         zIJ90A9S9kQ4k9Ht4GMnjesSM96C8MjCHzocwjJlPaYCDd2O9J7cK+QGvpKJe5JuQyUf
+         vexwdyrmOTovyN03W26pxKdnKlLfk01ney3eOXfd2SF8mfmtEoCz8xOw/2W1goIA1S7M
+         MrFhlPDoo09aUXtUIyzidKKZ44uacHNS43kJS/MEk2RlbUGLELlmzo8DkDG3a2ty62SA
+         PRhHLC0m67rQpnkpCKPgRiaJlmwdL5wohUnH9xrw3U2Igh27OMBxr6EozilYNOiBHtWt
+         wvLQ==
+X-Gm-Message-State: AC+VfDxCkMO8OrzuRVQDkU6pw8QDwukKQy6nc6ruVsd9+IUihf+dKaFc
+        aoWPXsAjT9dJvDZqSxPUuSk=
+X-Google-Smtp-Source: ACHHUZ6VpgHsGG8pXfBSvZUuAHTYHWngXlZb+0AI56ny79aH26oCesKm78tThBWyQGmn0AdMd368GA==
+X-Received: by 2002:a17:903:1206:b0:1af:e8cf:7004 with SMTP id l6-20020a170903120600b001afe8cf7004mr10557914plh.15.1686241398305;
+        Thu, 08 Jun 2023 09:23:18 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id 28-20020a17090a1a5c00b0024e4f169931sm3526454pjl.2.2023.06.08.09.23.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Jun 2023 09:23:17 -0700 (PDT)
+Message-ID: <5b898dde-2f76-51af-5d2e-c4572719a5be@acm.org>
+Date:   Thu, 8 Jun 2023 09:23:16 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230608024159.1282953-2-yukuai1@huaweicloud.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH] scsi: sd: support specify probe type of build-in driver
+Content-Language: en-US
+To:     Jianlin Lv <iecedge@gmail.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
+        bp@suse.de, peterz@infradead.org, will@kernel.org,
+        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
+        wyes.karny@amd.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20230606051217.2064-1-iecedge@gmail.com>
+ <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
+ <CAFA-uR_Zn4MdFKs6U6dqPjuVS60yN4RcYU4jJzjknqy7-RWyEQ@mail.gmail.com>
+ <e9b8b9c5-f400-9152-0f4b-537b05203dd2@acm.org>
+ <CAFA-uR83jHJsDXnn-3LWcrw251S4MizHC_JPJssYrgoD6kLoAg@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAFA-uR83jHJsDXnn-3LWcrw251S4MizHC_JPJssYrgoD6kLoAg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Yu,
+On 6/7/23 19:51, Jianlin Lv wrote:
+> On Thu, Jun 8, 2023 at 1:07 AM Bart Van Assche <bvanassche@acm.org> wrote:
+>> On 6/7/23 08:55, Jianlin Lv wrote:
+>> I see two possible solutions:
+>> - Change the volume provisioner such that it uses disk references that do
+>>     not depend on the probing order, e.g. /dev/disk/by-id/...
+> 
+> Yes, The "/dev/disk/by-id/" can uniquely identify SCSI devices. However,
+> I don't think it is suitable for the volume provisioner workflow.
+> For nodes of the same SKU , a unified YAML file will be defined to instruct
+> the volume provisioner on how to manage the local disks.
+> If use WWID, it would mean that a unique YAML file needs to be defined
+> for each node. This approach becomes impractical when dealing with a large
+> number of work nodes.
+Please consider using the paths available in /dev/disk/by-path.
 
-kernel test robot noticed the following build warnings:
+Thanks,
 
-[auto build test WARNING on axboe-block/for-next]
-[also build test WARNING on linus/master v6.4-rc5 next-20230608]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/scsi-sg-fix-blktrace-debugfs-entries-leakage/20230608-104735
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-patch link:    https://lore.kernel.org/r/20230608024159.1282953-2-yukuai1%40huaweicloud.com
-patch subject: [PATCH v3 1/2] scsi: sg: fix blktrace debugfs entries leakage
-config: i386-randconfig-r002-20230608 (https://download.01.org/0day-ci/archive/20230608/202306082353.o2lpbQcL-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build):
-        git remote add axboe-block https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-        git fetch axboe-block for-next
-        git checkout axboe-block/for-next
-        b4 shazam https://lore.kernel.org/r/20230608024159.1282953-2-yukuai1@huaweicloud.com
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=i386 olddefconfig
-        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306082353.o2lpbQcL-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/scsi/sg.c:45:
-   drivers/scsi/sg.c: In function 'sg_device_destroy':
->> include/linux/blktrace_api.h:88:57: warning: statement with no effect [-Wunused-value]
-      88 | # define blk_trace_remove(q)                            (-ENOTTY)
-         |                                                         ^
-   drivers/scsi/sg.c:1575:9: note: in expansion of macro 'blk_trace_remove'
-    1575 |         blk_trace_remove(sdp->device->request_queue);
-         |         ^~~~~~~~~~~~~~~~
-
-
-vim +88 include/linux/blktrace_api.h
-
-157f9c00e88529 Arnaldo Carvalho de Melo 2009-01-26  81  
-2056a782f8e7e6 Jens Axboe               2006-03-23  82  #else /* !CONFIG_BLK_DEV_IO_TRACE */
-2056a782f8e7e6 Jens Axboe               2006-03-23  83  # define blk_trace_ioctl(bdev, cmd, arg)		(-ENOTTY)
-2056a782f8e7e6 Jens Axboe               2006-03-23  84  # define blk_trace_shutdown(q)				do { } while (0)
-a54895fa057c67 Christoph Hellwig        2020-12-03  85  # define blk_add_driver_data(rq, data, len)		do {} while (0)
-d0deef5b14af7d Shawn Du                 2009-04-14  86  # define blk_trace_setup(q, name, dev, bdev, arg)	(-ENOTTY)
-6da127ad0918f9 Christof Schmitt         2008-01-11  87  # define blk_trace_startstop(q, start)			(-ENOTTY)
-6da127ad0918f9 Christof Schmitt         2008-01-11 @88  # define blk_trace_remove(q)				(-ENOTTY)
-9d5f09a424a67d Alan D. Brunelle         2008-05-27  89  # define blk_add_trace_msg(q, fmt, ...)			do { } while (0)
-35fe6d763229e8 Shaohua Li               2017-07-12  90  # define blk_add_cgroup_trace_msg(q, cg, fmt, ...)	do { } while (0)
-59fa0224cfea31 Shaohua Li               2016-05-09  91  # define blk_trace_note_message_enabled(q)		(false)
-2056a782f8e7e6 Jens Axboe               2006-03-23  92  #endif /* CONFIG_BLK_DEV_IO_TRACE */
-d0deef5b14af7d Shawn Du                 2009-04-14  93  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Bart.
