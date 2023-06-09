@@ -2,111 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 484ADC7EE29
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jun 2023 21:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 799B9C7EE25
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jun 2023 21:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229586AbjFIVJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jun 2023 17:09:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51866 "EHLO
+        id S232406AbjFIVwz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jun 2023 17:52:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbjFIVJW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 17:09:22 -0400
-X-Greylist: delayed 601 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 09 Jun 2023 14:09:21 PDT
-Received: from amazone.undermydesk.org (amazone.undermydesk.org [213.211.198.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 400971FDC
-        for <linux-scsi@vger.kernel.org>; Fri,  9 Jun 2023 14:09:21 -0700 (PDT)
-Received: from [192.168.178.141] (p4fc62d90.dip0.t-ipconnect.de [79.198.45.144])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        (Authenticated sender: frank)
-        by amazone.undermydesk.org (Postfix) with ESMTPSA id 23CE2E773CD;
-        Fri,  9 Jun 2023 22:53:11 +0200 (CEST)
-Message-ID: <a1bf6f05-9be3-3bd8-7878-abfa3ff5dbe8@undermydesk.org>
-Date:   Fri, 9 Jun 2023 22:54:14 +0200
+        with ESMTP id S229475AbjFIVwy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 17:52:54 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E4A22685;
+        Fri,  9 Jun 2023 14:52:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1686347573; x=1717883573;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=izJ4f9F65dVTOY3ec3XppLSc9XRNMCow5CmFkhoSG/Y=;
+  b=h9ywdeFY44JjAfgzrCLBAn5dlNf1tLfUPPyl7uVslvwI2QZC4SZ0bSUi
+   JrQ0FhErcVIROENrLOsLQslF6FhnJahusWqLJleiLHyCERhITzkLpNRes
+   SWoI3uMdPG9GmGat3+73+H7WfEOUeem+7O+DQdMguz5lv3fIdi2EtlUkT
+   m/bwlK1IKlP9tthPhw2vqmxzjKfaE66LynPhpQWrj71qYPpunu4jyM+hW
+   MI8liqrqhJ5ak5ortLmL1o6Z2DNcMvmS73fwmZM54jPQnL6hsDCLMZ3H0
+   HXIXi8Pcc2N5GJC7DBRlkMMeplACBH49nmqNN905lDXaNi4zZHvJtZOn4
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="444066207"
+X-IronPort-AV: E=Sophos;i="6.00,230,1681196400"; 
+   d="scan'208";a="444066207"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2023 14:52:52 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="957297138"
+X-IronPort-AV: E=Sophos;i="6.00,230,1681196400"; 
+   d="scan'208";a="957297138"
+Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 09 Jun 2023 14:52:49 -0700
+Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1q7k2K-0009RN-24;
+        Fri, 09 Jun 2023 21:52:48 +0000
+Date:   Sat, 10 Jun 2023 05:52:41 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de, axboe@kernel.dk,
+        dgilbert@interlog.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: Re: [PATCH v4 1/2] scsi: sg: fix blktrace debugfs entries leakage
+Message-ID: <202306100517.8BoUnWma-lkp@intel.com>
+References: <20230609083913.2254980-2-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.2
-Subject: Re: memcpy: detected field-spanning write (size 128) of single field
- "&r1_cmd->io_request->SGL" at
- drivers/scsi/megaraid/megaraid_sas_fusion.c:3326 (size 16)
-Content-Language: en-US
-To:     Holger Kiehl <Holger.Kiehl@dwd.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>
-References: <88de8faa-56c4-693d-2d3-67152ee72057@diagnostix.dwd.de>
-From:   Frank Reppin <frank@undermydesk.org>
-In-Reply-To: <88de8faa-56c4-693d-2d3-67152ee72057@diagnostix.dwd.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: amazone.undermydesk.org
-Authentication-Results: ORIGINATING;
-        auth=pass smtp.auth=frank smtp.mailfrom=frank@undermydesk.org
-X-Rspamd-Queue-Id: 23CE2E773CD
-X-Spamd-Result: default: False [-0.10 / 999999.00];
-         ARC_NA(0.00)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         MIME_GOOD(-0.10)[text/plain];
-         RCPT_COUNT_SEVEN(0.00)[9];
-         NEURAL_HAM(-0.00)[-0.960];
-         RCVD_COUNT_ZERO(0.00)[0];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         ASN(0.00)[asn:3320, ipnet:79.192.0.0/10, country:DE];
-         MID_RHS_MATCH_FROM(0.00)[]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230609083913.2254980-2-yukuai1@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear all,
+Hi Yu,
 
-at first - my apologies to bring this up again here.
+kernel test robot noticed the following build errors:
 
-But may I please ask/request to have this fix committed
-to longterm 6.1 too?
+[auto build test ERROR on axboe-block/for-next]
+[also build test ERROR on mkp-scsi/for-next linus/master v6.4-rc5 next-20230609]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Reason: Upcoming Debian Bookworm (currently RC4) comes with 6.1 but
-does not include this fix yet - as it is only present in 6.3. - and
-probably nobody noticed this one yet.
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/scsi-sg-fix-blktrace-debugfs-entries-leakage/20230609-164641
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+patch link:    https://lore.kernel.org/r/20230609083913.2254980-2-yukuai1%40huaweicloud.com
+patch subject: [PATCH v4 1/2] scsi: sg: fix blktrace debugfs entries leakage
+config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20230610/202306100517.8BoUnWma-lkp@intel.com/config)
+compiler: s390-linux-gcc (GCC) 12.3.0
+reproduce (this is a W=1 build):
+        mkdir -p ~/bin
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        git remote add axboe-block https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+        git fetch axboe-block for-next
+        git checkout axboe-block/for-next
+        b4 shazam https://lore.kernel.org/r/20230609083913.2254980-2-yukuai1@huaweicloud.com
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=s390 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash
 
-We do encounter this issue on brand new test machines (which should go
-live once Bookworm is released) and this is a real showstopper
-when it comes to show logs to QA audit people... ;)
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306100517.8BoUnWma-lkp@intel.com/
 
-Another reason: I see vanished /dev/disk/by-uuid/ entries when
-this issue hits us
+All errors (new ones prefixed by >>, old ones prefixed by <<):
 
-For example...
-
-cryptsetup -v -y luksFormat 
-/dev/disk/by-uuid/926943a2-8e40-445f-aad4-2ee96807cd32
--> this command should succeed - but returns with error because
-somehow this (some seconds earlier perfectly valid and existing)
-by-uuid entry vanished during the issue.
-Other entries pointing to the same virtual drive are not affected.
-(by-id,by-path,by-diskseq)
-
-Last but not least... is this really a warning only?!
-While I don't think that something on our brand new servers is broken
-(it affects all btw - same observation as Holger mentioned here earlier)
-it is really disturbing to see vanishing /dev/disk/by-uuid/ entries
-since they might be used somewhere else and their sudden disappearance
-might cause severe havoc for other daemons looking for them (server 
-monitoring comes to mind ... nagios... zabbix)
-
-Thankyou all!
-cheers
-Frank Reppin
-
+ERROR: modpost: "devm_ioremap_resource" [drivers/dma/qcom/hdma.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/dma/fsl-edma.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/dma/idma64.ko] undefined!
+ERROR: modpost: "iounmap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
+ERROR: modpost: "ioremap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/char/xillybus/xillybus_of.ko] undefined!
+ERROR: modpost: "devm_memremap" [drivers/misc/open-dice.ko] undefined!
+ERROR: modpost: "devm_memunmap" [drivers/misc/open-dice.ko] undefined!
+>> ERROR: modpost: "blk_trace_shutdown" [drivers/scsi/sg.ko] undefined!
+ERROR: modpost: "iounmap" [drivers/net/ethernet/8390/pcnet_cs.ko] undefined!
+WARNING: modpost: suppressed 14 unresolved symbol warnings because there were too many)
 
 -- 
-43rd Law of Computing:
-         Anything that can go wr
-fortune: Segmentation violation -- Core dumped
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
