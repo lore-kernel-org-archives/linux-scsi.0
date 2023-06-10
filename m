@@ -2,125 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 972D1C87FDC
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jun 2023 02:24:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D4AC7EE25
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jun 2023 03:00:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233602AbjFJCYa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jun 2023 22:24:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45362 "EHLO
+        id S233710AbjFJDAw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jun 2023 23:00:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232349AbjFJCY0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 22:24:26 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88B653ABA;
-        Fri,  9 Jun 2023 19:24:25 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QdMGF5R6xz4f3mHp;
-        Sat, 10 Jun 2023 10:24:21 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rHT3oNkRsFjLQ--.44376S6;
-        Sat, 10 Jun 2023 10:24:22 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     hch@lst.de, axboe@kernel.dk, dgilbert@interlog.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, yukuai3@huawei.com,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: [PATCH v5 2/3] scsi: sg: fix blktrace debugfs entries leakage
-Date:   Sat, 10 Jun 2023 10:20:02 +0800
-Message-Id: <20230610022003.2557284-3-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230610022003.2557284-1-yukuai1@huaweicloud.com>
-References: <20230610022003.2557284-1-yukuai1@huaweicloud.com>
+        with ESMTP id S233682AbjFJDAt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 23:00:49 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 438263C02;
+        Fri,  9 Jun 2023 20:00:30 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-4f122ff663eso2954557e87.2;
+        Fri, 09 Jun 2023 20:00:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686366028; x=1688958028;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FJq+2/RSaJ7fmkOcjKO3amG929XbfkZnl7QhpyxGlBk=;
+        b=Ym/6M4HGGdBtaElDK1B31w3o/7Z73YmWSrAu2i6jzVFCMwSarWiGTIrJH225I6J8s4
+         wgC2xYOZbIA2TOk0TPpxjhNGV4EWSsm4rjlRhZX6/Sjx2U3Ypr/ZssfhFUHNpHlheUgF
+         M7GS1oR/uEkdOXQkbb/tLBY6CnqQ5EzSx6LuxS2nOg5d4N2q9Oc7oYN/vZwKRxGcXCEX
+         HLLyGw4pms03SBZ9AquXz4xDgtRAZrEaHKKgmV9ws99mDct/2ZDMUaREgKLrqm00mk/6
+         VwXucoD3QNTvDweiRuCUw36WzkxnhbF07DVaeOyk+VBz0VmSfCcXbiBF79siBKdX0aWX
+         4QuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686366028; x=1688958028;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=FJq+2/RSaJ7fmkOcjKO3amG929XbfkZnl7QhpyxGlBk=;
+        b=Xuw1TiCLpFuxafSZgrvTeWqs/rlaRDYMC6xtiLP+Gn1FB8/fCivxKG7FmGSu1vyHeo
+         pD1lSVEbY2xVzembDmq9PsWlsY8k+XXVJejPeGdoTBNYraLv3fYRllplewqKRFfZwz5n
+         3MrqL0n3YR0F5EBm+PPvnb3dWf+4Woyhht992vEEvS0PfuuIdy6faUKJu31FTG70fJox
+         pus2LgOTAd28SnmAqq8IjJpM7kH4JZTmPebbDPYwi6l8V7pfVhbwk76rp6g8WBry/nUK
+         Ooy1EiGRLGweoN0UpUbwStel4GXbLlaGUjDiFjzs+CXVqj+SNhMdI0xcFPWLxgO7VZAs
+         pOug==
+X-Gm-Message-State: AC+VfDxbxTJcwItuiOJS+sruz3PtR7AFSmwTPwR0jUnB9d4EAtZ6FRdS
+        B5dP4CNrA/F2lC+OmjqMTqqaOTQc6tJRT/BEfg==
+X-Google-Smtp-Source: ACHHUZ5Vvb14RxL9ukTvB26Pk6G2V/s1h6McJEpnMG+Lb4tEsfZjaoVEBV1zBwT8Tj+qS/9hiAGrvpEIa+Pm0DftQM8=
+X-Received: by 2002:a19:505b:0:b0:4f6:14d1:596d with SMTP id
+ z27-20020a19505b000000b004f614d1596dmr1647182lfj.61.1686366027294; Fri, 09
+ Jun 2023 20:00:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rHT3oNkRsFjLQ--.44376S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kry3Zr4kJrWxuFyxtr4ruFg_yoW8ZFy5pF
-        W7Xa90krWUWr4UGw45Z34UZFySk3y0934rGFW7Kw1fWF4rJr90gFyktFyUX3W5ArZ5uFZ8
-        AFW3KF95GFnrJ3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
-        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
-        v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-        Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
-        0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
-        JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
-        AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbdOz7UUUUU=
-        =
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230610021553.1213-1-powen.kao@mediatek.com> <20230610021553.1213-3-powen.kao@mediatek.com>
+In-Reply-To: <20230610021553.1213-3-powen.kao@mediatek.com>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Sat, 10 Jun 2023 11:00:16 +0800
+Message-ID: <CAGaU9a8-2zzBshfoN4zaZbfBu_EKMEH7S4o32DDUk7GJ2nkh5g@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Remove dedicated hwq for dev command
+To:     Po-Wen Kao <powen.kao@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, eddie.huang@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Sat, Jun 10, 2023 at 10:17=E2=80=AFAM Po-Wen Kao <powen.kao@mediatek.com=
+> wrote:
+>
+> This patch depends on patch
+> "scsi: ufs: mcq: Fix the incorrect OCS value for the device command"
+> which take care of OCS value of dev commands under mcq mode.
+>
+> We are safe to share first hwq for dev commnad and IO request here.
+>
+> Tested-by: Po-Wen Kao <powen.kao@mediatek.com>
+> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
 
-sg_ioctl() support to enable blktrace, which will create debugfs entries
-"/sys/kernel/debug/block/sgx/", however, there is no guarantee that user
-will remove these entries through ioctl, and deleting sg device doesn't
-cleanup these blktrace entries.
-
-This problem can be fixed by cleanup blktrace while releasing
-request_queue, however, it's not a good idea to do this special handling
-in common layer just for sg device.
-
-Fix this problem by shutdown bltkrace in sg_device_destroy(), where the
-device is deleted and all the users close the device, also grab a
-scsi_device reference from sg_add_device() to prevent scsi_device to be
-freed before sg_device_destroy();
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/sg.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 037f8c98a6d3..0adfbd77437f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1496,6 +1496,10 @@ sg_add_device(struct device *cl_dev)
- 	int error;
- 	unsigned long iflags;
- 
-+	error = scsi_device_get(scsidp);
-+	if (error)
-+		return error;
-+
- 	error = -ENOMEM;
- 	cdev = cdev_alloc();
- 	if (!cdev) {
-@@ -1553,6 +1557,7 @@ sg_add_device(struct device *cl_dev)
- out:
- 	if (cdev)
- 		cdev_del(cdev);
-+	scsi_device_put(scsidp);
- 	return error;
- }
- 
-@@ -1560,6 +1565,7 @@ static void
- sg_device_destroy(struct kref *kref)
- {
- 	struct sg_device *sdp = container_of(kref, struct sg_device, d_ref);
-+	struct request_queue *q = sdp->device->request_queue;
- 	unsigned long flags;
- 
- 	/* CAUTION!  Note that the device can still be found via idr_find()
-@@ -1567,6 +1573,9 @@ sg_device_destroy(struct kref *kref)
- 	 * any other cleanup.
- 	 */
- 
-+	blk_trace_remove(q);
-+	scsi_device_put(sdp->device);
-+
- 	write_lock_irqsave(&sg_index_lock, flags);
- 	idr_remove(&sg_index_idr, sdp->index);
- 	write_unlock_irqrestore(&sg_index_lock, flags);
--- 
-2.39.2
-
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
