@@ -2,89 +2,91 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D4AC7EE25
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jun 2023 03:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E01C7EE45
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jun 2023 03:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233710AbjFJDAw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jun 2023 23:00:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54772 "EHLO
+        id S233958AbjFJDb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jun 2023 23:31:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233682AbjFJDAt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 23:00:49 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 438263C02;
-        Fri,  9 Jun 2023 20:00:30 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-4f122ff663eso2954557e87.2;
-        Fri, 09 Jun 2023 20:00:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686366028; x=1688958028;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FJq+2/RSaJ7fmkOcjKO3amG929XbfkZnl7QhpyxGlBk=;
-        b=Ym/6M4HGGdBtaElDK1B31w3o/7Z73YmWSrAu2i6jzVFCMwSarWiGTIrJH225I6J8s4
-         wgC2xYOZbIA2TOk0TPpxjhNGV4EWSsm4rjlRhZX6/Sjx2U3Ypr/ZssfhFUHNpHlheUgF
-         M7GS1oR/uEkdOXQkbb/tLBY6CnqQ5EzSx6LuxS2nOg5d4N2q9Oc7oYN/vZwKRxGcXCEX
-         HLLyGw4pms03SBZ9AquXz4xDgtRAZrEaHKKgmV9ws99mDct/2ZDMUaREgKLrqm00mk/6
-         VwXucoD3QNTvDweiRuCUw36WzkxnhbF07DVaeOyk+VBz0VmSfCcXbiBF79siBKdX0aWX
-         4QuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686366028; x=1688958028;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FJq+2/RSaJ7fmkOcjKO3amG929XbfkZnl7QhpyxGlBk=;
-        b=Xuw1TiCLpFuxafSZgrvTeWqs/rlaRDYMC6xtiLP+Gn1FB8/fCivxKG7FmGSu1vyHeo
-         pD1lSVEbY2xVzembDmq9PsWlsY8k+XXVJejPeGdoTBNYraLv3fYRllplewqKRFfZwz5n
-         3MrqL0n3YR0F5EBm+PPvnb3dWf+4Woyhht992vEEvS0PfuuIdy6faUKJu31FTG70fJox
-         pus2LgOTAd28SnmAqq8IjJpM7kH4JZTmPebbDPYwi6l8V7pfVhbwk76rp6g8WBry/nUK
-         Ooy1EiGRLGweoN0UpUbwStel4GXbLlaGUjDiFjzs+CXVqj+SNhMdI0xcFPWLxgO7VZAs
-         pOug==
-X-Gm-Message-State: AC+VfDxbxTJcwItuiOJS+sruz3PtR7AFSmwTPwR0jUnB9d4EAtZ6FRdS
-        B5dP4CNrA/F2lC+OmjqMTqqaOTQc6tJRT/BEfg==
-X-Google-Smtp-Source: ACHHUZ5Vvb14RxL9ukTvB26Pk6G2V/s1h6McJEpnMG+Lb4tEsfZjaoVEBV1zBwT8Tj+qS/9hiAGrvpEIa+Pm0DftQM8=
-X-Received: by 2002:a19:505b:0:b0:4f6:14d1:596d with SMTP id
- z27-20020a19505b000000b004f614d1596dmr1647182lfj.61.1686366027294; Fri, 09
- Jun 2023 20:00:27 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230610021553.1213-1-powen.kao@mediatek.com> <20230610021553.1213-3-powen.kao@mediatek.com>
-In-Reply-To: <20230610021553.1213-3-powen.kao@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Sat, 10 Jun 2023 11:00:16 +0800
-Message-ID: <CAGaU9a8-2zzBshfoN4zaZbfBu_EKMEH7S4o32DDUk7GJ2nkh5g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Remove dedicated hwq for dev command
-To:     Po-Wen Kao <powen.kao@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
+        with ESMTP id S229471AbjFJDby (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 23:31:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B2AE10EA;
+        Fri,  9 Jun 2023 20:31:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9FDFA63D18;
+        Sat, 10 Jun 2023 03:31:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48EA5C433D2;
+        Sat, 10 Jun 2023 03:31:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686367912;
+        bh=M2d5ZNsKDh43dcGKfm/+a42qhKgFtvwzkwCZa/pYhGY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Y+Y3dx2WbNFRh59OQWYi/ZB17i80nJePzherajKIkzcIWuPhUGWoyxkzBtv4uLstc
+         +qX1f8oMAR99wrkzvk+wlmCwX4xPHX+TV8eKMtbc1ZDbxt8tOYV7OHZGmBGbPuCwMv
+         eYYtuFy22/UrRTewPPiv4pRSoB+wyOiSlrCAzt15ojm8qRVstUufmRP6XzrRldL2hN
+         PgLJNT/g7+xaTbH2YfMcH7yyJMPCvbGbKJK8JxsdcxZa1UhD4kVEC+xIqpj3V639a/
+         0UwnbIGQuUue0HuZOAWj4oq1EuKoxULvdSBhQ/fV4Mvf/7Ds/eGpia7dmz1e4Vk4kl
+         EGteTnBzi7Oeg==
+Date:   Fri, 9 Jun 2023 20:31:49 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v7 2/3] scsi: ufs: ufs-qcom: Switch to the new ICE API
+Message-ID: <20230610033149.GD872@sol.localdomain>
+References: <20230408214041.533749-1-abel.vesa@linaro.org>
+ <20230408214041.533749-3-abel.vesa@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230408214041.533749-3-abel.vesa@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Jun 10, 2023 at 10:17=E2=80=AFAM Po-Wen Kao <powen.kao@mediatek.com=
-> wrote:
->
-> This patch depends on patch
-> "scsi: ufs: mcq: Fix the incorrect OCS value for the device command"
-> which take care of OCS value of dev commands under mcq mode.
->
-> We are safe to share first hwq for dev commnad and IO request here.
->
-> Tested-by: Po-Wen Kao <powen.kao@mediatek.com>
-> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+Hi Abel,
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+On Sun, Apr 09, 2023 at 12:40:40AM +0300, Abel Vesa wrote:
+> Now that there is a new dedicated ICE driver, drop the ufs-qcom-ice and
+> use the new ICE api provided by the Qualcomm soc driver ice. The platforms
+> that already have ICE support will use the API as library since there will
+> not be a devicetree node, but instead they have reg range. In this case,
+> the of_qcom_ice_get will return an ICE instance created for the consumer's
+> device. But if there are platforms that do not have ice reg in the
+> consumer devicetree node and instead provide a dedicated ICE devicetree
+> node, the of_qcom_ice_get will look up the device based on qcom,ice
+> property and will get the ICE instance registered by the probe function
+> of the ice driver.
+> 
+> The ICE clock is now handle by the new driver. This is done by enabling
+> it on the creation of the ICE instance and then enabling/disabling it on
+> UFS runtime resume/suspend.
+> 
+> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+
+Are you planning to resend this now that its prerequisites are upstream?
+
+Thanks!
+
+- Eric
