@@ -2,114 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 799B9C7EE25
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jun 2023 21:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE3BC7EE2E
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jun 2023 02:16:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232406AbjFIVwz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jun 2023 17:52:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36914 "EHLO
+        id S232966AbjFJCQX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jun 2023 22:16:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbjFIVwy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 17:52:54 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E4A22685;
-        Fri,  9 Jun 2023 14:52:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686347573; x=1717883573;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=izJ4f9F65dVTOY3ec3XppLSc9XRNMCow5CmFkhoSG/Y=;
-  b=h9ywdeFY44JjAfgzrCLBAn5dlNf1tLfUPPyl7uVslvwI2QZC4SZ0bSUi
-   JrQ0FhErcVIROENrLOsLQslF6FhnJahusWqLJleiLHyCERhITzkLpNRes
-   SWoI3uMdPG9GmGat3+73+H7WfEOUeem+7O+DQdMguz5lv3fIdi2EtlUkT
-   m/bwlK1IKlP9tthPhw2vqmxzjKfaE66LynPhpQWrj71qYPpunu4jyM+hW
-   MI8liqrqhJ5ak5ortLmL1o6Z2DNcMvmS73fwmZM54jPQnL6hsDCLMZ3H0
-   HXIXi8Pcc2N5GJC7DBRlkMMeplACBH49nmqNN905lDXaNi4zZHvJtZOn4
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="444066207"
-X-IronPort-AV: E=Sophos;i="6.00,230,1681196400"; 
-   d="scan'208";a="444066207"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2023 14:52:52 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="957297138"
-X-IronPort-AV: E=Sophos;i="6.00,230,1681196400"; 
-   d="scan'208";a="957297138"
-Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 09 Jun 2023 14:52:49 -0700
-Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q7k2K-0009RN-24;
-        Fri, 09 Jun 2023 21:52:48 +0000
-Date:   Sat, 10 Jun 2023 05:52:41 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de, axboe@kernel.dk,
-        dgilbert@interlog.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: Re: [PATCH v4 1/2] scsi: sg: fix blktrace debugfs entries leakage
-Message-ID: <202306100517.8BoUnWma-lkp@intel.com>
-References: <20230609083913.2254980-2-yukuai1@huaweicloud.com>
+        with ESMTP id S229497AbjFJCQW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2023 22:16:22 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA2153AB1;
+        Fri,  9 Jun 2023 19:16:16 -0700 (PDT)
+X-UUID: c44acd5c073411eeb20a276fd37b9834-20230610
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=lJdzP3e/EJ/8akimnAn3jpQf6Yqkt7vrJi2eCWPGmic=;
+        b=lU7FAtuuuZ2sF25ycR/orqecaotiNtk4NhyUU6GbDsv63p8T6a+2eIMwizLsv5otWatRz+ucAlqJ159v+fZ9FUN+eDEtMfV9eKhjNLHErUjQYYuwOgCEgIE4hQV6nabrqnqpPIASaS3E3ymkPdooh769CjcaIIopWdl1eNvbdH8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.26,REQID:48348667-3c65-4f4c-8a25-3362baf08a12,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:90
+X-CID-INFO: VERSION:1.1.26,REQID:48348667-3c65-4f4c-8a25-3362baf08a12,IP:0,URL
+        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
+        N:quarantine,TS:90
+X-CID-META: VersionHash:cb9a4e1,CLOUDID:9f89f93d-de1e-4348-bc35-c96f92f1dcbb,B
+        ulkID:230610101613PUVBU848,BulkQuantity:0,Recheck:0,SF:19|48|38|29|28|17,T
+        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+        ,OSI:0,OSA:0,AV:0,LES:1,SPR:NO
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SDM,TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,
+        TF_CID_SPAM_SNR
+X-UUID: c44acd5c073411eeb20a276fd37b9834-20230610
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+        (envelope-from <powen.kao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 464073811; Sat, 10 Jun 2023 10:16:10 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Sat, 10 Jun 2023 10:16:09 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Sat, 10 Jun 2023 10:16:09 +0800
+From:   Po-Wen Kao <powen.kao@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
+        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
+        <alice.chao@mediatek.com>, <naomi.chu@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <cc.chou@mediatek.com>,
+        <eddie.huang@mediatek.com>
+Subject: [PATCH v2 0/2] ufs: mcq: Share first hwq for dev comamnd and IO request
+Date:   Sat, 10 Jun 2023 10:15:50 +0800
+Message-ID: <20230610021553.1213-1-powen.kao@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230609083913.2254980-2-yukuai1@huaweicloud.com>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Yu,
+v1 -> v2:
+- Remove accidentally added ufshcd_add_command_trace() call in
+  [PATCH v1 1/2]
+- Add Test-by tag for both patch and refactor commit message
 
-kernel test robot noticed the following build errors:
+Po-Wen Kao (1):
+  scsi: ufs: core: Remove dedicated hwq for dev command
 
-[auto build test ERROR on axboe-block/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.4-rc5 next-20230609]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Stanley Chu (1):
+  scsi: ufs: mcq: Fix the incorrect OCS value for the device command
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/scsi-sg-fix-blktrace-debugfs-entries-leakage/20230609-164641
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-patch link:    https://lore.kernel.org/r/20230609083913.2254980-2-yukuai1%40huaweicloud.com
-patch subject: [PATCH v4 1/2] scsi: sg: fix blktrace debugfs entries leakage
-config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20230610/202306100517.8BoUnWma-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 12.3.0
-reproduce (this is a W=1 build):
-        mkdir -p ~/bin
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        git remote add axboe-block https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-        git fetch axboe-block for-next
-        git checkout axboe-block/for-next
-        b4 shazam https://lore.kernel.org/r/20230609083913.2254980-2-yukuai1@huaweicloud.com
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=s390 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash
+ drivers/ufs/core/ufs-mcq.c     | 14 ++++----------
+ drivers/ufs/core/ufshcd-priv.h |  1 -
+ drivers/ufs/core/ufshcd.c      | 14 +++++++++-----
+ include/ufs/ufshcd.h           |  1 -
+ 4 files changed, 13 insertions(+), 17 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306100517.8BoUnWma-lkp@intel.com/
+--
+2.18.0
 
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
-ERROR: modpost: "devm_ioremap_resource" [drivers/dma/qcom/hdma.ko] undefined!
-ERROR: modpost: "devm_platform_ioremap_resource" [drivers/dma/fsl-edma.ko] undefined!
-ERROR: modpost: "devm_platform_ioremap_resource" [drivers/dma/idma64.ko] undefined!
-ERROR: modpost: "iounmap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
-ERROR: modpost: "ioremap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
-ERROR: modpost: "devm_platform_ioremap_resource" [drivers/char/xillybus/xillybus_of.ko] undefined!
-ERROR: modpost: "devm_memremap" [drivers/misc/open-dice.ko] undefined!
-ERROR: modpost: "devm_memunmap" [drivers/misc/open-dice.ko] undefined!
->> ERROR: modpost: "blk_trace_shutdown" [drivers/scsi/sg.ko] undefined!
-ERROR: modpost: "iounmap" [drivers/net/ethernet/8390/pcnet_cs.ko] undefined!
-WARNING: modpost: suppressed 14 unresolved symbol warnings because there were too many)
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
