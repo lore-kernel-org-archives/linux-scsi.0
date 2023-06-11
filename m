@@ -2,43 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 153DCC8300C
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jun 2023 09:06:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 317E5C7EE45
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jun 2023 11:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231769AbjFKJG5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Jun 2023 05:06:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45642 "EHLO
+        id S233618AbjFKLby (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Jun 2023 07:31:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjFKJG4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 05:06:56 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AA81BD;
-        Sun, 11 Jun 2023 02:06:53 -0700 (PDT)
-Received: from mars.fo.jb.local ([188.174.4.245]) by mrelayeu.kundenserver.de
- (mreue012 [212.227.15.129]) with ESMTPSA (Nemesis) id
- 1MZSJa-1qcdQz3uqM-00WaA4; Sun, 11 Jun 2023 11:05:40 +0200
-Received: from localhost (unknown [127.0.0.1])
-        by mars.fo.jb.local (Postfix) with ESMTP id C763417F700;
-        Sun, 11 Jun 2023 09:05:34 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at jmbreuer.net
-Received: from mars.fo.jb.local ([127.0.0.1])
-        by localhost (mars.jmbreuer.net [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 8p5VEtgeCkTo; Sun, 11 Jun 2023 11:05:28 +0200 (CEST)
-Received: from sol.fo.jb.local (sol.fo.jb.local [192.168.23.1])
-        by mars.fo.jb.local (Postfix) with ESMTP id 209A117F413;
-        Sun, 11 Jun 2023 11:05:28 +0200 (CEST)
-Received: from [192.168.23.25] (mars.fo.jb.local [192.168.23.254])
-        by sol.fo.jb.local (Postfix) with ESMTPSA id D8535604E111;
-        Sun, 11 Jun 2023 11:05:27 +0200 (CEST)
-Message-ID: <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
-Date:   Sun, 11 Jun 2023 11:05:27 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: Fwd: Waking up from resume locks up on sr device
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
+        with ESMTP id S230233AbjFKLbx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 07:31:53 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 053E7BD;
+        Sun, 11 Jun 2023 04:31:52 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b3c0c476d1so3131785ad.1;
+        Sun, 11 Jun 2023 04:31:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686483111; x=1689075111;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ET+8jv1Sr4c8KNb9UT3DWTBXEn+DrM0MENG4Vij4uyQ=;
+        b=ByLAexixDGYoAAbP+TdnYMa5G8F/VvOmM2T7/k+wQ3cghFSNw4Kj2IASok17J7GtyC
+         pCfzHh4wSayC2NXfPUYE5UTGZGAvsxY0hoesHUUjSvY+EXJAg9ApMd/ncGMQ8Zpt2zo5
+         2dWmy69/WS7xsoZGYIbNEeHU1wTzK9gHgmOHmK5TVmSO//bspmX9a+Q4oiBHTTJIybS5
+         oLsqXrllscjmhjrL7peXQSqiWz/CugCFIORxjrW1urVFQzRXSdzR2nNPxSfGRevYccb6
+         jvg/uAW9JNITn/Y2P/ySuDZpDuzJQnuAIaagbCQMyiIaIeG1iJzNxF5hkMtCzUQG2zy5
+         Yiig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686483111; x=1689075111;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ET+8jv1Sr4c8KNb9UT3DWTBXEn+DrM0MENG4Vij4uyQ=;
+        b=F25x8/9q6RvQzI5mpZMUirrQIWMaerufuyOkn3jVNhaxqin9zviZvTYc/GXb5/vUwB
+         ozd067vNTRMo3tf+itxhcD18YzpdAVfUyLG9sQJQXG1ewPuuzctpCUjGuTixOFCiBmkY
+         vToCJM2Y/uH/iXAa2mXsqikqT3GxYR8xECv3K/CoSyDff89m5agd8o0BsDf0N1Ew9RHY
+         WYq2wWUR8iGsnWeLLfmgH1B9pc+VgNYFgfkZpVHz5htOfi0hYqDSnWEPVtKEEoAZzMRw
+         VsPtuM9z2lO4papvOtkbu+DExHuYSpPVkbRUzbA2XNnan7M1SIF2zJe9h3+FrF6kVS8V
+         RAuA==
+X-Gm-Message-State: AC+VfDwCtHyr3ZTu+nsOro4GEhvuZPy8iA5Iqg3jMhZii+hLsR7M+6Kn
+        MZ6GZQACepJKtYSX3nJipRg=
+X-Google-Smtp-Source: ACHHUZ7cRXXUiwx/VGfZs4Qirpj+wNLdNsY/9ynhNKhbPawe6sObhyNHGvcYnjCovYAKTibn3tXS+Q==
+X-Received: by 2002:a17:902:8642:b0:1b0:348:2498 with SMTP id y2-20020a170902864200b001b003482498mr3561999plt.2.1686483111258;
+        Sun, 11 Jun 2023 04:31:51 -0700 (PDT)
+Received: from debian.me ([103.124.138.155])
+        by smtp.gmail.com with ESMTPSA id jd4-20020a170903260400b001b3b83b7d4esm1417503plb.211.2023.06.11.04.31.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Jun 2023 04:31:50 -0700 (PDT)
+Received: by debian.me (Postfix, from userid 1000)
+        id 18522106A3A; Sun, 11 Jun 2023 18:31:34 +0700 (WIB)
+Date:   Sun, 11 Jun 2023 18:31:34 +0700
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+To:     Joe Breuer <linux-kernel@jmbreuer.net>,
+        Bart Van Assche <bvanassche@acm.org>,
         Pavel Machek <pavel@ucw.cz>,
         Damien Le Moal <dlemoal@kernel.org>
 Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -51,7 +66,6 @@ Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Phillip Potter <phil@philpotter.co.uk>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
         Linux Power Management <linux-pm@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Linux Hardening <linux-hardening@vger.kernel.org>,
@@ -63,100 +77,73 @@ Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Martin Kepplinger <martin.kepplinger@puri.sm>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: Re: Fwd: Waking up from resume locks up on sr device
+Message-ID: <ZIWwlptfVphjGz9u@debian.me>
 References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
  <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com>
  <ZIQ6bkau3j6qGef8@duo.ucw.cz>
  <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com>
  <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
-From:   Joe Breuer <linux-kernel@jmbreuer.net>
-Organization: Joachim Breuer EDV
-In-Reply-To: <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:GuseqWr4gMONF06rsnM6AiOEXCkR/Cv44Upar/c5EOonR0Jf6Hq
- w86W4ACYVsGhV48P0yuUxXkClARNSuVZc+BaegKZ2vTmY1I8oeztd7KC1cpSSOo8OXMWres
- +LDD4DisXFNhpAJrA/DEybPUVbje5HkqNGXx/kekJvWCzwnas/Irpi9fwbL2SUeSJfcIgKf
- gViTPsz32HjQZNWeKbhpg==
-UI-OutboundReport: notjunk:1;M01:P0:qcZsypbWK7s=;yakvpRY7qzxSMXRhppYJuzX0cLd
- DT7i1Jc9kBxkWkEMb20eplGhqWfn1pxPGwOVq/ygBAv7xqmTKjzb3dyEK6XbBRCJDUwJsIfE3
- pQW9vAstekoEZtPs9ys3guIZHaWQ2Ov02k1DfidPST6GbhYsZMdEe2CgZV5mbNCll7cvvbSLe
- qxA/+p3ZJ9LnRhr2+ven419CD6PZDYBDUaS8vr/KcFQF/Gd7ksig0RnaKVz8uTpVCJTG+GXIL
- U5CuF76mf0p3GbwCk9+JC57N5BWunyWsRx8jE6t0ZWvmgPMVXs2rq2ftmf5gZp19H+8LRXXpg
- xtIExACfDBAPMNCPVvy7bYKZhCZzj4OuuxVjMoKoIOp/hWGXQzd1nVxaSTZ++g59brCwBAR4T
- LQH5ruvgA94L+oao5AmLWwxNPa57YTo3bQceqKbiVeT9lFT9hWeYGRigc4iD7Yei4mzDYBgn8
- f1dhAhkuCiNDmQg0THzt+CElUikvBR9URlnVAcn7rn/3Te9ciirECiKFWE9Lp4khlHjzYTURp
- lZpkyFLHwtl6LBwXrfS7AoCSucbzXaNg3o2BcpdFP7W8sEvyCI/ltt1AOXWYcWU9cag6Ygefn
- 4tP6KqTod+sOZKsZBzRU886X/Bm+nd/Y2lx6PxZE2d6xzzoBtcnamBrch+7Mif/TTtDX8MJmz
- x6rsHNmeDUVr/y1dKlsq/JledutLsIWtgmrX7TsanQ==
+ <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="pJUn/uCZg2bV7nGQ"
+Content-Disposition: inline
+In-Reply-To: <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I'm the reporter of this issue.
 
-I just tried this patch against 6.3.4, and it completely fixes my 
-suspend/resume issue.
+--pJUn/uCZg2bV7nGQ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The optical drive stays usable after resume, even suspending/resuming 
-during playback of CDDA content works flawlessly and playback resumes 
-seamlessly after system resume.
+On Sun, Jun 11, 2023 at 11:05:27AM +0200, Joe Breuer wrote:
+> I'm the reporter of this issue.
+>=20
+> I just tried this patch against 6.3.4, and it completely fixes my
+> suspend/resume issue.
+>=20
+> The optical drive stays usable after resume, even suspending/resuming dur=
+ing
+> playback of CDDA content works flawlessly and playback resumes seamlessly
+> after system resume.
+>=20
+> So, from my perspective: Good one!
+>=20
 
-So, from my perspective: Good one!
+Thanks for trying the fix and telling the result. But tl;dr:
 
+> A: http://en.wikipedia.org/wiki/Top_post
+> Q: Were do I find info about this thing called top-posting?
+> A: Because it messes up the order in which people normally read text.
+> Q: Why is top-posting such a bad thing?
+> A: Top-posting.
+> Q: What is the most annoying thing in e-mail?
+>=20
+> A: No.
+> Q: Should I include quotations after my reply?
+>=20
+> http://daringfireball.net/2007/07/on_top
 
-So long,
-    Joe
+(while I'm removing the quoted context below your reply after the fact).
 
+Thanks.
 
-On 10.06.23 17:03, Bart Van Assche wrote:
-> On 6/10/23 06:27, Bagas Sanjaya wrote:
->> On 6/10/23 15:55, Pavel Machek wrote:
->>>>> #regzbot introduced: v5.0..v6.4-rc5 
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=217530
->>>>> #regzbot title: Waking up from resume locks up on SCSI CD/DVD drive
->>>>>
->>>> The reporter had found the culprit (via bisection), so:
->>>>
->>>> #regzbot introduced: a19a93e4c6a98c
->>> Maybe cc the authors of that commit?
->>
->> Ah! I forgot to do that! Thanks anyway.
-> 
-> Hi Damien,
-> 
-> Why does the ATA code call scsi_rescan_device() before system resume has
-> finished? Would ATA devices still work with the patch below applied?
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 6a959c993dd8..be3971b7fd27 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1629,6 +1629,20 @@ void scsi_rescan_device(struct device *dev)
->   {
->       struct scsi_device *sdev = to_scsi_device(dev);
-> 
-> +#ifdef CONFIG_PM_SLEEP
-> +    /*
-> +     * The ATA subsystem may call scsi_rescan_device() before resuming has
-> +     * finished. If this happens, prevent a deadlock on the device_lock()
-> +     * call by skipping rescanning.
-> +     */
-> +    if (dev->power.is_suspended)
-> +        return;
-> +#endif
-> +
-> +    /*
-> +     * Serialize scsi_driver.rescan() calls and 
-> scsi_driver.gendrv.remove()
-> +     * calls.
-> +     */
->       device_lock(dev);
-> 
->       scsi_attach_vpd(sdev);
-> 
+--=20
+An old man doll... just what I always wanted! - Clara
 
+--pJUn/uCZg2bV7nGQ
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZIWwkAAKCRD2uYlJVVFO
+o0dcAQDBLvOwhF7MNiLJ3qtN+3ezvWqHj9xZ1JeN01prxbawGgD+NSKtGG1O0leF
+rjwIYm0dINVegT1HRoIZQ0flawMzpAg=
+=j2UP
+-----END PGP SIGNATURE-----
+
+--pJUn/uCZg2bV7nGQ--
