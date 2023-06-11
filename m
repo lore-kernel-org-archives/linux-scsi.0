@@ -2,60 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4288DC77B7A
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jun 2023 14:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A151C77B7A
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jun 2023 15:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229946AbjFKOt4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Jun 2023 10:49:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45378 "EHLO
+        id S230084AbjFKPTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Jun 2023 11:19:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjFKOtz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 10:49:55 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 795E3D2;
-        Sun, 11 Jun 2023 07:49:52 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-4f644dffd71so4076023e87.1;
-        Sun, 11 Jun 2023 07:49:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686494991; x=1689086991;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1906mKgeCYanoMO1G8TOrxbKSD0ibOzetQNq9L6r6Mg=;
-        b=THZjIIera9alBZPdSKz/hSJwZzuNrSUzFM08KE6sb5UWzK32dHSUdARGQNxnBKPLSb
-         jhme7FIiVGVc7Elz0lB6eUtWTWGcixMlZHrNTTki1M4stqteLc7F8VQJlZCTP8fYQ87Y
-         NzXHgZQHB3s+Fed76QMwjsKv2k2Mg65c1mQoGw9HioM4dU0Iqp4DlcsTk+qL3gzaMiM2
-         DF13PNLcm3wgG1YGj2ROCG5uE1rBhkxwMvwVvQNE7VAOmTt3pOkHpn0QbVMA1yzNX/l9
-         8dF92sD0fLWmG5qkXJsE8IXOhMYOo07xDpN8atuCxhCFMNowcAlq6OnJib+jFKxCKU3e
-         xKoQ==
+        with ESMTP id S229497AbjFKPTJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 11:19:09 -0400
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB0BA1B7;
+        Sun, 11 Jun 2023 08:19:08 -0700 (PDT)
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-64d57cd373fso2338473b3a.1;
+        Sun, 11 Jun 2023 08:19:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686494991; x=1689086991;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1906mKgeCYanoMO1G8TOrxbKSD0ibOzetQNq9L6r6Mg=;
-        b=hDcwClGx6HLZ27SDdnErGnn2lwe+G28niFKJTBbhWzJSH84kUO54KeNEH323zPoljY
-         Od+hNVQ/WqdU2DBIvyxSQ8SLDqIgmX+gxnjJ+5fpxH84W6TdUBmXdl3FUdoYBjnly+0H
-         Ul4HS4XUS2Rq9kzAxgux8YuH7eUc1tXQuKwNZni1TF5IPZ8/yAjPr2SuTK5sjHBhdXrp
-         Q69rymuMhaWIhNMkzXaREAqytlsWxUfoyeW2x9VyMfaX9GTUfAXmLDvHj74aqD/113hE
-         Wd/nVU11DsM/XBDA7B+RSEOv5+hMKbII5yWmetLffWl6m5+peGaqfbXWYHtpV+ThXdQH
-         jq0A==
-X-Gm-Message-State: AC+VfDyeUoPosdOk46to11VvNwI+xupMMaFodbfPpfiSto06ZshM/egs
-        Lojhoj/sQ2seo1EY6EYMtmF7YR57JqCtGGEkPQ==
-X-Google-Smtp-Source: ACHHUZ6DzhDPr6mRW/dRWjDarWeMJA0yjjZLskh65T9elHYEI8cOUdnqguMOAzN3gZ88cq0B0iLUIwdd99xtcXaNjQ4=
-X-Received: by 2002:a2e:8795:0:b0:2ac:819f:f73f with SMTP id
- n21-20020a2e8795000000b002ac819ff73fmr1554337lji.20.1686494989928; Sun, 11
- Jun 2023 07:49:49 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1686496748; x=1689088748;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IFExSe/q0LX9tbRTk5+f74hTyWE8aqZzoVPz3pVv7x8=;
+        b=IoyvU5Zepg9vuCrb5zBvVahiDLCumYMKuv4NKM9Ozk6QXshBxl8KkQk+9YYTqiJgC3
+         9KY/5s0rRHWcabWwkZkiSk0g6vtSLUp6QlgoKG9rtZdgCqyDG5vTFCwpaLKOvA6rIaWR
+         6zj4Gm4ZH6UDL3VPJm/HtK2CThKLuDXH80nwXnGyHmM6IPYb4kLa0ilIiZ748jS3pKDq
+         c0Au7RI1li9bb+wRzeh1xZ4E5h9N5UJ9onx2PxcfD2hRCEOeRiIZP/bqfZi8D7sT4uKL
+         82o7nNyOYPHJ5M5DbMy54GfNK9KtRZdCj2tLz16cm3BO9kwZ4+HUH8vSsFJ7OhDldAiU
+         b+xQ==
+X-Gm-Message-State: AC+VfDxSDzFKFWeoZ8B7iEOoCXg9ufvsmshumkIJ65qA4tkF2xb4oJsq
+        KEn7ZTA8eBk0JkMhdW14KxE=
+X-Google-Smtp-Source: ACHHUZ7KNYSZhwMlWKJmeQAkJJdQy5MnpaIoDREmYyWKxyurcmvq4aWYyvEgmfA7ztBRay/tydeflw==
+X-Received: by 2002:a17:90a:4fe6:b0:259:30e7:733c with SMTP id q93-20020a17090a4fe600b0025930e7733cmr8032978pjh.21.1686496748220;
+        Sun, 11 Jun 2023 08:19:08 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id h13-20020a65518d000000b0053f5ff753e2sm5452666pgq.23.2023.06.11.08.19.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 11 Jun 2023 08:19:07 -0700 (PDT)
+Message-ID: <523bee5c-605f-ad6a-951a-2b9701362961@acm.org>
+Date:   Sun, 11 Jun 2023 08:19:05 -0700
 MIME-Version: 1.0
-References: <20230610021553.1213-1-powen.kao@mediatek.com> <20230610021553.1213-2-powen.kao@mediatek.com>
- <0367b612-b6a5-8fb1-9cee-28de04b7ce81@acm.org>
-In-Reply-To: <0367b612-b6a5-8fb1-9cee-28de04b7ce81@acm.org>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Sun, 11 Jun 2023 22:49:37 +0800
-Message-ID: <CAGaU9a_D_KUstcQkPXsxepCdcvn3Knv-mzBh_kJDoYHwP-ndVQ@mail.gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
 Subject: Re: [PATCH v2 1/2] scsi: ufs: mcq: Fix the incorrect OCS value for
  the device command
-To:     Bart Van Assche <bvanassche@acm.org>
+Content-Language: en-US
+To:     Stanley Chu <chu.stanley@gmail.com>
 Cc:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org,
@@ -70,59 +60,36 @@ Cc:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
         stanley.chu@mediatek.com, alice.chao@mediatek.com,
         naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
         cc.chou@mediatek.com, eddie.huang@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <20230610021553.1213-1-powen.kao@mediatek.com>
+ <20230610021553.1213-2-powen.kao@mediatek.com>
+ <0367b612-b6a5-8fb1-9cee-28de04b7ce81@acm.org>
+ <CAGaU9a_D_KUstcQkPXsxepCdcvn3Knv-mzBh_kJDoYHwP-ndVQ@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAGaU9a_D_KUstcQkPXsxepCdcvn3Knv-mzBh_kJDoYHwP-ndVQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+On 6/11/23 07:49, Stanley Chu wrote:
+> This patch removes the 'cqe' member from the struct ufs_dev_cmd, as
+> shown in the code section below. Please let us know if anything else
+> has been missed. Very appreciated.
+> 
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 9b2d1859f885..602615e6d1bf 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -225,7 +225,6 @@ struct ufs_dev_cmd {
+>          struct mutex lock;
+>          struct completion *complete;
+>          struct ufs_query query;
+> -       struct cq_entry *cqe;
+>   };
 
-On Sun, Jun 11, 2023 at 10:04=E2=80=AFPM Bart Van Assche <bvanassche@acm.or=
-g> wrote:
->
-> On 6/9/23 19:15, Po-Wen Kao wrote:
-> > From: Stanley Chu <stanley.chu@mediatek.com>
-> >
-> > In MCQ mode, when a device command uses a hardware queue shared
-> > with other commands, a race condition may occur in the following scenar=
-io:
-> >
-> > 1. A device command is completed in CQx with CQE entry "e".
-> > 2. The interrupt handler copies the "cqe" pointer to "hba->dev_cmd.cqe"
-> >     and completes "hba->dev_cmd.complete".
-> > 3. The "ufshcd_wait_for_dev_cmd()" function is awakened and retrieves
-> >     the OCS value from "hba->dev_cmd.cqe".
-> >
-> > However, there is a possibility that the CQE entry "e" will be overwrit=
-ten
-> > by newly completed commands in CQx, resulting in an incorrect OCS value
-> > being received by "ufshcd_wait_for_dev_cmd()".
-> >
-> > To avoid this race condition, the OCS value should be immediately copie=
-d
-> > to the struct "lrb" of the device command. Then "ufshcd_wait_for_dev_cm=
-d()"
-> > can retrieve the OCS value from the struct "lrb".
->
-> Since with this patch applied ufs_dev_cmd.cqe is always NULL, please
-> remove the 'cqe' member from struct ufs_dev_cmd.
+I misread the patch. Since the patch looks fine to me after having taken 
+a second look:
 
-This patch removes the 'cqe' member from the struct ufs_dev_cmd, as
-shown in the code section below. Please let us know if anything else
-has been missed. Very appreciated.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9b2d1859f885..602615e6d1bf 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -225,7 +225,6 @@ struct ufs_dev_cmd {
-        struct mutex lock;
-        struct completion *complete;
-        struct ufs_query query;
--       struct cq_entry *cqe;
- };
-
-Thanks,
-
-Stanley
