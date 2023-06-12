@@ -2,115 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A136FC7EE2E
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 10:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B980C7EE23
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 11:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236150AbjFLKy0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jun 2023 06:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56938 "EHLO
+        id S232666AbjFLLhT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jun 2023 07:37:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236008AbjFLKyM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2023 06:54:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FFD811D8C;
-        Mon, 12 Jun 2023 03:39:38 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S232651AbjFLLgj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2023 07:36:39 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0153C1708;
+        Mon, 12 Jun 2023 04:15:24 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EE62F612A1;
-        Mon, 12 Jun 2023 10:39:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA44BC4339B;
-        Mon, 12 Jun 2023 10:39:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1686566377;
-        bh=ePm379yY4XF2I6pU3RaBrQaVCGybMBc2EXUpeiAv+4k=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ub2eTSCgAMlvA5ggYJWNEnS1csnNMbfsyQGbWFl/PETUMU1239EcjIJixl83jSDX1
-         5tCXmnu9DfFWUur5ETdaavjatanX/hSCQXCg57jVBAlCYk2AhiLyan3NSb+cijwSS7
-         F02cxniIFsyoXqhS1Tld01KC9itc3Qy+oiPRfs50=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     stable@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        patches@lists.linux.dev, Holger Kiehl <Holger.Kiehl@dwd.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        Kees Cook <keescook@chromium.org>
-Subject: [PATCH 6.1 001/132] scsi: megaraid_sas: Add flexible array member for SGLs
-Date:   Mon, 12 Jun 2023 12:25:35 +0200
-Message-ID: <20230612101710.358894732@linuxfoundation.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230612101710.279705932@linuxfoundation.org>
-References: <20230612101710.279705932@linuxfoundation.org>
-User-Agent: quilt/0.67
-X-stable: review
-X-Patchwork-Hint: ignore
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B633A1FED7;
+        Mon, 12 Jun 2023 11:15:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1686568523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uV8gfOHNoty7LIUzvG3FLkKQz6YIw9I8wGaNW/Cgnfk=;
+        b=OjaFRAHXVApnkEoO+JYsE9j80+6hp3FBWMCcwPOdIXv0aunL35c1c/13RZNLKilZacUEK6
+        gxT3sZseyPYCjK6a6hevn8FLpzULDxJ963v3inja8c/zqoDuNL0bLnyem8LJ1yDV89KDgB
+        VbBHLQZc0bUitn4hnmrtOn+gZzK596Q=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 56C8F138EC;
+        Mon, 12 Jun 2023 11:15:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id zt5mE0v+hmSJQQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 12 Jun 2023 11:15:23 +0000
+Message-ID: <2bfdb9a65668109c204f7d4677bd717f049b1e83.camel@suse.com>
+Subject: Re: [PATCH v3 4/8] scsi: call scsi_stop_queue() without state_mutex
+ held
+From:   Martin Wilck <mwilck@suse.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Date:   Mon, 12 Jun 2023 13:15:22 +0200
+In-Reply-To: <dcef340d-0b43-42d3-0e1c-a96cd90283d3@oracle.com>
+References: <20230607182249.22623-1-mwilck@suse.com>
+         <20230607182249.22623-5-mwilck@suse.com>
+         <3b8b13bf-a458-827a-b916-07d7eee8ae00@acm.org>
+         <50cb1a5bd501721d7c816b1ca8bf560daa8e3cc9.camel@suse.com>
+         <ff669f59e3c42e5dec4920d705e2b8748ad600d5.camel@suse.com>
+         <20230608054444.GB11554@lst.de>
+         <5be7eebb-f734-1a0a-9f97-1b3534bc26ac@acm.org>
+         <dcef340d-0b43-42d3-0e1c-a96cd90283d3@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
+On Thu, 2023-06-08 at 13:54 -0500, Mike Christie wrote:
+> On 6/8/23 9:12 AM, Bart Van Assche wrote:
+> > On 6/7/23 22:44, Christoph Hellwig wrote:
+> > > > > Thanks. This wasn't obvious to me from the current code. I'll
+> > > > > add a
+> > > > > comment in the next version.
+> > > >=20
+> > > > The crucial question is now, is it sufficient to call
+> > > > blk_mq_quiesce_queue_nowait() under the mutex, or does the call
+> > > > to
+> > > > blk_mq_wait_quiesce_done() have to be under the mutex, too?
+> > > > The latter would actually kill off our attempt to fix the delay
+> > > > in fc_remote_port_delete() that was caused by repeated
+> > > > synchronize_rcu() calls.
+> > > >=20
+> > > > But if I understand you correctly, moving the wait out of the
+> > > > mutex
+> > > > should be ok. I'll update the series accordingly.
+> > >=20
+> > > I can't think of a reason we'd want to lock over the wait, but
+> > > Bart
+> > > knows this code way better than I do.
+> >=20
+> > Unless deep changes would be made in the block layer
+> > blk_mq_quiesce_queue_nowait() and/or blk_mq_wait_quiesce_done()
+> > functions, moving blk_mq_wait_quiesce_done() outside the critical
+> > section seems fine to me.
+>=20
+> If it helps, I tested with iscsi and the mutex changes discussed
+> above
+> and it worked ok for me.
 
-commit a9a3629592ab7442a2e9d40281420b51c453ea9b upstream.
+I guess the race that Bart was hinting at is hard to trigger.
 
-struct MPI2_RAID_SCSI_IO_REQUEST ends with a single SGL, but expects to
-copy multiple. Add a flexible array member so the compiler can reason about
-the size of the memcpy(). This will avoid the run-time false positive
-warning:
+I would like to remark that the fact that we need to hold the SCSI
+state_mutex while calling blk_mq_quiesce_queue_nowait() looks like a
+layering issue to me. Not sure if, and how, this could be avoided,
+though.
 
-  memcpy: detected field-spanning write (size 128) of single field "&r1_cmd->io_request->SGL" at drivers/scsi/megaraid/megaraid_sas_fusion.c:3326 (size 16)
-
-This change results in no binary output differences.
-
-Reported-by: Holger Kiehl <Holger.Kiehl@dwd.de>
-Link: https://lore.kernel.org/all/88de8faa-56c4-693d-2d3-67152ee72057@diagnostix.dwd.de/
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: megaraidlinux.pdl@broadcom.com
-Cc: linux-scsi@vger.kernel.org
-Link: https://lore.kernel.org/r/20230106053153.never.999-kees@kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Tested-by: Holger Kiehl <Holger.Kiehl@dwd.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.h |    5 ++++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3323,7 +3323,7 @@ static void megasas_prepare_secondRaid1_
- 	/* copy the io request frame as well as 8 SGEs data for r1 command*/
- 	memcpy(r1_cmd->io_request, cmd->io_request,
- 	       (sizeof(struct MPI2_RAID_SCSI_IO_REQUEST)));
--	memcpy(&r1_cmd->io_request->SGL, &cmd->io_request->SGL,
-+	memcpy(r1_cmd->io_request->SGLs, cmd->io_request->SGLs,
- 	       (fusion->max_sge_in_main_msg * sizeof(union MPI2_SGE_IO_UNION)));
- 	/*sense buffer is different for r1 command*/
- 	r1_cmd->io_request->SenseBufferLowAddress =
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -526,7 +526,10 @@ struct MPI2_RAID_SCSI_IO_REQUEST {
- 	__le32			Control;                        /* 0x3C */
- 	union MPI2_SCSI_IO_CDB_UNION  CDB;			/* 0x40 */
- 	union RAID_CONTEXT_UNION RaidContext;  /* 0x60 */
--	union MPI2_SGE_IO_UNION       SGL;			/* 0x80 */
-+	union {
-+		union MPI2_SGE_IO_UNION       SGL;		/* 0x80 */
-+		DECLARE_FLEX_ARRAY(union MPI2_SGE_IO_UNION, SGLs);
-+	};
- };
- 
- /*
-
+Regards
+Martin
 
