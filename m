@@ -2,94 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A151C77B7A
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jun 2023 15:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0854DC7EE37
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 02:20:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbjFKPTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Jun 2023 11:19:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50508 "EHLO
+        id S233320AbjFLCUN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Jun 2023 22:20:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbjFKPTJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 11:19:09 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB0BA1B7;
-        Sun, 11 Jun 2023 08:19:08 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-64d57cd373fso2338473b3a.1;
-        Sun, 11 Jun 2023 08:19:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686496748; x=1689088748;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IFExSe/q0LX9tbRTk5+f74hTyWE8aqZzoVPz3pVv7x8=;
-        b=IoyvU5Zepg9vuCrb5zBvVahiDLCumYMKuv4NKM9Ozk6QXshBxl8KkQk+9YYTqiJgC3
-         9KY/5s0rRHWcabWwkZkiSk0g6vtSLUp6QlgoKG9rtZdgCqyDG5vTFCwpaLKOvA6rIaWR
-         6zj4Gm4ZH6UDL3VPJm/HtK2CThKLuDXH80nwXnGyHmM6IPYb4kLa0ilIiZ748jS3pKDq
-         c0Au7RI1li9bb+wRzeh1xZ4E5h9N5UJ9onx2PxcfD2hRCEOeRiIZP/bqfZi8D7sT4uKL
-         82o7nNyOYPHJ5M5DbMy54GfNK9KtRZdCj2tLz16cm3BO9kwZ4+HUH8vSsFJ7OhDldAiU
-         b+xQ==
-X-Gm-Message-State: AC+VfDxSDzFKFWeoZ8B7iEOoCXg9ufvsmshumkIJ65qA4tkF2xb4oJsq
-        KEn7ZTA8eBk0JkMhdW14KxE=
-X-Google-Smtp-Source: ACHHUZ7KNYSZhwMlWKJmeQAkJJdQy5MnpaIoDREmYyWKxyurcmvq4aWYyvEgmfA7ztBRay/tydeflw==
-X-Received: by 2002:a17:90a:4fe6:b0:259:30e7:733c with SMTP id q93-20020a17090a4fe600b0025930e7733cmr8032978pjh.21.1686496748220;
-        Sun, 11 Jun 2023 08:19:08 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id h13-20020a65518d000000b0053f5ff753e2sm5452666pgq.23.2023.06.11.08.19.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 11 Jun 2023 08:19:07 -0700 (PDT)
-Message-ID: <523bee5c-605f-ad6a-951a-2b9701362961@acm.org>
-Date:   Sun, 11 Jun 2023 08:19:05 -0700
+        with ESMTP id S229477AbjFLCUL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 22:20:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3EB81BD;
+        Sun, 11 Jun 2023 19:20:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 37D4960BC5;
+        Mon, 12 Jun 2023 02:20:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4FA3C433D2;
+        Mon, 12 Jun 2023 02:20:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686536409;
+        bh=Hzy/vgJNkQScV+ALV8v/Qr/31Jnpc4qyg8qMUXzPsBE=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=VGFt/nHRTelGRYQgEdPhZoM8pLwRvTnPfmZkfUWZCxydP7pOBbSIqdCDhKpgYHDnz
+         51SOj+Mw4kiMSjL+iKP/AlBNSwqpacX8azijmebbkOhcjV4MCRb6iRPKc+/pxGLNX/
+         /QbliMuEA4as1uRijJo8w2pEGgXOsFeppPvOoQCVKnNrIvKirT0TRJ6aLPe6EjSQ/l
+         7b4tzXLKm4t9Xgdc4qDMnmoMB10e7Vv5WVWJ8dMUCjklh/sEcnOk6Tkw3cGXxfjkNe
+         Xw/MoArUFrXlwX4Z3sPs8H6V/AdAnySuuEORGGIZy8HhAbfdelXNCuCjZU1Rw43U2X
+         pIJJi2t/bq6qQ==
+Message-ID: <36d32720-569b-4172-0c8a-aef846541185@kernel.org>
+Date:   Mon, 12 Jun 2023 11:20:07 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v2 1/2] scsi: ufs: mcq: Fix the incorrect OCS value for
- the device command
+ Thunderbird/102.12.0
+Subject: Re: [PATCH RESEND] block: improve ioprio value validity checks
 Content-Language: en-US
-To:     Stanley Chu <chu.stanley@gmail.com>
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com
-References: <20230610021553.1213-1-powen.kao@mediatek.com>
- <20230610021553.1213-2-powen.kao@mediatek.com>
- <0367b612-b6a5-8fb1-9cee-28de04b7ce81@acm.org>
- <CAGaU9a_D_KUstcQkPXsxepCdcvn3Knv-mzBh_kJDoYHwP-ndVQ@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAGaU9a_D_KUstcQkPXsxepCdcvn3Knv-mzBh_kJDoYHwP-ndVQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230608095556.124001-1-dlemoal@kernel.org>
+ <CACRpkdbmxoUwcwHdw4bcgaDy633ZKLOZ3z-d1qjzBF42omC1CA@mail.gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CACRpkdbmxoUwcwHdw4bcgaDy633ZKLOZ3z-d1qjzBF42omC1CA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/11/23 07:49, Stanley Chu wrote:
-> This patch removes the 'cqe' member from the struct ufs_dev_cmd, as
-> shown in the code section below. Please let us know if anything else
-> has been missed. Very appreciated.
+On 6/9/23 16:46, Linus Walleij wrote:
+> On Thu, Jun 8, 2023 at 11:55 AM Damien Le Moal <dlemoal@kernel.org> wrote:
 > 
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 9b2d1859f885..602615e6d1bf 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -225,7 +225,6 @@ struct ufs_dev_cmd {
->          struct mutex lock;
->          struct completion *complete;
->          struct ufs_query query;
-> -       struct cq_entry *cqe;
->   };
+>> The introduction of the macro IOPRIO_PRIO_LEVEL() in commit
+>> eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
+>> results in an iopriority level to always be masked using the macro
+>> IOPRIO_LEVEL_MASK, and thus to the kernel always seeing an acceptable
+>> value for an I/O priority level when checked in ioprio_check_cap().
+>> Before this patch, this function would return an error for some (but not
+>> all) invalid values for a level valid range of [0..7].
+>>
+>> Restore and improve the detection of invalid priority levels by
+>> introducing the inline function ioprio_value() to check an ioprio class,
+>> level and hint value before combining these fields into a single value
+>> to be used with ioprio_set() or AIOs. If an invalid value for the class,
+>> level or hint of an ioprio is detected, ioprio_value() returns an ioprio
+>> using the class IOPRIO_CLASS_INVALID, indicating an invalid value and
+>> causing ioprio_check_cap() to return -EINVAL.
+>>
+>> Fixes: 6c913257226a ("scsi: block: Introduce ioprio hints")
+>> Fixes: eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> 
+> This makes it easier to get things right.
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-I misread the patch. Since the patch looks fine to me after having taken 
-a second look:
+Thanks Linus !
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Martin,
+
+can you queue this please ?
+
+> 
+> Yours,
+> Linus Walleij
+
+-- 
+Damien Le Moal
+Western Digital Research
 
