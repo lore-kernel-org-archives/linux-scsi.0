@@ -2,54 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E419C7EE2E
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 15:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47721C88CB2
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 15:49:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237540AbjFLPoL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jun 2023 11:44:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36986 "EHLO
+        id S236588AbjFLPtm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jun 2023 11:49:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235037AbjFLPoK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2023 11:44:10 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B519B10C7;
-        Mon, 12 Jun 2023 08:44:09 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id F102422724;
-        Mon, 12 Jun 2023 15:44:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1686584647; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2GdRycsSiOEQEiY7fq6URveL3vbsA2aSWAErAiK5l0M=;
-        b=zaZLjJvC5xEX5I/mZoOix4aVJWk7gEeFU8rxVko0vXQQt7ARSv0v4kFXw9+uxSuwPDKDOI
-        94xX1SAMcViqq3Ss+09RsowVEjvYs0c6p0wu8uF67ukYJC4lt+hQLP0+hBsRw8bu4/eJlg
-        J7O64R+51WNFdesTPhE9C7Xoq4KNjnI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1686584647;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2GdRycsSiOEQEiY7fq6URveL3vbsA2aSWAErAiK5l0M=;
-        b=/mQFuf8FbPYeCw34xJDN841sAWIh41SmP/MjlAV+Z212k2bc0dVh7ccg+3iJKiy9qX8Ewr
-        oz7FH/Wlrgn4+BAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id ACBAF138EC;
-        Mon, 12 Jun 2023 15:44:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id rHlXJ0c9h2QNQgAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 12 Jun 2023 15:44:07 +0000
-Message-ID: <1b2e7785-061e-dce3-8862-7eab656e18af@suse.de>
-Date:   Mon, 12 Jun 2023 17:44:06 +0200
+        with ESMTP id S232559AbjFLPtk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2023 11:49:40 -0400
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48B1D10C7;
+        Mon, 12 Jun 2023 08:49:40 -0700 (PDT)
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1b3a82c8887so19390585ad.2;
+        Mon, 12 Jun 2023 08:49:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686584980; x=1689176980;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TYfVhY3uC1rPtKUOcd4WiYqqlpaKjnLTB5rZELO6dUc=;
+        b=Ftek8DWxA5ssnm5r2/DLUxaWOrtSJJ3b5btJETyghxwJ0zfUcu03c1vU3TKEcYoNd2
+         OU15G+zQ8Cy0R8LroPfZDQxPJ1+y94qM37t39hrfKxSeFvpUShB9o18aiMIWYjOqlqJ/
+         M9ENOh9K2izm4dtszwvpb6mJkgONAKLFYSwTgqh35ZjIe1uE5kT5DQM4uR0XrO3NYlGS
+         v/OC+/KjPaz+Pa7SL1VuAnJb8gAvZnykp2vV0KFIxtIxBTk6QxGpgaPC5JusjgM64q1p
+         d8knbXdfZVtFQsRjIze8DaVM5m1mzg0xZvOiqwF2qu4cPdoesyOdeRkdYf1WjyaqPhM8
+         s4FQ==
+X-Gm-Message-State: AC+VfDwHdUhC5gXnilWPnAIaWG8PhMlI/XV8Mq8T0qlOVtxidN8e4UNS
+        0VU6K86MpX4zEJXX4hZAlwA=
+X-Google-Smtp-Source: ACHHUZ6gkZzTuMHWRnZjo1dy4XM87ORx/ZXp3Eo1PRS4R5ffbhINCKV/wqj4181O4HMMicc52RitQA==
+X-Received: by 2002:a17:902:f691:b0:1b0:2390:3674 with SMTP id l17-20020a170902f69100b001b023903674mr7355579plg.65.1686584979479;
+        Mon, 12 Jun 2023 08:49:39 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id u14-20020a170902a60e00b001b05e96d859sm8390716plq.135.2023.06.12.08.49.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Jun 2023 08:49:39 -0700 (PDT)
+Message-ID: <02068097-2e48-7662-3ac8-96542f64ab5d@acm.org>
+Date:   Mon, 12 Jun 2023 08:49:36 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
@@ -57,57 +46,28 @@ Subject: Re: [PATCH v4 6/6] scsi: replace scsi_target_block() by
  scsi_block_targets()
 Content-Language: en-US
 To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
 Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
         linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>,
         Karan Tilak Kumar <kartilak@cisco.com>,
         Sesidhar Baddela <sebaddel@cisco.com>
-References: <20230612145638.16999-1-mwilck@suse.com>
- <20230612145638.16999-7-mwilck@suse.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230612145638.16999-7-mwilck@suse.com>
+References: <20230612150309.18103-1-mwilck@suse.com>
+ <20230612150309.18103-7-mwilck@suse.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230612150309.18103-7-mwilck@suse.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/12/23 16:56, mwilck@suse.com wrote:
-> From: Martin Wilck <mwilck@suse.com>
-> 
-> All callers (fc_remote_port_delete(), __iscsi_block_session(),
-> __srp_start_tl_fail_timers(), srp_reconnect_rport(), snic_tgt_del()) pass
-> parent devices of scsi_target devices to scsi_target_block().
-> 
-> Rename the function to scsi_block_targets(), and simplify it by assuming
-> that it is always passed a parent device. Also, have callers pass the
-> Scsi_Host pointer to scsi_block_targets(), as every caller has this pointer
-> readily available.
-> 
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Suggested-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Martin Wilck <mwilck@suse.com>
-> Cc: Karan Tilak Kumar <kartilak@cisco.com>
-> Cc: Sesidhar Baddela <sebaddel@cisco.com>
-> ---
->   drivers/scsi/scsi_lib.c             | 25 +++++++++++++++----------
->   drivers/scsi/scsi_transport_fc.c    |  2 +-
->   drivers/scsi/scsi_transport_iscsi.c |  3 ++-
->   drivers/scsi/scsi_transport_srp.c   |  6 +++---
->   drivers/scsi/snic/snic_disc.c       |  2 +-
->   include/scsi/scsi_device.h          |  2 +-
->   6 files changed, 23 insertions(+), 17 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 6/12/23 08:03, mwilck@suse.com wrote:
+> + * Note:
+> + * @dev must not itself be a scsi_target device.
 
-Cheers,
+Please add a WARN_ON_ONCE() that checks this condition.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+Thanks,
 
+Bart.
