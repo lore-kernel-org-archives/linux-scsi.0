@@ -2,92 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0854DC7EE37
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 02:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 152F3C7EE37
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 03:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233320AbjFLCUN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Jun 2023 22:20:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60758 "EHLO
+        id S234579AbjFLDLS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Jun 2023 23:11:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229477AbjFLCUL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 22:20:11 -0400
+        with ESMTP id S234443AbjFLDKt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2023 23:10:49 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3EB81BD;
-        Sun, 11 Jun 2023 19:20:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 672E4170B;
+        Sun, 11 Jun 2023 20:09:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 37D4960BC5;
-        Mon, 12 Jun 2023 02:20:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4FA3C433D2;
-        Mon, 12 Jun 2023 02:20:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0003C60B67;
+        Mon, 12 Jun 2023 03:09:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3C3DC433D2;
+        Mon, 12 Jun 2023 03:09:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686536409;
-        bh=Hzy/vgJNkQScV+ALV8v/Qr/31Jnpc4qyg8qMUXzPsBE=;
+        s=k20201202; t=1686539373;
+        bh=m7heADEhyArv8WhRnVIeKrsbQux5pXrM8PZQfuvp/1I=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=VGFt/nHRTelGRYQgEdPhZoM8pLwRvTnPfmZkfUWZCxydP7pOBbSIqdCDhKpgYHDnz
-         51SOj+Mw4kiMSjL+iKP/AlBNSwqpacX8azijmebbkOhcjV4MCRb6iRPKc+/pxGLNX/
-         /QbliMuEA4as1uRijJo8w2pEGgXOsFeppPvOoQCVKnNrIvKirT0TRJ6aLPe6EjSQ/l
-         7b4tzXLKm4t9Xgdc4qDMnmoMB10e7Vv5WVWJ8dMUCjklh/sEcnOk6Tkw3cGXxfjkNe
-         Xw/MoArUFrXlwX4Z3sPs8H6V/AdAnySuuEORGGIZy8HhAbfdelXNCuCjZU1Rw43U2X
-         pIJJi2t/bq6qQ==
-Message-ID: <36d32720-569b-4172-0c8a-aef846541185@kernel.org>
-Date:   Mon, 12 Jun 2023 11:20:07 +0900
+        b=igo6QEWLIt9O3QrvGCvgaUhH0LpB2exG9vZLb1FpGB7+B3lpunb1oOGvciTN9PaXb
+         nU2vEka/mpnDgv2o6PM1h535AMc0fpeSc4Mn2rnJTuhxwfpV8z1bCqYUSyc8ZsgIf9
+         tlMQdzGIr6QmhXuVOg/7ZvvVPjEfCyHctG9gS2vODHAjBSP1/E5dm1QJj+eQD8/zKN
+         gJudIir1oDDNEZ+d4Q7vIIi3T9UgW4ByTCiOBW7SMbWJFQWlC41wkJWOdc57S5RzE1
+         SPY9HgWQAgvzoEa0KU7E2BYIaM9ZtfE5iIpO3ezmG4bDM/eQmaanP4wV7dQ04fsmv7
+         e1MWLKbLyjEYA==
+Message-ID: <4005a768-9e45-0707-509d-98ce0d2769bd@kernel.org>
+Date:   Mon, 12 Jun 2023 12:09:29 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
-Subject: Re: [PATCH RESEND] block: improve ioprio value validity checks
+Subject: Re: Fwd: Waking up from resume locks up on sr device
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <len.brown@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Tony Luck <tony.luck@intel.com>,
+        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+        Thorsten Leemhuis <linux@leemhuis.info>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Linux Power Management <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Hardening <linux-hardening@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
+ <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com>
+ <ZIQ6bkau3j6qGef8@duo.ucw.cz>
+ <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com>
+ <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
 Content-Language: en-US
-To:     Linus Walleij <linus.walleij@linaro.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230608095556.124001-1-dlemoal@kernel.org>
- <CACRpkdbmxoUwcwHdw4bcgaDy633ZKLOZ3z-d1qjzBF42omC1CA@mail.gmail.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <CACRpkdbmxoUwcwHdw4bcgaDy633ZKLOZ3z-d1qjzBF42omC1CA@mail.gmail.com>
+In-Reply-To: <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/9/23 16:46, Linus Walleij wrote:
-> On Thu, Jun 8, 2023 at 11:55 AM Damien Le Moal <dlemoal@kernel.org> wrote:
-> 
->> The introduction of the macro IOPRIO_PRIO_LEVEL() in commit
->> eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
->> results in an iopriority level to always be masked using the macro
->> IOPRIO_LEVEL_MASK, and thus to the kernel always seeing an acceptable
->> value for an I/O priority level when checked in ioprio_check_cap().
->> Before this patch, this function would return an error for some (but not
->> all) invalid values for a level valid range of [0..7].
+On 6/11/23 00:03, Bart Van Assche wrote:
+> On 6/10/23 06:27, Bagas Sanjaya wrote:
+>> On 6/10/23 15:55, Pavel Machek wrote:
+>>>>> #regzbot introduced: v5.0..v6.4-rc5 https://bugzilla.kernel.org/show_bug.cgi?id=217530
+>>>>> #regzbot title: Waking up from resume locks up on SCSI CD/DVD drive
+>>>>>
+>>>> The reporter had found the culprit (via bisection), so:
+>>>>
+>>>> #regzbot introduced: a19a93e4c6a98c
+>>> Maybe cc the authors of that commit?
 >>
->> Restore and improve the detection of invalid priority levels by
->> introducing the inline function ioprio_value() to check an ioprio class,
->> level and hint value before combining these fields into a single value
->> to be used with ioprio_set() or AIOs. If an invalid value for the class,
->> level or hint of an ioprio is detected, ioprio_value() returns an ioprio
->> using the class IOPRIO_CLASS_INVALID, indicating an invalid value and
->> causing ioprio_check_cap() to return -EINVAL.
->>
->> Fixes: 6c913257226a ("scsi: block: Introduce ioprio hints")
->> Fixes: eca2040972b4 ("scsi: block: ioprio: Clean up interface definition")
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> Ah! I forgot to do that! Thanks anyway.
 > 
-> This makes it easier to get things right.
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Hi Damien,
+> 
+> Why does the ATA code call scsi_rescan_device() before system resume has
+> finished? Would ATA devices still work with the patch below applied?
 
-Thanks Linus !
+I do not know the PM code well at all, need to dig into it. But your patch
+worries me as it seems it would prevent rescan of the device on a resume, which
+can be an issue if the device has changed.
 
-Martin,
+I am not yet 100% clear on the root cause for this, but I think it comes from
+the fact that ata_port_pm_resume() runs before the sci device resume is done, so
+with scsi_dev->power.is_suspended still true. And ata_port_pm_resume() calls
+ata_port_resume_async() which triggers EH (which will do reset + rescan)
+asynchronously. So it looks like we have scsi device resume and libata EH for
+rescan fighting each others for the scan mutex and device lock, leading to deadlock.
 
-can you queue this please ?
+Trying to recreate this issue now to confirm and debug further. But I suspect
+the solution to this may be best implemented in libata, not in scsi.
+This looks definitely related to this thread:
+
+https://lore.kernel.org/linux-scsi/7b553268-69d3-913a-f9de-28f8d45bdb1e@acm.org/
+
+Similaraly to your comment on that thread, having to look at
+dev->power.is_suspended is not ideal I think. What we need is to have ata and
+scsi pm resume be synchronized, but I am not yet 100% clear on the scsi layer side.
 
 > 
-> Yours,
-> Linus Walleij
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 6a959c993dd8..be3971b7fd27 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1629,6 +1629,20 @@ void scsi_rescan_device(struct device *dev)
+>   {
+>   	struct scsi_device *sdev = to_scsi_device(dev);
+> 
+> +#ifdef CONFIG_PM_SLEEP
+> +	/*
+> +	 * The ATA subsystem may call scsi_rescan_device() before resuming has
+> +	 * finished. If this happens, prevent a deadlock on the device_lock()
+> +	 * call by skipping rescanning.
+> +	 */
+> +	if (dev->power.is_suspended)
+> +		return;
+> +#endif
+> +
+> +	/*
+> +	 * Serialize scsi_driver.rescan() calls and scsi_driver.gendrv.remove()
+> +	 * calls.
+> +	 */
+>   	device_lock(dev);
+> 
+>   	scsi_attach_vpd(sdev);
+> 
 
 -- 
 Damien Le Moal
