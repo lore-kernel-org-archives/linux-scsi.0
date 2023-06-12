@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A27BDC88CB2
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 15:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D431DC7EE2E
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jun 2023 15:42:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239591AbjFLPmN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jun 2023 11:42:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35876 "EHLO
+        id S238103AbjFLPmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jun 2023 11:42:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237377AbjFLPmJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2023 11:42:09 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4336C10FF;
-        Mon, 12 Jun 2023 08:42:05 -0700 (PDT)
+        with ESMTP id S233394AbjFLPmh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2023 11:42:37 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E61DA10C7;
+        Mon, 12 Jun 2023 08:42:36 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 963AB2006B;
-        Mon, 12 Jun 2023 15:42:03 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 91AE722724;
+        Mon, 12 Jun 2023 15:42:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1686584523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1686584555; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wOSH8BCHrUPjsulF5jcPfLP76wATTCuHnxRP96DrRWE=;
-        b=asVxbyGaXYuaPPr7Qj8BOrxzNAu7CIEARL504d6JyBpoZFK+UGSqv5p6bz0SgERAJIwg0K
-        nAwFB/dkY6DbNFSdGa++ENn4sW8PU7Sa2OdPwsoYHKMpljlzwLJ+g9sjbCiSTZj+SHJg/m
-        w2dFvrkZ2WzQA8Y5kNyDzSyGRDlMyWU=
+        bh=FmuY1UZ8N0C0yeMPPmwYkjJ0ejF0JD75EQZXYcTievU=;
+        b=tWQDR1QfvZTusYfel4Cf8TbQBW3Y1xcFJbBNR7Kq2sz0CdSic2IlwAtpjimctmJQzrmQta
+        cly3/kSRObOoaYSugYl9IfvkrlE+ugPUSj2AFMBTYHWQ6Gf+LlGe/yO51iE8hOnHivutsg
+        UfauE1k6rzJ8w/AJvKnjCzDL8HibA5M=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1686584523;
+        s=susede2_ed25519; t=1686584555;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wOSH8BCHrUPjsulF5jcPfLP76wATTCuHnxRP96DrRWE=;
-        b=W81iqUzMN8jLgI4tgQEx7gUnFDVpLlErn2k3bpotpibAEsTJ7nRxAH31iK22aWvywO1TKt
-        LRgSxfmsLfkALTBw==
+        bh=FmuY1UZ8N0C0yeMPPmwYkjJ0ejF0JD75EQZXYcTievU=;
+        b=gYtRX+q3bKrvF1MQ4yBc9CM6hAPqm40Bx115Sq9wAS8CVhnNkkL0LSYBYRDE6brcaF3X99
+        HnTKxvKCE5RijqCg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 67380138EC;
-        Mon, 12 Jun 2023 15:42:03 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5B3F5138EC;
+        Mon, 12 Jun 2023 15:42:35 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id R2w+GMs8h2QcQQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 12 Jun 2023 15:42:03 +0000
-Message-ID: <79df8907-8834-05e5-0878-5c8072b1db19@suse.de>
-Date:   Mon, 12 Jun 2023 17:42:02 +0200
+        id rsx4Fes8h2RmQQAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 12 Jun 2023 15:42:35 +0000
+Message-ID: <26ad0240-0f41-e5b8-412d-972c2f9ac63f@suse.de>
+Date:   Mon, 12 Jun 2023 17:42:34 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
-Subject: Re: [PATCH v4 4/6] scsi: don't wait for quiesce in scsi_stop_queue()
+Subject: Re: [PATCH v4 5/6] scsi: don't wait for quiesce in
+ scsi_device_block()
 Content-Language: en-US
 To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
@@ -61,9 +62,9 @@ To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
 Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
         linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 References: <20230612145638.16999-1-mwilck@suse.com>
- <20230612145638.16999-5-mwilck@suse.com>
+ <20230612145638.16999-6-mwilck@suse.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230612145638.16999-5-mwilck@suse.com>
+In-Reply-To: <20230612145638.16999-6-mwilck@suse.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -73,19 +74,18 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 6/12/23 16:56, mwilck@suse.com wrote:
 > From: Martin Wilck <mwilck@suse.com>
 > 
-> scsi_stop_queue() has just two callers, one with and one without
-> "nowait". As blk_mq_quiesce_queue() comes down to
-> blk_mq_quiesce_queue_nowait() followed by blk_mq_wait_quiesce_done(),
-> we might as well open-code this in scsi_device_block().
+> scsi_device_block() is only called from scsi_target_block(), which
+> calls it repeatedly for every child device. For targets with many devices,
+> waiting for every queue to quiesce may cause a substantial delay
+> (we measured more than 100s delay for blocking a FC rport with 2048 LUNs).
 > 
-> Also, add a comment explaining why blk_mq_quiesce_queue_nowait() must
-> be called with the state_mutex held, see
-> https://lore.kernel.org/linux-scsi/3b8b13bf-a458-827a-b916-07d7eee8ae00@acm.org/.
+> Just call blk_mq_wait_quiesce_done() once from scsi_target_block() after
+> stopping all queues.
 > 
 > Signed-off-by: Martin Wilck <mwilck@suse.com>
 > ---
->   drivers/scsi/scsi_lib.c | 32 ++++++++++++++++----------------
->   1 file changed, 16 insertions(+), 16 deletions(-)
+>   drivers/scsi/scsi_lib.c | 16 +++++++++-------
+>   1 file changed, 9 insertions(+), 7 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
