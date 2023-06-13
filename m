@@ -2,78 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EEE3EB64D0
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jun 2023 17:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CDCBEB64DA
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jun 2023 17:42:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235168AbjFMRDo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jun 2023 13:03:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40718 "EHLO
+        id S232146AbjFMRml (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jun 2023 13:42:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235159AbjFMRDn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 13:03:43 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75CC4183
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 10:03:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686675822; x=1718211822;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=O3CQWZszT99rUkqHIh4iMrBofBOBQdyi+z2V+wOzVeo=;
-  b=DQusQDwpTtaMGnnFmzqNoefv25W+hb4ZPRa9JFSjEMGI6hV0+2Yzof5V
-   hTqLapk9PtLpmXYUvYLc35iobJQq0bpqXAY69uwaJs0oZ5SVnWdt1tDJ8
-   +wA/r7tCNJzvybZVVjXvDefa/dFrnXCBDVjpHLjlWKBrXuGKeNRI/Wcgv
-   pk0nfDZLoJdLTThOR/3rdV132Q/hnpoJELffikgU1T1eSxcVjJVeICr6E
-   QSNPveq4IM7JdG1KQjOpXDJSF7/F+kwrGRlzPnHI9ipam5iWlAOiWib+Z
-   PBVJe3lHjHR7RPG1d4TxnNSQiyBzvnp5j+/CL8o0uZfIuay7zg6RyqvLY
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="424281753"
-X-IronPort-AV: E=Sophos;i="6.00,240,1681196400"; 
-   d="scan'208";a="424281753"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 10:03:41 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="824491436"
-X-IronPort-AV: E=Sophos;i="6.00,240,1681196400"; 
-   d="scan'208";a="824491436"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO ahunter-VirtualBox.home\044ger.corp.intel.com) ([10.251.212.213])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 10:03:39 -0700
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Arrow Lake
-Date:   Tue, 13 Jun 2023 20:03:27 +0300
-Message-Id: <20230613170327.61186-1-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S239622AbjFMRmg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 13:42:36 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9317101;
+        Tue, 13 Jun 2023 10:42:34 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 9A5631F388;
+        Tue, 13 Jun 2023 17:42:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1686678153; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=dcQe94NHWKwEfD3MI7AnQAtuXjeqyhqnM1uaeyFHWSs=;
+        b=qm1T2ChE4/v8Mm0hNOG7wCTl/lrKRQIx7DKjB1m7Ql7Wdj2iTwupC+nKrT+gxGVKYFHiGb
+        mjixXrWGCqelriTbDJPLwQl1SrsQIWap3to3+ZmLEi+IlRlzphPNqJlru/cKwL3YE6mkYe
+        EXkGSjRUP90qTnOZbXouTHL/eU66/JU=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4336613483;
+        Tue, 13 Jun 2023 17:42:33 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id OB1vDomqiGSWXwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Tue, 13 Jun 2023 17:42:33 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v6 1/7] bsg: increase number of devices
+Date:   Tue, 13 Jun 2023 19:42:21 +0200
+Message-Id: <20230613174227.11235-2-mwilck@suse.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230613174227.11235-1-mwilck@suse.com>
+References: <20230613174227.11235-1-mwilck@suse.com>
 MIME-Version: 1.0
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add PCI ID to support Intel Arrow Lake, same as MTL.
+From: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Larger setups may need to allocate more than 32k bsg devices, so
+increase the number of devices to the full range of minor device
+numbers.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/host/ufshcd-pci.c | 1 +
- 1 file changed, 1 insertion(+)
+ block/bsg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 38276dac8e52..cf3987773051 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -599,6 +599,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0xA847), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
-+	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ }	/* terminate list */
- };
+diff --git a/block/bsg.c b/block/bsg.c
+index 7eca43f33d7f..c53f24243bf2 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -36,7 +36,7 @@ static inline struct bsg_device *to_bsg_device(struct inode *inode)
+ }
  
+ #define BSG_DEFAULT_CMDS	64
+-#define BSG_MAX_DEVS		32768
++#define BSG_MAX_DEVS		(1 << MINORBITS)
+ 
+ static DEFINE_IDA(bsg_minor_ida);
+ static struct class *bsg_class;
 -- 
-2.34.1
+2.40.1
 
