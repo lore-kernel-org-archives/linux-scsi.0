@@ -2,115 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44142C7EE29
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jun 2023 10:57:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A6DC77B7A
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jun 2023 12:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240821AbjFMK5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jun 2023 06:57:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43922 "EHLO
+        id S239438AbjFMMby (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jun 2023 08:31:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239739AbjFMK5o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 06:57:44 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97EA3E52;
-        Tue, 13 Jun 2023 03:57:43 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 4CD18222BC;
-        Tue, 13 Jun 2023 10:57:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1686653862; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=xiSWyWrFP9qYR7wfGwciATRVSUzaesp72LT0V5+P0PU=;
-        b=YIaIeek96SdjGhHgJ2jqsVGbeSmAh2nRj0jq9fFim6pXzdADcErJkFmhW03jyY47S1F0mw
-        JME0+dmBmwMYIX3r4kM5izQnXttcoGBjMBqdPtwDK4BPDV4VsXr8eLK6MG3Toik6egz9hw
-        r8H9ahvaIDOQIMcrpAcYWDgG330tuG4=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EB39913483;
-        Tue, 13 Jun 2023 10:57:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 0HB8N6VLiGQJAwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Tue, 13 Jun 2023 10:57:41 +0000
-Message-ID: <44762b9e1626ad7d77daf93bfa764e5d18256901.camel@suse.com>
-Subject: Re: [PATCH v5 4/7] scsi: don't wait for quiesce in scsi_stop_queue()
-From:   Martin Wilck <mwilck@suse.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
-Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Date:   Tue, 13 Jun 2023 12:57:41 +0200
-In-Reply-To: <9887b6c0-04ef-a2c7-94be-d8558cdc44df@acm.org>
-References: <20230612165049.29440-1-mwilck@suse.com>
-         <20230612165049.29440-5-mwilck@suse.com>
-         <9887b6c0-04ef-a2c7-94be-d8558cdc44df@acm.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 
+        with ESMTP id S240145AbjFMMbw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 08:31:52 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F661720
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 05:31:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1686659508; x=1718195508;
+  h=from:date:subject:mime-version:content-transfer-encoding:
+   message-id:to:cc;
+  bh=eBOPhrJm/lPZlbTVDzJu2audeIBSeETfQs33qVkZa4k=;
+  b=H3LFtrpe/43R3vBDJYPCwgy5lV6IJB/a4XBUfodwgfN1Ump5/dnqHcuA
+   Xe4awVQ8fTZVVhSbw/G2n/YLVs8N2775GnM0ev4ZmKg3yeELSaudad1Kx
+   Z+zRtkIRSQTJoALC3R0gaQGxIqf/QjoXQ23ryN47Q4EcQVwrKMz2FmCnz
+   6jL6xT2wUVhhbpMs4Y5BU/tAAuHcivFRfEyYdD9oZ3lvwwueMoSp+ljBy
+   a7tNo9dNhXwCAjvCdAGM1vnxts1/tMHuS3/SFz8+l9oJKIdJS/KQIeqla
+   q6xEX3yh7oX55FmrJ6rIDaeCn/rVSyMwPI94c3FSP+AkAXwAWhrGX4OnR
+   g==;
+X-IronPort-AV: E=Sophos;i="6.00,239,1681142400"; 
+   d="scan'208";a="239954588"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 13 Jun 2023 20:31:47 +0800
+IronPort-SDR: uS3jA6iT96deKPYqob70TyLojQkH9d+37r2d7qB/8/6SViLnAc1N97XWwR8Vihx2nLAopYLLcg
+ APGbrO2CbzpPh+vxaMynsIwD6dZL1Pr0YN0i1Qf94E5+s5YOhI4AFA/+yw4ck8qMizjcnCJ67X
+ pUyx0cdm7XlpUQ8VPx/tOePrsll5ITX4leN3mS+DHuIMAB0epheo4CZLYtm9RXn/hpAIF3fVD/
+ rVL7FySfO8lBoSOuB+1Eq88+f5LAK28GCX+96SxzauS7tJXVG0e3afRFSh1kzW44RNDMeUHnEe
+ sPw=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Jun 2023 04:46:23 -0700
+IronPort-SDR: dAXi/fbVCAbB+KwaW9k4hLjR48e1QwuhOXpceblTEYW/aGGICBLIAJIQFG3x9eIdw0ZBMXlQGt
+ OtYzxBGkm4JE2lLXmggYvZN0z6V4CI1CQdmvys17gqOB339W5kcFRCrncBE9QBLHoSlfP6SuEc
+ RxiKNH/Onq/oDraN0nLNxnUNKe4DKbveLBABRZATTA3UT83Qg0jH0exNp2B+rSiqZ9gbxGW5qv
+ AE85RFIXgIMnozU3QpU8N9pa4Iv4hKo3LGpJWLnsM42VCxul1TRxRjaSFcAHKrGIJa1cBop4DG
+ lFQ=
+WDCIronportException: Internal
+Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
+  by uls-op-cesaip01.wdc.com with ESMTP; 13 Jun 2023 05:31:47 -0700
+From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Date:   Tue, 13 Jun 2023 05:31:45 -0700
+Subject: [PATCH] scsi: sd_zbc: use PAGE_SECTORS_SHIFT
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20230613-sd_zbc-page_sectors-v1-1-363460a4413d@wdc.com>
+X-B4-Tracking: v=1; b=H4sIALBhiGQC/x2N0QqDMAwAf0XyvEBbnYP9yhiS1lTzsCqJjDHx3
+ 1f3eBzH7WCswgb3Zgflt5gspYK/NJBmKhOjjJUhuNC63rdo4/CNCVeaeDBO26KGuevD1fl8o9h
+ BLSMZY1QqaT7bF9nGeopVOcvnv3s8j+MHzF1fUn4AAAA=
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+X-Mailer: b4 0.12.2
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2023-06-12 at 11:02 -0700, Bart Van Assche wrote:
-> On 6/12/23 09:50, mwilck@suse.com=A0wrote:
-> > @@ -2800,9 +2792,17 @@ static void scsi_device_block(struct
-> > scsi_device *sdev, void *data)
-> > =A0=20
-> > =A0=A0=A0=A0=A0=A0=A0=A0mutex_lock(&sdev->state_mutex);
-> > =A0=A0=A0=A0=A0=A0=A0=A0err =3D __scsi_internal_device_block_nowait(sde=
-v);
-> > -=A0=A0=A0=A0=A0=A0=A0if (err =3D=3D 0)
-> > -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_stop_queue(sdev, fal=
-se);
-> > -=A0=A0=A0=A0=A0=A0=A0mutex_unlock(&sdev->state_mutex);
-> > +=A0=A0=A0=A0=A0=A0=A0if (err =3D=3D 0) {
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0/*
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 * scsi_stop_queue() must=
- be called with the
-> > state_mutex
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 * held. Otherwise a simu=
-ltaneous
-> > scsi_start_queue() call
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 * might unquiesce the qu=
-eue before we quiesce it.
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 */
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_stop_queue(sdev);
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0mutex_unlock(&sdev->state=
-_mutex);
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0blk_mq_wait_quiesce_done(=
-sdev->request_queue-
-> > >tag_set);
-> > +=A0=A0=A0=A0=A0=A0=A0} else
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0mutex_unlock(&sdev->state=
-_mutex);
-> > =A0=20
-> > =A0=A0=A0=A0=A0=A0=A0=A0WARN_ONCE(err, "__scsi_internal_device_block_no=
-wait(%s)
-> > failed: err =3D %d\n",
-> > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 dev_name(&sdev->sde=
-v_gendev), err);
->=20
-> Has it been considered to modify the above code such that there is a
-> single mutex_unlock() call instead of two? I wouldn't mind if
-> blk_mq_wait_quiesce_done() would be called if err !=3D 0 since
-> performance
-> is not that important if this function fails.
+Use PAGE_SECTORS_SHIFT instead of open-coding it.
 
-This code is just an intermediate stage. The double mutex_unlock() is
-converted back to a single one in the subsequent patch. As Christoph
-has already ack'd it, unless it's really important to you, I'd like to
-keep this patch as-is.
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ drivers/scsi/sd_zbc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Martin
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 22801c24ea19..abbd08933ac7 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -889,7 +889,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 	}
+ 
+ 	max_append = min_t(u32, logical_to_sectors(sdkp->device, zone_blocks),
+-			   q->limits.max_segments << (PAGE_SHIFT - 9));
++			   q->limits.max_segments << PAGE_SECTORS_SHIFT);
+ 	max_append = min_t(u32, max_append, queue_max_hw_sectors(q));
+ 
+ 	blk_queue_max_zone_append_sectors(q, max_append);
+
+---
+base-commit: 467e6cc73ef290f0099b1b86cec4f14060984916
+change-id: 20230613-sd_zbc-page_sectors-f462501f7ab4
+
+Best regards,
+-- 
+Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
