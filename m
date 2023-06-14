@@ -2,123 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46EDEEB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 01:58:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4471EB64D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:41:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241790AbjFNB6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jun 2023 21:58:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52974 "EHLO
+        id S233720AbjFNEl3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 00:41:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233260AbjFNB6m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 21:58:42 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B17ED1FC9;
-        Tue, 13 Jun 2023 18:58:26 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QgpVR0MJpz4f3tNm;
-        Wed, 14 Jun 2023 09:58:23 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7O+HolkasWdLg--.26820S3;
-        Wed, 14 Jun 2023 09:58:23 +0800 (CST)
-Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Yu Kuai <yukuai1@huaweicloud.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, naomi.chu@mediatek.com,
-        wsd_upstream@mediatek.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230509065230.32552-1-ed.tsai@mediatek.com>
- <20230509065230.32552-3-ed.tsai@mediatek.com>
- <ZF0K7A6G2cYBjSgn@infradead.org>
- <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
- <ZF5G5ztMng8Xbd1W@infradead.org>
- <2740ee82-e35f-1cbf-f5d0-373f94eb14a5@acm.org>
- <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
- <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
- <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
- <097caed2-10b3-7cd1-7c06-90f983e5c720@acm.org>
- <f9ccab59-91a1-69d5-6d20-2c6ea0e24b5a@huaweicloud.com>
- <66906bd5-d73f-af96-bf38-c6aee576fa73@acm.org>
- <bef8340e-f051-db63-5c2f-a2bc94c678ac@huaweicloud.com>
- <04a4d0db-2f2d-e2fc-5458-4ddf852ffc8a@acm.org>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <3e9e42aa-9a0d-2b73-194b-5c229e9ed533@huaweicloud.com>
-Date:   Wed, 14 Jun 2023 09:58:22 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <04a4d0db-2f2d-e2fc-5458-4ddf852ffc8a@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7O+HolkasWdLg--.26820S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF43JrWUJr4fWrykXrW3Awb_yoW8Jw4Upa
-        y8tFZIkFs7J398AwsrX3W8uayftwn3Jr97Jr1fG347Zwn09w4fZw4Ut3909rZ3Zr97Cr12
-        gay8Xr95X3s5Z37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUAxhLUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+        with ESMTP id S234040AbjFNElX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:41:23 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5371F1BE3
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 21:41:21 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230614044117epoutp011f2c7d603e8d64b5e667d7d61cf6b05e~obMqfHvwl2620726207epoutp01O
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 04:41:17 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230614044117epoutp011f2c7d603e8d64b5e667d7d61cf6b05e~obMqfHvwl2620726207epoutp01O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1686717677;
+        bh=UTp2spf180fapim/QCGBMuGvcRmlmKbbwTJawClBTJo=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=VJC3EuJjQcjy53i317PUpkpAY1MwggC7HDemD9pE26ieyukonBFv5/T880+0M6+wZ
+         qp7cOSuyofo8NIrxb6hLQ+dXi0IGHaQZhmsk7xlWvGbThlVjcRGBrvcXZBeqXorvx/
+         AhX1GWCjmcwbTcGMQLfZpr+nqBqDoFqr3RYd0SxA=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230614044117epcas2p30a32e7bdaf1e216b7d2fc05297d37c21~obMqCF2n82216722167epcas2p3p;
+        Wed, 14 Jun 2023 04:41:17 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.97]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Qgt6N6fZMz4x9Q5; Wed, 14 Jun
+        2023 04:41:16 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2A.19.07392.CE449846; Wed, 14 Jun 2023 13:41:16 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20230614044116epcas2p4174f088a892ca2d2d156944449f6823f~obMo6xLoD2937929379epcas2p4o;
+        Wed, 14 Jun 2023 04:41:16 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230614044116epsmtrp1930bd94b1ac3c8e43235cf98bb532903~obMo5Y_K13155031550epsmtrp17;
+        Wed, 14 Jun 2023 04:41:16 +0000 (GMT)
+X-AuditID: b6c32a47-157fd70000001ce0-0b-648944ecd760
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D2.D0.27706.CE449846; Wed, 14 Jun 2023 13:41:16 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20230614044116epsmtip18a4e154b4e06e21e36d5302f731c43dd~obMorEBwJ1168811688epsmtip1b;
+        Wed, 14 Jun 2023 04:41:16 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, kwangwon.min@samsung.com,
+        junwoo80.lee@samsung.com, wkon.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v3 0/2] change UIC command handling
+Date:   Wed, 14 Jun 2023 13:31:54 +0900
+Message-Id: <cover.1686716811.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA0VSbUxbZRTOe+/lUha63BQY7+pYmhLDh4G1lJa7uTKSwdZkkxD3Q90g3R29
+        AtKv9BaFTRMUHLRTKVOKLDhkjUIQ01BLhbYIazEdJOIc4grqwuZYAoowKsMujFl6Uf+dc57n
+        nOc573s4KM+E8zlVWiNt0FJqIb4Lc/kzZFl/FJpUouVgFjlxvx8n56+6cHIxPIOT1++aMNK6
+        GkbJL2zzGHkt6EJI95MGhBwMDmPkrPNbjJx2d+LkpdtDONkT2EJI869BQH62tYyRX916hBUQ
+        iukfTyhs3kVEYbk2BhQb9mZc8XBhDlN84OwDipBjv6Jp7BJSwjldfbiSplS0QUBry3WqKm2F
+        XHjilPKoUioTibPEB8k8oUBLaWi5sPBkSdaxKnVkA6HgdUpdEymVUAwjPJB/2KCrMdKCSh1j
+        lAtpvUqtz9NnM5SGqdFWZGtp4yGxSJQjjRDPVld6/PO43orWBuy3Y+qBDzEDDgcSuXB08oIZ
+        7OLwiCEALSsejE3WALQtbKBs8gjA3xvtsWYQF+2Y6vkIsMAIgH0PP49lk78BXPbfB9ssnMiA
+        C7NtyDaQSKwi8GmPKwqgRBp0W24g23ECIYF/ekejMUY8C7uCG1EJLkHCy9P9KCu3H85OmaI+
+        IPEuB65M9AMWKIStvfM4GyfApYBzxx8fLrZcjGW3q4be7j1suRbarMsYG0vglQdNYJuCRoza
+        3QdYdiocn8NYl7ths//JzhAubL7IYxtT4ePLH+7o74Uds7/saCrgXx0LUS88ogyOvN8FLCDl
+        yv/zPwWgD+yh9YymgmZy9JL//qhcp3GA6E1mHh8CHy+vZvsAwgE+ADmoMJG7kN6k4nFVVN15
+        2qBTGmrUNOMD0shrtaL8pHJd5Ki1RqU496AoVyYT5+VIRXnCZO4z8olyHlFBGelqmtbThn/7
+        EE4cvx4p/aEutX5leHJrM79n6l5vWcDZ3s07/V6rs+tFviYcSDn7khcMxr2SVETvS4t/69xv
+        zcUyzT5/hu/UbjG3pdqSXFogGUxKeM3zOCPnKlK05rozKh3gdWSOLcVI7egb2eFvks/Hc2/c
+        Gbhwz4ql5/dJAmlH1q3eMtumo1Hc+DKFj6yvKUsRgeeo6a67eOP6J4uhN6fNxZlYaO+rbb3t
+        w/4vEzW6deOZ7psNI8dUUyffNuW3l3Y+qLXeGtcVfSc5k16HNm2eM3o9My5rqGAp3RU8/nQ4
+        /ifmhZvmQ1+DlHpqPFxrsj7naOucOxLT0iDXTM4MuEWhdxw/d8+ov3c8TwgxppISZ6IGhvoH
+        N/qBKxwEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrNLMWRmVeSWpSXmKPExsWy7bCSnO4bl84Ug61TuC1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
+        LD/+j8mi6+4NRoul/96yWGy+9I3FQcDj8hVvj8V7XjJ5TFh0gNHj+/oONo+PT2+xePRtWcXo
+        8XmTnEf7gW6mAI4oLpuU1JzMstQifbsErozdhx+wFUxjrji+/jprA+Mhpi5GTg4JAROJc8un
+        MHYxcnEICexmlOiet4gRIiEpcWLncyhbWOJ+yxFWiKJvjBIff11hBkmwCWhKPL05lQkkISLQ
+        xCxxafZ0FpAEs4C6xK4JJ8BWCAsYS7zbsx/MZhFQlZh/4zs7iM0rYCEx6fIaZogNchI3z3Uy
+        T2DkWcDIsIpRMrWgODc9t9iwwDAvtVyvODG3uDQvXS85P3cTIzh8tTR3MG5f9UHvECMTB+Mh
+        RgkOZiUR3qca7SlCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeS90nYwXEkhPLEnNTk0tSC2CyTJx
+        cEo1MLUt2v8scKPbjh83nljv4PZhu7m95eHMCz6rGlkM23rFbZ4mfl44qULuqPQH3h/8E3XS
+        ptsptf+7fXjl1qLT9i9EVF79EI3+oRWRyingWGzI9iT8MYNH97K1fw7+OnK017v+zOev055U
+        fldL+XL57t+1947ujE555LSy/MnvgsnqnFUTHGxMgnnfVfhzabqWMwteLFUpc7lY1txw+8Xt
+        xZOyJL5zG7nuDNv9w6ArQqU8aurc+f12ixVTkm66F3jLLL52x+1qddF3P5eIzFmrLq12fOzs
+        dd9C1q2SVWkDc/wRD5WbdUWfzrqqfZdIsDMxjvFbKd/wZt+KNdevb/U0s006bCXhoRSY++bH
+        A+a2i0osxRmJhlrMRcWJAJg/w+POAgAA
+X-CMS-MailID: 20230614044116epcas2p4174f088a892ca2d2d156944449f6823f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
 X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230614044116epcas2p4174f088a892ca2d2d156944449f6823f
+References: <CGME20230614044116epcas2p4174f088a892ca2d2d156944449f6823f@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+v2 -> v3: rule out the change of polling w/ pmc from this thread.
+(I'll post the change later)
+v1 -> v2: remove an unused variable in __ufshcd_send_uic_cmd
 
-在 2023/06/13 22:07, Bart Van Assche 写道:
-> On 5/18/23 00:55, Yu Kuai wrote:
->> 在 2023/05/18 10:23, Bart Van Assche 写道:
->>> On 5/17/23 18:49, Yu Kuai wrote:
->>>> Currently, fair share from hctx_may_queue() requires two
->>>> atomic_read(active_queues and active_requests), I think this smoothing
->>>> method can be placed into get_tag fail path, for example, the more 
->>>> times
->>>> a disk failed to get tag in a period of time, the more tag this disk 
->>>> can
->>>> get, and all the information can be updated here(perhaps directly
->>>> record how many tags a disk can get, then hctx_may_queue() still only
->>>> require 2 atomic_read()).
->>>
->>> That sounds interesting to me. Do you perhaps plan to implement this 
->>> approach and to post it as a patch?
->>
->> Of course, I'll try to send a RFC patch.
-> 
-> Hi Kuai,
-> 
-> Has this RFC patch already been posted or did I perhaps miss it?
+Kiwoong Kim (2):
+  ufs: make __ufshcd_send_uic_cmd not wrapped by host_lock
+  ufs: poll HCS.UCRDY before issuing a UIC command
 
-Sorry for the delay, I finished switch from not share to fair share
-directly verion, however, I found that it's not that simple to add a
-smoothing method, and I'm stuck here for now.
+ drivers/ufs/core/ufshcd.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-I'll try to send a RFC verion soon, the smoothing method may not be
-flexible, but I'll make sure it can work for your simple case that
-2 device share tags, and one only issue few io while the other issue
-lots of io.
-
-Thanks,
-Kuai
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> .
-> 
+-- 
+2.7.4
 
