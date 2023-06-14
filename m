@@ -2,166 +2,294 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27BBBEB64D8
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:57:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A59D3EB64D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:58:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234067AbjFNE56 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 00:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42746 "EHLO
+        id S242667AbjFNE6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 00:58:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233669AbjFNE55 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:57:57 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01280122;
-        Tue, 13 Jun 2023 21:57:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686718675; x=1718254675;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ZzYK1qJbvS5rbTkIPTvyqdeqBd9oIHgEv+TMqS6toKk=;
-  b=CkAYym0F0CJY2LqGA/ivbb3Z+R7o2zdVPw838rQLG2wleWH3xWegfHci
-   smTIAIrICI4dyB1WXGv05ormvujC4bZokhWB9LkxvXxv8JIsGLzrUV8hU
-   +xiOdo8gzGCnwQBBIsVrHKRACn38Gz9eChb0Q5fkNwxHlJNpgGWvHe5Ni
-   12AcjVPYWTuhQbDFF+luWhL3Kvl1yjbqubh77X9FBt7YsDJU228F4ihFj
-   MB57GUCfP/Y4TVhXJo96hc9gLi03cS+7UWCbTBY4fTTEqHWJzI3FoAz91
-   PijDF15Y3BEsoY8UrK+VCLl96NrMFVUF/WJzeslh5Pst9tyEbroNRmsNP
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="338153721"
-X-IronPort-AV: E=Sophos;i="6.00,241,1681196400"; 
-   d="scan'208";a="338153721"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 21:57:55 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="706071738"
-X-IronPort-AV: E=Sophos;i="6.00,241,1681196400"; 
-   d="scan'208";a="706071738"
-Received: from lkp-server02.sh.intel.com (HELO d59cacf64e9e) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 13 Jun 2023 21:57:50 -0700
-Received: from kbuild by d59cacf64e9e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q9IZp-0000CP-1u;
-        Wed, 14 Jun 2023 04:57:49 +0000
-Date:   Wed, 14 Jun 2023 12:54:50 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     oe-kbuild-all@lists.linux.dev,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>
-Subject: Re: [PATCH v6 6/7] scsi: replace scsi_target_block() by
- scsi_block_targets()
-Message-ID: <202306141255.47GfqLNb-lkp@intel.com>
-References: <20230613174227.11235-7-mwilck@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230613174227.11235-7-mwilck@suse.com>
+        with ESMTP id S234067AbjFNE6v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:58:51 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 455C61A3
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 21:58:47 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230614045843epoutp03c678c9d7713ad3220ba6b506b9fea85c~obb4TQJ8x0995509955epoutp03N
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 04:58:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230614045843epoutp03c678c9d7713ad3220ba6b506b9fea85c~obb4TQJ8x0995509955epoutp03N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1686718723;
+        bh=OCbooCOCoON9qKh/petA99mWecUAvrQA0xN3SqT4+Vg=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=MqTAKLkTrfAuChjOKaZcNsA3joasTkyoZ3mLF1w+m/jmtyq72hTEStoe8OGK6vP/1
+         hp57eCuVtMsT9fb9LCfvKeuC3iEqoWmbsMRJ5n2DTqFIytUKQQOZM4OiQmJPb+WYtQ
+         Stf88q2sN6EvO07VoXi8HzkLWm0Z5rW1oUVlL6os=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230614045842epcas2p129cf3d12daf8e30d4aaa9e3dd65da624~obb3tIldY1512415124epcas2p1g;
+        Wed, 14 Jun 2023 04:58:42 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.88]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4QgtVV1DwRz4x9Px; Wed, 14 Jun
+        2023 04:58:42 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        53.7A.11450.20949846; Wed, 14 Jun 2023 13:58:42 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230614045841epcas2p32c488c50ca94b492023d00023189338a~obb2oRqM61309713097epcas2p3W;
+        Wed, 14 Jun 2023 04:58:41 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230614045841epsmtrp2607d90310646f066a96d8924b8175bd2~obb2ncaFV2412224122epsmtrp27;
+        Wed, 14 Jun 2023 04:58:41 +0000 (GMT)
+X-AuditID: b6c32a45-445fd70000022cba-c3-64894902a9d4
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        94.F2.27706.10949846; Wed, 14 Jun 2023 13:58:41 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20230614045841epsmtip2e5d9736b00a72d33f61da1cb7ac172fe~obb2WA_oF0826608266epsmtip2g;
+        Wed, 14 Jun 2023 04:58:41 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, kwangwon.min@samsung.com,
+        junwoo80.lee@samsung.com, wkon.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v4] ufs: poll pmc until another pa request is completed
+Date:   Wed, 14 Jun 2023 13:49:18 +0900
+Message-Id: <1686718158-154271-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupgk+LIzCtJLcpLzFFi42LZdljTVJfJszPF4MBXNouTT9awWTyYt43N
+        4uXPq2wWBx92slhM+/CT2WL14gcsFotubGOy2PW3mcli642dLBY3txxlsbi8aw6bRff1HWwW
+        y4//Y7LounuD0WLpv7csFpsvfWNxEPC4fMXbY/Gel0weExYdYPT4vr6DzePj01ssHn1bVjF6
+        fN4k59F+oJspgCMq2yYjNTEltUghNS85PyUzL91WyTs43jne1MzAUNfQ0sJcSSEvMTfVVsnF
+        J0DXLTMH6AMlhbLEnFKgUEBicbGSvp1NUX5pSapCRn5xia1SakFKToF5gV5xYm5xaV66Xl5q
+        iZWhgYGRKVBhQnbGxP+NTAUfjCuuPF7E1sB4QquLkYNDQsBE4vrj0i5GLg4hgR2MErNeL2KG
+        cD4xSmy9shvI4QRyvjFKvD7PCGKDNHx4/ZcFomgvo0TPlA5GCOcHo8SDtXvAqtgENCWe3pzK
+        BJIQEfjAJPF/+TawBLOAusSuCSeYQGxhAXeJ7Qvug61gEVCVOHRmKwuIzSvgJrG/9RHUOjmJ
+        m+c6wW6SEGjlkNg1Zx1UwkVix6lGJghbWOLV8S3sELaUxOd3e9kgnsuW2LNQDCJcIbF42lsW
+        CNtYYtazdkaQEmagQ9fv0oeoVpY4cosF4ko+iY7Df9khwrwSHW1CEI3KEr8mTYbaLykx8+Yd
+        qJ0eEtvv/YGGVazE9RVd7BMYZWchzF/AyLiKUSy1oDg3PbXYqMAQHkXJ+bmbGMFJUst1B+Pk
+        tx/0DjEycTAeYpTgYFYS4X2q0Z4ixJuSWFmVWpQfX1Sak1p8iNEUGFoTmaVEk/OBaTqvJN7Q
+        xNLAxMzM0NzI1MBcSZxX2vZkspBAemJJanZqakFqEUwfEwenVAPTCkn7id0Hbyt47OszmVXZ
+        Uax3zkzv7TQZljn/JmcYeUm131Pp0I9aydLI7Xdbf+LFAyL6OU6G1guspn3x9P+r1zO93GSn
+        //NdbS8Z+Y9ycR798mxb2QE/p6YlxukaLbEz1lXP75t+ytA431ta/KnAd8UZtTsv+B4+IeYW
+        0KZ2JJktdS4HR5fBudJdGXYzl+z8/PlYbM1F5mk7uZfeSqqdrLIm4paM0Z0H/35NfnBZiXVd
+        zuNd5s/7Zj17tE4rzSi2vD0/7fv0puXM9/RfREfLrtjDXtUoFnL805JTd5eWib0MXaEXGVNZ
+        2r/AUnhCyjJNt1cC3NaWhuvaGJLaLFv0zU7q/zyq6zC38aqb30olluKMREMt5qLiRAA4OPoM
+        GwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrNLMWRmVeSWpSXmKPExsWy7bCSvC6jZ2eKwauFahYnn6xhs3gwbxub
+        xcufV9ksDj7sZLGY9uEns8XqxQ9YLBbd2MZksetvM5PF1hs7WSxubjnKYnF51xw2i+7rO9gs
+        lh//x2TRdfcGo8XSf29ZLDZf+sbiIOBx+Yq3x+I9L5k8Jiw6wOjxfX0Hm8fHp7dYPPq2rGL0
+        +LxJzqP9QDdTAEcUl01Kak5mWWqRvl0CV8bE/41MBR+MK648XsTWwHhCq4uRk0NCwETiw+u/
+        LF2MXBxCArsZJT4+mMUCkZCUOLHzOSOELSxxv+UIK0TRN0aJRasWsYMk2AQ0JZ7enMoEkhAR
+        aGKWuDR7Olg3s4C6xK4JJ5hAbGEBd4ntC+4zg9gsAqoSh85sBavhFXCT2N/6CGqDnMTNc53M
+        Exh5FjAyrGKUTC0ozk3PLTYsMMxLLdcrTswtLs1L10vOz93ECA5fLc0djNtXfdA7xMjEwXiI
+        UYKDWUmE96lGe4oQb0piZVVqUX58UWlOavEhRmkOFiVx3gtdJ+OFBNITS1KzU1MLUotgskwc
+        nFINTMdvXpAsutgm6yNaoplocPn6+Vtb3Sf9mHH6TKf5196mupXTE1/mFOmus2u5uvx3/3nt
+        FresiEecLgftM7bkJl8z8MjMdIuVe9tbpcSfdyWr93i7Q4y/fbaQVWhqsmYT4xHuV9UC5nLn
+        /pSb9321Wy/S9fme8cV5Vct+z4tfJsk+3de2bbOtRlbX/QUBfumH++sWKOyNeLZo9uolzzWX
+        MYjKcR1IYXOf1Xh8Xa3O6W5Fqdo0IeYvxhvs5vho/VWKV1j40oMrpcB5/coVzEt0o+66Vdt3
+        Hf2zoTWfTf/suWO/ebRluvc5/JSWDZnYf8Gj+b7ptUzOPb8qvOqLdxaZ1LWeX75DbJnZjM1q
+        njuVWIozEg21mIuKEwG5u7c2zgIAAA==
+X-CMS-MailID: 20230614045841epcas2p32c488c50ca94b492023d00023189338a
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230614045841epcas2p32c488c50ca94b492023d00023189338a
+References: <CGME20230614045841epcas2p32c488c50ca94b492023d00023189338a@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Regarding 5.7.12.1.1 in Unipro v1.8, PA rejects sebsequent
+requests following the first request from upper layer or remote.
+In this situation, PA responds w/ BUSY in cases
+when they come from upper layer and does nothing for
+the requests. So HCI doesn't receive ind, a.k.a. indicator
+for its requests and an interrupt, IS.UPMS isn't generated.
 
-kernel test robot noticed the following build errors:
+When LINERESET occurs, the error handler issues PMC which is
+recognized as a request for PA. If a host's PA gets or raises
+LINERESET, and a request for PMC, this could be a concurrent
+situation mentioned above. And I found that situation w/ my
+environment.
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on jejb-scsi/for-next axboe-block/for-next linus/master v6.4-rc6 next-20230613]
-[cannot apply to hch-configfs/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+[  222.929539]I[0:DefaultDispatch:20410] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecdl : 0x80000002
+[  222.999009]I[0: arch_disk_io_1:20413] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
+[  222.999200] [6:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufs_pwr_mode_restore_needed : mode = 0x15, pwr_rx = 1, pwr_tx = 1
+[  223.002876]I[0: arch_disk_io_3:20422] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
+[  223.501050] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: pwr ctrl cmd 0x2 with mode 0x11 completion timeout
+[  223.502305] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_change_power_mode: power mode change failed -110
+[  223.502312] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_err_handler: Failed to restore power mode, err = -110
+[  223.502392] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_is_pwr_mode_restore_needed : mode = 0x11, pwr_rx = 1, pwr_tx = 1
 
-url:    https://github.com/intel-lab-lkp/linux/commits/mwilck-suse-com/bsg-increase-number-of-devices/20230614-014437
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230613174227.11235-7-mwilck%40suse.com
-patch subject: [PATCH v6 6/7] scsi: replace scsi_target_block() by scsi_block_targets()
-config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20230614/202306141255.47GfqLNb-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 12.3.0
-reproduce (this is a W=1 build):
-        mkdir -p ~/bin
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        git remote add mkp-scsi https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
-        git fetch mkp-scsi for-next
-        git checkout mkp-scsi/for-next
-        b4 shazam https://lore.kernel.org/r/20230613174227.11235-7-mwilck@suse.com
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=alpha olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=alpha SHELL=/bin/bash drivers/scsi/
+This patch is to poll PMC's result w/o checking its ind until
+the result is not busy, i.e. 09h, to avoid the rejection.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306141255.47GfqLNb-lkp@intel.com/
+And this patch requires the following patch because it assumes
+__ufshcd_send_uic_cmd doesn't require host_lock.
+https://lore.kernel.org/linux-scsi/bec84ee1ce8f5c5971b98d8e501aeabb9b5b26d1.1686716811.git.kwmad.kim@samsung.com/
 
-All errors (new ones prefixed by >>):
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 
->> drivers/scsi/scsi_lib.c:2912:1: error: conflicting types for 'scsi_block_targets'; have 'void(struct device *, struct Scsi_Host *)'
-    2912 | scsi_block_targets(struct device *dev, struct Scsi_Host *shost)
-         | ^~~~~~~~~~~~~~~~~~
-   In file included from include/scsi/scsi_cmnd.h:12,
-                    from drivers/scsi/scsi_lib.c:29:
-   include/scsi/scsi_device.h:459:6: note: previous declaration of 'scsi_block_targets' with type 'void(struct Scsi_Host *, struct device *)'
-     459 | void scsi_block_targets(struct Scsi_Host *shost, struct device *dev);
-         |      ^~~~~~~~~~~~~~~~~~
-   In file included from include/linux/linkage.h:7,
-                    from include/linux/preempt.h:10,
-                    from include/linux/spinlock.h:56,
-                    from include/linux/wait.h:9,
-                    from include/linux/mempool.h:8,
-                    from include/linux/bio.h:8,
-                    from drivers/scsi/scsi_lib.c:12:
-   drivers/scsi/scsi_lib.c:2918:19: error: conflicting types for 'scsi_block_targets'; have 'void(struct device *, struct Scsi_Host *)'
-    2918 | EXPORT_SYMBOL_GPL(scsi_block_targets);
-         |                   ^~~~~~~~~~~~~~~~~~
-   include/linux/export.h:87:28: note: in definition of macro '___EXPORT_SYMBOL'
-      87 |         extern typeof(sym) sym;                                                 \
-         |                            ^~~
-   include/linux/export.h:147:41: note: in expansion of macro '__EXPORT_SYMBOL'
-     147 | #define _EXPORT_SYMBOL(sym, sec)        __EXPORT_SYMBOL(sym, sec, "")
-         |                                         ^~~~~~~~~~~~~~~
-   include/linux/export.h:151:41: note: in expansion of macro '_EXPORT_SYMBOL'
-     151 | #define EXPORT_SYMBOL_GPL(sym)          _EXPORT_SYMBOL(sym, "_gpl")
-         |                                         ^~~~~~~~~~~~~~
-   drivers/scsi/scsi_lib.c:2918:1: note: in expansion of macro 'EXPORT_SYMBOL_GPL'
-    2918 | EXPORT_SYMBOL_GPL(scsi_block_targets);
-         | ^~~~~~~~~~~~~~~~~
-   include/scsi/scsi_device.h:459:6: note: previous declaration of 'scsi_block_targets' with type 'void(struct Scsi_Host *, struct device *)'
-     459 | void scsi_block_targets(struct Scsi_Host *shost, struct device *dev);
-         |      ^~~~~~~~~~~~~~~~~~
+---
+v3 -> v4
+1) change description
 
+v2 -> v3
+1) check time in the loop with jiffies, instead of miliseconds.
+2) change a variable's name and fix a typo and wrong alignment.
 
-vim +2912 drivers/scsi/scsi_lib.c
+v1 -> v2
+1) remove clearing hba->active_uic_cmd at the end of __ufshcd_poll_uic_pwr
+2) change commit message on the cited clause: 5.7.12.11 -> 5.7.12.1.1
+3) add mdelay to avoid too many issueing
+4) change the timeout for the polling to 100ms because I found it
+sometimes takes much longer than expected.
+---
+ drivers/ufs/core/ufshcd.c | 93 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 65 insertions(+), 28 deletions(-)
 
-  2898	
-  2899	/**
-  2900	 * scsi_block_targets - transition all SCSI child devices to SDEV_BLOCK state
-  2901	 * @dev: a parent device of one or more scsi_target devices
-  2902	 * @shost: the Scsi_Host to which this device belongs
-  2903	 *
-  2904	 * Iterate over all children of @dev, which should be scsi_target devices,
-  2905	 * and switch all subordinate scsi devices to SDEV_BLOCK state. Wait for
-  2906	 * ongoing scsi_queue_rq() calls to finish. May sleep.
-  2907	 *
-  2908	 * Note:
-  2909	 * @dev must not itself be a scsi_target device.
-  2910	 */
-  2911	void
-> 2912	scsi_block_targets(struct device *dev, struct Scsi_Host *shost)
-  2913	{
-  2914		WARN_ON_ONCE(scsi_is_target_device(dev));
-  2915		device_for_each_child(dev, NULL, target_block);
-  2916		blk_mq_wait_quiesce_done(&shost->tag_set);
-  2917	}
-  2918	EXPORT_SYMBOL_GPL(scsi_block_targets);
-  2919	
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 10ccc85..9a0f781 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -99,6 +99,9 @@
+ /* Polling time to wait for fDeviceInit */
+ #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+ 
++/* Polling time to wait until PA is ready */
++#define UIC_PA_RDY_TIMEOUT	100	/* millisecs */
++
+ /* UFSHC 4.0 compliant HC support this mode, refer param_set_mcq_mode() */
+ static bool use_mcq_mode = true;
+ 
+@@ -4139,6 +4142,62 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
+ 
++static int __ufshcd_poll_uic_pwr(struct ufs_hba *hba, struct uic_command *cmd,
++		struct completion *cnf)
++{
++	unsigned long flags;
++	int ret;
++	u32 mode = cmd->argument3;
++	unsigned long deadline = jiffies +
++		msecs_to_jiffies(UIC_PA_RDY_TIMEOUT);
++
++	do {
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		hba->active_uic_cmd = NULL;
++		if (ufshcd_is_link_broken(hba)) {
++			spin_unlock_irqrestore(hba->host->host_lock, flags);
++			ret = -ENOLINK;
++			goto out;
++		}
++		hba->uic_async_done = cnf;
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++		cmd->argument2 = 0;
++		cmd->argument3 = mode;
++		ret = __ufshcd_send_uic_cmd(hba, cmd, true);
++		if (ret) {
++			dev_err(hba->dev,
++				"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
++				cmd->command, cmd->argument3, ret);
++			goto out;
++		}
++
++		/* This value is heuristic */
++		if (!wait_for_completion_timeout(&cmd->done,
++						 msecs_to_jiffies(5))) {
++			ret = -ETIMEDOUT;
++			dev_err(hba->dev,
++				"pwr ctrl cmd 0x%x with mode 0x%x timeout\n",
++				cmd->command, cmd->argument3);
++			if (cmd->cmd_active)
++				goto out;
++
++			dev_info(hba->dev, "%s: pwr ctrl cmd has already been completed\n", __func__);
++		}
++
++		/* retry only for busy cases */
++		ret = cmd->argument2 & MASK_UIC_COMMAND_RESULT;
++		if (ret != UIC_CMD_RESULT_BUSY)
++			break;
++
++		dev_info(hba->dev, "%s: PA is busy and can't handle a requeest, %d\n", __func__, ret);
++		mdelay(1);
++
++	} while (time_before(jiffies, deadline));
++out:
++	return ret;
++}
++
+ /**
+  * ufshcd_uic_pwr_ctrl - executes UIC commands (which affects the link power
+  * state) and waits for it to take effect.
+@@ -4161,33 +4220,13 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	unsigned long flags;
+ 	u8 status;
+ 	int ret;
+-	bool reenable_intr = false;
+ 
+-	mutex_lock(&hba->uic_cmd_mutex);
+-	ufshcd_add_delay_before_dme_cmd(hba);
+-
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (ufshcd_is_link_broken(hba)) {
+-		ret = -ENOLINK;
+-		goto out_unlock;
+-	}
+-	hba->uic_async_done = &uic_async_done;
+-	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
+-		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
+-		/*
+-		 * Make sure UIC command completion interrupt is disabled before
+-		 * issuing UIC command.
+-		 */
+-		wmb();
+-		reenable_intr = true;
+-	}
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
++	ret = __ufshcd_poll_uic_pwr(hba, cmd, &uic_async_done);
+ 	if (ret) {
+-		dev_err(hba->dev,
+-			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+-			cmd->command, cmd->argument3, ret);
+-		goto out;
++		if (ret == -ENOLINK)
++			goto out_unlock;
++		else
++			goto out;
+ 	}
+ 
+ 	if (!wait_for_completion_timeout(hba->uic_async_done,
+@@ -4224,14 +4263,12 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->active_uic_cmd = NULL;
+ 	hba->uic_async_done = NULL;
+-	if (reenable_intr)
+-		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+ 	if (ret) {
+ 		ufshcd_set_link_broken(hba);
+ 		ufshcd_schedule_eh_work(hba);
+ 	}
+-out_unlock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++out_unlock:
+ 	mutex_unlock(&hba->uic_cmd_mutex);
+ 
+ 	return ret;
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.7.4
+
