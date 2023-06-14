@@ -2,90 +2,145 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8229EB64D8
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 21:47:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CA59EB64DC
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 22:44:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234645AbjFNVrE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 17:47:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49414 "EHLO
+        id S234331AbjFNWot (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 18:44:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231721AbjFNVrD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 17:47:03 -0400
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6017B2689
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 14:47:02 -0700 (PDT)
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6668950b6c0so336356b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 14:47:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686779222; x=1689371222;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kft6/a03c9zrFaWsqvSQq6avClcNfxsxpXF8EpvvZqM=;
-        b=HT+2Rtr+DuPyMv9Exn9JkNM7sWLaySXhS6sHJFQ3tUATDD7Oexgg189PrhN08M+Zzr
-         F+tcKXZsUbqncPwIxjRrY4xX40tqeRBiQW1HBRD32UXD4L/BSqiiSUJ9xsHTMB6x4K9L
-         cECUElZ4Gs1D6ACUYZYM4AY+siqnZ1OUe95NnluhWcw9toDY/dXZLWxme+JjgR30K21d
-         5p3/+JQodqWc97X8pEC4lF52IqComEaU8ksGQvJH/aBGZAJnhKOP06KFdkz2GzSKAcU/
-         I79b2W3y2VeUpXYUW8WQ+TJiu1f050cla2YBWvdC1lpTs8n8kLQf2OIg1WdrEAvEg1Nn
-         YDMw==
-X-Gm-Message-State: AC+VfDwAwrxzYV4zZNGA0TTr8iHjquPEajICM7lNhDd4piPbxqkuFIBt
-        JYhS1a54T1LNqJdB8c0qTdQ=
-X-Google-Smtp-Source: ACHHUZ5bd1fCdE59z4S3L5QWctNuvjrYBx2Uh86sEVpHI3iWUK5GiMywUmWjKc4F7N4snajHf5pABg==
-X-Received: by 2002:a05:6a00:1415:b0:64d:4412:9923 with SMTP id l21-20020a056a00141500b0064d44129923mr3707684pfu.3.1686779221680;
-        Wed, 14 Jun 2023 14:47:01 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id x7-20020aa793a7000000b0065da94fe917sm8963172pff.36.2023.06.14.14.47.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Jun 2023 14:47:01 -0700 (PDT)
-Message-ID: <e576431b-7196-fdf6-9dbd-cb7630d4c8ff@acm.org>
-Date:   Wed, 14 Jun 2023 14:46:59 -0700
+        with ESMTP id S229832AbjFNWor (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 18:44:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C45C1BF7;
+        Wed, 14 Jun 2023 15:44:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2B4556281D;
+        Wed, 14 Jun 2023 22:44:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5B01C433C0;
+        Wed, 14 Jun 2023 22:44:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686782685;
+        bh=lMvudJgKGP6G5z1D5G5ktPPOIHeYLAxIIf2pg1Bn6dA=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Zk6bt6oVdjWME3wilTbcHVuIxYexd/ugfSoqlxQA+OKl7qFQrKmyiFMXVZXlSLBrh
+         7Jry8e84dvXNqFZPIPlrmBuZoyCRj9Y6/+vzIlZqLjR2NWK/Ahana4A/5nbZpJ+xds
+         c7GN7maBBDBmKOcMkmw2tuqPXW3rM46twikbRfrEt5C92i+eoeQbNcEOXPuJrwAEOe
+         qPfWvLRNKp0EL4+S82/uGEoYOD+Fpg8jyck9vu6YebQG1WBdkb99Gz+xlMyb2XkkyC
+         /EzMJ5NBWSplFJ1Wj39Ba6c4ldZQoyJUY+xKb3VF1YWmjkV9RicqPqmO8QnICaTDna
+         dUKeQNi4BltJQ==
+Message-ID: <bf142e7d-178e-43a8-32e8-7e9e396eeee7@kernel.org>
+Date:   Thu, 15 Jun 2023 07:44:39 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v8 15/33] scsi: spi: Fix sshdr use
+ Thunderbird/102.12.0
+Subject: Re: Fwd: Waking up from resume locks up on sr device
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <len.brown@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Tony Luck <tony.luck@intel.com>,
+        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+        Thorsten Leemhuis <linux@leemhuis.info>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Linux Power Management <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Hardening <linux-hardening@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
+ <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com>
+ <ZIQ6bkau3j6qGef8@duo.ucw.cz>
+ <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com>
+ <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
+ <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
+ <84f1c51c-86f9-04b3-0cd1-f685ebee7592@kernel.org>
+ <37ed36f0-6f72-115c-85fb-62ef5ad72e76@suse.de>
+ <b0fdf454-b2f7-c273-66f5-efe42fbc2807@kernel.org>
+ <859f0eda-4984-4489-9851-c9f6ec454a88@rowland.harvard.edu>
+ <3f85cb4a-8b14-623f-eb4e-40baab1ed888@acm.org>
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
-        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20230614071719.6372-1-michael.christie@oracle.com>
- <20230614071719.6372-16-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230614071719.6372-16-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <3f85cb4a-8b14-623f-eb4e-40baab1ed888@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/14/23 00:17, Mike Christie wrote:
-> If scsi_execute_cmd returns < 0 it will not have set the sshdr, so we
-> can't access it.
+On 6/15/23 03:04, Bart Van Assche wrote:
+> On 6/14/23 07:26, Alan Stern wrote:
+>> On Wed, Jun 14, 2023 at 04:35:50PM +0900, Damien Le Moal wrote:
+>>> Or... Why the heck scsi_rescan_device() is calling device_lock() ? This
+>>> is the only place in scsi code I can see that takes this lock. I suspect
+>>> this is to serialize either rescans, or serialize with resume, or both.
+>>> For serializing rescans, we can use another lock. For serializing with
+>>> PM, we should wait for PM transitions...
+>>> Something is not right here.
+>>
+>> Here's what commit e27829dc92e5 ("scsi: serialize ->rescan against
+>> ->remove", written by Christoph Hellwig) says:
+>>
+>>      Lock the device embedded in the scsi_device to protect against
+>>      concurrent calls to ->remove.
+>>
+>> That's the commit which added the device_lock() call.
 > 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->   drivers/scsi/scsi_transport_spi.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-> index 2442d4d2e3f3..2100c3adb456 100644
-> --- a/drivers/scsi/scsi_transport_spi.c
-> +++ b/drivers/scsi/scsi_transport_spi.c
-> @@ -126,7 +126,7 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
->   		 */
->   		result = scsi_execute_cmd(sdev, cmd, opf, buffer, bufflen,
->   					  DV_TIMEOUT, 1, &exec_args);
-> -		if (result < 0 || !scsi_sense_valid(sshdr) ||
-> +		if (result <= 0 || !scsi_sense_valid(sshdr) ||
->   		    sshdr->sense_key != UNIT_ATTENTION)
->   			break;
->   	}
+> Even if scsi_rescan_device() would use another mechanism for 
+> serialization against sd_remove() and sr_remove(), we still need to 
+> solve the issue that the ATA code calls scsi_rescan_device() before 
+> resuming has finished. scsi_rescan_device() issues I/O. Issuing I/O to a 
+> device is not allowed before that device has been resumed.
 
-Hmm ... why is this change necessary? If result == 0 and args->sshdr != 
-0 then scsi_execute() has called scsi_normalize_sense(). The first 
-function call in scsi_normalize_sense() is memset(sshdr, 0, 
-sizeof(struct scsi_sense_hdr)). Does this mean that it is safe to access 
-the contents of sshdr if scsi_execute_cmd() returns 0?
+I am not convinced of that: scsi suspend quiecse the queue, thus preventing IOs
+from the block layer, but not internale scsi ml commands, which is what
+scsi_rescan_device() issues.
 
-Thanks,
+In any case, I am thinking that best (and quickest) fix for this issue for now
+is to have libata define a device link to make the scsi device a "parent" of the
+ata device (which is the ata link as of now). This way, PM operation ordering
+will ensure that the scsi device resume will be done before the ata device. What
+I really do not like about this though is that the suspend side would be done in
+the reverse order: ata first and then scsi, but we really want the reverse here
+to ensure that the request queue is quiesced before we suspend ata. That said,
+there is no such synchronization right now and so this is probably happening
+already without raising issues apparently.
 
-Bart.
+So ideally:
+1) Make the ata device the parent of the scsi device using a device link
+2) For suspend, the scsi device suspend will be done first, followed by the ata
+device, which is what we want.
+3) For resume, ata device will be first, followed by scsi device. The call to
+scsi_rescan_device() from libata being in a work task, asynchronous from the ata
+resume context, we need to synchronize that work to wait for the scsi device
+resume to complete. (but do we really given that we are going to issue internal
+commands only ?)
+
+Alan, Rafael,
+
+For the synchronization of step (3), if I understand the pm code correctly,
+using device_pm_wait_for_dev() would work only if async resume is on. This would
+be ineffective for the sync case. How can we best deal with this ?
+
+
+-- 
+Damien Le Moal
+Western Digital Research
+
