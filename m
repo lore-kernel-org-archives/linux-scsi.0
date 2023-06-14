@@ -2,173 +2,159 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE1FAEB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 05:56:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7364FEB64DC
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 06:33:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243027AbjFNF4c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 01:56:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59630 "EHLO
+        id S243210AbjFNGdu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 02:33:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243007AbjFNF4a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 01:56:30 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA04D1BDA
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 22:56:26 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4Qgvn44hCQzBQJYZ
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 13:56:24 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1686722184; x=1689314185; bh=ifq8SS92AiyQI92n55ie/vsInhk
-        9lQuSNFdLJ7tnOxs=; b=E5Ms8znZJcpeZWdiYr9w6xx4Gc0b9QuCG5AOxBAAsYV
-        in+FDR97kndTlXNXhXm8A0LwHW7cHIFU7spI/D67+cmW35V7gYRD5mJAr79SsOGG
-        kq3+4/wMeghvnlsp4zjeDb/8YA1xxRt7YnZ0yYfguaf0BR8dfUGWdGNkSCgzkQAm
-        HDG4rR79wp3wI7OHll39PrtYjE3d1/gWHKTuG+P6P/yTpB5CScQE6Hgqsa7EQIi6
-        ldBuXlBlVKBGeCuNlacZo7qpLiSDi98eVnqDyEHmsnbib6FGbukR+HTu2EWmhfWq
-        cx6sMTYnYWCqaG8g938idY55gYAIZSghZuoVnda6udg==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 9it-UQ4ZBBMG for <linux-scsi@vger.kernel.org>;
-        Wed, 14 Jun 2023 13:56:24 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4Qgvn43C3SzBJLB3;
-        Wed, 14 Jun 2023 13:56:24 +0800 (CST)
+        with ESMTP id S233971AbjFNGdZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 02:33:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11B471FC9;
+        Tue, 13 Jun 2023 23:31:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 98AFA6304E;
+        Wed, 14 Jun 2023 06:31:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86A3AC433C0;
+        Wed, 14 Jun 2023 06:31:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686724313;
+        bh=U3PE7SCQ1RxmKERA37xeQi0YnSmGXq/InAGZE9u2dUg=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=ba63IBzLXf4v1BRJlu0Aery8nmHq4ZxH63PyyGkxlUNZSWJqBkTKv7wf/kO3KB3UG
+         2IEh8nKDRrjkjXhwUNSwp1kTIbq6fEVimy41dBu4bjRLG57V73MRcOnr/AISqi4Lux
+         EEHm4j7cSnQ2+qzYaUJfJIH+b2/ILC83y3qfsdH9zB+0d8RZHqMAKI+/7ZlmqI130L
+         WTA5mONXSvdWQ4+Xn0ZukvhF7DX9TtcYtgT2ZX3ZxndN8HIsXcB17kSng8Ee8QCRRo
+         s/FrS9aYRuvf0HbW545P1InaKsRjsvwynmBgiCSTR3ZnwQh2oDHdsCeZRdd0S9al3Z
+         X9Kcf9w1IZ7hw==
+Message-ID: <e7fce935-68ac-6e8f-072f-87e6271c2f96@kernel.org>
+Date:   Wed, 14 Jun 2023 15:31:49 +0900
 MIME-Version: 1.0
-Date:   Wed, 14 Jun 2023 13:56:24 +0800
-From:   wuyonggang001@208suo.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        hare@kernel.org
-Subject: [PATCH] scsi: myrs: Replacing snprintf with scnprintf
-In-Reply-To: <f82ebaeda200bc172cd1764b44fa1a0a@208suo.com>
-References: <20230613065350.39003-1-zhanglibing@cdjrlc.com>
- <f82ebaeda200bc172cd1764b44fa1a0a@208suo.com>
-User-Agent: Roundcube Webmail
-Message-ID: <6d2c37de23facd0cd854bbaf6913ba3e@208suo.com>
-X-Sender: wuyonggang001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: Fwd: Waking up from resume locks up on sr device
+Content-Language: en-US
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     Joe Breuer <linux-kernel@jmbreuer.net>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <len.brown@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Tony Luck <tony.luck@intel.com>,
+        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+        Thorsten Leemhuis <linux@leemhuis.info>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Linux Power Management <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Hardening <linux-hardening@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
+ <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com>
+ <ZIQ6bkau3j6qGef8@duo.ucw.cz>
+ <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com>
+ <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
+ <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
+ <84f1c51c-86f9-04b3-0cd1-f685ebee7592@kernel.org>
+ <CAAd53p665S+dfOvWZt2UwTs=VrxE=FtpqjzUrSuLKR5tBpAa9Q@mail.gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAAd53p665S+dfOvWZt2UwTs=VrxE=FtpqjzUrSuLKR5tBpAa9Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warning:
+On 6/14/23 14:37, Kai-Heng Feng wrote:
+> On Wed, Jun 14, 2023 at 12:49 PM Damien Le Moal <dlemoal@kernel.org> wrote:
+>>
+>> On 6/11/23 18:05, Joe Breuer wrote:
+>>> I'm the reporter of this issue.
+>>>
+>>> I just tried this patch against 6.3.4, and it completely fixes my
+>>> suspend/resume issue.
+>>>
+>>> The optical drive stays usable after resume, even suspending/resuming
+>>> during playback of CDDA content works flawlessly and playback resumes
+>>> seamlessly after system resume.
+>>>
+>>> So, from my perspective: Good one!
+>>
+>> In place of Bart's fix, could you please try this patch ?
+> 
+> Issue still persists at my end, when /sys/power/pm_async is 0.
+> device_pm_wait_for_dev() in its current form is only usable for async case.
 
-drivers/scsi/myrs.c:1411:8-16: WARNING: use scnprintf or sprintf
+OK. Thanks for checking. Let me dig further.
 
-Signed-off-by: Yonggang Wu <wuyonggang001@208suo.com>
----
-  drivers/scsi/myrs.c | 22 +++++++++++-----------
-  1 file changed, 11 insertions(+), 11 deletions(-)
+> 
+> Kai-Heng
+> 
+>>
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index b80e68000dd3..a81eb4f882ab 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -4006,9 +4006,32 @@ static void ata_eh_handle_port_resume(struct
+>> ata_port *ap)
+>>         /* tell ACPI that we're resuming */
+>>         ata_acpi_on_resume(ap);
+>>
+>> -       /* update the flags */
+>>         spin_lock_irqsave(ap->lock, flags);
+>> +
+>> +       /* Update the flags */
+>>         ap->pflags &= ~(ATA_PFLAG_PM_PENDING | ATA_PFLAG_SUSPENDED);
+>> +
+>> +       /*
+>> +        * Resuming the port will trigger a rescan of the ATA device(s)
+>> +        * connected to it. Before scheduling the rescan, make sure that
+>> +        * the associated scsi device(s) are fully resumed as well.
+>> +        */
+>> +       ata_for_each_link(link, ap, HOST_FIRST) {
+>> +               ata_for_each_dev(dev, link, ENABLED) {
+>> +                       struct scsi_device *sdev = dev->sdev;
+>> +
+>> +                       if (!sdev)
+>> +                               continue;
+>> +                       if (scsi_device_get(sdev))
+>> +                               continue;
+>> +
+>> +                       spin_unlock_irqrestore(ap->lock, flags);
+>> +                       device_pm_wait_for_dev(&ap->tdev,
+>> +                                              &sdev->sdev_gendev);
+>> +                       scsi_device_put(sdev);
+>> +                       spin_lock_irqsave(ap->lock, flags);
+>> +               }
+>> +       }
+>>         spin_unlock_irqrestore(ap->lock, flags);
+>>  }
+>>  #endif /* CONFIG_PM */
+>>
+>> Thanks !
+>>
+>> --
+>> Damien Le Moal
+>> Western Digital Research
+>>
 
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index a1eec65a9713..ced1d2fbd862 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -939,7 +939,7 @@ static ssize_t raid_state_show(struct device *dev,
-      int ret;
+-- 
+Damien Le Moal
+Western Digital Research
 
-      if (!sdev->hostdata)
--        return snprintf(buf, 16, "Unknown\n");
-+        return scnprintf(buf, 16, "Unknown\n");
-
-      if (sdev->channel >= cs->ctlr_info->physchan_present) {
-          struct myrs_ldev_info *ldev_info = sdev->hostdata;
-@@ -1058,7 +1058,7 @@ static ssize_t raid_level_show(struct device *dev,
-      const char *name = NULL;
-
-      if (!sdev->hostdata)
--        return snprintf(buf, 16, "Unknown\n");
-+        return scnprintf(buf, 16, "Unknown\n");
-
-      if (sdev->channel >= cs->ctlr_info->physchan_present) {
-          struct myrs_ldev_info *ldev_info;
-@@ -1086,7 +1086,7 @@ static ssize_t rebuild_show(struct device *dev,
-      unsigned char status;
-
-      if (sdev->channel < cs->ctlr_info->physchan_present)
--        return snprintf(buf, 32, "physical device - not rebuilding\n");
-+        return scnprintf(buf, 32, "physical device - not 
-rebuilding\n");
-
-      ldev_info = sdev->hostdata;
-      ldev_num = ldev_info->ldev_num;
-@@ -1190,7 +1190,7 @@ static ssize_t consistency_check_show(struct 
-device *dev,
-      unsigned short ldev_num;
-
-      if (sdev->channel < cs->ctlr_info->physchan_present)
--        return snprintf(buf, 32, "physical device - not checking\n");
-+        return scnprintf(buf, 32, "physical device - not checking\n");
-
-      ldev_info = sdev->hostdata;
-      if (!ldev_info)
-@@ -1303,7 +1303,7 @@ static ssize_t serial_show(struct device *dev,
-
-      memcpy(serial, cs->ctlr_info->serial_number, 16);
-      serial[16] = '\0';
--    return snprintf(buf, 16, "%s\n", serial);
-+    return scnprintf(buf, 16, "%s\n", serial);
-  }
-  static DEVICE_ATTR_RO(serial);
-
-@@ -1313,7 +1313,7 @@ static ssize_t ctlr_num_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 20, "%d\n", cs->host->host_no);
-+    return scnprintf(buf, 20, "%d\n", cs->host->host_no);
-  }
-  static DEVICE_ATTR_RO(ctlr_num);
-
-@@ -1388,7 +1388,7 @@ static ssize_t model_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 28, "%s\n", cs->model_name);
-+    return scnprintf(buf, 28, "%s\n", cs->model_name);
-  }
-  static DEVICE_ATTR_RO(model);
-
-@@ -1398,7 +1398,7 @@ static ssize_t ctlr_type_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 4, "%d\n", cs->ctlr_info->ctlr_type);
-+    return scnprintf(buf, 4, "%d\n", cs->ctlr_info->ctlr_type);
-  }
-  static DEVICE_ATTR_RO(ctlr_type);
-
-@@ -1408,7 +1408,7 @@ static ssize_t cache_size_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 8, "%d MB\n", cs->ctlr_info->cache_size_mb);
-+    return scnprintf(buf, 8, "%d MB\n", cs->ctlr_info->cache_size_mb);
-  }
-  static DEVICE_ATTR_RO(cache_size);
-
-@@ -1418,7 +1418,7 @@ static ssize_t firmware_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 16, "%d.%02d-%02d\n",
-+    return scnprintf(buf, 16, "%d.%02d-%02d\n",
-              cs->ctlr_info->fw_major_version,
-              cs->ctlr_info->fw_minor_version,
-              cs->ctlr_info->fw_turn_number);
-@@ -1488,7 +1488,7 @@ static ssize_t 
-disable_enclosure_messages_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 3, "%d\n", cs->disable_enc_msg);
-+    return scnprintf(buf, 3, "%d\n", cs->disable_enc_msg);
-  }
-
-  static ssize_t disable_enclosure_messages_store(struct device *dev,
