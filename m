@@ -2,140 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4306CEB64DC
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:49:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A701EB64D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:54:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241045AbjFNEtj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 00:49:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39364 "EHLO
+        id S233971AbjFNEyk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 00:54:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231937AbjFNEth (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:49:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0C7F10CC;
-        Tue, 13 Jun 2023 21:49:36 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4F2D361466;
-        Wed, 14 Jun 2023 04:49:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CA4CC433C0;
-        Wed, 14 Jun 2023 04:49:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686718175;
-        bh=pbzb0xFNNW0u7m7s+rM8lFJaPjyJzD071PFKZTs/J/A=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=UM+oe/97PR4O1Hi+cZGwPwSNt6JUCfiE0bw7oltchUs+diqjB6VVn5/4KeuRMLMW5
-         eUFtHPKWelJK+r2aHwtBq09I25HiWUdOozz+lP6D5dllb/jaFQiUFmVnE4JGDX3i7O
-         V9Guu6jdin8C0KNJLS6+pY8ZRnyiuS6MPiFbSVd5tgODhFUFx4VI7awcPZHsPi5EOn
-         gY9GM4zxSgnsFeejG8HRUT5k9I8EyDII6Jb6Maxp1kYDsWXm2+ggVd3W1as3saiYXU
-         ZlG8QGUno+oWcR/VCGccifklYfE0TVqlQMWERcIFK172T/QTr44xLm54qIkWnD0EHU
-         th6NT0EiQQ/Dg==
-Message-ID: <84f1c51c-86f9-04b3-0cd1-f685ebee7592@kernel.org>
-Date:   Wed, 14 Jun 2023 13:49:31 +0900
+        with ESMTP id S234067AbjFNEyi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:54:38 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6371715
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 21:54:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1686718473; x=1718254473;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=3Muu6E+Is3WJHLbxz8Btl2rdbYzvJWSQQjPTwfqNXYs=;
+  b=QzV3NrII531qCTPoI3mYBSPhx0HS8mDwBDZjcalJRvXnw/iSYzNmojJN
+   QYnObQrbjUf7PIHlo27kv0Eiv70AGQnTYqQbUOTV619XdMNTTuQE40YmZ
+   +ND0qdCZpr9E0NNjTHMYDfMEcelceesZHjjsHWmwLgwPmi7oWBPlB7r0n
+   XLa3vXyvD2hnHGby1TKLSsDXXTiiHPX9vzwGxCjp3PTHLbd4jHnlplMJq
+   jJYlBSqL+oxoLTWhJ+6YxHT7EKcBfaOKYvg8lu4zNBr3iMB2isSD+m4UI
+   YJWwVr/CeW3L2vtwfG8hXOIVcWioTDruDoQ4URzOdOUb+kyhmqYG7wfjU
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="343214671"
+X-IronPort-AV: E=Sophos;i="6.00,241,1681196400"; 
+   d="scan'208";a="343214671"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 21:54:33 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="836138360"
+X-IronPort-AV: E=Sophos;i="6.00,241,1681196400"; 
+   d="scan'208";a="836138360"
+Received: from cjohann-mobl.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.60.240])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 21:54:31 -0700
+Message-ID: <f7e5a3d9-3caa-e75d-5069-3763d3ca8951@intel.com>
+Date:   Wed, 14 Jun 2023 07:54:27 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: Fwd: Waking up from resume locks up on sr device
-To:     Joe Breuer <linux-kernel@jmbreuer.net>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Pavel Machek <pavel@ucw.cz>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <len.brown@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Tony Luck <tony.luck@intel.com>,
-        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-        Thorsten Leemhuis <linux@leemhuis.info>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Linux Power Management <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Hardening <linux-hardening@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>
-References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
- <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com>
- <ZIQ6bkau3j6qGef8@duo.ucw.cz>
- <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com>
- <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
- <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
+ Firefox/102.0 Thunderbird/102.12.0
+Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Arrow Lake
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org
+References: <20230613170327.61186-1-adrian.hunter@intel.com>
+ <c3b42f98-31f8-39f4-4540-cccf0bfe31cd@acm.org>
 Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <c3b42f98-31f8-39f4-4540-cccf0bfe31cd@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/11/23 18:05, Joe Breuer wrote:
-> I'm the reporter of this issue.
+On 13/06/23 21:22, Bart Van Assche wrote:
+> On 6/13/23 10:03, Adrian Hunter wrote:
+>> Add PCI ID to support Intel Arrow Lake, same as MTL.
 > 
-> I just tried this patch against 6.3.4, and it completely fixes my
-> suspend/resume issue.
-> 
-> The optical drive stays usable after resume, even suspending/resuming
-> during playback of CDDA content works flawlessly and playback resumes
-> seamlessly after system resume.
-> 
-> So, from my perspective: Good one!
+> The patch looks good to me but the "same as MTL" text in the patch description looks confusing to me?
 
-In place of Bart's fix, could you please try this patch ?
+The code change is using the same driver data as MTL:
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index b80e68000dd3..a81eb4f882ab 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -4006,9 +4006,32 @@ static void ata_eh_handle_port_resume(struct
-ata_port *ap)
-        /* tell ACPI that we're resuming */
-        ata_acpi_on_resume(ap);
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 38276dac8e52..cf3987773051 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -599,6 +599,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0xA847), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },	<--- here
+ 	{ }	/* terminate list */
+ };
+ 
+MTL is Meteor Lake.  The abbreviation is not unheard of in
+commit messages. A web search for Intel MTL brings up the answer.
 
--       /* update the flags */
-        spin_lock_irqsave(ap->lock, flags);
-+
-+       /* Update the flags */
-        ap->pflags &= ~(ATA_PFLAG_PM_PENDING | ATA_PFLAG_SUSPENDED);
-+
-+       /*
-+        * Resuming the port will trigger a rescan of the ATA device(s)
-+        * connected to it. Before scheduling the rescan, make sure that
-+        * the associated scsi device(s) are fully resumed as well.
-+        */
-+       ata_for_each_link(link, ap, HOST_FIRST) {
-+               ata_for_each_dev(dev, link, ENABLED) {
-+                       struct scsi_device *sdev = dev->sdev;
-+
-+                       if (!sdev)
-+                               continue;
-+                       if (scsi_device_get(sdev))
-+                               continue;
-+
-+                       spin_unlock_irqrestore(ap->lock, flags);
-+                       device_pm_wait_for_dev(&ap->tdev,
-+                                              &sdev->sdev_gendev);
-+                       scsi_device_put(sdev);
-+                       spin_lock_irqsave(ap->lock, flags);
-+               }
-+       }
-        spin_unlock_irqrestore(ap->lock, flags);
- }
- #endif /* CONFIG_PM */
+And there is this earlier patch to the same code:
 
-Thanks !
+commit 4049f7acef3eb37c1ea0df45f3ffc29404f4e708
+Author: Adrian Hunter <adrian.hunter@intel.com>
+Date:   Mon Apr 4 08:50:38 2022 +0300
 
--- 
-Damien Le Moal
-Western Digital Research
+    scsi: ufs: ufs-pci: Add support for Intel MTL
+    
+    Add PCI ID and callbacks to support Intel Meteor Lake (MTL).
+    
+    Link: https://lore.kernel.org/r/20220404055038.2208051-1-adrian.hunter@intel.com
+    Cc: stable@vger.kernel.org # v5.15+
+    Reviewed-by: Avri Altman <avri.altman@wdc.com>
+    Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+    Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
