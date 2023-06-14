@@ -2,103 +2,166 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A701EB64D8
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:54:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27BBBEB64D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 04:57:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233971AbjFNEyk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 00:54:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41470 "EHLO
+        id S234067AbjFNE56 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 00:57:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234067AbjFNEyi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:54:38 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6371715
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 21:54:33 -0700 (PDT)
+        with ESMTP id S233669AbjFNE55 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 00:57:57 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01280122;
+        Tue, 13 Jun 2023 21:57:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686718473; x=1718254473;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=3Muu6E+Is3WJHLbxz8Btl2rdbYzvJWSQQjPTwfqNXYs=;
-  b=QzV3NrII531qCTPoI3mYBSPhx0HS8mDwBDZjcalJRvXnw/iSYzNmojJN
-   QYnObQrbjUf7PIHlo27kv0Eiv70AGQnTYqQbUOTV619XdMNTTuQE40YmZ
-   +ND0qdCZpr9E0NNjTHMYDfMEcelceesZHjjsHWmwLgwPmi7oWBPlB7r0n
-   XLa3vXyvD2hnHGby1TKLSsDXXTiiHPX9vzwGxCjp3PTHLbd4jHnlplMJq
-   jJYlBSqL+oxoLTWhJ+6YxHT7EKcBfaOKYvg8lu4zNBr3iMB2isSD+m4UI
-   YJWwVr/CeW3L2vtwfG8hXOIVcWioTDruDoQ4URzOdOUb+kyhmqYG7wfjU
+  t=1686718675; x=1718254675;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ZzYK1qJbvS5rbTkIPTvyqdeqBd9oIHgEv+TMqS6toKk=;
+  b=CkAYym0F0CJY2LqGA/ivbb3Z+R7o2zdVPw838rQLG2wleWH3xWegfHci
+   smTIAIrICI4dyB1WXGv05ormvujC4bZokhWB9LkxvXxv8JIsGLzrUV8hU
+   +xiOdo8gzGCnwQBBIsVrHKRACn38Gz9eChb0Q5fkNwxHlJNpgGWvHe5Ni
+   12AcjVPYWTuhQbDFF+luWhL3Kvl1yjbqubh77X9FBt7YsDJU228F4ihFj
+   MB57GUCfP/Y4TVhXJo96hc9gLi03cS+7UWCbTBY4fTTEqHWJzI3FoAz91
+   PijDF15Y3BEsoY8UrK+VCLl96NrMFVUF/WJzeslh5Pst9tyEbroNRmsNP
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="343214671"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="338153721"
 X-IronPort-AV: E=Sophos;i="6.00,241,1681196400"; 
-   d="scan'208";a="343214671"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 21:54:33 -0700
+   d="scan'208";a="338153721"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 21:57:55 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="836138360"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="706071738"
 X-IronPort-AV: E=Sophos;i="6.00,241,1681196400"; 
-   d="scan'208";a="836138360"
-Received: from cjohann-mobl.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.60.240])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 21:54:31 -0700
-Message-ID: <f7e5a3d9-3caa-e75d-5069-3763d3ca8951@intel.com>
-Date:   Wed, 14 Jun 2023 07:54:27 +0300
+   d="scan'208";a="706071738"
+Received: from lkp-server02.sh.intel.com (HELO d59cacf64e9e) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 13 Jun 2023 21:57:50 -0700
+Received: from kbuild by d59cacf64e9e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1q9IZp-0000CP-1u;
+        Wed, 14 Jun 2023 04:57:49 +0000
+Date:   Wed, 14 Jun 2023 12:54:50 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     oe-kbuild-all@lists.linux.dev,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>
+Subject: Re: [PATCH v6 6/7] scsi: replace scsi_target_block() by
+ scsi_block_targets()
+Message-ID: <202306141255.47GfqLNb-lkp@intel.com>
+References: <20230613174227.11235-7-mwilck@suse.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.12.0
-Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Arrow Lake
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org
-References: <20230613170327.61186-1-adrian.hunter@intel.com>
- <c3b42f98-31f8-39f4-4540-cccf0bfe31cd@acm.org>
-Content-Language: en-US
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <c3b42f98-31f8-39f4-4540-cccf0bfe31cd@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230613174227.11235-7-mwilck@suse.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/06/23 21:22, Bart Van Assche wrote:
-> On 6/13/23 10:03, Adrian Hunter wrote:
->> Add PCI ID to support Intel Arrow Lake, same as MTL.
-> 
-> The patch looks good to me but the "same as MTL" text in the patch description looks confusing to me?
+Hi,
 
-The code change is using the same driver data as MTL:
+kernel test robot noticed the following build errors:
 
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 38276dac8e52..cf3987773051 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -599,6 +599,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0xA847), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
-+	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },	<--- here
- 	{ }	/* terminate list */
- };
- 
-MTL is Meteor Lake.  The abbreviation is not unheard of in
-commit messages. A web search for Intel MTL brings up the answer.
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next axboe-block/for-next linus/master v6.4-rc6 next-20230613]
+[cannot apply to hch-configfs/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-And there is this earlier patch to the same code:
+url:    https://github.com/intel-lab-lkp/linux/commits/mwilck-suse-com/bsg-increase-number-of-devices/20230614-014437
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20230613174227.11235-7-mwilck%40suse.com
+patch subject: [PATCH v6 6/7] scsi: replace scsi_target_block() by scsi_block_targets()
+config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20230614/202306141255.47GfqLNb-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 12.3.0
+reproduce (this is a W=1 build):
+        mkdir -p ~/bin
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        git remote add mkp-scsi https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+        git fetch mkp-scsi for-next
+        git checkout mkp-scsi/for-next
+        b4 shazam https://lore.kernel.org/r/20230613174227.11235-7-mwilck@suse.com
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=alpha olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.3.0 ~/bin/make.cross W=1 O=build_dir ARCH=alpha SHELL=/bin/bash drivers/scsi/
 
-commit 4049f7acef3eb37c1ea0df45f3ffc29404f4e708
-Author: Adrian Hunter <adrian.hunter@intel.com>
-Date:   Mon Apr 4 08:50:38 2022 +0300
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306141255.47GfqLNb-lkp@intel.com/
 
-    scsi: ufs: ufs-pci: Add support for Intel MTL
-    
-    Add PCI ID and callbacks to support Intel Meteor Lake (MTL).
-    
-    Link: https://lore.kernel.org/r/20220404055038.2208051-1-adrian.hunter@intel.com
-    Cc: stable@vger.kernel.org # v5.15+
-    Reviewed-by: Avri Altman <avri.altman@wdc.com>
-    Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-    Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+All errors (new ones prefixed by >>):
 
+>> drivers/scsi/scsi_lib.c:2912:1: error: conflicting types for 'scsi_block_targets'; have 'void(struct device *, struct Scsi_Host *)'
+    2912 | scsi_block_targets(struct device *dev, struct Scsi_Host *shost)
+         | ^~~~~~~~~~~~~~~~~~
+   In file included from include/scsi/scsi_cmnd.h:12,
+                    from drivers/scsi/scsi_lib.c:29:
+   include/scsi/scsi_device.h:459:6: note: previous declaration of 'scsi_block_targets' with type 'void(struct Scsi_Host *, struct device *)'
+     459 | void scsi_block_targets(struct Scsi_Host *shost, struct device *dev);
+         |      ^~~~~~~~~~~~~~~~~~
+   In file included from include/linux/linkage.h:7,
+                    from include/linux/preempt.h:10,
+                    from include/linux/spinlock.h:56,
+                    from include/linux/wait.h:9,
+                    from include/linux/mempool.h:8,
+                    from include/linux/bio.h:8,
+                    from drivers/scsi/scsi_lib.c:12:
+   drivers/scsi/scsi_lib.c:2918:19: error: conflicting types for 'scsi_block_targets'; have 'void(struct device *, struct Scsi_Host *)'
+    2918 | EXPORT_SYMBOL_GPL(scsi_block_targets);
+         |                   ^~~~~~~~~~~~~~~~~~
+   include/linux/export.h:87:28: note: in definition of macro '___EXPORT_SYMBOL'
+      87 |         extern typeof(sym) sym;                                                 \
+         |                            ^~~
+   include/linux/export.h:147:41: note: in expansion of macro '__EXPORT_SYMBOL'
+     147 | #define _EXPORT_SYMBOL(sym, sec)        __EXPORT_SYMBOL(sym, sec, "")
+         |                                         ^~~~~~~~~~~~~~~
+   include/linux/export.h:151:41: note: in expansion of macro '_EXPORT_SYMBOL'
+     151 | #define EXPORT_SYMBOL_GPL(sym)          _EXPORT_SYMBOL(sym, "_gpl")
+         |                                         ^~~~~~~~~~~~~~
+   drivers/scsi/scsi_lib.c:2918:1: note: in expansion of macro 'EXPORT_SYMBOL_GPL'
+    2918 | EXPORT_SYMBOL_GPL(scsi_block_targets);
+         | ^~~~~~~~~~~~~~~~~
+   include/scsi/scsi_device.h:459:6: note: previous declaration of 'scsi_block_targets' with type 'void(struct Scsi_Host *, struct device *)'
+     459 | void scsi_block_targets(struct Scsi_Host *shost, struct device *dev);
+         |      ^~~~~~~~~~~~~~~~~~
+
+
+vim +2912 drivers/scsi/scsi_lib.c
+
+  2898	
+  2899	/**
+  2900	 * scsi_block_targets - transition all SCSI child devices to SDEV_BLOCK state
+  2901	 * @dev: a parent device of one or more scsi_target devices
+  2902	 * @shost: the Scsi_Host to which this device belongs
+  2903	 *
+  2904	 * Iterate over all children of @dev, which should be scsi_target devices,
+  2905	 * and switch all subordinate scsi devices to SDEV_BLOCK state. Wait for
+  2906	 * ongoing scsi_queue_rq() calls to finish. May sleep.
+  2907	 *
+  2908	 * Note:
+  2909	 * @dev must not itself be a scsi_target device.
+  2910	 */
+  2911	void
+> 2912	scsi_block_targets(struct device *dev, struct Scsi_Host *shost)
+  2913	{
+  2914		WARN_ON_ONCE(scsi_is_target_device(dev));
+  2915		device_for_each_child(dev, NULL, target_block);
+  2916		blk_mq_wait_quiesce_done(&shost->tag_set);
+  2917	}
+  2918	EXPORT_SYMBOL_GPL(scsi_block_targets);
+  2919	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
