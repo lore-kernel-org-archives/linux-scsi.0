@@ -2,142 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18F80EB64DA
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jun 2023 21:16:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46EDEEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 01:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239454AbjFMVQ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jun 2023 17:16:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60802 "EHLO
+        id S241790AbjFNB6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jun 2023 21:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235998AbjFMVQ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 17:16:27 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AF0C19B7;
-        Tue, 13 Jun 2023 14:16:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686690986; x=1718226986;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=xBxRrQSWCNJeRrf4b0WLzHh8isR+4h1yUuTtpwm0xS8=;
-  b=Thb0yr6yDOENAAADQ/By5OkT5yGyR4hWy1y4J20bDPy6VTfPDAxMKLQy
-   TzWgtPbSJjSkZ4oJQoFKUX5lgz0CPcj89m5ttxAW11nNses68G9r7M4oO
-   x5IFReoswNbQOV48ToWuUsk1disZDLd6MRuoWPpmnqNqwRIZ34PVoZb1H
-   NdD+eEcRirEdWrzHaWvYHflfq+zekAXInc5YKoZyyyGPvN8txp9TfG6jh
-   1plnai4ngiCvihK8xUiMIO0+IpECLhPJnzAhiFyrjxPd4UbAVwFShjXYj
-   YEBN1H8UHcSuoyCPCl+n5YrhuUudFg6tffWCl117VLl9GdxGiFA9ZLDJ9
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="357334279"
-X-IronPort-AV: E=Sophos;i="6.00,240,1681196400"; 
-   d="scan'208";a="357334279"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 14:16:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="1041912514"
-X-IronPort-AV: E=Sophos;i="6.00,240,1681196400"; 
-   d="scan'208";a="1041912514"
-Received: from lkp-server01.sh.intel.com (HELO 211f47bdb1cb) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 13 Jun 2023 14:16:22 -0700
-Received: from kbuild by 211f47bdb1cb with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q9BNF-0001mK-2i;
-        Tue, 13 Jun 2023 21:16:21 +0000
-Date:   Wed, 14 Jun 2023 05:16:04 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>
-Subject: Re: [PATCH v6 6/7] scsi: replace scsi_target_block() by
- scsi_block_targets()
-Message-ID: <202306140503.hMWyg8Xa-lkp@intel.com>
-References: <20230613174227.11235-7-mwilck@suse.com>
+        with ESMTP id S233260AbjFNB6m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2023 21:58:42 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B17ED1FC9;
+        Tue, 13 Jun 2023 18:58:26 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QgpVR0MJpz4f3tNm;
+        Wed, 14 Jun 2023 09:58:23 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7O+HolkasWdLg--.26820S3;
+        Wed, 14 Jun 2023 09:58:23 +0800 (CST)
+Subject: Re: [PATCH 2/2] ufs: don't use the fair tag sharings
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Yu Kuai <yukuai1@huaweicloud.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     Ed Tsai <ed.tsai@mediatek.com>, axboe@kernel.dk,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        stanley.chu@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        powen.kao@mediatek.com, naomi.chu@mediatek.com,
+        wsd_upstream@mediatek.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230509065230.32552-1-ed.tsai@mediatek.com>
+ <20230509065230.32552-3-ed.tsai@mediatek.com>
+ <ZF0K7A6G2cYBjSgn@infradead.org>
+ <aa9af9ae-62a4-6469-244c-b5d9106bb044@acm.org>
+ <ZF5G5ztMng8Xbd1W@infradead.org>
+ <2740ee82-e35f-1cbf-f5d0-373f94eb14a5@acm.org>
+ <de3f41a0-b13d-d4f6-765a-19b857bce53e@huaweicloud.com>
+ <86065501-ab2e-09b4-71cd-c0b18ede00ed@acm.org>
+ <a26e28a6-91e0-e803-749e-2ce957711c64@huaweicloud.com>
+ <097caed2-10b3-7cd1-7c06-90f983e5c720@acm.org>
+ <f9ccab59-91a1-69d5-6d20-2c6ea0e24b5a@huaweicloud.com>
+ <66906bd5-d73f-af96-bf38-c6aee576fa73@acm.org>
+ <bef8340e-f051-db63-5c2f-a2bc94c678ac@huaweicloud.com>
+ <04a4d0db-2f2d-e2fc-5458-4ddf852ffc8a@acm.org>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <3e9e42aa-9a0d-2b73-194b-5c229e9ed533@huaweicloud.com>
+Date:   Wed, 14 Jun 2023 09:58:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230613174227.11235-7-mwilck@suse.com>
+In-Reply-To: <04a4d0db-2f2d-e2fc-5458-4ddf852ffc8a@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCnD7O+HolkasWdLg--.26820S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF43JrWUJr4fWrykXrW3Awb_yoW8Jw4Upa
+        y8tFZIkFs7J398AwsrX3W8uayftwn3Jr97Jr1fG347Zwn09w4fZw4Ut3909rZ3Zr97Cr12
+        gay8Xr95X3s5Z37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUAxhLUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi,
 
-kernel test robot noticed the following build errors:
+在 2023/06/13 22:07, Bart Van Assche 写道:
+> On 5/18/23 00:55, Yu Kuai wrote:
+>> 在 2023/05/18 10:23, Bart Van Assche 写道:
+>>> On 5/17/23 18:49, Yu Kuai wrote:
+>>>> Currently, fair share from hctx_may_queue() requires two
+>>>> atomic_read(active_queues and active_requests), I think this smoothing
+>>>> method can be placed into get_tag fail path, for example, the more 
+>>>> times
+>>>> a disk failed to get tag in a period of time, the more tag this disk 
+>>>> can
+>>>> get, and all the information can be updated here(perhaps directly
+>>>> record how many tags a disk can get, then hctx_may_queue() still only
+>>>> require 2 atomic_read()).
+>>>
+>>> That sounds interesting to me. Do you perhaps plan to implement this 
+>>> approach and to post it as a patch?
+>>
+>> Of course, I'll try to send a RFC patch.
+> 
+> Hi Kuai,
+> 
+> Has this RFC patch already been posted or did I perhaps miss it?
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on jejb-scsi/for-next axboe-block/for-next linus/master v6.4-rc6 next-20230613]
-[cannot apply to hch-configfs/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Sorry for the delay, I finished switch from not share to fair share
+directly verion, however, I found that it's not that simple to add a
+smoothing method, and I'm stuck here for now.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/mwilck-suse-com/bsg-increase-number-of-devices/20230614-014437
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230613174227.11235-7-mwilck%40suse.com
-patch subject: [PATCH v6 6/7] scsi: replace scsi_target_block() by scsi_block_targets()
-config: arm-randconfig-r011-20230612 (https://download.01.org/0day-ci/archive/20230614/202306140503.hMWyg8Xa-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project.git 4a5ac14ee968ff0ad5d2cc1ffa0299048db4c88a)
-reproduce (this is a W=1 build):
-        mkdir -p ~/bin
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install arm cross compiling tool for clang build
-        # apt-get install binutils-arm-linux-gnueabi
-        git remote add mkp-scsi https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
-        git fetch mkp-scsi for-next
-        git checkout mkp-scsi/for-next
-        b4 shazam https://lore.kernel.org/r/20230613174227.11235-7-mwilck@suse.com
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=arm olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/scsi/
+I'll try to send a RFC verion soon, the smoothing method may not be
+flexible, but I'll make sure it can work for your simple case that
+2 device share tags, and one only issue few io while the other issue
+lots of io.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306140503.hMWyg8Xa-lkp@intel.com/
+Thanks,
+Kuai
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> .
+> 
 
-All errors (new ones prefixed by >>):
-
->> drivers/scsi/scsi_lib.c:2912:1: error: conflicting types for 'scsi_block_targets'
-    2912 | scsi_block_targets(struct device *dev, struct Scsi_Host *shost)
-         | ^
-   include/scsi/scsi_device.h:459:6: note: previous declaration is here
-     459 | void scsi_block_targets(struct Scsi_Host *shost, struct device *dev);
-         |      ^
-   1 error generated.
-
-
-vim +/scsi_block_targets +2912 drivers/scsi/scsi_lib.c
-
-  2898	
-  2899	/**
-  2900	 * scsi_block_targets - transition all SCSI child devices to SDEV_BLOCK state
-  2901	 * @dev: a parent device of one or more scsi_target devices
-  2902	 * @shost: the Scsi_Host to which this device belongs
-  2903	 *
-  2904	 * Iterate over all children of @dev, which should be scsi_target devices,
-  2905	 * and switch all subordinate scsi devices to SDEV_BLOCK state. Wait for
-  2906	 * ongoing scsi_queue_rq() calls to finish. May sleep.
-  2907	 *
-  2908	 * Note:
-  2909	 * @dev must not itself be a scsi_target device.
-  2910	 */
-  2911	void
-> 2912	scsi_block_targets(struct device *dev, struct Scsi_Host *shost)
-  2913	{
-  2914		WARN_ON_ONCE(scsi_is_target_device(dev));
-  2915		device_for_each_child(dev, NULL, target_block);
-  2916		blk_mq_wait_quiesce_done(&shost->tag_set);
-  2917	}
-  2918	EXPORT_SYMBOL_GPL(scsi_block_targets);
-  2919	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
