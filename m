@@ -2,165 +2,198 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31876EB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 05:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C10EEB64D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 05:53:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242682AbjFNFhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 01:37:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54436 "EHLO
+        id S242961AbjFNFxT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 01:53:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233043AbjFNFhX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 01:37:23 -0400
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BE0B198D
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 22:37:22 -0700 (PDT)
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 7B24C3F270
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 05:37:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1686721040;
-        bh=L700u4JHszhgKkjQdfFwXH0svBOHFooI3nofINxb84U=;
-        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-         To:Cc:Content-Type;
-        b=J8IR/UxZxnrMUz/OAv3XXvPm/4AplucihaWNCEeMJtGEtiY7NfzqJo94cgJpEVvBF
-         uffa5xuZKao1NmrVvu6ewpNcRBAsvoqqbJNEkp+jnsqK2pm80VY+uq84zvV4WNpBPR
-         vP2JdnDq8BtdJi6NFHmkIWmFxaC17gwjZX5iWjpAOLeYu91bnliqDfPaE9l9U6nOlN
-         i1/fJTj3Ey9MSm0WoOhwRpZOVFBocTba16yOWHmT0lvfdiwZiCpG+fp20WPu9imn6W
-         yoFdr8XzZTBl/EOXL3UquEEwXKnil6F9FWVXolpmbAKhG3aryXbrKLLiwWLtQibI76
-         aGJS2xJ6NVudg==
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-39a9cefa414so4700636b6e.0
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 22:37:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686721039; x=1689313039;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=L700u4JHszhgKkjQdfFwXH0svBOHFooI3nofINxb84U=;
-        b=e07qvg8UBjrwJg9x2qWSyZX0IS5EOLos9T6wQoAWL9b4Rxsj0rRoK/yFiOYQQXrnDl
-         RdUkvvcMKSZVpDr7lsfvIZQ3UUPY7tTlyI1eXmRi9jOZoCJUwS+Sx00Zm6bcEYPIl2sC
-         zy19vf3JgRPfgOVs1oxTwkIxc4iAXTjySOVw52Bk4e6qhaKkrgmHp9n+2Fb6UEgPO8bX
-         3klRprnTFfhcmCjuOZWCWM0/IR4Nvi+qevfG7hfJpJitk+Xy1e9DYutxYajoBCJkTBGk
-         S4eDkOsHHXIEcCV9JVFp4yey67Q9FC+xeNO+XfWVEQ0rmofkGYH9P1KHEoTzBWu8Y+nm
-         lvbA==
-X-Gm-Message-State: AC+VfDwjbTa17Ce7193yJ1vozo/usA6f+SKSKKUSj7NEXs3UY8/6eg7n
-        16rapKhxatObnt/ZGLNEcxq7131PQrtNGkGPI1ArteENNrSyRTJthFrOpN454fJO1CYL+5UYCjs
-        1Kofe227aTijMT9wFyGuAl62W6u2U87WqHLir6Mr6j+xZ2Yh1xpiUP48=
-X-Received: by 2002:aca:2301:0:b0:398:19e6:56a9 with SMTP id e1-20020aca2301000000b0039819e656a9mr9458909oie.2.1686721039178;
-        Tue, 13 Jun 2023 22:37:19 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4ZCvNJFhBXY5DTwt5hF4ORUgqFO+d5WsQ0PVogShHgfbbdYyTneKVBelaRsDRX0hSU0EGW4U4/NdJvc7kGFqw=
-X-Received: by 2002:aca:2301:0:b0:398:19e6:56a9 with SMTP id
- e1-20020aca2301000000b0039819e656a9mr9458892oie.2.1686721038957; Tue, 13 Jun
- 2023 22:37:18 -0700 (PDT)
+        with ESMTP id S234033AbjFNFxQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 01:53:16 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E997519B9
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jun 2023 22:53:14 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4QgvjK37MXzBJLB4
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 13:53:09 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1686721989; x=1689313990; bh=gwL5QqnWkXh0OwdKNyQ5nGlzb3p
+        qMBoMNFQEcLAZTlU=; b=cUIA2qzMBofXMMOjIic3XHBJx6Kuj4mRYoX8FuROgyS
+        HSp1/Ig4etu0Te/yrPT1ZG6stnIAh4pzTLoGcuOdN81BAuAxsmkDRWXeeHyFLDrH
+        98d53fHj4ICZUMOL2oXxJIJC0B3Re0KROREjfmJixN1hyvuQuoyenNzR1t++nQFK
+        jbrt1sqNXw8cSPFTUZGNOIUnfp1Hb4Oqzqdd6voRGnZB/yobzAyGFwTgtKxo9c5c
+        erj4XOYtI9XPSy3l6EPVNFnX8YK4OcwlcUj79qwCMXrjIfN9iQqWQ+K8YgPJxCX4
+        m0zmYr3ZhoRlX3RJRkLzDQKj09cwCRBljKf3h17dz+Q==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id k9-IvlJTtpww for <linux-scsi@vger.kernel.org>;
+        Wed, 14 Jun 2023 13:53:09 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4QgvjK1X25zBJLB3;
+        Wed, 14 Jun 2023 13:53:09 +0800 (CST)
 MIME-Version: 1.0
-References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
- <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com> <ZIQ6bkau3j6qGef8@duo.ucw.cz>
- <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com> <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org>
- <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net> <84f1c51c-86f9-04b3-0cd1-f685ebee7592@kernel.org>
-In-Reply-To: <84f1c51c-86f9-04b3-0cd1-f685ebee7592@kernel.org>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Wed, 14 Jun 2023 13:37:07 +0800
-Message-ID: <CAAd53p665S+dfOvWZt2UwTs=VrxE=FtpqjzUrSuLKR5tBpAa9Q@mail.gmail.com>
-Subject: Re: Fwd: Waking up from resume locks up on sr device
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Joe Breuer <linux-kernel@jmbreuer.net>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <len.brown@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Tony Luck <tony.luck@intel.com>,
-        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-        Thorsten Leemhuis <linux@leemhuis.info>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Linux Power Management <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Hardening <linux-hardening@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Date:   Wed, 14 Jun 2023 13:53:09 +0800
+From:   wuyonggang001@208suo.com
+To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers: message: fusion: Replacing snprintf with scnprintf
+In-Reply-To: <ecee2f186d763f578d770e7e0a05da89@208suo.com>
+References: <20230613061754.22011-1-zhanglibing@cdjrlc.com>
+ <ecee2f186d763f578d770e7e0a05da89@208suo.com>
+User-Agent: Roundcube Webmail
+Message-ID: <4de6b90007332f09f9c2e77aa27c168a@208suo.com>
+X-Sender: wuyonggang001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 14, 2023 at 12:49=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org=
-> wrote:
->
-> On 6/11/23 18:05, Joe Breuer wrote:
-> > I'm the reporter of this issue.
-> >
-> > I just tried this patch against 6.3.4, and it completely fixes my
-> > suspend/resume issue.
-> >
-> > The optical drive stays usable after resume, even suspending/resuming
-> > during playback of CDDA content works flawlessly and playback resumes
-> > seamlessly after system resume.
-> >
-> > So, from my perspective: Good one!
->
-> In place of Bart's fix, could you please try this patch ?
+Fix the following coccicheck warning:
 
-Issue still persists at my end, when /sys/power/pm_async is 0.
-device_pm_wait_for_dev() in its current form is only usable for async case.
+drivers/message/fusion/mptscsih.c:3146:8-16: WARNING: use scnprintf or 
+sprintf
 
-Kai-Heng
+Signed-off-by: Yonggang Wu <wuyonggang001@208suo.com>
+---
+  drivers/message/fusion/mptscsih.c | 24 ++++++++++++------------
+  1 file changed, 12 insertions(+), 12 deletions(-)
 
->
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index b80e68000dd3..a81eb4f882ab 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -4006,9 +4006,32 @@ static void ata_eh_handle_port_resume(struct
-> ata_port *ap)
->         /* tell ACPI that we're resuming */
->         ata_acpi_on_resume(ap);
->
-> -       /* update the flags */
->         spin_lock_irqsave(ap->lock, flags);
-> +
-> +       /* Update the flags */
->         ap->pflags &=3D ~(ATA_PFLAG_PM_PENDING | ATA_PFLAG_SUSPENDED);
-> +
-> +       /*
-> +        * Resuming the port will trigger a rescan of the ATA device(s)
-> +        * connected to it. Before scheduling the rescan, make sure that
-> +        * the associated scsi device(s) are fully resumed as well.
-> +        */
-> +       ata_for_each_link(link, ap, HOST_FIRST) {
-> +               ata_for_each_dev(dev, link, ENABLED) {
-> +                       struct scsi_device *sdev =3D dev->sdev;
-> +
-> +                       if (!sdev)
-> +                               continue;
-> +                       if (scsi_device_get(sdev))
-> +                               continue;
-> +
-> +                       spin_unlock_irqrestore(ap->lock, flags);
-> +                       device_pm_wait_for_dev(&ap->tdev,
-> +                                              &sdev->sdev_gendev);
-> +                       scsi_device_put(sdev);
-> +                       spin_lock_irqsave(ap->lock, flags);
-> +               }
-> +       }
->         spin_unlock_irqrestore(ap->lock, flags);
->  }
->  #endif /* CONFIG_PM */
->
-> Thanks !
->
-> --
-> Damien Le Moal
-> Western Digital Research
->
+diff --git a/drivers/message/fusion/mptscsih.c 
+b/drivers/message/fusion/mptscsih.c
+index 2bc17087d17d..f79a22f130b1 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -3045,7 +3045,7 @@ mptscsih_version_fw_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++    return scnprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
+          (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
+          (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
+          (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
+@@ -3061,7 +3061,7 @@ mptscsih_version_bios_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
++    return scnprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
+          (ioc->biosVersion & 0xFF000000) >> 24,
+          (ioc->biosVersion & 0x00FF0000) >> 16,
+          (ioc->biosVersion & 0x0000FF00) >> 8,
+@@ -3077,7 +3077,7 @@ mptscsih_version_mpi_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%03x\n", ioc->facts.MsgVersion);
++    return scnprintf(buf, PAGE_SIZE, "%03x\n", ioc->facts.MsgVersion);
+  }
+  static DEVICE_ATTR(version_mpi, S_IRUGO, mptscsih_version_mpi_show, 
+NULL);
+
+@@ -3090,7 +3090,7 @@ char *buf)
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%s\n", ioc->prod_name);
++    return scnprintf(buf, PAGE_SIZE, "%s\n", ioc->prod_name);
+  }
+  static DEVICE_ATTR(version_product, S_IRUGO,
+      mptscsih_version_product_show, NULL);
+@@ -3104,7 +3104,7 @@ mptscsih_version_nvdata_persistent_show(struct 
+device *dev,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%02xh\n",
++    return scnprintf(buf, PAGE_SIZE, "%02xh\n",
+          ioc->nvdata_version_persistent);
+  }
+  static DEVICE_ATTR(version_nvdata_persistent, S_IRUGO,
+@@ -3118,7 +3118,7 @@ mptscsih_version_nvdata_default_show(struct device 
+*dev,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, 
+"%02xh\n",ioc->nvdata_version_default);
++    return scnprintf(buf, PAGE_SIZE, "%02xh\n", 
+ioc->nvdata_version_default);
+  }
+  static DEVICE_ATTR(version_nvdata_default, S_IRUGO,
+      mptscsih_version_nvdata_default_show, NULL);
+@@ -3131,7 +3131,7 @@ mptscsih_board_name_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_name);
++    return scnprintf(buf, PAGE_SIZE, "%s\n", ioc->board_name);
+  }
+  static DEVICE_ATTR(board_name, S_IRUGO, mptscsih_board_name_show, 
+NULL);
+
+@@ -3143,7 +3143,7 @@ mptscsih_board_assembly_show(struct device *dev,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_assembly);
++    return scnprintf(buf, PAGE_SIZE, "%s\n", ioc->board_assembly);
+  }
+  static DEVICE_ATTR(board_assembly, S_IRUGO,
+      mptscsih_board_assembly_show, NULL);
+@@ -3156,7 +3156,7 @@ mptscsih_board_tracer_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_tracer);
++    return scnprintf(buf, PAGE_SIZE, "%s\n", ioc->board_tracer);
+  }
+  static DEVICE_ATTR(board_tracer, S_IRUGO,
+      mptscsih_board_tracer_show, NULL);
+@@ -3169,7 +3169,7 @@ mptscsih_io_delay_show(struct device *dev, struct 
+device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
++    return scnprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
+  }
+  static DEVICE_ATTR(io_delay, S_IRUGO,
+      mptscsih_io_delay_show, NULL);
+@@ -3182,7 +3182,7 @@ mptscsih_device_delay_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%02d\n", 
+ioc->device_missing_delay);
++    return scnprintf(buf, PAGE_SIZE, "%02d\n", 
+ioc->device_missing_delay);
+  }
+  static DEVICE_ATTR(device_delay, S_IRUGO,
+      mptscsih_device_delay_show, NULL);
+@@ -3195,7 +3195,7 @@ mptscsih_debug_level_show(struct device *dev, 
+struct device_attribute *attr,
+      MPT_SCSI_HOST    *hd = shost_priv(host);
+      MPT_ADAPTER *ioc = hd->ioc;
+
+-    return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->debug_level);
++    return scnprintf(buf, PAGE_SIZE, "%08xh\n", ioc->debug_level);
+  }
+  static ssize_t
+  mptscsih_debug_level_store(struct device *dev, struct device_attribute 
+*attr,
