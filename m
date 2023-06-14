@@ -2,76 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84BD7EB64D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 08:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B05BEB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 10:36:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230303AbjFNIys (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 04:54:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45700 "EHLO
+        id S235063AbjFNKgh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 06:36:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243781AbjFNIyq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 04:54:46 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 707171BC9
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 01:54:44 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4Qgzkl71rMzBQJZS
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 16:54:39 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1686732879; x=1689324880; bh=NXspP6LKCH9WQXgrfGSWn0gRJXx
-        XFr3UTCp4ndLYBcE=; b=ntix1U9dhofP07tpOOOxtJetvOTL9/WbBf8pgFJUB/S
-        S1p9JEI8TN97kIQ35/a42gK4bVQ4QUO2fQqraNxvPKynxHxFMlGPpMSzmm41y9c+
-        +rU3Disa6+Td22m93DE5wBTxumqoWIBCENGRJdC4+AbixTJ8712X+v3Ryn4Pw07+
-        TSi57S4bY/iNVQ2b2hB78Xv+wWev3dnP2kDCapmmCqk+uR6dmI68VPmKkxd/i67c
-        beO/35kZNTZhv+/+FMnYANRhveb2woMLaenPRaSckDHXNfjcBg5EBzkxJNdPi3e+
-        P2KZeM0h7AwMoPtU9tat+LlC8GQawpAtkhJswsSobog==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id y8OK5OOAy8Ts for <linux-scsi@vger.kernel.org>;
-        Wed, 14 Jun 2023 16:54:39 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4Qgzkl45Y3zBJJDJ;
-        Wed, 14 Jun 2023 16:54:39 +0800 (CST)
+        with ESMTP id S234072AbjFNKgf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 06:36:35 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 322B41A3;
+        Wed, 14 Jun 2023 03:36:34 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id D44AB22493;
+        Wed, 14 Jun 2023 10:36:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1686738992; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=8oMQCRfPm1HxrncWdpZzunTkbWOVMU3+Mv6MzhAp88I=;
+        b=CUVMS3YAVutJSAL41APDn28o0a/OKEM4csT7zmlvePsGeTd0+ZbWOI6TUm44WG6vdo5adu
+        3gFNJ/jZ7eSMuGYFtplhdqKFH7LC7kEJEaARizYmzReEZu8cyAYjd/Rc+7/TBNtGhFDyps
+        hmqzAWI5IkiPyE1jSCps9CqSJm91HLA=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 81A911357F;
+        Wed, 14 Jun 2023 10:36:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id dKjvHTCYiWSTfQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Wed, 14 Jun 2023 10:36:32 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>
+Subject: [PATCH v7 0/7] scsi: fixes for targets with many LUNs, and scsi_target_block rework
+Date:   Wed, 14 Jun 2023 12:36:09 +0200
+Message-Id: <20230614103616.31857-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Date:   Wed, 14 Jun 2023 16:54:39 +0800
-From:   baomingtong001@208suo.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: qlogicpti: Remove unneeded semicolon
-In-Reply-To: <20230614085236.43022-1-luojianhong@cdjrlc.com>
-References: <20230614085236.43022-1-luojianhong@cdjrlc.com>
-User-Agent: Roundcube Webmail
-Message-ID: <5b703018fcab06a574c713c318df1112@208suo.com>
-X-Sender: baomingtong001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-./drivers/scsi/qlogicpti.c:1153:3-4: Unneeded semicolon
+From: Martin Wilck <mwilck@suse.com>
 
-Signed-off-by: Mingtong Bao <baomingtong001@208suo.com>
----
-  drivers/scsi/qlogicpti.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
+This patch series addresses some issues we saw in a test setup
+with a large number of SCSI LUNs. The first two patches simply
+increase the number of available sg and bsg devices. 3-5 fix
+a large delay we encountered between blocking a Fibre Channel
+remote port and the dev_loss_tmo. 6 renames scsi_target_block()
+to scsi_block_targets(), and makes additional changes to this API,
+as suggested in the review of the v2 series. 7 improves a warning message.
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 1e8fbd457248..52253b7da157 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1150,7 +1150,7 @@ static struct scsi_cmnd 
-*qlogicpti_intr_handler(struct qlogicpti *qpti)
-          case COMMAND_ERROR:
-          case COMMAND_PARAM_ERROR:
-              break;
--        };
-+        }
-          sbus_writew(0, qpti->qregs + SBUS_SEMAPHORE);
-      }
+Changes v6 -> v7
+ - 6/7: fixed mistake I made inverting the argument order in v6
+   (I apologize for overlooking this dumb mistake!!)
+
+Changes v5 -> v6
+ - 6/7: inverted order of arguments for scsi_block_targets (Christoph Hellwig), dropped "extern"
+   (I took the liberty not to remove previous "Reviewed-by"'s because of this change)
+ - 5/7: wrapped one over-long comment line
+ - added tags
+
+Changes v4 -> v5:
+ - added 7/7 to improve the WARN_ON_ONCE in scsi_device_block() (Bart van Assche)
+ - 6/7: added WARN_ON_ONCE in scsi_block_targets() (Bart van Assche)
+ - 4/7: improved comment (Bart van Assche)
+ - Added tags
+
+Changes v3 -> v4:
+ - skipped 4/8: keep state_mutex held while quiescing queue (Bart van Assche),
+   added a comment in 4/6 to explain the rationale
+ - renamed scsi_target_block() to scsi_block_targets() (Christoph Hellwig), and
+   merged the previous patches 7/8 and 8/8 modifying this API into 6/6.
+ - rebased to latest mkp/queue branch
+
+Changes v2 -> v3:
+ - Split previous 3/3 into 4 separate patches as suggested by
+   Christoph Hellwig.
+ - Added 7/8 and 8/8, as suggested by Christoph and Bart van Assche.
+ - Added s-o-b and reviewed-by tags.
+
+Changes v1 -> v2:
+ - call blk_mq_wait_quiesce_done() from scsi_target_block() to
+   cover the case where BLK_MQ_F_BLOCKING is set (Bart van Assche)
+
+Hannes Reinecke (2):
+  bsg: increase number of devices
+  scsi: sg: increase number of devices
+
+Martin Wilck (5):
+  scsi: merge scsi_internal_device_block() and device_block()
+  scsi: don't wait for quiesce in scsi_stop_queue()
+  scsi: don't wait for quiesce in scsi_device_block()
+  scsi: replace scsi_target_block() by scsi_block_targets()
+  scsi: improve warning message in scsi_device_block()
+
+ block/bsg.c                         |  2 +-
+ drivers/scsi/scsi_lib.c             | 80 ++++++++++++++---------------
+ drivers/scsi/scsi_transport_fc.c    |  2 +-
+ drivers/scsi/scsi_transport_iscsi.c |  3 +-
+ drivers/scsi/scsi_transport_srp.c   |  6 +--
+ drivers/scsi/sg.c                   |  2 +-
+ drivers/scsi/snic/snic_disc.c       |  2 +-
+ include/scsi/scsi_device.h          |  2 +-
+ 8 files changed, 50 insertions(+), 49 deletions(-)
+
+-- 
+2.40.1
+
