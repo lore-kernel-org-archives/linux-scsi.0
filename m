@@ -2,97 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B7AEB64D9
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 02:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0211EB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 04:40:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237432AbjFOCY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 22:24:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59596 "EHLO
+        id S237506AbjFOEkW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Jun 2023 00:40:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238346AbjFOCY0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 22:24:26 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E40F1FCC
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 19:24:25 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1b3cdc7cfc6so6028555ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jun 2023 19:24:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1686795865; x=1689387865;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RSR50Y8VWLWHMMq4nms0HKVmdE5u9BBnFe5bAJ0HtnY=;
-        b=w1vYVgJzS9pjyHpDGocrQGNlRMjxacXj+jIRXxU0M+NratXeH2J2xuxppoGEHZSovM
-         K6SGNblnvVnW6J4J5WrkRU6J8XezgqcuX8cZPLTROTqY8UMesNzmU+GCI+7XCjo4hjwz
-         0BrieDbaOjOvWm1XYpyddJtBmirQsd6sdsbIL0mi+tEBwpZ3WIbpS2n8aghMYuUSABVQ
-         erOBT//6m+9y5vr809Yj0aLal+bzxoqzyvSia9giXgmhe/rPjPJkK39vcH00NV97cwxR
-         XCILag4gHkBoyy4IO2LZZrn04hbQJWqxpd6ubLSSRazSfGgF7vx1MpiPC+5RUO4eoLr1
-         BZ3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686795865; x=1689387865;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=RSR50Y8VWLWHMMq4nms0HKVmdE5u9BBnFe5bAJ0HtnY=;
-        b=ebxxxXKywvHK46AOuFvHyIAGnP45gfYldeDlG9BYxsQtVBEv4QuvYCZw0iuVO1zDWY
-         rx0UqPCtsq+DS0sjhOnj38SLKzehtvR0WWRWLa6M46jJEINK6ekqZDw6N2cgapO+wtT/
-         RKNSEalJG7jHVmeY1q/l/fyPjOFWSnrlQxPk1QyW9v5gUkA8Z/Ssj2xEAGYrlAAotllN
-         fWvC2zEWxXVXTXhMgWNxTfC0vV5Ka+K8J5WjKNkSnxq3I8uhKZz+aEogNNj9Oflytoos
-         ZxQMU9a0axQu/0dXyxm6jJ+xwX/Jj4Q6sOAgw+XUWEPRCoox6RVtq4AKSnuxzwKTsDKX
-         YIUA==
-X-Gm-Message-State: AC+VfDwM2uhj2eNSxpIyflpbTGh7t+KNDfiaAMaeXhPlOUNe16w9aJri
-        Okzf0X3pVClHSAcRUJ2CyFz4Tg==
-X-Google-Smtp-Source: ACHHUZ5D2OcFpcRCZ+WTQ8jJZZpZqq2lo8r/m6n+auc6W6Vc799H8O2HZWqfA6aNnF4o9Emqd8jxpA==
-X-Received: by 2002:a17:902:f682:b0:1b3:d4bb:3515 with SMTP id l2-20020a170902f68200b001b3d4bb3515mr11038855plg.0.1686795864826;
-        Wed, 14 Jun 2023 19:24:24 -0700 (PDT)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id u11-20020a170902714b00b001ae0b373382sm12977035plm.198.2023.06.14.19.24.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Jun 2023 19:24:24 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     hch@lst.de, dgilbert@interlog.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-In-Reply-To: <20230610022003.2557284-1-yukuai1@huaweicloud.com>
-References: <20230610022003.2557284-1-yukuai1@huaweicloud.com>
-Subject: Re: [PATCH v5 0/3] fix blktrace debugfs entries leakage
-Message-Id: <168679586333.2051714.1943947298850230853.b4-ty@kernel.dk>
-Date:   Wed, 14 Jun 2023 20:24:23 -0600
+        with ESMTP id S229712AbjFOEkV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 00:40:21 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02CFFB3;
+        Wed, 14 Jun 2023 21:40:21 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id DCDA567373; Thu, 15 Jun 2023 06:40:15 +0200 (CEST)
+Date:   Thu, 15 Jun 2023 06:40:15 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Alan Stern <stern@rowland.harvard.edu>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <len.brown@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Tony Luck <tony.luck@intel.com>,
+        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+        Thorsten Leemhuis <linux@leemhuis.info>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Linux Power Management <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Hardening <linux-hardening@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: Re: Fwd: Waking up from resume locks up on sr device
+Message-ID: <20230615044015.GA4720@lst.de>
+References: <5513e29d-955a-f795-21d6-ec02a2e2e128@gmail.com> <ZIQ6bkau3j6qGef8@duo.ucw.cz> <07d6e2e7-a50a-8cf4-5c5d-200551bd6687@gmail.com> <02e4f87a-80e8-dc5d-0d6e-46939f2c74ac@acm.org> <b2cf6d96-a55a-d444-d22e-e9b3945ba43f@jmbreuer.net> <84f1c51c-86f9-04b3-0cd1-f685ebee7592@kernel.org> <37ed36f0-6f72-115c-85fb-62ef5ad72e76@suse.de> <b0fdf454-b2f7-c273-66f5-efe42fbc2807@kernel.org> <859f0eda-4984-4489-9851-c9f6ec454a88@rowland.harvard.edu> <41b069c7-8723-4507-3e5a-1d1878db9002@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13-dev-c6835
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <41b069c7-8723-4507-3e5a-1d1878db9002@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On Sat, 10 Jun 2023 10:20:00 +0800, Yu Kuai wrote:
-> Changes in v5:
->  - blk_trace_shutdown() can't be used for module, add a new patch to use
->  inline function for blk_trace_remove() to fix build warning from v3.
->  - add review tag for patch 2,3 that is the same from v3.
+On Thu, Jun 15, 2023 at 09:10:28AM +0900, Damien Le Moal wrote:
+> > Here's what commit e27829dc92e5 ("scsi: serialize ->rescan against 
+> > ->remove", written by Christoph Hellwig) says:
+> > 
+> >     Lock the device embedded in the scsi_device to protect against
+> >     concurrent calls to ->remove.
+> > 
+> > That's the commit which added the device_lock() call.
 > 
-> Changes in v4:
->  - blk_trace_remove() will trigger build warning if blktrace config is
->  not enabled, use blk_trace_shutdown() instead.
+> Thanks for the information.
 > 
-> [...]
+> +Christoph
+> 
+> Why is adding the device_lock() needed ? We could just do a
+> scsi_device_get()+scsi_device_put() to serialize against remove. No ?
 
-Applied, thanks!
-
-[1/3] blktrace: use inline function for blk_trace_remove() while blktrace is disabled
-      commit: cbe7cff4a76bc749dd70264ca5cf924e2adf9296
-[2/3] scsi: sg: fix blktrace debugfs entries leakage
-      commit: db59133e927916d8a25ee1fd8264f2808040909d
-[3/3] block: fix blktrace debugfs entries leakage
-      commit: dd7de3704af9989b780693d51eaea49a665bd9c2
-
-Best regards,
--- 
-Jens Axboe
-
-
-
+No.  scsi_device_get just increments a reference count, and thus
+prevents ->release from beeing called.  ->remove is not in any way
+affected by the refcount.
