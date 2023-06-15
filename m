@@ -2,100 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 000D1EB64DC
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 08:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ECDCEB64D9
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 09:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241053AbjFOItP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Jun 2023 04:49:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36616 "EHLO
+        id S244971AbjFOJ3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Jun 2023 05:29:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245340AbjFOIsY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 04:48:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1A0E3C21;
-        Thu, 15 Jun 2023 01:47:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E91A611CE;
-        Thu, 15 Jun 2023 08:47:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55724C433C0;
-        Thu, 15 Jun 2023 08:47:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1686818834;
-        bh=m56mMgbW3ae6uqBwLx78dUGnP/kMnvofIKBmjW32CP8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vzrZNdyDH6kLNr/bXr1VgU7KQgPThhD4lLvUe/0vTGnrAqDnKuFSKbBIOrdo4d+7E
-         A9o3e+NuTglmnAuXUYNZ5IIUdIRofVFdyQg7biiu4bvoDNmr8af5lsSYO2DprtxHVa
-         Y/gkhL68z899XRPx5iG2Lbk8RKT1G+t0RogvU8sg=
-Date:   Thu, 15 Jun 2023 10:47:12 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Ranjan Kumar <ranjan.kumar@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] mpt3sas: Perform additional retries if Doorbell read
- returns 0
-Message-ID: <2023061538-dizzy-amiable-9ec7@gregkh>
-References: <20230615083010.45837-1-ranjan.kumar@broadcom.com>
+        with ESMTP id S243674AbjFOJ2y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 05:28:54 -0400
+Received: from mail.lokoho.com (mail.lokoho.com [217.61.105.98])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03CE42683
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2023 02:28:51 -0700 (PDT)
+Received: by mail.lokoho.com (Postfix, from userid 1001)
+        id 7989A87803; Thu, 15 Jun 2023 10:26:54 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lokoho.com; s=mail;
+        t=1686821220; bh=Z0N5VlX9/JlryGOL5I747Le9USomZJCRNNGRT3LbbKc=;
+        h=Date:From:To:Subject:From;
+        b=lkUuDHvbbhH+zF52DC8FNy2SNsxq5TwwOPzNDnygIi+jK0GvjR6xPCbKK4PFDigvZ
+         qKiabfCZkzUCAehApA/Qz5lIuiZsEuPrhwDNAqkP7B91umA/oekeFddNBUKJgW46Yq
+         YVgcphj9+/wa9Rt+XT8VPFgU1vnOR7NepvC52ySkLn0UJOo4zHASMAI6sNGAMSYJdx
+         1oEegx4XAzbJUNtFtukYlT/7Rd46dDxqJZdggzyU7EMRpqiNUw/dP4Hh9BdSybAiWG
+         ej4N9GrkEq4zP834Knw3CECMIH6T8VmX1T3oxA+HrHe3zwhrwYrPH5om+jHpdoPaDR
+         +P5sGV28ZwoyQ==
+Received: by mail.lokoho.com for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2023 09:26:02 GMT
+Message-ID: <20230615094301-0.1.6n.2mdml.0.19byxh5aau@lokoho.com>
+Date:   Thu, 15 Jun 2023 09:26:02 GMT
+From:   "Adam Charachuta" <adam.charachuta@lokoho.com>
+To:     <linux-scsi@vger.kernel.org>
+Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
+X-Mailer: mail.lokoho.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230615083010.45837-1-ranjan.kumar@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 15, 2023 at 02:00:10PM +0530, Ranjan Kumar wrote:
-> Doorbell and Host diagnostic registers could return 0 even
-> after 3 retries and that leads to occasional resets of the
-> controllers, hence increased the retry count to thirty.
-> 
-> 'Fixes: b899202901a8 ("mpt3sas: Add separate function for aero doorbell reads ")'
+Dzie=C5=84 dobry,
 
-No ' characters here please.
+zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
+=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
+o dalszych rozm=C3=B3w.=20
 
-> Cc: stable@vger.kernel.org
-> 
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
+=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
+=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
+strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
 
-No blank line before the signed-off-by and the other fields please.
-
-Didn't checkpatch warn you about this?
-
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 50 ++++++++++++++++-------------
->  drivers/scsi/mpt3sas/mpt3sas_base.h |  4 ++-
->  2 files changed, 31 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 53f5492579cb..44e7ccb6f780 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -201,20 +201,20 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
->   * while reading the system interface register.
->   */
->  static inline u32
-> -_base_readl_aero(const volatile void __iomem *addr)
-> +_base_readl_aero(const volatile void __iomem *addr, u8 retry_count)
-
-Are you sure that volatile really does what you think it does here?
+Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
 
 
->  {
->  	u32 i = 0, ret_val;
->  
->  	do {
->  		ret_val = readl(addr);
->  		i++;
-> -	} while (ret_val == 0 && i < 3);
-> +	} while (ret_val == 0 && i < retry_count);
-
-So newer systems will complete this failure loop faster than older ones?
-That feels very wrong, you will be changing this in a year or so.  Use
-time please, not counts.
-
-thanks,
-
-greg k-h
+Pozdrawiam
+Adam Charachuta
