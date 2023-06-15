@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 318ADEB64DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 11:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B97F9C0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 11:42:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344348AbjFOLmO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Jun 2023 07:42:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52876 "EHLO
+        id S1344332AbjFOLmq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Jun 2023 07:42:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344287AbjFOLlb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 07:41:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23EC530F1;
-        Thu, 15 Jun 2023 04:39:24 -0700 (PDT)
+        with ESMTP id S1344330AbjFOLmH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 07:42:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97114228;
+        Thu, 15 Jun 2023 04:39:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 03F6963A26;
-        Thu, 15 Jun 2023 11:39:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AD39C433C9;
-        Thu, 15 Jun 2023 11:39:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5C671639BD;
+        Thu, 15 Jun 2023 11:39:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2D51C433C8;
+        Thu, 15 Jun 2023 11:38:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686829163;
-        bh=y2DswBpHL8u2iGZ5hXkyTSPIJrD2A0iPxtuY3ySUUng=;
+        s=k20201202; t=1686829140;
+        bh=sn2IKEwdj/SlpGfzBw23euWcHWfnYvBDBogcN0hFLGs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kin9JrHk/dP8Bo8chnzW966gIYCCPbNVAYKXzMwu//8lhtVbHBU+fMptsunJ3LIae
-         kRUrU2L6sEMaaPDHz3YA0bmJLBGN2IjvjPHyhumyTpHfVlQaA5jhF98ByLa7/TiiXg
-         GbQaAR222alK1/MjaaFQJdYkXrg5gEmvHhtiGGmJNptLfxQ0RMBaJ9xyzkdixKbVSc
-         bnTMQXFkHccvgUc29cNmmTqrhZbJOMMMII8+1ZqYdkTrMNa43KVB7Ngoj7znaC0Bg2
-         0prr3VtYgvAKGGfLMTGlB48Lk+Mox94+mro6vozo2qypCAtkMjRbsGhRwALbKqurwx
-         sJp1nJMrv1ALQ==
+        b=gK3wP21RjFQhLsyCAIkOhR/0iqUI713EDIxRVRuTX47JaV/9jmklVS/OJ1lRa1YrU
+         cgqdKf1FBanWyQGaPFP6VDZY/69sCnyLZ0NMOMHcN/DXetmjUJX4auWMZZYaVxab2B
+         WCDApbV4tVf9oLoJXqMxJswOVKSSFEhswOYuewfkPhzew+Dkr/LqlNZ8J842YMmPhw
+         UK2yh7wMgB7k35xVo0z5zBk1dwd9RlLUpC8ZFGso+D17Vcc0hDFHcP89exoV1n5Mcz
+         Ga590MZIxTCyMZXeO0sqKlWtIe+73yutwt3+ruZ6WdJNOM0lucm/mAYN35jfyedh3V
+         WG4Wsc4Nc+tlA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Maurizio Lombardi <mlombard@redhat.com>,
         Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, d.bogdanov@yadro.com,
-        peilin.ye@bytedance.com, yang.lee@linux.alibaba.com,
+        yang.lee@linux.alibaba.com, peilin.ye@bytedance.com,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 2/9] scsi: target: iscsi: Prevent login threads from racing between each other
-Date:   Thu, 15 Jun 2023 07:39:10 -0400
-Message-Id: <20230615113917.649505-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 02/10] scsi: target: iscsi: Prevent login threads from racing between each other
+Date:   Thu, 15 Jun 2023 07:38:46 -0400
+Message-Id: <20230615113854.649370-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230615113917.649505-1-sashal@kernel.org>
-References: <20230615113917.649505-1-sashal@kernel.org>
+In-Reply-To: <20230615113854.649370-1-sashal@kernel.org>
+References: <20230615113854.649370-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.184
+X-stable-base: Linux 5.15.117
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 8b40f10976ff8..3931565018880 100644
+index c0ed6f8e5c5b9..32a2852352db1 100644
 --- a/drivers/target/iscsi/iscsi_target_nego.c
 +++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -1079,6 +1079,7 @@ int iscsi_target_locate_portal(
+@@ -1071,6 +1071,7 @@ int iscsi_target_locate_portal(
  	iscsi_target_set_sock_callbacks(conn);
  
  	login->np = np;
@@ -97,7 +97,7 @@ index 8b40f10976ff8..3931565018880 100644
  
  	login_req = (struct iscsi_login_req *) login->req;
  	payload_length = ntoh24(login_req->dlength);
-@@ -1148,7 +1149,6 @@ int iscsi_target_locate_portal(
+@@ -1138,7 +1139,6 @@ int iscsi_target_locate_portal(
  	 */
  	sessiontype = strncmp(s_buf, DISCOVERY, 9);
  	if (!sessiontype) {
@@ -105,7 +105,7 @@ index 8b40f10976ff8..3931565018880 100644
  		if (!login->leading_connection)
  			goto get_target;
  
-@@ -1165,9 +1165,11 @@ int iscsi_target_locate_portal(
+@@ -1155,9 +1155,11 @@ int iscsi_target_locate_portal(
  		 * Serialize access across the discovery struct iscsi_portal_group to
  		 * process login attempt.
  		 */
