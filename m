@@ -2,46 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CA59EB64DC
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jun 2023 22:44:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6452EB64D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 00:10:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234331AbjFNWot (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jun 2023 18:44:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
+        id S231852AbjFOAKg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jun 2023 20:10:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229832AbjFNWor (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 18:44:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C45C1BF7;
-        Wed, 14 Jun 2023 15:44:46 -0700 (PDT)
+        with ESMTP id S229567AbjFOAKe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2023 20:10:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8EAF1FC3;
+        Wed, 14 Jun 2023 17:10:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2B4556281D;
-        Wed, 14 Jun 2023 22:44:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5B01C433C0;
-        Wed, 14 Jun 2023 22:44:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4E326624E0;
+        Thu, 15 Jun 2023 00:10:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E521EC433C8;
+        Thu, 15 Jun 2023 00:10:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686782685;
-        bh=lMvudJgKGP6G5z1D5G5ktPPOIHeYLAxIIf2pg1Bn6dA=;
+        s=k20201202; t=1686787832;
+        bh=SQJrQpPv+nsje/JTZ9ubRFLugHjqBKrTYz9oEPnvMX8=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Zk6bt6oVdjWME3wilTbcHVuIxYexd/ugfSoqlxQA+OKl7qFQrKmyiFMXVZXlSLBrh
-         7Jry8e84dvXNqFZPIPlrmBuZoyCRj9Y6/+vzIlZqLjR2NWK/Ahana4A/5nbZpJ+xds
-         c7GN7maBBDBmKOcMkmw2tuqPXW3rM46twikbRfrEt5C92i+eoeQbNcEOXPuJrwAEOe
-         qPfWvLRNKp0EL4+S82/uGEoYOD+Fpg8jyck9vu6YebQG1WBdkb99Gz+xlMyb2XkkyC
-         /EzMJ5NBWSplFJ1Wj39Ba6c4ldZQoyJUY+xKb3VF1YWmjkV9RicqPqmO8QnICaTDna
-         dUKeQNi4BltJQ==
-Message-ID: <bf142e7d-178e-43a8-32e8-7e9e396eeee7@kernel.org>
-Date:   Thu, 15 Jun 2023 07:44:39 +0900
+        b=DQd1SD2v+DT/5LH2F/qjevLJDCfDZYDsl8VlAXVbL9SdG4VDUi5+vZqVkrVKJwrMc
+         M0DzEeNtgS8T9IbwLpJQQdToqScOfwfUm+wRDemBMiD847d4ICIgTurEo3fe+fW62b
+         QzBE3FRrlHyuz+CM0lbPHn5O+u/jk8uWPIx7YlXrQvP4ma+PYuEtlt8oB8VCGnblaJ
+         1GrixbhoPvCx3VVFNh5/R+gMqeoAbz4wiroBx8jGQyycSM+OHMwO+u9vqFiKxUseCk
+         WWwoqqBScp4CxLYRlLyUzuZ5Xf+zBaN4ITAYvBKmjKvRqPde9aEJ9YeXwEZeZbFOqK
+         7COGWTA/eqmUA==
+Message-ID: <41b069c7-8723-4507-3e5a-1d1878db9002@kernel.org>
+Date:   Thu, 15 Jun 2023 09:10:28 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
 Subject: Re: Fwd: Waking up from resume locks up on sr device
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Alan Stern <stern@rowland.harvard.edu>
+Content-Language: en-US
+To:     Alan Stern <stern@rowland.harvard.edu>,
+        Christoph Hellwig <hch@lst.de>
 Cc:     Hannes Reinecke <hare@suse.de>,
         Joe Breuer <linux-kernel@jmbreuer.net>,
+        Bart Van Assche <bvanassche@acm.org>,
         Bagas Sanjaya <bagasdotme@gmail.com>,
         Pavel Machek <pavel@ucw.cz>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -74,71 +76,155 @@ References: <2d1fdf6d-682c-a18d-2260-5c5ee7097f7d@gmail.com>
  <37ed36f0-6f72-115c-85fb-62ef5ad72e76@suse.de>
  <b0fdf454-b2f7-c273-66f5-efe42fbc2807@kernel.org>
  <859f0eda-4984-4489-9851-c9f6ec454a88@rowland.harvard.edu>
- <3f85cb4a-8b14-623f-eb4e-40baab1ed888@acm.org>
-Content-Language: en-US
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <3f85cb4a-8b14-623f-eb4e-40baab1ed888@acm.org>
+In-Reply-To: <859f0eda-4984-4489-9851-c9f6ec454a88@rowland.harvard.edu>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/15/23 03:04, Bart Van Assche wrote:
-> On 6/14/23 07:26, Alan Stern wrote:
->> On Wed, Jun 14, 2023 at 04:35:50PM +0900, Damien Le Moal wrote:
->>> Or... Why the heck scsi_rescan_device() is calling device_lock() ? This
->>> is the only place in scsi code I can see that takes this lock. I suspect
->>> this is to serialize either rescans, or serialize with resume, or both.
->>> For serializing rescans, we can use another lock. For serializing with
->>> PM, we should wait for PM transitions...
->>> Something is not right here.
+On 6/14/23 23:26, Alan Stern wrote:
+> On Wed, Jun 14, 2023 at 04:35:50PM +0900, Damien Le Moal wrote:
+>> On 6/14/23 15:57, Hannes Reinecke wrote:
+>>> On 6/14/23 06:49, Damien Le Moal wrote:
+>>>> On 6/11/23 18:05, Joe Breuer wrote:
+>>>>> I'm the reporter of this issue.
+>>>>>
+>>>>> I just tried this patch against 6.3.4, and it completely fixes my
+>>>>> suspend/resume issue.
+>>>>>
+>>>>> The optical drive stays usable after resume, even suspending/resuming
+>>>>> during playback of CDDA content works flawlessly and playback resumes
+>>>>> seamlessly after system resume.
+>>>>>
+>>>>> So, from my perspective: Good one!
+>>>>
+>>>> In place of Bart's fix, could you please try this patch ?
+>>>>
+>>>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>>>> index b80e68000dd3..a81eb4f882ab 100644
+>>>> --- a/drivers/ata/libata-eh.c
+>>>> +++ b/drivers/ata/libata-eh.c
+>>>> @@ -4006,9 +4006,32 @@ static void ata_eh_handle_port_resume(struct
+>>>> ata_port *ap)
+>>>>          /* tell ACPI that we're resuming */
+>>>>          ata_acpi_on_resume(ap);
+>>>>
+>>>> -       /* update the flags */
+>>>>          spin_lock_irqsave(ap->lock, flags);
+>>>> +
+>>>> +       /* Update the flags */
+>>>>          ap->pflags &= ~(ATA_PFLAG_PM_PENDING | ATA_PFLAG_SUSPENDED);
+>>>> +
+>>>> +       /*
+>>>> +        * Resuming the port will trigger a rescan of the ATA device(s)
+>>>> +        * connected to it. Before scheduling the rescan, make sure that
+>>>> +        * the associated scsi device(s) are fully resumed as well.
+>>>> +        */
+>>>> +       ata_for_each_link(link, ap, HOST_FIRST) {
+>>>> +               ata_for_each_dev(dev, link, ENABLED) {
+>>>> +                       struct scsi_device *sdev = dev->sdev;
+>>>> +
+>>>> +                       if (!sdev)
+>>>> +                               continue;
+>>>> +                       if (scsi_device_get(sdev))
+>>>> +                               continue;
+>>>> +
+>>>> +                       spin_unlock_irqrestore(ap->lock, flags);
+>>>> +                       device_pm_wait_for_dev(&ap->tdev,
+>>>> +                                              &sdev->sdev_gendev);
+>>>> +                       scsi_device_put(sdev);
+>>>> +                       spin_lock_irqsave(ap->lock, flags);
+>>>> +               }
+>>>> +       }
+>>>>          spin_unlock_irqrestore(ap->lock, flags);
+>>>>   }
+>>>>   #endif /* CONFIG_PM */
+>>>>
+>>>> Thanks !
+>>>>
+>>> Well; not sure if that'll work out.
+>>> The whole reason why we initial a rescan is that we need to check if the
+>>> ports are still connected, and whether the devices react.
+>>> So we can't iterate the ports here as this is the very thing which gets
+>>> checked during EH.
 >>
->> Here's what commit e27829dc92e5 ("scsi: serialize ->rescan against
->> ->remove", written by Christoph Hellwig) says:
+>> Hmmm... Right. So we need to move that loop into ata_scsi_dev_rescan(),
+>> which itself already loops over the port devices anyway.
 >>
->>      Lock the device embedded in the scsi_device to protect against
->>      concurrent calls to ->remove.
+>>> We really should claim resume to be finished as soon as we can talk with
+>>> the HBA, and kick off EH asynchronously to let it finish the job after
+>>> resume has completed.
 >>
->> That's the commit which added the device_lock() call.
+>> That is what's done already:
+>>
+>> static int ata_port_pm_resume(struct device *dev)
+>> {
+>> 	ata_port_resume_async(to_ata_port(dev), PMSG_RESUME);
+>> 	pm_runtime_disable(dev);
+>> 	pm_runtime_set_active(dev);
+>> 	pm_runtime_enable(dev);
+>> 	return 0;
+>> }
+>>
+>> EH is kicked by ata_port_resume_async() -> ata_port_request_pm() and it
+>> is async. There is no synchronization in EH with the PM side though. We
+>> probably should have EH check that the port resume is done first, which
+>> can be done in ata_eh_handle_port_resume() since that is the first thing
+>> done when entering EH.
+>>
+>> The problem remains though that we *must* wait for the scsi device
+>> resume to be done before calling scsi_rescan_device(), which is done
+>> asynchronously from EH, as a different work. So that one needs to wait
+>> for the scsi side resume to be done.
+>>
+>> I also thought of trigerring the rescan from the scsi side, but since
+>> the resume may be asynchronous, we could endup trigerring it with the
+>> ata side not yet resumed... That would only turn the problem around
+>> instead of solving it.
 > 
-> Even if scsi_rescan_device() would use another mechanism for 
-> serialization against sd_remove() and sr_remove(), we still need to 
-> solve the issue that the ATA code calls scsi_rescan_device() before 
-> resuming has finished. scsi_rescan_device() issues I/O. Issuing I/O to a 
-> device is not allowed before that device has been resumed.
+> The order in which devices get resumed isn't arbitrary.  If the system 
+> is set up not to use async suspends/resumes then the order is always the 
+> same as the order in which the devices were originally registered (for 
+> resume, that is -- suspend obviously takes place in the reverse order).
+> 
+> So if you're trying to perform an action that requires two devices to be 
+> active, you must not do it in the resume handler for the device that was 
+> registered first.  I don't know how the ATA and SCSI pieces interact 
+> here, but regardless, this is a pretty strict requirement.
+> 
+> It should be okay to perform the action in the resume handler for the 
+> device that was registered second.  But if the two devices aren't in an 
+> ancestor-descendant relationship then you also have to call 
+> device_pm_wait_for_dev() (or use device links as Rafael mentioned) to 
+> handle the async case properly.
+> 
+>> Or... Why the heck scsi_rescan_device() is calling device_lock() ? This
+>> is the only place in scsi code I can see that takes this lock. I suspect
+>> this is to serialize either rescans, or serialize with resume, or both.
+>> For serializing rescans, we can use another lock. For serializing with
+>> PM, we should wait for PM transitions...
+>> Something is not right here.
+> 
+> Here's what commit e27829dc92e5 ("scsi: serialize ->rescan against 
+> ->remove", written by Christoph Hellwig) says:
+> 
+>     Lock the device embedded in the scsi_device to protect against
+>     concurrent calls to ->remove.
+> 
+> That's the commit which added the device_lock() call.
 
-I am not convinced of that: scsi suspend quiecse the queue, thus preventing IOs
-from the block layer, but not internale scsi ml commands, which is what
-scsi_rescan_device() issues.
+Thanks for the information.
 
-In any case, I am thinking that best (and quickest) fix for this issue for now
-is to have libata define a device link to make the scsi device a "parent" of the
-ata device (which is the ata link as of now). This way, PM operation ordering
-will ensure that the scsi device resume will be done before the ata device. What
-I really do not like about this though is that the suspend side would be done in
-the reverse order: ata first and then scsi, but we really want the reverse here
-to ensure that the request queue is quiesced before we suspend ata. That said,
-there is no such synchronization right now and so this is probably happening
-already without raising issues apparently.
++Christoph
 
-So ideally:
-1) Make the ata device the parent of the scsi device using a device link
-2) For suspend, the scsi device suspend will be done first, followed by the ata
-device, which is what we want.
-3) For resume, ata device will be first, followed by scsi device. The call to
-scsi_rescan_device() from libata being in a work task, asynchronous from the ata
-resume context, we need to synchronize that work to wait for the scsi device
-resume to complete. (but do we really given that we are going to issue internal
-commands only ?)
+Why is adding the device_lock() needed ? We could just do a
+scsi_device_get()+scsi_device_put() to serialize against remove. No ?
 
-Alan, Rafael,
-
-For the synchronization of step (3), if I understand the pm code correctly,
-using device_pm_wait_for_dev() would work only if async resume is on. This would
-be ineffective for the sync case. How can we best deal with this ?
-
+> 
+> Alan Stern
 
 -- 
 Damien Le Moal
