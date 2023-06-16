@@ -2,350 +2,296 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD8BAC001DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 17:57:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8367CEB64D7
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 18:35:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345032AbjFPR5H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Jun 2023 13:57:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41282 "EHLO
+        id S245084AbjFPSfe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Jun 2023 14:35:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345397AbjFPR47 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 13:56:59 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E7513A8F;
-        Fri, 16 Jun 2023 10:56:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686938213; x=1718474213;
-  h=date:from:to:cc:subject:message-id;
-  bh=dHryKIkk8/2CTQfcM0R17XhQOqNhailCRjnxMpU/Z2k=;
-  b=YaHWEbWCKTZb3UMT+pPtdGu6caNa4uYmj4M5yCCmQvOiDNglrbnpZS3T
-   ixnNZJSVb/qX/4UEUhUVteQPfKbwarQwQL+LLrcqD6Rcad5kvHav2K7/N
-   gVXgqxPQwqJTLw3TfJGGMWxqWI6iuIG9EY6BYi7pZV+Pjp7fmEb3Id3cH
-   ODy9UBQnVEfungnRjXMvhTblTO5RLQMEv0p7mG8+EKnysDVz6M6KQvzaJ
-   FaEf1KNpfwqgDL0IWoKB2gLAaWk1+OdIZU0wgjIAR/nHHScHkGBuDAiJH
-   B1BKYl2D6x6MQZeE9vNOd42SNDfZGn57+qsda9gl6H+VZriJfEMjgihSZ
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10743"; a="425213638"
-X-IronPort-AV: E=Sophos;i="6.00,248,1681196400"; 
-   d="scan'208";a="425213638"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jun 2023 10:56:52 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10743"; a="742744959"
-X-IronPort-AV: E=Sophos;i="6.00,248,1681196400"; 
-   d="scan'208";a="742744959"
-Received: from lkp-server01.sh.intel.com (HELO 783282924a45) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 16 Jun 2023 10:56:47 -0700
-Received: from kbuild by 783282924a45 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qADgk-0001f2-1u;
-        Fri, 16 Jun 2023 17:56:46 +0000
-Date:   Sat, 17 Jun 2023 01:56:43 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Linux Memory Management List <linux-mm@kvack.org>,
-        apparmor@lists.ubuntu.com, intel-gfx@lists.freedesktop.org,
-        kunit-dev@googlegroups.com, linux-arm-kernel@lists.infradead.org,
-        linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-riscv@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, lvs-devel@vger.kernel.org,
-        netdev@vger.kernel.org, ntfs3@lists.linux.dev,
-        samba-technical@lists.samba.org
-Subject: [linux-next:master] BUILD REGRESSION
- f7efed9f38f886edb450041b82a6f15d663c98f8
-Message-ID: <202306170124.CtQqzf0I-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S229779AbjFPSfc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 14:35:32 -0400
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A7B52D73
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 11:35:31 -0700 (PDT)
+Received: by mail-wm1-x335.google.com with SMTP id 5b1f17b1804b1-3f8d65ecdb8so9228645e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 11:35:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1686940529; x=1689532529;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=z2pYTAmAOkd48vTiUJC9JHv3taSZSajrDLvZiTbaMR8=;
+        b=M6MexQ+luILnMUMyU3OLlsODQvkoJAZQAFoUI4TbKNuJnI3uzGoZZkptx3plIyO23t
+         mLD/cgy5CaHtT17vqHExAjGxDH+O3ergobI8krWySrLwhJK4L/JIH1NjKOenmVTFJldi
+         F2H5ZU85gz1E1iTVVoRgrYEltImen0ysfGy6E=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686940529; x=1689532529;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=z2pYTAmAOkd48vTiUJC9JHv3taSZSajrDLvZiTbaMR8=;
+        b=kF6R3FmTbygWIRHJ7ktQ57lWrnFdAJNtxTxm5fGtvOWUh64YUfS9TKWirlDMFc8uVb
+         4DBDml/pP4w5PsebujFAxeDl8grakPGgYzA+ZpwrD0BQrtHCIZVHQwhcWIQzOYUk/hOY
+         DqPBiJP4wY3RBXT63XgSpqpvHljcWLnVMecP0fSBS+R85yBalo+wOUlK//dJANz7KgYj
+         DvP3roO/ssTxgDx6aJaRN6z8zS67t5D/hlGmgGcjn4XvQo6Fm+a/r9hIX2NG3M1/nxIM
+         vdKHaQjwBrsv1MhUnJxxaLSRJtMRZ6YjwGCp57Wph35TWQf2kmV+DWJHznJf8HulHGBW
+         QZ5w==
+X-Gm-Message-State: AC+VfDwsed9z5XjpIUy2iiJipK/8dgiF9lZAKhetS1bfdQkg8eBdeit4
+        F1A+QKm5wUkQUHpCCJe9cDvT+0yFzDBFo7S0xy9v54a5RyMaohlSn5yvJ53F46oVwcBecQdgs5h
+        H6EXSZ/YhuMqNG9J/S2hmzw3TRhzf
+X-Google-Smtp-Source: ACHHUZ6fqIRR/t2BcANUMmW18AYEJelrSh1STgaFWR7kej7a/jSqZxCZt1lj0utR5sVBsC8cLF2q8dLNHnW4ovLB7nw=
+X-Received: by 2002:a7b:c4d4:0:b0:3f6:692:5607 with SMTP id
+ g20-20020a7bc4d4000000b003f606925607mr2466878wmk.40.1686940529279; Fri, 16
+ Jun 2023 11:35:29 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230616090705.2623408-1-arnd@kernel.org>
+In-Reply-To: <20230616090705.2623408-1-arnd@kernel.org>
+From:   Justin Tee <justin.tee@broadcom.com>
+Date:   Fri, 16 Jun 2023 11:35:17 -0700
+Message-ID: <CAAmqgVP96Rk4YYGixBqE0AyKt=uNJwCds_chnLAC1K8e4m00hQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: fix lpfc_name struct packing
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000008d01005fe43732e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: f7efed9f38f886edb450041b82a6f15d663c98f8  Add linux-next specific files for 20230616
+--00000000000008d01005fe43732e
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Error/Warning reports:
+Hi Arnd,
 
-https://lore.kernel.org/oe-kbuild-all/202306100035.VTusNhm4-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306122223.HHER4zOo-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306141719.MJHClSrC-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306141934.UKmM9bFX-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306142017.23VmBLmG-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306151506.goHEegOd-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306160203.DB48f7wR-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306160811.nV1bMsK4-lkp@intel.com
+Thanks looks good.
 
-Error/Warning: (recently discovered and may have been fixed)
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-arch/parisc/kernel/pdt.c:65:6: warning: no previous prototype for 'arch_report_meminfo' [-Wmissing-prototypes]
-drivers/block/pktcdvd.c:1371:13: warning: stack frame size (2496) exceeds limit (2048) in 'pkt_handle_packets' [-Wframe-larger-than]
-drivers/char/mem.c:164:25: error: implicit declaration of function 'unxlate_dev_mem_ptr'; did you mean 'xlate_dev_mem_ptr'? [-Werror=implicit-function-declaration]
-drivers/gpu/drm/i915/display/intel_display_power.h:255:70: error: declaration of 'struct seq_file' will not be visible outside of this function [-Werror,-Wvisibility]
-drivers/leds/leds-cht-wcove.c:144:21: warning: no previous prototype for 'cht_wc_leds_brightness_get' [-Wmissing-prototypes]
-drivers/media/platform/verisilicon/rockchip_vpu981_hw_av1_dec.c:1036:1: warning: the frame size of 1112 bytes is larger than 1024 bytes [-Wframe-larger-than=]
-drivers/scsi/FlashPoint.c:1712:12: warning: stack frame size (4208) exceeds limit (2048) in 'FlashPoint_HandleInterrupt' [-Wframe-larger-than]
-fs/ntfs3/super.c:1094:12: warning: stack frame size (2384) exceeds limit (2048) in 'ntfs_fill_super' [-Wframe-larger-than]
-lib/kunit/executor_test.c:138:4: warning: cast from 'void (*)(const void *)' to 'kunit_action_t *' (aka 'void (*)(void *)') converts to incompatible function type [-Wcast-function-type-strict]
-lib/kunit/test.c:775:38: warning: cast from 'void (*)(const void *)' to 'kunit_action_t *' (aka 'void (*)(void *)') converts to incompatible function type [-Wcast-function-type-strict]
-security/apparmor/policy_unpack.c:1173: warning: expecting prototype for verify_dfa_accept_xindex(). Prototype was for verify_dfa_accept_index() instead
 
-Unverified Error/Warning (likely false positive, please contact us if interested):
+On Fri, Jun 16, 2023 at 2:07=E2=80=AFAM Arnd Bergmann <arnd@kernel.org> wro=
+te:
+>
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> clang points out that the lpfc_name structure has an 8-byte alignement re=
+quirement
+> on most architectures, but is embedded in a number of other structures th=
+at are
+> forced to be only 1-byte aligned:
+>
+> drivers/scsi/lpfc/lpfc_hw.h:1516:30: error: field pe within 'struct lpfc_=
+fdmi_reg_port_list' is less aligned than 'struct lpfc_fdmi_port_entry' and =
+is usually due to 'struct lpfc_fdmi_reg_port_list' being packed, which can =
+lead to unaligned accesses [-Werror,-Wunaligned-access]
+>         struct lpfc_fdmi_port_entry pe;
+> drivers/scsi/lpfc/lpfc_hw.h:850:19: error: field portName within 'struct =
+_ADISC' is less aligned than 'struct lpfc_name' and is usually due to 'stru=
+ct _ADISC' being packed, which can lead to unaligned accesses [-Werror,-Wun=
+aligned-access]
+> drivers/scsi/lpfc/lpfc_hw.h:851:19: error: field nodeName within 'struct =
+_ADISC' is less aligned than 'struct lpfc_name' and is usually due to 'stru=
+ct _ADISC' being packed, which can lead to unaligned accesses [-Werror,-Wun=
+aligned-access]
+> drivers/scsi/lpfc/lpfc_hw.h:922:19: error: field portName within 'struct =
+_RNID' is less aligned than 'struct lpfc_name' and is usually due to 'struc=
+t _RNID' being packed, which can lead to unaligned accesses [-Werror,-Wunal=
+igned-access]
+> drivers/scsi/lpfc/lpfc_hw.h:923:19: error: field nodeName within 'struct =
+_RNID' is less aligned than 'struct lpfc_name' and is usually due to 'struc=
+t _RNID' being packed, which can lead to unaligned accesses [-Werror,-Wunal=
+igned-access]
+>
+> From the git history, I can see that all the __packed annotations were do=
+ne
+> specifically to avoid introducing implicit padding around the lpfc_name
+> instances, though this was probably the wrong approach.
+>
+> To improve this, only annotate the one uint64_t field inside of lpfc_name
+> as packed, with an explicit 4-byte alignment, as is the default already o=
+n
+> the 32-bit x86 ABI but not on most others. With this, the other __packed
+> annotations can be removed again, as this avoids the incorrect padding.
+>
+> Two other structures change their layout as a result of this change:
+>
+> - struct _LOGO never gained a __packed annotation even though it has the
+>   same alignment problem as the others but is not used anywhere in the
+>   driver today.
+>
+> - struct serv_param similarly has this issue, and it is used, my guess
+>   is that this is only an internal structure rather than part of a binary
+>   interface, so the padding has no negative effect here.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/scsi/lpfc/lpfc_hw.h | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+> index 663755842e4a4..aaea3e31944d0 100644
+> --- a/drivers/scsi/lpfc/lpfc_hw.h
+> +++ b/drivers/scsi/lpfc/lpfc_hw.h
+> @@ -365,7 +365,7 @@ struct lpfc_name {
+>                         uint8_t IEEE[6];        /* FC IEEE address */
+>                 } s;
+>                 uint8_t wwn[8];
+> -               uint64_t name;
+> +               uint64_t name __packed __aligned(4);
+>         } u;
+>  };
+>
+> @@ -850,7 +850,7 @@ typedef struct _ADISC {             /* Structure is i=
+n Big Endian format */
+>         struct lpfc_name portName;
+>         struct lpfc_name nodeName;
+>         uint32_t DID;
+> -} __packed ADISC;
+> +} ADISC;
+>
+>  typedef struct _FARP {         /* Structure is in Big Endian format */
+>         uint32_t Mflags:8;
+> @@ -880,7 +880,7 @@ typedef struct _FAN {               /* Structure is i=
+n Big Endian format */
+>         uint32_t Fdid;
+>         struct lpfc_name FportName;
+>         struct lpfc_name FnodeName;
+> -} __packed FAN;
+> +} FAN;
+>
+>  typedef struct _SCR {          /* Structure is in Big Endian format */
+>         uint8_t resvd1;
+> @@ -924,7 +924,7 @@ typedef struct _RNID {              /* Structure is i=
+n Big Endian format */
+>         union {
+>                 RNID_TOP_DISC topologyDisc;     /* topology disc (0xdf) *=
+/
+>         } un;
+> -} __packed RNID;
+> +} RNID;
+>
+>  struct RLS {                   /* Structure is in Big Endian format */
+>         uint32_t rls;
+> @@ -1514,7 +1514,7 @@ struct lpfc_fdmi_hba_ident {
+>  struct lpfc_fdmi_reg_port_list {
+>         __be32 EntryCnt;
+>         struct lpfc_fdmi_port_entry pe;
+> -} __packed;
+> +};
+>
+>  /*
+>   * Register HBA(RHBA)
+> --
+> 2.39.2
+>
 
-drivers/net/ethernet/mellanox/mlx5/core/lib/devcom.c:98 mlx5_devcom_register_device() error: uninitialized symbol 'tmp_dev'.
-drivers/opp/core.c:2710 dev_pm_opp_xlate_performance_state() warn: variable dereferenced before check 'src_table' (see line 2698)
-drivers/usb/cdns3/cdns3-starfive.c:23: warning: expecting prototype for cdns3(). Prototype was for USB_STRAP_HOST() instead
-fs/btrfs/volumes.c:6404 btrfs_map_block() error: we previously assumed 'mirror_num_ret' could be null (see line 6242)
-fs/smb/client/cifsfs.c:982 cifs_smb3_do_mount() warn: possible memory leak of 'cifs_sb'
-fs/smb/client/cifssmb.c:4089 CIFSFindFirst() warn: missing error code? 'rc'
-fs/smb/client/cifssmb.c:4216 CIFSFindNext() warn: missing error code? 'rc'
-fs/smb/client/connect.c:2775 cifs_match_super() error: 'tlink' dereferencing possible ERR_PTR()
-fs/smb/client/connect.c:2974 generic_ip_connect() error: we previously assumed 'socket' could be null (see line 2962)
-lib/kunit/test.c:336 __kunit_abort() warn: ignoring unreachable code.
-make[2]: *** No rule to make target 'rustdoc'.
-{standard input}: Error: local label `"2" (instance number 9 of a fb label)' is not defined
-{standard input}:1097: Error: pcrel too far
+--=20
+This electronic communication and the information and any files transmitted=
+=20
+with it, or attached to it, are confidential and are intended solely for=20
+the use of the individual or entity to whom it is addressed and may contain=
+=20
+information that is confidential, legally privileged, protected by privacy=
+=20
+laws, or otherwise restricted from disclosure to anyone else. If you are=20
+not the intended recipient or the person responsible for delivering the=20
+e-mail to the intended recipient, you are hereby notified that any use,=20
+copying, distributing, dissemination, forwarding, printing, or copying of=
+=20
+this e-mail is strictly prohibited. If you received this e-mail in error,=
+=20
+please return the e-mail to the sender, delete it from your computer, and=
+=20
+destroy any printed copy of it.
 
-Error/Warning ids grouped by kconfigs:
+--00000000000008d01005fe43732e
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-gcc_recent_errors
-|-- arm-randconfig-r046-20230615
-|   `-- drivers-media-platform-verisilicon-rockchip_vpu981_hw_av1_dec.c:warning:the-frame-size-of-bytes-is-larger-than-bytes
-|-- i386-allyesconfig
-|   `-- drivers-leds-leds-cht-wcove.c:warning:no-previous-prototype-for-cht_wc_leds_brightness_get
-|-- i386-randconfig-m021-20230614
-|   |-- drivers-opp-core.c-dev_pm_opp_xlate_performance_state()-warn:variable-dereferenced-before-check-src_table-(see-line-)
-|   |-- fs-smb-client-cifsfs.c-cifs_smb3_do_mount()-warn:possible-memory-leak-of-cifs_sb
-|   |-- fs-smb-client-cifssmb.c-CIFSFindFirst()-warn:missing-error-code-rc
-|   |-- fs-smb-client-cifssmb.c-CIFSFindNext()-warn:missing-error-code-rc
-|   |-- fs-smb-client-connect.c-cifs_match_super()-error:tlink-dereferencing-possible-ERR_PTR()
-|   `-- fs-smb-client-connect.c-generic_ip_connect()-error:we-previously-assumed-socket-could-be-null-(see-line-)
-|-- microblaze-randconfig-m031-20230614
-|   `-- drivers-opp-core.c-dev_pm_opp_xlate_performance_state()-warn:variable-dereferenced-before-check-src_table-(see-line-)
-|-- mips-randconfig-m041-20230615
-|   |-- drivers-opp-core.c-dev_pm_opp_xlate_performance_state()-warn:variable-dereferenced-before-check-src_table-(see-line-)
-|   |-- fs-btrfs-volumes.c-btrfs_map_block()-error:we-previously-assumed-mirror_num_ret-could-be-null-(see-line-)
-|   `-- lib-kunit-test.c-__kunit_abort()-warn:ignoring-unreachable-code.
-|-- parisc-allyesconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-defconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-c004-20230614
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-r001-20230616
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-r011-20230615
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-r021-20230615
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-r036-20230615
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-s042-20230614
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc64-defconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- riscv-allmodconfig
-|   `-- drivers-usb-cdns3-cdns3-starfive.c:warning:expecting-prototype-for-cdns3().-Prototype-was-for-USB_STRAP_HOST()-instead
-|-- riscv-allyesconfig
-|   `-- drivers-usb-cdns3-cdns3-starfive.c:warning:expecting-prototype-for-cdns3().-Prototype-was-for-USB_STRAP_HOST()-instead
-|-- riscv-randconfig-s031-20230612
-|   |-- arch-riscv-kernel-signal.c:sparse:sparse:incorrect-type-in-assignment-(different-address-spaces)-expected-void-noderef-__user-datap-got-void
-|   `-- arch-riscv-kernel-signal.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-__x-got-void-noderef-__user-assigned-datap
-|-- sh-allmodconfig
-|   |-- drivers-char-mem.c:error:implicit-declaration-of-function-unxlate_dev_mem_ptr
-|   |-- standard-input:Error:local-label-(instance-number-of-a-fb-label)-is-not-defined
-|   `-- standard-input:Error:pcrel-too-far
-|-- sh-j2_defconfig
-|   `-- drivers-char-mem.c:error:implicit-declaration-of-function-unxlate_dev_mem_ptr
-|-- x86_64-allyesconfig
-|   `-- drivers-leds-leds-cht-wcove.c:warning:no-previous-prototype-for-cht_wc_leds_brightness_get
-`-- x86_64-randconfig-m001-20230612
-    |-- drivers-net-ethernet-mellanox-mlx5-core-lib-devcom.c-mlx5_devcom_register_device()-error:uninitialized-symbol-tmp_dev-.
-    |-- fs-smb-client-cifsfs.c-cifs_smb3_do_mount()-warn:possible-memory-leak-of-cifs_sb
-    |-- fs-smb-client-cifssmb.c-CIFSFindFirst()-warn:missing-error-code-rc
-    |-- fs-smb-client-cifssmb.c-CIFSFindNext()-warn:missing-error-code-rc
-    |-- fs-smb-client-connect.c-cifs_match_super()-error:tlink-dereferencing-possible-ERR_PTR()
-    `-- fs-smb-client-connect.c-generic_ip_connect()-error:we-previously-assumed-socket-could-be-null-(see-line-)
-clang_recent_errors
-|-- hexagon-buildonly-randconfig-r002-20230615
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- hexagon-randconfig-r025-20230615
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- hexagon-randconfig-r041-20230615
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- i386-randconfig-i001-20230614
-|   `-- security-apparmor-policy_unpack.c:warning:expecting-prototype-for-verify_dfa_accept_xindex().-Prototype-was-for-verify_dfa_accept_index()-instead
-|-- i386-randconfig-i012-20230615
-|   `-- security-apparmor-policy_unpack.c:warning:expecting-prototype-for-verify_dfa_accept_xindex().-Prototype-was-for-verify_dfa_accept_index()-instead
-|-- i386-randconfig-i013-20230615
-|   `-- drivers-gpu-drm-i915-display-intel_display_power.h:error:declaration-of-struct-seq_file-will-not-be-visible-outside-of-this-function-Werror-Wvisibility
-|-- riscv-buildonly-randconfig-r001-20230615
-|   |-- drivers-block-pktcdvd.c:warning:stack-frame-size-()-exceeds-limit-()-in-pkt_handle_packets
-|   |-- drivers-scsi-FlashPoint.c:warning:stack-frame-size-()-exceeds-limit-()-in-FlashPoint_HandleInterrupt
-|   `-- fs-ntfs3-super.c:warning:stack-frame-size-()-exceeds-limit-()-in-ntfs_fill_super
-|-- riscv-randconfig-r042-20230615
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- s390-randconfig-r026-20230615
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- x86_64-randconfig-a005-20230614
-|   |-- net-netfilter-ipvs-ip_vs_proto.o:warning:objtool:.init.text:unexpected-end-of-section
-|   `-- security-apparmor-policy_unpack.c:warning:expecting-prototype-for-verify_dfa_accept_xindex().-Prototype-was-for-verify_dfa_accept_index()-instead
-|-- x86_64-randconfig-a015-20230615
-|   `-- drivers-net-ethernet-jme.o:warning:objtool:.text.jme_check_link:unexpected-end-of-section
-|-- x86_64-randconfig-r003-20230616
-|   `-- security-apparmor-policy_unpack.c:warning:expecting-prototype-for-verify_dfa_accept_xindex().-Prototype-was-for-verify_dfa_accept_index()-instead
-`-- x86_64-rhel-8.3-rust
-    |-- make:No-rule-to-make-target-rustdoc-.
-    `-- security-apparmor-policy_unpack.c:warning:expecting-prototype-for-verify_dfa_accept_xindex().-Prototype-was-for-verify_dfa_accept_index()-instead
-
-elapsed time: 733m
-
-configs tested: 135
-configs skipped: 5
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                        nsimosci_defconfig   gcc  
-arc                  randconfig-r043-20230615   gcc  
-arc                           tb10x_defconfig   gcc  
-arm                              alldefconfig   clang
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                         axm55xx_defconfig   gcc  
-arm                        clps711x_defconfig   gcc  
-arm                                 defconfig   gcc  
-arm                          gemini_defconfig   gcc  
-arm                           imxrt_defconfig   gcc  
-arm                      integrator_defconfig   gcc  
-arm                             mxs_defconfig   clang
-arm                         nhk8815_defconfig   gcc  
-arm                  randconfig-r046-20230615   gcc  
-arm                         s5pv210_defconfig   clang
-arm                        spear6xx_defconfig   gcc  
-arm                           sunxi_defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-hexagon      buildonly-randconfig-r002-20230615   clang
-hexagon              randconfig-r024-20230615   clang
-hexagon              randconfig-r025-20230615   clang
-hexagon              randconfig-r035-20230615   clang
-hexagon              randconfig-r041-20230615   clang
-hexagon              randconfig-r045-20230615   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230614   clang
-i386                 randconfig-i002-20230614   clang
-i386                 randconfig-i003-20230614   clang
-i386                 randconfig-i004-20230614   clang
-i386                 randconfig-i005-20230614   clang
-i386                 randconfig-i006-20230614   clang
-i386                 randconfig-i011-20230615   clang
-i386                 randconfig-i012-20230615   clang
-i386                 randconfig-i013-20230615   clang
-i386                 randconfig-i014-20230615   clang
-i386                 randconfig-i015-20230615   clang
-i386                 randconfig-i016-20230615   clang
-i386                 randconfig-r015-20230615   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r013-20230615   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r012-20230615   gcc  
-m68k                 randconfig-r016-20230615   gcc  
-m68k                 randconfig-r033-20230615   gcc  
-m68k                        stmark2_defconfig   gcc  
-m68k                           virt_defconfig   gcc  
-microblaze   buildonly-randconfig-r005-20230615   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                  cavium_octeon_defconfig   clang
-mips                     decstation_defconfig   gcc  
-mips                    maltaup_xpa_defconfig   gcc  
-mips                        omega2p_defconfig   clang
-mips                 randconfig-r023-20230615   gcc  
-mips                   sb1250_swarm_defconfig   clang
-nios2                               defconfig   gcc  
-nios2                randconfig-r005-20230616   gcc  
-nios2                randconfig-r014-20230615   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r001-20230616   gcc  
-parisc               randconfig-r011-20230615   gcc  
-parisc               randconfig-r021-20230615   gcc  
-parisc               randconfig-r036-20230615   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                        cell_defconfig   gcc  
-powerpc                     kilauea_defconfig   clang
-powerpc                      makalu_defconfig   gcc  
-powerpc                     ppa8548_defconfig   clang
-powerpc                      walnut_defconfig   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv        buildonly-randconfig-r001-20230615   clang
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230615   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r026-20230615   clang
-s390                 randconfig-r044-20230615   clang
-sh                               allmodconfig   gcc  
-sh                                  defconfig   gcc  
-sh                         ecovec24_defconfig   gcc  
-sh                               j2_defconfig   gcc  
-sh                          kfr2r09_defconfig   gcc  
-sh                          landisk_defconfig   gcc  
-sh                   randconfig-r031-20230615   gcc  
-sparc                            allyesconfig   gcc  
-sparc        buildonly-randconfig-r003-20230615   gcc  
-sparc        buildonly-randconfig-r004-20230615   gcc  
-sparc                               defconfig   gcc  
-sparc                       sparc32_defconfig   gcc  
-sparc64              randconfig-r004-20230616   gcc  
-sparc64              randconfig-r006-20230616   gcc  
-sparc64              randconfig-r022-20230615   gcc  
-sparc64              randconfig-r032-20230615   gcc  
-um                               alldefconfig   gcc  
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230614   clang
-x86_64               randconfig-a002-20230614   clang
-x86_64               randconfig-a003-20230614   clang
-x86_64               randconfig-a004-20230614   clang
-x86_64               randconfig-a005-20230614   clang
-x86_64               randconfig-a006-20230614   clang
-x86_64               randconfig-a011-20230615   clang
-x86_64               randconfig-a012-20230615   clang
-x86_64               randconfig-a013-20230615   clang
-x86_64               randconfig-a014-20230615   clang
-x86_64               randconfig-a015-20230615   clang
-x86_64               randconfig-a016-20230615   clang
-x86_64               randconfig-r003-20230616   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+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
+QsyUohclvlxgt5d/MsBG6WZxZ+uppzNvjEk/wUu+6JQNUVEMviA6eBCCi+4ShjZUbGPES11h5lw/
+wuyQZDIjy+1hGPtLHBXI/QQEbU3OVdTRn+aEMwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
+MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
+LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
+dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
+HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
+bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
+Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
+gRdqdXN0aW4udGVlQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
+gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUlHfvnuNaLp52RO2Y2En9J+7MKI4wDQYJ
+KoZIhvcNAQELBQADggEBAGaBsEmLZwejb3YsmigadLZGto3hJ7Erq2YZLhL7Pgtxft1/j4JNLsRN
+t3ZJIW2Xzfbj0p328xRekSP1gjZ9Szre0fxEFXH1sS1a7WP9E0fHxVW07xVsxGxo5opAh5Gf/bQH
+S4x9pCO48FJI310L1RGQiqFKY/OECnXO821y8MAyObbGo9HNHP4Sk6F5J1v2qJzbLtMfj8ybbTGe
+SidstRgjOIqMldZs2Koio14QFE7hJY+8KRiKfq+eb1EwQTMzBxZsMOL5vUSZjYg2+Fqwyr6YYp0w
+Lsq/wH9o18xSvL/FikpG4JRxiT20RdM6DQrk9lv8ijASZCuN3JR61WUNz2AxggJtMIICaQIBATBr
+MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
+YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwMd6BsMSBDsagVFtYwDQYJYIZI
+AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILbhSstiH2XA4Umous0zhIM7W08svopCZu7mH4Il
+QNXWMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDYxNjE4MzUy
+OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
+AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
+hkiG9w0BAQEFAASCAQAeEXJB8FrCtTnCth9eZkc2yuCvCtEGWQDowpjR2FuSv6w3/HE8ArQJoNTK
+mKvBtIR17s7rbyX6ZiN4pnbmy7wUDpFCFeulsVrEquo3FUP4MXpwVgs+W/rPPrY9nY5Zf5o2gEn1
+Ia+9oaymenMXaV32GTdyBa0dpTtioSRJMcqsp2geP/0bNrNlNYMfB/tD0RlOkudCKVjlycvC45+r
+cyv/nT4d1OtY0GZynxVVA2rhwvqLdGKphD8T0Bhrn2w63mIUAaMomx3zWJUaTGsxIcKyAsrzcawC
+POn18n+/1McYU6cbYjOdWqDMmT6FqPrkRlT5sBxXMgBbRQUVhN9p/2ho
+--00000000000008d01005fe43732e--
