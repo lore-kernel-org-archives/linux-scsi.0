@@ -2,160 +2,208 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC555EB64D8
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 14:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F4CCEB64DC
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 16:15:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229778AbjFPOZ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Jun 2023 10:25:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38806 "EHLO
+        id S1344104AbjFPQPX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Jun 2023 12:15:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233955AbjFPOZZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 10:25:25 -0400
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id EF8EF30EA
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 07:25:22 -0700 (PDT)
-Received: (qmail 530651 invoked by uid 1000); 16 Jun 2023 10:25:22 -0400
-Date:   Fri, 16 Jun 2023 10:25:22 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH] ata: libata-scsi: Avoid deadlock on rescan after device
- resume
-Message-ID: <b819f0d7-af6a-406e-90ae-fa1e2f8c8b74@rowland.harvard.edu>
-References: <20230615083326.161875-1-dlemoal@kernel.org>
- <b35c2137-6469-4d30-a25c-096e4932fe1b@rowland.harvard.edu>
- <766f0f86-7b2e-51a7-6cc1-b670631105a4@kernel.org>
+        with ESMTP id S1345405AbjFPQOv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 12:14:51 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D51F35AD
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 09:14:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1686932039;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1mlTQ7sLbMYrLbD7sQOL6EL8ri/fJk9iL2N/GT0ngis=;
+        b=C1dYt+DzvQMhIsTcvNEqAH15xKZgziE83XD//um90h8RnD7CNCoAC7h23gCUli+toizckj
+        gtHNLJz4UHr2sD/KvAQ6UzPNNBa3aAcBEd3dhrviF+NV0DqwcmXhvSOoKRbznLO6hrSSHo
+        BL4fmRLr1mnVhktjoL3s4VOiFQRIc/E=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-80--ZJjLFLpNDyvwEUeqVNoyg-1; Fri, 16 Jun 2023 12:13:56 -0400
+X-MC-Unique: -ZJjLFLpNDyvwEUeqVNoyg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C768A38041C6;
+        Fri, 16 Jun 2023 16:13:55 +0000 (UTC)
+Received: from warthog.procyon.org.com (unknown [10.42.28.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C88111121314;
+        Fri, 16 Jun 2023 16:13:53 +0000 (UTC)
+From:   David Howells <dhowells@redhat.com>
+To:     netdev@vger.kernel.org
+Cc:     David Howells <dhowells@redhat.com>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+        David Ahern <dsahern@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH net-next 15/17] iscsi: Use sendmsg(MSG_SPLICE_PAGES) rather than sendpage
+Date:   Fri, 16 Jun 2023 17:12:58 +0100
+Message-ID: <20230616161301.622169-16-dhowells@redhat.com>
+In-Reply-To: <20230616161301.622169-1-dhowells@redhat.com>
+References: <20230616161301.622169-1-dhowells@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <766f0f86-7b2e-51a7-6cc1-b670631105a4@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 16, 2023 at 02:25:38PM +0900, Damien Le Moal wrote:
-> On 6/15/23 23:50, Alan Stern wrote:
-> > On Thu, Jun 15, 2023 at 05:33:26PM +0900, Damien Le Moal wrote:
-> >> When an ATA port is resumed from sleep, the port is reset and a power
-> >> management request issued to libata EH to reset the port and rescanning
-> >> the device(s) attached to the port. Device rescanning is done by
-> >> scheduling an ata_scsi_dev_rescan() work, which will execute
-> >> scsi_rescan_device().
-> >>
-> >> However, scsi_rescan_device() takes the generic device lock, which is
-> >> also taken by dpm_resume() when the SCSI device is resumed as well. If
-> >> a device rescan execution starts before the completion of the SCSI
-> >> device resume, the rcu locking used to refresh the cached VPD pages of
-> >> the device, combined with the generic device locking from
-> >> scsi_rescan_device() and from dpm_resume() can cause a deadlock.
-> >>
-> >> Avoid this situation by changing struct ata_port scsi_rescan_task to be
-> >> a delayed work instead of a simple work_struct. ata_scsi_dev_rescan() is
-> >> modified to check if the SCSI device associated with the ATA device that
-> >> must be rescanned is not suspended. If the SCSI device is still
-> >> suspended, ata_scsi_dev_rescan() returns early and reschedule itself for
-> >> execution after an arbitrary delay of 5ms.
-> > 
-> > I don't understand the nature of the relationship between the ATA port
-> > and the corresponding SCSI device.  Maybe you could explain it more
-> > fully, if you have time.
-> 
-> For ata devices, the parent -> child relationship is:
-> 
-> ata_host (the adapter) -> ata_port -> ata_link -> ata_device (HDD, SSD or ATAPI
-> CD/DVD)
-> 
-> For scsi devices representing ATA devices, it is:
-> 
-> ata_port -> scsi_host -> scsi_target -> scsi_device -> scsi_disk (or gendisk for
-> a CD/DVD)
-> 
-> When devices are scanned, libata will create ports and create a scsi_host for
-> each port, and a scsi device for each ata_device found on the link(s) for the
-> port. There is no direct relationship between an ata_device (the HDD or SSD) and
-> its scsi_device/scsi_disk (the device used to issue commands). The PM operations
-> we have are for ata_port and scsi_device. For the scsi device, the operations
-> are actually defined per device type, so in the scsi_disk driver (sd) for HDDs
-> and SSDs.
+Use sendmsg() with MSG_SPLICE_PAGES rather than sendpage.  This allows
+multiple pages and multipage folios to be passed through.
 
-Thanks for the explanation.  So there are two device structures in the 
-kernel representing the same physical piece of hardware.  No wonder you 
-sometimes run into trouble!
+TODO: iscsit_fe_sendpage_sg() should perhaps set up a bio_vec array for the
+entire set of pages it's going to transfer plus two for the header and
+trailer and page fragments to hold the header and trailer - and then call
+sendmsg once for the entire message.
 
-On a more positive note, it sounds like each ata_device is always 
-created and registered before the corresponding scsi_device, which means 
-that synchronous suspends and resumes are guaranteed to work the way you 
-want.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+cc: "David S. Miller" <davem@davemloft.net>
+cc: Eric Dumazet <edumazet@google.com>
+cc: Jakub Kicinski <kuba@kernel.org>
+cc: Paolo Abeni <pabeni@redhat.com>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: Matthew Wilcox <willy@infradead.org>
+cc: linux-scsi@vger.kernel.org
+cc: target-devel@vger.kernel.org
+cc: netdev@vger.kernel.org
+---
+ drivers/scsi/iscsi_tcp.c                 | 26 +++++++++---------------
+ drivers/scsi/iscsi_tcp.h                 |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c | 14 +++++++------
+ 3 files changed, 19 insertions(+), 23 deletions(-)
 
-> > But in any case, this approach seems like a layering violation.  Why not 
-> 
-> The layering violation is I think only with the direct reference to the scsi
-> device power.is_suspended field, which is definitely not pretty. But there are
-> some other drivers doing something similar:
-> 
-> $ git grep "power\.is_suspended" | grep -v drivers/base/power/main.c
-> drivers/gpu/drm/i915/display/intel_display_power_well.c:	if
-> (!dev_priv->drm.dev->power.is_suspended)
-> drivers/net/ethernet/stmicro/stmmac/dwmac-stm32.c:	if
-> (!dwmac->dev->power.is_suspended) {
-> drivers/platform/surface/surface_acpi_notify.c:	if (d->dev->power.is_suspended) {
-> 
-> All the other code (ata calling scsi) is normal per the SCSI-to-ata translation
-> needed (all ata devices are represented as scsi devices in Linux, following the
-> SAT=scsi ATA translation specifications).
-> 
-> > instead call a SCSI utility routine to set a "needs_rescan" flag in the 
-> > scsi_device structure?  Then scsi_device_resume() could automatically 
-> > call scsi_rescan_device() -- or rather an internal version that assumes 
-> > the device lock is already held -- if the flag is set.  Or it could 
-> 
-> Yes, ideally, that is what we should do. Such fix is however more involved, and
-> so I prefer not to push for this right now as a fix for the regression at hand.
-> But I will definitively look into this.
-> 
-> > queue a non-delayed work routine to do this.  (Is it important to have 
-> > the rescan finish before userspace starts up and tries to access the ATA 
-> > device again?)
-> > 
-> > That, combined with a guaranteed order of resuming, would do what you 
-> > want, right?
-> 
-> Yes. But again more fixes needed:
-> 1) libata uses its error handling path to reset a port on resume and probe the
-> links again. The devices found are then revalidated (IDENTIFY command, reading
-> log pages etc). This call to EH is triggered in the pm->resume operation, but EH
-> runs as an asynchronous task. So the port->resume may complete before EH is
-> done. We need to change the EH call to be synchronous in ->resume
-> 2) We need to remove triggering the task that does scsi_rescan_device() in EH
-> and move that trigger to scsi_device ->resume.
-> 3) Modify scsi_device ->resume() to call scsi_rescan_device()
-> 
-> Safely doing (3) requires synchronization between ata_port->resume and
-> scsi_device->resume. We can do that by adding a device link between ata_device
-> and scsi_device. Doing so, the scsi device becomes the grandchild of the
-> ata_port and we are guaranteed that its ->resume will happen only once the ata
-> port ->resume is done.
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9637d4bc2bc9..9ab8555180a3 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -301,35 +301,32 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
+ 
+ 	while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
+ 		struct scatterlist *sg;
++		struct msghdr msg = {};
++		struct bio_vec bv;
+ 		unsigned int offset, copy;
+-		int flags = 0;
+ 
+ 		r = 0;
+ 		offset = segment->copied;
+ 		copy = segment->size - offset;
+ 
+ 		if (segment->total_copied + segment->size < segment->total_size)
+-			flags |= MSG_MORE | MSG_SENDPAGE_NOTLAST;
++			msg.msg_flags |= MSG_MORE;
+ 
+ 		if (tcp_sw_conn->queue_recv)
+-			flags |= MSG_DONTWAIT;
++			msg.msg_flags |= MSG_DONTWAIT;
+ 
+-		/* Use sendpage if we can; else fall back to sendmsg */
+ 		if (!segment->data) {
++			if (!tcp_conn->iscsi_conn->datadgst_en)
++				msg.msg_flags |= MSG_SPLICE_PAGES;
+ 			sg = segment->sg;
+ 			offset += segment->sg_offset + sg->offset;
+-			r = tcp_sw_conn->sendpage(sk, sg_page(sg), offset,
+-						  copy, flags);
++			bvec_set_page(&bv, sg_page(sg), copy, offset);
+ 		} else {
+-			struct msghdr msg = { .msg_flags = flags };
+-			struct kvec iov = {
+-				.iov_base = segment->data + offset,
+-				.iov_len = copy
+-			};
+-
+-			r = kernel_sendmsg(sk, &msg, &iov, 1, copy);
++			bvec_set_virt(&bv, segment->data + offset, copy);
+ 		}
++		iov_iter_bvec(&msg.msg_iter, ITER_SOURCE, &bv, 1, copy);
+ 
++		r = sock_sendmsg(sk, &msg);
+ 		if (r < 0) {
+ 			iscsi_tcp_segment_unmap(segment);
+ 			return r;
+@@ -746,7 +743,6 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 	sock_no_linger(sk);
+ 
+ 	iscsi_sw_tcp_conn_set_callbacks(conn);
+-	tcp_sw_conn->sendpage = tcp_sw_conn->sock->ops->sendpage;
+ 	/*
+ 	 * set receive state machine into initial state
+ 	 */
+@@ -777,8 +773,6 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+ 			return -ENOTCONN;
+ 		}
+ 		iscsi_set_param(cls_conn, param, buf, buflen);
+-		tcp_sw_conn->sendpage = conn->datadgst_en ?
+-			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
+ 		mutex_unlock(&tcp_sw_conn->sock_lock);
+ 		break;
+ 	case ISCSI_PARAM_MAX_R2T:
+diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
+index 68e14a344904..d6ec08d7eb63 100644
+--- a/drivers/scsi/iscsi_tcp.h
++++ b/drivers/scsi/iscsi_tcp.h
+@@ -48,7 +48,7 @@ struct iscsi_sw_tcp_conn {
+ 	uint32_t		sendpage_failures_cnt;
+ 	uint32_t		discontiguous_hdr_cnt;
+ 
+-	ssize_t (*sendpage)(struct socket *, struct page *, int, size_t, int);
++	bool			can_splice_to_tcp;
+ };
+ 
+ struct iscsi_sw_tcp_host {
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index b14835fcb033..8bab1898f1d0 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -1129,6 +1129,8 @@ int iscsit_fe_sendpage_sg(
+ 	struct iscsit_conn *conn)
+ {
+ 	struct scatterlist *sg = cmd->first_data_sg;
++	struct bio_vec bvec;
++	struct msghdr msghdr = { .msg_flags = MSG_SPLICE_PAGES,	};
+ 	struct kvec iov;
+ 	u32 tx_hdr_size, data_len;
+ 	u32 offset = cmd->first_data_sg_off;
+@@ -1172,17 +1174,17 @@ int iscsit_fe_sendpage_sg(
+ 		u32 space = (sg->length - offset);
+ 		u32 sub_len = min_t(u32, data_len, space);
+ send_pg:
+-		tx_sent = conn->sock->ops->sendpage(conn->sock,
+-					sg_page(sg), sg->offset + offset, sub_len, 0);
++		bvec_set_page(&bvec, sg_page(sg), sub_len, sg->offset + offset);
++		iov_iter_bvec(&msghdr.msg_iter, ITER_SOURCE, &bvec, 1, sub_len);
++
++		tx_sent = conn->sock->ops->sendmsg(conn->sock, &msghdr, sub_len);
+ 		if (tx_sent != sub_len) {
+ 			if (tx_sent == -EAGAIN) {
+-				pr_err("tcp_sendpage() returned"
+-						" -EAGAIN\n");
++				pr_err("sendmsg/splice returned -EAGAIN\n");
+ 				goto send_pg;
+ 			}
+ 
+-			pr_err("tcp_sendpage() failure: %d\n",
+-					tx_sent);
++			pr_err("sendmsg/splice failure: %d\n", tx_sent);
+ 			return -1;
+ 		}
+ 
 
-That change should be made in any case.  SCSI device drivers assume they 
-can send PM-related commands to the device as part of carrying out the 
-resume procedure.  (I don't remember whether they actually do so, but 
-they are allowed to make this assumption.)  Obviously such commands 
-won't work unless the ata_port is fully resumed first.
-
-> That will also improve things as we will be able to rescan the scsi device (and
-> thus catch any change to the device) *before* the device ->resume operation
-> re-enables issuing user commands by un-quiescing the device request queue.
-
-Just so.
-
-> As you can see, that is all beyond a quick fix for a regression... Will work on
-> this.
-
-It seems like a good plan of approach.
-
-Alan Stern
