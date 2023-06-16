@@ -2,185 +2,223 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A4DEB64D9
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Jun 2023 17:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0417AEB64DA
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 03:32:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232502AbjFORCE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Jun 2023 13:02:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58378 "EHLO
+        id S239577AbjFPDcS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Jun 2023 23:32:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbjFORCC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 13:02:02 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 046B4123
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2023 10:02:00 -0700 (PDT)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35FGJ4gY026580;
-        Thu, 15 Jun 2023 17:01:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=KNfwuIscXeQDBtWw5n/0djVnNR6BUIJOTUZicVYVh8s=;
- b=mOAnDdBzttdQRUi1JTMVhUFJobqqsLfJ/xLqtUp8asnPDJFB7+9ZTftUog5l29IsxlYJ
- VV1M1gtBspZlRZ0qh0qRVgHxAh4g0UuBRObobYMjKSW1jvPFez6F3qJkx5IeiTLZhTn4
- 6434HuW6oJ5azpf0ukMjbS8XonCUtRgB9ZTBQd0MZRfl1e2LxEabnLoOgD8wmFfBAXwe
- EZaOfFZCKJxnHogEMgIB4xUzl0hT3zhhCibdU/CbzT5nfVhzkr90FTl50nzRCfNrCess
- EuX+6M0ECIuvTU4gNd43nnAilJ7XjGLr/IDQtpoQEf0grCmqU93Kk9NuE25uU0Y/dqFv gA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3r4h7dajfb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 15 Jun 2023 17:01:48 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35FGV46H009515;
-        Thu, 15 Jun 2023 17:01:48 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2172.outbound.protection.outlook.com [104.47.55.172])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3r4fm7g0ya-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 15 Jun 2023 17:01:47 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LqhHLa7iUM+HyeJB3mut5joKF7XFfDe2wNu4QSUSbs5PL2CDbqNerkK7JYAt3tdUqZznwk5/gNq26YFYshaKINqPohSuE8lvHvX1DhVz0Mxl3FBE0eTL4qvf5zJGHTH9mELb9iyEyj4p3+3VtE+6OKG+I4z7ELt0CSmJ/7aOPPgRFVVorACff86ElLkdJhPbOJ9don27eBfPM7kavcruGsOTF5s6AsIvSREJGDF/tjMiyOXgVlN1dEKR7/evv0mds7SbmR3krnC1AVA+bm8owqSAz44BvtlREqHr2h+g9kL+IBmThqca6l+451QGgmpmCnuCaxpiy20jA61HelQzoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KNfwuIscXeQDBtWw5n/0djVnNR6BUIJOTUZicVYVh8s=;
- b=e9qiaYMrkN50y74oHIL4DAk9InzitxyZ29Suzsy9oGtXo30MXWmVoPt82INxTJhKijnDDCjvfgXANC4O4A91d7qtt0L2gImLnr2zi+sJmOLQa2P35+JNiMNE4TWsT5ObX6U5CjU3YxNqYfnZlz8ESiBtvCYv8RQgjV8UlbHc0YOHDQ1enEU8yIt+Uih5HxQd3/6QjLq8HasV2qwsNSZhfMJiKJjk6cDPoKF+ZBpaJCb7kkWKVjPzuDvmGFaLW+us1YmrVFSZjHAYbXq2SgMHcqpP4NtsGyrZdzHO1zHlbtJM8MpusEYsIwBCtyW1lyHZqbUgPamSnHeczEDxZ+28RQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KNfwuIscXeQDBtWw5n/0djVnNR6BUIJOTUZicVYVh8s=;
- b=yoQzl8r4l5iri3bwc4itW0j7XKCURJr6lwSBn7Mu+/KV5slTzO5CYYBumDMkaK/I/6uxaGL37eOqIe2Vu4Vt9muSGyNUdYToSu0HyTH5YK1S/9AUEe6X9kHadTNwzol8ayeMF6On7VHNEEhMQ56ejHCDB7c3f9Qrb+OSoycfzs4=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by CH0PR10MB7535.namprd10.prod.outlook.com (2603:10b6:610:187::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.33; Thu, 15 Jun
- 2023 17:01:44 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::13d6:c3f3:2447:6559]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::13d6:c3f3:2447:6559%5]) with mapi id 15.20.6455.045; Thu, 15 Jun 2023
- 17:01:44 +0000
-Message-ID: <bf457ee0-3900-e369-5966-d8451657f5fe@oracle.com>
-Date:   Thu, 15 Jun 2023 12:01:42 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH v8 15/33] scsi: spi: Fix sshdr use
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, mwilck@suse.com, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20230614071719.6372-1-michael.christie@oracle.com>
- <20230614071719.6372-16-michael.christie@oracle.com>
- <e576431b-7196-fdf6-9dbd-cb7630d4c8ff@acm.org>
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <e576431b-7196-fdf6-9dbd-cb7630d4c8ff@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: DS7PR03CA0064.namprd03.prod.outlook.com
- (2603:10b6:5:3bb::9) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+        with ESMTP id S236191AbjFPDcN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2023 23:32:13 -0400
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0388B2710
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2023 20:32:10 -0700 (PDT)
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 2B0943F15C
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 03:32:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1686886328;
+        bh=e5autB/dfHgjBRvA2eBYALYimY/hNsU7bj3L/KlaG6g=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=I0Wk3/LGCJp1J77YSYM56ZOFFJNKR/rN84LwIM/Bq1kvN9lO0SYIC8kRVNGTnpmIg
+         4//GX12D5FKjA2oLOI6uhCm6ydjw8qTXKi76oibklVhm156at/xWxNjQpOO3T+TOPE
+         R1WaA2ZJ8v6+1HJ7GyeU96C4IOSxErnhKJPquaMTjUDJCMWjHbWmhe+GCUJR9njbFw
+         xIHyI5SI02Z9Gc08lPpXLO8t/L90gWMCRrj09hk2/WD9Ke09NoStbN89kEmAk/Po6m
+         uR4XZ7zm47PQBY0h8P52iWpdTpaR0NORfjE6o9jPQOZf8ef3AItgnkE4zUkduUFW39
+         7YzqDN4OwjJCg==
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-39e9c739d68so207297b6e.0
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2023 20:32:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686886327; x=1689478327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=e5autB/dfHgjBRvA2eBYALYimY/hNsU7bj3L/KlaG6g=;
+        b=OYtpQhSnhYajArr1fiDuixxywMhduPAaiESsBkErEQtU+jl0COfdkyR4VOXbQhgJqT
+         yBauKCUmUj4uQLTLZON7BSbWh92MEypghaAknsrCb/bor5WYCdJUOGJt+VzVLtDTpFlU
+         pas5XVDuv9qy6rb9YGymjIgu9BiFmda5b531rLt/xjVehw7HXRUIWnJXouIS9Cvhnxdh
+         5dcuP5N9L/qGuRBB+gjZ26813TVBmEEk641mgj74RK2hZT14/5DVfcr0F216NPkOCo+g
+         +qwZQnw5Uvkx2Gp7+7lrF2ul/A8ObWjEk1CwnA1+a8Kh2N9kUqSizSs8pSUxiwrLkLC9
+         Gm7w==
+X-Gm-Message-State: AC+VfDyYoeuofRnjU8VZpti/9WVokR8qlYyWd0xAlxfNFG5wDX5zGB/A
+        AgsRg3/zJFLh7qIeDlhiNrX6Y17rWSlDdaDnn1qoz6MyqiyX/0zYv0871x0ZoVqml8vngYwxC2X
+        YV41bOeQOP/NvTSh4UfN86Dmumji7QENPGWPH9Vz4IxUbRRp93vtuPAo=
+X-Received: by 2002:aca:120d:0:b0:39a:a19a:3207 with SMTP id 13-20020aca120d000000b0039aa19a3207mr1040608ois.18.1686886326747;
+        Thu, 15 Jun 2023 20:32:06 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ6qVZLrWzR12LrdKIg1I9eJQ5EA1dk+XTVfU5unfFTvIB6ly1kPYwFu5gLy7jmlJgDQyLrBVfJ9E16KTi12lIA=
+X-Received: by 2002:aca:120d:0:b0:39a:a19a:3207 with SMTP id
+ 13-20020aca120d000000b0039aa19a3207mr1040596ois.18.1686886326405; Thu, 15 Jun
+ 2023 20:32:06 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|CH0PR10MB7535:EE_
-X-MS-Office365-Filtering-Correlation-Id: 96040311-af57-41a1-a827-08db6dc23278
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: k1fwndyFZI9iTULH0lqzy0NmEfVhPlWeJy/CjAavMxnRidPTWZt5siu52Jg1fNNap/6AfaIKtdZzQQnU595stQaeDqj5h1RueEwvyoXurzPB6/A/9t4oxpyfbycUIqoRjQr21nNh2jV2+QNpTeRAU/+xpzOJ5kjPF+vmXjpKVK5VFJw3u5wcgsQmM0nqpSHppwrDrro2ZeUpdxEoB6AQEWUJeUAJpM2ZTrLXCHD8QMyGKar1B0pG9v/v8H+ECNjrpuMLS+7J6HyLifa/IrjsGmOZI6TX9EZCwrJPvnZa41gIIbXfCtULBSPO18ZvDXITR++8/IKWUZXw0QyLlF1CsqvQLW11QHUhOlWS9rDlkr1iRF9cB5f3672O42mVJzHo1EqHpMdnd+RJ87bUNLYNO8mVXyNAtDRje8q4gNtHcV3RMH6+loKwVhLi+nSOmdJVHpVjh6/D1Jlq5J1XcHyj2BjCU6wIzQTnC7Fji4X5ssklcZ5VXbJN2IlA/w+byRz85hhpdqCHE0Y8hCeqpqxMLknP+zjtY7ceNbqJwgYkRL6FK0JMKaJ0fkXNfBhs+8vFD+l0RwYfTyx40bHZw53A4cmyzEae2OMQ9GuCa/KgtbnFv3t/st1uhRABSbiO6WKII/Sz82yrquJr1+asUv0cmQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(376002)(396003)(136003)(346002)(366004)(39860400002)(451199021)(478600001)(2906002)(36756003)(8936002)(8676002)(5660300002)(38100700002)(66946007)(66476007)(66556008)(316002)(41300700001)(31696002)(53546011)(6506007)(26005)(6512007)(86362001)(186003)(2616005)(31686004)(83380400001)(6486002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bmk1R2lpSG1iektwZVhUY1pjVXc0LzN2K1psbElCU1lqNk5nUGpHNjBrcklY?=
- =?utf-8?B?b3BxYjNxYWZTYStXMTdFSUQyKytocnE4K21JWTExVFhSeUYxUy9rUW1OaFp2?=
- =?utf-8?B?c1VjY3BXeFVLVG56dGFFZTRDYTJ3eWhkWWRtVUZ1bnl2NTVpdW5lOGdVZW5F?=
- =?utf-8?B?LzQzUXkvR1RBeHpwZlVTNXMzZ201T3RORWRWZ1BSc29GQWl1alJvcnhocVI3?=
- =?utf-8?B?ZkhOYUJtTFRjUHV4alRTNTZCVzc1KzdUTUlrTEJQd25qaUV4REhocGhranlO?=
- =?utf-8?B?ZzhuWmRsSkpMdklJTXkrTU94Mm1nLzZUbmRxU1NLSFB3Um5KS1lYQjNVUmRv?=
- =?utf-8?B?UHl4NjVhNEdSdXNWM3l0bW9WWUJ2bE9Lbmt3LzhucDJubjVab0lqemVqcUtQ?=
- =?utf-8?B?N05JbUNWL1RVUFVGZzZyMTdvWHdQZDF2Q3NhdWJpZTVLb0owODJvT2wwdlpV?=
- =?utf-8?B?dlFJY0NpaGJ1c2h4ckZ6eHI0dytmV01CNkF2MWN1U1MzclV3NzhWK2RmdkIx?=
- =?utf-8?B?WlhsL0FZOGJwZ085ZndmQTh5SEVtZ3ZiOFJwWEFHM0hCNWJSc2dqNjk2Z3Ez?=
- =?utf-8?B?VUJIL1pBa1lPSE1ZdFI4aUsrdFpLRVRtSUFKNlgzdFRsSHV5TTQyU2dKSUc1?=
- =?utf-8?B?RXIveHJmbEFLNDR4QllhVnpIZ1Q2ZDJ6UmZFa0ZibGgrU0lnWEFvbVN1RFRF?=
- =?utf-8?B?Zm9tc0p2d0NMdHpld0U1ejdiSTR2YmtMNVZyODBtZTNQeUpLM3piMlk1cWRZ?=
- =?utf-8?B?aTFTTDJ3dDcxbldxWjVMTUFtUmVORGhKK1QraHpwWUtoSG1xSjhpaFhlcWhF?=
- =?utf-8?B?Q1E1UkNaWVBYd1Q3VUZ0MDRab0tmRkNQVVVDRjdpOHBaN2txalYzdDlZbEg1?=
- =?utf-8?B?WS9tQkNJck4zSWtMVDNGTkhxTG9aZ2FPNVpEWjd1d2pocWlsSHNwT3VQWmUy?=
- =?utf-8?B?MDNwQm81WStrSDdMVHBzQStRTEJmaWxrMGtyZmRLNTJMaVZPSzR6Sk9LbFA5?=
- =?utf-8?B?UXBsTHoyQTAyTlRIYU1RV0VqWUxQcTVCaEwzQkx4VWtQWkxNTkVRVGdKOHF5?=
- =?utf-8?B?NnViU2l1dWRUbTI1Q0ZOa3VFZ1l3N1JuSWJMTGZ4WEltdWVPTVNvcE1rRVFn?=
- =?utf-8?B?RGtWMlhXamFsdlBIUHlJZWNjTlNqQkpsNnFTc2RrTVVTOUwzSlJCcGd4MGlU?=
- =?utf-8?B?N055VjdaakJhOW1tV0x4V1ZnR0ViTXFrcGJXZUxCUUlUanY2Q0EzV3JvNHY2?=
- =?utf-8?B?bUZZL2hLUUFLcFJGaE9OVG9OL3k3TDVYWEV2YXdJYlcvM2IzKzNtcUV6R0NI?=
- =?utf-8?B?N3RGN3NMT240YTBlWG1YYVQ5bkhlTEhaSkVxUFpWd0NYTm01amkyRGhuN1E0?=
- =?utf-8?B?YzQ3M3hBWWs1Tk5RNDZnSjJpbTZpSU4xbERWcXFwQm5Dd2k0UGVVZnkyU3ZS?=
- =?utf-8?B?WmEwQzI2MnlrWVBBbFRSUUk2WllHbGdCZjRrNi9iQVlFdm5ValBkSndlb3p4?=
- =?utf-8?B?MmNQMkJ5Tll2RktSL2xxb1p1RVM3NDlUa0lVaHpwQnlnR0FqbDF5SW02MmxU?=
- =?utf-8?B?TjZPU0ZQam5rL1pISTVrZVJ1UHFJV3lTRG1BbVVvaVVvRFlLbFlkQTBlMjN2?=
- =?utf-8?B?YW4zOGdRZFVNNzIwT2pvK0ZJZGFtSU1JRFI4RTFXUnVFSDhieXJDUTVSTll1?=
- =?utf-8?B?c0VlMkxMdGNCUDhIRHduL2VzMlpvWXNFQVByaktabUdicEVhc2M3Zzg4Nk5p?=
- =?utf-8?B?RFdyUTBiU2tOeVN4TkUzcllMNENUaG5wT3R5T3Eya0JGeXozclFBOTVybTdp?=
- =?utf-8?B?aE9sN0YrYmRMbXdyNHV5WFlUaVgyNTZlanpnSkhEOFpqZWV4cmg2ZUNPOUUv?=
- =?utf-8?B?eHUrNEFnQXBuaWw3OFFSZS8wUGZUS2ZmWUtjN0JOVUwwUXF5b093Z0s4UHQ3?=
- =?utf-8?B?ZVR0bXpmS3AxR3E0US9wYkl4bnZuelBFNnZhdjhYYk91K2NyWnZ1bWtqeWpo?=
- =?utf-8?B?UzRZckN6N1lpL09tMTY1VFVjNHBianJ2d0lzVE5qbDZVNG5Iek9aQXp3R1dl?=
- =?utf-8?B?YnZERnJrc0sxOEUyNjg4bndaZDVvZ3JrMm00c1cwRllibEdkL0xDMUdCUWxK?=
- =?utf-8?B?WndNZFNtYksvV280T1AyUzhreGNkOG1LLzR6c2crWU1XMlFPcEVSVlpFRnhy?=
- =?utf-8?B?Ync9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: h0NR+Mlqy8LsB0mfXhwHjYzvvguS3SDDE9zwZgHQbmI8KTeCKYzcXeGyhJ+Io8g+K5/lp092/UyZBKdiNO2eOAvQDZCeni9UtxdERIL4Wk3AANOH+9D651d3JFUJ5/uKnHv3O3h0rOeZ8J0en0FoMGxBAcEe/cQzY0z+RYAX3HgNldYwMHE+ZXgikpwHNX7vqyJMXgeJW+LLqboRpX6vGfJCrtOv+MlMhXVJv01FwAS1qtR3uMpNfhlPtWq4TkAyqvc1Bx7zGNl51eeCSeID63ZEOTGB5rH73SLDvq1jYQcjOfoIzg7INTN7rR6PVhblM7l1LQhwNz9lCj5HDWlUjiVIz5LFlPskv38pKwxaAc4n5K5nerpCAjB9z8gMNDnRSGeUEFx5A8pabKUgoJVhZ2IKFgJha46QR+QG8vNABOAFVLPx3xfDoRzeV+QZrpcfOCYZMz+Vu6or7/Dfnm+9/zUKkWAa9UaJrC0p2yYI0TJ+WZndyBHzq+mcMJGk7LD/4pEQ1Ek0Ane15oqItdaSxRNwFBXGqdELONqWVljNPF2RthhwHh9t4Pibsa2TESl29XIx2Xe1TkujkwKQVWQb2Aj6IMTwRb3vI5Sb0G0ep2hazirp8DFo2NL+FWcaKcx+1HfVPgAnganQB5G2cwQOHXHwSaYJPUTKiJHCupfHJNX//3u52G7NdOtm3P4KoQyaEfmzGxIDiDmcVkkMBOCVTPc1Cd/0J0/pankyYetBUVBvnM9TSkfrBDBuaw5/1B8TlClswlxN5bkChjVhIUcPI3M1IAzqwzXLEdd3YzVbmjutsHQvS+GnFmoWE54hfs+mFLkeWN+jW1AQQ8wVBg8rpN67TrsiqNK3MzC83TAnIoeQ/ZixFfx8pCwGS6V1jdRt
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 96040311-af57-41a1-a827-08db6dc23278
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2023 17:01:44.2342
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gSY9X7Wb6egCHTTtfOWcoVSnfyRplb1bk18BCq2Ra6WZAajEscgaEqJpPkXNE7RabTWhRuS27orsPDONiEUQ6rW+gAtSQl62cHFhCLoTkjM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB7535
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-06-15_13,2023-06-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 phishscore=0
- mlxscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2305260000
- definitions=main-2306150149
-X-Proofpoint-ORIG-GUID: fSWdHp6GCUrDBXDwpvnJCs1E_XEwbY9j
-X-Proofpoint-GUID: fSWdHp6GCUrDBXDwpvnJCs1E_XEwbY9j
+References: <20230615083326.161875-1-dlemoal@kernel.org>
+In-Reply-To: <20230615083326.161875-1-dlemoal@kernel.org>
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Fri, 16 Jun 2023 11:31:55 +0800
+Message-ID: <CAAd53p6PMhNO8PynWAw5xz_gEOp+NQv18XKkW-M-r=JfHWT6FQ@mail.gmail.com>
+Subject: Re: [PATCH] ata: libata-scsi: Avoid deadlock on rescan after device resume
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Hannes Reinecke <hare@suse.de>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/14/23 4:46 PM, Bart Van Assche wrote:
-> On 6/14/23 00:17, Mike Christie wrote:
->> If scsi_execute_cmd returns < 0 it will not have set the sshdr, so we
->> can't access it.
->>
->> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->> ---
->>   drivers/scsi/scsi_transport_spi.c | 6 +++---
->>   1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
->> index 2442d4d2e3f3..2100c3adb456 100644
->> --- a/drivers/scsi/scsi_transport_spi.c
->> +++ b/drivers/scsi/scsi_transport_spi.c
->> @@ -126,7 +126,7 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
->>            */
->>           result = scsi_execute_cmd(sdev, cmd, opf, buffer, bufflen,
->>                         DV_TIMEOUT, 1, &exec_args);
->> -        if (result < 0 || !scsi_sense_valid(sshdr) ||
->> +        if (result <= 0 || !scsi_sense_valid(sshdr) ||
->>               sshdr->sense_key != UNIT_ATTENTION)
->>               break;
->>       }
-> 
-> Hmm ... why is this change necessary?
+On Thu, Jun 15, 2023 at 4:33=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+>
+> When an ATA port is resumed from sleep, the port is reset and a power
+> management request issued to libata EH to reset the port and rescanning
+> the device(s) attached to the port. Device rescanning is done by
+> scheduling an ata_scsi_dev_rescan() work, which will execute
+> scsi_rescan_device().
+>
+> However, scsi_rescan_device() takes the generic device lock, which is
+> also taken by dpm_resume() when the SCSI device is resumed as well. If
+> a device rescan execution starts before the completion of the SCSI
+> device resume, the rcu locking used to refresh the cached VPD pages of
+> the device, combined with the generic device locking from
+> scsi_rescan_device() and from dpm_resume() can cause a deadlock.
+>
+> Avoid this situation by changing struct ata_port scsi_rescan_task to be
+> a delayed work instead of a simple work_struct. ata_scsi_dev_rescan() is
+> modified to check if the SCSI device associated with the ATA device that
+> must be rescanned is not suspended. If the SCSI device is still
+> suspended, ata_scsi_dev_rescan() returns early and reschedule itself for
+> execution after an arbitrary delay of 5ms.
+>
+> Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> Reported-by: Joe Breuer <linux-kernel@jmbreuer.net>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D217530
+> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for =
+async power management")
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-It's not needed. Will drop.
+Tested-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-I think when reviewing sshdr code I thought it was a waste to check for sense
-when result was zero. When I broke up the set, it got caught in the sshdr fixes.
-Will drop since not related.
+> ---
+>  drivers/ata/libata-core.c |  3 ++-
+>  drivers/ata/libata-eh.c   |  2 +-
+>  drivers/ata/libata-scsi.c | 22 +++++++++++++++++++++-
+>  include/linux/libata.h    |  2 +-
+>  4 files changed, 25 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 8bf612bdd61a..b4f246f0cac7 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5348,7 +5348,7 @@ struct ata_port *ata_port_alloc(struct ata_host *ho=
+st)
+>
+>         mutex_init(&ap->scsi_scan_mutex);
+>         INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
+> -       INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
+> +       INIT_DELAYED_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
+>         INIT_LIST_HEAD(&ap->eh_done_q);
+>         init_waitqueue_head(&ap->eh_wait_q);
+>         init_completion(&ap->park_req_pending);
+> @@ -5954,6 +5954,7 @@ static void ata_port_detach(struct ata_port *ap)
+>         WARN_ON(!(ap->pflags & ATA_PFLAG_UNLOADED));
+>
+>         cancel_delayed_work_sync(&ap->hotplug_task);
+> +       cancel_delayed_work_sync(&ap->scsi_rescan_task);
+>
+>   skip_eh:
+>         /* clean up zpodd on port removal */
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index a6c901811802..6f8d14191593 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2984,7 +2984,7 @@ static int ata_eh_revalidate_and_attach(struct ata_=
+link *link,
+>                         ehc->i.flags |=3D ATA_EHI_SETMODE;
+>
+>                         /* schedule the scsi_rescan_device() here */
+> -                       schedule_work(&(ap->scsi_rescan_task));
+> +                       schedule_delayed_work(&ap->scsi_rescan_task, 0);
+>                 } else if (dev->class =3D=3D ATA_DEV_UNKNOWN &&
+>                            ehc->tries[dev->devno] &&
+>                            ata_class_enabled(ehc->classes[dev->devno])) {
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 8ce90284eb34..551077cea4e4 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -4597,10 +4597,11 @@ int ata_scsi_user_scan(struct Scsi_Host *shost, u=
+nsigned int channel,
+>  void ata_scsi_dev_rescan(struct work_struct *work)
+>  {
+>         struct ata_port *ap =3D
+> -               container_of(work, struct ata_port, scsi_rescan_task);
+> +               container_of(work, struct ata_port, scsi_rescan_task.work=
+);
+>         struct ata_link *link;
+>         struct ata_device *dev;
+>         unsigned long flags;
+> +       bool delay_rescan =3D false;
+>
+>         mutex_lock(&ap->scsi_scan_mutex);
+>         spin_lock_irqsave(ap->lock, flags);
+> @@ -4614,6 +4615,21 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+>                         if (scsi_device_get(sdev))
+>                                 continue;
+>
+> +                       /*
+> +                        * If the rescan work was scheduled because of a =
+resume
+> +                        * event, the port is already fully resumed, but =
+the
+> +                        * SCSI device may not yet be fully resumed. In s=
+uch
+> +                        * case, executing scsi_rescan_device() may cause=
+ a
+> +                        * deadlock with the PM code on device_lock(). Pr=
+event
+> +                        * this by giving up and retrying rescan after a =
+short
+> +                        * delay.
+> +                        */
+> +                       delay_rescan =3D sdev->sdev_gendev.power.is_suspe=
+nded;
+> +                       if (delay_rescan) {
+> +                               scsi_device_put(sdev);
+> +                               break;
+> +                       }
+> +
+>                         spin_unlock_irqrestore(ap->lock, flags);
+>                         scsi_rescan_device(&(sdev->sdev_gendev));
+>                         scsi_device_put(sdev);
+> @@ -4623,4 +4639,8 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+>
+>         spin_unlock_irqrestore(ap->lock, flags);
+>         mutex_unlock(&ap->scsi_scan_mutex);
+> +
+> +       if (delay_rescan)
+> +               schedule_delayed_work(&ap->scsi_rescan_task,
+> +                                     msecs_to_jiffies(5));
+>  }
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 311cd93377c7..dd5797fb6305 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -836,7 +836,7 @@ struct ata_port {
+>
+>         struct mutex            scsi_scan_mutex;
+>         struct delayed_work     hotplug_task;
+> -       struct work_struct      scsi_rescan_task;
+> +       struct delayed_work     scsi_rescan_task;
+>
+>         unsigned int            hsm_task_state;
+>
+> --
+> 2.40.1
+>
