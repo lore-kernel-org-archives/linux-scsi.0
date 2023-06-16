@@ -2,53 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00924EB64D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 09:09:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33889EB64D8
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 09:22:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343975AbjFPJJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Jun 2023 05:09:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57992 "EHLO
+        id S240978AbjFPJWn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Jun 2023 05:22:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245052AbjFPJIz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 05:08:55 -0400
+        with ESMTP id S232796AbjFPJWm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 05:22:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 499AE423E;
-        Fri, 16 Jun 2023 02:07:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71798191;
+        Fri, 16 Jun 2023 02:22:41 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CAC5461844;
-        Fri, 16 Jun 2023 09:07:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 161B3C433C0;
-        Fri, 16 Jun 2023 09:07:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BEFA61011;
+        Fri, 16 Jun 2023 09:22:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02BB9C433C0;
+        Fri, 16 Jun 2023 09:22:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686906432;
-        bh=SssK4C+MROZYzi+b4Qyu0IIYF+H8yC2OIjf9lSsuvAQ=;
+        s=k20201202; t=1686907360;
+        bh=Cr7VVccB8uslD6H1Rks/FobCq/NyeYEEWyypGmgKkiA=;
         h=From:To:Cc:Subject:Date:From;
-        b=Fzi//9ZxgLWQfoZfdtXHI64hId/FbDLxPXsJA0sig9i/8y+vTgILgL3B0gbK78OgQ
-         pWOqcI8a3q2uq8HLkgEfQ5zCkQGXAk3VO3Yy3K3/E6WFGUtTB+LZlkl2Gdy8x2q544
-         0BIm/723DnL+o3tMD/pJX6xIBGKG8qP1xinjGVCtWoaU6ikf9qqLsx9J4aqYECkrE9
-         d/ay8T+HcYRMl9UHHkPDM9hD8fsPNos8NNmLtD1Xo5YtAY2ed8TDRXod1Aj29JnmR/
-         mBA0S/t6/zjEWn1Rba8+mxH2EDydli+aEWC9MgbUzd/5QvtF6/mCmbvALM99j5ypBe
-         tnh/wyjYUlFEQ==
+        b=dTvM44ZXNSDFZVjiYgwjfbRy6+GClxKKzlxx1FBu02t+iOmlQ7e2ISPmW1iSVfpmX
+         +Ayx7iH/zbCv3VOBRBi8VMAf20lpzSH2x8UkSSAu5wadLTisVTw+GsJYyv6/WXytIh
+         z1D8iydKNBYM+MkkEGK+oOdDec0ZDaZrdq4nQlbPf+r2PQK+3F7I4EeM0bCzcMwd2f
+         ZRHON5Y6cj3qyye0ixyVs4ykwgdY5mcyiy+PgIoinCS4FCjFWYVkTFCBBnwIKRvfzR
+         xak12VDCWVECi/HWWmNG10zyF84XvGhsb8Cr3Y5qRuAWePN1Ls+kdw23ZuP4aT3CwA
+         NBIR3IV3BrcKw==
 From:   Arnd Bergmann <arnd@kernel.org>
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+To:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Arnd Bergmann <arnd@arndb.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Nathan Chancellor <nathan@kernel.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         Tom Rix <trix@redhat.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Azeem Shaikh <azeemshaikh38@gmail.com>,
+        Krishna Gudipati <kgudipat@brocade.com>,
+        James Bottomley <JBottomley@Parallels.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         llvm@lists.linux.dev
-Subject: [PATCH] scsi: lpfc: fix lpfc_name struct packing
-Date:   Fri, 16 Jun 2023 11:06:56 +0200
-Message-Id: <20230616090705.2623408-1-arnd@kernel.org>
+Subject: [PATCH 1/2] scsi: bfa: fix function pointer type mismatch for hcb_qe->cbfn
+Date:   Fri, 16 Jun 2023 11:22:09 +0200
+Message-Id: <20230616092233.3229414-1-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -58,90 +60,142 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-clang points out that the lpfc_name structure has an 8-byte alignement requirement
-on most architectures, but is embedded in a number of other structures that are
-forced to be only 1-byte aligned:
+Some callback functions used here take a boolean argument, others
+take a status argument. This breaks KCFI type checking, so clang
+now warns about the function pointer cast:
 
-drivers/scsi/lpfc/lpfc_hw.h:1516:30: error: field pe within 'struct lpfc_fdmi_reg_port_list' is less aligned than 'struct lpfc_fdmi_port_entry' and is usually due to 'struct lpfc_fdmi_reg_port_list' being packed, which can lead to unaligned accesses [-Werror,-Wunaligned-access]
-        struct lpfc_fdmi_port_entry pe;
-drivers/scsi/lpfc/lpfc_hw.h:850:19: error: field portName within 'struct _ADISC' is less aligned than 'struct lpfc_name' and is usually due to 'struct _ADISC' being packed, which can lead to unaligned accesses [-Werror,-Wunaligned-access]
-drivers/scsi/lpfc/lpfc_hw.h:851:19: error: field nodeName within 'struct _ADISC' is less aligned than 'struct lpfc_name' and is usually due to 'struct _ADISC' being packed, which can lead to unaligned accesses [-Werror,-Wunaligned-access]
-drivers/scsi/lpfc/lpfc_hw.h:922:19: error: field portName within 'struct _RNID' is less aligned than 'struct lpfc_name' and is usually due to 'struct _RNID' being packed, which can lead to unaligned accesses [-Werror,-Wunaligned-access]
-drivers/scsi/lpfc/lpfc_hw.h:923:19: error: field nodeName within 'struct _RNID' is less aligned than 'struct lpfc_name' and is usually due to 'struct _RNID' being packed, which can lead to unaligned accesses [-Werror,-Wunaligned-access]
+drivers/scsi/bfa/bfad_bsg.c:2138:29: error: cast from 'void (*)(void *, enum bfa_status)' to 'bfa_cb_cbfn_t' (aka 'void (*)(void *, enum bfa_boolean)') converts to incompatible function type [-Werror,-Wcast-function-type-strict]
 
-From the git history, I can see that all the __packed annotations were done
-specifically to avoid introducing implicit padding around the lpfc_name
-instances, though this was probably the wrong approach.
+Assuming the code is actually correct here and the callers always match
+the argument types of the callee, rework this to replace the explicit
+cast with a union of the two pointer types. This does not change the
+behavior of the code, so if something is actually broken here, a larger
+rework may be necessary.
 
-To improve this, only annotate the one uint64_t field inside of lpfc_name
-as packed, with an explicit 4-byte alignment, as is the default already on
-the 32-bit x86 ABI but not on most others. With this, the other __packed
-annotations can be removed again, as this avoids the incorrect padding.
-
-Two other structures change their layout as a result of this change:
-
-- struct _LOGO never gained a __packed annotation even though it has the
-  same alignment problem as the others but is not used anywhere in the
-  driver today.
-
-- struct serv_param similarly has this issue, and it is used, my guess
-  is that this is only an internal structure rather than part of a binary
-  interface, so the padding has no negative effect here.
-
+Fixes: 37ea0558b87ab ("[SCSI] bfa: Added support to collect and reset fcport stats")
+Fixes: 3ec4f2c8bff25 ("[SCSI] bfa: Added support to configure QOS and collect stats.")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/lpfc/lpfc_hw.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa.h      |  9 ++++++++-
+ drivers/scsi/bfa/bfa_core.c |  4 +---
+ drivers/scsi/bfa/bfa_ioc.h  |  8 ++++++--
+ drivers/scsi/bfa/bfad_bsg.c | 11 ++++-------
+ 4 files changed, 19 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index 663755842e4a4..aaea3e31944d0 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -365,7 +365,7 @@ struct lpfc_name {
- 			uint8_t IEEE[6];	/* FC IEEE address */
- 		} s;
- 		uint8_t wwn[8];
--		uint64_t name;
-+		uint64_t name __packed __aligned(4);
- 	} u;
- };
+diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
+index 7bd2ba1ad4d11..f30fe324e6ecc 100644
+--- a/drivers/scsi/bfa/bfa.h
++++ b/drivers/scsi/bfa/bfa.h
+@@ -20,7 +20,6 @@
+ struct bfa_s;
  
-@@ -850,7 +850,7 @@ typedef struct _ADISC {		/* Structure is in Big Endian format */
- 	struct lpfc_name portName;
- 	struct lpfc_name nodeName;
- 	uint32_t DID;
--} __packed ADISC;
-+} ADISC;
- 
- typedef struct _FARP {		/* Structure is in Big Endian format */
- 	uint32_t Mflags:8;
-@@ -880,7 +880,7 @@ typedef struct _FAN {		/* Structure is in Big Endian format */
- 	uint32_t Fdid;
- 	struct lpfc_name FportName;
- 	struct lpfc_name FnodeName;
--} __packed FAN;
-+} FAN;
- 
- typedef struct _SCR {		/* Structure is in Big Endian format */
- 	uint8_t resvd1;
-@@ -924,7 +924,7 @@ typedef struct _RNID {		/* Structure is in Big Endian format */
- 	union {
- 		RNID_TOP_DISC topologyDisc;	/* topology disc (0xdf) */
- 	} un;
--} __packed RNID;
-+} RNID;
- 
- struct RLS {			/* Structure is in Big Endian format */
- 	uint32_t rls;
-@@ -1514,7 +1514,7 @@ struct lpfc_fdmi_hba_ident {
- struct lpfc_fdmi_reg_port_list {
- 	__be32 EntryCnt;
- 	struct lpfc_fdmi_port_entry pe;
--} __packed;
-+};
+ typedef void (*bfa_isr_func_t) (struct bfa_s *bfa, struct bfi_msg_s *m);
+-typedef void (*bfa_cb_cbfn_status_t) (void *cbarg, bfa_status_t status);
  
  /*
-  * Register HBA(RHBA)
+  * Interrupt message handlers
+@@ -437,4 +436,12 @@ struct bfa_cb_pending_q_s {
+ 	(__qe)->data = (__data);				\
+ } while (0)
+ 
++#define bfa_pending_q_init_status(__qe, __cbfn, __cbarg, __data) do {	\
++	bfa_q_qe_init(&((__qe)->hcb_qe.qe));			\
++	(__qe)->hcb_qe.cbfn_status = (__cbfn);			\
++	(__qe)->hcb_qe.cbarg = (__cbarg);			\
++	(__qe)->hcb_qe.pre_rmv = BFA_TRUE;			\
++	(__qe)->data = (__data);				\
++} while (0)
++
+ #endif /* __BFA_H__ */
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 6846ca8f7313c..3438d0b8ba062 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -1907,15 +1907,13 @@ bfa_comp_process(struct bfa_s *bfa, struct list_head *comp_q)
+ 	struct list_head		*qe;
+ 	struct list_head		*qen;
+ 	struct bfa_cb_qe_s	*hcb_qe;
+-	bfa_cb_cbfn_status_t	cbfn;
+ 
+ 	list_for_each_safe(qe, qen, comp_q) {
+ 		hcb_qe = (struct bfa_cb_qe_s *) qe;
+ 		if (hcb_qe->pre_rmv) {
+ 			/* qe is invalid after return, dequeue before cbfn() */
+ 			list_del(qe);
+-			cbfn = (bfa_cb_cbfn_status_t)(hcb_qe->cbfn);
+-			cbfn(hcb_qe->cbarg, hcb_qe->fw_status);
++			hcb_qe->cbfn_status(hcb_qe->cbarg, hcb_qe->fw_status);
+ 		} else
+ 			hcb_qe->cbfn(hcb_qe->cbarg, BFA_TRUE);
+ 	}
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 933a1c3890ff5..5e568d6d7b261 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -361,14 +361,18 @@ struct bfa_reqq_wait_s {
+ 	void	*cbarg;
+ };
+ 
+-typedef void	(*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
++typedef void (*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
++typedef void (*bfa_cb_cbfn_status_t) (void *cbarg, bfa_status_t status);
+ 
+ /*
+  * Generic BFA callback element.
+  */
+ struct bfa_cb_qe_s {
+ 	struct list_head	qe;
+-	bfa_cb_cbfn_t	cbfn;
++	union {
++		bfa_cb_cbfn_status_t	cbfn_status;
++		bfa_cb_cbfn_t		cbfn;
++	};
+ 	bfa_boolean_t	once;
+ 	bfa_boolean_t	pre_rmv;	/* set for stack based qe(s) */
+ 	bfa_status_t	fw_status;	/* to access fw status in comp proc */
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 520f9152f3bf2..c4b78ffb723bd 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -2135,8 +2135,7 @@ bfad_iocmd_fcport_get_stats(struct bfad_s *bfad, void *cmd)
+ 	struct bfa_cb_pending_q_s cb_qe;
+ 
+ 	init_completion(&fcomp.comp);
+-	bfa_pending_q_init(&cb_qe, (bfa_cb_cbfn_t)bfad_hcb_comp,
+-			   &fcomp, &iocmd->stats);
++	bfa_pending_q_init_status(&cb_qe, bfad_hcb_comp, &fcomp, &iocmd->stats);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_fcport_get_stats(&bfad->bfa, &cb_qe);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+@@ -2159,7 +2158,7 @@ bfad_iocmd_fcport_reset_stats(struct bfad_s *bfad, void *cmd)
+ 	struct bfa_cb_pending_q_s cb_qe;
+ 
+ 	init_completion(&fcomp.comp);
+-	bfa_pending_q_init(&cb_qe, (bfa_cb_cbfn_t)bfad_hcb_comp, &fcomp, NULL);
++	bfa_pending_q_init_status(&cb_qe, bfad_hcb_comp, &fcomp, NULL);
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_fcport_clear_stats(&bfad->bfa, &cb_qe);
+@@ -2443,8 +2442,7 @@ bfad_iocmd_qos_get_stats(struct bfad_s *bfad, void *cmd)
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(&bfad->bfa);
+ 
+ 	init_completion(&fcomp.comp);
+-	bfa_pending_q_init(&cb_qe, (bfa_cb_cbfn_t)bfad_hcb_comp,
+-			   &fcomp, &iocmd->stats);
++	bfa_pending_q_init_status(&cb_qe, bfad_hcb_comp, &fcomp, &iocmd->stats);
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	WARN_ON(!bfa_ioc_get_fcmode(&bfad->bfa.ioc));
+@@ -2474,8 +2472,7 @@ bfad_iocmd_qos_reset_stats(struct bfad_s *bfad, void *cmd)
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(&bfad->bfa);
+ 
+ 	init_completion(&fcomp.comp);
+-	bfa_pending_q_init(&cb_qe, (bfa_cb_cbfn_t)bfad_hcb_comp,
+-			   &fcomp, NULL);
++	bfa_pending_q_init_status(&cb_qe, bfad_hcb_comp, &fcomp, NULL);
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	WARN_ON(!bfa_ioc_get_fcmode(&bfad->bfa.ioc));
 -- 
 2.39.2
 
