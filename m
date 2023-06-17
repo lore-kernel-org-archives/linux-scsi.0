@@ -2,296 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8367CEB64D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jun 2023 18:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F0F1EB64DB
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jun 2023 06:55:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245084AbjFPSfe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Jun 2023 14:35:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56402 "EHLO
+        id S232644AbjFQGz2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 17 Jun 2023 02:55:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229779AbjFPSfc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jun 2023 14:35:32 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A7B52D73
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 11:35:31 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id 5b1f17b1804b1-3f8d65ecdb8so9228645e9.0
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2023 11:35:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1686940529; x=1689532529;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=z2pYTAmAOkd48vTiUJC9JHv3taSZSajrDLvZiTbaMR8=;
-        b=M6MexQ+luILnMUMyU3OLlsODQvkoJAZQAFoUI4TbKNuJnI3uzGoZZkptx3plIyO23t
-         mLD/cgy5CaHtT17vqHExAjGxDH+O3ergobI8krWySrLwhJK4L/JIH1NjKOenmVTFJldi
-         F2H5ZU85gz1E1iTVVoRgrYEltImen0ysfGy6E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686940529; x=1689532529;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=z2pYTAmAOkd48vTiUJC9JHv3taSZSajrDLvZiTbaMR8=;
-        b=kF6R3FmTbygWIRHJ7ktQ57lWrnFdAJNtxTxm5fGtvOWUh64YUfS9TKWirlDMFc8uVb
-         4DBDml/pP4w5PsebujFAxeDl8grakPGgYzA+ZpwrD0BQrtHCIZVHQwhcWIQzOYUk/hOY
-         DqPBiJP4wY3RBXT63XgSpqpvHljcWLnVMecP0fSBS+R85yBalo+wOUlK//dJANz7KgYj
-         DvP3roO/ssTxgDx6aJaRN6z8zS67t5D/hlGmgGcjn4XvQo6Fm+a/r9hIX2NG3M1/nxIM
-         vdKHaQjwBrsv1MhUnJxxaLSRJtMRZ6YjwGCp57Wph35TWQf2kmV+DWJHznJf8HulHGBW
-         QZ5w==
-X-Gm-Message-State: AC+VfDwsed9z5XjpIUy2iiJipK/8dgiF9lZAKhetS1bfdQkg8eBdeit4
-        F1A+QKm5wUkQUHpCCJe9cDvT+0yFzDBFo7S0xy9v54a5RyMaohlSn5yvJ53F46oVwcBecQdgs5h
-        H6EXSZ/YhuMqNG9J/S2hmzw3TRhzf
-X-Google-Smtp-Source: ACHHUZ6fqIRR/t2BcANUMmW18AYEJelrSh1STgaFWR7kej7a/jSqZxCZt1lj0utR5sVBsC8cLF2q8dLNHnW4ovLB7nw=
-X-Received: by 2002:a7b:c4d4:0:b0:3f6:692:5607 with SMTP id
- g20-20020a7bc4d4000000b003f606925607mr2466878wmk.40.1686940529279; Fri, 16
- Jun 2023 11:35:29 -0700 (PDT)
+        with ESMTP id S229500AbjFQGz1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Jun 2023 02:55:27 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3FC91BF2;
+        Fri, 16 Jun 2023 23:55:25 -0700 (PDT)
+Received: from mars.fo.jb.local ([188.174.26.59]) by mrelayeu.kundenserver.de
+ (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis) id
+ 1MKKER-1qOv5Z2Ob9-00LqEc; Sat, 17 Jun 2023 08:55:14 +0200
+Received: from localhost (unknown [127.0.0.1])
+        by mars.fo.jb.local (Postfix) with ESMTP id 1B72617F700;
+        Sat, 17 Jun 2023 06:55:13 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at jmbreuer.net
+Received: from mars.fo.jb.local ([127.0.0.1])
+        by localhost (mars.jmbreuer.net [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id O10Sinob0lYP; Sat, 17 Jun 2023 08:55:06 +0200 (CEST)
+Received: from sol.fo.jb.local (sol.fo.jb.local [192.168.23.1])
+        by mars.fo.jb.local (Postfix) with ESMTP id 79A3817F6FD;
+        Sat, 17 Jun 2023 08:55:06 +0200 (CEST)
+Received: from [192.168.23.25] (mars.fo.jb.local [192.168.23.254])
+        by sol.fo.jb.local (Postfix) with ESMTPSA id 699DB604E111;
+        Sat, 17 Jun 2023 08:55:06 +0200 (CEST)
+Message-ID: <0a698809-bc7d-e5a1-7825-d42001121913@jmbreuer.net>
+Date:   Sat, 17 Jun 2023 08:55:06 +0200
 MIME-Version: 1.0
-References: <20230616090705.2623408-1-arnd@kernel.org>
-In-Reply-To: <20230616090705.2623408-1-arnd@kernel.org>
-From:   Justin Tee <justin.tee@broadcom.com>
-Date:   Fri, 16 Jun 2023 11:35:17 -0700
-Message-ID: <CAAmqgVP96Rk4YYGixBqE0AyKt=uNJwCds_chnLAC1K8e4m00hQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: fix lpfc_name struct packing
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>, Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000008d01005fe43732e"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] ata: libata-scsi: Avoid deadlock on rescan after device
+ resume
+Content-Language: en-GB
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+References: <20230615083326.161875-1-dlemoal@kernel.org>
+ <df96d9fd-e8fa-c1d0-d6b0-4327ddf45514@kernel.org>
+From:   Joe Breuer <linux-kernel@jmbreuer.net>
+Organization: Joachim Breuer EDV
+In-Reply-To: <df96d9fd-e8fa-c1d0-d6b0-4327ddf45514@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:qZD4QCK8F7Rs7ceT1tXfgEvUCZQM3a5iiUCoS1qfo5jBRATWuoQ
+ K1ZTqHEC7fVxvk2WBwGFsF27Ba86wILNIm6E1ZxRo+k3/GAPdscHB5mUdTMNm5jRXequ6sX
+ xlfef8b5d98ArDFOVhcbPConrDPH+oBSQLoYJtPydKNv76Hsc/sXCQ02jOJcR6KMPeqyw9x
+ XfCx/6I6C4bXC/mk+Yptg==
+UI-OutboundReport: notjunk:1;M01:P0:40Z1lR+UeDI=;jHOkXEFBdhKEEQR+Ae3m1rMG/ok
+ 6dR8wrj++3iAVzZMvzchlKCK+PW4jwDtGkZ8t2Zr/Rzz2E8L8qfLBPm8junCYv7dvrhppxTb4
+ POiEfwfbnnWCoPRQW4Uj6In1aX46gZsCH5DBxk9lQdd65T+an/DF9C0oHwdYH3Iyek0pTsDzN
+ hPDb83OcKQ8ElgrlUey9xqU7VUZo+64X1mKzvhnDFsVQzG99tsjjGX9I4ryg/4+zaz8vEMOC3
+ mVJzg6hvkuskcJoSChC+bEcfZ9htCz/2k9vh2KSi1FT2s4t711AX4zmctqO6tyLP1foYwclh8
+ b5x41UxW6EWsErS3KVlC9vFWTPyZrdWzGIzaf15OYuyW9YRvWBYFGApfByIN2Ti0thPUTcNid
+ fFR22xeKhZKMArwT1HJdleUwfNWq8VbEFsb5b5j8fuEMiOPq/sg0CqFTtqjsRaLYLwQcJFNiE
+ veuH6riKqDK+2QweKZR4U0QTwgrbBCvQ9mOJNfHDi2vRt4Uz7WB+vZWPmPCCIfaBpr8NY3ekr
+ dZbnQXS923vIJoragK+EYdOMefs8HM3+Y8R5klXaKxZhx4pEvKpxR/yTllcHjokIN64QGunEe
+ 7PDY0adcY01l2XP+KRIN0EfcAcBK/4qhhNAUG1nApoZXzvUVC5ZfT4ZRAbFInVzXuzHK7REZW
+ MBZwFoz2TCPsn6T/Q/ECmwkU6TtpmcJs3KYMg6rUHw==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000008d01005fe43732e
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 15.06.23 10:35, Damien Le Moal wrote:
+> On 6/15/23 17:33, Damien Le Moal wrote:
+> Joe, Kai-Heng,
+> 
+> I cannot recreate the issue on my test machines. So it would be great if you
+> could test this new candidate fix.
 
-Hi Arnd,
+Thank you for looking into this!
 
-Thanks looks good.
+I've tried this patch against 6.3.4 on the affected machine, and it 
+looks like a full success. Suspend/resume work without any deadlocks, 
+and the optical drive stays usable after resuming.
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Since the patch and discussion around it mentions async vs 'guaranteed 
+order' power management: My original tests (without any patch) were with 
+both pm_async=0 and pm_async=1, no difference on my affected system.
+Also, with pm_trace=1, which is documented to imply pm_async=0.
 
+>> Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+>> Reported-by: Joe Breuer <linux-kernel@jmbreuer.net>
+>> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217530
+>> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-On Fri, Jun 16, 2023 at 2:07=E2=80=AFAM Arnd Bergmann <arnd@kernel.org> wro=
-te:
->
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> clang points out that the lpfc_name structure has an 8-byte alignement re=
-quirement
-> on most architectures, but is embedded in a number of other structures th=
-at are
-> forced to be only 1-byte aligned:
->
-> drivers/scsi/lpfc/lpfc_hw.h:1516:30: error: field pe within 'struct lpfc_=
-fdmi_reg_port_list' is less aligned than 'struct lpfc_fdmi_port_entry' and =
-is usually due to 'struct lpfc_fdmi_reg_port_list' being packed, which can =
-lead to unaligned accesses [-Werror,-Wunaligned-access]
->         struct lpfc_fdmi_port_entry pe;
-> drivers/scsi/lpfc/lpfc_hw.h:850:19: error: field portName within 'struct =
-_ADISC' is less aligned than 'struct lpfc_name' and is usually due to 'stru=
-ct _ADISC' being packed, which can lead to unaligned accesses [-Werror,-Wun=
-aligned-access]
-> drivers/scsi/lpfc/lpfc_hw.h:851:19: error: field nodeName within 'struct =
-_ADISC' is less aligned than 'struct lpfc_name' and is usually due to 'stru=
-ct _ADISC' being packed, which can lead to unaligned accesses [-Werror,-Wun=
-aligned-access]
-> drivers/scsi/lpfc/lpfc_hw.h:922:19: error: field portName within 'struct =
-_RNID' is less aligned than 'struct lpfc_name' and is usually due to 'struc=
-t _RNID' being packed, which can lead to unaligned accesses [-Werror,-Wunal=
-igned-access]
-> drivers/scsi/lpfc/lpfc_hw.h:923:19: error: field nodeName within 'struct =
-_RNID' is less aligned than 'struct lpfc_name' and is usually due to 'struc=
-t _RNID' being packed, which can lead to unaligned accesses [-Werror,-Wunal=
-igned-access]
->
-> From the git history, I can see that all the __packed annotations were do=
-ne
-> specifically to avoid introducing implicit padding around the lpfc_name
-> instances, though this was probably the wrong approach.
->
-> To improve this, only annotate the one uint64_t field inside of lpfc_name
-> as packed, with an explicit 4-byte alignment, as is the default already o=
-n
-> the 32-bit x86 ABI but not on most others. With this, the other __packed
-> annotations can be removed again, as this avoids the incorrect padding.
->
-> Two other structures change their layout as a result of this change:
->
-> - struct _LOGO never gained a __packed annotation even though it has the
->   same alignment problem as the others but is not used anywhere in the
->   driver today.
->
-> - struct serv_param similarly has this issue, and it is used, my guess
->   is that this is only an internal structure rather than part of a binary
->   interface, so the padding has no negative effect here.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/scsi/lpfc/lpfc_hw.h | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-> index 663755842e4a4..aaea3e31944d0 100644
-> --- a/drivers/scsi/lpfc/lpfc_hw.h
-> +++ b/drivers/scsi/lpfc/lpfc_hw.h
-> @@ -365,7 +365,7 @@ struct lpfc_name {
->                         uint8_t IEEE[6];        /* FC IEEE address */
->                 } s;
->                 uint8_t wwn[8];
-> -               uint64_t name;
-> +               uint64_t name __packed __aligned(4);
->         } u;
->  };
->
-> @@ -850,7 +850,7 @@ typedef struct _ADISC {             /* Structure is i=
-n Big Endian format */
->         struct lpfc_name portName;
->         struct lpfc_name nodeName;
->         uint32_t DID;
-> -} __packed ADISC;
-> +} ADISC;
->
->  typedef struct _FARP {         /* Structure is in Big Endian format */
->         uint32_t Mflags:8;
-> @@ -880,7 +880,7 @@ typedef struct _FAN {               /* Structure is i=
-n Big Endian format */
->         uint32_t Fdid;
->         struct lpfc_name FportName;
->         struct lpfc_name FnodeName;
-> -} __packed FAN;
-> +} FAN;
->
->  typedef struct _SCR {          /* Structure is in Big Endian format */
->         uint8_t resvd1;
-> @@ -924,7 +924,7 @@ typedef struct _RNID {              /* Structure is i=
-n Big Endian format */
->         union {
->                 RNID_TOP_DISC topologyDisc;     /* topology disc (0xdf) *=
-/
->         } un;
-> -} __packed RNID;
-> +} RNID;
->
->  struct RLS {                   /* Structure is in Big Endian format */
->         uint32_t rls;
-> @@ -1514,7 +1514,7 @@ struct lpfc_fdmi_hba_ident {
->  struct lpfc_fdmi_reg_port_list {
->         __be32 EntryCnt;
->         struct lpfc_fdmi_port_entry pe;
-> -} __packed;
-> +};
->
->  /*
->   * Register HBA(RHBA)
-> --
-> 2.39.2
->
+Tested-by: <linux-kernel@jmbreuer.net>
 
---=20
-This electronic communication and the information and any files transmitted=
-=20
-with it, or attached to it, are confidential and are intended solely for=20
-the use of the individual or entity to whom it is addressed and may contain=
-=20
-information that is confidential, legally privileged, protected by privacy=
-=20
-laws, or otherwise restricted from disclosure to anyone else. If you are=20
-not the intended recipient or the person responsible for delivering the=20
-e-mail to the intended recipient, you are hereby notified that any use,=20
-copying, distributing, dissemination, forwarding, printing, or copying of=
-=20
-this e-mail is strictly prohibited. If you received this e-mail in error,=
-=20
-please return the e-mail to the sender, delete it from your computer, and=
-=20
-destroy any printed copy of it.
-
---00000000000008d01005fe43732e
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-QsyUohclvlxgt5d/MsBG6WZxZ+uppzNvjEk/wUu+6JQNUVEMviA6eBCCi+4ShjZUbGPES11h5lw/
-wuyQZDIjy+1hGPtLHBXI/QQEbU3OVdTRn+aEMwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
-MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
-LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
-dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
-HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
-bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
-gRdqdXN0aW4udGVlQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
-gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUlHfvnuNaLp52RO2Y2En9J+7MKI4wDQYJ
-KoZIhvcNAQELBQADggEBAGaBsEmLZwejb3YsmigadLZGto3hJ7Erq2YZLhL7Pgtxft1/j4JNLsRN
-t3ZJIW2Xzfbj0p328xRekSP1gjZ9Szre0fxEFXH1sS1a7WP9E0fHxVW07xVsxGxo5opAh5Gf/bQH
-S4x9pCO48FJI310L1RGQiqFKY/OECnXO821y8MAyObbGo9HNHP4Sk6F5J1v2qJzbLtMfj8ybbTGe
-SidstRgjOIqMldZs2Koio14QFE7hJY+8KRiKfq+eb1EwQTMzBxZsMOL5vUSZjYg2+Fqwyr6YYp0w
-Lsq/wH9o18xSvL/FikpG4JRxiT20RdM6DQrk9lv8ijASZCuN3JR61WUNz2AxggJtMIICaQIBATBr
-MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
-YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwMd6BsMSBDsagVFtYwDQYJYIZI
-AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILbhSstiH2XA4Umous0zhIM7W08svopCZu7mH4Il
-QNXWMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDYxNjE4MzUy
-OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
-AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
-hkiG9w0BAQEFAASCAQAeEXJB8FrCtTnCth9eZkc2yuCvCtEGWQDowpjR2FuSv6w3/HE8ArQJoNTK
-mKvBtIR17s7rbyX6ZiN4pnbmy7wUDpFCFeulsVrEquo3FUP4MXpwVgs+W/rPPrY9nY5Zf5o2gEn1
-Ia+9oaymenMXaV32GTdyBa0dpTtioSRJMcqsp2geP/0bNrNlNYMfB/tD0RlOkudCKVjlycvC45+r
-cyv/nT4d1OtY0GZynxVVA2rhwvqLdGKphD8T0Bhrn2w63mIUAaMomx3zWJUaTGsxIcKyAsrzcawC
-POn18n+/1McYU6cbYjOdWqDMmT6FqPrkRlT5sBxXMgBbRQUVhN9p/2ho
---00000000000008d01005fe43732e--
