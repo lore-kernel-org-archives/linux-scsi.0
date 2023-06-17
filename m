@@ -2,98 +2,226 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F0F1EB64DB
-	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jun 2023 06:55:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C6EEB64D9
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jun 2023 12:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232644AbjFQGz2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 17 Jun 2023 02:55:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37900 "EHLO
+        id S236044AbjFQMN7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 17 Jun 2023 08:13:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbjFQGz1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Jun 2023 02:55:27 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3FC91BF2;
-        Fri, 16 Jun 2023 23:55:25 -0700 (PDT)
-Received: from mars.fo.jb.local ([188.174.26.59]) by mrelayeu.kundenserver.de
- (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis) id
- 1MKKER-1qOv5Z2Ob9-00LqEc; Sat, 17 Jun 2023 08:55:14 +0200
-Received: from localhost (unknown [127.0.0.1])
-        by mars.fo.jb.local (Postfix) with ESMTP id 1B72617F700;
-        Sat, 17 Jun 2023 06:55:13 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at jmbreuer.net
-Received: from mars.fo.jb.local ([127.0.0.1])
-        by localhost (mars.jmbreuer.net [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id O10Sinob0lYP; Sat, 17 Jun 2023 08:55:06 +0200 (CEST)
-Received: from sol.fo.jb.local (sol.fo.jb.local [192.168.23.1])
-        by mars.fo.jb.local (Postfix) with ESMTP id 79A3817F6FD;
-        Sat, 17 Jun 2023 08:55:06 +0200 (CEST)
-Received: from [192.168.23.25] (mars.fo.jb.local [192.168.23.254])
-        by sol.fo.jb.local (Postfix) with ESMTPSA id 699DB604E111;
-        Sat, 17 Jun 2023 08:55:06 +0200 (CEST)
-Message-ID: <0a698809-bc7d-e5a1-7825-d42001121913@jmbreuer.net>
-Date:   Sat, 17 Jun 2023 08:55:06 +0200
+        with ESMTP id S235750AbjFQMN5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Jun 2023 08:13:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7119A26BA
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Jun 2023 05:12:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687003978;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=bszGYXAPCfyFrCrKXBgf4DyEzlv1vS1+csO6wWtbX4c=;
+        b=ZH3uQ90QaWYZ91CERbG+c63lDgnvZVv5e3+xwOWM3lR06+s5upuNOWRO+fpv9AndENqu93
+        fL/YV2dhBpzftUiBB4NDJh8OLH3ValjIivB4g1YQygx8PXktcCWRt/l0EPCQl8ktgcWLoj
+        TYIF1qqXbbGfQQqIsZ+kwE1DeEmnr/M=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-436-185vvMv5PdOOlfFYb8ORMQ-1; Sat, 17 Jun 2023 08:12:55 -0400
+X-MC-Unique: 185vvMv5PdOOlfFYb8ORMQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 192423C11C6A;
+        Sat, 17 Jun 2023 12:12:54 +0000 (UTC)
+Received: from warthog.procyon.org.com (unknown [10.42.28.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 903F92026D49;
+        Sat, 17 Jun 2023 12:12:51 +0000 (UTC)
+From:   David Howells <dhowells@redhat.com>
+To:     netdev@vger.kernel.org
+Cc:     David Howells <dhowells@redhat.com>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+        David Ahern <dsahern@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Maurizio Lombardi <mlombard@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH net-next v2 15/17] iscsi: Use sendmsg(MSG_SPLICE_PAGES) rather than sendpage
+Date:   Sat, 17 Jun 2023 13:11:44 +0100
+Message-ID: <20230617121146.716077-16-dhowells@redhat.com>
+In-Reply-To: <20230617121146.716077-1-dhowells@redhat.com>
+References: <20230617121146.716077-1-dhowells@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH] ata: libata-scsi: Avoid deadlock on rescan after device
- resume
-Content-Language: en-GB
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-References: <20230615083326.161875-1-dlemoal@kernel.org>
- <df96d9fd-e8fa-c1d0-d6b0-4327ddf45514@kernel.org>
-From:   Joe Breuer <linux-kernel@jmbreuer.net>
-Organization: Joachim Breuer EDV
-In-Reply-To: <df96d9fd-e8fa-c1d0-d6b0-4327ddf45514@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:qZD4QCK8F7Rs7ceT1tXfgEvUCZQM3a5iiUCoS1qfo5jBRATWuoQ
- K1ZTqHEC7fVxvk2WBwGFsF27Ba86wILNIm6E1ZxRo+k3/GAPdscHB5mUdTMNm5jRXequ6sX
- xlfef8b5d98ArDFOVhcbPConrDPH+oBSQLoYJtPydKNv76Hsc/sXCQ02jOJcR6KMPeqyw9x
- XfCx/6I6C4bXC/mk+Yptg==
-UI-OutboundReport: notjunk:1;M01:P0:40Z1lR+UeDI=;jHOkXEFBdhKEEQR+Ae3m1rMG/ok
- 6dR8wrj++3iAVzZMvzchlKCK+PW4jwDtGkZ8t2Zr/Rzz2E8L8qfLBPm8junCYv7dvrhppxTb4
- POiEfwfbnnWCoPRQW4Uj6In1aX46gZsCH5DBxk9lQdd65T+an/DF9C0oHwdYH3Iyek0pTsDzN
- hPDb83OcKQ8ElgrlUey9xqU7VUZo+64X1mKzvhnDFsVQzG99tsjjGX9I4ryg/4+zaz8vEMOC3
- mVJzg6hvkuskcJoSChC+bEcfZ9htCz/2k9vh2KSi1FT2s4t711AX4zmctqO6tyLP1foYwclh8
- b5x41UxW6EWsErS3KVlC9vFWTPyZrdWzGIzaf15OYuyW9YRvWBYFGApfByIN2Ti0thPUTcNid
- fFR22xeKhZKMArwT1HJdleUwfNWq8VbEFsb5b5j8fuEMiOPq/sg0CqFTtqjsRaLYLwQcJFNiE
- veuH6riKqDK+2QweKZR4U0QTwgrbBCvQ9mOJNfHDi2vRt4Uz7WB+vZWPmPCCIfaBpr8NY3ekr
- dZbnQXS923vIJoragK+EYdOMefs8HM3+Y8R5klXaKxZhx4pEvKpxR/yTllcHjokIN64QGunEe
- 7PDY0adcY01l2XP+KRIN0EfcAcBK/4qhhNAUG1nApoZXzvUVC5ZfT4ZRAbFInVzXuzHK7REZW
- MBZwFoz2TCPsn6T/Q/ECmwkU6TtpmcJs3KYMg6rUHw==
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15.06.23 10:35, Damien Le Moal wrote:
-> On 6/15/23 17:33, Damien Le Moal wrote:
-> Joe, Kai-Heng,
-> 
-> I cannot recreate the issue on my test machines. So it would be great if you
-> could test this new candidate fix.
+Use sendmsg() with MSG_SPLICE_PAGES rather than sendpage.  This allows
+multiple pages and multipage folios to be passed through.
 
-Thank you for looking into this!
+TODO: iscsit_fe_sendpage_sg() should perhaps set up a bio_vec array for the
+entire set of pages it's going to transfer plus two for the header and
+trailer and page fragments to hold the header and trailer - and then call
+sendmsg once for the entire message.
 
-I've tried this patch against 6.3.4 on the affected machine, and it 
-looks like a full success. Suspend/resume work without any deadlocks, 
-and the optical drive stays usable after resuming.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Lee Duncan <lduncan@suse.com>
+cc: Chris Leech <cleech@redhat.com>
+cc: Mike Christie <michael.christie@oracle.com>
+cc: Maurizio Lombardi <mlombard@redhat.com>
+cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+cc: "David S. Miller" <davem@davemloft.net>
+cc: Eric Dumazet <edumazet@google.com>
+cc: Jakub Kicinski <kuba@kernel.org>
+cc: Paolo Abeni <pabeni@redhat.com>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: Matthew Wilcox <willy@infradead.org>
+cc: Al Viro <viro@zeniv.linux.org.uk>
+cc: open-iscsi@googlegroups.com
+cc: linux-scsi@vger.kernel.org
+cc: target-devel@vger.kernel.org
+cc: netdev@vger.kernel.org
+---
 
-Since the patch and discussion around it mentions async vs 'guaranteed 
-order' power management: My original tests (without any patch) were with 
-both pm_async=0 and pm_async=1, no difference on my affected system.
-Also, with pm_trace=1, which is documented to imply pm_async=0.
+Notes:
+    ver #2)
+     - Wrap lines at 80.
 
->> Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
->> Reported-by: Joe Breuer <linux-kernel@jmbreuer.net>
->> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217530
->> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+ drivers/scsi/iscsi_tcp.c                 | 26 +++++++++---------------
+ drivers/scsi/iscsi_tcp.h                 |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c | 15 ++++++++------
+ 3 files changed, 20 insertions(+), 23 deletions(-)
 
-Tested-by: <linux-kernel@jmbreuer.net>
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9637d4bc2bc9..9ab8555180a3 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -301,35 +301,32 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
+ 
+ 	while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
+ 		struct scatterlist *sg;
++		struct msghdr msg = {};
++		struct bio_vec bv;
+ 		unsigned int offset, copy;
+-		int flags = 0;
+ 
+ 		r = 0;
+ 		offset = segment->copied;
+ 		copy = segment->size - offset;
+ 
+ 		if (segment->total_copied + segment->size < segment->total_size)
+-			flags |= MSG_MORE | MSG_SENDPAGE_NOTLAST;
++			msg.msg_flags |= MSG_MORE;
+ 
+ 		if (tcp_sw_conn->queue_recv)
+-			flags |= MSG_DONTWAIT;
++			msg.msg_flags |= MSG_DONTWAIT;
+ 
+-		/* Use sendpage if we can; else fall back to sendmsg */
+ 		if (!segment->data) {
++			if (!tcp_conn->iscsi_conn->datadgst_en)
++				msg.msg_flags |= MSG_SPLICE_PAGES;
+ 			sg = segment->sg;
+ 			offset += segment->sg_offset + sg->offset;
+-			r = tcp_sw_conn->sendpage(sk, sg_page(sg), offset,
+-						  copy, flags);
++			bvec_set_page(&bv, sg_page(sg), copy, offset);
+ 		} else {
+-			struct msghdr msg = { .msg_flags = flags };
+-			struct kvec iov = {
+-				.iov_base = segment->data + offset,
+-				.iov_len = copy
+-			};
+-
+-			r = kernel_sendmsg(sk, &msg, &iov, 1, copy);
++			bvec_set_virt(&bv, segment->data + offset, copy);
+ 		}
++		iov_iter_bvec(&msg.msg_iter, ITER_SOURCE, &bv, 1, copy);
+ 
++		r = sock_sendmsg(sk, &msg);
+ 		if (r < 0) {
+ 			iscsi_tcp_segment_unmap(segment);
+ 			return r;
+@@ -746,7 +743,6 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 	sock_no_linger(sk);
+ 
+ 	iscsi_sw_tcp_conn_set_callbacks(conn);
+-	tcp_sw_conn->sendpage = tcp_sw_conn->sock->ops->sendpage;
+ 	/*
+ 	 * set receive state machine into initial state
+ 	 */
+@@ -777,8 +773,6 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+ 			return -ENOTCONN;
+ 		}
+ 		iscsi_set_param(cls_conn, param, buf, buflen);
+-		tcp_sw_conn->sendpage = conn->datadgst_en ?
+-			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
+ 		mutex_unlock(&tcp_sw_conn->sock_lock);
+ 		break;
+ 	case ISCSI_PARAM_MAX_R2T:
+diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
+index 68e14a344904..d6ec08d7eb63 100644
+--- a/drivers/scsi/iscsi_tcp.h
++++ b/drivers/scsi/iscsi_tcp.h
+@@ -48,7 +48,7 @@ struct iscsi_sw_tcp_conn {
+ 	uint32_t		sendpage_failures_cnt;
+ 	uint32_t		discontiguous_hdr_cnt;
+ 
+-	ssize_t (*sendpage)(struct socket *, struct page *, int, size_t, int);
++	bool			can_splice_to_tcp;
+ };
+ 
+ struct iscsi_sw_tcp_host {
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index b14835fcb033..6231fa4ef5c6 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -1129,6 +1129,8 @@ int iscsit_fe_sendpage_sg(
+ 	struct iscsit_conn *conn)
+ {
+ 	struct scatterlist *sg = cmd->first_data_sg;
++	struct bio_vec bvec;
++	struct msghdr msghdr = { .msg_flags = MSG_SPLICE_PAGES,	};
+ 	struct kvec iov;
+ 	u32 tx_hdr_size, data_len;
+ 	u32 offset = cmd->first_data_sg_off;
+@@ -1172,17 +1174,18 @@ int iscsit_fe_sendpage_sg(
+ 		u32 space = (sg->length - offset);
+ 		u32 sub_len = min_t(u32, data_len, space);
+ send_pg:
+-		tx_sent = conn->sock->ops->sendpage(conn->sock,
+-					sg_page(sg), sg->offset + offset, sub_len, 0);
++		bvec_set_page(&bvec, sg_page(sg), sub_len, sg->offset + offset);
++		iov_iter_bvec(&msghdr.msg_iter, ITER_SOURCE, &bvec, 1, sub_len);
++
++		tx_sent = conn->sock->ops->sendmsg(conn->sock, &msghdr,
++						   sub_len);
+ 		if (tx_sent != sub_len) {
+ 			if (tx_sent == -EAGAIN) {
+-				pr_err("tcp_sendpage() returned"
+-						" -EAGAIN\n");
++				pr_err("sendmsg/splice returned -EAGAIN\n");
+ 				goto send_pg;
+ 			}
+ 
+-			pr_err("tcp_sendpage() failure: %d\n",
+-					tx_sent);
++			pr_err("sendmsg/splice failure: %d\n", tx_sent);
+ 			return -1;
+ 		}
+ 
 
