@@ -2,130 +2,226 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A196EB64D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jun 2023 09:46:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48606EB64D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jun 2023 14:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231764AbjFTJqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jun 2023 05:46:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55752 "EHLO
+        id S233434AbjFTO6l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jun 2023 10:58:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232444AbjFTJqN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2023 05:46:13 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C53DF10C
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2023 02:46:11 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id ffacd0b85a97d-311367a3e12so3347662f8f.2
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2023 02:46:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1687254370; x=1689846370;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=52qn7S5H0DJ/OVNfPI7i/vY3Ezs8VvcT5G47wLVumi4=;
-        b=RTeUBidVbGAKwwXEABRQbd/fTYeY0h6jaQPebUelSqsob+jYZKBW7p3wCYAXpi4WPi
-         Llk0dQVPR+gnwhccYP0sQchzjxK4jVqHHao1IoKPVy4Xf8cp5Q5YT2QnGsWz1abYI1Kb
-         Lr+xDO+rH9f7Zc1ud34Vg7xCkR6om5CrDhfPGRf2cEN9HDqdb0CU2UDT9W6l06HUbN4z
-         yHmmnP9c8WTlFPpU/z6sHqmxUJhOsJlhxc0XGdSY0ZobutpXdiQS5f4YWSy08ZicspB9
-         wFLJInrO1gq3yaNcqOM/myCBS0AoEMqpxxNHnoZQvhK0w91B6+MLL0/Ay6rP1O4ubL3b
-         Ctug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687254370; x=1689846370;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=52qn7S5H0DJ/OVNfPI7i/vY3Ezs8VvcT5G47wLVumi4=;
-        b=GLDeqAmS25rHrGd9r2PTlxEldURlC6ZLBDTWznWs6B+JoyC3811bmoOQf9zS+Y47fS
-         sIaaWgaAD3P/IemYPTmfH1MU9lSGWjszekbjc4UuTrDSeGe65iCvA2CpS6yLkfizofRZ
-         7/5prjNbrphnAoU+zuB+XyJ/VIasd11OygWlDn5SPciSHyor8W2mT8T0pTHRPCnyV6vD
-         TwJ6gNxwiFmMLtnA1vWknLZdbTHFIqqZ4WW5zKE5v2zhDJlK9iXwI9epz1FTyuohUqpl
-         sFQc51XCCtNbr7L44odcN8bND/x4EWQb9HcoObDEx6P7Nv7+SL46w/8WTAcFk4GRG0mh
-         b52Q==
-X-Gm-Message-State: AC+VfDwKEC8ty132ySQ7S0GKnBC50U516SeSN01jCAqbN04maA7B+aM6
-        ZbJXkQ+KzMY+0mHQCSye1w0WAg==
-X-Google-Smtp-Source: ACHHUZ48uepgZCgbdc0HqkwijPGUg5rwXeoiJNVobk/8kRGzaIqlPu+W0NauFoKVVHM/8pCLgyEBcQ==
-X-Received: by 2002:a5d:4909:0:b0:30f:bf71:501b with SMTP id x9-20020a5d4909000000b0030fbf71501bmr9956218wrq.61.1687254370292;
-        Tue, 20 Jun 2023 02:46:10 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id h17-20020a5d6891000000b0030497b3224bsm1599089wru.64.2023.06.20.02.46.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Jun 2023 02:46:09 -0700 (PDT)
-Date:   Tue, 20 Jun 2023 12:46:04 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Nilesh Javali <njavali@marvell.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com, agurumurthy@marvell.com,
-        sdeodhar@marvell.com
-Subject: Re: [PATCH v2 5/8] qla2xxx: klocwork - Fix buffer overrun
-Message-ID: <38d406c9-8007-40dc-89dc-3cff828731ff@moroto.mountain>
-References: <20230607113843.37185-1-njavali@marvell.com>
- <20230607113843.37185-6-njavali@marvell.com>
+        with ESMTP id S233464AbjFTO61 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2023 10:58:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FFDF19A4
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2023 07:57:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687273036;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=bszGYXAPCfyFrCrKXBgf4DyEzlv1vS1+csO6wWtbX4c=;
+        b=d+QZna+v3yqE6N6R6OygzXJA5sGiVyiagRjfLt/wxaCGWUrWODSClsEw8q6fKci7PofGXT
+        SXXVQOnjxro7KT5EUioZzCHcG0JW/8qwLitJL6PzSXAuGRka23VhgdtJgkW2PPWW+iTdZb
+        r9dDh1Lm+Ap9fTsRPoSGjXMRQqtWG68=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-180-5iBq3k2zOLaeVvGBHbh90g-1; Tue, 20 Jun 2023 10:57:13 -0400
+X-MC-Unique: 5iBq3k2zOLaeVvGBHbh90g-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 176203C1BFD2;
+        Tue, 20 Jun 2023 14:54:42 +0000 (UTC)
+Received: from warthog.procyon.org.com (unknown [10.42.28.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9E84B422B0;
+        Tue, 20 Jun 2023 14:54:39 +0000 (UTC)
+From:   David Howells <dhowells@redhat.com>
+To:     netdev@vger.kernel.org
+Cc:     David Howells <dhowells@redhat.com>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+        David Ahern <dsahern@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Maurizio Lombardi <mlombard@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH net-next v3 16/18] iscsi: Use sendmsg(MSG_SPLICE_PAGES) rather than sendpage
+Date:   Tue, 20 Jun 2023 15:53:35 +0100
+Message-ID: <20230620145338.1300897-17-dhowells@redhat.com>
+In-Reply-To: <20230620145338.1300897-1-dhowells@redhat.com>
+References: <20230620145338.1300897-1-dhowells@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230607113843.37185-6-njavali@marvell.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 07, 2023 at 05:08:40PM +0530, Nilesh Javali wrote:
-> From: Quinn Tran <qutran@marvell.com>
-> 
-> Klocwork warning: Buffer Overflow - Array Index Out of Bounds
-> 
-> Driver uses fc_els_flogi to calculate size of buffer.
-> The actual buffer is nested inside of fc_els_flogi
-> which is smaller.
+Use sendmsg() with MSG_SPLICE_PAGES rather than sendpage.  This allows
+multiple pages and multipage folios to be passed through.
 
-To be honest, I don't really understand where either fc_els_flogi or
-fc_els_csp structs are involved in this.  Is that the source buffer?
-We are copying data to ha->init_cb which is type init_cb_t.
+TODO: iscsit_fe_sendpage_sg() should perhaps set up a bio_vec array for the
+entire set of pages it's going to transfer plus two for the header and
+trailer and page fragments to hold the header and trailer - and then call
+sendmsg once for the entire message.
 
-The names "ha->init_cb" and "ha->init_cb_size" match and how the size
-is set (in qla2x00_probe_one()) is like this:
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Lee Duncan <lduncan@suse.com>
+cc: Chris Leech <cleech@redhat.com>
+cc: Mike Christie <michael.christie@oracle.com>
+cc: Maurizio Lombardi <mlombard@redhat.com>
+cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+cc: "David S. Miller" <davem@davemloft.net>
+cc: Eric Dumazet <edumazet@google.com>
+cc: Jakub Kicinski <kuba@kernel.org>
+cc: Paolo Abeni <pabeni@redhat.com>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: Matthew Wilcox <willy@infradead.org>
+cc: Al Viro <viro@zeniv.linux.org.uk>
+cc: open-iscsi@googlegroups.com
+cc: linux-scsi@vger.kernel.org
+cc: target-devel@vger.kernel.org
+cc: netdev@vger.kernel.org
+---
 
-        ha->init_cb_size = sizeof(init_cb_t);
-                ha->init_cb_size = sizeof(struct mid_init_cb_24xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_24xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
-                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+Notes:
+    ver #2)
+     - Wrap lines at 80.
 
-I don't understand the Klocwork warning either...
+ drivers/scsi/iscsi_tcp.c                 | 26 +++++++++---------------
+ drivers/scsi/iscsi_tcp.h                 |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c | 15 ++++++++------
+ 3 files changed, 20 insertions(+), 23 deletions(-)
 
-> 
-> Replace structure name to allow proper size calculation.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Quinn Tran <qutran@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
->  drivers/scsi/qla2xxx/qla_init.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 0df6eae7324e..b0225f6f3221 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -5549,7 +5549,7 @@ static void qla_get_login_template(scsi_qla_host_t *vha)
->  	__be32 *q;
->  
->  	memset(ha->init_cb, 0, ha->init_cb_size);
-               ^^^^^^^^^^^
-
-> -	sz = min_t(int, sizeof(struct fc_els_flogi), ha->init_cb_size);
-> +	sz = min_t(int, sizeof(struct fc_els_csp), ha->init_cb_size);
-
-It's strange that we are checking min_t() after a memset().  Normally
-you check first then memset.
-
->  	rval = qla24xx_get_port_login_templ(vha, ha->init_cb_dma,
->  					    ha->init_cb, sz);
-                                            ^^^^^^^^^^^^^^^^
-sz is used as the size of ha->init_cb here, and then again at the the
-end of the function.
-
-regards,
-dan carpenter
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9637d4bc2bc9..9ab8555180a3 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -301,35 +301,32 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
+ 
+ 	while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
+ 		struct scatterlist *sg;
++		struct msghdr msg = {};
++		struct bio_vec bv;
+ 		unsigned int offset, copy;
+-		int flags = 0;
+ 
+ 		r = 0;
+ 		offset = segment->copied;
+ 		copy = segment->size - offset;
+ 
+ 		if (segment->total_copied + segment->size < segment->total_size)
+-			flags |= MSG_MORE | MSG_SENDPAGE_NOTLAST;
++			msg.msg_flags |= MSG_MORE;
+ 
+ 		if (tcp_sw_conn->queue_recv)
+-			flags |= MSG_DONTWAIT;
++			msg.msg_flags |= MSG_DONTWAIT;
+ 
+-		/* Use sendpage if we can; else fall back to sendmsg */
+ 		if (!segment->data) {
++			if (!tcp_conn->iscsi_conn->datadgst_en)
++				msg.msg_flags |= MSG_SPLICE_PAGES;
+ 			sg = segment->sg;
+ 			offset += segment->sg_offset + sg->offset;
+-			r = tcp_sw_conn->sendpage(sk, sg_page(sg), offset,
+-						  copy, flags);
++			bvec_set_page(&bv, sg_page(sg), copy, offset);
+ 		} else {
+-			struct msghdr msg = { .msg_flags = flags };
+-			struct kvec iov = {
+-				.iov_base = segment->data + offset,
+-				.iov_len = copy
+-			};
+-
+-			r = kernel_sendmsg(sk, &msg, &iov, 1, copy);
++			bvec_set_virt(&bv, segment->data + offset, copy);
+ 		}
++		iov_iter_bvec(&msg.msg_iter, ITER_SOURCE, &bv, 1, copy);
+ 
++		r = sock_sendmsg(sk, &msg);
+ 		if (r < 0) {
+ 			iscsi_tcp_segment_unmap(segment);
+ 			return r;
+@@ -746,7 +743,6 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 	sock_no_linger(sk);
+ 
+ 	iscsi_sw_tcp_conn_set_callbacks(conn);
+-	tcp_sw_conn->sendpage = tcp_sw_conn->sock->ops->sendpage;
+ 	/*
+ 	 * set receive state machine into initial state
+ 	 */
+@@ -777,8 +773,6 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+ 			return -ENOTCONN;
+ 		}
+ 		iscsi_set_param(cls_conn, param, buf, buflen);
+-		tcp_sw_conn->sendpage = conn->datadgst_en ?
+-			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
+ 		mutex_unlock(&tcp_sw_conn->sock_lock);
+ 		break;
+ 	case ISCSI_PARAM_MAX_R2T:
+diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
+index 68e14a344904..d6ec08d7eb63 100644
+--- a/drivers/scsi/iscsi_tcp.h
++++ b/drivers/scsi/iscsi_tcp.h
+@@ -48,7 +48,7 @@ struct iscsi_sw_tcp_conn {
+ 	uint32_t		sendpage_failures_cnt;
+ 	uint32_t		discontiguous_hdr_cnt;
+ 
+-	ssize_t (*sendpage)(struct socket *, struct page *, int, size_t, int);
++	bool			can_splice_to_tcp;
+ };
+ 
+ struct iscsi_sw_tcp_host {
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index b14835fcb033..6231fa4ef5c6 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -1129,6 +1129,8 @@ int iscsit_fe_sendpage_sg(
+ 	struct iscsit_conn *conn)
+ {
+ 	struct scatterlist *sg = cmd->first_data_sg;
++	struct bio_vec bvec;
++	struct msghdr msghdr = { .msg_flags = MSG_SPLICE_PAGES,	};
+ 	struct kvec iov;
+ 	u32 tx_hdr_size, data_len;
+ 	u32 offset = cmd->first_data_sg_off;
+@@ -1172,17 +1174,18 @@ int iscsit_fe_sendpage_sg(
+ 		u32 space = (sg->length - offset);
+ 		u32 sub_len = min_t(u32, data_len, space);
+ send_pg:
+-		tx_sent = conn->sock->ops->sendpage(conn->sock,
+-					sg_page(sg), sg->offset + offset, sub_len, 0);
++		bvec_set_page(&bvec, sg_page(sg), sub_len, sg->offset + offset);
++		iov_iter_bvec(&msghdr.msg_iter, ITER_SOURCE, &bvec, 1, sub_len);
++
++		tx_sent = conn->sock->ops->sendmsg(conn->sock, &msghdr,
++						   sub_len);
+ 		if (tx_sent != sub_len) {
+ 			if (tx_sent == -EAGAIN) {
+-				pr_err("tcp_sendpage() returned"
+-						" -EAGAIN\n");
++				pr_err("sendmsg/splice returned -EAGAIN\n");
+ 				goto send_pg;
+ 			}
+ 
+-			pr_err("tcp_sendpage() failure: %d\n",
+-					tx_sent);
++			pr_err("sendmsg/splice failure: %d\n", tx_sent);
+ 			return -1;
+ 		}
+ 
 
