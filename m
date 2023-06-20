@@ -2,70 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BA4BEB64DA
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Jun 2023 17:01:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A196EB64D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jun 2023 09:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229500AbjFRRBd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Jun 2023 13:01:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43652 "EHLO
+        id S231764AbjFTJqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jun 2023 05:46:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjFRRBc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jun 2023 13:01:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E1BF130;
-        Sun, 18 Jun 2023 10:01:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EEA8960BAD;
-        Sun, 18 Jun 2023 17:01:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 5FAC4C433C0;
-        Sun, 18 Jun 2023 17:01:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687107690;
-        bh=tobDUTohzLGZ4csPhDFXeuaV/DFtVFrB3Mb2/C7DX4g=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=nYr4nowOLUzvCu0kgWcgC1iVRcxW0NDBZJCgfF6y9wGAMBIG2YOuleIEUw1ZZgfqM
-         t2vgeK4m98ta6CTtNnjL4AnKBclI842Sc8wUhiLf23pjcvVKmKXYJtvJ4B9mfu341P
-         a0dlLi9thCOWBSPex5oOlZ/jyGpwZ5TqNtNPK3WCKQ2Ri+Zn0fgM50KEJ4nYlvwARH
-         bAe4pnoAVQuVcaYGUO4l7RzJnFN0NxnhQ3JYQHwck6xyd2986OiFtJwoA4pfOHGkB4
-         fw/cz9JxYrXz8Ip5m1FunqLBoUC/1JtUli0QuBkzoCyNKi42Z+vR9fqJxmXJ6nvhE4
-         7nmkcgFGetO7w==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4C042C1614E;
-        Sun, 18 Jun 2023 17:01:30 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.4-rc6
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <cdad87164ce2f62fabccad0b4f6c11a7e8e2914e.camel@HansenPartnership.com>
-References: <cdad87164ce2f62fabccad0b4f6c11a7e8e2914e.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <cdad87164ce2f62fabccad0b4f6c11a7e8e2914e.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 9cefd6e7e0a77b0fbca5c793f6fb6821b0962775
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8c1f0c38b31025f60437215dd27fffc293565fa4
-Message-Id: <168710769030.15251.11846954188757632501.pr-tracker-bot@kernel.org>
-Date:   Sun, 18 Jun 2023 17:01:30 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S232444AbjFTJqN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2023 05:46:13 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C53DF10C
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2023 02:46:11 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id ffacd0b85a97d-311367a3e12so3347662f8f.2
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2023 02:46:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1687254370; x=1689846370;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=52qn7S5H0DJ/OVNfPI7i/vY3Ezs8VvcT5G47wLVumi4=;
+        b=RTeUBidVbGAKwwXEABRQbd/fTYeY0h6jaQPebUelSqsob+jYZKBW7p3wCYAXpi4WPi
+         Llk0dQVPR+gnwhccYP0sQchzjxK4jVqHHao1IoKPVy4Xf8cp5Q5YT2QnGsWz1abYI1Kb
+         Lr+xDO+rH9f7Zc1ud34Vg7xCkR6om5CrDhfPGRf2cEN9HDqdb0CU2UDT9W6l06HUbN4z
+         yHmmnP9c8WTlFPpU/z6sHqmxUJhOsJlhxc0XGdSY0ZobutpXdiQS5f4YWSy08ZicspB9
+         wFLJInrO1gq3yaNcqOM/myCBS0AoEMqpxxNHnoZQvhK0w91B6+MLL0/Ay6rP1O4ubL3b
+         Ctug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687254370; x=1689846370;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=52qn7S5H0DJ/OVNfPI7i/vY3Ezs8VvcT5G47wLVumi4=;
+        b=GLDeqAmS25rHrGd9r2PTlxEldURlC6ZLBDTWznWs6B+JoyC3811bmoOQf9zS+Y47fS
+         sIaaWgaAD3P/IemYPTmfH1MU9lSGWjszekbjc4UuTrDSeGe65iCvA2CpS6yLkfizofRZ
+         7/5prjNbrphnAoU+zuB+XyJ/VIasd11OygWlDn5SPciSHyor8W2mT8T0pTHRPCnyV6vD
+         TwJ6gNxwiFmMLtnA1vWknLZdbTHFIqqZ4WW5zKE5v2zhDJlK9iXwI9epz1FTyuohUqpl
+         sFQc51XCCtNbr7L44odcN8bND/x4EWQb9HcoObDEx6P7Nv7+SL46w/8WTAcFk4GRG0mh
+         b52Q==
+X-Gm-Message-State: AC+VfDwKEC8ty132ySQ7S0GKnBC50U516SeSN01jCAqbN04maA7B+aM6
+        ZbJXkQ+KzMY+0mHQCSye1w0WAg==
+X-Google-Smtp-Source: ACHHUZ48uepgZCgbdc0HqkwijPGUg5rwXeoiJNVobk/8kRGzaIqlPu+W0NauFoKVVHM/8pCLgyEBcQ==
+X-Received: by 2002:a5d:4909:0:b0:30f:bf71:501b with SMTP id x9-20020a5d4909000000b0030fbf71501bmr9956218wrq.61.1687254370292;
+        Tue, 20 Jun 2023 02:46:10 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id h17-20020a5d6891000000b0030497b3224bsm1599089wru.64.2023.06.20.02.46.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Jun 2023 02:46:09 -0700 (PDT)
+Date:   Tue, 20 Jun 2023 12:46:04 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Nilesh Javali <njavali@marvell.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com, agurumurthy@marvell.com,
+        sdeodhar@marvell.com
+Subject: Re: [PATCH v2 5/8] qla2xxx: klocwork - Fix buffer overrun
+Message-ID: <38d406c9-8007-40dc-89dc-3cff828731ff@moroto.mountain>
+References: <20230607113843.37185-1-njavali@marvell.com>
+ <20230607113843.37185-6-njavali@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230607113843.37185-6-njavali@marvell.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sun, 18 Jun 2023 09:42:40 -0400:
+On Wed, Jun 07, 2023 at 05:08:40PM +0530, Nilesh Javali wrote:
+> From: Quinn Tran <qutran@marvell.com>
+> 
+> Klocwork warning: Buffer Overflow - Array Index Out of Bounds
+> 
+> Driver uses fc_els_flogi to calculate size of buffer.
+> The actual buffer is nested inside of fc_els_flogi
+> which is smaller.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+To be honest, I don't really understand where either fc_els_flogi or
+fc_els_csp structs are involved in this.  Is that the source buffer?
+We are copying data to ha->init_cb which is type init_cb_t.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8c1f0c38b31025f60437215dd27fffc293565fa4
+The names "ha->init_cb" and "ha->init_cb_size" match and how the size
+is set (in qla2x00_probe_one()) is like this:
 
-Thank you!
+        ha->init_cb_size = sizeof(init_cb_t);
+                ha->init_cb_size = sizeof(struct mid_init_cb_24xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_24xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+                ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+I don't understand the Klocwork warning either...
+
+> 
+> Replace structure name to allow proper size calculation.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Quinn Tran <qutran@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_init.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 0df6eae7324e..b0225f6f3221 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -5549,7 +5549,7 @@ static void qla_get_login_template(scsi_qla_host_t *vha)
+>  	__be32 *q;
+>  
+>  	memset(ha->init_cb, 0, ha->init_cb_size);
+               ^^^^^^^^^^^
+
+> -	sz = min_t(int, sizeof(struct fc_els_flogi), ha->init_cb_size);
+> +	sz = min_t(int, sizeof(struct fc_els_csp), ha->init_cb_size);
+
+It's strange that we are checking min_t() after a memset().  Normally
+you check first then memset.
+
+>  	rval = qla24xx_get_port_login_templ(vha, ha->init_cb_dma,
+>  					    ha->init_cb, sz);
+                                            ^^^^^^^^^^^^^^^^
+sz is used as the size of ha->init_cb here, and then again at the the
+end of the function.
+
+regards,
+dan carpenter
+
