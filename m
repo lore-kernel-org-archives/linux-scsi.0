@@ -2,83 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BCE6EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 15:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05748EB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 15:47:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233739AbjFUPnB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 11:43:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50496 "EHLO
+        id S232997AbjFUPrR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 11:47:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233705AbjFUPmq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 11:42:46 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32116E68;
-        Wed, 21 Jun 2023 08:42:24 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1b50e309602so47944165ad.0;
-        Wed, 21 Jun 2023 08:42:24 -0700 (PDT)
+        with ESMTP id S232254AbjFUPrQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 11:47:16 -0400
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5003BC;
+        Wed, 21 Jun 2023 08:47:15 -0700 (PDT)
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1b52bf6e669so47781795ad.2;
+        Wed, 21 Jun 2023 08:47:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687362122; x=1689954122;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20221208; t=1687362435; x=1689954435;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FTJzUZXq823ZXnmLS5AS4rZZIfTqatFrJY6YpC4QzpE=;
-        b=BoocG/dCUaNbOvH580ePfIw424DALlxJpTkKvSEKXH7mR7tpaLzPk1+JLpVttUy2t6
-         LM7wGbHTwWpJLJRExnC9fMrO2Kcx23CnQ2ZTOykU+vllB8pjhJdgDJtVFrSf/oa6TYaL
-         /EKD/HrhztwjLJ+vbpeHyVyMnUh6aoRKFROsTiWzgrutzI2LVG+SvRHl5qTBV5RwqO7X
-         Qbf8M0DTwmKwxImUsRx7JEnkCxYmuiJF3P5kgCw7IOhZkhe+RYoEU5pLYKkqpTZtK3bH
-         E7ORuuNs7H8PTdXFer2Mn1C3ck7GM7NWr2yuGw73zqLcFskL2FsYpPwsgNna4VbZFJqI
-         ClXQ==
-X-Gm-Message-State: AC+VfDzFoYTRdPW6EntrmsGNkyaAm2o3t77CHtexfASIQZXua5coZ+xG
-        W0lYKL6cf4+DR+HVNSXCQAc=
-X-Google-Smtp-Source: ACHHUZ75AgZuplMcSb1kEuUFuGEsTg5FBp+Eusurp/PRz9+EQrBqDaV+XQmO0a4stt8z/TTWglepIQ==
-X-Received: by 2002:a17:903:1108:b0:1b0:2d08:eb51 with SMTP id n8-20020a170903110800b001b02d08eb51mr19783283plh.12.1687362122342;
-        Wed, 21 Jun 2023 08:42:02 -0700 (PDT)
+        bh=G5Mcef6zMkNz9FKaMVVsQpbKPOPdZ24sc4KU/lOwhoA=;
+        b=Bi/cXZWeZgWMODnp89bAt8fNFY8oQ4OLLzKrznbVOLQnLvoLjTMSMZS9xlAdJM4Yil
+         2tUFAlgT9tERxr196lRy3dXaO3CCKOsw0NgHGmHPKG5074D5ffWD2ODkK49bP8erhHaM
+         HsV8auPVLV4sLHXvKLIBT0//rpX9V/mhkT/mJV2cgHPqpTSZvlF6NNRCbgq6eHfnxCDJ
+         vsMjmFv5EYeRELE6XJqeZhRuidsuf5AVvjAso70JdY0ru/l3kmuYEfyyNfZsi8WB5enM
+         tdF/HHyjP53GuBgezZOnYZhh5VjhVQvaUvUHaKVTdNiNzHqEaSwKEGUpSW6XvV0zDoPj
+         yIcw==
+X-Gm-Message-State: AC+VfDwx2b3j2wNtVJM71Fn5Hd7yGE3xnDERXs6i4oofqGRVp5AlDA9j
+        b5ypiSgrD0yBEz6ky8qkZawK1IlbZco=
+X-Google-Smtp-Source: ACHHUZ5TZ+AEE0tR2knWzeb7OcqtZ05gFVcqzh+aTH+zi7o1/qW/EOI3CETf/JsKXR8pyNBDrqhJfw==
+X-Received: by 2002:a17:903:2682:b0:1b1:9d14:1537 with SMTP id jf2-20020a170903268200b001b19d141537mr13780419plb.55.1687362435057;
+        Wed, 21 Jun 2023 08:47:15 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:9bb2:be1e:34e3:7c45? ([2620:15c:211:201:9bb2:be1e:34e3:7c45])
-        by smtp.gmail.com with ESMTPSA id u9-20020a17090341c900b001ac741dfd29sm3637788ple.295.2023.06.21.08.42.00
+        by smtp.gmail.com with ESMTPSA id d5-20020a170902cec500b001b54d064a4bsm3629752plg.259.2023.06.21.08.47.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Jun 2023 08:42:01 -0700 (PDT)
-Message-ID: <debdc47a-c377-e457-5643-415d93ced54a@acm.org>
-Date:   Wed, 21 Jun 2023 08:41:58 -0700
+        Wed, 21 Jun 2023 08:47:14 -0700 (PDT)
+Message-ID: <93834519-c945-94a7-f1f8-7bf85bf86dd5@acm.org>
+Date:   Wed, 21 Jun 2023 08:47:10 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] docs: target: Convert tcm_mod_builder.py print syntax to
- python3
-To:     Rong Tao <rtoax@foxmail.com>, martin.petersen@oracle.com
-Cc:     rongtao@cestc.cn, Jonathan Corbet <corbet@lwn.net>,
-        "open list:SCSI TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        "open list:SCSI TARGET SUBSYSTEM" <target-devel@vger.kernel.org>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Mike Christie <michael.christie@oracle.com>
-References: <tencent_F3895D0EA868BCCE8C56221619BC093D660A@qq.com>
+Subject: Re: [PATCH] scsi/sg: don't grab scsi host module reference
 Content-Language: en-US
-In-Reply-To: <tencent_F3895D0EA868BCCE8C56221619BC093D660A@qq.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de,
+        chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+        dgilbert@interlog.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, yukuai3@huawei.com, axboe@kernel.dk
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20230621160111.1433521-1-yukuai1@huaweicloud.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230621160111.1433521-1-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/21/23 00:33, Rong Tao wrote:
-> diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
-> index 54492aa813b9..e2ef72925de3 100755
-> --- a/Documentation/target/tcm_mod_builder.py
-> +++ b/Documentation/target/tcm_mod_builder.py
-> @@ -20,7 +20,7 @@ fabric_mod_port = ""
->   fabric_mod_init_port = ""
->   
->   def tcm_mod_err(msg):
-> -	print msg
-> +	print(msg)
->   	sys.exit(1)
+On 6/21/23 09:01, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> In order to prevent request_queue to be freed before cleaning up
+> blktrace debugfs entries, commit db59133e9279 ("scsi: sg: fix blktrace
+> debugfs entries leakage") use scsi_device_get(), however,
+> scsi_device_get() will also grab scsi module reference and scsi module
+> can't be removed.
+> 
+> It's reported that blktests can't unload scsi_debug after block/001:
+> 
+> blktests (master) # ./check block
+> block/001 (stress device hotplugging) [failed]
+>       +++ /root/blktests/results/nodev/block/001.out.bad 2023-06-19
+>        Running block/001
+>        Stressing sd
+>       +modprobe: FATAL: Module scsi_debug is in use.
+> 
+> Fix this problem by grabbing request_queue reference directly, so that
+> scsi host module can still be unloaded while request_queue will be
+> pinged by sg device.
 
-How about deleting the file Documentation/target/tcm_mod_builder.py? I
-don't think anyone is using this script. Additionally, it takes effort
-to keep this script in sync with the rest of the SCSI target code. I'm
-not sure anyone is interested in maintaining this script.
+pinged -> pinned
 
-Thanks,
+Otherwise this patch looks good to me.
 
 Bart.
