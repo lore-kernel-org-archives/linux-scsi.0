@@ -2,238 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B48EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 07:40:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BCEDEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 08:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231389AbjFUHkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 03:40:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35066 "EHLO
+        id S231620AbjFUICu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 04:02:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231386AbjFUHkK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 03:40:10 -0400
-Received: from out203-205-221-192.mail.qq.com (out203-205-221-192.mail.qq.com [203.205.221.192])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 442B1210B;
-        Wed, 21 Jun 2023 00:39:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1687333181;
-        bh=UqApaAasoEBoMc0dxYV4OnhSyfSEoo7sl5sXBYzYfds=;
-        h=From:To:Cc:Subject:Date;
-        b=WCV6uW5r4UcO67rokvNvBOtVGkznnBl2vKOKD9816+y1dwNO3igJQAVEdGBlMlbKF
-         l53y1EK3mIeXTpQ1slXy9NczFBlxBw75rn1KGTmbGZaFCLNz9ZGQG9yeA77Q1rvYUm
-         9QMkudbFYgWKpqqUm4PvWPo4LJxs6JrFT+OhCs3s=
-Received: from localhost.localdomain ([39.156.73.12])
-        by newxmesmtplogicsvrszc2-1.qq.com (NewEsmtp) with SMTP
-        id 8603282D; Wed, 21 Jun 2023 15:33:32 +0800
-X-QQ-mid: xmsmtpt1687332812t2jwfvdiw
-Message-ID: <tencent_F3895D0EA868BCCE8C56221619BC093D660A@qq.com>
-X-QQ-XMAILINFO: MQ+wLuVvI2LQjtOqTDlIV94yDrHmkwsY56bVPolYhQ89M8b1VZfbz8XhMultN9
-         2xBjYkXEzUFu76fKZNAsQOlL8OhtaDzw/sK9uvnSIVwTtg7Dx8NUosziNzoyaOw8gYYaOlIqX/HB
-         tSmmvm6MTN8NPtbcvZjVPFcU92BQhq7snXgooRbpUTtFy/9JrV9bBMjb/dehvF0b1fY1sQ2Mgp9b
-         Uoza7fQFr4kIVOgrXEJbl65uLjvZLSf1jtisvIeuNw18mt1Pbxj1OdU0hUSRh0JRwN5z5x1ISnAU
-         mjQTNrLTl+kaWF0v+Oev4SmZM8m+0A1pMVAK3TuaL3AfVfRT/XE0eHyiqChpkaUNji0I7u7wsF4T
-         GCGOsQ4C5Dhvl2bM3Troc+JHMoVNfhZNxM4tS5RkUgS/6jAy9p3xiSuEG5QMTvsSIeC3pSCgL3pL
-         RRDjpJrjfcx4/KXow7luA4Kz3QOIjTDw8GGanLwNP9t3oDYD+MynjOO/JAMX5QqTiBPpK8o6InZO
-         vkgrqv/i44HBKJ3Z03sPIk40UDLpV2kgEI4zII1343ldpMK7N4nYM9J1PMVxnxqeUnF2l/ZraqE1
-         FfjUUrk/fz3vXOnj1LR4tSIQ6pv3kedIh701tWYZxf4dKygkL9ecnUjBKmrPccHJQS19K52AYdnF
-         4lubXf+EvnSV6dGyMSp22EYwYrij7lrDPTHbfAbSuECnyf3HBOFiMyvBFvK1cDPWXzFFnsz1a2UR
-         rMh511MudjQlHnMu28jI1Cpt/OYCh+iPRMR1Erpl81OYcJtT7ip7oKPJ3ABvf6zyhkovuFi+KcCb
-         xNXEre3wX+paOww/KokfN1XlNf+8Jl+xXvWCDnNhxzno6xIYTQnU16GdTN2385vWCkmXbKf7LX6/
-         viViVS3f1ergI3BwpSx6vvyoWw5JengErO1EG+GnZTwaC7TvNTwtIWuaSvlt1/WOwTktiLE6TGMR
-         oOwBY5rQc8eJ8Z6EXc/bk0uJ/AA3S/NcbwKdI6mq16FaXsKBdvtw==
-X-QQ-XMRINFO: NjIWXnpjOUTzjNa+72IgnqZv1lPwKoxBEg==
-From:   Rong Tao <rtoax@foxmail.com>
-To:     martin.petersen@oracle.com
-Cc:     rongtao@cestc.cn, Jonathan Corbet <corbet@lwn.net>,
-        linux-scsi@vger.kernel.org (open list:SCSI TARGET SUBSYSTEM),
-        target-devel@vger.kernel.org (open list:SCSI TARGET SUBSYSTEM),
-        linux-doc@vger.kernel.org (open list:DOCUMENTATION),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] docs: target: Convert tcm_mod_builder.py print syntax to python3
-Date:   Wed, 21 Jun 2023 15:33:30 +0800
-X-OQ-MSGID: <20230621073331.85873-1-rtoax@foxmail.com>
-X-Mailer: git-send-email 2.39.3
+        with ESMTP id S230255AbjFUICt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 04:02:49 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 000EBFE;
+        Wed, 21 Jun 2023 01:02:47 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QmGFY2Gmtz4f4vLv;
+        Wed, 21 Jun 2023 16:02:41 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgA30JOerpJk+MDCMA--.36412S4;
+        Wed, 21 Jun 2023 16:02:40 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     hch@lst.de, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+        dgilbert@interlog.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, yukuai3@huawei.com, axboe@kernel.dk
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: [PATCH] scsi/sg: don't grab scsi host module reference
+Date:   Thu, 22 Jun 2023 00:01:11 +0800
+Message-Id: <20230621160111.1433521-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA30JOerpJk+MDCMA--.36412S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uryxZFyUtF47uF13Gr4fGrg_yoW8ZrWfpF
+        WUWa90krW09rWUG3WUZw1UZFyxK3yIv3yfJFWxKw15uFW8Jryj9ryktFy8XF15ArZagFWD
+        CFnxtFWvgF1UAw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9q14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2ocxC64kIII
+        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
+        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
+        64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
+        1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAq
+        YI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4I
+        kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
+        WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
+        0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWr
+        Jr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r
+        4UJbIYCTnIWIevJa73UjIFyTuYvjTRNgAwUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Rong Tao <rongtao@cestc.cn>
+From: Yu Kuai <yukuai3@huawei.com>
 
-Convert the tcm_mod_builder.py file to python3 and fix indentation.
+In order to prevent request_queue to be freed before cleaning up
+blktrace debugfs entries, commit db59133e9279 ("scsi: sg: fix blktrace
+debugfs entries leakage") use scsi_device_get(), however,
+scsi_device_get() will also grab scsi module reference and scsi module
+can't be removed.
 
-Error:
+It's reported that blktests can't unload scsi_debug after block/001:
 
-    $ ./tcm_mod_builder.py
-    File "/home/sda/git-repos/linux/Documentation/target/./tcm_mod_builder.py", line 23
-        print msg
-            ^
-    SyntaxError: Missing parentheses in call to 'print'. Did you mean print(msg)?
+blktests (master) # ./check block
+block/001 (stress device hotplugging) [failed]
+     +++ /root/blktests/results/nodev/block/001.out.bad 2023-06-19
+      Running block/001
+      Stressing sd
+     +modprobe: FATAL: Module scsi_debug is in use.
 
-    $ ./tcm_mod_builder.py
-    File "/home/sda/git-repos/linux/Documentation/target/./tcm_mod_builder.py", line 186
-        p = open(f, 'w');
-    TabError: inconsistent use of tabs and spaces in indentation
+Fix this problem by grabbing request_queue reference directly, so that
+scsi host module can still be unloaded while request_queue will be
+pinged by sg device.
 
-Signed-off-by: Rong Tao <rongtao@cestc.cn>
+Reported-by: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Link: https://lore.kernel.org/all/1760da91-876d-fc9c-ab51-999a6f66ad50@nvidia.com/
+Fixes: db59133e9279 ("scsi: sg: fix blktrace debugfs entries leakage")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- Documentation/target/tcm_mod_builder.py | 44 ++++++++++++-------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+ drivers/scsi/sg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
-index 54492aa813b9..e2ef72925de3 100755
---- a/Documentation/target/tcm_mod_builder.py
-+++ b/Documentation/target/tcm_mod_builder.py
-@@ -20,7 +20,7 @@ fabric_mod_port = ""
- fabric_mod_init_port = ""
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 2433eeef042a..dcb73787c29d 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1497,7 +1497,7 @@ sg_add_device(struct device *cl_dev)
+ 	int error;
+ 	unsigned long iflags;
  
- def tcm_mod_err(msg):
--	print msg
-+	print(msg)
- 	sys.exit(1)
+-	error = scsi_device_get(scsidp);
++	error = blk_get_queue(scsidp->request_queue);
+ 	if (error)
+ 		return error;
  
- def tcm_mod_create_module_subdir(fabric_mod_dir_var):
-@@ -28,7 +28,7 @@ def tcm_mod_create_module_subdir(fabric_mod_dir_var):
- 	if os.path.isdir(fabric_mod_dir_var) == True:
- 		return 1
+@@ -1558,7 +1558,7 @@ sg_add_device(struct device *cl_dev)
+ out:
+ 	if (cdev)
+ 		cdev_del(cdev);
+-	scsi_device_put(scsidp);
++	blk_put_queue(scsidp->request_queue);
+ 	return error;
+ }
  
--	print "Creating fabric_mod_dir: " + fabric_mod_dir_var
-+	print("Creating fabric_mod_dir: " + fabric_mod_dir_var)
- 	ret = os.mkdir(fabric_mod_dir_var)
- 	if ret:
- 		tcm_mod_err("Unable to mkdir " + fabric_mod_dir_var)
-@@ -41,7 +41,7 @@ def tcm_mod_build_FC_include(fabric_mod_dir_var, fabric_mod_name):
- 	buf = ""
+@@ -1575,7 +1575,7 @@ sg_device_destroy(struct kref *kref)
+ 	 */
  
- 	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_base.h"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
+ 	blk_trace_remove(q);
+-	scsi_device_put(sdp->device);
++	blk_put_queue(q);
  
- 	p = open(f, 'w');
- 	if not p:
-@@ -85,7 +85,7 @@ def tcm_mod_build_SAS_include(fabric_mod_dir_var, fabric_mod_name):
- 	buf = ""
- 
- 	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_base.h"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
- 
- 	p = open(f, 'w');
- 	if not p:
-@@ -128,7 +128,7 @@ def tcm_mod_build_iSCSI_include(fabric_mod_dir_var, fabric_mod_name):
- 	buf = ""
- 
- 	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_base.h"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
- 
- 	p = open(f, 'w');
- 	if not p:
-@@ -172,7 +172,7 @@ def tcm_mod_build_base_includes(proto_ident, fabric_mod_dir_val, fabric_mod_name
- 	elif proto_ident == "iSCSI":
- 		tcm_mod_build_iSCSI_include(fabric_mod_dir_val, fabric_mod_name)
- 	else:
--		print "Unsupported proto_ident: " + proto_ident
-+		print("Unsupported proto_ident: " + proto_ident)
- 		sys.exit(1)
- 
- 	return
-@@ -181,11 +181,11 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
- 	buf = ""
- 
- 	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_configfs.c"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
- 
--        p = open(f, 'w');
--        if not p:
--                tcm_mod_err("Unable to open file: " + f)
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
- 
- 	buf = "#include <linux/module.h>\n"
- 	buf += "#include <linux/moduleparam.h>\n"
-@@ -339,7 +339,7 @@ def tcm_mod_scan_fabric_ops(tcm_dir):
- 
- 	fabric_ops_api = tcm_dir + "include/target/target_core_fabric.h"
- 
--	print "Using tcm_mod_scan_fabric_ops: " + fabric_ops_api
-+	print("Using tcm_mod_scan_fabric_ops: " + fabric_ops_api)
- 	process_fo = 0;
- 
- 	p = open(fabric_ops_api, 'r')
-@@ -375,14 +375,14 @@ def tcm_mod_dump_fabric_ops(proto_ident, fabric_mod_dir_var, fabric_mod_name):
- 	bufi = ""
- 
- 	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_fabric.c"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
- 
- 	p = open(f, 'w')
- 	if not p:
- 		tcm_mod_err("Unable to open file: " + f)
- 
- 	fi = fabric_mod_dir_var + "/" + fabric_mod_name + "_fabric.h"
--	print "Writing file: " + fi
-+	print("Writing file: " + fi)
- 
- 	pi = open(fi, 'w')
- 	if not pi:
-@@ -537,7 +537,7 @@ def tcm_mod_build_kbuild(fabric_mod_dir_var, fabric_mod_name):
- 
- 	buf = ""
- 	f = fabric_mod_dir_var + "/Makefile"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
- 
- 	p = open(f, 'w')
- 	if not p:
-@@ -558,7 +558,7 @@ def tcm_mod_build_kconfig(fabric_mod_dir_var, fabric_mod_name):
- 
- 	buf = ""
- 	f = fabric_mod_dir_var + "/Kconfig"
--	print "Writing file: " + f
-+	print("Writing file: " + f)
- 
- 	p = open(f, 'w')
- 	if not p:
-@@ -603,20 +603,20 @@ def main(modname, proto_ident):
- 
- 	tcm_dir = os.getcwd();
- 	tcm_dir += "/../../"
--	print "tcm_dir: " + tcm_dir
-+	print("tcm_dir: " + tcm_dir)
- 	fabric_mod_name = modname
- 	fabric_mod_dir = tcm_dir + "drivers/target/" + fabric_mod_name
--	print "Set fabric_mod_name: " + fabric_mod_name
--	print "Set fabric_mod_dir: " + fabric_mod_dir
--	print "Using proto_ident: " + proto_ident
-+	print("Set fabric_mod_name: " + fabric_mod_name)
-+	print("Set fabric_mod_dir: " + fabric_mod_dir)
-+	print("Using proto_ident: " + proto_ident)
- 
- 	if proto_ident != "FC" and proto_ident != "SAS" and proto_ident != "iSCSI":
--		print "Unsupported proto_ident: " + proto_ident
-+		print("Unsupported proto_ident: " + proto_ident)
- 		sys.exit(1)
- 
- 	ret = tcm_mod_create_module_subdir(fabric_mod_dir)
- 	if ret:
--		print "tcm_mod_create_module_subdir() failed because module already exists!"
-+		print("tcm_mod_create_module_subdir() failed because module already exists!")
- 		sys.exit(1)
- 
- 	tcm_mod_build_base_includes(proto_ident, fabric_mod_dir, fabric_mod_name)
-@@ -647,7 +647,7 @@ parser.add_option('-p', '--protoident', help='Protocol Ident', dest='protoident'
- mandatories = ['modname', 'protoident']
- for m in mandatories:
- 	if not opts.__dict__[m]:
--		print "mandatory option is missing\n"
-+		print("mandatory option is missing\n")
- 		parser.print_help()
- 		exit(-1)
- 
+ 	write_lock_irqsave(&sg_index_lock, flags);
+ 	idr_remove(&sg_index_idr, sdp->index);
 -- 
-2.39.3
+2.39.2
 
