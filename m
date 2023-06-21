@@ -2,127 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 911EEEB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 18:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C282EB64DC
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 20:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230502AbjFUSmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 14:42:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33900 "EHLO
+        id S230185AbjFUU0k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 16:26:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229692AbjFUSmh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 14:42:37 -0400
-Received: from wout1-smtp.messagingengine.com (wout1-smtp.messagingengine.com [64.147.123.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91BC91A4;
-        Wed, 21 Jun 2023 11:42:36 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.west.internal (Postfix) with ESMTP id 8A3613200929;
-        Wed, 21 Jun 2023 14:42:32 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Wed, 21 Jun 2023 14:42:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm1; t=1687372952; x=1687459352; bh=x/
-        qYbwCgeTODxK3PDO1cDsIUXATfTIrzjbo84n1In5g=; b=k3bxJ4Bk+KdKGDC6iP
-        NAMvzQN4/RjQw/6gXQhMqzp3gaCrd+g5mkQeJ0gDVZZTifuV0Hdf52eRgZC4qXuE
-        hrYOGRC8P643mobNjDowCTIkml2swgMRd0NrThRxyYR5/GtSJwe497vrGbSTr05y
-        hs6wqsACFyJunGhPtW9Af0TfzXQu+owv65gXQGkNqG9WK4jEuvd5wsq2OPlJnFTb
-        LJ4KkEZA6xMJIE0Qgxtfq+BsTF+0ZqdAff6kBwJ8RZsv+w+wFHMG/QGvMjb2Cs21
-        OFQ8CSqR+vZzvNHOoWPROoxrWnLo0oSab2S45UMQjM/3STigTVpGEXYDovBLq6pR
-        s/Dw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm2; t=1687372952; x=1687459352; bh=x/qYbwCgeTODx
-        K3PDO1cDsIUXATfTIrzjbo84n1In5g=; b=oGU8w+WKcCwQz6HGxT7sMFhklHoJj
-        IP6vYl1XK8kgKRzVyD9RlpGvgtw0tH844DbE6G4B4Wi9NvbrBDEV+a6JxPYveQLr
-        S3iiWW2Mxku5kpz5tPKOHtrFXYrSt3LGQrOYB8u3E6fNo4Ow0e6AFcxXmTm/TGcj
-        bejiTaVT3/UbyK2RAD2hwRMDeZbwqTuwfTrAauWumm59vI3Mw/5+9j1N0bR18WKc
-        oYXSS6M701zIAM94UK6TJj2ybF9LkljwOxI3KyoHmEvWq3sp/iMUwNOxgkVd/yb/
-        O3up9hgspAT0D5/p6OmVKe/pAqrnETWAMLyr9Cgp8PkIoJ1l0CcUUJmfA==
-X-ME-Sender: <xms:l0STZH-uHDgr2OXrQpezn7aiFPgaL0V7C0L7hgcbQB9tgBcO5spsiA>
-    <xme:l0STZDuCBvDbekgT0gGsFfEheXb9QGtOeXsXHMkTM2eptd9XTLkttGjpOqxT46oBl
-    Qev7N6ontvU3sSu7IY>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrgeefledgfedtucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:l0STZFDNijvV1q6MRBl5StnQxKfZBMgp0rh7qJKuVBOtKWOwajdg_g>
-    <xmx:l0STZDe3Mvl59w73s9CdqzxOZS2AnNMJbxSCW4ivAFRnTZB-fELxPQ>
-    <xmx:l0STZMMwK4BmzT_Zzo4DDaWL-EuHAnKvMoUWojvqpA7-_WzPVhk93w>
-    <xmx:mESTZDcR0RNFwRlwcx5tShZxVsq4xMT42cTUeMOQkkL7SkWsEhXslw>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 95EF5B60086; Wed, 21 Jun 2023 14:42:31 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-499-gf27bbf33e2-fm-20230619.001-gf27bbf33
-Mime-Version: 1.0
-Message-Id: <336f2156-220f-47ff-be97-5a2a9c475372@app.fastmail.com>
-In-Reply-To: <202306211131.18885FF471@keescook>
-References: <20230616092233.3229414-1-arnd@kernel.org>
- <20230616092233.3229414-2-arnd@kernel.org> <202306211131.18885FF471@keescook>
-Date:   Wed, 21 Jun 2023 20:42:10 +0200
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Kees Cook" <keescook@chromium.org>,
-        "Arnd Bergmann" <arnd@kernel.org>
-Cc:     "Anil Gurumurthy" <anil.gurumurthy@qlogic.com>,
-        "Sudarsana Kalluru" <sudarsana.kalluru@qlogic.com>,
+        with ESMTP id S230305AbjFUU02 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 16:26:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E2011BFC;
+        Wed, 21 Jun 2023 13:26:26 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B207E616A1;
+        Wed, 21 Jun 2023 20:26:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37288C433C0;
+        Wed, 21 Jun 2023 20:26:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687379185;
+        bh=IldafOrMYKZpxWjdW8Dzn1OfaBUtuI1eV2ylNsc6e4U=;
+        h=Date:From:To:Cc:Subject:From;
+        b=Y2yqS/Y4fgeMMrBp4GVpPiqQbkfNRrlEDKuueTlTQcPCkJMvcZl93ZvoNBGz2WDfd
+         prh5aeFF+odgcGV6AHJovFc1nEKh5cxfzd3S8h2m07GFMUckTezMG4N7GGzAN8fHY4
+         d7JdCsfUVoBNmj2AlNadrUd87AzKOuZrRDvoL7MP1Vq9vBRZUd95XDNOMPjmUqQUKx
+         JMS2PKX5AmaDfvzGLvKQ6Fu1YquE0AdOgntp9F8JvZUElb/mbC3KGDpstXFzmfDT7D
+         xBHLVodDHNUxpMCFx2G+bfNhum2wBPFITdhqY5+waVCPStH3gMdb50Jy2z/dIh2biy
+         84S6CUf4NnFcQ==
+Date:   Wed, 21 Jun 2023 14:27:20 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Don Brace <don.brace@microchip.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Azeem Shaikh" <azeemshaikh38@gmail.com>,
-        "Bjorn Helgaas" <bhelgaas@google.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] scsi: bfa: fix function pointer type mismatch for state
- machines
-Content-Type: text/plain
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH][next] scsi: smartpqi: Replace one-element arrays with
+ flexible-array members
+Message-ID: <ZJNdKDkuRbFZpASS@work>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 21, 2023, at 20:33, Kees Cook wrote:
-> On Fri, Jun 16, 2023 at 11:22:10AM +0200, Arnd Bergmann wrote:
->> 
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
-> Thanks for all this! It's a lot of mechanical changes, but looks correct
-> to me. One nit below...
->
-> Reviewed-by: Kees Cook <keescook@chromium.org>
->
->> [...]
->>  static void
->> -bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event);
->>  static void
->> -bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event);
->>  static void
->> -bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event);
->>  static void
->> -bfad_sm_operational(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_operational(struct bfad_s *bfad, enum bfad_sm_event);
->>  static void
->> -bfad_sm_stopping(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_stopping(struct bfad_s *bfad, enum bfad_sm_event);
->>  static void
->> -bfad_sm_failed(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_failed(struct bfad_s *bfad, enum bfad_sm_event);
->>  static void
->> -bfad_sm_fcs_exit(struct bfad_s *bfad, enum bfad_sm_event event);
->> +bfad_sm_fcs_exit(struct bfad_s *bfad, enum bfad_sm_event);
->
-> This bit doesn't seem needed? i.e. why remove the prototype's argument
-> names?
+One-element arrays are deprecated, and we are replacing them with flexible
+array members instead. So, replace one-element arrays with flexible-array
+members in a couple of structures, and refactor the rest of the code,
+accordingly.
 
-Right, my mistake. I went through a few revisions and first tried to
-change the prototypes here, but later changed them back. I missed
-this after I folded my intermediate steps back into a single patch.
+This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+routines on memcpy().
 
-    Arnd
+This results in no differences in binary output.
+
+Link: https://github.com/KSPP/linux/issues/79
+Link: https://github.com/KSPP/linux/issues/204
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/scsi/smartpqi/smartpqi.h      | 4 ++--
+ drivers/scsi/smartpqi/smartpqi_init.c | 5 ++---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index f960b5095d09..e392eaf5b2bf 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -982,12 +982,12 @@ struct report_phys_lun_16byte_wwid {
+ 
+ struct report_phys_lun_8byte_wwid_list {
+ 	struct report_lun_header header;
+-	struct report_phys_lun_8byte_wwid lun_entries[1];
++	struct report_phys_lun_8byte_wwid lun_entries[];
+ };
+ 
+ struct report_phys_lun_16byte_wwid_list {
+ 	struct report_lun_header header;
+-	struct report_phys_lun_16byte_wwid lun_entries[1];
++	struct report_phys_lun_16byte_wwid lun_entries[];
+ };
+ 
+ struct raid_map_disk_data {
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 19af36e9a16d..6aaaa7ebca37 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -1203,7 +1203,6 @@ static inline int pqi_report_phys_luns(struct pqi_ctrl_info *ctrl_info, void **b
+ 	unsigned int i;
+ 	u8 rpl_response_format;
+ 	u32 num_physicals;
+-	size_t rpl_16byte_wwid_list_length;
+ 	void *rpl_list;
+ 	struct report_lun_header *rpl_header;
+ 	struct report_phys_lun_8byte_wwid_list *rpl_8byte_wwid_list;
+@@ -1232,9 +1231,9 @@ static inline int pqi_report_phys_luns(struct pqi_ctrl_info *ctrl_info, void **b
+ 
+ 	rpl_8byte_wwid_list = rpl_list;
+ 	num_physicals = get_unaligned_be32(&rpl_8byte_wwid_list->header.list_length) / sizeof(rpl_8byte_wwid_list->lun_entries[0]);
+-	rpl_16byte_wwid_list_length = sizeof(struct report_lun_header) + (num_physicals * sizeof(struct report_phys_lun_16byte_wwid));
+ 
+-	rpl_16byte_wwid_list = kmalloc(rpl_16byte_wwid_list_length, GFP_KERNEL);
++	rpl_16byte_wwid_list = kmalloc(struct_size(rpl_16byte_wwid_list, lun_entries,
++						   num_physicals), GFP_KERNEL);
+ 	if (!rpl_16byte_wwid_list)
+ 		return -ENOMEM;
+ 
+-- 
+2.34.1
+
