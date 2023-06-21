@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05748EB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 15:47:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB191EB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 16:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232997AbjFUPrR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 11:47:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
+        id S230386AbjFUQGb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 12:06:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232254AbjFUPrQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 11:47:16 -0400
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5003BC;
-        Wed, 21 Jun 2023 08:47:15 -0700 (PDT)
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1b52bf6e669so47781795ad.2;
-        Wed, 21 Jun 2023 08:47:15 -0700 (PDT)
+        with ESMTP id S230097AbjFUQG3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 12:06:29 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FA2895;
+        Wed, 21 Jun 2023 09:06:29 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-25edd424306so2129885a91.1;
+        Wed, 21 Jun 2023 09:06:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687362435; x=1689954435;
+        d=1e100.net; s=20221208; t=1687363589; x=1689955589;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=G5Mcef6zMkNz9FKaMVVsQpbKPOPdZ24sc4KU/lOwhoA=;
-        b=Bi/cXZWeZgWMODnp89bAt8fNFY8oQ4OLLzKrznbVOLQnLvoLjTMSMZS9xlAdJM4Yil
-         2tUFAlgT9tERxr196lRy3dXaO3CCKOsw0NgHGmHPKG5074D5ffWD2ODkK49bP8erhHaM
-         HsV8auPVLV4sLHXvKLIBT0//rpX9V/mhkT/mJV2cgHPqpTSZvlF6NNRCbgq6eHfnxCDJ
-         vsMjmFv5EYeRELE6XJqeZhRuidsuf5AVvjAso70JdY0ru/l3kmuYEfyyNfZsi8WB5enM
-         tdF/HHyjP53GuBgezZOnYZhh5VjhVQvaUvUHaKVTdNiNzHqEaSwKEGUpSW6XvV0zDoPj
-         yIcw==
-X-Gm-Message-State: AC+VfDwx2b3j2wNtVJM71Fn5Hd7yGE3xnDERXs6i4oofqGRVp5AlDA9j
-        b5ypiSgrD0yBEz6ky8qkZawK1IlbZco=
-X-Google-Smtp-Source: ACHHUZ5TZ+AEE0tR2knWzeb7OcqtZ05gFVcqzh+aTH+zi7o1/qW/EOI3CETf/JsKXR8pyNBDrqhJfw==
-X-Received: by 2002:a17:903:2682:b0:1b1:9d14:1537 with SMTP id jf2-20020a170903268200b001b19d141537mr13780419plb.55.1687362435057;
-        Wed, 21 Jun 2023 08:47:15 -0700 (PDT)
+        bh=ANhBuY1BkJQHuvukRlCiWkcwmUgmv7RsjD/BodsFM8Y=;
+        b=aaZFt0nsdG8OG5jOJ7Ms305MMoSO9emUcEcFw/fDHSV0Zms4zL0EnoHBmy22I8eHMB
+         Sepd9JWQ5/MQeW5+uhRFZDfVi/CYCNmgzsIH1ZJuW/xnY7PKd5XiP8bH0jI+CzfzarnI
+         svKlKRd5MLwOOAI8Xoswm1wkl0diKcDPOAvTV+K27AvkPV2FuxyoIdOxweGzZ9u5WSVA
+         pSR9vAb9Zb3tPIEfCwz32I+y0lJ1AbsriyX6iZwPt0bL+FYwHanFGbcXAmDt2WwZr4kp
+         3NupUN/bESUCGFmaA0qag57ffa2xU347lVWepo0zA73j6Yfqbf/XeggfeI0H/Zb1JCjd
+         VFVg==
+X-Gm-Message-State: AC+VfDyUPCB01aQ0UJ9EbHhGEBeXhMk4j8CeZ/WHIbS3T3Do2jkF90bu
+        lttHHPNR9o7HjenSqTPtxi8=
+X-Google-Smtp-Source: ACHHUZ66gQdcOK8mtfBUmJULdBxgu+TcSFVsM+yftcG0qy83CwljhEuG38NLPdTyq/cc1tpfFubXVA==
+X-Received: by 2002:a17:90a:db15:b0:260:de07:c663 with SMTP id g21-20020a17090adb1500b00260de07c663mr3061072pjv.27.1687363588637;
+        Wed, 21 Jun 2023 09:06:28 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:9bb2:be1e:34e3:7c45? ([2620:15c:211:201:9bb2:be1e:34e3:7c45])
-        by smtp.gmail.com with ESMTPSA id d5-20020a170902cec500b001b54d064a4bsm3629752plg.259.2023.06.21.08.47.11
+        by smtp.gmail.com with ESMTPSA id g14-20020a17090a290e00b0025e9d16f95bsm3615989pjd.28.2023.06.21.09.06.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Jun 2023 08:47:14 -0700 (PDT)
-Message-ID: <93834519-c945-94a7-f1f8-7bf85bf86dd5@acm.org>
-Date:   Wed, 21 Jun 2023 08:47:10 -0700
+        Wed, 21 Jun 2023 09:06:27 -0700 (PDT)
+Message-ID: <02a90139-a94a-ea1d-cc36-8b4b66a96bba@acm.org>
+Date:   Wed, 21 Jun 2023 09:06:24 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
@@ -67,22 +67,13 @@ On 6/21/23 09:01, Yu Kuai wrote:
 > debugfs entries leakage") use scsi_device_get(), however,
 > scsi_device_get() will also grab scsi module reference and scsi module
 > can't be removed.
-> 
-> It's reported that blktests can't unload scsi_debug after block/001:
-> 
-> blktests (master) # ./check block
-> block/001 (stress device hotplugging) [failed]
->       +++ /root/blktests/results/nodev/block/001.out.bad 2023-06-19
->        Running block/001
->        Stressing sd
->       +modprobe: FATAL: Module scsi_debug is in use.
-> 
-> Fix this problem by grabbing request_queue reference directly, so that
-> scsi host module can still be unloaded while request_queue will be
-> pinged by sg device.
 
-pinged -> pinned
+I just noticed that this patch has been posted on the linux-scsi mailing 
+list. If you plan to resend this patch, please send it to Jens and Cc 
+both linux-block and linux-scsi because this patch fixes a bug in a 
+patch that only exists in Jens' tree.
 
-Otherwise this patch looks good to me.
+Thanks,
 
 Bart.
+
