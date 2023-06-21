@@ -2,98 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD041EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 18:33:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 911EEEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 18:42:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231310AbjFUSdc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 14:33:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57398 "EHLO
+        id S230502AbjFUSmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 14:42:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230515AbjFUSdb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 14:33:31 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 757D1172C
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2023 11:33:30 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id 98e67ed59e1d1-25e836b733eso3295563a91.0
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2023 11:33:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1687372410; x=1689964410;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=R2S4gS2xsl31ZVbj5QmbK/bF8pdwruLrQ0Of/mUlG7M=;
-        b=hIQg4b6dBFhr8M1cB2wCKdDIS2BqrZFkxpeYC9/r/Fm4/PFRkhINjLnndweKacJ7IP
-         V8cig2c3cCv7oAvLssc4iBdvgeuMqkMdvBVCb2TTShovFY5Gf4Mfmm1haAIxoTVhcXAh
-         OT5ZmbC2Hz2Fbpo93tqT6X9u8qiANoR9cGeOw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687372410; x=1689964410;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=R2S4gS2xsl31ZVbj5QmbK/bF8pdwruLrQ0Of/mUlG7M=;
-        b=KB55SEAzg52ctgjLreN1M/4xjR8DWDi72HBNhD+VcuNfxYqQyFSCsYyZV/T8pZXIZO
-         EGc8esn148TaGBslvDF8zbjzMtWkhjbwW/qwa9ODy4bQiZ3/kbkXBNGgkRrnQUx4j4Ix
-         5bZi1J3FEw+kvtbO+Z+hI0Qm8M1RXU2I5WHpa8jIoeq4OyMrJ4pPtsoD1/iQFnQpLd3M
-         ZPHycPtCQF0B1jueuOy9JEd13WTCAtutHkWXAMc+0la0i4LrYlto20ldFtu45za/k5xM
-         2Qv1z2u0wMsALmqrJWROJSlh+3TivReq/VqI55oWAlA0pYVkkFaaKiWkJnec1EoQZSm9
-         etxQ==
-X-Gm-Message-State: AC+VfDzNeVCf/dXei/9oPOPmkizW5BuJ1P4hGpVyNRRNMsYiHNDGKJvd
-        PyG5Pvuzt/UJ0uM5AqiOKhI4kA==
-X-Google-Smtp-Source: ACHHUZ55HAlLqELh2ztTLy1Zy882zddDnIs2ffNwpxg18Goh1qFJ8fhZuoht6oim3Oz/H9kVw+iajg==
-X-Received: by 2002:a17:90a:69a2:b0:25b:f9ce:d8df with SMTP id s31-20020a17090a69a200b0025bf9ced8dfmr13250289pjj.8.1687372409966;
-        Wed, 21 Jun 2023 11:33:29 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id i18-20020a17090ad35200b0025e0bea16eesm3466415pjx.42.2023.06.21.11.33.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 11:33:29 -0700 (PDT)
-Date:   Wed, 21 Jun 2023 11:33:29 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Azeem Shaikh <azeemshaikh38@gmail.com>,
-        Krishna Gudipati <kgudipat@brocade.com>,
-        James Bottomley <JBottomley@parallels.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev
-Subject: Re: [PATCH 1/2] scsi: bfa: fix function pointer type mismatch for
- hcb_qe->cbfn
-Message-ID: <202306211133.DD89F45965@keescook>
+        with ESMTP id S229692AbjFUSmh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 14:42:37 -0400
+Received: from wout1-smtp.messagingengine.com (wout1-smtp.messagingengine.com [64.147.123.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91BC91A4;
+        Wed, 21 Jun 2023 11:42:36 -0700 (PDT)
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailout.west.internal (Postfix) with ESMTP id 8A3613200929;
+        Wed, 21 Jun 2023 14:42:32 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute6.internal (MEProxy); Wed, 21 Jun 2023 14:42:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:content-type:date:date:from:from:in-reply-to
+        :in-reply-to:message-id:mime-version:references:reply-to:sender
+        :subject:subject:to:to; s=fm1; t=1687372952; x=1687459352; bh=x/
+        qYbwCgeTODxK3PDO1cDsIUXATfTIrzjbo84n1In5g=; b=k3bxJ4Bk+KdKGDC6iP
+        NAMvzQN4/RjQw/6gXQhMqzp3gaCrd+g5mkQeJ0gDVZZTifuV0Hdf52eRgZC4qXuE
+        hrYOGRC8P643mobNjDowCTIkml2swgMRd0NrThRxyYR5/GtSJwe497vrGbSTr05y
+        hs6wqsACFyJunGhPtW9Af0TfzXQu+owv65gXQGkNqG9WK4jEuvd5wsq2OPlJnFTb
+        LJ4KkEZA6xMJIE0Qgxtfq+BsTF+0ZqdAff6kBwJ8RZsv+w+wFHMG/QGvMjb2Cs21
+        OFQ8CSqR+vZzvNHOoWPROoxrWnLo0oSab2S45UMQjM/3STigTVpGEXYDovBLq6pR
+        s/Dw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:content-type:date:date
+        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm2; t=1687372952; x=1687459352; bh=x/qYbwCgeTODx
+        K3PDO1cDsIUXATfTIrzjbo84n1In5g=; b=oGU8w+WKcCwQz6HGxT7sMFhklHoJj
+        IP6vYl1XK8kgKRzVyD9RlpGvgtw0tH844DbE6G4B4Wi9NvbrBDEV+a6JxPYveQLr
+        S3iiWW2Mxku5kpz5tPKOHtrFXYrSt3LGQrOYB8u3E6fNo4Ow0e6AFcxXmTm/TGcj
+        bejiTaVT3/UbyK2RAD2hwRMDeZbwqTuwfTrAauWumm59vI3Mw/5+9j1N0bR18WKc
+        oYXSS6M701zIAM94UK6TJj2ybF9LkljwOxI3KyoHmEvWq3sp/iMUwNOxgkVd/yb/
+        O3up9hgspAT0D5/p6OmVKe/pAqrnETWAMLyr9Cgp8PkIoJ1l0CcUUJmfA==
+X-ME-Sender: <xms:l0STZH-uHDgr2OXrQpezn7aiFPgaL0V7C0L7hgcbQB9tgBcO5spsiA>
+    <xme:l0STZDuCBvDbekgT0gGsFfEheXb9QGtOeXsXHMkTM2eptd9XTLkttGjpOqxT46oBl
+    Qev7N6ontvU3sSu7IY>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrgeefledgfedtucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:l0STZFDNijvV1q6MRBl5StnQxKfZBMgp0rh7qJKuVBOtKWOwajdg_g>
+    <xmx:l0STZDe3Mvl59w73s9CdqzxOZS2AnNMJbxSCW4ivAFRnTZB-fELxPQ>
+    <xmx:l0STZMMwK4BmzT_Zzo4DDaWL-EuHAnKvMoUWojvqpA7-_WzPVhk93w>
+    <xmx:mESTZDcR0RNFwRlwcx5tShZxVsq4xMT42cTUeMOQkkL7SkWsEhXslw>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 95EF5B60086; Wed, 21 Jun 2023 14:42:31 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.9.0-alpha0-499-gf27bbf33e2-fm-20230619.001-gf27bbf33
+Mime-Version: 1.0
+Message-Id: <336f2156-220f-47ff-be97-5a2a9c475372@app.fastmail.com>
+In-Reply-To: <202306211131.18885FF471@keescook>
 References: <20230616092233.3229414-1-arnd@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230616092233.3229414-1-arnd@kernel.org>
+ <20230616092233.3229414-2-arnd@kernel.org> <202306211131.18885FF471@keescook>
+Date:   Wed, 21 Jun 2023 20:42:10 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Kees Cook" <keescook@chromium.org>,
+        "Arnd Bergmann" <arnd@kernel.org>
+Cc:     "Anil Gurumurthy" <anil.gurumurthy@qlogic.com>,
+        "Sudarsana Kalluru" <sudarsana.kalluru@qlogic.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Azeem Shaikh" <azeemshaikh38@gmail.com>,
+        "Bjorn Helgaas" <bhelgaas@google.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] scsi: bfa: fix function pointer type mismatch for state
+ machines
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 16, 2023 at 11:22:09AM +0200, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> Some callback functions used here take a boolean argument, others
-> take a status argument. This breaks KCFI type checking, so clang
-> now warns about the function pointer cast:
-> 
-> drivers/scsi/bfa/bfad_bsg.c:2138:29: error: cast from 'void (*)(void *, enum bfa_status)' to 'bfa_cb_cbfn_t' (aka 'void (*)(void *, enum bfa_boolean)') converts to incompatible function type [-Werror,-Wcast-function-type-strict]
-> 
-> Assuming the code is actually correct here and the callers always match
-> the argument types of the callee, rework this to replace the explicit
-> cast with a union of the two pointer types. This does not change the
-> behavior of the code, so if something is actually broken here, a larger
-> rework may be necessary.
-> 
-> Fixes: 37ea0558b87ab ("[SCSI] bfa: Added support to collect and reset fcport stats")
-> Fixes: 3ec4f2c8bff25 ("[SCSI] bfa: Added support to configure QOS and collect stats.")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Wed, Jun 21, 2023, at 20:33, Kees Cook wrote:
+> On Fri, Jun 16, 2023 at 11:22:10AM +0200, Arnd Bergmann wrote:
+>> 
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> Thanks for all this! It's a lot of mechanical changes, but looks correct
+> to me. One nit below...
+>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
+>
+>> [...]
+>>  static void
+>> -bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event);
+>>  static void
+>> -bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event);
+>>  static void
+>> -bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event);
+>>  static void
+>> -bfad_sm_operational(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_operational(struct bfad_s *bfad, enum bfad_sm_event);
+>>  static void
+>> -bfad_sm_stopping(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_stopping(struct bfad_s *bfad, enum bfad_sm_event);
+>>  static void
+>> -bfad_sm_failed(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_failed(struct bfad_s *bfad, enum bfad_sm_event);
+>>  static void
+>> -bfad_sm_fcs_exit(struct bfad_s *bfad, enum bfad_sm_event event);
+>> +bfad_sm_fcs_exit(struct bfad_s *bfad, enum bfad_sm_event);
+>
+> This bit doesn't seem needed? i.e. why remove the prototype's argument
+> names?
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Right, my mistake. I went through a few revisions and first tried to
+change the prototypes here, but later changed them back. I missed
+this after I folded my intermediate steps back into a single patch.
 
--- 
-Kees Cook
+    Arnd
