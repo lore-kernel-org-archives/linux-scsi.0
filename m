@@ -2,127 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB1EBEB64DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jun 2023 18:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69EAAEB64D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jun 2023 03:00:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231133AbjFTSCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jun 2023 14:02:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46530 "EHLO
+        id S230005AbjFUDAx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jun 2023 23:00:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230415AbjFTSBx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2023 14:01:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 018961A8;
-        Tue, 20 Jun 2023 11:01:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B22E61359;
-        Tue, 20 Jun 2023 18:01:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA5AC433C8;
-        Tue, 20 Jun 2023 18:01:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1687284110;
-        bh=mLWzIkB9n6b+IgFjY2oTg9W4Iuvar0Rst5HENnLsKCU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1OHtgxwIb4ubKzxNV8Ad7uLkzco2kcDk0cCN7fqyXOg71+MYBgDqy5RrSz68BqwJm
-         tMhqCal5n1WhBt1r8en07b9aNXQe/G8x0fXr+rghqJrinhPT2VaDHyJZRjfFyHhiMV
-         InokhMPviNjv72pi4kAXnOUgCB7kdCmlHSwz7umQ=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-block@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        Ivan Orlov <ivan.orlov0322@gmail.com>,
-        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-        Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4/4] bsg: make bsg_class a static const structure
-Date:   Tue, 20 Jun 2023 20:01:33 +0200
-Message-ID: <20230620180129.645646-8-gregkh@linuxfoundation.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230620180129.645646-5-gregkh@linuxfoundation.org>
-References: <20230620180129.645646-5-gregkh@linuxfoundation.org>
+        with ESMTP id S229470AbjFUDAv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2023 23:00:51 -0400
+Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF860E7E;
+        Tue, 20 Jun 2023 20:00:50 -0700 (PDT)
+Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-77e2c42de06so176194439f.1;
+        Tue, 20 Jun 2023 20:00:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687316450; x=1689908450;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yk+CCzKPoEK1DNGd+x8aPT6YCsf+viHVDJzfkXgbxwM=;
+        b=VRgq37DNHaxMgTnBuph6L5V1HPRkptAq8ksZwGPsvwidL2Xvf6TPy/M9KpkfUx0ZsC
+         iSVwUvnf9FMnQU44mimALZbKUh/FkA6Jsdla2+Q6qxYjhqSsWceFrngsZzqVr6UieB1R
+         GxJOORpgtrvXvXhpPNn89+bku4KgEnmGzzBqERZLxnRTMEut3yw6nmxCzXvuFU1dvm+R
+         Bh+OVpfnwT09V5A72HMZ1lTeh2fXxlelsKk9YzP+yZ8qiYcHpOhZvr4Bgd3N/EA9zikm
+         Q2E71GNrAlIaD4WhIBvhbSB19T9dVLcwbOjIucMNtjJmOnPB9IqubxVhMD5m3gNiAOlM
+         s75Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687316450; x=1689908450;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=yk+CCzKPoEK1DNGd+x8aPT6YCsf+viHVDJzfkXgbxwM=;
+        b=CofBt2hm425r1r3Y4T7INGtdtXnIvfp+2BKSZ9SqRLp991W7CEOK9GzurCoRaEUV/5
+         38B3aXH+495Ceqmi8h1a6C1BpsXr6ndTPnq71OHYps+i7kYNBKB9cWnJrBP7PO+u7e1U
+         NACcsoadmk9UQsjnv3LdahcadRSHOWZDbZ7y/qLaO9FZdZBWuKNERTTbbbRt6y681I4l
+         NFPixB3wpQ9CA/Kw36L0oZJzzlLFIDrmpbdYp42B1UJDB6FiWb7fhh6/3W4A61J7fYea
+         oIBHXxRLNOZRVfYw2UN/3RGCSrHOK49kAH4DW9tbvZ1QF8cSqvihl9rPmwte1mKqEET4
+         0DRg==
+X-Gm-Message-State: AC+VfDyeaHNfU2wr0wGbIlO+TU+9PMDeApbDaDJQgukLp+qeOaXsAsvn
+        IRmORK/u/Kff4tZGwtI1XpukeoKnVoPfeQ==
+X-Google-Smtp-Source: ACHHUZ5tdpP+vH8ZxE1GLqqc/SHVOSQIlQ7gzYXMLVfVTpncwMOS3+mzoZuOl84qGUimIfjvOsU0LQ==
+X-Received: by 2002:a5e:8909:0:b0:777:b6cd:5a93 with SMTP id k9-20020a5e8909000000b00777b6cd5a93mr12837261ioj.2.1687316450166;
+        Tue, 20 Jun 2023 20:00:50 -0700 (PDT)
+Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
+        by smtp.gmail.com with ESMTPSA id x6-20020a029706000000b0042682dd951dsm1035008jai.87.2023.06.20.20.00.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Jun 2023 20:00:49 -0700 (PDT)
+From:   Azeem Shaikh <azeemshaikh38@gmail.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bodo Stroesser <bostroesser@gmail.com>
+Cc:     linux-hardening@vger.kernel.org,
+        Azeem Shaikh <azeemshaikh38@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] scsi: Replace strlcpy with strscpy
+Date:   Wed, 21 Jun 2023 03:00:31 +0000
+Message-ID: <20230621030033.3800351-1-azeemshaikh38@gmail.com>
+X-Mailer: git-send-email 2.41.0.162.gfafddb0af9-goog
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2239; i=gregkh@linuxfoundation.org; h=from:subject; bh=fnHpjCymBCx207w0QsVqcrjVrGR4TQ1EajvXa247ZDU=; b=owGbwMvMwCRo6H6F97bub03G02pJDCkTX1aZuMV9Uo01aZ9zpf7GpkNn1hzxWFobOfWfZH5jQ NSR0rWpHbEsDIJMDLJiiixftvEc3V9xSNHL0PY0zBxWJpAhDFycAjCRaBaG+bnKJ2VNc/cumjQl +2+I3YePdV8fT2JYcEh+u2jVrB7NfE/9AzG1PW7xTmbbAA==
-X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ivan Orlov <ivan.orlov0322@gmail.com>
+This patch series replaces strlcpy in the scsi subsystem wherever trivial
+replacement is possible, i.e return value from strlcpy is unused. The patches
+themselves are independent of each other and are included as a series for
+ease of review. 
 
-Now that the driver core allows for struct class to be in read-only
-memory, move the bsg_class structure to be declared at build time
-placing it into read-only memory, instead of having to be dynamically
-allocated at boot time.
+Azeem Shaikh (2):
+  scsi: Replace strlcpy with strscpy
+  scsi: target: tcmu: Replace strlcpy with strscpy
 
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-block@vger.kernel.org
-Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Ivan Orlov <ivan.orlov0322@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- block/bsg.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ drivers/scsi/ncr53c8xx.c          | 2 +-
+ drivers/target/target_core_user.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 7eca43f33d7f..e04fb075d604 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -39,7 +39,7 @@ static inline struct bsg_device *to_bsg_device(struct inode *inode)
- #define BSG_MAX_DEVS		32768
- 
- static DEFINE_IDA(bsg_minor_ida);
--static struct class *bsg_class;
-+static const struct class bsg_class;
- static int bsg_major;
- 
- static unsigned int bsg_timeout(struct bsg_device *bd, struct sg_io_v4 *hdr)
-@@ -206,7 +206,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
- 		return ERR_PTR(ret);
- 	}
- 	bd->device.devt = MKDEV(bsg_major, ret);
--	bd->device.class = bsg_class;
-+	bd->device.class = &bsg_class;
- 	bd->device.parent = parent;
- 	bd->device.release = bsg_device_release;
- 	dev_set_name(&bd->device, "%s", name);
-@@ -240,15 +240,19 @@ static char *bsg_devnode(const struct device *dev, umode_t *mode)
- 	return kasprintf(GFP_KERNEL, "bsg/%s", dev_name(dev));
- }
- 
-+static const struct class bsg_class = {
-+	.name		= "bsg",
-+	.devnode	= bsg_devnode,
-+};
-+
- static int __init bsg_init(void)
- {
- 	dev_t devid;
- 	int ret;
- 
--	bsg_class = class_create("bsg");
--	if (IS_ERR(bsg_class))
--		return PTR_ERR(bsg_class);
--	bsg_class->devnode = bsg_devnode;
-+	ret = class_register(&bsg_class);
-+	if (ret)
-+		return ret;
- 
- 	ret = alloc_chrdev_region(&devid, 0, BSG_MAX_DEVS, "bsg");
- 	if (ret)
-@@ -260,7 +264,7 @@ static int __init bsg_init(void)
- 	return 0;
- 
- destroy_bsg_class:
--	class_destroy(bsg_class);
-+	class_unregister(&bsg_class);
- 	return ret;
- }
- 
 -- 
-2.41.0
+2.41.0.162.gfafddb0af9-goog
 
