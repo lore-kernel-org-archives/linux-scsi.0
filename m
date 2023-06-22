@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D25D9EB64D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jun 2023 01:29:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B76EB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jun 2023 01:31:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229661AbjFVB3g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 21:29:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47018 "EHLO
+        id S229638AbjFVBbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 21:31:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjFVB3f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 21:29:35 -0400
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A30A91BD7
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2023 18:29:33 -0700 (PDT)
+        with ESMTP id S229657AbjFVBbA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 21:31:00 -0400
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B467D1BD5
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2023 18:30:58 -0700 (PDT)
 Received: from submission (posteo.de [185.67.36.169]) 
-        by mout01.posteo.de (Postfix) with ESMTPS id 4EC1224002E
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Jun 2023 03:29:31 +0200 (CEST)
+        by mout02.posteo.de (Postfix) with ESMTPS id 6684E240103
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jun 2023 03:30:57 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-        t=1687397371; bh=D4Csd5WfGqhnig4L4X+fLUt56k9ygxpxQWLQs8PeNuI=;
+        t=1687397457; bh=09XlL1/vCcPG0ljTp3PwBDMDDpta1CZKydZBQ7XpElA=;
         h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:
          Content-Transfer-Encoding:From;
-        b=mKMXtX4rHbJ8BeDf4HadpoLOj/M7gHT/VtkFQRJX1+PCs1gWNlDtsV4r4y+Z7fLww
-         /TzWkBg/APDT22KiYMTJ2r8Q7ATdK2i89v1M72QYEU8prnFyBQe2IzhpZCrZTf2JO7
-         gBDTbbSBRx75z4qRaXkjbh0vTmJG+Z453C5FojiNl3d4xBwSyvx9xiATpqSxaUDrHE
-         7ElAgfla+K/MiV1LPWYJXBC0kRCcTKpwzptmBAxhXJ/HN3ayLSM/QyN8bRAhGEjABA
-         PpdDayrGpIJ+huAIyvbwulvDTX+5w/eQSDfsWUzIbPxxdK64AJ3yvblMRukWR21RUp
-         6BcPj8hL+LaSQ==
+        b=lORN+8euUeR65leU70KFB+GzuyC2mG9G1lWZj6VxVqQrqjtPfe7uox1tDXML8/kLm
+         MqYL76DjhUw5q64r9OcfvbYB7u5lKRVuef17z4zdPW+6l3UtNWSKD9N8MX3azYjI7z
+         McsiG5Ho9HLWEUfpkEBTa0qs8L4KHoQ/gTyt7AqiSx4oNiMFIMe6sEn/xsqZItTd7y
+         NUqwLKpvf8dBH8zsB6c3y4Zv3BOfLq3PEX0E7j4UY8HnA7Pn1Wb57nfwLJzKSlZmA4
+         xJz7rYQ9Pa83IwrRuWYg63QKSjaBNU/PZj48dG0g0lTnRpRc/EDN9rtE/pQNHs9/U+
+         sKxIKVftt+uTA==
 Received: from customer (localhost [127.0.0.1])
-        by submission (posteo.de) with ESMTPSA id 4QmjTH2RS3z6tvh;
-        Thu, 22 Jun 2023 03:29:23 +0200 (CEST)
+        by submission (posteo.de) with ESMTPSA id 4QmjVy0jmWz6tx4;
+        Thu, 22 Jun 2023 03:30:49 +0200 (CEST)
 From:   Yueh-Shun Li <shamrocklee@posteo.net>
 To:     Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
         Tony Nguyen <anthony.l.nguyen@intel.com>,
@@ -44,42 +44,39 @@ Cc:     linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
         mptcp@lists.linux.dev, linux-kselftest@vger.kernel.org,
         linux-kernel@vger.kernel.org, Yueh-Shun Li <shamrocklee@posteo.net>
-Subject: [PATCH 0/8] Fix comment typos about "transmit"
-Date:   Thu, 22 Jun 2023 01:26:21 +0000
-Message-Id: <20230622012627.15050-1-shamrocklee@posteo.net>
+Subject: [PATCH 1/8] RDMA/rxe: fix comment typo
+Date:   Thu, 22 Jun 2023 01:26:23 +0000
+Message-Id: <20230622012627.15050-2-shamrocklee@posteo.net>
+In-Reply-To: <20230622012627.15050-1-shamrocklee@posteo.net>
+References: <20230622012627.15050-1-shamrocklee@posteo.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix typos about "transmit" missing the first "s"
-found by searching with keyword "tram" in the first 7
-patches.
+Spell "retransmitting" properly.
 
-Add related patterns to "scripts/spelling.txt" in the
-last patch.
+Found by searching for keyword "tranm".
 
-Yueh-Shun Li (8):
-  RDMA/rxe: fix comment typo
-  i40e, xsk: fix comment typo
-  zd1211rw: fix comment typo
-  scsi: fix comment typo
-  tcp: fix comment typo
-  net/tls: fix comment typo
-  selftests: mptcp: connect: fix comment typo
-  scripts/spelling.txt: Add "transmit" patterns
+Signed-off-by: Yueh-Shun Li <shamrocklee@posteo.net>
+---
+ drivers/infiniband/sw/rxe/rxe_verbs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/infiniband/sw/rxe/rxe_verbs.h              |  2 +-
- drivers/net/ethernet/intel/i40e/i40e_xsk.c         |  2 +-
- drivers/net/wireless/zydas/zd1211rw/zd_usb.c       |  2 +-
- drivers/scsi/isci/scu_task_context.h               |  2 +-
- net/ipv4/tcp_input.c                               |  2 +-
- net/tls/tls_device_fallback.c                      |  2 +-
- scripts/spelling.txt                               | 11 +++++++++++
- tools/testing/selftests/net/mptcp/mptcp_connect.sh |  2 +-
- 8 files changed, 18 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/infiniband/sw/rxe/rxe_verbs.h b/drivers/infiniband/sw/rxe/rxe_verbs.h
+index 26a20f088692..aca0f4c7a5cd 100644
+--- a/drivers/infiniband/sw/rxe/rxe_verbs.h
++++ b/drivers/infiniband/sw/rxe/rxe_verbs.h
+@@ -237,7 +237,7 @@ struct rxe_qp {
+ 	atomic_t		skb_out;
+ 	int			need_req_skb;
+ 
+-	/* Timer for retranmitting packet when ACKs have been lost. RC
++	/* Timer for retransmitting packet when ACKs have been lost. RC
+ 	 * only. The requester sets it when it is not already
+ 	 * started. The responder resets it whenever an ack is
+ 	 * received.
 -- 
 2.38.1
 
