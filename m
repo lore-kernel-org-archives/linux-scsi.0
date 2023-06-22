@@ -2,66 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE716EB64D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jun 2023 01:27:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25B33EB64DC
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jun 2023 01:27:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230007AbjFVB06 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jun 2023 21:26:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45080 "EHLO
+        id S229854AbjFVB1F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jun 2023 21:27:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229804AbjFVB0s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 21:26:48 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E34581BDF;
-        Wed, 21 Jun 2023 18:26:47 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35LLcM6u014079;
-        Thu, 22 Jun 2023 01:26:38 GMT
+        with ESMTP id S229796AbjFVB1C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2023 21:27:02 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855881BD4;
+        Wed, 21 Jun 2023 18:27:01 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35LKHFmL007951;
+        Thu, 22 Jun 2023 01:26:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=cSSXJvzwbsP7uvbiIhgg/wXMRZzlf7HkionQCzwDMMc=;
- b=VXI9CBi/3GMTuGF15duSZRXzzV5TeZDsfFCCUguhyiJuX2XYFLYk3+0Jey7LbG2D0GxW
- HACKhwQFR1GjOek+jQSQRkZIa6sv2o4td6tv8x/GfZ60RacGLhSDSsHsHPvpnxkrF8CU
- etZ6UfzB6T46iB+UhBorltf3ZxGNNtQGwTqb23PdxNPXXy5eyHM4zGHNDCyv//IwB9a3
- 55X4pk02IgNy2C3ky84bkq+mgEIIdibhYOrIhLDKQhysjH3i/6MLZkFAfwof1cf9LLy9
- u/b3DOWpkyzq2tQ25c7DwTmkt7KWenhA2L8XBUll2vlRAvQdiLrrMlLfjsyVDxxkc01K Ew== 
+ bh=jX27C/oUUJtUmxJEH6sxeuA+0J19a7Fvbg033jVIPA0=;
+ b=K/hqrwv1o/gFrefS58Fd5m5hdbrCmIWhQsb0AmMDlrmIBrp/4X6mHt6X7OkrhgDJq3jh
+ l1aDJ+xeKBQhyUioxasoA2YCj++QNIL/9Se/uTSpeAmot7fv5DCj90/6v/GeJmmsBTd+
+ dTG0BKFLIpyGBtgyiiJL0EYqpevFUP7iomeNYETKbWbHsCE+1kdjZMnpWFSEUqMy6AuL
+ L2GJz/l63bVUpWjjpecQlSERRf8Nl11LVoTfeiG7+/fcc24eV7wuqJY/s1SmAg6h1A+0
+ u0pbFhQClnsixkM6OgZzCHdGqHPX3OZPmixmEugEz9I69BDQ+urGcRn+iDJE4l1aVMJq sg== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3r93e1gs4u-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3r93m3rw3m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Jun 2023 01:26:38 +0000
+        Thu, 22 Jun 2023 01:26:35 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35M0pi6g038617;
-        Thu, 22 Jun 2023 01:26:37 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35M0f7oW038610;
+        Thu, 22 Jun 2023 01:26:35 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3r9396tj09-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3r9396thya-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Jun 2023 01:26:37 +0000
+        Thu, 22 Jun 2023 01:26:34 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 35M1QXb7038374;
-        Thu, 22 Jun 2023 01:26:36 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 35M1QXav038374;
+        Thu, 22 Jun 2023 01:26:34 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3r9396thxp-9;
-        Thu, 22 Jun 2023 01:26:36 +0000
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3r9396thxp-4;
+        Thu, 22 Jun 2023 01:26:34 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        stanley.chu@mediatek.com, alice.chao@mediatek.com,
-        naomi.chu@mediatek.com, chun-hung.wu@mediatek.com,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com
-Subject: Re: [PATCH v1 0/4] ufs: Introduce MCQ Quirks for MediaTek host
-Date:   Wed, 21 Jun 2023 21:26:27 -0400
-Message-Id: <168739587248.247655.6838498435493216526.b4-ty@oracle.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] dt-bindings: ufs: samsung,exynos: drop unneeded quotes
+Date:   Wed, 21 Jun 2023 21:26:22 -0400
+Message-Id: <168739587243.247655.8617428148720225678.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230612085817.12275-1-powen.kao@mediatek.com>
-References: <20230612085817.12275-1-powen.kao@mediatek.com>
+In-Reply-To: <20230609140651.64488-1-krzysztof.kozlowski@linaro.org>
+References: <20230609140651.64488-1-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -69,41 +67,26 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-06-21_14,2023-06-16_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 suspectscore=0
- adultscore=0 mlxscore=0 mlxlogscore=828 malwarescore=0 phishscore=0
+ adultscore=0 mlxscore=0 mlxlogscore=756 malwarescore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2305260000
  definitions=main-2306220009
-X-Proofpoint-GUID: JDCv5bixHWDoYLjfTImxiueTaAZT7aUr
-X-Proofpoint-ORIG-GUID: JDCv5bixHWDoYLjfTImxiueTaAZT7aUr
+X-Proofpoint-GUID: Alecm8faq3WsiG8DyeQK7GyGLQt9i-66
+X-Proofpoint-ORIG-GUID: Alecm8faq3WsiG8DyeQK7GyGLQt9i-66
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 12 Jun 2023 16:58:08 +0800, Po-Wen Kao wrote:
+On Fri, 09 Jun 2023 16:06:51 +0200, Krzysztof Kozlowski wrote:
 
-> v1
-> Introduce quirks for non-standard part of UFSHCI and address Bart's comment
-> from last patch
-> https://lore.kernel.org/all/20230328103801.11198-1-powen.kao@mediatek.com/
+> Cleanup bindings dropping unneeded quotes. Once all these are fixed,
+> checking for this can be enabled in yamllint.
 > 
 > 
-> Po-Wen Kao (4):
->   scsi: ufs: core: Add host quirk UFSHCD_QUIRK_MCQ_BROKEN_INTR
->   scsi: ufs: core: Add host quirk UFSHCD_QUIRK_MCQ_BROKEN_RTC
->   scsi: ufs: ufs-mediatek: Set UFSHCD_QUIRK_MCQ_BROKEN_INTR quirk
->   scsi: ufs: ufs-mediatek: Set UFSHCD_QUIRK_MCQ_BROKEN_RTC quirk
-> 
-> [...]
 
 Applied to 6.5/scsi-queue, thanks!
 
-[1/4] scsi: ufs: core: Add host quirk UFSHCD_QUIRK_MCQ_BROKEN_INTR
-      https://git.kernel.org/mkp/scsi/c/c4ad4f2e6646
-[2/4] scsi: ufs: core: Add host quirk UFSHCD_QUIRK_MCQ_BROKEN_RTC
-      https://git.kernel.org/mkp/scsi/c/aa9d5d0015a8
-[3/4] scsi: ufs: ufs-mediatek: Set UFSHCD_QUIRK_MCQ_BROKEN_INTR quirk
-      https://git.kernel.org/mkp/scsi/c/95cd364ccc97
-[4/4] scsi: ufs: ufs-mediatek: Set UFSHCD_QUIRK_MCQ_BROKEN_RTC quirk
-      https://git.kernel.org/mkp/scsi/c/3c9b49be6666
+[1/1] dt-bindings: ufs: samsung,exynos: drop unneeded quotes
+      https://git.kernel.org/mkp/scsi/c/e246514ae698
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
