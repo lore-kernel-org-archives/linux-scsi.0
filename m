@@ -2,70 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CC66EB64DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 10:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5401BC0015E
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 11:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232083AbjFWKhu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Jun 2023 06:37:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42452 "EHLO
+        id S231490AbjFWLaS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Jun 2023 07:30:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230516AbjFWKhp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 06:37:45 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71E75273B;
-        Fri, 23 Jun 2023 03:37:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Lk442Og9qeSuSAMtnFnHXSps46eB9vX+oT9sJwzVZUI=;
-        t=1687516628; x=1688726228; b=rq5bX+DOoTX2QnoAPE1GARiXl9V3H5DCitMRncFeT4zT8+f
-        3VhnaJWnATEKIo4071AgtZ1OOWRrjXBVOXchZufuPAZ/HwbXq07yUYOuInhTc8Ax4nnIq8r/HKqMc
-        nIw+lMkNqbsIsw2f4Iebh/fIZ1/YAOHemBM4Wf0mWrvSJ05zAFWu1HzBTsv0cvX8ssc1nW6fEqyo/
-        l8/SkCW8KuKeBQX9ovadC+v0wKw/vXsH2o0oq/Mfx6wforJlchNlwJTPsKsfW3pyNpmMYYJKhuatx
-        ySNNYDa6eCD+2WK2AjUQnOhXV4kRYrZI/sO87WfjQ7DSgYVABHgqZeVM5g+X9JXw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qCe9m-00FgPV-1a;
-        Fri, 23 Jun 2023 12:36:46 +0200
-Message-ID: <19d17ee302892f48f9b6110ec6c2ccccf0c1b9ef.camel@sipsolutions.net>
-Subject: Re: [PATCH 0/8] Fix comment typos about "transmit"
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Yueh-Shun Li <shamrocklee@posteo.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     jgg@ziepe.ca, leon@kernel.org, anthony.l.nguyen@intel.com,
-        davem@davemloft.net, kvalo@kernel.org, jejb@linux.ibm.com,
-        pabeni@redhat.com, apw@canonical.com, joe@perches.com,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        mptcp@lists.linux.dev, linux-kselftest@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Fri, 23 Jun 2023 12:36:44 +0200
-In-Reply-To: <50a88781b9e2a80588438c315167bbec@posteo.net>
-References: <20230622012627.15050-1-shamrocklee@posteo.net>
-         <168748862634.32034.1394302200661050543.git-patchwork-notify@kernel.org>
-         <50a88781b9e2a80588438c315167bbec@posteo.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
+        with ESMTP id S230081AbjFWLaQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 07:30:16 -0400
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D24E2683
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 04:30:15 -0700 (PDT)
+Received: by mail-ej1-x634.google.com with SMTP id a640c23a62f3a-9896216338cso45189466b.3
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 04:30:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1687519814; x=1690111814;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=JUTP9KVdzCwXWEwQEK/WejGY1+tnzW8te7FkC1dLoUk=;
+        b=Ryr1CDxaKF6klmfgzieOQd0RUv82RS6cdmB4lzrb2CxCHmGN58GhreizxfG5yU/BRR
+         PnVaoMBV54RF4gSMlQWwEuBqiN7sU84FCjWpqTav3GPGNxvGtrveqtU7qZ85URuvR0Lg
+         oY6f25j+rOfWqd3Yqab+/D84yb2Vr9s4LEb2zDOUp5Zl92YpmAHJLDOR8StSU4fyZqBN
+         KYV7JsgR+mlmKhV5Dr+LHDtJikqPcnXoizq9+Z7wE4ObxYjmj1DHtOqkJHZD0Z8lxVSp
+         Eyavsq0gisJd8fGV6IuTNw/V/H0m/vNf/PouoavbQxwW0Sb9RLW+MeIo+MsOSkllodUL
+         c88Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687519814; x=1690111814;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=JUTP9KVdzCwXWEwQEK/WejGY1+tnzW8te7FkC1dLoUk=;
+        b=jvtbH992I8y+wHuVrNqGO8ZUZd5o9uwjoUlnXtgTMr0771hXLjju1NK5IQTlSQCpF1
+         hvCBxzw/dNluMptuqdCbUvw6omKeDwhUwC86oG7QmKmz+Px372k6frbdo71hLkIVtzhT
+         85+3sG1YXegy+dHPQqP2bwTE3Gl0cR1DrDOo9P/hO/1hYQRiG1oK7U+AIxNbVj4dv02N
+         5Lq57HcrnFQTtRxKH7PjA0E1JCrN0pI/6ibsnrIHpB5ilLczZ8G808NHKqH5f5ESlcaK
+         FcIpDBRibBGZt0KTZxSwl45OWVgEm5EblpGEhzDxLu4MJhvCEvURQJF52+egmG1Hv94h
+         QdzA==
+X-Gm-Message-State: AC+VfDyv3lZPeFFCAYReMJ11UKvR4w1gUNyKrXGFDGNXTfNPSkGdKcY+
+        W2jNDANClPpN5W2h8Pac3S3xeQ==
+X-Google-Smtp-Source: ACHHUZ4be4+kKq0mciVEYRYbXmHEBQgeyuORUYXwDn/q+SYYNMtYOzdSeAFZMWMlYLVGaLxRvHATwA==
+X-Received: by 2002:a17:907:1c9c:b0:960:d9d:ffb5 with SMTP id nb28-20020a1709071c9c00b009600d9dffb5mr21446151ejc.41.1687519813731;
+        Fri, 23 Jun 2023 04:30:13 -0700 (PDT)
+Received: from hackbox.lan ([62.231.110.100])
+        by smtp.gmail.com with ESMTPSA id z17-20020a1709063ad100b009821ce1ea33sm5908033ejd.7.2023.06.23.04.30.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jun 2023 04:30:13 -0700 (PDT)
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Manivannan Sadhasivam <mani@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/5] scsi: dt-bindings: ufs: qcom: Some fixes to clear all dtbs_check warnings
+Date:   Fri, 23 Jun 2023 14:30:04 +0300
+Message-Id: <20230623113009.2512206-1-abel.vesa@linaro.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2023-06-23 at 08:51 +0000, Yueh-Shun Li wrote:
->=20
-> >   - [3/8] zd1211rw: fix comment typo
-> >     (no matching commit)
->=20
-> Should I rebase the local branch onto netdev/net-next/main
-> and send the "no matching commit" patches again?
->=20
+These are all the warnings left to fix for qcom,ufs schema.
 
-The wireless one is on our radar, no need to resend.
+Abel Vesa (5):
+  scsi: dt-bindings: ufs: qcom: Fix ICE phandle
+  scsi: dt-bindings: ufs: qcom: Add compatible for sm6115 and sm6125
+  scsi: dt-bindings: ufs: qcom: Add compatible for sc8180x
+  scsi: dt-bindings: ufs: qcom: Fix sm8450 clocks
+  scsi: dt-bindings: ufs: qcom: Fix warning for sdm845 by adding
+    reg-names
 
-But: https://lore.kernel.org/r/87y1kncuh4.fsf@kernel.org
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     | 49 ++++++++++++++++---
+ 1 file changed, 43 insertions(+), 6 deletions(-)
 
-johannes
+-- 
+2.34.1
+
