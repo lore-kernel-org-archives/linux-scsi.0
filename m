@@ -2,120 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2148EB64D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 07:31:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7577CEB64D7
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 08:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230458AbjFWHbH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Jun 2023 03:31:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60478 "EHLO
+        id S231835AbjFWIvt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Jun 2023 04:51:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230091AbjFWHbG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 03:31:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 566F32128
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 00:31:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D7DB66198E
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 07:30:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D35D0C433C0;
-        Fri, 23 Jun 2023 07:30:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687505459;
-        bh=DRXD/f6g0JWBc8hYMCFtLqO8imOHceLXOWDtWDSAFuU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=H3oJVFGJKhIp0fozg+9u5P3LjSNKKgYOjuf7cxsoc8OsIa8wIQoB/GiCGfFi79oVG
-         FnnEKROz37GyriPPVE0TiskTG0lgnVVQwtXGBiwt+j/CZ8gqoThEt1v8HaSOJ5qlFX
-         S0cwXCaWRt27b771DwJnWIxMQXM8/TAL1lm15AnlSPeGFZe/zkHM2+Rsw+NJUp0cqJ
-         WPJMiYHbRst/nN0PuGSQSOloT0njLTMCSHcZ3ZJroH7X8hcgVGsFkPhVZnWI1e2btg
-         g5UCZiFtQHr8Yu0t0Er8aA6Fe3oPeR9oQx97p/+mvzQbM+eRHrit/XqTQGqKs51OUO
-         SsRRQXLslkL4w==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v2] scsi: Simplify scsi_cdl_check_cmd()
-Date:   Fri, 23 Jun 2023 16:30:57 +0900
-Message-Id: <20230623073057.816199-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S231841AbjFWIvr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 04:51:47 -0400
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7B9B172C
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 01:51:44 -0700 (PDT)
+Received: from submission (posteo.de [185.67.36.169]) 
+        by mout01.posteo.de (Postfix) with ESMTPS id 7BDC8240028
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 10:51:42 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
+        t=1687510302; bh=B1c7aclKQlYnbAu4S2v+VVqp1E6daoHU8MjvPcNrGNA=;
+        h=MIME-Version:Content-Transfer-Encoding:Date:From:To:Cc:Subject:
+         Message-ID:From;
+        b=g/FFazuPoHXK0hRGWywrWG3suHsNGWkJB0tV+CHSY+gdr7TjUDRy7KN1VoyTCfnq8
+         1ypKDAbljvq19ZK6620XsQ1i5hPA3HdwyGEDf3YhJOXQ34v8zCBZfLPMZb6zKOfpVZ
+         dSQVS65rds9WP31vcLE6imHgkknbx7ZrCk3gHFhQSXxnGgLpUNmT1zmLom2dVAX1u/
+         9INrxqC0tJIMaVAiDcpNoj4XQqBGV5Odt+O9t1TLgwbpnMTi+mhI04yVrHy4ohKSE2
+         7UWn8h3J10tUu8s0xUHXYGPzkFD57BOLQfggmKBqXj4gtbL/QcXthHPvBNA4gmXmPL
+         p+BcoUxt7Z13g==
+Received: from customer (localhost [127.0.0.1])
+        by submission (posteo.de) with ESMTPSA id 4QnWF755Jkz9rxQ;
+        Fri, 23 Jun 2023 10:51:39 +0200 (CEST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 23 Jun 2023 08:51:39 +0000
+From:   Yueh-Shun Li <shamrocklee@posteo.net>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     jgg@ziepe.ca, leon@kernel.org, anthony.l.nguyen@intel.com,
+        davem@davemloft.net, kvalo@kernel.org, jejb@linux.ibm.com,
+        pabeni@redhat.com, apw@canonical.com, joe@perches.com,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+        mptcp@lists.linux.dev, linux-kselftest@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/8] Fix comment typos about "transmit"
+In-Reply-To: <168748862634.32034.1394302200661050543.git-patchwork-notify@kernel.org>
+References: <20230622012627.15050-1-shamrocklee@posteo.net>
+ <168748862634.32034.1394302200661050543.git-patchwork-notify@kernel.org>
+Message-ID: <50a88781b9e2a80588438c315167bbec@posteo.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reading the 800+ pages of SPC often leads to a brain shutdown and to
-less than ideal code... This resulted in the checks of the rwcdlp and
-cdlp fields in scsi_cdl_check_cmd() to have identical if-else branches.
+Dear Maintainer,
 
-Replace this with a comment describing the cases we are interested in
-and replace the if-else code block with a simple test of the cdlp field
-that is used as the function return value.
+On 23.06.2023 04:50, patchwork-bot+netdevbpf@kernel.org wrote:
+> Hello:
+> 
+> This series was applied to netdev/net-next.git (main)
+> by Jakub Kicinski <kuba@kernel.org>:
+> 
+> On Thu, 22 Jun 2023 01:26:21 +0000 you wrote:
+>> Fix typos about "transmit" missing the first "s"
+>> found by searching with keyword "tram" in the first 7
+>> patches.
+>> 
+>> Add related patterns to "scripts/spelling.txt" in the
+>> last patch.
+>> 
+>> [...]
 
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Julia Lawall <julia.lawall@inria.fr>
-Closes: https://lore.kernel.org/r/202306221657.BJHEADkz-lkp@intel.com/
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
-Changes from v1:
- * Reword the comment to follow SPC wording for "One_command parameter
-   data format"
+Thanks for merging!
 
- drivers/scsi/scsi.c | 37 ++++++++++++++-----------------------
- 1 file changed, 14 insertions(+), 23 deletions(-)
+> Here is the summary with links:
+>   - [1/8] RDMA/rxe: fix comment typo
+>     (no matching commit)
+>   - [2/8] i40e, xsk: fix comment typo
+>     https://git.kernel.org/netdev/net-next/c/b028813ac973
+>   - [3/8] zd1211rw: fix comment typo
+>     (no matching commit)
+>   - [4/8] scsi: fix comment typo
+>     (no matching commit)
+>   - [5/8] tcp: fix comment typo
+>     https://git.kernel.org/netdev/net-next/c/304b1875ba02
+>   - [6/8] net/tls: fix comment typo
+>     https://git.kernel.org/netdev/net-next/c/a0e128ef88e4
+>   - [7/8] selftests: mptcp: connect: fix comment typo
+>     (no matching commit)
+>   - [8/8] scripts/spelling.txt: Add "transmit" patterns
+>     (no matching commit)
+> 
+> You are awesome, thank you!
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index c4bf99a842f3..d0911bc28663 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -586,31 +586,22 @@ static bool scsi_cdl_check_cmd(struct scsi_device *sdev, u8 opcode, u16 sa,
- 	if ((buf[1] & 0x03) != 0x03)
- 		return false;
- 
--	/* See SPC-6, one command format of REPORT SUPPORTED OPERATION CODES */
-+	/*
-+	 * See SPC-6, One_command parameter data format for
-+	 * REPORT SUPPORTED OPERATION CODES. We have the following cases
-+	 * depending on rwcdlp (buf[0] & 0x01) value:
-+	 *  - rwcdlp == 0: then cdlp indicates support for the A mode page when
-+	 *		   it is equal to 1 and for the B mode page when it is
-+	 *		   equal to 2.
-+	 *  - rwcdlp == 1: then cdlp indicates support for the T2A mode page
-+	 *		   when it is equal to 1 and for the T2B mode page when
-+	 *		   it is equal to 2.
-+	 * Overall, to detect support for command duration limits, we only need
-+	 * to check that cdlp is 1 or 2.
-+	 */
- 	cdlp = (buf[1] & 0x18) >> 3;
--	if (buf[0] & 0x01) {
--		/* rwcdlp == 1 */
--		switch (cdlp) {
--		case 0x01:
--			/* T2A page */
--			return true;
--		case 0x02:
--			/* T2B page */
--			return true;
--		}
--	} else {
--		/* rwcdlp == 0 */
--		switch (cdlp) {
--		case 0x01:
--			/* A page */
--			return true;
--		case 0x02:
--			/* B page */
--			return true;
--		}
--	}
- 
--	return false;
-+	return cdlp == 0x01 || cdlp == 0x02;
- }
- 
- /**
--- 
-2.40.1
+Should I rebase the local branch onto netdev/net-next/main
+and send the "no matching commit" patches again?
 
+Best regards,
+
+Shamrock
