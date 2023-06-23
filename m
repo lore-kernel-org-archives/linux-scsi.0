@@ -2,226 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 591E6C001B1
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 11:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D343BC001DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 12:21:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231467AbjFWLq1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Jun 2023 07:46:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37812 "EHLO
+        id S230407AbjFWMVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Jun 2023 08:21:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231346AbjFWLqI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 07:46:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CE4A26A1
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 04:45:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687520718;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fDJq6YgohECWMLRvYSaMvRBz5Nf3qARzDo2+NfjppDk=;
-        b=KtSui72xLeL1Lmro/qTPLzeC90bh39SbUZK8uD5cCSdrqNPSPh1hLlkrRSFimLLjIOuJPM
-        XP7EWw7r8rzRNrhrdegALU18vmDnbU7OssN9ot9n1Hd1/MpBnBjZHwezFfpcD60Xm2Q5fs
-        70PWhrajtQrMx75heeQdolZx8LFNC7w=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-22-hRm2Fq0zPDmOXsotSEqhiA-1; Fri, 23 Jun 2023 07:45:14 -0400
-X-MC-Unique: hRm2Fq0zPDmOXsotSEqhiA-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6034588D7F7;
-        Fri, 23 Jun 2023 11:45:11 +0000 (UTC)
-Received: from warthog.procyon.org.com (unknown [10.42.28.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E750E492C13;
-        Fri, 23 Jun 2023 11:45:08 +0000 (UTC)
-From:   David Howells <dhowells@redhat.com>
-To:     netdev@vger.kernel.org
-Cc:     David Howells <dhowells@redhat.com>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
-        David Ahern <dsahern@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Maurizio Lombardi <mlombard@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH net-next v4 11/15] iscsi: Use sendmsg(MSG_SPLICE_PAGES) rather than sendpage
-Date:   Fri, 23 Jun 2023 12:44:21 +0100
-Message-ID: <20230623114425.2150536-12-dhowells@redhat.com>
-In-Reply-To: <20230623114425.2150536-1-dhowells@redhat.com>
-References: <20230623114425.2150536-1-dhowells@redhat.com>
-MIME-Version: 1.0
+        with ESMTP id S230355AbjFWMV2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 08:21:28 -0400
+Received: from mail-il1-f178.google.com (mail-il1-f178.google.com [209.85.166.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E5821BFA;
+        Fri, 23 Jun 2023 05:21:27 -0700 (PDT)
+Received: by mail-il1-f178.google.com with SMTP id e9e14a558f8ab-341ff6251f2so2056965ab.0;
+        Fri, 23 Jun 2023 05:21:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687522887; x=1690114887;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=yQSdFJAVTnk3qxJjfylhV8RKjwAoWiB8oCEQSQ64LXw=;
+        b=XBDdiwJc+DcefDw4HrP2TtB9UfY7/Wdb6EqGuvfKi1HqwYvF8aM1cONX4jaS+Aa5MB
+         MX0r3MwEiwgYTrHc827SEihECQ4t1e24t1GHV44e1wEZx/1h8bMTIru2MTmPgU+p5qt9
+         XzaP9yW0iFChDM2KnJo4306E9KCESZMhK9dFNTFMUsOIOUfsFKA9Znr6ppHZucOJy9yK
+         l2ChXlpU41tz2Edw3mH0t+PJuGi4dbc4u55tri9+MyHfnJJZRYHEX//IS++UDba8k8qp
+         ith83KATfse3RJRN6cJFRoDMrkkH4S3z7miRuXctwki3VYQJQVIZmFiX1LBPNYEb8Qqa
+         qzzA==
+X-Gm-Message-State: AC+VfDzwKYi3gRuspGPNJDWsJB/eEsYDbe8IkdaT17heYbf3xPv7u/Dd
+        3QlILtY4rVbTqaIASn4jpA==
+X-Google-Smtp-Source: ACHHUZ6PvkiRbelDYtDOJYRBqil07WdG7hR4Lr/TlrWUoohyLS1Z2dU2OmjmbHVB8LqMKTR0Hg67nQ==
+X-Received: by 2002:a92:c143:0:b0:33d:6988:bfea with SMTP id b3-20020a92c143000000b0033d6988bfeamr16680004ilh.21.1687522886662;
+        Fri, 23 Jun 2023 05:21:26 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id v2-20020a92d242000000b003443732257asm663017ilg.57.2023.06.23.05.21.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jun 2023 05:21:25 -0700 (PDT)
+Received: (nullmailer pid 27048 invoked by uid 1000);
+        Fri, 23 Jun 2023 12:21:24 -0000
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+MIME-Version: 1.0
+From:   Rob Herring <robh@kernel.org>
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Bjorn Andersson <andersson@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        linux-scsi@vger.kernel.org,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>
+In-Reply-To: <20230623113009.2512206-5-abel.vesa@linaro.org>
+References: <20230623113009.2512206-1-abel.vesa@linaro.org>
+ <20230623113009.2512206-5-abel.vesa@linaro.org>
+Message-Id: <168752288418.27031.1090471926569361855.robh@kernel.org>
+Subject: Re: [PATCH 4/5] scsi: dt-bindings: ufs: qcom: Fix sm8450 clocks
+Date:   Fri, 23 Jun 2023 06:21:24 -0600
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use sendmsg() with MSG_SPLICE_PAGES rather than sendpage.  This allows
-multiple pages and multipage folios to be passed through.
 
-TODO: iscsit_fe_sendpage_sg() should perhaps set up a bio_vec array for the
-entire set of pages it's going to transfer plus two for the header and
-trailer and page fragments to hold the header and trailer - and then call
-sendmsg once for the entire message.
+On Fri, 23 Jun 2023 14:30:08 +0300, Abel Vesa wrote:
+> The sm8450 has an ICE clock, so move the compatible to the proper
+> clocks check.
+> 
+> Fixes: 462c5c0aa798 ("dt-bindings: ufs: qcom,ufs: convert to dtschema")
+> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Lee Duncan <lduncan@suse.com>
-cc: Chris Leech <cleech@redhat.com>
-cc: Mike Christie <michael.christie@oracle.com>
-cc: Maurizio Lombardi <mlombard@redhat.com>
-cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-cc: "David S. Miller" <davem@davemloft.net>
-cc: Eric Dumazet <edumazet@google.com>
-cc: Jakub Kicinski <kuba@kernel.org>
-cc: Paolo Abeni <pabeni@redhat.com>
-cc: Jens Axboe <axboe@kernel.dk>
-cc: Matthew Wilcox <willy@infradead.org>
-cc: Al Viro <viro@zeniv.linux.org.uk>
-cc: open-iscsi@googlegroups.com
-cc: linux-scsi@vger.kernel.org
-cc: target-devel@vger.kernel.org
-cc: netdev@vger.kernel.org
----
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-Notes:
-    ver #2)
-     - Wrap lines at 80.
+yamllint warnings/errors:
 
- drivers/scsi/iscsi_tcp.c                 | 26 +++++++++---------------
- drivers/scsi/iscsi_tcp.h                 |  2 --
- drivers/target/iscsi/iscsi_target_util.c | 15 ++++++++------
- 3 files changed, 19 insertions(+), 24 deletions(-)
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: clocks: [[4294967295, 151], [4294967295, 10], [4294967295, 150], [4294967295, 166], [4294967295, 0], [4294967295, 164], [4294967295, 160], [4294967295, 162]] is too short
+	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: clock-names: ['core_clk', 'bus_aggr_clk', 'iface_clk', 'core_clk_unipro', 'ref_clk', 'tx_lane0_sync_clk', 'rx_lane0_sync_clk', 'rx_lane1_sync_clk'] is too short
+	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: reg: [[0, 30949376, 0, 12288]] is too short
+	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9637d4bc2bc9..9ab8555180a3 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -301,35 +301,32 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
- 
- 	while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
- 		struct scatterlist *sg;
-+		struct msghdr msg = {};
-+		struct bio_vec bv;
- 		unsigned int offset, copy;
--		int flags = 0;
- 
- 		r = 0;
- 		offset = segment->copied;
- 		copy = segment->size - offset;
- 
- 		if (segment->total_copied + segment->size < segment->total_size)
--			flags |= MSG_MORE | MSG_SENDPAGE_NOTLAST;
-+			msg.msg_flags |= MSG_MORE;
- 
- 		if (tcp_sw_conn->queue_recv)
--			flags |= MSG_DONTWAIT;
-+			msg.msg_flags |= MSG_DONTWAIT;
- 
--		/* Use sendpage if we can; else fall back to sendmsg */
- 		if (!segment->data) {
-+			if (!tcp_conn->iscsi_conn->datadgst_en)
-+				msg.msg_flags |= MSG_SPLICE_PAGES;
- 			sg = segment->sg;
- 			offset += segment->sg_offset + sg->offset;
--			r = tcp_sw_conn->sendpage(sk, sg_page(sg), offset,
--						  copy, flags);
-+			bvec_set_page(&bv, sg_page(sg), copy, offset);
- 		} else {
--			struct msghdr msg = { .msg_flags = flags };
--			struct kvec iov = {
--				.iov_base = segment->data + offset,
--				.iov_len = copy
--			};
--
--			r = kernel_sendmsg(sk, &msg, &iov, 1, copy);
-+			bvec_set_virt(&bv, segment->data + offset, copy);
- 		}
-+		iov_iter_bvec(&msg.msg_iter, ITER_SOURCE, &bv, 1, copy);
- 
-+		r = sock_sendmsg(sk, &msg);
- 		if (r < 0) {
- 			iscsi_tcp_segment_unmap(segment);
- 			return r;
-@@ -746,7 +743,6 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
- 	sock_no_linger(sk);
- 
- 	iscsi_sw_tcp_conn_set_callbacks(conn);
--	tcp_sw_conn->sendpage = tcp_sw_conn->sock->ops->sendpage;
- 	/*
- 	 * set receive state machine into initial state
- 	 */
-@@ -777,8 +773,6 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
- 			return -ENOTCONN;
- 		}
- 		iscsi_set_param(cls_conn, param, buf, buflen);
--		tcp_sw_conn->sendpage = conn->datadgst_en ?
--			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
- 		mutex_unlock(&tcp_sw_conn->sock_lock);
- 		break;
- 	case ISCSI_PARAM_MAX_R2T:
-diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
-index 68e14a344904..89a6fc552f0b 100644
---- a/drivers/scsi/iscsi_tcp.h
-+++ b/drivers/scsi/iscsi_tcp.h
-@@ -47,8 +47,6 @@ struct iscsi_sw_tcp_conn {
- 	/* MIB custom statistics */
- 	uint32_t		sendpage_failures_cnt;
- 	uint32_t		discontiguous_hdr_cnt;
--
--	ssize_t (*sendpage)(struct socket *, struct page *, int, size_t, int);
- };
- 
- struct iscsi_sw_tcp_host {
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index b14835fcb033..6231fa4ef5c6 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -1129,6 +1129,8 @@ int iscsit_fe_sendpage_sg(
- 	struct iscsit_conn *conn)
- {
- 	struct scatterlist *sg = cmd->first_data_sg;
-+	struct bio_vec bvec;
-+	struct msghdr msghdr = { .msg_flags = MSG_SPLICE_PAGES,	};
- 	struct kvec iov;
- 	u32 tx_hdr_size, data_len;
- 	u32 offset = cmd->first_data_sg_off;
-@@ -1172,17 +1174,18 @@ int iscsit_fe_sendpage_sg(
- 		u32 space = (sg->length - offset);
- 		u32 sub_len = min_t(u32, data_len, space);
- send_pg:
--		tx_sent = conn->sock->ops->sendpage(conn->sock,
--					sg_page(sg), sg->offset + offset, sub_len, 0);
-+		bvec_set_page(&bvec, sg_page(sg), sub_len, sg->offset + offset);
-+		iov_iter_bvec(&msghdr.msg_iter, ITER_SOURCE, &bvec, 1, sub_len);
-+
-+		tx_sent = conn->sock->ops->sendmsg(conn->sock, &msghdr,
-+						   sub_len);
- 		if (tx_sent != sub_len) {
- 			if (tx_sent == -EAGAIN) {
--				pr_err("tcp_sendpage() returned"
--						" -EAGAIN\n");
-+				pr_err("sendmsg/splice returned -EAGAIN\n");
- 				goto send_pg;
- 			}
- 
--			pr_err("tcp_sendpage() failure: %d\n",
--					tx_sent);
-+			pr_err("sendmsg/splice failure: %d\n", tx_sent);
- 			return -1;
- 		}
- 
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20230623113009.2512206-5-abel.vesa@linaro.org
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
