@@ -2,96 +2,48 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35F07EB64DA
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 02:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA4C4EB64D7
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 05:40:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231449AbjFWCuc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jun 2023 22:50:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51456 "EHLO
+        id S231450AbjFWFkp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Jun 2023 01:40:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231421AbjFWCu3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jun 2023 22:50:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4D132112;
-        Thu, 22 Jun 2023 19:50:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3AAC761957;
-        Fri, 23 Jun 2023 02:50:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6FCC6C433C9;
-        Fri, 23 Jun 2023 02:50:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687488626;
-        bh=9EiFCNHJdUpB+XW1zu/aSkMUksAqJahEysCGpYwwpD4=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=mOVmqgTDkzxHjY/uKaDRNHHy7gKk4xXwchepy/RBKuwnGRuz8kKXVdUGZvFxDmzPz
-         8e28RgQQzGfDmaHmJ5CZIUCEHWy8MOIs+IGJq54kKbkqCmo8kcZfnlWHfCG/cpQ7t/
-         MQl6UoXAIgGTFsYgoL5gyRtlpZiGoohwjv+gRsfU/oCd7QyvEIMzl+kpunI8vRDcou
-         RExwmgEqUX0YrOnw+RosZ3PVJDdq13xLqhoxRRTw/6SK+Sa1GgONnFaEuv/177fnz4
-         7vybmUpQMpWQ80Qg4SZ4AcFQB/b9h8coL/lrQOZgmgniG12C6Si1Ql29RqDwSeNqzH
-         l+5pDpsclDNKw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 54D53C395F1;
-        Fri, 23 Jun 2023 02:50:26 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        with ESMTP id S231451AbjFWFkk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 01:40:40 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19B4D2139
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jun 2023 22:40:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=3BDwGMORJZn7hXcXLNyQ/xvyvPaF34QPU9y9KJr5Z7U=; b=XKhKkrDs2Tw9j7iGi7sBd72gX7
+        /IrFBmEC6L1FORr114NQKdBBxuROPNgbhcPlSbm1LJyhRL04gmUK0dit5/YmHxZF5zzx2W5N8ZVIY
+        fxxA4oTBadOT83Hcgbd5CwCXoPiwxPilxTAfRKtDc9Kr0VnlatHZXUukebClPziX7MgKxNJ00I1ji
+        zxjEs77EU2rnzhKbS3vS9JCpaP7IcPS/+d/BRFBHMdpSPdBSp7IbtV3+b+4/dxqXAejK4VvaE4fuJ
+        LVrYiwb253g0V0NWyh4Al+2akfr6JCbFMJVzmnOtvG5zrlgYqsPKQIPLCW/TGHiGYaatfBKqBdHJ5
+        VYOxkitw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qCZWs-002cRJ-2P;
+        Fri, 23 Jun 2023 05:40:18 +0000
+Date:   Thu, 22 Jun 2023 22:40:18 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: Re: [PATCH] scsi: Simplify scsi_cdl_check_cmd()
+Message-ID: <ZJUwQvdRyr1v6wVX@infradead.org>
+References: <20230623002912.808251-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 0/8] Fix comment typos about "transmit"
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <168748862634.32034.1394302200661050543.git-patchwork-notify@kernel.org>
-Date:   Fri, 23 Jun 2023 02:50:26 +0000
-References: <20230622012627.15050-1-shamrocklee@posteo.net>
-In-Reply-To: <20230622012627.15050-1-shamrocklee@posteo.net>
-To:     Yueh-Shun Li <shamrocklee@posteo.net>
-Cc:     jgg@ziepe.ca, leon@kernel.org, anthony.l.nguyen@intel.com,
-        davem@davemloft.net, kvalo@kernel.org, jejb@linux.ibm.com,
-        kuba@kernel.org, pabeni@redhat.com, apw@canonical.com,
-        joe@perches.com, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-scsi@vger.kernel.org, mptcp@lists.linux.dev,
-        linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230623002912.808251-1-dlemoal@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello:
+> +	 * See SPC-6, one command format of REPORT SUPPORTED OPERATION CODES.
 
-This series was applied to netdev/net-next.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
-
-On Thu, 22 Jun 2023 01:26:21 +0000 you wrote:
-> Fix typos about "transmit" missing the first "s"
-> found by searching with keyword "tram" in the first 7
-> patches.
-> 
-> Add related patterns to "scripts/spelling.txt" in the
-> last patch.
-> 
-> [...]
-
-Here is the summary with links:
-  - [1/8] RDMA/rxe: fix comment typo
-    (no matching commit)
-  - [2/8] i40e, xsk: fix comment typo
-    https://git.kernel.org/netdev/net-next/c/b028813ac973
-  - [3/8] zd1211rw: fix comment typo
-    (no matching commit)
-  - [4/8] scsi: fix comment typo
-    (no matching commit)
-  - [5/8] tcp: fix comment typo
-    https://git.kernel.org/netdev/net-next/c/304b1875ba02
-  - [6/8] net/tls: fix comment typo
-    https://git.kernel.org/netdev/net-next/c/a0e128ef88e4
-  - [7/8] selftests: mptcp: connect: fix comment typo
-    (no matching commit)
-  - [8/8] scripts/spelling.txt: Add "transmit" patterns
-    (no matching commit)
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+/one/on/ or even on the?
