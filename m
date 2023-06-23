@@ -2,88 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7EAEB64DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 19:46:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0A9C001B1
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jun 2023 20:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231715AbjFWTqt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Jun 2023 15:46:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37116 "EHLO
+        id S231824AbjFWUMf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Jun 2023 16:12:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231316AbjFWTqr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 15:46:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BB612705
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Jun 2023 12:46:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687549564;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=S7cXFIATv0cqvFDOdx2Vy9pFsZWT3roW5tnB/9pxEhg=;
-        b=f8lfaklo4iZubCG2lE4oRSza2AepzTCjdD6AwSRyl9KfF6aDaT5iT/CukU88Rs+IhO5fZW
-        z+vBK3GNCHHqN1dxH1sK0AET4Y+rdKLYlOqFBDUdbgMKVfHupSngOk27WAGsC9tqujUIBG
-        luY0mEXkjFyjhc79S2r4JZGb7MYJRxA=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-422-tWsHGO7zMPmi0H68AQg1cg-1; Fri, 23 Jun 2023 15:46:01 -0400
-X-MC-Unique: tWsHGO7zMPmi0H68AQg1cg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 17FBE29AB435;
-        Fri, 23 Jun 2023 19:45:59 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.42.28.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 91DA92166B25;
-        Fri, 23 Jun 2023 19:45:56 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <27fd3750-7b9c-9638-26d8-0df3f0e33b81@oracle.com>
-References: <27fd3750-7b9c-9638-26d8-0df3f0e33b81@oracle.com> <20230623114425.2150536-1-dhowells@redhat.com> <20230623114425.2150536-12-dhowells@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     dhowells@redhat.com, netdev@vger.kernel.org,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
-        David Ahern <dsahern@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        Maurizio Lombardi <mlombard@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Dimitri KRAVTCHUK <dimitri.kravtchuk@oracle.com>
-Subject: Re: [PATCH net-next v4 11/15] iscsi: Use sendmsg(MSG_SPLICE_PAGES) rather than sendpage
+        with ESMTP id S231177AbjFWUMe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2023 16:12:34 -0400
+Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A3E62721;
+        Fri, 23 Jun 2023 13:12:33 -0700 (PDT)
+Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-78337d6b14fso11356039f.1;
+        Fri, 23 Jun 2023 13:12:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687551152; x=1690143152;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mIR790y01Y2bPW5MOoqgrgXvnrYJCrBg8XRy1PjtoJY=;
+        b=BJoG/cNi7CtWImHF7kin1/5vG96A0IKW4Rho44zIGheD0gfGjM2EJ6S1lfQIg7ifgB
+         9+EpjDIasiH+trW/Wtu/L3xfnY8kcN4AZgeWqGUSh/pMDATAOsYTMkuCkXbVyQq+1KV7
+         /5Lqg4q7ljyniDdLi8hm155oet//C29/8ef25lOJEHH9f9nwq1d0Oq6Ey0XXWhEsTUGa
+         p+Itg2jsXBCy/7/755KPE/5w4on2Oy72inqXpjg6SBrtaCYk8kpfaGxnjmEExShw6Qp6
+         VoE8tXN+kb2szIGYrNtUoqiVgizIfH6cq/HMgxLAYRyHwW1enJ2jzDbSv3FhMg6xVY1K
+         gDJw==
+X-Gm-Message-State: AC+VfDyM+3jJWHICqDX3e/otb/Dgj0UgCx/kDQOJhQmmOwHuCfXahnL9
+        D334IlcXvTJQIfTIHtheOg==
+X-Google-Smtp-Source: ACHHUZ5+4vAMYvqL65nBRMGEpteSxNFOw4+9+RQXvw/CZSamsT8j+pvvD3T/frJwTVTFe9VBJYQ5qA==
+X-Received: by 2002:a6b:ef16:0:b0:780:d76c:b645 with SMTP id k22-20020a6bef16000000b00780d76cb645mr4084530ioh.1.1687551152417;
+        Fri, 23 Jun 2023 13:12:32 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id j25-20020a5d9d19000000b00780dcff0414sm44315ioj.20.2023.06.23.13.12.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jun 2023 13:12:31 -0700 (PDT)
+Received: (nullmailer pid 1024620 invoked by uid 1000);
+        Fri, 23 Jun 2023 20:12:30 -0000
+Date:   Fri, 23 Jun 2023 14:12:30 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Bjorn Andersson <andersson@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>
+Subject: Re: [PATCH 4/5] scsi: dt-bindings: ufs: qcom: Fix sm8450 clocks
+Message-ID: <20230623201230.GA1022063-robh@kernel.org>
+References: <20230623113009.2512206-1-abel.vesa@linaro.org>
+ <20230623113009.2512206-5-abel.vesa@linaro.org>
+ <168752288418.27031.1090471926569361855.robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2611149.1687549556.1@warthog.procyon.org.uk>
-Date:   Fri, 23 Jun 2023 20:45:56 +0100
-Message-ID: <2611150.1687549556@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <168752288418.27031.1090471926569361855.robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Mike Christie <michael.christie@oracle.com> wrote:
-
+On Fri, Jun 23, 2023 at 06:21:24AM -0600, Rob Herring wrote:
 > 
-> One question on the target part I had is about the TODO above. Is that
-> something you were going to do, or is it something you are asking the target
-> people to do?
+> On Fri, 23 Jun 2023 14:30:08 +0300, Abel Vesa wrote:
+> > The sm8450 has an ICE clock, so move the compatible to the proper
+> > clocks check.
+> > 
+> > Fixes: 462c5c0aa798 ("dt-bindings: ufs: qcom,ufs: convert to dtschema")
+> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> > ---
+> >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> 
+> My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+> on your patch (DT_CHECKER_FLAGS is new in v5.13):
+> 
+> yamllint warnings/errors:
+> 
+> dtschema/dtc warnings/errors:
+> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: clocks: [[4294967295, 151], [4294967295, 10], [4294967295, 150], [4294967295, 166], [4294967295, 0], [4294967295, 164], [4294967295, 160], [4294967295, 162]] is too short
+> 	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: clock-names: ['core_clk', 'bus_aggr_clk', 'iface_clk', 'core_clk_unipro', 'ref_clk', 'tx_lane0_sync_clk', 'rx_lane0_sync_clk', 'rx_lane1_sync_clk'] is too short
+> 	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: reg: [[0, 30949376, 0, 12288]] is too short
+> 	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
 
-I've got an in-progress patch for that, but it's not the simplest code to
-modify.  I'm holding off on completing it till the simpler cleanup is in.  I
-might end up having to push the incomplete patch your way to ask for advice on
-how to complete it.
+Looks like patch 1 didn't apply for me and would fix this.
 
-David
-
+Rob
