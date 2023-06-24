@@ -2,132 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03294EB64DA
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jun 2023 11:45:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B074EB64DD
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jun 2023 12:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231466AbjFXLpx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Jun 2023 07:45:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44182 "EHLO
+        id S233071AbjFXMbG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Jun 2023 08:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229559AbjFXLpw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 07:45:52 -0400
-Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BD3D1FD7;
-        Sat, 24 Jun 2023 04:45:49 -0700 (PDT)
-Received: by mail-qk1-x72a.google.com with SMTP id af79cd13be357-763ddc4259dso141548185a.3;
-        Sat, 24 Jun 2023 04:45:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687607148; x=1690199148;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zP3mUhmYFxJcONcmqARo3rbXN0HiQgVUbkY1nlHKpiE=;
-        b=PQTR28s2V9NwNSHTiFgMA/4gp/BNDeredmuKpPYE/IJcPnQYIn6HzOw/VcSlkvnVlq
-         JF4qgEYsbhTkSP8gfxaLQFLcco+2LWWhurgdiMSwR72tASXyVcaWVCOfjGmhpuGXsXf4
-         OkVvRlezkY6aNvW/ojZfBmvCw/nBb0aryxy6mq3+slpE76i6FAO2zFpqPJ+FGLu+m7jk
-         ud9GrDy9D2vSuhptsiEcaKuOt+ENoC0823u3mtlBg8b7sh8Z5+InDtkk/LH51K/y+cgs
-         8NZyT3Pq5AVus7GldHPXihb4hPjTPIDiNxzNbyy/nS9c405pEUjxQNwMMekEaXkrhTLm
-         zzFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687607148; x=1690199148;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zP3mUhmYFxJcONcmqARo3rbXN0HiQgVUbkY1nlHKpiE=;
-        b=OPbEEn/gmi6fyA8zkdM5UOTtNJytoE/8XtPjTX/fmIdxARLrxKq/mAaEFVlW6PuIVX
-         t/L6P7bP7Tz1ONErO0YAv86NqXfHm7gzI4XZ8uIFn1Vi5wxqjo4mTBUXlMzrHmgu50Gq
-         ac+pUIOo7Mnfghdlh3VtN8j67fZdFEToSFmnC/MIdcp7sGkAlH+ydhOYh+2xwtOPqpLg
-         iz0W6mbS8CTuHjRvWA28a1gS6vDvGz/GUFNwD6yvVzdqov/w2GovgzoaMWSNQ1A9Rqz6
-         seZhrlpC5bmZX1WDoAbQnmzNSZpk4WemDnOAYbLa/CJd63JfEFAGXMCXbAsSl15S78Gg
-         No4g==
-X-Gm-Message-State: AC+VfDzMoaTREnvyDCQ6ozuyJoMC4KBYCx5np4mKIEQgynrsaBJxR5L+
-        Azx6R9D7mRTHbZbi1/MgcFiTiQIHkJPdx12ec00=
-X-Google-Smtp-Source: ACHHUZ6bf6KUSVdzdiaMFp337uOJ561gzdBdvqL0oPQm/uUN2weYcc0ipWTtYFaAeekf3yWRxtNp1NKp2DwnZEzEi3w=
-X-Received: by 2002:a05:620a:6847:b0:763:a7e9:6cfc with SMTP id
- ru7-20020a05620a684700b00763a7e96cfcmr16109209qkn.11.1687607148658; Sat, 24
- Jun 2023 04:45:48 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230606051217.2064-1-iecedge@gmail.com> <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
- <CAFA-uR_Zn4MdFKs6U6dqPjuVS60yN4RcYU4jJzjknqy7-RWyEQ@mail.gmail.com>
- <e9b8b9c5-f400-9152-0f4b-537b05203dd2@acm.org> <CAFA-uR83jHJsDXnn-3LWcrw251S4MizHC_JPJssYrgoD6kLoAg@mail.gmail.com>
- <5b898dde-2f76-51af-5d2e-c4572719a5be@acm.org>
-In-Reply-To: <5b898dde-2f76-51af-5d2e-c4572719a5be@acm.org>
-From:   Jianlin Lv <iecedge@gmail.com>
-Date:   Sat, 24 Jun 2023 19:45:36 +0800
-Message-ID: <CAFA-uR_jk6jCmf9DTebSVBRwtoLuXuyvf1Biq+OObqRVAOZbBw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: sd: support specify probe type of build-in driver
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
-        bp@suse.de, peterz@infradead.org, will@kernel.org,
-        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
-        wyes.karny@amd.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+        with ESMTP id S230388AbjFXMbF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 08:31:05 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7958E5D;
+        Sat, 24 Jun 2023 05:31:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1687609858;
+        bh=mVIJR4nMBjtez2qGjfCXvDgWZNOR+zXfVhJPIUl/Iv4=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=VVs3b+cKfTVsbQ04tkLwm1dwlaFoywd9QVlDOQ1Mla3JQSx0THZQB/I2qZV/kngZg
+         rxfUENf2roXtZmUFsEr2WrVwlyHCnHN3m7LJLwq12W/3Q8K2xLawib0u9p3y81jMGz
+         zPyD5W3t7sI49wOt6Bn86Soufm1TNXZ+2yrqwMso=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 9E95E12862C2;
+        Sat, 24 Jun 2023 08:30:58 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id JMB_OKpXtfZI; Sat, 24 Jun 2023 08:30:58 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1687609858;
+        bh=mVIJR4nMBjtez2qGjfCXvDgWZNOR+zXfVhJPIUl/Iv4=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=VVs3b+cKfTVsbQ04tkLwm1dwlaFoywd9QVlDOQ1Mla3JQSx0THZQB/I2qZV/kngZg
+         rxfUENf2roXtZmUFsEr2WrVwlyHCnHN3m7LJLwq12W/3Q8K2xLawib0u9p3y81jMGz
+         zPyD5W3t7sI49wOt6Bn86Soufm1TNXZ+2yrqwMso=
+Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id F39711286268;
+        Sat, 24 Jun 2023 08:30:56 -0400 (EDT)
+Message-ID: <38e69be8524c85062e627f77ed7ad766905e60a3.camel@HansenPartnership.com>
+Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for
+ sdm845 by adding reg-names
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Luca Weiss <luca.weiss@fairphone.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Abel Vesa <abel.vesa@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date:   Sat, 24 Jun 2023 08:30:54 -0400
+In-Reply-To: <CTK1AI4TVYRZ.F77OZB62YYC0@otso>
+References: <20230623113009.2512206-1-abel.vesa@linaro.org>
+         <20230623113009.2512206-6-abel.vesa@linaro.org>
+         <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
+         <CTK1AI4TVYRZ.F77OZB62YYC0@otso>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.42.4 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 9, 2023 at 12:23=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 6/7/23 19:51, Jianlin Lv wrote:
-> > On Thu, Jun 8, 2023 at 1:07=E2=80=AFAM Bart Van Assche <bvanassche@acm.=
-org> wrote:
-> >> On 6/7/23 08:55, Jianlin Lv wrote:
-> >> I see two possible solutions:
-> >> - Change the volume provisioner such that it uses disk references that=
- do
-> >>     not depend on the probing order, e.g. /dev/disk/by-id/...
-> >
-> > Yes, The "/dev/disk/by-id/" can uniquely identify SCSI devices. However=
-,
-> > I don't think it is suitable for the volume provisioner workflow.
-> > For nodes of the same SKU , a unified YAML file will be defined to inst=
-ruct
-> > the volume provisioner on how to manage the local disks.
-> > If use WWID, it would mean that a unique YAML file needs to be defined
-> > for each node. This approach becomes impractical when dealing with a la=
-rge
-> > number of work nodes.
-> Please consider using the paths available in /dev/disk/by-path.
+On Fri, 2023-06-23 at 14:38 +0200, Luca Weiss wrote:
+> With my private mailbox I just have a different folder for patches
+> that have been sent which I archive once they're applied, but with
+> work GMail I don't see how I can easily replicate this since it's
+> also not grouping threads properly.
 
-Sorry for the late reply.
-I carefully checked the server in the production environment and found
-some corner cases where there are differences in the dev/disk/by-path/ of
-nodes with the same SKU. These differences are caused by inconsistent
-target_numbers.
+I have something similar, but instead of multiple folders, I use imap
+labels to achieve the same thing (and then evolution search folders to
+sort out the labels).  I believe GMail has some primitive labelling
+system that actually works (unlike exchange), so you might be able to
+get a scheme like that to work.
 
-For example:
+For my mobile phone, which doesn't have the sophisticated search
+folders evolution does, I use dovecot virtual folders to achieve the
+same effect.  I'm afraid I don't think GMail has any equivalent of
+this.
 
-diff -y aa-by-path bb-by-path
-pci-0000:86:00.0-scsi-0:3:86:0 -> ../../sda |
-pci-0000:86:00.0-scsi-0:3:88:0 -> ../../sda
-pci-0000:86:00.0-scsi-0:3:87:0 -> ../../sdb |
-pci-0000:86:00.0-scsi-0:3:89:0 -> ../../sdb
-pci-0000:86:00.0-scsi-0:3:88:0 -> ../../sdc |
-pci-0000:86:00.0-scsi-0:3:90:0 -> ../../sdc
-pci-0000:86:00.0-scsi-0:3:89:0 -> ../../sdd |
-pci-0000:86:00.0-scsi-0:3:91:0 -> ../../sdd
-pci-0000:86:00.0-scsi-0:3:90:0 -> ../../sde |
-pci-0000:86:00.0-scsi-0:3:92:0 -> ../../sde
-pci-0000:86:00.0-scsi-0:3:92:0 -> ../../sdf |
-pci-0000:86:00.0-scsi-0:3:93:0 -> ../../sdf
-pci-0000:86:00.0-scsi-0:3:93:0 -> ../../sdg |
-pci-0000:86:00.0-scsi-0:3:94:0 -> ../../sdg
-pci-0000:86:00.0-scsi-0:3:94:0 -> ../../sdh |
-pci-0000:86:00.0-scsi-0:3:95:0 -> ../../sdh
+James
 
-I'm still not sure what causes the target_numbers to be different.
-However, the existence of such corner cases makes /dev/disk/by-path
-unusable for the volume provisioner, similar to /dev/disk/by-id/.
-
-So, If it's not possible to configure disk serialization detection, then
-it seems that implementing predictable disk names is the only option.
-
-Jianlin
-
->
-> Thanks,
->
-> Bart.
