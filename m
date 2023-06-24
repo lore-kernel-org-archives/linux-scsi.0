@@ -2,103 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B650AEB64DC
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jun 2023 07:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03294EB64DA
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jun 2023 11:45:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231911AbjFXHtU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Jun 2023 03:49:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47574 "EHLO
+        id S231466AbjFXLpx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Jun 2023 07:45:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231670AbjFXHtT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 03:49:19 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DD5226B3
-        for <linux-scsi@vger.kernel.org>; Sat, 24 Jun 2023 00:49:17 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id a640c23a62f3a-986d8332f50so163455466b.0
-        for <linux-scsi@vger.kernel.org>; Sat, 24 Jun 2023 00:49:17 -0700 (PDT)
+        with ESMTP id S229559AbjFXLpw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 07:45:52 -0400
+Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BD3D1FD7;
+        Sat, 24 Jun 2023 04:45:49 -0700 (PDT)
+Received: by mail-qk1-x72a.google.com with SMTP id af79cd13be357-763ddc4259dso141548185a.3;
+        Sat, 24 Jun 2023 04:45:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1687592955; x=1690184955;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=fobpxe2Vh3rTegR8aAILQO/aor/jN2XTUZh+y2BjRx8=;
-        b=p0vcB9NOqpDYcOFBUgjJtMCwF6u2j2jVYTScX1y2/6gMwv22HEnMNzigrsNRNvZbMY
-         fbmdwyutBRnJqkmZXJaWUm1xJ0c/uPYJslawKx77u4kN4PQwydalmy8slyP7J2De9dfl
-         N3t9pLZ7Nj7nARI6GTPETalZ3gx8ySvxsgSdz6o50H9bsdG4lI1I6pBTgtzbbqOK7VvP
-         c1KAp4StwpRAwDGi5bzdc3oiPOHaP5EQxwQMjq0vp7m2xUYcgzME0pa1Mig2T5tX30+d
-         fa4Eu8f6v8k9+JYXYw8Tt0Iqmsl3cFAZ5v4tQxHwqeQ/Czw4iXsHyL7Z8iAPcBsnJfsH
-         laIA==
+        d=gmail.com; s=20221208; t=1687607148; x=1690199148;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zP3mUhmYFxJcONcmqARo3rbXN0HiQgVUbkY1nlHKpiE=;
+        b=PQTR28s2V9NwNSHTiFgMA/4gp/BNDeredmuKpPYE/IJcPnQYIn6HzOw/VcSlkvnVlq
+         JF4qgEYsbhTkSP8gfxaLQFLcco+2LWWhurgdiMSwR72tASXyVcaWVCOfjGmhpuGXsXf4
+         OkVvRlezkY6aNvW/ojZfBmvCw/nBb0aryxy6mq3+slpE76i6FAO2zFpqPJ+FGLu+m7jk
+         ud9GrDy9D2vSuhptsiEcaKuOt+ENoC0823u3mtlBg8b7sh8Z5+InDtkk/LH51K/y+cgs
+         8NZyT3Pq5AVus7GldHPXihb4hPjTPIDiNxzNbyy/nS9c405pEUjxQNwMMekEaXkrhTLm
+         zzFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687592955; x=1690184955;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fobpxe2Vh3rTegR8aAILQO/aor/jN2XTUZh+y2BjRx8=;
-        b=OQ/H4azdfIGruT9Nog2/T6XuwnTktiQTpvMUEcLVJCXNR5wnySnWbMP7QOsTBhmOAz
-         gPz3AJX3s1tBX1pV2OJOwpFUP/KYxhSF0DbUp6AjsJl2axAG7fCA2V1jq5ouc2Yd1ngN
-         +Ap4PP3YzpN2SEJeGkWT4ntneyyGAKfiMekPJJM8ikIg0cno1yvO7ai2vdRdzq/RDAAN
-         JukUoz0BPv/oqS0yUixA3ofkcBTfSkyYSUqEgYWMMrhVJzMymkTBd8UXXTMlDTl3e5mD
-         TGmQ58uQnljTEbm1/G2qC2ON+YQPh/mADVkofAyOgtqJPXNqT+tOr3nnReWvljQRcA5e
-         1HlQ==
-X-Gm-Message-State: AC+VfDykLyXr8WdtYGtfpiWP6W+/c4RcjAzDGTFzCRmdTWCLs/RD5zt8
-        VJZ+QfUItkX6AaMKGiMHj0vtRA==
-X-Google-Smtp-Source: ACHHUZ5zxQNQmvecCWEX+T8SpICSGCyG7Q95vSIHvgEfe3ifIVl00Aelqo52kll7A4K7AbgmyvUGYg==
-X-Received: by 2002:a17:907:805:b0:989:450:e57d with SMTP id wv5-20020a170907080500b009890450e57dmr11352975ejb.73.1687592955055;
-        Sat, 24 Jun 2023 00:49:15 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.219.26])
-        by smtp.gmail.com with ESMTPSA id bm4-20020a170906c04400b00973ca837a68sm574507ejb.217.2023.06.24.00.49.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 24 Jun 2023 00:49:14 -0700 (PDT)
-Message-ID: <f1ff2c32-df2a-e349-1227-e5a93fe37c92@linaro.org>
-Date:   Sat, 24 Jun 2023 09:49:12 +0200
+        d=1e100.net; s=20221208; t=1687607148; x=1690199148;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=zP3mUhmYFxJcONcmqARo3rbXN0HiQgVUbkY1nlHKpiE=;
+        b=OPbEEn/gmi6fyA8zkdM5UOTtNJytoE/8XtPjTX/fmIdxARLrxKq/mAaEFVlW6PuIVX
+         t/L6P7bP7Tz1ONErO0YAv86NqXfHm7gzI4XZ8uIFn1Vi5wxqjo4mTBUXlMzrHmgu50Gq
+         ac+pUIOo7Mnfghdlh3VtN8j67fZdFEToSFmnC/MIdcp7sGkAlH+ydhOYh+2xwtOPqpLg
+         iz0W6mbS8CTuHjRvWA28a1gS6vDvGz/GUFNwD6yvVzdqov/w2GovgzoaMWSNQ1A9Rqz6
+         seZhrlpC5bmZX1WDoAbQnmzNSZpk4WemDnOAYbLa/CJd63JfEFAGXMCXbAsSl15S78Gg
+         No4g==
+X-Gm-Message-State: AC+VfDzMoaTREnvyDCQ6ozuyJoMC4KBYCx5np4mKIEQgynrsaBJxR5L+
+        Azx6R9D7mRTHbZbi1/MgcFiTiQIHkJPdx12ec00=
+X-Google-Smtp-Source: ACHHUZ6bf6KUSVdzdiaMFp337uOJ561gzdBdvqL0oPQm/uUN2weYcc0ipWTtYFaAeekf3yWRxtNp1NKp2DwnZEzEi3w=
+X-Received: by 2002:a05:620a:6847:b0:763:a7e9:6cfc with SMTP id
+ ru7-20020a05620a684700b00763a7e96cfcmr16109209qkn.11.1687607148658; Sat, 24
+ Jun 2023 04:45:48 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for sdm845
- by adding reg-names
-To:     Rob Herring <robh@kernel.org>,
-        Luca Weiss <luca.weiss@fairphone.com>
-Cc:     Abel Vesa <abel.vesa@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20230623113009.2512206-1-abel.vesa@linaro.org>
- <20230623113009.2512206-6-abel.vesa@linaro.org>
- <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
- <CTK1AI4TVYRZ.F77OZB62YYC0@otso> <20230623211746.GA1128583-robh@kernel.org>
-Content-Language: en-US
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230623211746.GA1128583-robh@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20230606051217.2064-1-iecedge@gmail.com> <6ad5fba3-926a-7a23-b21b-abffd33708be@acm.org>
+ <CAFA-uR_Zn4MdFKs6U6dqPjuVS60yN4RcYU4jJzjknqy7-RWyEQ@mail.gmail.com>
+ <e9b8b9c5-f400-9152-0f4b-537b05203dd2@acm.org> <CAFA-uR83jHJsDXnn-3LWcrw251S4MizHC_JPJssYrgoD6kLoAg@mail.gmail.com>
+ <5b898dde-2f76-51af-5d2e-c4572719a5be@acm.org>
+In-Reply-To: <5b898dde-2f76-51af-5d2e-c4572719a5be@acm.org>
+From:   Jianlin Lv <iecedge@gmail.com>
+Date:   Sat, 24 Jun 2023 19:45:36 +0800
+Message-ID: <CAFA-uR_jk6jCmf9DTebSVBRwtoLuXuyvf1Biq+OObqRVAOZbBw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: sd: support specify probe type of build-in driver
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, paulmck@kernel.org,
+        bp@suse.de, peterz@infradead.org, will@kernel.org,
+        rdunlap@infradead.org, kim.phillips@amd.com, rostedt@goodmis.org,
+        wyes.karny@amd.com, jianlv@ebay.com, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23/06/2023 23:17, Rob Herring wrote:
->> With my private mailbox I just have a different folder for patches that
->> have been sent which I archive once they're applied, but with work GMail
->> I don't see how I can easily replicate this since it's also not grouping
->> threads properly.
-> 
-> Yeah, GMail sucks for that. I use 'lei' to get all my patches and 
-> replies to them (though its caching will miss replies). Then I delete 
-> them from the mbox when they are applied or otherwise finished. lei 
-> updates won't re-add them to the mbox.
+On Fri, Jun 9, 2023 at 12:23=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> On 6/7/23 19:51, Jianlin Lv wrote:
+> > On Thu, Jun 8, 2023 at 1:07=E2=80=AFAM Bart Van Assche <bvanassche@acm.=
+org> wrote:
+> >> On 6/7/23 08:55, Jianlin Lv wrote:
+> >> I see two possible solutions:
+> >> - Change the volume provisioner such that it uses disk references that=
+ do
+> >>     not depend on the probing order, e.g. /dev/disk/by-id/...
+> >
+> > Yes, The "/dev/disk/by-id/" can uniquely identify SCSI devices. However=
+,
+> > I don't think it is suitable for the volume provisioner workflow.
+> > For nodes of the same SKU , a unified YAML file will be defined to inst=
+ruct
+> > the volume provisioner on how to manage the local disks.
+> > If use WWID, it would mean that a unique YAML file needs to be defined
+> > for each node. This approach becomes impractical when dealing with a la=
+rge
+> > number of work nodes.
+> Please consider using the paths available in /dev/disk/by-path.
 
-That's interesting approach. What's your lei search query for getting
-your patches? "f:rob" would get all your threads you participated in.
+Sorry for the late reply.
+I carefully checked the server in the production environment and found
+some corner cases where there are differences in the dev/disk/by-path/ of
+nodes with the same SKU. These differences are caused by inconsistent
+target_numbers.
 
-Best regards,
-Krzysztof
+For example:
 
+diff -y aa-by-path bb-by-path
+pci-0000:86:00.0-scsi-0:3:86:0 -> ../../sda |
+pci-0000:86:00.0-scsi-0:3:88:0 -> ../../sda
+pci-0000:86:00.0-scsi-0:3:87:0 -> ../../sdb |
+pci-0000:86:00.0-scsi-0:3:89:0 -> ../../sdb
+pci-0000:86:00.0-scsi-0:3:88:0 -> ../../sdc |
+pci-0000:86:00.0-scsi-0:3:90:0 -> ../../sdc
+pci-0000:86:00.0-scsi-0:3:89:0 -> ../../sdd |
+pci-0000:86:00.0-scsi-0:3:91:0 -> ../../sdd
+pci-0000:86:00.0-scsi-0:3:90:0 -> ../../sde |
+pci-0000:86:00.0-scsi-0:3:92:0 -> ../../sde
+pci-0000:86:00.0-scsi-0:3:92:0 -> ../../sdf |
+pci-0000:86:00.0-scsi-0:3:93:0 -> ../../sdf
+pci-0000:86:00.0-scsi-0:3:93:0 -> ../../sdg |
+pci-0000:86:00.0-scsi-0:3:94:0 -> ../../sdg
+pci-0000:86:00.0-scsi-0:3:94:0 -> ../../sdh |
+pci-0000:86:00.0-scsi-0:3:95:0 -> ../../sdh
+
+I'm still not sure what causes the target_numbers to be different.
+However, the existence of such corner cases makes /dev/disk/by-path
+unusable for the volume provisioner, similar to /dev/disk/by-id/.
+
+So, If it's not possible to configure disk serialization detection, then
+it seems that implementing predictable disk names is the only option.
+
+Jianlin
+
+>
+> Thanks,
+>
+> Bart.
