@@ -2,65 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCEAEB64DD
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jun 2023 01:36:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C694EB64DC
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jun 2023 07:07:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbjFYBgZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Jun 2023 21:36:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35360 "EHLO
+        id S231138AbjFYHHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Jun 2023 03:07:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbjFYBgX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 21:36:23 -0400
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE09BE5F;
-        Sat, 24 Jun 2023 18:36:22 -0700 (PDT)
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-39ecf031271so1739778b6e.1;
-        Sat, 24 Jun 2023 18:36:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687656982; x=1690248982;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6QES8iPVEs5Vp3VQZYa61QQkFQNBLSrnWKF7w6PAZtA=;
-        b=QG6FKqHYaoaONGGum/fcu/e23BgVbvLri3Btc7WrsT4pzp6FaPk5kZuw4WiGbTFuyO
-         oAX7EcYng4AVlja/R20qngrLmr5QXYtfUPa4+djzwKJHJrREc221CTfeel8K/r6r1Bwf
-         UPwmeYsITKN/TwDnusHennjGR4z14ijhp0/7ak6u+Eq2EbiZwmHka+3/hhfvrtLPRFWN
-         didqUCOwKEj5V8ZQhmJupJ1ds3mq+qT2Mq0dAfr3pQhl4v699wyRP49Z0cifkDwWvFq7
-         sAAtZr72K08srKUER+29F6uoWzn8enTdLtQUUWCF4W51HJeN2UVzDGkyGxXC23tELPXX
-         AzYQ==
-X-Gm-Message-State: AC+VfDy3WZ8WPXGYZ+//jUSHtStl1YwaJMukD39M1W0I+Q/ZMDOY+rEF
-        h6AGf3kVdMg+brubOAEVpnlsdXtH5xc=
-X-Google-Smtp-Source: ACHHUZ4It5O46YdG9BmcmgbA5yUzsHMVPQoRSR1CkNrQcEXwpZtIfr57LBj3oN85Na3xYuxKaULfQg==
-X-Received: by 2002:a05:6808:ec3:b0:39e:b58c:13d5 with SMTP id q3-20020a0568080ec300b0039eb58c13d5mr28074938oiv.17.1687656982135;
-        Sat, 24 Jun 2023 18:36:22 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id x42-20020a056a000bea00b0066f37665a6asm690494pfu.117.2023.06.24.18.36.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 24 Jun 2023 18:36:21 -0700 (PDT)
-Message-ID: <83fcf19d-b9a1-5369-d8f0-d80e00ae8dfd@acm.org>
-Date:   Sat, 24 Jun 2023 18:36:19 -0700
+        with ESMTP id S229611AbjFYHHt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jun 2023 03:07:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 345BCBF;
+        Sun, 25 Jun 2023 00:07:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7C27460ADE;
+        Sun, 25 Jun 2023 07:07:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 999C4C433C0;
+        Sun, 25 Jun 2023 07:07:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687676865;
+        bh=QneLE4H1o+Lxh8t2cx4M+9W8iJfMgYZLsP6GgnjIgtU=;
+        h=Date:To:Cc:References:From:Subject:In-Reply-To:From;
+        b=SItTricsiYViqlheveu8Us1v90DnbiFWUT3tNXJAW36asiL4uGAy8x2s7QVNladu6
+         rGH3PJcy1wJf+fabkDWoG/WP1LhMGg3fbjw0SOKC6W7BRuGI/5W0wA/smzeP9ANvbz
+         /tuLajILSf26vRI5Am4nUH0hlB/4lD7TqM8750GbkwmEHeI7bCN56Qc1r2jpI6xP1v
+         Nd65l1GLYDwspVOM3bnPfiFAXxNtkwiI52vcpqLUx4d6MDEatX/+DtK8IuGjcxKD2N
+         ZITA5JVREebb6wXe8HTtYiFz3E8gpXoPHKdXGoRGzE5pwRzf8IlTWw+WbMFcrBe24C
+         COqMvqWsy6pOA==
+Message-ID: <f93949dd-e90f-a9bf-33b3-4f31c4328c7d@kernel.org>
+Date:   Sun, 25 Jun 2023 15:07:40 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
-Subject: Re: [PATCH v2] docs: target: Remove useless tcm_mod_builder.py
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     jejb@linux.ibm.com, hch@infradead.org, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230310123604.1820231-1-chao@kernel.org>
+ <b53321ab-679d-e007-6407-6bd00149948e@kernel.org>
+ <yq17ct0nijm.fsf@ca-mkp.ca.oracle.com>
 Content-Language: en-US
-To:     Rong Tao <rtoax@foxmail.com>, martin.petersen@oracle.com
-Cc:     rongtao@cestc.cn, Jonathan Corbet <corbet@lwn.net>,
-        "open list:SCSI TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        "open list:SCSI TARGET SUBSYSTEM" <target-devel@vger.kernel.org>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <tencent_E3643D5F0AA8CCBEF28C6A233A18B808CD0A@qq.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <tencent_E3643D5F0AA8CCBEF28C6A233A18B808CD0A@qq.com>
+From:   Chao Yu <chao@kernel.org>
+Subject: Re: [PATCH v5] scsi: support packing multi-segment in UNMAP command
+In-Reply-To: <yq17ct0nijm.fsf@ca-mkp.ca.oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/24/23 17:50, Rong Tao wrote:
-> This script is not used and requires additional development to sync with
-> the SCSI target code.
+On 2023/5/23 5:51, Martin K. Petersen wrote:
+> 
+> Chao,
+> 
+>> SCSI maintainers,
+>>
+>> Any comments on this patch?
+> 
+> I have an updated version of your original multi-segment UNMAP support
+> queued in a discard topic branch that I intend to submit shortly.
+> Without the UFS HPB bits.
+> 
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Martin,
+
+Any progress on this patch?
+
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/commit/?h=5.20/discovery&id=834e3cef205d324c66bbc7edd85541be59f1f7b6
