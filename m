@@ -2,95 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B074EB64DD
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jun 2023 12:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17F4DC001B0
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jun 2023 00:53:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233071AbjFXMbG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Jun 2023 08:31:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53546 "EHLO
+        id S229779AbjFYAxM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Jun 2023 20:53:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230388AbjFXMbF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 08:31:05 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7958E5D;
-        Sat, 24 Jun 2023 05:31:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1687609858;
-        bh=mVIJR4nMBjtez2qGjfCXvDgWZNOR+zXfVhJPIUl/Iv4=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=VVs3b+cKfTVsbQ04tkLwm1dwlaFoywd9QVlDOQ1Mla3JQSx0THZQB/I2qZV/kngZg
-         rxfUENf2roXtZmUFsEr2WrVwlyHCnHN3m7LJLwq12W/3Q8K2xLawib0u9p3y81jMGz
-         zPyD5W3t7sI49wOt6Bn86Soufm1TNXZ+2yrqwMso=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 9E95E12862C2;
-        Sat, 24 Jun 2023 08:30:58 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id JMB_OKpXtfZI; Sat, 24 Jun 2023 08:30:58 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1687609858;
-        bh=mVIJR4nMBjtez2qGjfCXvDgWZNOR+zXfVhJPIUl/Iv4=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=VVs3b+cKfTVsbQ04tkLwm1dwlaFoywd9QVlDOQ1Mla3JQSx0THZQB/I2qZV/kngZg
-         rxfUENf2roXtZmUFsEr2WrVwlyHCnHN3m7LJLwq12W/3Q8K2xLawib0u9p3y81jMGz
-         zPyD5W3t7sI49wOt6Bn86Soufm1TNXZ+2yrqwMso=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id F39711286268;
-        Sat, 24 Jun 2023 08:30:56 -0400 (EDT)
-Message-ID: <38e69be8524c85062e627f77ed7ad766905e60a3.camel@HansenPartnership.com>
-Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for
- sdm845 by adding reg-names
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Luca Weiss <luca.weiss@fairphone.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Abel Vesa <abel.vesa@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Sat, 24 Jun 2023 08:30:54 -0400
-In-Reply-To: <CTK1AI4TVYRZ.F77OZB62YYC0@otso>
-References: <20230623113009.2512206-1-abel.vesa@linaro.org>
-         <20230623113009.2512206-6-abel.vesa@linaro.org>
-         <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
-         <CTK1AI4TVYRZ.F77OZB62YYC0@otso>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229449AbjFYAxL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2023 20:53:11 -0400
+X-Greylist: delayed 138 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 24 Jun 2023 17:53:09 PDT
+Received: from out203-205-221-240.mail.qq.com (out203-205-221-240.mail.qq.com [203.205.221.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99BFB10D8;
+        Sat, 24 Jun 2023 17:53:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+        s=s201512; t=1687654387;
+        bh=gQH4VaAwMjpN/17+66P6tp7c9VnLsslmB8qz1LllLJk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=zYlfl6mEXm2bGrHLswgty64ZXiywBYn0psiAYhkPVD3iKbtiYJ0mEtCS7xAjjvSFE
+         i4G/H+so735Ap19ytImuFErGlSMVCGYXznV9nz4SihkJ4zVMWooai4QcUhulBiVS6m
+         6N6qcjUzYLmjYve0l93qbEgDpoUZRpunfw2csV5M=
+Received: from localhost.localdomain ([39.156.73.12])
+        by newxmesmtplogicsvrsza12-0.qq.com (NewEsmtp) with SMTP
+        id D441B6B7; Sun, 25 Jun 2023 08:53:04 +0800
+X-QQ-mid: xmsmtpt1687654384tphqfewpw
+Message-ID: <tencent_DE0C5A84DAB2B62E1B543C5F4B4727118F09@qq.com>
+X-QQ-XMAILINFO: NMGzQWUSIfvTPAq7WF7g3gVA8xXBb7bkZIy6xeiCUzUlrR3syishj+Ur2X7kxZ
+         rdECZFBxwRu3ZMZgI+gN3I0jCGDY9rhfqcH+aNfsULkSB57pAsnpkNC2VVfOwNqxEtwQwyoqn1lX
+         HCdP9MOLb3SLeFezh97/bibNxfNw86EUXUAJYBBR3TS8GUjQeuZwc+3n62ZMD6x6q/p8b/7wFzWe
+         BghXoSde/DmyXvQSoyGTXTxdKq6+cSVTvU2jxTRTQ+uyKl3bCjjYFv2CZJFsz/pWNDBlh3OKPmkj
+         8vc0rZ+tRWikjCzuL5koghXfPU0vFo0QdPR72CmfLpbP0E8jI6UBDFLayS+f0VGq/3NSC3xF6IIs
+         1mdNDvj/N/PqlaP01ExYkL/+RsL1ZtZuvgwr8c2Jh1F8WFQpKa5lEDzkrOUu8xmfyPmNDAXiyXoN
+         llkIZQrIDABF0zfv/BEOg31qyqYELkmRpvE/3xiqU1mlYnUaJ9XDt8K6es2c0PlObrqfwgNmgQ5u
+         45N6vJpMclLLg/bU6ggarvEKAhv8I+FvsSbQgmYe4N3ke8tMLecF7jDjPeP2nhFgatFhV8/thOdz
+         fPvh1DlBJUuF+nAVMl30u7OYN0HOYzdquZuNBn04cyETPiNrS4G+LmvenPOm5/ShmE6ssmWf3g6r
+         xHxof6qzW2yThrFZtsd5/Bmes2FRMf4vXbgjbeOx+HP7HyjVkHxQiHMp6jM4I5+J+z9nKRv7PFej
+         o1hL4Da02/BZMZvoXHj1yVHFR7lHpO9Yqz7KG1HOUp2pn3pSziWK8LqEXYh7ZzRGZEbCtckCXN9T
+         xWBUJkvU5j+MuQ+puIEFPFjBNUNgEkr7u6XZD9bvocIkE+oONZECeqSWfO3FII1bJDhQnTXwxfYH
+         GjZlcB2g+R02V0LvoKHGOU9Ier/L3j1aB2SPi4+rCOR4Fe6i6EsQ3eWURSiMJVfkqYUfL5FXQ/J1
+         OJADEcZXH8Af0p2vzGOJIF7Q0hBHktGLzDCXG34hBm5YC26LeE4DeG3SS8N6l4
+X-QQ-XMRINFO: MMd9k4KOWfk4EI9u9DiMAPPHFKKkl9Wo5w==
+From:   Rong Tao <rtoax@foxmail.com>
+To:     bvanassche@acm.org
+Cc:     corbet@lwn.net, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, michael.christie@oracle.com,
+        rongtao@cestc.cn, rtoax@foxmail.com, target-devel@vger.kernel.org
+Subject: Re: Re: [PATCH] docs: target: Convert tcm_mod_builder.py print syntax to python3
+Date:   Sun, 25 Jun 2023 08:53:03 +0800
+X-OQ-MSGID: <20230625005303.5464-1-rtoax@foxmail.com>
+X-Mailer: git-send-email 2.39.3
+In-Reply-To: <debdc47a-c377-e457-5643-415d93ced54a@acm.org>
+References: <debdc47a-c377-e457-5643-415d93ced54a@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2023-06-23 at 14:38 +0200, Luca Weiss wrote:
-> With my private mailbox I just have a different folder for patches
-> that have been sent which I archive once they're applied, but with
-> work GMail I don't see how I can easily replicate this since it's
-> also not grouping threads properly.
+Sorry for the late reply, I just submit v2[0], remove tcm_mod_builder.py
+totally. Please review.
 
-I have something similar, but instead of multiple folders, I use imap
-labels to achieve the same thing (and then evolution search folders to
-sort out the labels).  I believe GMail has some primitive labelling
-system that actually works (unlike exchange), so you might be able to
-get a scheme like that to work.
+Thanks,
 
-For my mobile phone, which doesn't have the sophisticated search
-folders evolution does, I use dovecot virtual folders to achieve the
-same effect.  I'm afraid I don't think GMail has any equivalent of
-this.
+Rong Tao.
 
-James
+
+[0] https://lore.kernel.org/lkml/tencent_E3643D5F0AA8CCBEF28C6A233A18B808CD0A@qq.com/
 
